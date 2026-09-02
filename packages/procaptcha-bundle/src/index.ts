@@ -84,8 +84,6 @@ const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
  *
  * Fire-and-forget by design — a failed prefetch is indistinguishable from no
  * prefetch, and the detection path falls back to resolving a provider itself.
- *
- * Skipped in manual start mode so nothing reaches the provider on page load.
  */
 const startDetectorPrefetch = (
 	siteKey: string | null,
@@ -287,11 +285,7 @@ export const execute = () => {
 	document.dispatchEvent(executeEvent);
 };
 
-/**
- * Starts a widget rendered with `startMode: "manual"`; omit the id to start
- * every widget. Sent as a `procaptcha:start` event so direct-React
- * integrations can dispatch the same thing themselves.
- */
+/** Starts a `startMode: "manual"` widget; omit the id to start all of them. */
 export const start = (widgetId?: string): void => {
 	const ids: string[] =
 		undefined === widgetId ? Array.from(procaptchaWidgets.keys()) : [widgetId];
