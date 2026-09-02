@@ -141,8 +141,8 @@ describe("puzzleDifficultyToSeverity", () => {
 	it("leaves the site's own settings in force at level 0", () => {
 		// Level 0 samples no band, so the count it maps to must be one the
 		// provider reads as "nothing escalated this session".
-		expect(severityToPuzzleDifficulty(puzzleDifficultyToSeverity(0, 2), 2)).toBe(
-			0,
-		);
+		expect(
+			severityToPuzzleDifficulty(puzzleDifficultyToSeverity(0, 2), 2),
+		).toBe(0);
 	});
 });
