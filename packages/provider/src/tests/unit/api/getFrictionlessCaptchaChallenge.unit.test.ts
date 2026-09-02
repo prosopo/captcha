@@ -15,7 +15,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CaptchaType, ContextType } from "@prosopo/types";
+import { CaptchaType } from "@prosopo/types";
 import { AccessPolicyType } from "@prosopo/user-access-policy";
 import {
 	type Mock,
@@ -41,7 +41,6 @@ type MockTasks = {
 		setSessionParams: MockFn;
 		setRoutingContext: MockFn;
 		applyRoutingMachine: MockFn;
-		getClientContextEntropy: MockFn;
 		sendImageCaptcha: MockFn;
 		sendPowCaptcha: MockFn;
 		sendPuzzleCaptcha: MockFn;
@@ -178,7 +177,6 @@ vi.mock("../../../tasks/index.js", async () => {
 							captchaType: baseline.captchaType,
 						}),
 					),
-					getClientContextEntropy: vi.fn(),
 					sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 					sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),
 					sendPuzzleCaptcha: vi.fn().mockResolvedValue({ type: "puzzle" }),
@@ -263,7 +261,6 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 					captchaType: baseline.captchaType,
 				}),
 			),
-			getClientContextEntropy: vi.fn(),
 			sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 			sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),
 			sendPuzzleCaptcha: vi.fn().mockResolvedValue({ type: "puzzle" }),
@@ -328,125 +325,6 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		decryptionFailed: false,
 	});
 
-	const clientWithContexts = (
-		account: string,
-		contexts: Record<string, { type: ContextType; threshold: number }>,
-	): Record<string, unknown> => ({
-		account,
-		settings: {
-			contextAware: { enabled: true, contexts },
-			frictionlessThreshold: 0.5,
-			disallowWebView: false,
-		},
-	});
-
-	it("looks up the context for the request's device family and webview flag", async () => {
-		// Every device context configured, so the lookup is driven purely by
-		// the request rather than by which contexts happen to be enabled.
-		tasksInstance.db.getClientRecord.mockResolvedValue(
-			clientWithContexts("site1", {
-				[ContextType.Desktop]: { type: ContextType.Desktop, threshold: 0.5 },
-				[ContextType.DesktopWebview]: {
-					type: ContextType.DesktopWebview,
-					threshold: 0.5,
-				},
-				[ContextType.Mobile]: { type: ContextType.Mobile, threshold: 0.5 },
-				[ContextType.MobileWebview]: {
-					type: ContextType.MobileWebview,
-					threshold: 0.5,
-				},
-			}),
-		);
-
-		const body = { token: "t", headHash: "hh", dapp: "site1", user: "u" };
-		const { req, res, next } = buildReqRes(body);
-
-		// Desktop UA (the builder's default "ua" matches nothing) + webview.
-		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
-			payload(true),
-		);
-		tasksInstance.frictionlessManager.getClientContextEntropy.mockResolvedValueOnce(
-			"ent-desktop-webview",
-		);
-		// biome-ignore lint/suspicious/noExplicitAny: mock request
-		await handler(req as any, res as any, next);
-		expect(
-			tasksInstance.frictionlessManager.getClientContextEntropy,
-		).toHaveBeenCalledWith("site1", ContextType.DesktopWebview);
-
-		// Same device, no webview.
-		tasksInstance.frictionlessManager.getClientContextEntropy.mockClear();
-		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
-			payload(false),
-		);
-		tasksInstance.frictionlessManager.getClientContextEntropy.mockResolvedValueOnce(
-			"ent-desktop",
-		);
-		// biome-ignore lint/suspicious/noExplicitAny: mock request
-		await handler(req as any, res as any, next);
-		expect(
-			tasksInstance.frictionlessManager.getClientContextEntropy,
-		).toHaveBeenCalledWith("site1", ContextType.Desktop);
-
-		// Phone UA on the same site moves the lookup to the mobile family.
-		tasksInstance.frictionlessManager.getClientContextEntropy.mockClear();
-		req.headers["user-agent"] = IPHONE_UA;
-		tasksInstance.frictionlessManager.getClientContextEntropy.mockResolvedValueOnce(
-			"ent-mobile",
-		);
-		// biome-ignore lint/suspicious/noExplicitAny: mock request
-		await handler(req as any, res as any, next);
-		expect(
-			tasksInstance.frictionlessManager.getClientContextEntropy,
-		).toHaveBeenCalledWith("site1", ContextType.Mobile);
-	});
-
-	it("expands a legacy default context across the non-webview families", async () => {
-		tasksInstance.db.getClientRecord.mockResolvedValue(
-			clientWithContexts("site2", {
-				[ContextType.Default]: { type: ContextType.Default, threshold: 0.5 },
-			}),
-		);
-		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
-			payload(false),
-		);
-		tasksInstance.frictionlessManager.getClientContextEntropy.mockResolvedValueOnce(
-			"ent-desktop",
-		);
-
-		const body = { token: "t2", headHash: "hh2", dapp: "site2", user: "u" };
-		const { req, res, next } = buildReqRes(body);
-		// biome-ignore lint/suspicious/noExplicitAny: mock request
-		await handler(req as any, res as any, next);
-
-		expect(
-			tasksInstance.frictionlessManager.getClientContextEntropy,
-		).toHaveBeenCalledWith("site2", ContextType.Desktop);
-	});
-
-	it("skips context validation when the request's context is not configured", async () => {
-		// Only the non-webview families are covered, and this request is a
-		// webview. Previously a single configured context was applied to every
-		// request; with six contexts that would measure a webview against a
-		// browser baseline, so the stage is skipped instead.
-		tasksInstance.db.getClientRecord.mockResolvedValue(
-			clientWithContexts("site3", {
-				[ContextType.Default]: { type: ContextType.Default, threshold: 0.5 },
-			}),
-		);
-		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
-			payload(true),
-		);
-
-		const body = { token: "t3", headHash: "hh3", dapp: "site3", user: "u" };
-		const { req, res, next } = buildReqRes(body);
-		// biome-ignore lint/suspicious/noExplicitAny: mock request
-		await handler(req as any, res as any, next);
-
-		expect(
-			tasksInstance.frictionlessManager.getClientContextEntropy,
-		).not.toHaveBeenCalled();
-	});
 
 	it("returns 401 when blocked by access policy", async () => {
 		const clientRecord = {

@@ -23,7 +23,6 @@ import {
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { compareBinaryStrings } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../../express.js";
 import {
@@ -35,15 +34,9 @@ import type { Tasks } from "../../../tasks/index.js";
 import { hashUserAgent } from "../../../utils/hashUserAgent.js";
 import { recordFrictionlessDecision } from "../../metrics.js";
 import {
-	determineContextType,
-	getContextThreshold,
-	isContextConfigured,
-} from "../contextAwareValidation.js";
-import {
 	DECRYPTION_FAILED_IMAGE_ROUNDS,
 	MISSING_HEAD_HASH_IMAGE_ROUNDS,
 	MISSING_TOKEN_IMAGE_ROUNDS,
-	getRoundsFromSimScore,
 	getRoundsFromTriggeredDetectors,
 } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
@@ -211,9 +204,6 @@ export const runDecisionMachine = async (
 		handle,
 	);
 	if (userAgentMismatchResponse) return userAgentMismatchResponse;
-
-	const contextResponse = await runContextAwareValidation(input, handle);
-	if (contextResponse) return contextResponse;
 
 	// Accumulate all score penalties before evaluating autoBan so the
 	// threshold compares against the full sum.
@@ -506,75 +496,3 @@ const runUserAgentMismatchCheck = async (
 	);
 };
 
-const runContextAwareValidation = async (
-	input: DecisionMachineInput,
-	handle: ExpressHandle,
-): Promise<unknown | null> => {
-	const { tasks, clientRecord, dapp, user } = input;
-	const { req, res, next } = handle;
-
-	if (!clientRecord.settings.contextAware?.enabled) return null;
-
-	// The request's own context: device family x webview. Classified from the
-	// raw header UA, which is what the off-provider entropy sweep reads off
-	// stored sessions — the two must agree or we look up a baseline nobody
-	// wrote.
-	const contextType = determineContextType(
-		req.headers["user-agent"],
-		input.webView,
-	);
-
-	// Only validate contexts the customer has actually configured. Traffic
-	// from an unconfigured device family passes through: with six contexts,
-	// borrowing another family's baseline would reject real users.
-	if (!isContextConfigured(clientRecord.settings, contextType)) return null;
-
-	const clientEntropy = await tasks.frictionlessManager.getClientContextEntropy(
-		clientRecord.account,
-		contextType,
-	);
-
-	if (!clientEntropy) return null;
-
-	if (!input.decryptedHeadHash) {
-		tasks.logger.info(() => ({
-			msg: "No decryptedHeadHash in session for context aware client",
-		}));
-		return next(
-			new ProsopoApiError("API.BAD_REQUEST", {
-				context: { code: 400, siteKey: dapp, user },
-				i18n: req.i18n,
-				logger: req.logger,
-			}),
-		);
-	}
-
-	const threshold = getContextThreshold(clientRecord.settings, contextType);
-	const sim = compareBinaryStrings(input.decryptedHeadHash, clientEntropy);
-	if (sim >= threshold) return null;
-
-	req.logger.info(() => ({
-		msg: "Frictionless decision",
-		data: {
-			decision: "context_aware_failed",
-			captchaType: CaptchaType.image,
-			sim,
-			threshold,
-		},
-	}));
-	recordFrictionlessDecision("context_aware_failed");
-	attachHoneypot(res, clientRecord);
-	return res.json(
-		await tasks.frictionlessManager.sendImageCaptcha({
-			solvedImagesCount: clampImageRounds(
-				getRoundsFromSimScore(sim),
-				clientRecord.settings,
-			),
-			userSitekeyIpHash: input.userSitekeyIpHash,
-			reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,
-			siteKey: dapp,
-			ipInfo: input.ipInfo,
-			headers: input.flatHeaders,
-		}),
-	);
-};

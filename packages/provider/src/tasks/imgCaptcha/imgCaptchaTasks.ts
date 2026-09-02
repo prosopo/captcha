@@ -686,7 +686,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 		maxVerifiedTime?: number,
 		ip?: string,
 		disallowWebView?: boolean,
-		contextAwareEnabled = false,
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
@@ -1078,16 +1077,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 				failStatus = ResultReason.DISALLOWED_WEBVIEW;
 				isApproved = false;
 				failureStatus = ResultReason.DISALLOWED_WEBVIEW;
-			}
-			if (
-				contextAwareEnabled &&
-				sessionRecord.reason ===
-					FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
-			) {
-				logger.info(() => ({
-					msg: "Context aware validation failed",
-				}));
-				//return { status: "API.USER_NOT_VERIFIED", verified: false };
 			}
 		}
 
