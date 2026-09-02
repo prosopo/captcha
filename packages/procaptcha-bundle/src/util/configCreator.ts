@@ -21,11 +21,6 @@ import {
 	resolvePlacement,
 } from "@prosopo/types";
 
-/**
- * Named rather than positional: this had reached eight positional parameters,
- * six of them optional booleans and strings, which made every call site a
- * puzzle and adding placement to it a trap.
- */
 interface CreateConfigOptions {
 	siteKey?: string;
 	theme?: "light" | "dark";
@@ -66,9 +61,6 @@ function createConfig(
 		mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || "",
 		web2,
 		mode: invisible ? "invisible" : "visible",
-		// Resolved once, here, rather than in each widget: an invisible widget
-		// renders no checkbox for a floating challenge to anchor to, so the
-		// request degrades to popup and every widget sees the same answer.
 		placement: resolvePlacement(placement, invisible),
 		theme,
 		language,

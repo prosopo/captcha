@@ -286,8 +286,6 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
 		mode: Mode.optional().default(ModeEnum.visible),
-		// Where a challenge opens. Defaults to popup, which is what every
-		// challenge did before this option existed.
 		placement: Placement.optional().default(PlacementEnum.popup),
 		// Restrict provider DNS resolution. When both are unset providers stay
 		// dual-stack. `ipv4` wins if both are true.

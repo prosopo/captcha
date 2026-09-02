@@ -35,7 +35,6 @@ interface PuzzleCanvasProps {
 	submitting: boolean;
 	theme: Theme;
 	placement?: PlacementType;
-	/** Element a floating puzzle anchors to — the widget container. */
 	anchor?: HTMLElement | null;
 	onDismiss?: () => void;
 }
@@ -268,9 +267,6 @@ export const PuzzleCanvas = ({
 	const bgTransform = `translate(${bgTranslateX.toFixed(2)}px, ${bgTranslateY.toFixed(2)}px) scale(${bgScale.toFixed(3)})`;
 
 	return (
-		// The scrim, z-index and centring that used to be inlined here now come
-		// from the shared surface, so the puzzle picks up float placement for
-		// free instead of growing a second implementation of it.
 		<ChallengeSurface
 			show
 			placement={placement}

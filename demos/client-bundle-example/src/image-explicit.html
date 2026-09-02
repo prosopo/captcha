@@ -135,9 +135,7 @@
             window.updateCaptchaStatus('Initializing CAPTCHA with explicit render call', 'info');
 
             // Render the CAPTCHA
-            // Placement comes from the query string so the same page can show
-            // both modes: ?placement=float anchors the challenge to the widget,
-            // anything else leaves it centred over the page (the default).
+            // ?placement=float anchors the challenge to the widget; the default is popup.
             const placement =
                 new URLSearchParams(window.location.search).get("placement") === "float"
                     ? "float"

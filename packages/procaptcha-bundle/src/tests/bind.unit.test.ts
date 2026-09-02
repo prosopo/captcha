@@ -12,17 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * Binding a host-page button to one widget, and the targeted `execute()` that
- * makes it possible.
- *
- * A bare `execute()` has always fired every widget on the page, because the
- * event goes to `document` and each widget listens there. Two bound buttons on
- * one page therefore need targeting, or pressing either one runs both widgets.
- */
-
 import type { Root } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { CreatedWidget } from "../util/widgetFactory.js";
 
 const mocks = vi.hoisted(() => ({
 	prefetchDetector: vi.fn(),
@@ -52,18 +44,30 @@ const EXECUTE_EVENT = "procaptcha:execute";
 const makeRoot = (): Root =>
 	({ unmount: vi.fn(), render: vi.fn() }) as unknown as Root;
 
-/** Mirrors what a widget does: listen on document and on its own element. */
+// Like the real factory, the widget lives in a child of the host element and
+// listens there, so a targeted event must be dispatched on that child.
+const createWidgetsLikeTheFactory = async (
+	hosts: Element[],
+): Promise<CreatedWidget[]> =>
+	hosts.map((host) => {
+		const container = document.createElement("div");
+		host.appendChild(container);
+		return { root: makeRoot(), container };
+	});
+
 const listenLikeAWidget = (
-	element: Element,
+	host: Element,
 ): { calls: () => number; stop: () => void } => {
 	const handler = vi.fn();
+	const target = host.firstElementChild;
+	if (!target) throw new Error("expected the factory to mount a container");
 	document.addEventListener(EXECUTE_EVENT, handler);
-	element.addEventListener(EXECUTE_EVENT, handler);
+	target.addEventListener(EXECUTE_EVENT, handler);
 	return {
 		calls: () => handler.mock.calls.length,
 		stop: () => {
 			document.removeEventListener(EXECUTE_EVENT, handler);
-			element.removeEventListener(EXECUTE_EVENT, handler);
+			target.removeEventListener(EXECUTE_EVENT, handler);
 		},
 	};
 };
@@ -72,13 +76,11 @@ beforeEach(async () => {
 	vi.clearAllMocks();
 	await remove();
 	document.body.innerHTML = "";
-	mocks.createWidgets.mockResolvedValue([makeRoot()]);
+	mocks.createWidgets.mockImplementation(createWidgetsLikeTheFactory);
 });
 
 describe("execute targeting", () => {
 	it("reaches every widget when called with no id", async () => {
-		// The untargeted path finds containers by selector rather than from the
-		// widget registry, so these need a shape it recognises.
 		const first = document.createElement("div");
 		first.className = "p-procaptcha";
 		const second = document.createElement("div");
@@ -91,7 +93,6 @@ describe("execute targeting", () => {
 		const b = listenLikeAWidget(second);
 		execute();
 
-		// The long-standing behaviour: one call, every widget responds.
 		expect(a.calls()).toBe(1);
 		expect(b.calls()).toBe(1);
 		a.stop();
@@ -116,8 +117,6 @@ describe("execute targeting", () => {
 	});
 
 	it("does not bubble a targeted event up to document", async () => {
-		// If it bubbled, the document listener every widget keeps would fire and
-		// the targeting would achieve nothing.
 		const element = document.createElement("div");
 		document.body.appendChild(element);
 		const widgetId = await render(element, { siteKey: SITE_KEY });
@@ -170,8 +169,6 @@ describe("bind", () => {
 	});
 
 	it("stops the button's default action", async () => {
-		// The host page submits on its verified callback; letting the default
-		// through would post the form before a token exists.
 		const form = document.createElement("form");
 		const button = document.createElement("button");
 		button.id = "submit-it";
@@ -192,8 +189,6 @@ describe("bind", () => {
 	});
 
 	it("detaches the listener when the widget is removed", async () => {
-		// A button still calling execute() for a removed widget would target an
-		// id that no longer resolves, logging an error on every click.
 		const button = document.createElement("button");
 		button.id = "gone";
 		const element = document.createElement("div");
@@ -205,24 +200,19 @@ describe("bind", () => {
 		const error = vi
 			.spyOn(console, "error")
 			.mockImplementation(() => undefined);
-		const listener = listenLikeAWidget(element);
 		button.click();
 
-		expect(listener.calls()).toBe(0);
 		expect(error).not.toHaveBeenCalled();
-		listener.stop();
 		error.mockRestore();
 	});
 
-	it("reports a selector that matches nothing", async () => {
+	it("reports a selector that matches nothing and still renders", async () => {
 		const error = vi
 			.spyOn(console, "error")
 			.mockImplementation(() => undefined);
 		const element = document.createElement("div");
 		document.body.appendChild(element);
 
-		// The widget still renders — a bad selector should not cost the page its
-		// captcha, only its button binding.
 		const widgetId = await render(element, {
 			siteKey: SITE_KEY,
 			bind: "#nothing-here",

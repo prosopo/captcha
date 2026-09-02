@@ -12,17 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * What the surface actually puts on the page for each placement.
- *
- * The geometry is covered separately; these are about the properties that make
- * a placement what it is — whether the page stays usable behind the challenge,
- * whether an outside click dismisses it, and whether a float request without
- * an anchor quietly becomes a popup rather than a panel in the corner.
- */
-
-// jsdom has no PointerEvent, and the dismiss handler only reads event.target,
-// so these dispatch a plain Event of the same type.
+// jsdom has no PointerEvent; the dismiss handler only reads event.target, so
+// a plain Event of the same type is dispatched instead.
+import { PlacementEnum, type PlacementType } from "@prosopo/types";
 import { type Root, createRoot } from "react-dom/client";
 import { act } from "react-dom/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -39,7 +31,7 @@ const content = (): HTMLElement | null =>
 	document.querySelector<HTMLElement>(".prosopo-challenge-content");
 
 interface RenderArgs {
-	placement?: "popup" | "float";
+	placement?: PlacementType;
 	withAnchor?: boolean;
 	onDismiss?: () => void;
 	show?: boolean;
@@ -80,8 +72,6 @@ afterEach(() => {
 
 describe("where the surface renders", () => {
 	it("portals out of the mount container to the body", () => {
-		// A challenge left in the widget's own flow is clipped by any host page
-		// that wraps the widget in overflow: hidden.
 		render({});
 
 		expect(container.querySelector(".prosopo-challenge-surface")).toBeNull();
@@ -89,7 +79,6 @@ describe("where the surface renders", () => {
 	});
 
 	it("hides rather than unmounts when not shown", () => {
-		// Children keep their state, so reopening does not re-fetch a challenge.
 		render({ show: false });
 
 		expect(layer()?.style.display).toBe("none");
@@ -105,16 +94,15 @@ describe("popup", () => {
 	});
 
 	it("covers the page, so nothing behind it is reachable", () => {
-		render({ placement: "popup" });
+		render({ placement: PlacementEnum.popup });
 
 		expect(layer()?.style.display).toBe("flex");
-		// No pointer-events opt-out: the layer itself is the barrier.
 		expect(layer()?.style.pointerEvents).toBe("");
 	});
 
 	it("ignores an outside click", () => {
 		const onDismiss = vi.fn();
-		render({ placement: "popup", onDismiss });
+		render({ placement: PlacementEnum.popup, onDismiss });
 
 		act(() => {
 			document.body.dispatchEvent(new Event("pointerdown", { bubbles: true }));
@@ -126,18 +114,16 @@ describe("popup", () => {
 
 describe("float", () => {
 	it("leaves the page usable behind it", () => {
-		render({ placement: "float" });
+		render({ placement: PlacementEnum.float });
 
 		expect(layer()?.className).toContain("prosopo-challenge-surface--float");
-		// The layer spans the viewport for positioning but must not swallow
-		// clicks — that is the whole difference from a popup.
 		expect(layer()?.style.pointerEvents).toBe("none");
 		expect(content()?.style.pointerEvents).toBe("auto");
 	});
 
 	it("dismisses on a click outside the panel", () => {
 		const onDismiss = vi.fn();
-		render({ placement: "float", onDismiss });
+		render({ placement: PlacementEnum.float, onDismiss });
 
 		act(() => {
 			document.body.dispatchEvent(new Event("pointerdown", { bubbles: true }));
@@ -148,7 +134,7 @@ describe("float", () => {
 
 	it("does not dismiss on a click inside the panel", () => {
 		const onDismiss = vi.fn();
-		render({ placement: "float", onDismiss });
+		render({ placement: PlacementEnum.float, onDismiss });
 
 		act(() => {
 			content()?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
@@ -158,10 +144,8 @@ describe("float", () => {
 	});
 
 	it("does not dismiss on a click on the anchor", () => {
-		// Clicking the widget is what opened the panel; treating it as an
-		// outside click would close and immediately reopen it.
 		const onDismiss = vi.fn();
-		render({ placement: "float", onDismiss });
+		render({ placement: PlacementEnum.float, onDismiss });
 
 		act(() => {
 			anchor.dispatchEvent(new Event("pointerdown", { bubbles: true }));
@@ -171,8 +155,7 @@ describe("float", () => {
 	});
 
 	it("falls back to popup with no anchor to attach to", () => {
-		// This is the invisible-widget case: nothing on the page to point at.
-		render({ placement: "float", withAnchor: false });
+		render({ placement: PlacementEnum.float, withAnchor: false });
 
 		expect(layer()?.className).toContain("prosopo-challenge-surface--popup");
 		expect(layer()?.style.pointerEvents).toBe("");
@@ -181,7 +164,7 @@ describe("float", () => {
 
 describe("dismissing with the keyboard", () => {
 	it("closes on Escape in either placement", () => {
-		for (const placement of ["popup", "float"] as const) {
+		for (const placement of [PlacementEnum.popup, PlacementEnum.float]) {
 			const onDismiss = vi.fn();
 			render({ placement, onDismiss });
 
@@ -200,7 +183,7 @@ describe("dismissing with the keyboard", () => {
 
 	it("ignores other keys", () => {
 		const onDismiss = vi.fn();
-		render({ placement: "float", onDismiss });
+		render({ placement: PlacementEnum.float, onDismiss });
 
 		act(() => {
 			document.dispatchEvent(

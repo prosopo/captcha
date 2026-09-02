@@ -18,7 +18,7 @@ import { computeFloatPosition } from "../reactComponents/ChallengeSurface.js";
 const VIEWPORT_WIDTH = 1000;
 const VIEWPORT_HEIGHT = 800;
 
-/** jsdom gives every element a zero rect, so rects are built by hand here. */
+// jsdom gives every element a zero rect, so rects are built by hand.
 const rect = (
 	left: number,
 	top: number,
@@ -69,13 +69,10 @@ describe("computeFloatPosition", () => {
 	});
 
 	it("stays below when neither side fits but below has more room", () => {
-		// 40px above, 60px below — too tight either way, so it takes the
-		// larger side rather than flipping into an even worse one.
 		const anchor = rect(100, 40, 300, 700);
 
 		const { top } = place(anchor);
 
-		// Clamped into the viewport rather than pushed off the bottom.
 		expect(top).toBeGreaterThanOrEqual(8);
 		expect(top + PANEL_HEIGHT).toBeLessThanOrEqual(VIEWPORT_HEIGHT);
 	});
@@ -85,13 +82,11 @@ describe("computeFloatPosition", () => {
 
 		const { left } = place(anchor);
 
-		// Left-aligning would put the right edge at 1200, off a 1000px viewport.
 		expect(left).toBe(VIEWPORT_WIDTH - PANEL_WIDTH - 8);
 		expect(left + PANEL_WIDTH).toBeLessThanOrEqual(VIEWPORT_WIDTH);
 	});
 
 	it("never positions the panel off the left edge", () => {
-		// A negative anchor left happens when the page is scrolled sideways.
 		const anchor = rect(-200, 100, 80, 78);
 
 		const { left } = place(anchor);
@@ -100,8 +95,6 @@ describe("computeFloatPosition", () => {
 	});
 
 	it("pins a panel taller than the viewport to the top", () => {
-		// Nothing can fully fit; the first row must stay reachable rather than
-		// the panel running off the bottom of the screen.
 		const anchor = rect(100, 300, 300, 78);
 
 		const { top } = place(anchor, VIEWPORT_HEIGHT + 400);

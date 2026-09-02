@@ -139,10 +139,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 
 		document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
 
-		// A bound button dispatches a non-bubbling event on this widget's own
-		// container instead of on document, so only this widget reacts. Without
-		// the second listener, per-widget targeting is impossible: one
-		// document-level execute() runs every widget on the page.
+		// A targeted execute() is dispatched on the container, not document.
 		const container = props.container;
 		container?.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
 

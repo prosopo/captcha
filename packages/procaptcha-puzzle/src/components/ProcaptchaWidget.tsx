@@ -117,58 +117,50 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		return undefined;
 	}, [state.error, frictionlessState, props.onSessionInvalidated]);
 
-	// Add event listener for the execute event (works for invisible mode)
+	// A bare execute() reaches every invisible widget via document. A targeted
+	// execute() is dispatched on this widget's container and works in either
+	// mode, which is what lets a bound button drive a visible widget.
 	useEffect(() => {
-		// Only set up event listener if in invisible mode
-		if (config.mode === ModeEnum.invisible) {
-			// Event handler for when execute() is called: fetch a challenge
-			// then drive the puzzle UI through the same phase transitions as
-			// the visible checkbox flow.
-			const handleExecuteEvent = async () => {
-				if (loading) {
-					return;
+		const handleExecuteEvent = async () => {
+			if (loading) {
+				return;
+			}
+			setLoading(true);
+			setShowRetry(false);
+			try {
+				const challenge = await manager.current.start();
+				if (challenge) {
+					setChallengeData(challenge);
+					setPuzzlePhase("dragging");
 				}
-				setLoading(true);
-				setShowRetry(false);
-				try {
-					const challenge = await manager.current.start();
-					if (challenge) {
-						setChallengeData(challenge);
-						setPuzzlePhase("dragging");
-					}
-				} catch (error) {
-					callbacks.onError?.(
-						error instanceof Error ? error : new Error(String(error)),
-					);
-				} finally {
-					setLoading(false);
-				}
-			};
+			} catch (error) {
+				callbacks.onError?.(
+					error instanceof Error ? error : new Error(String(error)),
+				);
+			} finally {
+				setLoading(false);
+			}
+		};
 
+		const container = props.container;
+		const invisible = config.mode === ModeEnum.invisible;
+		container?.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+		if (invisible) {
 			document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+		}
 
-			// A bound button dispatches a non-bubbling event on this widget's own
-			// container instead of on document, so only this widget reacts. The
-			// document listener stays for a bare execute(), which has always
-			// triggered every widget on the page.
-			const container = props.container;
-			container?.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
-
-			// Cleanup function to remove event listener
-			return () => {
+		return () => {
+			container?.removeEventListener(
+				PROCAPTCHA_EXECUTE_EVENT,
+				handleExecuteEvent,
+			);
+			if (invisible) {
 				document.removeEventListener(
 					PROCAPTCHA_EXECUTE_EVENT,
 					handleExecuteEvent,
 				);
-				container?.removeEventListener(
-					PROCAPTCHA_EXECUTE_EVENT,
-					handleExecuteEvent,
-				);
-			};
-		}
-
-		// Return empty cleanup function when not in invisible mode
-		return () => {};
+			}
+		};
 	}, [config.mode, callbacks.onError, loading, props.container]);
 
 	const handlePuzzleComplete = useCallback(
@@ -221,9 +213,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 
 	const isInvisible = config.mode === ModeEnum.invisible;
 
-	// Dismissing a floating puzzle returns to the checkbox rather than failing
-	// the attempt: the user clicked away, which is not a wrong answer. Popup
-	// never calls this — it has no outside to click.
+	// Dismissing returns to the checkbox; clicking away is not a wrong answer.
 	const handleDismiss = useCallback(() => {
 		setPuzzlePhase("checkbox");
 		setChallengeData(null);
@@ -239,9 +229,7 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			{frictionlessState?.hp && (
 				<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
 			)}
-			{/* Puzzle overlay — presented on the shared ChallengeSurface, which
-			    decides between a centred popup and a panel floating next to the
-			    widget. Shown in both visible and invisible modes once a
+			{/* Puzzle overlay — shown in both visible and invisible modes once a
 			    challenge has been fetched; puzzle is inherently interactive. */}
 			{showPuzzleOverlay && (
 				<PuzzleCanvas

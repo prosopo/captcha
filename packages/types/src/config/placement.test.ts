@@ -29,8 +29,6 @@ describe("Placement", () => {
 
 describe("resolvePlacement", () => {
 	it("defaults to popup when nothing is requested", () => {
-		// Popup is what every challenge did before placement existed, so an
-		// unset option must not move an existing widget.
 		expect(resolvePlacement(undefined, false)).toBe(PlacementEnum.popup);
 	});
 
@@ -41,8 +39,6 @@ describe("resolvePlacement", () => {
 	});
 
 	it("falls back to popup when the widget is invisible", () => {
-		// An invisible widget renders no checkbox, so a floating challenge has
-		// nothing on the page to anchor itself to.
 		expect(resolvePlacement(PlacementEnum.float, true)).toBe(
 			PlacementEnum.popup,
 		);

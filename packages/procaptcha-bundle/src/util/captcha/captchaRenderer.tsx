@@ -29,15 +29,7 @@ import { setLanguage } from "../language.js";
 import { setValidChallengeLength } from "../timeout.js";
 import { BundleCaptcha } from "./components/bundleCaptcha.js";
 
-/**
- * Reads the requested placement from the render options, falling back to the
- * element's `data-placement` so implicitly-rendered widgets — which never see a
- * render-options object — can set it too.
- *
- * An unrecognised value is dropped rather than thrown on: a typo in a host
- * page's markup should leave the widget on its default placement, not stop it
- * rendering.
- */
+/** Render options first, then `data-placement`; an unrecognised value is dropped. */
 const resolveRequestedPlacement = (
 	element: Element,
 	renderOptions: ProcaptchaRenderOptions,

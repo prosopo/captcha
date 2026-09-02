@@ -15,24 +15,11 @@
 import type { infer as zInfer } from "zod";
 import { enum as zEnum } from "zod";
 
-/**
- * Where a challenge opens.
- *
- * Distinct from `Mode`, which says whether the *widget* is visible. The two
- * combine: an invisible widget still has to put its challenge somewhere, and a
- * visible one can present its challenge either way.
- *
- * `popup` is the default because it is what every challenge did before this
- * option existed — adding a placement must not move any existing customer's
- * widget.
- */
+/** Where a challenge opens. Distinct from `Mode`, which is whether the widget is visible. */
 export enum PlacementEnum {
-	/** Centred over the page, above a scrim. */
+	/** Centred over the page. The default, and the only behaviour before this option existed. */
 	popup = "popup",
-	/**
-	 * Anchored to the widget, page still usable behind it. Requires something
-	 * to anchor to, so an invisible widget falls back to `popup`.
-	 */
+	/** Anchored to the widget with the page usable behind it. */
 	float = "float",
 }
 
@@ -40,11 +27,7 @@ export const Placement = zEnum([PlacementEnum.popup, PlacementEnum.float]);
 
 export type PlacementType = zInfer<typeof Placement>;
 
-/**
- * Float needs an on-page anchor, and an invisible widget renders no checkbox to
- * anchor to. Resolving that here means every widget agrees on the outcome
- * instead of each one deciding, and the demo can show the same result.
- */
+/** An invisible widget has nothing to anchor to, so float resolves to popup. */
 export const resolvePlacement = (
 	placement: PlacementType | undefined,
 	isInvisibleWidget: boolean,

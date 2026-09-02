@@ -77,15 +77,7 @@ const render = (canvasProps: CanvasProps): void => {
 	});
 };
 
-/**
- * Queries the document, not the mount container.
- *
- * The canvas is presented on the shared ChallengeSurface, which portals to
- * `document.body` so a host page's `overflow: hidden` — or any ancestor with a
- * transform, which would otherwise re-root `position: fixed` — cannot clip the
- * challenge. Nothing the user experiences changed; the nodes just no longer
- * live under the React mount point.
- */
+// The canvas portals to document.body, so queries go through the document.
 const piece = (): HTMLElement => {
 	const element = document.querySelector<HTMLElement>(
 		'[data-cy="prosopo-puzzle-piece"]',

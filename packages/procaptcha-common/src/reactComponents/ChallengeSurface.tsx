@@ -25,17 +25,9 @@ import React, {
 import { createPortal } from "react-dom";
 
 /**
- * The single layer every challenge is presented on.
- *
- * Image and puzzle each grew their own full-viewport overlay — a scrim, a
- * z-index, a centring rule, duplicated with subtly different values. Adding a
- * second placement to both would have meant writing it twice, so the layer is
- * shared and the difference between "popup" and "float" lives in one place.
- *
- * Callers pass unpositioned content: the surface decides where it goes. Both
- * placements portal to `document.body` and position fixed, because a challenge
- * rendered in the widget's own flow gets clipped the moment a host page puts
- * the widget inside `overflow: hidden` — which is most of them.
+ * The layer every challenge is presented on. Portals to `document.body` so a
+ * host page's `overflow: hidden` or transformed ancestor cannot clip it.
+ * `popup` centres the content over the page; `float` anchors it to the widget.
  */
 
 /** Scrim behind the content. Image has never dimmed the page; puzzle always has. */
@@ -44,47 +36,21 @@ export type SurfaceScrim = "none" | "dim";
 interface ChallengeSurfaceProps {
 	show: boolean;
 	children: ReactNode;
-	/** Defaults to popup, which is what every challenge did before placement existed. */
 	placement?: PlacementType;
-	/**
-	 * The element a floating challenge is positioned against — normally the
-	 * widget container. Float without an anchor has nothing to attach to, so
-	 * the surface falls back to popup rather than rendering somewhere arbitrary.
-	 */
+	/** Element a floating challenge is positioned against. Without one, float falls back to popup. */
 	anchor?: HTMLElement | null;
 	scrim?: SurfaceScrim;
-	/** Escape, and (float only) a click outside the content. */
+	/** Called on Escape, and on an outside click when floating. */
 	onDismiss?: () => void;
-	/**
-	 * Lifts the popup content by half its own height on iOS.
-	 *
-	 * Carried over from the image captcha's modal, where it compensates for
-	 * Safari's bottom bar overlapping a centred dialog. Opt-in rather than
-	 * universal so migrating the puzzle onto this surface does not silently
-	 * move it on iOS.
-	 */
+	/** Lifts the popup content on iOS, where Safari's bottom bar overlaps a centred dialog. */
 	popupIosLift?: boolean;
-	/**
-	 * Extra class on the layer element.
-	 *
-	 * Exists so the image modal can keep emitting `prosopo-modalOuter`, which
-	 * has been in customers' stylesheets since long before this surface — a
-	 * refactor should not silently retire a public styling hook.
-	 */
 	className?: string;
 }
 
-// One below the content, so the content always wins against the layer itself.
 const SURFACE_Z_INDEX = 2147483646;
 const CONTENT_Z_INDEX = 2147483647;
 
-/**
- * The iOS lift, as a real stylesheet rule.
- *
- * `@supports (-webkit-touch-callout: none)` is an iOS-Safari sniff and cannot
- * be expressed as an inline style, so the transform for a lifted popup comes
- * entirely from here rather than being split between the two.
- */
+// `@supports` cannot be expressed inline, so the iOS lift is a stylesheet rule.
 const IOS_LIFT_STYLE_ID = "prosopo-challenge-surface-ios-lift";
 
 const IOS_LIFT_CSS = `
@@ -98,14 +64,6 @@ const IOS_LIFT_CSS = `
 }
 `;
 
-/**
- * Adds the rule to the document head once per page.
- *
- * Rendering it as a `<style>` inside the surface would work, but the rule is
- * identical for every widget and its text would count towards the surface's
- * own `textContent` — which is what anything reading the challenge's text,
- * tests included, actually sees.
- */
 const ensureIosLiftStyles = (): void => {
 	if (typeof document === "undefined") return;
 	if (document.getElementById(IOS_LIFT_STYLE_ID)) return;
@@ -116,10 +74,11 @@ const ensureIosLiftStyles = (): void => {
 	document.head.appendChild(style);
 };
 
-/** Distance between a floating panel and the element it is anchored to. */
 const FLOAT_GAP_PX = 8;
-/** Keeps a floating panel off the exact edge of the viewport. */
 const FLOAT_VIEWPORT_MARGIN_PX = 8;
+
+const useIsomorphicLayoutEffect =
+	typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 interface FloatPosition {
 	top: number;
@@ -127,12 +86,9 @@ interface FloatPosition {
 }
 
 /**
- * Places the panel below the anchor, flipping above it when there is more room
- * there, and clamps horizontally so it cannot hang off the viewport.
- *
- * Coordinates are viewport-relative because the panel is `position: fixed` —
- * which is also why this has to re-run on scroll rather than being computed
- * once at open time.
+ * Places the panel below the anchor, flipping above when there is more room
+ * there, and clamps it inside the viewport. Coordinates are viewport-relative
+ * because the panel is `position: fixed`.
  */
 const computeFloatPosition = (
 	anchorRect: DOMRect,
@@ -150,15 +106,13 @@ const computeFloatPosition = (
 		? anchorRect.top - panelHeight - FLOAT_GAP_PX
 		: anchorRect.bottom + FLOAT_GAP_PX;
 
-	// Prefer left-aligning with the anchor; pull it back in if that overflows.
 	const maxLeft = viewportWidth - panelWidth - FLOAT_VIEWPORT_MARGIN_PX;
 	const left = Math.max(
 		FLOAT_VIEWPORT_MARGIN_PX,
 		Math.min(anchorRect.left, maxLeft),
 	);
 
-	// A panel taller than the viewport cannot be fully placed; pin it to the
-	// top so its first row is reachable rather than letting it run off-screen.
+	// A panel taller than the viewport is pinned to the top so its first row is reachable.
 	const maxTop = viewportHeight - panelHeight - FLOAT_VIEWPORT_MARGIN_PX;
 	const clampedTop = Math.max(
 		FLOAT_VIEWPORT_MARGIN_PX,
@@ -185,8 +139,6 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 		null,
 	);
 
-	// Float needs something to attach to. Without an anchor the honest fallback
-	// is the centred popup, not a panel pinned to an arbitrary corner.
 	const isFloating = placement === PlacementEnum.float && !!anchor;
 
 	const reposition = useCallback(() => {
@@ -203,9 +155,8 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 		);
 	}, [isFloating, anchor]);
 
-	// Layout effect so the first paint already has the panel in place; a state
-	// update in a passive effect would show it at 0,0 for a frame first.
-	useLayoutEffect(() => {
+	// Layout effect so the first paint already has the panel in place.
+	useIsomorphicLayoutEffect(() => {
 		if (!show || !isFloating) {
 			setFloatPosition(null);
 			return;
@@ -216,14 +167,10 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 	useEffect(() => {
 		if (!show || !isFloating) return;
 
-		// Capture phase: an ancestor that scrolls does not bubble its scroll
-		// event, so a panel anchored to a widget inside a scrollable column
-		// would drift away from it without this.
+		// Capture phase: a scrolling ancestor's scroll event does not bubble.
 		window.addEventListener("scroll", reposition, true);
 		window.addEventListener("resize", reposition);
 
-		// The panel's own size changes as a challenge loads its content, and
-		// the anchor can move without any scroll or resize at all.
 		const observer =
 			typeof ResizeObserver === "function"
 				? new ResizeObserver(reposition)
@@ -251,15 +198,11 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 	useEffect(() => {
 		if (!show || !isFloating || !onDismiss) return;
 
-		// Only float dismisses on an outside click. Popup has a scrim covering
-		// the page, so "outside" is not reachable without going through it, and
-		// the challenge's own cancel button is the way out.
 		const onPointerDown = (event: PointerEvent) => {
 			const target = event.target;
 			if (!(target instanceof Node)) return;
 			if (contentRef.current?.contains(target)) return;
-			// Clicking the widget itself is what opened this; treating it as an
-			// outside click would close and immediately reopen the panel.
+			// The anchor's own click is what opens the panel.
 			if (anchor?.contains(target)) return;
 			onDismiss();
 		};
@@ -275,9 +218,7 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 
 	const layerStyle: CSSProperties = isFloating
 		? {
-				// A float layer must not cover the page: it is sized to nothing and
-				// only its content receives pointer events, so the host page stays
-				// usable behind it. That is the whole difference from popup.
+				// The float layer must not cover the page: only its content takes pointer events.
 				position: "fixed",
 				inset: 0,
 				zIndex: SURFACE_Z_INDEX,
@@ -304,16 +245,14 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 				pointerEvents: "auto",
 				top: `${floatPosition?.top ?? 0}px`,
 				left: `${floatPosition?.left ?? 0}px`,
-				// Until the first measurement lands the panel has no meaningful
-				// position; showing it at 0,0 would flash it in the corner.
+				// Hidden until the first measurement so it does not flash at 0,0.
 				visibility: floatPosition ? "visible" : "hidden",
 			}
 		: {
 				position: "absolute",
 				top: "50%",
 				left: "50%",
-				// Left unset when lifting so the stylesheet rule below owns the
-				// transform; an inline value would out-specify the @supports block.
+				// When lifting, the stylesheet rule owns the transform.
 				transform: popupIosLift ? undefined : "translate(-50%, -50%)",
 				zIndex: CONTENT_Z_INDEX,
 				boxSizing: "border-box",

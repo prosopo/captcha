@@ -24,17 +24,7 @@ type ModalProps = {
 	onDismiss?: () => void;
 };
 
-/**
- * The image captcha's dialog frame.
- *
- * The scrim, z-index and positioning it used to own now live in
- * `ChallengeSurface`, shared with the puzzle overlay, so a placement is
- * implemented once rather than per challenge type. What is left here is the
- * frame itself: the width cap and corner radius that make it a dialog.
- *
- * `popupIosLift` preserves the iOS-only upward shift this modal has always
- * applied — Safari's bottom bar otherwise overlaps a centred dialog.
- */
+/** The image captcha's dialog frame; positioning lives in `ChallengeSurface`. */
 const ModalComponent = React.memo((props: ModalProps) => {
 	const { show, children, placement, anchor, onDismiss } = props;
 
@@ -56,8 +46,6 @@ const ModalComponent = React.memo((props: ModalProps) => {
 					border: "none",
 					borderRadius: "28px",
 					alignSelf: "center",
-					// Shadowless — the dialog separates from the page via its own
-					// surface role, not a drop shadow.
 					boxSizing: "border-box",
 				}}
 			>

@@ -81,9 +81,6 @@ describe("re-exported types", () => {
 	});
 
 	it("carries the placement and bind options through to consumers", () => {
-		// Both are part of the public surface — a customer configuring the
-		// widget from TypeScript sees exactly this shape, so a rename upstream
-		// has to break here rather than at their build.
 		assertType<ExportedRenderOptions>({ siteKey: "k", placement: "float" });
 		assertType<ExportedRenderOptions>({ siteKey: "k", placement: "popup" });
 		assertType<ExportedRenderOptions>({ siteKey: "k", bind: "#submit" });
