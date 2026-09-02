@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/captcha-severity",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"description": "Relative severity of the captcha types, and the helpers for picking the strictest when policies compete",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -28,7 +28,7 @@
 	"sideEffects": false,
 	"dependencies": {},
 	"devDependencies": {
-		"@prosopo/config": "3.3.12",
+		"@prosopo/config": "3.3.13",
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0",
 		"tslib": "2.7.0",
