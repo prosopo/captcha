@@ -30,6 +30,7 @@ import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	BlacklistRequestInspector,
+	getPrioritisedAccessRule,
 	getRequestUserScope,
 	getVerdictCache,
 	rankCandidateRules,
@@ -910,7 +911,7 @@ describe("rankCandidateRules", () => {
 			ja4Hash: "ja4-A",
 			numericIp: 99999n,
 		};
-		const ranked = rankCandidateRules([ruleA], request, undefined);
+		const ranked = rankCandidateRules([ruleA], request, undefined, {});
 		expect(ranked).toEqual([]);
 	});
 
@@ -920,7 +921,7 @@ describe("rankCandidateRules", () => {
 			ja4Hash: "ja4-A",
 			numericIp: 16909060n,
 		};
-		const ranked = rankCandidateRules([rule], request, undefined);
+		const ranked = rankCandidateRules([rule], request, undefined, {});
 		expect(ranked).toEqual([rule]);
 	});
 
@@ -931,7 +932,7 @@ describe("rankCandidateRules", () => {
 			numericIpMaskMin: 16909000n,
 			numericIpMaskMax: 16910000n,
 		};
-		const ranked = rankCandidateRules([rule], request, undefined);
+		const ranked = rankCandidateRules([rule], request, undefined, {});
 		expect(ranked).toEqual([rule]);
 	});
 
@@ -941,7 +942,7 @@ describe("rankCandidateRules", () => {
 			numericIpMaskMin: 99000n,
 			numericIpMaskMax: 99999n,
 		};
-		const ranked = rankCandidateRules([rule], request, undefined);
+		const ranked = rankCandidateRules([rule], request, undefined, {});
 		expect(ranked).toEqual([]);
 	});
 
@@ -951,7 +952,7 @@ describe("rankCandidateRules", () => {
 			type: AccessPolicyType.Block,
 			browser: "firefox",
 		};
-		expect(rankCandidateRules([rule], scope, undefined)).toEqual([rule]);
+		expect(rankCandidateRules([rule], scope, undefined, {})).toEqual([rule]);
 	});
 
 	it("rejects a browser rule naming a different browser", () => {
@@ -960,7 +961,7 @@ describe("rankCandidateRules", () => {
 			type: AccessPolicyType.Block,
 			browser: "firefox",
 		};
-		expect(rankCandidateRules([rule], scope, undefined)).toEqual([]);
+		expect(rankCandidateRules([rule], scope, undefined, {})).toEqual([]);
 	});
 
 	it("blocks an unclassifiable browser under an allow-list", () => {
@@ -969,7 +970,7 @@ describe("rankCandidateRules", () => {
 			type: AccessPolicyType.Block,
 			browser: "unknown",
 		};
-		expect(rankCandidateRules([rule], scope, undefined)).toEqual([rule]);
+		expect(rankCandidateRules([rule], scope, undefined, {})).toEqual([rule]);
 	});
 
 	it("ranks more-specific rules first (more populated fields wins)", () => {
@@ -982,7 +983,12 @@ describe("rankCandidateRules", () => {
 			ja4Hash: "ja4-A",
 			asn: 205016,
 		};
-		const ranked = rankCandidateRules([broad, specific], request, undefined);
+		const ranked = rankCandidateRules(
+			[broad, specific],
+			request,
+			undefined,
+			{},
+		);
 		expect(ranked).toEqual([specific, broad]);
 	});
 
@@ -1000,6 +1006,7 @@ describe("rankCandidateRules", () => {
 			[global, clientScoped],
 			request,
 			"site-1",
+			{},
 		);
 		expect(ranked[0]).toEqual(clientScoped);
 		expect(ranked[1]).toEqual(global);
@@ -1011,7 +1018,7 @@ describe("rankCandidateRules", () => {
 			clientId: "site-2",
 			ja4Hash: "ja4-A",
 		};
-		const ranked = rankCandidateRules([rule], request, "site-1");
+		const ranked = rankCandidateRules([rule], request, "site-1", {});
 		expect(ranked).toEqual([]);
 	});
 
@@ -1020,7 +1027,7 @@ describe("rankCandidateRules", () => {
 			type: AccessPolicyType.Block,
 			ja4Hash: "ja4-A",
 		};
-		const ranked = rankCandidateRules([rule], request, undefined);
+		const ranked = rankCandidateRules([rule], request, undefined, {});
 		expect(ranked).toEqual([rule]);
 	});
 
@@ -1028,7 +1035,7 @@ describe("rankCandidateRules", () => {
 		const rule: AccessRule = {
 			type: AccessPolicyType.Block,
 		};
-		const ranked = rankCandidateRules([rule], request, undefined);
+		const ranked = rankCandidateRules([rule], request, undefined, {});
 		expect(ranked).toEqual([rule]);
 	});
 
@@ -1039,7 +1046,7 @@ describe("rankCandidateRules", () => {
 			ja4Hash: "ja4-A",
 			headHash: "hash-X",
 		};
-		const ranked = rankCandidateRules([rule], request, undefined);
+		const ranked = rankCandidateRules([rule], request, undefined, {});
 		expect(ranked).toEqual([]);
 	});
 
@@ -1053,7 +1060,12 @@ describe("rankCandidateRules", () => {
 			ja4Hash: "ja4-A",
 		};
 		// Pass them in restrict-first order — block must still come first.
-		const ranked = rankCandidateRules([restrict, block], request, undefined);
+		const ranked = rankCandidateRules(
+			[restrict, block],
+			request,
+			undefined,
+			{},
+		);
 		expect(ranked[0]).toEqual(block);
 		expect(ranked[1]).toEqual(restrict);
 	});
@@ -1075,6 +1087,7 @@ describe("rankCandidateRules", () => {
 			[broadBlock, specificRestrict],
 			request,
 			undefined,
+			{},
 		);
 		expect(ranked[0]).toEqual(specificRestrict);
 	});
@@ -1104,6 +1117,7 @@ describe("rankCandidateRules", () => {
 			[powRule, puzzleRule, imageRule],
 			request,
 			undefined,
+			{},
 		);
 		expect(ranked).toEqual([imageRule, puzzleRule, powRule]);
 	});
@@ -1125,6 +1139,7 @@ describe("rankCandidateRules", () => {
 			[twoRounds, fourRounds],
 			request,
 			undefined,
+			{},
 		);
 		expect(ranked[0]).toEqual(fourRounds);
 		expect(ranked[1]).toEqual(twoRounds);
@@ -1141,7 +1156,7 @@ describe("rankCandidateRules", () => {
 			captchaType: CaptchaType.image,
 			solvedImagesCount: 9,
 		};
-		const ranked = rankCandidateRules([image, block], request, undefined);
+		const ranked = rankCandidateRules([image, block], request, undefined, {});
 		expect(ranked[0]).toEqual(block);
 	});
 
@@ -1165,6 +1180,7 @@ describe("rankCandidateRules", () => {
 			[restrict, deferredBlock],
 			request,
 			undefined,
+			{},
 		);
 		expect(ranked[0]).toEqual(deferredBlock);
 	});
@@ -1188,6 +1204,7 @@ describe("rankCandidateRules", () => {
 			[broadImage, specificPow],
 			request,
 			undefined,
+			{},
 		);
 		expect(ranked[0]).toEqual(specificPow);
 	});
@@ -1320,5 +1337,56 @@ describe("rankCandidateRules — header conditions", () => {
 			{ "cf-worker": "example.com" },
 		);
 		expect(ranked).toEqual([]);
+	});
+});
+
+describe("getPrioritisedAccessRule — request headers", () => {
+	// An allow-list header rule: blocks unless x-app is one of the listed
+	// values, including when the header is absent. Every lookup that can see
+	// such a rule must therefore be handed the request's headers — a lookup
+	// run with an empty header map would fire it on every request.
+	const allowList: AccessRule = {
+		type: AccessPolicyType.Block,
+		headerMatch: "1",
+		headerName: "x-app",
+		headerOperator: "notEqualsAny",
+		headerValue: encodeHeaderValueList(["ios", "android"]),
+	};
+	const storage = {
+		findRules: vi.fn().mockResolvedValue([allowList]),
+	} as unknown as AccessRulesStorage;
+	const scope: UserScope = { ja4Hash: "ja4-header-verdict", headerMatch: "1" };
+
+	it("lets a request whose header is on the allow-list through", async () => {
+		const ranked = await getPrioritisedAccessRule(
+			storage,
+			scope,
+			"site",
+			{ "x-app": "ios" },
+			{ skipCache: true },
+		);
+		expect(ranked).toEqual([]);
+	});
+
+	it("blocks a request that omits the header", async () => {
+		const ranked = await getPrioritisedAccessRule(
+			storage,
+			scope,
+			"site",
+			{},
+			{ skipCache: true },
+		);
+		expect(ranked).toEqual([allowList]);
+	});
+
+	it("ranks against each request's own headers even when the candidate fetch is cached", async () => {
+		// Same scope, same cache key. The candidate list is shared; the header
+		// verdict must not be.
+		const allowed = await getPrioritisedAccessRule(storage, scope, "site", {
+			"x-app": "android",
+		});
+		const blocked = await getPrioritisedAccessRule(storage, scope, "site", {});
+		expect(allowed).toEqual([]);
+		expect(blocked).toEqual([allowList]);
 	});
 });
