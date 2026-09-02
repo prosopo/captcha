@@ -1,5 +1,149 @@
 # @prosopo/cli
 
+## 3.8.4
+### Patch Changes
+
+- a62b994: Context-aware validation buckets by device type, not just webview.
+  
+  Context-aware validation compares a session's head SimHash against a baseline
+  for its context. That context was `default | webview`, which puts a phone and
+  a desktop in the same bucket — and those two emit genuinely different
+  `<head>`s, so the blended baseline matches neither well. Contexts are now the
+  device family crossed with the webview flag: `desktop`, `desktop-webview`,
+  `mobile`, `mobile-webview`, `tablet`, `tablet-webview`.
+  
+  `desktop-webview` is included deliberately. Desktop webviews are a real and
+  notably fraudulent population here (see the Twickets desktop-webview rules),
+  and folding them into the plain `desktop` baseline would let exactly the
+  traffic we want excluded define what "normal desktop" looks like.
+  
+  **Classification.** `deviceTypeFromUserAgent` in `@prosopo/types` is a
+  dependency-free UA classifier, deliberately not ua-parser-js: this module is
+  imported by the browser bundles, and the off-provider entropy sweep has to
+  bucket stored sessions *identically* or it writes baselines the decision
+  machine never looks up. One shared function keeps the two sides in lockstep.
+  Tablets are matched before phones because an iPad's UA carries a
+  `Mobile/<build>` token and an Android tablet is exactly "Android without
+  Mobile". Known gap, documented at the call site: an iPadOS 13+ Safari in
+  desktop mode identifies as a Mac and lands in `desktop` — nothing in the UA
+  separates it from a real Mac, and both sides make the same call, which is
+  what matters for the lookup.
+  
+  **Back-compat.** `default` and `webview` remain valid `ContextType` members,
+  so settings already stored against them keep parsing. `expandContexts` maps a
+  legacy `default` onto the three non-webview families and a legacy `webview`
+  onto the three webview families, at the threshold they were saved with; an
+  explicit device entry always wins over the legacy entry covering it. Nothing
+  downstream of settings parsing branches on the legacy keys, and no data
+  migration is required.
+  
+  **Behaviour change.** A request whose context is not configured now skips
+  context validation instead of borrowing another context's baseline.
+  Previously, configuring a single context validated *every* request against it
+  — with six contexts that would measure desktop traffic against a tablet
+  baseline and reject real users wholesale. `isContextConfigured` is the new
+  guard; `determineContextType` now takes the raw request UA alongside the
+  webview flag.
+  
+  New site-key registrations default to all six device contexts.
+- a447afa: Per-sitekey `imageMinRounds` alongside the existing `imageMaxRounds`.
+  
+  Every source of an image round count — access-policy rules, traffic-filter categories, routing machines, the staleness curve, and the provider's own heuristics — is now clamped into `[imageMinRounds, imageMaxRounds]` via `clampImageRounds`, so the sitekey's settings override its rules in both directions rather than only capping them. `imageMinRounds` defaults to 2, matching the floor that was previously hard-coded, so existing sitekeys are unaffected.
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/provider@5.6.4
+  - @prosopo/api@4.1.4
+  - @prosopo/env@3.6.49
+  - @prosopo/keyring@2.9.83
+
+## 3.8.3
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/provider@5.6.3
+  - @prosopo/types@5.5.2
+  - @prosopo/api@4.1.3
+  - @prosopo/env@3.6.48
+  - @prosopo/keyring@2.9.82
+
+## 3.8.2
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/provider@5.6.2
+  - @prosopo/types@5.5.1
+  - @prosopo/env@3.6.47
+  - @prosopo/api@4.1.2
+  - @prosopo/keyring@2.9.81
+
+## 3.8.1
+### Patch Changes
+
+- Updated dependencies [8a9f7e9]
+- Updated dependencies [e6d2dbc]
+  - @prosopo/provider@5.6.1
+  - @prosopo/env@3.6.46
+
+## 3.8.0
+### Minor Changes
+
+- eb34de6: Add a puzzle band to the frictionless flow.
+  
+  `settings.frictionlessThreshold` becomes an object with two rungs instead of a single number:
+  
+  ```
+  frictionlessThreshold: {
+    frictionlessPuzzleThreshold: 0.5,
+    frictionlessImageThreshold: 1.0,
+  }
+  ```
+  
+  Scores at or below the puzzle rung still pass silently to PoW and scores at or above the image rung still get an image captcha, but everything in between — suspicious without being conclusive — now gets a puzzle rather than being lumped in with the worst traffic.
+  
+  The puzzle rung defaults to the value `frictionlessThreshold` already had, so no site's silent-pass boundary moves. Putting both rungs on the same value opts out of the middle band.
+  
+  A bare number is still accepted wherever the setting is read or parsed, and means what it always meant (the puzzle rung), so records written before this release keep working while they are migrated. Unlike the puzzle rung, the image rung is not capped at 1: the score it is compared against is a total that server-side penalties add to.
+  
+  Image challenges served on the score path are now sized by how many signals fired, rather than a fixed count.
+
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/provider@5.6.0
+  - @prosopo/types@5.5.0
+  - @prosopo/api@4.1.1
+  - @prosopo/env@3.6.45
+  - @prosopo/keyring@2.9.80
+
+## 3.7.27
+### Patch Changes
+
+  - @prosopo/env@3.6.44
+  - @prosopo/provider@5.5.1
+
+## 3.7.26
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/locale@3.4.0
+  - @prosopo/api@4.1.0
+  - @prosopo/provider@5.5.0
+  - @prosopo/common@3.1.52
+  - @prosopo/env@3.6.43
+  - @prosopo/keyring@2.9.79
+
+## 3.7.25
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/provider@5.4.0
+  - @prosopo/api@4.0.15
+  - @prosopo/env@3.6.42
+  - @prosopo/keyring@2.9.78
+
 ## 3.7.24
 ### Patch Changes
 

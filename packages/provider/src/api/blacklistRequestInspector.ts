@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { randomUUID } from "node:crypto";
+import { captchaPolicySeverity } from "@prosopo/captcha-severity";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiPrefix,
@@ -32,6 +33,7 @@ import {
 	FilterScopeMatch,
 	type UserScope,
 	type UserScopeRecord,
+	classifyBrowser,
 	classifyOs,
 	describeMatchedRule,
 	makeAccessRuleHash,
@@ -65,6 +67,7 @@ export const getRequestUserScope = (
 	| "countryCode"
 	| "asn"
 	| "os"
+	| "browser"
 > => {
 	const userAgent = requestHeaders["user-agent"]
 		? requestHeaders["user-agent"].toString()
@@ -79,11 +82,10 @@ export const getRequestUserScope = (
 		...(coords && { coords }),
 		...(countryCode && { countryCode }),
 		...(typeof asn === "number" && { asn }),
-		// Always populated (even "unknown") — derived from the request UA, not
-		// trusted from a client hint. Present unconditionally so an OS
-		// allow-list (block everything not on the list) still matches requests
-		// whose UA we can't classify.
+		// Unconditional, unlike the fields above: an allow-list has to match a
+		// request whose UA we can't classify, which lands on "unknown".
 		os: classifyOs(userAgent),
+		browser: classifyBrowser(userAgent),
 	};
 };
 
@@ -100,6 +102,7 @@ const SCALAR_USER_SCOPE_FIELDS = [
 	"countryCode",
 	"asn",
 	"os",
+	"browser",
 ] as const satisfies ReadonlyArray<keyof UserScope>;
 
 // Derive the populated-scope field list for a matched rule (the same shape
@@ -209,22 +212,6 @@ const ruleSpecificity = (
 	return score;
 };
 
-// Per-captcha-type harshness ranks for Restrict rules. Used as the
-// equal-specificity tiebreaker (issue #3713). Gaps of 10 between tiers
-// leave room for `solvedImagesCount` to break ties within the image
-// tier without crossing into the puzzle tier — a 12-round image still
-// ranks above puzzle/pow, which is the intended ordering.
-const CAPTCHA_TYPE_HARSHNESS: Record<CaptchaType, number> = {
-	[CaptchaType.image]: 30,
-	[CaptchaType.puzzle]: 20,
-	[CaptchaType.pow]: 10,
-	// Frictionless isn't a routing target for Restrict rules but include it
-	// so the Record is total over CaptchaType — keeps the type-checker honest
-	// if the enum grows. Restrict-with-frictionless wouldn't make operational
-	// sense and ranks at the bottom of the captcha tiers if it ever appears.
-	[CaptchaType.frictionless]: 0,
-};
-
 // Harshness within an equal-specificity tier (issue #3713). On equal
 // specificity, the harshest matching rule wins:
 //   Block  >  Restrict[image, rounds DESC]  >  Restrict[puzzle]  >  Restrict[pow]
@@ -232,6 +219,29 @@ const CAPTCHA_TYPE_HARSHNESS: Record<CaptchaType, number> = {
 // less-specific Block, because the operator deliberately narrowed scope
 // for that combination. Harshness only decides ties between rules at the
 // same specificity, replacing the prior Block-vs-Restrict-only tiebreaker.
+//
+// The ordering comes from `@prosopo/captcha-severity`, shared with the
+// traffic filter's `resolveChallengePolicy` and with downstream routing
+// consumers — all of them rank competing policies by the same notion of
+// "stricter". `captchaPolicySeverity` ranks the captcha type first
+// and its own difficulty setting second, so a rule's settings break ties
+// within a type without ever crossing between types.
+//
+// This previously kept its own table with tiers 10 apart and a raw
+// `base + solvedImagesCount`. `solvedImagesCount` is validated by
+// `imageMaxRoundsFieldSchema` (`number().int().min(2)`, no upper bound, and
+// `imageMaxRounds` defaults to 32), so a Restrict[pow] carrying 32 rounds
+// scored 42 and outranked a Restrict[image] at 30 — inverting the intended
+// order. The intra-type component is now clamped below the tier gap, so no
+// setting can lift a rule over a stricter captcha type.
+//
+// One deliberate change: pow rules now break ties on `powDifficulty` rather
+// than `solvedImagesCount`. Rule authoring drops `solvedImagesCount` for pow,
+// so every pow rule previously scored at the bottom of its tier regardless of
+// difficulty.
+// Image and puzzle both keep `solvedImagesCount` — it is the severity
+// currency they share, which the provider maps onto a puzzle difficulty
+// level via `severityToPuzzleDifficulty` rather than a literal round count.
 //
 // `deferToVerify` doesn't affect this ordering: it controls *when* a Block
 // fires (request-time vs verify-time), not how severe it is. The flag
@@ -241,12 +251,7 @@ const ruleHarshness = (rule: AccessRule): number => {
 	if (rule.type === AccessPolicyType.Block) {
 		return Number.MAX_SAFE_INTEGER;
 	}
-	if (rule.captchaType === undefined) {
-		return 0;
-	}
-	const base = CAPTCHA_TYPE_HARSHNESS[rule.captchaType];
-	const rounds = rule.solvedImagesCount ?? 0;
-	return base + rounds;
+	return captchaPolicySeverity(rule);
 };
 
 /**
@@ -336,6 +341,10 @@ const getOrCreateRequestMemo = (
 
 export type GetPrioritisedAccessRuleOptions = {
 	blockOnly?: boolean;
+	// Widen a `blockOnly` pool to also admit deferred rules of any type.
+	// Only the verify-time hard-block lookup sets this — see
+	// AccessRulesFilter.includeDeferred.
+	includeDeferred?: boolean;
 	// When provided, results are memoised against this host object for
 	// the request lifetime. Callers pass `req` directly; middleware
 	// chains that share the same request object share one Redis
@@ -355,12 +364,18 @@ export const getPrioritisedAccessRule = async (
 ): Promise<AccessRule[]> => {
 	const parsedUserScope = userScopeInput.parse(userScope);
 	const blockOnly = options?.blockOnly ?? false;
+	const includeDeferred = options?.includeDeferred ?? false;
 	const skipCache = options?.skipCache ?? false;
 	const requestMemoHost = options?.requestMemoHost as
 		| RequestWithMemo
 		| undefined;
 
-	const cacheKey = hardBlockCacheKey(clientId, parsedUserScope, blockOnly);
+	const cacheKey = hardBlockCacheKey(
+		clientId,
+		parsedUserScope,
+		blockOnly,
+		includeDeferred,
+	);
 
 	// Request-scoped memo first — zero staleness, cheapest lookup.
 	const requestMemo = requestMemoHost
@@ -383,6 +398,7 @@ export const getPrioritisedAccessRule = async (
 		userScope: parsedUserScope,
 		userScopeMatch: FilterScopeMatch.Greedy,
 		...(blockOnly && { blockOnly: true }),
+		...(includeDeferred && { includeDeferred: true }),
 	};
 
 	// The compute closure defers work until the singleflight coordinator
@@ -636,6 +652,7 @@ export class BlacklistRequestInspector {
 					countryCode: ctx.countryCode,
 					asn: ctx.asn,
 					os: classifyOs(userAgent),
+					browser: classifyBrowser(userAgent),
 				},
 			},
 		}));

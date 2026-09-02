@@ -23,6 +23,7 @@ import { union } from "zod";
 import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
 import { Mode, ModeEnum } from "./mode.js";
+import { StartModeEnum, StartModeSchema } from "./startMode.js";
 export { Mode, ModeEnum };
 export type { ModeType } from "./mode.js";
 import { Placement, PlacementEnum, resolvePlacement } from "./placement.js";
@@ -291,6 +292,13 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		// dual-stack. `ipv4` wins if both are true.
 		ipv4: boolean().optional(),
 		ipv6: boolean().optional(),
+		// Session id the site rendered this widget with, via `data-sessionid` or
+		// `renderOptions.sessionId`. Travels to the provider as
+		// `clientMetaData.clientSessionId` on solution submission so the verify
+		// call can correlate it. Named `clientSessionId` here to keep it clear
+		// of the provider's own frictionless `sessionId`.
+		clientSessionId: string().optional(),
+		startMode: StartModeSchema.optional().default(StartModeEnum.auto),
 	}),
 );
 

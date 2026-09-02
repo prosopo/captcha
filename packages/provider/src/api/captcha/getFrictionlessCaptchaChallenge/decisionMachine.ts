@@ -15,10 +15,11 @@
 import { ProsopoApiError } from "@prosopo/common";
 import {
 	CaptchaType,
-	ContextType,
 	type IPInfoResponse,
 	type RequestHeaders,
 	type ScoreComponents,
+	clampImageRounds,
+	resolveImageRoundsBounds,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -36,12 +37,14 @@ import { recordFrictionlessDecision } from "../../metrics.js";
 import {
 	determineContextType,
 	getContextThreshold,
+	isContextConfigured,
 } from "../contextAwareValidation.js";
 import {
 	DECRYPTION_FAILED_IMAGE_ROUNDS,
 	MISSING_HEAD_HASH_IMAGE_ROUNDS,
 	MISSING_TOKEN_IMAGE_ROUNDS,
 	getRoundsFromSimScore,
+	getRoundsFromTriggeredDetectors,
 } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 
@@ -67,7 +70,16 @@ export type DecisionMachineInput = {
 	// As received from the client, before decryption — the gates below read
 	// these to tell "sent nothing" apart from "sent something we can't open".
 	headHash: string;
+	// Lower rung of the score ladder: at or below this, the session passes
+	// frictionlessly to PoW.
 	botThreshold: number;
+	// Upper rung: at or above this the session gets an image captcha. Scores
+	// strictly between the two rungs get a puzzle. Collapsing the two onto the
+	// same value removes the middle band.
+	botImageThreshold: number;
+	// Signals that fired for this session. Sizes the image challenge — more
+	// corroborating signals, more rounds.
+	triggeredDetectors: number[] | undefined;
 	// Sanitised page URL the widget reported (origin + path, no query /
 	// fragment / credentials). Undefined when the client didn't report a
 	// usable page URL — see the missing-currentUrl gate below.
@@ -119,9 +131,9 @@ export const runDecisionMachine = async (
 		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: Math.min(
+				solvedImagesCount: clampImageRounds(
 					MISSING_TOKEN_IMAGE_ROUNDS,
-					clientRecord.settings.imageMaxRounds,
+					clientRecord.settings,
 				),
 				userSitekeyIpHash,
 				reason: FrictionlessReason.MISSING_TOKEN,
@@ -144,9 +156,9 @@ export const runDecisionMachine = async (
 		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: Math.min(
+				solvedImagesCount: clampImageRounds(
 					MISSING_HEAD_HASH_IMAGE_ROUNDS,
-					clientRecord.settings.imageMaxRounds,
+					clientRecord.settings,
 				),
 				userSitekeyIpHash,
 				reason: FrictionlessReason.MISSING_HEAD_HASH,
@@ -181,9 +193,9 @@ export const runDecisionMachine = async (
 		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: Math.min(
+				solvedImagesCount: clampImageRounds(
 					DECRYPTION_FAILED_IMAGE_ROUNDS,
-					clientRecord.settings.imageMaxRounds,
+					clientRecord.settings,
 				),
 				userSitekeyIpHash,
 				reason: FrictionlessReason.DECRYPTION_FAILED,
@@ -245,7 +257,7 @@ export const runDecisionMachine = async (
 		}));
 		recordFrictionlessDecision("auto_ban_score");
 		await tasks.frictionlessManager.registerBlockedSession({
-			solvedImagesCount: clientRecord.settings.imageMaxRounds,
+			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
 			userSitekeyIpHash,
 			reason: FrictionlessReason.AUTO_BAN_SCORE,
 			siteKey: dapp,
@@ -267,9 +279,9 @@ export const runDecisionMachine = async (
 		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: Math.min(
+				solvedImagesCount: clampImageRounds(
 					env.config.captchas.solved.count * 2,
-					clientRecord.settings.imageMaxRounds,
+					clientRecord.settings,
 				),
 				userSitekeyIpHash,
 				reason: FrictionlessReason.WEBVIEW_DETECTED,
@@ -292,12 +304,66 @@ export const runDecisionMachine = async (
 		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: timestampDecayFunction(
-					input.timestamp,
-					clientRecord.settings.imageMaxRounds,
+				solvedImagesCount: clampImageRounds(
+					timestampDecayFunction(
+						input.timestamp,
+						clientRecord.settings.imageMaxRounds,
+					),
+					clientRecord.settings,
 				),
 				userSitekeyIpHash,
 				reason: FrictionlessReason.OLD_TIMESTAMP,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
+		);
+	}
+
+	// Rounds an image challenge would carry from here on: the sitekey's
+	// baseline plus one per signal that fired, clamped into its bounds.
+	// Computed once because the puzzle band uses it too — a puzzle session
+	// downgrades to image when this provider can't render puzzles, and the
+	// downgraded session should be sized like the image challenge it became.
+	const scoredImageRounds = clampImageRounds(
+		getRoundsFromTriggeredDetectors(
+			env.config.captchas.solved.count,
+			input.triggeredDetectors,
+		),
+		clientRecord.settings,
+	);
+
+	// Middle rung of the ladder: "not clean enough for a silent PoW" is split
+	// in two, so merely suspicious sessions drag a puzzle and only the ones
+	// past the upper rung are handed an image captcha. A sitekey that puts
+	// both rungs on the same value collapses the band and keeps the original
+	// two outcomes.
+	const botImageThreshold = input.botImageThreshold;
+	if (
+		botImageThreshold > input.botThreshold &&
+		Number(botScore) > input.botThreshold &&
+		Number(botScore) < botImageThreshold
+	) {
+		req.logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "bot_score_puzzle_band",
+				captchaType: CaptchaType.puzzle,
+				botScore,
+				botThreshold: input.botThreshold,
+				botImageThreshold,
+				token: input.token,
+			},
+		}));
+		recordFrictionlessDecision("bot_score_puzzle_band");
+		attachHoneypot(res, clientRecord);
+		return res.json(
+			await tasks.frictionlessManager.sendPuzzleCaptcha({
+				// Only read if the puzzle renderer is unavailable and the
+				// session is downgraded to image on the way out.
+				solvedImagesCount: scoredImageRounds,
+				userSitekeyIpHash,
+				reason: FrictionlessReason.BOT_SCORE_PUZZLE_BAND,
 				siteKey: dapp,
 				ipInfo,
 				headers: flatHeaders,
@@ -319,16 +385,15 @@ export const runDecisionMachine = async (
 			data: {
 				decision: "bot_score_above_threshold",
 				captchaType: CaptchaType.image,
+				solvedImagesCount: scoredImageRounds,
+				triggeredDetectorCount: input.triggeredDetectors?.length ?? 0,
 			},
 		}));
 		recordFrictionlessDecision("bot_score_above_threshold");
 		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: Math.min(
-					env.config.captchas.solved.count,
-					clientRecord.settings.imageMaxRounds,
-				),
+				solvedImagesCount: scoredImageRounds,
 				userSitekeyIpHash,
 				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
 				siteKey: dapp,
@@ -353,9 +418,9 @@ export const runDecisionMachine = async (
 		attachHoneypot(res, clientRecord);
 		return res.json(
 			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: Math.min(
+				solvedImagesCount: clampImageRounds(
 					env.config.captchas.solved.count,
-					clientRecord.settings.imageMaxRounds,
+					clientRecord.settings,
 				),
 				userSitekeyIpHash,
 				reason: FrictionlessReason.MISSING_CURRENT_URL,
@@ -425,9 +490,12 @@ const runUserAgentMismatchCheck = async (
 	attachHoneypot(res, input.clientRecord);
 	return res.json(
 		await input.tasks.frictionlessManager.sendImageCaptcha({
-			solvedImagesCount: timestampDecayFunction(
-				input.timestamp,
-				input.clientRecord.settings.imageMaxRounds,
+			solvedImagesCount: clampImageRounds(
+				timestampDecayFunction(
+					input.timestamp,
+					input.clientRecord.settings.imageMaxRounds,
+				),
+				input.clientRecord.settings,
 			),
 			userSitekeyIpHash: input.userSitekeyIpHash,
 			reason: FrictionlessReason.USER_AGENT_MISMATCH,
@@ -447,20 +515,19 @@ const runContextAwareValidation = async (
 
 	if (!clientRecord.settings.contextAware?.enabled) return null;
 
-	const contexts = clientRecord.settings.contextAware?.contexts || {};
-	const hasDefault = contexts[ContextType.Default] !== undefined;
-	const hasWebview = contexts[ContextType.Webview] !== undefined;
+	// The request's own context: device family x webview. Classified from the
+	// raw header UA, which is what the off-provider entropy sweep reads off
+	// stored sessions — the two must agree or we look up a baseline nobody
+	// wrote.
+	const contextType = determineContextType(
+		req.headers["user-agent"],
+		input.webView,
+	);
 
-	let contextType: ContextType | undefined;
-	if (hasDefault && hasWebview) {
-		contextType = determineContextType(input.webView);
-	} else if (hasDefault) {
-		contextType = ContextType.Default;
-	} else if (hasWebview) {
-		contextType = ContextType.Webview;
-	}
-
-	if (!contextType) return null;
+	// Only validate contexts the customer has actually configured. Traffic
+	// from an unconfigured device family passes through: with six contexts,
+	// borrowing another family's baseline would reject real users.
+	if (!isContextConfigured(clientRecord.settings, contextType)) return null;
 
 	const clientEntropy = await tasks.frictionlessManager.getClientContextEntropy(
 		clientRecord.account,
@@ -499,9 +566,9 @@ const runContextAwareValidation = async (
 	attachHoneypot(res, clientRecord);
 	return res.json(
 		await tasks.frictionlessManager.sendImageCaptcha({
-			solvedImagesCount: Math.min(
+			solvedImagesCount: clampImageRounds(
 				getRoundsFromSimScore(sim),
-				clientRecord.settings.imageMaxRounds,
+				clientRecord.settings,
 			),
 			userSitekeyIpHash: input.userSitekeyIpHash,
 			reason: FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED,

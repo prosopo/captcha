@@ -21,6 +21,7 @@ import {
 } from "@prosopo/common";
 import {
 	ExtensionLoader,
+	buildClientMetaData,
 	buildUpdateState,
 	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
@@ -351,8 +352,10 @@ export function Manager(
 
 				// Wait 5 secs for ongoing SIMD, else submit without
 				const simdReadings = await getSimdReadingsForSubmit(frictionlessState);
-				const hpValue = getHoneypotValue?.();
-				const clientMetaData = hpValue ? { hp: hpValue } : undefined;
+				const clientMetaData = buildClientMetaData(
+					getHoneypotValue?.(),
+					getConfig().clientSessionId,
+				);
 				// send the commitment to the provider
 				const submission: TCaptchaSubmitResult =
 					await captchaApi.submitCaptchaSolution(

@@ -42,6 +42,15 @@ export type AccessRulesFilter = {
 	 * and the lookup misses them.
 	 */
 	blockOnly?: boolean;
+	/**
+	 * Widen a `blockOnly` pool to also admit deferred rules of any type.
+	 * A `deferToVerify` rule is skipped at request time and enforced at
+	 * verify, so it can legitimately be a Restrict — `blockOnly` alone
+	 * would filter it out of the verify-time lookup and the rule would
+	 * never fire. Only `checkForHardBlock` sets this; the request-time
+	 * middleware keeps the narrow Block-only pool.
+	 */
+	includeDeferred?: boolean;
 };
 
 export type AccessRuleEntry = {

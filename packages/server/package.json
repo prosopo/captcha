@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/server",
-	"version": "2.10.58",
+	"version": "2.11.5",
 	"description": "NodeJS package for server side communication with the prosopo captcha client",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -38,12 +38,12 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"sideEffects": false,
 	"dependencies": {
-		"@prosopo/api": "4.0.14",
-		"@prosopo/common": "3.1.51",
+		"@prosopo/api": "4.1.4",
+		"@prosopo/common": "3.1.52",
 		"@prosopo/logger": "2.0.7",
-		"@prosopo/keyring": "2.9.77",
-		"@prosopo/load-balancer": "2.10.31",
-		"@prosopo/types": "5.2.6",
+		"@prosopo/keyring": "2.9.83",
+		"@prosopo/load-balancer": "2.10.38",
+		"@prosopo/types": "5.5.3",
 		"@prosopo/util": "3.3.7",
 		"i18next": "24.1.0"
 	},
@@ -51,7 +51,7 @@
 		"@polkadot/util": "13.5.7",
 		"@prosopo/config": "3.3.12",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "4.1.10",
+		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
@@ -59,7 +59,7 @@
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
 		"vite": "8.1.5",
-		"vitest": "4.1.10",
+		"vitest": "4.1.11",
 		"zod": "3.23.8"
 	}
 }

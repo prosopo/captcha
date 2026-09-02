@@ -1,5 +1,97 @@
 # @prosopo/scripts
 
+## 3.1.174
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/provider@5.6.4
+  - @prosopo/cli@3.8.4
+  - @prosopo/datasets@3.1.76
+  - @prosopo/env@3.6.49
+  - @prosopo/keyring@2.9.83
+  - @prosopo/types-env@2.10.43
+
+## 3.1.173
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/provider@5.6.3
+  - @prosopo/types@5.5.2
+  - @prosopo/cli@3.8.3
+  - @prosopo/datasets@3.1.75
+  - @prosopo/env@3.6.48
+  - @prosopo/keyring@2.9.82
+  - @prosopo/types-env@2.10.42
+
+## 3.1.172
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/provider@5.6.2
+  - @prosopo/types@5.5.1
+  - @prosopo/types-env@2.10.41
+  - @prosopo/env@3.6.47
+  - @prosopo/cli@3.8.2
+  - @prosopo/datasets@3.1.74
+  - @prosopo/keyring@2.9.81
+
+## 3.1.171
+### Patch Changes
+
+- Updated dependencies [8a9f7e9]
+- Updated dependencies [e6d2dbc]
+  - @prosopo/provider@5.6.1
+  - @prosopo/cli@3.8.1
+  - @prosopo/env@3.6.46
+  - @prosopo/types-env@2.10.40
+
+## 3.1.170
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/provider@5.6.0
+  - @prosopo/types@5.5.0
+  - @prosopo/cli@3.8.0
+  - @prosopo/types-env@2.10.39
+  - @prosopo/datasets@3.1.73
+  - @prosopo/env@3.6.45
+  - @prosopo/keyring@2.9.80
+
+## 3.1.169
+### Patch Changes
+
+  - @prosopo/env@3.6.44
+  - @prosopo/provider@5.5.1
+  - @prosopo/cli@3.7.27
+
+## 3.1.168
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/locale@3.4.0
+  - @prosopo/provider@5.5.0
+  - @prosopo/cli@3.7.26
+  - @prosopo/common@3.1.52
+  - @prosopo/datasets@3.1.72
+  - @prosopo/env@3.6.43
+  - @prosopo/keyring@2.9.79
+  - @prosopo/types-env@2.10.38
+
+## 3.1.167
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/provider@5.4.0
+  - @prosopo/cli@3.7.25
+  - @prosopo/datasets@3.1.71
+  - @prosopo/env@3.6.42
+  - @prosopo/keyring@2.9.78
+  - @prosopo/types-env@2.10.37
+
 ## 3.1.166
 ### Patch Changes
 

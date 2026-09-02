@@ -1,5 +1,85 @@
 # @prosopo/database
 
+## 4.0.26
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/types-database@5.3.4
+  - @prosopo/user-access-policy@3.12.32
+
+## 4.0.25
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/types-database@5.3.3
+  - @prosopo/user-access-policy@3.12.31
+
+## 4.0.24
+### Patch Changes
+
+- 0a88895: Project the session fields callers read, and let routing machines set puzzle overrides.
+  
+  `getSessionRecordBySessionId` lists its fields explicitly but declared a full `Session` return type. That type lie let callers read fields the projection never selected — they get `undefined`, with no error anywhere. This is the fourth time it has shipped: after the tcp-probe fields (verify-time TCP decide rules received `undefined` and never fired) and `clientMetaData` (#3141), this round found the entropy fingerprints plus the `g`/`i`/`sw`/`md`/`bn`/`fs` flags — which silently disabled the origin-session fallback in `getSessionRecordWithOriginFallback` *and* made it issue a redundant second query on every escalation, since every `needsX` check was trivially true and the origin read back `undefined` too — along with `ruleType` (fed into `DecisionMachineInput` by all three verify paths, so any decide rule gating on the matched access rule was dead), `powDifficulty` and `isProtect`.
+  
+  Adds the 13 missing fields, then makes it structural: the projection is now `SESSION_PROJECTION` and the return type is derived from it as `ProjectedSession`, so reading an unprojected field is a compile error. The other three projected queries were audited and are correct; `getClientRecord` is safe by construction for the same reason, its return type being `Pick`-narrowed to match.
+  
+  Separately, `RoutingMachineOutput` gains `puzzleTolerance` and `puzzle`, so a routing machine that inherits a trafficFilter `challenge` policy can reproduce it exactly. `getPuzzleCaptchaChallenge` re-derives its overrides from a live trafficFilter verdict, which a machine-chosen puzzle has no counterpart for, so the values are persisted on the session and layered in there. Both are bounded by the same field validators the portal uses.
+  
+  Also: `deriveTrafficPolicies` forwards a site's per-category `trafficFilter` policies to routing and decision machines, so a machine can tell "the operator rejects this egress class" from "the operator deliberately accepts it"; `sendCaptcha` now persists the router's `reason`, which previously never reached the session on the route phase and was invisible in the portal; and `runArtifactExport`'s schema generic is corrected from `z.ZodSchema<T>` (which pins Input === Output === T, so any `.default()` in the tree made `T` unify with the input shape) to `z.ZodType<T, z.ZodTypeDef, unknown>`.
+- Updated dependencies [0a88895]
+- Updated dependencies [360b737]
+  - @prosopo/types-database@5.3.2
+  - @prosopo/types@5.5.1
+  - @prosopo/user-access-policy@3.12.30
+
+## 4.0.23
+### Patch Changes
+
+- Updated dependencies [8a9f7e9]
+  - @prosopo/user-access-policy@3.12.29
+  - @prosopo/types-database@5.3.1
+
+## 4.0.22
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types-database@5.3.0
+  - @prosopo/types@5.5.0
+  - @prosopo/user-access-policy@3.12.28
+
+## 4.0.21
+### Patch Changes
+
+- 5a17a65: Fix client session id correlation rejecting every token.
+  
+  #3139 added `clientMetaData.clientSessionId` and a verify-time check that the solve carries the same session id the widget was rendered with. The check never passed: `getPowCaptchaRecordByChallenge` and `getPuzzleCaptchaRecordByChallenge` project an explicit field list, and `clientMetaData` was not in it. The verify path therefore read `undefined` and `isClientSessionMismatch(suppliedId, undefined)` returned true for *every* token carrying a session id, disapproving it with `API.CLIENT_SESSION_MISMATCH`.
+  
+  Nothing else was wrong: the widget attached the id, the wire format carried it, and the write path persisted it (the session record — read without a projection — had it all along). Only the read dropped it, which is why unit tests over the comparison helper and the escalation handoff all passed. `getSessionRecordBySessionId` had the same omission and is fixed too.
+  
+  This is the third instance of this class of bug — the projection-contract helper's own docstring already cites #3107 and #3116. The guard existed but its `consumerReads` manifest was not updated when #3139 started reading a new field, so the manifests for the PoW and puzzle contracts now list `clientMetaData` and their fixtures populate it. Reverting the projection fix makes that test fail with "serverVerifyPowCaptchaSolution reads a field that the projection stripped: clientMetaData".
+  
+  Adds an end-to-end Cypress spec (`clientSessionId.cy.ts`) that solves a real PoW captcha rendered with `data-sessionid` and asserts the dapp server's verify succeeds, plus a mismatch case that must be rejected — the half that proves the correlation actually runs rather than being silently skipped. This required wiring `clientSessionId` through the demo server's `/signup` into `isVerified`, which #3139 left unwired; that omission is why no e2e covered the feature.
+
+## 4.0.20
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/types-database@5.2.0
+  - @prosopo/common@3.1.52
+  - @prosopo/user-access-policy@3.12.27
+
+## 4.0.19
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/types-database@5.1.12
+  - @prosopo/user-access-policy@3.12.26
+
 ## 4.0.18
 ### Patch Changes
 

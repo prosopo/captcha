@@ -31,7 +31,10 @@ import { v4 as uuidv4 } from "uuid";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
 import { Tasks } from "../../../tasks/index.js";
-import { derivePlatform } from "../../../utils/devicePlatform.js";
+import {
+	derivePlatform,
+	deriveTrafficPolicies,
+} from "../../../utils/devicePlatform.js";
 import { hashUserAgent } from "../../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../../utils/hashUserIp.js";
 import { normalizeRequestIp } from "../../../utils/normalizeRequestIp.js";
@@ -51,7 +54,7 @@ import {
 	handleFrictionlessTrafficFilter,
 } from "../trafficFilterRequestTime.js";
 import { handleAccessPolicy } from "./accessPolicy.js";
-import { DEFAULT_FRICTIONLESS_THRESHOLD } from "./constants.js";
+import { resolveScoreLadder } from "./constants.js";
 import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
 import { attachHoneypot } from "./honeypotResponse.js";
@@ -254,6 +257,9 @@ export default (
 						: undefined;
 				const dedupFlatHeaders = flatten(req.headers);
 				const dedupUserAgent = String(req.headers["user-agent"] ?? "");
+				const dedupTrafficPolicies = deriveTrafficPolicies(
+					clientRecord.settings?.trafficFilter,
+				);
 				const dedupUserScope = getRequestUserScope(
 					dedupFlatHeaders,
 					req.ja4,
@@ -356,6 +362,9 @@ export default (
 									}),
 									...(dedup.session.iframeUrl && {
 										iframeUrl: dedup.session.iframeUrl,
+									}),
+									...(dedupTrafficPolicies && {
+										trafficPolicies: dedupTrafficPolicies,
 									}),
 								},
 							},
@@ -653,9 +662,12 @@ export default (
 				recordDetectorTriggered(triggeredDetectors);
 			}
 
-			const botThreshold =
-				clientRecord.settings?.frictionlessThreshold ||
-				DEFAULT_FRICTIONLESS_THRESHOLD;
+			// Both rungs of the score ladder. `resolveScoreLadder` tolerates the
+			// pre-ladder shape (a bare number) so a client record that predates
+			// the migration still routes rather than throwing.
+			const { botThreshold, botImageThreshold } = resolveScoreLadder(
+				clientRecord.settings?.frictionlessThreshold,
+			);
 
 			let scoreComponents: ScoreComponents = {
 				baseScore: baseBotScore,
@@ -717,12 +729,21 @@ export default (
 					? req.ipInfo.isMobile
 					: undefined;
 			const safeUserAgent = userAgent ?? "";
+			const trafficPolicies = deriveTrafficPolicies(
+				clientRecord.settings?.trafficFilter,
+			);
 			tasks.frictionlessManager.setRoutingContext({
 				dappAccount: dapp,
 				userAccount: user,
 				ip: normalizedIp,
 				countryCode,
 				score: botScore,
+				imageMaxRounds: clientRecord.settings.imageMaxRounds,
+				imageMinRounds: clientRecord.settings.imageMinRounds,
+				// Constrains what `sendCaptcha` may finally mint, and sizes a
+				// puzzle chosen in place of a disabled image challenge.
+				frictionlessTypes: clientRecord.settings.frictionlessTypes,
+				baseImageRounds: env.config.captchas.solved.count,
 				platform: derivePlatform(safeUserAgent, webView, {
 					...(typeof ipInfoMobile === "boolean" && { isMobile: ipInfoMobile }),
 				}),
@@ -745,16 +766,25 @@ export default (
 						req.ipInfo.isValid && { ipInfo: req.ipInfo }),
 					...(currentUrl && { currentUrl }),
 					...(iframeUrl && { iframeUrl }),
+					// Which egress categories this site blocks, so egress-sensitive
+					// route rules can skip sites that accept VPN / proxy / DC users.
+					...(trafficPolicies && { trafficPolicies }),
 				},
 			});
 
-			// Skip deferToVerify policies at the frictionless entry — they
-			// enforce at verify time only. handleAccessPolicy treats a
-			// Block policy as a 401 short-circuit; a deferToVerify Block
-			// hitting here would 401 the frictionless response, defeating
-			// the "solve normally, block at verify" contract deferToVerify
-			// is meant to enable.
-			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
+			// Skip deferred *Block* policies only. handleAccessPolicy
+			// treats a Block as a 401 short-circuit, so a deferred Block
+			// reaching here would reject at request time and defeat the
+			// "solve normally, block at verify" contract.
+			//
+			// A deferred Restrict is deliberately let through: it never
+			// takes the 401 branch, and it is how a deferred rule sets
+			// the captcha type it wants served. The rule then blocks at
+			// verify via checkForHardBlock. Filtering it out here would
+			// mean the challenge type it names is silently ignored.
+			const userAccessPolicy = accessPolicies.find(
+				(p) => !(p.deferToVerify === true && p.type === AccessPolicyType.Block),
+			);
 
 			const accessPolicyOutcome = await handleAccessPolicy(
 				{
@@ -822,6 +852,8 @@ export default (
 					token,
 					headHash,
 					botThreshold,
+					botImageThreshold,
+					triggeredDetectors,
 					currentUrl,
 					iframeUrl,
 				},

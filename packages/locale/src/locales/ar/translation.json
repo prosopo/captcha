@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "الطابع الزمني قديم للغاية",
 		"FAILED_IP_VALIDATION": "فشل التحقق من صحة IP",
 		"ACCESS_POLICY_BLOCK": "تم حظر الوصول بواسطة السياسة",
+		"CLIENT_SESSION_MISMATCH": "عدم تطابق الجلسة. لم يتم إكمال اختبار التحقق في هذه الجلسة.",
 		"FORBIDDEN": "ممنوع",
 		"PROVIDER_VERIFY_FAILED": "فشل التحقق من الجهة الخارجية",
 		"SPAM_EMAIL_DOMAIN": "نطاق البريد الإلكتروني غير مسموح به",

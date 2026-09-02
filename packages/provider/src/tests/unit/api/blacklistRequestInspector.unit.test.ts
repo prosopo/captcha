@@ -51,6 +51,7 @@ describe("getRequestUserScope", () => {
 			ip: rawIp,
 			userId: "testuser",
 			os: "unknown",
+			browser: "unknown",
 		});
 	});
 	it("should return a user scope with ja4Hash and userAgent and ip", () => {
@@ -67,6 +68,7 @@ describe("getRequestUserScope", () => {
 			userAgent: userAgent,
 			ip: rawIp,
 			os: "unknown",
+			browser: "unknown",
 		});
 	});
 	it("should return a user scope with userAgent and ip", () => {
@@ -81,6 +83,7 @@ describe("getRequestUserScope", () => {
 			userAgent: userAgent,
 			ip: rawIp,
 			os: "unknown",
+			browser: "unknown",
 		});
 	});
 	it("should return a user scope with userAgent", () => {
@@ -92,7 +95,17 @@ describe("getRequestUserScope", () => {
 		expect(userScope).toEqual({
 			userAgent: userAgent,
 			os: "unknown",
+			browser: "unknown",
 		});
+	});
+
+	it("classifies os and browser from the request User-Agent", () => {
+		const userScope = getRequestUserScope({
+			"user-agent":
+				"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7; rv:120.0) Gecko/20100101 Firefox/120.0",
+		});
+		expect(userScope.os).toBe("macos");
+		expect(userScope.browser).toBe("firefox");
 	});
 
 	it("should include countryCode in the scope when provided", () => {
@@ -925,6 +938,33 @@ describe("rankCandidateRules", () => {
 		};
 		const ranked = rankCandidateRules([rule], request, undefined);
 		expect(ranked).toEqual([]);
+	});
+
+	it("matches a browser rule against the request browser", () => {
+		const scope: UserScope = { ...request, browser: "firefox" };
+		const rule: AccessRule = {
+			type: AccessPolicyType.Block,
+			browser: "firefox",
+		};
+		expect(rankCandidateRules([rule], scope, undefined)).toEqual([rule]);
+	});
+
+	it("rejects a browser rule naming a different browser", () => {
+		const scope: UserScope = { ...request, browser: "chrome" };
+		const rule: AccessRule = {
+			type: AccessPolicyType.Block,
+			browser: "firefox",
+		};
+		expect(rankCandidateRules([rule], scope, undefined)).toEqual([]);
+	});
+
+	it("blocks an unclassifiable browser under an allow-list", () => {
+		const scope: UserScope = { ...request, browser: "unknown" };
+		const rule: AccessRule = {
+			type: AccessPolicyType.Block,
+			browser: "unknown",
+		};
+		expect(rankCandidateRules([rule], scope, undefined)).toEqual([rule]);
 	});
 
 	it("ranks more-specific rules first (more populated fields wins)", () => {

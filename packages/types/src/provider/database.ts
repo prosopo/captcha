@@ -31,7 +31,7 @@ import {
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
 import { CaptchaType } from "../client/index.js";
-import type { ContextType } from "../client/settings.js";
+import type { ContextType, IPuzzleSettings } from "../client/settings.js";
 import { ModeEnum } from "../config/mode.js";
 import {
 	type CaptchaResult,
@@ -159,6 +159,12 @@ export interface StoredCaptchaMetadata {
 // signal channel for the honeypot (and any future widget-side traps).
 export interface ClientMetaData {
 	hp?: string;
+	// The site-owner session id the widget was rendered with (`data-sessionid`
+	// / `renderOptions.sessionId`). Named `clientSessionId` rather than
+	// `sessionId` because the record already carries a top-level `sessionId`
+	// for the provider's own frictionless session — these are different
+	// things and both appear on the same document.
+	clientSessionId?: string;
 }
 
 /**
@@ -281,6 +287,7 @@ export const StoredCaptchaMetadataSchema = object({
 
 export const ClientMetaDataDbSchema = object({
 	hp: string().optional(),
+	clientSessionId: string().optional(),
 }) satisfies ZodType<ClientMetaData, ZodTypeDef, unknown>;
 
 export const UserCommitmentSchema = object({
@@ -541,6 +548,8 @@ export const SessionSchema = object({
 		pathValid: boolean().optional(),
 		receivedAt: date(),
 	}).optional(),
+	// See Session.clientMetaData.
+	clientMetaData: ClientMetaDataDbSchema.optional(),
 }) satisfies ZodType<Session, ZodTypeDef, unknown>;
 
 // Session now includes all frictionless token fields
@@ -556,6 +565,13 @@ export type Session = {
 	mode?: ModeEnum;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
+	// Puzzle-only render overrides chosen by the routing machine, persisted
+	// so getPuzzleCaptchaChallenge can layer them in. That endpoint otherwise
+	// re-derives its overrides from a live trafficFilter verdict, which a
+	// machine-chosen puzzle has no counterpart for. Same semantics as the
+	// trafficFilter challenge-policy fields of the same names.
+	puzzleTolerance?: number;
+	puzzle?: IPuzzleSettings;
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
 	// See StoredCaptcha.pendingStage — same semantics on Session records.
@@ -676,6 +692,14 @@ export type Session = {
 		// above but don't bump this timestamp.
 		receivedAt: Date;
 	};
+	// Site-owner-supplied metadata the widget was rendered with, mirrored up
+	// from the captcha record so the session row carries it too. Today that is
+	// just `clientSessionId` (Protect's JTI or any per-user session id the site
+	// holds); it is an object rather than a flat field because more render-time
+	// metadata is expected to land here. The verify endpoints correlate the
+	// `clientSessionId` the dapp server sends against the one recorded here /
+	// on the captcha record, and reject the token when they disagree.
+	clientMetaData?: ClientMetaData;
 };
 
 // Zod schema for PoWCaptchaStored

@@ -31,6 +31,7 @@ import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { getRequestUserScope } from "../blacklistRequestInspector.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
+import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildPowMaintenanceResponse } from "./maintenanceModeResponses.js";
 import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
@@ -69,6 +70,20 @@ export default (
 		if (getMaintenanceMode()) {
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning dummy PoW challenge",
+				data: { dapp, user, sessionId },
+			}));
+			return res.json(buildPowMaintenanceResponse(user, dapp));
+		}
+
+		// Reserved CI test site keys have no client record, so the lookup
+		// below would reject them as unregistered. The frictionless handler
+		// hands these keys an invisible PoW session, which lands right here,
+		// so without this the reserved key cannot complete a flow at all.
+		// Checked before `new Tasks(env, ...)` for the same reason as
+		// maintenance mode: the constructor calls `env.getDb()`.
+		if (isReservedTestSiteKey(dapp)) {
+			req.logger.warn(() => ({
+				msg: "Reserved TEST site key - returning dummy PoW challenge",
 				data: { dapp, user, sessionId },
 			}));
 			return res.json(buildPowMaintenanceResponse(user, dapp));
@@ -129,13 +144,20 @@ export default (
 			// getImageCaptchaChallenge for the full rationale (sanitiser
 			// strips captchaType from Block policies → INCORRECT_CAPTCHA_TYPE
 			// fires when a deferToVerify Block rule leaks into isValidRequest).
-			const userAccessPolicy = (
+			const accessPolicies =
 				await tasks.powCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
 					userScope,
-				)
-			).find((p) => !p.deferToVerify);
+				);
+			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
+			// A deferred rule must never reject at request time, so it is
+			// kept out of the validation above — but it still carries the
+			// difficulty it wants imposed, applied below when no enforcing
+			// policy supplies one.
+			const deferredParamsPolicy = accessPolicies.find(
+				(p) => p.deferToVerify === true,
+			);
 
 			const {
 				valid,
@@ -201,6 +223,7 @@ export default (
 				trafficPowDifficulty ||
 				powDifficulty ||
 				userAccessPolicy?.powDifficulty ||
+				deferredParamsPolicy?.powDifficulty ||
 				clientSettings?.settings?.powDifficulty;
 			const challenge = await tasks.powCaptchaManager.getPowCaptchaChallenge(
 				user,

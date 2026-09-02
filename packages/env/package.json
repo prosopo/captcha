@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/env",
-	"version": "3.6.41",
+	"version": "3.6.49",
 	"description": "Path env prosopo environment",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -26,19 +26,19 @@
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"dependencies": {
-		"@prosopo/ipinfo": "0.3.15",
-		"@prosopo/common": "3.1.51",
+		"@prosopo/ipinfo": "0.3.21",
+		"@prosopo/common": "3.1.52",
 		"@prosopo/logger": "2.0.7",
-		"@prosopo/database": "4.0.18",
-		"@prosopo/keyring": "2.9.77",
-		"@prosopo/types": "5.2.6",
-		"@prosopo/types-env": "2.10.36",
+		"@prosopo/database": "4.0.26",
+		"@prosopo/keyring": "2.9.83",
+		"@prosopo/types": "5.5.3",
+		"@prosopo/types-env": "2.10.43",
 		"@prosopo/util-crypto": "13.5.30"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.12",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "4.1.10",
+		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
@@ -46,7 +46,7 @@
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
 		"vite": "8.1.5",
-		"vitest": "4.1.10"
+		"vitest": "4.1.11"
 	},
 	"author": "Prosopo",
 	"license": "Apache-2.0",

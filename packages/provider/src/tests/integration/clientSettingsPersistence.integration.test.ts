@@ -48,10 +48,15 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 const FULLY_POPULATED_SETTINGS = {
 	captchaType: CaptchaType.frictionless,
 	domains: ["example.com", "*.example.com"],
-	frictionlessThreshold: 0.42,
+	frictionlessThreshold: {
+		frictionlessPuzzleThreshold: 0.42,
+		frictionlessImageThreshold: 1.3,
+	},
+	frictionlessTypes: { image: false, puzzle: true },
 	powDifficulty: 6,
 	imageThreshold: 0.81,
 	imageMaxRounds: 12,
+	imageMinRounds: 4,
 	autoBanScoreThreshold: 0.95,
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
@@ -229,12 +234,15 @@ describe("Client settings Mongo persistence", () => {
 		// rather than dumping the whole settings diff.
 		expect(stored.captchaType).toBe(FULLY_POPULATED_SETTINGS.captchaType);
 		expect(stored.domains).toEqual(FULLY_POPULATED_SETTINGS.domains);
-		expect(stored.frictionlessThreshold).toBe(
+		// Both ladder rungs must survive the round-trip. The field is stored
+		// as Mixed, so a mongoose regression here silently flattens it.
+		expect(stored.frictionlessThreshold).toMatchObject(
 			FULLY_POPULATED_SETTINGS.frictionlessThreshold,
 		);
 		expect(stored.powDifficulty).toBe(FULLY_POPULATED_SETTINGS.powDifficulty);
 		expect(stored.imageThreshold).toBe(FULLY_POPULATED_SETTINGS.imageThreshold);
 		expect(stored.imageMaxRounds).toBe(FULLY_POPULATED_SETTINGS.imageMaxRounds);
+		expect(stored.imageMinRounds).toBe(FULLY_POPULATED_SETTINGS.imageMinRounds);
 		expect(stored.autoBanScoreThreshold).toBe(
 			FULLY_POPULATED_SETTINGS.autoBanScoreThreshold,
 		);

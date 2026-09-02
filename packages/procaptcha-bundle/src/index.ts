@@ -13,10 +13,17 @@
 // limitations under the License.
 
 import { getWindowCallback } from "@prosopo/procaptcha-common";
-import type { EnvironmentTypes, ProcaptchaRenderOptions } from "@prosopo/types";
+import {
+	type EnvironmentTypes,
+	PROCAPTCHA_START_EVENT,
+	type ProcaptchaRenderOptions,
+	type ProcaptchaStartEventDetail,
+	StartModeEnum,
+} from "@prosopo/types";
 import { at } from "@prosopo/util";
 import type { Root } from "react-dom/client";
 import { extractParams, getProcaptchaScript } from "./util/config.js";
+import { resolveStartMode } from "./util/startMode.js";
 import { type CreatedWidget, WidgetFactory } from "./util/widgetFactory.js";
 import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
 
@@ -84,9 +91,10 @@ const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
  */
 const startDetectorPrefetch = (
 	siteKey: string | null,
-	flags: { ipv4?: boolean; ipv6?: boolean },
+	flags: { ipv4?: boolean; ipv6?: boolean; startMode?: StartModeEnum },
 ): void => {
 	if (!siteKey) return;
+	if (flags.startMode === StartModeEnum.manual) return;
 	void Promise.all([
 		import("@prosopo/procaptcha-frictionless"),
 		import("@prosopo/procaptcha-common"),
@@ -121,6 +129,7 @@ const implicitRender = async () => {
 		const web3 = firstElement.getAttribute("data-web3");
 		const ipv4 = firstElement.getAttribute("data-ipv4") === "true";
 		const ipv6 = firstElement.getAttribute("data-ipv6") === "true";
+		const startMode = resolveStartMode(undefined, firstElement);
 		if (!siteKey) {
 			console.error("No site key found");
 			return;
@@ -131,12 +140,13 @@ const implicitRender = async () => {
 		// constant. Start it now so the round-trip overlaps the widget's own
 		// dynamic-import chain instead of queueing behind it —
 		// `customDetectBot` claims the in-flight promise when it eventually runs.
-		startDetectorPrefetch(siteKey, { ipv4, ipv6 });
+		startDetectorPrefetch(siteKey, { ipv4, ipv6, startMode });
 
 		const implicitRenderOptions: ProcaptchaRenderOptions = {
 			siteKey: siteKey,
 			ipv4,
 			ipv6,
+			startMode,
 		};
 
 		const widgets = await widgetFactory.createWidgets(
@@ -172,14 +182,16 @@ const implicitRender = async () => {
 			const callback = button.getAttribute("data-callback") || "";
 			const ipv4 = button.getAttribute("data-ipv4") === "true";
 			const ipv6 = button.getAttribute("data-ipv6") === "true";
+			const startMode = resolveStartMode(undefined, button);
 
-			startDetectorPrefetch(siteKey, { ipv4, ipv6 });
+			startDetectorPrefetch(siteKey, { ipv4, ipv6, startMode });
 
 			const buttonRenderOptions: ProcaptchaRenderOptions = {
 				siteKey: siteKey,
 				callback: callback,
 				ipv4,
 				ipv6,
+				startMode,
 			};
 
 			const widgets = await widgetFactory.createWidgets(
@@ -220,7 +232,10 @@ export const render = async (
 	element: Element,
 	renderOptions: ProcaptchaRenderOptions,
 ): Promise<string | undefined> => {
-	startDetectorPrefetch(renderOptions.siteKey, renderOptions);
+	startDetectorPrefetch(renderOptions.siteKey, {
+		...renderOptions,
+		startMode: resolveStartMode(renderOptions, element),
+	});
 
 	const hasInvisibleSize =
 		Object.prototype.hasOwnProperty.call(renderOptions, "size") &&
@@ -331,6 +346,33 @@ const bindTrigger = (widgetId: string, selector: string): void => {
 	entry.unbindTrigger = () => trigger.removeEventListener("click", onClick);
 };
 
+/** Starts a `startMode: "manual"` widget; omit the id to start all of them. */
+export const start = (widgetId?: string): void => {
+	const ids: string[] =
+		undefined === widgetId ? Array.from(procaptchaWidgets.keys()) : [widgetId];
+
+	if (ids.length === 0) {
+		console.error("No Procaptcha widgets found to start");
+		return;
+	}
+
+	for (const id of ids) {
+		const entry = procaptchaWidgets.get(id);
+		if (!entry) {
+			console.error(`No Procaptcha widget found with id ${id}`);
+			continue;
+		}
+		const detail: ProcaptchaStartEventDetail = { element: entry.element };
+		document.dispatchEvent(
+			new CustomEvent<ProcaptchaStartEventDetail>(PROCAPTCHA_START_EVENT, {
+				detail,
+				bubbles: true,
+				cancelable: false,
+			}),
+		);
+	}
+};
+
 function findProcaptchaContainers(): Element[] {
 	const containers: Element[] = [];
 
@@ -371,11 +413,12 @@ declare global {
 			reset: typeof reset;
 			remove: typeof remove;
 			execute: typeof execute;
+			start: typeof start;
 		};
 	}
 }
 
-const start = () => {
+const boot = () => {
 	// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 	// onRenderExplicit takes values of either explicit or implicit
 	const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAMES);
@@ -413,7 +456,7 @@ const start = () => {
  * widget id to reset one widget, or omit it to reset every widget on the page.
  *
  * This remounts rather than merely unmounting. The previous implementation
- * unmounted every root and then called `start()`, which only re-renders when
+ * unmounted every root and then called `boot()`, which only re-renders when
  * the page uses implicit rendering — and even then only via the
  * `document.readyState` fallback, because the script's `load` event has long
  * since fired. On an explicitly-rendered page nothing came back at all: the
@@ -421,7 +464,7 @@ const start = () => {
  * request was ever made. Rebuilding from the stored descriptor makes reset
  * behave the same way on both paths.
  *
- * `start()` is deliberately not called here any more. It re-renders implicit
+ * `boot()` is deliberately not called here any more. It re-renders implicit
  * widgets, which would double up with the remount below, and it attaches
  * another `load` listener to the script tag on every call.
  */
@@ -475,7 +518,7 @@ export const remove = (widgetId?: string): void => {
 };
 
 // set the procaptcha attribute on the window
-window.procaptcha = { ready, render, reset, remove, execute };
+window.procaptcha = { ready, render, reset, remove, execute, start };
 
 // Dispatch a custom event to notify that window.procaptcha is ready
 const procaptchaReadyEvent = new CustomEvent(PROCAPTCHA_READY_EVENT, {
@@ -487,4 +530,4 @@ const procaptchaReadyEvent = new CustomEvent(PROCAPTCHA_READY_EVENT, {
 });
 document.dispatchEvent(procaptchaReadyEvent);
 
-start();
+boot();

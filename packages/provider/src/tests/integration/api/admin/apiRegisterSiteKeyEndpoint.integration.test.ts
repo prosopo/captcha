@@ -65,9 +65,14 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 			settings: {
 				captchaType: CaptchaType.frictionless,
 				domains: [],
-				frictionlessThreshold: 0.5,
+				frictionlessThreshold: {
+					frictionlessPuzzleThreshold: 0.5,
+					frictionlessImageThreshold: 1,
+				},
+				frictionlessTypes: { image: true, puzzle: true },
 				imageThreshold: 0.5,
 				imageMaxRounds: 3,
+				imageMinRounds: 2,
 				powDifficulty: 0.5,
 				verifiedTimeout: 120000,
 				solutionTimeout: 60000,
@@ -105,9 +110,14 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 			settings: {
 				captchaType: CaptchaType.frictionless,
 				domains: [],
-				frictionlessThreshold: 0.5,
+				frictionlessThreshold: {
+					frictionlessPuzzleThreshold: 0.5,
+					frictionlessImageThreshold: 1,
+				},
+				frictionlessTypes: { image: true, puzzle: true },
 				imageThreshold: 0.5,
 				imageMaxRounds: 3,
+				imageMinRounds: 2,
 				powDifficulty: 0.5,
 				verifiedTimeout: 120000,
 				solutionTimeout: 60000,

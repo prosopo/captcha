@@ -36,6 +36,7 @@ const userAttributesSchema = z.object({
 	// countryCode: a stale/unknown value just never matches a request rather
 	// than failing the whole rule parse.
 	os: z.coerce.string().optional(),
+	browser: z.coerce.string().optional(),
 } satisfies AllKeys<UserAttributes>) satisfies ZodType<UserAttributes>;
 
 const userAttributesInput = z

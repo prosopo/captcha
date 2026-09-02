@@ -24,8 +24,10 @@ import {
 } from "@prosopo/types";
 import type { ReactNode } from "react";
 import { type Root, createRoot } from "react-dom/client";
+import { setClientSessionId } from "../clientSession.js";
 import { createConfig } from "../configCreator.js";
 import { setLanguage } from "../language.js";
+import { setStartMode } from "../startMode.js";
 import { setValidChallengeLength } from "../timeout.js";
 import { BundleCaptcha } from "./components/bundleCaptcha.js";
 
@@ -111,6 +113,8 @@ class CaptchaRenderer {
 	): void {
 		setValidChallengeLength(renderOptions, element, config);
 		setLanguage(renderOptions, element, config);
+		setClientSessionId(renderOptions, element, config);
+		setStartMode(renderOptions, element, config);
 	}
 
 	protected makeEmotionCache(

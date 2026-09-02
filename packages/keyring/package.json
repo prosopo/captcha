@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/keyring",
-	"version": "2.9.77",
+	"version": "2.9.83",
 	"description": "Keypair generator for Prosopo",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -38,9 +38,9 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@polkadot/util": "13.5.7",
-		"@polkadot/util-crypto": "13.5.7",
-		"@prosopo/common": "3.1.51",
-		"@prosopo/types": "5.2.6",
+		"@polkadot/util-crypto": "14.0.3",
+		"@prosopo/common": "3.1.52",
+		"@prosopo/types": "5.5.3",
 		"@prosopo/util": "3.3.7",
 		"@prosopo/util-crypto": "13.5.30",
 		"dotenv": "16.4.5"
@@ -48,7 +48,7 @@
 	"devDependencies": {
 		"@prosopo/config": "3.3.12",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "4.1.10",
+		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
@@ -56,7 +56,7 @@
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
 		"vite": "8.1.5",
-		"vitest": "4.1.10"
+		"vitest": "4.1.11"
 	},
 	"sideEffects": false
 }

@@ -95,6 +95,7 @@ const SPECIFICITY_EXPR = [
 	"exists(@countryCode)",
 	"exists(@asn)",
 	"exists(@os)",
+	"exists(@browser)",
 	"exists(@numericIp)",
 	"exists(@numericIpMaskMin)",
 ].join(" + ");
@@ -135,6 +136,7 @@ const RULE_LOAD_FIELDS = [
 	"@countryCode",
 	"@asn",
 	"@os",
+	"@browser",
 	"@numericIp",
 	"@numericIpMaskMin",
 	"@numericIpMaskMax",
@@ -156,6 +158,7 @@ const readerSpecificity = (rule: AccessRule): number => {
 	if (rule.countryCode !== undefined) score++;
 	if (rule.asn !== undefined) score++;
 	if (rule.os !== undefined) score++;
+	if (rule.browser !== undefined) score++;
 	if (rule.numericIp !== undefined) score++;
 	if (rule.numericIpMaskMin !== undefined) score++;
 	return score;
@@ -273,6 +276,7 @@ export class RedisRulesReader implements AccessRulesReader {
 
 		const subQueries = buildScopedRulesSubQueries(userScope, clientId, {
 			...(filter.blockOnly === true && { blockOnly: true }),
+			...(filter.includeDeferred === true && { includeDeferred: true }),
 		});
 
 		try {

@@ -467,7 +467,13 @@ export class DecisionMachineRunner {
 		artifact: DecisionMachineArtifact,
 		exportNames: string[],
 		options: { input: unknown; optional?: boolean },
-		schema: z.ZodSchema<T>,
+		// `z.ZodType<T, _, unknown>` rather than `z.ZodSchema<T>`: the latter
+		// pins Input === Output === T, so a schema with `.default()`s
+		// anywhere in its tree (RoutingMachineOutputSchema's puzzle settings)
+		// makes T unify with the *input* shape and the parsed result stops
+		// matching the declared output type. This says only "a schema that
+		// produces T from unknown input", which is what the caller wants.
+		schema: z.ZodType<T, z.ZodTypeDef, unknown>,
 	): Promise<T | undefined> {
 		const { exports } = loadMachine(artifact.source);
 		const named = this.findExport(exports, exportNames);

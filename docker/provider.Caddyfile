@@ -152,6 +152,22 @@ http://:9090 {
 			X-Robots-Tag "none"
 		}
 
+		# The detector-pool push (`@prosopo/catcher`'s `pool:add`) carries
+		# the whole pool in one body — a 100-bundle pool is ~86 MB of JSON,
+		# ~27 MB gzipped on the wire. The global `timeouts` block caps a
+		# body read at 15s, which is the right anti-slowloris budget for
+		# every normal request but strangles this upload from anything
+		# slower than a datacentre uplink: Caddy aborts the stream part-way
+		# and answers 504 with only a few MB read, which looks like a
+		# provider fault rather than a client-side timeout. Override the
+		# read/write deadlines for this one admin path so the tight budget
+		# still applies everywhere else.
+		@detector_pool_push path /v1/prosopo/provider/admin/detector/pool/replace
+		request_body @detector_pool_push {
+			read_timeout 15m
+			write_timeout 15m
+		}
+
 		# enable prometheus metrics
 		metrics /metrics
 
@@ -298,7 +314,7 @@ http://:9090 {
 			header_up x-remote-host "{remote_host}"
 			header_up x-method "{method}"
 			header_up x-client-ip "{client_ip}"
-			header_up x-duration-ms "{http.request.duration}"
+			header_up x-duration-ms "{http.request.duration_ms}"
 			header_up x-tls-resumed "{http.request.tls.resumed}"
 			header_up x-tls-proto "{http.request.tls.proto}"
 			header_up x-tls-proto-mutual "{http.request.tls.proto_mutual}"

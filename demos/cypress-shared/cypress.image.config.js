@@ -91,6 +91,19 @@ export default defineConfig({
 			// CAPTCHA_TYPE=image with the wrong sitekey + demo page and
 			// fail before the actual test logic runs.
 			"cypress/e2e/**/routingFrictionless.cy.ts",
+			// Score-ladder spec needs the frictionless sitekey, the frictionless
+			// demo page, and the detector override that pins the base score - all
+			// of which live in cypress.frictionlessLadder.config.js and its CI
+			// step. Under this catch-all it registers the image sitekey with no
+			// override, so every request short-circuits to image and only the
+			// image-band cases pass by accident.
+			"cypress/e2e/**/frictionlessLadder.cy.ts",
+			// Challenge-type toggles spec: needs the same banded-score env as
+			// the ladder (detector override + L_RULES) to get a session into
+			// the image and puzzle bands at all. Without it every case scores
+			// zero and lands on PoW, so it must not be pulled into this
+			// catch-all. Runs under cypress.frictionlessTypes.config.js.
+			"cypress/e2e/**/frictionlessTypes.cy.ts",
 			"cypress/e2e/**/postPowPuzzle.cy.ts",
 			"cypress/e2e/**/decisionMachineDeny.cy.ts",
 			"cypress/e2e/**/decisionMachineDenyPow.cy.ts",
@@ -108,6 +121,12 @@ export default defineConfig({
 			// / CI step where it passes.
 			"cypress/e2e/**/sessionCaptchaTypeConsistency.cy.ts",
 			"cypress/e2e/**/escalationPuzzle.cy.ts",
+			// Drives pow-implicit-sessionid.html, which is the only page
+			// rendering the widget with data-sessionid. Under this catch-all
+			// it would mount the image page with no session id and fail
+			// before reaching the correlation it exists to test. Runs under
+			// cypress.clientSessionId.config.js.
+			"cypress/e2e/**/clientSessionId.cy.ts",
 		],
 	},
 	component: {

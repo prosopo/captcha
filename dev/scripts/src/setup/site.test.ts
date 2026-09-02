@@ -83,7 +83,9 @@ describe("registerSiteKey", () => {
 
 	it("applies the default thresholds and difficulty", async () => {
 		const { settings } = await register();
-		expect(settings.frictionlessThreshold).toBe(0.8);
+		expect(settings.frictionlessThreshold.frictionlessPuzzleThreshold).toBe(
+			0.8,
+		);
 		expect(settings.imageThreshold).toBe(0.8);
 		expect(settings.powDifficulty).toBe(4);
 	});
@@ -116,11 +118,16 @@ describe("registerSiteKey", () => {
 
 	it("lets the caller override the thresholds", async () => {
 		const { settings } = await register({
-			frictionlessThreshold: 0.1,
+			frictionlessThreshold: {
+				frictionlessPuzzleThreshold: 0.1,
+				frictionlessImageThreshold: 1,
+			},
 			imageThreshold: 0.2,
 			powDifficulty: 9,
 		});
-		expect(settings.frictionlessThreshold).toBe(0.1);
+		expect(settings.frictionlessThreshold.frictionlessPuzzleThreshold).toBe(
+			0.1,
+		);
 		expect(settings.imageThreshold).toBe(0.2);
 		expect(settings.powDifficulty).toBe(9);
 	});
@@ -128,7 +135,8 @@ describe("registerSiteKey", () => {
 	it("rejects settings that fail schema validation", async () => {
 		await expect(
 			registerSiteKey(env, "site-key", {
-				frictionlessThreshold: "high" as unknown as number,
+				frictionlessThreshold:
+					"high" as unknown as IUserSettings["frictionlessThreshold"],
 			}),
 		).rejects.toThrow();
 		expect(calls).toHaveLength(0);

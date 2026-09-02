@@ -60,6 +60,11 @@ import {
 	type UsageCounters,
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
+import {
+	isClientSessionMismatch,
+	toStoredClientMetaData,
+} from "../../utils/clientMetaData.js";
+import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
@@ -388,9 +393,10 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		if (clientMetaData?.hp) {
+		const storedClientMetaData = toStoredClientMetaData(clientMetaData);
+		if (storedClientMetaData) {
 			await this.db.updatePuzzleCaptchaRecord(challenge, {
-				clientMetaData: { hp: clientMetaData.hp },
+				clientMetaData: storedClientMetaData,
 			});
 		}
 
@@ -411,6 +417,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				result,
 				...(isBlockingCaptchaResult(CaptchaType.puzzle, result) && {
 					blocked: true,
+				}),
+				// Mirror the render-time metadata onto the session so the session
+				// row carries the same clientSessionId the verify call correlates
+				// against.
+				...(storedClientMetaData && {
+					clientMetaData: storedClientMetaData,
 				}),
 			});
 			if (simdReadings) {
@@ -441,6 +453,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 	 * @param trafficFilter
 	 * @param storeMetadata - when true, persists the dapp-server-provided
 	 *   `email` on the captcha record for spam-rate analysis.
+	 * @param clientSessionId - the session id the site rendered the widget
+	 *   with. When supplied, the solve must carry the same value in its
+	 *   `clientMetaData` or it is disapproved.
 	 */
 	async serverVerifyPuzzleCaptchaSolution(
 		dappAccount: string,
@@ -454,6 +469,7 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		spamFilter?: ISpamFilterRules,
 		trafficFilter?: ITrafficFilter,
 		storeMetadata = false,
+		clientSessionId?: string,
 	): Promise<{ verified: boolean; score?: number; sessionId?: string }> {
 		// Shared by every not-verified exit; sessionId is stamped on below
 		// once the record is loaded, so each exit needn't repeat it.
@@ -535,6 +551,46 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 					serverChecked: true,
 					result: disapprovedResult,
+					...(isBlocked && { blocked: true }),
+				});
+			}
+			return notVerifiedResponse;
+		}
+
+		// The site rendered the widget with a session id, so the solve has to
+		// carry the same one — otherwise the token was earned in a different
+		// session (or outside the widget entirely) and is being replayed here.
+		// Cheap and purely local, so it runs before any I/O-bound check.
+		if (
+			isClientSessionMismatch(
+				clientSessionId,
+				challengeRecord.clientMetaData?.clientSessionId,
+			)
+		) {
+			logger.info(() => ({
+				msg: "Client session mismatch in server puzzle verification",
+				data: {
+					hasRecordedClientSessionId: Boolean(
+						challengeRecord.clientMetaData?.clientSessionId,
+					),
+				},
+			}));
+			const mismatchResult = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.CLIENT_SESSION_MISMATCH,
+			};
+			const isBlocked = isBlockingCaptchaResult(
+				CaptchaType.puzzle,
+				mismatchResult,
+			);
+			await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
+				result: mismatchResult,
+				...(isBlocked && { blocked: true }),
+			});
+			if (challengeRecord.sessionId) {
+				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+					serverChecked: true,
+					result: mismatchResult,
 					...(isBlocked && { blocked: true }),
 				});
 			}
@@ -858,6 +914,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				tcpOptsFlags: sessionRecord?.tcpOptsFlags,
 				tcpOptsOrder: sessionRecord?.tcpOptsOrder,
 				tcpWindow: sessionRecord?.tcpWindow,
+				// Which egress categories this site blocks. Gates the
+				// egress-sensitive TCP-stack deny rules — a VPN
+				// concentrator legitimately terminates the handshake, so
+				// on a site that accepts VPN users the observed stack
+				// says nothing about the client.
+				trafficPolicies: deriveTrafficPolicies(trafficFilter),
 			};
 
 			const decision = await this.decisionMachineRunner.decide(
