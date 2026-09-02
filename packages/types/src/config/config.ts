@@ -23,6 +23,7 @@ import { union } from "zod";
 import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
 import { Mode, ModeEnum } from "./mode.js";
+import { StartModeEnum, StartModeSchema } from "./startMode.js";
 export { Mode, ModeEnum };
 export type { ModeType } from "./mode.js";
 import {
@@ -293,6 +294,11 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		// call can correlate it. Named `clientSessionId` here to keep it clear
 		// of the provider's own frictionless `sessionId`.
 		clientSessionId: string().optional(),
+		// When the frictionless flow runs. `manual` keeps the widget inert
+		// (checkbox visible, no detection or provider traffic) until the site
+		// calls `window.procaptcha.start()` or the user clicks the checkbox.
+		// See `StartModeEnum`.
+		startMode: StartModeSchema.optional().default(StartModeEnum.auto),
 	}),
 );
 

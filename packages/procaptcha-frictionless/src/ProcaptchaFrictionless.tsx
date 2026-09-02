@@ -24,10 +24,14 @@ import {
 	CaptchaType,
 	type FrictionlessState,
 	type ModeType,
+	PROCAPTCHA_START_EVENT,
 	ProcaptchaConfigSchema,
 	type ProcaptchaFrictionlessProps,
+	type ProcaptchaStartEventDetail,
+	StartModeEnum,
 } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import type { KeyboardEvent, MouseEvent, TouchEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import customDetectBot from "./customDetectBot.js";
 import { evaluateFrictionlessResult } from "./frictionlessResultGuard.js";
@@ -46,6 +50,15 @@ const ProcaptchaPuzzleLoader = async () =>
 const ProcaptchaPowLoader = async () =>
 	(await import("@prosopo/procaptcha-pow")).ProcaptchaPow;
 
+// Mirrors the constant each inner widget declares for `window.procaptcha
+// .execute()`. Listened to here only in manual start mode, where no inner
+// widget exists yet to receive it.
+const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
+
+type CheckboxEvent = MouseEvent | TouchEvent | KeyboardEvent;
+
+const noopCheckboxHandler = async (_event: CheckboxEvent): Promise<void> => {};
+
 const renderPlaceholder = (
 	theme: string | undefined,
 	mode: ModeType,
@@ -53,6 +66,7 @@ const renderPlaceholder = (
 	isTranslationLoaded: boolean,
 	translationFn: (key: string) => string,
 	loading: boolean,
+	onChange: (event: CheckboxEvent) => Promise<void> = noopCheckboxHandler,
 ) => {
 	const checkboxTheme = "light" === theme ? lightTheme : darkTheme;
 
@@ -63,7 +77,7 @@ const renderPlaceholder = (
 	return (
 		<Checkbox
 			theme={checkboxTheme}
-			onChange={async () => {}}
+			onChange={onChange}
 			checked={false}
 			labelText={isTranslationLoaded ? translationFn("WIDGET.I_AM_HUMAN") : ""}
 			error={errorMessage}
@@ -116,6 +130,17 @@ export const ProcaptchaFrictionless = ({
 	// because `providerRetry` re-invokes `start` with no arguments, which would
 	// otherwise drop the flag on the first provider retry.
 	const nextMountAutoStartRef = useRef(false);
+	// `manual` start mode: the widget is inert until the site asks for it (a
+	// `procaptcha:start` event, e.g. `window.procaptcha.start()`) or the end
+	// user clicks the checkbox — whichever comes first. Nothing runs on page
+	// load: no detector, no behavioural collectors, no provider traffic.
+	const manualStart = config.startMode === StartModeEnum.manual;
+	// One-shot guard for the manual triggers. Both the event and the click can
+	// fire, in either order; only the first runs the frictionless flow.
+	const manualStartedRef = useRef(false);
+	// The placeholder checkbox is built before `start()` exists in this scope,
+	// so its click handler is reached through a ref that is filled in below.
+	const manualCheckboxHandlerRef = useRef(noopCheckboxHandler);
 
 	useEffect(() => {
 		if (!config.language) return;
@@ -139,7 +164,13 @@ export const ProcaptchaFrictionless = ({
 			stateRef.current.errorMessage,
 			i18n.isInitialized,
 			i18n.t,
-			true,
+			// Auto mode is already fetching, so it shows the spinner. Manual mode
+			// has nothing in flight: show the real checkbox, at its final size,
+			// and let a click on it be the trigger.
+			!manualStart,
+			manualStart
+				? (event: CheckboxEvent) => manualCheckboxHandlerRef.current(event)
+				: undefined,
 		),
 	);
 
@@ -374,6 +405,74 @@ export const ProcaptchaFrictionless = ({
 		});
 	};
 
+	// Run the deferred frictionless flow. `autoStart` makes the widget the
+	// provider picks open its challenge as soon as it mounts, so a user who
+	// clicked the placeholder checkbox is not asked to click again; `coords`
+	// is that click's position, carried through to the solution salt exactly
+	// as the session-invalidated retry path does.
+	const startManually = async (
+		autoStart: boolean,
+		coords?: RetryCoords,
+	): Promise<void> => {
+		if (manualStartedRef.current) return;
+		manualStartedRef.current = true;
+		pendingRetryCoordsRef.current = coords ?? null;
+		nextMountAutoStartRef.current = autoStart;
+		// Swap the live checkbox for the spinner for the duration of the
+		// frictionless round-trip, matching what auto mode shows on load.
+		setComponentToRender(
+			renderPlaceholder(
+				config.theme,
+				config.mode,
+				stateRef.current.errorMessage,
+				i18n.isInitialized,
+				i18n.t,
+				true,
+			),
+		);
+		await start();
+	};
+
+	manualCheckboxHandlerRef.current = async (event: CheckboxEvent) => {
+		// Checkbox has already rejected untrusted events by the time this runs.
+		let x = 0;
+		let y = 0;
+		const nativeEvent = event.nativeEvent;
+		if ("clientX" in nativeEvent && "clientY" in nativeEvent) {
+			x = nativeEvent.clientX;
+			y = nativeEvent.clientY;
+		}
+		await startManually(true, normaliseRetryCoords(x, y) ?? undefined);
+	};
+
+	// Manual mode triggers. `procaptcha:start` runs the frictionless flow and
+	// leaves the resulting widget waiting for a click, as auto mode would
+	// have. `procaptcha:execute` (the invisible-mode API) has no inner widget
+	// to land on yet, so it is honoured here by starting with `autoStart`.
+	// `container` is the widget's own element; an event addressed to a
+	// different widget's element is ignored. Direct-React consumers, who
+	// mount without a container, receive every event.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional — `startManually` captures the mount-time `start()`, as the auto-mode effect below does; the listener is keyed on the two values that decide whether it exists at all.
+	useEffect(() => {
+		if (!manualStart) return;
+		const onStartEvent = (event: Event) => {
+			const detail = (event as CustomEvent<ProcaptchaStartEventDetail>).detail;
+			if (detail?.element && container && !detail.element.contains(container)) {
+				return;
+			}
+			void startManually(false);
+		};
+		const onExecuteEvent = () => {
+			void startManually(true);
+		};
+		document.addEventListener(PROCAPTCHA_START_EVENT, onStartEvent);
+		document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, onExecuteEvent);
+		return () => {
+			document.removeEventListener(PROCAPTCHA_START_EVENT, onStartEvent);
+			document.removeEventListener(PROCAPTCHA_EXECUTE_EVENT, onExecuteEvent);
+		};
+	}, [manualStart, container]);
+
 	// Track which config identity has already been started for. Host
 	// pages often recreate the `callbacks` object (and sometimes the whole
 	// `config`) on every render, which — before this guard — re-fired
@@ -399,6 +498,8 @@ export const ProcaptchaFrictionless = ({
 		}`;
 		if (startedForKeyRef.current === key) return;
 		startedForKeyRef.current = key;
+		// Manual mode waits for one of the triggers above instead.
+		if (manualStart) return;
 		void start();
 	}, [config.account?.address, config.language, config.mode]);
 

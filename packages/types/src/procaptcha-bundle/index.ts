@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Languages } from "@prosopo/locale";
+import type { StartMode } from "../config/startMode.js";
 
 // note: do not use any Zod-related types inside the interface,
 // as this interface is re-exported by '@prosopo/procaptcha-wrapper' to external customers
@@ -44,4 +45,10 @@ export interface ProcaptchaRenderOptions {
 	// solution; pass the same value to the server-side verify call and the
 	// provider will reject the token unless the two agree.
 	sessionId?: string;
+	// When the frictionless flow starts. Equivalent to the `data-start-mode`
+	// attribute. `manual` renders the checkbox immediately but defers bot
+	// detection and the `/frictionless` request until the site calls
+	// `window.procaptcha.start()` or the end user clicks the checkbox.
+	// Defaults to `auto`.
+	startMode?: StartMode;
 }
