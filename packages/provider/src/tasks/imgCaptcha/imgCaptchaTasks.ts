@@ -85,7 +85,6 @@ import {
 	enrichDnsEvent,
 	getIpInfoAsn,
 } from "../dnsEvent/enrichDnsEvent.js";
-import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import {
 	evaluateEmailSpamRules,

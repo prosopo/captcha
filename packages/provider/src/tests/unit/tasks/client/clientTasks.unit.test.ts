@@ -189,14 +189,12 @@ describe("ClientTaskManager", () => {
 				{
 					account: "mockClientRecord1",
 					tier: Tier.Professional,
-					settings: {
-					},
+					settings: {},
 				},
 				{
 					account: "mockClientRecord2",
 					tier: Tier.Professional,
-					settings: {
-					},
+					settings: {},
 				},
 			]),
 			upsertDecisionMachineArtifact: vi.fn(),

@@ -37,7 +37,7 @@ import {
 	powDifficultyDefault,
 	requireAllConditionsDefault,
 } from "@prosopo/types";
-import mongoose from "mongoose";
+import type mongoose from "mongoose";
 import { Schema as MongooseSchema, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import type { ClientRecord, Tables } from "./provider.js";

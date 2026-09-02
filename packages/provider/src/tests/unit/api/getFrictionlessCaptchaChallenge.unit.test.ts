@@ -325,7 +325,6 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		decryptionFailed: false,
 	});
 
-
 	it("returns 401 when blocked by access policy", async () => {
 		const clientRecord = {
 			account: "siteBlocked",

@@ -14,11 +14,7 @@
 
 import type { RedisWriteQueue } from "@prosopo/database";
 import { type Logger, getLogger } from "@prosopo/logger";
-import {
-	IpAddressType,
-	type KeyringPair,
-	type Session,
-} from "@prosopo/types";
+import { IpAddressType, type KeyringPair, type Session } from "@prosopo/types";
 import {
 	CaptchaType,
 	type IUserSettings,

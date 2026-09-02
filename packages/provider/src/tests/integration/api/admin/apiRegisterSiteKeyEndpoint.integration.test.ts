@@ -14,11 +14,7 @@
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/logger";
-import {
-	CaptchaType,
-	type ProsopoConfigOutput,
-	Tier,
-} from "@prosopo/types";
+import { CaptchaType, type ProsopoConfigOutput, Tier } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import { describe, expect, it, vi } from "vitest";
 import { ApiRegisterSiteKeyEndpoint } from "../../../../api/admin/apiRegisterSiteKeyEndpoint.js";

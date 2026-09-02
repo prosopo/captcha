@@ -85,7 +85,6 @@ describe("getFrictionlessCaptchaChallenge/constants", () => {
 		});
 	});
 
-
 	describe("getRoundsFromTriggeredDetectors", () => {
 		it("returns the baseline when the detector found nothing", () => {
 			expect(getRoundsFromTriggeredDetectors(2, [])).toBe(2);
