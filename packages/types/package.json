@@ -43,7 +43,7 @@
 		"@prosopo/locale": "3.4.0",
 		"@prosopo/util": "3.3.7",
 		"@prosopo/util-crypto": "13.5.30",
-		"ip-address": "10.5.0",
+		"ip-address": "10.7.0",
 		"scale-ts": "1.6.1",
 		"zod": "3.23.8"
 	},
