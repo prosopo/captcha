@@ -174,6 +174,10 @@ export default defineConfig(({ command, mode }) => {
 						__dirname,
 						"src/frictionless-explicit.html",
 					),
+					"frictionless-manual-start": path.resolve(
+						__dirname,
+						"src/frictionless-manual-start.html",
+					),
 					"invisible-pow-explicit": path.resolve(
 						__dirname,
 						"src/invisible-pow-explicit.html",

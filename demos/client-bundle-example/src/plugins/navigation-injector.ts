@@ -47,6 +47,7 @@ export default function navigationInjector(): Plugin {
 			frictionless: {
 				implicit: { path: "frictionless-implicit.html", exists: true },
 				explicit: { path: "frictionless-explicit.html", exists: true },
+				manual: { path: "frictionless-manual-start.html", exists: true },
 			},
 			puzzle: {
 				implicit: { path: "puzzle-implicit.html", exists: true },
