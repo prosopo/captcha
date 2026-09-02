@@ -27,6 +27,9 @@
 			"path": "../logger/tsconfig.cjs.json"
 		},
 		{
+			"path": "../captcha-severity/tsconfig.cjs.json"
+		},
+		{
 			"path": "../database/tsconfig.cjs.json"
 		},
 		{
