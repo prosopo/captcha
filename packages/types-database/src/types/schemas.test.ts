@@ -511,14 +511,6 @@ describe("UserSettingsSchema", () => {
 		expect([...doc.spamFilter.emailRules.customRegexBlocklist]).toEqual([]);
 	});
 
-	it("seeds the context-aware thresholds for both contexts", () => {
-		const doc = settings();
-		expect(Object.keys(doc.contextAware.contexts).sort()).toEqual(
-			Object.keys(doc.contextAware.contexts).sort(),
-		);
-		expect(doc.contextAware.enabled).toBe(false);
-	});
-
 	it("leaves the ip validation rules unset unless configured", () => {
 		expect(settings().ipValidationRules).toBeUndefined();
 	});

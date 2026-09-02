@@ -24,9 +24,7 @@ import {
 	abuseScoreThresholdExceedActionDefault,
 	captchaTypeDefault,
 	cityChangeActionDefault,
-	contextAwareThresholdDefault,
 	countryChangeActionDefault,
-	deviceContextTypes,
 	distanceExceedActionDefault,
 	distanceThresholdKmDefault,
 	domainsDefault,
@@ -39,7 +37,7 @@ import {
 	powDifficultyDefault,
 	requireAllConditionsDefault,
 } from "@prosopo/types";
-import mongoose from "mongoose";
+import type mongoose from "mongoose";
 import { Schema as MongooseSchema, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import type { ClientRecord, Tables } from "./provider.js";
@@ -204,22 +202,6 @@ export const UserSettingsSchema = new Schema({
 	disallowWebView: {
 		type: Boolean,
 		default: false,
-	},
-	contextAware: {
-		enabled: { type: Boolean, default: false },
-		contexts: {
-			type: mongoose.Schema.Types.Mixed,
-			// One entry per device family x webview. Records written before
-			// device contexts existed carry `default`/`webview` instead; those
-			// keys still parse and `expandContexts` maps them onto these
-			// families, so nothing needs backfilling.
-			default: Object.fromEntries(
-				deviceContextTypes.map((type) => [
-					type,
-					{ type, threshold: contextAwareThresholdDefault },
-				]),
-			),
-		},
 	},
 	spamEmailDomainCheckEnabled: {
 		type: Boolean,

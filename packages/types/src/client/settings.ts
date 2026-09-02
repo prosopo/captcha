@@ -49,7 +49,6 @@ export const imageMaxRoundsDefault = 32;
 // `Math.max(2, …)` inside `timestampDecayFunction`), so leaving it unset
 // preserves existing behaviour.
 export const imageMinRoundsDefault = 2;
-export const contextAwareThresholdDefault = 0.7;
 export const puzzleToleranceDefault = 15;
 
 // Puzzle render defaults, mirrored from `packages/puzzle-assets`'s
@@ -337,16 +336,8 @@ export enum DeviceType {
  * different markup from a desktop, and an in-app webview injects and
  * suppresses different things again from the same device's real browser.
  *
- * `Default` and `Webview` are the pre-device-type keys. They are retained so
- * settings already stored against them keep parsing, and are expanded into
- * their device families by `expandContexts` — nothing downstream of settings
- * parsing should branch on them. See `isLegacyContextType`.
  */
 export enum ContextType {
-	/** @deprecated Legacy pre-device-type key: every non-webview device. */
-	Default = "default",
-	/** @deprecated Legacy pre-device-type key: every webview device. */
-	Webview = "webview",
 	Desktop = "desktop",
 	DesktopWebview = "desktop-webview",
 	Mobile = "mobile",
@@ -357,19 +348,6 @@ export enum ContextType {
 
 // Zod schema for context type
 export const ContextTypeSchema = z.nativeEnum(ContextType);
-
-/** The two keys that predate device-type contexts. */
-export const legacyContextTypes = [
-	ContextType.Default,
-	ContextType.Webview,
-] as const;
-
-export type LegacyContextType = (typeof legacyContextTypes)[number];
-
-export const isLegacyContextType = (
-	contextType: ContextType,
-): contextType is LegacyContextType =>
-	contextType === ContextType.Default || contextType === ContextType.Webview;
 
 /** Every device-type context, in a stable order. */
 export const deviceContextTypes = [
@@ -453,67 +431,6 @@ export const contextTypeFromSession = (
 	userAgent: string | undefined,
 	webView: boolean,
 ): ContextType => contextTypeFor(deviceTypeFromUserAgent(userAgent), webView);
-
-// Individual context configuration
-export const ContextConfigSchema = z.object({
-	type: ContextTypeSchema,
-	threshold: number()
-		.min(Number((contextAwareThresholdDefault - 0.2).toFixed(2)))
-		.max(Number((contextAwareThresholdDefault + 0.2).toFixed(2)))
-		.optional()
-		.default(contextAwareThresholdDefault),
-});
-
-export type IContextConfig = z.infer<typeof ContextConfigSchema>;
-
-const ContextsSchema = z.record(ContextTypeSchema, ContextConfigSchema);
-
-export type IContexts = z.infer<typeof ContextsSchema>;
-
-/**
- * Resolve a stored `contexts` map to device-type contexts only.
- *
- * A legacy `default` entry configures every non-webview device family and a
- * legacy `webview` entry configures every webview family, both at the
- * threshold they were saved with. An explicit device-type entry always wins
- * over the legacy entry that would otherwise cover it, so a customer can
- * tighten one family without restating the rest.
- *
- * Everything downstream — the decision machine's lookup, the entropy sweep,
- * the portal — deals only in the six device contexts this returns.
- */
-export const expandContexts = (
-	contexts: IContexts | undefined,
-): Partial<Record<ContextType, IContextConfig>> => {
-	const expanded: Partial<Record<ContextType, IContextConfig>> = {};
-	if (!contexts) return expanded;
-
-	const legacy = contexts as Partial<Record<ContextType, IContextConfig>>;
-
-	for (const deviceType of Object.values(DeviceType)) {
-		for (const webView of [false, true]) {
-			const contextType = contextTypeFor(deviceType, webView);
-			const legacyConfig =
-				legacy[webView ? ContextType.Webview : ContextType.Default];
-			const config = legacy[contextType] ?? legacyConfig;
-			if (config) {
-				expanded[contextType] = {
-					type: contextType,
-					threshold: config.threshold,
-				};
-			}
-		}
-	}
-
-	return expanded;
-};
-
-const ContextAwareSchema = object({
-	enabled: boolean().optional().default(false),
-	contexts: ContextsSchema,
-});
-
-export type IContextAware = z.infer<typeof ContextAwareSchema>;
 
 // Spam filter rules
 export const maxLocalPartDotsDefault = 2;
@@ -740,7 +657,6 @@ export const ClientSettingsSchema = object({
 	// `false`. Both are falsy, so no consumer changed behaviour, but the
 	// declared output type said `boolean` while the value was missing.
 	disallowWebView: boolean().optional().default(false),
-	contextAware: ContextAwareSchema.optional(),
 	spamEmailDomainCheckEnabled: boolean().optional(),
 	spamFilter: SpamFilterRulesSchema.optional(),
 	trafficFilter: TrafficFilterSchema.optional(),

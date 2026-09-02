@@ -13,7 +13,6 @@
 // limitations under the License.
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
-	ContextType,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -190,32 +189,12 @@ describe("ClientTaskManager", () => {
 				{
 					account: "mockClientRecord1",
 					tier: Tier.Professional,
-					settings: {
-						contextAware: {
-							enabled: true,
-							contexts: {
-								[ContextType.Default]: {
-									type: ContextType.Default,
-									threshold: 0.7,
-								},
-							},
-						},
-					},
+					settings: {},
 				},
 				{
 					account: "mockClientRecord2",
 					tier: Tier.Professional,
-					settings: {
-						contextAware: {
-							enabled: true,
-							contexts: {
-								[ContextType.Webview]: {
-									type: ContextType.Webview,
-									threshold: 0.7,
-								},
-							},
-						},
-					},
+					settings: {},
 				},
 			]),
 			upsertDecisionMachineArtifact: vi.fn(),
