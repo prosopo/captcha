@@ -16,15 +16,11 @@
  * How severe a captcha challenge is, and the helpers for picking the strictest
  * when several policies compete for one request.
  *
- * Three call sites ask this question, and each used to answer it with its own
- * table:
- *
- *   - the traffic filter, combining multiple `challenge` matches on a single
- *     request (`resolveChallengePolicy`);
- *   - the access rules, breaking ties between equally-specific rules
- *     (`ruleHarshness`);
- *   - the decision machines, resolving an undeclared middlebox against a
- *     site's vpn / datacenter policies (`resolveMiddleboxPolicy`).
+ * Several call sites ask this question, and each used to answer it with its
+ * own table: the traffic filter, combining multiple `challenge` matches on a
+ * single request (`resolveChallengePolicy`); the access rules, breaking ties
+ * between equally-specific rules (`ruleHarshness`); and downstream routing
+ * consumers outside this repository.
  *
  * They agreed on the order — image > puzzle > pow > frictionless — but nothing
  * held them to it, and they disagreed on the encoding, which is where the
@@ -42,9 +38,9 @@
  *
  *   - **Whole policy** — is `image` with 2 rounds stricter than `image` with
  *     9? `captchaPolicySeverity` / `isStricterCaptchaPolicy`. Used where one
- *     complete policy has to beat another, as the access rules and the
- *     decision machines do — there the settings ride along with the type and
- *     a tie on type alone would be decided by argument order.
+ *     complete policy has to beat another, as the access rules do — there the
+ *     settings ride along with the type and a tie on type alone would be
+ *     decided by argument order.
  *
  * ## Zero dependencies, deliberately
  *
@@ -52,10 +48,9 @@
  * `CaptchaType` enum. Captcha types are string enums, so a plain `string`
  * parameter accepts them without the import — and the import would not be
  * free. `CaptchaType` lives in a module that pulls zod in to build its
- * schemas, and the decision machines are bundled standalone and published
- * through an API capped at 65,536 characters, a ceiling a runtime dependency
- * on the `@prosopo/types` barrel has breached before. A leaf with no imports
- * cannot repeat that.
+ * schemas, and some consumers bundle this standalone under a hard source-size
+ * ceiling that a runtime dependency on the `@prosopo/types` barrel has
+ * breached before. A leaf with no imports cannot repeat that.
  */
 
 /**
@@ -88,8 +83,8 @@ const MAX_INTRA_TIER = TIER_GAP - 1;
  * Severity tier per captcha type. Higher is stricter.
  *
  * Keyed by the enum's string values rather than the enum itself, so callers
- * carrying a captcha type as a bare `string` — as the decision machines'
- * policy bags do — rank it without importing `CaptchaType`.
+ * carrying a captcha type as a bare `string` rank it without importing
+ * `CaptchaType`.
  */
 const CAPTCHA_TYPE_TIER: Record<string, number> = {
 	image: 4 * TIER_GAP,
@@ -101,9 +96,9 @@ const CAPTCHA_TYPE_TIER: Record<string, number> = {
 /**
  * The tunables that make one challenge of a given type harder than another.
  *
- * Structurally compatible with `ITrafficCategoryPolicy`, an `AccessRule`, and
- * the decision machines' `TrafficCategoryPolicyBag`, so all three pass their
- * own objects straight in.
+ * Structurally compatible with `ITrafficCategoryPolicy` and `AccessRule`, and
+ * with the equivalent policy shapes used by downstream consumers, so each can
+ * pass its own object straight in.
  *
  * `puzzleTolerance` is deliberately absent, which is worth spelling out
  * because a puzzle's difficulty plainly does depend on it. It is a *render*
@@ -120,9 +115,8 @@ const CAPTCHA_TYPE_TIER: Record<string, number> = {
  * converts with `severityToPuzzleDifficulty` (see
  * `provider/src/tasks/puzzle/puzzleDifficulty.ts`) into an index into
  * `PUZZLE_DIFFICULTY_LEVELS`, the banded ladder that actually renders a
- * harder puzzle. Detector-authored rules therefore keep the field on puzzle
- * rules on purpose, and drop it for `pow`, which has its own dial — see
- * `applyAccountAnomalyRules`.
+ * harder puzzle. Rule authoring therefore keeps the field on puzzle rules on
+ * purpose, and drops it for `pow`, which has its own dial.
  */
 export interface CaptchaPolicySeverityInput {
 	captchaType?: string | undefined;
@@ -178,9 +172,9 @@ export const isStricterCaptchaType = (
  * `image` and `puzzle` share `solvedImagesCount` because it is the severity
  * currency both speak: a puzzle has no rounds, so the provider maps the same
  * number onto a puzzle difficulty level (`severityToPuzzleDifficulty`) instead
- * of running that many rounds. `pow` has its own dial and detector-authored
- * rules drop `solvedImagesCount` for it, so reading it there would rank every
- * pow rule at the bottom of its tier regardless of how hard it actually is.
+ * of running that many rounds. `pow` has its own dial and rule authoring drops
+ * `solvedImagesCount` for it, so reading it there would rank every pow rule at
+ * the bottom of its tier regardless of how hard it actually is.
  */
 const intraTierSeverity = (policy: CaptchaPolicySeverityInput): number => {
 	switch (policy.captchaType) {
