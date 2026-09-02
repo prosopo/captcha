@@ -12,13 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * `window.procaptcha.start()` is how a site kicks off a widget rendered with
- * `startMode: "manual"`. It reaches the widget as a `procaptcha:start` event
- * addressed to the element the widget was rendered into, so that one call
- * can target one widget on a page that has several.
- */
-
 import {
 	PROCAPTCHA_START_EVENT,
 	type ProcaptchaStartEventDetail,

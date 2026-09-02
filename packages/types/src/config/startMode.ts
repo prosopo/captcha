@@ -16,16 +16,9 @@ import type { infer as zInfer } from "zod";
 import { enum as zEnum } from "zod";
 
 /**
- * When the widget starts the frictionless flow (bot detection, behavioural
- * collectors and the `/frictionless` round-trip that picks a challenge).
- *
- * - `auto` (default): as soon as the widget mounts.
- * - `manual`: the widget renders its checkbox straight away, at its final
- *   size, but does nothing else until the site calls
- *   `window.procaptcha.start()` (or dispatches a `procaptcha:start` event),
- *   or the end user clicks the checkbox. In the latter case the click is
- *   carried through to the challenge the provider picks, so the user never
- *   has to click twice.
+ * When the widget starts the frictionless flow. `manual` renders the checkbox
+ * but defers everything else until `window.procaptcha.start()` is called or
+ * the user clicks the checkbox.
  */
 export enum StartModeEnum {
 	auto = "auto",
@@ -38,11 +31,7 @@ export const StartModeSchema = zEnum([
 ]);
 export type StartMode = zInfer<typeof StartModeSchema>;
 
-/**
- * DOM event that starts a widget rendered with `startMode: "manual"`.
- * Dispatched on `document`; `detail.element`, when present, restricts the
- * event to the widget rendered into that element.
- */
+// Dispatched on `document`. `detail.element` restricts it to one widget.
 export const PROCAPTCHA_START_EVENT = "procaptcha:start";
 
 export interface ProcaptchaStartEventDetail {

@@ -38,8 +38,7 @@ const BUNDLE_NAMES = ["procaptcha.bundle.iife.js", "procaptcha.bundle.js"];
  * stayed in the DOM, leaving a container with a logo and no checkbox. There
  * was no record of which element or render options produced it, so nothing
  * could put it back. Keeping the descriptor alongside the root is what lets
- * `reset()` remount rather than just destroy, and `start()` address its
- * `procaptcha:start` event to the right element.
+ * `reset()` remount rather than just destroy.
  */
 interface WidgetEntry {
 	root: Root;
@@ -86,9 +85,7 @@ const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
  * Fire-and-forget by design — a failed prefetch is indistinguishable from no
  * prefetch, and the detection path falls back to resolving a provider itself.
  *
- * Skipped in manual start mode: the point of that mode is that nothing
- * reaches the provider until the site says so, and `customDetectBot` resolves
- * a provider itself when there is no prefetch to claim.
+ * Skipped in manual start mode so nothing reaches the provider on page load.
  */
 const startDetectorPrefetch = (
 	siteKey: string | null,
@@ -291,15 +288,9 @@ export const execute = () => {
 };
 
 /**
- * Starts the frictionless flow for a widget rendered with
- * `startMode: "manual"` (or `data-start-mode="manual"`). Pass a widget id to
- * start one widget, or omit it to start every widget on the page. Widgets in
- * the default `auto` mode, and manual widgets that have already started (by
- * an earlier call or the user clicking the checkbox), ignore it.
- *
- * Delivered as a `procaptcha:start` DOM event addressed to the widget's
- * element rather than by calling into React directly, which keeps direct-React
- * integrations on the same mechanism: they can dispatch the event themselves.
+ * Starts a widget rendered with `startMode: "manual"`; omit the id to start
+ * every widget. Sent as a `procaptcha:start` event so direct-React
+ * integrations can dispatch the same thing themselves.
  */
 export const start = (widgetId?: string): void => {
 	const ids: string[] =

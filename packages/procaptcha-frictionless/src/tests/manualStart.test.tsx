@@ -12,13 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * `startMode: "manual"` keeps the widget inert after mount — checkbox on the
- * page at its final size, but no detection and no provider traffic — until
- * the site asks for it or the user clicks. These tests pin the three ways the
- * deferred flow can start and that a click never has to be repeated.
- */
-
 import type { Ti18n } from "@prosopo/locale";
 import {
 	type Account,
@@ -148,12 +141,8 @@ const lastMountOf = (widget: InnerWidget) => {
 	return mount;
 };
 
-/**
- * jsdom marks everything it dispatches untrusted and exposes `isTrusted` as
- * a non-configurable accessor on its internal implementation object, so the
- * flag has to be pinned there for the Checkbox's trust guard to let the
- * click through.
- */
+// jsdom exposes `isTrusted` as a non-configurable accessor on its internal
+// implementation object, so the flag has to be pinned there.
 const setTrusted = (event: Event, trusted: boolean): void => {
 	for (const symbol of Object.getOwnPropertySymbols(event)) {
 		const impl: unknown = Reflect.get(event, symbol);
@@ -233,8 +222,6 @@ describe("manual start mode", () => {
 
 		expect(detectBot).not.toHaveBeenCalled();
 		expect(mocks.mounts).toHaveLength(0);
-		// A real checkbox, not the spinner auto mode shows while it fetches: the
-		// widget occupies its final footprint from the first paint.
 		expect(checkbox().disabled).toBe(false);
 		expect(spinner()).toBeNull();
 	});
@@ -264,8 +251,6 @@ describe("manual start mode", () => {
 
 			expect(detectBot).toHaveBeenCalledTimes(1);
 			const mount = lastMountOf("image").props;
-			// The site started it, not the user, so the challenge must not open
-			// on its own — same as an auto-mode mount.
 			expect(mount.autoStart).toBe(false);
 			expect(mount.startCoords).toBeUndefined();
 			expect(mount.frictionlessState?.sessionId).toBe(SESSION_ID);
@@ -343,9 +328,6 @@ describe("manual start mode", () => {
 
 			expect(detectBot).toHaveBeenCalledTimes(1);
 			const mount = lastMountOf("image").props;
-			// The click that started the flow is the click that opens the
-			// challenge: the user is never asked to tick the box twice, and the
-			// position reaches the solution salt as it would on a direct mount.
 			expect(mount.autoStart).toBe(true);
 			expect(mount.startCoords).toEqual({ x: 11, y: 22 });
 		});

@@ -45,10 +45,6 @@ export interface ProcaptchaRenderOptions {
 	// solution; pass the same value to the server-side verify call and the
 	// provider will reject the token unless the two agree.
 	sessionId?: string;
-	// When the frictionless flow starts. Equivalent to the `data-start-mode`
-	// attribute. `manual` renders the checkbox immediately but defers bot
-	// detection and the `/frictionless` request until the site calls
-	// `window.procaptcha.start()` or the end user clicks the checkbox.
-	// Defaults to `auto`.
+	// Equivalent to the `data-start-mode` attribute. Defaults to `auto`.
 	startMode?: StartMode;
 }

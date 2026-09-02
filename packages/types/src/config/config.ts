@@ -294,10 +294,6 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		// call can correlate it. Named `clientSessionId` here to keep it clear
 		// of the provider's own frictionless `sessionId`.
 		clientSessionId: string().optional(),
-		// When the frictionless flow runs. `manual` keeps the widget inert
-		// (checkbox visible, no detection or provider traffic) until the site
-		// calls `window.procaptcha.start()` or the user clicks the checkbox.
-		// See `StartModeEnum`.
 		startMode: StartModeSchema.optional().default(StartModeEnum.auto),
 	}),
 );

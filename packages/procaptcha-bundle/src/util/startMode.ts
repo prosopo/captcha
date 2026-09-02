@@ -22,15 +22,7 @@ import {
 
 export const START_MODE_ATTRIBUTE = "data-start-mode";
 
-/**
- * Resolves when this widget should start the frictionless flow, from either:
- * 1. renderOptions.startMode
- * 2. the element's data-start-mode attribute
- *
- * Anything unrecognised falls back to `auto`, the historic behaviour, with a
- * console error rather than a failed render — a typo in a data attribute
- * should not take the captcha off the page.
- */
+// An unrecognised value falls back to `auto` rather than failing the render.
 export const resolveStartMode = (
 	renderOptions: ProcaptchaRenderOptions | undefined,
 	element: Element,
