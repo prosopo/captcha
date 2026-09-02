@@ -33,8 +33,8 @@ import {
 	HEADER_RULE_MARKER,
 	type UserScope,
 	type UserScopeRecord,
-	classifyBrowser,
 	accessRuleHeaderMatches,
+	classifyBrowser,
 	classifyOs,
 	describeMatchedRule,
 	makeAccessRuleHash,
@@ -305,7 +305,7 @@ export const rankCandidateRules = (
 	rules: AccessRule[],
 	request: UserScope,
 	requestClientId: string | undefined,
-	requestHeaders: Record<string, string> = {},
+	requestHeaders: Record<string, string>,
 ): AccessRule[] =>
 	rules
 		.filter((rule) =>
@@ -398,12 +398,14 @@ export type GetPrioritisedAccessRuleOptions = {
 export const getPrioritisedAccessRule = async (
 	userAccessRulesStorage: AccessRulesStorage,
 	userScope: UserScope | UserScopeRecord,
-	clientId?: string,
-	options?: GetPrioritisedAccessRuleOptions,
+	clientId: string | undefined,
 	// Raw request headers (lower-cased name → value) for the in-code header
-	// condition check. Optional so existing callers/tests that don't exercise
-	// header rules keep working; header rules simply never match without it.
-	requestHeaders: Record<string, string> = {},
+	// condition check. Required, with no default: the negated header operators
+	// treat a missing header as "does not match", so a lookup that silently
+	// ran with an empty header map would make every allow-list rule fire on
+	// every request. Callers with nothing but a scope must say so explicitly.
+	requestHeaders: Record<string, string>,
+	options?: GetPrioritisedAccessRuleOptions,
 ): Promise<AccessRule[]> => {
 	const parsedUserScope = userScopeInput.parse(userScope);
 	const blockOnly = options?.blockOnly ?? false;
@@ -600,6 +602,7 @@ export class BlacklistRequestInspector {
 					asn,
 				),
 				clientId,
+				normalizeHeadersForMatching(requestHeaders),
 				// Request-time middleware only ever fires on Block policies
 				// (Restrict rules flow through and let the captcha-creation
 				// path decorate the response). Restrict the Redis-side
@@ -607,7 +610,6 @@ export class BlacklistRequestInspector {
 				// crowd out hard-block rules in clients with dense Restrict
 				// rule populations.
 				{ blockOnly: true, requestMemoHost },
-				normalizeHeadersForMatching(requestHeaders),
 			);
 			// Skip policies that have explicitly opted out of request-time
 			// enforcement (`deferToVerify`). Those are matched again from
