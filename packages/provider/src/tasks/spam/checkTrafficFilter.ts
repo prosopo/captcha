@@ -303,8 +303,8 @@ export const checkTrafficFilter = (
 // `checkTrafficFilter`); among captcha types, image outranks puzzle
 // outranks pow — a stricter check is monotonically preferred so the
 // operator's hardest configured policy wins. The ordering comes from
-// `@prosopo/captcha-severity`, shared with the access rules'
-// `ruleHarshness` and the decision machines' `resolveMiddleboxPolicy`.
+// `@prosopo/captcha-severity`, shared with the access rules' `ruleHarshness`
+// and with downstream routing consumers.
 
 export type ResolvedChallengePolicy = {
 	captchaType?: CaptchaType;

@@ -221,9 +221,9 @@ const ruleSpecificity = (
 // same specificity, replacing the prior Block-vs-Restrict-only tiebreaker.
 //
 // The ordering comes from `@prosopo/captcha-severity`, shared with the
-// traffic filter's `resolveChallengePolicy` and the decision machines'
-// `resolveMiddleboxPolicy` — all three rank competing policies by the same
-// notion of "stricter". `captchaPolicySeverity` ranks the captcha type first
+// traffic filter's `resolveChallengePolicy` and with downstream routing
+// consumers — all of them rank competing policies by the same notion of
+// "stricter". `captchaPolicySeverity` ranks the captcha type first
 // and its own difficulty setting second, so a rule's settings break ties
 // within a type without ever crossing between types.
 //
@@ -236,9 +236,9 @@ const ruleSpecificity = (
 // setting can lift a rule over a stricter captcha type.
 //
 // One deliberate change: pow rules now break ties on `powDifficulty` rather
-// than `solvedImagesCount`. Detector-authored pow rules drop
-// `solvedImagesCount` (see applyAccountAnomalyRules), so every pow rule
-// previously scored at the bottom of its tier regardless of difficulty.
+// than `solvedImagesCount`. Rule authoring drops `solvedImagesCount` for pow,
+// so every pow rule previously scored at the bottom of its tier regardless of
+// difficulty.
 // Image and puzzle both keep `solvedImagesCount` — it is the severity
 // currency they share, which the provider maps onto a puzzle difficulty
 // level via `severityToPuzzleDifficulty` rather than a literal round count.
