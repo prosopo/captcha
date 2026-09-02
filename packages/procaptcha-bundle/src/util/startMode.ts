@@ -22,7 +22,6 @@ import {
 
 export const START_MODE_ATTRIBUTE = "data-start-mode";
 
-// An unrecognised value falls back to `auto` rather than failing the render.
 export const resolveStartMode = (
 	renderOptions: ProcaptchaRenderOptions | undefined,
 	element: Element,
