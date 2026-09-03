@@ -39,7 +39,10 @@ import { hashUserAgent } from "../../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../../utils/hashUserIp.js";
 import { normalizeRequestIp } from "../../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../../admin/apiToggleMaintenanceModeEndpoint.js";
-import { getRequestUserScope } from "../../blacklistRequestInspector.js";
+import {
+	getRequestUserScope,
+	normalizeHeadersForMatching,
+} from "../../blacklistRequestInspector.js";
 import { buildDnsEventUrl } from "../../dnsEventUrl.js";
 import {
 	recordBotScore,
@@ -279,6 +282,7 @@ export default (
 						userAccessRulesStorage,
 						dapp,
 						dedupUserScope,
+						normalizeHeadersForMatching(req.headers),
 					)
 				).find((p) => !p.deferToVerify);
 				const dedupConflictsWithPolicy =
@@ -581,6 +585,7 @@ export default (
 					userAccessRulesStorage,
 					dapp,
 					userScope,
+					normalizeHeadersForMatching(req.headers),
 				),
 			]);
 
