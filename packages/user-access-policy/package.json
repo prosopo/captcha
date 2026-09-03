@@ -65,7 +65,7 @@
 		"mongoose": "9.9.4",
 		"vite": "8.1.5",
 		"vitest": "4.1.11",
-		"yargs": "17.7.2"
+		"yargs": "18.1.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
