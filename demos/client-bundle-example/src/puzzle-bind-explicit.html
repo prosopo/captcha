@@ -55,10 +55,17 @@
             window.updateCaptchaStatus(`Token generated: ${token.substring(0, 15)}...`, 'success');
 
             const resultElement = document.getElementById('result');
-            resultElement.innerHTML = `<strong>Form submitted with:</strong><br>
-- Name: ${document.getElementById('name').value}<br>
-- Email: ${document.getElementById('email').value}<br>
-- Procaptcha verified: Yes`;
+            resultElement.replaceChildren();
+            const heading = document.createElement('strong');
+            heading.textContent = 'Form submitted with:';
+            resultElement.append(heading);
+            for (const line of [
+                `- Name: ${document.getElementById('name').value}`,
+                `- Email: ${document.getElementById('email').value}`,
+                '- Procaptcha verified: Yes',
+            ]) {
+                resultElement.append(document.createElement('br'), document.createTextNode(line));
+            }
             resultElement.style.display = 'block';
         }
 
