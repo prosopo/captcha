@@ -152,6 +152,16 @@ vi.mock("../../../api/admin/apiToggleMaintenanceModeEndpoint.js", () => ({
 // Mock getRequestUserScope
 vi.mock("../../../api/blacklistRequestInspector.js", () => ({
 	getRequestUserScope: vi.fn(() => ({})),
+	// Same shape as the real normaliser: lower-cased names, string values.
+	normalizeHeadersForMatching: vi.fn(
+		(headers: Record<string, unknown>): Record<string, string> =>
+			Object.fromEntries(
+				Object.entries(headers).map(([name, value]) => [
+					name.toLowerCase(),
+					String(value),
+				]),
+			),
+	),
 }));
 
 // Mock getCompositeIpAddress
