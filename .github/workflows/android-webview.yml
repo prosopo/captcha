@@ -42,7 +42,7 @@ jobs:
       # 17, not the app's own jvmTarget: that is the bytecode level the app
       # compiles *to*, while the Android Gradle Plugin itself needs a JDK 17.
       - name: Set up JDK 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "17"
