@@ -117,48 +117,51 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		return undefined;
 	}, [state.error, frictionlessState, props.onSessionInvalidated]);
 
-	// Add event listener for the execute event (works for invisible mode)
+	// A bare execute() reaches every invisible widget via document. A targeted
+	// execute() is dispatched on this widget's container and works in either
+	// mode, which is what lets a bound button drive a visible widget.
 	useEffect(() => {
-		// Only set up event listener if in invisible mode
-		if (config.mode === ModeEnum.invisible) {
-			// Event handler for when execute() is called: fetch a challenge
-			// then drive the puzzle UI through the same phase transitions as
-			// the visible checkbox flow.
-			const handleExecuteEvent = async () => {
-				if (loading) {
-					return;
+		const handleExecuteEvent = async () => {
+			if (loading) {
+				return;
+			}
+			setLoading(true);
+			setShowRetry(false);
+			try {
+				const challenge = await manager.current.start();
+				if (challenge) {
+					setChallengeData(challenge);
+					setPuzzlePhase("dragging");
 				}
-				setLoading(true);
-				setShowRetry(false);
-				try {
-					const challenge = await manager.current.start();
-					if (challenge) {
-						setChallengeData(challenge);
-						setPuzzlePhase("dragging");
-					}
-				} catch (error) {
-					callbacks.onError?.(
-						error instanceof Error ? error : new Error(String(error)),
-					);
-				} finally {
-					setLoading(false);
-				}
-			};
+			} catch (error) {
+				callbacks.onError?.(
+					error instanceof Error ? error : new Error(String(error)),
+				);
+			} finally {
+				setLoading(false);
+			}
+		};
 
+		const container = props.container;
+		const invisible = config.mode === ModeEnum.invisible;
+		container?.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+		if (invisible) {
 			document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+		}
 
-			// Cleanup function to remove event listener
-			return () => {
+		return () => {
+			container?.removeEventListener(
+				PROCAPTCHA_EXECUTE_EVENT,
+				handleExecuteEvent,
+			);
+			if (invisible) {
 				document.removeEventListener(
 					PROCAPTCHA_EXECUTE_EVENT,
 					handleExecuteEvent,
 				);
-			};
-		}
-
-		// Return empty cleanup function when not in invisible mode
-		return () => {};
-	}, [config.mode, callbacks.onError, loading]);
+			}
+		};
+	}, [config.mode, callbacks.onError, loading, props.container]);
 
 	const handlePuzzleComplete = useCallback(
 		async (finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => {
@@ -209,6 +212,14 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	);
 
 	const isInvisible = config.mode === ModeEnum.invisible;
+
+	// Dismissing returns to the checkbox; clicking away is not a wrong answer.
+	const handleDismiss = useCallback(() => {
+		setPuzzlePhase("checkbox");
+		setChallengeData(null);
+		setShowRetry(false);
+		setLoading(false);
+	}, []);
 	const showPuzzleOverlay =
 		(puzzlePhase === "dragging" || puzzlePhase === "submitting") &&
 		challengeData;
@@ -218,11 +229,8 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			{frictionlessState?.hp && (
 				<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
 			)}
-			{/* Puzzle overlay — portals itself onto document.body, so the
-			    widget skeleton's query container cannot trap its fixed
-			    positioning (see PuzzleCanvas). Shown in both visible and
-			    invisible modes once a challenge has been fetched; puzzle is
-			    inherently interactive. */}
+			{/* Puzzle overlay — shown in both visible and invisible modes once a
+			    challenge has been fetched; puzzle is inherently interactive. */}
 			{showPuzzleOverlay && (
 				<PuzzleCanvas
 					originX={challengeData.originX}
@@ -234,6 +242,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 					showRetry={showRetry}
 					submitting={puzzlePhase === "submitting"}
 					theme={theme}
+					placement={config.placement}
+					anchor={props.container}
+					onDismiss={handleDismiss}
 				/>
 			)}
 

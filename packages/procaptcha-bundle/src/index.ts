@@ -24,7 +24,7 @@ import { at } from "@prosopo/util";
 import type { Root } from "react-dom/client";
 import { extractParams, getProcaptchaScript } from "./util/config.js";
 import { resolveStartMode } from "./util/startMode.js";
-import { WidgetFactory } from "./util/widgetFactory.js";
+import { type CreatedWidget, WidgetFactory } from "./util/widgetFactory.js";
 import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
 
 const BUNDLE_NAMES = ["procaptcha.bundle.iife.js", "procaptcha.bundle.js"];
@@ -43,9 +43,12 @@ const BUNDLE_NAMES = ["procaptcha.bundle.iife.js", "procaptcha.bundle.js"];
 interface WidgetEntry {
 	root: Root;
 	element: Element;
+	/** The element the widget listens on; a targeted execute() is dispatched here. */
+	target: HTMLElement;
 	renderOptions: ProcaptchaRenderOptions;
 	isWeb2: boolean;
 	invisible: boolean;
+	unbindTrigger?: () => void;
 }
 
 const procaptchaWidgets = new Map<string, WidgetEntry>();
@@ -54,17 +57,18 @@ let widgetIdCounter = 0;
 const nextWidgetId = (): string => `procaptcha-widget-${widgetIdCounter++}`;
 
 const registerWidgets = (
-	roots: Root[],
+	widgets: CreatedWidget[],
 	elements: Element[],
 	renderOptions: ProcaptchaRenderOptions,
 	isWeb2: boolean,
 	invisible: boolean,
 ): string[] =>
-	roots.map((root, index) => {
+	widgets.map(({ root, container }, index) => {
 		const id = nextWidgetId();
 		procaptchaWidgets.set(id, {
 			root,
 			element: at(elements, index),
+			target: container,
 			renderOptions,
 			isWeb2,
 			invisible,
@@ -145,19 +149,26 @@ const implicitRender = async () => {
 			startMode,
 		};
 
-		const root = await widgetFactory.createWidgets(
+		const widgets = await widgetFactory.createWidgets(
 			elements,
 			implicitRenderOptions,
 			!(web3 === "true"),
 		);
 
-		registerWidgets(
-			root,
+		const ids = registerWidgets(
+			widgets,
 			elements,
 			implicitRenderOptions,
 			!(web3 === "true"),
 			false,
 		);
+
+		// `data-placement` is read per element by the renderer; `data-bind` is
+		// wired here because the trigger lives outside the widget.
+		ids.forEach((id, index) => {
+			const selector = at(elements, index).getAttribute("data-bind");
+			if (selector) bindTrigger(id, selector);
+		});
 	}
 
 	// Check for invisible mode indicators (procaptcha class on buttons)
@@ -183,19 +194,25 @@ const implicitRender = async () => {
 				startMode,
 			};
 
-			const root = await widgetFactory.createWidgets(
+			const widgets = await widgetFactory.createWidgets(
 				[button],
 				buttonRenderOptions,
 				true,
 				true,
 			);
 
-			registerWidgets(root, [button], buttonRenderOptions, true, true);
+			const [id] = registerWidgets(
+				widgets,
+				[button],
+				buttonRenderOptions,
+				true,
+				true,
+			);
 
 			// Add click event listener to the button
 			button.addEventListener("click", async (event) => {
 				event.preventDefault();
-				execute();
+				execute(id);
 			});
 		}
 	}
@@ -228,7 +245,7 @@ export const render = async (
 	const invisible =
 		hasInvisibleSize || element.tagName.toLowerCase() === "button";
 
-	const roots = await widgetFactory.createWidgets(
+	const widgets = await widgetFactory.createWidgets(
 		[element],
 		renderOptions,
 		isWeb2,
@@ -236,7 +253,7 @@ export const render = async (
 	);
 
 	const ids = registerWidgets(
-		roots,
+		widgets,
 		[element],
 		renderOptions,
 		isWeb2,
@@ -245,7 +262,10 @@ export const render = async (
 
 	// Deliberately not `at()`: it throws on an empty array before it consults
 	// `optional`, and zero roots is a legitimate outcome here.
-	return ids[0];
+	const id = ids[0];
+	if (id && renderOptions.bind) bindTrigger(id, renderOptions.bind);
+
+	return id;
 };
 
 export default function ready(fn: () => void) {
@@ -262,8 +282,21 @@ export default function ready(fn: () => void) {
 	}
 }
 
-export const execute = () => {
-	const containers = findProcaptchaContainers();
+/**
+ * Starts verification. With no id the event goes to `document` and every
+ * widget responds; with an id (as returned by `render()`) only that widget
+ * runs.
+ */
+export const execute = (widgetId?: string) => {
+	const targeted =
+		undefined === widgetId ? undefined : procaptchaWidgets.get(widgetId);
+
+	if (undefined !== widgetId && !targeted) {
+		console.error(`No Procaptcha widget found with id ${widgetId}`);
+		return;
+	}
+
+	const containers = targeted ? [targeted.element] : findProcaptchaContainers();
 
 	if (containers.length === 0) {
 		console.error("No Procaptcha containers found for execution");
@@ -277,12 +310,40 @@ export const execute = () => {
 			containerCount: containers.length,
 			timestamp: Date.now(),
 		},
-		bubbles: true,
+		// A targeted event must not bubble to document, where every widget listens.
+		bubbles: !targeted,
 		cancelable: true,
 	});
 
+	if (targeted) {
+		targeted.target.dispatchEvent(executeEvent);
+		return;
+	}
+
 	// Dispatch the event on the document
 	document.dispatchEvent(executeEvent);
+};
+
+/**
+ * Wires the host-page element matching `selector` to trigger one widget. The
+ * click's default is prevented so a submit button does not post the form
+ * before a token exists.
+ */
+const bindTrigger = (widgetId: string, selector: string): void => {
+	const entry = procaptchaWidgets.get(widgetId);
+	const trigger = document.querySelector(selector);
+	if (!entry || !trigger) {
+		console.error(`Procaptcha: no element matches bind selector ${selector}`);
+		return;
+	}
+
+	const onClick = (event: Event) => {
+		event.preventDefault();
+		execute(widgetId);
+	};
+
+	trigger.addEventListener("click", onClick);
+	entry.unbindTrigger = () => trigger.removeEventListener("click", onClick);
 };
 
 /** Starts a `startMode: "manual"` widget; omit the id to start all of them. */
@@ -417,15 +478,19 @@ export const reset = async (widgetId?: string): Promise<void> => {
 
 		current.root.unmount();
 
-		const [root] = await widgetFactory.createWidgets(
+		const [widget] = await widgetFactory.createWidgets(
 			[current.element],
 			current.renderOptions,
 			current.isWeb2,
 			current.invisible,
 		);
 
-		if (root) {
-			procaptchaWidgets.set(id, { ...current, root });
+		if (widget) {
+			procaptchaWidgets.set(id, {
+				...current,
+				root: widget.root,
+				target: widget.container,
+			});
 		} else {
 			procaptchaWidgets.delete(id);
 		}
@@ -445,6 +510,7 @@ export const remove = (widgetId?: string): void => {
 	for (const id of ids) {
 		const entry = procaptchaWidgets.get(id);
 		if (!entry) continue;
+		entry.unbindTrigger?.();
 		entry.root.unmount();
 		entry.element.innerHTML = "";
 		procaptchaWidgets.delete(id);

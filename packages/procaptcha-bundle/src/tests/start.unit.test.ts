@@ -19,6 +19,7 @@ import {
 } from "@prosopo/types";
 import type { Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { CreatedWidget } from "../util/widgetFactory.js";
 
 const mocks = vi.hoisted(() => ({
 	prefetchDetector: vi.fn(),
@@ -44,8 +45,10 @@ const { render, remove, start } = await import("../index.js");
 
 const SITE_KEY = "5CcNvLUdiXFpzKDMjThGLSK9rhWHA1H4EF3zrgkpkjAdqmuP";
 
-const makeRoot = (): Root =>
-	({ unmount: vi.fn(), render: vi.fn() }) as unknown as Root;
+const makeWidget = (): CreatedWidget => ({
+	root: { unmount: vi.fn(), render: vi.fn() } as unknown as Root,
+	container: document.createElement("div"),
+});
 
 const flush = (): Promise<void> =>
 	new Promise((resolve) => setTimeout(resolve, 0));
@@ -53,7 +56,7 @@ const flush = (): Promise<void> =>
 const renderWidget = async (
 	options: Partial<Parameters<typeof render>[1]> = {},
 ): Promise<{ element: HTMLDivElement; id: string }> => {
-	mocks.createWidgets.mockResolvedValueOnce([makeRoot()]);
+	mocks.createWidgets.mockResolvedValueOnce([makeWidget()]);
 	const element = document.createElement("div");
 	const id = await render(element, { siteKey: SITE_KEY, ...options });
 	if (!id) throw new Error("expected render to return a widget id");
@@ -141,7 +144,7 @@ describe("detector prefetch", () => {
 	});
 
 	it("is skipped when the element asks for manual mode", async () => {
-		mocks.createWidgets.mockResolvedValueOnce([makeRoot()]);
+		mocks.createWidgets.mockResolvedValueOnce([makeWidget()]);
 		const element = document.createElement("div");
 		element.setAttribute("data-start-mode", "manual");
 		await render(element, { siteKey: SITE_KEY });

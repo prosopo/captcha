@@ -112,37 +112,46 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		}
 	}, [state.error, frictionlessState, props.onSessionInvalidated]);
 
-	// Add event listener for the execute event (works for invisible mode)
+	// A bare execute() reaches every invisible widget via document. A targeted
+	// execute() is dispatched on this widget's container and works in either
+	// mode, which is what lets a bound button drive a visible widget.
 	useEffect(() => {
-		// Only set up event listener if in invisible mode
-		if (config.mode === ModeEnum.invisible) {
-			// Event handler for when execute() is called
-			const handleExecuteEvent = (event: Event) => {
-				// Directly start the verification process without showing any UI
-				try {
-					// Start the PoW verification process
-					void manager.current.start().catch((error: unknown) => {
-						console.error("Error starting PoW verification:", error);
-					});
-				} catch (error) {
-					console.error("Error starting PoW verification:", error);
-				}
+		const invisible = config.mode === ModeEnum.invisible;
+		const logError = (error: unknown) => {
+			console.error("Error starting PoW verification:", error);
+		};
+		const handleExecuteEvent = () => {
+			if (!invisible) setLoading(true);
+			const done = () => {
+				if (!invisible) setLoading(false);
 			};
+			try {
+				void manager.current.start().catch(logError).finally(done);
+			} catch (error) {
+				logError(error);
+				done();
+			}
+		};
 
+		const container = props.container;
+		container?.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+		if (invisible) {
 			document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+		}
 
-			// Cleanup function to remove event listener
-			return () => {
+		return () => {
+			container?.removeEventListener(
+				PROCAPTCHA_EXECUTE_EVENT,
+				handleExecuteEvent,
+			);
+			if (invisible) {
 				document.removeEventListener(
 					PROCAPTCHA_EXECUTE_EVENT,
 					handleExecuteEvent,
 				);
-			};
-		}
-
-		// Return empty cleanup function when not in invisible mode
-		return () => {};
-	}, [config.mode]);
+			}
+		};
+	}, [config.mode, props.container]);
 
 	const honeypot = frictionlessState?.hp ? (
 		<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />

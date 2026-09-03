@@ -429,6 +429,32 @@ describe("the invisible-mode execute event", () => {
 		expect(mocks.start).not.toHaveBeenCalled();
 	});
 
+	const executeOn = async (target: Element): Promise<void> => {
+		await act(async () => {
+			target.dispatchEvent(new Event("procaptcha:execute"));
+			await new Promise((resolve) => setTimeout(resolve, 0));
+		});
+	};
+
+	test("a targeted execute on the container runs a visible widget", async () => {
+		const target = document.createElement("div");
+		render(props({ container: target }));
+		await executeOn(target);
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+	});
+
+	test("a targeted execute on the container runs an invisible widget", async () => {
+		const target = document.createElement("div");
+		render(
+			props({
+				config: config({ mode: ModeEnum.invisible }),
+				container: target,
+			}),
+		);
+		await executeOn(target);
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+	});
+
 	test("stops being listened for once the widget is gone", () => {
 		render(props({ config: config({ mode: ModeEnum.invisible }) }));
 		act(() => {

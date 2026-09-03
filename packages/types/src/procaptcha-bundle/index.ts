@@ -31,6 +31,11 @@ export interface ProcaptchaRenderOptions {
 	"reset-callback"?: string | (() => void);
 	language?: (typeof Languages)[keyof typeof Languages];
 	size?: "invisible";
+	// "popup" (default) centres the challenge over the page; "float" anchors
+	// it to the widget. An invisible widget always uses popup.
+	placement?: "popup" | "float";
+	// CSS selector for a host-page button that triggers this widget.
+	bind?: string;
 	web3?: boolean;
 	userAccountAddress?: string;
 	// When true, restrict provider DNS resolution to A records only. Mutually

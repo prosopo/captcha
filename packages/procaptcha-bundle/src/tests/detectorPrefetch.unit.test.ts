@@ -19,8 +19,8 @@
  * to assigning a detector inline on the widget's critical path.
  */
 
-import type { Root } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { CreatedWidget } from "../util/widgetFactory.js";
 
 const mocks = vi.hoisted(() => ({
 	prefetchDetector: vi.fn(),
@@ -59,7 +59,7 @@ const renderAndFlush = async (
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	mocks.createWidgets.mockResolvedValue([] as Root[]);
+	mocks.createWidgets.mockResolvedValue([] as CreatedWidget[]);
 });
 
 describe("render", () => {

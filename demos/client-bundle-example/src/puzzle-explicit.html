@@ -135,8 +135,16 @@
             window.updateCaptchaStatus('Initializing CAPTCHA with explicit render call', 'info');
 
             // Render the CAPTCHA
+            // ?placement=float anchors the challenge to the widget; the default is popup.
+            const placement =
+                new URLSearchParams(window.location.search).get("placement") === "float"
+                    ? "float"
+                    : "popup";
+            window.updateCaptchaStatus('Challenge placement: ' + placement, 'info');
+
             const widgetId = render(document.getElementById('procaptcha-container'), {
                 siteKey: import.meta.env.PROSOPO_SITE_KEY_PUZZLE,
+                placement,
                 callback: handleCaptchaResponse,
                 "failed-callback": handleCaptchaFailed
             });

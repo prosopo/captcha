@@ -139,14 +139,22 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 
 		document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
 
+		// A targeted execute() is dispatched on the container, not document.
+		const container = props.container;
+		container?.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+
 		// Cleanup function to remove event listener
 		return () => {
 			document.removeEventListener(
 				PROCAPTCHA_EXECUTE_EVENT,
 				handleExecuteEvent,
 			);
+			container?.removeEventListener(
+				PROCAPTCHA_EXECUTE_EVENT,
+				handleExecuteEvent,
+			);
 		};
-	}, [state.challenge, updateState]);
+	}, [state.challenge, updateState, props.container]);
 
 	const honeypot = frictionlessState?.hp ? (
 		<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
@@ -156,7 +164,12 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 		return (
 			<>
 				{honeypot}
-				<Modal show={state.showModal}>
+				<Modal
+					show={state.showModal}
+					placement={config.placement}
+					anchor={props.container}
+					onDismiss={manager.current.cancel}
+				>
 					{state.challenge ? (
 						<CaptchaComponent
 							challenge={state.challenge}
@@ -178,7 +191,12 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	return (
 		<div className={"image-captcha"}>
 			{honeypot}
-			<Modal show={state.showModal}>
+			<Modal
+				show={state.showModal}
+				placement={config.placement}
+				anchor={props.container}
+				onDismiss={manager.current.cancel}
+			>
 				{state.challenge ? (
 					<CaptchaComponent
 						challenge={state.challenge}

@@ -29,6 +29,12 @@ import type { CaptchaRenderer } from "./captcha/captchaRenderer.js";
 import { resolveLanguage } from "./language.js";
 import type { WidgetThemeResolver } from "./widgetThemeResolver.js";
 
+/** A mounted widget and the element it listens on for `procaptcha:execute`. */
+interface CreatedWidget {
+	root: Root;
+	container: HTMLElement;
+}
+
 class WidgetFactory {
 	private captchaRenderer: CaptchaRenderer | null = null;
 	private _i18n: Ti18n | null = null;
@@ -49,7 +55,7 @@ class WidgetFactory {
 		renderOptions: ProcaptchaRenderOptions,
 		isWeb2 = true,
 		invisible = false,
-	): Promise<Root[]> {
+	): Promise<CreatedWidget[]> {
 		return Promise.all(
 			containers.map((container) => {
 				const callbacks = getDefaultCallbacks(container);
@@ -71,7 +77,7 @@ class WidgetFactory {
 		callbacks: Callbacks,
 		isWeb2 = true,
 		invisible = false,
-	): Promise<Root> {
+	): Promise<CreatedWidget> {
 		renderOptions.theme = this.widgetThemeResolver.resolveWidgetTheme(
 			container,
 			renderOptions,
@@ -127,7 +133,7 @@ class WidgetFactory {
 			container,
 		);
 
-		return captchaRoot;
+		return { root: captchaRoot, container: widgetContainer };
 	}
 
 	protected async getCaptchaRenderer(
@@ -158,3 +164,4 @@ class WidgetFactory {
 }
 
 export { WidgetFactory };
+export type { CreatedWidget };
