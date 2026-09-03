@@ -52,7 +52,21 @@ export interface PrefetchedDetector {
 	assigned: AssignDetectorBundleResponse;
 }
 
-const inFlight = new Map<string, Promise<PrefetchedDetector>>();
+interface PrefetchEntry {
+	promise: Promise<PrefetchedDetector>;
+	startedAt: number;
+}
+
+const inFlight = new Map<string, PrefetchEntry>();
+
+/**
+ * How long a started prefetch stays claimable. A page that mounts several
+ * widgets does so within a tick or two of each other, so a short window is
+ * enough for them to share one assignment; anything mounting much later
+ * (a modal opened minutes in, say) re-resolves rather than reusing a provider
+ * pin that has since gone stale.
+ */
+const PREFETCH_TTL_MS = 60_000;
 
 const keyOf = (
 	environment: EnvironmentTypes,
@@ -76,6 +90,7 @@ export const prefetchDetector = (
 ): void => {
 	const key = keyOf(environment, ipMode, siteKey);
 	if (inFlight.has(key)) return;
+	const startedAt = Date.now();
 
 	const promise = (async (): Promise<PrefetchedDetector> => {
 		const provider = await getProcaptchaRandomActiveProvider(
@@ -90,13 +105,37 @@ export const prefetchDetector = (
 	// Attach a no-op catch so a failed prefetch never becomes an unhandled
 	// rejection. `takePrefetchedDetector`'s consumer still sees the rejection on
 	// the original promise and falls back.
-	promise.catch(() => undefined);
-	inFlight.set(key, promise);
+	//
+	// Drop the entry if it rejects, so a later widget re-resolves instead of
+	// inheriting a pin that has already failed. This is what the previous
+	// delete-on-claim was protecting against; doing it on rejection instead
+	// keeps that guarantee while letting concurrent widgets share a success.
+	promise.catch(() => {
+		if (inFlight.get(key)?.promise === promise) inFlight.delete(key);
+	});
+	inFlight.set(key, { promise, startedAt });
 };
 
 /**
- * Claim a prefetched assignment, if one was started for this exact key. The
- * entry is removed, so a retry does not reuse a pin that may have just failed.
+ * Claim a prefetched assignment, if one was started for this exact key and is
+ * still fresh.
+ *
+ * The entry is deliberately NOT removed on claim. It used to be, which meant
+ * that on a page carrying several widgets only the first shared the prefetch
+ * and every other widget issued its own provider resolve + assign. One
+ * production integration mounts a widget per form — eight on a property page —
+ * so a single page view cost eight assign calls instead of one, enough to push
+ * ordinary visitors past a rate detector.
+ *
+ * Sharing one assignment across widgets is sound: `detectorSessionId` binds to
+ * a bundleId in Redis purely so the provider can resolve which cipher keys
+ * decrypt that widget's SIMD readings. Widgets sharing an assignment run the
+ * same bundle, so the same keys are the right ones. It is a lookup, not a
+ * one-shot token.
+ *
+ * A failed prefetch still removes itself (see `prefetchDetector`), and entries
+ * go stale after PREFETCH_TTL_MS, so neither a failed nor an aged provider pin
+ * is handed out.
  */
 export const takePrefetchedDetector = (
 	environment: EnvironmentTypes,
@@ -104,9 +143,13 @@ export const takePrefetchedDetector = (
 	siteKey: string,
 ): Promise<PrefetchedDetector> | undefined => {
 	const key = keyOf(environment, ipMode, siteKey);
-	const promise = inFlight.get(key);
-	if (promise) inFlight.delete(key);
-	return promise;
+	const entry = inFlight.get(key);
+	if (!entry) return undefined;
+	if (Date.now() - entry.startedAt > PREFETCH_TTL_MS) {
+		inFlight.delete(key);
+		return undefined;
+	}
+	return entry.promise;
 };
 
 /** Test seam — drops any in-flight prefetches. */
