@@ -14,13 +14,7 @@
 
 import type { RedisWriteQueue } from "@prosopo/database";
 import { type Logger, getLogger } from "@prosopo/logger";
-import {
-	ContextType,
-	IpAddressType,
-	type KeyringPair,
-	type Session,
-	contextAwareThresholdDefault,
-} from "@prosopo/types";
+import { IpAddressType, type KeyringPair, type Session } from "@prosopo/types";
 import {
 	CaptchaType,
 	type IUserSettings,
@@ -61,15 +55,6 @@ const defaultUserSettings: IUserSettings = {
 	solutionTimeout: 60000,
 	puzzleTolerance: 15,
 	disallowWebView: false,
-	contextAware: {
-		enabled: false,
-		contexts: {
-			default: {
-				type: ContextType.Default,
-				threshold: contextAwareThresholdDefault,
-			},
-		},
-	},
 };
 
 describe("CaptchaManager", () => {

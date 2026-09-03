@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ContextType } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { hashUserAgentMock, timestampTooOldMock, timestampDecayMock } =
@@ -30,7 +29,6 @@ vi.mock("../../../../../tasks/frictionless/frictionlessTasks.js", () => ({
 	FrictionlessManager: { timestampTooOld: timestampTooOldMock },
 	FrictionlessReason: {
 		USER_AGENT_MISMATCH: "USER_AGENT_MISMATCH",
-		CONTEXT_AWARE_VALIDATION_FAILED: "CONTEXT_AWARE_VALIDATION_FAILED",
 		WEBVIEW_DETECTED: "WEBVIEW_DETECTED",
 		OLD_TIMESTAMP: "OLD_TIMESTAMP",
 		BOT_SCORE_ABOVE_THRESHOLD: "BOT_SCORE_ABOVE_THRESHOLD",
@@ -45,12 +43,6 @@ vi.mock("../../../../../tasks/frictionless/frictionlessTasks.js", () => ({
 
 vi.mock("../../../../../tasks/frictionless/frictionlessTasksUtils.js", () => ({
 	timestampDecayFunction: timestampDecayMock,
-}));
-
-vi.mock("../../../contextAwareValidation.js", () => ({
-	determineContextType: (webView: boolean) =>
-		webView ? ContextType.Webview : ContextType.Default,
-	getContextThreshold: () => 0.5,
 }));
 
 import { runDecisionMachine } from "../../../../../api/captcha/getFrictionlessCaptchaChallenge/decisionMachine.js";

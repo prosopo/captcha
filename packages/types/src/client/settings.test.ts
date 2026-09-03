@@ -20,7 +20,6 @@ import {
 import { CaptchaType } from "./captchaType/captchaType.js";
 import {
 	ClientSettingsSchema,
-	ContextConfigSchema,
 	ContextType,
 	DeviceType,
 	EmailSpamRulesSchema,
@@ -33,12 +32,10 @@ import {
 	abuseScoreThresholdDefault,
 	captchaTypeDefault,
 	clampImageRounds,
-	contextAwareThresholdDefault,
 	contextTypeFor,
 	deviceContextTypes,
 	deviceTypeFromUserAgent,
 	distanceThresholdKmDefault,
-	expandContexts,
 	frictionlessImageThresholdDefault,
 	frictionlessPuzzleThresholdDefault,
 	frictionlessThresholdDefault,
@@ -409,52 +406,6 @@ describe("IPValidationRulesSchema", () => {
 	});
 });
 
-describe("ContextConfigSchema", () => {
-	it("defaults the threshold", () => {
-		expect(
-			ContextConfigSchema.parse({ type: ContextType.Default }).threshold,
-		).toBe(contextAwareThresholdDefault);
-	});
-
-	it("allows the threshold to move 0.2 either way but no further", () => {
-		const low = Number((contextAwareThresholdDefault - 0.2).toFixed(2));
-		const high = Number((contextAwareThresholdDefault + 0.2).toFixed(2));
-		expect(
-			ContextConfigSchema.safeParse({
-				type: ContextType.Default,
-				threshold: low,
-			}).success,
-		).toBe(true);
-		expect(
-			ContextConfigSchema.safeParse({
-				type: ContextType.Default,
-				threshold: high,
-			}).success,
-		).toBe(true);
-		expect(
-			ContextConfigSchema.safeParse({
-				type: ContextType.Default,
-				threshold: low - 0.01,
-			}).success,
-		).toBe(false);
-		expect(
-			ContextConfigSchema.safeParse({
-				type: ContextType.Default,
-				threshold: high + 0.01,
-			}).success,
-		).toBe(false);
-	});
-
-	it("requires a known context type", () => {
-		expect(ContextConfigSchema.safeParse({ type: "native" }).success).toBe(
-			false,
-		);
-		expect(
-			ContextConfigSchema.safeParse({ type: ContextType.Webview }).success,
-		).toBe(true);
-	});
-});
-
 describe("deviceTypeFromUserAgent", () => {
 	const cases: Array<[string, string, DeviceType]> = [
 		[
@@ -529,119 +480,6 @@ describe("contextTypeFor", () => {
 		]);
 		expect(new Set(produced)).toEqual(new Set(deviceContextTypes));
 		expect(produced).toHaveLength(deviceContextTypes.length);
-	});
-});
-
-describe("expandContexts", () => {
-	const config = (type: ContextType, threshold: number) => ({
-		type,
-		threshold,
-	});
-
-	it("returns nothing for undefined or empty contexts", () => {
-		expect(expandContexts(undefined)).toEqual({});
-		expect(expandContexts({})).toEqual({});
-	});
-
-	it("passes device contexts through untouched", () => {
-		const expanded = expandContexts({
-			[ContextType.Mobile]: config(ContextType.Mobile, 0.8),
-		});
-
-		expect(expanded).toEqual({
-			[ContextType.Mobile]: config(ContextType.Mobile, 0.8),
-		});
-	});
-
-	it("spreads a legacy default across the non-webview families only", () => {
-		const expanded = expandContexts({
-			[ContextType.Default]: config(ContextType.Default, 0.75),
-		});
-
-		expect(Object.keys(expanded).sort()).toEqual(
-			[ContextType.Desktop, ContextType.Mobile, ContextType.Tablet].sort(),
-		);
-		expect(expanded[ContextType.Desktop]?.threshold).toBe(0.75);
-	});
-
-	it("spreads a legacy webview across the webview families only", () => {
-		const expanded = expandContexts({
-			[ContextType.Webview]: config(ContextType.Webview, 0.65),
-		});
-
-		expect(Object.keys(expanded).sort()).toEqual(
-			[
-				ContextType.DesktopWebview,
-				ContextType.MobileWebview,
-				ContextType.TabletWebview,
-			].sort(),
-		);
-		expect(expanded[ContextType.MobileWebview]?.threshold).toBe(0.65);
-	});
-
-	it("lets an explicit device context override the legacy entry covering it", () => {
-		const expanded = expandContexts({
-			[ContextType.Default]: config(ContextType.Default, 0.75),
-			[ContextType.Mobile]: config(ContextType.Mobile, 0.6),
-		});
-
-		expect(expanded[ContextType.Mobile]?.threshold).toBe(0.6);
-		expect(expanded[ContextType.Desktop]?.threshold).toBe(0.75);
-		expect(expanded[ContextType.Tablet]?.threshold).toBe(0.75);
-	});
-
-	it("never emits a legacy key", () => {
-		const expanded = expandContexts({
-			[ContextType.Default]: config(ContextType.Default, 0.75),
-			[ContextType.Webview]: config(ContextType.Webview, 0.65),
-		});
-
-		expect(expanded).not.toHaveProperty(ContextType.Default);
-		expect(expanded).not.toHaveProperty(ContextType.Webview);
-		expect(Object.keys(expanded)).toHaveLength(deviceContextTypes.length);
-	});
-});
-
-describe("ContextsSchema round-trip", () => {
-	it("accepts a legacy contexts map so stored settings keep parsing", () => {
-		const parsed = ClientSettingsSchema.safeParse({
-			...minimal,
-			contextAware: {
-				enabled: true,
-				contexts: {
-					[ContextType.Default]: { type: ContextType.Default, threshold: 0.7 },
-					[ContextType.Webview]: { type: ContextType.Webview, threshold: 0.7 },
-				},
-			},
-		});
-		expect(parsed.success).toBe(true);
-	});
-
-	it("accepts a device contexts map", () => {
-		const parsed = ClientSettingsSchema.safeParse({
-			...minimal,
-			contextAware: {
-				enabled: true,
-				contexts: {
-					[ContextType.MobileWebview]: {
-						type: ContextType.MobileWebview,
-						threshold: 0.7,
-					},
-				},
-			},
-		});
-		expect(parsed.success).toBe(true);
-	});
-
-	it("rejects a context key that is not a known context type", () => {
-		const parsed = ClientSettingsSchema.safeParse({
-			...minimal,
-			contextAware: {
-				enabled: true,
-				contexts: { smartfridge: { type: "smartfridge", threshold: 0.7 } },
-			},
-		});
-		expect(parsed.success).toBe(false);
 	});
 });
 

@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { severityToPuzzleDifficulty } from "@prosopo/captcha-severity";
 import type { Logger } from "@prosopo/logger";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
 	ApiParams,
 	CaptchaType,
 	type CompositeIpAddress,
-	type ContextType,
 	FrictionlessReason,
 	type GetFrictionlessCaptchaResponse,
 	type IPInfoResponse,
@@ -48,10 +48,7 @@ import { CaptchaManager } from "../captchaManager.js";
 import { coerceToEnabledCaptchaType } from "../captchaTypeSelection.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { getBotScore } from "../detection/getBotScore.js";
-import {
-	samplePuzzleDifficulty,
-	severityToPuzzleDifficulty,
-} from "../puzzle/puzzleDifficulty.js";
+import { samplePuzzleDifficulty } from "../puzzle/puzzleDifficulty.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
 
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
@@ -968,12 +965,5 @@ export class FrictionlessManager extends CaptchaManager {
 			// later behavioural-data hop can resolve the same keypair/inner cfg.
 			bundleId,
 		};
-	}
-
-	async getClientContextEntropy(
-		siteKey: string,
-		contextType: ContextType,
-	): Promise<string | undefined> {
-		return this.db.getClientContextEntropy(siteKey, contextType);
 	}
 }

@@ -51,7 +51,19 @@
  * schemas, and some consumers bundle this standalone under a hard source-size
  * ceiling that a runtime dependency on the `@prosopo/types` barrel has
  * breached before. A leaf with no imports cannot repeat that.
+ *
+ * It is also why the puzzle ladder re-exported below stops at the arithmetic:
+ * drawing a render out of a level's bands needs `IPuzzleSettings` and a
+ * `node:crypto` sampler, so that half stays in the provider.
  */
+
+/**
+ * The puzzle difficulty ladder. Severity ranks a policy; the ladder says what
+ * a puzzle policy carrying that severity is actually served at. Both answers
+ * belong to the same question, so they ship from one package — see
+ * `puzzleDifficulty.ts`.
+ */
+export * from "./puzzleDifficulty.js";
 
 /**
  * Spacing between adjacent severity tiers.

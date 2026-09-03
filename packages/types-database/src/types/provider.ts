@@ -985,6 +985,21 @@ export const ClientContextEntropyRecordSchema =
 				required: true,
 			},
 			entropy: { type: String, required: true },
+			totalSessions: { type: Number, required: false },
+			distinctHashes: { type: Number, required: false },
+			urls: {
+				type: [
+					new Schema(
+						{
+							url: { type: String, required: true },
+							sessions: { type: Number, required: true },
+							entropy: { type: String, required: true },
+						},
+						{ _id: false },
+					),
+				],
+				required: false,
+			},
 		},
 		{ timestamps: { createdAt: true, updatedAt: true } },
 	);
@@ -1478,11 +1493,6 @@ export interface IProviderDatabase extends IDatabase {
 	removeDecisionMachineArtifact(id: string): Promise<boolean>;
 
 	removeAllDecisionMachineArtifacts(): Promise<number>;
-
-	getClientContextEntropy(
-		account: string,
-		contextType: ContextType,
-	): Promise<string | undefined>;
 
 	getSpamEmailDomain(domain: string): Promise<SpamEmailDomainRecord | null>;
 

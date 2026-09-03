@@ -238,7 +238,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						maxVerifiedTime,
 						ip,
 						clientRecord.settings.disallowWebView,
-						clientRecord.settings.contextAware?.enabled,
 						userAccessRulesStorage,
 						email,
 						clientRecord.settings.spamEmailDomainCheckEnabled,

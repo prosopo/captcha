@@ -1229,7 +1229,6 @@ describe("ImgCaptchaManager", () => {
 					undefined, // maxVerifiedTime
 					undefined, // ip
 					undefined, // disallowWebView
-					false, // contextAwareEnabled
 					// Truthy storage triggers the checkForHardBlock branch;
 					// the stub above ignores whatever's passed here.
 					// biome-ignore lint/suspicious/noExplicitAny: test stub
@@ -1304,7 +1303,6 @@ describe("ImgCaptchaManager", () => {
 				dappAccount,
 				commitmentId,
 				mockEnv,
-				undefined,
 				undefined,
 				undefined,
 				undefined,
@@ -1388,7 +1386,6 @@ describe("ImgCaptchaManager", () => {
 					undefined,
 					undefined,
 					undefined,
-					undefined,
 					legitimateEmail,
 					true,
 				);
@@ -1466,7 +1463,6 @@ describe("ImgCaptchaManager", () => {
 					undefined,
 					undefined,
 					undefined,
-					undefined,
 					undefined, // No email provided
 					true,
 				);
@@ -1533,7 +1529,6 @@ describe("ImgCaptchaManager", () => {
 				undefined,
 				undefined,
 				undefined,
-				undefined,
 				atDomainEmail,
 				true,
 			);
@@ -1594,7 +1589,6 @@ describe("ImgCaptchaManager", () => {
 				dappAccount,
 				commitmentId,
 				mockEnv,
-				undefined,
 				undefined,
 				undefined,
 				undefined,
@@ -1672,7 +1666,6 @@ describe("ImgCaptchaManager", () => {
 					undefined,
 					undefined,
 					undefined,
-					undefined,
 					email,
 					true,
 				);
@@ -1739,7 +1732,6 @@ describe("ImgCaptchaManager", () => {
 				dappAccount,
 				undefined, // No commitmentId
 				mockEnv,
-				undefined,
 				undefined,
 				undefined,
 				undefined,
@@ -1945,7 +1937,6 @@ describe("ImgCaptchaManager", () => {
 				undefined, // maxVerifiedTime
 				undefined, // ip
 				undefined, // disallowWebView
-				undefined, // contextAwareEnabled
 				undefined, // userAccessRulesStorage
 				email,
 				false, // spamEmailDomainCheckingEnabled — off, isolates the count check
@@ -2104,7 +2095,6 @@ describe("ImgCaptchaManager", () => {
 				undefined, // maxVerifiedTime
 				undefined, // ip
 				undefined, // disallowWebView
-				undefined, // contextAwareEnabled
 				undefined, // userAccessRulesStorage
 				undefined, // email
 				false, // spamEmailDomainCheckingEnabled

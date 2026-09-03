@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { MIN_DECOY_HOLE_DARKEN_MARGIN } from "@prosopo/captcha-severity";
 import {
 	DEFAULT_GEOMETRY,
 	DEFAULT_RENDER_SETTINGS,
@@ -29,7 +30,6 @@ import {
 	getPuzzleBackgroundBuffer,
 	initPuzzleBackgroundBuffer,
 } from "./backgroundBuffer.js";
-import { MIN_DECOY_HOLE_DARKEN_MARGIN } from "./puzzleDifficulty.js";
 import { createStratifiedSampler } from "./stratifiedSampler.js";
 
 export interface RenderedPuzzleImages {

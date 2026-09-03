@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/native-ja4",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "Rust JA4 TLS fingerprint parser exposed to Node via napi-rs.",
 	"license": "Apache-2.0",
 	"private": true,
