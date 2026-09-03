@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
+    <link href="styles/field.css" rel="stylesheet" type="text/css"/>
+
+    <script src="index.js"></script>
+    <title>Procaptcha Puzzle Mode - Bound Button</title>
+<link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+    <div class="mui-container">
+        <h1>Procaptcha Puzzle Mode - Bound Button</h1>
+        <p>
+            The widget is rendered once and bound to the form's own submit button with
+            <code>bind: "#verify-btn"</code>. Clicking the button triggers that widget's challenge
+            without ticking the checkbox. Add <code>?placement=float</code> to anchor the
+            challenge to the widget instead of centring it.
+        </p>
+
+        <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
+
+        <form id="demo-form" class="mui-form">
+            <h2>Example Form</h2>
+
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required />
+            </div>
+
+            <div class="mui-textfield mui-textfield--float-label">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required />
+            </div>
+
+            <!-- The container for the CAPTCHA -->
+            <div id="procaptcha-container"></div>
+
+            <button type="submit" id="verify-btn" class="mui-btn mui-btn--raised mui-btn--primary">Verify &amp; submit</button>
+
+            <div id="error"></div>
+        </form>
+
+        <div id="result" class="info-box" style="display: none;"></div>
+
+        <!-- Console output display area -->
+        <div id="console-output" class="console-output" style="display: none;"></div>
+    </div>
+
+    <script type="module">
+        import { render } from "%VITE_BUNDLE_URL%"
+
+        function handleCaptchaResponse(token) {
+            window.updateCaptchaStatus('Challenge passed successfully!', 'success');
+            window.updateCaptchaStatus(`Token generated: ${token.substring(0, 15)}...`, 'success');
+
+            const resultElement = document.getElementById('result');
+            resultElement.innerHTML = `<strong>Form submitted with:</strong><br>
+- Name: ${document.getElementById('name').value}<br>
+- Email: ${document.getElementById('email').value}<br>
+- Procaptcha verified: Yes`;
+            resultElement.style.display = 'block';
+        }
+
+        function handleCaptchaFailed() {
+            window.updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
+            document.getElementById('error').textContent = 'CAPTCHA verification failed. Please try again.';
+            document.getElementById('error').style.display = 'block';
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            // ?placement=float anchors the challenge to the widget; the default is popup.
+            const placement =
+                new URLSearchParams(window.location.search).get("placement") === "float"
+                    ? "float"
+                    : "popup";
+            window.updateCaptchaStatus('Challenge placement: ' + placement, 'info');
+
+            const widgetId = await render(document.getElementById('procaptcha-container'), {
+                siteKey: import.meta.env.PROSOPO_SITE_KEY_PUZZLE,
+                placement,
+                bind: "#verify-btn",
+                callback: handleCaptchaResponse,
+                "failed-callback": handleCaptchaFailed
+            });
+
+            window.updateCaptchaStatus('Widget ' + widgetId + ' bound to #verify-btn', 'info');
+        });
+    </script>
+</body>
+</html>

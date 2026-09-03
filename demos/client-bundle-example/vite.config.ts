@@ -210,6 +210,10 @@ export default defineConfig(({ command, mode }) => {
 						__dirname,
 						"src/puzzle-explicit.html",
 					),
+					"puzzle-bind-explicit": path.resolve(
+						__dirname,
+						"src/puzzle-bind-explicit.html",
+					),
 					"invisible-puzzle-implicit": path.resolve(
 						__dirname,
 						"src/invisible-puzzle-implicit.html",
