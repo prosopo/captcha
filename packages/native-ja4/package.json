@@ -1,9 +1,14 @@
 {
 	"name": "@prosopo/native-ja4",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "Rust JA4 TLS fingerprint parser exposed to Node via napi-rs.",
 	"license": "Apache-2.0",
-	"private": true,
+	"author": "Prosopo Limited",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/native-ja4"
+	},
 	"main": "index.js",
 	"types": "index.d.ts",
 	"files": ["index.js", "index.d.ts", "*.node"],

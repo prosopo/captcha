@@ -1,5 +1,145 @@
 # @prosopo/provider
 
+## 5.7.0
+### Minor Changes
+
+- 8a670d3: Remove the provider-side context validation path.
+  
+  The provider read a per-context baseline out of `clientcontextentropies` on the frictionless path and compared a session's head hash against it. The task that wrote that collection was removed from the provider on 2026-08-21, so the read has returned `undefined` ever since and the branch has been dead in every deployment since then. Computing and applying the baseline now happens off-provider.
+  
+  Removed: `contextAwareValidation.ts`, the decision-machine branch that used it, `getClientContextEntropy` on the provider and its database method, the `clientContextEntropy` table registration, the unused `getRoundsFromSimScore` helper, and the `contextAwareEnabled` parameter threaded into image verification — which logged and then did nothing, its return commented out.
+  
+  Also removes the per-site `settings.contextAware` block that configured it, along with `ContextAwareSchema`, `IContextAware`, `IContexts`, `ContextConfigSchema`, `contextAwareThresholdDefault` and `expandContexts`, the legacy `default`/`webview` context keys and their helpers, and `FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED`. The site-key registration CLI no longer writes a `contextAware` default into new sites.
+  
+  `ContextType`, `contextTypeFromSession` and `deviceContextTypes` stay — the off-provider work keys on them. `ClientContextEntropyRecord` and its schema stay for the same reason; only the provider's use of them goes.
+  
+  No behaviour change: every path removed here was already inert.
+
+### Patch Changes
+
+- 7fd6eb2: Add a `browser` match dimension to access rules.
+  
+  Rules can now be scoped to the browser classified server-side from the request
+  User-Agent (`chrome`, `safari`, `firefox`, `edge`, `opera`, `samsung_internet`,
+  `wechat`, `facebook`, `instagram`, `ie`, `unknown`), mirroring the existing `os`
+  dimension. The classifier duplicates `@prosopo/decision-machines`' `uaClassify`
+  because the provider request path cannot depend on that package.
+  
+  Also fixes `os` never getting its own probe on the Redis split-query hot path:
+  `SCALAR_USER_SCOPE_FIELDS` in `redisRulesSplitQuery` had not been updated when
+  the OS dimension landed, so an OS-only rule was reachable only via the
+  `no-user-scope` fall-through, competing for that probe's candidate budget
+  against genuine client-wide blocks.
+  
+  The Redis index gains a `browser` TAG field. `createRedisIndex` hashes the index
+  definition and drops/recreates when the hash changes, so this needs no manual
+  migration — verified locally: the index came back carrying `browser` and the
+  stored hash moved to match.
+- 424e467: Add `@prosopo/captcha-severity` and use it for the access rules and the traffic filter.
+  
+  "Which captcha challenge is stricter" is one idea with several callers, and each answered it with its own table: the traffic filter combining multiple `challenge` matches on one request (`resolveChallengePolicy`), the access rules breaking ties between equally-specific rules (`ruleHarshness`), and downstream routing consumers. They agreed on the order — image > puzzle > pow > frictionless — but nothing held them to it, and they disagreed on the encoding.
+  
+  The new package has **zero dependencies**, deliberately. Captcha types are string enums, so a plain `string` parameter accepts them without importing `CaptchaType` — and that import would not be free, because it lives in a module that pulls zod in for its schemas. Some consumers bundle this standalone under a hard source-size ceiling that a runtime dependency on the `@prosopo/types` barrel has breached before.
+  
+  Two APIs, because "stricter" means two different things:
+  
+  - `rankCaptchaType` / `isStricterCaptchaType` compare the **type alone**, for callers that choose the type independently of its settings — as the traffic filter does, picking the strictest type and then separately merging the hardest parameters from every matched category.
+  - `captchaPolicySeverity` / `isStricterCaptchaPolicy` compare a **whole policy**, type first and its own difficulty setting second, for callers where one complete policy must beat another and a tie on type alone would otherwise be decided by argument order.
+  
+  **Fixes an ordering bug in the access rules.** `ruleHarshness` scored `base + solvedImagesCount` with tiers 10 apart, and `solvedImagesCount` is validated by `imageMaxRoundsFieldSchema` — `number().int().min(2)`, with no upper bound and an `imageMaxRounds` default of 32. A `Restrict[pow]` rule carrying 32 rounds therefore scored 42 and outranked a `Restrict[image]` rule at 30, exactly inverting the intended order; 11 rounds on a puzzle rule was enough to do it. The intra-type component is now clamped below the tier gap, so no setting can lift a rule over a stricter captcha type.
+  
+  One further behaviour change: pow rules now break ties on `powDifficulty` rather than `solvedImagesCount`. Rule authoring drops `solvedImagesCount` for pow, so every pow rule previously scored at the bottom of its tier regardless of difficulty. Image and puzzle both keep `solvedImagesCount` — it is the severity currency they share, which the provider maps onto a puzzle difficulty level via `severityToPuzzleDifficulty` rather than treating as a literal round count.
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- 4810cb3: Fix `computeFrictionlessScore` returning `NaN` when `scoreComponents` carries a non-numeric field.
+  
+  The score was summed with `Object.values(...).reduce((acc, val) => acc + val, 0)` over every defined value. `ScoreComponents` also carries two non-numeric diagnostic fields — `triggeredDetectors` (`number[]`) and `shadowDomPenalty` (`boolean`) — and neither has an arithmetic weight anywhere in the scoring path. `+` on an array coerces the accumulator to a string, so any numeric component summed *after* an array turned the running total into string concatenation and the final `Math.min(1, ...)` into `NaN`:
+  
+  ```
+  0.42 + []    -> "0.42"
+  "0.42" + 0.3 -> "0.420.3"
+  Math.min(1, "0.420.3") -> NaN
+  ```
+  
+  This was reachable in production rather than theoretical. The Mongoose schema declares `triggeredDetectors` as an array path and Mongoose defaults array paths to `[]`, so the field is present on every session read back from the database even when the frictionless handler omitted it; the pow / puzzle / image tasks then spread `dnsAsymmetry` on afterwards, landing it after the array in key order. Every solve-time recompute on a session with `dnsAsymmetry > 0` produced `NaN`.
+  
+  Only numeric values now contribute. `shadowDomPenalty` no longer silently adds a full `1.0` when true. A genuinely numeric `NaN` component still propagates — `typeof NaN === "number"`, so it survives the filter deliberately — because a score that cannot be computed must not read as a low one.
+  
+  The recomputed value is not persisted (neither `sessions` nor `usercommitments` stores it) and no decide rule currently branches on `input.score`, so the impact to date was a `NaN` in the solve-time log line and in `DecisionMachineInput.score`.
+- 3d2176d: Move the puzzle difficulty ladder into `@prosopo/captcha-severity`, so every consumer derives a difficulty from one table.
+  
+  `PUZZLE_DIFFICULTY_LEVELS`, `MAX_AUTO_ESCALATION_LEVEL`, `MIN_DECOY_HOLE_DARKEN_MARGIN`, `clampDifficultyLevel` and `severityToPuzzleDifficulty` lived in `provider/src/tasks/puzzle/puzzleDifficulty.ts`, reachable only from inside the provider — the severity package's own docs described the ladder at length but did not hold it. Anything else that has to answer "what difficulty is this puzzle" had to restate the mapping, and the consumers that author and edit puzzle rules sit outside the provider.
+  
+  They can import it now. The severity package already answers "which of these policies is stricter" off `solvedImagesCount`; the ladder answers what a puzzle policy carrying that number is actually served at, which is the same question one step further in.
+  
+  Sampling a concrete render from a level's bands stays in the provider as `samplePuzzleDifficulty`: it needs `IPuzzleSettings` from `@prosopo/types` and a `node:crypto`-backed sampler, and the severity package's zero-dependency, browser-safe property is load-bearing for consumers that bundle it standalone.
+  
+  Adds `puzzleDifficultyToSeverity`, the inverse of `severityToPuzzleDifficulty`. Writers need that direction — a rule editor turning a chosen difficulty into the field the rule carries, or rule authoring normalising a count inherited from the image path. Each level spans two rounds, so without a canonical value per level a writer picks between numbers that produce the identical puzzle, and the difference survives only to break severity ties arbitrarily. The round-trip is pinned by tests.
+  
+  No behaviour change in the provider: same table, same thresholds, same clamping.
+- Updated dependencies [7fd6eb2]
+- Updated dependencies [424e467]
+- Updated dependencies [1b77849]
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [3d2176d]
+- Updated dependencies [8fce190]
+- Updated dependencies [8a670d3]
+  - @prosopo/user-access-policy@3.12.33
+  - @prosopo/captcha-severity@1.1.0
+  - @prosopo/util-crypto@13.5.31
+  - @prosopo/api@4.1.5
+  - @prosopo/api-express-router@3.1.81
+  - @prosopo/api-route@2.6.57
+  - @prosopo/common@3.1.53
+  - @prosopo/database@4.0.27
+  - @prosopo/datasets@3.1.77
+  - @prosopo/env@3.6.50
+  - @prosopo/ipinfo@0.3.22
+  - @prosopo/keyring@2.9.84
+  - @prosopo/load-balancer@2.10.39
+  - @prosopo/locale@3.4.1
+  - @prosopo/logger@2.0.8
+  - @prosopo/redis-client@1.0.34
+  - @prosopo/types@5.6.0
+  - @prosopo/types-database@5.4.0
+  - @prosopo/types-env@2.10.44
+  - @prosopo/util@3.3.8
+  - @prosopo/native-ja4@0.0.4
+  - @prosopo/native-merkle@0.0.4
+
 ## 5.6.4
 ### Patch Changes
 

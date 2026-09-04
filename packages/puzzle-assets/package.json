@@ -42,12 +42,11 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
-	"private": true,
 	"dependencies": {
 		"sharp": "0.35.4"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.12",
+		"@prosopo/config": "3.3.13",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",
 		"del-cli": "6.0.0",

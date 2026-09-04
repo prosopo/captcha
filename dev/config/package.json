@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/config",
-	"version": "3.3.12",
+	"version": "3.3.13",
 	"description": "Prosopo config library",
 	"type": "module",
 	"scripts": {
@@ -68,7 +68,7 @@
 		"vite-tsconfig-paths": "6.1.1",
 		"vitest": "4.1.11",
 		"webpack": "5.110.1",
-		"webpack-cli": "5.1.4",
+		"webpack-cli": "7.2.3",
 		"webpack-dev-server": "6.0.0"
 	},
 	"repository": {
