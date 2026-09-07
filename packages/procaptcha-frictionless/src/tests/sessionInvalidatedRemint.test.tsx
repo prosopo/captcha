@@ -14,6 +14,8 @@
 
 import type { Ti18n } from "@prosopo/locale";
 import {
+	type Account,
+	type BotDetectionFunction,
 	CaptchaType,
 	ModeEnum,
 	type ProcaptchaClientConfigInput,
@@ -22,7 +24,15 @@ import {
 } from "@prosopo/types";
 import { type ReactElement, act, createElement } from "react";
 import { type Root, createRoot } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	type Mock,
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import { MAX_SESSION_INVALIDATED_RETRIES } from "../sessionInvalidatedRecovery.js";
 
 declare global {
@@ -68,22 +78,30 @@ const i18nStub = {
 	changeLanguage: vi.fn(),
 } as unknown as Ti18n;
 
+const provider: RandomProvider = {
+	providerAccount: "provider-account",
+	provider: { url: "https://provider.test" },
+};
+
+const userAccount: Account = { account: { address: "user-address" } };
+
 // Each /frictionless run mints a new session, exactly as the provider does.
 let sessionCounter = 0;
-const detectBot = vi.fn(async () => {
+const detectBot: Mock<BotDetectionFunction> = vi.fn(async () => {
 	sessionCounter += 1;
 	return {
 		captchaType: CaptchaType.image,
 		sessionId: `provider-session-${sessionCounter}`,
-		provider: { provider: { url: "https://provider.test" } } as RandomProvider,
-		userAccount: "userAccount",
+		status: "ok",
+		provider,
+		userAccount,
 	};
 });
 
 let container: HTMLDivElement;
 let root: Root;
-let restart: ReturnType<typeof vi.fn>;
-let onError: ReturnType<typeof vi.fn>;
+let restart: Mock<() => void>;
+let onError: Mock<(error: Error) => void>;
 
 const lastMount = () => {
 	const mount = mocks.mounts.at(-1);
@@ -106,8 +124,8 @@ beforeEach(async () => {
 	mocks.mounts.length = 0;
 	sessionCounter = 0;
 	detectBot.mockClear();
-	restart = vi.fn();
-	onError = vi.fn();
+	restart = vi.fn<() => void>();
+	onError = vi.fn<(error: Error) => void>();
 	container = document.createElement("div");
 	document.body.appendChild(container);
 	act(() => {
