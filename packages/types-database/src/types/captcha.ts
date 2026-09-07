@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { PoWCaptcha, UserCommitment } from "@prosopo/types";
-import { type RootFilterQuery, Schema } from "mongoose";
+import { type QueryFilter, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
 import {
 	type PoWCaptchaRecord,
@@ -54,7 +54,7 @@ export interface ICaptchaDatabase extends IDatabase {
 		puzzleCaptchaEvents?: PuzzleCaptchaRecord[],
 	): Promise<void>;
 	getCaptchas(
-		filter: RootFilterQuery<CaptchaProperties>,
+		filter: QueryFilter<CaptchaProperties>,
 		limit: number,
 	): Promise<{
 		userCommitmentRecords: UserCommitmentRecord[];

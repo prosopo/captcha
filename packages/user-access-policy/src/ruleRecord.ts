@@ -32,6 +32,11 @@ export const userAttributesRecordFields = [
 	"countryCode",
 	"asn",
 	"os",
+	"browser",
+	"headerMatch",
+	"headerName",
+	"headerValue",
+	"headerOperator",
 	"webBotAuthAgent",
 ] as const satisfies (keyof UserAttributesRecord)[];
 

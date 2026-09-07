@@ -48,6 +48,14 @@ const userAttributesSchema = z.object({
 	// countryCode: a stale/unknown value just never matches a request rather
 	// than failing the whole rule parse.
 	os: z.coerce.string().optional(),
+	browser: z.coerce.string().optional(),
+	// Arbitrary-header matching (see `headerMatch.ts`). `headerMatch` is the
+	// indexed sentinel; name/value/operator are rule data checked in code, not
+	// via the Redis query. Loose `string` like the other tags.
+	headerMatch: z.coerce.string().optional(),
+	headerName: z.coerce.string().optional(),
+	headerValue: z.coerce.string().optional(),
+	headerOperator: z.coerce.string().optional(),
 	// Web Bot Auth Signature-Agent URL. Normalised at parse time
 	// (lowercase scheme+host, no trailing slash) so the runtime matcher can
 	// use exact string equality against the verified `Signature-Agent`

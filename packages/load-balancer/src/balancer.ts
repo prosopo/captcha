@@ -83,6 +83,7 @@ export const getLoadBalancerUrl = (environment: EnvironmentTypes): string => {
 
 export const loadBalancer = async (
 	environment: EnvironmentTypes,
+	ipMode?: IpMode,
 ): Promise<HardcodedProvider[]> => {
 	if (environment === "development") {
 		return [
@@ -103,5 +104,9 @@ export const loadBalancer = async (
 			mode: "cors",
 		},
 	).then((res) => res.json());
-	return convertHostedProvider(providers);
+	// `ipMode` steers `convertHostedProvider` at the fetched JSON's
+	// `ipv4` / `ipv6` sub-object rather than the dual-stack default,
+	// so tokens minted with a single-stack sub-zone URL find their
+	// entry — see the `detectIpMode` doc-comment in @prosopo/server.
+	return convertHostedProvider(providers, ipMode);
 };

@@ -15,7 +15,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CaptchaType, ContextType } from "@prosopo/types";
+import { CaptchaType } from "@prosopo/types";
 import { AccessPolicyType } from "@prosopo/user-access-policy";
 import {
 	type Mock,
@@ -41,7 +41,6 @@ type MockTasks = {
 		setSessionParams: MockFn;
 		setRoutingContext: MockFn;
 		applyRoutingMachine: MockFn;
-		getClientContextEntropy: MockFn;
 		sendImageCaptcha: MockFn;
 		sendPowCaptcha: MockFn;
 		sendPuzzleCaptcha: MockFn;
@@ -153,6 +152,16 @@ vi.mock("../../../api/admin/apiToggleMaintenanceModeEndpoint.js", () => ({
 // Mock getRequestUserScope
 vi.mock("../../../api/blacklistRequestInspector.js", () => ({
 	getRequestUserScope: vi.fn(() => ({})),
+	// Same shape as the real normaliser: lower-cased names, string values.
+	normalizeHeadersForMatching: vi.fn(
+		(headers: Record<string, unknown>): Record<string, string> =>
+			Object.fromEntries(
+				Object.entries(headers).map(([name, value]) => [
+					name.toLowerCase(),
+					String(value),
+				]),
+			),
+	),
 }));
 
 // Mock getCompositeIpAddress
@@ -178,7 +187,6 @@ vi.mock("../../../tasks/index.js", async () => {
 							captchaType: baseline.captchaType,
 						}),
 					),
-					getClientContextEntropy: vi.fn(),
 					sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 					sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),
 					sendPuzzleCaptcha: vi.fn().mockResolvedValue({ type: "puzzle" }),
@@ -263,7 +271,6 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 					captchaType: baseline.captchaType,
 				}),
 			),
-			getClientContextEntropy: vi.fn(),
 			sendImageCaptcha: vi.fn().mockResolvedValue({ type: "image" }),
 			sendPowCaptcha: vi.fn().mockResolvedValue({ type: "pow" }),
 			sendPuzzleCaptcha: vi.fn().mockResolvedValue({ type: "puzzle" }),
@@ -314,167 +321,18 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		});
 	});
 
-	it("uses webview or default when both contexts exist", async () => {
-		// Arrange: both contexts present
-		const clientRecord = {
-			account: "site1",
-			settings: {
-				contextAware: {
-					enabled: true,
-					contexts: {
-						[ContextType.Default]: {
-							type: ContextType.Default,
-							threshold: 0.5,
-						},
-						[ContextType.Webview]: {
-							type: ContextType.Webview,
-							threshold: 0.5,
-						},
-					},
-				},
-				frictionlessThreshold: 0.5,
-				disallowWebView: false,
-			},
-		};
+	const IPHONE_UA =
+		"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
 
-		// stub db.getClientRecord
-		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
-
-		// decryptPayload returns webView true and a head hash
-		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
-			baseBotScore: 0,
-			timestamp: Date.now(),
-			userId: "u",
-			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
-			webView: true,
-			iFrame: false,
-			decryptedHeadHash: "abc",
-			decryptionFailed: false,
-		});
-
-		// return entropy for Webview
-		tasksInstance.frictionlessManager.getClientContextEntropy.mockResolvedValueOnce(
-			"ent-web",
-		);
-
-		const body = { token: "t", headHash: "hh", dapp: "site1", user: "u" };
-		const { req, res, next } = buildReqRes(body);
-
-		// Act
-		// biome-ignore lint/suspicious/noExplicitAny: mock request
-		await handler(req as any, res as any, next);
-
-		// Get the instance created by the handler and assert
-		expect(
-			tasksInstance.frictionlessManager.getClientContextEntropy,
-		).toHaveBeenCalledWith("site1", ContextType.Webview);
-
-		// Now test webView=false -> default
-		tasksInstance.frictionlessManager.getClientContextEntropy.mockClear();
-		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValueOnce({
-			baseBotScore: 0,
-			timestamp: Date.now(),
-			userId: "u",
-			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
-			webView: false,
-			iFrame: false,
-			decryptedHeadHash: "abc",
-			decryptionFailed: false,
-		});
-		tasksInstance.frictionlessManager.getClientContextEntropy.mockResolvedValueOnce(
-			"ent-def",
-		);
-		// biome-ignore lint/suspicious/noExplicitAny: mock request
-		await handler(req as any, res as any, next);
-		expect(
-			tasksInstance.frictionlessManager.getClientContextEntropy,
-		).toHaveBeenCalledWith("site1", ContextType.Default);
-	});
-
-	it("uses default when only default exists", async () => {
-		const clientRecord = {
-			account: "site2",
-			settings: {
-				contextAware: {
-					enabled: true,
-					contexts: {
-						[ContextType.Default]: {
-							type: ContextType.Default,
-							threshold: 0.5,
-						},
-					},
-				},
-				frictionlessThreshold: 0.5,
-				disallowWebView: false,
-			},
-		};
-		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
-
-		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
-			baseBotScore: 0,
-			timestamp: Date.now(),
-			userId: "u",
-			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
-			webView: true, // even if webView true
-			iFrame: false,
-			decryptedHeadHash: "abc",
-			decryptionFailed: false,
-		});
-		tasksInstance.frictionlessManager.getClientContextEntropy.mockResolvedValueOnce(
-			"ent-def-only",
-		);
-
-		const body = { token: "t2", headHash: "hh2", dapp: "site2", user: "u" };
-		const { req, res, next } = buildReqRes(body);
-		// biome-ignore lint/suspicious/noExplicitAny: mock request
-		await handler(req as any, res as any, next);
-
-		expect(
-			tasksInstance.frictionlessManager.getClientContextEntropy,
-		).toHaveBeenCalledWith("site2", ContextType.Default);
-	});
-
-	it("uses webview when only webview exists", async () => {
-		const clientRecord = {
-			account: "site3",
-			settings: {
-				contextAware: {
-					enabled: true,
-					contexts: {
-						[ContextType.Webview]: {
-							type: ContextType.Webview,
-							threshold: 0.5,
-						},
-					},
-				},
-				frictionlessThreshold: 0.5,
-				disallowWebView: false,
-			},
-		};
-		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
-
-		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
-			baseBotScore: 0,
-			timestamp: Date.now(),
-			userId: "u",
-			userAgent: "844bc172f032bdd2d0baae3536c1d66c",
-			webView: false, // even if webView false
-			iFrame: false,
-			decryptedHeadHash: "abc",
-			decryptionFailed: false,
-		});
-		tasksInstance.frictionlessManager.getClientContextEntropy.mockResolvedValueOnce(
-			"ent-web-only",
-		);
-
-		const body = { token: "t3", headHash: "hh3", dapp: "site3", user: "u" };
-		const { req, res, next } = buildReqRes(body);
-		// biome-ignore lint/suspicious/noExplicitAny: mock request
-		await handler(req as any, res as any, next);
-
-		expect(
-			tasksInstance.frictionlessManager.getClientContextEntropy,
-		).toHaveBeenCalledWith("site3", ContextType.Webview);
+	const payload = (webView: boolean): Record<string, unknown> => ({
+		baseBotScore: 0,
+		timestamp: Date.now(),
+		userId: "u",
+		userAgent: "844bc172f032bdd2d0baae3536c1d66c",
+		webView,
+		iFrame: false,
+		decryptedHeadHash: "abc",
+		decryptionFailed: false,
 	});
 
 	it("returns 401 when blocked by access policy", async () => {
@@ -703,6 +561,47 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		// Reuse-session response shape is NOT used.
 		expect(res.json).not.toHaveBeenCalledWith(
 			expect.objectContaining({ sessionId: "stale-pow-session-routing" }),
+		);
+	});
+
+	// `decryptPayload` returns `userAgent` hashed, for the mismatch check only.
+	// Routing it into `derivePlatform` pinned `platform.isApple` to false, so
+	// the global machine's Apple passthrough never fired on a fresh session and
+	// genuine iPhones fell through to the rate ladder.
+	it("gives the routing machine the request user agent, not the hashed one", async () => {
+		const clientRecord = {
+			account: "siteRoutingUa",
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				frictionlessThreshold: 0.5,
+				disallowWebView: false,
+			},
+		};
+		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+			payload(false),
+		);
+
+		const body = {
+			token: "tRoutingUa",
+			headHash: "hhRoutingUa",
+			dapp: "siteRoutingUa",
+			user: "u",
+		};
+		const { req, res, next } = buildReqRes(body);
+		req.headers["user-agent"] = IPHONE_UA;
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(
+			tasksInstance.frictionlessManager.setRoutingContext,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({
+				platform: expect.objectContaining({ isApple: true }),
+				raw: expect.objectContaining({ userAgent: IPHONE_UA }),
+			}),
 		);
 	});
 

@@ -25,6 +25,8 @@ import {
 	DecisionMachineScope,
 	type IUserSettings,
 	Tier,
+	frictionlessImageThresholdDefault,
+	frictionlessPuzzleThresholdDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import Chainable = Cypress.Chainable;
@@ -32,6 +34,7 @@ import { getPair } from "@prosopo/keyring";
 import type { CaptchaWithoutId } from "@prosopo/types";
 
 export const MAX_IMAGE_CAPTCHA_ROUNDS = 3;
+export const MIN_IMAGE_CAPTCHA_ROUNDS = 2;
 
 // Solution record keyed by item hashes + target for stable matching across
 // dataset rebuilds. We can't match by captchaContentId because buildDataset
@@ -76,12 +79,16 @@ declare global {
 
 			clickNextButton(): Chainable<JQuery<HTMLElement>>;
 
+			// Wait for the widget to render the given image captcha round
+			// before interacting with it.
+			waitForCaptchaRound(index: number): Chainable<JQuery<HTMLElement>>;
+
 			elementExists(element: string): Chainable<Subject>;
 
 			registerSiteKey(
 				baseCaptchaType: CaptchaType,
 				captchaType?: CaptchaType,
-				settingsOverrides?: Partial<IUserSettings>,
+				settingsOverrides?: RegisterSiteKeySettings,
 				// biome-ignore lint/suspicious/noExplicitAny: tests
 			): Cypress.Chainable<Response<any>>;
 
@@ -257,6 +264,7 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 					captchas.length,
 				);
 				expect(captchas).to.have.lengthOf.lte(MAX_IMAGE_CAPTCHA_ROUNDS);
+				expect(captchas).to.have.lengthOf.gte(MIN_IMAGE_CAPTCHA_ROUNDS);
 				expect(captchas[0]).to.have.property("items");
 				console.log(
 					"-----------------------------captchas[0].items",
@@ -381,14 +389,40 @@ function clickCorrectCaptchaImages(
 }
 
 function clickNextButton(): Chainable<JQuery<HTMLElement>> {
-	// Ensure button exists and is visible before clicking
+	// The widget ignores untrusted events, so this has to be a realClick, which
+	// means it clicks at coordinates rather than at an element. Callers should
+	// wait for the round to settle first — see waitForCaptchaRound.
+	cy.task("log", "Next button: waiting for it to be visible...");
+	// Nothing may sit between the query and the click: a `.then()` that queues
+	// a command yields that command's subject, and realClick needs the button.
 	return getWidgetElement('button[data-cy="button-next"]')
 		.should("exist")
 		.should("be.visible")
-		.then(($btn) => {
-			cy.task("log", "Next button found and visible, clicking...");
-			cy.wrap($btn).realClick();
-			cy.task("log", "Next button clicked!");
+		.realClick();
+}
+
+/**
+ * Wait until the widget is showing the given round and that round's images
+ * have finished loading.
+ *
+ * Both matter before clicking. The round marker says the new round has been
+ * committed — the next/submit button is the same DOM node in every round, only
+ * its label and handler change (see CaptchaComponent.tsx). The images matter
+ * because they carry the height of the grid: realClick measures the button,
+ * then dispatches at those coordinates, so an image that finishes loading in
+ * between pushes the button down and the click lands on the image above it
+ * instead of on the button.
+ */
+function waitForCaptchaRound(index: number): Chainable<JQuery<HTMLElement>> {
+	return getWidgetElement(`[data-cy="captcha-${index}"]`, { timeout: 15000 })
+		.should("be.visible")
+		.should(($round) => {
+			const images = $round.find("img");
+			expect(images.length, `round ${index} image count`).to.be.gte(1);
+			images.each((_, image) => {
+				const { complete, naturalWidth, src } = image as HTMLImageElement;
+				expect(complete && naturalWidth > 0, `${src} loaded`).to.equal(true);
+			});
 		});
 }
 
@@ -398,10 +432,26 @@ function elementExists(selector: string) {
 		.then(($window) => $window.document.querySelector(selector));
 }
 
+/**
+ * Settings a test may hand to `registerSiteKey`.
+ *
+ * Widened past `Partial<IUserSettings>` on one field only: the score ladder
+ * migration has to keep working for records still holding the pre-ladder bare
+ * number, and the ladder spec registers exactly that shape to prove it. Typed
+ * as an explicit union rather than cast at the call site, so the legacy shape
+ * is documented instead of smuggled through `unknown`.
+ */
+export type RegisterSiteKeySettings = Omit<
+	Partial<IUserSettings>,
+	"frictionlessThreshold"
+> & {
+	frictionlessThreshold?: IUserSettings["frictionlessThreshold"] | number;
+};
+
 function registerSiteKey(
 	baseCaptchaType: CaptchaType,
 	captchaType?: CaptchaType,
-	settingsOverrides?: Partial<IUserSettings>,
+	settingsOverrides?: RegisterSiteKeySettings,
 ) {
 	const siteKey = Cypress.env(
 		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
@@ -422,13 +472,21 @@ function registerSiteKey(
 		const jwt = pair.jwtIssue();
 		const adminSiteKeyURL = `https://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 
-		const settings: IUserSettings = {
+		// Typed as the widened shape, not `IUserSettings`, so the ladder spec
+		// can register a pre-ladder bare threshold. The admin endpoint parses
+		// it through `ClientSettingsSchema`, which lifts a number into the
+		// puzzle rung, so the server still only ever stores the ladder.
+		const settings: RegisterSiteKeySettings = {
 			captchaType: captchaType || baseCaptchaType,
 			domains: ["0.0.0.0", "localhost", "*"],
-			frictionlessThreshold: 0.5,
+			frictionlessThreshold: {
+				frictionlessPuzzleThreshold: frictionlessPuzzleThresholdDefault,
+				frictionlessImageThreshold: frictionlessImageThresholdDefault,
+			},
 			powDifficulty: 1,
 			imageThreshold: 0.8,
 			imageMaxRounds: MAX_IMAGE_CAPTCHA_ROUNDS,
+			imageMinRounds: MIN_IMAGE_CAPTCHA_ROUNDS,
 			puzzleTolerance: puzzleToleranceDefault,
 			disallowWebView: false,
 			verifiedTimeout: 60000,
@@ -618,6 +676,7 @@ Cypress.Commands.add("captchaImages", captchaImages);
 Cypress.Commands.add("clickCorrectCaptchaImages", clickCorrectCaptchaImages);
 Cypress.Commands.add("getSelectors", getSelectors);
 Cypress.Commands.add("clickNextButton", clickNextButton);
+Cypress.Commands.add("waitForCaptchaRound", waitForCaptchaRound);
 Cypress.Commands.add("elementExists", elementExists);
 Cypress.Commands.add("registerSiteKey", registerSiteKey);
 Cypress.Commands.add("waitForProcaptchaScript", waitForProcaptchaScript);

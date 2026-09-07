@@ -1,5 +1,50 @@
 # @prosopo/cypress-shared
 
+## 2.8.134
+### Patch Changes
+
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+
+## 2.8.133
+### Patch Changes
+
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/types@5.6.0
+  - @prosopo/util@3.3.8
+
+## 2.8.132
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+
+## 2.8.131
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+
+## 2.8.130
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/types@5.5.1
+
+## 2.8.129
+### Patch Changes
+
+- 8a2a589: Drop the warm-up visit from the score ladder spec.
+  
+  `/frictionless` deduplicates on user + IP + sitekey and replays a live session instead of scoring again, and the widget's identity is fingerprint-derived, so it is the same for every test in the run. The `beforeEach` warm-up visit mounted the widget, which created a score-0 session — and the request the test had just set its language header on got that session replayed back. Every banded case returned `pow`.
+- Updated dependencies [eb34de6]
+  - @prosopo/types@5.5.0
+
 ## 2.8.128
 ### Patch Changes
 

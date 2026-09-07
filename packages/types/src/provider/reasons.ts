@@ -20,12 +20,15 @@
  * on the server-side provider package.
  */
 export enum FrictionlessReason {
-	CONTEXT_AWARE_VALIDATION_FAILED = "CONTEXT_AWARE_VALIDATION_FAILED",
 	USER_ACCESS_POLICY = "USER_ACCESS_POLICY",
 	ACCESS_POLICY_BLOCK = "ACCESS_POLICY_BLOCK",
 	USER_AGENT_MISMATCH = "USER_AGENT_MISMATCH",
 	OLD_TIMESTAMP = "OLD_TIMESTAMP",
 	BOT_SCORE_ABOVE_THRESHOLD = "BOT_SCORE_ABOVE_THRESHOLD",
+	// Score landed in the middle band of the frictionless ladder: past the
+	// point where a silent PoW pass is warranted, but short of the image
+	// rung, so the user gets a puzzle instead.
+	BOT_SCORE_PUZZLE_BAND = "BOT_SCORE_PUZZLE_BAND",
 	WEBVIEW_DETECTED = "WEBVIEW_DETECTED",
 	AUTO_BAN_SCORE = "AUTO_BAN_SCORE",
 	FINGERPRINT_PROOF_INVALID = "FINGERPRINT_PROOF_INVALID",

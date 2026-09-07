@@ -21,11 +21,34 @@ import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
 export const captchaTypeDefault = CaptchaType.frictionless;
 export const domainsDefault: string[] = [];
-export const frictionlessThresholdDefault = 0.5;
+
+/**
+ * Lower rung of the frictionless score ladder: at or below this a session
+ * passes silently to PoW, above it the user is asked to drag a puzzle.
+ *
+ * Same value `frictionlessThreshold` carried when it was a bare number, so
+ * moving to the ladder is a shape change and not a routing change — nobody
+ * who passes frictionlessly today stops passing.
+ */
+export const frictionlessPuzzleThresholdDefault = 0.5;
+
+/**
+ * Upper rung: at or above this the user gets an image captcha instead.
+ *
+ * Deliberately allowed above 1 by the schema, unlike the lower rung: the
+ * score compared against it is a total that server-side penalties add to,
+ * and it is expected to exceed 1.
+ */
+export const frictionlessImageThresholdDefault = 1.0;
+
 export const powDifficultyDefault = 4;
 export const imageThresholdDefault = 0.8;
 export const imageMaxRoundsDefault = 32;
-export const contextAwareThresholdDefault = 0.7;
+// Floor on image rounds. Matches the floor that was previously only
+// hard-coded (the provider's `captchas.solved.count` default and the
+// `Math.max(2, …)` inside `timestampDecayFunction`), so leaving it unset
+// preserves existing behaviour.
+export const imageMinRoundsDefault = 2;
 export const puzzleToleranceDefault = 15;
 
 // Puzzle render defaults, mirrored from `packages/puzzle-assets`'s
@@ -55,7 +78,126 @@ export const puzzlePieceScaleMaxDefault = 0.45;
 // bounds elsewhere — reuse the hoisted schemas.
 export const powDifficultyFieldSchema = number().positive().min(1).max(10);
 export const imageThresholdFieldSchema = number().min(0).max(1);
+
+/**
+ * The frictionless score ladder. Two rungs cutting the score line into three
+ * bands: PoW at or below the puzzle rung, puzzle between the two, image at or
+ * above the image rung.
+ *
+ * This replaces the bare `frictionlessThreshold: number`, which could only
+ * express "pass or image". A number is still accepted on the way in and lifted
+ * into the puzzle rung — see the preprocess below — because documents written
+ * before the migration are still out there, and a settings blob that fails to
+ * parse would take the whole site down rather than degrade.
+ */
+export const FrictionlessThresholdSchema = z.preprocess(
+	(raw) =>
+		typeof raw === "number" ? { frictionlessPuzzleThreshold: raw } : raw,
+	object({
+		frictionlessPuzzleThreshold: number()
+			.min(0)
+			.max(1)
+			.optional()
+			.default(frictionlessPuzzleThresholdDefault),
+		// Not capped at 1, unlike the rung below it — see the default's note.
+		frictionlessImageThreshold: number()
+			.min(0)
+			.optional()
+			.default(frictionlessImageThresholdDefault),
+	}).refine(
+		(t) => t.frictionlessImageThreshold >= t.frictionlessPuzzleThreshold,
+		{
+			message:
+				"frictionlessImageThreshold must be >= frictionlessPuzzleThreshold — the image band sits above the puzzle band",
+			path: ["frictionlessImageThreshold"],
+		},
+	),
+);
+
+export type IFrictionlessThreshold = output<typeof FrictionlessThresholdSchema>;
+
+/** The ladder every site gets when it has never configured one. */
+export const frictionlessThresholdDefault: IFrictionlessThreshold = {
+	frictionlessPuzzleThreshold: frictionlessPuzzleThresholdDefault,
+	frictionlessImageThreshold: frictionlessImageThresholdDefault,
+};
+
+/**
+ * Which challenge types the frictionless flow may serve on this site.
+ *
+ * PoW is deliberately absent and is always available: it is the terminal
+ * fallback of the decision machine and the only type with no interaction
+ * requirement, so a site with both of these off still has a way to challenge.
+ *
+ * This is a hard constraint on OUTPUT, not a hint. A site with `image: false`
+ * must never be served an image captcha by any path — score ladder, access
+ * policy, traffic filter, routing machine, detector rule or escalation. See
+ * `coerceToEnabledCaptchaType` in the provider, which is applied at the two
+ * points a session's captchaType is decided.
+ *
+ * Expressing "no image" here rather than as an unreachable
+ * `frictionlessImageThreshold` keeps the intent explicit: the rung is a score
+ * boundary, and a site that wants image off should not have to encode that as
+ * a threshold nobody can reach.
+ */
+export const FrictionlessTypesSchema = object({
+	image: boolean().optional().default(true),
+	puzzle: boolean().optional().default(true),
+});
+
+export type IFrictionlessTypes = output<typeof FrictionlessTypesSchema>;
+
+export const frictionlessTypesDefault: IFrictionlessTypes = {
+	image: true,
+	puzzle: true,
+};
+
+/**
+ * Read a stored `frictionlessTypes` into a complete set.
+ *
+ * Tolerates `undefined` (a client record written before the field existed)
+ * and a partial object, so a provider handed an older settings blob keeps
+ * serving every type rather than silently narrowing to PoW.
+ */
+export const resolveFrictionlessTypes = (
+	configured: Partial<IFrictionlessTypes> | undefined | null,
+): IFrictionlessTypes => ({
+	image: configured?.image ?? frictionlessTypesDefault.image,
+	puzzle: configured?.puzzle ?? frictionlessTypesDefault.puzzle,
+});
+
+/**
+ * Read a stored `frictionlessThreshold` into a complete ladder.
+ *
+ * The single place that knows how to interpret the pre-ladder shape. Records
+ * are migrated in the background rather than in lockstep with the deploy, so
+ * both the provider and the portal API can be handed a bare number; it means
+ * what it always meant, the puzzle rung, and the image rung falls back to its
+ * default. The image rung is never allowed below the puzzle rung, which would
+ * otherwise invert the ladder and puzzle the worst traffic.
+ */
+export const resolveFrictionlessThreshold = (
+	configured: IFrictionlessThreshold | number | null | undefined,
+): IFrictionlessThreshold => {
+	const raw: Partial<IFrictionlessThreshold> =
+		typeof configured === "number"
+			? { frictionlessPuzzleThreshold: configured }
+			: (configured ?? {});
+	const frictionlessPuzzleThreshold =
+		raw.frictionlessPuzzleThreshold ?? frictionlessPuzzleThresholdDefault;
+	return {
+		frictionlessPuzzleThreshold,
+		frictionlessImageThreshold: Math.max(
+			frictionlessPuzzleThreshold,
+			raw.frictionlessImageThreshold ?? frictionlessImageThresholdDefault,
+		),
+	};
+};
 export const imageMaxRoundsFieldSchema = number().int().min(2);
+// Deliberately looser than the max at the bottom end: a site may want to
+// serve a single round, but no site may cap itself below 2. `min <= max` is
+// enforced across the pair on `ClientSettingsSchema`.
+export const imageMinRoundsFieldSchema = number().int().min(1);
 export const puzzleToleranceFieldSchema = number().int().min(5).max(1000);
 export const puzzleDecoyCountFieldSchema = number().int().min(0).max(200);
 export const puzzleDecoyEdgeDarknessFieldSchema = number().int().min(0).max(40);
@@ -172,40 +314,123 @@ export const IPValidationRulesSchema = object({
 	forceConsistentIp: boolean().optional().default(false),
 });
 
-// Context type enum for filtering entropy samples
+/**
+ * The device families a context-aware baseline is held per.
+ *
+ * Coarse on purpose. A site's `<head>` differs most between a phone-width
+ * responsive render, a tablet render and a desktop render; finer splits
+ * (vendor, OS version) fracture the sample without changing the DOM.
+ */
+export enum DeviceType {
+	Desktop = "desktop",
+	Mobile = "mobile",
+	Tablet = "tablet",
+}
+
+/**
+ * Context type — the bucket a session's head hash is averaged into, and the
+ * key a context-aware entropy record is stored under.
+ *
+ * The device family crossed with whether the page is running inside a
+ * webview. Both dimensions move the DOM independently: a phone renders
+ * different markup from a desktop, and an in-app webview injects and
+ * suppresses different things again from the same device's real browser.
+ *
+ */
 export enum ContextType {
-	Default = "default",
-	Webview = "webview",
+	Desktop = "desktop",
+	DesktopWebview = "desktop-webview",
+	Mobile = "mobile",
+	MobileWebview = "mobile-webview",
+	Tablet = "tablet",
+	TabletWebview = "tablet-webview",
 }
 
 // Zod schema for context type
 export const ContextTypeSchema = z.nativeEnum(ContextType);
 
-// Individual context configuration
-export const ContextConfigSchema = z.object({
-	type: ContextTypeSchema,
-	threshold: number()
-		.min(Number((contextAwareThresholdDefault - 0.2).toFixed(2)))
-		.max(Number((contextAwareThresholdDefault + 0.2).toFixed(2)))
-		.optional()
-		.default(contextAwareThresholdDefault),
-});
+/** Every device-type context, in a stable order. */
+export const deviceContextTypes = [
+	ContextType.Desktop,
+	ContextType.DesktopWebview,
+	ContextType.Mobile,
+	ContextType.MobileWebview,
+	ContextType.Tablet,
+	ContextType.TabletWebview,
+] as const;
 
-export type IContextConfig = z.infer<typeof ContextConfigSchema>;
+const contextTypeByDevice: Record<
+	DeviceType,
+	{ browser: ContextType; webview: ContextType }
+> = {
+	[DeviceType.Desktop]: {
+		browser: ContextType.Desktop,
+		webview: ContextType.DesktopWebview,
+	},
+	[DeviceType.Mobile]: {
+		browser: ContextType.Mobile,
+		webview: ContextType.MobileWebview,
+	},
+	[DeviceType.Tablet]: {
+		browser: ContextType.Tablet,
+		webview: ContextType.TabletWebview,
+	},
+};
 
-const ContextsSchema = z.record(
-	z.enum([ContextType.Default, ContextType.Webview]),
-	ContextConfigSchema,
-);
+/** The context a (device family, webview) pair belongs to. */
+export const contextTypeFor = (
+	deviceType: DeviceType,
+	webView: boolean,
+): ContextType =>
+	webView
+		? contextTypeByDevice[deviceType].webview
+		: contextTypeByDevice[deviceType].browser;
 
-export type IContexts = z.infer<typeof ContextsSchema>;
+// Tablets are tested before phones because both tablet shapes collide with
+// the phone patterns: an iPad's UA carries a `Mobile/<build>` token, and an
+// Android tablet is exactly "Android without Mobile", which the bare
+// "Android" phone signal would otherwise claim.
+//
+// Known gap: an iPadOS 13+ Safari in its default desktop mode identifies as a
+// Mac, with no iPad token at all, and lands in Desktop. Nothing in a UA
+// distinguishes it from a real Mac, so it is left there deliberately — both
+// the decision machine and the sweep make the same call, which is what
+// matters for the lookup to line up.
+const TABLET_PATTERN =
+	/\b(iPad|Tablet|PlayBook|Silk)\b|Android(?!.*\bMobile\b)/i;
+const MOBILE_PATTERN =
+	/\b(Mobi|Mobile|iPhone|iPod|Windows Phone|IEMobile|BlackBerry|BB10|Opera Mini)\b/i;
 
-const ContextAwareSchema = object({
-	enabled: boolean().optional().default(false),
-	contexts: ContextsSchema,
-});
+/**
+ * Classify a raw user-agent string into a device family.
+ *
+ * Deliberately hand-rolled rather than delegating to ua-parser-js: this
+ * module is imported by the browser widget bundles, and the entropy sweep on
+ * the server has to bucket sessions *identically* or it writes baselines the
+ * decision machine will never look up. One shared function with no runtime
+ * dependency is what keeps the two sides in lockstep.
+ *
+ * An absent or unrecognised UA is Desktop — the largest population, and the
+ * conservative landing spot for a bucket we can't identify.
+ *
+ * Note this reads a claimed UA. A spoofed one buckets the session by the
+ * claim, which is fine here: the head hash is compared against the baseline
+ * for whatever the client says it is, so a desktop harness claiming to be a
+ * phone is measured against real phones and stands out rather than blending
+ * into desktop traffic.
+ */
+export const deviceTypeFromUserAgent = (userAgent?: string): DeviceType => {
+	if (!userAgent) return DeviceType.Desktop;
+	if (TABLET_PATTERN.test(userAgent)) return DeviceType.Tablet;
+	if (MOBILE_PATTERN.test(userAgent)) return DeviceType.Mobile;
+	return DeviceType.Desktop;
+};
 
-export type IContextAware = z.infer<typeof ContextAwareSchema>;
+/** The context a session belongs to, from its UA and webview flag. */
+export const contextTypeFromSession = (
+	userAgent: string | undefined,
+	webView: boolean,
+): ContextType => contextTypeFor(deviceTypeFromUserAgent(userAgent), webView);
 
 // Spam filter rules
 export const maxLocalPartDotsDefault = 2;
@@ -381,11 +606,18 @@ export const ClientSettingsSchema = object({
 		.max(600000)
 		.optional()
 		.default(DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT),
-	frictionlessThreshold: number()
-		.min(0)
-		.max(1)
-		.optional()
-		.default(frictionlessThresholdDefault),
+	// The score ladder. Was a bare number meaning "above this, image captcha";
+	// now an object carrying both rungs so the flow can put the middle band on
+	// a puzzle. A legacy number is lifted into the puzzle rung on parse.
+	frictionlessThreshold: FrictionlessThresholdSchema.optional().default(
+		frictionlessThresholdDefault,
+	),
+	// Which challenge types the ladder may actually serve. Independent of the
+	// rungs above: the rungs say where the score boundaries sit, this says
+	// which outcomes are permitted at all.
+	frictionlessTypes: FrictionlessTypesSchema.optional().default(
+		frictionlessTypesDefault,
+	),
 	powDifficulty: powDifficultyFieldSchema
 		.optional()
 		.default(powDifficultyDefault),
@@ -395,6 +627,14 @@ export const ClientSettingsSchema = object({
 	imageMaxRounds: imageMaxRoundsFieldSchema
 		.optional()
 		.default(imageMaxRoundsDefault),
+	// Floor on the same count. Every round-count source in the provider —
+	// access-policy rules, traffic-filter categories, routing machines, the
+	// staleness curve — is clamped into [imageMinRounds, imageMaxRounds], so
+	// this pair is how a site overrides its rules rather than the other way
+	// round. See `clampImageRounds`.
+	imageMinRounds: imageMinRoundsFieldSchema
+		.optional()
+		.default(imageMinRoundsDefault),
 	// Detector score at or above which the frictionless flow blocks the
 	// request outright instead of issuing a challenge. Undefined disables.
 	autoBanScoreThreshold: number().min(0).optional(),
@@ -417,7 +657,6 @@ export const ClientSettingsSchema = object({
 	// `false`. Both are falsy, so no consumer changed behaviour, but the
 	// declared output type said `boolean` while the value was missing.
 	disallowWebView: boolean().optional().default(false),
-	contextAware: ContextAwareSchema.optional(),
 	spamEmailDomainCheckEnabled: boolean().optional(),
 	spamFilter: SpamFilterRulesSchema.optional(),
 	trafficFilter: TrafficFilterSchema.optional(),
@@ -438,8 +677,64 @@ export const ClientSettingsSchema = object({
 	// cost, and the site operator should make that trust decision
 	// explicitly rather than get it as a default.
 	allowAgents: boolean().optional(),
+}).refine((v) => v.imageMinRounds <= v.imageMaxRounds, {
+	message: "imageMinRounds must be <= imageMaxRounds",
+	path: ["imageMinRounds"],
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;
+
+/**
+ * The subset of a client record's settings that bounds how many image rounds
+ * a challenge may carry. Accepts a whole `IUserSettings` — every call site
+ * has one — but is stated narrowly so tests and rule code can pass a literal.
+ */
+export interface ImageRoundsBounds {
+	imageMinRounds?: number;
+	imageMaxRounds?: number;
+}
+
+export interface ResolvedImageRounds {
+	min: number;
+	max: number;
+}
+
+/**
+ * Resolve a client record's image-round bounds, filling in defaults for
+ * records written before either field existed.
+ *
+ * The `min <= max` invariant is enforced by `ClientSettingsSchema`, but only
+ * on write: a record stored before `imageMinRounds` existed can end up with a
+ * min above its max the moment an operator lowers the max. The cap wins in
+ * that case — a site that asked for at most N rounds never gets more.
+ */
+export const resolveImageRoundsBounds = (
+	bounds: ImageRoundsBounds,
+): ResolvedImageRounds => {
+	const max = bounds.imageMaxRounds ?? imageMaxRoundsDefault;
+	return {
+		min: Math.min(bounds.imageMinRounds ?? imageMinRoundsDefault, max),
+		max,
+	};
+};
+
+/**
+ * Clamp a requested image-round count into the site's configured bounds.
+ *
+ * This is the single place the site settings win over every other source of a
+ * round count — access-policy rules, traffic-filter categories, routing
+ * machines, and the provider's own heuristics all pass through it.
+ */
+export const clampImageRounds = (
+	requested: number,
+	bounds: ImageRoundsBounds,
+): number => {
+	const { min, max } = resolveImageRoundsBounds(bounds);
+	// A non-finite request is a bug upstream, not a signal about the user.
+	// Fall back to the floor rather than propagating NaN into the session
+	// record or handing a real user the maximum.
+	if (!Number.isFinite(requested)) return min;
+	return Math.min(Math.max(Math.round(requested), min), max);
+};
 export type IIPValidationRules = output<typeof IPValidationRulesSchema>;
 export type IIPValidation = output<typeof IPValidationSchema>;

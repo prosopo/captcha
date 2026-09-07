@@ -41,6 +41,20 @@ export const userAttributesRedisSchema: RediSearchSchema = {
 	countryCode: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	asn: { type: SCHEMA_FIELD_TYPE.NUMERIC, INDEXMISSING: true },
 	os: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	browser: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	// Header-restriction fields. NONE of these are queried on the hot path:
+	// the split-query builder probes neither `headerMatch` nor the
+	// name/value/operator triple, and a header rule populates none of the
+	// fields that builder does probe, so it is returned by the `no-user-scope`
+	// fall-through probe (the same route `os` rules take) and the concrete
+	// condition is evaluated in code by `accessRuleHeaderMatches`. They are
+	// indexed to satisfy the schema exhaustiveness check, and `headerMatch`
+	// additionally gates candidacy JS-side in `ruleApplies` and scores one
+	// specificity point in the reader's SPECIFICITY_EXPR.
+	headerMatch: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	headerName: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	headerValue: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	headerOperator: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 	webBotAuthAgent: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 } satisfies AllKeys<UserAttributes>;
 
@@ -74,6 +88,13 @@ export const accessRuleRedisSchema: RediSearchSchema = {
 	// Restrict / routing-Block populations push the hard-block rules out
 	// of the top-N candidate set and the lookup silently misses them.
 	type: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	// Indexed so `checkForHardBlock` can widen its Block-only pool to
+	// `(@type:{block} | @deferToVerify:{true})`. Deferred rules are
+	// skipped at request time and enforced at verify, so a deferred
+	// Restrict is a legitimate hard block — without this field in the
+	// index it can't be selected server-side and never fires.
+	// Stored by `getRedisRuleValue` as the string "true"/"false".
+	deferToVerify: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 } satisfies Keys<AccessRule>;
 
 export const ACCESS_RULES_REDIS_INDEX_NAME = "index:user-access-rules";

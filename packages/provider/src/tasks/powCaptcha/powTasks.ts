@@ -74,6 +74,7 @@ import {
 	isClientSessionMismatch,
 	toStoredClientMetaData,
 } from "../../utils/clientMetaData.js";
+import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
@@ -1039,6 +1040,12 @@ export class PowCaptchaManager extends CaptchaManager {
 					tcpOptsFlags: sessionRecord?.tcpOptsFlags,
 					tcpOptsOrder: sessionRecord?.tcpOptsOrder,
 					tcpWindow: sessionRecord?.tcpWindow,
+					// Which egress categories this site blocks. Gates the
+					// egress-sensitive TCP-stack deny rules — a VPN
+					// concentrator legitimately terminates the handshake, so
+					// on a site that accepts VPN users the observed stack
+					// says nothing about the client.
+					trafficPolicies: deriveTrafficPolicies(trafficFilter),
 				};
 
 				const decision = await this.decisionMachineRunner.decide(

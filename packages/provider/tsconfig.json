@@ -33,6 +33,9 @@
 			"path": "../../dev/config"
 		},
 		{
+			"path": "../captcha-severity"
+		},
+		{
 			"path": "../database"
 		},
 		{

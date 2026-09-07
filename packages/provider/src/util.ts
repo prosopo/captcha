@@ -455,6 +455,13 @@ export const deepValidateIpAddress = async (
 				msg: "Failed to get IP distance comparison",
 				data: {
 					error: comparison.error,
+					// The per-IP reasons are what separate "this IP isn't in the
+					// database" from "the ipinfo sidecar is down". Without them
+					// the top-level "Failed to lookup both IP addresses" is
+					// unactionable and the cause has to be chased by hand on the
+					// host.
+					ip1Error: comparison.ip1Error,
+					ip2Error: comparison.ip2Error,
 				},
 			}));
 			// If we can't do distance comparison and IPs don't match exactly, be strict

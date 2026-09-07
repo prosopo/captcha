@@ -24,10 +24,14 @@ import {
 	CaptchaType,
 	type FrictionlessState,
 	type ModeType,
+	PROCAPTCHA_START_EVENT,
 	ProcaptchaConfigSchema,
 	type ProcaptchaFrictionlessProps,
+	type ProcaptchaStartEventDetail,
+	StartModeEnum,
 } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import type { KeyboardEvent, MouseEvent, TouchEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { AuthenticatedBadge } from "./AuthenticatedBadge.js";
 import customDetectBot from "./customDetectBot.js";
@@ -39,6 +43,8 @@ import {
 	normaliseRetryCoords,
 } from "./sessionInvalidatedRecovery.js";
 
+const NO_SESSION_FOUND_KEY = "CAPTCHA.NO_SESSION_FOUND";
+
 // Each session uses exactly one solver — chosen by the /frictionless response.
 const ProcaptchaLoader = async () =>
 	(await import("@prosopo/procaptcha-react")).Procaptcha;
@@ -47,6 +53,12 @@ const ProcaptchaPuzzleLoader = async () =>
 const ProcaptchaPowLoader = async () =>
 	(await import("@prosopo/procaptcha-pow")).ProcaptchaPow;
 
+const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
+
+type CheckboxEvent = MouseEvent | TouchEvent | KeyboardEvent;
+
+const noopCheckboxHandler = async (_event: CheckboxEvent): Promise<void> => {};
+
 const renderPlaceholder = (
 	theme: string | undefined,
 	mode: ModeType,
@@ -54,6 +66,7 @@ const renderPlaceholder = (
 	isTranslationLoaded: boolean,
 	translationFn: (key: string) => string,
 	loading: boolean,
+	onChange: (event: CheckboxEvent) => Promise<void> = noopCheckboxHandler,
 ) => {
 	const checkboxTheme = "light" === theme ? lightTheme : darkTheme;
 
@@ -64,7 +77,7 @@ const renderPlaceholder = (
 	return (
 		<Checkbox
 			theme={checkboxTheme}
-			onChange={async () => {}}
+			onChange={onChange}
 			checked={false}
 			labelText={isTranslationLoaded ? translationFn("WIDGET.I_AM_HUMAN") : ""}
 			error={errorMessage}
@@ -84,7 +97,7 @@ const defaultLoadingState = (
 	attemptCount: number,
 ): FrictionlessLoadingState => ({
 	loading: false,
-	attemptCount: attemptCount || 0,
+	attemptCount,
 });
 
 export const ProcaptchaFrictionless = ({
@@ -103,10 +116,22 @@ export const ProcaptchaFrictionless = ({
 	// to click the checkbox a second time and the checkbox click position is
 	// preserved in the eventual solution salt.
 	const pendingRetryCoordsRef = useRef<RetryCoords | null>(null);
-	// One-shot outer guard so a persistently broken session doesn't loop.
-	// After we've retried once, a second NO_SESSION_FOUND falls back to the
-	// inner widget's own `frictionlessState.restart()` path.
-	const sessionInvalidatedFiredRef = useRef(false);
+	// Bounded outer guard so a persistently broken session doesn't loop. Each
+	// re-mint costs a /frictionless round trip, so the count is capped — but
+	// it is a count rather than a one-shot, because a widget legitimately
+	// mints a new session every time the user presses reload. `onReload`
+	// clears it for the same reason. When the budget is spent we fall over
+	// visibly (see `onSessionInvalidated`) instead of leaving the user on a
+	// dead "No session found" checkbox.
+	const sessionInvalidatedAttemptsRef = useRef(0);
+	// Escalation sessions we have already mounted a widget for. The provider
+	// mints exactly one escalation session per PoW solution and consumes it on
+	// the first challenge fetch, so a repeat handoff for the same id can only
+	// produce a widget that 400s with NO_SESSION_FOUND. The PoW manager fires
+	// `onEscalate` from inside its `providerRetry`-wrapped `submit()`, so a
+	// throw anywhere after the handoff re-runs submit and escalates a second
+	// time on the same envelope.
+	const escalatedSessionIdsRef = useRef(new Set<string>());
 	// Bumped on every mount so the replacement widget gets a fresh React
 	// `key`. Without it a re-render for the same captcha type reconciles onto
 	// the existing element, and the inner widget keeps the manager it built on
@@ -117,6 +142,10 @@ export const ProcaptchaFrictionless = ({
 	// because `providerRetry` re-invokes `start` with no arguments, which would
 	// otherwise drop the flag on the first provider retry.
 	const nextMountAutoStartRef = useRef(false);
+	const manualStart = config.startMode === StartModeEnum.manual;
+	const manualStartedRef = useRef(false);
+	// The placeholder is built before `start()` exists in this scope.
+	const manualCheckboxHandlerRef = useRef(noopCheckboxHandler);
 
 	useEffect(() => {
 		if (!config.language) return;
@@ -140,13 +169,21 @@ export const ProcaptchaFrictionless = ({
 			stateRef.current.errorMessage,
 			i18n.isInitialized,
 			i18n.t,
-			true,
+			!manualStart,
+			manualStart
+				? (event: CheckboxEvent) => manualCheckboxHandlerRef.current(event)
+				: undefined,
 		),
 	);
 
+	// `??`, not `||`: every caller that wants the counter back at zero passes
+	// literal 0, and `0 || current` silently kept the old count. `start()` then
+	// tripped its own `attemptCount >= 5` fall-over after five *cumulative*
+	// runs in a widget lifetime — five reload presses were enough to strand the
+	// user on the error placeholder even though every one of them succeeded.
 	const resetState = (attemptCount?: number) => {
 		stateRef.current = defaultLoadingState(
-			attemptCount || stateRef.current.attemptCount,
+			attemptCount ?? stateRef.current.attemptCount,
 		);
 	};
 
@@ -195,6 +232,12 @@ export const ProcaptchaFrictionless = ({
 			newSessionId: string,
 			coords?: RetryCoords,
 		) => {
+			// Idempotent per escalation session — see `escalatedSessionIdsRef`.
+			// Without this a re-run of the PoW widget's `submit()` mounts a
+			// second widget against the session the first one already spent,
+			// which the provider answers with 400 CAPTCHA.NO_SESSION_FOUND.
+			if (escalatedSessionIdsRef.current.has(newSessionId)) return;
+			escalatedSessionIdsRef.current.add(newSessionId);
 			void renderForCaptchaType(
 				next,
 				{
@@ -208,23 +251,38 @@ export const ProcaptchaFrictionless = ({
 
 		// The provider returned NO_SESSION_FOUND on the inner widget's
 		// challenge fetch — the sessionId minted upstream is no longer usable
-		// (usually because a duplicate /captcha/{type} POST from a WebView
-		// mount storm consumed it first). Re-run the frictionless flow to
+		// (a duplicate /captcha/{type} POST consumed it first, or the widget
+		// re-sent an id it had already spent). Re-run the frictionless flow to
 		// mint a fresh session, then re-mount the inner widget with the
 		// preserved checkbox click coords so the user is not asked to click a
-		// second time. One-shot per outer widget lifetime — if the retry
-		// also fails, fall through to the inner widget's existing
-		// `frictionlessState.restart()` path.
+		// second time.
+		//
+		// The inner widget cannot recover on its own here: it always takes
+		// this branch and returns before its own `frictionlessState.restart()`
+		// fallback, and its guard ref is fresh on every re-mount. So whatever
+		// this handler declines to do, nothing else does — hence the terminal
+		// `fallOverWithStyle` rather than a silent return once the retry
+		// budget is spent.
 		const onSessionInvalidated = (x?: number, y?: number) => {
 			const { shouldRestart } = handleSessionInvalidated(
 				x,
 				y,
-				sessionInvalidatedFiredRef,
+				sessionInvalidatedAttemptsRef,
 				pendingRetryCoordsRef,
 			);
-			if (!shouldRestart) return;
-			resetState(0);
-			void start();
+			if (shouldRestart) {
+				resetState(0);
+				void start();
+				return;
+			}
+			// Budget spent. Surface the error on the checkbox and let
+			// `fallOverWithStyle`'s NO_SESSION_FOUND branch schedule the
+			// 10-second full restart, so the user always has a way back.
+			const message = i18n.isInitialized
+				? i18n.t(NO_SESSION_FOUND_KEY)
+				: "No session found";
+			events.onError(new Error(message));
+			fallOverWithStyle(message, NO_SESSION_FOUND_KEY);
 		};
 
 		// The user pressed reload on the challenge. The provider consumed this
@@ -236,6 +294,9 @@ export const ProcaptchaFrictionless = ({
 		const onReload = (x?: number, y?: number) => {
 			pendingRetryCoordsRef.current = normaliseRetryCoords(x, y);
 			nextMountAutoStartRef.current = true;
+			// A reload mints a genuinely new session, so the invalidation
+			// budget for the *previous* one shouldn't count against it.
+			sessionInvalidatedAttemptsRef.current = 0;
 			resetState(0);
 			void start();
 		};
@@ -294,6 +355,7 @@ export const ProcaptchaFrictionless = ({
 					autoStart={resumedAutoStart}
 					startCoords={startCoords}
 					onSessionInvalidated={onSessionInvalidated}
+					container={container}
 					onReload={onReload}
 				/>,
 			);
@@ -309,6 +371,7 @@ export const ProcaptchaFrictionless = ({
 					autoStart={resumedAutoStart}
 					startCoords={startCoords}
 					onSessionInvalidated={onSessionInvalidated}
+					container={container}
 				/>,
 			);
 		} else {
@@ -324,6 +387,7 @@ export const ProcaptchaFrictionless = ({
 					autoStart={resumedAutoStart}
 					startCoords={startCoords}
 					onSessionInvalidated={onSessionInvalidated}
+					container={container}
 				/>,
 			);
 		}
@@ -400,6 +464,59 @@ export const ProcaptchaFrictionless = ({
 		});
 	};
 
+	const startManually = async (
+		autoStart: boolean,
+		coords?: RetryCoords,
+	): Promise<void> => {
+		if (manualStartedRef.current) return;
+		manualStartedRef.current = true;
+		pendingRetryCoordsRef.current = coords ?? null;
+		nextMountAutoStartRef.current = autoStart;
+		setComponentToRender(
+			renderPlaceholder(
+				config.theme,
+				config.mode,
+				stateRef.current.errorMessage,
+				i18n.isInitialized,
+				i18n.t,
+				true,
+			),
+		);
+		await start();
+	};
+
+	manualCheckboxHandlerRef.current = async (event: CheckboxEvent) => {
+		let x = 0;
+		let y = 0;
+		const nativeEvent = event.nativeEvent;
+		if ("clientX" in nativeEvent && "clientY" in nativeEvent) {
+			x = nativeEvent.clientX;
+			y = nativeEvent.clientY;
+		}
+		await startManually(true, normaliseRetryCoords(x, y) ?? undefined);
+	};
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional — `startManually` captures the mount-time `start()`, as the auto-mode effect below does.
+	useEffect(() => {
+		if (!manualStart) return;
+		const onStartEvent = (event: Event) => {
+			const detail = (event as CustomEvent<ProcaptchaStartEventDetail>).detail;
+			if (detail?.element && container && !detail.element.contains(container)) {
+				return;
+			}
+			void startManually(false);
+		};
+		const onExecuteEvent = () => {
+			void startManually(true);
+		};
+		document.addEventListener(PROCAPTCHA_START_EVENT, onStartEvent);
+		document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, onExecuteEvent);
+		return () => {
+			document.removeEventListener(PROCAPTCHA_START_EVENT, onStartEvent);
+			document.removeEventListener(PROCAPTCHA_EXECUTE_EVENT, onExecuteEvent);
+		};
+	}, [manualStart, container]);
+
 	// Track which config identity has already been started for. Host
 	// pages often recreate the `callbacks` object (and sometimes the whole
 	// `config`) on every render, which — before this guard — re-fired
@@ -425,6 +542,7 @@ export const ProcaptchaFrictionless = ({
 		}`;
 		if (startedForKeyRef.current === key) return;
 		startedForKeyRef.current = key;
+		if (manualStart) return;
 		void start();
 	}, [config.account?.address, config.language, config.mode]);
 

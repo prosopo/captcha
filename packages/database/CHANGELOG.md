@@ -1,5 +1,185 @@
 # @prosopo/database
 
+## 4.0.29
+### Patch Changes
+
+- 8a63ea3: Include `clientMetaData` in the commitment projection.
+  
+  `DAPP_USER_COMMITMENT_PROJECTION` enumerates the fields the verify path reads
+  off `solution`. `clientMetaData` arrived in 5.5.0 with the client-session
+  correlation but was never added, so both `getDappUserCommitmentById` and
+  `getDappUserCommitmentByAccount` returned it as `undefined` on every fetch —
+  whatever was stored on the record.
+  
+  `isClientSessionMismatch(expected, undefined)` is therefore true whenever the
+  caller supplies a session id, so every image captcha verified through a caller
+  that correlates on a session was disapproved with `CLIENT_SESSION_MISMATCH`:
+  a token replay reported on solves earned in exactly the session they claimed.
+  
+  PoW and puzzle were unaffected — they read their own challenge record rather
+  than this projection, which is why the failure was confined to image captchas.
+  
+  The projection's own regression test now asserts the field round-trips; it was
+  written to catch this class of bug and did not cover this field.
+
+## 4.0.28
+### Patch Changes
+
+- f8a41fe: Stop leaking a mongoose connection pool on every failed database connect.
+  
+  `MongoDatabase.connect()` assigns `this.connection` only once the connection
+  opens, so a connection that fails to open is unreachable from the instance and
+  `close()` can never reach it — while mongoose keeps its topology monitor, its
+  `minPoolSize: 5` pool and its entry in `mongoose.connections` alive and
+  retrying forever. `onError` now destroys that connection. `destroy` rather than
+  `close` because only `destroy` drops the `mongoose.connections` entry, which
+  would otherwise retain the object on its own. The teardown is guarded so that a
+  runtime `error` on an already-open connection is not mistaken for a failed
+  connect and does not tear down a working pool; the `error` listener stays
+  registered after `open` because an `EventEmitter` `error` with no listener
+  would take the process down.
+  
+  Observed on a provider whose connects to the central DB were timing out: 524
+  failed connects an hour accumulated 5,819 ESTABLISHED sockets to the central
+  DB and 5,859 TLS sockets, and the resulting flood of driver DNS lookups
+  saturated libuv's four-thread pool — 8,812 `getaddrinfo` calls queued — so
+  every unrelated outbound lookup in the process backed up behind them. That
+  provider burned 3.45x the CPU of a healthy peer while serving 2.5x less
+  traffic, with event-loop p99 at 240ms against the peer's 27ms.
+  
+  `getMongoConnectionOptions` also gains `connectTimeoutMS` and
+  `serverSelectionTimeoutMS` overrides, and `CentralDbStreamer` passes 45s for
+  both. The 10s default is sized for a database that is local or on the same
+  continent; the central DB is long-haul for every provider and genuinely distant
+  for some, where the TLS handshake alone measures 2-30s. Under the old ceiling
+  those providers could never connect at all, so the streamer burned a connect
+  attempt every cooldown forever and streamed no records — which is what fed the
+  leak above.
+- 6f57ee9: chore(deps): bump make-dir from 3.1.0 to 5.1.0
+- 6f57ee9: chore(deps): bump the npm-minor-and-patch group across 1 directory with 3 updates
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [e22d5fb]
+- Updated dependencies [b6918c0]
+- Updated dependencies [d288371]
+  - @prosopo/user-access-policy@3.13.0
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/types-database@5.4.1
+  - @prosopo/common@3.1.54
+  - @prosopo/logger@2.0.9
+  - @prosopo/redis-client@1.0.35
+
+## 4.0.27
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- 8a670d3: Remove the provider-side context validation path.
+  
+  The provider read a per-context baseline out of `clientcontextentropies` on the frictionless path and compared a session's head hash against it. The task that wrote that collection was removed from the provider on 2026-08-21, so the read has returned `undefined` ever since and the branch has been dead in every deployment since then. Computing and applying the baseline now happens off-provider.
+  
+  Removed: `contextAwareValidation.ts`, the decision-machine branch that used it, `getClientContextEntropy` on the provider and its database method, the `clientContextEntropy` table registration, the unused `getRoundsFromSimScore` helper, and the `contextAwareEnabled` parameter threaded into image verification — which logged and then did nothing, its return commented out.
+  
+  Also removes the per-site `settings.contextAware` block that configured it, along with `ContextAwareSchema`, `IContextAware`, `IContexts`, `ContextConfigSchema`, `contextAwareThresholdDefault` and `expandContexts`, the legacy `default`/`webview` context keys and their helpers, and `FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED`. The site-key registration CLI no longer writes a `contextAware` default into new sites.
+  
+  `ContextType`, `contextTypeFromSession` and `deviceContextTypes` stay — the off-provider work keys on them. `ClientContextEntropyRecord` and its schema stay for the same reason; only the provider's use of them goes.
+  
+  No behaviour change: every path removed here was already inert.
+- Updated dependencies [7fd6eb2]
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/user-access-policy@3.12.33
+  - @prosopo/common@3.1.53
+  - @prosopo/logger@2.0.8
+  - @prosopo/redis-client@1.0.34
+  - @prosopo/types@5.6.0
+  - @prosopo/types-database@5.4.0
+  - @prosopo/util@3.3.8
+
+## 4.0.26
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/types-database@5.3.4
+  - @prosopo/user-access-policy@3.12.32
+
+## 4.0.25
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/types-database@5.3.3
+  - @prosopo/user-access-policy@3.12.31
+
+## 4.0.24
+### Patch Changes
+
+- 0a88895: Project the session fields callers read, and let routing machines set puzzle overrides.
+  
+  `getSessionRecordBySessionId` lists its fields explicitly but declared a full `Session` return type. That type lie let callers read fields the projection never selected — they get `undefined`, with no error anywhere. This is the fourth time it has shipped: after the tcp-probe fields (verify-time TCP decide rules received `undefined` and never fired) and `clientMetaData` (#3141), this round found the entropy fingerprints plus the `g`/`i`/`sw`/`md`/`bn`/`fs` flags — which silently disabled the origin-session fallback in `getSessionRecordWithOriginFallback` *and* made it issue a redundant second query on every escalation, since every `needsX` check was trivially true and the origin read back `undefined` too — along with `ruleType` (fed into `DecisionMachineInput` by all three verify paths, so any decide rule gating on the matched access rule was dead), `powDifficulty` and `isProtect`.
+  
+  Adds the 13 missing fields, then makes it structural: the projection is now `SESSION_PROJECTION` and the return type is derived from it as `ProjectedSession`, so reading an unprojected field is a compile error. The other three projected queries were audited and are correct; `getClientRecord` is safe by construction for the same reason, its return type being `Pick`-narrowed to match.
+  
+  Separately, `RoutingMachineOutput` gains `puzzleTolerance` and `puzzle`, so a routing machine that inherits a trafficFilter `challenge` policy can reproduce it exactly. `getPuzzleCaptchaChallenge` re-derives its overrides from a live trafficFilter verdict, which a machine-chosen puzzle has no counterpart for, so the values are persisted on the session and layered in there. Both are bounded by the same field validators the portal uses.
+  
+  Also: `deriveTrafficPolicies` forwards a site's per-category `trafficFilter` policies to routing and decision machines, so a machine can tell "the operator rejects this egress class" from "the operator deliberately accepts it"; `sendCaptcha` now persists the router's `reason`, which previously never reached the session on the route phase and was invisible in the portal; and `runArtifactExport`'s schema generic is corrected from `z.ZodSchema<T>` (which pins Input === Output === T, so any `.default()` in the tree made `T` unify with the input shape) to `z.ZodType<T, z.ZodTypeDef, unknown>`.
+- Updated dependencies [0a88895]
+- Updated dependencies [360b737]
+  - @prosopo/types-database@5.3.2
+  - @prosopo/types@5.5.1
+  - @prosopo/user-access-policy@3.12.30
+
+## 4.0.23
+### Patch Changes
+
+- Updated dependencies [8a9f7e9]
+  - @prosopo/user-access-policy@3.12.29
+  - @prosopo/types-database@5.3.1
+
+## 4.0.22
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types-database@5.3.0
+  - @prosopo/types@5.5.0
+  - @prosopo/user-access-policy@3.12.28
+
 ## 4.0.21
 ### Patch Changes
 

@@ -12,8 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import {
+	CaptchaType,
+	type ITrafficFilter,
+	TrafficFilterAction,
+} from "@prosopo/types";
 import { describe, expect, it } from "vitest";
-import { derivePlatform } from "../../../utils/devicePlatform.js";
+import {
+	derivePlatform,
+	deriveTrafficPolicies,
+} from "../../../utils/devicePlatform.js";
 
 const IPHONE_UA =
 	"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
@@ -80,5 +88,71 @@ describe("derivePlatform", () => {
 		it("falls back to UA when ipInfo missing — Mac Safari is not mobile", () => {
 			expect(derivePlatform(MAC_UA, false).isMobile).toBe(false);
 		});
+	});
+});
+
+describe("deriveTrafficPolicies", () => {
+	const block = { action: TrafficFilterAction.Block } as const;
+	const challenge = { action: TrafficFilterAction.Challenge } as const;
+
+	it("returns undefined when there is no trafficFilter", () => {
+		expect(deriveTrafficPolicies(undefined)).toBeUndefined();
+	});
+
+	it("returns undefined when no category is configured", () => {
+		const tf: Partial<ITrafficFilter> = {
+			abuserScoreThreshold: 0.9,
+			skipExtrasOnValidDnsPath: true,
+			datacenterNameAllowlist: ["Cloudflare"],
+		};
+		expect(deriveTrafficPolicies(tf)).toBeUndefined();
+	});
+
+	it("carries challenge policies through, not just blocks", () => {
+		const tf: Partial<ITrafficFilter> = { vpn: challenge, datacenter: block };
+		expect(deriveTrafficPolicies(tf)).toEqual({
+			vpn: challenge,
+			datacenter: block,
+		});
+	});
+
+	it("preserves the challenge policy's captcha overrides", () => {
+		const vpn = {
+			action: TrafficFilterAction.Challenge,
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 4,
+		} as const;
+		const tf: Partial<ITrafficFilter> = { vpn };
+		expect(deriveTrafficPolicies(tf)?.vpn).toEqual(vpn);
+	});
+
+	it("omits a category that is absent from the filter", () => {
+		const tf: Partial<ITrafficFilter> = { datacenter: block };
+		const policies = deriveTrafficPolicies(tf);
+		expect(policies).toEqual({ datacenter: block });
+		expect(policies?.vpn).toBeUndefined();
+	});
+
+	it("covers every policy-carrying category", () => {
+		const tf: Partial<ITrafficFilter> = {
+			vpn: block,
+			proxy: block,
+			tor: block,
+			datacenter: block,
+			abuser: block,
+			mobile: block,
+			satellite: block,
+			crawler: block,
+		};
+		expect(Object.keys(deriveTrafficPolicies(tf) ?? {}).sort()).toEqual([
+			"abuser",
+			"crawler",
+			"datacenter",
+			"mobile",
+			"proxy",
+			"satellite",
+			"tor",
+			"vpn",
+		]);
 	});
 });

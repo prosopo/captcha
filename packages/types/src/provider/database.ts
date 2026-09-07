@@ -31,7 +31,7 @@ import {
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
 import { CaptchaType } from "../client/index.js";
-import type { ContextType } from "../client/settings.js";
+import type { ContextType, IPuzzleSettings } from "../client/settings.js";
 import { ModeEnum } from "../config/mode.js";
 import {
 	type CaptchaResult,
@@ -565,6 +565,13 @@ export type Session = {
 	mode?: ModeEnum;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
+	// Puzzle-only render overrides chosen by the routing machine, persisted
+	// so getPuzzleCaptchaChallenge can layer them in. That endpoint otherwise
+	// re-derives its overrides from a live trafficFilter verdict, which a
+	// machine-chosen puzzle has no counterpart for. Same semantics as the
+	// trafficFilter challenge-policy fields of the same names.
+	puzzleTolerance?: number;
+	puzzle?: IPuzzleSettings;
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
 	// See StoredCaptcha.pendingStage — same semantics on Session records.
@@ -832,10 +839,40 @@ export type DecisionMachineArtifact = {
 	updatedAt: Date;
 };
 
+/**
+ * The baseline for one normalised URL inside a context — "what this page type
+ * is expected to look like". Head hashes vary far more between page types
+ * than between visitors, so a per-URL baseline is a much tighter comparison
+ * than the context-wide one, which has to average every page together.
+ */
+export type ClientContextEntropyUrl = {
+	/** Normalised `currentUrl`, e.g. `example.com/en/results/:id`. */
+	url: string;
+	sessions: number;
+	entropy: string;
+};
+
 export type ClientContextEntropy = {
 	account: string;
 	contextType: ContextType;
 	entropy: string;
+	/**
+	 * Per-page-type baselines, best-sampled first. Only URLs whose own sample
+	 * cleared the sweep's floors appear here, so a page type nobody visits
+	 * much is absent rather than represented by a thin average.
+	 */
+	urls?: ClientContextEntropyUrl[];
+	/**
+	 * Sessions behind this baseline, and how many distinct head hashes voted
+	 * in it.
+	 *
+	 * Kept so detectors have a measured sense of what normal volume looks
+	 * like for this site and context, instead of comparing every site against
+	 * the same absolute number. A cluster of 30 sessions is noise on a site
+	 * doing 12,000 an hour and is most of the traffic on one doing 200.
+	 */
+	totalSessions?: number;
+	distinctHashes?: number;
 	createdAt: Date;
 	updatedAt: Date;
 };

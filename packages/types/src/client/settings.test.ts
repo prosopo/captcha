@@ -20,8 +20,8 @@ import {
 import { CaptchaType } from "./captchaType/captchaType.js";
 import {
 	ClientSettingsSchema,
-	ContextConfigSchema,
 	ContextType,
+	DeviceType,
 	EmailSpamRulesSchema,
 	EncodingType,
 	HoneypotSettingsSchema,
@@ -31,14 +31,21 @@ import {
 	TrafficFilterSchema,
 	abuseScoreThresholdDefault,
 	captchaTypeDefault,
-	contextAwareThresholdDefault,
+	clampImageRounds,
+	contextTypeFor,
+	deviceContextTypes,
+	deviceTypeFromUserAgent,
 	distanceThresholdKmDefault,
+	frictionlessImageThresholdDefault,
+	frictionlessPuzzleThresholdDefault,
 	frictionlessThresholdDefault,
 	honeypotEncodingTypeDefault,
 	imageMaxRoundsDefault,
+	imageMinRoundsDefault,
 	imageThresholdDefault,
 	powDifficultyDefault,
 	puzzleToleranceDefault,
+	resolveImageRoundsBounds,
 	trafficFilterAbuserScoreThresholdDefault,
 } from "./settings.js";
 
@@ -59,7 +66,9 @@ describe("ClientSettingsSchema", () => {
 		expect(settings.captchaType).toBe(captchaTypeDefault);
 		expect(settings.verifiedTimeout).toBe(DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT);
 		expect(settings.solutionTimeout).toBe(DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT);
-		expect(settings.frictionlessThreshold).toBe(frictionlessThresholdDefault);
+		expect(settings.frictionlessThreshold).toEqual(
+			frictionlessThresholdDefault,
+		);
 		expect(settings.powDifficulty).toBe(powDifficultyDefault);
 		expect(settings.imageThreshold).toBe(imageThresholdDefault);
 		expect(settings.imageMaxRounds).toBe(imageMaxRoundsDefault);
@@ -79,6 +88,100 @@ describe("ClientSettingsSchema", () => {
 		expect(settings.honeypot).toBeUndefined();
 		expect(settings.autoBanScoreThreshold).toBeUndefined();
 		expect(settings.storeMetadata).toBeUndefined();
+	});
+
+	describe("frictionlessThreshold ladder", () => {
+		it("lifts a legacy bare number into the puzzle rung", () => {
+			// Documents written before the ladder still carry a number. They
+			// must keep parsing, and keep meaning what they meant.
+			const settings = parse({ ...minimal, frictionlessThreshold: 0.35 });
+			expect(settings.frictionlessThreshold).toEqual({
+				frictionlessPuzzleThreshold: 0.35,
+				frictionlessImageThreshold: frictionlessImageThresholdDefault,
+			});
+		});
+
+		it("accepts both rungs explicitly", () => {
+			const settings = parse({
+				...minimal,
+				frictionlessThreshold: {
+					frictionlessPuzzleThreshold: 0.35,
+					frictionlessImageThreshold: 0.75,
+				},
+			});
+			expect(settings.frictionlessThreshold.frictionlessPuzzleThreshold).toBe(
+				0.35,
+			);
+			expect(settings.frictionlessThreshold.frictionlessImageThreshold).toBe(
+				0.75,
+			);
+		});
+
+		it("fills the missing rung from its default", () => {
+			expect(
+				parse({
+					...minimal,
+					frictionlessThreshold: { frictionlessPuzzleThreshold: 0.4 },
+				}).frictionlessThreshold.frictionlessImageThreshold,
+			).toBe(frictionlessImageThresholdDefault);
+			expect(
+				parse({
+					...minimal,
+					frictionlessThreshold: { frictionlessImageThreshold: 1.4 },
+				}).frictionlessThreshold.frictionlessPuzzleThreshold,
+			).toBe(frictionlessPuzzleThresholdDefault);
+		});
+
+		it("accepts rungs collapsed onto the same value", () => {
+			// A collapsed band is legal - it just means "no puzzle band".
+			expect(
+				ClientSettingsSchema.safeParse({
+					...minimal,
+					frictionlessThreshold: {
+						frictionlessPuzzleThreshold: 0.5,
+						frictionlessImageThreshold: 0.5,
+					},
+				}).success,
+			).toBe(true);
+		});
+
+		it("rejects an image rung below the puzzle rung", () => {
+			expect(
+				ClientSettingsSchema.safeParse({
+					...minimal,
+					frictionlessThreshold: {
+						frictionlessPuzzleThreshold: 0.8,
+						frictionlessImageThreshold: 0.4,
+					},
+				}).success,
+			).toBe(false);
+		});
+
+		it("allows an image rung above 1, unlike the puzzle rung", () => {
+			// The score it is compared against is a post-penalty total that is
+			// expected to exceed 1; the puzzle rung is a plain probability.
+			expect(
+				parse({
+					...minimal,
+					frictionlessThreshold: { frictionlessImageThreshold: 1.5 },
+				}).frictionlessThreshold.frictionlessImageThreshold,
+			).toBe(1.5);
+			expect(
+				ClientSettingsSchema.safeParse({
+					...minimal,
+					frictionlessThreshold: { frictionlessPuzzleThreshold: 1.5 },
+				}).success,
+			).toBe(false);
+		});
+
+		it("rejects a negative rung", () => {
+			expect(
+				ClientSettingsSchema.safeParse({
+					...minimal,
+					frictionlessThreshold: { frictionlessImageThreshold: -0.1 },
+				}).success,
+			).toBe(false);
+		});
 	});
 
 	it("accepts every captcha type", () => {
@@ -115,12 +218,14 @@ describe("ClientSettingsSchema", () => {
 		).toBe(false);
 	});
 
-	it("bounds frictionlessThreshold to a probability", () => {
+	it("bounds the puzzle rung to a probability", () => {
 		expect(
-			parse({ ...minimal, frictionlessThreshold: 0 }).frictionlessThreshold,
+			parse({ ...minimal, frictionlessThreshold: 0 }).frictionlessThreshold
+				.frictionlessPuzzleThreshold,
 		).toBe(0);
 		expect(
-			parse({ ...minimal, frictionlessThreshold: 1 }).frictionlessThreshold,
+			parse({ ...minimal, frictionlessThreshold: 1 }).frictionlessThreshold
+				.frictionlessPuzzleThreshold,
 		).toBe(1);
 		expect(
 			ClientSettingsSchema.safeParse({
@@ -165,6 +270,39 @@ describe("ClientSettingsSchema", () => {
 			ClientSettingsSchema.safeParse({ ...minimal, imageMaxRounds: 2.5 })
 				.success,
 		).toBe(false);
+		expect(
+			ClientSettingsSchema.safeParse({ ...minimal, imageMinRounds: 2.5 })
+				.success,
+		).toBe(false);
+	});
+
+	it("defaults imageMinRounds to the historical hard-coded floor", () => {
+		expect(parse(minimal).imageMinRounds).toBe(imageMinRoundsDefault);
+		expect(imageMinRoundsDefault).toBe(2);
+	});
+
+	it("allows a single-round floor but never a sub-2 cap", () => {
+		expect(parse({ ...minimal, imageMinRounds: 1 }).imageMinRounds).toBe(1);
+		expect(
+			ClientSettingsSchema.safeParse({ ...minimal, imageMinRounds: 0 }).success,
+		).toBe(false);
+	});
+
+	it("rejects a floor above the cap", () => {
+		expect(
+			ClientSettingsSchema.safeParse({
+				...minimal,
+				imageMinRounds: 9,
+				imageMaxRounds: 8,
+			}).success,
+		).toBe(false);
+		expect(
+			ClientSettingsSchema.safeParse({
+				...minimal,
+				imageMinRounds: 8,
+				imageMaxRounds: 8,
+			}).success,
+		).toBe(true);
 	});
 
 	it("bounds puzzleTolerance to [5, 1000]", () => {
@@ -268,49 +406,80 @@ describe("IPValidationRulesSchema", () => {
 	});
 });
 
-describe("ContextConfigSchema", () => {
-	it("defaults the threshold", () => {
-		expect(
-			ContextConfigSchema.parse({ type: ContextType.Default }).threshold,
-		).toBe(contextAwareThresholdDefault);
-	});
+describe("deviceTypeFromUserAgent", () => {
+	const cases: Array<[string, string, DeviceType]> = [
+		[
+			"macOS Chrome",
+			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+			DeviceType.Desktop,
+		],
+		[
+			"Windows Firefox",
+			"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+			DeviceType.Desktop,
+		],
+		[
+			"iPhone Safari",
+			"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+			DeviceType.Mobile,
+		],
+		[
+			"Android phone Chrome",
+			"Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+			DeviceType.Mobile,
+		],
+		[
+			// Carries a `Mobile/<build>` token, so it must be matched as a
+			// tablet before the phone patterns get a look at it.
+			"iPad Safari",
+			"Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+			DeviceType.Tablet,
+		],
+		[
+			// "Android without Mobile" is the only thing separating this from
+			// the phone above.
+			"Android tablet Chrome",
+			"Mozilla/5.0 (Linux; Android 13; SM-X710) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+			DeviceType.Tablet,
+		],
+	];
 
-	it("allows the threshold to move 0.2 either way but no further", () => {
-		const low = Number((contextAwareThresholdDefault - 0.2).toFixed(2));
-		const high = Number((contextAwareThresholdDefault + 0.2).toFixed(2));
-		expect(
-			ContextConfigSchema.safeParse({
-				type: ContextType.Default,
-				threshold: low,
-			}).success,
-		).toBe(true);
-		expect(
-			ContextConfigSchema.safeParse({
-				type: ContextType.Default,
-				threshold: high,
-			}).success,
-		).toBe(true);
-		expect(
-			ContextConfigSchema.safeParse({
-				type: ContextType.Default,
-				threshold: low - 0.01,
-			}).success,
-		).toBe(false);
-		expect(
-			ContextConfigSchema.safeParse({
-				type: ContextType.Default,
-				threshold: high + 0.01,
-			}).success,
-		).toBe(false);
-	});
+	for (const [name, userAgent, expected] of cases) {
+		it(`classifies ${name} as ${expected}`, () => {
+			expect(deviceTypeFromUserAgent(userAgent)).toBe(expected);
+		});
+	}
 
-	it("requires a known context type", () => {
-		expect(ContextConfigSchema.safeParse({ type: "native" }).success).toBe(
-			false,
+	it("falls back to desktop for a missing or unrecognised user agent", () => {
+		expect(deviceTypeFromUserAgent(undefined)).toBe(DeviceType.Desktop);
+		expect(deviceTypeFromUserAgent("")).toBe(DeviceType.Desktop);
+		expect(deviceTypeFromUserAgent("curl/8.4.0")).toBe(DeviceType.Desktop);
+	});
+});
+
+describe("contextTypeFor", () => {
+	it("crosses each device family with the webview flag", () => {
+		expect(contextTypeFor(DeviceType.Desktop, false)).toBe(ContextType.Desktop);
+		expect(contextTypeFor(DeviceType.Desktop, true)).toBe(
+			ContextType.DesktopWebview,
 		);
-		expect(
-			ContextConfigSchema.safeParse({ type: ContextType.Webview }).success,
-		).toBe(true);
+		expect(contextTypeFor(DeviceType.Mobile, false)).toBe(ContextType.Mobile);
+		expect(contextTypeFor(DeviceType.Mobile, true)).toBe(
+			ContextType.MobileWebview,
+		);
+		expect(contextTypeFor(DeviceType.Tablet, false)).toBe(ContextType.Tablet);
+		expect(contextTypeFor(DeviceType.Tablet, true)).toBe(
+			ContextType.TabletWebview,
+		);
+	});
+
+	it("covers every device context exactly once", () => {
+		const produced = Object.values(DeviceType).flatMap((device) => [
+			contextTypeFor(device, false),
+			contextTypeFor(device, true),
+		]);
+		expect(new Set(produced)).toEqual(new Set(deviceContextTypes));
+		expect(produced).toHaveLength(deviceContextTypes.length);
 	});
 });
 
@@ -486,5 +655,50 @@ describe("HoneypotSettingsSchema", () => {
 		expect(
 			HoneypotSettingsSchema.safeParse({ encodingType: "rot13" }).success,
 		).toBe(false);
+	});
+});
+
+describe("image round bounds", () => {
+	it("clamps a requested count into the configured bounds", () => {
+		const bounds = { imageMinRounds: 3, imageMaxRounds: 8 };
+		expect(clampImageRounds(1, bounds)).toBe(3);
+		expect(clampImageRounds(5, bounds)).toBe(5);
+		expect(clampImageRounds(99, bounds)).toBe(8);
+	});
+
+	it("rounds a fractional request to a whole number of rounds", () => {
+		expect(
+			clampImageRounds(4.4, { imageMinRounds: 2, imageMaxRounds: 8 }),
+		).toBe(4);
+		expect(
+			clampImageRounds(4.5, { imageMinRounds: 2, imageMaxRounds: 8 }),
+		).toBe(5);
+	});
+
+	it("falls back to the floor for a non-finite request", () => {
+		// A NaN here is an upstream bug, not a signal about the user — it must
+		// not hand a real user the maximum, nor reach the session record.
+		expect(
+			clampImageRounds(Number.NaN, { imageMinRounds: 3, imageMaxRounds: 8 }),
+		).toBe(3);
+	});
+
+	it("uses the schema defaults when a record stores neither bound", () => {
+		expect(resolveImageRoundsBounds({})).toEqual({
+			min: imageMinRoundsDefault,
+			max: imageMaxRoundsDefault,
+		});
+	});
+
+	it("lets the cap win when a legacy record's floor exceeds it", () => {
+		// `imageMinRounds` post-dates `imageMaxRounds`, so a stored record can
+		// carry a defaulted floor above a cap an operator has since lowered.
+		expect(resolveImageRoundsBounds({ imageMaxRounds: 1 })).toEqual({
+			min: 1,
+			max: 1,
+		});
+		expect(clampImageRounds(5, { imageMinRounds: 9, imageMaxRounds: 4 })).toBe(
+			4,
+		);
 	});
 });

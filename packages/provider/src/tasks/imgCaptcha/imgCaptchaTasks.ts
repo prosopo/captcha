@@ -77,6 +77,7 @@ import {
 	isClientSessionMismatch,
 	toStoredClientMetaData,
 } from "../../utils/clientMetaData.js";
+import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
@@ -84,7 +85,6 @@ import {
 	enrichDnsEvent,
 	getIpInfoAsn,
 } from "../dnsEvent/enrichDnsEvent.js";
-import { FrictionlessReason } from "../frictionless/frictionlessTasks.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import {
 	evaluateEmailSpamRules,
@@ -658,25 +658,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 		return dappUserSolution;
 	}
 
-	/* Check if dapp user has verified solution in cache */
-	async getDappUserCommitmentByAccount(
-		userAccount: string,
-		dappAccount: string,
-	): Promise<UserCommitment | undefined> {
-		const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(
-			userAccount,
-			dappAccount,
-		);
-		if (dappUserSolutions.length > 0) {
-			for (const dappUserSolution of dappUserSolutions) {
-				if (dappUserSolution.result.status === CaptchaStatus.approved) {
-					return dappUserSolution;
-				}
-			}
-		}
-		return undefined;
-	}
-
 	async verifyImageCaptchaSolution(
 		user: string,
 		dapp: string,
@@ -685,7 +666,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 		maxVerifiedTime?: number,
 		ip?: string,
 		disallowWebView?: boolean,
-		contextAwareEnabled = false,
 		userAccessRulesStorage?: AccessRulesStorage,
 		email?: string,
 		spamEmailDomainCheckingEnabled = false,
@@ -701,9 +681,36 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// method carries it without repeating the fields in each `data` block.
 		const logger = this.logger.with({ commitmentId, dapp });
 
-		const solution = await (commitmentId
-			? this.getDappUserCommitmentById(commitmentId)
-			: this.getDappUserCommitmentByAccount(user, dapp));
+		// An image token has carried its `commitmentId` since the Procaptcha
+		// token was introduced (#1263, 2024-06-06) — `Manager.ts` sets it
+		// unconditionally on every `onHuman` for this captcha type. It is
+		// `optional()` on the schema only because PoW shares the token shape and
+		// identifies its work by `challenge` instead.
+		//
+		// The fallback that used to stand here searched the account's entire
+		// history for any approved commitment. It predates the token and could
+		// only ever return the wrong record: for a returning user whose current
+		// solve was not yet approved it produced an approved commitment from an
+		// earlier visit, which carries no `clientSessionId`, so the correlation
+		// below compared the live session id against `undefined` and reported a
+		// replay that never happened. Seen in production at scale on the image
+		// path while PoW, which resolves its exact challenge record, saw
+		// effectively none of it.
+		//
+		// Verifying a token against a commitment it does not name is not a
+		// weaker answer, it is an answer to a different question. Without an id
+		// there is nothing to verify.
+		if (!commitmentId) {
+			logger.debug(() => ({
+				msg: "Not verified - token carried no commitmentId",
+			}));
+			return {
+				status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+				verified: false,
+			};
+		}
+
+		const solution = await this.getDappUserCommitmentById(commitmentId);
 
 		// No solution exists
 		if (!solution) {
@@ -1078,16 +1085,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 				isApproved = false;
 				failureStatus = ResultReason.DISALLOWED_WEBVIEW;
 			}
-			if (
-				contextAwareEnabled &&
-				sessionRecord.reason ===
-					FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED
-			) {
-				logger.info(() => ({
-					msg: "Context aware validation failed",
-				}));
-				//return { status: "API.USER_NOT_VERIFIED", verified: false };
-			}
 		}
 
 		// Decision machine evaluation (only if still approved)
@@ -1126,6 +1123,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 				tcpOptsFlags: sessionRecord?.tcpOptsFlags,
 				tcpOptsOrder: sessionRecord?.tcpOptsOrder,
 				tcpWindow: sessionRecord?.tcpWindow,
+				// Which egress categories this site blocks. Gates the
+				// egress-sensitive TCP-stack deny rules — a VPN
+				// concentrator legitimately terminates the handshake, so
+				// on a site that accepts VPN users the observed stack
+				// says nothing about the client.
+				trafficPolicies: deriveTrafficPolicies(trafficFilter),
 			};
 
 			try {

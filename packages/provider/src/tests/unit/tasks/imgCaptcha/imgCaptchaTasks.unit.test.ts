@@ -620,60 +620,37 @@ describe("ImgCaptchaManager", () => {
 		);
 	});
 
-	it("should get dapp user commitment by account", async () => {
-		const userAccount = "userAccount";
-		const dappAccount = "dappAccount";
-		const dappUserCommitments: Partial<UserCommitment>[] = [
-			{
-				id: "commitmentId",
-				userAccount,
-				dappAccount,
-				providerAccount: "providerAccount",
-				datasetId: "datasetId",
-				result: { status: CaptchaStatus.approved },
-				userSignature: "",
-				userSubmitted: true,
-				serverChecked: false,
-				requestedAtTimestamp: new Date(0),
-				submittedAtTimestamp: new Date(),
-				ipAddress: {
-					lower: getIPAddress("1.1.1.1").bigInt(),
-					upper: 0n,
-					type: IpAddressType.v4,
-				},
-				headers: { a: "1", b: "2", c: "3" },
-				ja4: "ja4",
-				lastUpdatedTimestamp: new Date(),
-			} as Partial<UserCommitment>,
-		];
-		// biome-ignore lint/suspicious/noExplicitAny: tests
-		(db.getDappUserCommitmentByAccount as any).mockResolvedValue(
-			dappUserCommitments,
+	// Regression seen in production: image captchas produced
+	// CLIENT_SESSION_MISMATCH at scale while PoW saw effectively none of it.
+	// Verify used to fall back to an account-wide search
+	// for any approved commitment when the token carried no id. That fallback
+	// predates the Procaptcha token (#1263, 2024-06-06) — which has carried
+	// `commitmentId` on every image solve since — and could only return the
+	// wrong record, so the session correlation compared a live id against the
+	// `undefined` on some earlier visit's commitment.
+	it("should not verify when the token carries no commitmentId", async () => {
+		const result = await imgCaptchaManager.verifyImageCaptchaSolution(
+			"userAccount",
+			"dappAccount",
+			undefined,
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			{} as any,
 		);
 
-		const result = await imgCaptchaManager.getDappUserCommitmentByAccount(
-			userAccount,
-			dappAccount,
-		);
-
-		expect(result).toEqual(dappUserCommitments[0]);
+		expect(result.verified).toBe(false);
+		expect(result.status).toBe("API.USER_NOT_VERIFIED_NO_SOLUTION");
 	});
 
-	it("should return undefined if no approved dapp user commitment is found by account", async () => {
-		const userAccount = "userAccount";
-		const dappAccount = "dappAccount";
-		const dappUserCommitments: UserCommitment[] = [];
-		// biome-ignore lint/suspicious/noExplicitAny: tests
-		(db.getDappUserCommitmentByAccount as any).mockResolvedValue(
-			dappUserCommitments,
+	it("should never search the account's history when no commitmentId is given", async () => {
+		await imgCaptchaManager.verifyImageCaptchaSolution(
+			"userAccount",
+			"dappAccount",
+			undefined,
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			{} as any,
 		);
 
-		const result = await imgCaptchaManager.getDappUserCommitmentByAccount(
-			userAccount,
-			dappAccount,
-		);
-
-		expect(result).toBeUndefined();
+		expect(db.getDappUserCommitmentByAccount).not.toHaveBeenCalled();
 	});
 
 	describe("verifyImageCaptchaSolution with decision machine", () => {
@@ -1229,7 +1206,6 @@ describe("ImgCaptchaManager", () => {
 					undefined, // maxVerifiedTime
 					undefined, // ip
 					undefined, // disallowWebView
-					false, // contextAwareEnabled
 					// Truthy storage triggers the checkForHardBlock branch;
 					// the stub above ignores whatever's passed here.
 					// biome-ignore lint/suspicious/noExplicitAny: test stub
@@ -1304,7 +1280,6 @@ describe("ImgCaptchaManager", () => {
 				dappAccount,
 				commitmentId,
 				mockEnv,
-				undefined,
 				undefined,
 				undefined,
 				undefined,
@@ -1388,7 +1363,6 @@ describe("ImgCaptchaManager", () => {
 					undefined,
 					undefined,
 					undefined,
-					undefined,
 					legitimateEmail,
 					true,
 				);
@@ -1466,7 +1440,6 @@ describe("ImgCaptchaManager", () => {
 					undefined,
 					undefined,
 					undefined,
-					undefined,
 					undefined, // No email provided
 					true,
 				);
@@ -1533,7 +1506,6 @@ describe("ImgCaptchaManager", () => {
 				undefined,
 				undefined,
 				undefined,
-				undefined,
 				atDomainEmail,
 				true,
 			);
@@ -1594,7 +1566,6 @@ describe("ImgCaptchaManager", () => {
 				dappAccount,
 				commitmentId,
 				mockEnv,
-				undefined,
 				undefined,
 				undefined,
 				undefined,
@@ -1672,7 +1643,6 @@ describe("ImgCaptchaManager", () => {
 					undefined,
 					undefined,
 					undefined,
-					undefined,
 					email,
 					true,
 				);
@@ -1743,15 +1713,20 @@ describe("ImgCaptchaManager", () => {
 				undefined,
 				undefined,
 				undefined,
-				undefined,
 				spamEmail,
 				true,
 			);
 
 			expect(result.verified).toBe(false);
-			expect(result.status).toBe("API.SPAM_EMAIL_DOMAIN");
-			expect(db.getSpamEmailDomain).toHaveBeenCalledWith("spammydomain.com");
-			// Should not call disapprove when commitmentId is undefined
+			// Was API.SPAM_EMAIL_DOMAIN: without a commitmentId this used to
+			// search the account's history, find *some* approved commitment and
+			// carry on into the spam check. That search is gone — a token that
+			// names no commitment cannot be verified against one, so the answer
+			// is now simply "no solution". Either way the caller is told the user
+			// is not verified; only the reason is more honest.
+			expect(result.status).toBe("API.USER_NOT_VERIFIED_NO_SOLUTION");
+			// The point of the test, unchanged: nothing gets disapproved when
+			// there is no commitment to disapprove.
 			expect(db.disapproveDappUserCommitment).not.toHaveBeenCalled();
 		});
 	});
@@ -1945,7 +1920,6 @@ describe("ImgCaptchaManager", () => {
 				undefined, // maxVerifiedTime
 				undefined, // ip
 				undefined, // disallowWebView
-				undefined, // contextAwareEnabled
 				undefined, // userAccessRulesStorage
 				email,
 				false, // spamEmailDomainCheckingEnabled — off, isolates the count check
@@ -2104,7 +2078,6 @@ describe("ImgCaptchaManager", () => {
 				undefined, // maxVerifiedTime
 				undefined, // ip
 				undefined, // disallowWebView
-				undefined, // contextAwareEnabled
 				undefined, // userAccessRulesStorage
 				undefined, // email
 				false, // spamEmailDomainCheckingEnabled

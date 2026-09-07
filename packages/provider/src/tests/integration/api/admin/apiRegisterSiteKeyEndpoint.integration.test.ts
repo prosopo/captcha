@@ -14,13 +14,7 @@
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
 import type { Logger } from "@prosopo/logger";
-import {
-	CaptchaType,
-	ContextType,
-	type ProsopoConfigOutput,
-	Tier,
-	contextAwareThresholdDefault,
-} from "@prosopo/types";
+import { CaptchaType, type ProsopoConfigOutput, Tier } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import { describe, expect, it, vi } from "vitest";
 import { ApiRegisterSiteKeyEndpoint } from "../../../../api/admin/apiRegisterSiteKeyEndpoint.js";
@@ -65,23 +59,19 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 			settings: {
 				captchaType: CaptchaType.frictionless,
 				domains: [],
-				frictionlessThreshold: 0.5,
+				frictionlessThreshold: {
+					frictionlessPuzzleThreshold: 0.5,
+					frictionlessImageThreshold: 1,
+				},
+				frictionlessTypes: { image: true, puzzle: true },
 				imageThreshold: 0.5,
 				imageMaxRounds: 3,
+				imageMinRounds: 2,
 				powDifficulty: 0.5,
 				verifiedTimeout: 120000,
 				solutionTimeout: 60000,
 				puzzleTolerance: 15,
 				disallowWebView: false,
-				contextAware: {
-					enabled: false,
-					contexts: {
-						default: {
-							type: ContextType.Default,
-							threshold: contextAwareThresholdDefault,
-						},
-					},
-				},
 			},
 		};
 		const db = getMockDb();
@@ -105,23 +95,19 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 			settings: {
 				captchaType: CaptchaType.frictionless,
 				domains: [],
-				frictionlessThreshold: 0.5,
+				frictionlessThreshold: {
+					frictionlessPuzzleThreshold: 0.5,
+					frictionlessImageThreshold: 1,
+				},
+				frictionlessTypes: { image: true, puzzle: true },
 				imageThreshold: 0.5,
 				imageMaxRounds: 3,
+				imageMinRounds: 2,
 				powDifficulty: 0.5,
 				verifiedTimeout: 120000,
 				solutionTimeout: 60000,
 				puzzleTolerance: 15,
 				disallowWebView: false,
-				contextAware: {
-					enabled: false,
-					contexts: {
-						default: {
-							type: ContextType.Default,
-							threshold: contextAwareThresholdDefault,
-						},
-					},
-				},
 			},
 		};
 		const db = getMockDb();

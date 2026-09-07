@@ -236,6 +236,24 @@ describe("hardBlockCacheKey", () => {
 		);
 	});
 
+	it("distinguishes a deferred-inclusive lookup from a Block-only one", () => {
+		// The middleware (blockOnly) and the verify-time lookup
+		// (blockOnly + includeDeferred) share a scope but query
+		// different candidate pools, so they must not share a cached
+		// verdict.
+		const scope = { ja4Hash: "abc" };
+		expect(hardBlockCacheKey("client-A", scope, true, true)).not.toBe(
+			hardBlockCacheKey("client-A", scope, true, false),
+		);
+	});
+
+	it("defaults includeDeferred to false", () => {
+		const scope = { ja4Hash: "abc" };
+		expect(hardBlockCacheKey("client-A", scope, true)).toBe(
+			hardBlockCacheKey("client-A", scope, true, false),
+		);
+	});
+
 	it("distinguishes different clientIds", () => {
 		const scope = { ja4Hash: "abc" };
 		expect(hardBlockCacheKey("client-A", scope, true)).not.toBe(
