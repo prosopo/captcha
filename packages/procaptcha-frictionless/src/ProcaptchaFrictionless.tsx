@@ -33,6 +33,7 @@ import {
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import type { KeyboardEvent, MouseEvent, TouchEvent } from "react";
 import { useEffect, useRef, useState } from "react";
+import { AuthenticatedBadge } from "./AuthenticatedBadge.js";
 import customDetectBot from "./customDetectBot.js";
 import { evaluateFrictionlessResult } from "./frictionlessResultGuard.js";
 import {
@@ -318,7 +319,31 @@ export const ProcaptchaFrictionless = ({
 		mountCountRef.current += 1;
 		const mountKey = mountCountRef.current;
 
-		if (captchaType === CaptchaType.image) {
+		if (captchaType === CaptchaType.authenticated) {
+			// Web Bot Auth pre-verified pass-through. No challenge, no
+			// interaction — the badge component encodes and fires the token
+			// on mount. Skip the loader chain the other branches use because
+			// there is no captcha module to lazy-import here.
+			if (!frictionlessState.sessionId) {
+				events.onError(
+					new Error(
+						"authenticated captcha response missing sessionId — provider is misbehaving",
+					),
+				);
+				fallOverWithStyle();
+				return;
+			}
+			setComponentToRender(
+				<AuthenticatedBadge
+					sessionId={frictionlessState.sessionId}
+					agent={frictionlessState.agent}
+					dapp={config.account.address ?? ""}
+					userAccount={frictionlessState.userAccount}
+					provider={frictionlessState.provider}
+					callbacks={callbacks}
+				/>,
+			);
+		} else if (captchaType === CaptchaType.image) {
 			const Procaptcha = await ProcaptchaLoader();
 			setComponentToRender(
 				<Procaptcha
@@ -417,6 +442,7 @@ export const ProcaptchaFrictionless = ({
 					encryptBehavioralData: result.encryptBehavioralData,
 					getSimdReadings: result.getSimdReadings,
 					hp: result.hp,
+					agent: result.agent,
 				};
 
 				await renderForCaptchaType(result.captchaType, frictionlessState);

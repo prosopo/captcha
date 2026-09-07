@@ -37,6 +37,7 @@ const userAttributesSchema: SchemaDefinition<UserAttributesRecord> = {
 	headerName: { type: String, required: false },
 	headerValue: { type: String, required: false },
 	headerOperator: { type: String, required: false },
+	webBotAuthAgent: { type: String, required: false },
 } satisfies AllKeys<UserAttributesRecord>;
 
 const userIpSchema: SchemaDefinition<UserIpRecord> = {

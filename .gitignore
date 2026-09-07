@@ -1,3 +1,4 @@
+.nx
 .yarn/*
 !.yarn/patches
 !.yarn/plugins

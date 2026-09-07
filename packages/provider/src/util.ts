@@ -74,7 +74,10 @@ export async function checkIfTaskIsRunning(
 	// TODO: This is a temporary fix to prevent failed tasks from blocking the next task
 	if (runningTask && runningTask.datetime.getTime() > twoMinutesAgo) {
 		const completedTask = await db.getScheduledTaskStatus(
-			runningTask._id,
+			// Mongoose 8's Document._id defaults to `unknown`; the schema stores
+			// an ObjectId, and the sibling API expects one. Narrow at the call
+			// site rather than annotating every ScheduledTaskRecord consumer.
+			runningTask._id as import("mongoose").Types.ObjectId,
 			ScheduledTaskStatus.Completed,
 		);
 		return !completedTask;

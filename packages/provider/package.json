@@ -45,6 +45,7 @@
 		"@prosopo/types-env": "2.10.45",
 		"@prosopo/user-access-policy": "3.13.0",
 		"@prosopo/util": "3.3.9",
+		"@prosopo/web-bot-auth": "0.0.1",
 		"@prosopo/util-crypto": "13.5.31",
 		"cron": "3.1.7",
 		"express": "4.22.2",
@@ -58,6 +59,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
+		"@noble/curves": "1.9.2",
 		"@prosopo/config": "3.3.14",
 		"@types/node": "22.5.5",
 		"@types/pg": "8.23.1",
