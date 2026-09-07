@@ -39,7 +39,7 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@prosopo/logger": "2.0.8",
-		"@redis/search": "5.0.0",
+		"@redis/search": "6.2.1",
 		"redis": "5.0.0"
 	},
 	"devDependencies": {
