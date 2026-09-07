@@ -41,6 +41,7 @@ export default function placementInjector(): Plugin {
 		}
 		.placement-option {
 			display: inline-block;
+			text-decoration: none;
 			margin-right: 8px;
 			padding: 6px 14px;
 			border: 1px solid #2196F3;
@@ -51,7 +52,7 @@ export default function placementInjector(): Plugin {
 			font-family: inherit;
 			font-size: inherit;
 		}
-		.placement-option[aria-pressed="true"] {
+		.placement-option[aria-current="page"] {
 			background-color: #2196F3;
 			color: white;
 			font-weight: bold;
@@ -67,8 +68,8 @@ export default function placementInjector(): Plugin {
 	<!-- Challenge placement switcher -->
 	<div id="placement-switcher" class="placement-switcher">
 		<div class="placement-switcher-title">Challenge placement</div>
-		<button type="button" class="placement-option" data-placement-option="popup">popup</button>
-		<button type="button" class="placement-option" data-placement-option="float">float</button>
+		<a class="placement-option" data-placement-option="popup" href="?placement=popup">popup</a>
+		<a class="placement-option" data-placement-option="float" href="?placement=float">float</a>
 		<div id="placement-note" class="placement-note"></div>
 	</div>
   `;
@@ -101,18 +102,20 @@ export default function placementInjector(): Plugin {
 						: "The challenge opens centred over the page. This is the default.";
 			}
 
-			var buttons = document.querySelectorAll("[data-placement-option]");
-			for (var j = 0; j < buttons.length; j++) {
-				(function (button) {
-					var value = button.getAttribute("data-placement-option");
-					button.setAttribute("aria-pressed", String(value === placement));
-					button.addEventListener("click", function () {
-						if (value === placement) return;
-						var url = new URL(window.location.href);
-						url.searchParams.set("placement", value);
-						window.location.href = url.toString();
-					});
-				})(buttons[j]);
+			// Links rather than buttons, and not only because navigation is what
+			// they do: several specs reach for an element with
+			// button[type='button']:nth-of-type(2), which a pair of injected
+			// buttons answers to, and following one mid-test reloads the page.
+			var options = document.querySelectorAll("[data-placement-option]");
+			for (var j = 0; j < options.length; j++) {
+				var option = options[j];
+				var value = option.getAttribute("data-placement-option");
+				// Rebuilt from the live URL so the switch keeps any other query
+				// parameters the page was opened with.
+				var url = new URL(window.location.href);
+				url.searchParams.set("placement", value);
+				option.setAttribute("href", url.toString());
+				if (value === placement) option.setAttribute("aria-current", "page");
 			}
 		})();
 	</script>
