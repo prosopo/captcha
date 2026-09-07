@@ -392,6 +392,10 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame: false,
 			decryptedHeadHash: "",
 			siteKey,
+			// Written rather than left absent: `verifyAuthenticatedSession`
+			// reads this to enforce single use, and "field never set" and
+			// "consumed" would otherwise be told apart only by an absence.
+			serverChecked: false,
 			agent: true,
 			webBotAuthAgent,
 			...(ipInfo && { ipInfo }),

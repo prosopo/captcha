@@ -90,13 +90,11 @@ export const getRequestUserScope = (
 		...(coords && { coords }),
 		...(countryCode && { countryCode }),
 		...(typeof asn === "number" && { asn }),
+		// Only set when signature verification succeeded, so a rule scoped to
+		// a signer can never be matched by a spoofed header.
+		...(webBotAuthAgent && { webBotAuthAgent }),
 		// Unconditional, unlike the fields above: an allow-list has to match a
 		// request whose UA we can't classify, which lands on "unknown".
-		...(webBotAuthAgent && { webBotAuthAgent }),
-		// Always populated (even "unknown") — derived from the request UA, not
-		// trusted from a client hint. Present unconditionally so an OS
-		// allow-list (block everything not on the list) still matches requests
-		// whose UA we can't classify.
 		os: classifyOs(userAgent),
 		browser: classifyBrowser(userAgent),
 		// Sentinel that makes every header-restriction rule a matching

@@ -16,6 +16,28 @@ import type { CompositeIpAddress } from "@prosopo/types";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 
 /**
+ * `CompositeIpAddress` types its halves as `bigint`, but that is only true of
+ * a value just built by `getCompositeIpAddress`. Read back off a session the
+ * halves are whatever BSON stored — a `Decimal128`, or a `Long` on records
+ * written before the Decimal128 migration — so `===` against a real bigint is
+ * false for every session that has been through Mongo. Both BSON types
+ * stringify to plain digits at IP magnitudes (≤ 2^64, well inside
+ * Decimal128's 34 significant digits), so a string round-trip is exact.
+ *
+ * `null` for anything unparseable rather than a 0n default: two unparseable
+ * halves must not compare equal, or garbage would match garbage.
+ */
+const asBigInt = (half: unknown): bigint | null => {
+	if (typeof half === "bigint") return half;
+	if (half === undefined || half === null) return 0n;
+	try {
+		return BigInt(String(half));
+	} catch {
+		return null;
+	}
+};
+
+/**
  * Compare an operator-supplied plain-string IP against the CompositeIpAddress
  * captured on a session. Returns true iff the parsed IP has the same type
  * (v4/v6) and numeric halves.
@@ -32,9 +54,11 @@ export const ipMatchesSession = (
 	sessionIp: CompositeIpAddress,
 ): boolean => {
 	const parsed = getCompositeIpAddress(operatorIp);
-	return (
-		parsed.type === sessionIp.type &&
-		parsed.lower === sessionIp.lower &&
-		(parsed.upper ?? undefined) === (sessionIp.upper ?? undefined)
-	);
+	if (parsed.type !== sessionIp.type) return false;
+
+	const lower = asBigInt(sessionIp.lower);
+	const upper = asBigInt(sessionIp.upper);
+	if (lower === null || upper === null) return false;
+
+	return parsed.lower === lower && (parsed.upper ?? 0n) === upper;
 };

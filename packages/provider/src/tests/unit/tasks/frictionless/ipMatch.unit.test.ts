@@ -119,4 +119,50 @@ describe("ipMatchesSession", () => {
 			expect(ipMatchesSession("not.an.ip", zeroSession)).toBe(true);
 		});
 	});
+
+	describe("Halves as they come back from Mongo", () => {
+		// `CompositeIpAddress` types its halves as bigint, but that is only
+		// true of a value the process just built. A session read back off the
+		// database carries BSON — a Decimal128, or a Long on records written
+		// before the Decimal128 migration — and `===` against a bigint is
+		// false for every one of them. That made the IP binding reject every
+		// legitimate `/client/authenticated/verify`, which is indistinguishable
+		// from a replay attempt in the response.
+		const bson = (digits: string): unknown => ({
+			toString: () => digits,
+		});
+
+		it("matches a v4 session whose lower half is a BSON-shaped value", () => {
+			const real = composeV4("203.0.113.20");
+			const fromDb = {
+				lower: bson(real.lower.toString()),
+				type: IpAddressType.v4,
+			} as unknown as CompositeIpAddress;
+			expect(ipMatchesSession("203.0.113.20", fromDb)).toBe(true);
+			expect(ipMatchesSession("203.0.113.21", fromDb)).toBe(false);
+		});
+
+		it("matches a v6 session whose halves are BSON-shaped values", () => {
+			const real = composeV6("2001:db8::1");
+			const fromDb = {
+				lower: bson(real.lower.toString()),
+				upper: bson((real.upper ?? 0n).toString()),
+				type: IpAddressType.v6,
+			} as unknown as CompositeIpAddress;
+			expect(ipMatchesSession("2001:db8::1", fromDb)).toBe(true);
+			// Same lower half, different upper — the upper must be compared
+			// through the same conversion or this passes.
+			expect(ipMatchesSession("2001:db9::1", fromDb)).toBe(false);
+		});
+
+		it("rejects a session half that is not a number in any encoding", () => {
+			// Two unparseable halves must not compare equal to each other.
+			const corrupt = {
+				lower: bson("not-a-number"),
+				type: IpAddressType.v4,
+			} as unknown as CompositeIpAddress;
+			expect(ipMatchesSession("", corrupt)).toBe(false);
+			expect(ipMatchesSession("203.0.113.20", corrupt)).toBe(false);
+		});
+	});
 });
