@@ -40,6 +40,8 @@ import {
 	PENALTY_UNVERIFIED_HOST_DEFAULT,
 	PENALTY_WEBVIEW_DEFAULT,
 } from "./frictionless.js";
+// Re-exported to consumers by ./index.js, not from here.
+import { Placement, PlacementEnum } from "./placement.js";
 import {
 	DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
@@ -284,6 +286,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
 		mode: Mode.optional().default(ModeEnum.visible),
+		placement: Placement.optional().default(PlacementEnum.popup),
 		// Restrict provider DNS resolution. When both are unset providers stay
 		// dual-stack. `ipv4` wins if both are true.
 		ipv4: boolean().optional(),

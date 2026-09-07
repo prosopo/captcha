@@ -287,6 +287,7 @@ export const ProcaptchaFrictionless = ({
 					autoStart={resumedAutoStart}
 					startCoords={startCoords}
 					onSessionInvalidated={onSessionInvalidated}
+					container={container}
 					onReload={onReload}
 				/>,
 			);
@@ -302,6 +303,7 @@ export const ProcaptchaFrictionless = ({
 					autoStart={resumedAutoStart}
 					startCoords={startCoords}
 					onSessionInvalidated={onSessionInvalidated}
+					container={container}
 				/>,
 			);
 		} else {
@@ -317,6 +319,7 @@ export const ProcaptchaFrictionless = ({
 					autoStart={resumedAutoStart}
 					startCoords={startCoords}
 					onSessionInvalidated={onSessionInvalidated}
+					container={container}
 				/>,
 			);
 		}
