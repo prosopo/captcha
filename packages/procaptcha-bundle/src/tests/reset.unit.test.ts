@@ -22,6 +22,7 @@
 
 import type { Root } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { CreatedWidget } from "../util/widgetFactory.js";
 
 const mocks = vi.hoisted(() => ({
 	prefetchDetector: vi.fn(),
@@ -50,10 +51,15 @@ const SITE_KEY = "5CcNvLUdiXFpzKDMjThGLSK9rhWHA1H4EF3zrgkpkjAdqmuP";
 const makeRoot = (): Root =>
 	({ unmount: vi.fn(), render: vi.fn() }) as unknown as Root;
 
+const makeWidget = (root: Root = makeRoot()): CreatedWidget => ({
+	root,
+	container: document.createElement("div"),
+});
+
 /** Each createWidgets call yields a distinct root, as the real factory does. */
 const queueRoots = (...roots: Root[]): void => {
 	for (const root of roots) {
-		mocks.createWidgets.mockResolvedValueOnce([root]);
+		mocks.createWidgets.mockResolvedValueOnce([makeWidget(root)]);
 	}
 };
 
@@ -62,7 +68,7 @@ beforeEach(async () => {
 	// Drop any widgets registered by a previous test — module state persists
 	// across tests in the same file.
 	await remove();
-	mocks.createWidgets.mockResolvedValue([makeRoot()]);
+	mocks.createWidgets.mockResolvedValue([makeWidget()]);
 });
 
 describe("render", () => {
@@ -78,7 +84,7 @@ describe("render", () => {
 	});
 
 	it("returns undefined when the factory creates no widget", async () => {
-		mocks.createWidgets.mockResolvedValueOnce([] as Root[]);
+		mocks.createWidgets.mockResolvedValueOnce([] as CreatedWidget[]);
 
 		const widgetId = await render(document.createElement("div"), {
 			siteKey: SITE_KEY,

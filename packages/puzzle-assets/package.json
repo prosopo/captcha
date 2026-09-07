@@ -42,7 +42,6 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
-	"private": true,
 	"dependencies": {
 		"sharp": "0.35.4"
 	},

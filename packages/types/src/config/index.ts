@@ -13,6 +13,7 @@
 // limitations under the License.
 export * from "./config.js";
 export * from "./mode.js";
+export * from "./placement.js";
 export * from "./startMode.js";
 export * from "./network.js";
 export * from "./timeouts.js";
