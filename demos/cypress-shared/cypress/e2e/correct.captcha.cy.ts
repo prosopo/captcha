@@ -127,12 +127,16 @@ describe("Captchas", () => {
 		cy.clickIAmHuman().then(() => {
 			// Make sure the images are loaded
 			cy.captchaImages().then(() => {
-				cy.get("@captchas").each((captcha: Captcha) => {
-					cy.log("in each function");
+				cy.get("@captchas").each((captcha: Captcha, index: number) => {
+					cy.log(`in each function: round ${index}`);
+					// Only click once the widget has rendered this round. Nothing
+					// is selected here, so without this gate the clicks land back
+					// to back while the previous round is still on screen, the
+					// second one re-fires the first round's `onNext`, and the
+					// final round is never submitted.
+					cy.waitForCaptchaRound(index);
 					// Click next without selecting any images (incorrect answer)
 					cy.clickNextButton();
-					// wait a bit for the next captcha to load
-					cy.wait(500);
 				});
 			});
 
@@ -170,6 +174,9 @@ describe("Captchas", () => {
 		// Solve the captchas
 		cy.get("@captchas").each((captcha: Captcha, index: number) => {
 			cy.log(`Solving captcha ${index + 1}: ${captcha.captchaContentId}`);
+			// A round with no solution images clicks next without selecting
+			// anything, so wait for the round to be on screen before touching it
+			cy.waitForCaptchaRound(index);
 			// Click correct images and submit the solution
 			cy.clickCorrectCaptchaImages(captcha);
 			// Wait for the next captcha to fully load before continuing

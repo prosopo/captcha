@@ -79,6 +79,10 @@ declare global {
 
 			clickNextButton(): Chainable<JQuery<HTMLElement>>;
 
+			// Wait for the widget to render the given image captcha round
+			// before interacting with it.
+			waitForCaptchaRound(index: number): Chainable<JQuery<HTMLElement>>;
+
 			elementExists(element: string): Chainable<Subject>;
 
 			registerSiteKey(
@@ -385,15 +389,33 @@ function clickCorrectCaptchaImages(
 }
 
 function clickNextButton(): Chainable<JQuery<HTMLElement>> {
-	// Ensure button exists and is visible before clicking
+	// Click the live subject rather than a handle captured in a `.then()`:
+	// realClick dispatches at the coordinates of the element it is handed, so a
+	// captured handle can be clicked at a stale position once the widget
+	// re-renders the next round underneath it.
 	return getWidgetElement('button[data-cy="button-next"]')
 		.should("exist")
 		.should("be.visible")
+		.realClick()
 		.then(($btn) => {
-			cy.task("log", "Next button found and visible, clicking...");
-			cy.wrap($btn).realClick();
-			cy.task("log", "Next button clicked!");
+			cy.task("log", `Next button clicked: ${$btn.text()}`);
+			return cy.wrap($btn);
 		});
+}
+
+/**
+ * Wait until the widget is actually showing the given round.
+ *
+ * The next/submit button is the same DOM node in every round — only its label
+ * and click handler change (see CaptchaComponent.tsx) — so clicking it again
+ * before the new round has been committed re-fires the previous round's
+ * `onNext`, which is a no-op on the last round and leaves the solution
+ * unposted. Gating each click on the round marker makes that impossible.
+ */
+function waitForCaptchaRound(index: number): Chainable<JQuery<HTMLElement>> {
+	return getWidgetElement(`[data-cy="captcha-${index}"]`, {
+		timeout: 15000,
+	}).should("be.visible");
 }
 
 function elementExists(selector: string) {
@@ -646,6 +668,7 @@ Cypress.Commands.add("captchaImages", captchaImages);
 Cypress.Commands.add("clickCorrectCaptchaImages", clickCorrectCaptchaImages);
 Cypress.Commands.add("getSelectors", getSelectors);
 Cypress.Commands.add("clickNextButton", clickNextButton);
+Cypress.Commands.add("waitForCaptchaRound", waitForCaptchaRound);
 Cypress.Commands.add("elementExists", elementExists);
 Cypress.Commands.add("registerSiteKey", registerSiteKey);
 Cypress.Commands.add("waitForProcaptchaScript", waitForProcaptchaScript);
