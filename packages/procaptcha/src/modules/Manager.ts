@@ -94,6 +94,15 @@ export function Manager(
 	// URL of the provider used on the previous attempt. On a retry we exclude it
 	// from the candidate pool so the fallback lands on a different provider.
 	let previousProviderUrl: string | undefined;
+	// The sessionId this manager has already exchanged for a challenge. The
+	// provider consumes a session the moment it issues a challenge against it
+	// (`checkAndRemoveSession`), so asking for a second challenge with the same
+	// id is a guaranteed 400 CAPTCHA.NO_SESSION_FOUND. `defaultState()` doesn't
+	// clear `sessionId` and `buildUpdateState` skips `undefined`, so a stale id
+	// survives `resetState()` — any path that re-enters `start()` (a
+	// providerRetry after a late failure, a `procaptcha:execute` event, a
+	// non-delegated reload) would otherwise re-send it.
+	let spentSessionId: string | undefined;
 
 	/**
 	 * Build the config on demand, using the optional config passed in from the outside. State may override various
@@ -189,13 +198,38 @@ export function Manager(
 					updateState({ captchaApi });
 				}
 
+				// Short-circuit a challenge fetch we already know the provider
+				// will reject, and route straight to the recovery path the
+				// wrapper listens for — re-minting a session is the only way
+				// forward, and the doomed round trip only delays it.
+				if (state.sessionId && state.sessionId === spentSessionId) {
+					updateState({
+						loading: false,
+						error: {
+							message: "No session found",
+							key: "CAPTCHA.NO_SESSION_FOUND",
+						},
+					});
+					events.onError(new Error("No session found"));
+					return;
+				}
+
 				// Non-blocking check — attach SIMD readings only if the
 				// prefetched benchmark has already resolved by this point.
 				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
 					? await frictionlessState.getSimdReadings(0)
 					: undefined;
+				// Mark the id spent as soon as the request goes out: once the
+				// provider has seen it we must assume it is consumed, whether
+				// the response is a challenge, a 4xx, or never arrives. A
+				// transport failure is the only case where it may still be
+				// live, and treating it as spent there costs one extra
+				// /frictionless on the retry — cheaper than re-sending a dead
+				// id and stranding the user on "No session found".
+				const challengeSessionId = state.sessionId;
+				if (challengeSessionId) spentSessionId = challengeSessionId;
 				const challenge = await captchaApi?.getCaptchaChallenge(
-					state.sessionId,
+					challengeSessionId,
 					simdReadingsOnChallenge,
 				);
 

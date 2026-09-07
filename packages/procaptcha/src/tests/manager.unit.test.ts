@@ -471,6 +471,54 @@ describe("start", () => {
 		);
 	});
 
+	// The provider consumes a session the moment it issues a challenge for it,
+	// so a second challenge fetch on the same id is a guaranteed 400
+	// CAPTCHA.NO_SESSION_FOUND. Production saw the widget do exactly that —
+	// /captcha/image 200 followed 2-6s later by /captcha/image 400 on the same
+	// sessionId — and the user was left on a dead "No session found" checkbox.
+	test("does not ask for a second challenge on a session it already spent", async () => {
+		const harness = build({
+			frictionlessState: frictionless({ sessionId: "session-9" }),
+		});
+		await harness.manager.start();
+		expect(mocks.getCaptchaChallenge).toHaveBeenCalledTimes(1);
+
+		await harness.manager.start();
+
+		expect(mocks.getCaptchaChallenge).toHaveBeenCalledTimes(1);
+	});
+
+	test("surfaces NO_SESSION_FOUND for a spent session so the wrapper re-mints", async () => {
+		const harness = build({
+			frictionlessState: frictionless({ sessionId: "session-9" }),
+		});
+		await harness.manager.start();
+		Object.assign(harness.state, { loading: false, isHuman: false });
+
+		await harness.manager.start();
+
+		expect(lastUpdate(harness, "error")).toEqual({
+			message: "No session found",
+			key: "CAPTCHA.NO_SESSION_FOUND",
+		});
+		expect(harness.events.onError).toHaveBeenCalledTimes(1);
+	});
+
+	test("marks the session spent even when the challenge request fails", async () => {
+		// A 400 means the session was already gone; re-sending the id can only
+		// produce the same 400, so the retry has to take the re-mint path.
+		const harness = build({
+			frictionlessState: frictionless({ sessionId: "session-9" }),
+		});
+		mocks.getCaptchaChallenge.mockRejectedValueOnce(
+			new Error("No session found"),
+		);
+
+		await harness.manager.start();
+
+		expect(mocks.getCaptchaChallenge).toHaveBeenCalledTimes(1);
+	});
+
 	test("shows the modal and seeds an empty solution per captcha", async () => {
 		const harness = build();
 		mocks.getCaptchaChallenge.mockResolvedValue(
