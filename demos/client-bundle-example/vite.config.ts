@@ -20,6 +20,7 @@ import { type UserConfig, defineConfig } from "vite";
 import explanationInjector from "./src/plugins/explanation-injector.js";
 import formFillerInjector from "./src/plugins/form-filler-injector.js";
 import navigationInjector from "./src/plugins/navigation-injector.js";
+import placementInjector from "./src/plugins/placement-injector.js";
 import statusLogInjector from "./src/plugins/status-log-injector.js";
 
 loadEnv();
@@ -230,6 +231,7 @@ export default defineConfig(({ command, mode }) => {
 			formFillerInjector(),
 			explanationInjector(),
 			statusLogInjector(),
+			placementInjector(),
 			{
 				name: "copy-files",
 				closeBundle() {
