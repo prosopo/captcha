@@ -24,7 +24,10 @@ const KEY = "test-security-key";
 const NOW_MS = 1_700_000_000_000;
 const IMAGE = "https://prosopoimages.b-cdn.net/v5_dataset_flat/images/abc.webp";
 
-const resolver = (ttlSeconds?: number, clientIp?: string): SignedAssetsResolver =>
+const resolver = (
+	ttlSeconds?: number,
+	clientIp?: string,
+): SignedAssetsResolver =>
 	new SignedAssetsResolver({
 		securityKey: KEY,
 		now: () => NOW_MS,
@@ -79,7 +82,9 @@ describe("SignedAssetsResolver", () => {
 	});
 
 	test("includes the client IP when bound", () => {
-		const url = new URL(resolver(300, "203.0.113.9").resolveAsset(IMAGE).getURL());
+		const url = new URL(
+			resolver(300, "203.0.113.9").resolveAsset(IMAGE).getURL(),
+		);
 		const expires = NOW_MS / 1000 + 300;
 		expect(url.searchParams.get("token")).toBe(
 			expected("/v5_dataset_flat/images/abc.webp", expires, "203.0.113.9"),
