@@ -392,12 +392,12 @@ function clickNextButton(): Chainable<JQuery<HTMLElement>> {
 	// The widget ignores untrusted events, so this has to be a realClick, which
 	// means it clicks at coordinates rather than at an element. Callers should
 	// wait for the round to settle first — see waitForCaptchaRound.
+	cy.task("log", "Next button: waiting for it to be visible...");
+	// Nothing may sit between the query and the click: a `.then()` that queues
+	// a command yields that command's subject, and realClick needs the button.
 	return getWidgetElement('button[data-cy="button-next"]')
 		.should("exist")
 		.should("be.visible")
-		.then(($btn) => {
-			cy.task("log", `Clicking the "${$btn.text().trim()}" button...`);
-		})
 		.realClick();
 }
 
