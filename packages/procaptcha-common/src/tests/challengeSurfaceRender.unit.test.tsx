@@ -121,6 +121,17 @@ describe("float", () => {
 		expect(content()?.style.pointerEvents).toBe("auto");
 	});
 
+	it("positions the panel absolutely so the page scrolls it", () => {
+		render({ placement: PlacementEnum.float });
+
+		// Viewport-relative positioning is what made the panel drift while
+		// scrolling; document-relative is what keeps it still.
+		expect(content()?.style.position).toBe("absolute");
+		expect(layer()?.style.position).toBe("absolute");
+		expect(layer()?.style.width).toBe("0px");
+		expect(layer()?.style.height).toBe("0px");
+	});
+
 	it("dismisses on a click outside the panel", () => {
 		const onDismiss = vi.fn();
 		render({ placement: PlacementEnum.float, onDismiss });

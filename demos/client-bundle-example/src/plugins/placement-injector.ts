@@ -98,7 +98,7 @@ export default function placementInjector(): Plugin {
 				note.textContent = placement === "float" && invisible
 					? "float requested, but an invisible widget has nothing to anchor to, so the challenge opens as a popup."
 					: placement === "float"
-						? "The challenge opens anchored to the widget, and the page stays usable behind it."
+						? "The challenge opens directly above the widget and stays pinned there while you scroll. The page stays usable behind it."
 						: "The challenge opens centred over the page. This is the default.";
 			}
 

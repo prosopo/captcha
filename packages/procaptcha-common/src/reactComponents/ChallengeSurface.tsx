@@ -75,7 +75,6 @@ const ensureIosLiftStyles = (): void => {
 };
 
 const FLOAT_GAP_PX = 8;
-const FLOAT_VIEWPORT_MARGIN_PX = 8;
 
 const useIsomorphicLayoutEffect =
 	typeof window === "undefined" ? useEffect : useLayoutEffect;
@@ -86,41 +85,25 @@ interface FloatPosition {
 }
 
 /**
- * Places the panel below the anchor, flipping above when there is more room
- * there, and clamps it inside the viewport. Coordinates are viewport-relative
- * because the panel is `position: fixed`.
+ * Places the panel directly above the anchor, in document coordinates.
+ *
+ * Document coordinates rather than viewport ones, because the panel is
+ * `position: absolute`: the page carries it while scrolling instead of the
+ * panel being recomputed against a moving viewport, which is what made it
+ * drift. Always above, never flipped, so the challenge does not jump to the
+ * other side of the widget as the page moves.
  */
 const computeFloatPosition = (
 	anchorRect: DOMRect,
-	panelWidth: number,
 	panelHeight: number,
-	viewportWidth: number,
-	viewportHeight: number,
-): FloatPosition => {
-	const spaceBelow = viewportHeight - anchorRect.bottom;
-	const spaceAbove = anchorRect.top;
-	const fitsBelow = spaceBelow >= panelHeight + FLOAT_GAP_PX;
-	const flipAbove = !fitsBelow && spaceAbove > spaceBelow;
-
-	const top = flipAbove
-		? anchorRect.top - panelHeight - FLOAT_GAP_PX
-		: anchorRect.bottom + FLOAT_GAP_PX;
-
-	const maxLeft = viewportWidth - panelWidth - FLOAT_VIEWPORT_MARGIN_PX;
-	const left = Math.max(
-		FLOAT_VIEWPORT_MARGIN_PX,
-		Math.min(anchorRect.left, maxLeft),
-	);
-
-	// A panel taller than the viewport is pinned to the top so its first row is reachable.
-	const maxTop = viewportHeight - panelHeight - FLOAT_VIEWPORT_MARGIN_PX;
-	const clampedTop = Math.max(
-		FLOAT_VIEWPORT_MARGIN_PX,
-		Math.min(top, Math.max(FLOAT_VIEWPORT_MARGIN_PX, maxTop)),
-	);
-
-	return { top: clampedTop, left };
-};
+	scrollX: number,
+	scrollY: number,
+): FloatPosition => ({
+	// Clamped at the top of the document so a widget near the top of the page
+	// cannot push the panel out of reach.
+	top: Math.max(0, anchorRect.top + scrollY - panelHeight - FLOAT_GAP_PX),
+	left: anchorRect.left + scrollX,
+});
 
 const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 	const {
@@ -146,14 +129,13 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 		const panel = contentRef.current.getBoundingClientRect();
 		const next = computeFloatPosition(
 			anchor.getBoundingClientRect(),
-			panel.width,
 			panel.height,
-			window.innerWidth,
-			window.innerHeight,
+			window.scrollX,
+			window.scrollY,
 		);
-		// Scroll and resize fire far more often than the panel actually moves;
-		// keeping the previous object when nothing changed avoids a re-render
-		// per frame.
+		// Reflow and panel-size changes fire more often than the panel actually
+		// moves; keeping the previous object when nothing changed avoids a
+		// needless re-render.
 		setFloatPosition((current) =>
 			current && current.top === next.top && current.left === next.left
 				? current
@@ -173,8 +155,9 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 	useEffect(() => {
 		if (!show || !isFloating) return;
 
-		// Capture phase: a scrolling ancestor's scroll event does not bubble.
-		window.addEventListener("scroll", reposition, true);
+		// No scroll listener: the coordinates are document-relative, so the page
+		// scrolls the panel along with the widget on its own. Resize still
+		// matters because it can reflow the anchor to a new place in the page.
 		window.addEventListener("resize", reposition);
 
 		const observer =
@@ -185,7 +168,6 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 		if (observer && anchor) observer.observe(anchor);
 
 		return () => {
-			window.removeEventListener("scroll", reposition, true);
 			window.removeEventListener("resize", reposition);
 			observer?.disconnect();
 		};
@@ -224,9 +206,16 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 
 	const layerStyle: CSSProperties = isFloating
 		? {
-				// The float layer must not cover the page: only its content takes pointer events.
-				position: "fixed",
-				inset: 0,
+				// A zero-sized box at the document origin: it must not cover the
+				// page, and only its content takes pointer events. Absolute with
+				// no positioned ancestor resolves against the initial containing
+				// block, which is what makes the child's coordinates document
+				// coordinates.
+				position: "absolute",
+				top: 0,
+				left: 0,
+				width: 0,
+				height: 0,
 				zIndex: SURFACE_Z_INDEX,
 				display: show ? "block" : "none",
 				pointerEvents: "none",
@@ -246,7 +235,7 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 
 	const contentStyle: CSSProperties = isFloating
 		? {
-				position: "fixed",
+				position: "absolute",
 				zIndex: CONTENT_Z_INDEX,
 				pointerEvents: "auto",
 				top: `${floatPosition?.top ?? 0}px`,

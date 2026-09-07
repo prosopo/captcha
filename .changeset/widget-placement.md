@@ -11,7 +11,7 @@
 
 Let a site choose where a challenge opens, and which button triggers it.
 
-- `placement: "popup" | "float"`, also `data-placement`. `popup` is the default and unchanged. `float` anchors the challenge to the widget, keeps the page usable behind it, flips above the widget when there is no room below, and dismisses on Escape or an outside click. An invisible widget always uses popup.
+- `placement: "popup" | "float"`, also `data-placement`. `popup` is the default and unchanged. `float` opens the challenge directly above the widget and keeps it pinned there as the page scrolls, leaves the page usable behind it, and dismisses on Escape or an outside click. An invisible widget always uses popup.
 - `bind: "#selector"`, also `data-bind`. The matching host-page button triggers that one widget, in visible or invisible mode. The click's default action is prevented so a submit button does not post the form before a token exists.
 - `execute(widgetId?)`. Called with no argument every widget responds, as before. Called with the id `render()` returns, only that widget runs. Implicitly rendered invisible buttons now trigger only their own widget.
 

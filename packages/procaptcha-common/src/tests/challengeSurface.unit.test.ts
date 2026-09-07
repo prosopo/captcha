@@ -37,68 +37,68 @@ const rect = (
 		toJSON: () => ({}),
 	}) as DOMRect;
 
-const PANEL_WIDTH = 300;
 const PANEL_HEIGHT = 250;
 
-const place = (anchor: DOMRect, panelHeight = PANEL_HEIGHT) =>
-	computeFloatPosition(
-		anchor,
-		PANEL_WIDTH,
-		panelHeight,
-		VIEWPORT_WIDTH,
-		VIEWPORT_HEIGHT,
-	);
+const place = (
+	anchor: DOMRect,
+	panelHeight = PANEL_HEIGHT,
+	scrollX = 0,
+	scrollY = 0,
+) => computeFloatPosition(anchor, panelHeight, scrollX, scrollY);
 
 describe("computeFloatPosition", () => {
-	it("sits just below the anchor when there is room", () => {
-		const anchor = rect(100, 100, 300, 78);
+	it("sits directly above the anchor", () => {
+		const anchor = rect(100, 300, 300, 78);
 
 		const { top, left } = place(anchor);
 
-		expect(top).toBe(anchor.bottom + 8);
+		expect(top).toBe(anchor.top - PANEL_HEIGHT - 8);
 		expect(left).toBe(anchor.left);
 	});
 
-	it("flips above the anchor when the space below cannot hold it", () => {
-		// Anchor near the bottom: 100px below, 650px above.
-		const anchor = rect(100, 650, 300, 50);
+	it("stays above the anchor even when the space below is larger", () => {
+		// Plenty of room below, none of which should tempt it downwards.
+		const anchor = rect(100, 400, 300, 50);
 
 		const { top } = place(anchor);
 
 		expect(top).toBe(anchor.top - PANEL_HEIGHT - 8);
+		expect(top + PANEL_HEIGHT).toBeLessThan(anchor.top);
 	});
 
-	it("stays below when neither side fits but below has more room", () => {
-		const anchor = rect(100, 40, 300, 700);
-
-		const { top } = place(anchor);
-
-		expect(top).toBeGreaterThanOrEqual(8);
-		expect(top + PANEL_HEIGHT).toBeLessThanOrEqual(VIEWPORT_HEIGHT);
-	});
-
-	it("pulls the panel back when the anchor is near the right edge", () => {
-		const anchor = rect(900, 100, 80, 78);
-
-		const { left } = place(anchor);
-
-		expect(left).toBe(VIEWPORT_WIDTH - PANEL_WIDTH - 8);
-		expect(left + PANEL_WIDTH).toBeLessThanOrEqual(VIEWPORT_WIDTH);
-	});
-
-	it("never positions the panel off the left edge", () => {
-		const anchor = rect(-200, 100, 80, 78);
-
-		const { left } = place(anchor);
-
-		expect(left).toBe(8);
-	});
-
-	it("pins a panel taller than the viewport to the top", () => {
+	it("converts the viewport rect into document coordinates", () => {
 		const anchor = rect(100, 300, 300, 78);
 
-		const { top } = place(anchor, VIEWPORT_HEIGHT + 400);
+		const { top, left } = place(anchor, PANEL_HEIGHT, 40, 500);
 
-		expect(top).toBe(8);
+		expect(top).toBe(anchor.top + 500 - PANEL_HEIGHT - 8);
+		expect(left).toBe(anchor.left + 40);
+	});
+
+	it("does not move when only the scroll offset changes", () => {
+		// The same widget, seen after scrolling 200px: its viewport rect moves
+		// up by exactly what the scroll offset gains, so the document position
+		// is unchanged and the panel does not drift.
+		const unscrolled = place(rect(100, 300, 300, 78), PANEL_HEIGHT, 0, 0);
+		const scrolled = place(rect(100, 100, 300, 78), PANEL_HEIGHT, 0, 200);
+
+		expect(scrolled).toEqual(unscrolled);
+	});
+
+	it("tracks a taller panel so its bottom edge stays on the anchor", () => {
+		const anchor = rect(100, 600, 300, 78);
+
+		const short = place(anchor, 100);
+		const tall = place(anchor, 400);
+
+		expect(short.top + 100).toBe(tall.top + 400);
+	});
+
+	it("clamps to the top of the document rather than going out of reach", () => {
+		const anchor = rect(100, 20, 300, 78);
+
+		const { top } = place(anchor, PANEL_HEIGHT);
+
+		expect(top).toBe(0);
 	});
 });
