@@ -123,6 +123,14 @@ export const ProcaptchaFrictionless = ({
 	// visibly (see `onSessionInvalidated`) instead of leaving the user on a
 	// dead "No session found" checkbox.
 	const sessionInvalidatedAttemptsRef = useRef(0);
+	// Escalation sessions we have already mounted a widget for. The provider
+	// mints exactly one escalation session per PoW solution and consumes it on
+	// the first challenge fetch, so a repeat handoff for the same id can only
+	// produce a widget that 400s with NO_SESSION_FOUND. The PoW manager fires
+	// `onEscalate` from inside its `providerRetry`-wrapped `submit()`, so a
+	// throw anywhere after the handoff re-runs submit and escalates a second
+	// time on the same envelope.
+	const escalatedSessionIdsRef = useRef(new Set<string>());
 	// Bumped on every mount so the replacement widget gets a fresh React
 	// `key`. Without it a re-render for the same captcha type reconciles onto
 	// the existing element, and the inner widget keeps the manager it built on
@@ -223,6 +231,12 @@ export const ProcaptchaFrictionless = ({
 			newSessionId: string,
 			coords?: RetryCoords,
 		) => {
+			// Idempotent per escalation session — see `escalatedSessionIdsRef`.
+			// Without this a re-run of the PoW widget's `submit()` mounts a
+			// second widget against the session the first one already spent,
+			// which the provider answers with 400 CAPTCHA.NO_SESSION_FOUND.
+			if (escalatedSessionIdsRef.current.has(newSessionId)) return;
+			escalatedSessionIdsRef.current.add(newSessionId);
 			void renderForCaptchaType(
 				next,
 				{
