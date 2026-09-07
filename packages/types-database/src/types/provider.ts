@@ -1108,6 +1108,12 @@ export const SESSION_PROJECTION = {
 	// path too. Keep this projection in sync with whatever
 	// fields the read-only callers need.
 	captchaType: 1,
+	// Single-use marker for the authenticated (Web Bot Auth) verify path.
+	// `verifyAuthenticatedSession` reads it to reject a token that has already
+	// been redeemed, then sets it — without the projection the check would read
+	// `undefined` and every authenticated token would verify an unlimited
+	// number of times.
+	serverChecked: 1,
 	// Raw per-connection TCP-handshake signals populated by the
 	// tcp-probe eBPF sidecar (see @prosopo/types Session for the
 	// wire semantics). The verify-time DM input surface exposes
