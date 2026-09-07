@@ -46,7 +46,7 @@
 		"@prosopo/util": "3.3.8",
 		"@prosopo/workspace": "3.2.1",
 		"fast-glob": "3.3.3",
-		"yargs": "17.7.2",
+		"yargs": "18.1.0",
 		"zod": "3.23.8"
 	}
 }
