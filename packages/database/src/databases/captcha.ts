@@ -40,7 +40,7 @@ const isBsonLong = (value: unknown): boolean =>
 	"_bsontype" in value &&
 	(value as { _bsontype: string })._bsontype === "Long";
 import type { QueryFilter } from "mongoose";
-import { MongoDatabase } from "../base/index.js";
+import { type MongoConnectionTimeouts, MongoDatabase } from "../base/index.js";
 
 const logger = getLogger("info", "database:captcha");
 
@@ -84,8 +84,9 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		dbname?: string,
 		authSource?: string,
 		logger?: Logger,
+		timeouts?: MongoConnectionTimeouts,
 	) {
-		super(url, dbname, authSource, logger);
+		super(url, dbname, authSource, logger, timeouts);
 		this.tables = {} as Tables<TableNames>;
 	}
 
