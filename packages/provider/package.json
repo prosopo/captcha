@@ -59,6 +59,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
+		"@noble/curves": "1.9.2",
 		"@prosopo/config": "3.3.14",
 		"@types/node": "22.5.5",
 		"@types/pg": "8.23.1",
