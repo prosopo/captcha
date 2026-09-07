@@ -81,10 +81,9 @@ export default function placementInjector(): Plugin {
 			var requested = new URLSearchParams(window.location.search).get("placement");
 			var placement = requested === "float" ? "float" : "popup";
 
-			// Implicit widgets carry the class and take their options from
-			// attributes. Buttons are the invisible variant, which resolves
-			// float back to popup -- stamped anyway so the downgrade is
-			// visible rather than untested.
+			// Buttons are the invisible variant, which resolves float back to
+			// popup -- stamped anyway so the downgrade is visible rather than
+			// untested.
 			var containers = document.getElementsByClassName("procaptcha");
 			for (var i = 0; i < containers.length; i++) {
 				containers[i].setAttribute("data-placement", placement);

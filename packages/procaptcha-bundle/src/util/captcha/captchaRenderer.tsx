@@ -31,7 +31,6 @@ import { setStartMode } from "../startMode.js";
 import { setValidChallengeLength } from "../timeout.js";
 import { BundleCaptcha } from "./components/bundleCaptcha.js";
 
-/** Render options first, then `data-placement`; an unrecognised value is dropped. */
 const resolveRequestedPlacement = (
 	element: Element,
 	renderOptions: ProcaptchaRenderOptions,

@@ -325,8 +325,7 @@ export const execute = (widgetId?: string) => {
 };
 
 /**
- * Wires the host-page element matching `selector` to trigger one widget. The
- * click's default is prevented so a submit button does not post the form
+ * The click's default is prevented so a submit button does not post the form
  * before a token exists.
  */
 const bindTrigger = (widgetId: string, selector: string): void => {
