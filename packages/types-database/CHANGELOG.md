@@ -1,5 +1,31 @@
 # @prosopo/types-database
 
+## 5.4.1
+### Patch Changes
+
+- b6918c0: fix: declare the puzzle render settings on the mongoose user-settings schema
+  
+  `UserSettingsSchema` never declared the `puzzle` block that
+  `ClientSettingsSchema` has carried since the puzzle render tunables shipped.
+  Mongoose is strict by default, so every site-wide override — decoy count,
+  decoy edge/body shading, hole darken, decoy hole darken, piece scale — round
+  tripped through zod, reached the database and was silently dropped on write.
+  The same omission on `TrafficCategoryPolicySchema` did the same to the
+  per-category puzzle overrides a traffic-filter challenge can carry.
+  
+  Identical failure mode to `frictionlessTypes`, which carries the comment
+  explaining it. Bounds mirror the zod field schemas, and the block has no
+  default so an unconfigured site stays free of an empty subdocument rather
+  than gaining one on every save.
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [e22d5fb]
+- Updated dependencies [d288371]
+  - @prosopo/user-access-policy@3.13.0
+  - @prosopo/types@5.7.0
+  - @prosopo/common@3.1.54
+  - @prosopo/logger@2.0.9
+
 ## 5.4.0
 ### Minor Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/native-ja4",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"description": "Rust JA4 TLS fingerprint parser exposed to Node via napi-rs.",
 	"license": "Apache-2.0",
 	"author": "Prosopo Limited",
@@ -27,6 +27,6 @@
 		"clean": "cargo clean && rm -f *.node index.js index.d.ts"
 	},
 	"devDependencies": {
-		"@napi-rs/cli": "2.18.4"
+		"@napi-rs/cli": "3.8.6"
 	}
 }

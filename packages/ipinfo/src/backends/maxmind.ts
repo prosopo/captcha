@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Asn, City, ReaderModel } from "@maxmind/geoip2-node";
+import type { Asn, City, Country, ReaderModel } from "@maxmind/geoip2-node";
 import type { Logger } from "@prosopo/logger";
 import type { IPInfoResponse, IPInfoResult } from "@prosopo/types";
 
@@ -40,9 +40,29 @@ export interface MaxMindBackendConfig {
 	openReader?: OpenReader;
 }
 
+/**
+ * Which accessor the geo reader actually supports.
+ *
+ * `cityDbPath` is a path, not a promise of a City database — production points
+ * it at GeoLite2-Country.mmdb. `Reader.open()` accepts any valid .mmdb, so the
+ * reader opens and `isAvailable()` reports true, but `city()` checks
+ * `metadata.databaseType` and throws `BadMethodCallError` on every call. The
+ * result was a backend that claimed to be up and failed 100% of lookups —
+ * invisible until the ipapi.is sidecar it was meant to back up went down.
+ *
+ * `metadata` is not on `ReaderModel`'s public type, so the kind is latched
+ * lazily on the first `BadMethodCallError` rather than probed at open time.
+ * "unknown" only ever costs one extra throw for the process lifetime.
+ */
+type GeoReaderKind = "unknown" | "city" | "country";
+
+/** Thrown by geoip2-node when an accessor doesn't match the database type. */
+const BAD_METHOD_CALL_ERROR = "BadMethodCallError";
+
 export class MaxMindBackend {
 	private cityReader: ReaderModel | null = null;
 	private asnReader: ReaderModel | null = null;
+	private geoReaderKind: GeoReaderKind = "unknown";
 	private config: MaxMindBackendConfig;
 
 	constructor(config: MaxMindBackendConfig) {
@@ -100,17 +120,44 @@ export class MaxMindBackend {
 
 		try {
 			let cityData: City | undefined;
+			let countryData: Country | undefined;
 			let asnData: Asn | undefined;
 
 			if (this.cityReader) {
-				try {
-					cityData = this.cityReader.city(ip);
-				} catch (error) {
-					this.config.logger?.debug(() => ({
-						msg: "MaxMind City lookup failed",
-						data: { ip },
-						err: error,
-					}));
+				if (this.geoReaderKind !== "country") {
+					try {
+						cityData = this.cityReader.city(ip);
+						this.geoReaderKind = "city";
+					} catch (error) {
+						if (isBadMethodCall(error)) {
+							// Not a City database. Latch so subsequent lookups go
+							// straight to country() instead of paying the throw.
+							this.geoReaderKind = "country";
+							this.config.logger?.warn(() => ({
+								msg: "MaxMind geo database is not a City database; falling back to country-level lookups",
+								data: { dbPath: this.config.cityDbPath },
+								err: error,
+							}));
+						} else {
+							this.config.logger?.debug(() => ({
+								msg: "MaxMind City lookup failed",
+								data: { ip },
+								err: error,
+							}));
+						}
+					}
+				}
+
+				if (this.geoReaderKind === "country") {
+					try {
+						countryData = this.cityReader.country(ip);
+					} catch (error) {
+						this.config.logger?.debug(() => ({
+							msg: "MaxMind Country lookup failed",
+							data: { ip },
+							err: error,
+						}));
+					}
 				}
 			}
 
@@ -126,7 +173,11 @@ export class MaxMindBackend {
 				}
 			}
 
-			if (!cityData && !asnData) {
+			// `City extends Country`, so everything below the city/subdivision/
+			// location fields reads off whichever one the database gave us.
+			const geoData: City | Country | undefined = cityData ?? countryData;
+
+			if (!geoData && !asnData) {
 				return {
 					isValid: false,
 					error: "No MaxMind data available for IP",
@@ -139,39 +190,40 @@ export class MaxMindBackend {
 				isValid: true,
 
 				// Threat indicators - GeoLite2 free DBs do not populate these
-				isVPN: cityData?.traits?.isAnonymousVpn ?? false,
-				isTor: cityData?.traits?.isTorExitNode ?? false,
+				isVPN: geoData?.traits?.isAnonymousVpn ?? false,
+				isTor: geoData?.traits?.isTorExitNode ?? false,
 				isProxy:
-					(cityData?.traits?.isPublicProxy ?? false) ||
-					(cityData?.traits?.isResidentialProxy ?? false),
-				isDatacenter: cityData?.traits?.isHostingProvider ?? false,
+					(geoData?.traits?.isPublicProxy ?? false) ||
+					(geoData?.traits?.isResidentialProxy ?? false),
+				isDatacenter: geoData?.traits?.isHostingProvider ?? false,
 				isAbuser: false,
 				isMobile: false,
-				isSatellite: cityData?.traits?.isSatelliteProvider ?? false,
+				isSatellite: geoData?.traits?.isSatelliteProvider ?? false,
 				isCrawler: false,
 
-				// Geolocation from City DB
-				country: cityData?.country?.names?.en,
-				countryCode: cityData?.country?.isoCode,
+				// Country is available from both database types; the rest needs a
+				// City database and stays undefined on a Country-only one.
+				country: geoData?.country?.names?.en,
+				countryCode: geoData?.country?.isoCode,
 				region: cityData?.subdivisions?.[0]?.names?.en,
 				city: cityData?.city?.names?.en,
 				latitude: cityData?.location?.latitude,
 				longitude: cityData?.location?.longitude,
 				timezone: cityData?.location?.timeZone,
 
-				// ASN info - prefer City DB traits, fall back to ASN DB
+				// ASN info - prefer geo DB traits, fall back to ASN DB
 				asnNumber:
-					cityData?.traits?.autonomousSystemNumber ??
+					geoData?.traits?.autonomousSystemNumber ??
 					asnData?.autonomousSystemNumber,
 				asnOrganization:
-					cityData?.traits?.autonomousSystemOrganization ??
+					geoData?.traits?.autonomousSystemOrganization ??
 					asnData?.autonomousSystemOrganization,
 
 				// Provider info from ASN
 				providerName:
-					cityData?.traits?.autonomousSystemOrganization ??
+					geoData?.traits?.autonomousSystemOrganization ??
 					asnData?.autonomousSystemOrganization,
-				providerType: mapUserType(cityData?.traits?.userType),
+				providerType: mapUserType(geoData?.traits?.userType),
 			};
 
 			return result;
@@ -183,6 +235,14 @@ export class MaxMindBackend {
 			};
 		}
 	}
+}
+
+/**
+ * geoip2-node sets `name` on its error classes, so this survives the class
+ * identity being lost across the lazy `import()` in `openReaderFromFile`.
+ */
+function isBadMethodCall(error: unknown): boolean {
+	return error instanceof Error && error.name === BAD_METHOD_CALL_ERROR;
 }
 
 export type MaxMindUserType =

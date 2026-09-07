@@ -733,7 +733,11 @@ export default (
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.isMobile
 					: undefined;
-			const safeUserAgent = userAgent ?? "";
+			// `userAgent` is hashed and only meaningful to
+			// `runUserAgentMismatchCheck`; passing it here left `isApple` and any
+			// UA classification permanently false. The dedup replay above already
+			// reads the header directly.
+			const requestUserAgent = String(req.headers["user-agent"] ?? "");
 			const trafficPolicies = deriveTrafficPolicies(
 				clientRecord.settings?.trafficFilter,
 			);
@@ -749,12 +753,12 @@ export default (
 				// puzzle chosen in place of a disabled image challenge.
 				frictionlessTypes: clientRecord.settings.frictionlessTypes,
 				baseImageRounds: env.config.captchas.solved.count,
-				platform: derivePlatform(safeUserAgent, webView, {
+				platform: derivePlatform(requestUserAgent, webView, {
 					...(typeof ipInfoMobile === "boolean" && { isMobile: ipInfoMobile }),
 				}),
 				raw: {
 					headers: flatHeaders,
-					userAgent: safeUserAgent,
+					userAgent: requestUserAgent,
 					...(req.ja4 && { ja4: req.ja4 }),
 					...(req.tcpToChelloUs !== undefined && {
 						tcpToChelloUs: req.tcpToChelloUs,

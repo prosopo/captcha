@@ -40,6 +40,7 @@ import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
+import { getSignedAssetsResolver } from "./signedAssetsResolver.js";
 import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
 
 export default (
@@ -294,13 +295,20 @@ export default (
 					// flat fields.
 					req.ipInfo,
 				);
+			// Signed URLs are minted per request so each challenge's images
+			// expire on their own clock (and can be bound to the requesting
+			// IP). Falls back to the env resolver, and thence to passing
+			// `item.data` through untouched, when no signing key is set.
+			const assetsResolver =
+				getSignedAssetsResolver(ipAddress.toString()) ?? env.assetsResolver;
+
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",
 				[ApiParams.captchas]: taskData.captchas.map((captcha: Captcha) => ({
 					...captcha,
 					target: req.t(`TARGET.${captcha.target}`),
 					items: captcha.items.map((item) =>
-						parseCaptchaAssets(item, env.assetsResolver),
+						parseCaptchaAssets(item, assetsResolver),
 					),
 				})),
 				[ApiParams.requestHash]: taskData.requestHash,

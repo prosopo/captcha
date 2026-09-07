@@ -1,5 +1,75 @@
 # @prosopo/database
 
+## 4.0.29
+### Patch Changes
+
+- 8a63ea3: Include `clientMetaData` in the commitment projection.
+  
+  `DAPP_USER_COMMITMENT_PROJECTION` enumerates the fields the verify path reads
+  off `solution`. `clientMetaData` arrived in 5.5.0 with the client-session
+  correlation but was never added, so both `getDappUserCommitmentById` and
+  `getDappUserCommitmentByAccount` returned it as `undefined` on every fetch —
+  whatever was stored on the record.
+  
+  `isClientSessionMismatch(expected, undefined)` is therefore true whenever the
+  caller supplies a session id, so every image captcha verified through a caller
+  that correlates on a session was disapproved with `CLIENT_SESSION_MISMATCH`:
+  a token replay reported on solves earned in exactly the session they claimed.
+  
+  PoW and puzzle were unaffected — they read their own challenge record rather
+  than this projection, which is why the failure was confined to image captchas.
+  
+  The projection's own regression test now asserts the field round-trips; it was
+  written to catch this class of bug and did not cover this field.
+
+## 4.0.28
+### Patch Changes
+
+- f8a41fe: Stop leaking a mongoose connection pool on every failed database connect.
+  
+  `MongoDatabase.connect()` assigns `this.connection` only once the connection
+  opens, so a connection that fails to open is unreachable from the instance and
+  `close()` can never reach it — while mongoose keeps its topology monitor, its
+  `minPoolSize: 5` pool and its entry in `mongoose.connections` alive and
+  retrying forever. `onError` now destroys that connection. `destroy` rather than
+  `close` because only `destroy` drops the `mongoose.connections` entry, which
+  would otherwise retain the object on its own. The teardown is guarded so that a
+  runtime `error` on an already-open connection is not mistaken for a failed
+  connect and does not tear down a working pool; the `error` listener stays
+  registered after `open` because an `EventEmitter` `error` with no listener
+  would take the process down.
+  
+  Observed on a provider whose connects to the central DB were timing out: 524
+  failed connects an hour accumulated 5,819 ESTABLISHED sockets to the central
+  DB and 5,859 TLS sockets, and the resulting flood of driver DNS lookups
+  saturated libuv's four-thread pool — 8,812 `getaddrinfo` calls queued — so
+  every unrelated outbound lookup in the process backed up behind them. That
+  provider burned 3.45x the CPU of a healthy peer while serving 2.5x less
+  traffic, with event-loop p99 at 240ms against the peer's 27ms.
+  
+  `getMongoConnectionOptions` also gains `connectTimeoutMS` and
+  `serverSelectionTimeoutMS` overrides, and `CentralDbStreamer` passes 45s for
+  both. The 10s default is sized for a database that is local or on the same
+  continent; the central DB is long-haul for every provider and genuinely distant
+  for some, where the TLS handshake alone measures 2-30s. Under the old ceiling
+  those providers could never connect at all, so the streamer burned a connect
+  attempt every cooldown forever and streamed no records — which is what fed the
+  leak above.
+- 6f57ee9: chore(deps): bump make-dir from 3.1.0 to 5.1.0
+- 6f57ee9: chore(deps): bump the npm-minor-and-patch group across 1 directory with 3 updates
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [e22d5fb]
+- Updated dependencies [b6918c0]
+- Updated dependencies [d288371]
+  - @prosopo/user-access-policy@3.13.0
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/types-database@5.4.1
+  - @prosopo/common@3.1.54
+  - @prosopo/logger@2.0.9
+  - @prosopo/redis-client@1.0.35
+
 ## 4.0.27
 ### Patch Changes
 

@@ -1,5 +1,11 @@
 # @prosopo/config
 
+## 3.3.14
+### Patch Changes
+
+- 56e5502: chore(deps-dev): bump webpack-cli from 5.1.4 to 7.2.3
+- 6f57ee9: chore(deps): bump the npm-minor-and-patch group across 1 directory with 3 updates
+
 ## 3.3.13
 ### Patch Changes
 

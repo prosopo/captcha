@@ -52,6 +52,7 @@ export default function navigationInjector(): Plugin {
 			puzzle: {
 				implicit: { path: "puzzle-implicit.html", exists: true },
 				explicit: { path: "puzzle-explicit.html", exists: true },
+				bound: { path: "puzzle-bind-explicit.html", exists: true },
 			},
 		},
 		invisible: {

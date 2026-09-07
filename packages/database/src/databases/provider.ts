@@ -2318,6 +2318,13 @@ export class ProviderDatabase
 		behavioralDataPacked: 1,
 		deviceCapability: 1,
 		coords: 1,
+		// Read by `verifyImageCaptchaSolution` for the client-session
+		// correlation. Added in 5.5.0 but never added here, so
+		// `solution.clientMetaData` came back `undefined` on every fetch and
+		// `isClientSessionMismatch(id, undefined)` was true for every caller
+		// that supplied a session id — a token replay reported on solves that
+		// were earned in exactly the session they claimed.
+		clientMetaData: 1,
 	} as { [key in keyof Partial<UserCommitmentRecord>]: 1 };
 
 	/**
