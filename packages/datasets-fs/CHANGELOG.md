@@ -1,5 +1,16 @@
 # @prosopo/datasets-fs
 
+## 3.0.127
+### Patch Changes
+
+- 6f57ee9: chore(deps): bump yargs from 17.7.2 to 18.1.0
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/common@3.1.54
+  - @prosopo/logger@2.0.9
+
 ## 3.0.126
 ### Patch Changes
 

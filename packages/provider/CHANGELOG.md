@@ -1,5 +1,72 @@
 # @prosopo/provider
 
+## 5.8.0
+### Minor Changes
+
+- e22d5fb: Add an arbitrary-header match dimension to user access policies.
+  
+  A `Block` or `Restrict` rule can now target a named request header with an `equals`, `contains`, `notEquals`, `notContains`, `notEqualsAny` or `notContainsAny` operator. The negated operators back the portal's allow-list mode — block unless the header matches; the `*Any` pair carries a list of accepted values in `headerValue` so an allow-list over several values of the same header fires only when the header matches none of them (separate single-value rules would each fire on the other's value and block everything). Because substring `contains` and per-rule operators can't be expressed as a Redis TAG query — and an allow-list rule must still fire on a request that omits the header — the header condition is carried on the rule as `headerName`/`headerValue`/`headerOperator` and evaluated in code against the raw request headers, while an indexed `headerMatch` sentinel makes every header rule a matching candidate for every request. Header rules contribute one point to rule specificity ranking, mirroring the other scalar dimensions.
+  
+  The raw request headers are a **required** argument of `getPrioritisedAccessRule` / `CaptchaManager.getPrioritisedAccessPolicies`, with no default. A negated header operator treats a missing header as "does not match", so a lookup that quietly ran with an empty header map would fire every allow-list rule on every request. Every lookup now passes them: the request-time block middleware, the verify-path hard-block check, the `/frictionless` policy and dedup lookups, and the image / PoW / puzzle challenge endpoints.
+  
+  `getPrioritisedAccessRule` now caches only the candidate fetch and ranks per request, because the header verdict depends on data that is not part of the cache key. This also closes a latent gap where `os` was never part of `hardBlockCacheKey`, so a cached ranked list could serve one operating system's verdict to a request from another.
+
+### Patch Changes
+
+- 6f57ee9: chore(deps-dev): bump @types/uuid from 10.0.0 to 11.0.0
+- 6f57ee9: chore(deps): bump the npm-minor-and-patch group across 1 directory with 3 updates
+- c59f8a6: Remove the account-wide commitment fallback from image captcha verification.
+  
+  `verifyImageCaptchaSolution` fell back to `getDappUserCommitmentByAccount` when
+  the token carried no `commitmentId`, returning the first *approved* commitment
+  in the account's history — any age, any session.
+  
+  That fallback predates the Procaptcha token (#1263, 2024-06-06), which has
+  carried `commitmentId` on every image solve since; `Manager.ts` sets it
+  unconditionally for this captcha type, and it is `optional()` on the schema only
+  because PoW shares the token shape and identifies its work by `challenge`.
+  
+  It could only ever return the wrong record. For a returning user whose current
+  solve was not yet approved it produced an approved commitment from an earlier
+  visit, which carries no `clientSessionId`, so the session correlation compared
+  the live id against `undefined` and reported `CLIENT_SESSION_MISMATCH` — a token
+  replay that never happened. Observed in production at scale on the image
+  path while PoW, which resolves its exact challenge record, was unaffected.
+  
+  Verification now requires a `commitmentId` and returns
+  `API.USER_NOT_VERIFIED_NO_SOLUTION` without one. A token that names no
+  commitment cannot be verified against one.
+- Updated dependencies [f8a41fe]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [e22d5fb]
+- Updated dependencies [9386e5e]
+- Updated dependencies [6fd727c]
+- Updated dependencies [b6918c0]
+- Updated dependencies [d288371]
+  - @prosopo/database@4.0.28
+  - @prosopo/user-access-policy@3.13.0
+  - @prosopo/native-ja4@0.0.5
+  - @prosopo/native-merkle@0.0.5
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/puzzle-assets@0.1.4
+  - @prosopo/types-database@5.4.1
+  - @prosopo/env@3.6.51
+  - @prosopo/api@4.1.6
+  - @prosopo/api-express-router@3.1.82
+  - @prosopo/api-route@2.6.58
+  - @prosopo/common@3.1.54
+  - @prosopo/datasets@3.1.78
+  - @prosopo/ipinfo@0.3.23
+  - @prosopo/keyring@2.9.85
+  - @prosopo/load-balancer@2.10.40
+  - @prosopo/logger@2.0.9
+  - @prosopo/redis-client@1.0.35
+  - @prosopo/types-env@2.10.45
+
 ## 5.7.0
 ### Minor Changes
 
