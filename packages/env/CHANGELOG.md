@@ -1,5 +1,13 @@
 # @prosopo/env
 
+## 3.6.52
+### Patch Changes
+
+- Updated dependencies [8a63ea3]
+- Updated dependencies [162f591]
+  - @prosopo/database@4.0.29
+  - @prosopo/ipinfo@0.3.24
+
 ## 3.6.51
 ### Patch Changes
 
