@@ -14,6 +14,8 @@
 import { ServerApiVersion } from "mongodb";
 import { describe, expect, it } from "vitest";
 import {
+	DEFAULT_CONNECT_TIMEOUT_MS,
+	DEFAULT_SERVER_SELECTION_TIMEOUT_MS,
 	type MongoCompressor,
 	getMongoCompressors,
 	getMongoConnectionOptions,
@@ -216,6 +218,32 @@ describe("getMongoConnectionOptions", () => {
 		});
 		expect(options.maxPoolSize).toBe(50);
 		expect(options.minPoolSize).toBe(5);
+	});
+
+	it("defaults the connect and server selection timeouts", () => {
+		const options = getMongoConnectionOptions({
+			url: "mongodb://example.com:27017/db",
+			appName,
+		});
+		expect(options.connectTimeoutMS).toBe(DEFAULT_CONNECT_TIMEOUT_MS);
+		expect(options.serverSelectionTimeoutMS).toBe(
+			DEFAULT_SERVER_SELECTION_TIMEOUT_MS,
+		);
+	});
+
+	// A caller owning a long-haul connection (the central DB streamer) has to be
+	// able to raise these: the default ceiling is below the real TLS handshake
+	// time from the more distant pronodes, so without an override that
+	// connection can never be established at all.
+	it("applies connect and server selection timeout overrides", () => {
+		const options = getMongoConnectionOptions({
+			url: "mongodb://example.com:27017/db",
+			appName,
+			connectTimeoutMS: 45_000,
+			serverSelectionTimeoutMS: 45_000,
+		});
+		expect(options.connectTimeoutMS).toBe(45_000);
+		expect(options.serverSelectionTimeoutMS).toBe(45_000);
 	});
 
 	it("only sets dbName when provided", () => {

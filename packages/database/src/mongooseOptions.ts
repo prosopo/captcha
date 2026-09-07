@@ -80,6 +80,20 @@ export const getMongoCompressors = (
 };
 
 /**
+ * Default connect / server-selection timeouts.
+ *
+ * These are sized for a database that is local to the process or at least on
+ * the same continent, where a connect that has not completed in 10s is a real
+ * fault worth failing fast on. They are *not* safe as a universal ceiling: a
+ * connection to a remote database can need far longer for the TLS handshake
+ * alone — pronode17 measures 2-30s to mongo1 — and every connect that trips
+ * the ceiling is a wasted attempt that will simply be retried. Callers that
+ * own a known long-haul connection pass their own values instead.
+ */
+export const DEFAULT_CONNECT_TIMEOUT_MS = 10000;
+export const DEFAULT_SERVER_SELECTION_TIMEOUT_MS = 20000;
+
+/**
  * Returns default mongoose connection options with the ability to override specific values.
  *
  * @param options - Configuration options
@@ -88,6 +102,8 @@ export const getMongoCompressors = (
  * @param options.maxPoolSize - Maximum pool size (default: 10)
  * @param options.minPoolSize - Minimum pool size (default: 0)
  * @param options.dbName - Optional database name
+ * @param options.connectTimeoutMS - Max time to establish a connection (default: 10000)
+ * @param options.serverSelectionTimeoutMS - Max time to select a server (default: 20000)
  * @returns Mongoose connection options object
  */
 export const getMongoConnectionOptions = (options: {
@@ -96,8 +112,18 @@ export const getMongoConnectionOptions = (options: {
 	maxPoolSize?: number;
 	minPoolSize?: number;
 	dbName?: string;
+	connectTimeoutMS?: number;
+	serverSelectionTimeoutMS?: number;
 }): ConnectOptions => {
-	const { url, appName, maxPoolSize = 10, minPoolSize = 0, dbName } = options;
+	const {
+		url,
+		appName,
+		maxPoolSize = 10,
+		minPoolSize = 0,
+		dbName,
+		connectTimeoutMS = DEFAULT_CONNECT_TIMEOUT_MS,
+		serverSelectionTimeoutMS = DEFAULT_SERVER_SELECTION_TIMEOUT_MS,
+	} = options;
 
 	if (!url || url.trim() === "") {
 		throw new Error(
@@ -118,11 +144,11 @@ export const getMongoConnectionOptions = (options: {
 		maxPoolSize, // allow up to N connections at any given time. >1 connection allows parallel db operations
 		minPoolSize, // pool may close idle connections down to this amount (0 = close all idle past maxIdleTimeMS)
 		maxConnecting: 2, // maximum number of concurrent connection attempts
-		connectTimeoutMS: 10000, // max time to connect to the database
+		connectTimeoutMS, // max time to connect to the database
 		socketTimeoutMS: 30000, // max time to wait for a response from the database when doing an operation
 		maxIdleTimeMS: 300000, // max time spent idle before closing the connection
 		appName,
-		serverSelectionTimeoutMS: 20000, // max time to wait for a response from the database
+		serverSelectionTimeoutMS, // max time to wait for a response from the database
 		compressors,
 	};
 
