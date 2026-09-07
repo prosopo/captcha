@@ -26,9 +26,6 @@ import { Mode, ModeEnum } from "./mode.js";
 import { StartModeEnum, StartModeSchema } from "./startMode.js";
 export { Mode, ModeEnum };
 export type { ModeType } from "./mode.js";
-import { Placement, PlacementEnum, resolvePlacement } from "./placement.js";
-export { Placement, PlacementEnum, resolvePlacement };
-export type { PlacementType } from "./placement.js";
 import {
 	ApiPathRateLimits,
 	DEFAULT_SOLVED_COUNT,
@@ -43,6 +40,8 @@ import {
 	PENALTY_UNVERIFIED_HOST_DEFAULT,
 	PENALTY_WEBVIEW_DEFAULT,
 } from "./frictionless.js";
+// Re-exported to consumers by ./index.js, not from here.
+import { Placement, PlacementEnum } from "./placement.js";
 import {
 	DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,

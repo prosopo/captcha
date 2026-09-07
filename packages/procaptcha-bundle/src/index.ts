@@ -331,11 +331,20 @@ export const execute = (widgetId?: string) => {
  */
 const bindTrigger = (widgetId: string, selector: string): void => {
 	const entry = procaptchaWidgets.get(widgetId);
+	if (!entry) {
+		console.error(`No Procaptcha widget found with id ${widgetId}`);
+		return;
+	}
+
 	const trigger = document.querySelector(selector);
-	if (!entry || !trigger) {
+	if (!trigger) {
 		console.error(`Procaptcha: no element matches bind selector ${selector}`);
 		return;
 	}
+
+	// Binding the same widget twice would otherwise stack listeners and leave
+	// the earlier one behind, since only the last unbind is remembered.
+	entry.unbindTrigger?.();
 
 	const onClick = (event: Event) => {
 		event.preventDefault();

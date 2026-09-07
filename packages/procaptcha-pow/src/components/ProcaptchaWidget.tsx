@@ -35,6 +35,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
 	const hpRef = useRef<HTMLInputElement>(null);
+	// A bound button can be clicked again while the first run is still going;
+	// `loading` is not in the execute effect's deps, so the guard is a ref.
+	const executeRunning = useRef(false);
 	const manager = useRef(
 		Manager(
 			config,
@@ -121,8 +124,11 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			console.error("Error starting PoW verification:", error);
 		};
 		const handleExecuteEvent = () => {
+			if (executeRunning.current) return;
+			executeRunning.current = true;
 			if (!invisible) setLoading(true);
 			const done = () => {
+				executeRunning.current = false;
 				if (!invisible) setLoading(false);
 			};
 			try {

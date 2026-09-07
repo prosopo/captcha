@@ -144,14 +144,20 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 	const reposition = useCallback(() => {
 		if (!isFloating || !anchor || !contentRef.current) return;
 		const panel = contentRef.current.getBoundingClientRect();
-		setFloatPosition(
-			computeFloatPosition(
-				anchor.getBoundingClientRect(),
-				panel.width,
-				panel.height,
-				window.innerWidth,
-				window.innerHeight,
-			),
+		const next = computeFloatPosition(
+			anchor.getBoundingClientRect(),
+			panel.width,
+			panel.height,
+			window.innerWidth,
+			window.innerHeight,
+		);
+		// Scroll and resize fire far more often than the panel actually moves;
+		// keeping the previous object when nothing changed avoids a re-render
+		// per frame.
+		setFloatPosition((current) =>
+			current && current.top === next.top && current.left === next.left
+				? current
+				: next,
 		);
 	}, [isFloating, anchor]);
 

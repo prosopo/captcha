@@ -18,6 +18,6 @@ Let a site choose where a challenge opens, and which button triggers it.
 Behaviour changes for existing widgets:
 
 - Escape now closes the image and puzzle challenge in both placements. For the image captcha this runs the cancel path, which fires `onClose` and restarts frictionless.
-- The puzzle challenge is now portalled to `document.body`, as the image modal already was, so a host page's `overflow: hidden` cannot clip it. CSS or selectors scoped under the widget no longer match it. The image modal keeps its `prosopo-modalOuter` class.
+- Image and puzzle now present on one shared `ChallengeSurface`. Both were already portalled to `document.body`, so neither moves in the page, but the markup around them changed: the outer layer keeps `prosopo-modalOuter` for the image captcha and also carries `prosopo-challenge-surface`, and a new `prosopo-challenge-content` element sits between it and `prosopo-modalInner`. A direct-child selector such as `.prosopo-modalOuter > .prosopo-modalInner` no longer matches, and the centring transform now lives on `prosopo-challenge-content` rather than on `prosopo-modalInner`.
 
-Image and puzzle now share one `ChallengeSurface`. `createConfig` takes a named options object.
+`createConfig` takes a named options object.
