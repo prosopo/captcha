@@ -1,5 +1,10 @@
 # @prosopo/util
 
+## 3.3.9
+### Patch Changes
+
+- 6f57ee9: chore(deps): bump the npm-minor-and-patch group across 1 directory with 3 updates
+
 ## 3.3.8
 ### Patch Changes
 

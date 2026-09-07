@@ -1,5 +1,10 @@
 # @prosopo/common
 
+## 3.1.54
+### Patch Changes
+
+  - @prosopo/logger@2.0.9
+
 ## 3.1.53
 ### Patch Changes
 

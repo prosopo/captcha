@@ -1,5 +1,24 @@
 # @prosopo/cli
 
+## 3.8.6
+### Patch Changes
+
+- 6f57ee9: chore(deps): bump yargs from 17.7.2 to 18.1.0
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [e22d5fb]
+- Updated dependencies [c59f8a6]
+- Updated dependencies [d288371]
+  - @prosopo/provider@5.8.0
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/env@3.6.51
+  - @prosopo/api@4.1.6
+  - @prosopo/common@3.1.54
+  - @prosopo/dotenv@3.0.55
+  - @prosopo/keyring@2.9.85
+  - @prosopo/logger@2.0.9
+
 ## 3.8.5
 ### Patch Changes
 
