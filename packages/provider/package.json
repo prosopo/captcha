@@ -61,7 +61,7 @@
 		"@prosopo/config": "3.3.13",
 		"@types/node": "22.5.5",
 		"@types/pg": "8.23.1",
-		"@types/uuid": "10.0.0",
+		"@types/uuid": "11.0.0",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"cors": "2.8.6",
