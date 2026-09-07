@@ -389,33 +389,41 @@ function clickCorrectCaptchaImages(
 }
 
 function clickNextButton(): Chainable<JQuery<HTMLElement>> {
-	// Click the live subject rather than a handle captured in a `.then()`:
-	// realClick dispatches at the coordinates of the element it is handed, so a
-	// captured handle can be clicked at a stale position once the widget
-	// re-renders the next round underneath it.
+	// The widget ignores untrusted events, so this has to be a realClick, which
+	// means it clicks at coordinates rather than at an element. Callers should
+	// wait for the round to settle first — see waitForCaptchaRound.
 	return getWidgetElement('button[data-cy="button-next"]')
 		.should("exist")
 		.should("be.visible")
-		.realClick()
 		.then(($btn) => {
-			cy.task("log", `Next button clicked: ${$btn.text()}`);
-			return cy.wrap($btn);
-		});
+			cy.task("log", `Clicking the "${$btn.text().trim()}" button...`);
+		})
+		.realClick();
 }
 
 /**
- * Wait until the widget is actually showing the given round.
+ * Wait until the widget is showing the given round and that round's images
+ * have finished loading.
  *
- * The next/submit button is the same DOM node in every round — only its label
- * and click handler change (see CaptchaComponent.tsx) — so clicking it again
- * before the new round has been committed re-fires the previous round's
- * `onNext`, which is a no-op on the last round and leaves the solution
- * unposted. Gating each click on the round marker makes that impossible.
+ * Both matter before clicking. The round marker says the new round has been
+ * committed — the next/submit button is the same DOM node in every round, only
+ * its label and handler change (see CaptchaComponent.tsx). The images matter
+ * because they carry the height of the grid: realClick measures the button,
+ * then dispatches at those coordinates, so an image that finishes loading in
+ * between pushes the button down and the click lands on the image above it
+ * instead of on the button.
  */
 function waitForCaptchaRound(index: number): Chainable<JQuery<HTMLElement>> {
-	return getWidgetElement(`[data-cy="captcha-${index}"]`, {
-		timeout: 15000,
-	}).should("be.visible");
+	return getWidgetElement(`[data-cy="captcha-${index}"]`, { timeout: 15000 })
+		.should("be.visible")
+		.should(($round) => {
+			const images = $round.find("img");
+			expect(images.length, `round ${index} image count`).to.be.gte(1);
+			images.each((_, image) => {
+				const { complete, naturalWidth, src } = image as HTMLImageElement;
+				expect(complete && naturalWidth > 0, `${src} loaded`).to.equal(true);
+			});
+		});
 }
 
 function elementExists(selector: string) {
