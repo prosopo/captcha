@@ -102,6 +102,7 @@ const buildCommitment = (id: string) => ({
 	deadlineTimestamp: new Date(Date.now() + 60_000),
 	threshold: 0.5,
 	sessionId: "session-projection",
+	clientMetaData: { clientSessionId: "bumblebee-session-projection" },
 	ipInfo: {
 		ip: "203.0.113.1",
 		isValid: true as const,
@@ -187,6 +188,17 @@ describe("getDappUserCommitment{ById,ByAccount} projection", () => {
 		expect(got.coords?.[0]?.[0]).toEqual([723, 766]);
 		expect(got.serverChecked).toBe(false);
 		expect(got.sessionId).toBe("session-projection");
+		// Added in 5.5.0 and omitted from the projection until 2026-09-07.
+		// While it was missing, `solution.clientMetaData` was `undefined` on
+		// every fetch, so the client-session correlation compared a live
+		// session id against nothing and disapproved with
+		// CLIENT_SESSION_MISMATCH — reporting a replay on solves earned in
+		// exactly the session they claimed. PoW and puzzle were untouched
+		// because they read their own challenge record, not this projection.
+		expect(got.clientMetaData).toBeDefined();
+		expect(got.clientMetaData?.clientSessionId).toBe(
+			"bumblebee-session-projection",
+		);
 		expect(got.result?.status).toBe(CaptchaStatus.approved);
 		expect(got.ipAddress).toBeDefined();
 		expect(got.submittedAtTimestamp).toBeInstanceOf(Date);
