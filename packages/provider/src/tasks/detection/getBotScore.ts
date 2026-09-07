@@ -50,6 +50,7 @@ export const getBotScore = async (
 	const md: boolean | undefined = result.md;
 	const bn: boolean | undefined = result.bn;
 	const fs: boolean | undefined = result.fs;
+	const b: Record<string, string[]> | undefined = result.b;
 
 	if (baseBotScore === undefined || Number.isNaN(baseBotScore)) {
 		return {
@@ -78,5 +79,6 @@ export const getBotScore = async (
 		md,
 		bn,
 		fs,
+		b,
 	};
 };
