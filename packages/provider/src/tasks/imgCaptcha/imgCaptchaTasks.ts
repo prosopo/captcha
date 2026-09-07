@@ -658,25 +658,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 		return dappUserSolution;
 	}
 
-	/* Check if dapp user has verified solution in cache */
-	async getDappUserCommitmentByAccount(
-		userAccount: string,
-		dappAccount: string,
-	): Promise<UserCommitment | undefined> {
-		const dappUserSolutions = await this.db.getDappUserCommitmentByAccount(
-			userAccount,
-			dappAccount,
-		);
-		if (dappUserSolutions.length > 0) {
-			for (const dappUserSolution of dappUserSolutions) {
-				if (dappUserSolution.result.status === CaptchaStatus.approved) {
-					return dappUserSolution;
-				}
-			}
-		}
-		return undefined;
-	}
-
 	async verifyImageCaptchaSolution(
 		user: string,
 		dapp: string,
@@ -700,9 +681,36 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// method carries it without repeating the fields in each `data` block.
 		const logger = this.logger.with({ commitmentId, dapp });
 
-		const solution = await (commitmentId
-			? this.getDappUserCommitmentById(commitmentId)
-			: this.getDappUserCommitmentByAccount(user, dapp));
+		// An image token has carried its `commitmentId` since the Procaptcha
+		// token was introduced (#1263, 2024-06-06) — `Manager.ts` sets it
+		// unconditionally on every `onHuman` for this captcha type. It is
+		// `optional()` on the schema only because PoW shares the token shape and
+		// identifies its work by `challenge` instead.
+		//
+		// The fallback that used to stand here searched the account's entire
+		// history for any approved commitment. It predates the token and could
+		// only ever return the wrong record: for a returning user whose current
+		// solve was not yet approved it produced an approved commitment from an
+		// earlier visit, which carries no `clientSessionId`, so the correlation
+		// below compared the live session id against `undefined` and reported a
+		// replay that never happened. Seen in production at scale on the image
+		// path while PoW, which resolves its exact challenge record, saw
+		// effectively none of it.
+		//
+		// Verifying a token against a commitment it does not name is not a
+		// weaker answer, it is an answer to a different question. Without an id
+		// there is nothing to verify.
+		if (!commitmentId) {
+			logger.debug(() => ({
+				msg: "Not verified - token carried no commitmentId",
+			}));
+			return {
+				status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+				verified: false,
+			};
+		}
+
+		const solution = await this.getDappUserCommitmentById(commitmentId);
 
 		// No solution exists
 		if (!solution) {
