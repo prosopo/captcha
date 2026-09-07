@@ -113,6 +113,37 @@ export const IPValidationRulesSchema = new Schema({
 	},
 });
 
+// Per-render puzzle tunables, mirroring `PuzzleSettingsSchema` in
+// @prosopo/types. Every field is optional: the provider merges whatever is
+// set on top of the asset package's defaults, so a site that overrides one
+// value must not have the other five written into its record.
+//
+// Declared explicitly rather than left to the strict-mode default for the
+// same reason as `frictionlessTypes` below: an undeclared field is dropped
+// on write, so the portal's puzzle settings would round-trip through zod,
+// reach the database and vanish. Bounds mirror the zod field schemas.
+// `_id: false` because this is a value object, not a document.
+export const PuzzleRenderSettingsSchema = new Schema(
+	{
+		decoyCount: { type: Number, min: 0, max: 200, required: false },
+		decoyEdgeDarkness: { type: Number, min: 0, max: 40, required: false },
+		decoyBodyBrightness: { type: Number, min: -20, max: 20, required: false },
+		decoyHoleDarken: { type: Number, min: 0, max: 1, required: false },
+		holeDarken: { type: Number, min: 0, max: 1, required: false },
+		pieceScale: {
+			type: new Schema(
+				{
+					min: { type: Number, min: 0.05, max: 0.95, required: false },
+					max: { type: Number, min: 0.05, max: 0.95, required: false },
+				},
+				{ _id: false },
+			),
+			required: false,
+		},
+	},
+	{ _id: false },
+);
+
 // Sub-schema for one trafficFilter category's policy. `_id: false` prevents
 // Mongoose from stamping an implicit ObjectId onto each subdoc.
 export const TrafficCategoryPolicySchema = new Schema(
@@ -130,6 +161,9 @@ export const TrafficCategoryPolicySchema = new Schema(
 		powDifficulty: { type: Number, required: false },
 		solvedImagesCount: { type: Number, required: false },
 		puzzleTolerance: { type: Number, required: false },
+		// Per-category puzzle render overrides, layered on top of the
+		// site-wide `puzzle` block by the traffic filter.
+		puzzle: { type: PuzzleRenderSettingsSchema, required: false },
 	},
 	{ _id: false },
 );
@@ -192,6 +226,13 @@ export const UserSettingsSchema = new Schema({
 	},
 	puzzleTolerance: {
 		type: Number,
+		required: false,
+	},
+	// Site-wide puzzle render overrides. No default: an absent block means
+	// "use the provider defaults", and defaulting it would write an empty
+	// subdocument onto every site regardless of captcha type.
+	puzzle: {
+		type: PuzzleRenderSettingsSchema,
 		required: false,
 	},
 	ipValidationRules: IPValidationRulesSchema,
