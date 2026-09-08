@@ -47,10 +47,12 @@ export default function navigationInjector(): Plugin {
 			frictionless: {
 				implicit: { path: "frictionless-implicit.html", exists: true },
 				explicit: { path: "frictionless-explicit.html", exists: true },
+				manual: { path: "frictionless-manual-start.html", exists: true },
 			},
 			puzzle: {
 				implicit: { path: "puzzle-implicit.html", exists: true },
 				explicit: { path: "puzzle-explicit.html", exists: true },
+				bound: { path: "puzzle-bind-explicit.html", exists: true },
 			},
 			iconOrder: {
 				implicit: { path: "icon-order-implicit.html", exists: true },

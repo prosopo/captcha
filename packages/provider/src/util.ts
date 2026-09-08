@@ -74,7 +74,10 @@ export async function checkIfTaskIsRunning(
 	// TODO: This is a temporary fix to prevent failed tasks from blocking the next task
 	if (runningTask && runningTask.datetime.getTime() > twoMinutesAgo) {
 		const completedTask = await db.getScheduledTaskStatus(
-			runningTask._id,
+			// Mongoose 8's Document._id defaults to `unknown`; the schema stores
+			// an ObjectId, and the sibling API expects one. Narrow at the call
+			// site rather than annotating every ScheduledTaskRecord consumer.
+			runningTask._id as import("mongoose").Types.ObjectId,
 			ScheduledTaskStatus.Completed,
 		);
 		return !completedTask;
@@ -452,6 +455,13 @@ export const deepValidateIpAddress = async (
 				msg: "Failed to get IP distance comparison",
 				data: {
 					error: comparison.error,
+					// The per-IP reasons are what separate "this IP isn't in the
+					// database" from "the ipinfo sidecar is down". Without them
+					// the top-level "Failed to lookup both IP addresses" is
+					// unactionable and the cause has to be chased by hand on the
+					// host.
+					ip1Error: comparison.ip1Error,
+					ip2Error: comparison.ip2Error,
 				},
 			}));
 			// If we can't do distance comparison and IPs don't match exactly, be strict

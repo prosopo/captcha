@@ -93,6 +93,11 @@ export enum ClientApiPaths {
 	GetIconOrderCaptchaChallenge = "/v1/prosopo/provider/client/captcha/icon-order",
 	SubmitIconOrderCaptchaSolution = "/v1/prosopo/provider/client/icon-order/solution",
 	VerifyIconOrderCaptchaSolution = "/v1/prosopo/provider/client/icon-order/verify",
+	// Verify path for Web Bot Auth authenticated sessions. Only accepts tokens
+	// minted with captchaType=authenticated. Requires the operator to forward
+	// the client IP so the session's `ipAddress` binding can be enforced;
+	// a leaked authenticated token cannot be replayed from a different IP.
+	VerifyAuthenticatedSession = "/v1/prosopo/provider/client/authenticated/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
@@ -204,6 +209,10 @@ export const ProviderDefaultRateLimits = {
 		limit: 15000,
 	},
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
+		windowMs: 60000,
+		limit: 15000,
+	},
+	[ClientApiPaths.VerifyAuthenticatedSession]: {
 		windowMs: 60000,
 		limit: 15000,
 	},
@@ -511,7 +520,8 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
-		| CaptchaType.iconOrder;
+		| CaptchaType.iconOrder
+		| CaptchaType.authenticated;
 	[ApiParams.sessionId]?: string;
 	// Encoded honeypot question. NOT serialised by the provider on the wire
 	// (it travels in the `x-prosopo-meta` response header so it doesn't sit
@@ -521,6 +531,10 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.hp]?: string;
 	// Per-session DNS observation URL; undefined when no dns sidecar.
 	dns_url?: string;
+	// Web Bot Auth: canonical Signature-Agent URL of the verified signer.
+	// Only present when captchaType === "authenticated". Rendered by the
+	// widget's badge so the operator can see WHICH agent verified.
+	agent?: string;
 }
 
 export interface PowCaptchaSolutionEscalation {
@@ -661,6 +675,15 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// server-side; not gated in the decision machine.
 	[ApiParams.currentUrl]: boundedString(INPUT_LIMITS.URL).optional(),
 	[ApiParams.iframeUrl]: boundedString(INPUT_LIMITS.URL).optional(),
+	// Same wire semantics as VerifySolutionBody.clientSessionId — a per-render
+	// session id the client (Bumblebee's JTI, a customer widget's `sessionId`,
+	// anything else the site owner supplies) uses to bind a captcha token to
+	// the render it was earned in. On the authenticated fast-path the value is
+	// persisted onto the session's clientMetaData; /authenticated/verify
+	// rejects with API.CLIENT_SESSION_MISMATCH when the forwarded value
+	// doesn't match, so a token exfiltrated to a different render is dead on
+	// arrival even if it clears the IP-binding check.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<

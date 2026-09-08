@@ -24,6 +24,9 @@
 			"path": "../api/tsconfig.cjs.json"
 		},
 		{
+			"path": "../captcha-severity/tsconfig.cjs.json"
+		},
+		{
 			"path": "../common/tsconfig.cjs.json"
 		},
 		{
@@ -36,7 +39,7 @@
 			"path": "../env/tsconfig.cjs.json"
 		},
 		{
-			"path": "../icon-order-assets"
+			"path": "../icon-order-assets/tsconfig.cjs.json"
 		},
 		{
 			"path": "../ipinfo/tsconfig.cjs.json"
@@ -76,6 +79,9 @@
 		},
 		{
 			"path": "../util/tsconfig.cjs.json"
+		},
+		{
+			"path": "../web-bot-auth/tsconfig.cjs.json"
 		}
 	]
 }

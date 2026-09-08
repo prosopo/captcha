@@ -23,6 +23,7 @@ import {
 	frictionlessImageThresholdDefault,
 	frictionlessTypesDefault,
 	iconOrderToleranceDefault,
+	puzzleMaxDifficultyDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
@@ -144,6 +145,7 @@ export default (
 						imageMinRounds: image_min_rounds as number,
 						puzzleTolerance: puzzleToleranceDefault,
 						iconOrderTolerance: iconOrderToleranceDefault,
+						puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 						disallowWebView: false,
 						verifiedTimeout: 60000,
 						solutionTimeout: 60000,

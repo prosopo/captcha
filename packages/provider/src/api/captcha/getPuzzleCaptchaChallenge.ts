@@ -34,7 +34,10 @@ import {
 } from "../../tasks/puzzle/puzzleRenderer.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
-import { getRequestUserScope } from "../blacklistRequestInspector.js";
+import {
+	getRequestUserScope,
+	normalizeHeadersForMatching,
+} from "../blacklistRequestInspector.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
@@ -147,6 +150,7 @@ export default (
 					userAccessRulesStorage,
 					dapp,
 					userScope,
+					normalizeHeadersForMatching(req.headers),
 				)
 			).find((p) => !p.deferToVerify);
 

@@ -17,6 +17,7 @@ import {
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 	Tier,
+	TrafficFilterAction,
 	captchaTypeDefault,
 	domainsDefault,
 	powDifficultyDefault,
@@ -96,7 +97,7 @@ describe("BannedDomainRecordSchema", () => {
 		// made mongoose warn about a duplicate on every process start.
 		expect(BannedDomainRecordSchema.path("domain").options.unique).toBe(true);
 		expect(indexesOf(BannedDomainRecordSchema)).toEqual([
-			[{ domain: 1 }, { unique: true, background: true }],
+			[{ domain: 1 }, { unique: true }],
 		]);
 	});
 
@@ -511,14 +512,6 @@ describe("UserSettingsSchema", () => {
 		expect([...doc.spamFilter.emailRules.customRegexBlocklist]).toEqual([]);
 	});
 
-	it("seeds the context-aware thresholds for both contexts", () => {
-		const doc = settings();
-		expect(Object.keys(doc.contextAware.contexts).sort()).toEqual(
-			Object.keys(doc.contextAware.contexts).sort(),
-		);
-		expect(doc.contextAware.enabled).toBe(false);
-	});
-
 	it("leaves the ip validation rules unset unless configured", () => {
 		expect(settings().ipValidationRules).toBeUndefined();
 	});
@@ -538,6 +531,61 @@ describe("UserSettingsSchema", () => {
 				}).validateSync(),
 			),
 		).toEqual(["ipValidationRules.distanceThresholdKm"]);
+	});
+
+	// Same failure mode as `frictionlessTypes`: mongoose is strict by
+	// default, so a field the portal saves but this schema never declares is
+	// dropped on write and the operator sees their settings silently revert.
+	it("persists every puzzle render override", () => {
+		const doc = settings({
+			puzzle: {
+				decoyCount: 12,
+				decoyEdgeDarkness: 30,
+				decoyBodyBrightness: -6,
+				decoyHoleDarken: 0.8,
+				holeDarken: 0.4,
+				pieceScale: { min: 0.2, max: 0.35 },
+			},
+		});
+		expect(doc.puzzle.decoyCount).toBe(12);
+		expect(doc.puzzle.decoyEdgeDarkness).toBe(30);
+		expect(doc.puzzle.decoyBodyBrightness).toBe(-6);
+		expect(doc.puzzle.decoyHoleDarken).toBe(0.8);
+		expect(doc.puzzle.holeDarken).toBe(0.4);
+		expect(doc.puzzle.pieceScale.min).toBe(0.2);
+		expect(doc.puzzle.pieceScale.max).toBe(0.35);
+	});
+
+	it("leaves the puzzle overrides unset unless configured", () => {
+		// Absent means "use the provider defaults" — a defaulted empty
+		// subdocument would write a `puzzle` block onto every site.
+		expect(settings().puzzle).toBeUndefined();
+	});
+
+	it("persists a partial puzzle override without filling in the rest", () => {
+		// Every field is independently optional: the provider merges what is
+		// set on top of its own defaults, so a one-field override must not
+		// drag the other five into the record.
+		const doc = settings({ puzzle: { decoyCount: 0 } });
+		expect(doc.puzzle.decoyCount).toBe(0);
+		expect(doc.puzzle.holeDarken).toBeUndefined();
+		expect(doc.puzzle.pieceScale).toBeUndefined();
+	});
+
+	it("persists puzzle overrides on a traffic filter category", () => {
+		const doc = settings({
+			trafficFilter: {
+				vpn: {
+					action: TrafficFilterAction.Challenge,
+					captchaType: CaptchaType.puzzle,
+					puzzleTolerance: 8,
+					puzzle: { decoyCount: 40, pieceScale: { min: 0.1, max: 0.2 } },
+				},
+			},
+		});
+		expect(doc.trafficFilter.vpn.puzzleTolerance).toBe(8);
+		expect(doc.trafficFilter.vpn.puzzle.decoyCount).toBe(40);
+		expect(doc.trafficFilter.vpn.puzzle.pieceScale.max).toBe(0.2);
 	});
 });
 

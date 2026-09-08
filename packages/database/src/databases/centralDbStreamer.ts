@@ -50,6 +50,18 @@ export class CentralDbStreamer {
 	private lastFailureTime = 0;
 	private static readonly RECONNECT_COOLDOWN_MS = 5_000;
 
+	/**
+	 * The central DB is long-haul for every provider and genuinely distant for
+	 * some of them: a pronode outside the European core measures 2-30s just to
+	 * complete the TLS handshake to it, against a default ceiling of 10s. Below
+	 * that ceiling the streamer can never connect at all, so it burns a connect
+	 * attempt every cooldown forever and no record is ever streamed. These are
+	 * deliberately generous — this is a fire-and-forget background path, so a
+	 * slow connect costs nothing that a failed one doesn't cost more of.
+	 */
+	private static readonly CONNECT_TIMEOUT_MS = 45_000;
+	private static readonly SERVER_SELECTION_TIMEOUT_MS = 45_000;
+
 	constructor(mongoCaptchaUri: string, logger?: Logger) {
 		this.logger = logger || getLogger("info", "CentralDbStreamer");
 		this.db = new CaptchaDatabase(
@@ -57,6 +69,10 @@ export class CentralDbStreamer {
 			undefined,
 			undefined,
 			this.logger,
+			{
+				connectTimeoutMS: CentralDbStreamer.CONNECT_TIMEOUT_MS,
+				serverSelectionTimeoutMS: CentralDbStreamer.SERVER_SELECTION_TIMEOUT_MS,
+			},
 		);
 	}
 

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { randomUUID } from "node:crypto";
+import { captchaPolicySeverity } from "@prosopo/captcha-severity";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiPrefix,
@@ -30,8 +31,11 @@ import {
 	type AccessRule,
 	type AccessRulesStorage,
 	FilterScopeMatch,
+	HEADER_RULE_MARKER,
 	type UserScope,
 	type UserScopeRecord,
+	accessRuleHeaderMatches,
+	classifyBrowser,
 	classifyOs,
 	describeMatchedRule,
 	makeAccessRuleHash,
@@ -54,6 +58,10 @@ export const getRequestUserScope = (
 	coords?: string,
 	countryCode?: string,
 	asn?: number,
+	// Present only when Web Bot Auth signature verification succeeded on the
+	// inbound request. Passed through to rule matching so `webBotAuthAgent`
+	// rules match the verified signer URL, never a spoofed header.
+	webBotAuthAgent?: string,
 ): Pick<
 	UserScopeRecord,
 	| "userId"
@@ -65,6 +73,9 @@ export const getRequestUserScope = (
 	| "countryCode"
 	| "asn"
 	| "os"
+	| "browser"
+	| "headerMatch"
+	| "webBotAuthAgent"
 > => {
 	const userAgent = requestHeaders["user-agent"]
 		? requestHeaders["user-agent"].toString()
@@ -79,12 +90,37 @@ export const getRequestUserScope = (
 		...(coords && { coords }),
 		...(countryCode && { countryCode }),
 		...(typeof asn === "number" && { asn }),
-		// Always populated (even "unknown") — derived from the request UA, not
-		// trusted from a client hint. Present unconditionally so an OS
-		// allow-list (block everything not on the list) still matches requests
-		// whose UA we can't classify.
+		// Only set when signature verification succeeded, so a rule scoped to
+		// a signer can never be matched by a spoofed header.
+		...(webBotAuthAgent && { webBotAuthAgent }),
+		// Unconditional, unlike the fields above: an allow-list has to match a
+		// request whose UA we can't classify, which lands on "unknown".
 		os: classifyOs(userAgent),
+		browser: classifyBrowser(userAgent),
+		// Sentinel that makes every header-restriction rule a matching
+		// candidate for this request (the concrete header condition is then
+		// checked in code — see `accessRuleHeaderMatches`). Always present so an
+		// allow-list header rule fires even on a request that omits the header.
+		headerMatch: HEADER_RULE_MARKER,
 	};
+};
+
+// Normalise a raw request-header bag into the lower-cased `{name: value}` map
+// the in-code header matcher expects. Array-valued headers are joined the same
+// way `sanitizeRequestHeaders` collapses them, so a `contains` check sees the
+// same string the session record would store.
+export const normalizeHeadersForMatching = (
+	headers: Record<string, unknown>,
+): Record<string, string> => {
+	const out: Record<string, string> = {};
+	for (const [key, value] of Object.entries(headers)) {
+		if (typeof value === "string") {
+			out[key.toLowerCase()] = value;
+		} else if (Array.isArray(value)) {
+			out[key.toLowerCase()] = value.map((v) => String(v)).join(", ");
+		}
+	}
+	return out;
 };
 
 // Scalar user-scope fields (i.e. everything except the IP triple, which is
@@ -100,6 +136,14 @@ const SCALAR_USER_SCOPE_FIELDS = [
 	"countryCode",
 	"asn",
 	"os",
+	"browser",
+	// The header-rule candidacy sentinel. Its equality check ("1" === "1") is
+	// always trivially true; the real header condition (name/value/operator) is
+	// evaluated separately by `accessRuleHeaderMatches`. Listed here so a header
+	// rule scores one specificity point, mirroring `exists(@headerMatch)` in the
+	// reader's SPECIFICITY_EXPR.
+	"headerMatch",
+	"webBotAuthAgent",
 ] as const satisfies ReadonlyArray<keyof UserScope>;
 
 // Derive the populated-scope field list for a matched rule (the same shape
@@ -172,6 +216,7 @@ const ruleApplies = (
 	rule: AccessRule,
 	request: UserScope,
 	requestClientId: string | undefined,
+	requestHeaders: Record<string, string>,
 ): boolean => {
 	// Client-scoped rules: rule.clientId must equal the request's clientId.
 	// Rules without a clientId are global and apply to any client.
@@ -187,7 +232,13 @@ const ruleApplies = (
 			return false;
 		}
 	}
-	return ruleIpMatchesRequest(rule, request.numericIp);
+	if (!ruleIpMatchesRequest(rule, request.numericIp)) {
+		return false;
+	}
+	// Arbitrary-header condition (equals / contains / their negations). Checked
+	// against the raw request headers because Redis can't express it; a rule
+	// with no header condition passes this trivially.
+	return accessRuleHeaderMatches(rule, requestHeaders);
 };
 
 const ruleSpecificity = (
@@ -209,27 +260,6 @@ const ruleSpecificity = (
 	return score;
 };
 
-// Per-captcha-type harshness ranks for Restrict rules. Used as the
-// equal-specificity tiebreaker (issue #3713). Gaps of 10 between tiers
-// leave room for `solvedImagesCount` to break ties within the image
-// tier without crossing into the puzzle tier — a 12-round image still
-// ranks above puzzle/pow, which is the intended ordering.
-const CAPTCHA_TYPE_HARSHNESS: Record<CaptchaType, number> = {
-	[CaptchaType.image]: 30,
-	// Icon-order sits above puzzle: it asks for several ordered clicks rather
-	// than one drag. Still below image, and the gap to image is wider than
-	// any `rounds` bonus can close from below, so image outranks it at every
-	// round count.
-	[CaptchaType.iconOrder]: 25,
-	[CaptchaType.puzzle]: 20,
-	[CaptchaType.pow]: 10,
-	// Frictionless isn't a routing target for Restrict rules but include it
-	// so the Record is total over CaptchaType — keeps the type-checker honest
-	// if the enum grows. Restrict-with-frictionless wouldn't make operational
-	// sense and ranks at the bottom of the captcha tiers if it ever appears.
-	[CaptchaType.frictionless]: 0,
-};
-
 // Harshness within an equal-specificity tier (issue #3713). On equal
 // specificity, the harshest matching rule wins:
 //   Block  >  Restrict[image, rounds DESC]  >  Restrict[puzzle]  >  Restrict[pow]
@@ -237,6 +267,29 @@ const CAPTCHA_TYPE_HARSHNESS: Record<CaptchaType, number> = {
 // less-specific Block, because the operator deliberately narrowed scope
 // for that combination. Harshness only decides ties between rules at the
 // same specificity, replacing the prior Block-vs-Restrict-only tiebreaker.
+//
+// The ordering comes from `@prosopo/captcha-severity`, shared with the
+// traffic filter's `resolveChallengePolicy` and with downstream routing
+// consumers — all of them rank competing policies by the same notion of
+// "stricter". `captchaPolicySeverity` ranks the captcha type first
+// and its own difficulty setting second, so a rule's settings break ties
+// within a type without ever crossing between types.
+//
+// This previously kept its own table with tiers 10 apart and a raw
+// `base + solvedImagesCount`. `solvedImagesCount` is validated by
+// `imageMaxRoundsFieldSchema` (`number().int().min(2)`, no upper bound, and
+// `imageMaxRounds` defaults to 32), so a Restrict[pow] carrying 32 rounds
+// scored 42 and outranked a Restrict[image] at 30 — inverting the intended
+// order. The intra-type component is now clamped below the tier gap, so no
+// setting can lift a rule over a stricter captcha type.
+//
+// One deliberate change: pow rules now break ties on `powDifficulty` rather
+// than `solvedImagesCount`. Rule authoring drops `solvedImagesCount` for pow,
+// so every pow rule previously scored at the bottom of its tier regardless of
+// difficulty.
+// Image and puzzle both keep `solvedImagesCount` — it is the severity
+// currency they share, which the provider maps onto a puzzle difficulty
+// level via `severityToPuzzleDifficulty` rather than a literal round count.
 //
 // `deferToVerify` doesn't affect this ordering: it controls *when* a Block
 // fires (request-time vs verify-time), not how severe it is. The flag
@@ -246,12 +299,7 @@ const ruleHarshness = (rule: AccessRule): number => {
 	if (rule.type === AccessPolicyType.Block) {
 		return Number.MAX_SAFE_INTEGER;
 	}
-	if (rule.captchaType === undefined) {
-		return 0;
-	}
-	const base = CAPTCHA_TYPE_HARSHNESS[rule.captchaType];
-	const rounds = rule.solvedImagesCount ?? 0;
-	return base + rounds;
+	return captchaPolicySeverity(rule);
 };
 
 /**
@@ -269,9 +317,12 @@ export const rankCandidateRules = (
 	rules: AccessRule[],
 	request: UserScope,
 	requestClientId: string | undefined,
+	requestHeaders: Record<string, string>,
 ): AccessRule[] =>
 	rules
-		.filter((rule) => ruleApplies(rule, request, requestClientId))
+		.filter((rule) =>
+			ruleApplies(rule, request, requestClientId, requestHeaders),
+		)
 		.sort((a, b) => {
 			const specDelta =
 				ruleSpecificity(b, requestClientId) -
@@ -359,7 +410,13 @@ export type GetPrioritisedAccessRuleOptions = {
 export const getPrioritisedAccessRule = async (
 	userAccessRulesStorage: AccessRulesStorage,
 	userScope: UserScope | UserScopeRecord,
-	clientId?: string,
+	clientId: string | undefined,
+	// Raw request headers (lower-cased name → value) for the in-code header
+	// condition check. Required, with no default: the negated header operators
+	// treat a missing header as "does not match", so a lookup that silently
+	// ran with an empty header map would make every allow-list rule fire on
+	// every request. Callers with nothing but a scope must say so explicitly.
+	requestHeaders: Record<string, string>,
 	options?: GetPrioritisedAccessRuleOptions,
 ): Promise<AccessRule[]> => {
 	const parsedUserScope = userScopeInput.parse(userScope);
@@ -381,12 +438,7 @@ export const getPrioritisedAccessRule = async (
 	const requestMemo = requestMemoHost
 		? getOrCreateRequestMemo(requestMemoHost)
 		: undefined;
-	if (requestMemo !== undefined) {
-		const memoHit = requestMemo.get(cacheKey);
-		if (memoHit !== undefined) {
-			return memoHit;
-		}
-	}
+	const memoHit = requestMemo?.get(cacheKey);
 
 	const filter = {
 		...(clientId && {
@@ -406,28 +458,41 @@ export const getPrioritisedAccessRule = async (
 	// callers race for the same scope, only one closure runs — the
 	// others await the same Promise. Kills the wave-1 stampede where
 	// every retry-storm identity misses simultaneously.
-	const compute = async (): Promise<AccessRule[]> => {
-		const candidates = await userAccessRulesStorage.findRules(
+	const compute = async (): Promise<AccessRule[]> =>
+		userAccessRulesStorage.findRules(
 			filter,
 			true, // matchingFieldsOnly — engages the split-query hot path
 			true,
 		);
-		return rankCandidateRules(candidates, parsedUserScope, clientId);
-	};
 
+	// Only the *candidate fetch* is cached — the Redis round-trip is what the
+	// cache exists to absorb. Ranking stays outside it because `ruleApplies`
+	// now consults the raw request headers, and `hardBlockCacheKey` is built
+	// from the user scope alone (arbitrary header values can't go in a cache
+	// key without destroying its hit rate). Caching a ranked list would let
+	// one request's header-rule verdict be served to a different request that
+	// shares a user scope but sends different headers.
+	//
 	// Process-wide cache with singleflight dedupe: absorbs burst traffic
 	// with identical scope, and coalesces concurrent identical misses
 	// onto one storage call. Callers that must bypass (e.g. write-path
 	// revalidation) pass skipCache=true.
-	let ranked: AccessRule[];
-	if (skipCache) {
-		ranked = await compute();
+	let candidates: AccessRule[];
+	if (memoHit !== undefined) {
+		candidates = memoHit;
+	} else if (skipCache) {
+		candidates = await compute();
 	} else {
-		ranked = await verdictCache.getOrCompute(cacheKey, compute);
+		candidates = await verdictCache.getOrCompute(cacheKey, compute);
 	}
 
-	requestMemo?.set(cacheKey, ranked);
-	return ranked;
+	requestMemo?.set(cacheKey, candidates);
+	return rankCandidateRules(
+		candidates,
+		parsedUserScope,
+		clientId,
+		requestHeaders,
+	);
 };
 
 export class BlacklistRequestInspector {
@@ -549,6 +614,7 @@ export class BlacklistRequestInspector {
 					asn,
 				),
 				clientId,
+				normalizeHeadersForMatching(requestHeaders),
 				// Request-time middleware only ever fires on Block policies
 				// (Restrict rules flow through and let the captcha-creation
 				// path decorate the response). Restrict the Redis-side
@@ -652,6 +718,7 @@ export class BlacklistRequestInspector {
 					countryCode: ctx.countryCode,
 					asn: ctx.asn,
 					os: classifyOs(userAgent),
+					browser: classifyBrowser(userAgent),
 				},
 			},
 		}));

@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { PuzzleEvent } from "@prosopo/types";
+import { ChallengeSurface } from "@prosopo/procaptcha-common";
+import type { PlacementType, PuzzleEvent } from "@prosopo/types";
 import type { Theme } from "@prosopo/widget-skeleton";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -33,6 +34,9 @@ interface PuzzleCanvasProps {
 	showRetry: boolean;
 	submitting: boolean;
 	theme: Theme;
+	placement?: PlacementType;
+	anchor?: HTMLElement | null;
+	onDismiss?: () => void;
 }
 
 const CONTAINER_WIDTH = 300;
@@ -56,6 +60,9 @@ export const PuzzleCanvas = ({
 	showRetry,
 	submitting,
 	theme,
+	placement,
+	anchor,
+	onDismiss,
 }: PuzzleCanvasProps) => {
 	const [posX, setPosX] = useState<number>(originX);
 	const [posY, setPosY] = useState<number>(originY);
@@ -260,17 +267,12 @@ export const PuzzleCanvas = ({
 	const bgTransform = `translate(${bgTranslateX.toFixed(2)}px, ${bgTranslateY.toFixed(2)}px) scale(${bgScale.toFixed(3)})`;
 
 	return (
-		<div
-			style={{
-				position: "fixed",
-				inset: 0,
-				zIndex: 2147483646,
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "center",
-				backgroundColor: visible ? "rgba(0, 0, 0, 0.4)" : "rgba(0, 0, 0, 0)",
-				transition: "background-color 0.3s ease",
-			}}
+		<ChallengeSurface
+			show
+			placement={placement}
+			anchor={anchor}
+			onDismiss={onDismiss}
+			scrim={visible ? "dim" : "none"}
 		>
 			{/* Inject shake keyframes */}
 			<style>{SHAKE_KEYFRAMES}</style>
@@ -281,7 +283,6 @@ export const PuzzleCanvas = ({
 					flexDirection: "column",
 					alignItems: "center",
 					gap: "0",
-					zIndex: 2147483647,
 					opacity: visible ? 1 : 0,
 					transform: visible ? "scale(1)" : "scale(0.9)",
 					transition: "opacity 0.3s ease, transform 0.3s ease",
@@ -430,6 +431,6 @@ export const PuzzleCanvas = ({
 					/>
 				</div>
 			</div>
-		</div>
+		</ChallengeSurface>
 	);
 };

@@ -1,5 +1,142 @@
 # @prosopo/types
 
+## 5.7.0
+### Minor Changes
+
+- d288371: Let a site choose where a challenge opens, and which button triggers it.
+  
+  - `placement: "popup" | "float"`, also `data-placement`. `popup` is the default and unchanged. `float` opens the challenge directly above the widget and keeps it pinned there as the page scrolls, leaves the page usable behind it, and dismisses on Escape or an outside click. An invisible widget always uses popup.
+  - `bind: "#selector"`, also `data-bind`. The matching host-page button triggers that one widget, in visible or invisible mode. The click's default action is prevented so a submit button does not post the form before a token exists.
+  - `execute(widgetId?)`. Called with no argument every widget responds, as before. Called with the id `render()` returns, only that widget runs. Implicitly rendered invisible buttons now trigger only their own widget.
+  
+  Behaviour changes for existing widgets:
+  
+  - Escape now closes the image and puzzle challenge in both placements. For the image captcha this runs the cancel path, which fires `onClose` and restarts frictionless.
+  - Image and puzzle now present on one shared `ChallengeSurface`. Both were already portalled to `document.body`, so neither moves in the page, but the markup around them changed: the outer layer keeps `prosopo-modalOuter` for the image captcha and also carries `prosopo-challenge-surface`, and a new `prosopo-challenge-content` element sits between it and `prosopo-modalInner`. A direct-child selector such as `.prosopo-modalOuter > .prosopo-modalInner` no longer matches, and the centring transform now lives on `prosopo-challenge-content` rather than on `prosopo-modalInner`.
+  
+  `createConfig` takes a named options object.
+
+### Patch Changes
+
+- 6f57ee9: chore(deps): bump the npm-minor-and-patch group across 1 directory with 3 updates
+- Updated dependencies [6f57ee9]
+  - @prosopo/util@3.3.9
+
+## 5.6.0
+### Minor Changes
+
+- 80f73c1: Sites can now control when the widget starts working.
+  
+  By default the widget runs bot detection, starts the behavioural collectors and calls `/frictionless` as soon as it mounts. Rendering with `data-start-mode="manual"` (or `startMode: "manual"` in the render options) keeps all of that off the page load: the checkbox still appears immediately, at its final size, so nothing shifts, but the widget does nothing else until one of two things happens.
+  
+  - The site calls `window.procaptcha.start()`, optionally with a widget id, or dispatches a `procaptcha:start` event on `document`. The frictionless flow runs and the widget then waits for a click exactly as it does today.
+  - The visitor clicks the checkbox. The frictionless flow runs and whichever challenge the provider chooses opens straight away, carrying that click's position, so the visitor is never asked to click twice.
+  
+  Both triggers are one-shot: whichever comes first wins and the other is ignored. `window.procaptcha.execute()` also starts a manual widget, opening its challenge immediately. Widgets in the default `auto` mode are unaffected.
+- 8a670d3: Remove the provider-side context validation path.
+  
+  The provider read a per-context baseline out of `clientcontextentropies` on the frictionless path and compared a session's head hash against it. The task that wrote that collection was removed from the provider on 2026-08-21, so the read has returned `undefined` ever since and the branch has been dead in every deployment since then. Computing and applying the baseline now happens off-provider.
+  
+  Removed: `contextAwareValidation.ts`, the decision-machine branch that used it, `getClientContextEntropy` on the provider and its database method, the `clientContextEntropy` table registration, the unused `getRoundsFromSimScore` helper, and the `contextAwareEnabled` parameter threaded into image verification — which logged and then did nothing, its return commented out.
+  
+  Also removes the per-site `settings.contextAware` block that configured it, along with `ContextAwareSchema`, `IContextAware`, `IContexts`, `ContextConfigSchema`, `contextAwareThresholdDefault` and `expandContexts`, the legacy `default`/`webview` context keys and their helpers, and `FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED`. The site-key registration CLI no longer writes a `contextAware` default into new sites.
+  
+  `ContextType`, `contextTypeFromSession` and `deviceContextTypes` stay — the off-provider work keys on them. `ClientContextEntropyRecord` and its schema stay for the same reason; only the provider's use of them goes.
+  
+  No behaviour change: every path removed here was already inert.
+
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [1b77849]
+- Updated dependencies [89dd38a]
+  - @prosopo/util-crypto@13.5.31
+  - @prosopo/locale@3.4.1
+  - @prosopo/util@3.3.8
+
+## 5.5.3
+### Patch Changes
+
+- a62b994: Context-aware validation buckets by device type, not just webview.
+  
+  Context-aware validation compares a session's head SimHash against a baseline
+  for its context. That context was `default | webview`, which puts a phone and
+  a desktop in the same bucket — and those two emit genuinely different
+  `<head>`s, so the blended baseline matches neither well. Contexts are now the
+  device family crossed with the webview flag: `desktop`, `desktop-webview`,
+  `mobile`, `mobile-webview`, `tablet`, `tablet-webview`.
+  
+  `desktop-webview` is included deliberately. Desktop webviews are a real and
+  notably fraudulent population here (see the Twickets desktop-webview rules),
+  and folding them into the plain `desktop` baseline would let exactly the
+  traffic we want excluded define what "normal desktop" looks like.
+  
+  **Classification.** `deviceTypeFromUserAgent` in `@prosopo/types` is a
+  dependency-free UA classifier, deliberately not ua-parser-js: this module is
+  imported by the browser bundles, and the off-provider entropy sweep has to
+  bucket stored sessions *identically* or it writes baselines the decision
+  machine never looks up. One shared function keeps the two sides in lockstep.
+  Tablets are matched before phones because an iPad's UA carries a
+  `Mobile/<build>` token and an Android tablet is exactly "Android without
+  Mobile". Known gap, documented at the call site: an iPadOS 13+ Safari in
+  desktop mode identifies as a Mac and lands in `desktop` — nothing in the UA
+  separates it from a real Mac, and both sides make the same call, which is
+  what matters for the lookup.
+  
+  **Back-compat.** `default` and `webview` remain valid `ContextType` members,
+  so settings already stored against them keep parsing. `expandContexts` maps a
+  legacy `default` onto the three non-webview families and a legacy `webview`
+  onto the three webview families, at the threshold they were saved with; an
+  explicit device entry always wins over the legacy entry covering it. Nothing
+  downstream of settings parsing branches on the legacy keys, and no data
+  migration is required.
+  
+  **Behaviour change.** A request whose context is not configured now skips
+  context validation instead of borrowing another context's baseline.
+  Previously, configuring a single context validated *every* request against it
+  — with six contexts that would measure desktop traffic against a tablet
+  baseline and reject real users wholesale. `isContextConfigured` is the new
+  guard; `determineContextType` now takes the raw request UA alongside the
+  webview flag.
+  
+  New site-key registrations default to all six device contexts.
+- a447afa: Per-sitekey `imageMinRounds` alongside the existing `imageMaxRounds`.
+  
+  Every source of an image round count — access-policy rules, traffic-filter categories, routing machines, the staleness curve, and the provider's own heuristics — is now clamped into `[imageMinRounds, imageMaxRounds]` via `clampImageRounds`, so the sitekey's settings override its rules in both directions rather than only capping them. `imageMinRounds` defaults to 2, matching the floor that was previously hard-coded, so existing sitekeys are unaffected.
+
 ## 5.5.2
 ### Patch Changes
 

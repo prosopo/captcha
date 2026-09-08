@@ -18,7 +18,7 @@
 // impossible to reach at all. The reader is therefore injected, and everything
 // the backend does with its output runs for real.
 
-import type { Asn, City, ReaderModel } from "@maxmind/geoip2-node";
+import type { Asn, City, Country, ReaderModel } from "@maxmind/geoip2-node";
 import type { IPInfoResult } from "@prosopo/types";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -31,9 +31,10 @@ const IP = "8.8.8.8";
 const CITY_DB = "/dbs/GeoLite2-City.mmdb";
 const ASN_DB = "/dbs/GeoLite2-ASN.mmdb";
 
-/** Builds a reader that answers city/asn lookups however the test needs. */
+/** Builds a reader that answers city/country/asn lookups however the test needs. */
 const reader = (behaviour: {
 	city?: () => City;
+	country?: () => Country;
 	asn?: () => Asn;
 }): ReaderModel => {
 	const notSupported = (): never => {
@@ -42,8 +43,22 @@ const reader = (behaviour: {
 	};
 	return {
 		city: behaviour.city ?? notSupported,
+		country: behaviour.country ?? notSupported,
 		asn: behaviour.asn ?? notSupported,
 	} as unknown as ReaderModel;
+};
+
+/**
+ * The error geoip2-node raises when an accessor doesn't match the opened
+ * database — `city()` against GeoLite2-Country, for instance. It is identified
+ * by `name`, so the name is what the fake sets.
+ */
+const badMethodCall = (): never => {
+	const error = new Error(
+		"The city() method cannot be used with the GeoLite2-Country database",
+	);
+	error.name = "BadMethodCallError";
+	throw error;
 };
 
 const cityData = (overrides: Partial<City> = {}): City =>
@@ -59,6 +74,13 @@ const cityData = (overrides: Partial<City> = {}): City =>
 		traits: {},
 		...overrides,
 	}) as City;
+
+const countryData = (overrides: Partial<Country> = {}): Country =>
+	({
+		country: { isoCode: "US", names: { en: "United States" } },
+		traits: {},
+		...overrides,
+	}) as Country;
 
 const asnData = (overrides: Partial<Asn> = {}): Asn =>
 	({
@@ -544,6 +566,150 @@ describe("MaxMindBackend.lookup", () => {
 			isValid: false,
 			error: "MaxMind lookup error: just a string",
 		});
+	});
+});
+
+describe("MaxMindBackend with a Country-only geo database", () => {
+	// Production points cityDbPath at GeoLite2-Country.mmdb (MAXMIND_DB_PATH).
+	// Reader.open accepts it, so isAvailable() reports true, but city() rejects
+	// the database type on every call. Before this was handled the backend
+	// answered "No MaxMind data available for IP" for every address — a fallback
+	// that looked healthy and had never once produced an answer.
+	const countryBackend = async (options: {
+		city?: () => City;
+		country?: () => Country;
+	}): Promise<MaxMindBackend> => {
+		const backend = new MaxMindBackend({
+			cityDbPath: CITY_DB,
+			openReader: opens({
+				city: reader({
+					city: options.city ?? badMethodCall,
+					country: options.country ?? ((): Country => countryData()),
+				}),
+			}),
+		});
+		await backend.initialize();
+		return backend;
+	};
+
+	it("answers from country() when city() rejects the database type", async () => {
+		const backend = await countryBackend({});
+
+		const result = expectValid(await backend.lookup(IP));
+
+		expect(result).toMatchObject({
+			ip: IP,
+			isValid: true,
+			country: "United States",
+			countryCode: "US",
+		});
+	});
+
+	it("leaves the city-only fields unset rather than inventing them", async () => {
+		// Country-level data is enough for geoblocking but cannot support the
+		// distance comparison, and consumers must be able to tell.
+		const backend = await countryBackend({});
+
+		const result = expectValid(await backend.lookup(IP));
+
+		expect(result.city).toBeUndefined();
+		expect(result.region).toBeUndefined();
+		expect(result.latitude).toBeUndefined();
+		expect(result.longitude).toBeUndefined();
+		expect(result.timezone).toBeUndefined();
+	});
+
+	it("still reads the traits the country record carries", async () => {
+		const backend = await countryBackend({
+			country: (): Country =>
+				countryData({
+					traits: {
+						isAnonymousVpn: true,
+						autonomousSystemNumber: 15169,
+						autonomousSystemOrganization: "Google LLC",
+					},
+				} as Partial<Country>),
+		});
+
+		const result = expectValid(await backend.lookup(IP));
+
+		expect(result.isVPN).toBe(true);
+		expect(result.asnNumber).toBe(15169);
+		expect(result.providerName).toBe("Google LLC");
+	});
+
+	it("stops calling city() once the database type is known", async () => {
+		// Constructing the rejection is the expensive part; paying it per request
+		// on every lookup for the life of the process is not acceptable.
+		const city = vi.fn(badMethodCall);
+		const backend = await countryBackend({ city });
+
+		await backend.lookup(IP);
+		await backend.lookup(IP);
+		await backend.lookup(IP);
+
+		expect(city).toHaveBeenCalledTimes(1);
+	});
+
+	it("warns once, naming the database, when it discovers the mismatch", async () => {
+		// Silent degradation is what let this sit unnoticed; the path an operator
+		// has to correct is in the payload.
+		const warn = vi.fn();
+		const backend = new MaxMindBackend({
+			cityDbPath: CITY_DB,
+			openReader: opens({
+				city: reader({
+					city: badMethodCall,
+					country: (): Country => countryData(),
+				}),
+			}),
+			logger: { warn, info: vi.fn(), debug: vi.fn() } as never,
+		});
+		await backend.initialize();
+
+		await backend.lookup(IP);
+		await backend.lookup(IP);
+
+		expect(warn).toHaveBeenCalledTimes(1);
+		type WarnPayload = { msg: string; data: { dbPath: string } };
+		const payload: WarnPayload = (
+			warn.mock.calls[0]?.[0] as () => WarnPayload
+		)();
+		expect(payload.msg).toBe(
+			"MaxMind geo database is not a City database; falling back to country-level lookups",
+		);
+		expect(payload.data.dbPath).toBe(CITY_DB);
+	});
+
+	it("reports no data when the country lookup finds nothing either", async () => {
+		const backend = await countryBackend({
+			country: (): never => {
+				throw new Error("address not found");
+			},
+		});
+
+		await expect(backend.lookup(IP)).resolves.toEqual({
+			isValid: false,
+			error: "No MaxMind data available for IP",
+			ip: IP,
+		});
+	});
+
+	it("never calls country() when the database really is a City database", async () => {
+		// The fallback must not become a second lookup on the happy path.
+		const country = vi.fn((): Country => countryData());
+		const backend = new MaxMindBackend({
+			cityDbPath: CITY_DB,
+			openReader: opens({
+				city: reader({ city: () => cityData(), country }),
+			}),
+		});
+		await backend.initialize();
+
+		await backend.lookup(IP);
+		await backend.lookup(IP);
+
+		expect(country).not.toHaveBeenCalled();
 	});
 });
 

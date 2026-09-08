@@ -1,5 +1,106 @@
 # @prosopo/procaptcha-bundle
 
+## 4.4.1
+### Patch Changes
+
+- Updated dependencies [46cca63]
+- Updated dependencies [9e06d72]
+  - @prosopo/procaptcha-frictionless@2.15.1
+
+## 4.4.0
+### Minor Changes
+
+- d288371: Let a site choose where a challenge opens, and which button triggers it.
+  
+  - `placement: "popup" | "float"`, also `data-placement`. `popup` is the default and unchanged. `float` opens the challenge directly above the widget and keeps it pinned there as the page scrolls, leaves the page usable behind it, and dismisses on Escape or an outside click. An invisible widget always uses popup.
+  - `bind: "#selector"`, also `data-bind`. The matching host-page button triggers that one widget, in visible or invisible mode. The click's default action is prevented so a submit button does not post the form before a token exists.
+  - `execute(widgetId?)`. Called with no argument every widget responds, as before. Called with the id `render()` returns, only that widget runs. Implicitly rendered invisible buttons now trigger only their own widget.
+  
+  Behaviour changes for existing widgets:
+  
+  - Escape now closes the image and puzzle challenge in both placements. For the image captcha this runs the cancel path, which fires `onClose` and restarts frictionless.
+  - Image and puzzle now present on one shared `ChallengeSurface`. Both were already portalled to `document.body`, so neither moves in the page, but the markup around them changed: the outer layer keeps `prosopo-modalOuter` for the image captcha and also carries `prosopo-challenge-surface`, and a new `prosopo-challenge-content` element sits between it and `prosopo-modalInner`. A direct-child selector such as `.prosopo-modalOuter > .prosopo-modalInner` no longer matches, and the centring transform now lives on `prosopo-challenge-content` rather than on `prosopo-modalInner`.
+  
+  `createConfig` takes a named options object.
+
+### Patch Changes
+
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/procaptcha-common@2.13.0
+  - @prosopo/procaptcha-frictionless@2.15.0
+  - @prosopo/dotenv@3.0.55
+
+## 4.3.0
+### Minor Changes
+
+- 80f73c1: Sites can now control when the widget starts working.
+  
+  By default the widget runs bot detection, starts the behavioural collectors and calls `/frictionless` as soon as it mounts. Rendering with `data-start-mode="manual"` (or `startMode: "manual"` in the render options) keeps all of that off the page load: the checkbox still appears immediately, at its final size, so nothing shifts, but the widget does nothing else until one of two things happens.
+  
+  - The site calls `window.procaptcha.start()`, optionally with a widget id, or dispatches a `procaptcha:start` event on `document`. The frictionless flow runs and the widget then waits for a click exactly as it does today.
+  - The visitor clicks the checkbox. The frictionless flow runs and whichever challenge the provider chooses opens straight away, carrying that click's position, so the visitor is never asked to click twice.
+  
+  Both triggers are one-shot: whichever comes first wins and the other is ignored. `window.procaptcha.execute()` also starts a manual widget, opening its challenge immediately. Widgets in the default `auto` mode are unaffected.
+
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/dotenv@3.0.54
+  - @prosopo/locale@3.4.1
+  - @prosopo/procaptcha-common@2.12.6
+  - @prosopo/procaptcha-frictionless@2.14.0
+  - @prosopo/types@5.6.0
+  - @prosopo/util@3.3.8
+  - @prosopo/widget-skeleton@2.8.7
+
+## 4.2.5
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/procaptcha-common@2.12.5
+  - @prosopo/procaptcha-frictionless@2.13.23
+
 ## 4.2.4
 ### Patch Changes
 

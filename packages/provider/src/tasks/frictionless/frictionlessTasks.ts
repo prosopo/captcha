@@ -12,19 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { severityToPuzzleDifficulty } from "@prosopo/captcha-severity";
 import type { Logger } from "@prosopo/logger";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
 	ApiParams,
 	CaptchaType,
 	type CompositeIpAddress,
-	type ContextType,
 	FrictionlessReason,
 	type GetFrictionlessCaptchaResponse,
 	type IPInfoResponse,
 	type ImageRoundsBounds,
 	type KeyringPair,
 	type ModeEnum,
+	NO_MEASUREMENT_REASONS,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	type RoutingMachineBaseline,
@@ -33,6 +34,7 @@ import {
 	type Session,
 	SimdReadingsStage,
 	clampImageRounds,
+	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
@@ -44,14 +46,13 @@ import {
 	type UsageCounters,
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
+import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { coerceToEnabledCaptchaType } from "../captchaTypeSelection.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import { getBotScore } from "../detection/getBotScore.js";
-import {
-	samplePuzzleDifficulty,
-	severityToPuzzleDifficulty,
-} from "../puzzle/puzzleDifficulty.js";
+import { samplePuzzleDifficulty } from "../puzzle/puzzleDifficulty.js";
+import { ipMatchesSession } from "./ipMatch.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
 
 const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
@@ -358,6 +359,149 @@ export class FrictionlessManager extends CaptchaManager {
 		return sessionRecord;
 	}
 
+	/**
+	 * Dedicated issuance path for Web Bot Auth verified requests. The signature
+	 * verification already carried the trust decision; there is no captcha to
+	 * solve, no bot score to compute, no routing to run. The session is minted
+	 * with `captchaType: authenticated`, `agent: true`, `webBotAuthAgent` set to
+	 * the verified Signature-Agent URL, and `ipAddress` frozen for the verify-
+	 * time IP-binding check. Consumed only by `/client/authenticated/verify`.
+	 */
+	async createAuthenticatedSession(
+		token: string,
+		ipAddress: CompositeIpAddress,
+		webBotAuthAgent: string,
+		siteKey: string,
+		userSitekeyIpHash?: string,
+		headers?: RequestHeaders,
+		ipInfo?: IPInfoResponse,
+		clientSessionId?: string,
+	): Promise<Session> {
+		const sessionRecord: Session = {
+			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
+			createdAt: new Date(),
+			token,
+			// score / threshold are meaningless for a pre-verified pass; zero
+			// them so downstream analytics never mistake the session for a
+			// scored one.
+			score: 0,
+			threshold: 0,
+			scoreComponents: { baseScore: 0 },
+			ipAddress,
+			captchaType: CaptchaType.authenticated,
+			userSitekeyIpHash,
+			webView: false,
+			iFrame: false,
+			decryptedHeadHash: "",
+			siteKey,
+			// Written rather than left absent: `verifyAuthenticatedSession`
+			// reads this to enforce single use, and "field never set" and
+			// "consumed" would otherwise be told apart only by an absence.
+			serverChecked: false,
+			agent: true,
+			webBotAuthAgent,
+			...(ipInfo && { ipInfo }),
+			...(headers && { headers }),
+			// Same shape as pow/image/puzzle: the render-time session id lives
+			// on `clientMetaData.clientSessionId` so the verify-side comparison
+			// is a straight equality check on the identical field regardless of
+			// captcha type. Absent when the client didn't supply one, in which
+			// case the verify check is a no-op (matches pow/image/puzzle).
+			...(clientSessionId && { clientMetaData: { clientSessionId } }),
+		};
+
+		await this.db.storeSessionRecord(sessionRecord);
+
+		if (this.writeQueue) {
+			const cacheData = sessionRecord as unknown as Record<string, unknown>;
+			const cachePromises: Promise<boolean>[] = [
+				this.writeQueue.cacheSession(sessionRecord.sessionId, cacheData),
+			];
+			if (userSitekeyIpHash) {
+				cachePromises.push(
+					this.writeQueue.cacheSessionByHash(
+						userSitekeyIpHash,
+						sessionRecord.sessionId,
+					),
+				);
+			}
+			await Promise.all(cachePromises).catch(() => {});
+		}
+
+		return sessionRecord;
+	}
+
+	/**
+	 * Verify an authenticated (Web Bot Auth) session. Called from
+	 * `/client/authenticated/verify` after the operator forwards their
+	 * dApp-signed token. Enforces the four properties that make replay
+	 * infeasible:
+	 *   1. session exists and was minted with captchaType=authenticated
+	 *      (so ordinary captcha tokens can't be redeemed here)
+	 *   2. session hasn't been consumed (serverChecked === false)
+	 *   3. operator forwarded the client IP (`ip` is required — silently
+	 *      dropping the check would nullify the whole binding)
+	 *   4. the forwarded IP matches the IP the session was issued to
+	 *
+	 * Marks serverChecked=true on success so subsequent verifies fail loudly.
+	 */
+	async verifyAuthenticatedSession(
+		sessionId: string,
+		ip: string | undefined,
+		clientSessionId: string | undefined,
+	): Promise<{ verified: boolean; status: string }> {
+		if (!ip) {
+			return {
+				verified: false,
+				status: "API.AUTHENTICATED_IP_REQUIRED",
+			};
+		}
+		const session = await this.db.getSessionRecordBySessionId(sessionId);
+		if (!session) {
+			return {
+				verified: false,
+				status: "API.USER_NOT_VERIFIED_NO_SOLUTION",
+			};
+		}
+		if (session.captchaType !== CaptchaType.authenticated) {
+			return {
+				verified: false,
+				status: "API.INCORRECT_CAPTCHA_TYPE",
+			};
+		}
+		if (session.serverChecked) {
+			return {
+				verified: false,
+				status: "API.USER_ALREADY_VERIFIED",
+			};
+		}
+		if (!ipMatchesSession(ip, session.ipAddress)) {
+			return {
+				verified: false,
+				status: "API.AUTHENTICATED_IP_MISMATCH",
+			};
+		}
+		// Same semantics as pow/image/puzzle: `expected` is the id the dapp
+		// server just supplied on the verify call, `recorded` is the id the
+		// session was minted with. A site that doesn't opt in to correlation
+		// (no `expected`) is a no-op; anything else — including "expected set
+		// but nothing recorded" — is a mismatch. Uses the shared helper so the
+		// authenticated flow can't drift from the other captcha types.
+		if (
+			isClientSessionMismatch(
+				clientSessionId,
+				session.clientMetaData?.clientSessionId,
+			)
+		) {
+			return {
+				verified: false,
+				status: "API.CLIENT_SESSION_MISMATCH",
+			};
+		}
+		await this.db.updateSessionRecord(sessionId, { serverChecked: true });
+		return { verified: true, status: "API.USER_VERIFIED" };
+	}
+
 	async sendImageCaptcha(
 		params?: Partial<ImageCaptchaSessionParams>,
 	): Promise<GetFrictionlessCaptchaResponse> {
@@ -474,6 +618,19 @@ export class FrictionlessManager extends CaptchaManager {
 			finalCaptchaType === CaptchaType.pow
 				? (routed.powDifficulty ?? effectiveParams.powDifficulty)
 				: undefined;
+		// A router that overrode the captcha type is the more specific
+		// explanation of what was served, so its reason wins over the one the
+		// score ladder left on the session params. Mirrors the postPow path,
+		// which already does `routed.reason ?? originSession.reason`. Without
+		// this a route-phase selection reason never reached the session and
+		// was invisible in the portal.
+		//
+		// Resolved here rather than beside its use on the session record below,
+		// because the puzzle overrides need it to tell an escalation from a
+		// missing measurement.
+		const finalReason =
+			(routed.reason as FrictionlessReason | undefined) ??
+			(effectiveParams.reason as FrictionlessReason | undefined);
 		// Puzzle tunables persisted on the session so getPuzzleCaptchaChallenge
 		// can layer them over the site defaults — that endpoint re-derives its
 		// overrides from a live trafficFilter verdict, and a router- or
@@ -493,11 +650,30 @@ export class FrictionlessManager extends CaptchaManager {
 		const finalPuzzleOverrides: Pick<Session, "puzzleTolerance" | "puzzle"> =
 			finalCaptchaType === CaptchaType.puzzle
 				? (() => {
-						const level = severityToPuzzleDifficulty(
-							requestedSolvedImagesCount,
-							this.routingContext?.baseImageRounds ??
-								this.config.captchas.solved.count,
-						);
+						// Paths that measured nothing carry a fixed fallback round
+						// count, not a severity — see NO_MEASUREMENT_REASONS. Reading
+						// one as an escalation silently replaces the site's puzzle
+						// config with ladder values for every user of a site whose
+						// detector cannot run at all (CSP blocking the bundle, say),
+						// which is the opposite of what an operator configuring an
+						// easier puzzle asked for.
+						// The site's own ceiling on automatic escalation. 0 pins it to
+						// level 0, so its configured puzzle settings render every
+						// time — the puzzle counterpart to `imageMaxRounds` holding
+						// every round-count source to the site's bound.
+						const maxLevel =
+							this.routingContext?.puzzleMaxDifficulty ??
+							puzzleMaxDifficultyDefault;
+						const level =
+							finalReason !== undefined &&
+							NO_MEASUREMENT_REASONS.has(finalReason)
+								? 0
+								: severityToPuzzleDifficulty(
+										requestedSolvedImagesCount,
+										this.routingContext?.baseImageRounds ??
+											this.config.captchas.solved.count,
+										maxLevel,
+									);
 						// Level 0 means "nothing escalated this session". Sampling a
 						// band here would override the site's own configured
 						// puzzleTolerance / puzzle settings with ladder values, which
@@ -522,15 +698,6 @@ export class FrictionlessManager extends CaptchaManager {
 						};
 					})()
 				: {};
-		// A router that overrode the captcha type is the more specific
-		// explanation of what was served, so its reason wins over the one the
-		// score ladder left on the session params. Mirrors the postPow path,
-		// which already does `routed.reason ?? originSession.reason`. Without
-		// this a route-phase selection reason never reached the session and
-		// was invisible in the portal.
-		const finalReason =
-			(routed.reason as FrictionlessReason | undefined) ??
-			(effectiveParams.reason as FrictionlessReason | undefined);
 		const blocked =
 			finalCaptchaType === CaptchaType.image
 				? effectiveParams.blocked
@@ -978,12 +1145,5 @@ export class FrictionlessManager extends CaptchaManager {
 			// later behavioural-data hop can resolve the same keypair/inner cfg.
 			bundleId,
 		};
-	}
-
-	async getClientContextEntropy(
-		siteKey: string,
-		contextType: ContextType,
-	): Promise<string | undefined> {
-		return this.db.getClientContextEntropy(siteKey, contextType);
 	}
 }

@@ -30,6 +30,9 @@
 			"path": "../api-route"
 		},
 		{
+			"path": "../captcha-severity"
+		},
+		{
 			"path": "../common"
 		},
 		{
@@ -82,6 +85,9 @@
 		},
 		{
 			"path": "../util-crypto"
+		},
+		{
+			"path": "../web-bot-auth"
 		}
 	]
 }

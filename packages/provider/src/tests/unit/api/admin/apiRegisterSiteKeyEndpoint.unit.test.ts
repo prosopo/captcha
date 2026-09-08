@@ -18,6 +18,7 @@ import {
 	type IUserSettings,
 	Tier,
 	iconOrderToleranceDefault,
+	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiRegisterSiteKeyEndpoint } from "../../../../api/admin/apiRegisterSiteKeyEndpoint.js";
@@ -76,6 +77,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 			solutionTimeout: 60000,
 			puzzleTolerance: 15,
 			iconOrderTolerance: iconOrderToleranceDefault,
+			puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 			disallowWebView: false,
 		};
 

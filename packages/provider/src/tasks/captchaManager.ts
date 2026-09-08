@@ -49,6 +49,7 @@ import {
 import {
 	getPrioritisedAccessRule,
 	getRequestUserScope,
+	normalizeHeadersForMatching,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import { getDetectorBundlePool } from "./detection/bundlePool.js";
@@ -719,6 +720,9 @@ export class CaptchaManager {
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
 		userScope: UserScope | UserScopeRecord,
+		// Raw request headers for header-restriction rules — see
+		// getPrioritisedAccessRule for why this has no default.
+		requestHeaders: Record<string, string>,
 		options?: {
 			blockOnly?: boolean;
 			// Widen a blockOnly pool to admit deferred rules of any type
@@ -735,6 +739,7 @@ export class CaptchaManager {
 			userAccessRulesStorage,
 			userScope,
 			clientId,
+			requestHeaders,
 			options,
 		);
 	}
@@ -912,6 +917,10 @@ export class CaptchaManager {
 			userAccessRulesStorage,
 			challengeRecord.dappAccount,
 			userScope,
+			// Raw headers for the in-code header-condition check. Available
+			// on the verify path too, so header rules fire there (e.g. an
+			// allow-list rule marked deferToVerify).
+			normalizeHeadersForMatching(headers),
 			// Hard-block lookup only — restrict the Redis-side candidate
 			// pool so the SERVER_SIDE_RANK_TOP_N cap can't crowd a
 			// hard-block out of the top-N with routing-Block

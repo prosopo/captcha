@@ -41,8 +41,8 @@ const isBsonLong = (value: unknown): boolean =>
 	value !== null &&
 	"_bsontype" in value &&
 	(value as { _bsontype: string })._bsontype === "Long";
-import type { RootFilterQuery } from "mongoose";
-import { MongoDatabase } from "../base/index.js";
+import type { QueryFilter } from "mongoose";
+import { type MongoConnectionTimeouts, MongoDatabase } from "../base/index.js";
 
 const logger = getLogger("info", "database:captcha");
 
@@ -92,8 +92,9 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		dbname?: string,
 		authSource?: string,
 		logger?: Logger,
+		timeouts?: MongoConnectionTimeouts,
 	) {
-		super(url, dbname, authSource, logger);
+		super(url, dbname, authSource, logger, timeouts);
 		this.tables = {} as Tables<TableNames>;
 	}
 
@@ -365,7 +366,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	}
 
 	async getCaptchas(
-		filter: RootFilterQuery<CaptchaProperties> = {},
+		filter: QueryFilter<CaptchaProperties> = {},
 		limit = 100,
 	): Promise<{
 		userCommitmentRecords: UserCommitmentRecord[];

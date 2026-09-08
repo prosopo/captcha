@@ -28,7 +28,6 @@ import {
 	CaptchaStatus,
 	CaptchaType,
 	type CompositeIpAddress,
-	type ContextType,
 	type Dataset,
 	type DatasetBase,
 	type DatasetWithIds,
@@ -63,8 +62,6 @@ import {
 import type { SessionRecord, StoredSession } from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
-	type ClientContextEntropyRecord,
-	ClientContextEntropyRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
@@ -123,7 +120,6 @@ enum TableNames {
 	session = "session",
 	detector = "detector",
 	decisionMachine = "decisionMachine",
-	clientContextEntropy = "clientContextEntropy",
 	spamEmailDomain = "spamEmailDomain",
 }
 
@@ -187,11 +183,6 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.decisionMachine,
 		modelName: "DecisionMachine",
 		schema: DecisionMachineArtifactRecordSchema,
-	},
-	{
-		collectionName: TableNames.clientContextEntropy,
-		modelName: "ClientContextEntropy",
-		schema: ClientContextEntropyRecordSchema,
 	},
 	{
 		collectionName: TableNames.spamEmailDomain,
@@ -756,9 +747,17 @@ export class ProviderDatabase
 			const filter: Pick<UserCommitmentRecord, "id"> = {
 				id: commit.id,
 			};
-			await this.tables?.commitment.updateOne(filter, commitmentRecord, {
-				upsert: true,
-			});
+			// Wrap in an explicit `$set` over a shallow copy. Passing the
+			// record itself lets mongoose mutate it in place on an upsert:
+			// `moveImmutableProperties` hoists immutable paths into a
+			// `$setOnInsert` key it adds to the object you handed it. The
+			// same object is then streamed below, and mongoose 9 rejects a
+			// `$set` payload carrying a `$setOnInsert` key.
+			await this.tables?.commitment.updateOne(
+				filter,
+				{ $set: { ...commitmentRecord } },
+				{ upsert: true },
+			);
 
 			const ops = captchas.map((captcha: CaptchaSolution) => ({
 				updateOne: {
@@ -1010,9 +1009,13 @@ export class ProviderDatabase
 			};
 		}
 		try {
-			const updateResult = await tables.powcaptcha.updateOne({ challenge }, [
-				{ $set: setStage },
-			]);
+			const updateResult = await tables.powcaptcha.updateOne(
+				{ challenge },
+				[{ $set: setStage }],
+				// mongoose 9 refuses an array update unless the caller opts
+				// in, so every pipeline-form write below carries this flag.
+				{ updatePipeline: true },
+			);
 			if (updateResult.matchedCount === 0) {
 				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 					context: {
@@ -1753,27 +1756,31 @@ export class ProviderDatabase
 	 */
 	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
 		const timestamp = new Date();
-		await this.tables?.commitment.updateMany({ id: { $in: commitmentIds } }, [
-			{
-				$set: {
-					serverChecked: true,
-					lastUpdatedTimestamp: timestamp,
-					pendingStage: true,
-					verifiedAtTimestamp: {
-						$ifNull: ["$verifiedAtTimestamp", timestamp],
+		await this.tables?.commitment.updateMany(
+			{ id: { $in: commitmentIds } },
+			[
+				{
+					$set: {
+						serverChecked: true,
+						lastUpdatedTimestamp: timestamp,
+						pendingStage: true,
+						verifiedAtTimestamp: {
+							$ifNull: ["$verifiedAtTimestamp", timestamp],
+						},
 					},
 				},
-			},
-		]);
+			],
+			{ updatePipeline: true },
+		);
 	}
 
 	/** @description Update an image captcha commitment
 	 */
 	async updateDappUserCommitment(
-		commitmentId: Hash,
+		commitmentId: UserCommitment["id"],
 		updates: Partial<UserCommitment>,
 	) {
-		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
+		const filter: Pick<UserCommitment, "id"> = { id: commitmentId };
 		const timestamp = new Date();
 		const baseSet: Record<string, unknown> = {
 			...updates,
@@ -1805,9 +1812,11 @@ export class ProviderDatabase
 			await this.tables?.commitment.updateOne(filter, { $set: baseSet });
 			return;
 		}
-		await this.tables?.commitment.updateOne(filter, [
-			{ $set: { ...baseSet, ...pipelineExprs } },
-		]);
+		await this.tables?.commitment.updateOne(
+			filter,
+			[{ $set: { ...baseSet, ...pipelineExprs } }],
+			{ updatePipeline: true },
+		);
 	}
 
 	/**
@@ -1907,7 +1916,7 @@ export class ProviderDatabase
 					},
 				},
 			],
-			{ upsert: false },
+			{ upsert: false, updatePipeline: true },
 		);
 	}
 
@@ -2133,16 +2142,20 @@ export class ProviderDatabase
 		stage: SimdReadingsStage,
 	): Promise<void> {
 		try {
-			await this.tables.session.updateOne({ sessionId }, [
-				{
-					$set: {
-						simdReadings: { $ifNull: ["$simdReadings", readings] },
-						simdReadingsStage: { $ifNull: ["$simdReadingsStage", stage] },
-						lastUpdatedTimestamp: new Date(),
-						pendingStage: true,
+			await this.tables.session.updateOne(
+				{ sessionId },
+				[
+					{
+						$set: {
+							simdReadings: { $ifNull: ["$simdReadings", readings] },
+							simdReadingsStage: { $ifNull: ["$simdReadingsStage", stage] },
+							lastUpdatedTimestamp: new Date(),
+							pendingStage: true,
+						},
 					},
-				},
-			]);
+				],
+				{ updatePipeline: true },
+			);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
 				context: { error: err, sessionId, stage },
@@ -2190,9 +2203,11 @@ export class ProviderDatabase
 			setStage["dnsEvent.pathValid"] = fields.pathValid;
 		}
 		try {
-			const result = await this.tables.session.updateOne({ sessionId }, [
-				{ $set: setStage },
-			]);
+			const result = await this.tables.session.updateOne(
+				{ sessionId },
+				[{ $set: setStage }],
+				{ updatePipeline: true },
+			);
 			return result.matchedCount > 0;
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
@@ -2584,6 +2599,13 @@ export class ProviderDatabase
 		behavioralDataPacked: 1,
 		deviceCapability: 1,
 		coords: 1,
+		// Read by `verifyImageCaptchaSolution` for the client-session
+		// correlation. Added in 5.5.0 but never added here, so
+		// `solution.clientMetaData` came back `undefined` on every fetch and
+		// `isClientSessionMismatch(id, undefined)` was true for every caller
+		// that supplied a session id — a token replay reported on solves that
+		// were earned in exactly the session they claimed.
+		clientMetaData: 1,
 	} as { [key in keyof Partial<UserCommitmentRecord>]: 1 };
 
 	/**
@@ -2880,8 +2902,20 @@ export class ProviderDatabase
 	/**
 	 * @description Update the client records
 	 */
-	async updateClientRecords(clientRecords: ClientRecord[]): Promise<void> {
-		const ops = clientRecords.map((record) => {
+	async updateClientRecords(clientRecords: IUserDataSlim[]): Promise<void> {
+		// An upsert filtered on a missing account matches nothing and inserts,
+		// so a batch of records with no account collapses into a single row
+		// keyed on `account: undefined` and silently replaces every site's
+		// settings with the last one in the batch. Drop them instead.
+		const usable = clientRecords.filter((record) => !!record.account);
+		const skipped = clientRecords.length - usable.length;
+		if (skipped > 0) {
+			await this.logger.error(() => ({
+				msg: "Refusing to upsert client records with no account",
+				data: { skipped, received: clientRecords.length },
+			}));
+		}
+		const ops = usable.map((record) => {
 			const clientRecord: IUserDataSlim = {
 				account: record.account,
 				settings: record.settings,
@@ -3061,28 +3095,6 @@ export class ProviderDatabase
 	async removeAllDecisionMachineArtifacts(): Promise<number> {
 		const result = await this.tables?.decisionMachine.deleteMany({});
 		return result?.deletedCount ?? 0;
-	}
-
-	/**
-	 * @description get client context-specific entropy
-	 *
-	 * Read-only. The `clientcontextentropies` collection is populated
-	 * externally by the job-runner sweep — the provider used to compute
-	 * entropy locally via `sampleContextEntropy` + `setClientContextEntropy`
-	 * on a scheduled task, but that path was pulled 2026-08-21 (the sweep
-	 * aggregation was ~36 minutes of DB time per 6h, and the same
-	 * computation now runs off-provider across the full record set).
-	 */
-	async getClientContextEntropy(
-		account: string,
-		contextType: ContextType,
-	): Promise<string | undefined> {
-		const filter: Pick<ClientContextEntropyRecord, "account" | "contextType"> =
-			{ account, contextType };
-		const doc = await this.tables?.clientContextEntropy
-			.findOne(filter)
-			.lean<ClientContextEntropyRecord>();
-		return doc ? doc.entropy : undefined;
 	}
 
 	async getSpamEmailDomain(

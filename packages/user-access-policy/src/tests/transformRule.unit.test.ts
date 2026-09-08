@@ -116,6 +116,12 @@ describe("transformRule", () => {
 		countryCode: "US",
 		asn: 205016,
 		os: "macos",
+		browser: "firefox",
+		headerMatch: "1",
+		headerName: "x-test",
+		headerValue: "test",
+		headerOperator: "equals",
+		webBotAuthAgent: "https://signatures.openai.com",
 	} satisfies AccessRule;
 
 	it("should transform access rule record into rule", () => {

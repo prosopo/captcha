@@ -23,6 +23,7 @@ import { union } from "zod";
 import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
 import { Mode, ModeEnum } from "./mode.js";
+import { StartModeEnum, StartModeSchema } from "./startMode.js";
 export { Mode, ModeEnum };
 export type { ModeType } from "./mode.js";
 import {
@@ -39,6 +40,8 @@ import {
 	PENALTY_UNVERIFIED_HOST_DEFAULT,
 	PENALTY_WEBVIEW_DEFAULT,
 } from "./frictionless.js";
+// Re-exported to consumers by ./index.js, not from here.
+import { Placement, PlacementEnum } from "./placement.js";
 import {
 	DEFAULT_ICON_ORDER_CAPTCHA_CACHED_TIMEOUT,
 	DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT,
@@ -307,6 +310,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
 		mode: Mode.optional().default(ModeEnum.visible),
+		placement: Placement.optional().default(PlacementEnum.popup),
 		// Restrict provider DNS resolution. When both are unset providers stay
 		// dual-stack. `ipv4` wins if both are true.
 		ipv4: boolean().optional(),
@@ -317,6 +321,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		// call can correlate it. Named `clientSessionId` here to keep it clear
 		// of the provider's own frictionless `sessionId`.
 		clientSessionId: string().optional(),
+		startMode: StartModeSchema.optional().default(StartModeEnum.auto),
 	}),
 );
 

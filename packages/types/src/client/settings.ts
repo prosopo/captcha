@@ -49,8 +49,30 @@ export const imageMaxRoundsDefault = 32;
 // `Math.max(2, …)` inside `timestampDecayFunction`), so leaving it unset
 // preserves existing behaviour.
 export const imageMinRoundsDefault = 2;
-export const contextAwareThresholdDefault = 0.7;
 export const puzzleToleranceDefault = 15;
+
+/**
+ * Ceiling on the puzzle difficulty ladder for a site, in ladder levels.
+ *
+ * The puzzle equivalent of `imageMaxRounds`. An escalated session samples its
+ * render settings from a difficulty band, and a sampled band sets EVERY knob —
+ * so while the ladder is active the site's own `puzzle` block and
+ * `puzzleTolerance` are not consulted at all. That is intended for a site
+ * using escalation, and wrong for a site that has deliberately configured an
+ * easier puzzle and expects to get it.
+ *
+ * `0` pins the site to level 0, which is the documented "nothing escalated"
+ * case: the session is left bare and the site's own settings render every
+ * time. Higher values cap how far automatic escalation may climb.
+ *
+ * The default matches `MAX_AUTO_ESCALATION_LEVEL` in `@prosopo/captcha-severity`,
+ * and the maximum matches that package's ladder length. Those live there
+ * because the ladder does, and this package deliberately does not depend on it
+ * — `puzzleMaxDifficultyMatchesLadder` in @prosopo/provider pins the pair so
+ * they cannot drift.
+ */
+export const puzzleMaxDifficultyDefault = 3;
+export const puzzleMaxDifficultyMax = 4;
 
 // Puzzle render defaults, mirrored from `packages/puzzle-assets`'s
 // `DEFAULT_RENDER_SETTINGS`. Kept here so the schema layer owns the
@@ -227,6 +249,10 @@ export const imageMaxRoundsFieldSchema = number().int().min(2);
 // enforced across the pair on `ClientSettingsSchema`.
 export const imageMinRoundsFieldSchema = number().int().min(1);
 export const puzzleToleranceFieldSchema = number().int().min(5).max(1000);
+export const puzzleMaxDifficultyFieldSchema = number()
+	.int()
+	.min(0)
+	.max(puzzleMaxDifficultyMax);
 export const puzzleDecoyCountFieldSchema = number().int().min(0).max(200);
 export const puzzleDecoyEdgeDarknessFieldSchema = number().int().min(0).max(40);
 export const puzzleDecoyBodyBrightnessFieldSchema = number()
@@ -420,16 +446,8 @@ export enum DeviceType {
  * different markup from a desktop, and an in-app webview injects and
  * suppresses different things again from the same device's real browser.
  *
- * `Default` and `Webview` are the pre-device-type keys. They are retained so
- * settings already stored against them keep parsing, and are expanded into
- * their device families by `expandContexts` — nothing downstream of settings
- * parsing should branch on them. See `isLegacyContextType`.
  */
 export enum ContextType {
-	/** @deprecated Legacy pre-device-type key: every non-webview device. */
-	Default = "default",
-	/** @deprecated Legacy pre-device-type key: every webview device. */
-	Webview = "webview",
 	Desktop = "desktop",
 	DesktopWebview = "desktop-webview",
 	Mobile = "mobile",
@@ -440,19 +458,6 @@ export enum ContextType {
 
 // Zod schema for context type
 export const ContextTypeSchema = z.nativeEnum(ContextType);
-
-/** The two keys that predate device-type contexts. */
-export const legacyContextTypes = [
-	ContextType.Default,
-	ContextType.Webview,
-] as const;
-
-export type LegacyContextType = (typeof legacyContextTypes)[number];
-
-export const isLegacyContextType = (
-	contextType: ContextType,
-): contextType is LegacyContextType =>
-	contextType === ContextType.Default || contextType === ContextType.Webview;
 
 /** Every device-type context, in a stable order. */
 export const deviceContextTypes = [
@@ -537,67 +542,6 @@ export const contextTypeFromSession = (
 	webView: boolean,
 ): ContextType => contextTypeFor(deviceTypeFromUserAgent(userAgent), webView);
 
-// Individual context configuration
-export const ContextConfigSchema = z.object({
-	type: ContextTypeSchema,
-	threshold: number()
-		.min(Number((contextAwareThresholdDefault - 0.2).toFixed(2)))
-		.max(Number((contextAwareThresholdDefault + 0.2).toFixed(2)))
-		.optional()
-		.default(contextAwareThresholdDefault),
-});
-
-export type IContextConfig = z.infer<typeof ContextConfigSchema>;
-
-const ContextsSchema = z.record(ContextTypeSchema, ContextConfigSchema);
-
-export type IContexts = z.infer<typeof ContextsSchema>;
-
-/**
- * Resolve a stored `contexts` map to device-type contexts only.
- *
- * A legacy `default` entry configures every non-webview device family and a
- * legacy `webview` entry configures every webview family, both at the
- * threshold they were saved with. An explicit device-type entry always wins
- * over the legacy entry that would otherwise cover it, so a customer can
- * tighten one family without restating the rest.
- *
- * Everything downstream — the decision machine's lookup, the entropy sweep,
- * the portal — deals only in the six device contexts this returns.
- */
-export const expandContexts = (
-	contexts: IContexts | undefined,
-): Partial<Record<ContextType, IContextConfig>> => {
-	const expanded: Partial<Record<ContextType, IContextConfig>> = {};
-	if (!contexts) return expanded;
-
-	const legacy = contexts as Partial<Record<ContextType, IContextConfig>>;
-
-	for (const deviceType of Object.values(DeviceType)) {
-		for (const webView of [false, true]) {
-			const contextType = contextTypeFor(deviceType, webView);
-			const legacyConfig =
-				legacy[webView ? ContextType.Webview : ContextType.Default];
-			const config = legacy[contextType] ?? legacyConfig;
-			if (config) {
-				expanded[contextType] = {
-					type: contextType,
-					threshold: config.threshold,
-				};
-			}
-		}
-	}
-
-	return expanded;
-};
-
-const ContextAwareSchema = object({
-	enabled: boolean().optional().default(false),
-	contexts: ContextsSchema,
-});
-
-export type IContextAware = z.infer<typeof ContextAwareSchema>;
-
 // Spam filter rules
 export const maxLocalPartDotsDefault = 2;
 
@@ -647,7 +591,9 @@ export const SpamFilterRulesSchema = object({
 	emailRules: EmailSpamRulesSchema.optional(),
 });
 
-export const trafficFilterAbuserScoreThresholdDefault = 0.5;
+// Abuser score at or above which the `abuser` category applies. The scale is
+// 0..1 with 0 meaning "clean", so 0 would act on any non-zero score.
+export const trafficFilterAbuserScoreThresholdDefault = 0.2;
 
 // Operators almost always want the datacenter category to catch
 // scraping/automation traffic but not legitimate consumer relays that exit
@@ -817,6 +763,13 @@ export const ClientSettingsSchema = object({
 	puzzleTolerance: puzzleToleranceFieldSchema
 		.optional()
 		.default(puzzleToleranceDefault),
+	// Ceiling on automatic puzzle escalation, in difficulty-ladder levels —
+	// the puzzle counterpart to `imageMaxRounds`. Set to 0 to pin the site to
+	// its own `puzzle` / `puzzleTolerance` settings on every challenge; the
+	// ladder otherwise replaces all of them whenever a session escalates.
+	puzzleMaxDifficulty: puzzleMaxDifficultyFieldSchema
+		.optional()
+		.default(puzzleMaxDifficultyDefault),
 	// Site-wide puzzle render settings. Fields not set here fall back to
 	// the asset package's defaults. Traffic-filter category policies may
 	// further override any of these on a per-request basis.
@@ -837,7 +790,6 @@ export const ClientSettingsSchema = object({
 	// `false`. Both are falsy, so no consumer changed behaviour, but the
 	// declared output type said `boolean` while the value was missing.
 	disallowWebView: boolean().optional().default(false),
-	contextAware: ContextAwareSchema.optional(),
 	spamEmailDomainCheckEnabled: boolean().optional(),
 	spamFilter: SpamFilterRulesSchema.optional(),
 	trafficFilter: TrafficFilterSchema.optional(),
@@ -847,6 +799,17 @@ export const ClientSettingsSchema = object({
 	// whether the submitted emails are mostly spam).
 	storeMetadata: boolean().optional(),
 	honeypot: HoneypotSettingsSchema.optional(),
+	// Web Bot Auth (RFC 9421) verified-agent pass-through. When true, a
+	// request that carries a valid Ed25519 signature and matches no
+	// operator-authored Block/Restrict rule on its Signature-Agent URL
+	// gets an `authenticated` session — no captcha, no interaction. When
+	// false (default), verified agents are still identified on the userScope
+	// so per-agent access rules can act on them, but they follow the normal
+	// challenge flow like everyone else. Opt-in because the whole
+	// authenticated flow issues bearer tokens that skip the puzzle-solve
+	// cost, and the site operator should make that trust decision
+	// explicitly rather than get it as a default.
+	allowAgents: boolean().optional(),
 }).refine((v) => v.imageMinRounds <= v.imageMaxRounds, {
 	message: "imageMinRounds must be <= imageMaxRounds",
 	path: ["imageMinRounds"],

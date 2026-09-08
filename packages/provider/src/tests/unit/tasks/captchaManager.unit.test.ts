@@ -15,11 +15,9 @@
 import type { RedisWriteQueue } from "@prosopo/database";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
-	ContextType,
 	IpAddressType,
 	type KeyringPair,
 	type Session,
-	contextAwareThresholdDefault,
 	iconOrderToleranceDefault,
 } from "@prosopo/types";
 import {
@@ -28,6 +26,7 @@ import {
 	ResultReason,
 	Tier,
 	TrafficFilterAction,
+	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -62,16 +61,8 @@ const defaultUserSettings: IUserSettings = {
 	solutionTimeout: 60000,
 	puzzleTolerance: 15,
 	iconOrderTolerance: iconOrderToleranceDefault,
+	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 	disallowWebView: false,
-	contextAware: {
-		enabled: false,
-		contexts: {
-			default: {
-				type: ContextType.Default,
-				threshold: contextAwareThresholdDefault,
-			},
-		},
-	},
 };
 
 describe("CaptchaManager", () => {

@@ -30,7 +30,6 @@ import { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
 import {
 	CaptchaType,
-	ContextType,
 	DatabaseTypes,
 	EncodingType,
 	IPValidationAction,
@@ -39,6 +38,7 @@ import {
 	Tier,
 	TrafficFilterAction,
 	iconOrderToleranceDefault,
+	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -63,20 +63,8 @@ const FULLY_POPULATED_SETTINGS = {
 	solutionTimeout: 60000,
 	puzzleTolerance: 20,
 	iconOrderTolerance: iconOrderToleranceDefault,
+	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 	disallowWebView: true,
-	contextAware: {
-		enabled: true,
-		contexts: {
-			[ContextType.Default]: {
-				type: ContextType.Default,
-				threshold: 0.72,
-			},
-			[ContextType.Webview]: {
-				type: ContextType.Webview,
-				threshold: 0.68,
-			},
-		},
-	},
 	ipValidationRules: {
 		enabled: true,
 		actions: {
@@ -260,9 +248,6 @@ describe("Client settings Mongo persistence", () => {
 		expect(stored.storeMetadata).toBe(FULLY_POPULATED_SETTINGS.storeMetadata);
 
 		// Nested objects — compare wholesale so any nested drop also fails.
-		expect(stored.contextAware).toMatchObject(
-			FULLY_POPULATED_SETTINGS.contextAware,
-		);
 		expect(stored.ipValidationRules).toMatchObject(
 			FULLY_POPULATED_SETTINGS.ipValidationRules,
 		);

@@ -15,18 +15,33 @@
 import createCache, { type EmotionCache } from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
 import type { Ti18n } from "@prosopo/locale";
-import type {
-	Callbacks,
-	ProcaptchaClientConfigOutput,
-	ProcaptchaRenderOptions,
+import {
+	type Callbacks,
+	Placement,
+	type PlacementType,
+	type ProcaptchaClientConfigOutput,
+	type ProcaptchaRenderOptions,
 } from "@prosopo/types";
 import type { ReactNode } from "react";
 import { type Root, createRoot } from "react-dom/client";
 import { setClientSessionId } from "../clientSession.js";
 import { createConfig } from "../configCreator.js";
 import { setLanguage } from "../language.js";
+import { setStartMode } from "../startMode.js";
 import { setValidChallengeLength } from "../timeout.js";
 import { BundleCaptcha } from "./components/bundleCaptcha.js";
+
+const resolveRequestedPlacement = (
+	element: Element,
+	renderOptions: ProcaptchaRenderOptions,
+): PlacementType | undefined => {
+	const requested =
+		renderOptions.placement ?? element.getAttribute("data-placement");
+	if (!requested) return undefined;
+
+	const parsed = Placement.safeParse(requested);
+	return parsed.success ? parsed.data : undefined;
+};
 
 interface RenderSettings {
 	identifierPrefix: string;
@@ -46,16 +61,20 @@ class CaptchaRenderer {
 		widgetContainer: HTMLElement,
 		sourceElement?: Element,
 	): Root {
-		const config = createConfig(
-			renderOptions.siteKey,
-			renderOptions.theme,
-			renderOptions.language,
-			isWeb2,
+		const config = createConfig({
+			siteKey: renderOptions.siteKey,
+			theme: renderOptions.theme,
+			language: renderOptions.language,
+			web2: isWeb2,
 			invisible,
-			renderOptions.userAccountAddress,
-			renderOptions.ipv4,
-			renderOptions.ipv6,
-		);
+			placement: resolveRequestedPlacement(
+				sourceElement || container,
+				renderOptions,
+			),
+			userAccountAddress: renderOptions.userAccountAddress,
+			ipv4: renderOptions.ipv4,
+			ipv6: renderOptions.ipv6,
+		});
 		this.readAndValidateSettings(
 			sourceElement || container,
 			config,
@@ -94,6 +113,7 @@ class CaptchaRenderer {
 		setValidChallengeLength(renderOptions, element, config);
 		setLanguage(renderOptions, element, config);
 		setClientSessionId(renderOptions, element, config);
+		setStartMode(renderOptions, element, config);
 	}
 
 	protected makeEmotionCache(

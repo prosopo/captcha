@@ -1,5 +1,94 @@
 # @prosopo/procaptcha
 
+## 2.11.8
+### Patch Changes
+
+- 9e06d72: Stop `CAPTCHA.NO_SESSION_FOUND` leaving the widget on a dead checkbox.
+  
+  Users reported a checkbox reading "No session found" that never recovered, usually after pressing the image-challenge reload button. Provider logs show the shape clearly: `POST /captcha/image` returns 200 and issues a challenge, then 2-6 seconds later the *same* sessionId is POSTed again and the provider answers 400 `CAPTCHA.NO_SESSION_FOUND` — `checkAndRemoveSession` consumed the session when it issued the first challenge, so a second challenge fetch on that id can never succeed.
+  
+  Three defects combined to turn that into a permanent dead end.
+  
+  - **The manager re-sent a sessionId it had already spent.** `defaultState()` doesn't clear `sessionId` and `buildUpdateState` skips `undefined`, so a stale id survives `resetState()` and any path that re-enters `start()` re-sends it. `Manager` now remembers the id it exchanged for a challenge and, rather than making a request it knows the provider will reject, routes straight to the `CAPTCHA.NO_SESSION_FOUND` state the wrapper already listens for.
+  
+  - **Recovery was one-shot per outer widget lifetime and had no terminal branch.** `ProcaptchaWidget` always takes the `onSessionInvalidated` branch and returns before its own `frictionlessState.restart()` fallback, and its guard ref is fresh on every re-mount because the wrapper bumps the mount key. So once the wrapper's one-shot was spent, the second failure was handled by nobody: no re-mint, no restart, no message — just a stuck checkbox. `handleSessionInvalidated` is now a bounded counter (`MAX_SESSION_INVALIDATED_RETRIES`) rather than a boolean, it reports `exhausted` to the caller, a reload press clears it (a reload mints a genuinely new session, so it shouldn't spend the budget for the old one), and exhaustion falls over visibly through `fallOverWithStyle` — which schedules the existing 10-second full restart, so there is always a way back.
+  
+  - **`resetState(0)` never reset anything.** `0 || stateRef.current.attemptCount` kept the old count, so `attemptCount` accumulated across every re-mint and `start()`'s own `attemptCount >= 5` fall-over fired after five *cumulative* runs in a widget lifetime. Five successful reload presses were enough to drop the user onto the error placeholder. Now `??`, so callers passing literal `0` get the reset they asked for.
+
+## 2.11.7
+### Patch Changes
+
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/procaptcha-common@2.13.0
+  - @prosopo/api@4.1.6
+  - @prosopo/common@3.1.54
+  - @prosopo/datasets@3.1.78
+  - @prosopo/load-balancer@2.10.40
+
+## 2.11.6
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [1b77849]
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/util-crypto@13.5.31
+  - @prosopo/api@4.1.5
+  - @prosopo/common@3.1.53
+  - @prosopo/datasets@3.1.77
+  - @prosopo/load-balancer@2.10.39
+  - @prosopo/procaptcha-common@2.12.6
+  - @prosopo/types@5.6.0
+  - @prosopo/util@3.3.8
+
+## 2.11.5
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/api@4.1.4
+  - @prosopo/datasets@3.1.76
+  - @prosopo/load-balancer@2.10.38
+  - @prosopo/procaptcha-common@2.12.5
+
 ## 2.11.4
 ### Patch Changes
 

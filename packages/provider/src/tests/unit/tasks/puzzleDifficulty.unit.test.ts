@@ -13,6 +13,10 @@
 // limitations under the License.
 
 import {
+	MIN_DECOY_HOLE_DARKEN_MARGIN,
+	PUZZLE_DIFFICULTY_LEVELS,
+} from "@prosopo/captcha-severity";
+import {
 	DEFAULT_RENDER_SETTINGS,
 	type PuzzleRenderSettings,
 } from "@prosopo/puzzle-assets";
@@ -24,14 +28,7 @@ import {
 	puzzleToleranceFieldSchema,
 } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
-import {
-	MAX_AUTO_ESCALATION_LEVEL,
-	MIN_DECOY_HOLE_DARKEN_MARGIN,
-	PUZZLE_DIFFICULTY_LEVELS,
-	clampDifficultyLevel,
-	samplePuzzleDifficulty,
-	severityToPuzzleDifficulty,
-} from "../../../tasks/puzzle/puzzleDifficulty.js";
+import { samplePuzzleDifficulty } from "../../../tasks/puzzle/puzzleDifficulty.js";
 import { resolvePuzzleRenderSettings } from "../../../tasks/puzzle/puzzleRenderer.js";
 
 const HOLE_DARKEN = DEFAULT_RENDER_SETTINGS.holeDarken;
@@ -39,35 +36,6 @@ const HOLE_DARKEN = DEFAULT_RENDER_SETTINGS.holeDarken;
 const SAMPLES = 400;
 
 describe("PUZZLE_DIFFICULTY_LEVELS table", () => {
-	it("is ordered strictly harder as the level rises", () => {
-		for (let i = 1; i < PUZZLE_DIFFICULTY_LEVELS.length; i++) {
-			const prev = PUZZLE_DIFFICULTY_LEVELS[i - 1];
-			const cur = PUZZLE_DIFFICULTY_LEVELS[i];
-			if (!prev || !cur) throw new Error("missing level");
-			// Harder = tighter tolerance, more decoys, decoys closer to the real
-			// cut's darkness, stronger decoy rims, smaller pieces.
-			expect(cur.tolerance.max).toBeLessThan(prev.tolerance.max);
-			expect(cur.decoyCount.min).toBeGreaterThanOrEqual(prev.decoyCount.min);
-			expect(cur.decoyHoleDarken.max).toBeLessThan(prev.decoyHoleDarken.max);
-			expect(cur.decoyEdgeDarkness.max).toBeGreaterThan(
-				prev.decoyEdgeDarkness.max,
-			);
-			expect(cur.pieceScale.max).toBeLessThan(prev.pieceScale.max);
-		}
-	});
-
-	it("overlaps adjacent bands so one render does not identify the level", () => {
-		// If bands were disjoint, a solver could read the level straight off the
-		// decoy count and know whether it had been flagged.
-		for (let i = 1; i < PUZZLE_DIFFICULTY_LEVELS.length; i++) {
-			const prev = PUZZLE_DIFFICULTY_LEVELS[i - 1];
-			const cur = PUZZLE_DIFFICULTY_LEVELS[i];
-			if (!prev || !cur) throw new Error("missing level");
-			expect(cur.decoyCount.min).toBeLessThanOrEqual(prev.decoyCount.max);
-			expect(cur.tolerance.max).toBeGreaterThanOrEqual(prev.tolerance.min);
-		}
-	});
-
 	it("keeps every band inside the settings-schema bounds", () => {
 		for (const band of PUZZLE_DIFFICULTY_LEVELS) {
 			for (const v of [band.tolerance.min, band.tolerance.max]) {
@@ -93,51 +61,6 @@ describe("PUZZLE_DIFFICULTY_LEVELS table", () => {
 				expect(puzzlePieceScaleFieldSchema.safeParse(v).success).toBe(true);
 			}
 		}
-	});
-});
-
-describe("severityToPuzzleDifficulty", () => {
-	it("maps no requested rounds to the baseline level", () => {
-		expect(severityToPuzzleDifficulty(undefined, 2)).toBe(0);
-	});
-
-	it("maps a request at or below the site baseline to the baseline level", () => {
-		expect(severityToPuzzleDifficulty(2, 2)).toBe(0);
-		expect(severityToPuzzleDifficulty(1, 2)).toBe(0);
-	});
-
-	it("rises monotonically with rounds requested above the baseline", () => {
-		const levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 12].map((extra) =>
-			severityToPuzzleDifficulty(2 + extra, 2, PUZZLE_DIFFICULTY_LEVELS.length),
-		);
-		for (let i = 1; i < levels.length; i++) {
-			expect(levels[i]).toBeGreaterThanOrEqual(levels[i - 1] as number);
-		}
-	});
-
-	it("is relative to the site baseline, not an absolute round count", () => {
-		// Same absolute count means different severity on sites whose ordinary
-		// challenge is a different length.
-		expect(severityToPuzzleDifficulty(6, 2)).toBeGreaterThan(
-			severityToPuzzleDifficulty(6, 6),
-		);
-	});
-
-	it("caps automatic escalation below the hardest level", () => {
-		// With image disabled there is no fallback modality, so the hardest
-		// level must not be reachable by escalation alone.
-		expect(severityToPuzzleDifficulty(100, 2)).toBe(MAX_AUTO_ESCALATION_LEVEL);
-		expect(MAX_AUTO_ESCALATION_LEVEL).toBeLessThan(
-			PUZZLE_DIFFICULTY_LEVELS.length - 1,
-		);
-	});
-});
-
-describe("clampDifficultyLevel", () => {
-	it("clamps out-of-range and non-finite input", () => {
-		expect(clampDifficultyLevel(-5)).toBe(0);
-		expect(clampDifficultyLevel(Number.NaN)).toBe(0);
-		expect(clampDifficultyLevel(99)).toBe(MAX_AUTO_ESCALATION_LEVEL);
 	});
 });
 

@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { severityToPuzzleDifficulty } from "@prosopo/captcha-severity";
 import { ProsopoApiError } from "@prosopo/common";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
@@ -29,10 +30,7 @@ import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { coerceToEnabledCaptchaType } from "../../tasks/captchaTypeSelection.js";
-import {
-	samplePuzzleDifficulty,
-	severityToPuzzleDifficulty,
-} from "../../tasks/puzzle/puzzleDifficulty.js";
+import { samplePuzzleDifficulty } from "../../tasks/puzzle/puzzleDifficulty.js";
 import { Tasks } from "../../tasks/tasks.js";
 import {
 	derivePlatform,

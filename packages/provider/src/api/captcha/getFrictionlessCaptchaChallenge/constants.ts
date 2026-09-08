@@ -82,12 +82,3 @@ export const getRoundsFromTriggeredDetectors = (
 ): number =>
 	base +
 	Math.min(triggeredDetectors?.length ?? 0, MAX_DETECTOR_EXTRA_IMAGE_ROUNDS);
-
-export const getRoundsFromSimScore = (simScore: number): number => {
-	if (simScore >= 0.9) return 0;
-	if (simScore >= 0.8) return 3;
-	if (simScore >= 0.7) return 4;
-	if (simScore >= 0.6) return 6;
-	if (simScore >= 0.5) return 7;
-	return 8;
-};
