@@ -42,7 +42,7 @@ import {
 import type mongoose from "mongoose";
 import { Schema as MongooseSchema, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
-import type { ClientRecord, Tables } from "./provider.js";
+import type { IUserDataSlim, Tables } from "./provider.js";
 
 export type UserDataRecord = mongoose.Document & IUserData;
 
@@ -403,5 +403,7 @@ export enum TableNames {
 
 export interface IClientDatabase extends IDatabase {
 	getTables(): Tables<TableNames>;
-	getUpdatedClients(updatedAtTimestamp: Timestamp): Promise<ClientRecord[]>;
+	// Plain objects built from the portal's account documents, not mongoose
+	// Documents — `IUserDataSlim` is what this actually returns.
+	getUpdatedClients(updatedAtTimestamp: Timestamp): Promise<IUserDataSlim[]>;
 }
