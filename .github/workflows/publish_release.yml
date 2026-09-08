@@ -79,6 +79,21 @@ jobs:
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "Version: $version"
 
+      - name: Preflight publishability check
+        # Runs before the install and build because it needs neither, and a
+        # release that cannot publish should fail in seconds rather than after
+        # three minutes of building artifacts nobody will ship.
+        #
+        # `changeset publish` publishes serially and cannot roll back, so a
+        # package that fails part way through leaves the release half-applied,
+        # with the earlier packages already live and immutable on the registry.
+        # This turns that into a failure before anything is published. It
+        # catches the two ways a package is unpublishable: a first publish
+        # (trusted publishing cannot bootstrap a package that does not exist
+        # yet, and npm reports it as a misleading ENEEDAUTH) and a private
+        # workspace package leaked into a published package's runtime deps.
+        run: node .github/scripts/check-publishable.mjs
+
       - run: npm ci --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
 
       - name: Build packages
@@ -157,6 +172,32 @@ jobs:
           gh release create "v${{ steps.version.outputs.version }}" \
             --title "Release v${{ steps.version.outputs.version }}" \
             --generate-notes
+
+      - name: Open the private release PR
+        # The release is not finished when this repo's packages are out: the
+        # private repo still has to move its captcha submodule to the new tag,
+        # cascade the version bumps through its own packages and repoint the
+        # ansible inventories at the new provider image. Its create_release_pr
+        # workflow does all of that, but it was dispatch-only, so it happened
+        # only when somebody remembered. v3.8.7 and v3.8.8 both shipped from
+        # here with no release PR opened there at all, and production's
+        # compose_provider_image_version was hand-edited to 3.8.7 in an
+        # unrelated PR to paper over it.
+        #
+        # Fired after the GitHub Release exists so the private side never opens
+        # a PR for a release that did not finish. Non-fatal on purpose: at this
+        # point the packages, images and release are already published, and
+        # failing here would both mark a successful release as failed and fire
+        # the failure notification below. A missed dispatch just means running
+        # create_release_pr by hand, which is where this started.
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
+        run: |
+          gh api repos/prosopo/captcha-private/dispatches \
+            --method POST \
+            --field event_type=captcha_released \
+            --field 'client_payload[version]=${{ steps.version.outputs.version }}'
 
       - name: Send success notification
         if: success()
