@@ -297,6 +297,7 @@ const customDetectBot: BotDetectionFunction = async (
 			userAccount: userAccount,
 			error: captcha.error,
 			hp: captcha.hp,
+			agent: captcha.agent,
 		};
 	}
 
@@ -357,6 +358,7 @@ const customDetectBot: BotDetectionFunction = async (
 		userAccount: userAccount,
 		error: captcha.error,
 		hp: captcha.hp,
+		agent: captcha.agent,
 		// Map specific trackers to generic behavioral collectors
 		behaviorCollector1: detectionResult.mouseTracker,
 		behaviorCollector2: detectionResult.touchTracker,

@@ -36,6 +36,7 @@ import {
 	ispChangeActionDefault,
 	powDifficultyDefault,
 	requireAllConditionsDefault,
+	trafficFilterAbuserScoreThresholdDefault,
 } from "@prosopo/types";
 import type mongoose from "mongoose";
 import { Schema as MongooseSchema, Schema } from "mongoose";
@@ -270,7 +271,12 @@ export const UserSettingsSchema = new Schema({
 		proxy: { type: TrafficCategoryPolicySchema, required: false },
 		tor: { type: TrafficCategoryPolicySchema, required: false },
 		abuser: { type: TrafficCategoryPolicySchema, required: false },
-		abuserScoreThreshold: { type: Number, min: 0, max: 1, default: 0 },
+		abuserScoreThreshold: {
+			type: Number,
+			min: 0,
+			max: 1,
+			default: trafficFilterAbuserScoreThresholdDefault,
+		},
 		datacenter: { type: TrafficCategoryPolicySchema, required: false },
 		datacenterNameAllowlist: { type: [String], required: false },
 		datacenterNameDenylist: { type: [String], required: false },

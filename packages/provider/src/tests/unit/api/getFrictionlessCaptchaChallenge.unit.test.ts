@@ -564,6 +564,47 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		);
 	});
 
+	// `decryptPayload` returns `userAgent` hashed, for the mismatch check only.
+	// Routing it into `derivePlatform` pinned `platform.isApple` to false, so
+	// the global machine's Apple passthrough never fired on a fresh session and
+	// genuine iPhones fell through to the rate ladder.
+	it("gives the routing machine the request user agent, not the hashed one", async () => {
+		const clientRecord = {
+			account: "siteRoutingUa",
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				frictionlessThreshold: 0.5,
+				disallowWebView: false,
+			},
+		};
+		tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+			payload(false),
+		);
+
+		const body = {
+			token: "tRoutingUa",
+			headHash: "hhRoutingUa",
+			dapp: "siteRoutingUa",
+			user: "u",
+		};
+		const { req, res, next } = buildReqRes(body);
+		req.headers["user-agent"] = IPHONE_UA;
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(
+			tasksInstance.frictionlessManager.setRoutingContext,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({
+				platform: expect.objectContaining({ isApple: true }),
+				raw: expect.objectContaining({ userAgent: IPHONE_UA }),
+			}),
+		);
+	});
+
 	it("reuses the cached session when the routing machine returns the same captchaType", async () => {
 		const clientRecord = {
 			account: "siteDedupRoutingAgrees",

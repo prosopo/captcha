@@ -37,6 +37,7 @@ export const userAttributesRecordFields = [
 	"headerName",
 	"headerValue",
 	"headerOperator",
+	"webBotAuthAgent",
 ] as const satisfies (keyof UserAttributesRecord)[];
 
 export type UserIpRecord = {

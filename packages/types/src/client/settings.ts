@@ -481,7 +481,9 @@ export const SpamFilterRulesSchema = object({
 	emailRules: EmailSpamRulesSchema.optional(),
 });
 
-export const trafficFilterAbuserScoreThresholdDefault = 0.5;
+// Abuser score at or above which the `abuser` category applies. The scale is
+// 0..1 with 0 meaning "clean", so 0 would act on any non-zero score.
+export const trafficFilterAbuserScoreThresholdDefault = 0.2;
 
 // Operators almost always want the datacenter category to catch
 // scraping/automation traffic but not legitimate consumer relays that exit
@@ -666,6 +668,17 @@ export const ClientSettingsSchema = object({
 	// whether the submitted emails are mostly spam).
 	storeMetadata: boolean().optional(),
 	honeypot: HoneypotSettingsSchema.optional(),
+	// Web Bot Auth (RFC 9421) verified-agent pass-through. When true, a
+	// request that carries a valid Ed25519 signature and matches no
+	// operator-authored Block/Restrict rule on its Signature-Agent URL
+	// gets an `authenticated` session — no captcha, no interaction. When
+	// false (default), verified agents are still identified on the userScope
+	// so per-agent access rules can act on them, but they follow the normal
+	// challenge flow like everyone else. Opt-in because the whole
+	// authenticated flow issues bearer tokens that skip the puzzle-solve
+	// cost, and the site operator should make that trust decision
+	// explicitly rather than get it as a default.
+	allowAgents: boolean().optional(),
 }).refine((v) => v.imageMinRounds <= v.imageMaxRounds, {
 	message: "imageMinRounds must be <= imageMaxRounds",
 	path: ["imageMinRounds"],

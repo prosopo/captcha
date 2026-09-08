@@ -71,4 +71,9 @@ export type DetectorResult = {
 	md?: boolean;
 	bn?: boolean;
 	fs?: boolean;
+	// Opaque client-reported signals, keyed by signal name. Forwarded verbatim
+	// so server-side rules can consume them without a client release.
+	// Undefined for clients that predate the field, and empty for the great
+	// majority of sessions.
+	b?: Record<string, string[]>;
 };

@@ -75,6 +75,9 @@
 			"path": "../user-access-policy"
 		},
 		{
+			"path": "../web-bot-auth"
+		},
+		{
 			"path": "../api"
 		},
 		{

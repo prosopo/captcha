@@ -58,6 +58,10 @@ export const getRequestUserScope = (
 	coords?: string,
 	countryCode?: string,
 	asn?: number,
+	// Present only when Web Bot Auth signature verification succeeded on the
+	// inbound request. Passed through to rule matching so `webBotAuthAgent`
+	// rules match the verified signer URL, never a spoofed header.
+	webBotAuthAgent?: string,
 ): Pick<
 	UserScopeRecord,
 	| "userId"
@@ -71,6 +75,7 @@ export const getRequestUserScope = (
 	| "os"
 	| "browser"
 	| "headerMatch"
+	| "webBotAuthAgent"
 > => {
 	const userAgent = requestHeaders["user-agent"]
 		? requestHeaders["user-agent"].toString()
@@ -85,6 +90,9 @@ export const getRequestUserScope = (
 		...(coords && { coords }),
 		...(countryCode && { countryCode }),
 		...(typeof asn === "number" && { asn }),
+		// Only set when signature verification succeeded, so a rule scoped to
+		// a signer can never be matched by a spoofed header.
+		...(webBotAuthAgent && { webBotAuthAgent }),
 		// Unconditional, unlike the fields above: an allow-list has to match a
 		// request whose UA we can't classify, which lands on "unknown".
 		os: classifyOs(userAgent),
@@ -135,6 +143,7 @@ const SCALAR_USER_SCOPE_FIELDS = [
 	// rule scores one specificity point, mirroring `exists(@headerMatch)` in the
 	// reader's SPECIFICITY_EXPR.
 	"headerMatch",
+	"webBotAuthAgent",
 ] as const satisfies ReadonlyArray<keyof UserScope>;
 
 // Derive the populated-scope field list for a matched rule (the same shape
