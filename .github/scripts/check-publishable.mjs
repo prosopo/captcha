@@ -41,7 +41,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 
 const ROOT = process.cwd();
-const REGISTRY = process.env.npm_config_registry || "https://registry.npmjs.org";
+const REGISTRY =
+	process.env.npm_config_registry || "https://registry.npmjs.org";
 
 // Runtime sections only. A devDependency is not installed by consumers, so a
 // private package there is harmless.
@@ -122,7 +123,11 @@ function findPackages(dir, out = []) {
 
 /** Does the package exist on the registry at all (any version)? */
 async function existsOnRegistry(name) {
-	const url = `${REGISTRY.replace(/\/$/, "")}/${name.replace("/", "%2F")}`;
+	// The scope separator has to stay percent-encoded or the registry reads it
+	// as a path segment. replaceAll, not replace: a package name only ever has
+	// the one slash, but replace would silently encode just the first if that
+	// ever stopped being true.
+	const url = `${REGISTRY.replace(/\/$/, "")}/${name.replaceAll("/", "%2F")}`;
 	const res = await fetch(url, { method: "GET", headers: { accept: "*/*" } });
 	if (res.status === 404) return false;
 	if (!res.ok) {
