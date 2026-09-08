@@ -79,6 +79,21 @@ jobs:
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "Version: $version"
 
+      - name: Preflight publishability check
+        # Runs before the install and build because it needs neither, and a
+        # release that cannot publish should fail in seconds rather than after
+        # three minutes of building artifacts nobody will ship.
+        #
+        # `changeset publish` publishes serially and cannot roll back, so a
+        # package that fails part way through leaves the release half-applied,
+        # with the earlier packages already live and immutable on the registry.
+        # This turns that into a failure before anything is published. It
+        # catches the two ways a package is unpublishable: a first publish
+        # (trusted publishing cannot bootstrap a package that does not exist
+        # yet, and npm reports it as a misleading ENEEDAUTH) and a private
+        # workspace package leaked into a published package's runtime deps.
+        run: node .github/scripts/check-publishable.mjs
+
       - run: npm ci --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
 
       - name: Build packages
