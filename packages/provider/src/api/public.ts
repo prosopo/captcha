@@ -59,9 +59,17 @@ export function publicRouter(env: ProviderEnvironment): Router {
 			const redisConnection = db.getRedisConnection();
 			const redisAccessRulesConnection = db.getRedisAccessRulesConnection();
 
+			// Identity of the node answering this request, so callers can tell
+			// which node they reached without relying on /healthz.
+			const host =
+				env.config.host && env.config.host.length > 0
+					? env.config.host
+					: req.hostname;
+
 			const response: ProviderDetails = {
 				version,
 				message: "Provider online",
+				host,
 				redis: [
 					{
 						actor: "General",
