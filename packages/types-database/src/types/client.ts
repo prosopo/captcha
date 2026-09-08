@@ -35,6 +35,7 @@ import {
 	imageThresholdDefault,
 	ispChangeActionDefault,
 	powDifficultyDefault,
+	puzzleMaxDifficultyMax,
 	requireAllConditionsDefault,
 	trafficFilterAbuserScoreThresholdDefault,
 } from "@prosopo/types";
@@ -227,6 +228,17 @@ export const UserSettingsSchema = new Schema({
 	},
 	puzzleTolerance: {
 		type: Number,
+		required: false,
+	},
+	// Ceiling on automatic puzzle escalation, in difficulty-ladder levels.
+	// No default: an absent value means "site never set this", and the
+	// provider falls back to `puzzleMaxDifficultyDefault` at read time. A
+	// schema default would be indistinguishable from an operator explicitly
+	// choosing that level.
+	puzzleMaxDifficulty: {
+		type: Number,
+		min: 0,
+		max: puzzleMaxDifficultyMax,
 		required: false,
 	},
 	// Site-wide puzzle render overrides. No default: an absent block means

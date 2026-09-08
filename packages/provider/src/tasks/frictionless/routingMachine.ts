@@ -56,6 +56,12 @@ export interface RoutingContext {
 	// puzzle difficulty level — severity is "rounds above normal", which
 	// means the same thing across sites where an absolute count does not.
 	baseImageRounds?: number;
+	// Ceiling on that difficulty level, from the sitekey's
+	// `puzzleMaxDifficulty`. Same rationale as `imageMaxRounds` above: this is
+	// the site's own bound on how far a rule may escalate it, and 0 keeps the
+	// site's configured puzzle settings on every challenge. Optional for the
+	// dedup replay; absent falls back to `puzzleMaxDifficultyDefault`.
+	puzzleMaxDifficulty?: number;
 }
 
 /**
