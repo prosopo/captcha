@@ -15,10 +15,26 @@
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
-import { PublicApiPaths } from "@prosopo/types";
+import { type IPInfoResponse, PublicApiPaths } from "@prosopo/types";
+import type { IIpInfoService } from "@prosopo/types-env";
 import { version } from "@prosopo/util";
-import type { NextFunction, Request, Response } from "express";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import type {
+	NextFunction,
+	Request,
+	RequestHandler,
+	Response,
+	Router,
+} from "express";
+import {
+	type Mock,
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
+import { resetHealthzGeoRouter } from "../../../api/healthzGeo.js";
 import { metricsHandler } from "../../../api/metrics.js";
 import { publicRouter } from "../../../api/public.js";
 
@@ -373,5 +389,152 @@ describe("publicRouter", () => {
 				]),
 			}),
 		);
+	});
+});
+
+describe("publicRouter /healthz", () => {
+	// Express keeps the registered handlers on the router's layer stack; the
+	// healthz handler is pulled off it and called directly so the assertions
+	// are about the handler and not about express's dispatch.
+	interface RouteLayer {
+		route?: { path?: string; stack: Array<{ handle: RequestHandler }> };
+	}
+
+	const healthzHandler = (router: Router): RequestHandler => {
+		const layers = (router as unknown as { stack: RouteLayer[] }).stack;
+		const handler = layers.find(
+			(layer: RouteLayer) => layer.route?.path === PublicApiPaths.Healthz,
+		)?.route?.stack[0]?.handle;
+		if (!handler) throw new Error("healthz route is not registered");
+		return handler;
+	};
+
+	const ipInfoService: IIpInfoService = {
+		initialize: vi.fn<() => Promise<void>>(async () => {}),
+		lookup: vi.fn<(ip: string) => Promise<IPInfoResponse>>(async () => {
+			throw new Error("lookup() must not be called by healthz");
+		}),
+		country: vi.fn<(ip: string) => string | undefined>(() => "US"),
+		isAvailable: vi.fn<() => boolean>(() => true),
+	};
+
+	const env = (host: string): ProviderEnvironment =>
+		({
+			config: { host },
+			logger: { warn: vi.fn(), info: vi.fn(), error: vi.fn(), debug: vi.fn() },
+			ipInfoService,
+		}) as unknown as ProviderEnvironment;
+
+	interface ResponseSpy {
+		res: Response;
+		set: Mock;
+		json: Mock;
+	}
+
+	const responseSpy = (): ResponseSpy => {
+		const set = vi.fn();
+		const json = vi.fn();
+		return {
+			res: {
+				status: vi.fn().mockReturnThis(),
+				set,
+				json,
+			} as unknown as Response,
+			set,
+			json,
+		};
+	};
+
+	const request = (ip: string): Request =>
+		({ ip, hostname: "lb.example.com" }) as Request;
+
+	const setEnvVars = (vars: Record<string, string | undefined>): void => {
+		for (const [key, value] of Object.entries(vars)) {
+			if (value === undefined) {
+				delete process.env[key];
+			} else {
+				process.env[key] = value;
+			}
+		}
+	};
+
+	beforeEach(() => {
+		vi.clearAllMocks();
+		resetHealthzGeoRouter();
+		// Nothing may reach the network from a unit test; the health poller is
+		// the only thing here that would try.
+		vi.stubGlobal(
+			"fetch",
+			vi.fn<typeof fetch>(async () => new Response(null, { status: 503 })),
+		);
+	});
+
+	afterEach(() => {
+		resetHealthzGeoRouter();
+		vi.unstubAllGlobals();
+		setEnvVars({
+			PROSOPO_HEALTHZ_GEO_STEERING: undefined,
+			PROSOPO_HEALTHZ_GEO_ROUTES: undefined,
+		});
+	});
+
+	it("answers with its own name and sets no headers when steering is off", () => {
+		setEnvVars({
+			PROSOPO_HEALTHZ_GEO_STEERING: undefined,
+			PROSOPO_HEALTHZ_GEO_ROUTES: JSON.stringify({
+				US: "node-b.example.com",
+			}),
+		});
+		const { res, set, json } = responseSpy();
+
+		healthzHandler(publicRouter(env("node-a.example.com")))(
+			request("203.0.113.9"),
+			res,
+			vi.fn() as NextFunction,
+		);
+
+		expect(json).toHaveBeenCalledWith({
+			ok: true,
+			host: "node-a.example.com",
+		});
+		// The response has to stay exactly what it was, headers included.
+		expect(set).not.toHaveBeenCalled();
+		expect(ipInfoService.country).not.toHaveBeenCalled();
+	});
+
+	it("falls back to the request hostname when no host is configured", () => {
+		const { res, json } = responseSpy();
+
+		healthzHandler(publicRouter(env("")))(
+			request("203.0.113.9"),
+			res,
+			vi.fn() as NextFunction,
+		);
+
+		expect(json).toHaveBeenCalledWith({ ok: true, host: "lb.example.com" });
+	});
+
+	it("marks the response uncacheable once it can vary per caller", () => {
+		setEnvVars({
+			PROSOPO_HEALTHZ_GEO_STEERING: "true",
+			PROSOPO_HEALTHZ_GEO_ROUTES: JSON.stringify({
+				US: "node-b.example.com",
+			}),
+		});
+		const { res, set, json } = responseSpy();
+
+		healthzHandler(publicRouter(env("node-a.example.com")))(
+			request("203.0.113.9"),
+			res,
+			vi.fn() as NextFunction,
+		);
+
+		expect(set).toHaveBeenCalledWith("Cache-Control", "no-store, private");
+		// The target has not been confirmed up, so this node still answers with
+		// its own name — the header is set regardless of which branch wins.
+		expect(json).toHaveBeenCalledWith({
+			ok: true,
+			host: "node-a.example.com",
+		});
 	});
 });
