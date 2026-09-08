@@ -20,18 +20,24 @@ import {
 	rankCaptchaType,
 } from "./index.js";
 
-// The four members of CaptchaType, as bare strings. Not imported from
+// The scoreable members of CaptchaType, as bare strings. Not imported from
 // @prosopo/types — this package deliberately has no dependencies, and the
 // coupling is asserted on the consuming side instead.
-const TYPES = ["image", "puzzle", "pow", "frictionless"] as const;
-const STRICTEST_FIRST = ["image", "puzzle", "pow", "frictionless"] as const;
+const TYPES = ["image", "iconOrder", "puzzle", "pow", "frictionless"] as const;
+const STRICTEST_FIRST = [
+	"image",
+	"iconOrder",
+	"puzzle",
+	"pow",
+	"frictionless",
+] as const;
 
 // Well above imageMaxRoundsDefault (32). `solvedImagesCount` is validated by
 // `number().int().min(2)` with no upper bound, so "absurd" is reachable.
 const ABSURD_ROUNDS = 100_000;
 
 describe("rankCaptchaType", () => {
-	it("ranks image > puzzle > pow > frictionless", () => {
+	it("ranks image > iconOrder > puzzle > pow > frictionless", () => {
 		const ascending = [...STRICTEST_FIRST].reverse();
 		const ranks = ascending.map(rankCaptchaType);
 		expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
@@ -56,8 +62,10 @@ describe("isStricterCaptchaType — type only, settings ignored", () => {
 	// Adjacent pairs in both orderings — non-adjacent comparisons would still
 	// pass with an off-by-one in the table.
 	it.each([
-		["image", "puzzle", true],
-		["puzzle", "image", false],
+		["image", "iconOrder", true],
+		["iconOrder", "image", false],
+		["iconOrder", "puzzle", true],
+		["puzzle", "iconOrder", false],
 		["puzzle", "pow", true],
 		["pow", "puzzle", false],
 		["pow", "frictionless", true],
@@ -90,6 +98,9 @@ describe("isStricterCaptchaType — type only, settings ignored", () => {
 describe("captchaPolicySeverity — type dominates", () => {
 	it("orders by type before any setting", () => {
 		expect(captchaPolicySeverity({ captchaType: "image" })).toBeGreaterThan(
+			captchaPolicySeverity({ captchaType: "iconOrder" }),
+		);
+		expect(captchaPolicySeverity({ captchaType: "iconOrder" })).toBeGreaterThan(
 			captchaPolicySeverity({ captchaType: "puzzle" }),
 		);
 		expect(captchaPolicySeverity({ captchaType: "puzzle" })).toBeGreaterThan(

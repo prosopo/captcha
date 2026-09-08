@@ -72,13 +72,25 @@ describe("frictionlessTypes bounds what the ladder may serve", () => {
 	 * all, which is the shape every client record written before the field
 	 * existed still has.
 	 */
-	const configure = (types?: { image: boolean; puzzle: boolean }) => {
+	const configure = (types?: {
+		image: boolean;
+		puzzle: boolean;
+		iconOrder?: boolean;
+	}) => {
 		cy.registerSiteKey(baseCaptchaType, undefined, {
 			frictionlessThreshold: {
 				frictionlessPuzzleThreshold: PUZZLE_RUNG,
 				frictionlessImageThreshold: IMAGE_RUNG,
 			},
-			...(types ? { frictionlessTypes: types } : {}),
+			// `iconOrder` defaults to off in this spec: it exercises the
+			// image/puzzle ladder, and leaving a third interactive type
+			// enabled would give the coercion under test another rung to
+			// fall back to.
+			...(types
+				? {
+						frictionlessTypes: { iconOrder: false, ...types },
+					}
+				: {}),
 		}).then((response) => {
 			expect(response.status).to.equal(200);
 		});

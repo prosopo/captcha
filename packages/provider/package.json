@@ -31,6 +31,7 @@
 		"@prosopo/database": "4.0.30",
 		"@prosopo/datasets": "3.1.79",
 		"@prosopo/env": "3.6.53",
+		"@prosopo/icon-order-assets": "0.1.0",
 		"@prosopo/ipinfo": "0.3.25",
 		"@prosopo/keyring": "2.9.86",
 		"@prosopo/load-balancer": "2.10.41",

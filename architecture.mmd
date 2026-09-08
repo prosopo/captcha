@@ -25,6 +25,7 @@ graph TB
             ImageCaptcha["Image Captcha<br/>select matching images"]
             PoW["Proof of Work<br/>compute hash puzzle"]
             PuzzleCaptcha["Puzzle Captcha<br/>drag the piece into the notch"]
+            IconOrderCaptcha["Icon Order Captcha<br/>click the legend icons in order"]
         end
     end
 
@@ -48,6 +49,9 @@ graph TB
             ImageVerifyEP["POST .../client/image/dapp/verify"]
             PowVerifyEP["POST .../client/pow/verify"]
             PuzzleVerifyEP["POST .../client/puzzle/verify"]
+            IconOrderChallengeEP["POST .../client/captcha/icon-order"]
+            IconOrderSolutionEP["POST .../client/icon-order/solution"]
+            IconOrderVerifyEP["POST .../client/icon-order/verify"]
             SpamEmailEP["POST .../client/spam/email"]
             DetectorAssignEP["POST .../client/detector/assign<br/>(assigns this session a pool bundle)"]
         end
@@ -69,6 +73,8 @@ graph TB
             ImgTasks["Image Captcha Manager"]
             PowTasks["PoW Captcha Manager"]
             PuzzleTasks["Puzzle Captcha Manager"]
+            IconOrderTasks["Icon Order Captcha Manager"]
+            InteractiveBase["InteractiveCaptchaManager<br/>(shared base: replay + recency,<br/>client-session correlation,<br/>access policies, spam rules,<br/>traffic filter, IP validation,<br/>decision machine)"]
             FrictionlessTasks["Frictionless Manager"]
             DetectorPool["Detector Bundle Pool<br/>(precomputed bundles loaded<br/>from disk; empty pool ⇒ no<br/>detection ⇒ PoW fallback)"]
             SolutionVerifier["Solution Verifier<br/>Merkle tree + salt embedding"]
@@ -125,7 +131,7 @@ graph TB
     FrictionlessEP --> FrictionlessTasks
     FrictionlessTasks --> Redis
     FrictionlessTasks -->|"1. handleAccessPolicy<br/>(captchaType override)"| AccessPolicies
-    FrictionlessTasks -->|"2. handleFrictionlessTrafficFilter<br/>(block → 401, challenge →<br/>dispatch send{Image,Pow,Puzzle})"| TrafficFilter
+    FrictionlessTasks -->|"2. handleFrictionlessTrafficFilter<br/>(block → 401, challenge →<br/>dispatch send{Image,Pow,Puzzle,IconOrder})"| TrafficFilter
     FrictionlessTasks -->|"3. runDecisionMachine<br/>(score-based routing)"| DecisionMachine
     FrictionlessTasks -->|human detected| Manager
     FrictionlessTasks -->|bot suspected| ImageCaptcha
@@ -191,6 +197,30 @@ graph TB
     PuzzleTasks -->|"checkForHardBlock +<br/>deferToVerify block"| AccessPolicies
     PuzzleTasks -->|signed token| Manager
 
+    %% ===== ICON ORDER FLOW =====
+    %% Icon-order is never reached from the score ladder. It is served only
+    %% when something names it: a site-wide captchaType, a Restrict rule, a
+    %% traffic-filter policy, or a routing machine.
+    Manager -->|"configured / routed: icon-order"| IconOrderCaptcha
+    IconOrderCaptcha -->|get challenge| IconOrderChallengeEP
+    IconOrderChallengeEP -->|"1. AccessPolicy lookup"| AccessPolicies
+    IconOrderChallengeEP -->|"2. applyTrafficFilterAtRequestTime<br/>(challenge → iconOrderTolerance +<br/>render overrides; same non-401<br/>handling as the puzzle flow)"| TrafficFilter
+    IconOrderChallengeEP --> IconOrderTasks
+    IconOrderTasks -->|"render collage + legend, THEN store.<br/>The imagery IS the answer, so targets<br/>only exist once pixels do — the endpoint<br/>persists them before responding"| MongoDB
+    IconOrderTasks -->|"background + legend strip only.<br/>Target positions are never serialised"| IconOrderCaptcha
+    IconOrderCaptcha -->|"ordered clicks<br/>+ behavioural data"| IconOrderSolutionEP
+    IconOrderSolutionEP --> IconOrderTasks
+    IconOrderTasks -->|"claim the single submission,<br/>THEN grade clicks against<br/>stored targets (order-sensitive)"| MongoDB
+    IconOrderTasks -->|"resolveTrafficFilterCheck<br/>(block matches → disapprove)"| TrafficFilter
+    IconOrderTasks -->|"checkForHardBlock +<br/>deferToVerify block"| AccessPolicies
+    IconOrderTasks -->|signed token| Manager
+
+    %% ===== SHARED INTERACTIVE PIPELINE =====
+    %% Puzzle and icon-order differ only in how a challenge is drawn and
+    %% graded; everything after that is one implementation.
+    PuzzleTasks -.->|extends| InteractiveBase
+    IconOrderTasks -.->|extends| InteractiveBase
+
     %% ===== TOKEN TO BACKEND =====
     Manager -->|"ProcaptchaToken<br/>(hex-encoded)"| EndUser
     EndUser -->|"submit form + token"| DappBackend
@@ -200,12 +230,15 @@ graph TB
     ServerPkg -->|"verify image token<br/>(+ optional clientSessionId)"| ImageVerifyEP
     ServerPkg -->|"verify pow token<br/>(+ optional clientSessionId)"| PowVerifyEP
     ServerPkg -->|"verify puzzle token<br/>(+ optional clientSessionId)"| PuzzleVerifyEP
+    ServerPkg -->|"verify icon-order token<br/>(+ optional clientSessionId)"| IconOrderVerifyEP
     ImageVerifyEP -->|decode token, check commitment| MongoDB
     PowVerifyEP -->|decode token, check proof| MongoDB
     PuzzleVerifyEP -->|decode token, check placement| MongoDB
+    IconOrderVerifyEP -->|decode token, check click order| MongoDB
     ImageVerifyEP -->|"verified: true/false"| ServerPkg
     PowVerifyEP -->|"verified: true/false"| ServerPkg
     PuzzleVerifyEP -->|"verified: true/false"| ServerPkg
+    IconOrderVerifyEP -->|"verified: true/false"| ServerPkg
     ServerPkg -->|grant or deny access| DappBackend
 
     %% ===== ADMIN =====
@@ -232,9 +265,9 @@ graph TB
     classDef external fill:#eceff1,stroke:#546e6a,color:#000
 
     class Developer,EndUser actor
-    class Widget,Manager,LB,Detector,Fingerprint,Behavioral,Frictionless,ImageCaptcha,PoW,PuzzleCaptcha browser
-    class Healthz,Details,FrictionlessEP,ImageChallengeEP,ImageSolutionEP,PowChallengeEP,PowSolutionEP,PuzzleChallengeEP,PuzzleSolutionEP,ImageVerifyEP,PowVerifyEP,PuzzleVerifyEP,SpamEmailEP,DetectorAssignEP,SiteKeyMgmt,DetectorMgmt,DetectorPoolMgmt,DecisionMachineMgmt,MaintenanceToggle,RulesCRUD provider
-    class ImgTasks,PowTasks,PuzzleTasks,FrictionlessTasks,SolutionVerifier,DecisionMachine,DetectorPool,AccessPolicies,TrafficFilter,SpamFilter provider
+    class Widget,Manager,LB,Detector,Fingerprint,Behavioral,Frictionless,ImageCaptcha,PoW,PuzzleCaptcha,IconOrderCaptcha browser
+    class Healthz,Details,FrictionlessEP,ImageChallengeEP,ImageSolutionEP,PowChallengeEP,PowSolutionEP,PuzzleChallengeEP,PuzzleSolutionEP,IconOrderChallengeEP,IconOrderSolutionEP,ImageVerifyEP,PowVerifyEP,PuzzleVerifyEP,IconOrderVerifyEP,SpamEmailEP,DetectorAssignEP,SiteKeyMgmt,DetectorMgmt,DetectorPoolMgmt,DecisionMachineMgmt,MaintenanceToggle,RulesCRUD provider
+    class ImgTasks,PowTasks,PuzzleTasks,IconOrderTasks,InteractiveBase,FrictionlessTasks,SolutionVerifier,DecisionMachine,DetectorPool,AccessPolicies,TrafficFilter,SpamFilter provider
     class MongoDB,Redis,Dataset storage
     class ServerPkg,DappBackend backend
     class ProviderList external

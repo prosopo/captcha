@@ -22,6 +22,7 @@ import {
 	Tier,
 	frictionlessImageThresholdDefault,
 	frictionlessTypesDefault,
+	iconOrderToleranceDefault,
 	puzzleMaxDifficultyDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
@@ -143,6 +144,7 @@ export default (
 						imageMaxRounds: image_max_rounds as number,
 						imageMinRounds: image_min_rounds as number,
 						puzzleTolerance: puzzleToleranceDefault,
+						iconOrderTolerance: iconOrderToleranceDefault,
 						puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 						disallowWebView: false,
 						verifiedTimeout: 60000,

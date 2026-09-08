@@ -13,14 +13,7 @@
 // limitations under the License.
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
-import type { Logger } from "@prosopo/logger";
-import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
-import {
-	CaptchaType,
-	DecisionMachineDecision,
-	type DecisionMachineInput,
-} from "@prosopo/types";
+import { CaptchaType, type DecisionMachineInput } from "@prosopo/types";
 import {
 	ApiParams,
 	type BehavioralDataPacked,
@@ -30,7 +23,6 @@ import {
 	type IPAddress,
 	type ISpamFilterRules,
 	type ITrafficFilter,
-	POW_SEPARATOR,
 	type PoWChallengeId,
 	type PuzzleEvent,
 	type RequestHeaders,
@@ -39,42 +31,22 @@ import {
 	isBlockingCaptchaResult,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type { PuzzleCaptchaRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import {
-	type AccessRulesStorage,
-	describeMatchedRule,
-} from "@prosopo/user-access-policy";
+import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import {
 	assertCoordsSafe,
 	at,
 	extractData,
 	verifyRecency,
 } from "@prosopo/util";
+import { buildAllWindowIncrements } from "../../util/usageCounters.js";
+import { toStoredClientMetaData } from "../../utils/clientMetaData.js";
 import {
-	getCompositeIpAddress,
-	getIpAddressFromComposite,
-} from "../../compositeIpAddress.js";
-import { deepValidateIpAddress } from "../../util.js";
-import {
-	type UsageCounters,
-	buildAllWindowIncrements,
-} from "../../util/usageCounters.js";
-import {
-	isClientSessionMismatch,
-	toStoredClientMetaData,
-} from "../../utils/clientMetaData.js";
-import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
-import { CaptchaManager } from "../captchaManager.js";
-import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
-import {
-	computeDnsAsymmetry,
-	enrichDnsEvent,
-	getIpInfoAsn,
-} from "../dnsEvent/enrichDnsEvent.js";
-import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+	InteractiveCaptchaManager,
+	type InteractiveCaptchaRecordUpdate,
+} from "../interactiveCaptcha/interactiveCaptchaManager.js";
 import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
-import { normaliseEmailForMatching } from "../spam/evaluateEmailSpamRules.js";
 import { validatePuzzleSolution } from "./puzzleTasksUtils.js";
 
 interface PuzzleCaptchaChallenge {
@@ -88,22 +60,27 @@ interface PuzzleCaptchaChallenge {
 	requestedAtTimestamp: number;
 }
 
-export class PuzzleCaptchaManager extends CaptchaManager {
-	POW_SEPARATOR: string;
-	private decisionMachineRunner: DecisionMachineRunner;
-	private readonly usageCounters: UsageCounters | null;
+export class PuzzleCaptchaManager extends InteractiveCaptchaManager {
+	protected readonly captchaType = CaptchaType.puzzle;
+	protected readonly logLabel = "puzzle";
 
-	constructor(
-		db: IProviderDatabase,
-		pair: KeyringPair,
-		config: ProsopoConfigOutput,
-		logger?: Logger,
-		usageCounters?: UsageCounters | null,
-	) {
-		super(db, pair, config, logger);
-		this.POW_SEPARATOR = POW_SEPARATOR;
-		this.decisionMachineRunner = new DecisionMachineRunner(db);
-		this.usageCounters = usageCounters ?? null;
+	protected getRecordByChallenge(
+		challenge: string,
+	): Promise<PuzzleCaptchaRecord | null> {
+		return this.db.getPuzzleCaptchaRecordByChallenge(challenge);
+	}
+
+	protected updateRecord(
+		challenge: PoWChallengeId,
+		updates: InteractiveCaptchaRecordUpdate,
+	): Promise<void> {
+		return this.db.updatePuzzleCaptchaRecord(challenge, updates);
+	}
+
+	protected decisionMachineEventFields(
+		record: PuzzleCaptchaRecord,
+	): Partial<DecisionMachineInput> {
+		return { puzzleEvents: record.puzzleEvents };
 	}
 
 	/**
@@ -438,24 +415,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 	}
 
 	/**
-	 * @description Verifies a Puzzle Captcha for a given user and dapp. This is called by the server to verify the user's solution
-	 * and update the record in the database to show that the user has solved the captcha
+	 * Server-side verification for the puzzle type.
 	 *
-	 * @param {string} dappAccount - the dapp that is requesting the captcha
-	 * @param {string} challenge - the challenge string
-	 * @param {number} timeout - the time in milliseconds since the Provider was selected to provide the captcha
-	 * @param env - provider environment
-	 * @param ip - optional IP address for validation
-	 * @param userAccessRulesStorage - storage for querying user access policies
-	 * @param email
-	 * @param spamEmailDomainCheckingEnabled
-	 * @param spamFilter
-	 * @param trafficFilter
-	 * @param storeMetadata - when true, persists the dapp-server-provided
-	 *   `email` on the captcha record for spam-rate analysis.
-	 * @param clientSessionId - the session id the site rendered the widget
-	 *   with. When supplied, the solve must carry the same value in its
-	 *   `clientMetaData` or it is disapproved.
+	 * The pipeline itself is shared — see
+	 * `InteractiveCaptchaManager.serverVerifyInteractiveCaptchaSolution`. This
+	 * wrapper exists so callers keep the type-named entry point they already
+	 * use; the record accessors above are what make it puzzle-specific.
 	 */
 	async serverVerifyPuzzleCaptchaSolution(
 		dappAccount: string,
@@ -471,526 +436,19 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		storeMetadata = false,
 		clientSessionId?: string,
 	): Promise<{ verified: boolean; score?: number; sessionId?: string }> {
-		// Shared by every not-verified exit; sessionId is stamped on below
-		// once the record is loaded, so each exit needn't repeat it.
-		const notVerifiedResponse: {
-			verified: false;
-			sessionId?: string;
-		} = { verified: false };
-
-		// Bind the challenge/dappAccount context once so every log line in this
-		// method carries it without repeating the fields in each `data` block.
-		const logger = this.logger.with({ challenge, dappAccount });
-
-		const challengeRecord =
-			await this.db.getPuzzleCaptchaRecordByChallenge(challenge);
-
-		if (!challengeRecord) {
-			logger.debug(() => ({
-				msg: `No record of this challenge: ${challenge}`,
-			}));
-
-			return notVerifiedResponse;
-		}
-
-		notVerifiedResponse.sessionId = challengeRecord.sessionId;
-
-		if (challengeRecord.result.status !== CaptchaStatus.approved) {
-			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
-				context: {
-					code: 400,
-					failedFuncName: this.serverVerifyPuzzleCaptchaSolution.name,
-					challenge,
-				},
-			});
-		}
-
-		if (challengeRecord.serverChecked) return notVerifiedResponse;
-
-		const challengeDappAccount = challengeRecord.dappAccount;
-
-		if (dappAccount !== challengeDappAccount) {
-			throw new ProsopoEnvError("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", {
-				context: {
-					failedFuncName: this.serverVerifyPuzzleCaptchaSolution.name,
-					dappAccount,
-					challengeDappAccount,
-				},
-			});
-		}
-
-		// -- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING ---- WARNING --
-		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
-		// solution has already been checked by the server. Moving this code around could result in solutions being
-		// re-usable.
-		await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-			serverChecked: true,
-			lastUpdatedTimestamp: new Date(),
-		});
-		// -- END WARNING --
-
-		const submittedAt = challengeRecord.submittedAtTimestamp;
-		const submitToVerifyMs =
-			submittedAt instanceof Date
-				? Date.now() - submittedAt.getTime()
-				: Number.POSITIVE_INFINITY;
-		if (submitToVerifyMs > timeout) {
-			const disapprovedResult = {
-				status: CaptchaStatus.disapproved,
-				reason: ResultReason.TIMESTAMP_TOO_OLD,
-			};
-			const isBlocked = isBlockingCaptchaResult(
-				CaptchaType.puzzle,
-				disapprovedResult,
-			);
-			await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-				result: disapprovedResult,
-				...(isBlocked && { blocked: true }),
-			});
-			if (challengeRecord.sessionId) {
-				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
-					serverChecked: true,
-					result: disapprovedResult,
-					...(isBlocked && { blocked: true }),
-				});
-			}
-			return notVerifiedResponse;
-		}
-
-		// The site rendered the widget with a session id, so the solve has to
-		// carry the same one — otherwise the token was earned in a different
-		// session (or outside the widget entirely) and is being replayed here.
-		// Cheap and purely local, so it runs before any I/O-bound check.
-		if (
-			isClientSessionMismatch(
-				clientSessionId,
-				challengeRecord.clientMetaData?.clientSessionId,
-			)
-		) {
-			logger.info(() => ({
-				msg: "Client session mismatch in server puzzle verification",
-				data: {
-					hasRecordedClientSessionId: Boolean(
-						challengeRecord.clientMetaData?.clientSessionId,
-					),
-				},
-			}));
-			const mismatchResult = {
-				status: CaptchaStatus.disapproved,
-				reason: ResultReason.CLIENT_SESSION_MISMATCH,
-			};
-			const isBlocked = isBlockingCaptchaResult(
-				CaptchaType.puzzle,
-				mismatchResult,
-			);
-			await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-				result: mismatchResult,
-				...(isBlocked && { blocked: true }),
-			});
-			if (challengeRecord.sessionId) {
-				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
-					serverChecked: true,
-					result: mismatchResult,
-					...(isBlocked && { blocked: true }),
-				});
-			}
-			return notVerifiedResponse;
-		}
-
-		// Check user access policies for hard blocks
-		if (userAccessRulesStorage) {
-			try {
-				const blockPolicy = await this.checkForHardBlock(
-					userAccessRulesStorage,
-					challengeRecord,
-					challengeRecord.userAccount,
-					challengeRecord.headers,
-					challengeRecord.coords,
-					challengeRecord.ipInfo?.isValid
-						? challengeRecord.ipInfo.countryCode
-						: undefined,
-					challengeRecord.ipInfo?.isValid
-						? challengeRecord.ipInfo.asnNumber
-						: undefined,
-				);
-
-				if (blockPolicy) {
-					logger.info(() => ({
-						msg: "User blocked by access policy in server puzzle verification",
-						data: {
-							userAccount: challengeRecord.userAccount,
-							policy: blockPolicy,
-						},
-					}));
-					const blockedResult = {
-						status: CaptchaStatus.disapproved,
-						reason: ResultReason.ACCESS_POLICY_BLOCK,
-					};
-					const isBlocked = isBlockingCaptchaResult(
-						CaptchaType.puzzle,
-						blockedResult,
-					);
-					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-						result: blockedResult,
-						...(isBlocked && { blocked: true }),
-					});
-					if (challengeRecord.sessionId) {
-						await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
-							serverChecked: true,
-							result: blockedResult,
-							...(isBlocked && { blocked: true }),
-							// Name the rule behind the ACCESS_POLICY_BLOCK on the
-							// audit row. This path is where `deferToVerify` rules
-							// land, which is precisely where "why was I rejected?"
-							// is least obvious.
-							matchedRule: describeMatchedRule(blockPolicy),
-						});
-					}
-					return notVerifiedResponse;
-				}
-			} catch (error) {
-				logger.warn(() => ({
-					msg: "Failed to check user access policies in server puzzle verification",
-					error,
-				}));
-			}
-		}
-
-		// Check email domain against spam list if email is provided
-		if (email && spamEmailDomainCheckingEnabled) {
-			try {
-				const isSpam = await this.checkSpamEmail(email);
-				if (isSpam) {
-					const emailDomain = email.split("@")[1] || "unknown";
-					logger.info(() => ({
-						msg: "Spam email domain detected in server puzzle verification",
-						data: { emailDomain },
-					}));
-					const spamResult = {
-						status: CaptchaStatus.disapproved,
-						reason: ResultReason.SPAM_EMAIL_DOMAIN,
-					};
-					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-						result: spamResult,
-						...(isBlockingCaptchaResult(CaptchaType.puzzle, spamResult) && {
-							blocked: true,
-						}),
-					});
-					return notVerifiedResponse;
-				}
-			} catch (error) {
-				logger.warn(() => ({
-					msg: "Failed to check spam email domain in server puzzle verification",
-					error,
-				}));
-			}
-		}
-
-		// Per-email submission-count check — see `imgCaptchaTasks` for the
-		// full rationale. Runs before the metadata write below so the
-		// count reflects PRIOR verified submissions only.
-		const maxEmailSubmissionCount =
-			spamFilter?.enabled && spamFilter.emailRules?.enabled
-				? spamFilter.emailRules.maxEmailSubmissionCount
-				: undefined;
-		let emailNormalised: string | undefined;
-		if (maxEmailSubmissionCount !== undefined && email && storeMetadata) {
-			emailNormalised = normaliseEmailForMatching(email);
-			if (emailNormalised) {
-				try {
-					const priorCount = await this.db.countCommitmentsByNormalisedEmail(
-						dappAccount,
-						emailNormalised,
-					);
-					if (priorCount >= maxEmailSubmissionCount) {
-						logger.info(() => ({
-							msg: "Email submission count exceeded in server puzzle verification",
-							data: { priorCount, maxEmailSubmissionCount },
-						}));
-						const spamCountResult = {
-							status: CaptchaStatus.disapproved,
-							reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
-						};
-						await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-							result: spamCountResult,
-							...(isBlockingCaptchaResult(
-								CaptchaType.puzzle,
-								spamCountResult,
-							) && { blocked: true }),
-						});
-						return notVerifiedResponse;
-					}
-				} catch (error) {
-					logger.warn(() => ({
-						msg: "Failed to check email submission count in server puzzle verification",
-						error,
-					}));
-				}
-			}
-		}
-
-		const sessionRecord = challengeRecord.sessionId
-			? await this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
-			: undefined;
-
-		const enrichedDnsEvent = await enrichDnsEvent(
-			sessionRecord?.dnsEvent,
-			env.ipInfoService,
-			ip ?? challengeRecord.ipInfo?.ip,
+		return this.serverVerifyInteractiveCaptchaSolution(
+			dappAccount,
+			challenge,
+			timeout,
+			env,
+			ip,
+			userAccessRulesStorage,
+			email,
+			spamEmailDomainCheckingEnabled,
+			spamFilter,
+			trafficFilter,
+			storeMetadata,
+			clientSessionId,
 		);
-
-		{
-			const check = await this.resolveTrafficFilterCheck(
-				env,
-				challengeRecord.ipInfo,
-				trafficFilter,
-				ip,
-				enrichedDnsEvent,
-			);
-			if (check.isBlocked) {
-				logger.info(() => ({
-					msg: "Traffic filter rejected request in puzzle verification",
-					data: {
-						ip,
-						reason: check.reason,
-						dnsPeerIp: enrichedDnsEvent?.peerIp,
-						dnsResolverIp: enrichedDnsEvent?.resolverIp,
-						dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
-						dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
-						dnsPathValid: enrichedDnsEvent?.pathValid,
-					},
-				}));
-				const blockedResult = {
-					status: CaptchaStatus.disapproved,
-					reason: check.reason,
-				};
-				const isBlocked = isBlockingCaptchaResult(
-					CaptchaType.puzzle,
-					blockedResult,
-				);
-				await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-					result: blockedResult,
-					...(isBlocked && { blocked: true }),
-				});
-				if (challengeRecord.sessionId) {
-					await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
-						serverChecked: true,
-						result: blockedResult,
-						...(isBlocked && { blocked: true }),
-					});
-				}
-				return notVerifiedResponse;
-			}
-		}
-
-		// Persist dapp-server-provided metadata when the site opts in.
-		// Gated purely by `storeMetadata`; `emailNormalised` piggybacks on
-		// the same write so the per-email submission-count check has an
-		// indexed field to query against.
-		if (storeMetadata && email) {
-			await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-				metadata: {
-					email,
-					emailNormalised: emailNormalised ?? normaliseEmailForMatching(email),
-				},
-			});
-		}
-
-		if (ip) {
-			const challengeIpAddress = getIpAddressFromComposite(
-				challengeRecord.ipAddress,
-			);
-
-			// Get client settings for IP validation rules
-			const clientRecord = await this.db.getClientRecord(dappAccount);
-			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
-
-			await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-				providedIp: getCompositeIpAddress(ip),
-			});
-
-			if (ipValidationRules?.enabled === true) {
-				const ipValidation = await deepValidateIpAddress(
-					ip,
-					challengeIpAddress,
-					logger,
-					env.ipInfoService,
-					ipValidationRules,
-					enrichedDnsEvent?.peerIp,
-				);
-
-				if (!ipValidation.isValid) {
-					logger.error(() => ({
-						msg: "IP validation failed for puzzle captcha",
-						data: {
-							ip,
-							challengeIp: challengeIpAddress.address,
-							error: ipValidation.errorMessage,
-							distanceKm: ipValidation.distanceKm,
-						},
-					}));
-					const ipFailResult = {
-						status: CaptchaStatus.disapproved,
-						reason: ResultReason.FAILED_IP_VALIDATION,
-					};
-					const isBlocked = isBlockingCaptchaResult(
-						CaptchaType.puzzle,
-						ipFailResult,
-					);
-					await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-						result: ipFailResult,
-						...(isBlocked && { blocked: true }),
-					});
-					if (challengeRecord.sessionId) {
-						await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
-							serverChecked: true,
-							result: ipFailResult,
-							...(isBlocked && { blocked: true }),
-						});
-					}
-					return notVerifiedResponse;
-				}
-			}
-		}
-
-		let score: number | undefined;
-		if (sessionRecord) {
-			const dnsAsymmetry = computeDnsAsymmetry(
-				enrichedDnsEvent,
-				challengeRecord.ipInfo,
-				trafficFilter,
-			);
-			if (dnsAsymmetry > 0) {
-				sessionRecord.scoreComponents = {
-					...sessionRecord.scoreComponents,
-					dnsAsymmetry,
-				};
-			}
-			score = computeFrictionlessScore(sessionRecord?.scoreComponents);
-			logger.info(() => ({
-				data: {
-					scoreComponents: { ...(sessionRecord?.scoreComponents || {}) },
-					score,
-					dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
-					dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
-				},
-			}));
-		}
-
-		// We know solution is correct by this point. Run decision machine evaluation to process additional checks.
-		try {
-			const decisionInput: DecisionMachineInput = {
-				userAccount: challengeRecord.userAccount,
-				dappAccount: challengeRecord.dappAccount,
-				captchaResult: "passed",
-				headers: challengeRecord.headers,
-				captchaType: CaptchaType.puzzle,
-				behavioralDataPacked: challengeRecord.behavioralDataPacked,
-				deviceCapability: challengeRecord.deviceCapability,
-				countryCode: challengeRecord.ipInfo?.isValid
-					? challengeRecord.ipInfo.countryCode
-					: undefined,
-				ipInfo: challengeRecord.ipInfo,
-				dnsEvent: enrichedDnsEvent,
-				score,
-				threshold: sessionRecord?.threshold,
-				scoreComponents: sessionRecord?.scoreComponents,
-				decryptedHeadHash: sessionRecord?.decryptedHeadHash,
-				userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
-				simdReadings: sessionRecord?.simdReadings,
-				frictionlessReason: sessionRecord?.reason,
-				ruleType: sessionRecord?.ruleType,
-				webView: sessionRecord?.webView,
-				iFrame: sessionRecord?.iFrame,
-				coords: challengeRecord.coords,
-				puzzleEvents: challengeRecord.puzzleEvents,
-				// tcp-probe fields — see powTasks.ts for the reasoning.
-				synNs: sessionRecord?.synNs,
-				synackNs: sessionRecord?.synackNs,
-				ackNs: sessionRecord?.ackNs,
-				observedTtl: sessionRecord?.observedTtl,
-				tcpMss: sessionRecord?.tcpMss,
-				tcpWscale: sessionRecord?.tcpWscale,
-				tcpOptsFlags: sessionRecord?.tcpOptsFlags,
-				tcpOptsOrder: sessionRecord?.tcpOptsOrder,
-				tcpWindow: sessionRecord?.tcpWindow,
-				// Which egress categories this site blocks. Gates the
-				// egress-sensitive TCP-stack deny rules — a VPN
-				// concentrator legitimately terminates the handshake, so
-				// on a site that accepts VPN users the observed stack
-				// says nothing about the client.
-				trafficPolicies: deriveTrafficPolicies(trafficFilter),
-			};
-
-			const decision = await this.decisionMachineRunner.decide(
-				decisionInput,
-				logger,
-			);
-
-			if (decision.decision === DecisionMachineDecision.Deny) {
-				logger.info(() => ({
-					msg: "Decision machine denied puzzle captcha in server verification",
-					data: {
-						userAccount: challengeRecord.userAccount,
-						reason: decision.reason,
-						score: decision.score,
-						tags: decision.tags,
-					},
-				}));
-
-				// Decision machines are operator-authored JS — their `reason`
-				// is just `string | undefined`. Cast to `ResultReason` at the
-				// boundary so the strict types on `CaptchaResult` hold.
-				const dmResult = {
-					status: CaptchaStatus.disapproved,
-					reason: (decision.reason ||
-						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason,
-				};
-				const isBlocked = isBlockingCaptchaResult(CaptchaType.puzzle, dmResult);
-				await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-					result: dmResult,
-					...(isBlocked && { blocked: true }),
-				});
-				if (challengeRecord.sessionId) {
-					await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
-						serverChecked: true,
-						result: dmResult,
-						...(isBlocked && { blocked: true }),
-					});
-				}
-				return notVerifiedResponse;
-			}
-
-			logger.debug(() => ({
-				msg: "Decision machine allowed puzzle captcha",
-				data: {
-					reason: decision.reason,
-					score: decision.score,
-					tags: decision.tags,
-				},
-			}));
-		} catch (error) {
-			logger.error(() => ({
-				msg: "Failed to run decision machine in server puzzle verification",
-				err: error,
-			}));
-			// Don't fail the captcha if decision machine fails - default to allow
-		}
-
-		// Server verification passed — update session as approved and serverChecked
-		if (challengeRecord.sessionId) {
-			await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
-				serverChecked: true,
-				result: { status: CaptchaStatus.approved },
-			});
-		}
-
-		return {
-			verified: true,
-			...(score ? { score } : {}),
-			...(challengeRecord.sessionId && {
-				sessionId: challengeRecord.sessionId,
-			}),
-		};
 	}
 }

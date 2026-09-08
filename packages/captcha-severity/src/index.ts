@@ -22,9 +22,10 @@
  * between equally-specific rules (`ruleHarshness`); and downstream routing
  * consumers outside this repository.
  *
- * They agreed on the order — image > puzzle > pow > frictionless — but nothing
- * held them to it, and they disagreed on the encoding, which is where the
- * tier-crossing bug documented on `TIER_GAP` came from.
+ * They agreed on the order — image > iconOrder > puzzle > pow >
+ * frictionless — but nothing held them to it, and they disagreed on the
+ * encoding, which is where the tier-crossing bug documented on `TIER_GAP`
+ * came from.
  *
  * ## Two questions, two APIs
  *
@@ -99,7 +100,11 @@ const MAX_INTRA_TIER = TIER_GAP - 1;
  * `CaptchaType`.
  */
 const CAPTCHA_TYPE_TIER: Record<string, number> = {
-	image: 4 * TIER_GAP,
+	image: 5 * TIER_GAP,
+	// Icon-order sits above puzzle: it asks for several ordered clicks rather
+	// than one drag. Below image, and a whole tier below it, so no intra-tier
+	// component can lift an icon-order policy over an image one.
+	iconOrder: 4 * TIER_GAP,
 	puzzle: 3 * TIER_GAP,
 	pow: 2 * TIER_GAP,
 	frictionless: 1 * TIER_GAP,

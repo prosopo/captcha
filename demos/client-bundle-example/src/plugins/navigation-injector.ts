@@ -54,6 +54,10 @@ export default function navigationInjector(): Plugin {
 				explicit: { path: "puzzle-explicit.html", exists: true },
 				bound: { path: "puzzle-bind-explicit.html", exists: true },
 			},
+			iconOrder: {
+				implicit: { path: "icon-order-implicit.html", exists: true },
+				explicit: { path: "icon-order-explicit.html", exists: true },
+			},
 		},
 		invisible: {
 			image: {
@@ -554,7 +558,11 @@ export default function navigationInjector(): Plugin {
 		const navGroups: string[] = [];
 
 		for (const [typeName, captchaType] of Object.entries(captchaTypes)) {
-			const typeTitle = typeName.charAt(0).toUpperCase() + typeName.slice(1);
+			// Keys are camelCase, so split before each capital to keep multi-word
+			// types readable: `iconOrder` renders as "Icon Order", not "IconOrder".
+			const typeTitle = (
+				typeName.charAt(0).toUpperCase() + typeName.slice(1)
+			).replace(/(?<!^)([A-Z])/g, " $1");
 			const links: string[] = [];
 
 			// Create simple buttons for each implementation

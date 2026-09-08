@@ -15,6 +15,7 @@
 import { isStricterCaptchaType } from "@prosopo/captcha-severity";
 import {
 	type CaptchaType,
+	type IIconOrderSettings,
 	type IPInfoResponse,
 	type IPInfoResult,
 	type IPuzzleSettings,
@@ -317,6 +318,9 @@ export type ResolvedChallengePolicy = {
 	// object means "no policy specified any puzzle setting"; undefined
 	// means no challenge matches at all (already short-circuited above).
 	puzzleSettings?: IPuzzleSettings;
+	// Icon-order equivalents of the two fields above, merged the same way.
+	iconOrderTolerance?: number;
+	iconOrderSettings?: IIconOrderSettings;
 	// Categories whose policies contributed to the resolved combination.
 	sourceCategories: TrafficCategory[];
 };
@@ -347,6 +351,8 @@ export const resolveChallengePolicy = (
 	let solvedImagesCount: number | undefined;
 	let puzzleTolerance: number | undefined;
 	let puzzleSettings: IPuzzleSettings | undefined;
+	let iconOrderTolerance: number | undefined;
+	let iconOrderSettings: IIconOrderSettings | undefined;
 	for (const m of challenges) {
 		if (m.policy.powDifficulty !== undefined) {
 			powDifficulty =
@@ -373,6 +379,20 @@ export const resolveChallengePolicy = (
 		if (m.policy.puzzle) {
 			puzzleSettings = { ...(puzzleSettings ?? {}), ...m.policy.puzzle };
 		}
+		// Lower tolerance is stricter for icon-order too — it shrinks the hit
+		// radius around each target — so the same `min` combination applies.
+		if (m.policy.iconOrderTolerance !== undefined) {
+			iconOrderTolerance =
+				iconOrderTolerance === undefined
+					? m.policy.iconOrderTolerance
+					: Math.min(iconOrderTolerance, m.policy.iconOrderTolerance);
+		}
+		if (m.policy.iconOrder) {
+			iconOrderSettings = {
+				...(iconOrderSettings ?? {}),
+				...m.policy.iconOrder,
+			};
+		}
 	}
 
 	return {
@@ -381,6 +401,8 @@ export const resolveChallengePolicy = (
 		solvedImagesCount,
 		puzzleTolerance,
 		puzzleSettings,
+		iconOrderTolerance,
+		iconOrderSettings,
 		sourceCategories: challenges.map((m) => m.category),
 	};
 };
