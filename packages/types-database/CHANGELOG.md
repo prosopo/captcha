@@ -1,5 +1,14 @@
 # @prosopo/types-database
 
+## 5.5.1
+### Patch Changes
+
+- 32d286d: Persist b from detector payload
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+  - @prosopo/user-access-policy@3.14.1
+
 ## 5.5.0
 ### Minor Changes
 
