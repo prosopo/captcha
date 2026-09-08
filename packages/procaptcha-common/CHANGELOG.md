@@ -1,5 +1,14 @@
 # @prosopo/procaptcha-common
 
+## 2.13.2
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+  - @prosopo/account@2.8.90
+  - @prosopo/load-balancer@2.10.42
+
 ## 2.13.1
 ### Patch Changes
 
