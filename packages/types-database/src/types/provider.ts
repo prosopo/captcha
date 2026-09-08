@@ -1551,6 +1551,19 @@ export interface IProviderDatabase extends IDatabase {
 		challenge: string,
 	): Promise<IconOrderCaptchaRecord | null>;
 
+	/**
+	 * Atomically take the single submission a challenge allows.
+	 *
+	 * Resolves `true` for the caller that flipped `userSubmitted` from unset to
+	 * true, and `false` for every other caller — including a concurrent one
+	 * that read the same not-yet-submitted record. Grading must happen behind
+	 * this rather than behind a read of `userSubmitted`, because the answer is
+	 * an ordered subset of a handful of on-screen positions: parallel
+	 * submissions against one challenge would otherwise each get a verdict and
+	 * the ordering would be enumerable.
+	 */
+	claimIconOrderCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
+
 	updateIconOrderCaptchaRecordResult(
 		challenge: PoWChallengeId,
 		result: CaptchaResult,

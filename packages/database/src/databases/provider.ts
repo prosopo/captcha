@@ -1548,6 +1548,49 @@ export class ProviderDatabase
 		}
 	}
 
+	/**
+	 * Atomically take the single submission an icon-order challenge allows.
+	 *
+	 * The filter is the guard: `userSubmitted: { $ne: true }` matches only a
+	 * record nobody has claimed, so of N concurrent submitters exactly one sees
+	 * `modifiedCount === 1`. A read-then-check would let all N through the gap
+	 * between the read and the write, and each would come back with a verdict —
+	 * enough to enumerate an ordered subset of a handful of positions.
+	 *
+	 * `submittedAtTimestamp` is stamped here rather than left to
+	 * `updateIconOrderCaptchaRecordResult` so the claim is self-contained: the
+	 * record is consistent even if the caller dies before writing a result.
+	 */
+	async claimIconOrderCaptchaSubmission(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		const tables = this.getTables();
+		try {
+			const claim = await tables.iconordercaptcha.updateOne(
+				{ challenge, userSubmitted: { $ne: true } },
+				{ $set: { userSubmitted: true, submittedAtTimestamp: new Date() } },
+			);
+			const won = claim.modifiedCount === 1;
+			this.logger.info(() => ({
+				data: { challenge, won },
+				msg: won
+					? "IconOrderCaptcha submission claimed"
+					: "IconOrderCaptcha submission already claimed",
+			}));
+			return won;
+		} catch (error) {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+				context: { error, challenge },
+				logger: this.logger,
+			});
+			this.logger.error(() => ({
+				err: err,
+				msg: "Failed to claim IconOrderCaptcha submission",
+			}));
+			throw err;
+		}
+	}
+
 	async updateIconOrderCaptchaRecordResult(
 		challenge: PoWChallengeId,
 		result: CaptchaResult,

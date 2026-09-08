@@ -34,15 +34,17 @@ import { checkboxClass, getWidgetElement } from "../support/commands.js";
 const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "iconOrder";
 
 /**
- * Hit radius as a multiple of each icon's own size. Icons are ~38 px on a
- * 300x200 frame, so 20 gives a radius of ~760 px — larger than the frame's
- * diagonal (~360 px). Every target therefore covers the whole frame, and a
- * scripted click anywhere inside it counts as landing on the icon the legend
- * asked for. That is what lets Cypress drive the flow without reading the
- * imagery: order and click count still have to be right, which is what this
- * spec is proving end to end.
+ * Hit radius as a multiple of each icon's own size, pinned to the ceiling
+ * `iconOrderToleranceFieldSchema` allows. Icons render between 32.3 and 43.7 px
+ * on a 300x200 frame, and edge margins keep every centre ~17.8 px off the
+ * sides, so the furthest a click can land from a target is ~336 px — inside
+ * the ~388 px radius this gives even the smallest icon. Every target therefore
+ * covers the whole frame, and a scripted click anywhere inside it counts as
+ * landing on the icon the legend asked for. That is what lets Cypress drive
+ * the flow without reading the imagery: order and click count still have to be
+ * right, which is what this spec is proving end to end.
  */
-const LAX_ICON_ORDER_TOLERANCE = 20;
+const LAX_ICON_ORDER_TOLERANCE = 12;
 
 /** Matches `iconOrderTargetCountDefault`; the number of clicks to make. */
 const TARGET_COUNT = 3;

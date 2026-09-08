@@ -314,10 +314,17 @@ export const iconOrderBackgroundClutterFieldSchema = number()
 	.int()
 	.min(0)
 	.max(40);
-// Wider at the top than any real site needs, for the same reason as
-// `puzzleToleranceFieldSchema`: end-to-end tests raise it until a scripted
-// click anywhere near an icon passes.
-export const iconOrderToleranceFieldSchema = number().min(0.1).max(20);
+// The ceiling exists for the end-to-end tests, which raise the tolerance until
+// a scripted click anywhere on the frame counts as landing on the icon the
+// legend asked for — that is what lets Cypress drive the flow without reading
+// the imagery. 12 is the smallest value that does it, so the vacuous end of
+// the range is as narrow as the tests allow: the smallest an icon renders is
+// `iconSize * SIZE_JITTER[0]` = 38 * 0.85 = 32.3px, `EDGE_MARGIN` keeps every
+// centre at least 0.55 * 32.3 = 17.8px off each edge of the 300x200 frame, so
+// the furthest a click can be from a target is ~336px and 12 * 32.3 = 388px
+// covers it. Do not raise this without redoing that arithmetic — above it the
+// hit test stops discriminating at all.
+export const iconOrderToleranceFieldSchema = number().min(0.1).max(12);
 
 /**
  * Per-render tunables for the icon-order captcha. Every field is optional so

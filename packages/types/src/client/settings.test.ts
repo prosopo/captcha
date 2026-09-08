@@ -754,6 +754,14 @@ describe("ClientSettingsSchema icon-order fields", () => {
 
 	it("rejects a tolerance outside the field bounds", () => {
 		expect(() => parse({ ...minimal, iconOrderTolerance: 0 })).toThrow();
-		expect(() => parse({ ...minimal, iconOrderTolerance: 21 })).toThrow();
+		expect(() => parse({ ...minimal, iconOrderTolerance: 13 })).toThrow();
+	});
+
+	// The e2e specs pin themselves to this ceiling, so a change here has to be
+	// made deliberately rather than by loosening the field schema in passing.
+	it("accepts the ceiling the end-to-end specs rely on", () => {
+		expect(
+			parse({ ...minimal, iconOrderTolerance: 12 }).iconOrderTolerance,
+		).toBe(12);
 	});
 });

@@ -211,7 +211,13 @@ export class IconOrderCaptchaManager extends InteractiveCaptchaManager {
 		// than anywhere: the answer is an ordered subset of a handful of
 		// on-screen positions, so repeated guesses against one challenge
 		// would be enumerable. Each challenge accepts exactly one submission.
-		if (challengeRecord.userSubmitted) {
+		//
+		// Claimed atomically rather than read off `challengeRecord` above:
+		// concurrent submissions all read the same unclaimed record, so a
+		// read-then-check leaves a window in which each of them is graded and
+		// handed a verdict — which is the enumeration this is here to stop.
+		// Everything that can produce a verdict lives below this point.
+		if (!(await this.db.claimIconOrderCaptchaSubmission(challenge))) {
 			this.logger.debug(() => ({
 				msg: `Challenge already submitted: ${challenge}`,
 			}));

@@ -98,6 +98,9 @@ describe("IconOrderCaptchaManager", () => {
 		db = {
 			storeIconOrderCaptchaRecord: vi.fn(),
 			getIconOrderCaptchaRecordByChallenge: vi.fn(),
+			// Default to winning the claim: every test but the re-submission
+			// ones is the first and only submitter for its challenge.
+			claimIconOrderCaptchaSubmission: vi.fn().mockResolvedValue(true),
 			updateIconOrderCaptchaRecord: vi.fn(),
 			updateIconOrderCaptchaRecordResult: vi.fn(),
 			getClientRecord: vi.fn(),
@@ -292,6 +295,7 @@ describe("IconOrderCaptchaManager", () => {
 			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
 				storedRecord({ userSubmitted: true }),
 			);
+			vi.mocked(db.claimIconOrderCaptchaSubmission).mockResolvedValue(false);
 
 			await expect(
 				submit([
@@ -301,6 +305,41 @@ describe("IconOrderCaptchaManager", () => {
 				]),
 			).resolves.toBe(false);
 			expect(db.updateIconOrderCaptchaRecordResult).not.toHaveBeenCalled();
+		});
+
+		// The claim is what makes the challenge single-use, so a losing claim
+		// has to stop the request even when the record still reads unsubmitted
+		// — which is exactly the state a concurrent submitter sees.
+		it("grades nothing when it loses the claim on an unsubmitted record", async () => {
+			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+				storedRecord({ userSubmitted: false }),
+			);
+			vi.mocked(db.claimIconOrderCaptchaSubmission).mockResolvedValue(false);
+
+			// The correct answer: it must still be refused.
+			await expect(
+				submit([
+					{ x: 60, y: 50 },
+					{ x: 180, y: 90 },
+					{ x: 240, y: 150 },
+				]),
+			).resolves.toBe(false);
+			expect(db.updateIconOrderCaptchaRecordResult).not.toHaveBeenCalled();
+			expect(db.updateIconOrderCaptchaRecord).not.toHaveBeenCalled();
+		});
+
+		it("claims the submission before grading it", async () => {
+			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
+				storedRecord({ userSubmitted: false }),
+			);
+
+			await submit([
+				{ x: 60, y: 50 },
+				{ x: 180, y: 90 },
+				{ x: 240, y: 150 },
+			]);
+
+			expect(db.claimIconOrderCaptchaSubmission).toHaveBeenCalledTimes(1);
 		});
 
 		it("returns false when the challenge is unknown", async () => {
