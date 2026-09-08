@@ -112,6 +112,9 @@ export enum PublicApiPaths {
 export const providerDetailsSchema = object({
 	version: string(),
 	message: string(),
+	// Identity of the node that answered. Optional because the fleet is
+	// mixed-version during a rolling deploy and older nodes omit it.
+	host: string().optional(),
 	redis: object({
 		actor: string(),
 		isReady: boolean(),

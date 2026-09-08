@@ -33,6 +33,11 @@ import {
 export function publicRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
 
+	// Built here rather than per request so the target health poller starts
+	// with the API and has converged before real traffic arrives. It is a
+	// no-op, and starts nothing, when steering is off.
+	const geo = getHealthzGeoRouter(env);
+
 	// The `host` field is the per-pronode identity (e.g. `pronode4.prosopo.io`).
 	// Clients hit `pronode.prosopo.io/healthz` to discover which pronode the
 	// DNS layer picked, then pin all subsequent captcha calls to that host so
@@ -43,11 +48,6 @@ export function publicRouter(env: ProviderEnvironment): Router {
 	// Optionally the answer is the node the CALLER's country maps to instead —
 	// see `healthzGeo.ts`. Off by default; when off this handler behaves
 	// exactly as it did before, including sending no cache headers.
-	// Built here rather than per request so the target health poller starts
-	// with the API and has converged before real traffic arrives. It is a
-	// no-op, and starts nothing, when steering is off.
-	const geo = getHealthzGeoRouter(env);
-
 	router.get(PublicApiPaths.Healthz, (req, res) => {
 		const ownHost =
 			env.config.host && env.config.host.length > 0
@@ -87,9 +87,17 @@ export function publicRouter(env: ProviderEnvironment): Router {
 			const redisConnection = db.getRedisConnection();
 			const redisAccessRulesConnection = db.getRedisAccessRulesConnection();
 
+			// Identity of the node answering this request, so callers can tell
+			// which node they reached without relying on /healthz.
+			const host =
+				env.config.host && env.config.host.length > 0
+					? env.config.host
+					: req.hostname;
+
 			const response: ProviderDetails = {
 				version,
 				message: "Provider online",
+				host,
 				redis: [
 					{
 						actor: "General",

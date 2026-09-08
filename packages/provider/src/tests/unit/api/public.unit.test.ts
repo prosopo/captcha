@@ -15,7 +15,11 @@
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
-import { type IPInfoResponse, PublicApiPaths } from "@prosopo/types";
+import {
+	type IPInfoResponse,
+	PublicApiPaths,
+	providerDetailsSchema,
+} from "@prosopo/types";
 import type { IIpInfoService } from "@prosopo/types-env";
 import { version } from "@prosopo/util";
 import type {
@@ -49,6 +53,27 @@ vi.mock("@prosopo/util", async (importActual) => {
 		version: "1.0.0-test",
 	};
 });
+
+// Express does not expose its layer stack in its public types, so describe the
+// slice of it these tests read rather than reaching for `any`.
+type RouteLayer = {
+	route?: {
+		path?: string;
+		stack: { handle: RequestHandler }[];
+	};
+};
+
+const getRouteHandler = (router: Router, path: string): RequestHandler => {
+	const { stack } = router as unknown as { stack: RouteLayer[] };
+	const handler = stack.find((layer) => layer.route?.path === path)?.route
+		?.stack[0]?.handle;
+
+	if (!handler) {
+		throw new Error(`no handler registered for ${path}`);
+	}
+
+	return handler;
+};
 
 describe("publicRouter", () => {
 	let mockEnv: ProviderEnvironment;
@@ -389,6 +414,61 @@ describe("publicRouter", () => {
 				]),
 			}),
 		);
+	});
+
+	describe("the details endpoint reports the answering node", () => {
+		const envWithConfiguredHost = (host: string): ProviderEnvironment =>
+			({
+				getDb: vi.fn().mockReturnValue(mockDb),
+				logger: mockLogger,
+				config: { host },
+			}) as unknown as ProviderEnvironment;
+
+		const callDetails = async (
+			env: ProviderEnvironment,
+			hostname: string,
+		): Promise<unknown> => {
+			const handler = getRouteHandler(
+				publicRouter(env),
+				PublicApiPaths.GetProviderDetails,
+			);
+			const req = { hostname, params: {} } as unknown as Request;
+
+			await handler(req, mockRes, mockNext);
+
+			return vi.mocked(mockRes.json).mock.calls[0]?.[0];
+		};
+
+		it("reports the configured host", async () => {
+			const body = await callDetails(
+				envWithConfiguredHost("provider.example.com"),
+				"proxied.example.com",
+			);
+
+			expect(body).toEqual(
+				expect.objectContaining({ host: "provider.example.com" }),
+			);
+		});
+
+		it("falls back to the request hostname when no host is configured", async () => {
+			const body = await callDetails(
+				envWithConfiguredHost(""),
+				"req.example.com",
+			);
+
+			expect(body).toEqual(
+				expect.objectContaining({ host: "req.example.com" }),
+			);
+		});
+
+		it("returns a body the shared schema still accepts", async () => {
+			const body = await callDetails(
+				envWithConfiguredHost("provider.example.com"),
+				"proxied.example.com",
+			);
+
+			expect(providerDetailsSchema.safeParse(body).success).toBe(true);
+		});
 	});
 });
 
