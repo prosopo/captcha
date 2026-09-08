@@ -54,6 +54,34 @@ export enum FrictionlessReason {
 }
 
 /**
+ * Reasons that mean "we measured nothing", as opposed to "we measured
+ * something bad".
+ *
+ * Each of these paths sizes its challenge from a fixed constant
+ * (`MISSING_TOKEN_IMAGE_ROUNDS` and friends) chosen to be short — "prove
+ * you're human quickly", per their own doc comments — not from any signal the
+ * client produced. Those constants nonetheless sit above the default baseline
+ * of `DEFAULT_SOLVED_COUNT`, so anything reading a round count as severity
+ * scores them as an escalation and applies a graduated response to a session
+ * that never produced a measurement to grade.
+ *
+ * That is wrong wherever the "severity" changes what a legitimate user
+ * experiences rather than what a suspected bot pays. The concrete case: a site
+ * whose CSP blocks the detector bundle sends no token on EVERY request, so
+ * every one of its users was permanently escalated and the site's own puzzle
+ * settings were never rendered.
+ *
+ * `OLD_TIMESTAMP` is deliberately absent: its round count comes from
+ * `timestampDecayFunction`, which scales with how stale the payload is. That
+ * is a real graduated measurement, not a fixed fallback.
+ */
+export const NO_MEASUREMENT_REASONS: ReadonlySet<FrictionlessReason> = new Set([
+	FrictionlessReason.MISSING_TOKEN,
+	FrictionlessReason.MISSING_HEAD_HASH,
+	FrictionlessReason.DECRYPTION_FAILED,
+]);
+
+/**
  * Reason persisted at `result.reason` to record the outcome of a captcha
  * verification. Provider task code previously inlined these as string
  * literals — the enum lifts the canonical set into one place so callers

@@ -13,7 +13,12 @@
 // limitations under the License.
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
-import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
+import {
+	CaptchaType,
+	type IUserSettings,
+	Tier,
+	puzzleMaxDifficultyDefault,
+} from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiRegisterSiteKeyEndpoint } from "../../../../api/admin/apiRegisterSiteKeyEndpoint.js";
 
@@ -70,6 +75,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 			verifiedTimeout: 120000,
 			solutionTimeout: 60000,
 			puzzleTolerance: 15,
+			puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 			disallowWebView: false,
 		};
 

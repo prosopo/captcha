@@ -25,6 +25,7 @@ import {
 	type ImageRoundsBounds,
 	type KeyringPair,
 	type ModeEnum,
+	NO_MEASUREMENT_REASONS,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	type RoutingMachineBaseline,
@@ -33,6 +34,7 @@ import {
 	type Session,
 	SimdReadingsStage,
 	clampImageRounds,
+	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
@@ -606,6 +608,19 @@ export class FrictionlessManager extends CaptchaManager {
 			finalCaptchaType === CaptchaType.pow
 				? (routed.powDifficulty ?? effectiveParams.powDifficulty)
 				: undefined;
+		// A router that overrode the captcha type is the more specific
+		// explanation of what was served, so its reason wins over the one the
+		// score ladder left on the session params. Mirrors the postPow path,
+		// which already does `routed.reason ?? originSession.reason`. Without
+		// this a route-phase selection reason never reached the session and
+		// was invisible in the portal.
+		//
+		// Resolved here rather than beside its use on the session record below,
+		// because the puzzle overrides need it to tell an escalation from a
+		// missing measurement.
+		const finalReason =
+			(routed.reason as FrictionlessReason | undefined) ??
+			(effectiveParams.reason as FrictionlessReason | undefined);
 		// Puzzle tunables persisted on the session so getPuzzleCaptchaChallenge
 		// can layer them over the site defaults — that endpoint re-derives its
 		// overrides from a live trafficFilter verdict, and a router- or
@@ -625,11 +640,30 @@ export class FrictionlessManager extends CaptchaManager {
 		const finalPuzzleOverrides: Pick<Session, "puzzleTolerance" | "puzzle"> =
 			finalCaptchaType === CaptchaType.puzzle
 				? (() => {
-						const level = severityToPuzzleDifficulty(
-							requestedSolvedImagesCount,
-							this.routingContext?.baseImageRounds ??
-								this.config.captchas.solved.count,
-						);
+						// Paths that measured nothing carry a fixed fallback round
+						// count, not a severity — see NO_MEASUREMENT_REASONS. Reading
+						// one as an escalation silently replaces the site's puzzle
+						// config with ladder values for every user of a site whose
+						// detector cannot run at all (CSP blocking the bundle, say),
+						// which is the opposite of what an operator configuring an
+						// easier puzzle asked for.
+						// The site's own ceiling on automatic escalation. 0 pins it to
+						// level 0, so its configured puzzle settings render every
+						// time — the puzzle counterpart to `imageMaxRounds` holding
+						// every round-count source to the site's bound.
+						const maxLevel =
+							this.routingContext?.puzzleMaxDifficulty ??
+							puzzleMaxDifficultyDefault;
+						const level =
+							finalReason !== undefined &&
+							NO_MEASUREMENT_REASONS.has(finalReason)
+								? 0
+								: severityToPuzzleDifficulty(
+										requestedSolvedImagesCount,
+										this.routingContext?.baseImageRounds ??
+											this.config.captchas.solved.count,
+										maxLevel,
+									);
 						// Level 0 means "nothing escalated this session". Sampling a
 						// band here would override the site's own configured
 						// puzzleTolerance / puzzle settings with ladder values, which
@@ -654,15 +688,6 @@ export class FrictionlessManager extends CaptchaManager {
 						};
 					})()
 				: {};
-		// A router that overrode the captcha type is the more specific
-		// explanation of what was served, so its reason wins over the one the
-		// score ladder left on the session params. Mirrors the postPow path,
-		// which already does `routed.reason ?? originSession.reason`. Without
-		// this a route-phase selection reason never reached the session and
-		// was invisible in the portal.
-		const finalReason =
-			(routed.reason as FrictionlessReason | undefined) ??
-			(effectiveParams.reason as FrictionlessReason | undefined);
 		const blocked =
 			finalCaptchaType === CaptchaType.image
 				? effectiveParams.blocked

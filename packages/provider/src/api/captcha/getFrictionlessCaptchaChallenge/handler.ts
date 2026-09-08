@@ -840,6 +840,7 @@ export default (
 				// puzzle chosen in place of a disabled image challenge.
 				frictionlessTypes: clientRecord.settings.frictionlessTypes,
 				baseImageRounds: env.config.captchas.solved.count,
+				puzzleMaxDifficulty: clientRecord.settings.puzzleMaxDifficulty,
 				platform: derivePlatform(requestUserAgent, webView, {
 					...(typeof ipInfoMobile === "boolean" && { isMobile: ipInfoMobile }),
 				}),

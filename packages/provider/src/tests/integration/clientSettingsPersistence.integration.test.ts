@@ -37,6 +37,7 @@ import {
 	ProsopoConfigSchema,
 	Tier,
 	TrafficFilterAction,
+	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -60,6 +61,7 @@ const FULLY_POPULATED_SETTINGS = {
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
 	puzzleTolerance: 20,
+	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 	disallowWebView: true,
 	ipValidationRules: {
 		enabled: true,

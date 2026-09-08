@@ -21,6 +21,7 @@ import {
 	ResultReason,
 	Tier,
 	TrafficFilterAction,
+	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -54,6 +55,7 @@ const defaultUserSettings: IUserSettings = {
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
 	puzzleTolerance: 15,
+	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 	disallowWebView: false,
 };
 

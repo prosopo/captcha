@@ -51,6 +51,29 @@ export const imageMaxRoundsDefault = 32;
 export const imageMinRoundsDefault = 2;
 export const puzzleToleranceDefault = 15;
 
+/**
+ * Ceiling on the puzzle difficulty ladder for a site, in ladder levels.
+ *
+ * The puzzle equivalent of `imageMaxRounds`. An escalated session samples its
+ * render settings from a difficulty band, and a sampled band sets EVERY knob —
+ * so while the ladder is active the site's own `puzzle` block and
+ * `puzzleTolerance` are not consulted at all. That is intended for a site
+ * using escalation, and wrong for a site that has deliberately configured an
+ * easier puzzle and expects to get it.
+ *
+ * `0` pins the site to level 0, which is the documented "nothing escalated"
+ * case: the session is left bare and the site's own settings render every
+ * time. Higher values cap how far automatic escalation may climb.
+ *
+ * The default matches `MAX_AUTO_ESCALATION_LEVEL` in `@prosopo/captcha-severity`,
+ * and the maximum matches that package's ladder length. Those live there
+ * because the ladder does, and this package deliberately does not depend on it
+ * — `puzzleMaxDifficultyMatchesLadder` in @prosopo/provider pins the pair so
+ * they cannot drift.
+ */
+export const puzzleMaxDifficultyDefault = 3;
+export const puzzleMaxDifficultyMax = 4;
+
 // Puzzle render defaults, mirrored from `packages/puzzle-assets`'s
 // `DEFAULT_RENDER_SETTINGS`. Kept here so the schema layer owns the
 // authoritative bounds and defaults; the renderer just receives resolved
@@ -199,6 +222,10 @@ export const imageMaxRoundsFieldSchema = number().int().min(2);
 // enforced across the pair on `ClientSettingsSchema`.
 export const imageMinRoundsFieldSchema = number().int().min(1);
 export const puzzleToleranceFieldSchema = number().int().min(5).max(1000);
+export const puzzleMaxDifficultyFieldSchema = number()
+	.int()
+	.min(0)
+	.max(puzzleMaxDifficultyMax);
 export const puzzleDecoyCountFieldSchema = number().int().min(0).max(200);
 export const puzzleDecoyEdgeDarknessFieldSchema = number().int().min(0).max(40);
 export const puzzleDecoyBodyBrightnessFieldSchema = number()
@@ -649,6 +676,13 @@ export const ClientSettingsSchema = object({
 	puzzleTolerance: puzzleToleranceFieldSchema
 		.optional()
 		.default(puzzleToleranceDefault),
+	// Ceiling on automatic puzzle escalation, in difficulty-ladder levels —
+	// the puzzle counterpart to `imageMaxRounds`. Set to 0 to pin the site to
+	// its own `puzzle` / `puzzleTolerance` settings on every challenge; the
+	// ladder otherwise replaces all of them whenever a session escalates.
+	puzzleMaxDifficulty: puzzleMaxDifficultyFieldSchema
+		.optional()
+		.default(puzzleMaxDifficultyDefault),
 	// Site-wide puzzle render settings. Fields not set here fall back to
 	// the asset package's defaults. Traffic-filter category policies may
 	// further override any of these on a per-request basis.
