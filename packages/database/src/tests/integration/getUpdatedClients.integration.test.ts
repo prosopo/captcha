@@ -57,7 +57,7 @@ describe("ClientDatabase.getUpdatedClients", () => {
 		const db = await seed();
 		await db.tables.accounts.create({
 			signupEmail: "two-sites@example.com",
-			tier: Tier.professional,
+			tier: Tier.Professional,
 			users: [{ email: "two-sites@example.com", status: "active" }],
 			sites: [
 				{
@@ -91,8 +91,8 @@ describe("ClientDatabase.getUpdatedClients", () => {
 		]);
 		expect(records.every((r) => r.account !== undefined)).toBe(true);
 		expect(records.map((r) => r.tier)).toEqual([
-			Tier.professional,
-			Tier.professional,
+			Tier.Professional,
+			Tier.Professional,
 		]);
 		const a = records.find((r) => r.account === "siteKeyA");
 		expect(a?.settings.domains).toEqual(["a.example.com"]);
@@ -102,7 +102,7 @@ describe("ClientDatabase.getUpdatedClients", () => {
 		const db = await seed();
 		await db.tables.accounts.create({
 			signupEmail: "mixed@example.com",
-			tier: Tier.free,
+			tier: Tier.Free,
 			users: [{ email: "mixed@example.com", status: "active" }],
 			sites: [
 				{
@@ -137,7 +137,7 @@ describe("ClientDatabase.getUpdatedClients", () => {
 		const db = await seed();
 		await db.tables.accounts.create({
 			signupEmail: "inactive@example.com",
-			tier: Tier.free,
+			tier: Tier.Free,
 			users: [{ email: "inactive@example.com", status: "pending" }],
 			sites: [
 				{
