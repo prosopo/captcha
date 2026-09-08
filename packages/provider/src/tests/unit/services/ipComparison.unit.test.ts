@@ -54,6 +54,7 @@ const createMockService = (responses: IPInfoResponse[]): IIpInfoService => {
 			}
 			return response;
 		}),
+		country: vi.fn().mockReturnValue(undefined),
 		isAvailable: vi.fn().mockReturnValue(true),
 	};
 };
@@ -320,6 +321,7 @@ describe("compareIPs", () => {
 		const service: IIpInfoService = {
 			initialize: vi.fn(),
 			lookup: vi.fn().mockRejectedValue(new Error("Network error")),
+			country: vi.fn().mockReturnValue(undefined),
 			isAvailable: vi.fn().mockReturnValue(true),
 		};
 

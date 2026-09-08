@@ -18,6 +18,12 @@ import type { IPInfoResponse } from "@prosopo/types";
 export interface IIpInfoService {
 	initialize(): Promise<void>;
 	lookup(ip: string): Promise<IPInfoResponse>;
+	/**
+	 * ISO 3166-1 alpha-2 country code from the local MaxMind database only.
+	 * Synchronous and network-free, unlike `lookup()`. Undefined whenever no
+	 * answer is available.
+	 */
+	country(ip: string): string | undefined;
 	isAvailable(): boolean;
 }
 
