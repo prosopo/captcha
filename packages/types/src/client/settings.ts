@@ -481,7 +481,9 @@ export const SpamFilterRulesSchema = object({
 	emailRules: EmailSpamRulesSchema.optional(),
 });
 
-export const trafficFilterAbuserScoreThresholdDefault = 0.5;
+// Abuser score at or above which the `abuser` category applies. The scale is
+// 0..1 with 0 meaning "clean", so 0 would act on any non-zero score.
+export const trafficFilterAbuserScoreThresholdDefault = 0.2;
 
 // Operators almost always want the datacenter category to catch
 // scraping/automation traffic but not legitimate consumer relays that exit
