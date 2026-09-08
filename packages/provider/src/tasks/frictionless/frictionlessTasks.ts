@@ -165,6 +165,7 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyMathRandomFirst: params.entropyMathRandomFirst,
 			g: params.g,
 			i: params.i,
+			b: params.b,
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
 			// Raw per-connection TCP-handshake signals forwarded by chaddy
@@ -983,6 +984,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let entropyMathRandomFirst: number | undefined;
 		let g: string | undefined;
 		let ii: boolean | undefined;
+		let bb: Record<string, string[]> | undefined;
 		let sw: boolean | undefined;
 		let md: boolean | undefined;
 		let bn: boolean | undefined;
@@ -1016,6 +1018,7 @@ export class FrictionlessManager extends CaptchaManager {
 				const em = decrypted.entropyMathRandomFirst;
 				const gv = decrypted.g;
 				const iv = decrypted.i;
+				const bv = decrypted.b;
 				const swv = decrypted.sw;
 				const mdv = decrypted.md;
 				const bnv = decrypted.bn;
@@ -1056,6 +1059,7 @@ export class FrictionlessManager extends CaptchaManager {
 				entropyMathRandomFirst = em;
 				g = gv;
 				ii = iv;
+				bb = bv;
 				sw = swv;
 				md = mdv;
 				bn = bnv;
@@ -1127,6 +1131,7 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyMathRandomFirst,
 			g,
 			i: ii,
+			b: bb,
 			sw,
 			md,
 			bn,

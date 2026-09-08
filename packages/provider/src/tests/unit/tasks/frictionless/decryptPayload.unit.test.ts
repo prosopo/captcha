@@ -121,6 +121,65 @@ describe("decryptPayload", () => {
 		});
 	});
 
+	it("relays the collected client signals through to the caller", async () => {
+		// Every one of these is decoded by the detector bundle and then has to
+		// survive the per-key retry relay in decryptPayload. `b` and `i` were
+		// both decoded and then silently dropped, so no session ever carried
+		// them; assert the whole set rather than just the two that broke.
+		const b: Record<string, string[]> = {
+			cdpBinding: ["puppeteer", "puppeteer_1"],
+		};
+		vi.doMock("../../../../tasks/detection/getBotScore.ts", () => ({
+			getBotScore: vi.fn().mockImplementation(() => {
+				return {
+					baseBotScore: 0.5,
+					timestamp: Date.now(),
+					triggeredDetectors: [50, 51],
+					g: "vendor~renderer",
+					i: true,
+					b,
+					sw: true,
+					md: false,
+					bn: false,
+					fs: true,
+				};
+			}),
+		}));
+		const { initDetectorBundlePool } = await import(
+			"../../../../tasks/detection/bundlePool.js"
+		);
+		initDetectorBundlePool(dir);
+
+		const FrictionlessManager = (
+			await import("../../../../tasks/frictionless/frictionlessTasks.js")
+		).FrictionlessManager;
+
+		const writeQueue = {
+			getDetectorBundle: vi.fn().mockResolvedValue("bundle-0"),
+		} as unknown as RedisWriteQueue;
+
+		const frictionlessTaskManager = new FrictionlessManager(
+			db,
+			pair,
+			config,
+			undefined,
+			writeQueue,
+		);
+
+		const result = await frictionlessTaskManager.decryptPayload(
+			"payload",
+			"headHash",
+			"det-1",
+		);
+
+		expect(result.b).toEqual(b);
+		expect(result.i).toBe(true);
+		expect(result.g).toBe("vendor~renderer");
+		expect(result.triggeredDetectors).toEqual([50, 51]);
+		expect(result.sw).toBe(true);
+		expect(result.fs).toBe(true);
+	});
+
 	it("fails closed (treated as bot) when no detector bundle can be resolved", async () => {
 		const FrictionlessManager = (
 			await import("../../../../tasks/frictionless/frictionlessTasks.js")

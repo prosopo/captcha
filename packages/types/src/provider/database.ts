@@ -24,6 +24,7 @@ import {
 	nativeEnum,
 	number,
 	object,
+	record,
 	string,
 	tuple,
 	union,
@@ -502,6 +503,7 @@ export const SessionSchema = object({
 	entropyMathRandomFirst: number().optional(),
 	g: string().optional(),
 	i: boolean().optional(),
+	b: record(string(), array(string())).optional(),
 	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
 	// classifier folds into `webView`. Persisted per session so
 	// decision-machine rules can key off the individual signals
@@ -658,6 +660,7 @@ export type Session = {
 	entropyMathRandomFirst?: number;
 	g?: string;
 	i?: boolean;
+	b?: Record<string, string[]>;
 	// Raw iOS WKWebView-vs-Safari DOM signals — see SessionSchema above.
 	sw?: boolean;
 	md?: boolean;
