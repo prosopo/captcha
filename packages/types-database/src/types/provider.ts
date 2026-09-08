@@ -1406,7 +1406,9 @@ export interface IProviderDatabase extends IDatabase {
 		updates: Partial<PuzzleCaptchaRecord>,
 	): Promise<void>;
 
-	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
+	// Accepts plain records: the client-list poll builds these from the
+	// portal's account documents and they are never mongoose Documents.
+	updateClientRecords(clientRecords: IUserDataSlim[]): Promise<void>;
 
 	removeClientRecords(accounts: string[]): Promise<void>;
 
