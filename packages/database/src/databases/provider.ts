@@ -2621,8 +2621,20 @@ export class ProviderDatabase
 	/**
 	 * @description Update the client records
 	 */
-	async updateClientRecords(clientRecords: ClientRecord[]): Promise<void> {
-		const ops = clientRecords.map((record) => {
+	async updateClientRecords(clientRecords: IUserDataSlim[]): Promise<void> {
+		// An upsert filtered on a missing account matches nothing and inserts,
+		// so a batch of records with no account collapses into a single row
+		// keyed on `account: undefined` and silently replaces every site's
+		// settings with the last one in the batch. Drop them instead.
+		const usable = clientRecords.filter((record) => !!record.account);
+		const skipped = clientRecords.length - usable.length;
+		if (skipped > 0) {
+			await this.logger.error(() => ({
+				msg: "Refusing to upsert client records with no account",
+				data: { skipped, received: clientRecords.length },
+			}));
+		}
+		const ops = usable.map((record) => {
 			const clientRecord: IUserDataSlim = {
 				account: record.account,
 				settings: record.settings,
