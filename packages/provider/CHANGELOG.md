@@ -1,5 +1,107 @@
 # @prosopo/provider
 
+## 5.9.0
+### Minor Changes
+
+- af267c2: Web Bot Auth verifier and an authenticated frictionless flow for pre-verified agents.
+  
+  **`@prosopo/web-bot-auth`** — a new package: an RFC 9421 HTTP Message Signatures verifier built on `@noble/curves/ed25519`, with no Cloudflare dependency. It parses `Signature-Agent` in both its bare-string and dictionary forms, resolves the signer's JWKS at `/.well-known/http-message-signatures-directory` honouring the response's cache-control TTL, and verifies the Ed25519 signature over the RFC 9421 signature base.
+  
+  **Provider fast path.** `/captcha/frictionless` returns `captchaType: authenticated` when a non-`deferToVerify` `AccessPolicyType.Allow` rule matches the request's user scope, and writes a session with `serverChecked: false`, `agent: true` and the issuing IP frozen for verify-time binding. Decrypt, bot score and the decision machine are all skipped. A verified `Signature-Agent` is one way to qualify — the userScope gains a `webBotAuthAgent` field, set only when signature verification succeeded so a rule scoped to a signer can never be matched by a spoofed header — but an IP CIDR, JA4, user agent, ASN or country rule qualifies the same way. A `Block` or `Restrict` on the same match set always wins, because severity outranks Allow.
+  
+  **`/client/authenticated/verify`.** A separate router with mandatory IP binding — the operator must forward the client IP (`API.AUTHENTICATED_IP_REQUIRED`) and it must match the one the session was issued to (`API.AUTHENTICATED_IP_MISMATCH`), so a leaked token cannot be replayed from elsewhere. Single use is enforced through `serverChecked`, and `captchaType` is checked so an ordinary captcha token cannot be redeemed on this route. `clientSessionId` correlation goes through the same `isClientSessionMismatch` helper as pow / image / puzzle, so the authenticated path cannot drift from the others.
+  
+  **Surface.** `AccessPolicyType.Allow` and `CaptchaType.authenticated`; `webBotAuthAgent` on the user scope (indexed, normalised at parse time to a lowercase scheme+host with no trailing slash); `Session.agent` / `Session.webBotAuthAgent` for the Traffic view's "pre-verified pass" filter; `submitAuthenticatedCaptchaVerify` on `ProviderApi` and the matching branch in `@prosopo/server.verifyProvider`; `AuthenticatedBadge` and a dispatch branch in `procaptcha-frictionless`.
+  
+  Three fixes the new end-to-end coverage turned up, each of which broke the flow outright:
+  
+  - `ipMatchesSession` compared the operator's parsed IP against the session's composite halves with `===`. A session read back from Mongo carries BSON (`Decimal128`, or `Long` on pre-migration records), not the `bigint` the type claims, so the comparison was false for every session that had been through the database — every legitimate redemption was rejected as `API.AUTHENTICATED_IP_MISMATCH`. Both halves are now normalised before comparison, and an unparseable half fails closed rather than defaulting to `0n`, so garbage still cannot match garbage.
+  - `serverChecked` was never written onto the authenticated session, so "never set" and "consumed" were distinguishable only by an absence. It is now written as `false` at issuance.
+  - `serverChecked` was missing from `SESSION_PROJECTION`. Left out, the single-use check reads `undefined` and an authenticated token verifies an unlimited number of times.
+
+### Patch Changes
+
+- 934fa5d: feat(types,provider): carry the client's `b` signal map on DetectorResult
+  
+  `DetectorResult` grows an optional `b?: Record<string, string[]>`, and
+  `getBotScore` forwards it, following the same shape as the existing `g`, `i`,
+  `sw`, `md`, `bn` and `fs` fields: read off the decoded payload, passed through
+  untouched, absent for clients that predate it.
+  
+  Typing it is the whole change. Without it the field arrives on the provider
+  untyped and any rule reading it has to assert its shape at the call site.
+  
+  The map is keyed by signal name with a short list of strings per key. It is
+  empty for the great majority of sessions, so anything consuming it should
+  treat absent and empty as the same thing. Adding a key is a client-side
+  change and needs no deploy here — an existing decoder passes through keys it
+  predates rather than dropping the ones it knows, which is the property that
+  lets the two sides move independently.
+- 27f525e: Stop the puzzle difficulty ladder silently replacing a site's own puzzle settings.
+  
+  An escalated puzzle session samples its render settings from a difficulty band, and a sampled band sets every knob — decoy count, edge darkness, hole darken, piece scale and tolerance. While that is happening the site's configured `puzzle` block and `puzzleTolerance` are not consulted at all. For a site using escalation that is the intent; for a site that deliberately configured an easier puzzle it means the settings it saved never render, which reads as "my settings aren't being saved".
+  
+  Two changes:
+  
+  `puzzleMaxDifficulty` is a new client setting — the puzzle counterpart to `imageMaxRounds`. It caps how far automatic escalation may climb the ladder, and `0` pins the site to level 0, the documented "nothing escalated" case where the session is left bare and the site's own settings render every time. It defaults to `MAX_AUTO_ESCALATION_LEVEL`, so sites that never set it keep the behaviour they have.
+  
+  Separately, the paths that measured nothing about a client — `MISSING_TOKEN`, `MISSING_HEAD_HASH` and `DECRYPTION_FAILED` — no longer feed the ladder. Each sizes its challenge from a fixed constant chosen to be short ("prove you're human quickly", per their own comments), not from any signal the client produced, but those constants sit above the default baseline of `DEFAULT_SOLVED_COUNT` and so scored as an escalation. A site whose CSP blocks the detector bundle sends no token on every request, so every one of its users was permanently escalated. `OLD_TIMESTAMP` deliberately keeps the ladder: its round count comes from `timestampDecayFunction`, which scales with staleness and is a real graduated measurement.
+  
+  Explicit router and traffic-filter overrides are unaffected in both cases — an operator naming a value still gets it.
+- a0c87c7: feat(provider): sign captcha image URLs with short-lived tokens
+  
+  Captcha image URLs are permanent, unauthenticated and cacheable. Harvest the
+  URLs once and the entire image pool can be refetched indefinitely, offline and
+  unattributably — which is what makes scraping the demo dataset cheap, and why
+  regenerating the dataset alone never fixes it.
+  
+  `AssetsResolver` has been declared in `@prosopo/types` and called by
+  `parseCaptchaAssets` since the image flow was written, but nothing ever assigned
+  it. `env.assetsResolver` was always `undefined`, so `item.data` went out exactly
+  as stored. This fills that hook with a bunny.net token-authentication signer.
+  
+  Signing happens strictly below `item.data`. The item hash stays
+  `blake2b(image bytes)`, so `captchaId`, `captchaContentId` and `datasetId` are
+  untouched and no dataset has to be rebuilt to adopt this — a signed URL is never
+  itself hashed. The resolver is constructed per request rather than per process,
+  so each challenge's URLs expire on their own clock and can optionally be bound
+  to the requesting IP via `ZoneSecurityIncludeHashRemoteIP`.
+  
+  The scheme was checked against a live token-auth pull zone before being written:
+  a correctly signed URL returns 200, while a tampered token, an expired token,
+  and a token replayed against a different path all return 403. The token is bound
+  to its exact path, so one harvested URL cannot be rewritten across the pool.
+  
+  Inactive unless `PROSOPO_ASSET_TOKEN_KEY` is set. Without it the resolver is
+  `undefined` and the response is byte-for-byte what it is today, so this can ship
+  ahead of the infrastructure change.
+  
+  Ordering matters when it is switched on. The pull zone only excludes
+  `token`/`expires` from its cache key while token authentication is enabled: with
+  it on, repeated requests carrying different tokens still hit cache; with it off,
+  every distinct `expires` becomes its own cache entry and every image misses.
+  Enabling the zone first is worse still — unsigned requests 403 and image
+  captchas break — so the zone has to be switched over promptly after providers
+  begin signing, not before.
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [b2183f9]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/types-database@5.5.0
+  - @prosopo/database@4.0.30
+  - @prosopo/web-bot-auth@0.1.0
+  - @prosopo/user-access-policy@3.14.0
+  - @prosopo/api@4.2.0
+  - @prosopo/api-express-router@3.1.84
+  - @prosopo/datasets@3.1.79
+  - @prosopo/env@3.6.53
+  - @prosopo/ipinfo@0.3.25
+  - @prosopo/keyring@2.9.86
+  - @prosopo/load-balancer@2.10.41
+  - @prosopo/types-env@2.10.46
+
 ## 5.8.1
 ### Patch Changes
 

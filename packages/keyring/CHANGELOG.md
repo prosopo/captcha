@@ -1,5 +1,14 @@
 # @prosopo/keyring
 
+## 2.9.86
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+
 ## 2.9.85
 ### Patch Changes
 
