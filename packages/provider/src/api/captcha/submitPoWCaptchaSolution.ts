@@ -367,83 +367,81 @@ export const buildEscalation = async (
 	const selectionReason =
 		(routed.reason as FrictionlessReason | undefined) ?? originSession.reason;
 
-	const newSession = await tasks.frictionlessManager.createSession(
-		originSession.token,
-		originSession.score,
-		originSession.threshold,
-		originSession.scoreComponents,
-		originSession.ipAddress,
-		escalatedType,
-		originSession.siteKey ?? powRecord.dappAccount,
-		// Clamp to the sitekey's ceiling. This was the one image-issuing path
-		// that took a router-supplied round count unbounded — the routing
-		// machine's output schema only constrains it to a positive int, so an
-		// escalation could mint a session demanding far more rounds than the
-		// site permits. Every other path already clamps; serve-time in
-		// getImageCaptchaChallenge clamps too, so the visible effect was a
-		// session record that misreported the challenge it would produce.
-		escalatedType === CaptchaType.image
-			? Math.min(
-					routed.solvedImagesCount ??
-						originSession.solvedImagesCount ??
-						tasks.config.captchas.solved.count,
-					imageMaxRounds,
-				)
-			: undefined,
-		undefined,
-		originSession.userSitekeyIpHash,
-		originSession.webView,
-		originSession.iFrame,
-		originSession.decryptedHeadHash,
-		selectionReason,
-		undefined,
-		undefined,
-		originSession.ipInfo,
-		originSession.headers,
-		originSession.mode,
-		originSession.simdReadings,
-		originSession.entropyMathRandomFingerprint,
-		originSession.entropyCryptoFingerprint,
-		originSession.entropyWallClockOffsetMs,
-		originSession.entropyMathRandomFirst,
+	// Enumerated rather than spread from `originSession`: what an escalation
+	// inherits from the session it escalated from is a deliberate list, not
+	// "everything the origin happened to carry". Behavioural data in
+	// particular lives only in the pow-solve request payload and must not
+	// follow the user onto the new session.
+	const newSession = await tasks.frictionlessManager.createSession({
+		token: originSession.token,
+		score: originSession.score,
+		threshold: originSession.threshold,
+		scoreComponents: originSession.scoreComponents,
+		ipAddress: originSession.ipAddress,
+		captchaType: escalatedType,
+		// The origin's siteKey is the source of truth if set.
+		siteKey: originSession.siteKey ?? powRecord.dappAccount,
+		// Clamp to the sitekey's ceiling. The routing machine's output schema
+		// only constrains the count to a positive int, so an escalation could
+		// otherwise mint a session demanding more rounds than the site permits.
+		solvedImagesCount:
+			escalatedType === CaptchaType.image
+				? Math.min(
+						routed.solvedImagesCount ??
+							originSession.solvedImagesCount ??
+							tasks.config.captchas.solved.count,
+						imageMaxRounds,
+					)
+				: undefined,
+		userSitekeyIpHash: originSession.userSitekeyIpHash,
+		webView: originSession.webView,
+		iFrame: originSession.iFrame,
+		decryptedHeadHash: originSession.decryptedHeadHash,
+		reason: selectionReason,
+		ipInfo: originSession.ipInfo,
+		headers: originSession.headers,
+		mode: originSession.mode,
+		simdReadings: originSession.simdReadings,
+		entropyMathRandomFingerprint: originSession.entropyMathRandomFingerprint,
+		entropyCryptoFingerprint: originSession.entropyCryptoFingerprint,
+		entropyWallClockOffsetMs: originSession.entropyWallClockOffsetMs,
+		entropyMathRandomFirst: originSession.entropyMathRandomFirst,
 		// Carry the detector pool bundle forward so the escalated image/puzzle
 		// solve can decrypt the (same-origin) behavioural payload.
-		originSession.bundleId,
-		originSession.currentUrl,
-		perConnectionSignals?.tcpToChelloUs,
-		perConnectionSignals?.chelloToHandshakeUs,
-		true,
-		originSession.iframeUrl,
-		originSession.isProtect,
-		// Record the origin sessionId on the escalation record. The
-		// DM-input read path (captchaManager.getSessionRecordWithOriginFallback)
-		// uses this to fall back to the origin session for fields that the
-		// escalation doesn't carry itself — simdReadings (attached by pow-
-		// submit fire-and-forget, races the escalation read), dnsEvent
-		// (set by the DNS sidecar on the origin's TLS connection only).
-		originSession.sessionId,
-		originSession.g,
-		undefined,
-		originSession.i,
-		originSession.sw,
-		originSession.md,
-		originSession.bn,
-		originSession.fs,
+		bundleId: originSession.bundleId,
+		currentUrl: originSession.currentUrl,
+		iframeUrl: originSession.iframeUrl,
+		isProtect: originSession.isProtect,
+		isEscalation: true,
+		// The DM-input read path (captchaManager.getSessionRecordWithOriginFallback)
+		// uses this to fall back to the origin session for fields the escalation
+		// doesn't carry itself — simdReadings (attached by pow-submit
+		// fire-and-forget, races the escalation read), dnsEvent (set by the DNS
+		// sidecar on the origin's TLS connection only).
+		originSessionId: originSession.sessionId,
+		g: originSession.g,
+		i: originSession.i,
+		b: originSession.b,
+		sw: originSession.sw,
+		md: originSession.md,
+		bn: originSession.bn,
+		fs: originSession.fs,
 		// Raw signals for the current PoW-submit TCP connection — not the
-		// origin's. Escalation session belongs on this hop's fingerprint.
-		perConnectionSignals && {
-			synNs: perConnectionSignals.synNs,
-			synackNs: perConnectionSignals.synackNs,
-			ackNs: perConnectionSignals.ackNs,
-			observedTtl: perConnectionSignals.observedTtl,
-			tcpMss: perConnectionSignals.tcpMss,
-			tcpWscale: perConnectionSignals.tcpWscale,
-			tcpOptsFlags: perConnectionSignals.tcpOptsFlags,
-			tcpOptsOrder: perConnectionSignals.tcpOptsOrder,
-			tcpWindow: perConnectionSignals.tcpWindow,
-		},
-		escalationPuzzleOverrides,
-	);
+		// origin's. The escalation session belongs on this hop's fingerprint.
+		tcpToChelloUs: perConnectionSignals?.tcpToChelloUs,
+		chelloToHandshakeUs: perConnectionSignals?.chelloToHandshakeUs,
+		synNs: perConnectionSignals?.synNs,
+		synackNs: perConnectionSignals?.synackNs,
+		ackNs: perConnectionSignals?.ackNs,
+		observedTtl: perConnectionSignals?.observedTtl,
+		tcpMss: perConnectionSignals?.tcpMss,
+		tcpWscale: perConnectionSignals?.tcpWscale,
+		tcpOptsFlags: perConnectionSignals?.tcpOptsFlags,
+		tcpOptsOrder: perConnectionSignals?.tcpOptsOrder,
+		tcpWindow: perConnectionSignals?.tcpWindow,
+		puzzleTolerance: escalationPuzzleOverrides?.puzzleTolerance,
+		puzzle: escalationPuzzleOverrides?.puzzle,
+	});
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*
 	// request that arrives carrying the originating sessionId (because the

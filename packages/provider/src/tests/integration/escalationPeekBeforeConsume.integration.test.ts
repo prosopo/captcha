@@ -187,21 +187,20 @@ describe("Escalation peek-before-consume integration test", () => {
 		const seedConsumedOriginPlusLiveEscalation = async (params: {
 			escalationCaptchaType: CaptchaType;
 		}) => {
-			const originSession = await tasks.frictionlessManager.createSession(
-				`token-origin-${Math.random()}`,
-				0.2,
-				0.5,
-				{ baseScore: 0.2 },
-				{ lower: 0n, type: IpAddressType.v4 },
-				CaptchaType.pow,
+			const originSession = await tasks.frictionlessManager.createSession({
+				token: `token-origin-${Math.random()}`,
+				score: 0.2,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0.2 },
+				ipAddress: { lower: 0n, type: IpAddressType.v4 },
+				captchaType: CaptchaType.pow,
 				siteKey,
-				undefined,
-				1,
-				`hash-origin-${Math.random()}`,
-				false,
-				false,
-				"head-origin",
-			);
+				powDifficulty: 1,
+				userSitekeyIpHash: `hash-origin-${Math.random()}`,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "head-origin",
+			});
 			// Simulate the preceding /captcha/pow having consumed the origin
 			// session — this is the prod state when the widget retries.
 			const consumed = await env
@@ -209,21 +208,18 @@ describe("Escalation peek-before-consume integration test", () => {
 				.checkAndRemoveSession(originSession.sessionId);
 			expect(consumed?.sessionId).toBe(originSession.sessionId);
 
-			const escalationSession = await tasks.frictionlessManager.createSession(
-				`token-escalation-${Math.random()}`,
-				0.2,
-				0.5,
-				{ baseScore: 0.2 },
-				{ lower: 0n, type: IpAddressType.v4 },
-				params.escalationCaptchaType,
+			const escalationSession = await tasks.frictionlessManager.createSession({
+				token: `token-escalation-${Math.random()}`,
+				score: 0.2,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0.2 },
+				ipAddress: { lower: 0n, type: IpAddressType.v4 },
+				captchaType: params.escalationCaptchaType,
 				siteKey,
-				undefined,
-				undefined,
-				`hash-escalation-${Math.random()}`,
-				false,
-				false,
-				"head-escalation",
-			);
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "head-escalation",
+			});
 
 			// Sanity-check that storeSessionRecord actually wrote the
 			// escalation session synchronously — without this, race

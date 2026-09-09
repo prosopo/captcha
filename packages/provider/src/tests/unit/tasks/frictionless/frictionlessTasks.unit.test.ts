@@ -132,15 +132,15 @@ describe("Frictionless Task Manager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
 
-			const session = await frictionlessTaskManager.createSession(
-				mockToken,
-				mockScore,
-				mockThreshold,
-				mockScoreComponents,
-				mockIpAddress,
-				CaptchaType.image,
-				mockSiteKey,
-			);
+			const session = await frictionlessTaskManager.createSession({
+				token: mockToken,
+				score: mockScore,
+				threshold: mockThreshold,
+				scoreComponents: mockScoreComponents,
+				ipAddress: mockIpAddress,
+				captchaType: CaptchaType.image,
+				siteKey: mockSiteKey,
+			});
 
 			expect(session).toHaveProperty("sessionId");
 			expect(session).toHaveProperty("token", mockToken);
@@ -197,6 +197,38 @@ describe("Frictionless Task Manager", () => {
 			// called with — the ipInfo we set must be on it.
 			expect(db.storeSessionRecord).toHaveBeenCalledWith(
 				expect.objectContaining({ ipInfo: stubIpInfo }),
+			);
+		});
+
+		it("threads b from setSessionParams through to the stored session record", async () => {
+			// Same path as ipInfo above. `b` reached setSessionParams and then
+			// stopped: createSession had no parameter for it, so the field was
+			// decoded on every request and dropped before the write. The Mongo
+			// schema and the read projection have carried it all along.
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			const stubB: Record<string, string[]> = { k1: ["v1", "v2"] };
+
+			frictionlessTaskManager.setSessionParams({
+				token: "tok-b",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.2.3.4"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "siteKey-b",
+				b: stubB,
+			});
+
+			await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(
+				expect.objectContaining({ b: stubB }),
 			);
 		});
 
