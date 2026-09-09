@@ -45,6 +45,7 @@ import {
 	initDetectorBundlePool,
 } from "../tasks/detection/bundlePool.js";
 import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvider.js";
+import { authHealthRouter } from "./authHealth.js";
 import { getVerdictCache } from "./blacklistRequestInspector.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
@@ -389,6 +390,10 @@ export async function startProviderApi(
 		"/v1/prosopo/provider/admin",
 		authMiddleware(env.pair, env.authAccount),
 	);
+
+	// Authenticated health endpoint
+	apiApp.use("/auth", authMiddleware(env.pair, env.authAccount));
+	apiApp.use("/auth", authHealthRouter(env));
 	if (apiRuleRoutesProvider) {
 		const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
 		for (const userAccessRuleRoute in userAccessRuleRoutes) {
