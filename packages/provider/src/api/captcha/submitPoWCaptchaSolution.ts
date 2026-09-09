@@ -421,6 +421,8 @@ export const buildEscalation = async (
 		originSessionId: originSession.sessionId,
 		g: originSession.g,
 		i: originSession.i,
+		cv: originSession.cv,
+		sq: originSession.sq,
 		b: originSession.b,
 		sw: originSession.sw,
 		md: originSession.md,
