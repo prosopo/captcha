@@ -399,6 +399,29 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		expect(createSessionInput().bundleId).toBe("bundle-17");
 	});
 
+	it("carries the origin's b onto the escalation", async () => {
+		// `b` travels with g / i / sw / md / bn / fs rather than being
+		// re-collected: the escalation is the same client and never re-runs
+		// the collection step.
+		const originB: Record<string, string[]> = { k1: ["v1", "v2"] };
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue({
+			...makeOriginSession(),
+			b: originB,
+		});
+
+		await buildEscalation(
+			env.tasks,
+			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
+			"challenge",
+		);
+
+		expect(createSessionInput().b).toBe(originB);
+	});
+
 	// Behavioural data (the decrypted BDP struct produced from the pow-solve
 	// payload) is NOT persisted anywhere and consequently never appears on
 	// the escalation record. buildEscalation deliberately doesn't try to

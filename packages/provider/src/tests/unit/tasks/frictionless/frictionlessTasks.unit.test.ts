@@ -200,6 +200,38 @@ describe("Frictionless Task Manager", () => {
 			);
 		});
 
+		it("threads b from setSessionParams through to the stored session record", async () => {
+			// Same path as ipInfo above. `b` reached setSessionParams and then
+			// stopped: createSession had no parameter for it, so the field was
+			// decoded on every request and dropped before the write. The Mongo
+			// schema and the read projection have carried it all along.
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			const stubB: Record<string, string[]> = { k1: ["v1", "v2"] };
+
+			frictionlessTaskManager.setSessionParams({
+				token: "tok-b",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.2.3.4"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "siteKey-b",
+				b: stubB,
+			});
+
+			await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(
+				expect.objectContaining({ b: stubB }),
+			);
+		});
+
 		it("threads ipInfo through registerBlockedSession too", async () => {
 			// The blocked-session path constructs a Session record
 			// independently of sendImageCaptcha; make sure ipInfo is
