@@ -121,7 +121,7 @@ export const IconOrderCanvas = ({
 	}, []);
 
 	const handlePointerMove = useCallback(
-		(event: React.MouseEvent<HTMLDivElement>) => {
+		(event: React.PointerEvent<HTMLDivElement>) => {
 			if (submitting) return;
 			const point = toFrameCoords(event.clientX, event.clientY);
 			if (point) recordEvent(point);
@@ -129,23 +129,21 @@ export const IconOrderCanvas = ({
 		[submitting, toFrameCoords, recordEvent],
 	);
 
-	const handleClick = useCallback(
-		(event: React.MouseEvent<HTMLDivElement>) => {
+	/**
+	 * One handler for mouse, touch and pen.
+	 *
+	 * This was `onClick` plus `onTouchEnd`, which double-counted every tap on
+	 * a touch device: `touchend` fires, then the browser synthesises a
+	 * compatibility `click` at the same spot, so three taps arrived as six
+	 * clicks and `gradeClicks` rejected the answer on length alone — a
+	 * correctly solved challenge failing on every phone. `touch-action: none`
+	 * on the frame does not suppress that synthesised click; only listening
+	 * for one event family does.
+	 */
+	const handlePointerUp = useCallback(
+		(event: React.PointerEvent<HTMLDivElement>) => {
 			if (submitting) return;
 			const point = toFrameCoords(event.clientX, event.clientY);
-			if (!point) return;
-			recordEvent(point);
-			setClicks((current) => [...current, point]);
-		},
-		[submitting, toFrameCoords, recordEvent],
-	);
-
-	const handleTouchEnd = useCallback(
-		(event: React.TouchEvent<HTMLDivElement>) => {
-			if (submitting) return;
-			const touch = event.changedTouches[0];
-			if (!touch) return;
-			const point = toFrameCoords(touch.clientX, touch.clientY);
 			if (!point) return;
 			recordEvent(point);
 			setClicks((current) => [...current, point]);
@@ -252,9 +250,8 @@ export const IconOrderCanvas = ({
 					{...(process.env.NODE_ENV !== "production" && {
 						"data-cy": "prosopo-icon-order-frame",
 					})}
-					onClick={handleClick}
-					onMouseMove={handlePointerMove}
-					onTouchEnd={handleTouchEnd}
+					onPointerUp={handlePointerUp}
+					onPointerMove={handlePointerMove}
 					style={{
 						position: "relative",
 						width: `${CONTAINER_WIDTH}px`,

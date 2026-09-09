@@ -104,10 +104,15 @@ const stubFrameRect = (
 		}) as DOMRect;
 };
 
+/**
+ * The frame listens for `pointerup` only, so that is what these dispatch.
+ * jsdom has no `PointerEvent` constructor; `MouseEvent` carries the
+ * `clientX`/`clientY` React reads and dispatch matches on `type` alone.
+ */
 const clickFrame = (clientX: number, clientY: number): void => {
 	act(() => {
 		frame().dispatchEvent(
-			new MouseEvent("click", { bubbles: true, clientX, clientY }),
+			new MouseEvent("pointerup", { bubbles: true, clientX, clientY }),
 		);
 	});
 };
@@ -115,18 +120,30 @@ const clickFrame = (clientX: number, clientY: number): void => {
 const moveOverFrame = (clientX: number, clientY: number): void => {
 	act(() => {
 		frame().dispatchEvent(
-			new MouseEvent("mousemove", { bubbles: true, clientX, clientY }),
+			new MouseEvent("pointermove", { bubbles: true, clientX, clientY }),
 		);
 	});
 };
 
-const touchEndAt = (clientX: number, clientY: number): void => {
-	const event = new Event("touchend", { bubbles: true });
-	Object.defineProperty(event, "changedTouches", {
+/**
+ * A touch device's full event sequence for one tap: `touchend`, then the
+ * compatibility `click` the browser synthesises at the same coordinates.
+ * Both are dispatched so the "one tap, one click" test below is checking the
+ * real thing rather than a convenient subset of it.
+ */
+const tapFrame = (clientX: number, clientY: number): void => {
+	const touchEnd = new Event("touchend", { bubbles: true });
+	Object.defineProperty(touchEnd, "changedTouches", {
 		value: [{ clientX, clientY }],
 	});
 	act(() => {
-		frame().dispatchEvent(event);
+		frame().dispatchEvent(
+			new MouseEvent("pointerup", { bubbles: true, clientX, clientY }),
+		);
+		frame().dispatchEvent(touchEnd);
+		frame().dispatchEvent(
+			new MouseEvent("click", { bubbles: true, clientX, clientY }),
+		);
 	});
 };
 
@@ -247,11 +264,28 @@ describe("capturing an ordered answer", () => {
 		expect(submitButton().disabled).toBe(true);
 	});
 
-	test("accepts a tap as well as a click", () => {
+	/**
+	 * Regression: the frame used to listen for `click` *and* `touchend`, so a
+	 * phone recorded two clicks per tap. Three correct taps submitted six
+	 * clicks against three targets and the provider rejected the answer on
+	 * length alone — icon-order was unsolvable on every touch device.
+	 */
+	test("counts one click per tap, synthesised click included", () => {
 		render(props());
 		stubFrameRect();
-		touchEndAt(120, 80);
+		tapFrame(120, 80);
 		expect(markers()).toEqual(["1"]);
+
+		tapFrame(60, 50);
+		tapFrame(180, 90);
+		click();
+
+		const [clicks] = onComplete.mock.calls[0] ?? [];
+		expect(clicks).toEqual([
+			{ x: 120, y: 80 },
+			{ x: 60, y: 50 },
+			{ x: 180, y: 90 },
+		]);
 	});
 
 	test("does not submit an empty answer", () => {
