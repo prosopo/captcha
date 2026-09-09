@@ -53,6 +53,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Liian monta lähetystä tästä sähköpostiosoitteesta",
 		"VPN_BLOCKED": "VPN-yhteyksien pyynnöt eivät ole sallittuja tälle sivustolle",
 		"PROXY_BLOCKED": "Välityspalvelimien pyynnöt eivät ole sallittuja tälle sivustolle",
+		"TOO_MANY_LOCALHOST": "Liian monta CAPTCHA-pyyntöä localhostista tälle sivustoavaimelle",
 		"TOR_BLOCKED": "Tor-poistumissolmujen pyynnöt eivät ole sallittuja tälle sivustolle",
 		"ABUSER_BLOCKED": "Väärinkäytöstä merkittyjen verkkojen pyynnöt eivät ole sallittuja tälle sivustolle",
 		"DATACENTER_BLOCKED": "Datakeskusten IP-osoitteiden pyynnöt eivät ole sallittuja tälle sivustolle",
