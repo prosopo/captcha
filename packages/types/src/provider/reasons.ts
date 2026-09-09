@@ -111,6 +111,12 @@ export enum ResultReason {
 	SPAM_EMAIL_RULE = "API.SPAM_EMAIL_RULE",
 	SPAM_EMAIL_COUNT_EXCEEDED = "API.SPAM_EMAIL_COUNT_EXCEEDED",
 	TIMESTAMP_TOO_OLD = "API.TIMESTAMP_TOO_OLD",
+	// A site key has served more captchas from a localhost origin in a day
+	// than any real integration needs. Carried on the auto-generated Block
+	// rule's `messageKey` so the integrator gets told why, rather than a bare
+	// "Forbidden" — localhost traffic is developer traffic, and a developer
+	// can only stop if they know what tripped.
+	TOO_MANY_LOCALHOST = "API.TOO_MANY_LOCALHOST",
 	TOR_BLOCKED = "API.TOR_BLOCKED",
 	VPN_BLOCKED = "API.VPN_BLOCKED",
 	CAPTCHA_INVALID_SALT = "CAPTCHA.INVALID_SALT",

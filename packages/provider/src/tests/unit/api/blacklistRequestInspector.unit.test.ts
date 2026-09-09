@@ -17,6 +17,7 @@ import {
 	CaptchaType,
 	FrictionlessReason,
 	type IPInfoResponse,
+	ResultReason,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import {
@@ -815,6 +816,14 @@ describe("BlacklistRequestInspector blocked-session persistence", () => {
 });
 
 describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
+	// Same reason as the shouldAbortRequest suite above: the verdict cache is
+	// a module-level singleton keyed on the request scope, and these cases all
+	// use one IP/ja4, so without a reset the first case's verdict answers the
+	// rest.
+	beforeEach(() => {
+		getVerdictCache().clear();
+	});
+
 	const mockLogger = {
 		info: vi.fn(),
 		debug: vi.fn(),
@@ -871,6 +880,88 @@ describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
 			error: { message: "Forbidden: test-request-id", code: 403 },
 		});
 		expect(next).not.toHaveBeenCalled();
+	});
+
+	it("replaces the generic Forbidden with the rule's translated messageKey", async () => {
+		const inspector = new BlacklistRequestInspector(
+			{
+				findRules: vi.fn().mockResolvedValue([
+					{
+						type: AccessPolicyType.Block,
+						messageKey: ResultReason.TOO_MANY_LOCALHOST,
+					},
+				]),
+			} as unknown as AccessRulesStorage,
+			async () => undefined,
+		);
+		const { res, status, json } = buildResponse();
+		const next: NextFunction = vi.fn();
+
+		await inspector.abortRequestForBlockedUsers(
+			buildRequest({
+				i18n: {
+					t: (key: string) => `translated(${key})`,
+				},
+			} as unknown as Partial<Request>),
+			res,
+			next,
+		);
+
+		expect(status).toHaveBeenCalledWith(403);
+		// The key is echoed alongside the prose so the widget (and support)
+		// can branch on a stable identifier rather than parse a translated
+		// string that changes per language.
+		expect(json).toHaveBeenCalledWith({
+			error: {
+				message: `translated(${ResultReason.TOO_MANY_LOCALHOST}): test-request-id`,
+				code: 403,
+				key: ResultReason.TOO_MANY_LOCALHOST,
+			},
+		});
+		expect(next).not.toHaveBeenCalled();
+	});
+
+	it("falls back to the raw key when i18n has not been attached to the request", async () => {
+		const inspector = new BlacklistRequestInspector(
+			{
+				findRules: vi.fn().mockResolvedValue([
+					{
+						type: AccessPolicyType.Block,
+						messageKey: ResultReason.TOO_MANY_LOCALHOST,
+					},
+				]),
+			} as unknown as AccessRulesStorage,
+			async () => undefined,
+		);
+		const { res, json } = buildResponse();
+
+		await inspector.abortRequestForBlockedUsers(buildRequest({}), res, vi.fn());
+
+		expect(json).toHaveBeenCalledWith({
+			error: {
+				message: `${ResultReason.TOO_MANY_LOCALHOST}: test-request-id`,
+				code: 403,
+				key: ResultReason.TOO_MANY_LOCALHOST,
+			},
+		});
+	});
+
+	it("keeps the generic Forbidden for a Block rule that names no reason", async () => {
+		const inspector = new BlacklistRequestInspector(
+			{
+				findRules: vi
+					.fn()
+					.mockResolvedValue([{ type: AccessPolicyType.Block }]),
+			} as unknown as AccessRulesStorage,
+			async () => undefined,
+		);
+		const { res, json } = buildResponse();
+
+		await inspector.abortRequestForBlockedUsers(buildRequest({}), res, vi.fn());
+
+		expect(json).toHaveBeenCalledWith({
+			error: { message: "Forbidden: test-request-id", code: 403 },
+		});
 	});
 
 	it("calls next() and does not write a status when the request is allowed", async () => {

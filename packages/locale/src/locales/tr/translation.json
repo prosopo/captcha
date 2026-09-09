@@ -47,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Bu e-posta adresinden çok fazla gönderi",
 		"VPN_BLOCKED": "Bu site için VPN bağlantılarından gelen isteklere izin verilmiyor",
 		"PROXY_BLOCKED": "Bu site için proxy sunucularından gelen isteklere izin verilmiyor",
+		"TOO_MANY_LOCALHOST": "Bu site anahtarı için localhost'tan çok fazla CAPTCHA isteği",
 		"TOR_BLOCKED": "Bu site için Tor çıkış düğümlerinden gelen isteklere izin verilmiyor",
 		"ABUSER_BLOCKED": "Bu site için kötüye kullanım olarak işaretlenen ağlardan gelen isteklere izin verilmiyor",
 		"DATACENTER_BLOCKED": "Bu site için veri merkezi IP adreslerinden gelen isteklere izin verilmiyor",

@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { CaptchaType } from "@prosopo/types";
+import type { CaptchaType, ResultReason } from "@prosopo/types";
 
 export enum AccessPolicyType {
 	Block = "block",
@@ -60,6 +60,18 @@ export type AccessPolicy = {
 	// signals (ja4, headersHash, etc.) when the operator wants the
 	// attacker to pay the captcha-solving cost before being rejected.
 	deferToVerify?: boolean;
+	// Why a Block policy refused the request. `ResultReason` values are the
+	// translation keys themselves, so the middleware can hand this straight to
+	// i18n and send a specific message ("too many localhost requests") in place
+	// of the generic "Forbidden" body. Optional: a rule without one keeps the
+	// generic message, which is what every pre-existing rule does.
+	//
+	// Carrying the reason on the rule (rather than adding an AccessPolicyType)
+	// keeps `type` at Block, so the Redis Block-only candidate filter, the
+	// severity ranking and the portal's rule rendering all keep working
+	// untouched — a new policy type would be filtered out of the hot-path
+	// candidate pool by `@type:{block}` and silently never fire.
+	messageKey?: ResultReason;
 };
 
 export type PolicyScope = {
