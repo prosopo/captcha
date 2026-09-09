@@ -292,27 +292,23 @@ export const evaluateIpValidationRules = (
 		});
 	}
 
-	// Check for abuse score exceed condition
-	const ip2AbuseScore = comparison.comparison.ip2Details?.abuserScore;
+	// Both IPs count, but they are ONE rule and must contribute at most ONE
+	// condition — a condition per IP double-counts against `rejectActions.length`
+	// in the requireAllConditions branch below.
+	const abuseScores = [
+		comparison.comparison.ip2Details?.abuserScore,
+		comparison.comparison.ip1Details?.abuserScore,
+	].filter((score): score is number => score !== undefined);
+	const worstAbuseScore =
+		abuseScores.length > 0 ? Math.max(...abuseScores) : undefined;
 	if (
-		ip2AbuseScore !== undefined &&
-		ip2AbuseScore > effectiveRules.abuseScoreThreshold
+		worstAbuseScore !== undefined &&
+		worstAbuseScore > effectiveRules.abuseScoreThreshold
 	) {
 		conditions.push({
 			met: true,
 			action: effectiveRules.actions.abuseScoreExceedAction,
-			message: `Abuse score ${ip2AbuseScore.toFixed(4)} exceeds threshold ${effectiveRules.abuseScoreThreshold}`,
-		});
-	}
-	const ip1AbuseScore = comparison.comparison.ip1Details?.abuserScore;
-	if (
-		ip1AbuseScore !== undefined &&
-		ip1AbuseScore > effectiveRules.abuseScoreThreshold
-	) {
-		conditions.push({
-			met: true,
-			action: effectiveRules.actions.abuseScoreExceedAction,
-			message: `Abuse score ${ip1AbuseScore.toFixed(4)} exceeds threshold ${effectiveRules.abuseScoreThreshold}`,
+			message: `Abuse score ${worstAbuseScore.toFixed(4)} exceeds threshold ${effectiveRules.abuseScoreThreshold}`,
 		});
 	}
 
