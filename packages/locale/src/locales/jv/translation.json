@@ -47,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Kakehen kiriman saka alamat email iki",
 		"VPN_BLOCKED": "Panjaluk saka sambungan VPN ora diidini kanggo situs iki",
 		"PROXY_BLOCKED": "Panjaluk saka server proxy ora diidini kanggo situs iki",
+		"TOO_MANY_LOCALHOST": "Kakehan panjaluk CAPTCHA saka localhost kanggo kunci situs iki",
 		"TOR_BLOCKED": "Panjaluk saka simpul metu Tor ora diidini kanggo situs iki",
 		"ABUSER_BLOCKED": "Panjaluk saka jaringan sing ditandhani amarga penyalahgunaan ora diidini kanggo situs iki",
 		"DATACENTER_BLOCKED": "Panjaluk saka alamat IP pusat data ora diidini kanggo situs iki",

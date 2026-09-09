@@ -346,6 +346,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Terlalu banyak penghantaran dari alamat e-mel ini",
 		"VPN_BLOCKED": "Permintaan daripada sambungan VPN tidak dibenarkan untuk laman ini",
 		"PROXY_BLOCKED": "Permintaan daripada pelayan proksi tidak dibenarkan untuk laman ini",
+		"TOO_MANY_LOCALHOST": "Terlalu banyak permintaan CAPTCHA dari localhost untuk kunci tapak ini",
 		"TOR_BLOCKED": "Permintaan daripada nod keluar Tor tidak dibenarkan untuk laman ini",
 		"ABUSER_BLOCKED": "Permintaan daripada rangkaian yang ditandakan kerana penyalahgunaan tidak dibenarkan untuk laman ini",
 		"DATACENTER_BLOCKED": "Permintaan daripada alamat IP pusat data tidak dibenarkan untuk laman ini",

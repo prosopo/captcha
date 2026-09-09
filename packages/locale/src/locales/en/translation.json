@@ -126,6 +126,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Too many submissions from this email address",
 		"VPN_BLOCKED": "Requests from VPN connections are not allowed for this site",
 		"PROXY_BLOCKED": "Requests from proxy servers are not allowed for this site",
+		"TOO_MANY_LOCALHOST": "Too many CAPTCHA requests from localhost for this site key",
 		"TOR_BLOCKED": "Requests from Tor exit nodes are not allowed for this site",
 		"ABUSER_BLOCKED": "Requests from networks flagged for abuse are not allowed for this site",
 		"DATACENTER_BLOCKED": "Requests from datacenter IP addresses are not allowed for this site",

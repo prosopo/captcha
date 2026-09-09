@@ -49,6 +49,15 @@ import {
 } from "./hardBlockVerdictCache.js";
 import { recordBlockedRequest } from "./metrics.js";
 
+/**
+ * Out-param filled in by `shouldAbortRequest` when the rule it matched named a
+ * reason for the block, so `abortRequestForBlockedUsers` can put that reason in
+ * the response instead of a bare "Forbidden".
+ */
+export type BlockOutcome = {
+	messageKey?: ResultReason;
+};
+
 export const getRequestUserScope = (
 	requestHeaders: Record<string, unknown>,
 	ja4?: string,
@@ -520,6 +529,12 @@ export class BlacklistRequestInspector {
 			data: { ja4: request.ja4 },
 		}));
 
+		// Collects the matched rule's `messageKey`, if it carried one, so the
+		// response can name the reason. Out-param rather than a richer return
+		// type because `shouldAbortRequest` is public and its boolean contract
+		// is relied on by every other caller.
+		const blockOutcome: BlockOutcome = {};
+
 		const shouldAbortRequest = await this.shouldAbortRequest(
 			request.url,
 			rawIp,
@@ -532,6 +547,7 @@ export class BlacklistRequestInspector {
 			// hitting checkForHardBlock in the same request reuses this
 			// lookup rather than re-querying Redis.
 			request,
+			blockOutcome,
 		);
 
 		if (shouldAbortRequest) {
@@ -544,16 +560,46 @@ export class BlacklistRequestInspector {
 			// extractor picks it up — a plain string falls through to the
 			// generic "Cannot load CAPTCHA" fallback. Surfacing the
 			// requestId lets support quote it back on tickets.
+			//
+			// A rule carrying a `messageKey` replaces the generic "Forbidden"
+			// with the translated reason. That is the whole point of the field:
+			// an integrator blocked for hammering localhost can only stop if
+			// the response says so. The requestId is kept either way.
 			res.status(403).json({
 				error: {
-					message: `Forbidden: ${request.requestId ?? "unknown"}`,
+					message: `${this.translateBlockReason(request, blockOutcome.messageKey)}: ${
+						request.requestId ?? "unknown"
+					}`,
 					code: 403,
+					...(blockOutcome.messageKey && { key: blockOutcome.messageKey }),
 				},
 			});
 			return;
 		}
 
 		next();
+	}
+
+	/**
+	 * Render the 403's leading text. A rule that named a reason gets it
+	 * translated into the caller's language; everything else — an unnamed
+	 * rule, a request with no IP, a fail-closed error — keeps the generic
+	 * "Forbidden". `request.i18n` is absent whenever the i18n middleware
+	 * hasn't run (unit tests construct bare request objects), so the raw key
+	 * is the fallback rather than a crash.
+	 */
+	private translateBlockReason(
+		request: Request,
+		messageKey?: ResultReason,
+	): string {
+		if (!messageKey) {
+			return "Forbidden";
+		}
+		const translate = request.i18n?.t;
+		if (typeof translate !== "function") {
+			return messageKey;
+		}
+		return translate(messageKey);
 	}
 
 	public async shouldAbortRequest(
@@ -565,6 +611,9 @@ export class BlacklistRequestInspector {
 		logger: Logger,
 		ipInfo?: IPInfoResponse,
 		requestMemoHost?: object,
+		// Written to (not read) when a matched Block rule names a reason. See
+		// `abortRequestForBlockedUsers`.
+		blockOutcome?: BlockOutcome,
 	): Promise<boolean> {
 		// Skip this middleware for non-api routes like /json /favicon.ico etc
 		if (this.isApiUnrelatedRoute(requestedRoute)) {
@@ -638,6 +687,9 @@ export class BlacklistRequestInspector {
 
 			const isBlock = AccessPolicyType.Block === accessPolicy.type;
 			if (isBlock) {
+				if (blockOutcome) {
+					blockOutcome.messageKey = accessPolicy.messageKey;
+				}
 				recordBlockedRequest("access_policy");
 				// `Restrict` policies aren't logged or persisted here — those
 				// don't 403, they let the request through with modified

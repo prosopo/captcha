@@ -47,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "该电子邮件地址提交次数过多",
 		"VPN_BLOCKED": "此网站不允许来自VPN连接的请求",
 		"PROXY_BLOCKED": "此网站不允许来自代理服务器的请求",
+		"TOO_MANY_LOCALHOST": "此站点密钥来自 localhost 的 CAPTCHA 请求过多",
 		"TOR_BLOCKED": "此网站不允许来自Tor出口节点的请求",
 		"ABUSER_BLOCKED": "此网站不允许来自被标记为滥用的网络的请求",
 		"DATACENTER_BLOCKED": "此网站不允许来自数据中心IP地址的请求",
