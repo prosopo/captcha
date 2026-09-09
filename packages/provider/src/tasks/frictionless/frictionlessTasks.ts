@@ -24,7 +24,6 @@ import {
 	type IPInfoResponse,
 	type ImageRoundsBounds,
 	type KeyringPair,
-	type ModeEnum,
 	NO_MEASUREMENT_REASONS,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
@@ -40,7 +39,6 @@ import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
 import { buildDnsEventUrl } from "../../api/dnsEventUrl.js";
-import type { RawTlsSignals } from "../../api/rawTlsSignalsMiddleware.js";
 import { checkLangRules } from "../../rules/lang.js";
 import {
 	type UsageCounters,
@@ -68,6 +66,26 @@ export interface ImageCaptchaSessionParams extends Session {}
 export interface PowCaptchaSessionParams extends Session {}
 
 export interface PuzzleCaptchaSessionParams extends Session {}
+
+/**
+ * Everything a caller supplies when minting a session. `sessionId` and
+ * `createdAt` are assigned by `createSession` and `simdReadingsStage` is
+ * derived from `simdReadings`, so none of the three are accepted here.
+ */
+export type CreateSessionInput = Omit<
+	Session,
+	| "sessionId"
+	| "createdAt"
+	| "simdReadingsStage"
+	| "siteKey"
+	| "webView"
+	| "iFrame"
+	| "decryptedHeadHash"
+> &
+	// Optional on `Session`, but every issuance path knows its sitekey.
+	Required<Pick<Session, "siteKey">> &
+	// Required on `Session`; defaulted here for callers with nothing to report.
+	Partial<Pick<Session, "webView" | "iFrame" | "decryptedHeadHash">>;
 
 export class FrictionlessManager extends CaptchaManager {
 	private sessionParams?: Omit<
@@ -188,51 +206,63 @@ export class FrictionlessManager extends CaptchaManager {
 		return checkLangRules(this.config, acceptLanguage);
 	}
 
-	async createSession(
-		token: string,
-		score: number,
-		threshold: number,
-		scoreComponents: ScoreComponents,
-		ipAddress: CompositeIpAddress,
-		captchaType: CaptchaType,
-		siteKey: string,
-		solvedImagesCount?: number,
-		powDifficulty?: number,
-		userSitekeyIpHash?: string,
-		webView = false,
-		iFrame = false,
-		decryptedHeadHash = "",
-		reason?: FrictionlessReason,
-		blocked?: boolean,
-		deleted?: boolean,
-		ipInfo?: IPInfoResponse,
-		headers?: RequestHeaders,
-		mode?: ModeEnum,
-		simdReadings?: Session["simdReadings"],
-		entropyMathRandomFingerprint?: Session["entropyMathRandomFingerprint"],
-		entropyCryptoFingerprint?: Session["entropyCryptoFingerprint"],
-		entropyWallClockOffsetMs?: Session["entropyWallClockOffsetMs"],
-		entropyMathRandomFirst?: Session["entropyMathRandomFirst"],
-		bundleId?: Session["bundleId"],
-		currentUrl?: Session["currentUrl"],
-		tcpToChelloUs?: Session["tcpToChelloUs"],
-		chelloToHandshakeUs?: Session["chelloToHandshakeUs"],
-		isEscalation?: Session["isEscalation"],
-		iframeUrl?: Session["iframeUrl"],
-		isProtect?: Session["isProtect"],
-		originSessionId?: Session["originSessionId"],
-		g?: Session["g"],
-		matchedRule?: Session["matchedRule"],
-		i?: Session["i"],
-		sw?: Session["sw"],
-		md?: Session["md"],
-		bn?: Session["bn"],
-		fs?: Session["fs"],
-		// Kept as bags rather than expanded into positional params, to avoid
-		// pushing createSession's arity past 40.
-		rawTlsSignals?: Partial<RawTlsSignals>,
-		puzzleOverrides?: Pick<Session, "puzzleTolerance" | "puzzle">,
-	): Promise<Session> {
+	async createSession(input: CreateSessionInput): Promise<Session> {
+		// Destructured rather than spread: this list is the set of fields a
+		// session record is built from, so anything else on `input` is ignored
+		// exactly as it was when these were positional parameters.
+		const {
+			token,
+			score,
+			threshold,
+			scoreComponents,
+			ipAddress,
+			captchaType,
+			siteKey,
+			mode,
+			solvedImagesCount,
+			powDifficulty,
+			userSitekeyIpHash,
+			reason,
+			blocked,
+			deleted,
+			ipInfo,
+			headers,
+			bundleId,
+			currentUrl,
+			iframeUrl,
+			entropyMathRandomFingerprint,
+			entropyCryptoFingerprint,
+			entropyWallClockOffsetMs,
+			entropyMathRandomFirst,
+			g,
+			i,
+			sw,
+			md,
+			bn,
+			fs,
+			tcpToChelloUs,
+			chelloToHandshakeUs,
+			synNs,
+			synackNs,
+			ackNs,
+			observedTtl,
+			tcpMss,
+			tcpWscale,
+			tcpOptsFlags,
+			tcpOptsOrder,
+			tcpWindow,
+			simdReadings,
+			puzzleTolerance,
+			puzzle,
+			isEscalation,
+			originSessionId,
+			isProtect,
+			matchedRule,
+			webView = false,
+			iFrame = false,
+			decryptedHeadHash = "",
+		} = input;
+
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
 			createdAt: new Date(),
@@ -245,10 +275,8 @@ export class FrictionlessManager extends CaptchaManager {
 			mode,
 			solvedImagesCount,
 			powDifficulty,
-			...(puzzleOverrides?.puzzleTolerance !== undefined && {
-				puzzleTolerance: puzzleOverrides.puzzleTolerance,
-			}),
-			...(puzzleOverrides?.puzzle && { puzzle: puzzleOverrides.puzzle }),
+			...(puzzleTolerance !== undefined && { puzzleTolerance }),
+			...(puzzle && { puzzle }),
 			userSitekeyIpHash,
 			webView,
 			iFrame,
@@ -283,7 +311,15 @@ export class FrictionlessManager extends CaptchaManager {
 			fs,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
-			...(rawTlsSignals ?? {}),
+			synNs,
+			synackNs,
+			ackNs,
+			observedTtl,
+			tcpMss,
+			tcpWscale,
+			tcpOptsFlags,
+			tcpOptsOrder,
+			tcpWindow,
 			...(matchedRule && { matchedRule }),
 		};
 
@@ -581,59 +617,29 @@ export class FrictionlessManager extends CaptchaManager {
 				? effectiveParams.blocked
 				: undefined;
 
-		const sessionRecord = await this.createSession(
-			effectiveParams.token,
-			effectiveParams.score,
-			effectiveParams.threshold,
-			effectiveParams.scoreComponents,
-			effectiveParams.ipAddress,
-			finalCaptchaType,
-			effectiveParams.siteKey,
-			finalSolvedImagesCount,
-			finalPowDifficulty,
-			effectiveParams.userSitekeyIpHash,
-			effectiveParams.webView ?? false,
-			effectiveParams.iFrame ?? false,
-			effectiveParams.decryptedHeadHash,
-			finalReason,
+		const sessionRecord = await this.createSession({
+			...effectiveParams,
+			// Restated because the guard above narrows these on
+			// `effectiveParams`, and a spread would widen them back.
+			token: effectiveParams.token,
+			score: effectiveParams.score,
+			threshold: effectiveParams.threshold,
+			scoreComponents: effectiveParams.scoreComponents,
+			ipAddress: effectiveParams.ipAddress,
+			siteKey: effectiveParams.siteKey,
+			captchaType: finalCaptchaType,
+			solvedImagesCount: finalSolvedImagesCount,
+			powDifficulty: finalPowDifficulty,
+			reason: finalReason,
 			blocked,
-			undefined,
-			effectiveParams.ipInfo,
-			effectiveParams.headers,
-			effectiveParams.mode,
-			effectiveParams.simdReadings,
-			effectiveParams.entropyMathRandomFingerprint,
-			effectiveParams.entropyCryptoFingerprint,
-			effectiveParams.entropyWallClockOffsetMs,
-			effectiveParams.entropyMathRandomFirst,
-			effectiveParams.bundleId,
-			effectiveParams.currentUrl,
-			effectiveParams.tcpToChelloUs,
-			effectiveParams.chelloToHandshakeUs,
-			undefined,
-			effectiveParams.iframeUrl,
-			effectiveParams.isProtect,
-			undefined,
-			effectiveParams.g,
-			effectiveParams.matchedRule,
-			effectiveParams.i,
-			effectiveParams.sw,
-			effectiveParams.md,
-			effectiveParams.bn,
-			effectiveParams.fs,
-			{
-				synNs: effectiveParams.synNs,
-				synackNs: effectiveParams.synackNs,
-				ackNs: effectiveParams.ackNs,
-				observedTtl: effectiveParams.observedTtl,
-				tcpMss: effectiveParams.tcpMss,
-				tcpWscale: effectiveParams.tcpWscale,
-				tcpOptsFlags: effectiveParams.tcpOptsFlags,
-				tcpOptsOrder: effectiveParams.tcpOptsOrder,
-				tcpWindow: effectiveParams.tcpWindow,
-			},
-			finalPuzzleOverrides,
-		);
+			puzzleTolerance: finalPuzzleOverrides.puzzleTolerance,
+			puzzle: finalPuzzleOverrides.puzzle,
+			// Never set on this path; pinned so a stale value on
+			// `effectiveParams` can't reach the record through the spread.
+			deleted: undefined,
+			isEscalation: undefined,
+			originSessionId: undefined,
+		});
 
 		// Fire-and-forget served-counter writes, only useful when a router is in
 		// play.
@@ -674,58 +680,23 @@ export class FrictionlessManager extends CaptchaManager {
 			);
 		}
 
-		await this.createSession(
-			effectiveParams.token,
-			effectiveParams.score,
-			effectiveParams.threshold,
-			effectiveParams.scoreComponents,
-			effectiveParams.ipAddress,
-			CaptchaType.image,
-			effectiveParams.siteKey,
-			effectiveParams.solvedImagesCount,
-			undefined,
-			effectiveParams.userSitekeyIpHash,
-			effectiveParams.webView ?? false,
-			effectiveParams.iFrame ?? false,
-			effectiveParams.decryptedHeadHash,
-			effectiveParams.reason as FrictionlessReason,
-			true,
-			true,
-			effectiveParams.ipInfo,
-			effectiveParams.headers,
-			effectiveParams.mode,
-			effectiveParams.simdReadings,
-			effectiveParams.entropyMathRandomFingerprint,
-			effectiveParams.entropyCryptoFingerprint,
-			effectiveParams.entropyWallClockOffsetMs,
-			effectiveParams.entropyMathRandomFirst,
-			effectiveParams.bundleId,
-			effectiveParams.currentUrl,
-			effectiveParams.tcpToChelloUs,
-			effectiveParams.chelloToHandshakeUs,
-			undefined,
-			effectiveParams.iframeUrl,
-			effectiveParams.isProtect,
-			undefined,
-			effectiveParams.g,
-			effectiveParams.matchedRule,
-			effectiveParams.i,
-			effectiveParams.sw,
-			effectiveParams.md,
-			effectiveParams.bn,
-			effectiveParams.fs,
-			{
-				synNs: effectiveParams.synNs,
-				synackNs: effectiveParams.synackNs,
-				ackNs: effectiveParams.ackNs,
-				observedTtl: effectiveParams.observedTtl,
-				tcpMss: effectiveParams.tcpMss,
-				tcpWscale: effectiveParams.tcpWscale,
-				tcpOptsFlags: effectiveParams.tcpOptsFlags,
-				tcpOptsOrder: effectiveParams.tcpOptsOrder,
-				tcpWindow: effectiveParams.tcpWindow,
-			},
-		);
+		await this.createSession({
+			...effectiveParams,
+			token: effectiveParams.token,
+			score: effectiveParams.score,
+			threshold: effectiveParams.threshold,
+			scoreComponents: effectiveParams.scoreComponents,
+			ipAddress: effectiveParams.ipAddress,
+			siteKey: effectiveParams.siteKey,
+			captchaType: CaptchaType.image,
+			powDifficulty: undefined,
+			blocked: true,
+			deleted: true,
+			puzzleTolerance: undefined,
+			puzzle: undefined,
+			isEscalation: undefined,
+			originSessionId: undefined,
+		});
 	}
 
 	scoreIncreaseAccessPolicy(

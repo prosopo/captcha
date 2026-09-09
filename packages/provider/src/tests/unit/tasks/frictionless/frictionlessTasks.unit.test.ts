@@ -132,15 +132,15 @@ describe("Frictionless Task Manager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
 
-			const session = await frictionlessTaskManager.createSession(
-				mockToken,
-				mockScore,
-				mockThreshold,
-				mockScoreComponents,
-				mockIpAddress,
-				CaptchaType.image,
-				mockSiteKey,
-			);
+			const session = await frictionlessTaskManager.createSession({
+				token: mockToken,
+				score: mockScore,
+				threshold: mockThreshold,
+				scoreComponents: mockScoreComponents,
+				ipAddress: mockIpAddress,
+				captchaType: CaptchaType.image,
+				siteKey: mockSiteKey,
+			});
 
 			expect(session).toHaveProperty("sessionId");
 			expect(session).toHaveProperty("token", mockToken);
