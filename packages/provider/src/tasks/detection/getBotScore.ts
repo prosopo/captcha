@@ -46,6 +46,8 @@ export const getBotScore = async (
 		result.entropyMathRandomFirst;
 	const g: string | undefined = result.g;
 	const i: boolean | undefined = result.i;
+	const cv: number | undefined = result.cv;
+	const sq: number | undefined = result.sq;
 	const sw: boolean | undefined = result.sw;
 	const md: boolean | undefined = result.md;
 	const bn: boolean | undefined = result.bn;
@@ -75,6 +77,8 @@ export const getBotScore = async (
 		entropyMathRandomFirst,
 		g,
 		i,
+		cv,
+		sq,
 		sw,
 		md,
 		bn,

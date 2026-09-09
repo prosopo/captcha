@@ -57,6 +57,8 @@ export type DetectorResult = {
 	entropyMathRandomFirst?: number;
 	g?: string;
 	i?: boolean;
+	cv?: number;
+	sq?: number;
 	// Raw iOS WKWebView-vs-Safari DOM signals (positions 14-17 in the client
 	// payload). Undefined for clients that predate the fields, or on non-iOS
 	// / non-WebKit engines where the classifier gate returns early. Shipped
