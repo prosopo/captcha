@@ -15,6 +15,53 @@
 import type { DetectorResult } from "@prosopo/types";
 import getBotScoreFromPayload from "./decodePayload.js";
 
+// Mongo rejects field names containing "." or starting with "$", and the map
+// is unbounded client-controlled data that is now persisted on the session
+// record — an oversized or malformed key would fail the insert and 400 the
+// request. Entries that can't be stored are dropped rather than rejecting the
+// whole payload.
+const MAX_SIGNAL_KEYS = 64;
+const MAX_SIGNAL_KEY_LENGTH = 64;
+const MAX_SIGNAL_VALUES = 64;
+const MAX_SIGNAL_VALUE_LENGTH = 256;
+
+const isStringArray = (values: unknown): values is string[] =>
+	Array.isArray(values) &&
+	values.every(
+		(entry: unknown): entry is string =>
+			typeof entry === "string" && entry.length <= MAX_SIGNAL_VALUE_LENGTH,
+	);
+
+export const sanitiseSignalMap = (
+	value: unknown,
+): Record<string, string[]> | undefined => {
+	if (typeof value !== "object" || value === null || Array.isArray(value)) {
+		return undefined;
+	}
+
+	const sanitised: Record<string, string[]> = {};
+	let kept = 0;
+	for (const [key, values] of Object.entries(
+		value as Record<string, unknown>,
+	)) {
+		if (kept >= MAX_SIGNAL_KEYS) break;
+		if (
+			key.length === 0 ||
+			key.length > MAX_SIGNAL_KEY_LENGTH ||
+			key.includes(".") ||
+			key.startsWith("$") ||
+			key.includes("\u0000")
+		) {
+			continue;
+		}
+		if (!isStringArray(values)) continue;
+		sanitised[key] = values.slice(0, MAX_SIGNAL_VALUES);
+		kept += 1;
+	}
+
+	return Object.keys(sanitised).length > 0 ? sanitised : undefined;
+};
+
 export const getBotScore = async (
 	payload: string,
 	headHash: string,
@@ -52,7 +99,7 @@ export const getBotScore = async (
 	const md: boolean | undefined = result.md;
 	const bn: boolean | undefined = result.bn;
 	const fs: boolean | undefined = result.fs;
-	const b: Record<string, string[]> | undefined = result.b;
+	const b: Record<string, string[]> | undefined = sanitiseSignalMap(result.b);
 
 	if (baseBotScore === undefined || Number.isNaN(baseBotScore)) {
 		return {
