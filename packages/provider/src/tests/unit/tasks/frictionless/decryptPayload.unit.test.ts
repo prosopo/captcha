@@ -123,9 +123,9 @@ describe("decryptPayload", () => {
 
 	it("relays the collected client signals through to the caller", async () => {
 		// Every one of these is decoded by the detector bundle and then has to
-		// survive the per-key retry relay in decryptPayload. `b` and `i` were
-		// both decoded and then silently dropped, so no session ever carried
-		// them; assert the whole set rather than just the two that broke.
+		// survive the per-key retry relay in decryptPayload. `b`, `i`, `cv` and
+		// `sq` were all decoded and then silently dropped, so no session ever
+		// carried them; assert the whole set rather than just the ones that broke.
 		const b: Record<string, string[]> = {
 			cdpBinding: ["puppeteer", "puppeteer_1"],
 		};
@@ -137,6 +137,8 @@ describe("decryptPayload", () => {
 					triggeredDetectors: [50, 51],
 					g: "vendor~renderer",
 					i: true,
+					cv: 120,
+					sq: 1073741824,
 					b,
 					sw: true,
 					md: false,
@@ -174,6 +176,8 @@ describe("decryptPayload", () => {
 
 		expect(result.b).toEqual(b);
 		expect(result.i).toBe(true);
+		expect(result.cv).toBe(120);
+		expect(result.sq).toBe(1073741824);
 		expect(result.g).toBe("vendor~renderer");
 		expect(result.triggeredDetectors).toEqual([50, 51]);
 		expect(result.sw).toBe(true);
