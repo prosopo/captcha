@@ -54,7 +54,7 @@
 		"cidr-calc": "1.0.4",
 		"dotenv": "16.4.5",
 		"ip-address": "10.7.0",
-		"redis": "5.0.0",
+		"redis": "6.2.1",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
