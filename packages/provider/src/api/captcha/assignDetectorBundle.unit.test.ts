@@ -32,7 +32,10 @@ const cacheDetectorBundle = vi.fn(
  */
 const bindings = new Map<string, string>();
 const bindDetectorBundleToClient = vi.fn(
-	async (clientHash: string, candidateBundleId: string) => {
+	async (
+		clientHash: string,
+		candidateBundleId: string,
+	): Promise<string | null> => {
 		const existing = bindings.get(clientHash);
 		if (existing !== undefined) {
 			return existing;
