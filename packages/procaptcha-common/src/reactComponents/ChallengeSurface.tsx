@@ -42,37 +42,13 @@ interface ChallengeSurfaceProps {
 	scrim?: SurfaceScrim;
 	/** Called on Escape, and on an outside click when floating. */
 	onDismiss?: () => void;
-	/** Lifts the popup content on iOS, where Safari's bottom bar overlaps a centred dialog. */
-	popupIosLift?: boolean;
 	className?: string;
 }
 
 const SURFACE_Z_INDEX = 2147483646;
 const CONTENT_Z_INDEX = 2147483647;
 
-// `@supports` cannot be expressed inline, so the iOS lift is a stylesheet rule.
-const IOS_LIFT_STYLE_ID = "prosopo-challenge-surface-ios-lift";
-
-const IOS_LIFT_CSS = `
-.prosopo-challenge-content--ios-lift {
-	transform: translate(-50%, -50%);
-}
-@supports (-webkit-touch-callout: none) {
-	.prosopo-challenge-content--ios-lift {
-		transform: translate(-50%, -100%);
-	}
-}
-`;
-
-const ensureIosLiftStyles = (): void => {
-	if (typeof document === "undefined") return;
-	if (document.getElementById(IOS_LIFT_STYLE_ID)) return;
-
-	const style = document.createElement("style");
-	style.id = IOS_LIFT_STYLE_ID;
-	style.textContent = IOS_LIFT_CSS;
-	document.head.appendChild(style);
-};
+const POPUP_EDGE_GAP_PX = 8;
 
 const FLOAT_GAP_PX = 8;
 
@@ -113,7 +89,6 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 		anchor,
 		scrim = "none",
 		onDismiss,
-		popupIosLift = false,
 		className,
 	} = props;
 
@@ -198,10 +173,6 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 		return () => document.removeEventListener("pointerdown", onPointerDown);
 	}, [show, isFloating, anchor, onDismiss]);
 
-	useEffect(() => {
-		if (popupIosLift && !isFloating) ensureIosLiftStyles();
-	}, [popupIosLift, isFloating]);
-
 	if (typeof document === "undefined") return null;
 
 	const layerStyle: CSSProperties = isFloating
@@ -227,7 +198,12 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 				display: show ? "flex" : "none",
 				alignItems: "center",
 				justifyContent: "center",
-				minHeight: "100vh",
+				// `dvh`, not `vh`: on iOS Safari `100vh` is the toolbar-retracted
+				// height, which would make this box taller than the visible area and
+				// centre the challenge underneath the bottom bar.
+				minHeight: "100dvh",
+				padding: `${POPUP_EDGE_GAP_PX}px`,
+				boxSizing: "border-box",
 				backgroundColor:
 					scrim === "dim" && show ? "rgba(0, 0, 0, 0.4)" : "transparent",
 				transition: "background-color 0.3s ease",
@@ -244,13 +220,17 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 				visibility: floatPosition ? "visible" : "hidden",
 			}
 		: {
-				position: "absolute",
-				top: "50%",
-				left: "50%",
-				// When lifting, the stylesheet rule owns the transform.
-				transform: popupIosLift ? undefined : "translate(-50%, -50%)",
+				// Centred as a flex item by the layer rather than by
+				// `top/left: 50%` and a translate. An out-of-flow panel taller than
+				// the viewport overflows off both edges and its top is unreachable;
+				// in flow it is bounded by `maxHeight` and scrolls instead.
+				position: "relative",
 				zIndex: CONTENT_Z_INDEX,
 				boxSizing: "border-box",
+				maxWidth: "100%",
+				maxHeight: "100%",
+				overflowY: "auto",
+				overscrollBehavior: "contain",
 			};
 
 	return createPortal(
@@ -266,11 +246,7 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 		>
 			<div
 				ref={contentRef}
-				className={
-					popupIosLift && !isFloating
-						? "prosopo-challenge-content prosopo-challenge-content--ios-lift"
-						: "prosopo-challenge-content"
-				}
+				className="prosopo-challenge-content"
 				style={contentStyle}
 			>
 				{children}

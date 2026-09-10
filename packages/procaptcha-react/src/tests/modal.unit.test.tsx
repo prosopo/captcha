@@ -102,6 +102,33 @@ describe("stacking", () => {
 	test("covers the viewport so the page behind cannot be clicked", () => {
 		render(true);
 		expect(outer().style.position).toBe("fixed");
-		expect(outer().style.minHeight).toBe("100vh");
+		expect(outer().style.minHeight).toBe("100dvh");
+	});
+
+	test("does not lift the challenge by its own height on iOS", () => {
+		// The panel used to be translated up by a full 100% of its height, so a
+		// challenge taller than half the viewport lost its instruction line and
+		// top row of images off the top of the screen, with no way to scroll to
+		// them. Centring is the layer's job now.
+		render(true);
+		const panel = outer().querySelector<HTMLElement>(
+			".prosopo-challenge-content",
+		);
+
+		expect(panel?.className).not.toContain("ios-lift");
+		expect(panel?.style.transform).toBe("");
+		expect(
+			document.getElementById("prosopo-challenge-surface-ios-lift"),
+		).toBeNull();
+	});
+
+	test("lets a challenge taller than the viewport scroll instead of clipping", () => {
+		render(true);
+		const panel = outer().querySelector<HTMLElement>(
+			".prosopo-challenge-content",
+		);
+
+		expect(panel?.style.maxHeight).toBe("100%");
+		expect(panel?.style.overflowY).toBe("auto");
 	});
 });

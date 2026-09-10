@@ -100,6 +100,29 @@ describe("popup", () => {
 		expect(layer()?.style.pointerEvents).toBe("");
 	});
 
+	it("keeps a tall challenge inside the viewport rather than clipping its top", () => {
+		// A panel taller than the viewport used to be translated out of flow by
+		// its own full height, putting the instruction ("Select all containing
+		// ...") and the first row of images above the top of the screen with no
+		// way to scroll back to them. In flow it is bounded and scrolls instead.
+		render({ placement: PlacementEnum.popup });
+
+		const style = content()?.style;
+		expect(style?.position).not.toBe("absolute");
+		expect(style?.transform).toBe("");
+		expect(style?.maxHeight).toBe("100%");
+		expect(style?.overflowY).toBe("auto");
+	});
+
+	it("sizes the layer to the visible viewport, not the retracted-toolbar one", () => {
+		// `100vh` on iOS Safari is the toolbar-retracted height. Forcing the
+		// centring box to it put the challenge's lower half under the bottom bar,
+		// which is what the removed translate hack was compensating for.
+		render({ placement: PlacementEnum.popup });
+
+		expect(layer()?.style.minHeight).toBe("100dvh");
+	});
+
 	it("ignores an outside click", () => {
 		const onDismiss = vi.fn();
 		render({ placement: PlacementEnum.popup, onDismiss });
