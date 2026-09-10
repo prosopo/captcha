@@ -75,6 +75,12 @@ export default async function (
 		"process.env.PROSOPO_SERVER_URL": JSON.stringify(
 			process.env.PROSOPO_SERVER_URL,
 		),
+		// Lets a development widget reach a provider that is not on the machine
+		// serving the page — a phone or simulator testing over the LAN would
+		// otherwise resolve the default `localhost` to itself.
+		"process.env.PROSOPO_PROVIDER_URL_DEVELOPMENT": JSON.stringify(
+			process.env.PROSOPO_PROVIDER_URL_DEVELOPMENT,
+		),
 		"process.env._DEV_ONLY_WATCH_EVENTS": JSON.stringify(
 			process.env._DEV_ONLY_WATCH_EVENTS,
 		),

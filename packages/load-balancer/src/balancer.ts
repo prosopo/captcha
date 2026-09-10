@@ -14,6 +14,7 @@
 import { ProsopoEnvError } from "@prosopo/common";
 import type { EnvironmentTypes } from "@prosopo/types";
 import { z } from "zod";
+import { getDevelopmentProviderUrl } from "./developmentProviderUrl.js";
 
 const HardcodedProviderSchema = z.object({
 	address: z.string(),
@@ -89,7 +90,7 @@ export const loadBalancer = async (
 		return [
 			{
 				address: "5EjTA28bKSbFPPyMbUjNtArxyqjwq38r1BapVmLZShaqEedV",
-				url: "https://localhost:9229",
+				url: getDevelopmentProviderUrl(),
 				datasetId:
 					"0x7984714b92d61fd92fd6a7bc9b56b729481470bcc771c19c382ec679acf02e67",
 				weight: 1,
