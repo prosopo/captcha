@@ -49,5 +49,7 @@ export const getDevelopmentProviderUrl = (
 	override: string | undefined = readDevelopmentProviderUrlOverride(),
 ): string => {
 	const trimmed = override?.trim();
-	return trimmed ? trimmed.replace(/\/$/, "") : DEFAULT_DEVELOPMENT_PROVIDER_URL;
+	return trimmed
+		? trimmed.replace(/\/$/, "")
+		: DEFAULT_DEVELOPMENT_PROVIDER_URL;
 };
