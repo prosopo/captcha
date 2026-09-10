@@ -35,7 +35,7 @@
 		}
 	},
 	"dependencies": {
-		"@polkadot/util": "13.5.7",
+		"@polkadot/util": "14.0.3",
 		"@prosopo/api": "4.2.2",
 		"@prosopo/common": "3.1.54",
 		"@prosopo/datasets": "3.1.81",

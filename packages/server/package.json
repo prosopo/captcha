@@ -48,7 +48,7 @@
 		"i18next": "24.1.0"
 	},
 	"devDependencies": {
-		"@polkadot/util": "13.5.7",
+		"@polkadot/util": "14.0.3",
 		"@prosopo/config": "3.3.16",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",
