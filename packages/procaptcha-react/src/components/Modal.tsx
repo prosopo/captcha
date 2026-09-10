@@ -35,13 +35,13 @@ const ModalComponent = React.memo((props: ModalProps) => {
 			anchor={anchor}
 			onDismiss={onDismiss}
 			scrim="none"
-			popupIosLift
 			className="prosopo-modalOuter"
 		>
 			<div
 				className="prosopo-modalInner"
 				style={{
 					maxWidth: "500px",
+					maxHeight: "100%",
 					backgroundColor: "transparent",
 					border: "none",
 					borderRadius: "28px",
