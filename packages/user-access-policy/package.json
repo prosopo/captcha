@@ -62,7 +62,7 @@
 		"@prosopo/util-crypto": "13.5.31",
 		"@types/node": "22.10.2",
 		"fast-glob": "3.3.3",
-		"mongoose": "9.9.4",
+		"mongoose": "9.9.5",
 		"vite": "8.1.5",
 		"vitest": "4.1.11",
 		"yargs": "18.1.0"
