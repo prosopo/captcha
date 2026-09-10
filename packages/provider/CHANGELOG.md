@@ -1,5 +1,36 @@
 # @prosopo/provider
 
+## 5.10.1
+### Patch Changes
+
+- fad87b7: Populate `abuserScore` on the IP comparison result so `ipValidationRules` can use it. The field was read when evaluating `abuseScoreExceedAction` but never set, so that rule never fired for any site. Also counts both IPs exceeding the threshold as one condition rather than two, which previously mis-counted under `requireAllConditions`.
+- 477b4e7: Persist cv and sq from detector payload, and refresh the decoder bundle
+- e4d6f06: Persist cg and sm opaque payload keys
+- 24d6b7b: Persist `cv` and `sq` on the session record. Both were decoded from the detector
+  payload and copied onto the session params, but `createSession` had no entry for
+  them and dropped them before the write — the same hop where `b` was being lost.
+  Escalation sessions now carry them forward alongside `g` / `i` / `b`.
+  
+  The client-supplied `b` signal map is bounded and stripped of keys Mongo cannot
+  store as field names before it reaches the record, so a malformed or oversized
+  payload can no longer fail the session insert and turn into a failed captcha
+  request.
+- Updated dependencies [0d479f9]
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/load-balancer@2.10.43
+  - @prosopo/types-database@5.5.2
+  - @prosopo/types@5.8.2
+  - @prosopo/api@4.2.2
+  - @prosopo/api-express-router@3.1.86
+  - @prosopo/database@4.0.32
+  - @prosopo/datasets@3.1.81
+  - @prosopo/env@3.6.55
+  - @prosopo/ipinfo@0.4.1
+  - @prosopo/keyring@2.9.88
+  - @prosopo/types-env@2.11.1
+  - @prosopo/user-access-policy@3.14.2
+
 ## 5.10.0
 ### Minor Changes
 

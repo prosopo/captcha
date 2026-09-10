@@ -1,5 +1,15 @@
 # @prosopo/types-database
 
+## 5.5.2
+### Patch Changes
+
+- 477b4e7: Persist cv and sq from detector payload, and refresh the decoder bundle
+- e4d6f06: Persist cg and sm opaque payload keys
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/types@5.8.2
+  - @prosopo/user-access-policy@3.14.2
+
 ## 5.5.1
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-wrapper",
-	"version": "2.7.2",
+	"version": "2.7.3",
 	"type": "module",
 	"engines": {
 		"node": "^24",
@@ -27,11 +27,11 @@
 		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --coverage --config ./vite.test.config.ts"
 	},
 	"dependencies": {
-		"@prosopo/types": "5.8.1",
+		"@prosopo/types": "5.8.2",
 		"@prosopo/locale": "3.4.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.15",
+		"@prosopo/config": "3.3.16",
 		"@types/jsdom": "30.0.0",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",
