@@ -505,6 +505,8 @@ export const SessionSchema = object({
 	i: boolean().optional(),
 	cv: number().optional(),
 	sq: number().optional(),
+	cg: string().optional(),
+	sm: string().optional(),
 	b: record(string(), array(string())).optional(),
 	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
 	// classifier folds into `webView`. Persisted per session so
@@ -664,6 +666,8 @@ export type Session = {
 	i?: boolean;
 	cv?: number;
 	sq?: number;
+	cg?: string;
+	sm?: string;
 	b?: Record<string, string[]>;
 	// Raw iOS WKWebView-vs-Safari DOM signals — see SessionSchema above.
 	sw?: boolean;

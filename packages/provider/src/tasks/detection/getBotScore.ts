@@ -95,6 +95,8 @@ export const getBotScore = async (
 	const i: boolean | undefined = result.i;
 	const cv: number | undefined = result.cv;
 	const sq: number | undefined = result.sq;
+	const cg: string | undefined = result.cg;
+	const sm: string | undefined = result.sm;
 	const sw: boolean | undefined = result.sw;
 	const md: boolean | undefined = result.md;
 	const bn: boolean | undefined = result.bn;
@@ -126,6 +128,8 @@ export const getBotScore = async (
 		i,
 		cv,
 		sq,
+		cg,
+		sm,
 		sw,
 		md,
 		bn,

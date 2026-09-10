@@ -172,6 +172,8 @@ export class FrictionlessManager extends CaptchaManager {
 			i: params.i,
 			cv: params.cv,
 			sq: params.sq,
+			cg: params.cg,
+			sm: params.sm,
 			b: params.b,
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
@@ -240,6 +242,8 @@ export class FrictionlessManager extends CaptchaManager {
 			i,
 			cv,
 			sq,
+			cg,
+			sm,
 			b,
 			sw,
 			md,
@@ -312,6 +316,8 @@ export class FrictionlessManager extends CaptchaManager {
 			i,
 			cv,
 			sq,
+			cg,
+			sm,
 			b,
 			sw,
 			md,
@@ -840,6 +846,8 @@ export class FrictionlessManager extends CaptchaManager {
 		let ii: boolean | undefined;
 		let cvv: number | undefined;
 		let sqq: number | undefined;
+		let cgg: string | undefined;
+		let smm: string | undefined;
 		let bb: Record<string, string[]> | undefined;
 		let sw: boolean | undefined;
 		let md: boolean | undefined;
@@ -876,6 +884,8 @@ export class FrictionlessManager extends CaptchaManager {
 				const iv = decrypted.i;
 				const cvv2 = decrypted.cv;
 				const sqq2 = decrypted.sq;
+				const cgg2 = decrypted.cg;
+				const smm2 = decrypted.sm;
 				const bv = decrypted.b;
 				const swv = decrypted.sw;
 				const mdv = decrypted.md;
@@ -919,6 +929,8 @@ export class FrictionlessManager extends CaptchaManager {
 				ii = iv;
 				cvv = cvv2;
 				sqq = sqq2;
+				cgg = cgg2;
+				smm = smm2;
 				bb = bv;
 				sw = swv;
 				md = mdv;
@@ -991,6 +1003,8 @@ export class FrictionlessManager extends CaptchaManager {
 			i: ii,
 			cv: cvv,
 			sq: sqq,
+			cg: cgg,
+			sm: smm,
 			b: bb,
 			sw,
 			md,
