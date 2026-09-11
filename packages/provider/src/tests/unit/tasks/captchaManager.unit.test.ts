@@ -105,6 +105,7 @@ describe("CaptchaManager", () => {
 			cacheSessionEscalation: vi.fn().mockResolvedValue(true),
 			getCachedSessionEscalation: vi.fn().mockResolvedValue(null),
 			invalidateCachedSessionEscalation: vi.fn().mockResolvedValue(undefined),
+			getDetectorBundle: vi.fn().mockResolvedValue(null),
 		} as unknown as RedisWriteQueue;
 
 		captchaManager = new CaptchaManager(
@@ -2120,6 +2121,70 @@ describe("CaptchaManager", () => {
 				"1.2.3.4",
 			);
 			expect(check.isBlocked).toBe(false);
+		});
+	});
+
+	// Every one of these branches leaves the frictionless decrypt with no keys
+	// and fails closed to a challenge, so the cause has to be distinguishable
+	// from the logs alone.
+	describe("resolveBundleByDetectorSession", () => {
+		type LogPayload = { msg: string; data?: { cause?: string } };
+		const causeOf = (): string | undefined => {
+			const calls = (logger.info as ReturnType<typeof vi.fn>).mock
+				.calls as unknown as Array<[() => LogPayload]>;
+			for (const [build] of calls) {
+				const payload = build();
+				if (payload.msg === "Detector bundle not resolved") {
+					return payload.data?.cause;
+				}
+			}
+			return undefined;
+		};
+
+		it("reports noDetectorSession when the caller sent no detector session", async () => {
+			const result =
+				await captchaManager.resolveBundleByDetectorSession(undefined);
+			expect(result).toBeUndefined();
+			expect(causeOf()).toBe("noDetectorSession");
+		});
+
+		it("reports noBinding when the Redis binding is absent or expired", async () => {
+			(
+				mockWriteQueue.getDetectorBundle as ReturnType<typeof vi.fn>
+			).mockResolvedValue(null);
+			const result =
+				await captchaManager.resolveBundleByDetectorSession("detector-1");
+			expect(result).toBeUndefined();
+			expect(causeOf()).toBe("noBinding");
+		});
+
+		it("reports bundleNotInPool when the binding names a bundle this provider lacks", async () => {
+			(
+				mockWriteQueue.getDetectorBundle as ReturnType<typeof vi.fn>
+			).mockResolvedValue("bundle-1");
+			vi.spyOn(captchaManager, "resolveBundleById").mockReturnValue(undefined);
+			const result =
+				await captchaManager.resolveBundleByDetectorSession("detector-1");
+			expect(result).toBeUndefined();
+			expect(causeOf()).toBe("bundleNotInPool");
+		});
+
+		it("resolves the bundle and logs nothing on the success path", async () => {
+			(
+				mockWriteQueue.getDetectorBundle as ReturnType<typeof vi.fn>
+			).mockResolvedValue("bundle-1");
+			vi.spyOn(captchaManager, "resolveBundleById").mockReturnValue({
+				key: "private-key",
+				innerConfig: "inner-config",
+			});
+			const result =
+				await captchaManager.resolveBundleByDetectorSession("detector-1");
+			expect(result).toEqual({
+				key: "private-key",
+				innerConfig: "inner-config",
+				bundleId: "bundle-1",
+			});
+			expect(causeOf()).toBeUndefined();
 		});
 	});
 });
