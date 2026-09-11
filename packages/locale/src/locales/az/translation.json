@@ -377,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "Hesab tapılmadı",
 		"ACCOUNT_NOT_FOUND": "Hesab tapılmadı",
 		"NO_EXTENSION_FOUND": "Tətbiq tapılmadı",
-		"INSECURE_CONTEXT": "Procaptcha təhlükəsiz (HTTPS) bağlantı tələb edir"
+		"INSECURE_CONTEXT": "Procaptcha təhlükəsiz (HTTPS) bağlantı tələb edir",
+		"CHECKING": "İnsan olduğunuz yoxlanılır",
+		"IMAGE_DIALOG_LABEL": "Şəkil yoxlaması",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Tapmaca yoxlaması",
+			"DRAG": "Hissəni hədəfə sürüşdürün",
+			"RETRY": "Az qaldı — yenidən cəhd edin",
+			"PIECE_LABEL": "Tapmaca hissəsi",
+			"PIECE_ROLE": "sürüşdürülə bilən tapmaca hissəsi",
+			"KEYBOARD_HINT": "Hissəni ox düymələri ilə hərəkət etdirin, daha kiçik addımlar üçün Shift düyməsini basılı saxlayın. Göndərmək üçün Enter, başlanğıca qaytarmaq üçün Home, ləğv etmək üçün Escape düyməsini basın.",
+			"POSITION": "soldan {{x}} faiz, yuxarıdan {{y}} faiz",
+			"CHECKING": "Cavabınız yoxlanılır",
+			"RETRY_ANNOUNCEMENT": "Az qaldı. Yeni tapmaca yükləndi və hissə yenidən başlanğıcdadır."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Geçərsiz ünvan kodlanmadı",

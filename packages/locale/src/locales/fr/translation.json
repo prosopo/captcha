@@ -78,7 +78,20 @@
 		"NO_ACCOUNTS_FOUND": "Aucun compte trouvé",
 		"ACCOUNT_NOT_FOUND": "Compte non trouvé",
 		"NO_EXTENSION_FOUND": "Aucune extension trouvée",
-		"INSECURE_CONTEXT": "Procaptcha nécessite une connexion sécurisée (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha nécessite une connexion sécurisée (HTTPS)",
+		"CHECKING": "Vérification que vous êtes humain",
+		"IMAGE_DIALOG_LABEL": "Défi d'images",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Défi de puzzle",
+			"DRAG": "Faites glisser la pièce jusqu'à la cible",
+			"RETRY": "Presque — réessayez",
+			"PIECE_LABEL": "Pièce du puzzle",
+			"PIECE_ROLE": "pièce de puzzle déplaçable",
+			"KEYBOARD_HINT": "Utilisez les touches fléchées pour déplacer la pièce, en maintenant Maj pour des pas plus petits. Appuyez sur Entrée pour valider, Origine pour la remettre au départ, ou Échap pour annuler.",
+			"POSITION": "{{x}} pour cent depuis la gauche, {{y}} pour cent depuis le haut",
+			"CHECKING": "Vérification de votre réponse",
+			"RETRY_ANNOUNCEMENT": "Presque. Un nouveau puzzle a été chargé et la pièce est revenue au départ."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Échec de l'encodage de l'adresse invalide",

@@ -377,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "कई खत नह मल",
 		"ACCOUNT_NOT_FOUND": "खत नह मल",
 		"NO_EXTENSION_FOUND": "कई एकसटशन नह मल",
-		"INSECURE_CONTEXT": "Procaptcha के लिए सुरक्षित (HTTPS) कनेक्शन आवश्यक है"
+		"INSECURE_CONTEXT": "Procaptcha के लिए सुरक्षित (HTTPS) कनेक्शन आवश्यक है",
+		"CHECKING": "जाँचा जा रहा है कि आप मनुष्य हैं",
+		"IMAGE_DIALOG_LABEL": "छवि चुनौती",
+		"PUZZLE": {
+			"DIALOG_LABEL": "पहेली चुनौती",
+			"DRAG": "टुकड़े को लक्ष्य तक खींचें",
+			"RETRY": "लगभग सही — फिर से कोशिश करें",
+			"PIECE_LABEL": "पहेली का टुकड़ा",
+			"PIECE_ROLE": "खींचा जा सकने वाला पहेली का टुकड़ा",
+			"KEYBOARD_HINT": "टुकड़े को तीर कुंजियों से हिलाएँ; छोटे कदमों के लिए Shift दबाए रखें। भेजने के लिए Enter, शुरुआत में लौटाने के लिए Home, और रद्द करने के लिए Escape दबाएँ।",
+			"POSITION": "बाएँ से {{x}} प्रतिशत, ऊपर से {{y}} प्रतिशत",
+			"CHECKING": "आपका उत्तर जाँचा जा रहा है",
+			"RETRY_ANNOUNCEMENT": "लगभग सही। एक नई पहेली आ गई है और टुकड़ा फिर से शुरुआत में है।"
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "अवध पत क एनकड करन म वफल रह",

@@ -377,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "Nie znaleziono kont",
 		"ACCOUNT_NOT_FOUND": "Nie znaleziono konta",
 		"NO_EXTENSION_FOUND": "Nie znaleziono rozszerzenia",
-		"INSECURE_CONTEXT": "Procaptcha wymaga bezpiecznego połączenia (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha wymaga bezpiecznego połączenia (HTTPS)",
+		"CHECKING": "Sprawdzanie, czy jesteś człowiekiem",
+		"IMAGE_DIALOG_LABEL": "Zadanie z obrazkami",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Zadanie z układanką",
+			"DRAG": "Przeciągnij element na miejsce docelowe",
+			"RETRY": "Prawie — spróbuj ponownie",
+			"PIECE_LABEL": "Element układanki",
+			"PIECE_ROLE": "przeciągalny element układanki",
+			"KEYBOARD_HINT": "Użyj klawiszy strzałek, aby przesunąć element; przytrzymaj Shift, aby przesuwać go drobniej. Naciśnij Enter, aby go wysłać, Home, aby wrócić na początek, albo Escape, aby anulować.",
+			"POSITION": "{{x}} procent od lewej, {{y}} procent od góry",
+			"CHECKING": "Sprawdzanie odpowiedzi",
+			"RETRY_ANNOUNCEMENT": "Prawie. Wczytano nową układankę, a element wrócił na początek."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nie udało się zakodować nieprawidłowego adresu",

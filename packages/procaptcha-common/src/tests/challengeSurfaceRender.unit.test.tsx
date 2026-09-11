@@ -35,6 +35,8 @@ interface RenderArgs {
 	withAnchor?: boolean;
 	onDismiss?: () => void;
 	show?: boolean;
+	dialogLabel?: string;
+	focusableChildren?: number;
 }
 
 const render = ({
@@ -42,6 +44,8 @@ const render = ({
 	withAnchor = true,
 	onDismiss,
 	show = true,
+	dialogLabel,
+	focusableChildren = 0,
 }: RenderArgs): void => {
 	act(() => {
 		root.render(
@@ -50,9 +54,30 @@ const render = ({
 				placement={placement}
 				anchor={withAnchor ? anchor : null}
 				onDismiss={onDismiss}
+				dialogLabel={dialogLabel}
 			>
 				<div data-testid="challenge">challenge</div>
+				{Array.from(
+					{ length: focusableChildren },
+					(_, index) => `button-${index}`,
+				).map((id) => (
+					<button key={id} type="button">
+						{id}
+					</button>
+				))}
 			</ChallengeSurface>,
+		);
+	});
+};
+
+/** Scoped to the panel: tests put buttons on the page around it too. */
+const buttons = (): HTMLButtonElement[] =>
+	Array.from(content()?.querySelectorAll("button") ?? []);
+
+const pressTab = (shiftKey = false): void => {
+	act(() => {
+		document.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "Tab", bubbles: true, shiftKey }),
 		);
 	});
 };
@@ -226,5 +251,91 @@ describe("dismissing with the keyboard", () => {
 		});
 
 		expect(onDismiss).not.toHaveBeenCalled();
+	});
+});
+
+describe("as a dialog", () => {
+	it("stays inert for a challenge that does not name itself", () => {
+		render({});
+
+		expect(content()?.getAttribute("role")).toBeNull();
+		expect(content()?.getAttribute("aria-modal")).toBeNull();
+	});
+
+	it("names itself to assistive tech once a label is given", () => {
+		render({ dialogLabel: "Puzzle challenge" });
+
+		expect(content()?.getAttribute("role")).toBe("dialog");
+		expect(content()?.getAttribute("aria-modal")).toBe("true");
+		expect(content()?.getAttribute("aria-label")).toBe("Puzzle challenge");
+	});
+
+	it("takes focus so a screen reader lands on the challenge", () => {
+		render({ dialogLabel: "Puzzle challenge", focusableChildren: 2 });
+
+		expect(document.activeElement).toBe(buttons()[0]);
+	});
+
+	it("falls back to the panel when it holds nothing focusable", () => {
+		render({ dialogLabel: "Puzzle challenge" });
+
+		expect(document.activeElement).toBe(content());
+	});
+
+	it("gives focus back to whatever opened it", () => {
+		const opener = document.createElement("button");
+		document.body.appendChild(opener);
+		opener.focus();
+
+		render({ dialogLabel: "Puzzle challenge", focusableChildren: 1 });
+		expect(document.activeElement).not.toBe(opener);
+
+		act(() => root.unmount());
+		expect(document.activeElement).toBe(opener);
+
+		opener.remove();
+		root = createRoot(container);
+	});
+
+	it("wraps tab from the last control back to the first", () => {
+		render({ dialogLabel: "Puzzle challenge", focusableChildren: 2 });
+		const [first, last] = buttons();
+		last?.focus();
+
+		pressTab();
+
+		expect(document.activeElement).toBe(first);
+	});
+
+	it("wraps shift-tab from the first control back to the last", () => {
+		render({ dialogLabel: "Puzzle challenge", focusableChildren: 2 });
+		const [first, last] = buttons();
+		first?.focus();
+
+		pressTab(true);
+
+		expect(document.activeElement).toBe(last);
+	});
+
+	it("pulls focus back in if it has escaped to the page", () => {
+		const outside = document.createElement("button");
+		document.body.appendChild(outside);
+		render({ dialogLabel: "Puzzle challenge", focusableChildren: 2 });
+		outside.focus();
+
+		pressTab();
+
+		expect(document.activeElement).toBe(buttons()[0]);
+		outside.remove();
+	});
+
+	it("leaves tab alone for a challenge that is not a dialog", () => {
+		render({ focusableChildren: 2 });
+		const [, last] = buttons();
+		last?.focus();
+
+		pressTab();
+
+		expect(document.activeElement).toBe(last);
 	});
 });

@@ -269,9 +269,7 @@ describe("clicking the checkbox", () => {
 		fire(checkbox(), "click", { clientX: 1, clientY: 1 });
 		// The checkbox is swapped for a spinner while loading, so a second
 		// click cannot even reach it — the guard covers the race where it can.
-		expect(
-			mounted.container.querySelector('[aria-label="Loading spinner"]'),
-		).not.toBeNull();
+		expect(mounted.container.querySelector('[role="status"]')).not.toBeNull();
 		expect(start).toHaveBeenCalledTimes(1);
 		finish?.();
 	});
@@ -283,6 +281,41 @@ describe("clicking the checkbox", () => {
 		expect(checkbox()).toBeDefined();
 	});
 
+	test("the spinner takes over focus from the box it replaced", () => {
+		let finish: (() => void) | undefined;
+		start.mockImplementation(
+			() =>
+				new Promise<void>((resolve) => {
+					finish = resolve;
+				}),
+		);
+		render();
+		checkbox().focus();
+		fire(checkbox(), "click", { clientX: 1, clientY: 1 });
+
+		// Otherwise focus falls to the body and a keyboard user is dumped back
+		// at the top of the page with nothing said about why.
+		const spinner = mounted.container.querySelector('[role="status"]');
+		expect(document.activeElement).toBe(spinner);
+		expect(spinner?.getAttribute("aria-label")).toBe("WIDGET.CHECKING");
+		finish?.();
+	});
+
+	test("focus comes back to the box when the check is done", async () => {
+		render();
+		checkbox().focus();
+		fire(checkbox(), "click");
+		await flush();
+		expect(document.activeElement).toBe(checkbox());
+	});
+
+	test("a box the user never focused does not steal focus", async () => {
+		render();
+		fire(checkbox(), "click");
+		await flush();
+		expect(document.activeElement).not.toBe(checkbox());
+	});
+
 	test("shows the checkbox again when the start fails", async () => {
 		// A failed start still has to give the user their click back, otherwise
 		// the widget spins forever.
@@ -290,9 +323,7 @@ describe("clicking the checkbox", () => {
 		render();
 		fire(checkbox(), "click");
 		await flush();
-		expect(
-			mounted.container.querySelector('[aria-label="Loading spinner"]'),
-		).toBeNull();
+		expect(mounted.container.querySelector('[role="status"]')).toBeNull();
 	});
 
 	test("reflects a verified user as a ticked box", () => {
@@ -342,9 +373,7 @@ describe("recovering from an error", () => {
 		render();
 		fire(checkbox(), "click");
 		setState({ error: { message: "boom", key: "CAPTCHA.UNKNOWN" } });
-		expect(
-			mounted.container.querySelector('[aria-label="Loading spinner"]'),
-		).toBeNull();
+		expect(mounted.container.querySelector('[role="status"]')).toBeNull();
 	});
 
 	test("shows the error text against the checkbox", () => {
@@ -437,9 +466,7 @@ describe("starting without a click", () => {
 		start.mockImplementation(() => Promise.reject(new Error("network down")));
 		render({ autoStart: true });
 		await flush();
-		expect(
-			mounted.container.querySelector('[aria-label="Loading spinner"]'),
-		).toBeNull();
+		expect(mounted.container.querySelector('[role="status"]')).toBeNull();
 	});
 });
 

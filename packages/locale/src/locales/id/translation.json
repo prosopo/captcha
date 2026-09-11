@@ -377,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "Tidak ada akun ditemukan",
 		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
 		"NO_EXTENSION_FOUND": "Tidak ada ekstensi ditemukan",
-		"INSECURE_CONTEXT": "Procaptcha memerlukan koneksi aman (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha memerlukan koneksi aman (HTTPS)",
+		"CHECKING": "Memeriksa bahwa Anda manusia",
+		"IMAGE_DIALOG_LABEL": "Tantangan gambar",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Tantangan teka-teki",
+			"DRAG": "Seret kepingan ke sasaran",
+			"RETRY": "Nyaris — coba lagi",
+			"PIECE_LABEL": "Kepingan teka-teki",
+			"PIECE_ROLE": "kepingan teka-teki yang dapat diseret",
+			"KEYBOARD_HINT": "Gunakan tombol panah untuk menggeser kepingan, tahan Shift untuk langkah yang lebih kecil. Tekan Enter untuk mengirimnya, Home untuk mengembalikannya ke awal, atau Escape untuk membatalkan.",
+			"POSITION": "{{x}} persen dari kiri, {{y}} persen dari atas",
+			"CHECKING": "Memeriksa jawaban Anda",
+			"RETRY_ANNOUNCEMENT": "Nyaris. Teka-teki baru telah dimuat dan kepingan kembali ke awal."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Gagal mengkodekan alamat yang tidak valid",
