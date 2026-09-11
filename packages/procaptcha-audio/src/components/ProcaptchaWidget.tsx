@@ -1,0 +1,327 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import { loadI18next, useTranslation } from "@prosopo/locale";
+import { buildUpdateState, useProcaptcha } from "@prosopo/procaptcha-common";
+import { Checkbox, Honeypot, isEventTrusted } from "@prosopo/procaptcha-common";
+import {
+	type AudioEvent,
+	type GetAudioCaptchaResponse,
+	ModeEnum,
+	type ProcaptchaProps,
+} from "@prosopo/types";
+import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Manager } from "../services/Manager.js";
+import { AudioPlayer } from "./AudioPlayer.js";
+
+// Define the same event name as in the bundle for consistency
+const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
+
+type AudioPhase = "checkbox" | "answering" | "submitting";
+
+const Procaptcha = (props: ProcaptchaProps) => {
+	const { t, ready: isTranslationReady } = useTranslation();
+	const config = props.config;
+	const i18n = props.i18n;
+	const theme = "light" === config.theme ? lightTheme : darkTheme;
+	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
+	const callbacks = props.callbacks || {};
+	const [state, _updateState] = useProcaptcha(useState, useRef);
+	const [loading, setLoading] = useState(false);
+	const [audioPhase, setAudioPhase] = useState<AudioPhase>("checkbox");
+	const [challengeData, setChallengeData] =
+		useState<GetAudioCaptchaResponse | null>(null);
+	const [showRetry, setShowRetry] = useState(false);
+	// get the state update mechanism
+	const updateState = buildUpdateState(state, _updateState);
+	const hpRef = useRef<HTMLInputElement>(null);
+	// Read at call time rather than captured, so a wrapper that re-renders
+	// with a new handler is still the one a retry reaches.
+	const onReloadRef = useRef(props.onReload);
+	onReloadRef.current = props.onReload;
+	// Whether the retry is delegated is decided at mount: handing the manager
+	// a handler the wrapper never supplied would leave a wrong answer with
+	// nothing to re-mint the challenge with.
+	const delegatesReload = useRef(Boolean(props.onReload));
+	const manager = useRef(
+		Manager(
+			config,
+			state,
+			updateState,
+			callbacks,
+			frictionlessState,
+			() => hpRef.current?.value || undefined,
+			delegatesReload.current
+				? (x?: number, y?: number) => onReloadRef.current?.(x, y)
+				: undefined,
+		),
+	);
+	// See ProcaptchaWidget (procaptcha-pow) — same session-invalidation
+	// recovery contract with coords preservation across a re-mint.
+	const lastCoordsRef = useRef<{ x: number; y: number } | null>(null);
+	const sessionInvalidatedFiredRef = useRef(false);
+
+	useEffect(() => {
+		if (!config.language) return;
+		if (i18n) {
+			if (i18n.language !== config.language) {
+				void i18n.changeLanguage(config.language);
+			}
+			return;
+		}
+		// Direct-React consumers don't go through WidgetFactory, so pass the
+		// language into loadI18next — first init boots with the right language
+		// (skipping browser detection), and subsequent calls reconcile via
+		// changeLanguage inside loadI18next.
+		void loadI18next(false, config.language);
+	}, [i18n, config.language]);
+
+	useEffect(() => {
+		if (!props.autoStart) return;
+		setLoading(true);
+		setShowRetry(false);
+		const coords = props.startCoords;
+		lastCoordsRef.current = coords ?? null;
+		manager.current.start(coords?.x ?? 0, coords?.y ?? 0).then(
+			(challenge) => {
+				if (challenge) {
+					setChallengeData(challenge);
+					setAudioPhase("answering");
+				}
+				setLoading(false);
+			},
+			() => setLoading(false),
+		);
+	}, [props.autoStart, props.startCoords]);
+
+	useEffect(() => {
+		if (!state.error) return undefined;
+		setLoading(false);
+		setAudioPhase("checkbox");
+		setChallengeData(null);
+		setShowRetry(false);
+		if (state.error.key !== "CAPTCHA.NO_SESSION_FOUND") return undefined;
+		if (props.onSessionInvalidated && !sessionInvalidatedFiredRef.current) {
+			sessionInvalidatedFiredRef.current = true;
+			const coords = lastCoordsRef.current;
+			props.onSessionInvalidated(coords?.x, coords?.y);
+			return undefined;
+		}
+		if (frictionlessState) {
+			const timer = setTimeout(() => {
+				frictionlessState.restart();
+			}, 100);
+			return () => clearTimeout(timer);
+		}
+		return undefined;
+	}, [state.error, frictionlessState, props.onSessionInvalidated]);
+
+	// A bare execute() reaches every invisible widget via document. A targeted
+	// execute() is dispatched on this widget's container and works in either
+	// mode, which is what lets a bound button drive a visible widget.
+	useEffect(() => {
+		// Fetch a challenge then drive the audio UI through the same phase
+		// transitions as the visible checkbox flow.
+		const handleExecuteEvent = async () => {
+			if (loading) {
+				return;
+			}
+			setLoading(true);
+			setShowRetry(false);
+			try {
+				const challenge = await manager.current.start();
+				if (challenge) {
+					setChallengeData(challenge);
+					setAudioPhase("answering");
+				}
+			} catch (error) {
+				callbacks.onError?.(
+					error instanceof Error ? error : new Error(String(error)),
+				);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		const container = props.container;
+		const invisible = config.mode === ModeEnum.invisible;
+		container?.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+		if (invisible) {
+			document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+		}
+
+		return () => {
+			container?.removeEventListener(
+				PROCAPTCHA_EXECUTE_EVENT,
+				handleExecuteEvent,
+			);
+			if (invisible) {
+				document.removeEventListener(
+					PROCAPTCHA_EXECUTE_EVENT,
+					handleExecuteEvent,
+				);
+			}
+		};
+	}, [config.mode, callbacks.onError, loading, props.container]);
+
+	const handleAudioComplete = useCallback(
+		async (answer: string, replays: number, audioEvents: AudioEvent[]) => {
+			setAudioPhase("submitting");
+			let verified = false;
+			try {
+				verified = await manager.current.submitSolution(
+					answer,
+					replays,
+					audioEvents,
+				);
+			} catch (error) {
+				callbacks.onError?.(
+					error instanceof Error ? error : new Error(String(error)),
+				);
+			}
+
+			if (verified) {
+				setAudioPhase("checkbox");
+				setChallengeData(null);
+				setShowRetry(false);
+				setLoading(false);
+				return;
+			}
+
+			// Failed — show retry message and get another clip.
+			setShowRetry(true);
+			setAudioPhase("answering");
+
+			// When the wrapper takes the retry, the manager has already asked
+			// it to mint a fresh session and re-mount us; this instance is on
+			// its way out and must not fetch anything against the session the
+			// provider consumed when it issued the clip we just failed.
+			if (delegatesReload.current) {
+				setLoading(false);
+				return;
+			}
+
+			try {
+				const newChallenge = await manager.current.start();
+				if (newChallenge) {
+					setChallengeData(newChallenge);
+				} else {
+					// Couldn't get new challenge, fall back to checkbox
+					setAudioPhase("checkbox");
+					setChallengeData(null);
+					setShowRetry(false);
+				}
+			} catch {
+				setAudioPhase("checkbox");
+				setChallengeData(null);
+				setShowRetry(false);
+			}
+			setLoading(false);
+		},
+		[callbacks.onError],
+	);
+
+	const isInvisible = config.mode === ModeEnum.invisible;
+	const showAudioOverlay =
+		(audioPhase === "answering" || audioPhase === "submitting") &&
+		challengeData;
+
+	return (
+		<>
+			{frictionlessState?.hp && (
+				<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
+			)}
+			{/* Audio overlay — rendered outside the shadow DOM flow via fixed
+			    positioning. Shown in both visible and invisible modes once a
+			    challenge has been fetched; audio is inherently interactive. */}
+			{showAudioOverlay && (
+				<AudioPlayer
+					clip={challengeData.clip}
+					characterCount={challengeData.characterCount}
+					onComplete={handleAudioComplete}
+					showRetry={showRetry}
+					submitting={audioPhase === "submitting"}
+					theme={theme}
+					t={t}
+				/>
+			)}
+
+			{/* Checkbox — only in visible mode. Invisible mode is driven by
+			    the host page's execute() call (e.g. on form submit). */}
+			{!isInvisible && (
+				<Checkbox
+					checked={state.isHuman}
+					theme={theme}
+					onChange={async (event: React.MouseEvent | React.TouchEvent) => {
+						if (loading) {
+							return;
+						}
+						setLoading(true);
+						setShowRetry(false);
+
+						// Capture click coordinates (mirrors POW widget) so the
+						// audio solution salt records the entry-point telemetry.
+						let x = 0;
+						let y = 0;
+						const mouseOrTouchEvent = event.nativeEvent;
+						if (!isEventTrusted(mouseOrTouchEvent)) {
+							// Don't capture coordinates for non-trusted events
+						} else if (
+							"touches" in mouseOrTouchEvent &&
+							mouseOrTouchEvent.touches.length > 0 &&
+							mouseOrTouchEvent.touches[0]
+						) {
+							x = mouseOrTouchEvent.touches[0].clientX;
+							y = mouseOrTouchEvent.touches[0].clientY;
+						} else if (
+							"clientX" in mouseOrTouchEvent &&
+							"clientY" in mouseOrTouchEvent
+						) {
+							x = mouseOrTouchEvent.clientX;
+							y = mouseOrTouchEvent.clientY;
+						}
+
+						lastCoordsRef.current = { x, y };
+						try {
+							const challenge = await manager.current.start(x, y);
+
+							if (challenge) {
+								setChallengeData(challenge);
+								setAudioPhase("answering");
+							}
+						} catch (error) {
+							// The manager reports failures through state.error;
+							// rethrowing here only produces an unhandled rejection,
+							// since nothing awaits this handler.
+							callbacks.onError?.(
+								error instanceof Error ? error : new Error(String(error)),
+							);
+						} finally {
+							// A rejected start would otherwise leave the spinner up for
+							// good, with no way back to the checkbox for the user.
+							setLoading(false);
+						}
+					}}
+					labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
+					error={state.error?.message}
+					aria-label="human checkbox"
+					loading={loading || audioPhase === "submitting"}
+				/>
+			)}
+		</>
+	);
+};
+
+export default Procaptcha;

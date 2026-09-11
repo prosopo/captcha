@@ -390,7 +390,19 @@
 			"POSITION": "{{x}} phần trăm từ bên trái, {{y}} phần trăm từ trên xuống",
 			"CHECKING": "Đang kiểm tra câu trả lời của bạn",
 			"RETRY_ANNOUNCEMENT": "Suýt nữa. Một hình ghép mới đã được tải và mảnh ghép trở lại vị trí ban đầu."
-		}
+		},
+		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
+		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
+		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
+		"AUDIO_PLAY": "Play",
+		"AUDIO_REPLAY": "Play again",
+		"AUDIO_PLAYING": "Playing",
+		"AUDIO_FINISHED": "Playback finished",
+		"AUDIO_PLAYBACK_FAILED": "Audio could not be played. Check your device volume and try again.",
+		"AUDIO_INCORRECT": "That wasn't right. Here's a new one.",
+		"AUDIO_SUBMIT": "Verify",
+		"AUDIO_CHECKING": "Checking",
+		"AUDIO_ALTERNATIVE": "Use audio instead"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Không thể mã hóa địa chỉ không hợp lệ",

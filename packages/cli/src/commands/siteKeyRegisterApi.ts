@@ -144,6 +144,7 @@ export default (
 						imageMinRounds: image_min_rounds as number,
 						puzzleTolerance: puzzleToleranceDefault,
 						puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+						audioAccessibilityEnabled: false,
 						disallowWebView: false,
 						verifiedTimeout: 60000,
 						solutionTimeout: 60000,

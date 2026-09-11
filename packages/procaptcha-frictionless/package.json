@@ -33,6 +33,7 @@
 		"@prosopo/api": "4.2.2",
 		"@prosopo/common": "3.1.54",
 		"@prosopo/locale": "3.4.1",
+		"@prosopo/procaptcha-audio": "0.1.0",
 		"@prosopo/procaptcha-common": "2.13.3",
 		"@prosopo/procaptcha-pow": "2.12.3",
 		"@prosopo/procaptcha-puzzle": "2.12.3",

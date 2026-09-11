@@ -22,6 +22,9 @@
 			"path": "../locale"
 		},
 		{
+			"path": "../procaptcha-audio"
+		},
+		{
 			"path": "../procaptcha-pow"
 		},
 		{

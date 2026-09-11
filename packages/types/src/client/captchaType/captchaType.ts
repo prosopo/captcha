@@ -19,6 +19,7 @@ enum CaptchaType {
 	pow = "pow",
 	frictionless = "frictionless",
 	puzzle = "puzzle",
+	audio = "audio",
 	// Web Bot Auth verified — no user-facing challenge. Issued only by the
 	// frictionless flow when the request carried a valid Ed25519 signature
 	// per RFC 9421 / draft-meunier-web-bot-auth AND no operator-authored
@@ -31,13 +32,14 @@ enum CaptchaType {
 
 const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
 
-// Decision machines only work with pow, image and puzzle captcha types.
-// Frictionless is the outer flow that dispatches to these; authenticated
-// is a pre-verified pass-through and has no scoring surface.
+// Every type a decision machine may route to. Excludes `frictionless`,
+// which is the flow that *runs* the machine rather than an outcome of it,
+// and `authenticated`, a pre-verified pass-through with no scoring surface.
 const DecisionMachineCaptchaTypeSchema = z.union([
 	z.literal(CaptchaType.pow),
 	z.literal(CaptchaType.image),
 	z.literal(CaptchaType.puzzle),
+	z.literal(CaptchaType.audio),
 ]);
 
 export { CaptchaType, CaptchaTypeSchema, DecisionMachineCaptchaTypeSchema };

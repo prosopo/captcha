@@ -48,6 +48,7 @@ const defaultUserSettings: IUserSettings = {
 	frictionlessTypes: { image: true, puzzle: true },
 	domains: [],
 	captchaType: CaptchaType.frictionless,
+	audioAccessibilityEnabled: false,
 	powDifficulty: 4,
 	imageThreshold: 0.8,
 	imageMaxRounds: 3,

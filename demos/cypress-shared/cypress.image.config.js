@@ -79,6 +79,11 @@ export default defineConfig({
 			// bespoke lax-tolerance registration. Runs under its own
 			// cypress.puzzle.config.js.
 			"cypress/e2e/**/puzzle.cy.ts",
+			// Audio spec drives audio-implicit.html and needs the `audioAnswer`
+			// cy.task, which only cypress.audio.config.js registers — under this
+			// catch-all it reads the answer as undefined and fails before it
+			// gets anywhere near the grading path.
+			"cypress/e2e/**/audio.cy.ts",
 			// Escalation spec drives the frictionless flow + installs a
 			// dapp-scoped routing machine; it has its own
 			// cypress.escalation.config.js and must not be pulled into

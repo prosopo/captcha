@@ -101,6 +101,13 @@ const MAX_INTRA_TIER = TIER_GAP - 1;
 const CAPTCHA_TYPE_TIER: Record<string, number> = {
 	image: 4 * TIER_GAP,
 	puzzle: 3 * TIER_GAP,
+	// Audio shares the puzzle tier rather than sitting above it. Severity
+	// ranks how demanding a challenge is on the user, and audio is a
+	// different modality at comparable effort, not a harsher challenge.
+	// Ranking it top would let a single Restrict-to-audio rule or traffic
+	// category win every tie and quietly turn an accessibility affordance
+	// into the default challenge.
+	audio: 3 * TIER_GAP,
 	pow: 2 * TIER_GAP,
 	frictionless: 1 * TIER_GAP,
 };

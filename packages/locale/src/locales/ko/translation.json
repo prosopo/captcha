@@ -390,7 +390,19 @@
 			"POSITION": "왼쪽에서 {{x}} 퍼센트, 위에서 {{y}} 퍼센트",
 			"CHECKING": "답을 확인하는 중입니다",
 			"RETRY_ANNOUNCEMENT": "아깝습니다. 새 퍼즐이 불러와졌고 조각은 처음 위치로 돌아갔습니다."
-		}
+		},
+		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
+		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
+		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
+		"AUDIO_PLAY": "Play",
+		"AUDIO_REPLAY": "Play again",
+		"AUDIO_PLAYING": "Playing",
+		"AUDIO_FINISHED": "Playback finished",
+		"AUDIO_PLAYBACK_FAILED": "Audio could not be played. Check your device volume and try again.",
+		"AUDIO_INCORRECT": "That wasn't right. Here's a new one.",
+		"AUDIO_SUBMIT": "Verify",
+		"AUDIO_CHECKING": "Checking",
+		"AUDIO_ALTERNATIVE": "Use audio instead"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "유효하지 않은 주소를 인코딩하는 데 실패함",

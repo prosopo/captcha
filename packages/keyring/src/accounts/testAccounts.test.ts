@@ -31,6 +31,7 @@ describe("getDefaultSiteKeys", SLOW, () => {
 			CaptchaType.pow,
 			CaptchaType.frictionless,
 			CaptchaType.puzzle,
+			CaptchaType.audio,
 		]);
 	});
 
@@ -64,7 +65,7 @@ describe("getDefaultSiteKeys", SLOW, () => {
 		const second = getDefaultSiteKeys();
 		expect(first).not.toBe(second);
 		first.pop();
-		expect(second).toHaveLength(4);
+		expect(second).toHaveLength(5);
 	});
 });
 

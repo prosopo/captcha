@@ -245,6 +245,16 @@ const Procaptcha = (props: ProcaptchaProps) => {
 					placement={config.placement}
 					anchor={props.container}
 					onDismiss={handleDismiss}
+					audioAlternative={
+						props.audioAlternativeAvailable && props.onRequestAudioAlternative
+							? {
+									onRequestAudio: props.onRequestAudioAlternative,
+									label: isTranslationReady
+										? t("WIDGET.AUDIO_ALTERNATIVE")
+										: "",
+								}
+							: undefined
+					}
 				/>
 			)}
 
