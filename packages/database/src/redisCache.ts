@@ -50,16 +50,13 @@ export const DETECTOR_BUNDLE_TTL_SECONDS = 60;
  * TTL (seconds) for the client → bundle binding that makes `/detector/assign`
  * return the *same* bundle to a repeat caller.
  *
- * Without it every assign is an independent uniform draw from the pool, so one
- * caller can collect all N bundles in roughly `N * ln(N)` requests — measured
- * in production, ~800 requests over 20 minutes emptied a 100-bundle pool. The
- * binding caps a caller at one bundle per provider per window instead.
+ * Without it every assign is an independent draw, so the set of bundles a
+ * single caller has seen grows with the number of requests it makes. The
+ * binding holds that at one bundle per provider per window.
  *
- * An hour is long enough that re-collecting the pool costs an attacker either
- * many hours or many source addresses, and costs a legitimate client nothing:
- * bundle ids are stable across pool rebuilds (`bundle-0`…`bundle-N`), so a
- * binding made before a rotation resolves to the *new* bundle of that id
- * afterwards rather than going stale.
+ * An hour costs a legitimate client nothing: bundle ids are stable across pool
+ * rebuilds (`bundle-0`…`bundle-N`), so a binding made before a rotation
+ * resolves to the *new* bundle of that id afterwards rather than going stale.
  */
 export const DETECTOR_BUNDLE_CLIENT_TTL_SECONDS = 3600;
 
@@ -345,8 +342,8 @@ export class RedisWriteQueue {
 	 * caller can pick at random without knowing whether that pick will be used.
 	 * The set is `NX` and the read of an existing value follows it, which makes
 	 * concurrent assigns for one client converge on a single bundle rather than
-	 * racing to overwrite each other — a scraper opening 50 parallel connections
-	 * must not get 50 different bundles.
+	 * racing to overwrite each other — parallel requests from one caller must
+	 * not each resolve to a different bundle.
 	 *
 	 * Returns null when Redis is unavailable, meaning "no opinion": the caller
 	 * falls back to its random pick rather than failing the request, so a Redis

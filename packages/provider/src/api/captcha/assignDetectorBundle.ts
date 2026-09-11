@@ -38,12 +38,10 @@ const clientHash = (ip: string): string =>
  * (short-TTL) `detectorSessionId → bundleId` binding in Redis, and returns the
  * obfuscated detector script inline.
  *
- * The caller binding is what stops the pool being enumerated. A uniform draw
- * per request lets one address collect every bundle in `N * ln(N)` requests;
- * binding the choice to the caller for an hour caps them at one bundle per
- * provider per window. It costs a legitimate client nothing — any bundle
- * detects equally well, and a repeat visitor simply gets the one they already
- * have.
+ * Binding the choice to the caller keeps the set of bundles any one caller has
+ * seen from growing with the number of requests it makes. It costs a legitimate
+ * client nothing — any bundle detects equally well, and a repeat visitor simply
+ * gets the one they already have.
  *
  * When it cannot (no pool loaded, or Redis unavailable so the binding could not
  * be persisted) it returns `useProviderBundle: false`. There is NO bundled
