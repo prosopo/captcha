@@ -377,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "Niciun cont gasit",
 		"ACCOUNT_NOT_FOUND": "Contul nu a fost gasit",
 		"NO_EXTENSION_FOUND": "Nicio extensie gasita",
-		"INSECURE_CONTEXT": "Procaptcha necesită o conexiune securizată (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha necesită o conexiune securizată (HTTPS)",
+		"CHECKING": "Verificăm că ești om",
+		"IMAGE_DIALOG_LABEL": "Test cu imagini",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Test cu puzzle",
+			"DRAG": "Trage piesa până la țintă",
+			"RETRY": "Aproape — mai încearcă",
+			"PIECE_LABEL": "Piesă de puzzle",
+			"PIECE_ROLE": "piesă de puzzle care poate fi trasă",
+			"KEYBOARD_HINT": "Folosește tastele săgeți pentru a muta piesa, ținând apăsat Shift pentru pași mai mici. Apasă Enter pentru a o trimite, Home pentru a o readuce la început sau Escape pentru a anula.",
+			"POSITION": "{{x}} la sută din stânga, {{y}} la sută de sus",
+			"CHECKING": "Îți verificăm răspunsul",
+			"RETRY_ANNOUNCEMENT": "Aproape. S-a încărcat un puzzle nou, iar piesa este din nou la început."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Eroare la codificarea adresei invalide",

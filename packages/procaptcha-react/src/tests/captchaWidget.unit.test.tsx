@@ -180,6 +180,31 @@ describe("selection", () => {
 	});
 });
 
+describe("reaching the tiles without a mouse", () => {
+	test("each tile is a button, so it can be tabbed to and pressed", () => {
+		render();
+		expect(clickable(0).tagName).toBe("BUTTON");
+		expect(clickable(0).getAttribute("type")).toBe("button");
+	});
+
+	test("an unpicked tile says so", () => {
+		render();
+		expect(clickable(0).getAttribute("aria-pressed")).toBe("false");
+	});
+
+	test("a picked tile says so, rather than only looking picked", () => {
+		render({ solution: [["hash-2", 1, 2]] });
+		expect(clickable(0).getAttribute("aria-pressed")).toBe("false");
+		expect(clickable(1).getAttribute("aria-pressed")).toBe("true");
+	});
+
+	test("the tile takes its name from the image it holds", () => {
+		render();
+		expect(clickable(0).textContent).toBe("");
+		expect(tiles()[0]?.alt).toBe("Captcha image 1");
+	});
+});
+
 describe("clicking an image", () => {
 	test("reports the hash and where the user clicked", () => {
 		render();

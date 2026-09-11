@@ -141,7 +141,11 @@ describe("the grid", () => {
 describe("the controls", () => {
 	test("offers cancel, reload and a forward action", () => {
 		render();
-		expect(mounted.container.querySelectorAll("button")).toHaveLength(3);
+		// The image tiles are buttons too, and carry the pressed state that
+		// tells a screen reader whether they are picked; the controls do not.
+		expect(
+			mounted.container.querySelectorAll("button:not([aria-pressed])"),
+		).toHaveLength(3);
 	});
 
 	test("cancelling tells the manager to close the challenge", () => {
@@ -152,7 +156,7 @@ describe("the controls", () => {
 
 	test("reloading asks for a fresh challenge", () => {
 		render();
-		const reload = mounted.container.querySelectorAll("button")[1];
+		const reload = mounted.container.querySelector(".reload-button");
 		if (!reload) throw new Error("expected a reload button");
 		fire(reload, "click");
 		expect(onReload).toHaveBeenCalledTimes(1);

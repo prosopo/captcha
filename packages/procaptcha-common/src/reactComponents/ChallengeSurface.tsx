@@ -43,7 +43,26 @@ interface ChallengeSurfaceProps {
 	/** Called on Escape, and on an outside click when floating. */
 	onDismiss?: () => void;
 	className?: string;
+	/**
+	 * Accessible name for the panel. Supplying one turns the panel into a modal
+	 * dialog: it takes focus when it opens, keeps Tab inside itself while it is
+	 * open, and hands focus back to whatever opened it on close. Challenges
+	 * that have nothing focusable to offer leave it unset and stay inert.
+	 */
+	dialogLabel?: string;
 }
+
+const FOCUSABLE_SELECTOR = [
+	"a[href]",
+	"button:not([disabled])",
+	"input:not([disabled])",
+	"select:not([disabled])",
+	"textarea:not([disabled])",
+	'[tabindex]:not([tabindex="-1"])',
+].join(",");
+
+const focusableWithin = (root: HTMLElement): HTMLElement[] =>
+	Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
 
 const SURFACE_Z_INDEX = 2147483646;
 const CONTENT_Z_INDEX = 2147483647;
@@ -90,6 +109,7 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 		scrim = "none",
 		onDismiss,
 		className,
+		dialogLabel,
 	} = props;
 
 	const contentRef = useRef<HTMLDivElement>(null);
@@ -157,6 +177,53 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 		document.addEventListener("keydown", onKeyDown);
 		return () => document.removeEventListener("keydown", onKeyDown);
 	}, [show, onDismiss]);
+
+	useEffect(() => {
+		if (!show || !dialogLabel) return;
+
+		const content = contentRef.current;
+		if (!content) return;
+
+		const opener =
+			document.activeElement instanceof HTMLElement
+				? document.activeElement
+				: null;
+		// The panel itself is the fallback so the dialog's name is still
+		// announced when it holds nothing focusable.
+		(focusableWithin(content)[0] ?? content).focus();
+
+		return () => opener?.focus();
+	}, [show, dialogLabel]);
+
+	useEffect(() => {
+		if (!show || !dialogLabel) return;
+
+		// Tabbing off either end wraps back inside. A modal hides the rest of
+		// the page from assistive tech, so focus landing out there leaves the
+		// user somewhere they have no way to perceive or get back from.
+		const onKeyDown = (event: KeyboardEvent) => {
+			if (event.key !== "Tab") return;
+			const content = contentRef.current;
+			if (!content) return;
+
+			const focusable = focusableWithin(content);
+			const first = focusable[0] ?? content;
+			const last = focusable[focusable.length - 1] ?? content;
+			const active = document.activeElement;
+			const outside = !content.contains(active);
+
+			if (event.shiftKey && (outside || active === first)) {
+				event.preventDefault();
+				last.focus();
+			} else if (!event.shiftKey && (outside || active === last)) {
+				event.preventDefault();
+				first.focus();
+			}
+		};
+
+		document.addEventListener("keydown", onKeyDown);
+		return () => document.removeEventListener("keydown", onKeyDown);
+	}, [show, dialogLabel]);
 
 	useEffect(() => {
 		if (!show || !isFloating || !onDismiss) return;
@@ -244,10 +311,17 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 				.join(" ")}
 			style={layerStyle}
 		>
+			{/* biome-ignore lint/a11y/useSemanticElements: <dialog> brings its own
+			    top-layer and backdrop, which would fight the portal's own
+			    stacking and the float placement computed above. */}
 			<div
 				ref={contentRef}
 				className="prosopo-challenge-content"
 				style={contentStyle}
+				role={dialogLabel ? "dialog" : undefined}
+				aria-modal={dialogLabel ? true : undefined}
+				aria-label={dialogLabel}
+				tabIndex={dialogLabel ? -1 : undefined}
 			>
 				{children}
 			</div>

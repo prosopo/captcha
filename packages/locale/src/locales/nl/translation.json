@@ -377,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "Geen accounts gevonden",
 		"ACCOUNT_NOT_FOUND": "Account niet gevonden",
 		"NO_EXTENSION_FOUND": "Geen extensie gevonden",
-		"INSECURE_CONTEXT": "Procaptcha vereist een beveiligde (HTTPS-)verbinding"
+		"INSECURE_CONTEXT": "Procaptcha vereist een beveiligde (HTTPS-)verbinding",
+		"CHECKING": "Controleren of je een mens bent",
+		"IMAGE_DIALOG_LABEL": "Afbeeldingsopgave",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Puzzelopgave",
+			"DRAG": "Sleep het stukje naar het doel",
+			"RETRY": "Net niet — probeer het opnieuw",
+			"PIECE_LABEL": "Puzzelstukje",
+			"PIECE_ROLE": "versleepbaar puzzelstukje",
+			"KEYBOARD_HINT": "Gebruik de pijltoetsen om het stukje te verplaatsen, houd Shift ingedrukt voor kleinere stappen. Druk op Enter om te versturen, Home om het terug te zetten, of Escape om te annuleren.",
+			"POSITION": "{{x}} procent vanaf links, {{y}} procent vanaf boven",
+			"CHECKING": "Je antwoord wordt gecontroleerd",
+			"RETRY_ANNOUNCEMENT": "Net niet. Er is een nieuwe puzzel geladen en het stukje staat weer aan het begin."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Mislukt om ongeldig adres te coderen",

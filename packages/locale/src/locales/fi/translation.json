@@ -412,7 +412,20 @@
 		"NO_ACCOUNTS_FOUND": "Ei tilejä löytynyt",
 		"ACCOUNT_NOT_FOUND": "Tiliä ei löytynyt",
 		"NO_EXTENSION_FOUND": "Laajennusta ei löytynyt",
-		"INSECURE_CONTEXT": "Procaptcha vaatii suojatun (HTTPS) yhteyden"
+		"INSECURE_CONTEXT": "Procaptcha vaatii suojatun (HTTPS) yhteyden",
+		"CHECKING": "Tarkistetaan, että olet ihminen",
+		"IMAGE_DIALOG_LABEL": "Kuvatehtävä",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Palapelitehtävä",
+			"DRAG": "Vedä pala kohteeseen",
+			"RETRY": "Melkein — yritä uudelleen",
+			"PIECE_LABEL": "Palapelin pala",
+			"PIECE_ROLE": "vedettävä palapelin pala",
+			"KEYBOARD_HINT": "Siirrä palaa nuolinäppäimillä; pidä vaihtonäppäintä pohjassa, niin askel on pienempi. Lähetä painamalla Enter, palauta alkuun Home-näppäimellä tai peruuta Esc-näppäimellä.",
+			"POSITION": "{{x}} prosenttia vasemmalta, {{y}} prosenttia ylhäältä",
+			"CHECKING": "Tarkistetaan vastaustasi",
+			"RETRY_ANNOUNCEMENT": "Melkein. Uusi palapeli ladattiin ja pala on taas alussa."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Epäonnistui koodata virheellinen osoite",

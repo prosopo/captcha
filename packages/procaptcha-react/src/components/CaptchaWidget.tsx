@@ -17,7 +17,7 @@ import type { Captcha, HashedItem } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import type { Properties } from "csstype";
 import type React from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 export interface CaptchaWidgetProps {
 	challenge: Captcha;
@@ -49,6 +49,8 @@ export const CaptchaWidget = ({
 		() => (themeColor === "light" ? lightTheme : darkTheme),
 		[themeColor],
 	);
+	// Matched imperatively so the ring is keyboard-only, as ReloadButton does.
+	const [focusedHash, setFocusedHash] = useState<string | null>(null);
 
 	const fullSpacing = `${theme.spacing.unit}px`;
 
@@ -81,7 +83,13 @@ export const CaptchaWidget = ({
 				};
 				return (
 					<div style={imageStyle} key={item.hash}>
-						<div
+						{/* A button rather than a clickable div: the tiles are the
+						    whole challenge, and a div cannot be tabbed to, cannot be
+						    activated by Enter or Space, and tells a screen reader
+						    nothing about being selectable or already picked. */}
+						<button
+							type="button"
+							aria-pressed={selected}
 							style={{
 								position: "relative",
 								cursor: "pointer",
@@ -89,7 +97,21 @@ export const CaptchaWidget = ({
 								width: "100%",
 								padding: 0,
 								margin: 0,
+								border: "none",
+								background: "none",
+								appearance: "none",
+								display: "block",
+								...(focusedHash === hash
+									? {
+											outline: `3px solid ${theme.palette.primary.main}`,
+											outlineOffset: "2px",
+										}
+									: { outline: "none" }),
 							}}
+							onFocus={(e: React.FocusEvent<HTMLButtonElement>) =>
+								setFocusedHash(e.target.matches(":focus-visible") ? hash : null)
+							}
+							onBlur={() => setFocusedHash(null)}
 							// A tap delivers a click too, and React's synthetic click
 							// carries only clientX/clientY — never `touches` — so
 							// there is one set of coordinates to read, not three.
@@ -180,7 +202,7 @@ export const CaptchaWidget = ({
 									<path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
 								</svg>
 							</div>
-						</div>
+						</button>
 					</div>
 				);
 			})}

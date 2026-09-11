@@ -23,7 +23,9 @@ import {
 	type ButtonHTMLAttributes,
 	type CSSProperties,
 	type FC,
+	useEffect,
 	useMemo,
+	useRef,
 	useState,
 } from "react";
 import { isEventTrusted } from "../events/trust.js";
@@ -36,6 +38,8 @@ interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	labelText: string;
 	error?: string;
 	loading: boolean;
+	/** Name for the spinner that stands in for the box while it is working. */
+	loadingText?: string;
 }
 
 const checkboxBefore = css`{
@@ -101,8 +105,26 @@ export const Checkbox: FC<CheckboxProps> = ({
 	labelText,
 	error,
 	loading,
+	loadingText = "Checking that you are human",
 }: CheckboxProps) => {
 	const [hover, setHover] = useState(false);
+	const inputRef = useRef<HTMLInputElement>(null);
+	const spinnerRef = useRef<HTMLDivElement>(null);
+	// Removing a focused element drops focus to the body without firing blur,
+	// so this survives the swap and says whether the swap cost the user their
+	// place on the page.
+	const hadFocus = useRef(false);
+
+	// The spinner replaces the box in the DOM rather than covering it, which
+	// strands a keyboard user at the top of the page for as long as the check
+	// runs, with nothing said about why the box vanished. Handing focus across
+	// the swap and back keeps them where they were and gets each side's name
+	// read out as it arrives.
+	useEffect(() => {
+		if (!hadFocus.current) return;
+		const target = loading ? spinnerRef.current : inputRef.current;
+		target?.focus();
+	}, [loading]);
 
 	// M3 focus indicator: a 3dp outline offset by 2dp, drawn only for keyboard
 	// focus. The control previously had no focus affordance at all.
@@ -188,18 +210,30 @@ export const Checkbox: FC<CheckboxProps> = ({
 		>
 			{loading ? (
 				<div
+					ref={spinnerRef}
 					className={WIDGET_CHECKBOX_SPINNER_CSS_CLASS}
-					aria-label="Loading spinner"
+					role="status"
+					// Focusable only programmatically: it stands in for the input it
+					// replaced, so the name below is what a screen reader reads when
+					// focus is handed over.
+					tabIndex={-1}
+					aria-label={loadingText}
 				/>
 			) : (
 				<input
+					ref={inputRef}
 					name={id}
 					id={id}
 					onMouseEnter={() => setHover(true)}
 					onMouseLeave={() => setHover(false)}
+					onFocus={() => {
+						hadFocus.current = true;
+					}}
+					onBlur={() => {
+						hadFocus.current = false;
+					}}
 					css={[checkboxBefore, checkboxForcedColors, checkboxFocus]}
 					type={"checkbox"}
-					aria-live={"assertive"}
 					aria-label={labelText}
 					onKeyDown={(e) => {
 						if (!isEventTrusted(e)) {
