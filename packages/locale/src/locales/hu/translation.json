@@ -377,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "Nem található felhasználó",
 		"ACCOUNT_NOT_FOUND": "Felhasználó nem található",
 		"NO_EXTENSION_FOUND": "Nincs kiterjesztés található",
-		"INSECURE_CONTEXT": "A Procaptcha biztonságos (HTTPS) kapcsolatot igényel"
+		"INSECURE_CONTEXT": "A Procaptcha biztonságos (HTTPS) kapcsolatot igényel",
+		"CHECKING": "Ellenőrizzük, hogy ember vagy-e",
+		"IMAGE_DIALOG_LABEL": "Képes feladat",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Kirakós feladat",
+			"DRAG": "Húzd a darabot a célhelyre",
+			"RETRY": "Majdnem — próbáld újra",
+			"PIECE_LABEL": "Kirakósdarab",
+			"PIECE_ROLE": "húzható kirakósdarab",
+			"KEYBOARD_HINT": "A nyílbillentyűkkel mozgathatod a darabot, a Shift lenyomva tartásával kisebb lépésekben. Az Enter beküldi, a Home visszateszi a kiindulóhelyre, az Escape megszakítja.",
+			"POSITION": "{{x}} százalék balról, {{y}} százalék fentről",
+			"CHECKING": "Ellenőrizzük a válaszodat",
+			"RETRY_ANNOUNCEMENT": "Majdnem. Új kirakós töltődött be, a darab pedig visszakerült a kiindulóhelyre."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nem sikerült kódolni az érvénytelen címet",

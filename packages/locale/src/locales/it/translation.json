@@ -78,7 +78,20 @@
 		"NO_ACCOUNTS_FOUND": "Nessun account trovato",
 		"ACCOUNT_NOT_FOUND": "Account non trovato",
 		"NO_EXTENSION_FOUND": "Nessuna estensione trovata",
-		"INSECURE_CONTEXT": "Procaptcha richiede una connessione sicura (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha richiede una connessione sicura (HTTPS)",
+		"CHECKING": "Verifica che tu sia umano in corso",
+		"IMAGE_DIALOG_LABEL": "Verifica con immagini",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Verifica con puzzle",
+			"DRAG": "Trascina il pezzo fino al bersaglio",
+			"RETRY": "Quasi — riprova",
+			"PIECE_LABEL": "Pezzo del puzzle",
+			"PIECE_ROLE": "pezzo del puzzle trascinabile",
+			"KEYBOARD_HINT": "Usa i tasti freccia per spostare il pezzo, tenendo premuto Maiusc per passi più piccoli. Premi Invio per inviarlo, Home per riportarlo all'inizio o Esc per annullare.",
+			"POSITION": "{{x}} percento da sinistra, {{y}} percento dall'alto",
+			"CHECKING": "Verifica della tua risposta in corso",
+			"RETRY_ANNOUNCEMENT": "Quasi. È stato caricato un nuovo puzzle e il pezzo è tornato all'inizio."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Impossibile codificare l'indirizzo non valido",

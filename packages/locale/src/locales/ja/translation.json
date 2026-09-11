@@ -377,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "アカウントが見つかりません",
 		"ACCOUNT_NOT_FOUND": "アカウントが見つかりません",
 		"NO_EXTENSION_FOUND": "拡張機能が見つかりません",
-		"INSECURE_CONTEXT": "Procaptcha には安全な (HTTPS) 接続が必要です"
+		"INSECURE_CONTEXT": "Procaptcha には安全な (HTTPS) 接続が必要です",
+		"CHECKING": "人間であることを確認しています",
+		"IMAGE_DIALOG_LABEL": "画像による認証",
+		"PUZZLE": {
+			"DIALOG_LABEL": "パズルによる認証",
+			"DRAG": "ピースを目標の位置までドラッグしてください",
+			"RETRY": "惜しい — もう一度お試しください",
+			"PIECE_LABEL": "パズルのピース",
+			"PIECE_ROLE": "ドラッグできるパズルのピース",
+			"KEYBOARD_HINT": "矢印キーでピースを動かします。Shift キーを押しながらだと細かく動きます。Enter キーで送信、Home キーで開始位置に戻す、Escape キーで中止します。",
+			"POSITION": "左から {{x}} パーセント、上から {{y}} パーセント",
+			"CHECKING": "回答を確認しています",
+			"RETRY_ANNOUNCEMENT": "惜しい。新しいパズルが読み込まれ、ピースは開始位置に戻りました。"
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "無効なアドレスをエンコードできませんでした",

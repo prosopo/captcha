@@ -377,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "No accounts found",
 		"ACCOUNT_NOT_FOUND": "Account not found",
 		"NO_EXTENSION_FOUND": "No extension found",
-		"INSECURE_CONTEXT": "Procaptcha memerlukan sambungan selamat (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha memerlukan sambungan selamat (HTTPS)",
+		"CHECKING": "Mengesahkan bahawa anda manusia",
+		"IMAGE_DIALOG_LABEL": "Cabaran imej",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Cabaran teka-teki",
+			"DRAG": "Seret kepingan ke sasaran",
+			"RETRY": "Hampir — cuba lagi",
+			"PIECE_LABEL": "Kepingan teka-teki",
+			"PIECE_ROLE": "kepingan teka-teki yang boleh diseret",
+			"KEYBOARD_HINT": "Gunakan kekunci anak panah untuk menggerakkan kepingan, tekan dan tahan Shift untuk langkah yang lebih kecil. Tekan Enter untuk menghantarnya, Home untuk mengembalikannya ke permulaan, atau Escape untuk membatalkan.",
+			"POSITION": "{{x}} peratus dari kiri, {{y}} peratus dari atas",
+			"CHECKING": "Memeriksa jawapan anda",
+			"RETRY_ANNOUNCEMENT": "Hampir. Teka-teki baharu telah dimuatkan dan kepingan kembali ke permulaan."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Failed to encode invalid address",

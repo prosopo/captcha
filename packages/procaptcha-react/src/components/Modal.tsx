@@ -22,11 +22,12 @@ type ModalProps = {
 	placement?: PlacementType;
 	anchor?: HTMLElement | null;
 	onDismiss?: () => void;
+	dialogLabel?: string;
 };
 
 /** The image captcha's dialog frame; positioning lives in `ChallengeSurface`. */
 const ModalComponent = React.memo((props: ModalProps) => {
-	const { show, children, placement, anchor, onDismiss } = props;
+	const { show, children, placement, anchor, onDismiss, dialogLabel } = props;
 
 	return (
 		<ChallengeSurface
@@ -36,6 +37,7 @@ const ModalComponent = React.memo((props: ModalProps) => {
 			onDismiss={onDismiss}
 			scrim="none"
 			className="prosopo-modalOuter"
+			dialogLabel={dialogLabel}
 		>
 			<div
 				className="prosopo-modalInner"

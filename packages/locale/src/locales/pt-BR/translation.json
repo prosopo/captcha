@@ -78,7 +78,20 @@
 		"NO_ACCOUNTS_FOUND": "Nenhuma conta encontrada",
 		"ACCOUNT_NOT_FOUND": "Conta não encontrada",
 		"NO_EXTENSION_FOUND": "Nenhuma extensão encontrada",
-		"INSECURE_CONTEXT": "O Procaptcha requer uma conexão segura (HTTPS)"
+		"INSECURE_CONTEXT": "O Procaptcha requer uma conexão segura (HTTPS)",
+		"CHECKING": "Verificando se você é humano",
+		"IMAGE_DIALOG_LABEL": "Desafio de imagens",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Desafio de quebra-cabeça",
+			"DRAG": "Arraste a peça até o alvo",
+			"RETRY": "Quase — tente de novo",
+			"PIECE_LABEL": "Peça do quebra-cabeça",
+			"PIECE_ROLE": "peça de quebra-cabeça arrastável",
+			"KEYBOARD_HINT": "Use as teclas de seta para mover a peça, segurando Shift para passos menores. Pressione Enter para enviar, Home para voltar ao início ou Esc para cancelar.",
+			"POSITION": "{{x}} por cento a partir da esquerda, {{y}} por cento a partir do topo",
+			"CHECKING": "Verificando sua resposta",
+			"RETRY_ANNOUNCEMENT": "Quase. Um novo quebra-cabeça foi carregado e a peça voltou ao início."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Falha ao codificar endereço inválido",
