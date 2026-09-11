@@ -19,6 +19,7 @@ import {
 	ApiParams,
 	CaptchaType,
 	type CompositeIpAddress,
+	DEFAULT_MAX_TIMESTAMP_AGE,
 	FrictionlessReason,
 	type GetFrictionlessCaptchaResponse,
 	type IPInfoResponse,
@@ -52,8 +53,6 @@ import { getBotScore } from "../detection/getBotScore.js";
 import { samplePuzzleDifficulty } from "../puzzle/puzzleDifficulty.js";
 import { ipMatchesSession } from "./ipMatch.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
-
-const DEFAULT_MAX_TIMESTAMP_AGE = 60 * 10 * 1000; // 10 minutes
 
 const getSessionIDPrefix = (host?: string): string => {
 	return host ? host.replace(".prosopo.io", "") : "local";
