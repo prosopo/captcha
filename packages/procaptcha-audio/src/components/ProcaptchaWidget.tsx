@@ -47,6 +47,14 @@ const Procaptcha = (props: ProcaptchaProps) => {
 	// get the state update mechanism
 	const updateState = buildUpdateState(state, _updateState);
 	const hpRef = useRef<HTMLInputElement>(null);
+	// Read at call time rather than captured, so a wrapper that re-renders
+	// with a new handler is still the one a retry reaches.
+	const onReloadRef = useRef(props.onReload);
+	onReloadRef.current = props.onReload;
+	// Whether the retry is delegated is decided at mount: handing the manager
+	// a handler the wrapper never supplied would leave a wrong answer with
+	// nothing to re-mint the challenge with.
+	const delegatesReload = useRef(Boolean(props.onReload));
 	const manager = useRef(
 		Manager(
 			config,
@@ -55,6 +63,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 			callbacks,
 			frictionlessState,
 			() => hpRef.current?.value || undefined,
+			delegatesReload.current
+				? (x?: number, y?: number) => onReloadRef.current?.(x, y)
+				: undefined,
 		),
 	);
 	// See ProcaptchaWidget (procaptcha-pow) — same session-invalidation
@@ -189,9 +200,18 @@ const Procaptcha = (props: ProcaptchaProps) => {
 				return;
 			}
 
-			// Failed — show retry message and fetch a new challenge
+			// Failed — show retry message and get another clip.
 			setShowRetry(true);
 			setAudioPhase("answering");
+
+			// When the wrapper takes the retry, the manager has already asked
+			// it to mint a fresh session and re-mount us; this instance is on
+			// its way out and must not fetch anything against the session the
+			// provider consumed when it issued the clip we just failed.
+			if (delegatesReload.current) {
+				setLoading(false);
+				return;
+			}
 
 			try {
 				const newChallenge = await manager.current.start();

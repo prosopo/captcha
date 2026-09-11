@@ -442,6 +442,7 @@ export const ProcaptchaFrictionless = ({
 					startCoords={startCoords}
 					onSessionInvalidated={onSessionInvalidated}
 					container={container}
+					onReload={onReload}
 				/>,
 			);
 		} else {

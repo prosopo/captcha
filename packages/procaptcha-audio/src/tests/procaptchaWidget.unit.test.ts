@@ -61,6 +61,7 @@ const mocks = vi.hoisted(() => {
 	const constructions: {
 		updateState: (next: Partial<ProcaptchaState>) => void;
 		getHoneypotValue?: () => string | undefined;
+		onReloadRequest?: (x?: number, y?: number) => void;
 	}[] = [];
 	const loadI18next = vi.fn<(a?: boolean, b?: string) => Promise<unknown>>();
 	const checkboxProps: {
@@ -112,8 +113,13 @@ vi.mock("../services/Manager.js", () => ({
 		_callbacks: unknown,
 		_frictionlessState: unknown,
 		getHoneypotValue?: () => string | undefined,
+		onReloadRequest?: (x?: number, y?: number) => void,
 	) => {
-		mocks.constructions.push({ updateState, getHoneypotValue });
+		mocks.constructions.push({
+			updateState,
+			getHoneypotValue,
+			onReloadRequest,
+		});
 		return {
 			start: mocks.start,
 			submitSolution: mocks.submitSolution,
@@ -589,6 +595,30 @@ describe("answering the challenge", () => {
 			characterCount: 6,
 			submitting: false,
 		});
+	});
+
+	test("delegates the retry to the wrapper when it offered one", async () => {
+		const onReload = vi.fn<(x?: number, y?: number) => void>();
+		mocks.submitSolution.mockResolvedValue(false);
+		await openPlayer(props({ onReload }));
+		await complete();
+		// The manager drives the re-mint through the wrapper; fetching here
+		// as well would ask the provider for a clip against the session it
+		// consumed to issue the one just failed.
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+		expect(mocks.constructions[0]?.onReloadRequest).toBeTypeOf("function");
+	});
+
+	test("does not offer the manager a retry hook the wrapper never supplied", async () => {
+		await openPlayer();
+		expect(mocks.constructions[0]?.onReloadRequest).toBeUndefined();
+	});
+
+	test("the wrapper's retry handler is reached through the manager", async () => {
+		const onReload = vi.fn<(x?: number, y?: number) => void>();
+		await openPlayer(props({ onReload }));
+		mocks.constructions[0]?.onReloadRequest?.(3, 4);
+		expect(onReload).toHaveBeenCalledWith(3, 4);
 	});
 
 	test("a wrong answer with no replacement challenge closes the player", async () => {

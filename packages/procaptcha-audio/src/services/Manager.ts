@@ -64,6 +64,10 @@ export const Manager = (
 	// Reads the live honeypot input value at submit time. Returns undefined
 	// when the honeypot is disabled or the input hasn't been filled.
 	getHoneypotValue?: () => string | undefined,
+	// Asks the caller to mint a fresh session and re-mount this widget
+	// against it. Supplied by the frictionless wrapper; absent for a
+	// direct-React consumer, which has no session to re-mint.
+	onReloadRequest?: (x?: number, y?: number) => void,
 ): AudioManagerHandle => {
 	const events = getDefaultEvents(callbacks);
 
@@ -455,6 +459,23 @@ export const Manager = (
 				);
 				setValidChallengeTimeout();
 				return true;
+			}
+			if (onReloadRequest) {
+				// A wrong answer spends the challenge, and the provider
+				// consumed the session when it issued that challenge — so
+				// there is no session left to ask for another clip against.
+				// Drop the spent challenge but leave the frictionless flow
+				// alone: the caller re-runs it and re-mounts us against a new
+				// session. Restarting frictionless from here instead would
+				// tear the widget back down to an unticked checkbox, which
+				// is not the "here is another one" the user was promised.
+				updateState({ isHuman: false, loading: false });
+				events.onFailed();
+				const retryX = storedClickX;
+				const retryY = storedClickY;
+				resetState();
+				onReloadRequest(retryX, retryY);
+				return false;
 			}
 			onFailed();
 			return false;

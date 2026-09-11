@@ -197,6 +197,7 @@ interface HarnessOptions {
 	frictionlessState?: FrictionlessState;
 	withFrictionless?: boolean;
 	honeypot?: () => string | undefined;
+	onReloadRequest?: Mock<(x?: number, y?: number) => void>;
 }
 
 const build = (options: HarnessOptions = {}): Harness => {
@@ -224,6 +225,7 @@ const build = (options: HarnessOptions = {}): Harness => {
 		callbackInput,
 		frictionlessState,
 		options.honeypot,
+		options.onReloadRequest,
 	);
 	return { manager, state: currentState, updates, events, restart };
 };
@@ -732,6 +734,22 @@ describe("submitSolution: the verdict", () => {
 		expect(harness.events.onHuman).not.toHaveBeenCalled();
 		expect(harness.restart).toHaveBeenCalled();
 		expect(lastUpdate(harness, "isHuman")).toBe(false);
+	});
+
+	test("a rejected answer asks the wrapper for a fresh session, not a restart", async () => {
+		mocks.submitAudioCaptchaSolution.mockResolvedValue(
+			solutionResponse({ verified: false }),
+		);
+		const onReloadRequest = vi.fn<(x?: number, y?: number) => void>();
+		const harness = build({ onReloadRequest });
+		await expect(solve(harness)).resolves.toBe(false);
+		// The provider consumed the session when it issued the clip that was
+		// just failed, so there is nothing left to fetch another one against.
+		expect(onReloadRequest).toHaveBeenCalledWith(11, 22);
+		// Restarting frictionless from here would drop the user back to an
+		// unticked checkbox rather than handing them another clip.
+		expect(harness.restart).not.toHaveBeenCalled();
+		expect(harness.events.onFailed).toHaveBeenCalled();
 	});
 
 	test("a rejected answer without a frictionless state still resets", async () => {
