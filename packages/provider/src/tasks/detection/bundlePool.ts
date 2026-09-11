@@ -21,14 +21,13 @@
  * (`{ privateKey, innerConfig }`, kept server-side) produced by the catcher
  * `bundle:pool` build script.
  *
- * A bundle is assigned per detector session by {@link DetectorBundlePool.pickRandom},
+ * A bundle is assigned per detector session by {@link DetectorBundlePool.at},
  * served by id, and resolved again at decryption time so the provider uses the
  * single correct keypair + inner config rather than brute-forcing a key pool.
  * The session→bundle binding lives in Redis (short TTL); this module only holds
  * the immutable pool.
  */
 
-import { randomInt } from "node:crypto";
 import {
 	existsSync,
 	mkdirSync,
@@ -179,15 +178,15 @@ export class DetectorBundlePool {
 	}
 
 	/**
-	 * Pick a uniformly-random bundle. Throws if the pool is empty — the caller
-	 * must surface this as a hard failure (no bundle ⇒ no valid payload can be
-	 * produced).
+	 * Select by position. `ids` is sorted by {@link replace}, so an index means
+	 * the same bundle until the pool contents change. Reduced modulo the size, so
+	 * callers need not know how many bundles are loaded.
 	 */
-	pickRandom(): { bundleId: string; bundle: PoolBundle } {
+	at(index: number): { bundleId: string; bundle: PoolBundle } {
 		if (this.ids.length === 0) {
 			throw new Error("detector bundle pool is empty");
 		}
-		const bundleId = this.ids[randomInt(this.ids.length)];
+		const bundleId = this.ids[index % this.ids.length];
 		const bundle =
 			bundleId !== undefined ? this.bundles.get(bundleId) : undefined;
 		if (bundleId === undefined || !bundle) {
@@ -291,6 +290,11 @@ export function persistDetectorBundlePool(
 /** Get the global pool, or `null` if {@link initDetectorBundlePool} was never called. */
 export function getDetectorBundlePool(): DetectorBundlePool | null {
 	return globalPool;
+}
+
+/** Where the global pool was last loaded from — the host-mounted volume. */
+export function getDetectorBundlePoolDir(): string {
+	return globalPoolDir;
 }
 
 /**

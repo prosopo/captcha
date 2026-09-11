@@ -47,20 +47,6 @@ const SESSION_KEY_PATTERNS = [
 export const DETECTOR_BUNDLE_TTL_SECONDS = 60;
 
 /**
- * TTL (seconds) for the client → bundle binding that makes `/detector/assign`
- * return the *same* bundle to a repeat caller.
- *
- * Without it every assign is an independent draw, so the set of bundles a
- * single caller has seen grows with the number of requests it makes. The
- * binding holds that at one bundle per provider per window.
- *
- * An hour costs a legitimate client nothing: bundle ids are stable across pool
- * rebuilds (`bundle-0`…`bundle-N`), so a binding made before a rotation
- * resolves to the *new* bundle of that id afterwards rather than going stale.
- */
-export const DETECTOR_BUNDLE_CLIENT_TTL_SECONDS = 3600;
-
-/**
  * Redis-backed write queue and read cache for reducing MongoDB load.
  *
  * Provides:
@@ -331,47 +317,6 @@ export class RedisWriteQueue {
 				detectorSessionId,
 			}));
 			return false;
-		}
-	}
-
-	/**
-	 * Bind `clientHash` to a bundle for {@link DETECTOR_BUNDLE_CLIENT_TTL_SECONDS},
-	 * and return the bundle it is bound to.
-	 *
-	 * `candidateBundleId` is only used if the client has no binding yet, so the
-	 * caller can pick at random without knowing whether that pick will be used.
-	 * The set is `NX` and the read of an existing value follows it, which makes
-	 * concurrent assigns for one client converge on a single bundle rather than
-	 * racing to overwrite each other — parallel requests from one caller must
-	 * not each resolve to a different bundle.
-	 *
-	 * Returns null when Redis is unavailable, meaning "no opinion": the caller
-	 * falls back to its random pick rather than failing the request, so a Redis
-	 * outage degrades this to the previous behaviour instead of breaking assign.
-	 */
-	async bindDetectorBundleToClient(
-		clientHash: string,
-		candidateBundleId: string,
-		ttlSeconds: number = DETECTOR_BUNDLE_CLIENT_TTL_SECONDS,
-	): Promise<string | null> {
-		const client = await this.getClient();
-		if (!client) {
-			return null;
-		}
-		try {
-			const key = `cache:detector:client:${clientHash}`;
-			const stored = await client.set(key, candidateBundleId, {
-				NX: true,
-				EX: ttlSeconds,
-			});
-			return stored === null ? await client.get(key) : candidateBundleId;
-		} catch (error) {
-			this.logger.warn(() => ({
-				msg: "Failed to bind detector bundle to client in Redis",
-				err: error,
-				clientHash,
-			}));
-			return null;
 		}
 	}
 

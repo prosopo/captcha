@@ -383,10 +383,9 @@ export default (
 				// use to decrypt every later behavioural / SIMD payload for
 				// this session (via resolveBundleBySessionId). But the client
 				// on this request just did a fresh /detector/assign that
-				// bound `detectorSessionId` to whichever bundle
-				// DetectorBundlePool.pickRandom returned — almost never the
-				// same one the cached session stored, because the pick is
-				// uniform-random across the pool. If we hand the client the
+				// bound `detectorSessionId` to the bundle this caller now
+				// resolves to, which need not be the one the cached session
+				// stored. If we hand the client the
 				// cached sessionId, every later hop encrypts with the fresh
 				// detector's public key and the provider tries to decrypt
 				// with the cached bundle's private key, yielding
