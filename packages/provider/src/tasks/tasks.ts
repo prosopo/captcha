@@ -24,13 +24,13 @@ import type {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { UsageCounters } from "../util/usageCounters.js";
+import { AudioCaptchaManager } from "./audioCaptcha/audioTasks.js";
 import { ClientTaskManager } from "./client/clientTasks.js";
 import { DatasetManager } from "./dataset/datasetTasks.js";
 import { DecisionMachineRunner } from "./decisionMachine/decisionMachineRunner.js";
 import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
-import { AudioCaptchaManager } from "./audioCaptcha/audioTasks.js";
 import { PuzzleCaptchaManager } from "./puzzleCaptcha/puzzleTasks.js";
 
 /**

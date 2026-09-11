@@ -89,9 +89,8 @@ export interface AudioRenderSettings {
 	digitCount: number;
 	/**
 	 * Signal-to-noise ratio in dB against the additive noise bed. Lower is
-	 * noisier. Note this trades against humans at least as fast as it
-	 * trades against a recogniser — see the package README-in-comments at
-	 * the top of `distort.ts`.
+	 * noisier, and costs a listener more than it gains — see the note at
+	 * the top of `distort.ts` before lowering it.
 	 */
 	noiseSnrDb: number;
 	/**

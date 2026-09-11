@@ -21,11 +21,9 @@
  * resonances, and you get something a listener parses as speech. That is
  * the whole design: no recorded audio, no dictionary, no model weights.
  *
- * Why procedural rather than a recorded corpus: a fixed corpus is
- * harvestable. Record 10 digits × 20 speakers and an attacker collects all
- * 200 clips over a weekend, fingerprints them, and every future challenge
- * is a lookup. A generator with a continuous parameter space has no finite
- * set to collect.
+ * Why procedural rather than a recorded corpus: a fixed corpus is a
+ * finite set, and anything finite can eventually be collected and matched
+ * against. A generator with a continuous parameter space has no such set.
  */
 
 import type { Prng } from "./prng.js";

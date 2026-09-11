@@ -23,14 +23,14 @@ import express, {
 } from "express";
 import assignDetectorBundle from "./captcha/assignDetectorBundle.js";
 import checkSpamEmail from "./captcha/checkSpamEmail.js";
+import getAudioCaptchaChallenge from "./captcha/getAudioCaptchaChallenge.js";
 import getFrictionlessCaptchaChallenge from "./captcha/getFrictionlessCaptchaChallenge.js";
 import getImageCaptchaChallenge from "./captcha/getImageCaptchaChallenge.js";
 import getPoWCaptchaChallenge from "./captcha/getPoWCaptchaChallenge.js";
-import getAudioCaptchaChallenge from "./captcha/getAudioCaptchaChallenge.js";
 import getPuzzleCaptchaChallenge from "./captcha/getPuzzleCaptchaChallenge.js";
+import submitAudioCaptchaSolution from "./captcha/submitAudioCaptchaSolution.js";
 import submitImageCaptchaSolution from "./captcha/submitImageCaptchaSolution.js";
 import submitPoWCaptchaSolution from "./captcha/submitPoWCaptchaSolution.js";
-import submitAudioCaptchaSolution from "./captcha/submitAudioCaptchaSolution.js";
 import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.js";
 
 /**

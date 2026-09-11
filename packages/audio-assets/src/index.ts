@@ -64,9 +64,8 @@ export type {
  * resolves an effective value and passes it to `renderAudioChallenge`.
  *
  * These are set for intelligibility. See the note at the top of
- * `distort.ts` before raising the difficulty knobs — under this class of
- * distortion a recogniser degrades more slowly than a listener does, so
- * turning them up costs legitimate users more than it costs an attacker.
+ * `distort.ts` before raising the difficulty knobs: turning them up costs
+ * legitimate users far more than it gains.
  */
 export const DEFAULT_RENDER_SETTINGS: AudioRenderSettings = {
 	digitCount: 5,
@@ -102,11 +101,10 @@ const chooseAnswer = (prng: Prng, count: number): Utterance[] => {
  * down at random offsets underneath the foreground speech.
  *
  * Babble digits are drawn from the same alphabet as the answer, which is
- * the entire point — a recogniser that transcribes everything it hears
- * gets a longer string than the answer and no marker for which characters
- * were the foreground ones. Human listeners solve this by attending to
- * the loudest, closest voice, which is a thing people are unusually good
- * at and machines are not.
+ * the entire point: transcribing everything audible yields a longer
+ * string than the answer, with no marker for which characters were the
+ * foreground ones. Human listeners solve this by attending to the
+ * loudest, closest voice.
  */
 const renderBabble = (
 	prng: Prng,

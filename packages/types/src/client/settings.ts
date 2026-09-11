@@ -103,9 +103,9 @@ export const puzzlePieceScaleMaxDefault = 0.45;
 // These are tuned for intelligibility rather than for difficulty. The
 // audio challenge is the accessibility path, so its users are
 // disproportionately people for whom the visual challenge was not an
-// option; making it harder costs them more than it costs an attacker
-// with a speech recogniser. Difficulty is expected to come from varying
-// what the challenge *asks*, not from burying the answer in noise.
+// option, and distorting the audio further costs them more than it
+// gains. Difficulty is expected to come from varying what the challenge
+// *asks*, not from burying the answer in noise.
 export const audioDigitCountDefault = 5;
 export const audioNoiseSnrDbDefault = 14;
 export const audioBabbleGainDefault = 0.16;
@@ -266,10 +266,8 @@ export const puzzlePieceScaleFieldSchema = number().min(0.05).max(0.95);
 // gives up".
 export const audioDigitCountFieldSchema = number().int().min(3).max(8);
 // Floor of 3 dB rather than 0: below roughly that the noise is louder
-// than the speech and human accuracy collapses while a recogniser is
-// still coping. There is no operating point where this knob is a good
-// security trade — it is here to be turned *down* for accessibility, not
-// up for difficulty.
+// than the speech and a listener can no longer follow it. This knob is
+// here to be turned *down* for accessibility, not up for difficulty.
 export const audioNoiseSnrDbFieldSchema = number().min(3).max(60);
 export const audioBabbleGainFieldSchema = number().min(0).max(0.6);
 export const audioBabbleVoicesFieldSchema = number().int().min(0).max(4);

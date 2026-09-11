@@ -17,14 +17,11 @@
  *
  * READ THIS BEFORE TURNING THE KNOBS UP.
  *
- * Additive noise does not buy what it looks like it buys. Modern speech
- * recognisers are trained on deliberately augmented audio — noise, reverb,
- * band-limiting, speed perturbation are all standard augmentations — so
- * they degrade far more slowly under exactly these distortions than a
- * human listener does. Past a fairly low threshold, every extra decibel
- * of noise costs a real user more than it costs an attacker, and for this
- * challenge the real users are disproportionately people who chose the
- * audio path because the visual one was not available to them.
+ * Additive noise does not buy what it looks like it buys. Past a fairly
+ * low threshold, every extra decibel costs a real user far more than it
+ * gains, and for this challenge the real users are disproportionately
+ * people who chose the audio path because the visual one was not
+ * available to them.
  *
  * The defaults are therefore set for intelligibility, not for maximum
  * difficulty, and the durable difficulty work is expected to come from
@@ -167,11 +164,10 @@ export const addReverb = (buffer: AudioBuffer, mix: number): void => {
 /**
  * Telephone-style band-limiting, 300 Hz to 3.4 kHz.
  *
- * Deliberately NOT applied by default. It removes the high-frequency
- * energy that separates /s/ from /f/ from /θ/ — which is to say it makes
- * "six", "five" and "three" harder to tell apart — and a recogniser
- * handles that better than a person does. Kept available because it is
- * occasionally the right choice for a bandwidth-constrained deployment.
+ * Deliberately NOT applied by default: it removes the high-frequency
+ * energy a listener needs to tell several of the digit names apart. Kept
+ * available because it is occasionally the right choice for a
+ * bandwidth-constrained deployment.
  */
 export const bandLimit = (
 	buffer: AudioBuffer,

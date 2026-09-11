@@ -15,6 +15,7 @@
 import type { AllKeys } from "@prosopo/common";
 import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
 import {
+	type AudioCaptchaStored,
 	CaptchaLabel,
 	CaptchaType,
 	type ClientContextEntropy,
@@ -29,7 +30,6 @@ import {
 	ModeEnum,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
-	type AudioCaptchaStored,
 	type PuzzleCaptchaStored,
 	type Session,
 	type SimdReadingsStage,

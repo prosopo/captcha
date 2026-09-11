@@ -26,6 +26,7 @@
 		"@prosopo/api": "4.2.2",
 		"@prosopo/api-express-router": "3.1.86",
 		"@prosopo/api-route": "2.6.58",
+		"@prosopo/audio-assets": "0.1.0",
 		"@prosopo/captcha-severity": "1.1.0",
 		"@prosopo/common": "3.1.54",
 		"@prosopo/database": "4.0.32",

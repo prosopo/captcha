@@ -65,8 +65,8 @@ describe("validateAudioSolution", () => {
 	});
 
 	test("rejects a single-substitution near miss", () => {
-		// Deliberately no edit-distance tolerance — one allowed substitution
-		// would take a blind guess from 1-in-100,000 to roughly 1-in-2,200.
+		// Deliberately no edit-distance tolerance: one allowed substitution
+		// widens the accepted set by far more than it helps a listener.
 		expect(validateAudioSolution("12395", "12345")).toBe(false);
 	});
 

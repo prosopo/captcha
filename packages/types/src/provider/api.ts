@@ -902,6 +902,8 @@ export const ServerAudioCaptchaVerifyRequestBody = object({
 	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).email().optional(),
+	// See `VerifySolutionBody.clientSessionId`.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type ServerAudioCaptchaVerifyRequestBodyType = zInfer<

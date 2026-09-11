@@ -18,6 +18,8 @@ import {
 	type ApiResponse,
 	type AssignDetectorBundleRequestBodyOutput,
 	type AssignDetectorBundleResponse,
+	type AudioCaptchaSolutionResponse,
+	type AudioEvent,
 	type CaptchaRequestBodyType,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
@@ -30,14 +32,12 @@ import {
 	type DecisionMachineLanguage,
 	type DecisionMachineRuntime,
 	type DecisionMachineScope,
+	type GetAudioCaptchaChallengeRequestBodyType,
+	type GetAudioCaptchaResponse,
 	type GetFrictionlessCaptchaChallengeRequestBodyOutput,
 	type GetFrictionlessCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
-	type AudioCaptchaSolutionResponse,
-	type AudioEvent,
-	type GetAudioCaptchaChallengeRequestBodyType,
-	type GetAudioCaptchaResponse,
 	type GetPuzzleCaptchaChallengeRequestBodyType,
 	type GetPuzzleCaptchaResponse,
 	type IUserSettings,
@@ -56,12 +56,12 @@ import {
 	RemoveSitekeyBody,
 	RemoveSitekeysBody,
 	type RemoveSitekeysBodyTypeOutput,
-	type ServerPowCaptchaVerifyRequestBodyType,
 	type ServerAudioCaptchaVerifyRequestBodyType,
+	type ServerPowCaptchaVerifyRequestBodyType,
 	type ServerPuzzleCaptchaVerifyRequestBodyType,
 	type StoredEvents,
-	SubmitPowCaptchaSolutionBody,
 	SubmitAudioCaptchaSolutionBody,
+	SubmitPowCaptchaSolutionBody,
 	SubmitPuzzleCaptchaSolutionBody,
 	type Tier,
 	ToggleMaintenanceModeBody,
@@ -457,6 +457,7 @@ export default class ProviderApi
 		user: string,
 		ip?: string,
 		email?: string,
+		clientSessionId?: string,
 	): Promise<VerificationResponse> {
 		const body: ServerAudioCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
@@ -465,6 +466,9 @@ export default class ProviderApi
 		};
 		if (email) {
 			body[ApiParams.email] = email;
+		}
+		if (clientSessionId) {
+			body[ApiParams.clientSessionId] = clientSessionId;
 		}
 		return this.post(ClientApiPaths.VerifyAudioCaptchaSolution, body, {
 			headers: {

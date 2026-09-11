@@ -117,48 +117,53 @@ const Procaptcha = (props: ProcaptchaProps) => {
 		return undefined;
 	}, [state.error, frictionlessState, props.onSessionInvalidated]);
 
-	// Add event listener for the execute event (works for invisible mode)
+	// A bare execute() reaches every invisible widget via document. A targeted
+	// execute() is dispatched on this widget's container and works in either
+	// mode, which is what lets a bound button drive a visible widget.
 	useEffect(() => {
-		// Only set up event listener if in invisible mode
-		if (config.mode === ModeEnum.invisible) {
-			// Event handler for when execute() is called: fetch a challenge
-			// then drive the audio UI through the same phase transitions as
-			// the visible checkbox flow.
-			const handleExecuteEvent = async () => {
-				if (loading) {
-					return;
+		// Fetch a challenge then drive the audio UI through the same phase
+		// transitions as the visible checkbox flow.
+		const handleExecuteEvent = async () => {
+			if (loading) {
+				return;
+			}
+			setLoading(true);
+			setShowRetry(false);
+			try {
+				const challenge = await manager.current.start();
+				if (challenge) {
+					setChallengeData(challenge);
+					setAudioPhase("answering");
 				}
-				setLoading(true);
-				setShowRetry(false);
-				try {
-					const challenge = await manager.current.start();
-					if (challenge) {
-						setChallengeData(challenge);
-						setAudioPhase("answering");
-					}
-				} catch (error) {
-					callbacks.onError?.(
-						error instanceof Error ? error : new Error(String(error)),
-					);
-				} finally {
-					setLoading(false);
-				}
-			};
+			} catch (error) {
+				callbacks.onError?.(
+					error instanceof Error ? error : new Error(String(error)),
+				);
+			} finally {
+				setLoading(false);
+			}
+		};
 
+		const container = props.container;
+		const invisible = config.mode === ModeEnum.invisible;
+		container?.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+		if (invisible) {
 			document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+		}
 
-			// Cleanup function to remove event listener
-			return () => {
+		return () => {
+			container?.removeEventListener(
+				PROCAPTCHA_EXECUTE_EVENT,
+				handleExecuteEvent,
+			);
+			if (invisible) {
 				document.removeEventListener(
 					PROCAPTCHA_EXECUTE_EVENT,
 					handleExecuteEvent,
 				);
-			};
-		}
-
-		// Return empty cleanup function when not in invisible mode
-		return () => {};
-	}, [config.mode, callbacks.onError, loading]);
+			}
+		};
+	}, [config.mode, callbacks.onError, loading, props.container]);
 
 	const handleAudioComplete = useCallback(
 		async (answer: string, replays: number, audioEvents: AudioEvent[]) => {

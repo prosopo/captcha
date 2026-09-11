@@ -86,6 +86,7 @@ export const AudioPlayer = ({
 	// it once and typed the answer" — which is the value a solver that
 	// never renders audio will always report.
 	const replays = useRef(0);
+	const hasPlayed = useRef(false);
 	const events = useRef<AudioEvent[]>([]);
 	const startedAt = useRef<number>(Date.now());
 
@@ -102,16 +103,20 @@ export const AudioPlayer = ({
 	// element, but not before the browser has had a chance to keep playing
 	// the old audio for a frame or two — which, on a retry, means the user
 	// hears the end of the challenge they just got wrong while being shown
-	// the new one.
+	// the new one. React has already committed the new `src` by the time an
+	// effect runs, so there is nothing left to compare it against; pause
+	// unconditionally, which is a no-op on a clip that was never played.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional — `clip` is the challenge's identity and so the trigger for this reset, not a value the body reads.
 	useEffect(() => {
 		const audio = audioRef.current;
-		if (audio && audio.src !== clip) {
+		if (audio) {
 			audio.pause();
 			audio.currentTime = 0;
 		}
 		setAnswer("");
 		setPlaying(false);
 		replays.current = 0;
+		hasPlayed.current = false;
 		events.current = [];
 		startedAt.current = Date.now();
 	}, [clip]);
@@ -138,10 +143,14 @@ export const AudioPlayer = ({
 	const play = useCallback(() => {
 		const audio = audioRef.current;
 		if (!audio) return;
-		const isReplay = replays.current > 0 || audio.currentTime > 0;
+		// Every press after the first is a replay, whether or not the clip
+		// got far enough to advance `currentTime` — a user who hits play
+		// twice in quick succession has still asked to hear it twice.
+		const isReplay = hasPlayed.current;
 		audio.currentTime = 0;
 		record(isReplay ? "replay" : "play");
 		if (isReplay) replays.current += 1;
+		hasPlayed.current = true;
 		void audio.play().then(
 			() => {
 				setPlaying(true);
@@ -261,7 +270,7 @@ export const AudioPlayer = ({
 					>
 						{playing
 							? t("WIDGET.AUDIO_PLAYING")
-							: replays.current > 0 || answer.length > 0
+							: hasPlayed.current || answer.length > 0
 								? t("WIDGET.AUDIO_REPLAY")
 								: t("WIDGET.AUDIO_PLAY")}
 					</button>

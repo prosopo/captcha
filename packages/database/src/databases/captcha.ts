@@ -15,13 +15,13 @@
 import { ProsopoDBError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
+	type AudioCaptchaRecord,
 	type CaptchaProperties,
 	type ICaptchaDatabase,
 	type PoWCaptchaRecord,
 	type PuzzleCaptchaRecord,
-	StoredPoWCaptchaRecordSchema,
-	type AudioCaptchaRecord,
 	StoredAudioCaptchaRecordSchema,
+	StoredPoWCaptchaRecordSchema,
 	StoredPuzzleCaptchaRecordSchema,
 	type StoredSession,
 	StoredSessionRecordSchema,

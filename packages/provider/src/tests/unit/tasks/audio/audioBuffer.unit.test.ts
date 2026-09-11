@@ -50,8 +50,8 @@ describe("createAudioChallengeBuffer", () => {
 	});
 
 	test("never hands out the same challenge twice", () => {
-		// This is the security property, not an optimisation: a repeated
-		// clip is a free labelled training pair for an attacker.
+		// This is the security property, not an optimisation: a clip that
+		// came round again would be a clip whose answer is already known.
 		buffer = createAudioChallengeBuffer({
 			capacity: 6,
 			primeSettings: fastSettings,

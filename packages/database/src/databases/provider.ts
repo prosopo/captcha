@@ -21,6 +21,7 @@ import {
 	setupRedisIndex,
 } from "@prosopo/redis-client";
 import {
+	type AudioCaptchaStored,
 	type Captcha,
 	type CaptchaResult,
 	type CaptchaSolution,
@@ -42,7 +43,6 @@ import {
 	type PoWCaptchaStored,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
-	type AudioCaptchaStored,
 	type PuzzleCaptchaStored,
 	type RequestHeaders,
 	type ResultReason,
@@ -60,6 +60,8 @@ import {
 } from "@prosopo/types";
 import type { SessionRecord, StoredSession } from "@prosopo/types-database";
 import {
+	type AudioCaptchaRecord,
+	AudioCaptchaRecordSchema,
 	CaptchaRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
@@ -70,9 +72,7 @@ import {
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
 	type ProjectedSession,
-	type AudioCaptchaRecord,
 	type PuzzleCaptchaRecord,
-	AudioCaptchaRecordSchema,
 	PuzzleCaptchaRecordSchema,
 	SESSION_PROJECTION,
 	type ScheduledTask,

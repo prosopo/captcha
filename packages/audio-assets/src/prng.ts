@@ -18,12 +18,10 @@ import { randomBytes } from "node:crypto";
  * Deterministic PRNG for speech synthesis.
  *
  * SECURITY: the generator algorithm is public (this repo is open source), so
- * the seed is the ONLY thing standing between an attacker and a sample-exact
- * reproduction of the clip. Given the seed they can re-render the clean
- * (noise-free, babble-free) rendering of the same challenge and read the
- * spoken digits straight off it without ever running a speech recogniser.
- * Seeds are therefore 128 bits from the system CSPRNG and must never leave
- * the provider — not in the response, not in logs, not on the session record.
+ * the seed is the ONLY thing standing between a caller and a sample-exact
+ * reproduction of the clip, which would give away the answer. Seeds are
+ * therefore 128 bits from the system CSPRNG and must never leave the
+ * provider — not in the response, not in logs, not on the session record.
  */
 export interface Prng {
 	/** Uniform in [0, 1). */

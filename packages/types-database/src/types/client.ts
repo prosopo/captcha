@@ -162,7 +162,6 @@ export const AudioRenderSettingsSchema = new Schema(
 	{ _id: false },
 );
 
-
 // Sub-schema for one trafficFilter category's policy. `_id: false` prevents
 // Mongoose from stamping an implicit ObjectId onto each subdoc.
 export const TrafficCategoryPolicySchema = new Schema(

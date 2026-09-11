@@ -26,11 +26,14 @@ import { flatten } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../express.js";
-import { Tasks } from "../../tasks/index.js";
 import { resolveAudioRenderSettings } from "../../tasks/audio/audioRenderer.js";
+import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
-import { getRequestUserScope } from "../blacklistRequestInspector.js";
+import {
+	getRequestUserScope,
+	normalizeHeadersForMatching,
+} from "../blacklistRequestInspector.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildAudioMaintenanceResponse } from "./maintenanceModeResponses.js";
@@ -130,6 +133,7 @@ export default (
 					userAccessRulesStorage,
 					dapp,
 					userScope,
+					normalizeHeadersForMatching(req.headers),
 				)
 			).find((p) => !p.deferToVerify);
 

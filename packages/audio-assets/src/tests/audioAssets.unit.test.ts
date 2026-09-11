@@ -190,8 +190,8 @@ describe("renderAudioChallenge", () => {
 	});
 
 	test("consecutive challenges differ in both answer and audio", () => {
-		// A repeated clip is a free training pair for an attacker, so this
-		// is a security property rather than a quality one.
+		// A clip that came round again would be a clip whose answer is
+		// already known, so this is a security property, not a quality one.
 		const answers = new Set<string>();
 		const digests = new Set<string>();
 		for (let i = 0; i < 12; i++) {

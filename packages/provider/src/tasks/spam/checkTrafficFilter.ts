@@ -15,9 +15,9 @@
 import { isStricterCaptchaType } from "@prosopo/captcha-severity";
 import {
 	type CaptchaType,
+	type IAudioSettings,
 	type IPInfoResponse,
 	type IPInfoResult,
-	type IAudioSettings,
 	type IPuzzleSettings,
 	type ITrafficCategoryPolicy,
 	type ITrafficFilter,

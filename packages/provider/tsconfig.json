@@ -24,6 +24,9 @@
 			"path": "../api-express-router"
 		},
 		{
+			"path": "../audio-assets"
+		},
+		{
 			"path": "../common"
 		},
 		{

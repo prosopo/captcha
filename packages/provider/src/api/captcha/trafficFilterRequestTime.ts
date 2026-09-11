@@ -16,8 +16,8 @@ import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
 	type GetFrictionlessCaptchaResponse,
-	type IPInfoResponse,
 	type IAudioSettings,
+	type IPInfoResponse,
 	type IPuzzleSettings,
 	type ITrafficFilter,
 	clampImageRounds,

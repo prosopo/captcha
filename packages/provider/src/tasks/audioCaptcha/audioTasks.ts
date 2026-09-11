@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
+import type { AudioRenderSettings } from "@prosopo/audio-assets";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
@@ -23,6 +24,7 @@ import {
 } from "@prosopo/types";
 import {
 	ApiParams,
+	type AudioEvent,
 	type BehavioralDataPacked,
 	type CaptchaResult,
 	CaptchaStatus,
@@ -32,7 +34,6 @@ import {
 	type ITrafficFilter,
 	POW_SEPARATOR,
 	type PoWChallengeId,
-	type AudioEvent,
 	type RequestHeaders,
 	ResultReason,
 	SimdReadingsStage,
@@ -44,7 +45,6 @@ import {
 	type AccessRulesStorage,
 	describeMatchedRule,
 } from "@prosopo/user-access-policy";
-import type { AudioRenderSettings } from "@prosopo/audio-assets";
 import {
 	assertCoordsSafe,
 	at,
@@ -60,6 +60,15 @@ import {
 	type UsageCounters,
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
+import {
+	isClientSessionMismatch,
+	toStoredClientMetaData,
+} from "../../utils/clientMetaData.js";
+import {
+	type RenderedAudioClip,
+	renderAudioClip,
+	resolveAudioRenderSettings,
+} from "../audio/audioRenderer.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
@@ -70,11 +79,6 @@ import {
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
 import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
 import { normaliseEmailForMatching } from "../spam/evaluateEmailSpamRules.js";
-import {
-	type RenderedAudioClip,
-	renderAudioClip,
-	resolveAudioRenderSettings,
-} from "../audio/audioRenderer.js";
 import {
 	normaliseAudioAnswer,
 	validateAudioSolution,
@@ -238,12 +242,12 @@ export class AudioCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Single-use challenge: refuse re-submission. Unlike POW
-		// (hash-bound), a five-digit answer is a 100,000-entry space that
-		// falls to brute force in seconds if resubmission is allowed, so
-		// each challenge must accept exactly one submission. This is also
-		// what makes "wrong answer means a fresh challenge" the only
-		// possible retry policy — the old clip is spent.
+		// Single-use challenge: refuse re-submission. Unlike POW, which is
+		// hash-bound, the answer space here is small enough that repeated
+		// attempts against one challenge would matter, so each challenge
+		// accepts exactly one submission. This is also what makes "wrong
+		// answer means a fresh challenge" the only possible retry policy —
+		// the old clip is spent.
 		if (challengeRecord.userSubmitted) {
 			this.logger.debug(() => ({
 				msg: `Challenge already submitted: ${challenge}`,
@@ -406,9 +410,10 @@ export class AudioCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		if (clientMetaData?.hp) {
+		const storedClientMetaData = toStoredClientMetaData(clientMetaData);
+		if (storedClientMetaData) {
 			await this.db.updateAudioCaptchaRecord(challenge, {
-				clientMetaData: { hp: clientMetaData.hp },
+				clientMetaData: storedClientMetaData,
 			});
 		}
 
@@ -429,6 +434,12 @@ export class AudioCaptchaManager extends CaptchaManager {
 				result,
 				...(isBlockingCaptchaResult(CaptchaType.audio, result) && {
 					blocked: true,
+				}),
+				// Mirror the render-time metadata onto the session so the session
+				// row carries the same clientSessionId the verify call correlates
+				// against.
+				...(storedClientMetaData && {
+					clientMetaData: storedClientMetaData,
 				}),
 			});
 			if (simdReadings) {
@@ -459,6 +470,9 @@ export class AudioCaptchaManager extends CaptchaManager {
 	 * @param trafficFilter
 	 * @param storeMetadata - when true, persists the dapp-server-provided
 	 *   `email` on the captcha record for spam-rate analysis.
+	 * @param clientSessionId - the session id the site rendered the widget
+	 *   with. When supplied, the solve must carry the same value in its
+	 *   `clientMetaData` or it is disapproved.
 	 */
 	async serverVerifyAudioCaptchaSolution(
 		dappAccount: string,
@@ -472,8 +486,14 @@ export class AudioCaptchaManager extends CaptchaManager {
 		spamFilter?: ISpamFilterRules,
 		trafficFilter?: ITrafficFilter,
 		storeMetadata = false,
-	): Promise<{ verified: boolean; score?: number }> {
-		const notVerifiedResponse = { verified: false };
+		clientSessionId?: string,
+	): Promise<{ verified: boolean; score?: number; sessionId?: string }> {
+		// Shared by every not-verified exit; sessionId is stamped on below
+		// once the record is loaded, so each exit needn't repeat it.
+		const notVerifiedResponse: {
+			verified: false;
+			sessionId?: string;
+		} = { verified: false };
 
 		// Bind the challenge/dappAccount context once so every log line in this
 		// method carries it without repeating the fields in each `data` block.
@@ -489,6 +509,8 @@ export class AudioCaptchaManager extends CaptchaManager {
 
 			return notVerifiedResponse;
 		}
+
+		notVerifiedResponse.sessionId = challengeRecord.sessionId;
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
 			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
@@ -546,6 +568,46 @@ export class AudioCaptchaManager extends CaptchaManager {
 				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 					serverChecked: true,
 					result: disapprovedResult,
+					...(isBlocked && { blocked: true }),
+				});
+			}
+			return notVerifiedResponse;
+		}
+
+		// The site rendered the widget with a session id, so the solve has to
+		// carry the same one — otherwise the token was earned in a different
+		// session (or outside the widget entirely) and is being replayed here.
+		// Cheap and purely local, so it runs before any I/O-bound check.
+		if (
+			isClientSessionMismatch(
+				clientSessionId,
+				challengeRecord.clientMetaData?.clientSessionId,
+			)
+		) {
+			logger.info(() => ({
+				msg: "Client session mismatch in server audio verification",
+				data: {
+					hasRecordedClientSessionId: Boolean(
+						challengeRecord.clientMetaData?.clientSessionId,
+					),
+				},
+			}));
+			const mismatchResult = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.CLIENT_SESSION_MISMATCH,
+			};
+			const isBlocked = isBlockingCaptchaResult(
+				CaptchaType.audio,
+				mismatchResult,
+			);
+			await this.db.updateAudioCaptchaRecord(challengeRecord.challenge, {
+				result: mismatchResult,
+				...(isBlocked && { blocked: true }),
+			});
+			if (challengeRecord.sessionId) {
+				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+					serverChecked: true,
+					result: mismatchResult,
 					...(isBlocked && { blocked: true }),
 				});
 			}

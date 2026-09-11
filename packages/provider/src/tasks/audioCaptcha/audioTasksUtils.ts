@@ -31,13 +31,11 @@ export const normaliseAudioAnswer = (raw: string): string =>
 /**
  * Grade a submitted answer against the stored transcript.
  *
- * Exact match after normalisation. No edit-distance tolerance: with a
- * five-digit answer, allowing one substitution would multiply the
- * accepted set by roughly 45×, taking a blind guess from 1-in-100,000 to
- * about 1-in-2,200. That is too much to give away for a class of
- * challenge that is already weak, and the failure path here is cheap —
- * a wrong answer issues a fresh challenge rather than costing the user
- * their session.
+ * Exact match after normalisation. No edit-distance tolerance: allowing
+ * even one substitution widens the accepted set by far more than it
+ * helps a genuine listener, and the failure path here is cheap — a wrong
+ * answer issues a fresh challenge rather than costing the user their
+ * session.
  */
 export const validateAudioSolution = (
 	submitted: string,

@@ -164,6 +164,7 @@ export class ProsopoServer {
 				user,
 				ip,
 				email,
+				clientSessionId,
 			);
 		}
 
