@@ -12,37 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+	mkdtempSync,
+	readFileSync,
+	rmSync,
+	statSync,
+	writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AugmentedRequest } from "../../express.js";
+import { resetAssignSecretCache } from "../../tasks/detection/assignSecret.js";
 import { initDetectorBundlePool } from "../../tasks/detection/bundlePool.js";
 import assignDetectorBundle from "./assignDetectorBundle.js";
 
 const cacheDetectorBundle = vi.fn(
 	async (_detectorSessionId: string, _bundleId: string) => true,
-);
-
-/**
- * Stands in for Redis with the same `SET NX` semantics the real binding relies
- * on: first writer for a client wins, everyone after reads that value back.
- */
-const bindings = new Map<string, string>();
-const bindDetectorBundleToClient = vi.fn(
-	async (
-		clientHash: string,
-		candidateBundleId: string,
-	): Promise<string | null> => {
-		const existing = bindings.get(clientHash);
-		if (existing !== undefined) {
-			return existing;
-		}
-		bindings.set(clientHash, candidateBundleId);
-		return candidateBundleId;
-	},
 );
 
 // A class rather than `vi.fn().mockImplementation`: the afterEach
@@ -52,7 +40,7 @@ const bindDetectorBundleToClient = vi.fn(
 vi.mock("../../tasks/index.js", () => ({
 	Tasks: class {
 		frictionlessManager = {
-			writeQueue: { cacheDetectorBundle, bindDetectorBundleToClient },
+			writeQueue: { cacheDetectorBundle },
 		};
 	},
 }));
@@ -83,6 +71,17 @@ const writePool = (dir: string, count: number): string[] => {
 const assignedBundleId = (): string =>
 	cacheDetectorBundle.mock.calls.at(-1)?.[1] as string;
 
+const assignOnceWith = async (
+	ip?: string,
+): Promise<{ res: Response; json: ReturnType<typeof vi.fn> }> => {
+	const r = makeRes();
+	await assignDetectorBundle(env)(makeReq(ip), r.res, next);
+	return r;
+};
+const assignOnce = async (ip?: string): Promise<void> => {
+	await assignOnceWith(ip);
+};
+
 const makeRes = (): { res: Response; json: ReturnType<typeof vi.fn> } => {
 	const json = vi.fn((body: unknown) => body);
 	return { res: { json } as unknown as Response, json };
@@ -97,8 +96,7 @@ describe("assignDetectorBundle", () => {
 	beforeEach(() => {
 		dir = mkdtempSync(join(tmpdir(), "assign-"));
 		cacheDetectorBundle.mockClear();
-		bindDetectorBundleToClient.mockClear();
-		bindings.clear();
+		resetAssignSecretCache();
 	});
 
 	afterEach(() => {
@@ -171,78 +169,74 @@ describe("assignDetectorBundle", () => {
 
 		const served = new Set<string>();
 		for (let i = 0; i < 200; i++) {
-			await assignDetectorBundle(env)(makeReq(), makeRes().res, next);
+			await assignOnce();
 			served.add(assignedBundleId());
 		}
 
-		// Without the binding this is a uniform draw per request, so 200 draws on
-		// a 50-bundle pool would return essentially the whole pool.
 		expect(served.size).toBe(1);
 	});
 
-	it("returns the bundle body matching the bound id, not the fresh pick", async () => {
+	it("keeps serving that bundle after the secret is re-read from disk", async () => {
 		writePool(dir, 50);
 		initDetectorBundlePool(dir);
 
-		const first = makeRes();
-		await assignDetectorBundle(env)(makeReq(), first.res, next);
-		const boundId = assignedBundleId();
+		await assignOnce();
+		const first = assignedBundleId();
 
-		const second = makeRes();
-		await assignDetectorBundle(env)(makeReq(), second.res, next);
+		// Same volume, fresh process: the mapping must survive a restart.
+		resetAssignSecretCache();
+		await assignOnce();
 
-		const body = second.json.mock.calls[0]?.[0] as { detectorScript: string };
-		expect(assignedBundleId()).toBe(boundId);
+		expect(assignedBundleId()).toBe(first);
+	});
+
+	it("returns the bundle body matching the id it recorded", async () => {
+		writePool(dir, 50);
+		initDetectorBundlePool(dir);
+
+		const { json } = await assignOnceWith();
+		const body = json.mock.calls[0]?.[0] as { detectorScript: string };
 		expect(body.detectorScript).toBe(
-			`export default ${boundId.replace("bundle-", "")};`,
+			`export default ${assignedBundleId().replace("bundle-", "")};`,
 		);
 	});
 
-	it("binds per caller, so distinct addresses are not pinned together", async () => {
+	it("spreads distinct callers across the pool", async () => {
 		writePool(dir, 50);
 		initDetectorBundlePool(dir);
 
 		const served = new Set<string>();
 		for (let i = 0; i < 60; i++) {
-			await assignDetectorBundle(env)(
-				makeReq(`203.0.113.${i}`),
-				makeRes().res,
-				next,
-			);
+			await assignOnce(`203.0.113.${i}`);
 			served.add(assignedBundleId());
 		}
 
-		expect(bindings.size).toBe(60);
 		expect(served.size).toBeGreaterThan(1);
 	});
 
-	it("falls back to the random pick when Redis cannot answer", async () => {
+	it("still assigns when Redis holds no client state", async () => {
+		// The mapping is derived, so there is no lookup to miss.
 		writePool(dir, 50);
 		initDetectorBundlePool(dir);
-		bindDetectorBundleToClient.mockResolvedValueOnce(null);
 
-		const { res, json } = makeRes();
-		await assignDetectorBundle(env)(makeReq(), res, next);
-
+		const { json } = await assignOnceWith();
 		const body = json.mock.calls[0]?.[0] as { useProviderBundle: boolean };
 		expect(body.useProviderBundle).toBe(true);
 		expect(assignedBundleId()).toMatch(/^bundle-\d+$/);
 	});
 
-	it("ignores a binding naming a bundle the current pool no longer has", async () => {
-		writePool(dir, 5);
+	it("writes the secret 0600 and leaves it alone on reload", async () => {
+		writePool(dir, 50);
 		initDetectorBundlePool(dir);
-		bindDetectorBundleToClient.mockResolvedValueOnce("bundle-999");
 
-		const { res, json } = makeRes();
-		await assignDetectorBundle(env)(makeReq(), res, next);
+		await assignOnce();
+		const secretPath = join(dir, ".assign-secret");
+		const first = readFileSync(secretPath);
+		expect(first.length).toBe(32);
+		expect(statSync(secretPath).mode & 0o777).toBe(0o600);
 
-		const body = json.mock.calls[0]?.[0] as {
-			useProviderBundle: boolean;
-			detectorScript: string;
-		};
-		expect(body.useProviderBundle).toBe(true);
-		expect(assignedBundleId()).not.toBe("bundle-999");
-		expect(body.detectorScript).toMatch(/^export default \d+;$/);
+		resetAssignSecretCache();
+		await assignOnce();
+		expect(readFileSync(secretPath)).toEqual(first);
 	});
 });

@@ -12,41 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createHash } from "node:crypto";
+import { createHmac } from "node:crypto";
 import { ApiParams, type AssignDetectorBundleResponse } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import type { AugmentedRequest } from "../../express.js";
-import { getDetectorBundlePool } from "../../tasks/detection/bundlePool.js";
+import { getAssignSecret } from "../../tasks/detection/assignSecret.js";
+import {
+	getDetectorBundlePool,
+	getDetectorBundlePoolDir,
+} from "../../tasks/detection/bundlePool.js";
 import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 
-/**
- * Identifies the caller for the purposes of the client → bundle binding.
- * Hashed so that Redis keys carry no raw addresses; truncated because 128 bits
- * is far past collision relevance for a one-hour keyspace.
- */
-const clientHash = (ip: string): string =>
-	createHash("sha256").update(ip).digest("hex").slice(0, 32);
+/** Pool position for this caller: a keyed hash of their address. */
+const clientIndex = (ip: string, secret: Buffer): number =>
+	createHmac("sha256", secret).update(ip).digest().readUIntBE(0, 6);
 
 /**
  * Assigns a precomputed detector bundle for this detection session.
  *
- * When the provider has a non-empty pool it resolves the bundle bound to this
- * caller (picking a random one if there is no binding yet), records the
- * (short-TTL) `detectorSessionId → bundleId` binding in Redis, and returns the
- * obfuscated detector script inline.
+ * The bundle is derived from the caller's address and this provider's secret,
+ * so a repeat caller keeps getting the same one with nothing stored and nothing
+ * to expire. Any bundle detects equally well, so this is not visible to users.
  *
- * Binding the choice to the caller keeps the set of bundles any one caller has
- * seen from growing with the number of requests it makes. It costs a legitimate
- * client nothing — any bundle detects equally well, and a repeat visitor simply
- * gets the one they already have.
+ * The `detectorSessionId → bundleId` binding is still written to Redis; the
+ * decrypt side resolves the session's bundle from it on the next hop.
  *
- * When it cannot (no pool loaded, or Redis unavailable so the binding could not
- * be persisted) it returns `useProviderBundle: false`. There is NO bundled
- * detector and no legacy key pool to fall back to — the client sends an empty
- * token on the frictionless hop and the provider decides what to serve.
+ * Returns `useProviderBundle: false` when there is no pool, no secret, or Redis
+ * could not store that binding. There is NO bundled detector to fall back to —
+ * the client sends an empty token on the frictionless hop and the provider
+ * decides what to serve.
  */
 export default (env: ProviderEnvironment) =>
 	async (
@@ -65,7 +62,14 @@ export default (env: ProviderEnvironment) =>
 				return res.json(noBundle);
 			}
 
-			const candidate = pool.pickRandom();
+			const secret = getAssignSecret(getDetectorBundlePoolDir(), {
+				info: (msg, data) => req.logger.info(() => ({ msg, data })),
+				warn: (msg, data) => req.logger.warn(() => ({ msg, data })),
+			});
+
+			const { bundleId, bundle } = pool.at(
+				clientIndex(normalizeRequestIp(req.ip, req.logger), secret),
+			);
 			const detectorSessionId = `det-${uuidv4()}`;
 
 			// Persist the ephemeral session→bundle binding. If Redis is
@@ -77,20 +81,6 @@ export default (env: ProviderEnvironment) =>
 			if (!writeQueue) {
 				return res.json(noBundle);
 			}
-
-			// Reuse whatever this caller was last given. A binding can outlive the
-			// pool it was made against, so anything it names that is no longer
-			// loaded falls back to the fresh pick rather than serving nothing.
-			const bound = await writeQueue.bindDetectorBundleToClient(
-				clientHash(normalizeRequestIp(req.ip, req.logger)),
-				candidate.bundleId,
-			);
-			const boundBundle = bound ? pool.get(bound) : undefined;
-			const { bundleId, bundle } =
-				bound && boundBundle
-					? { bundleId: bound, bundle: boundBundle }
-					: candidate;
-
 			const cached = await writeQueue.cacheDetectorBundle(
 				detectorSessionId,
 				bundleId,
