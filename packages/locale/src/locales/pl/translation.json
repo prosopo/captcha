@@ -47,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Zbyt wiele zgłoszeń z tego adresu e-mail",
 		"VPN_BLOCKED": "Żądania z połączeń VPN nie są dozwolone dla tej strony",
 		"PROXY_BLOCKED": "Żądania z serwerów proxy nie są dozwolone dla tej strony",
+		"TOO_MANY_LOCALHOST": "Zbyt wiele żądań CAPTCHA z localhost dla tego klucza witryny",
 		"TOR_BLOCKED": "Żądania z węzłów wyjściowych Tor nie są dozwolone dla tej strony",
 		"ABUSER_BLOCKED": "Żądania z sieci oznaczonych za nadużycia nie są dozwolone dla tej strony",
 		"DATACENTER_BLOCKED": "Żądania z adresów IP centrów danych nie są dozwolone dla tej strony",
