@@ -831,6 +831,7 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	sq: { type: Number, required: false },
 	cg: { type: String, required: false },
 	sm: { type: String, required: false },
+	dz: { type: String, required: false },
 	b: { type: Schema.Types.Mixed, required: false },
 	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
 	// classifier folds into `webView` (see @prosopo/types Session for
@@ -1095,6 +1096,7 @@ export const SESSION_PROJECTION = {
 	sq: 1,
 	cg: 1,
 	sm: 1,
+	dz: 1,
 	b: 1,
 	sw: 1,
 	md: 1,

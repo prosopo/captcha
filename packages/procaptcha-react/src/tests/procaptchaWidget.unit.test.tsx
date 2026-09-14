@@ -316,6 +316,34 @@ describe("clicking the checkbox", () => {
 		expect(document.activeElement).not.toBe(checkbox());
 	});
 
+	test("focus the user moved on to is left where they put it", async () => {
+		// The check runs for as long as the network takes, and the user is free
+		// to carry on filling in the form behind the widget while it does. The
+		// box handing focus back at that point would take it off whatever they
+		// were typing into, losing the keystroke that arrived with it.
+		let finish: (() => void) | undefined;
+		start.mockImplementation(
+			() =>
+				new Promise<void>((resolve) => {
+					finish = resolve;
+				}),
+		);
+		render();
+		checkbox().focus();
+		fire(checkbox(), "click");
+
+		const elsewhere = document.createElement("input");
+		document.body.appendChild(elsewhere);
+		elsewhere.focus();
+
+		finish?.();
+		await flush();
+
+		const focused = document.activeElement;
+		elsewhere.remove();
+		expect(focused).toBe(elsewhere);
+	});
+
 	test("shows the checkbox again when the start fails", async () => {
 		// A failed start still has to give the user their click back, otherwise
 		// the widget spins forever.
