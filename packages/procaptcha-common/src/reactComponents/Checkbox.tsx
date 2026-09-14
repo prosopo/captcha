@@ -83,6 +83,15 @@ const baseStyle: CSSProperties = {
 
 const ID_LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+/**
+ * Whether nothing on the page holds focus, which is where the browser leaves it
+ * when the focused element is removed.
+ */
+const focusIsStranded = (element: HTMLElement): boolean => {
+	const { activeElement, body } = element.ownerDocument;
+	return activeElement === null || activeElement === body;
+};
+
 const FAQ_LINK = process.env.PROSOPO_DOCS_URL
 	? `${new URL(`${process.env.PROSOPO_DOCS_URL}/en/basics/faq/`).href}/`
 	: "https://docs.prosopo.io/en/basics/faq/";
@@ -120,10 +129,16 @@ export const Checkbox: FC<CheckboxProps> = ({
 	// runs, with nothing said about why the box vanished. Handing focus across
 	// the swap and back keeps them where they were and gets each side's name
 	// read out as it arrives.
+	//
+	// Only focus the swap itself stranded is claimed back. The check lasts as
+	// long as the network does, and a user who spent that time moving on to the
+	// host page's own fields would otherwise be dragged out of them, mid
+	// keystroke, by a widget they had finished with.
 	useEffect(() => {
 		if (!hadFocus.current) return;
 		const target = loading ? spinnerRef.current : inputRef.current;
-		target?.focus();
+		if (!target || !focusIsStranded(target)) return;
+		target.focus();
 	}, [loading]);
 
 	// M3 focus indicator: a 3dp outline offset by 2dp, drawn only for keyboard
