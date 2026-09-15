@@ -1,5 +1,53 @@
 # @prosopo/client-example-server
 
+## 2.7.159
+### Patch Changes
+
+- ca03f7e: Stop the staging database being killed by the host, and let it come back on its own.
+  
+  The `database1` mongo container had no memory limit and no restart policy. The
+  staging host has 5.8GB of RAM and no swap, so mongod grew until the kernel
+  OOM-killer took it — three times, on 18 August, 5 September and 8 September.
+  Because it was the only service in this compose file without
+  `restart: unless-stopped`, nothing brought it back, and the last crash left the
+  database down for two days.
+  
+  It now has `mem_limit: 3g`, which keeps it clear of the host limit, and a
+  WiredTiger cache pinned to 1.5GB so the rest of the budget is left for
+  connections and sorts rather than being handed to the cache. `restart:
+  unless-stopped` matches the other two services, so a crash costs seconds
+  instead of days.
+- Updated dependencies [98ab052]
+- Updated dependencies [028a158]
+- Updated dependencies [1f0598c]
+- Updated dependencies [3958046]
+- Updated dependencies [028a158]
+  - @prosopo/database@4.0.33
+  - @prosopo/types@5.8.3
+  - @prosopo/common@3.1.55
+  - @prosopo/keyring@2.9.89
+  - @prosopo/server@2.12.3
+
+## 2.7.158
+### Patch Changes
+
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/types@5.8.2
+  - @prosopo/server@2.12.2
+  - @prosopo/database@4.0.32
+  - @prosopo/keyring@2.9.88
+
+## 2.7.157
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+  - @prosopo/database@4.0.31
+  - @prosopo/keyring@2.9.87
+  - @prosopo/server@2.12.1
+
 ## 2.7.156
 ### Patch Changes
 

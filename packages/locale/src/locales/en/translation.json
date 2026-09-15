@@ -12,7 +12,20 @@
 		"NO_ACCOUNTS_FOUND": "No accounts found",
 		"ACCOUNT_NOT_FOUND": "Account not found",
 		"NO_EXTENSION_FOUND": "No extension found",
-		"INSECURE_CONTEXT": "Procaptcha requires a secure (HTTPS) connection"
+		"INSECURE_CONTEXT": "Procaptcha requires a secure (HTTPS) connection",
+		"CHECKING": "Checking that you are human",
+		"IMAGE_DIALOG_LABEL": "Image challenge",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Puzzle challenge",
+			"DRAG": "Drag the piece to the target",
+			"RETRY": "Not quite — try again",
+			"PIECE_LABEL": "Puzzle piece",
+			"PIECE_ROLE": "draggable puzzle piece",
+			"KEYBOARD_HINT": "Use the arrow keys to move the piece, holding shift for smaller steps. Press Enter to submit it, Home to put it back at the start, or Escape to cancel.",
+			"POSITION": "{{x}} percent across, {{y}} percent down",
+			"CHECKING": "Checking your answer",
+			"RETRY_ANNOUNCEMENT": "Not quite. A new puzzle has loaded and the piece is back at the start."
+		}
 	},
 	"GENERAL": {
 		"JSON_LOAD_FAILED": "Failed to load JSON file",

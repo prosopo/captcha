@@ -132,8 +132,7 @@ const checkbox = (): HTMLInputElement => {
 	return element;
 };
 
-const spinner = (): Element | null =>
-	host.querySelector('[aria-label="Loading spinner"]');
+const spinner = (): Element | null => host.querySelector('[role="status"]');
 
 const lastMountOf = (widget: InnerWidget) => {
 	const mount = mocks.mounts.filter((m) => m.widget === widget).at(-1);

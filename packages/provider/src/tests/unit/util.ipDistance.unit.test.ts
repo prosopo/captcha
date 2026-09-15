@@ -41,6 +41,7 @@ describe("deepValidateIpAddress", () => {
 		mockIpInfoService = {
 			initialize: vi.fn(),
 			lookup: vi.fn(),
+			country: vi.fn().mockReturnValue(undefined),
 			isAvailable: vi.fn().mockReturnValue(true),
 		};
 		vi.clearAllMocks();

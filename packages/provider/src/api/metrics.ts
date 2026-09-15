@@ -27,6 +27,7 @@ import {
 	Registry,
 	collectDefaultMetrics,
 } from "prom-client";
+import type { HealthzGeoOutcome } from "./healthzGeo.js";
 
 // Whether the /metrics endpoint and instrumentation are active. Defaults to on;
 // set PROSOPO_METRICS_ENABLED=false to disable. The endpoint only ever listens
@@ -83,6 +84,7 @@ interface ProviderMetrics {
 	spamEmailTotal: Counter<"result">;
 	maintenanceMode: Gauge<never>;
 	redisReady: Gauge<"actor">;
+	healthzGeoOutcomesTotal: Counter<"outcome">;
 }
 
 let metrics: ProviderMetrics | undefined;
@@ -175,6 +177,16 @@ const buildMetrics = (): ProviderMetrics => {
 		labelNames: ["actor"] as const,
 		registers: [registry],
 	});
+	// Every non-"steered" outcome falls back to the node's own name, which is
+	// also the behaviour with steering off — so a degraded geo lookup or an
+	// unreachable target changes nothing observable in the response. This
+	// counter is the only place that difference shows up.
+	const healthzGeoOutcomesTotal = new Counter({
+		name: `${PREFIX}healthz_geo_outcomes_total`,
+		help: "Healthz geo steering outcomes (steered/not_steered/target_down/geo_unavailable)",
+		labelNames: ["outcome"] as const,
+		registers: [registry],
+	});
 
 	return {
 		registry,
@@ -191,6 +203,7 @@ const buildMetrics = (): ProviderMetrics => {
 		spamEmailTotal,
 		maintenanceMode,
 		redisReady,
+		healthzGeoOutcomesTotal,
 	};
 };
 
@@ -263,6 +276,11 @@ export const recordDomainValidation = (result: string): void => {
 export const recordSpamEmail = (result: string): void => {
 	if (!metricsEnabled()) return;
 	getMetrics().spamEmailTotal.inc({ result });
+};
+
+export const recordHealthzGeoOutcome = (outcome: HealthzGeoOutcome): void => {
+	if (!metricsEnabled()) return;
+	getMetrics().healthzGeoOutcomesTotal.inc({ outcome });
 };
 
 export const setMaintenanceModeGauge = (on: boolean): void => {

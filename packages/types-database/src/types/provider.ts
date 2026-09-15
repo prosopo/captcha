@@ -943,6 +943,12 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	entropyMathRandomFirst: { type: Number, required: false },
 	g: { type: String, required: false },
 	i: { type: Boolean, required: false },
+	cv: { type: Number, required: false },
+	sq: { type: Number, required: false },
+	cg: { type: String, required: false },
+	sm: { type: String, required: false },
+	dz: { type: String, required: false },
+	b: { type: Schema.Types.Mixed, required: false },
 	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
 	// classifier folds into `webView` (see @prosopo/types Session for
 	// per-key semantics). Persisted so server-side rules can retune
@@ -1209,6 +1215,12 @@ export const SESSION_PROJECTION = {
 	entropyMathRandomFirst: 1,
 	g: 1,
 	i: 1,
+	cv: 1,
+	sq: 1,
+	cg: 1,
+	sm: 1,
+	dz: 1,
+	b: 1,
 	sw: 1,
 	md: 1,
 	bn: 1,

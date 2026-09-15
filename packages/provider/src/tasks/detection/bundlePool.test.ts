@@ -116,10 +116,10 @@ describe("DetectorBundlePool", () => {
 		const pool = new DetectorBundlePool();
 		pool.loadFromDir(join(dir, "does-not-exist"));
 		expect(pool.size()).toBe(0);
-		expect(() => pool.pickRandom()).toThrow(/empty/);
+		expect(() => pool.at(0)).toThrow(/empty/);
 	});
 
-	it("pickRandom returns valid pool members and covers the pool over many draws", () => {
+	it("at returns valid pool members and is stable for a given index", () => {
 		for (let i = 0; i < 5; i++) {
 			writeBundle(dir, `bundle-${i}`, `JS${i}`, {
 				privateKey: `PK${i}`,
@@ -131,11 +131,12 @@ describe("DetectorBundlePool", () => {
 
 		const seen = new Set<string>();
 		for (let i = 0; i < 500; i++) {
-			const { bundleId, bundle } = pool.pickRandom();
+			const { bundleId, bundle } = pool.at(i);
 			expect(pool.get(bundleId)).toBe(bundle);
+			expect(pool.at(i).bundleId).toBe(bundleId);
 			seen.add(bundleId);
 		}
-		// With 5 bundles over 500 uniform draws every id should appear.
+		// Successive indices walk the whole pool.
 		expect(seen.size).toBe(5);
 	});
 

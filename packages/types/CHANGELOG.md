@@ -1,5 +1,62 @@
 # @prosopo/types
 
+## 5.8.3
+### Patch Changes
+
+- 028a158: Add optional field `dz` to detector payload
+- 3958046: Keep a detector bundle binding for as long as its payload is accepted
+  
+  The `detectorSessionId → bundleId` binding held the only key able to read a
+  detector payload, and expired after 60 seconds. The frictionless flow accepts a
+  payload for ten minutes (`DEFAULT_MAX_TIMESTAMP_AGE`). For nine of those ten
+  minutes the provider would therefore accept a payload it had already discarded
+  the means to decrypt: `resolveDecryptAttempts` returns an empty key list, the
+  decrypt loop never runs, the score is forced to 1 and the caller is challenged
+  despite nothing having been measured about them.
+  
+  Sixty seconds is ample for the assign → submit gap in the normal case — it is
+  around 1.5s — but it only has to stall once to be lost, and a backgrounded
+  mobile tab is enough.
+  
+  The two values are now one value. `DEFAULT_MAX_TIMESTAMP_AGE` moves from a
+  private constant in `frictionlessTasks` to `@prosopo/types`, the only package
+  both the provider and the database can see, and `DETECTOR_BUNDLE_TTL_SECONDS` is
+  derived from it instead of being written down a second time. A unit test pins
+  the relationship so they cannot drift apart again.
+  
+  The TTL cannot now outlive the payload-age check, so this does not widen the
+  window in which any payload is usable. Bundle selection is unaffected: which
+  bundle a caller receives is derived from their IP and a server secret, not from
+  this binding's lifetime.
+- 028a158: Add optional session field `dz`.
+- Updated dependencies [864ddde]
+  - @prosopo/locale@3.4.2
+
+## 5.8.2
+### Patch Changes
+
+- 477b4e7: Persist cv and sq from detector payload, and refresh the decoder bundle
+- e4d6f06: Persist cg and sm opaque payload keys
+
+## 5.8.1
+### Patch Changes
+
+- 0c1f301: feat(types,provider): report `host` in `/details`
+  
+  `providerDetailsSchema` grows an optional `host`, and the `/details` handler
+  populates it from `config.host`, falling back to the request's hostname when
+  that is unset — the same shape `/healthz` already uses.
+  
+  `/details` already reports the version and Redis readiness; it just did not
+  say which node answered. Callers that want the answering node's identity can
+  now read it there instead of inferring it from a liveness endpoint.
+  
+  The field is optional on purpose. A fleet is mixed-version part-way through a
+  rolling deploy, so a required field would fail validation against a node that
+  has not been upgraded yet. Consumers should treat it as absent-or-string.
+  Purely additive: nothing existing changes shape.
+- 32d286d: Persist b from detector payload
+
 ## 5.8.0
 ### Minor Changes
 

@@ -78,7 +78,20 @@
 		"NO_ACCOUNTS_FOUND": "Keine Konten gefunden",
 		"ACCOUNT_NOT_FOUND": "Konto nicht gefunden",
 		"NO_EXTENSION_FOUND": "Keine Erweiterung gefunden",
-		"INSECURE_CONTEXT": "Procaptcha erfordert eine sichere (HTTPS-)Verbindung"
+		"INSECURE_CONTEXT": "Procaptcha erfordert eine sichere (HTTPS-)Verbindung",
+		"CHECKING": "Es wird geprüft, ob du ein Mensch bist",
+		"IMAGE_DIALOG_LABEL": "Bild-Aufgabe",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Puzzle-Aufgabe",
+			"DRAG": "Ziehe das Teil auf die Zielstelle",
+			"RETRY": "Knapp daneben — versuche es erneut",
+			"PIECE_LABEL": "Puzzleteil",
+			"PIECE_ROLE": "verschiebbares Puzzleteil",
+			"KEYBOARD_HINT": "Bewege das Teil mit den Pfeiltasten, mit gedrückter Umschalttaste in kleineren Schritten. Drücke die Eingabetaste zum Absenden, Pos1, um das Teil zurückzusetzen, oder Escape zum Abbrechen.",
+			"POSITION": "{{x}} Prozent von links, {{y}} Prozent von oben",
+			"CHECKING": "Deine Antwort wird geprüft",
+			"RETRY_ANNOUNCEMENT": "Knapp daneben. Ein neues Puzzle wurde geladen und das Teil steht wieder am Anfang."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Ungültige Adresse konnte nicht codiert werden",

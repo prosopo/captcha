@@ -377,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "Tidak ada akun ditemukan",
 		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
 		"NO_EXTENSION_FOUND": "Tidak ada ekstensi ditemukan",
-		"INSECURE_CONTEXT": "Procaptcha mbutuhake sambungan sing aman (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha mbutuhake sambungan sing aman (HTTPS)",
+		"CHECKING": "Mriksa manawa panjenengan manungsa",
+		"IMAGE_DIALOG_LABEL": "Tantangan gambar",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Tantangan bedhekan",
+			"DRAG": "Seret potongan menyang sasaran",
+			"RETRY": "Meh wae — coba maneh",
+			"PIECE_LABEL": "Potongan bedhekan",
+			"PIECE_ROLE": "potongan bedhekan sing bisa diseret",
+			"KEYBOARD_HINT": "Gunakake tombol panah kanggo mindhah potongan, tahan Shift supaya obahe luwih cilik. Pencet Enter kanggo ngirim, Home kanggo mbalekake menyang wiwitan, utawa Escape kanggo mbatalake.",
+			"POSITION": "{{x}} persen saka kiwa, {{y}} persen saka ndhuwur",
+			"CHECKING": "Mriksa wangsulan panjenengan",
+			"RETRY_ANNOUNCEMENT": "Meh wae. Bedhekan anyar wis dimuat lan potongane bali menyang wiwitan."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Gagal mengkodekan alamat yang tidak valid",

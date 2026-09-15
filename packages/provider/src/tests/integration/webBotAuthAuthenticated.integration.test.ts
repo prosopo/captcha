@@ -221,6 +221,7 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 			initialize: async () => {},
 			isAvailable: () => true,
 			lookup: async (ip: string) => cleanIpInfo(ip),
+			country: (): string | undefined => undefined,
 		};
 
 		// The authenticated fast path sits *after* the empty-detector-pool PoW

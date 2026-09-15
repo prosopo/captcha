@@ -726,3 +726,76 @@ describe("MaxMindBackend default reader", () => {
 		expect(backend.isAvailable()).toBe(false);
 	});
 });
+
+describe("MaxMindBackend.countryCode", () => {
+	it("reads the country from a City database", async () => {
+		const backend = new MaxMindBackend({
+			cityDbPath: CITY_DB,
+			openReader: opens({ city: reader({ city: () => cityData() }) }),
+		});
+		await backend.initialize();
+
+		expect(backend.countryCode(IP)).toBe("US");
+	});
+
+	it("falls back to country() on a Country database and latches the choice", async () => {
+		const city = vi.fn(badMethodCall);
+		const country = vi.fn((): Country => countryData());
+		const backend = new MaxMindBackend({
+			cityDbPath: CITY_DB,
+			openReader: opens({ city: reader({ city, country }) }),
+		});
+		await backend.initialize();
+
+		expect(backend.countryCode(IP)).toBe("US");
+		expect(backend.countryCode(IP)).toBe("US");
+
+		// The mismatched accessor is tried once, not once per call.
+		expect(city).toHaveBeenCalledTimes(1);
+		expect(country).toHaveBeenCalledTimes(2);
+	});
+
+	it("has no answer when the address is absent from the database", async () => {
+		const backend = new MaxMindBackend({
+			cityDbPath: CITY_DB,
+			openReader: opens({
+				city: reader({
+					city: (): never => {
+						throw new Error("The address 8.8.8.8 is not in the database");
+					},
+				}),
+			}),
+		});
+		await backend.initialize();
+
+		expect(backend.countryCode(IP)).toBeUndefined();
+	});
+
+	it("has no answer when no geo database was opened", async () => {
+		const backend = new MaxMindBackend({
+			asnDbPath: ASN_DB,
+			openReader: opens({ asn: reader({ asn: () => asnData() }) }),
+		});
+		await backend.initialize();
+
+		expect(backend.isAvailable()).toBe(true);
+		expect(backend.countryCode(IP)).toBeUndefined();
+	});
+
+	it("does not read the ASN database", async () => {
+		// The country is the whole answer; nothing else is worth a second read.
+		const asn = vi.fn((): Asn => asnData());
+		const backend = new MaxMindBackend({
+			cityDbPath: CITY_DB,
+			asnDbPath: ASN_DB,
+			openReader: opens({
+				city: reader({ city: () => cityData() }),
+				asn: reader({ asn }),
+			}),
+		});
+		await backend.initialize();
+
+		expect(backend.countryCode(IP)).toBe("US");
+		expect(asn).not.toHaveBeenCalled();
+	});
+});

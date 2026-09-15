@@ -377,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "Không tìm thấy tài khoản",
 		"ACCOUNT_NOT_FOUND": "Không tìm thấy tài khoản",
 		"NO_EXTENSION_FOUND": "Không tìm thấy tiện ích",
-		"INSECURE_CONTEXT": "Procaptcha yêu cầu kết nối an toàn (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha yêu cầu kết nối an toàn (HTTPS)",
+		"CHECKING": "Đang xác minh bạn là người thật",
+		"IMAGE_DIALOG_LABEL": "Thử thách hình ảnh",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Thử thách ghép hình",
+			"DRAG": "Kéo mảnh ghép đến vị trí đích",
+			"RETRY": "Suýt nữa — hãy thử lại",
+			"PIECE_LABEL": "Mảnh ghép",
+			"PIECE_ROLE": "mảnh ghép có thể kéo",
+			"KEYBOARD_HINT": "Dùng các phím mũi tên để di chuyển mảnh ghép, giữ Shift để đi từng bước nhỏ hơn. Nhấn Enter để gửi, Home để đưa nó về vị trí ban đầu, hoặc Escape để hủy.",
+			"POSITION": "{{x}} phần trăm từ bên trái, {{y}} phần trăm từ trên xuống",
+			"CHECKING": "Đang kiểm tra câu trả lời của bạn",
+			"RETRY_ANNOUNCEMENT": "Suýt nữa. Một hình ghép mới đã được tải và mảnh ghép trở lại vị trí ban đầu."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Không thể mã hóa địa chỉ không hợp lệ",

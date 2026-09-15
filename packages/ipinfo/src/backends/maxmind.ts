@@ -109,6 +109,42 @@ export class MaxMindBackend {
 		return this.cityReader !== null || this.asnReader !== null;
 	}
 
+	/**
+	 * ISO 3166-1 alpha-2 country code, or undefined when the reader has no
+	 * answer. Synchronous and allocation-light: the .mmdb is memory-mapped, so
+	 * this is a tree walk with no I/O and no network.
+	 *
+	 * Separate from `lookup()` because callers that only need the country
+	 * should not pay for the ASN read, the threat-field assembly, or the
+	 * `IPInfoResponse` object. The reader-kind latch is shared with `lookup()`
+	 * — `country()` rejects a City database and `city()` rejects a Country one,
+	 * so the accessor has to be chosen from the database's own metadata.
+	 */
+	countryCode(ip: string): string | undefined {
+		if (!this.cityReader) return undefined;
+
+		if (this.geoReaderKind !== "country") {
+			try {
+				const isoCode = this.cityReader.city(ip).country?.isoCode;
+				this.geoReaderKind = "city";
+				return isoCode;
+			} catch (error) {
+				if (!isBadMethodCall(error)) {
+					// Address not in the database, or an invalid address: no
+					// country, and nothing to latch.
+					return undefined;
+				}
+				this.geoReaderKind = "country";
+			}
+		}
+
+		try {
+			return this.cityReader.country(ip).country?.isoCode;
+		} catch {
+			return undefined;
+		}
+	}
+
 	async lookup(ip: string): Promise<IPInfoResponse> {
 		if (!this.isAvailable()) {
 			return {

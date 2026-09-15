@@ -15,7 +15,10 @@
 import type { DetectorResult } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as decodePayloadModule from "../../../../tasks/detection/decodePayload.js";
-import { getBotScore } from "../../../../tasks/detection/getBotScore.js";
+import {
+	getBotScore,
+	sanitiseSignalMap,
+} from "../../../../tasks/detection/getBotScore.js";
 
 vi.mock("../../../../tasks/detection/decodePayload.js", () => ({
 	default: vi.fn(),
@@ -230,5 +233,63 @@ describe("getBotScore", () => {
 			undefined,
 			undefined,
 		);
+	});
+});
+
+describe("sanitiseSignalMap", () => {
+	// `b` is opaque client-controlled data that now lands on the session
+	// record, so it has to survive the Mongo write rather than 400 the
+	// request. See the bounds in getBotScore.ts.
+	it("passes a well-formed signal map through unchanged", () => {
+		const map: Record<string, string[]> = { k1: ["v1", "v2"], k2: [] };
+		expect(sanitiseSignalMap(map)).toEqual(map);
+	});
+
+	it("returns undefined for anything that isn't a plain object", () => {
+		expect(sanitiseSignalMap(undefined)).toBeUndefined();
+		expect(sanitiseSignalMap(null)).toBeUndefined();
+		expect(sanitiseSignalMap("nope")).toBeUndefined();
+		expect(sanitiseSignalMap(["nope"])).toBeUndefined();
+	});
+
+	it("drops keys Mongo cannot store as field names", () => {
+		expect(
+			sanitiseSignalMap({
+				ok: ["v"],
+				"has.dot": ["v"],
+				$op: ["v"],
+				"": ["v"],
+			}),
+		).toEqual({ ok: ["v"] });
+	});
+
+	it("drops entries whose value isn't an array of short strings", () => {
+		expect(
+			sanitiseSignalMap({
+				ok: ["v"],
+				notArray: "v",
+				notStrings: [1, 2],
+				tooLong: ["x".repeat(257)],
+			}),
+		).toEqual({ ok: ["v"] });
+	});
+
+	it("caps key count and per-key value count", () => {
+		const oversized: Record<string, string[]> = {};
+		for (let index = 0; index < 100; index++) {
+			oversized[`k${index}`] = Array.from({ length: 100 }, () => "v");
+		}
+
+		const sanitised = sanitiseSignalMap(oversized);
+
+		expect(Object.keys(sanitised ?? {})).toHaveLength(64);
+		for (const values of Object.values(sanitised ?? {})) {
+			expect(values).toHaveLength(64);
+		}
+	});
+
+	it("returns undefined when nothing survives", () => {
+		expect(sanitiseSignalMap({ "bad.key": ["v"] })).toBeUndefined();
+		expect(sanitiseSignalMap({})).toBeUndefined();
 	});
 });

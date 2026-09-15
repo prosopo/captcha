@@ -377,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "계정을 찾을 수 없음",
 		"ACCOUNT_NOT_FOUND": "계정을 찾을 수 없음",
 		"NO_EXTENSION_FOUND": "확장 프로그램을 찾을 수 없음",
-		"INSECURE_CONTEXT": "Procaptcha에는 보안 연결(HTTPS)이 필요합니다"
+		"INSECURE_CONTEXT": "Procaptcha에는 보안 연결(HTTPS)이 필요합니다",
+		"CHECKING": "사람인지 확인하는 중입니다",
+		"IMAGE_DIALOG_LABEL": "이미지 인증",
+		"PUZZLE": {
+			"DIALOG_LABEL": "퍼즐 인증",
+			"DRAG": "조각을 목표 위치로 끌어다 놓으세요",
+			"RETRY": "아깝습니다 — 다시 시도해 주세요",
+			"PIECE_LABEL": "퍼즐 조각",
+			"PIECE_ROLE": "끌 수 있는 퍼즐 조각",
+			"KEYBOARD_HINT": "화살표 키로 조각을 옮기고, Shift 키를 누른 채로 옮기면 더 작게 움직입니다. Enter 키로 제출하고, Home 키로 처음 위치로 되돌리며, Escape 키로 취소합니다.",
+			"POSITION": "왼쪽에서 {{x}} 퍼센트, 위에서 {{y}} 퍼센트",
+			"CHECKING": "답을 확인하는 중입니다",
+			"RETRY_ANNOUNCEMENT": "아깝습니다. 새 퍼즐이 불러와졌고 조각은 처음 위치로 돌아갔습니다."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "유효하지 않은 주소를 인코딩하는 데 실패함",

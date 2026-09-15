@@ -12,10 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ChallengeSurface } from "@prosopo/procaptcha-common";
+import { useTranslation } from "@prosopo/locale";
+import { ChallengeSurface, isEventTrusted } from "@prosopo/procaptcha-common";
 import type { PlacementType, PuzzleEvent } from "@prosopo/types";
 import type { Theme } from "@prosopo/widget-skeleton";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+	type CSSProperties,
+	useCallback,
+	useEffect,
+	useId,
+	useRef,
+	useState,
+} from "react";
 
 interface PuzzleCanvasProps {
 	originX: number;
@@ -42,11 +50,42 @@ interface PuzzleCanvasProps {
 const CONTAINER_WIDTH = 300;
 const CONTAINER_HEIGHT = 200;
 
-const SHAKE_KEYFRAMES = `
+const PIECE_CSS_CLASS = "prosopo-puzzle-piece";
+
+// An arrow press moves a tenth of the board's width. The provider accepts a
+// solution within 15px of the target, so a 10px lattice always contains a
+// winning cell (worst case is half a diagonal, ~7.1px) — a keyboard user can
+// land the piece without ever needing the finer step.
+const STEP_PX = 10;
+const FINE_STEP_PX = 2;
+
+// Arrow keys repeat far faster than a screen reader speaks. Coalescing to the
+// last position after a pause keeps the running commentary from queueing up
+// behind the user and reporting somewhere they left several seconds ago.
+const ANNOUNCE_DEBOUNCE_MS = 400;
+
+const VISUALLY_HIDDEN: CSSProperties = {
+	position: "absolute",
+	width: "1px",
+	height: "1px",
+	padding: 0,
+	margin: "-1px",
+	overflow: "hidden",
+	clip: "rect(0, 0, 0, 0)",
+	clipPath: "inset(50%)",
+	whiteSpace: "nowrap",
+	border: 0,
+};
+
+const stylesheet = (focusRingColor: string): string => `
 @keyframes prosopo-puzzle-shake {
 	0%, 100% { transform: translateX(0); }
 	10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
 	20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+.${PIECE_CSS_CLASS}:focus-visible {
+	outline: 3px solid ${focusRingColor};
+	outline-offset: 2px;
 }
 `;
 
@@ -77,11 +116,21 @@ export const PuzzleCanvas = ({
 	const offsetRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 	const [visible, setVisible] = useState(false);
 	const [shaking, setShaking] = useState(false);
+	const { t } = useTranslation();
+	const baseId = useId();
+	const instructionId = `${baseId}-instruction`;
+	const keyboardHintId = `${baseId}-keyboard-hint`;
+	// Set to true by the first arrow press of a keyboard run, so the run starts
+	// from a clean trail exactly as a fresh mouse grab does.
+	const keyboardDragging = useRef<boolean>(false);
+	const [announcement, setAnnouncement] = useState<string>("");
+	const announceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	// Reset piece position when challenge data changes (new puzzle on retry)
 	useEffect(() => {
 		setPosX(originX);
 		setPosY(originY);
+		keyboardDragging.current = false;
 	}, [originX, originY]);
 
 	// Trigger entrance animation after mount
@@ -105,6 +154,38 @@ export const PuzzleCanvas = ({
 			return Math.max(min, Math.min(max, value));
 		},
 		[],
+	);
+
+	const announce = useCallback((message: string, delayMs = 0): void => {
+		if (announceTimer.current) {
+			clearTimeout(announceTimer.current);
+			announceTimer.current = null;
+		}
+		if (delayMs === 0) {
+			setAnnouncement(message);
+			return;
+		}
+		announceTimer.current = setTimeout(() => setAnnouncement(message), delayMs);
+	}, []);
+
+	useEffect(
+		() => () => {
+			if (announceTimer.current) clearTimeout(announceTimer.current);
+		},
+		[],
+	);
+
+	// Pixel coordinates mean nothing to someone who cannot see the board, and
+	// the widget is never told where the target is, so proportions are the only
+	// bearing it can honestly offer.
+	const describePosition = useCallback(
+		(x: number, y: number): string =>
+			t("WIDGET.PUZZLE.POSITION", {
+				defaultValue: "{{x}} percent across, {{y}} percent down",
+				x: Math.round((x / CONTAINER_WIDTH) * 100),
+				y: Math.round((y / CONTAINER_HEIGHT) * 100),
+			}),
+		[t],
 	);
 
 	const getContainerOffset = useCallback((): { x: number; y: number } => {
@@ -141,6 +222,13 @@ export const PuzzleCanvas = ({
 		[clamp, getContainerOffset],
 	);
 
+	const complete = useCallback(
+		(finalX: number, finalY: number): void => {
+			onComplete(finalX, finalY, [...puzzleEvents.current]);
+		},
+		[onComplete],
+	);
+
 	const handleEndEvent = useCallback(() => {
 		if (!isDragging.current) {
 			return;
@@ -149,13 +237,12 @@ export const PuzzleCanvas = ({
 		isDragging.current = false;
 		setDragging(false);
 
-		const currentEvents = [...puzzleEvents.current];
-		const lastEvent = currentEvents[currentEvents.length - 1];
-		const finalX = lastEvent ? lastEvent.x : originX;
-		const finalY = lastEvent ? lastEvent.y : originY;
-
-		onComplete(finalX, finalY, currentEvents);
-	}, [onComplete, originX, originY]);
+		const lastEvent = puzzleEvents.current[puzzleEvents.current.length - 1];
+		complete(
+			lastEvent ? lastEvent.x : originX,
+			lastEvent ? lastEvent.y : originY,
+		);
+	}, [complete, originX, originY]);
 
 	const handleMouseMove = useCallback(
 		(event: MouseEvent) => {
@@ -200,6 +287,7 @@ export const PuzzleCanvas = ({
 		(event: React.MouseEvent<HTMLDivElement>) => {
 			if (submitting) return;
 			isDragging.current = true;
+			keyboardDragging.current = false;
 			setDragging(true);
 			puzzleEvents.current = [];
 			const containerOffset = getContainerOffset();
@@ -217,6 +305,7 @@ export const PuzzleCanvas = ({
 			const touch = event.touches[0];
 			if (touch) {
 				isDragging.current = true;
+				keyboardDragging.current = false;
 				setDragging(true);
 				puzzleEvents.current = [];
 				const containerOffset = getContainerOffset();
@@ -229,9 +318,87 @@ export const PuzzleCanvas = ({
 		[getContainerOffset, posX, posY, submitting],
 	);
 
+	const moveByKeyboard = useCallback(
+		(deltaX: number, deltaY: number): void => {
+			if (!keyboardDragging.current) {
+				keyboardDragging.current = true;
+				puzzleEvents.current = [];
+			}
+
+			const nextX = clamp(posX + deltaX, 0, CONTAINER_WIDTH);
+			const nextY = clamp(posY + deltaY, 0, CONTAINER_HEIGHT);
+
+			setPosX(nextX);
+			setPosY(nextY);
+			puzzleEvents.current.push({ x: nextX, y: nextY, t: Date.now() });
+			announce(describePosition(nextX, nextY), ANNOUNCE_DEBOUNCE_MS);
+		},
+		[announce, clamp, describePosition, posX, posY],
+	);
+
+	const handlePieceKeyDown = useCallback(
+		(event: React.KeyboardEvent<HTMLDivElement>): void => {
+			if (submitting) return;
+			if (!isEventTrusted(event)) return;
+
+			const step = event.shiftKey ? FINE_STEP_PX : STEP_PX;
+			const moves: Record<string, [number, number] | undefined> = {
+				ArrowLeft: [-step, 0],
+				ArrowRight: [step, 0],
+				ArrowUp: [0, -step],
+				ArrowDown: [0, step],
+				Home: [originX - posX, originY - posY],
+			};
+
+			const move = moves[event.key];
+			if (move) {
+				event.preventDefault();
+				moveByKeyboard(move[0], move[1]);
+				return;
+			}
+
+			if (event.key === "Enter" || event.key === " ") {
+				event.preventDefault();
+				// Ends the run, so the next arrow press opens a clean trail just
+				// as the next mouse grab would.
+				keyboardDragging.current = false;
+				complete(posX, posY);
+			}
+		},
+		[complete, moveByKeyboard, originX, originY, posX, posY, submitting],
+	);
+
+	const handlePieceFocus = useCallback((): void => {
+		announce(describePosition(posX, posY));
+	}, [announce, describePosition, posX, posY]);
+
 	const instructionText = showRetry
-		? "Not quite \u2014 try again"
-		: "Drag the piece to the target";
+		? t("WIDGET.PUZZLE.RETRY", { defaultValue: "Not quite \u2014 try again" })
+		: t("WIDGET.PUZZLE.DRAG", {
+				defaultValue: "Drag the piece to the target",
+			});
+
+	const keyboardHintText = t("WIDGET.PUZZLE.KEYBOARD_HINT", {
+		defaultValue:
+			"Use the arrow keys to move the piece, holding shift for smaller steps. Press Enter to submit it, Home to put it back at the start, or Escape to cancel.",
+	});
+
+	useEffect(() => {
+		if (!submitting) return;
+		announce(
+			t("WIDGET.PUZZLE.CHECKING", { defaultValue: "Checking your answer" }),
+		);
+	}, [submitting, announce, t]);
+
+	useEffect(() => {
+		if (!showRetry) return;
+		announce(
+			t("WIDGET.PUZZLE.RETRY_ANNOUNCEMENT", {
+				defaultValue:
+					"Not quite. A new puzzle has loaded and the piece is back at the start.",
+			}),
+		);
+	}, [showRetry, announce, t]);
 
 	const headerBorderColor = showRetry
 		? theme.palette.error.main
@@ -273,9 +440,22 @@ export const PuzzleCanvas = ({
 			anchor={anchor}
 			onDismiss={onDismiss}
 			scrim={visible ? "dim" : "none"}
+			dialogLabel={t("WIDGET.PUZZLE.DIALOG_LABEL", {
+				defaultValue: "Puzzle challenge",
+			})}
 		>
-			{/* Inject shake keyframes */}
-			<style>{SHAKE_KEYFRAMES}</style>
+			<style>{stylesheet(theme.palette.primary.main)}</style>
+
+			{/* Progress the piece cannot show a screen reader: where it has got
+			    to, that a solution is being checked, and that a failed go has
+			    been replaced by a fresh puzzle. */}
+			<output aria-live="polite" aria-atomic="true" style={VISUALLY_HIDDEN}>
+				{announcement}
+			</output>
+
+			<div id={keyboardHintId} style={VISUALLY_HIDDEN}>
+				{keyboardHintText}
+			</div>
 
 			<div
 				style={{
@@ -291,6 +471,7 @@ export const PuzzleCanvas = ({
 			>
 				{/* Instruction text */}
 				<div
+					id={instructionId}
 					style={{
 						backgroundColor: theme.palette.surface,
 						borderRadius: "20px 20px 0 0",
@@ -387,20 +568,41 @@ export const PuzzleCanvas = ({
 							);
 						})}
 					</div>
-					{/* Puzzle piece */}
+					{/* Puzzle piece.
+
+					    `application` rather than `button`: in the browse mode
+					    NVDA and JAWS default to, arrow keys move the reading
+					    cursor through the page and never reach a button's key
+					    handler. `application` is the role that hands them
+					    straight to this element, which is what makes the drag
+					    reachable without a pointer at all.
+
+					    The role and class are a stable production selector,
+					    which the data-cy below is deliberately not. A scripted
+					    solver could already find this element — it is the only
+					    draggable thing on the surface — whereas without them a
+					    keyboard or screen-reader user cannot find it at all. */}
 					<div
 						// Test-only selector: gated on NODE_ENV !== "production"
 						// so esbuild constant-folds it out of production bundles.
-						// The whole point of the puzzle drag is that a bot
-						// shouldn't be able to `querySelector` its way to the
-						// interactive element; shipping a stable data-cy would
-						// hand that to any scripted solver for free. Cypress
-						// builds the bundle with NODE_ENV=development
+						// Cypress builds the bundle with NODE_ENV=development
 						// (.github/workflows/cypress.yml:110) so the selector
 						// is present under test.
 						{...(process.env.NODE_ENV !== "production" && {
 							"data-cy": "prosopo-puzzle-piece",
 						})}
+						className={PIECE_CSS_CLASS}
+						role="application"
+						aria-roledescription={t("WIDGET.PUZZLE.PIECE_ROLE", {
+							defaultValue: "draggable puzzle piece",
+						})}
+						aria-label={t("WIDGET.PUZZLE.PIECE_LABEL", {
+							defaultValue: "Puzzle piece",
+						})}
+						aria-describedby={`${instructionId} ${keyboardHintId}`}
+						tabIndex={submitting ? -1 : 0}
+						onFocus={handlePieceFocus}
+						onKeyDown={handlePieceKeyDown}
 						onMouseDown={handlePieceMouseDown}
 						onTouchStart={handlePieceTouchStart}
 						style={{

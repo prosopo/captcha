@@ -377,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "Inga konton hittades",
 		"ACCOUNT_NOT_FOUND": "Konto hittades inte",
 		"NO_EXTENSION_FOUND": "Ingen förlängning hittades",
-		"INSECURE_CONTEXT": "Procaptcha kräver en säker (HTTPS) anslutning"
+		"INSECURE_CONTEXT": "Procaptcha kräver en säker (HTTPS) anslutning",
+		"CHECKING": "Kontrollerar att du är en människa",
+		"IMAGE_DIALOG_LABEL": "Bilduppgift",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Pusseluppgift",
+			"DRAG": "Dra biten till målet",
+			"RETRY": "Nästan — försök igen",
+			"PIECE_LABEL": "Pusselbit",
+			"PIECE_ROLE": "dragbar pusselbit",
+			"KEYBOARD_HINT": "Flytta biten med piltangenterna, håll ned skift för mindre steg. Tryck på Retur för att skicka in den, Home för att lägga tillbaka den vid starten, eller Escape för att avbryta.",
+			"POSITION": "{{x}} procent från vänster, {{y}} procent uppifrån",
+			"CHECKING": "Kontrollerar ditt svar",
+			"RETRY_ANNOUNCEMENT": "Nästan. Ett nytt pussel har laddats och biten är tillbaka vid starten."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Misslyckades att koda ogiltig adress",

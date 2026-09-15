@@ -78,7 +78,20 @@
 		"NO_ACCOUNTS_FOUND": "No se encontraron cuentas",
 		"ACCOUNT_NOT_FOUND": "Cuenta no encontrada",
 		"NO_EXTENSION_FOUND": "Extensión no encontrada",
-		"INSECURE_CONTEXT": "Procaptcha requiere una conexión segura (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha requiere una conexión segura (HTTPS)",
+		"CHECKING": "Comprobando que eres humano",
+		"IMAGE_DIALOG_LABEL": "Desafío de imágenes",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Desafío de rompecabezas",
+			"DRAG": "Arrastra la pieza hasta el objetivo",
+			"RETRY": "Casi — inténtalo de nuevo",
+			"PIECE_LABEL": "Pieza del rompecabezas",
+			"PIECE_ROLE": "pieza de rompecabezas arrastrable",
+			"KEYBOARD_HINT": "Usa las teclas de flecha para mover la pieza, manteniendo Mayús para pasos más pequeños. Pulsa Intro para enviarla, Inicio para devolverla al principio o Escape para cancelar.",
+			"POSITION": "{{x}} por ciento desde la izquierda, {{y}} por ciento desde arriba",
+			"CHECKING": "Comprobando tu respuesta",
+			"RETRY_ANNOUNCEMENT": "Casi. Se ha cargado un rompecabezas nuevo y la pieza vuelve a estar al principio."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Error al codificar dirección inválida",

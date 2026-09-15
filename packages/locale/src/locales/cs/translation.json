@@ -377,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "Nebyly nalezeny žádné účty",
 		"ACCOUNT_NOT_FOUND": "Účet nenalezen",
 		"NO_EXTENSION_FOUND": "Nenalezeno žádné rozšíření",
-		"INSECURE_CONTEXT": "Procaptcha vyžaduje zabezpečené připojení (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha vyžaduje zabezpečené připojení (HTTPS)",
+		"CHECKING": "Ověřujeme, že jste člověk",
+		"IMAGE_DIALOG_LABEL": "Obrázkový úkol",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Skládačkový úkol",
+			"DRAG": "Přetáhněte dílek na cíl",
+			"RETRY": "Skoro — zkuste to znovu",
+			"PIECE_LABEL": "Dílek skládačky",
+			"PIECE_ROLE": "přetažitelný dílek skládačky",
+			"KEYBOARD_HINT": "Dílek posouvejte šipkami, s podrženým Shiftem se posouvá po menších krocích. Stisknutím Enter jej odešlete, klávesou Home jej vrátíte na začátek, klávesou Escape akci zrušíte.",
+			"POSITION": "{{x}} procent zleva, {{y}} procent shora",
+			"CHECKING": "Ověřujeme vaši odpověď",
+			"RETRY_ANNOUNCEMENT": "Skoro. Načetla se nová skládačka a dílek je zpět na začátku."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nepodařilo se zakódovat neplatnou adresu",

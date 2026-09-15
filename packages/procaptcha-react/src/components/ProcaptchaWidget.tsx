@@ -160,6 +160,10 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 		<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
 	) : null;
 
+	const imageDialogLabel = t("WIDGET.IMAGE_DIALOG_LABEL", {
+		defaultValue: "Image challenge",
+	});
+
 	if (config.mode === "invisible") {
 		return (
 			<>
@@ -169,6 +173,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 					placement={config.placement}
 					anchor={props.container}
 					onDismiss={manager.current.cancel}
+					dialogLabel={imageDialogLabel}
 				>
 					{state.challenge ? (
 						<CaptchaComponent
@@ -196,6 +201,7 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 				placement={config.placement}
 				anchor={props.container}
 				onDismiss={manager.current.cancel}
+				dialogLabel={imageDialogLabel}
 			>
 				{state.challenge ? (
 					<CaptchaComponent
@@ -256,6 +262,9 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 				labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
 				error={state.error?.message}
 				aria-label="human checkbox"
+				loadingText={t("WIDGET.CHECKING", {
+					defaultValue: "Checking that you are human",
+				})}
 				loading={loading}
 			/>
 		</div>
