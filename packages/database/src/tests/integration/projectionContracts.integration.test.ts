@@ -20,6 +20,7 @@ import {
 	Tier,
 } from "@prosopo/types";
 import type {
+	AudioCaptchaRecord,
 	ClientRecord,
 	PoWCaptchaRecord,
 	PuzzleCaptchaRecord,
@@ -231,6 +232,73 @@ describe("ProviderDatabase projection contracts", () => {
 			"targetX",
 			"targetY",
 			"tolerance",
+			"userAccount",
+			"userSubmitted",
+		],
+	});
+
+	// ─── Audio captcha record ────────────────────────────────────────────
+	// getAudioCaptchaRecordByChallenge is called by `verifyAudioCaptchaSolution`
+	// and, through the shared base, `serverVerifyInteractiveCaptchaSolution`.
+	// Consumer field manifest derived by `grep -oE "challengeRecord\.[a-zA-Z_]+"`
+	// on `audioCaptcha/audioTasks.ts` and
+	// `interactiveCaptcha/interactiveCaptchaManager.ts`. `clientMetaData` was
+	// once missing here, which rejected every verify that sent a
+	// clientSessionId.
+	testProjectionContract<AudioCaptchaRecord>({
+		name: "getAudioCaptchaRecordByChallenge",
+		consumerName: "serverVerifyAudioCaptchaSolution",
+		insert: async () => {
+			const challenge =
+				"1___2___audio-projection-contract" as unknown as string;
+			const doc = {
+				challenge,
+				userAccount: "user-audio",
+				dappAccount: "dapp-audio",
+				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
+				ipAddress: ipv4Composite(1n),
+				headers: { host: "example.com", "user-agent": "Mozilla/5.0" },
+				ja4: "ja4-audio",
+				result: { status: CaptchaStatus.approved },
+				answer: "96475",
+				submittedAnswer: "96475",
+				replays: 1,
+				audioEvents: [{ kind: "play", t: 1_787_000_000_000 }],
+				providerSignature: "sig-audio",
+				sessionId: "session-audio",
+				ipInfo: validIpInfo,
+				deviceCapability: "desktop",
+				behavioralDataPacked: bdp(),
+				serverChecked: false,
+				userSubmitted: true,
+				coords: [[[100, 100]]] as [number, number][][],
+				clientMetaData: { clientSessionId: "bumblebee-audio-contract" },
+			};
+			await db.tables.audiocaptcha.create(doc);
+			return doc as unknown as AudioCaptchaRecord;
+		},
+		fetch: (fixture) =>
+			db.getAudioCaptchaRecordByChallenge(
+				fixture.challenge as unknown as string,
+			),
+		consumerReads: [
+			"answer",
+			"audioEvents",
+			"behavioralDataPacked",
+			"challenge",
+			"clientMetaData",
+			"coords",
+			"dappAccount",
+			"deviceCapability",
+			"headers",
+			"ipAddress",
+			"ipInfo",
+			"replays",
+			"result",
+			"serverChecked",
+			"sessionId",
+			"submittedAtTimestamp",
 			"userAccount",
 			"userSubmitted",
 		],

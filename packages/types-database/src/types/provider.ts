@@ -561,23 +561,7 @@ PuzzleCaptchaRecordSchema.index(
 );
 
 export const AudioCaptchaRecordSchema = new Schema<AudioCaptchaRecord>({
-	challenge: { type: String, required: true },
-	dappAccount: { type: String, required: true },
-	userAccount: { type: String, required: true },
-	requestedAtTimestamp: { type: Date, required: true },
-	submittedAtTimestamp: { type: Date, required: false },
-	verifiedAtTimestamp: { type: Date, required: false },
-	failedAtTimestamp: { type: Date, required: false },
-	lastUpdatedTimestamp: { type: Date, required: false },
-	result: {
-		status: { type: String, enum: CaptchaStatus, required: true },
-		reason: {
-			type: String,
-			enum: TranslationKeysSchema.options,
-			required: false,
-		},
-		error: { type: String, required: false },
-	},
+	...interactiveCaptchaRecordFields,
 	// The spoken transcript. Required, because a record without it cannot
 	// be graded. Never serialised into any response — see
 	// `AudioCaptchaStored` and `GetAudioCaptchaResponse`.
@@ -600,53 +584,6 @@ export const AudioCaptchaRecordSchema = new Schema<AudioCaptchaRecord>({
 		],
 		required: false,
 	},
-	ipAddress: CompositeIpAddressRecordSchemaObj,
-	providedIp: {
-		type: new Schema(CompositeIpAddressRecordSchemaObj, { _id: false }),
-		required: false,
-	},
-	metadata: {
-		type: new Schema(
-			{
-				email: { type: String, required: false },
-				emailNormalised: { type: String, required: false },
-			},
-			{ _id: false },
-		),
-		required: false,
-	},
-	clientMetaData: {
-		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
-		required: false,
-	},
-	headers: { type: Object, required: true },
-	ja4: { type: String, required: true },
-	userSignature: { type: String, required: false },
-	userSubmitted: { type: Boolean, required: true },
-	serverChecked: { type: Boolean, required: true },
-	storedAtTimestamp: { type: Date, required: false, expires: ONE_MONTH },
-	// See `StoredCaptcha.pendingStage`.
-	pendingStage: { type: Boolean, required: false },
-	// Mirrors `Session.blocked`. See `StoredCaptcha.blocked`.
-	blocked: { type: Boolean, required: false },
-	ipInfo: { type: Object, required: false },
-	parsedUserAgentInfo: { type: Object, required: false },
-	sessionId: {
-		type: String,
-		required: false,
-	},
-	coords: { type: [[[Number]]], required: false },
-	deviceCapability: { type: String, required: false },
-	behavioralDataPacked: {
-		type: {
-			c1: { type: [Schema.Types.Mixed], required: true },
-			c2: { type: [Schema.Types.Mixed], required: true },
-			c3: { type: [Schema.Types.Mixed], required: true },
-			d: { type: String, required: true },
-		},
-		required: false,
-	},
-	providerSignature: { type: String, required: true },
 });
 
 // Same index set as the puzzle and pow records — the audit, spam-count
@@ -1224,6 +1161,7 @@ export const DecisionMachineArtifactRecordSchema =
 				CaptchaType.image,
 				CaptchaType.puzzle,
 				CaptchaType.iconOrder,
+				CaptchaType.audio,
 			],
 			required: false,
 		},
@@ -1731,6 +1669,16 @@ export interface IProviderDatabase extends IDatabase {
 	 * the ordering would be enumerable.
 	 */
 	claimIconOrderCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
+
+	/**
+	 * Atomically claims the single submission an audio challenge allows.
+	 * Resolves `true` for exactly one caller, `false` for every other caller
+	 * that read the same not-yet-submitted record. Grading must happen behind
+	 * this rather than behind a read of `userSubmitted`: the answer is a
+	 * handful of digits, so parallel submissions against one challenge would
+	 * otherwise each get a verdict and the answer would be enumerable.
+	 */
+	claimAudioCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
 
 	updateIconOrderCaptchaRecordResult(
 		challenge: PoWChallengeId,
