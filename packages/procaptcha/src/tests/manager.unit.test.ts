@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { IpMode } from "@prosopo/load-balancer";
+import type { ScrollEventPoint } from "@prosopo/types";
 import {
 	ApiParams,
 	type BehavioralData,
@@ -941,6 +942,28 @@ describe("submit", () => {
 			timestamp: 1,
 			eventType: "click",
 			button: 0,
+		});
+		const scrollPoint = (y: number): ScrollEventPoint => ({
+			x: 0,
+			y,
+			timestamp: 1,
+		});
+
+		test("sends the scroll offsets even when no other collector ran", async () => {
+			const encryptBehavioralData = vi.fn<(data: string) => Promise<string>>();
+			encryptBehavioralData.mockResolvedValue("0xencrypted");
+			const harness = await started({
+				frictionlessState: frictionless({
+					encryptBehavioralData,
+					behaviorCollector4: collector([scrollPoint(120), scrollPoint(480)]),
+					restart: vi.fn(),
+				}),
+			});
+			await harness.manager.submit();
+			const payload: BehavioralData = JSON.parse(
+				encryptBehavioralData.mock.calls[0]?.[0] ?? "{}",
+			);
+			expect(payload.collector4).toEqual([scrollPoint(120), scrollPoint(480)]);
 		});
 
 		test("encrypts the collected data when an encryptor is present", async () => {
