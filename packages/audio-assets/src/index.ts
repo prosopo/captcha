@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { type Prng, createPrng, createSeed } from "@prosopo/puzzle-assets";
 import { addNoiseBed, addReverb, finalise, mixInto } from "./distort.js";
 import { encodeWav } from "./encode.js";
 import { DIGITS } from "./phonemes.js";
-import { type Prng, createPrng, createSeed } from "./prng.js";
 import {
 	SAMPLE_RATE,
 	type Voice,
@@ -29,8 +29,10 @@ import type {
 	Utterance,
 } from "./types.js";
 
-export { createPrng, createSeed, SEED_BYTES } from "./prng.js";
-export type { Prng } from "./prng.js";
+// The PRNG is puzzle-assets' — one audited generator for every asset
+// package rather than a copy per modality.
+export { createPrng, createSeed, SEED_BYTES } from "@prosopo/puzzle-assets";
+export type { Prng } from "@prosopo/puzzle-assets";
 export { ANSWER_ALPHABET, DIGITS } from "./phonemes.js";
 export {
 	SAMPLE_RATE,

@@ -34,7 +34,7 @@
  * at it.
  */
 
-import type { Prng } from "./prng.js";
+import type { Prng } from "@prosopo/puzzle-assets";
 import { normalise } from "./synth.js";
 import type { AudioBuffer } from "./types.js";
 

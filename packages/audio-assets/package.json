@@ -38,6 +38,9 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"private": true,
+	"dependencies": {
+		"@prosopo/puzzle-assets": "0.1.4"
+	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.16",
 		"@types/node": "22.10.2",
