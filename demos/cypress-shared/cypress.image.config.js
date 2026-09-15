@@ -33,7 +33,7 @@ export default defineConfig({
 		...process.env,
 		// For the client-example, the default page is the captcha type. For the client-bundle-example, the default_page
 		// is sometimes passed via --expose default_page='/THE_PAGE.html'" inside package.json scripts.
-		default_page: "/",
+		default_page: "/image-implicit.html",
 		visualRegressionType: "regression",
 		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
 		visualRegressionDiffDirectory: "cypress/snapshots/diff",
