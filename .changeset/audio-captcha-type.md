@@ -19,13 +19,9 @@
 "@prosopo/client-bundle-example": patch
 ---
 
-Add an audio captcha: the challenge speaks five digits and the user types them.
+Add an audio challenge as an accessibility alternative: the challenge speaks five digits and the user types them.
 
-It is a captcha type in its own right, selectable and routable like image, pow
-and puzzle, with its own provider routes, widget and database record. It is also
-the accessibility path: a per-site `audioAccessibilityEnabled` flag adds a "use
-audio instead" control to the image and puzzle widgets, leaving the primary
-challenge unchanged.
+A site turns it on with `audioAccessibilityEnabled`, which is off by default. Its image, puzzle and icon-order challenges then offer a "use audio instead" control, and a user who presses it is served the audio challenge in place of the visual one. Audio is not a captcha type a site selects or a rule routes to; see the accessibility-only changeset for how that is enforced. It has its own provider routes, widget and database record.
 
 The speech is synthesised rather than recorded. `@prosopo/audio-assets` is a
 formant synthesiser, so there is no fixed set of clips to collect.
