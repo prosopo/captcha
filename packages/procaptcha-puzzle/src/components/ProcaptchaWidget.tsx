@@ -307,6 +307,9 @@ const Procaptcha = (props: ProcaptchaProps) => {
 					labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
 					error={state.error?.message}
 					aria-label="human checkbox"
+					loadingText={t("WIDGET.CHECKING", {
+						defaultValue: "Checking that you are human",
+					})}
 					loading={loading || puzzlePhase === "submitting"}
 				/>
 			)}

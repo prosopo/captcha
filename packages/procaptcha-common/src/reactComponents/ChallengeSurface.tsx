@@ -42,37 +42,32 @@ interface ChallengeSurfaceProps {
 	scrim?: SurfaceScrim;
 	/** Called on Escape, and on an outside click when floating. */
 	onDismiss?: () => void;
-	/** Lifts the popup content on iOS, where Safari's bottom bar overlaps a centred dialog. */
-	popupIosLift?: boolean;
 	className?: string;
+	/**
+	 * Accessible name for the panel. Supplying one turns the panel into a modal
+	 * dialog: it takes focus when it opens, keeps Tab inside itself while it is
+	 * open, and hands focus back to whatever opened it on close. Challenges
+	 * that have nothing focusable to offer leave it unset and stay inert.
+	 */
+	dialogLabel?: string;
 }
+
+const FOCUSABLE_SELECTOR = [
+	"a[href]",
+	"button:not([disabled])",
+	"input:not([disabled])",
+	"select:not([disabled])",
+	"textarea:not([disabled])",
+	'[tabindex]:not([tabindex="-1"])',
+].join(",");
+
+const focusableWithin = (root: HTMLElement): HTMLElement[] =>
+	Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
 
 const SURFACE_Z_INDEX = 2147483646;
 const CONTENT_Z_INDEX = 2147483647;
 
-// `@supports` cannot be expressed inline, so the iOS lift is a stylesheet rule.
-const IOS_LIFT_STYLE_ID = "prosopo-challenge-surface-ios-lift";
-
-const IOS_LIFT_CSS = `
-.prosopo-challenge-content--ios-lift {
-	transform: translate(-50%, -50%);
-}
-@supports (-webkit-touch-callout: none) {
-	.prosopo-challenge-content--ios-lift {
-		transform: translate(-50%, -100%);
-	}
-}
-`;
-
-const ensureIosLiftStyles = (): void => {
-	if (typeof document === "undefined") return;
-	if (document.getElementById(IOS_LIFT_STYLE_ID)) return;
-
-	const style = document.createElement("style");
-	style.id = IOS_LIFT_STYLE_ID;
-	style.textContent = IOS_LIFT_CSS;
-	document.head.appendChild(style);
-};
+const POPUP_EDGE_GAP_PX = 8;
 
 const FLOAT_GAP_PX = 8;
 
@@ -113,8 +108,8 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 		anchor,
 		scrim = "none",
 		onDismiss,
-		popupIosLift = false,
 		className,
+		dialogLabel,
 	} = props;
 
 	const contentRef = useRef<HTMLDivElement>(null);
@@ -184,6 +179,53 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 	}, [show, onDismiss]);
 
 	useEffect(() => {
+		if (!show || !dialogLabel) return;
+
+		const content = contentRef.current;
+		if (!content) return;
+
+		const opener =
+			document.activeElement instanceof HTMLElement
+				? document.activeElement
+				: null;
+		// The panel itself is the fallback so the dialog's name is still
+		// announced when it holds nothing focusable.
+		(focusableWithin(content)[0] ?? content).focus();
+
+		return () => opener?.focus();
+	}, [show, dialogLabel]);
+
+	useEffect(() => {
+		if (!show || !dialogLabel) return;
+
+		// Tabbing off either end wraps back inside. A modal hides the rest of
+		// the page from assistive tech, so focus landing out there leaves the
+		// user somewhere they have no way to perceive or get back from.
+		const onKeyDown = (event: KeyboardEvent) => {
+			if (event.key !== "Tab") return;
+			const content = contentRef.current;
+			if (!content) return;
+
+			const focusable = focusableWithin(content);
+			const first = focusable[0] ?? content;
+			const last = focusable[focusable.length - 1] ?? content;
+			const active = document.activeElement;
+			const outside = !content.contains(active);
+
+			if (event.shiftKey && (outside || active === first)) {
+				event.preventDefault();
+				last.focus();
+			} else if (!event.shiftKey && (outside || active === last)) {
+				event.preventDefault();
+				first.focus();
+			}
+		};
+
+		document.addEventListener("keydown", onKeyDown);
+		return () => document.removeEventListener("keydown", onKeyDown);
+	}, [show, dialogLabel]);
+
+	useEffect(() => {
 		if (!show || !isFloating || !onDismiss) return;
 
 		const onPointerDown = (event: PointerEvent) => {
@@ -197,10 +239,6 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 		document.addEventListener("pointerdown", onPointerDown);
 		return () => document.removeEventListener("pointerdown", onPointerDown);
 	}, [show, isFloating, anchor, onDismiss]);
-
-	useEffect(() => {
-		if (popupIosLift && !isFloating) ensureIosLiftStyles();
-	}, [popupIosLift, isFloating]);
 
 	if (typeof document === "undefined") return null;
 
@@ -227,7 +265,12 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 				display: show ? "flex" : "none",
 				alignItems: "center",
 				justifyContent: "center",
-				minHeight: "100vh",
+				// `dvh`, not `vh`: on iOS Safari `100vh` is the toolbar-retracted
+				// height, which would make this box taller than the visible area and
+				// centre the challenge underneath the bottom bar.
+				minHeight: "100dvh",
+				padding: `${POPUP_EDGE_GAP_PX}px`,
+				boxSizing: "border-box",
 				backgroundColor:
 					scrim === "dim" && show ? "rgba(0, 0, 0, 0.4)" : "transparent",
 				transition: "background-color 0.3s ease",
@@ -244,13 +287,17 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 				visibility: floatPosition ? "visible" : "hidden",
 			}
 		: {
-				position: "absolute",
-				top: "50%",
-				left: "50%",
-				// When lifting, the stylesheet rule owns the transform.
-				transform: popupIosLift ? undefined : "translate(-50%, -50%)",
+				// Centred as a flex item by the layer rather than by
+				// `top/left: 50%` and a translate. An out-of-flow panel taller than
+				// the viewport overflows off both edges and its top is unreachable;
+				// in flow it is bounded by `maxHeight` and scrolls instead.
+				position: "relative",
 				zIndex: CONTENT_Z_INDEX,
 				boxSizing: "border-box",
+				maxWidth: "100%",
+				maxHeight: "100%",
+				overflowY: "auto",
+				overscrollBehavior: "contain",
 			};
 
 	return createPortal(
@@ -264,14 +311,17 @@ const ChallengeSurface = React.memo((props: ChallengeSurfaceProps) => {
 				.join(" ")}
 			style={layerStyle}
 		>
+			{/* biome-ignore lint/a11y/useSemanticElements: <dialog> brings its own
+			    top-layer and backdrop, which would fight the portal's own
+			    stacking and the float placement computed above. */}
 			<div
 				ref={contentRef}
-				className={
-					popupIosLift && !isFloating
-						? "prosopo-challenge-content prosopo-challenge-content--ios-lift"
-						: "prosopo-challenge-content"
-				}
+				className="prosopo-challenge-content"
 				style={contentStyle}
+				role={dialogLabel ? "dialog" : undefined}
+				aria-modal={dialogLabel ? true : undefined}
+				aria-label={dialogLabel}
+				tabIndex={dialogLabel ? -1 : undefined}
 			>
 				{children}
 			</div>

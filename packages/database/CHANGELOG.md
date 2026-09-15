@@ -1,5 +1,70 @@
 # @prosopo/database
 
+## 4.0.33
+### Patch Changes
+
+- 98ab052: Serve a repeat caller the same detector bundle.
+  
+  `/detector/assign` picked a bundle at random on every request. The provider now
+  records which bundle it served a caller and returns that one for a bounded
+  period, so a returning visitor gets a stable bundle instead of a fresh draw each
+  time. Any bundle performs identically, so this is not visible to users. If Redis
+  cannot answer, assign falls back to the previous behaviour rather than failing.
+  
+  Also fixes the `assignDetectorBundle` tests, which were failing on main and had
+  gone unnoticed because the file was named `*.test.ts` while CI only runs
+  `*.unit.test.ts`. Renamed so it runs, and replaced the mock that
+  `clearAllMocks` was silently emptying.
+- 1f0598c: Derive the detector bundle for a caller instead of storing it.
+  
+  `assignDetectorBundle` now picks the bundle with a keyed hash of the caller's
+  address, using a per-provider secret kept on the pool volume. Same caller, same
+  bundle, with nothing recorded and nothing to expire — which also means the
+  result no longer changes when the cache is unavailable.
+  
+  Replaces the Redis client → bundle entry added in the previous patch, so
+  `bindDetectorBundleToClient` and its TTL constant are gone.
+- 3958046: Keep a detector bundle binding for as long as its payload is accepted
+  
+  The `detectorSessionId → bundleId` binding held the only key able to read a
+  detector payload, and expired after 60 seconds. The frictionless flow accepts a
+  payload for ten minutes (`DEFAULT_MAX_TIMESTAMP_AGE`). For nine of those ten
+  minutes the provider would therefore accept a payload it had already discarded
+  the means to decrypt: `resolveDecryptAttempts` returns an empty key list, the
+  decrypt loop never runs, the score is forced to 1 and the caller is challenged
+  despite nothing having been measured about them.
+  
+  Sixty seconds is ample for the assign → submit gap in the normal case — it is
+  around 1.5s — but it only has to stall once to be lost, and a backgrounded
+  mobile tab is enough.
+  
+  The two values are now one value. `DEFAULT_MAX_TIMESTAMP_AGE` moves from a
+  private constant in `frictionlessTasks` to `@prosopo/types`, the only package
+  both the provider and the database can see, and `DETECTOR_BUNDLE_TTL_SECONDS` is
+  derived from it instead of being written down a second time. A unit test pins
+  the relationship so they cannot drift apart again.
+  
+  The TTL cannot now outlive the payload-age check, so this does not widen the
+  window in which any payload is usable. Bundle selection is unaffected: which
+  bundle a caller receives is derived from their IP and a server secret, not from
+  this binding's lifetime.
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [028a158]
+  - @prosopo/types-database@5.5.3
+  - @prosopo/types@5.8.3
+  - @prosopo/common@3.1.55
+  - @prosopo/user-access-policy@3.14.3
+
+## 4.0.32
+### Patch Changes
+
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/types-database@5.5.2
+  - @prosopo/types@5.8.2
+  - @prosopo/user-access-policy@3.14.2
+
 ## 4.0.31
 ### Patch Changes
 

@@ -83,6 +83,9 @@ const renderPlaceholder = (
 			error={errorMessage}
 			aria-label="human checkbox"
 			loading={loading}
+			loadingText={
+				isTranslationLoaded ? translationFn("WIDGET.CHECKING") : undefined
+			}
 		/>
 	);
 };

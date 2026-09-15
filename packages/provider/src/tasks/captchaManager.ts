@@ -756,10 +756,42 @@ export class CaptchaManager {
 	async resolveBundleByDetectorSession(
 		detectorSessionId?: string,
 	): Promise<(PoolBundleDecrypt & { bundleId: string }) | undefined> {
-		if (!detectorSessionId || !this.writeQueue) return undefined;
+		if (!detectorSessionId || !this.writeQueue) {
+			this.logUnresolvedDetectorBundle("noDetectorSession");
+			return undefined;
+		}
 		const bundleId = await this.writeQueue.getDetectorBundle(detectorSessionId);
+		if (!bundleId) {
+			this.logUnresolvedDetectorBundle("noBinding");
+			return undefined;
+		}
 		const decrypt = this.resolveBundleById(bundleId);
-		return bundleId && decrypt ? { ...decrypt, bundleId } : undefined;
+		if (!decrypt) {
+			this.logUnresolvedDetectorBundle("bundleNotInPool", bundleId);
+			return undefined;
+		}
+		return { ...decrypt, bundleId };
+	}
+
+	/**
+	 * Returning undefined here leaves the frictionless decrypt with no keys to
+	 * try, which fails closed: the score is forced to 1 and the caller is
+	 * challenged despite nothing having been measured about it. The three causes
+	 * need different fixes — a caller that sent no detector session, a binding
+	 * that was absent or had expired (see `DETECTOR_BUNDLE_TTL_SECONDS`), and a
+	 * bundle this provider no longer holds — but they are indistinguishable
+	 * downstream, where all three surface as the same decrypt failure. Logged at
+	 * info because that is the level aggregated log search runs at, and only on
+	 * the failure path, so this costs nothing on the hot path.
+	 */
+	private logUnresolvedDetectorBundle(
+		cause: "noDetectorSession" | "noBinding" | "bundleNotInPool",
+		bundleId?: string,
+	): void {
+		this.logger?.info(() => ({
+			msg: "Detector bundle not resolved",
+			data: { cause, ...(bundleId !== undefined && { bundleId }) },
+		}));
 	}
 
 	/**

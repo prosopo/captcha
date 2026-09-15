@@ -59,6 +59,9 @@ export type DetectorResult = {
 	i?: boolean;
 	cv?: number;
 	sq?: number;
+	cg?: string;
+	sm?: string;
+	dz?: string;
 	// Raw iOS WKWebView-vs-Safari DOM signals (positions 14-17 in the client
 	// payload). Undefined for clients that predate the fields, or on non-iOS
 	// / non-WebKit engines where the classifier gate returns early. Shipped
