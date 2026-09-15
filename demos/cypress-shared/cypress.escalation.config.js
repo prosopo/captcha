@@ -30,7 +30,7 @@ export default defineConfig({
 	screenshotsFolder: "./cypress/snapshots/actual",
 	trashAssetsBeforeRuns: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
-	env: {
+	expose: {
 		...process.env,
 		// Frictionless entry point — that's where the post-PoW route()
 		// escalation surfaces in production.

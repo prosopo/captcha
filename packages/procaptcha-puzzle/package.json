@@ -32,7 +32,7 @@
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
-		"@polkadot/util": "13.5.7",
+		"@polkadot/util": "14.0.3",
 		"@prosopo/api": "4.2.3",
 		"@prosopo/common": "3.1.55",
 		"@prosopo/locale": "3.4.2",
@@ -41,8 +41,8 @@
 		"@prosopo/util": "3.3.9",
 		"@prosopo/util-crypto": "13.5.31",
 		"@prosopo/widget-skeleton": "2.8.7",
-		"react": "19.2.8",
-		"react-dom": "19.2.8"
+		"react": "19.3.0",
+		"react-dom": "19.3.0"
 	},
 	"devDependencies": {
 		"@emotion/react": "11.14.0",
