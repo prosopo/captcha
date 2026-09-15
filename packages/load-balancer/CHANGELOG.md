@@ -1,5 +1,14 @@
 # @prosopo/load-balancer
 
+## 2.10.44
+### Patch Changes
+
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [028a158]
+  - @prosopo/types@5.8.3
+  - @prosopo/common@3.1.55
+
 ## 2.10.43
 ### Patch Changes
 
