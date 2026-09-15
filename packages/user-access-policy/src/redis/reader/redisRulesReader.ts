@@ -128,6 +128,7 @@ const RULE_LOAD_FIELDS = [
 	"@unsolvedImagesCount",
 	"@frictionlessScore",
 	"@deferToVerify",
+	"@messageKey",
 	"@clientId",
 	"@groupId",
 	"@userId",
