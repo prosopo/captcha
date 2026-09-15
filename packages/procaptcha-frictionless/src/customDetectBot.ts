@@ -363,6 +363,7 @@ const customDetectBot: BotDetectionFunction = async (
 		behaviorCollector1: detectionResult.mouseTracker,
 		behaviorCollector2: detectionResult.touchTracker,
 		behaviorCollector3: detectionResult.clickTracker,
+		behaviorCollector4: detectionResult.scrollTracker,
 		deviceCapability: detectionResult.hasTouchSupport,
 		encryptBehavioralData: detectionResult.encryptBehavioralData,
 		packBehavioralData: detectionResult.packBehavioralData,
