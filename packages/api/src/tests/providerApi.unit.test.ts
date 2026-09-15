@@ -559,12 +559,14 @@ describe("getFrictionlessCaptcha", () => {
 			undefined, // detectorSessionId
 			"https://site.example/page",
 			"https://iframe.example",
+			"pbk_example",
 		);
 		expect(body()).toMatchObject({
 			[ApiParams.mode]: ModeEnum.invisible,
 			[ApiParams.simdReadings]: "readings",
 			[ApiParams.currentUrl]: "https://site.example/page",
 			[ApiParams.iframeUrl]: "https://iframe.example",
+			[ApiParams.bypassKey]: "pbk_example",
 		});
 	});
 
