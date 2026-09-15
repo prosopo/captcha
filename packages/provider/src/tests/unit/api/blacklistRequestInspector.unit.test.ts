@@ -126,6 +126,27 @@ describe("getRequestUserScope", () => {
 		);
 		expect(userScope.countryCode).toBe("DE");
 	});
+
+	it("includes bypassKeyHash in the scope only when one is provided", () => {
+		const bypassKeyHash =
+			"9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
+		const withKey = getRequestUserScope(
+			{ "user-agent": "ua" },
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			bypassKeyHash,
+		);
+		expect(withKey.bypassKeyHash).toBe(bypassKeyHash);
+		expect(getRequestUserScope({ "user-agent": "ua" })).not.toHaveProperty(
+			"bypassKeyHash",
+		);
+	});
 });
 
 describe("BlacklistRequestInspector.shouldAbortRequest", () => {
