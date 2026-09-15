@@ -83,6 +83,8 @@ const CAPTCHA_TABLES = [
 		collectionName: TableNames.audiocaptcha,
 		modelName: "AudioCaptcha",
 		schema: StoredAudioCaptchaRecordSchema,
+	},
+	{
 		collectionName: TableNames.iconordercaptcha,
 		modelName: "IconOrderCaptcha",
 		schema: StoredIconOrderCaptchaRecordSchema,
