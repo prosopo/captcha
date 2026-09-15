@@ -7,14 +7,16 @@
 "@prosopo/api": minor
 "@prosopo/server": minor
 "@prosopo/database": minor
-"@prosopo/cli": minor
+"@prosopo/cli": patch
 "@prosopo/captcha-severity": minor
 "@prosopo/locale": minor
-"@prosopo/keyring": minor
+"@prosopo/keyring": patch
 "@prosopo/procaptcha-common": minor
 "@prosopo/procaptcha-frictionless": minor
 "@prosopo/procaptcha-puzzle": minor
 "@prosopo/procaptcha-react": minor
+"@prosopo/scripts": patch
+"@prosopo/client-bundle-example": patch
 ---
 
 Add an audio captcha: the challenge speaks five digits and the user types them.

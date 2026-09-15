@@ -26,8 +26,12 @@ export function getDefaultSiteKeys(): ISite[] {
 		CaptchaType.image,
 		CaptchaType.pow,
 		CaptchaType.frictionless,
-		CaptchaType.puzzle,
+		// Ordered before `puzzle` deliberately. `updateDemoHTMLFiles` rewrites
+		// the sitekey in EVERY demo HTML file once per seeded type, so whichever
+		// type is seeded last is the one left in the webview demos. Appending
+		// here would silently repoint them from puzzle to audio.
 		CaptchaType.audio,
+		CaptchaType.puzzle,
 	];
 	const sites: ISite[] = [];
 	for (const captchaType of captchaTypes) {

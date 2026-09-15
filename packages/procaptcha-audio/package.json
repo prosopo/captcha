@@ -32,16 +32,16 @@
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
-		"@polkadot/util": "13.5.7",
-		"@prosopo/api": "4.2.2",
-		"@prosopo/common": "3.1.54",
-		"@prosopo/locale": "3.4.1",
-		"@prosopo/procaptcha-common": "2.13.3",
-		"@prosopo/types": "5.8.2",
+		"@polkadot/util": "14.0.3",
+		"@prosopo/api": "4.2.3",
+		"@prosopo/common": "3.1.55",
+		"@prosopo/locale": "3.4.2",
+		"@prosopo/procaptcha-common": "2.14.0",
+		"@prosopo/types": "5.8.3",
 		"@prosopo/util": "3.3.9",
 		"@prosopo/util-crypto": "13.5.31",
 		"@prosopo/widget-skeleton": "2.8.7",
-		"react": "19.2.8"
+		"react": "19.3.0"
 	},
 	"devDependencies": {
 		"@emotion/react": "11.14.0",
@@ -53,7 +53,7 @@
 		"del-cli": "6.0.0",
 		"jsdom": "26.1.0",
 		"npm-run-all": "4.1.5",
-		"react-dom": "19.2.8",
+		"react-dom": "19.3.0",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",

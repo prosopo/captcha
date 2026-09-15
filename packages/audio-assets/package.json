@@ -37,7 +37,6 @@
 		"url": "https://github.com/prosopo/captcha/issues"
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
-	"private": true,
 	"devDependencies": {
 		"@prosopo/config": "3.3.16",
 		"@types/node": "22.10.2",
