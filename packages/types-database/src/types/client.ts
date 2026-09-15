@@ -162,6 +162,12 @@ export const AudioRenderSettingsSchema = new Schema(
 	{ _id: false },
 );
 
+// Mirrors `SelectableCaptchaTypeSchema`: audio is only ever the accessibility
+// alternative, never a type a site or traffic category is configured with.
+const SELECTABLE_CAPTCHA_TYPES: CaptchaType[] = Object.values(
+	CaptchaType,
+).filter((captchaType) => captchaType !== CaptchaType.audio);
+
 // Sub-schema for one trafficFilter category's policy. `_id: false` prevents
 // Mongoose from stamping an implicit ObjectId onto each subdoc.
 export const TrafficCategoryPolicySchema = new Schema(
@@ -173,7 +179,7 @@ export const TrafficCategoryPolicySchema = new Schema(
 		},
 		captchaType: {
 			type: String,
-			enum: CaptchaType,
+			enum: SELECTABLE_CAPTCHA_TYPES,
 			required: false,
 		},
 		powDifficulty: { type: Number, required: false },
@@ -195,7 +201,7 @@ export const TrafficCategoryPolicySchema = new Schema(
 export const UserSettingsSchema = new Schema({
 	captchaType: {
 		type: String,
-		enum: CaptchaType,
+		enum: SELECTABLE_CAPTCHA_TYPES,
 		default: captchaTypeDefault,
 	},
 	verifiedTimeout: {
