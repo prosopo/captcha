@@ -31,7 +31,7 @@
 	"dependencies": {
 		"@noble/curves": "2.4.0",
 		"@noble/hashes": "1.8.0",
-		"@polkadot/util": "13.5.7",
+		"@polkadot/util": "14.0.3",
 		"@polkadot/x-randomvalues": "13.5.7",
 		"@scure/base": "1.2.6",
 		"@scure/sr25519": "2.4.0",

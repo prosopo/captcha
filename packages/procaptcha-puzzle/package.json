@@ -32,7 +32,7 @@
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
-		"@polkadot/util": "13.5.7",
+		"@polkadot/util": "14.0.3",
 		"@prosopo/api": "4.2.3",
 		"@prosopo/common": "3.1.55",
 		"@prosopo/locale": "3.4.2",
