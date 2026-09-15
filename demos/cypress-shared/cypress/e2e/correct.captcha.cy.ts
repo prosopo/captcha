@@ -22,7 +22,7 @@ import {
 	getWidgetElement,
 } from "../support/commands.js";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
 
 describe("Captchas", () => {
 	before(() => {
@@ -72,7 +72,7 @@ describe("Captchas", () => {
 
 		cy.intercept("/dummy").as("dummy");
 
-		const page = Cypress.env("default_page");
+		const page = Cypress.expose("default_page");
 
 		console.log(`Visiting page: ${page}`);
 

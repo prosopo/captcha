@@ -19,7 +19,7 @@ import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
 
 describe("Proof of Work CAPTCHA", () => {
 	beforeEach(() => {
@@ -47,7 +47,7 @@ describe("Proof of Work CAPTCHA", () => {
 		}
 		cy.intercept("/dummy").as("dummy");
 
-		return cy.visit(Cypress.env("default_page")).then(() => {
+		return cy.visit(Cypress.expose("default_page")).then(() => {
 			cy.waitForProcaptchaScript();
 			getWidgetElement(checkboxClass).should("be.visible");
 			cy.wrap(solutions).as("solutions");
@@ -70,7 +70,7 @@ describe("Proof of Work CAPTCHA", () => {
 	});
 
 	it("POW CAPTCHA loads and completes when 'I am human' is pressed", () => {
-		cy.visit(Cypress.env("default_page"));
+		cy.visit(Cypress.expose("default_page"));
 
 		// Wait for the procaptcha script to be loaded after navigation
 		cy.waitForProcaptchaScript();
