@@ -221,7 +221,7 @@ body.demo {
 	gap: 6px;
 }
 
-.demo .demo-type {
+.demo .demo-choice {
 	display: flex;
 	gap: 10px;
 	padding: 10px 12px;
@@ -230,19 +230,19 @@ body.demo {
 	color: var(--gray-900);
 }
 
-.demo .demo-type:hover {
+.demo .demo-choice:hover {
 	border-color: var(--gray-300);
 	background: var(--gray-50);
 	color: var(--gray-900);
 }
 
-.demo .demo-type[aria-current="page"] {
+.demo .demo-choice[aria-current="page"] {
 	border-color: var(--propurple-600);
 	box-shadow: inset 0 0 0 0.5px var(--propurple-600);
 	background: var(--propurple-50);
 }
 
-.demo-type__radio {
+.demo-choice__radio {
 	flex-shrink: 0;
 	width: 16px;
 	height: 16px;
@@ -252,17 +252,17 @@ body.demo {
 	background: #ffffff;
 }
 
-.demo-type[aria-current="page"] .demo-type__radio {
+.demo-choice[aria-current="page"] .demo-choice__radio {
 	border: 5px solid var(--propurple-600);
 }
 
-.demo-type__body {
+.demo-choice__body {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
 }
 
-.demo-type__name {
+.demo-choice__name {
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -270,7 +270,7 @@ body.demo {
 	font-weight: 600;
 }
 
-.demo-type[aria-current="page"] .demo-type__name {
+.demo-choice[aria-current="page"] .demo-choice__name {
 	font-weight: 700;
 }
 
@@ -283,7 +283,7 @@ body.demo {
 	border-radius: 9999px;
 }
 
-.demo-type__description {
+.demo-choice__description {
 	font-size: 13px;
 	line-height: 18px;
 	color: var(--gray-600);
@@ -317,6 +317,57 @@ body.demo {
 	color: var(--gray-900);
 	font-weight: 600;
 	box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+
+.demo-renderings {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.demo-group__hint {
+	margin: 0;
+	font-size: 12px;
+	line-height: 17px;
+	color: var(--gray-500);
+}
+
+.demo-advanced {
+	padding-top: 18px;
+	border-top: 1px solid var(--gray-200);
+}
+
+.demo-advanced summary {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--gray-700);
+	list-style: none;
+	cursor: pointer;
+}
+
+.demo-advanced summary::-webkit-details-marker {
+	display: none;
+}
+
+.demo-advanced summary::before {
+	content: "";
+	width: 6px;
+	height: 6px;
+	border-right: 1.5px solid currentColor;
+	border-bottom: 1.5px solid currentColor;
+	transform: rotate(-45deg);
+	transition: transform 150ms ease-in-out;
+}
+
+.demo-advanced[open] summary {
+	margin-bottom: 12px;
+}
+
+.demo-advanced[open] summary::before {
+	transform: rotate(45deg);
 }
 
 .demo-placement-note {
@@ -724,7 +775,7 @@ body.demo {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
-	.demo-type__description {
+	.demo-types .demo-choice__description {
 		display: none;
 	}
 

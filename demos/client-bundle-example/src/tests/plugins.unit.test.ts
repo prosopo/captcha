@@ -166,8 +166,16 @@ describe("layoutInjector", () => {
 
 		expect(html.match(/aria-current="page"/g)).toHaveLength(3);
 		expect(html).toContain(
-			'<a class="demo-type" data-demo-nav href="pow-explicit.html" aria-current="page">',
+			'<a class="demo-choice" data-demo-nav href="pow-explicit.html" aria-current="page">',
 		);
+	});
+
+	it("folds rendering away unless the page uses a non-default rendering", () => {
+		const implicit = handler(page(), ctx(`${cwd}/src/pow-implicit.html`));
+		const explicit = handler(page(), ctx(`${cwd}/src/pow-explicit.html`));
+
+		expect(implicit).toContain('<details class="demo-advanced">');
+		expect(explicit).toContain('<details class="demo-advanced" open>');
 	});
 
 	it("keeps the mode and rendering when switching captcha type", () => {

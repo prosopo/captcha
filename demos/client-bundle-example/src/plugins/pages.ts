@@ -52,7 +52,7 @@ export const captchaTypeOptions: CaptchaTypeOption[] = [
 	{
 		value: CaptchaType.pow,
 		label: "Proof of Work",
-		description: "The browser does a quick computation. No clicks.",
+		description: "The browser does a quick computation.",
 	},
 	{
 		value: CaptchaType.puzzle,
@@ -71,11 +71,33 @@ export const modeOptions: DemoOption<DemoMode>[] = [
 	{ value: "invisible", label: "Invisible" },
 ];
 
-export const renderingOptions: DemoOption<DemoRendering>[] = [
-	{ value: "implicit", label: "Implicit" },
-	{ value: "explicit", label: "Explicit" },
-	{ value: "manual", label: "Manual" },
-	{ value: "bound", label: "Bound" },
+export interface RenderingOption extends DemoOption<DemoRendering> {
+	description: string;
+}
+
+export const renderingOptions: RenderingOption[] = [
+	{
+		value: "implicit",
+		label: "Implicit",
+		description:
+			"Add a div with your site key and the script renders the widget.",
+	},
+	{
+		value: "explicit",
+		label: "Explicit",
+		description: "Your own code calls render() when it is ready.",
+	},
+	{
+		value: "manual",
+		label: "Manual start",
+		description:
+			"The widget shows straight away, but checks only start when you say.",
+	},
+	{
+		value: "bound",
+		label: "Bound button",
+		description: "Your own submit button opens the challenge.",
+	},
 ];
 
 const page = (
@@ -178,7 +200,7 @@ export const resolvePage = (setup: DemoSetup): DemoPage =>
 export const renderingsFor = (
 	captchaType: DemoCaptchaType,
 	mode: DemoMode,
-): DemoOption<DemoRendering>[] =>
+): RenderingOption[] =>
 	renderingOptions.filter(({ value }) =>
 		demoPages.some((demoPage) =>
 			isSetup(demoPage, { captchaType, mode, rendering: value }),

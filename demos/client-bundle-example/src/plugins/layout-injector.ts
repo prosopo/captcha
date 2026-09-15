@@ -68,16 +68,30 @@ const sidebar = (page: DemoPage | undefined, prefix: string): string => {
 	const href = (target: DemoSetup): string =>
 		`${prefix}${resolvePage(target).path}`;
 
-	const types = captchaTypeOptions
-		.map(
-			({ value, label, description }) => `
-		<a class="demo-type" data-demo-nav href="${href({ ...setup, captchaType: value })}"${ariaCurrent(page?.captchaType === value)}>
-			<span class="demo-type__radio"></span>
-			<span class="demo-type__body">
-				<span class="demo-type__name">${label}${value === defaultSetup.captchaType ? '<span class="demo-badge">Default</span>' : ""}</span>
-				<span class="demo-type__description">${description}</span>
+	const choice = (
+		target: DemoSetup,
+		isCurrent: boolean,
+		name: string,
+		description: string,
+	): string => `
+		<a class="demo-choice" data-demo-nav href="${href(target)}"${ariaCurrent(isCurrent)}>
+			<span class="demo-choice__radio"></span>
+			<span class="demo-choice__body">
+				<span class="demo-choice__name">${name}</span>
+				<span class="demo-choice__description">${description}</span>
 			</span>
-		</a>`,
+		</a>`;
+
+	const types = captchaTypeOptions
+		.map(({ value, label, description }) =>
+			choice(
+				{ ...setup, captchaType: value },
+				page?.captchaType === value,
+				value === defaultSetup.captchaType
+					? `${label}<span class="demo-badge">Default</span>`
+					: label,
+				description,
+			),
 		)
 		.join("");
 
@@ -89,11 +103,20 @@ const sidebar = (page: DemoPage | undefined, prefix: string): string => {
 		.join("");
 
 	const renderings = renderingsFor(setup.captchaType, setup.mode)
-		.map(
-			({ value, label }) =>
-				`<a data-demo-nav href="${href({ ...setup, rendering: value })}"${ariaCurrent(page?.rendering === value)}>${label}</a>`,
+		.map(({ value, label, description }) =>
+			choice(
+				{ ...setup, rendering: value },
+				page?.rendering === value,
+				label,
+				description,
+			),
 		)
 		.join("");
+
+	// Rendering is an integration detail, so it stays folded away unless the
+	// visitor is already on a non-default rendering.
+	const advancedOpen =
+		page && page.rendering !== defaultSetup.rendering ? " open" : "";
 
 	return `
 <aside class="demo-sidebar">
@@ -111,11 +134,16 @@ const sidebar = (page: DemoPage | undefined, prefix: string): string => {
 		<div class="demo-group__label">Mode</div>
 		<nav class="demo-segmented" aria-label="Mode">${modes}</nav>
 	</div>
-	<div class="demo-group">
-		<div class="demo-group__label">Rendering</div>
-		<nav class="demo-segmented" aria-label="Rendering">${renderings}</nav>
-	</div>
 	${slotMarkup("placement")}
+	<details class="demo-advanced"${advancedOpen}>
+		<summary>Advanced</summary>
+		<div class="demo-group">
+			<div class="demo-group__label">Rendering</div>
+			<p class="demo-group__hint">How the widget gets onto your page. Most sites use implicit.</p>
+			<nav class="demo-renderings" aria-label="Rendering">${renderings}
+			</nav>
+		</div>
+	</details>
 </aside>`;
 };
 
@@ -124,7 +152,9 @@ const chips = (page: DemoPage | undefined): string =>
 		? [
 				labelOf(captchaTypeOptions, page.captchaType),
 				labelOf(modeOptions, page.mode),
-				labelOf(renderingOptions, page.rendering),
+				...(page.rendering === defaultSetup.rendering
+					? []
+					: [labelOf(renderingOptions, page.rendering)]),
 			]
 				.map((label) => `<span class="demo-chip">${label}</span>`)
 				.join("")
