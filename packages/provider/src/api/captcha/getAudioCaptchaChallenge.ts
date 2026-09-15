@@ -35,6 +35,7 @@ import {
 	normalizeHeadersForMatching,
 } from "../blacklistRequestInspector.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
+import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildAudioMaintenanceResponse } from "./maintenanceModeResponses.js";
 import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
@@ -73,6 +74,18 @@ export default (
 		if (getMaintenanceMode()) {
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning dummy audio challenge",
+				data: { dapp, user, sessionId },
+			}));
+			return res.json(await buildAudioMaintenanceResponse(user, dapp));
+		}
+
+		// Reserved CI test site keys are never registered, so the lookup
+		// below would reject them as unregistered. Checked before
+		// `new Tasks(env, ...)` for the same reason as maintenance mode: the
+		// constructor calls `env.getDb()`.
+		if (isReservedTestSiteKey(dapp)) {
+			req.logger.warn(() => ({
+				msg: "Reserved TEST site key - returning dummy audio challenge",
 				data: { dapp, user, sessionId },
 			}));
 			return res.json(await buildAudioMaintenanceResponse(user, dapp));
