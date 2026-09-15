@@ -29,7 +29,8 @@ export function getDefaultSiteKeys(): ISite[] {
 		// Ordered before `puzzle` deliberately. `updateDemoHTMLFiles` rewrites
 		// the sitekey in EVERY demo HTML file once per seeded type, so whichever
 		// type is seeded last is the one left in the webview demos. Appending
-		// here would silently repoint them from puzzle to audio.
+		// here would silently repoint them from puzzle to icon-order or audio.
+		CaptchaType.iconOrder,
 		CaptchaType.audio,
 		CaptchaType.puzzle,
 	];

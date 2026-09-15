@@ -124,6 +124,9 @@ export default defineConfig(({ command, mode }) => {
 			"import.meta.env.PROSOPO_SITE_KEY_AUDIO": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY_AUDIO,
 			),
+			"import.meta.env.PROSOPO_SITE_KEY_ICONORDER": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_ICONORDER,
+			),
 			"import.meta.env.PROSOPO_SITE_KEY_POW": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY_POW,
 			),
@@ -235,6 +238,14 @@ export default defineConfig(({ command, mode }) => {
 					"invisible-audio-explicit": path.resolve(
 						__dirname,
 						"src/invisible-audio-explicit.html",
+					),
+					"icon-order-implicit": path.resolve(
+						__dirname,
+						"src/icon-order-implicit.html",
+					),
+					"icon-order-explicit": path.resolve(
+						__dirname,
+						"src/icon-order-explicit.html",
 					),
 				},
 			},

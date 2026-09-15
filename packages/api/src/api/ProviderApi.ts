@@ -36,11 +36,14 @@ import {
 	type GetAudioCaptchaResponse,
 	type GetFrictionlessCaptchaChallengeRequestBodyOutput,
 	type GetFrictionlessCaptchaResponse,
+	type GetIconOrderCaptchaChallengeRequestBodyType,
+	type GetIconOrderCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
 	type GetPuzzleCaptchaChallengeRequestBodyType,
 	type GetPuzzleCaptchaResponse,
 	type IUserSettings,
+	type IconOrderCaptchaSolutionResponse,
 	type ImageVerificationResponse,
 	type ModeEnum,
 	type PowCaptchaSolutionResponse,
@@ -57,10 +60,12 @@ import {
 	RemoveSitekeysBody,
 	type RemoveSitekeysBodyTypeOutput,
 	type ServerAudioCaptchaVerifyRequestBodyType,
+	type ServerIconOrderCaptchaVerifyRequestBodyType,
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type ServerPuzzleCaptchaVerifyRequestBodyType,
 	type StoredEvents,
 	SubmitAudioCaptchaSolutionBody,
+	SubmitIconOrderCaptchaSolutionBody,
 	SubmitPowCaptchaSolutionBody,
 	SubmitPuzzleCaptchaSolutionBody,
 	type Tier,
@@ -410,6 +415,29 @@ export default class ProviderApi
 		});
 	}
 
+	public getIconOrderCaptchaChallenge(
+		user: string,
+		dapp: string,
+		sessionId?: string,
+		simdReadings?: string,
+	): Promise<GetIconOrderCaptchaResponse> {
+		const body: GetIconOrderCaptchaChallengeRequestBodyType = {
+			[ApiParams.user]: user.toString(),
+			[ApiParams.dapp]: dapp.toString(),
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
+			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+		};
+		return this.dedupedPost<
+			GetIconOrderCaptchaResponse,
+			GetIconOrderCaptchaChallengeRequestBodyType
+		>(ClientApiPaths.GetIconOrderCaptchaChallenge, sessionId, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
+
 	public submitAudioCaptchaSolution(
 		challenge: GetAudioCaptchaResponse,
 		userAccount: string,
@@ -451,6 +479,45 @@ export default class ProviderApi
 		});
 	}
 
+	public submitIconOrderCaptchaSolution(
+		challenge: GetIconOrderCaptchaResponse,
+		userAccount: string,
+		dappAccount: string,
+		clicks: Array<{ x: number; y: number }>,
+		iconOrderEvents: Array<{ x: number; y: number; t: number }>,
+		userTimestampSignature: string,
+		behavioralData?: string,
+		salt?: string,
+		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
+	): Promise<IconOrderCaptchaSolutionResponse> {
+		const body = SubmitIconOrderCaptchaSolutionBody.parse({
+			[ApiParams.challenge]: challenge.challenge,
+			[ApiParams.timestamp]: challenge.timestamp,
+			[ApiParams.user]: userAccount.toString(),
+			[ApiParams.dapp]: dappAccount.toString(),
+			[ApiParams.clicks]: clicks,
+			[ApiParams.iconOrderEvents]: iconOrderEvents,
+			[ApiParams.signature]: {
+				[ApiParams.provider]:
+					challenge[ApiParams.signature][ApiParams.provider],
+				[ApiParams.user]: {
+					[ApiParams.timestamp]: userTimestampSignature,
+				},
+			},
+			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
+			...(salt && { [ApiParams.salt]: salt }),
+			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+			...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
+		});
+		return this.post(ClientApiPaths.SubmitIconOrderCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
+			},
+		});
+	}
+
 	public submitAudioCaptchaVerify(
 		token: string,
 		signatureHex: string,
@@ -471,6 +538,33 @@ export default class ProviderApi
 			body[ApiParams.clientSessionId] = clientSessionId;
 		}
 		return this.post(ClientApiPaths.VerifyAudioCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
+
+	public submitIconOrderCaptchaVerify(
+		token: string,
+		signatureHex: string,
+		user: string,
+		ip?: string,
+		email?: string,
+		clientSessionId?: string,
+	): Promise<VerificationResponse> {
+		const body: ServerIconOrderCaptchaVerifyRequestBodyType = {
+			[ApiParams.token]: token,
+			[ApiParams.dappSignature]: signatureHex,
+			[ApiParams.ip]: ip,
+		};
+		if (email) {
+			body[ApiParams.email] = email;
+		}
+		if (clientSessionId) {
+			body[ApiParams.clientSessionId] = clientSessionId;
+		}
+		return this.post(ClientApiPaths.VerifyIconOrderCaptchaSolution, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,

@@ -16,6 +16,7 @@ import { isStricterCaptchaType } from "@prosopo/captcha-severity";
 import {
 	type CaptchaType,
 	type IAudioSettings,
+	type IIconOrderSettings,
 	type IPInfoResponse,
 	type IPInfoResult,
 	type IPuzzleSettings,
@@ -319,6 +320,9 @@ export type ResolvedChallengePolicy = {
 	// means no challenge matches at all (already short-circuited above).
 	puzzleSettings?: IPuzzleSettings;
 	audioSettings?: IAudioSettings;
+	// Icon-order equivalents of the two fields above, merged the same way.
+	iconOrderTolerance?: number;
+	iconOrderSettings?: IIconOrderSettings;
 	// Categories whose policies contributed to the resolved combination.
 	sourceCategories: TrafficCategory[];
 };
@@ -350,6 +354,8 @@ export const resolveChallengePolicy = (
 	let puzzleTolerance: number | undefined;
 	let puzzleSettings: IPuzzleSettings | undefined;
 	let audioSettings: IAudioSettings | undefined;
+	let iconOrderTolerance: number | undefined;
+	let iconOrderSettings: IIconOrderSettings | undefined;
 	for (const m of challenges) {
 		if (m.policy.powDifficulty !== undefined) {
 			powDifficulty =
@@ -382,6 +388,20 @@ export const resolveChallengePolicy = (
 			// an earlier one set.
 			audioSettings = { ...(audioSettings ?? {}), ...m.policy.audio };
 		}
+		// Lower tolerance is stricter for icon-order too — it shrinks the hit
+		// radius around each target — so the same `min` combination applies.
+		if (m.policy.iconOrderTolerance !== undefined) {
+			iconOrderTolerance =
+				iconOrderTolerance === undefined
+					? m.policy.iconOrderTolerance
+					: Math.min(iconOrderTolerance, m.policy.iconOrderTolerance);
+		}
+		if (m.policy.iconOrder) {
+			iconOrderSettings = {
+				...(iconOrderSettings ?? {}),
+				...m.policy.iconOrder,
+			};
+		}
 	}
 
 	return {
@@ -391,6 +411,8 @@ export const resolveChallengePolicy = (
 		puzzleTolerance,
 		puzzleSettings,
 		audioSettings,
+		iconOrderTolerance,
+		iconOrderSettings,
 		sourceCategories: challenges.map((m) => m.category),
 	};
 };

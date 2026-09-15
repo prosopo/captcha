@@ -18,6 +18,8 @@ import type { IDatabase } from "./mongo.js";
 import {
 	type AudioCaptchaRecord,
 	AudioCaptchaRecordSchema,
+	type IconOrderCaptchaRecord,
+	IconOrderCaptchaRecordSchema,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
 	type PuzzleCaptchaRecord,
@@ -52,6 +54,10 @@ export const StoredAudioCaptchaRecordSchema: Schema = new Schema({
 	...AudioCaptchaRecordSchema.obj,
 });
 StoredAudioCaptchaRecordSchema.index({ sessionId: 1 });
+export const StoredIconOrderCaptchaRecordSchema: Schema = new Schema({
+	...IconOrderCaptchaRecordSchema.obj,
+});
+StoredIconOrderCaptchaRecordSchema.index({ sessionId: 1 });
 
 export interface ICaptchaDatabase extends IDatabase {
 	saveCaptchas(
@@ -60,6 +66,7 @@ export interface ICaptchaDatabase extends IDatabase {
 		powCaptchaEvents: PoWCaptchaRecord[],
 		puzzleCaptchaEvents?: PuzzleCaptchaRecord[],
 		audioCaptchaEvents?: AudioCaptchaRecord[],
+		iconOrderCaptchaEvents?: IconOrderCaptchaRecord[],
 	): Promise<void>;
 	getCaptchas(
 		filter: QueryFilter<CaptchaProperties>,
@@ -69,6 +76,7 @@ export interface ICaptchaDatabase extends IDatabase {
 		powCaptchaRecords: PoWCaptchaRecord[];
 		puzzleCaptchaRecords: PuzzleCaptchaRecord[];
 		audioCaptchaRecords: AudioCaptchaRecord[];
+		iconOrderCaptchaRecords: IconOrderCaptchaRecord[];
 	}>;
 }
 

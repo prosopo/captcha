@@ -17,6 +17,7 @@ import {
 	CaptchaType,
 	type GetFrictionlessCaptchaResponse,
 	type IAudioSettings,
+	type IIconOrderSettings,
 	type IPInfoResponse,
 	type IPuzzleSettings,
 	type ITrafficFilter,
@@ -50,6 +51,10 @@ export type RequestTimeTrafficVerdict =
 			// Merged audio render overrides, same cascade position as
 			// `puzzleSettings`.
 			audioSettings?: IAudioSettings;
+			// Icon-order equivalents, consumed by
+			// getIconOrderCaptchaChallenge's resolver.
+			iconOrderTolerance?: number;
+			iconOrder?: IIconOrderSettings;
 			sourceCategories: ResolvedChallengePolicy["sourceCategories"];
 	  };
 
@@ -102,6 +107,8 @@ export const applyTrafficFilterAtRequestTime = (
 		puzzleTolerance: resolved.puzzleTolerance,
 		puzzleSettings: resolved.puzzleSettings,
 		audioSettings: resolved.audioSettings,
+		iconOrderTolerance: resolved.iconOrderTolerance,
+		iconOrder: resolved.iconOrderSettings,
 		sourceCategories: resolved.sourceCategories,
 	};
 };

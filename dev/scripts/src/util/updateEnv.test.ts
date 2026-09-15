@@ -102,6 +102,26 @@ describe("updateEnvFiles", () => {
 		expect(read(`a/${ENV_FILE}`)).toBe(original);
 	});
 
+	it("adds a new site key to a file that already tracks site keys", async () => {
+		// The regression that broke the icon-order demo: a machine set up
+		// before the captcha type existed keeps an .env without its variable,
+		// and `copyEnvFile` only seeds from the template when the file is
+		// absent. Replacing only what was already there left the new key
+		// permanently missing and the demo page rendering with `undefined`.
+		write(`a/${ENV_FILE}`, "PROSOPO_SITE_KEY_POW=old");
+		await updateEnvFiles(["PROSOPO_SITE_KEY_ICONORDER"], "new", logger, root);
+		expect(read(`a/${ENV_FILE}`)).toBe(
+			"PROSOPO_SITE_KEY_POW=old\nPROSOPO_SITE_KEY_ICONORDER=new",
+		);
+	});
+
+	it("does not scatter site keys into files that track none", async () => {
+		const original = "OTHER=keep";
+		write(`a/${ENV_FILE}`, original);
+		await updateEnvFiles(["PROSOPO_SITE_KEY_ICONORDER"], "new", logger, root);
+		expect(read(`a/${ENV_FILE}`)).toBe(original);
+	});
+
 	it("replaces several variables in one pass", async () => {
 		write(`a/${ENV_FILE}`, "ONE=a\nTWO=b");
 		await updateEnvFiles(["ONE", "TWO"], "z", logger, root);
