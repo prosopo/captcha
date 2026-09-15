@@ -1,5 +1,70 @@
 # @prosopo/procaptcha-react
 
+## 2.11.0
+### Minor Changes
+
+- 864ddde: Make the challenges usable with a keyboard and a screen reader.
+  
+  The puzzle could only be solved by dragging with a mouse or a finger. The piece
+  was a plain `div`, so it could not be tabbed to, had no name or role, and a
+  screen reader announced nothing at all — a user on assistive tech could tick "I
+  am human", get a silent overlay, and have no way forward. The image captcha had
+  the same problem in its tiles.
+  
+  What changed:
+  
+  - The puzzle piece can now be focused and moved with the arrow keys (hold shift
+    for smaller steps, Home to start over, Enter or Space to submit). It has a
+    name, a role, and a visible focus ring.
+  - The puzzle announces its state as you go: where the piece is, as a percentage
+    across and down the board; that an answer is being checked; and that a failed
+    go has been replaced by a fresh puzzle.
+  - The image captcha tiles are now buttons rather than clickable `div`s, so they
+    can be tabbed to and activated with Enter or Space, and they report whether
+    they are selected instead of only looking selected.
+  - Both challenges now open as a proper dialog: it takes focus when it opens,
+    keeps Tab inside itself, and gives focus back to the checkbox on close.
+  - The spinner that replaces the checkbox while a check runs used to drop focus
+    to the top of the page without saying why. It now takes focus in the
+    checkbox's place, names itself, and hands focus back when the check finishes.
+    This affects the pow, image and puzzle flows.
+  - The puzzle's on-screen text was hardcoded English. It now goes through the
+    locale package, and the new strings are translated into all 32 locales.
+  
+  A visual puzzle still cannot be solved by someone who cannot see it — the widget
+  is never told where the target is, so there is nothing it could describe. Sites
+  that need a challenge a blind user can complete should use the pow captcha type,
+  which needs no interaction beyond the checkbox.
+
+### Patch Changes
+
+- 028a158: Stop the widget taking focus off the form the user is filling in.
+  
+  While the widget checks a user, its checkbox is replaced by a spinner, and the
+  box takes focus back when the check finishes so a keyboard user is not left
+  stranded at the top of the page. It did that unconditionally, so if the user
+  spent the wait typing into the page's own form, the box grabbed focus off
+  whatever field they were in — and the keystroke that arrived with it went
+  nowhere. It now only claims focus back when nothing else holds it, which is
+  where removing the spinner leaves it.
+  
+  This is what made the `puzzle` cypress spec flaky: it fills the signup form as
+  soon as the puzzle is solved, and lost the race with the widget often enough to
+  fail CI.
+  
+  Covered by a new unit test in `procaptcha-react` that focuses an element outside
+  the widget mid-check and asserts focus is still there afterwards.
+- Updated dependencies [028a158]
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [864ddde]
+- Updated dependencies [028a158]
+  - @prosopo/procaptcha-common@2.14.0
+  - @prosopo/types@5.8.3
+  - @prosopo/locale@3.4.2
+  - @prosopo/procaptcha@2.11.12
+  - @prosopo/common@3.1.55
+
 ## 2.10.4
 ### Patch Changes
 

@@ -20,6 +20,7 @@ enum CaptchaType {
 	frictionless = "frictionless",
 	puzzle = "puzzle",
 	audio = "audio",
+	iconOrder = "iconOrder",
 	// Web Bot Auth verified — no user-facing challenge. Issued only by the
 	// frictionless flow when the request carried a valid Ed25519 signature
 	// per RFC 9421 / draft-meunier-web-bot-auth AND no operator-authored
@@ -40,6 +41,7 @@ const DecisionMachineCaptchaTypeSchema = z.union([
 	z.literal(CaptchaType.image),
 	z.literal(CaptchaType.puzzle),
 	z.literal(CaptchaType.audio),
+	z.literal(CaptchaType.iconOrder),
 ]);
 
 export { CaptchaType, CaptchaTypeSchema, DecisionMachineCaptchaTypeSchema };

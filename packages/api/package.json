@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/api",
-	"version": "4.2.2",
+	"version": "4.2.3",
 	"description": "Wrapper for the provider API",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -39,7 +39,7 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/types": "5.8.2"
+		"@prosopo/types": "5.8.3"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.3.16",

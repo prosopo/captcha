@@ -19,13 +19,17 @@ import {
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
 import {
+	type IIconOrderSettings,
 	type IPuzzleSettings,
 	type ITrafficCategoryPolicy,
+	IconOrderSettingsSchema,
 	PuzzleSettingsSchema,
+	iconOrderToleranceFieldSchema,
 	puzzleToleranceFieldSchema,
 } from "../client/settings.js";
 import type {
 	AudioEvent,
+	IconOrderEvent,
 	PuzzleEvent,
 	RequestHeaders,
 } from "../provider/api.js";
@@ -133,7 +137,8 @@ export type DecisionMachineInput = {
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
-		| CaptchaType.audio;
+		| CaptchaType.audio
+		| CaptchaType.iconOrder;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
 	countryCode?: string;
@@ -177,6 +182,9 @@ export type DecisionMachineInput = {
 	audioEvents?: AudioEvent[];
 	// Audio-only: how many times the clip was played before submitting.
 	audioReplays?: number;
+	// Icon-order-only: the pointer trail across the frame, captured
+	// client-side and persisted on the icon-order captcha record.
+	iconOrderEvents?: IconOrderEvent[];
 	// Raw per-connection TCP-handshake signals persisted on the Session
 	// at frictionless entry (see rawTlsSignalsMiddleware). Surfaced here
 	// so verify-time decide rules can gate on the raw TCP fingerprint
@@ -209,7 +217,8 @@ export type DecisionMachineCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
 	| CaptchaType.puzzle
-	| CaptchaType.audio;
+	| CaptchaType.audio
+	| CaptchaType.iconOrder;
 
 // This is the API configuration type (used for uploads/API calls)
 // The database storage type is DecisionMachineArtifact in provider/database.ts
@@ -271,6 +280,7 @@ export type CounterCaptchaType =
 	| CaptchaType.image
 	| CaptchaType.puzzle
 	| CaptchaType.audio
+	| CaptchaType.iconOrder
 	| typeof COUNTER_CAPTCHA_ANY;
 
 export interface CounterSpec {
@@ -287,6 +297,7 @@ export const CounterSpecSchema = z.object({
 		z.literal(CaptchaType.image),
 		z.literal(CaptchaType.puzzle),
 		z.literal(CaptchaType.audio),
+		z.literal(CaptchaType.iconOrder),
 		z.literal(COUNTER_CAPTCHA_ANY),
 	]),
 	dimension: z.enum(COUNTER_DIMENSIONS),
@@ -305,7 +316,8 @@ export interface RoutingMachineBaseline {
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
-		| CaptchaType.audio;
+		| CaptchaType.audio
+		| CaptchaType.iconOrder;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
 }
@@ -410,7 +422,8 @@ export interface RoutingMachineOutput {
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
-		| CaptchaType.audio;
+		| CaptchaType.audio
+		| CaptchaType.iconOrder;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
 	// Optional selection reason the machine can attach to explain an escalation
@@ -427,6 +440,11 @@ export interface RoutingMachineOutput {
 	// Ignored unless the resolved captchaType is `puzzle`.
 	puzzleTolerance?: number;
 	puzzle?: IPuzzleSettings;
+	// Icon-order equivalents of the two fields above, with identical
+	// semantics and the same layering path through the Session record.
+	// Ignored unless the resolved captchaType is `iconOrder`.
+	iconOrderTolerance?: number;
+	iconOrder?: IIconOrderSettings;
 }
 
 export const RoutingMachineOutputSchema = z.object({
@@ -435,6 +453,7 @@ export const RoutingMachineOutputSchema = z.object({
 		z.literal(CaptchaType.image),
 		z.literal(CaptchaType.puzzle),
 		z.literal(CaptchaType.audio),
+		z.literal(CaptchaType.iconOrder),
 	]),
 	solvedImagesCount: z.number().int().positive().optional(),
 	powDifficulty: z.number().positive().optional(),
@@ -444,4 +463,6 @@ export const RoutingMachineOutputSchema = z.object({
 	// reject.
 	puzzleTolerance: puzzleToleranceFieldSchema.optional(),
 	puzzle: PuzzleSettingsSchema.optional(),
+	iconOrderTolerance: iconOrderToleranceFieldSchema.optional(),
+	iconOrder: IconOrderSettingsSchema.optional(),
 });
