@@ -409,6 +409,7 @@ export default class ProviderApi
 		detectorSessionId?: string,
 		currentUrl?: string,
 		iframeUrl?: string,
+		bypassKey?: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
 			[ApiParams.dapp]: dapp,
@@ -422,6 +423,7 @@ export default class ProviderApi
 			}),
 			...(currentUrl && { [ApiParams.currentUrl]: currentUrl }),
 			...(iframeUrl && { [ApiParams.iframeUrl]: iframeUrl }),
+			...(bypassKey && { [ApiParams.bypassKey]: bypassKey }),
 		};
 		const { data, headers } = await this.postWithHeaders<
 			GetFrictionlessCaptchaResponse,

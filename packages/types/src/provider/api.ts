@@ -632,6 +632,9 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// doesn't match, so a token exfiltrated to a different render is dead on
 	// arrival even if it clears the IP-binding check.
 	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
+	// A site bypass key read from the page's cookie. Never stored: the provider
+	// hashes it and only the hash is compared with the site's Allow rules.
+	[ApiParams.bypassKey]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<

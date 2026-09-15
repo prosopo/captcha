@@ -62,6 +62,7 @@ import {
 	AccessPolicyType,
 	type AccessRulesStorage,
 	accessRuleInput,
+	hashBypassKey,
 } from "@prosopo/user-access-policy";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { buildSignatureBase } from "@prosopo/web-bot-auth";
@@ -306,6 +307,7 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 			userAgent: string;
 			extraHeaders?: Record<string, string>;
 			clientSessionId?: string;
+			bypassKey?: string;
 		},
 	): Promise<{ status: number; body: FrictionlessResponse }> => {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
@@ -316,6 +318,7 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 			...(options.clientSessionId && {
 				[ApiParams.clientSessionId]: options.clientSessionId,
 			}),
+			...(options.bypassKey && { [ApiParams.bypassKey]: options.bypassKey }),
 		};
 		const response = await testFetch(
 			`${baseUrl}${ClientApiPaths.GetFrictionlessCaptchaChallenge}`,
@@ -537,6 +540,93 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 				userId,
 				ip: "203.0.113.13",
 				userAgent: "IntegrationAgent/1.0",
+			});
+
+			expect(status).toBe(200);
+			expect(body.captchaType).not.toBe(CaptchaType.authenticated);
+		});
+	});
+
+	describe("site bypass keys", () => {
+		const userAgent = "BypassKeyIntegration/1.0";
+
+		it("mints an authenticated session for a request carrying the site's bypass key, and it verifies", async () => {
+			const [siteKeyMnemonic, siteKey] = await registerSite();
+			const [, userId] = await generateMnemonic();
+			const bypassKey = `pbk_${randomAsHex(32)}`;
+			await allowRule(siteKey, { bypassKeyHash: hashBypassKey(bypassKey) });
+			const ip = "203.0.113.40";
+
+			const { status, body } = await frictionless(siteKey, {
+				userId,
+				ip,
+				userAgent,
+				bypassKey,
+			});
+
+			expect(status).toBe(200);
+			expect(body.captchaType).toBe(CaptchaType.authenticated);
+			expect(body.agent).toBeUndefined();
+
+			const verified = await authenticatedVerify(
+				siteKey,
+				siteKeyMnemonic,
+				userId,
+				body.sessionId,
+				{ ip },
+			);
+			expect(verified.verified).toBe(true);
+		});
+
+		it("does not mint an authenticated session for a key the site does not have", async () => {
+			const [, siteKey] = await registerSite();
+			const [, userId] = await generateMnemonic();
+			await allowRule(siteKey, {
+				bypassKeyHash: hashBypassKey(`pbk_${randomAsHex(32)}`),
+			});
+
+			const { status, body } = await frictionless(siteKey, {
+				userId,
+				ip: "203.0.113.41",
+				userAgent,
+				bypassKey: `pbk_${randomAsHex(32)}`,
+			});
+
+			expect(status).toBe(200);
+			expect(body.captchaType).not.toBe(CaptchaType.authenticated);
+		});
+
+		it("does not honour a key that belongs to a different site", async () => {
+			const [, siteKey] = await registerSite();
+			const [, otherSiteKey] = await registerSite();
+			const [, userId] = await generateMnemonic();
+			const bypassKey = `pbk_${randomAsHex(32)}`;
+			await allowRule(otherSiteKey, {
+				bypassKeyHash: hashBypassKey(bypassKey),
+			});
+
+			const { status, body } = await frictionless(siteKey, {
+				userId,
+				ip: "203.0.113.42",
+				userAgent,
+				bypassKey,
+			});
+
+			expect(status).toBe(200);
+			expect(body.captchaType).not.toBe(CaptchaType.authenticated);
+		});
+
+		it("does not accept the stored hash in place of the key", async () => {
+			const [, siteKey] = await registerSite();
+			const [, userId] = await generateMnemonic();
+			const bypassKeyHash = hashBypassKey(`pbk_${randomAsHex(32)}`);
+			await allowRule(siteKey, { bypassKeyHash });
+
+			const { status, body } = await frictionless(siteKey, {
+				userId,
+				ip: "203.0.113.43",
+				userAgent,
+				bypassKey: bypassKeyHash,
 			});
 
 			expect(status).toBe(200);

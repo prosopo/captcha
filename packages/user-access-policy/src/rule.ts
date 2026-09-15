@@ -108,6 +108,9 @@ export type UserAttributes = {
 	// Rules with this field only match requests carrying a valid Web Bot
 	// Auth signature; unverified traffic falls through.
 	webBotAuthAgent?: string;
+	// SHA-256 (hex) of a site bypass key. Only the site's developers hold the raw
+	// key; the widget sends it and the provider hashes it before rule matching.
+	bypassKeyHash?: string;
 };
 
 export type UserScope = UserAttributes & UserIp;

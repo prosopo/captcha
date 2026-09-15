@@ -24,6 +24,7 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
 	AccessPolicyType,
 	type AccessRulesStorage,
+	hashBypassKey,
 } from "@prosopo/user-access-policy";
 import { flatten, isProtectDeployment, sanitisePageUrl } from "@prosopo/util";
 import { verifyWebBotAuth } from "@prosopo/web-bot-auth";
@@ -100,7 +101,9 @@ export default (
 				currentUrl: reportedCurrentUrl,
 				iframeUrl: reportedIframeUrl,
 				clientSessionId,
+				bypassKey,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+			const bypassKeyHash = bypassKey ? hashBypassKey(bypassKey) : undefined;
 
 			// Re-sanitise whatever the client reported: keep only scheme + host
 			// + path and drop the query string, fragment and any embedded
@@ -274,6 +277,8 @@ export default (
 					undefined,
 					dedupCountryCode,
 					dedupAsn,
+					undefined,
+					bypassKeyHash,
 				);
 				// Skip deferToVerify policies — they enforce at verify time
 				// only; using them here to invalidate a dedup session would
@@ -290,6 +295,8 @@ export default (
 				const dedupConflictsWithPolicy =
 					dedupAccessPolicy !== undefined &&
 					(dedupAccessPolicy.type === AccessPolicyType.Block ||
+						(dedupAccessPolicy.type === AccessPolicyType.Allow &&
+							dedup.captchaType !== CaptchaType.authenticated) ||
 						(dedupAccessPolicy.captchaType !== undefined &&
 							dedupAccessPolicy.captchaType !== dedup.captchaType));
 
@@ -581,6 +588,7 @@ export default (
 				countryCode,
 				asn,
 				verifiedSignerUrl,
+				bypassKeyHash,
 			);
 
 			// Fan out the three independent post-shortcircuit awaits:
@@ -610,8 +618,9 @@ export default (
 			// Authenticated fast-path. Fires when any non-deferToVerify Allow
 			// rule matches the userScope — the qualifier can be a verified
 			// Web Bot Auth agent, an IP CIDR, a JA4 fingerprint, a UA
-			// substring, an ASN, a country, or any combination. Web Bot Auth
-			// is one of the ways to qualify, not the only one.
+			// substring, an ASN, a country, a site bypass key, or any
+			// combination. Web Bot Auth is one of the ways to qualify, not the
+			// only one.
 			//
 			// Skips decrypt/detect/decision-machine entirely, mints an
 			// authenticated session with `serverChecked: false`, and the
