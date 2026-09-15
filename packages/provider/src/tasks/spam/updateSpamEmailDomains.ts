@@ -46,7 +46,6 @@ export const updateSpamEmailDomains = async (
 			const domains = text.trim().split("\n");
 			for (const domain of domains) {
 				const trimmedDomain = domain.trim().toLowerCase();
-				// Skip empty lines and comment lines (starting with # or //)
 				if (
 					trimmedDomain &&
 					!trimmedDomain.startsWith("#") &&
@@ -59,8 +58,8 @@ export const updateSpamEmailDomains = async (
 		}
 
 		const ops = Array.from(domainsSet).map((domain) => ({
-			filter: { domain: domain.trim() },
-			update: { domain: domain.trim() },
+			filter: { domain },
+			update: { domain },
 		}));
 		await db.bulkUpdateSpamEmailDomains(ops, true);
 

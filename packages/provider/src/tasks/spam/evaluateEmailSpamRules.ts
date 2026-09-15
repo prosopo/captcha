@@ -146,13 +146,14 @@ export const evaluateEmailSpamRules = (
 		return { isSpam: true, reason: ResultReason.EMAIL_TOO_MANY_DOTS };
 	}
 
+	const address = `${parts.local}@${parts.domain}`;
 	const target = rules.normaliseGmail
-		? normaliseGmailAddress(`${parts.local}@${parts.domain}`)
-		: `${parts.local}@${parts.domain}`;
+		? normaliseGmailAddress(address)
+		: address;
 
 	if (rules.useDefaultPatterns) {
 		for (const { name, pattern } of DEFAULT_EMAIL_SPAM_PATTERNS) {
-			if (pattern.test(`${parts.local}@${parts.domain}`)) {
+			if (pattern.test(address)) {
 				return {
 					isSpam: true,
 					reason: ResultReason.EMAIL_MATCHED_DEFAULT_PATTERN,

@@ -72,9 +72,8 @@ export default (
 		validateSiteKey(dapp);
 		validateAddr(user);
 
-		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
-		// because the Tasks constructor calls `env.getDb()`, which throws when
-		// `env.db` is undefined (the maintenance-mode case).
+		// Must run before `new Tasks(env, ...)`, whose constructor throws in
+		// maintenance mode (`env.getDb()` with no `env.db`).
 		if (getMaintenanceMode()) {
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning dummy puzzle challenge",
@@ -85,8 +84,7 @@ export default (
 
 		// Reserved CI test site keys have no client record, so the lookup
 		// below would reject them as unregistered. Checked before
-		// `new Tasks(env, ...)` for the same reason as maintenance mode: the
-		// constructor calls `env.getDb()`.
+		// `new Tasks(env, ...)` for the same reason as maintenance mode.
 		if (isReservedTestSiteKey(dapp)) {
 			req.logger.warn(() => ({
 				msg: "Reserved TEST site key - returning dummy puzzle challenge",
@@ -117,7 +115,6 @@ export default (
 				}));
 			}
 
-			// Get country code for geoblocking from middleware-provided IP info
 			const countryCode =
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.countryCode
@@ -198,12 +195,9 @@ export default (
 				);
 			}
 
-			// Evaluate the site's trafficFilter against the connecting IP.
-			// Only `challenge` policies affect the request-time gate — they
-			// contribute puzzleTolerance overrides (lower tolerance =
-			// stricter accuracy). `block` policies are enforced at submit /
-			// verify time so the user still receives a captcha and produces
-			// a billable interaction.
+			// Only `challenge` policies apply at request time, as
+			// puzzleTolerance overrides (lower tolerance = stricter accuracy);
+			// see applyTrafficFilterAtRequestTime.
 			const trafficVerdict = applyTrafficFilterAtRequestTime(
 				req.ipInfo,
 				clientSettings.settings?.trafficFilter,
@@ -286,9 +280,6 @@ export default (
 				flatten(req.headers),
 				req.ja4,
 				validSessionId,
-				// Persist the full ipinfo payload — consumers read
-				// individual flags off this object instead of separate
-				// flat fields.
 				req.ipInfo,
 			);
 

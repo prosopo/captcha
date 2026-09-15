@@ -57,11 +57,6 @@ type CacheEntry = {
  */
 export class HardBlockVerdictCache {
 	private readonly store = new Map<string, CacheEntry>();
-	// Keyed by cache key; each Promise resolves to the value the
-	// computer produced. Populated at getOrCompute call time and cleared
-	// in a finally so a rejected computation doesn't wedge future
-	// callers on the same key. See getOrCompute for the ordering
-	// guarantees.
 	private readonly inflight = new Map<string, Promise<AccessRule[]>>();
 
 	constructor(
@@ -78,25 +73,17 @@ export class HardBlockVerdictCache {
 			this.store.delete(key);
 			return undefined;
 		}
-		// LRU move-to-tail. delete + set is O(1) and re-orders the key
-		// to the end of the Map's iteration order without touching
-		// `expiresAt` — the absolute TTL is preserved so a hot key
-		// can't outlive its freshness window.
+		// LRU move-to-tail, keeping the original `expiresAt`.
 		this.store.delete(key);
 		this.store.set(key, entry);
 		return entry.value;
 	}
 
 	set(key: string, value: AccessRule[]): void {
-		// If the key already exists, delete first so the re-insert
-		// lands at the tail (as an LRU update) rather than in its old
-		// slot. Size check runs against the post-delete state so an
-		// update never triggers a spurious eviction.
+		// Delete first so an update lands at the tail and the size check
+		// below never evicts on an update.
 		this.store.delete(key);
 		if (this.store.size >= this.maxEntries) {
-			// Map iteration order is insertion order — with move-to-tail
-			// in get() this makes the first entry the least-recently-
-			// used. Drop until we're under the cap. Usually just one.
 			const oldest = this.store.keys().next().value;
 			if (oldest !== undefined) {
 				this.store.delete(oldest);
@@ -109,24 +96,13 @@ export class HardBlockVerdictCache {
 	}
 
 	/**
-	 * Cache lookup with singleflight dedupe of concurrent misses.
+	 * Cache lookup with singleflight dedupe of concurrent misses. On a miss,
+	 * joins an in-flight computation for the key if there is one; otherwise
+	 * runs `compute()` and caches its result. The in-flight entry is removed in
+	 * a `finally` so a rejection doesn't wedge future callers.
 	 *
-	 * Fast path: cache hit → return immediately (with LRU move-to-tail
-	 * via `get()`).
-	 *
-	 * Slow path: cache miss →
-	 *   1. If an in-flight Promise exists for this key, join it. This
-	 *      is the coalescing behaviour — N concurrent identical misses
-	 *      all await the same underlying storage call.
-	 *   2. Otherwise, invoke `compute()`, register the Promise, and
-	 *      populate the cache with the result on resolve. The Promise
-	 *      is removed from the in-flight map in a `finally` so a
-	 *      rejection doesn't wedge future callers.
-	 *
-	 * Rejection semantics: if `compute()` throws, all joined waiters
-	 * see the same rejection. Callers should handle it — the underlying
-	 * `getPrioritisedAccessRule` catches its own storage errors and
-	 * returns `[]` (fail-open), so in practice this never propagates.
+	 * If `compute()` rejects, every joined waiter sees the same rejection and
+	 * nothing is cached.
 	 */
 	async getOrCompute(
 		key: string,
@@ -149,22 +125,17 @@ export class HardBlockVerdictCache {
 		try {
 			return await promise;
 		} finally {
-			// Only delete our own entry — a subsequent unrelated
-			// getOrCompute for the same key could have already
-			// replaced it in the map (race not possible in single-
-			// threaded Node event loop, but defensive against future
-			// changes).
+			// Only delete our own entry: clear() may have dropped it while we
+			// awaited, and a newer call for the same key registered its own.
 			if (this.inflight.get(key) === promise) {
 				this.inflight.delete(key);
 			}
 		}
 	}
 
-	// Test/ops hook — the running cache is not exposed on the wire, but
-	// admin tooling (e.g. a rule-mutation notifier) may need to flush
-	// after a bulk insert to bound the staleness window. Clears both
-	// the stored entries and any in-flight Promises so a rule mutation
-	// can't leave a stale computation in flight.
+	// Flushed after rule mutations to bound the staleness window. Clears
+	// in-flight Promises too so a mutation can't leave a stale computation
+	// to repopulate lookups.
 	clear(): void {
 		this.store.clear();
 		this.inflight.clear();

@@ -33,7 +33,7 @@ import {
  * waits (about 240 KB at the default geometry).
  */
 export interface PuzzleBackgroundBuffer {
-	/** Consume one background, or null when the buffer has run dry. */
+	/** Consume one background, generating one inline if the buffer has run dry. */
 	take(): RgbaImage | null;
 	/** How many are ready right now. */
 	depth(): number;

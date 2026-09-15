@@ -130,13 +130,6 @@ export const isPuzzleRenderAvailable = (): boolean => {
 	return true;
 };
 
-// `downgradePuzzleIfUnavailable` used to live here. It has been replaced by
-// `coerceToEnabledCaptchaType` in tasks/captchaTypeSelection.ts, which folds
-// render-availability together with the site's enabled-type constraint. The
-// old helper fell back to image unconditionally, which is wrong on a site
-// that has image disabled — it would have served exactly the type the
-// customer asked us never to serve.
-
 export const renderPuzzleImages = async (
 	placement: NotchPlacement,
 	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,

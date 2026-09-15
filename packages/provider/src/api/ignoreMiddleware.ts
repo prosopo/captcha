@@ -17,11 +17,9 @@ import type { NextFunction, Request, Response } from "express";
 export function ignoreMiddleware() {
 	return (req: Request, res: Response, next: NextFunction) => {
 		if (req.originalUrl.indexOf(PublicApiPaths.Healthz) !== -1) {
-			// If the request is for a health endpoint, we allow it to pass through
 			return next();
 		}
 
-		// Ignore non-api routes
 		if (req.originalUrl.indexOf(ApiPrefix) === -1) {
 			res.statusCode = 404;
 			res.send("Not Found");

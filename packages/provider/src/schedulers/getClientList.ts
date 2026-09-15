@@ -21,9 +21,6 @@ import { checkIfTaskIsRunning } from "../util.js";
 
 /**
  * Get the list of registered clients that have access to the product on a schedule.
- * @param pair
- * @param cronSchedule
- * @param config
  */
 export async function getClientList(
 	pair: KeyringPair,

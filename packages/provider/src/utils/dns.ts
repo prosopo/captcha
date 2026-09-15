@@ -16,10 +16,9 @@ import * as dns from "node:dns";
 import * as https from "node:https";
 import { promisify } from "node:util";
 
-/** Default DNS servers to use for lookups (Google and Cloudflare) */
+/** Google and Cloudflare */
 const DEFAULT_DNS_SERVERS = ["8.8.8.8", "1.1.1.1"];
 
-/** Default timeout for HTTPS requests in milliseconds */
 const DEFAULT_HTTPS_TIMEOUT_MS = 1000;
 
 /**
@@ -40,7 +39,7 @@ export const checkForCname = async (
 		const res = resolver ?? createResolver();
 		const resolveCname = promisify(res.resolveCname.bind(res));
 		return await resolveCname(domain);
-	} catch (err) {
+	} catch {
 		return null;
 	}
 };
@@ -53,7 +52,7 @@ export const checkForARecord = async (
 		const res = resolver ?? createResolver();
 		const resolve4 = promisify(res.resolve4.bind(res));
 		return await resolve4(domain);
-	} catch (err) {
+	} catch {
 		return null;
 	}
 };
@@ -66,7 +65,7 @@ export const checkForMXRecord = async (
 		const res = resolver ?? createResolver();
 		const resolveMx = promisify(res.resolveMx.bind(res));
 		return await resolveMx(domain);
-	} catch (err) {
+	} catch {
 		return null;
 	}
 };
@@ -87,12 +86,10 @@ export const checkForRedirect = (
 					res.statusCode < 400 &&
 					res.headers.location
 				) {
-					// Resolve relative URLs against the request URL
 					try {
 						const absoluteUrl = new URL(res.headers.location, url).href;
 						resolve({ redirectUrl: absoluteUrl });
 					} catch {
-						// If the Location header is not a valid URL, treat as non-redirect
 						resolve({});
 					}
 				} else {
@@ -116,7 +113,7 @@ export const checkForRedirect = (
 };
 
 export interface DnsCheckOptions {
-	/** Optional DNS servers to use. If not provided, uses Google (8.8.8.8) and Cloudflare (1.1.1.1). */
+	/** Defaults to Google (8.8.8.8) and Cloudflare (1.1.1.1). */
 	dnsServers?: string[];
 }
 
@@ -124,7 +121,6 @@ export const runDnsChecks = async (
 	domain: string,
 	options?: DnsCheckOptions,
 ) => {
-	// Create an isolated resolver - doesn't affect global DNS config
 	const resolver = createResolver(options?.dnsServers);
 
 	try {

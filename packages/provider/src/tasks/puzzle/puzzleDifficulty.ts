@@ -29,8 +29,8 @@ import { createStratifiedSampler } from "./stratifiedSampler.js";
  * The ladder itself — the band table, `severityToPuzzleDifficulty` and its
  * inverse — lives in `@prosopo/captcha-severity`, so that every consumer
  * derives a difficulty from one table: this provider, and the rule-authoring
- * and rule-editing consumers outside this repository. Only the sampling stayed
- * here: it needs `IPuzzleSettings` and a `node:crypto`-backed sampler, and
+ * and rule-editing consumers outside this repository. The sampling lives here
+ * because it needs `IPuzzleSettings` and a `node:crypto`-backed sampler, and
  * that package is deliberately dependency-free and browser-safe.
  */
 

@@ -72,13 +72,13 @@ export const deriveTrafficPolicies = (
 ): TrafficCategoryPolicies | undefined => {
 	if (!trafficFilter) return undefined;
 	const policies: TrafficCategoryPolicies = {};
-	let any = false;
+	let hasPolicy = false;
 	for (const category of TRAFFIC_FILTER_CATEGORIES) {
 		const policy = trafficFilter[category];
 		if (policy) {
 			policies[category] = policy;
-			any = true;
+			hasPolicy = true;
 		}
 	}
-	return any ? policies : undefined;
+	return hasPolicy ? policies : undefined;
 };

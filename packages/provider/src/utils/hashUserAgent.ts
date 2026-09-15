@@ -15,19 +15,12 @@
 import { createHash } from "node:crypto";
 
 /**
- * Hash a user agent string to a fixed-length string to prevent RSA-OAEP encryption size limits
- * Uses SHA-256 and returns first 32 characters of the hex digest (128 bits)
- * This provides a good balance between uniqueness and size constraints
- *
- * @param userAgent - The user agent string to hash
- * @returns A 32-character hex string representing the hash
+ * Hash a user agent to a fixed 32-character hex string (the first 128 bits of
+ * its SHA-256) so it stays within RSA-OAEP encryption size limits while
+ * remaining unique enough to compare.
  */
 export function hashUserAgent(userAgent: string): string {
-	// Create SHA-256 hash
 	const hash = createHash("sha256");
 	hash.update(userAgent, "utf8");
-	const hashHex = hash.digest("hex");
-
-	// Return first 32 characters (128 bits) for a good balance of uniqueness and size
-	return hashHex.substring(0, 32);
+	return hash.digest("hex").substring(0, 32);
 }

@@ -57,9 +57,8 @@ export type RequestTimeTrafficVerdict =
  * matches are deliberately ignored here; the enforcement of block policies
  * is deferred to submit / verify time (via `resolveTrafficFilterCheck` in
  * PoW / image / puzzle task classes) so that blocked users still receive a
- * captcha and produce a billable interaction. Removing this deferral
- * previously turned every blocked request into a request-time 401, which
- * the widget mis-handled into an INCORRECT_CAPTCHA_TYPE cascade — see
+ * captcha and produce a billable interaction. A request-time 401 would also
+ * be mis-handled by the widget into an INCORRECT_CAPTCHA_TYPE cascade — see
  * `evaluateFrictionlessResult` in `@prosopo/procaptcha-frictionless`.
  */
 export const applyTrafficFilterAtRequestTime = (

@@ -16,7 +16,7 @@ import type { DetectorResult } from "@prosopo/types";
 import getBotScoreFromPayload from "./decodePayload.js";
 
 // Mongo rejects field names containing "." or starting with "$", and the map
-// is unbounded client-controlled data that is now persisted on the session
+// is unbounded client-controlled data that is persisted on the session
 // record — an oversized or malformed key would fail the insert and 400 the
 // request. Entries that can't be stored are dropped rather than rejecting the
 // whole payload.
@@ -68,12 +68,12 @@ export const getBotScore = async (
 	privateKeyString?: string,
 	innerConfigEncoded?: string,
 ) => {
-	const result = (await getBotScoreFromPayload(
+	const result: DetectorResult = await getBotScoreFromPayload(
 		payload,
 		headHash,
 		privateKeyString,
 		innerConfigEncoded,
-	)) as DetectorResult;
+	);
 	const baseBotScore: number = result.score;
 	const timestamp: number = result.timestamp;
 	const userId: string = result.userId;

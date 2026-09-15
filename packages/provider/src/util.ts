@@ -38,7 +38,7 @@ export function encodeStringAddress(address: string) {
 		return encodeAddress(
 			isHex(address) ? hexToU8a(address) : decodeAddress(address),
 		);
-	} catch (err) {
+	} catch {
 		throw new ProsopoContractError("CONTRACT.INVALID_ADDRESS", {
 			context: { address },
 		});
@@ -74,7 +74,7 @@ export async function checkIfTaskIsRunning(
 	// TODO: This is a temporary fix to prevent failed tasks from blocking the next task
 	if (runningTask && runningTask.datetime.getTime() > twoMinutesAgo) {
 		const completedTask = await db.getScheduledTaskStatus(
-			// Mongoose 8's Document._id defaults to `unknown`; the schema stores
+			// Mongoose's Document._id defaults to `unknown`; the schema stores
 			// an ObjectId, and the sibling API expects one. Narrow at the call
 			// site rather than annotating every ScheduledTaskRecord consumer.
 			runningTask._id as import("mongoose").Types.ObjectId,
@@ -89,10 +89,10 @@ export const getIPAddress = (ipAddressString: string): IPAddress => {
 	try {
 		try {
 			return new Address4(ipAddressString);
-		} catch (e) {
+		} catch {
 			return new Address6(ipAddressString);
 		}
-	} catch (e) {
+	} catch {
 		throw new ProsopoEnvError("API.INVALID_IP");
 	}
 };
@@ -100,10 +100,10 @@ export const getIPAddress = (ipAddressString: string): IPAddress => {
 export const getIPAddressFromBigInt = (ipAddressBigInt: bigint): IPAddress => {
 	try {
 		if (ipAddressBigInt > 4228250626n) {
-			return Address6.fromBigInt(BigInt(ipAddressBigInt));
+			return Address6.fromBigInt(ipAddressBigInt);
 		}
-		return Address4.fromBigInt(BigInt(ipAddressBigInt));
-	} catch (e) {
+		return Address4.fromBigInt(ipAddressBigInt);
+	} catch {
 		throw new ProsopoEnvError("API.INVALID_IP");
 	}
 };
@@ -128,7 +128,7 @@ export const validateIpAddress = (
 	try {
 		ipV4orV6Address = getIPAddress(ip);
 		logger.info(() => ({ data: { ipV4orV6Address } }));
-	} catch (e) {
+	} catch {
 		const errorMessage = `Invalid IP address: ${ip}`;
 		logger.info(() => ({ msg: errorMessage }));
 		return { isValid: false, errorMessage };
@@ -181,7 +181,6 @@ export const evaluateIpValidationRules = (
 	errorMessage?: string;
 	shouldFlag?: boolean;
 } => {
-	// Early return if no comparison data is provided
 	if (!comparison.comparison) {
 		return { action: IPValidationAction.Allow };
 	}
@@ -220,7 +219,6 @@ export const evaluateIpValidationRules = (
 		};
 	}
 
-	// Check for country change
 	if (ip1Country !== ip2Country) {
 		conditions.push({
 			met: true,
@@ -258,7 +256,6 @@ export const evaluateIpValidationRules = (
 		}));
 	}
 
-	// Check for city change
 	const ip1City = comparison.comparison.ip1Details?.city;
 	const ip2City = comparison.comparison.ip2Details?.city;
 	if (!sameTrustedProvider && ip1City !== ip2City) {
@@ -269,7 +266,6 @@ export const evaluateIpValidationRules = (
 		});
 	}
 
-	// Check for ISP change
 	if (comparison.comparison.differentProviders) {
 		conditions.push({
 			met: true,
@@ -278,7 +274,6 @@ export const evaluateIpValidationRules = (
 		});
 	}
 
-	// Check for distance exceed condition
 	const distanceKm = comparison.comparison.distanceKm;
 	if (
 		!sameTrustedProvider &&
@@ -312,7 +307,6 @@ export const evaluateIpValidationRules = (
 		});
 	}
 
-	// If no conditions are met, allow
 	if (conditions.length === 0) {
 		return { action: IPValidationAction.Allow };
 	}
@@ -370,7 +364,6 @@ export const evaluateIpValidationRules = (
 		},
 	}));
 
-	// Return the evaluation result
 	return {
 		action: finalAction,
 		errorMessage:
@@ -451,11 +444,9 @@ export const deepValidateIpAddress = async (
 				msg: "Failed to get IP distance comparison",
 				data: {
 					error: comparison.error,
-					// The per-IP reasons are what separate "this IP isn't in the
-					// database" from "the ipinfo sidecar is down". Without them
-					// the top-level "Failed to lookup both IP addresses" is
-					// unactionable and the cause has to be chased by hand on the
-					// host.
+					// The per-IP reasons separate "this IP isn't in the database"
+					// from "the ipinfo sidecar is down"; the top-level error alone
+					// is unactionable.
 					ip1Error: comparison.ip1Error,
 					ip2Error: comparison.ip2Error,
 				},
@@ -478,7 +469,7 @@ export const deepValidateIpAddress = async (
 			log.info(() => ({
 				msg: "No IP validation rules provided, using legacy logic",
 				data: {
-					distanceKm: distanceKm,
+					distanceKm,
 				},
 			}));
 			// Legacy distance > 1000km -> fail and log
@@ -487,7 +478,7 @@ export const deepValidateIpAddress = async (
 				log.info(() => ({
 					msg: "IP validation failed - distance too great",
 					data: {
-						distanceKm: distanceKm,
+						distanceKm,
 						comparison: comparison.comparison,
 					},
 				}));
@@ -502,7 +493,7 @@ export const deepValidateIpAddress = async (
 			log.info(() => ({
 				msg: "IP addresses differ but within acceptable distance",
 				data: {
-					distanceKm: distanceKm,
+					distanceKm,
 					comparison: comparison.comparison,
 				},
 			}));

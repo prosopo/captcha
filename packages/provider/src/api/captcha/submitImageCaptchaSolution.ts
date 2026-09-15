@@ -34,9 +34,8 @@ export default (env: ProviderEnvironment) =>
 		res: Response,
 		next: NextFunction,
 	) => {
-		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
-		// because the Tasks constructor calls `env.getDb()`, which throws when
-		// `env.db` is undefined (the maintenance-mode case).
+		// Must run before `new Tasks(env, ...)`, whose constructor throws in
+		// maintenance mode (`env.getDb()` with no `env.db`).
 		if (getMaintenanceMode()) {
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning verified for image captcha",
@@ -107,9 +106,6 @@ export default (env: ProviderEnvironment) =>
 					flatten(req.headers),
 					req.ja4,
 					parsed[ApiParams.behavioralData],
-					// Persist the full ipinfo payload — consumers read
-					// individual flags off this object instead of separate
-					// flat fields.
 					req.ipInfo,
 					parsed[ApiParams.simdReadings],
 					parsed[ApiParams.clientMetaData],

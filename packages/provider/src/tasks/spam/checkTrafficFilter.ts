@@ -119,23 +119,16 @@ export const isDatacenterAllowlisted = (
 	allowlist: ReadonlyArray<string> | undefined,
 ): boolean => matchesDatacenterNameList(ipInfo, allowlist);
 
-// Counterpart to `isDatacenterAllowlisted`. When the datacenter rule is
-// active and the IP's name matches an entry in `datacenterNameDenylist`,
-// the rule fires regardless of the `providerType === "isp"` suppression
-// and regardless of any allowlist entry for the same name. Denylist wins
-// so operators can opt named providers back into the rule that would
-// otherwise be exempted by the ISP heuristic.
+// A denylist match makes the datacenter rule fire regardless of the
+// `providerType === "isp"` suppression and of any allowlist entry for the same
+// name, so operators can opt named providers back in.
 export const isDatacenterDenylisted = (
 	ipInfo: IPInfoResult,
 	denylist: ReadonlyArray<string> | undefined,
 ): boolean => matchesDatacenterNameList(ipInfo, denylist);
 
-// True when the IP's datacenter flag survives its qualifiers:
-// `datacenterNameDenylist` forces a match; otherwise the IP must not be
-// classified `providerType === "isp"` and must not be on
-// `datacenterNameAllowlist`. Used by the datacenter step of the per-IP
-// precedence chain in `evaluateIpInfo`, and mirrored by
-// `computeDnsAsymmetry` to gate its datacenter signal on the same rules.
+// True when the IP's datacenter flag survives its qualifiers. Shared with
+// `computeDnsAsymmetry` so its datacenter signal is gated on the same rules.
 export const isEffectivelyDatacenter = (
 	ipInfo: IPInfoResult,
 	trafficFilter: Partial<ITrafficFilter>,
@@ -158,18 +151,10 @@ const push = (
 	if (policy) matches.push({ category, policy });
 };
 
-// Highest-precedence flag set on the IP wins. Only that category's policy
-// is consulted; lower-precedence flags on the same IP are ignored, even
-// when active. An IP that's fundamentally a Tor exit or a VPN is that
-// category first — upstream flagging it as datacenter/abuser/etc. is
-// downstream categorisation the top flag already captures. So if the
-// operator hasn't configured a policy for the top flag, the IP passes.
-//
-// A few flags carry qualifying conditions that reject the flag itself:
-// abuser with score below threshold, datacenter with providerType='isp'
-// (and no denylist match, no allowlist bypass), crawler on DNS extras.
-// When those conditions disqualify the flag, evaluation falls through to
-// the next flag — the IP is not really that category.
+// Per-IP precedence and qualifier fall-through are described on
+// `checkTrafficFilter`. An IP that is fundamentally a Tor exit or a VPN is
+// that category first; upstream also flagging it as datacenter/abuser/etc. is
+// downstream categorisation the top flag already captures.
 const evaluateIpInfo = (
 	ipInfo: IPInfoResponse | undefined,
 	trafficFilter: Partial<ITrafficFilter>,
@@ -273,8 +258,7 @@ export const checkTrafficFilter = (
 	extraIpInfos?: ReadonlyArray<IPInfoResponse | undefined>,
 	dnsPathValid?: boolean,
 ): TrafficCheckResult => {
-	const matches: TrafficFilterMatch[] = [];
-	matches.push(...evaluateIpInfo(ipInfo, trafficFilter));
+	const matches: TrafficFilterMatch[] = evaluateIpInfo(ipInfo, trafficFilter);
 
 	const skipExtras =
 		trafficFilter.skipExtrasOnValidDnsPath && dnsPathValid === true;
@@ -298,35 +282,29 @@ export const checkTrafficFilter = (
 	return { isBlocked: false, matches };
 };
 
-// Precedence for combining multiple `challenge` matches on the same
-// request. `block` outranks any challenge (short-circuited earlier in
-// `checkTrafficFilter`); among captcha types, image outranks puzzle
-// outranks pow — a stricter check is monotonically preferred so the
-// operator's hardest configured policy wins. The ordering comes from
-// `@prosopo/captcha-severity`, shared with the access rules' `ruleHarshness`
-// and with downstream routing consumers.
-
 export type ResolvedChallengePolicy = {
 	captchaType?: CaptchaType;
 	powDifficulty?: number;
 	solvedImagesCount?: number;
 	puzzleTolerance?: number;
 	// Merged puzzle render overrides across all matched challenge
-	// categories: later categories overwrite earlier ones on a per-field
-	// basis, so partial overrides on separate categories compose. Empty
-	// object means "no policy specified any puzzle setting"; undefined
-	// means no challenge matches at all (already short-circuited above).
+	// categories: later categories overwrite earlier ones per field, so partial
+	// overrides on separate categories compose. Undefined when no policy sets
+	// any puzzle field; unset fields fall back downstream to clientSettings,
+	// then the asset-package default.
 	puzzleSettings?: IPuzzleSettings;
-	// Categories whose policies contributed to the resolved combination.
 	sourceCategories: TrafficCategory[];
 };
 
 /**
  * Combine the `challenge` matches into a single effective policy: pick the
  * strictest captcha type, then take the hardest params (max difficulty,
- * max image count, min puzzle tolerance). `block` matches are ignored —
- * callers should short-circuit on the top-level `isBlocked` verdict
- * first. Returns undefined when there are no challenge matches.
+ * max image count, min puzzle tolerance), so the operator's hardest
+ * configured policy wins. The captcha type ordering comes from
+ * `@prosopo/captcha-severity`, shared with the access rules' `ruleHarshness`.
+ * `block` matches are ignored — callers should short-circuit on the top-level
+ * `isBlocked` verdict first. Returns undefined when there are no challenge
+ * matches.
  */
 export const resolveChallengePolicy = (
 	matches: TrafficFilterMatch[],
@@ -366,10 +344,6 @@ export const resolveChallengePolicy = (
 					? m.policy.puzzleTolerance
 					: Math.min(puzzleTolerance, m.policy.puzzleTolerance);
 		}
-		// Per-field merge across categories: last-writer-wins on any sub-
-		// field that is set. If no category sets a given puzzle field, the
-		// combined object leaves it undefined and the downstream resolver
-		// falls back to clientSettings then the asset-package default.
 		if (m.policy.puzzle) {
 			puzzleSettings = { ...(puzzleSettings ?? {}), ...m.policy.puzzle };
 		}

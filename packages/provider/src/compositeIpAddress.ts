@@ -12,13 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { IPAddress } from "@prosopo/types";
-import { type CompositeIpAddress, IpAddressType } from "@prosopo/types";
+import {
+	type CompositeIpAddress,
+	type IPAddress,
+	IpAddressType,
+} from "@prosopo/types";
 import { getIPAddress } from "@prosopo/util";
 import { Address4, Address6 } from "ip-address";
 
 const V6_SHIFT = 64n;
-const v6_LOWER_MASK = (1n << V6_SHIFT) - 1n;
+const V6_LOWER_MASK = (1n << V6_SHIFT) - 1n;
 
 export const getCompositeIpAddress = (
 	ip: string | IPAddress,
@@ -27,7 +30,7 @@ export const getCompositeIpAddress = (
 
 	try {
 		ipAddress = "string" === typeof ip ? getIPAddress(ip) : ip;
-	} catch (e) {
+	} catch {
 		return {
 			lower: 0n,
 			type: IpAddressType.v4,
@@ -52,7 +55,7 @@ const getCompositeFromIpAddress = (
 	ipAddress satisfies Address6;
 
 	return {
-		lower: numericIp & v6_LOWER_MASK,
+		lower: numericIp & V6_LOWER_MASK,
 		upper: numericIp >> V6_SHIFT,
 		type: IpAddressType.v6,
 	};
@@ -67,7 +70,7 @@ export const getIpAddressFromComposite = (
 		case IpAddressType.v6:
 			return Address6.fromBigInt(
 				(getBigInt(compositeIpAddress.upper) << V6_SHIFT) |
-					(getBigInt(compositeIpAddress.lower) & v6_LOWER_MASK),
+					(getBigInt(compositeIpAddress.lower) & V6_LOWER_MASK),
 			);
 		default:
 			never();

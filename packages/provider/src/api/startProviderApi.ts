@@ -97,7 +97,7 @@ export const getClientApiPathsExpectingProsopoHeaders =
 				// rides in the body and it is rate-limited.
 				path.indexOf("detector/assign") === -1,
 		);
-		return paths as ClientApiPaths[];
+		return paths;
 	};
 
 /**
@@ -125,7 +125,7 @@ export const getUserFromJWT = (req: Request): string | undefined => {
 			Buffer.from(parts[1], "base64url").toString("utf-8"),
 		);
 		return payload.sub as string | undefined;
-	} catch (e) {
+	} catch {
 		return undefined;
 	}
 };
@@ -269,17 +269,14 @@ export async function startProviderApi(
 			maxAge: 86400,
 		}),
 	);
-	// The detector-pool push carries the entire pool in a single body: one
-	// obfuscated bundle is ~830 KB, so a 100-bundle pool JSON-encodes to ~86 MB
-	// (the obfuscated output is near-ASCII, so JSON escaping only adds ~2%).
-	// Mount a dedicated parser on that one path, ahead of the coarse backstop
-	// below — express.json is a no-op once req.body is populated, so every other
-	// route keeps the 1 MB ceiling.
+	// The detector-pool push carries the entire pool in a single body. Mount a
+	// dedicated parser on that one path, ahead of the coarse backstop below —
+	// express.json is a no-op once req.body is populated, so every other route
+	// keeps the 1 MB ceiling.
 	//
-	// Do NOT raise this much further without switching to a chunked push:
-	// express.json buffers the body into a single string before JSON.parse, and
-	// V8 caps strings at 512 MiB (~620 bundles), with the parse itself needing
-	// roughly the same again in heap on top of the raw body.
+	// Do NOT raise DETECTOR_POOL_BODY_LIMIT much further without switching to a
+	// chunked push: express.json buffers the body into a single string before
+	// JSON.parse, and the parse needs roughly the same again in heap.
 	apiApp.use(
 		AdminApiPaths.ReplaceDetectorPool,
 		express.json({ limit: DETECTOR_POOL_BODY_LIMIT }),
@@ -383,7 +380,7 @@ export async function startProviderApi(
 	// Specify verify router before the blocking middlewares
 	apiApp.use(prosopoVerifyRouter(env));
 
-	//  Admin routes - do not put after block middleware as this can block admin requests
+	// Admin routes - do not put after block middleware as this can block admin requests
 	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
 	apiApp.use(
 		"/v1/prosopo/provider/admin",
@@ -444,10 +441,7 @@ export async function startProviderApi(
 	apiApp.use("/v1/prosopo/provider/client/", domainMiddleware(env));
 	apiApp.use(prosopoRouter(env));
 
-	// Check if certificates exist and create HTTPS server if available
-	const useTls = fs.existsSync(keyPath) && fs.existsSync(crtPath);
-
-	if (useTls) {
+	if (isTlsAvailable()) {
 		env.logger.info(() => ({ msg: "Starting Provider API with HTTPS" }));
 		const httpsOptions = {
 			key: fs.readFileSync(keyPath),

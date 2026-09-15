@@ -58,10 +58,10 @@ export interface PoolBundle {
 	readonly innerConfig: string;
 	/**
 	 * The release the bundle was built from (e.g. "3.6.64"), stamped by the
-	 * catcher `bundle:pool` script. The widget no longer carries a detector — it
-	 * runs whatever the provider serves — so the only guard against serving a
-	 * detector built from a different release is this field. Optional for pools
-	 * built before stamping existed; those load with a warning.
+	 * catcher `bundle:pool` script. The widget carries no detector of its own —
+	 * it runs whatever the provider serves — so the only guard against serving a
+	 * detector built from a different release is this field. Optional because
+	 * older pools are unstamped; those load with a warning.
 	 */
 	readonly release?: string;
 }
@@ -172,7 +172,6 @@ export class DetectorBundlePool {
 		this.ids = [...bundles.keys()].sort();
 	}
 
-	/** Number of loaded bundles. */
 	size(): number {
 		return this.ids.length;
 	}
@@ -226,9 +225,8 @@ export function initDetectorBundlePool(
  *
  * Writes *into* `dir` and never replaces the directory itself. In the provider
  * container `dir` is a bind-mount point, and removing or renaming over a mount
- * point from inside the container fails with EBUSY ("Device or resource busy")
- * — which is exactly what an earlier stage-into-a-sibling-and-rename version of
- * this function did on every push.
+ * point from inside the container fails with EBUSY ("Device or resource busy"),
+ * so staging into a sibling directory and renaming it over `dir` does not work.
  *
  * Each file is still written to a temp name and renamed into place, so a reader
  * never observes a partially-written bundle; renames within one directory are

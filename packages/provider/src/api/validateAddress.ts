@@ -35,7 +35,7 @@ export const validateAddr = (
 				logger,
 			});
 		}
-	} catch (err) {
+	} catch {
 		throw new ProsopoApiError(translationKey, {
 			context: { code: 400, siteKey: address },
 			logger,

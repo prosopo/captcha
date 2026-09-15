@@ -47,9 +47,8 @@ export default (env: ProviderEnvironment) =>
 		res: Response,
 		next: NextFunction,
 	) => {
-		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
-		// because the Tasks constructor calls `env.getDb()`, which throws when
-		// `env.db` is undefined (the maintenance-mode case).
+		// Must run before `new Tasks(env, ...)`, whose constructor throws in
+		// maintenance mode (`env.getDb()` with no `env.db`).
 		if (getMaintenanceMode()) {
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning verified",
@@ -162,10 +161,9 @@ export default (env: ProviderEnvironment) =>
 						chelloToHandshakeUs: req.chelloToHandshakeUs,
 					}),
 					...rawTlsSignalsForSession(req),
-					// PoW-submit's ipInfo is looked up fresh on this request
-					// (per-connection, so it's the PoW submit hop's IP not
-					// the frictionless entry hop's). Only surface on the
-					// isValid:true branch of the discriminated union.
+					// Looked up on this request, so it is the PoW-submit hop's IP,
+					// not the frictionless entry hop's. Omitted when the lookup
+					// failed (isValid: false).
 					...(req.ipInfo &&
 						"isValid" in req.ipInfo &&
 						req.ipInfo.isValid && { ipInfo: req.ipInfo }),
@@ -379,7 +377,6 @@ export const buildEscalation = async (
 		scoreComponents: originSession.scoreComponents,
 		ipAddress: originSession.ipAddress,
 		captchaType: escalatedType,
-		// The origin's siteKey is the source of truth if set.
 		siteKey: originSession.siteKey ?? powRecord.dappAccount,
 		// Clamp to the sitekey's ceiling. The routing machine's output schema
 		// only constrains the count to a positive int, so an escalation could

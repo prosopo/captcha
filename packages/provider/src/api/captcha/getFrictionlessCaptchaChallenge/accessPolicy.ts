@@ -93,15 +93,41 @@ export const handleAccessPolicy = async (
 		},
 	}));
 
-	const scoreUpdate = tasks.frictionlessManager.scoreIncreaseAccessPolicy(
-		userAccessPolicy,
-		input.baseBotScore,
-		input.botScore,
-		input.scoreComponents,
-	);
-	const botScore = scoreUpdate.score;
-	const scoreComponents = scoreUpdate.scoreComponents;
+	const { score: botScore, scoreComponents } =
+		tasks.frictionlessManager.scoreIncreaseAccessPolicy(
+			userAccessPolicy,
+			input.baseBotScore,
+			input.botScore,
+			input.scoreComponents,
+		);
 	tasks.frictionlessManager.updateScore(botScore, scoreComponents);
+
+	const blockSession = async (
+		reason: FrictionlessReason,
+	): Promise<AccessPolicyOutcome> => {
+		await tasks.frictionlessManager.registerBlockedSession({
+			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
+			userSitekeyIpHash: input.userSitekeyIpHash,
+			reason,
+			siteKey: input.dapp,
+			ipInfo: input.ipInfo,
+			headers: input.flatHeaders,
+		});
+		return {
+			handled: true,
+			response: res.status(401).json({ error: "Unauthorized" }),
+		};
+	};
+
+	const logUserAccessPolicyDecision = (captchaType: CaptchaType): void => {
+		logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision: "user_access_policy",
+				captchaType,
+			},
+		}));
+	};
 
 	if (userAccessPolicy.type === "block") {
 		logger.info(() => ({
@@ -111,26 +137,12 @@ export const handleAccessPolicy = async (
 				captchaType: CaptchaType.image,
 			},
 		}));
-		await tasks.frictionlessManager.registerBlockedSession({
-			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
-			userSitekeyIpHash: input.userSitekeyIpHash,
-			reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
-			siteKey: input.dapp,
-			ipInfo: input.ipInfo,
-			headers: input.flatHeaders,
-		});
-
-		return {
-			handled: true,
-			response: res.status(401).json({ error: "Unauthorized" }),
-		};
+		return blockSession(FrictionlessReason.ACCESS_POLICY_BLOCK);
 	}
 
-	// Defensive: re-evaluate autoBan after the access-policy bump so the
-	// non-block branches below can't dispatch to image/pow/puzzle when
-	// the bumped score now meets the threshold. The autoBan check added
-	// to runDecisionMachine (#2738) doesn't cover this path because
-	// handleAccessPolicy short-circuits before runDecisionMachine runs.
+	// Re-evaluate autoBan with the bumped score: the captcha-type branches
+	// below return before runDecisionMachine, whose own autoBan check would
+	// otherwise catch it.
 	const autoBanThreshold = clientRecord.settings.autoBanScoreThreshold;
 	if (autoBanThreshold !== undefined && Number(botScore) >= autoBanThreshold) {
 		logger.info(() => ({
@@ -142,18 +154,7 @@ export const handleAccessPolicy = async (
 				captchaType: userAccessPolicy.captchaType,
 			},
 		}));
-		await tasks.frictionlessManager.registerBlockedSession({
-			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
-			userSitekeyIpHash: input.userSitekeyIpHash,
-			reason: FrictionlessReason.AUTO_BAN_SCORE,
-			siteKey: input.dapp,
-			ipInfo: input.ipInfo,
-			headers: input.flatHeaders,
-		});
-		return {
-			handled: true,
-			response: res.status(401).json({ error: "Unauthorized" }),
-		};
+		return blockSession(FrictionlessReason.AUTO_BAN_SCORE);
 	}
 
 	const captchaTypeBaseParams = {
@@ -165,13 +166,7 @@ export const handleAccessPolicy = async (
 	};
 
 	if (userAccessPolicy.captchaType === CaptchaType.image) {
-		logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "user_access_policy",
-				captchaType: CaptchaType.image,
-			},
-		}));
+		logUserAccessPolicyDecision(CaptchaType.image);
 		attachHoneypot(res, clientRecord);
 		return {
 			handled: true,
@@ -190,13 +185,7 @@ export const handleAccessPolicy = async (
 	}
 
 	if (userAccessPolicy.captchaType === CaptchaType.pow) {
-		logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "user_access_policy",
-				captchaType: CaptchaType.pow,
-			},
-		}));
+		logUserAccessPolicyDecision(CaptchaType.pow);
 		attachHoneypot(res, clientRecord);
 		return {
 			handled: true,
@@ -207,25 +196,15 @@ export const handleAccessPolicy = async (
 	}
 
 	if (userAccessPolicy.captchaType === CaptchaType.puzzle) {
-		logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "user_access_policy",
-				captchaType: CaptchaType.puzzle,
-			},
-		}));
+		logUserAccessPolicyDecision(CaptchaType.puzzle);
 		attachHoneypot(res, clientRecord);
 		return {
 			handled: true,
 			response: res.json(
 				await tasks.frictionlessManager.sendPuzzleCaptcha({
 					...captchaTypeBaseParams,
-					// Carried so the rule's severity reaches the puzzle difficulty
-					// ladder. A puzzle has no rounds, and `sendCaptcha` drops the
-					// count from a puzzle session — it reads it only to decide how
-					// hard the puzzle should be. Without this a rule that asked for
-					// 8 rounds and one that asked for 2 would produce identical
-					// puzzles.
+					// A puzzle has no rounds, but `sendCaptcha` reads the count to
+					// size puzzle difficulty, so the rule's severity still applies.
 					...(userAccessPolicy.solvedImagesCount !== undefined && {
 						solvedImagesCount: userAccessPolicy.solvedImagesCount,
 					}),

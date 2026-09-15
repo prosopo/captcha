@@ -102,23 +102,13 @@ export default (
 				clientSessionId,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
-			// Re-sanitise whatever the client reported: keep only scheme + host
-			// + path and drop the query string, fragment and any embedded
-			// credentials so we never persist secrets carried in the page URL.
-			// undefined when the field is absent or not a usable http(s) URL —
-			// the decision machine treats that as "not reported" and forces an
-			// image captcha.
-			//
-			// `iframeUrl` is only populated when the widget was embedded and
-			// is optional — its absence just means "widget was the top frame".
-			// It's not gated in the decision machine; recorded for analytics.
+			// Re-sanitised to scheme + host + path so secrets carried in the page
+			// URL are never persisted. undefined when absent or not a usable
+			// http(s) URL. `iframeUrl` is only set when the widget was embedded.
 			const currentUrl = sanitisePageUrl(reportedCurrentUrl);
 			const iframeUrl = sanitisePageUrl(reportedIframeUrl);
-			// Cheap boolean tag ("is the widget being loaded through Protect's
-			// site-wide iframe endpoint?") derived from the two sanitised
-			// URLs so downstream analytics can filter Protect sessions
-			// without re-parsing hosts. Only persisted when true — see the
-			// sparse index on {isProtect, createdAt}.
+			// Only persisted when true — see the sparse index on
+			// {isProtect, createdAt}.
 			const isProtect = isProtectDeployment(currentUrl, iframeUrl);
 
 			// Sessions need a unique, truthy token for dedup, so synthesise one
@@ -127,14 +117,9 @@ export default (
 			const sessionToken = token || `notoken-${uuidv4()}`;
 
 			const normalizedIp = normalizeRequestIp(req.ip, req.logger);
-			// Always persist a concrete mode on the session — the client only
-			// sends `mode` when it wants to opt into invisible; visible is the
-			// implicit default. Previously the visible path collapsed to
-			// `undefined` and never reached the record, so the DB had zero
-			// sessions with `mode` set, making it impossible to distinguish
-			// visible from invisible traffic in analytics or to correlate
-			// widget-bypass symptoms (empty checkbox coords, missing
-			// behaviouralData) with invisible-mode deployments.
+			// Always persist a concrete mode so analytics can tell visible from
+			// invisible traffic: the client only sends `mode` to opt into
+			// invisible.
 			const sessionMode: ModeEnum =
 				mode === ModeEnum.invisible ? ModeEnum.invisible : ModeEnum.visible;
 
@@ -152,11 +137,10 @@ export default (
 				},
 			}));
 
-			// Maintenance mode: short-circuit before constructing Tasks. The
-			// Tasks constructor calls `env.getDb()`, which throws when `env.db`
-			// is undefined (the maintenance-mode case). The matching
+			// Must run before `new Tasks(env, ...)`, whose constructor throws in
+			// maintenance mode (`env.getDb()` with no `env.db`). The
 			// /captcha/{type} and /submit/{type} endpoints also short-circuit so
-			// the captcha widget keeps rendering while Mongo is unavailable.
+			// the widget keeps rendering while Mongo is unavailable.
 			if (getMaintenanceMode()) {
 				req.logger.info(() => ({
 					msg: "Maintenance mode active - returning dummy PoW captcha session",
@@ -192,13 +176,6 @@ export default (
 			const tasks = new Tasks(env, req.logger);
 			const userSitekeyIpHash = hashUserIp(user, normalizedIp, dapp);
 
-			// Fan out the three independent async dependencies in
-			// parallel: SIMD reading decrypt, session dedup lookup, and
-			// the client record fetch. The original sequential ordering
-			// paid for each in series on every request and dominated p50
-			// on the hottest endpoint. Errors in any branch surface via
-			// Promise.all rejection, which the outer catch already
-			// handles.
 			const [decodedSimdReadings, { existingToken, dedup }, clientRecord] =
 				await Promise.all([
 					decryptIncomingSimdReadings(
@@ -234,34 +211,29 @@ export default (
 				);
 			}
 
+			// `isValid: false` means the ipapi lookup failed and none of its
+			// fields are populated, so it is treated as no ipInfo at all.
+			const validIpInfo =
+				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+					? req.ipInfo
+					: undefined;
+			const countryCode = validIpInfo?.countryCode;
+			const asn = validIpInfo?.asnNumber;
+			const ipInfoMobile = validIpInfo?.isMobile;
+			// The raw header: the decrypted `userAgent` is a hash that only
+			// `runUserAgentMismatchCheck` can use.
+			const requestUserAgent = String(req.headers["user-agent"] ?? "");
+
 			if (dedup) {
-				// A reused session must still honour an active user access policy
-				// AND the configured routing machine. This fast-path returns
-				// before handleAccessPolicy / runDecisionMachine below, so a
-				// cached session whose captchaType conflicts with either gate —
-				// e.g. an IP rate-limit rule forcing `image`, or a routing
-				// machine published after this dedup pointer was minted that
-				// now wants `puzzle` — would be served as-is and then either
-				// hard-rejected at the /captcha/{type} gate with
-				// INCORRECT_CAPTCHA_TYPE or escalated by the post-PoW router
-				// into a session the widget can't follow. Re-check both here
-				// and on conflict evict the stale session so the request falls
-				// through to the access policy / decision machine, which will
-				// re-derive the correct captcha type.
-				const dedupCountryCode =
-					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-						? req.ipInfo.countryCode
-						: undefined;
-				const dedupAsn =
-					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-						? req.ipInfo.asnNumber
-						: undefined;
-				const dedupIsMobile =
-					req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-						? req.ipInfo.isMobile
-						: undefined;
+				// The reused session must still agree with the active access
+				// policy and routing machine, which otherwise run only on the
+				// fresh-session path below. A conflicting cached captchaType (e.g.
+				// an IP rule forcing `image`, or a routing machine published after
+				// the session was minted) would be rejected at /captcha/{type}
+				// with INCORRECT_CAPTCHA_TYPE or escalated by the post-PoW router
+				// into a session the widget can't follow, so on conflict the
+				// session is evicted and the type re-derived below.
 				const dedupFlatHeaders = flatten(req.headers);
-				const dedupUserAgent = String(req.headers["user-agent"] ?? "");
 				const dedupTrafficPolicies = deriveTrafficPolicies(
 					clientRecord.settings?.trafficFilter,
 				);
@@ -272,8 +244,8 @@ export default (
 					user,
 					undefined,
 					undefined,
-					dedupCountryCode,
-					dedupAsn,
+					countryCode,
+					asn,
 				);
 				// Skip deferToVerify policies — they enforce at verify time
 				// only; using them here to invalidate a dedup session would
@@ -293,18 +265,11 @@ export default (
 						(dedupAccessPolicy.captchaType !== undefined &&
 							dedupAccessPolicy.captchaType !== dedup.captchaType));
 
-				// Ask the routing machine (if any) what it would pick now,
-				// using the cached session's signals as the baseline. If it
-				// disagrees with the cached captchaType, evict.
-				//
-				// The router input intentionally mirrors the inputs the cached
-				// session was created under: `score` and `webView` come from
-				// the persisted session, the rest (UA, JA4, country, mobile)
-				// come from the current request. A routing machine that only
-				// reads the captchaType (e.g. blanket-escalate-to-puzzle) will
-				// behave identically. One that mixes per-request signals with
-				// session-derived ones gets the request-time view of every
-				// input that's available without re-decrypting the payload.
+				// Ask the routing machine (if any) what it would pick now; evict if
+				// it disagrees with the cached captchaType. `score`, `webView` and
+				// the page URLs come from the cached session, as they can't be
+				// re-derived without re-decrypting the payload; the other signals
+				// (UA, JA4, country, mobile) come from this request.
 				const cachedCaptchaType = dedup.captchaType as
 					| CaptchaType.image
 					| CaptchaType.pow
@@ -324,24 +289,24 @@ export default (
 								dappAccount: dapp,
 								userAccount: user,
 								ip: normalizedIp,
-								...(dedupCountryCode && { countryCode: dedupCountryCode }),
+								...(countryCode && { countryCode }),
 								score: dedup.session.score,
 								platform: derivePlatform(
-									dedupUserAgent,
+									requestUserAgent,
 									dedup.session.webView,
 									{
-										...(typeof dedupIsMobile === "boolean" && {
-											isMobile: dedupIsMobile,
+										...(typeof ipInfoMobile === "boolean" && {
+											isMobile: ipInfoMobile,
 										}),
 									},
 								),
 								raw: {
 									headers: dedupFlatHeaders,
-									userAgent: dedupUserAgent,
+									userAgent: requestUserAgent,
 									...(req.ja4 && { ja4: req.ja4 }),
-									// Timing values are per-connection so they come from
-									// the current request even in the dedup replay path —
-									// dedup.session was created on a different TCP conn.
+									// Timing values are per-connection, so they come from
+									// this request: dedup.session was created on a
+									// different TCP connection.
 									...(req.tcpToChelloUs !== undefined && {
 										tcpToChelloUs: req.tcpToChelloUs,
 									}),
@@ -349,20 +314,7 @@ export default (
 										chelloToHandshakeUs: req.chelloToHandshakeUs,
 									}),
 									...rawTlsSignalsForSession(req),
-									// req.ipInfo is the per-request ipapi lookup. Only
-									// surface it into `raw` when the lookup succeeded —
-									// an `isValid:false` payload just means the middleware
-									// errored and none of the threat flags are populated,
-									// so pushing it in would give the routing machine
-									// nothing to reason on and waste bytes across the
-									// wire.
-									...(req.ipInfo &&
-										"isValid" in req.ipInfo &&
-										req.ipInfo.isValid && { ipInfo: req.ipInfo }),
-									// currentUrl / iframeUrl use the cached session's
-									// values to match the rest of the dedup routing input
-									// (score, webView, captchaType are all pulled from
-									// dedup).
+									...(validIpInfo && { ipInfo: validIpInfo }),
 									...(dedup.session.currentUrl && {
 										currentUrl: dedup.session.currentUrl,
 									}),
@@ -379,24 +331,14 @@ export default (
 				const dedupConflictsWithRouting =
 					dedupRouted.captchaType !== cachedCaptchaType;
 
-				// The reused session's `bundleId` is what the provider will
-				// use to decrypt every later behavioural / SIMD payload for
-				// this session (via resolveBundleBySessionId). But the client
-				// on this request just did a fresh /detector/assign that
-				// bound `detectorSessionId` to the bundle this caller now
-				// resolves to, which need not be the one the cached session
-				// stored. If we hand the client the
-				// cached sessionId, every later hop encrypts with the fresh
-				// detector's public key and the provider tries to decrypt
-				// with the cached bundle's private key, yielding
-				// ERR_OSSL_RSA_OAEP_DECODING_ERROR and an escalation via the
-				// DM's empty-BDP rule. Evict on mismatch so the fresh-session
-				// path below re-binds `bundleId` from the current
-				// detectorSessionId. When the incoming detectorSessionId
-				// binding has expired (Redis TTL) we cannot see the fresh
-				// bundleId; fall through to reuse rather than evict
-				// unconditionally — the widget will still be re-bootstrapped
-				// on the next retry.
+				// The cached session's `bundleId` decrypts every later SIMD /
+				// behavioural payload (via resolveBundleBySessionId), but this
+				// request's fresh /detector/assign may have bound
+				// `detectorSessionId` to a different bundle. Later hops would then
+				// encrypt with one key and decrypt with another
+				// (ERR_OSSL_RSA_OAEP_DECODING_ERROR), escalating via the DM's
+				// empty-BDP rule. If the incoming binding has expired (Redis TTL)
+				// the fresh bundleId is unknown, so the session is reused as-is.
 				let dedupConflictsWithBundle = false;
 				let dedupIncomingBundleId: string | undefined;
 				if (detectorSessionId && dedup.session.bundleId) {
@@ -441,19 +383,12 @@ export default (
 						) ?? Promise.resolve(),
 					]);
 				} else {
-					// Bundle-only mismatch: rebind the cached session's `bundleId`
-					// in-place rather than evicting and minting fresh. Evicting
-					// races concurrent /captcha/{type} + solution calls the widget
-					// already has in flight for `dedup.sessionId` — those calls
-					// look the session up mid-request and get `No session found`
-					// → `INCORRECT_CAPTCHA_TYPE` → 400. The rate reached ~21%
-					// of the heaviest sitekey's /captcha/pow post-hotfix
-					// (baseline 0.3%) until this branch was added. captchaType,
-					// score, threshold etc. are untouched — only the bundleId
-					// flips to the fresh detector's key so future SIMD /
-					// behavioural decrypts on this session work. Cache-first
-					// write-behind so the reuse response below already reflects
-					// the update for any same-request read.
+					// Bundle-only mismatch: rebind `bundleId` in place rather than
+					// evicting. Evicting races /captcha/{type} and solution calls
+					// the widget already has in flight for `dedup.sessionId`, which
+					// then find no session and fail with INCORRECT_CAPTCHA_TYPE
+					// (400). Cache-first write-behind so same-request reads see the
+					// update.
 					if (dedupConflictsWithBundle && dedupIncomingBundleId) {
 						req.logger.info(() => ({
 							msg: "Rebinding reused session bundleId to match incoming detector",
@@ -488,10 +423,7 @@ export default (
 					recordFrictionlessDecision("reuse_session");
 					attachHoneypot(res, clientRecord);
 					return res.json({
-						[ApiParams.captchaType]: dedup.captchaType as
-							| CaptchaType.image
-							| CaptchaType.pow
-							| CaptchaType.puzzle,
+						[ApiParams.captchaType]: cachedCaptchaType,
 						[ApiParams.sessionId]: dedup.sessionId,
 						[ApiParams.status]: "ok",
 						dns_url: buildDnsEventUrl(dedup.sessionId),
@@ -501,14 +433,6 @@ export default (
 
 			const ipAddress = getCompositeIpAddress(normalizedIp);
 			const flatHeaders = flatten(req.headers);
-			const countryCode =
-				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-					? req.ipInfo.countryCode
-					: undefined;
-			const asn =
-				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-					? req.ipInfo.asnNumber
-					: undefined;
 
 			const shortCircuitInput = {
 				tasks,
@@ -523,10 +447,6 @@ export default (
 				userSitekeyIpHash,
 				requestId: req.requestId,
 				logger: req.logger,
-				// Thread the client's detector session id through so the
-				// bypass paths (configured-captchaType + empty-pool pow
-				// fallback) can promote the resolved bundleId onto the
-				// session and enable later SIMD / BDP attach to decrypt.
 				...(detectorSessionId && { detectorSessionId }),
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
@@ -583,11 +503,6 @@ export default (
 				verifiedSignerUrl,
 			);
 
-			// Fan out the three independent post-shortcircuit awaits:
-			// payload decrypt (CPU-bound crypto), validation (cheap
-			// async), and the Redis-backed access-policy lookup. None of
-			// them depends on the others' outputs — running them in
-			// series previously added up to ~50-80ms on the hot path.
 			const [decryptedPayload, validation, accessPolicies] = await Promise.all([
 				tasks.frictionlessManager.decryptPayload(
 					token,
@@ -607,24 +522,15 @@ export default (
 				),
 			]);
 
-			// Authenticated fast-path. Fires when any non-deferToVerify Allow
-			// rule matches the userScope — the qualifier can be a verified
-			// Web Bot Auth agent, an IP CIDR, a JA4 fingerprint, a UA
-			// substring, an ASN, a country, or any combination. Web Bot Auth
-			// is one of the ways to qualify, not the only one.
+			// Authenticated fast-path: any non-deferToVerify Allow rule matching
+			// the userScope (verified Web Bot Auth agent, IP CIDR, JA4, UA, ASN,
+			// country, or a combination) skips the decision machine and mints an
+			// authenticated session with `serverChecked: false`, which the
+			// operator's `/client/authenticated/verify` call consumes.
+			// deferToVerify policies enforce at verify time only, so are ignored.
 			//
-			// Skips decrypt/detect/decision-machine entirely, mints an
-			// authenticated session with `serverChecked: false`, and the
-			// operator's `/client/authenticated/verify` call is what marks
-			// it consumed. deferToVerify policies are ignored here for the
-			// same reason the ordinary flow ignores them at frictionless
-			// entry — they enforce at verify time only.
-			//
-			// A Block or Restrict policy on the same match set always wins
-			// (severity outranks Allow) so an operator who wrote both
-			// "allow /24" and "block 10.0.0.5" gets what they asked for.
-			// getPrioritisedAccessPolicies returns policies in matched-order,
-			// so the presence of a blocking policy short-circuits the check.
+			// A Block or Restrict on the same match set always outranks Allow, so
+			// "allow /24" plus "block 10.0.0.5" still blocks that address.
 			const blockingPolicy = accessPolicies.find(
 				(p) =>
 					!p.deferToVerify &&
@@ -649,9 +555,7 @@ export default (
 						dapp,
 						userSitekeyIpHash,
 						flatHeaders,
-						req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-							? req.ipInfo
-							: undefined,
+						validIpInfo,
 						clientSessionId,
 					);
 				req.logger.info(() => ({
@@ -759,9 +663,6 @@ export default (
 				recordDetectorTriggered(triggeredDetectors);
 			}
 
-			// Both rungs of the score ladder. `resolveScoreLadder` tolerates the
-			// pre-ladder shape (a bare number) so a client record that predates
-			// the migration still routes rather than throwing.
 			const { botThreshold, botImageThreshold } = resolveScoreLadder(
 				clientRecord.settings?.frictionlessThreshold,
 			);
@@ -827,15 +728,6 @@ export default (
 				...rawTlsSignalsForSession(req),
 			});
 
-			const ipInfoMobile =
-				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
-					? req.ipInfo.isMobile
-					: undefined;
-			// `userAgent` is hashed and only meaningful to
-			// `runUserAgentMismatchCheck`; passing it here left `isApple` and any
-			// UA classification permanently false. The dedup replay above already
-			// reads the header directly.
-			const requestUserAgent = String(req.headers["user-agent"] ?? "");
 			const trafficPolicies = deriveTrafficPolicies(
 				clientRecord.settings?.trafficFilter,
 			);
@@ -866,12 +758,7 @@ export default (
 						chelloToHandshakeUs: req.chelloToHandshakeUs,
 					}),
 					...rawTlsSignalsForSession(req),
-					// req.ipInfo is the per-request ipapi lookup; only surface
-					// on the successful branch of the discriminated union.
-					// See the dedup replay path above for the full comment.
-					...(req.ipInfo &&
-						"isValid" in req.ipInfo &&
-						req.ipInfo.isValid && { ipInfo: req.ipInfo }),
+					...(validIpInfo && { ipInfo: validIpInfo }),
 					...(currentUrl && { currentUrl }),
 					...(iframeUrl && { iframeUrl }),
 					// Which egress categories this site blocks, so egress-sensitive

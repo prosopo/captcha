@@ -25,6 +25,7 @@ import {
 	ApiParams,
 	type BehavioralDataPacked,
 	type Captcha,
+	type CaptchaResult,
 	type CaptchaSolution,
 	CaptchaStatus,
 	CaptchaType,
@@ -191,7 +192,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 		);
 
 		const timeLimit = captchas
-			// if 2 captchas with 30s time limit, this will add to 1 minute (30s * 2)
 			.map((captcha) => captcha.timeLimitMs || DEFAULT_IMAGE_CAPTCHA_TIMEOUT)
 			.reduce((a, b) => a + b, 0);
 		const deadlineDate = new Date(timeLimit + currentTime);
@@ -272,7 +272,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 		);
 
 		if (!providerRequestHashSignatureVerify.isValid) {
-			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
 			const err = new ProsopoEnvError("GENERAL.INVALID_SIGNATURE", {
 				context: {
 					failedFuncName: this.dappUserSolution.name,
@@ -355,24 +354,19 @@ export class ImgCaptchaManager extends CaptchaManager {
 				});
 			}
 
-			// Only do stuff if the request is in the local DB
-			// prevent this request hash from being used twice
+			// Prevent this request hash from being used twice
 			await this.db.updatePendingImageCommitmentStatus(requestHash);
 
-			// Process behavioral data if provided
 			let behavioralDataPacked: BehavioralDataPacked | undefined;
 			let deviceCapability: string | undefined;
 			if (behavioralData) {
 				try {
-					// Decrypt the behavioural data with this session's detector pool
-					// bundle (resolved above; no key pool).
 					const decryptedData = await this.decryptBehavioralData(
 						behavioralData,
 						sessionBundle,
 					);
 
 					if (decryptedData) {
-						// Log behavioral analytics using unpacked data counts
 						this.logger?.info(() => ({
 							msg: "Behavioral analysis completed",
 							data: {
@@ -386,7 +380,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 							},
 						}));
 
-						// Convert to packed format for storage
 						behavioralDataPacked = {
 							c1: decryptedData.collector1 || [],
 							c2: decryptedData.collector2 || [],
@@ -407,7 +400,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			const commit: UserCommitment = {
 				id: commitmentId,
-				userAccount: userAccount,
+				userAccount,
 				dappAccount,
 				providerAccount: this.pair.address,
 				datasetId,
@@ -451,23 +444,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			const totalImages = storedCaptchas[0]?.items.length || 0;
 
-			if (containsIdenticalPairs(pairs) && process.env.NODE_ENV !== "test") {
-				// Write commitment disapproval and session update in parallel
-				const writePromises: Promise<void>[] = [
-					this.db.disapproveDappUserCommitment(
-						commitmentId,
-						"CAPTCHA.INVALID_SOLUTION",
-						pairs,
-					),
-				];
+			const writeSubmissionResult = async (
+				commitmentWrite: Promise<void>,
+				result: CaptchaResult,
+			): Promise<void> => {
+				const writePromises: Promise<void>[] = [commitmentWrite];
 				if (pendingRecord.sessionId) {
 					writePromises.push(
 						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
 							userSubmitted: true,
-							result: {
-								status: CaptchaStatus.disapproved,
-								reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
-							},
+							result,
 							...(storedClientMetaData && {
 								clientMetaData: storedClientMetaData,
 							}),
@@ -476,14 +462,31 @@ export class ImgCaptchaManager extends CaptchaManager {
 					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
 				}
 				await Promise.all(writePromises);
-				response = {
+			};
+
+			const rejectSubmission = async (): Promise<DappUserSolutionResult> => {
+				await writeSubmissionResult(
+					this.db.disapproveDappUserCommitment(
+						commitmentId,
+						"CAPTCHA.INVALID_SOLUTION",
+						pairs,
+					),
+					{
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
+					},
+				);
+				return {
 					captchas: captchaIds.map((id) => ({
 						captchaId: id,
 						proof: [[]],
 					})),
 					verified: false,
 				};
-				return response;
+			};
+
+			if (containsIdenticalPairs(pairs) && process.env.NODE_ENV !== "test") {
+				return rejectSubmission();
 			}
 
 			if (
@@ -501,55 +504,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 					})),
 					verified: true,
 				};
-				// Write commitment approval and session update in parallel
-				const writePromises: Promise<void>[] = [
+				await writeSubmissionResult(
 					this.db.approveDappUserCommitment(commitmentId, pairs),
-				];
-				if (pendingRecord.sessionId) {
-					writePromises.push(
-						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
-							userSubmitted: true,
-							result: { status: CaptchaStatus.approved },
-							...(storedClientMetaData && {
-								clientMetaData: storedClientMetaData,
-							}),
-						}),
-					);
-					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
-				}
-				await Promise.all(writePromises);
+					{ status: CaptchaStatus.approved },
+				);
 			} else {
-				// Write commitment disapproval and session update in parallel
-				const writePromises: Promise<void>[] = [
-					this.db.disapproveDappUserCommitment(
-						commitmentId,
-						"CAPTCHA.INVALID_SOLUTION",
-						pairs,
-					),
-				];
-				if (pendingRecord.sessionId) {
-					writePromises.push(
-						this.updateSessionRecordWithCache(pendingRecord.sessionId, {
-							userSubmitted: true,
-							result: {
-								status: CaptchaStatus.disapproved,
-								reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
-							},
-							...(storedClientMetaData && {
-								clientMetaData: storedClientMetaData,
-							}),
-						}),
-					);
-					pushSimdAttachIfAny(pendingRecord.sessionId, writePromises);
-				}
-				await Promise.all(writePromises);
-				response = {
-					captchas: captchaIds.map((id) => ({
-						captchaId: id,
-						proof: [[]],
-					})),
-					verified: false,
-				};
+				response = await rejectSubmission();
 			}
 		} else {
 			this.logger.info(() => ({
@@ -578,7 +538,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 				context: {
 					failedFuncName:
 						this.validateReceivedCaptchasAgainstStoredCaptchas.name,
-
 					captchas,
 				},
 			});
@@ -613,7 +572,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 		captchaIds: string[],
 	): Promise<boolean> {
 		const currentTime = new Date();
-		// only proceed if there is a pending record
 		if (!pendingRecord) {
 			this.logger.info(() => ({
 				msg: "No pending record found",
@@ -622,26 +580,19 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		if (pendingRecord.deadlineTimestamp < currentTime) {
-			// deadline for responding to the captcha has expired
 			this.logger.info(() => ({
 				msg: "Deadline for responding to captcha has expired",
 			}));
 			return false;
 		}
-		if (pendingRecord) {
-			const pendingHashComputed = computePendingRequestHash(
-				captchaIds,
-				userAccount,
-				pendingRecord.salt,
-			);
-			return requestHash === pendingHashComputed;
-		}
-		return false;
+		const pendingHashComputed = computePendingRequestHash(
+			captchaIds,
+			userAccount,
+			pendingRecord.salt,
+		);
+		return requestHash === pendingHashComputed;
 	}
 
-	/*
-	 * Get dapp user solution from database
-	 */
 	async getDappUserCommitmentById(
 		commitmentId: string,
 	): Promise<UserCommitment> {
@@ -651,7 +602,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			throw new ProsopoEnvError("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", {
 				context: {
 					failedFuncName: this.getDappUserCommitmentById.name,
-					commitmentId: commitmentId,
+					commitmentId,
 				},
 			});
 		}
@@ -677,29 +628,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// disapproved.
 		clientSessionId?: string,
 	): Promise<ImageVerificationResponse> {
-		// Bind the commitmentId/dapp context once so every log line in this
-		// method carries it without repeating the fields in each `data` block.
 		const logger = this.logger.with({ commitmentId, dapp });
 
-		// An image token has carried its `commitmentId` since the Procaptcha
-		// token was introduced (#1263, 2024-06-06) — `Manager.ts` sets it
-		// unconditionally on every `onHuman` for this captcha type. It is
-		// `optional()` on the schema only because PoW shares the token shape and
-		// identifies its work by `challenge` instead.
-		//
-		// The fallback that used to stand here searched the account's entire
-		// history for any approved commitment. It predates the token and could
-		// only ever return the wrong record: for a returning user whose current
-		// solve was not yet approved it produced an approved commitment from an
-		// earlier visit, which carries no `clientSessionId`, so the correlation
-		// below compared the live session id against `undefined` and reported a
-		// replay that never happened. Seen in production at scale on the image
-		// path while PoW, which resolves its exact challenge record, saw
-		// effectively none of it.
-		//
-		// Verifying a token against a commitment it does not name is not a
-		// weaker answer, it is an answer to a different question. Without an id
-		// there is nothing to verify.
+		// Every image token carries its `commitmentId` (`Manager.ts` sets it on
+		// every `onHuman`); it is optional on the schema only because PoW shares
+		// the token shape and identifies its work by `challenge`. Do not fall back
+		// to some other commitment for the account, such as its latest approved
+		// one: that verifies a different solve, which can carry no
+		// `clientSessionId` and so reports a false replay below.
 		if (!commitmentId) {
 			logger.debug(() => ({
 				msg: "Not verified - token carried no commitmentId",
@@ -712,7 +648,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		const solution = await this.getDappUserCommitmentById(commitmentId);
 
-		// No solution exists
 		if (!solution) {
 			logger.debug(() => ({
 				msg: "Not verified - no solution found",
@@ -738,7 +673,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 		await this.db.markDappUserCommitmentsChecked([solution.id]);
 		// -- END WARNING --
 
-		// A solution exists but is disapproved
 		if (solution.result.status === CaptchaStatus.disapproved) {
 			return {
 				status: solution.result.reason || "API.USER_NOT_VERIFIED",
@@ -756,7 +690,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 				? currentTime - submittedAt.getTime()
 				: Number.POSITIVE_INFINITY;
 
-		// A solution exists but has timed out
 		if (timeSinceCompletion > maxVerifiedTime) {
 			logger.debug(() => ({
 				msg: "Not verified - timed out",
@@ -768,9 +701,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		// Accumulate commitment updates in memory to batch writes.
-		// Instead of writing after each check, we collect all updates and
-		// perform a single batch write at the end.
+		// Collected in memory and written together at the end.
 		const commitmentUpdates: Partial<UserCommitment> = {};
 		let failStatus: ResultReason | undefined;
 		// Set only by the access-policy branch below, and stamped onto the
@@ -778,9 +709,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// ACCESS_POLICY_BLOCK.
 		let matchedRule: Session["matchedRule"];
 
-		// The site rendered the widget with a session id, so the solve has to
-		// carry the same one — otherwise the token was earned in a different
-		// session (or outside the widget entirely) and is being replayed here.
 		// Cheap and purely local, so it runs before any I/O-bound check.
 		if (
 			isClientSessionMismatch(
@@ -803,7 +731,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 			failStatus = ResultReason.CLIENT_SESSION_MISMATCH;
 		}
 
-		// Check user access policies for hard blocks
 		if (!failStatus && userAccessRulesStorage) {
 			try {
 				const blockPolicy = await this.checkForHardBlock(
@@ -840,7 +767,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Check email domain against spam list if email is provided
 		if (!failStatus && email && spamEmailDomainCheckingEnabled) {
 			try {
 				const isSpam = await this.checkSpamEmail(email);
@@ -885,11 +811,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Per-email submission-count check. Runs before we persist
-		// `metadata.emailNormalised` for the current commitment so the
-		// count reflects PRIOR verified submissions only. Silently no-op
-		// when `storeMetadata` is off — nothing gets written under that
-		// mode, so no historical rows would exist to count against.
+		// Per-email submission-count check. Runs before `metadata.emailNormalised`
+		// is persisted for this commitment so the count reflects PRIOR submissions
+		// only. No-op when `storeMetadata` is off: nothing is written in that
+		// mode, so there are no rows to count against.
 		const maxEmailSubmissionCount =
 			spamFilter?.enabled && spamFilter.emailRules?.enabled
 				? spamFilter.emailRules.maxEmailSubmissionCount
@@ -969,14 +894,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Persist dapp-server-provided metadata when the site opts in.
-		// Gated purely by `storeMetadata` — independent of the spam-email
-		// checks above, which inspect the email but never write it.
-		// `emailNormalised` is written alongside `email` so the per-email
-		// submission-count check has an indexed field to query against
-		// (see `countCommitmentsByNormalisedEmail`); its shape is a
-		// subset of the raw value (dots collapsed for gmail, `+tag`
-		// stripped) so it never leaks anything the raw field doesn't.
+		// Gated purely by `storeMetadata`; the spam-email checks above inspect the
+		// email but never write it. `emailNormalised` gives the per-email
+		// submission-count check an indexed field to query (see
+		// `countCommitmentsByNormalisedEmail`), and is derived from the raw value
+		// so it never leaks anything the raw field doesn't.
 		if (storeMetadata && email) {
 			commitmentUpdates.metadata = {
 				email,
@@ -984,15 +906,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		// IP validation: accumulate providedIp update
 		if (ip) {
 			const solutionIpAddress = getIpAddressFromComposite(solution.ipAddress);
-			// Get client settings for IP validation rules
 			const clientRecord = await this.db.getClientRecord(dapp);
 
 			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
 
-			// Accumulate providedIp instead of writing immediately
 			commitmentUpdates.providedIp = getCompositeIpAddress(ip);
 
 			if (!failStatus && ipValidationRules?.enabled === true) {
@@ -1032,13 +951,12 @@ export class ImgCaptchaManager extends CaptchaManager {
 			solution.result.status === CaptchaStatus.approved &&
 			this.usageCounters
 		) {
-			const ipValue = ip ?? "";
 			this.usageCounters.incrManyAsync(
 				solution.dappAccount,
 				buildAllWindowIncrements(
 					"solved",
 					CaptchaType.image,
-					ipValue,
+					ip ?? "",
 					solution.userAccount,
 					enrichedDnsEvent?.peerIp,
 				),
@@ -1062,7 +980,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			logger.info(() => ({
 				data: {
 					scoreComponents: sessionRecord?.scoreComponents,
-					score: score,
+					score,
 					dnsPeerAsn: getIpInfoAsn(enrichedDnsEvent?.peerIpInfo),
 					dnsResolverAsn: getIpInfoAsn(enrichedDnsEvent?.resolverIpInfo),
 				},
@@ -1123,11 +1041,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 				tcpOptsFlags: sessionRecord?.tcpOptsFlags,
 				tcpOptsOrder: sessionRecord?.tcpOptsOrder,
 				tcpWindow: sessionRecord?.tcpWindow,
-				// Which egress categories this site blocks. Gates the
-				// egress-sensitive TCP-stack deny rules — a VPN
-				// concentrator legitimately terminates the handshake, so
-				// on a site that accepts VPN users the observed stack
-				// says nothing about the client.
 				trafficPolicies: deriveTrafficPolicies(trafficFilter),
 			};
 
@@ -1137,9 +1050,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 					logger,
 				);
 				if (decision.decision === DecisionMachineDecision.Deny) {
-					// Decision machines are operator-authored JS — their `reason`
-					// is just `string | undefined`. Cast to `ResultReason` at the
-					// boundary so the strict types on `CaptchaResult` hold.
 					const dmReason = (decision.reason ||
 						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason;
 					logger.info(() => ({
@@ -1168,7 +1078,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// - approve/disapprove use dedicated methods that trigger centralStreamer
 		const writePromises: Promise<void>[] = [];
 
-		// Write non-streaming metadata fields if accumulated.
 		const sideUpdates: Partial<UserCommitment> = {};
 		if (commitmentUpdates.providedIp) {
 			sideUpdates.providedIp = commitmentUpdates.providedIp;
@@ -1211,12 +1120,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 					{
 						serverChecked: true,
 						result: finalResult,
-						// Server-verify Disapprovals (traffic filter, IP validation,
-						// spam rules, decision-machine veto, etc.) are blocks —
-						// mark the session so the Overview chart and other
-						// aggregations pick them up without inspecting
-						// result.reason. User solution failures
-						// (CAPTCHA_INVALID_SOLUTION) are excluded — see
+						// Stamped so aggregations can count blocks without
+						// re-deriving them from result.reason. See
 						// `isBlockingCaptchaResult`.
 						...(isBlockingCaptchaResult(CaptchaType.image, finalResult) && {
 							blocked: true,

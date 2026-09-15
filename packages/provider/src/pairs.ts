@@ -18,7 +18,6 @@ import { at } from "@prosopo/util";
  * @param list
  */
 export const constructPairList = (list: number[]): [number, number][] => {
-	// if set of pairs is not even, fail
 	if (list.length % 2 !== 0) {
 		throw new Error("Invalid pairs length");
 	}
@@ -63,6 +62,5 @@ export const containsIdenticalPairs = (pairsLists: [number, number][][]) => {
 		}
 	}
 
-	// if the size of the set is less than half the total number of coordinates, there are identical pairs
 	return set.size !== pairsLists.flat().flat().length / 2;
 };

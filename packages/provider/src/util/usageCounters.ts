@@ -215,8 +215,9 @@ export class UsageCounters {
 }
 
 /**
- * Helper: produce the standard 24-counter served/solved write set for a given
- * captcha challenge. Used by both served (post-session) and solved hooks.
+ * Produce the standard served/solved write set for a captcha challenge: every
+ * window, per dimension, for the challenge's own type and for `any`. Used by
+ * both served (post-session) and solved hooks.
  */
 export const buildAllWindowIncrements = (
 	kind: "served" | "solved",
@@ -226,6 +227,8 @@ export const buildAllWindowIncrements = (
 	peerIp?: string,
 ): CounterIncrement[] => {
 	const out: CounterIncrement[] = [];
+	const countedTypes: CounterSpec["captchaType"][] =
+		captchaType === "any" ? ["any"] : [captchaType, "any"];
 	for (const window of [
 		"1m",
 		"10m",
@@ -234,29 +237,16 @@ export const buildAllWindowIncrements = (
 		"6h",
 		"24h",
 	] as CounterSpec["window"][]) {
-		out.push(
-			{ spec: { kind, captchaType, dimension: "ip", window }, value: ip },
-			{
-				spec: { kind, captchaType, dimension: "userAccount", window },
-				value: userAccount,
-			},
-		);
-		if (peerIp && peerIp !== ip) {
-			out.push({
-				spec: { kind, captchaType, dimension: "peerIp", window },
-				value: peerIp,
-			});
-		}
-		if (captchaType !== "any") {
+		for (const countedType of countedTypes) {
 			out.push(
 				{
-					spec: { kind, captchaType: "any", dimension: "ip", window },
+					spec: { kind, captchaType: countedType, dimension: "ip", window },
 					value: ip,
 				},
 				{
 					spec: {
 						kind,
-						captchaType: "any",
+						captchaType: countedType,
 						dimension: "userAccount",
 						window,
 					},
@@ -267,7 +257,7 @@ export const buildAllWindowIncrements = (
 				out.push({
 					spec: {
 						kind,
-						captchaType: "any",
+						captchaType: countedType,
 						dimension: "peerIp",
 						window,
 					},

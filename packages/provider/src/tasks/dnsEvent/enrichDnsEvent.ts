@@ -106,9 +106,8 @@ export const extraIpInfosFromEnrichedDnsEvent = (
  *     threshold.
  *
  * `pathValid` is a protocol signal, not a category — it always contributes
- * regardless of trafficFilter. When `trafficFilter` is omitted, all
- * datacenter / abuser flags count (preserves the pre-gating behaviour for
- * admin / diagnostic recompute callers).
+ * regardless of trafficFilter. When `trafficFilter` is omitted (admin /
+ * diagnostic recompute callers), all datacenter / abuser flags count.
  */
 export const computeDnsAsymmetry = (
 	enriched: EnrichedDnsEvent | undefined,
@@ -123,17 +122,9 @@ export const computeDnsAsymmetry = (
 		if (!ip?.isValid || !ip.isDatacenter) return false;
 		if (!trafficFilter) return true;
 		if (trafficFilter.datacenter === undefined) return false;
-		// Denylist wins over shielding and over the ISP / allowlist checks —
-		// an explicitly named provider counts as DC no matter what.
 		if (isDatacenterDenylisted(ip, trafficFilter.datacenterNameDenylist)) {
 			return true;
 		}
-		// Policy-aware shielding: a higher-precedence flag the operator has
-		// left unconfigured (i.e. is allowing) "explains" why this resolver
-		// is on a datacenter range and suppresses the DC signal. When the
-		// operator has actually configured that category (block or challenge)
-		// there's no shielding, because they're treating that category as
-		// suspicious in its own right.
 		if (
 			(ip.isVPN && trafficFilter.vpn === undefined) ||
 			(ip.isProxy && trafficFilter.proxy === undefined) ||

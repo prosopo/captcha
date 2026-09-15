@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createPrivateKey } from "node:crypto";
 import { ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import type { Logger } from "@prosopo/logger";
@@ -42,20 +41,6 @@ import {
 	invalidateDecisionMachineScriptCache,
 } from "../decisionMachine/decisionMachineRunner.js";
 
-const isValidPrivateKey = (privateKeyString: string) => {
-	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
-	try {
-		createPrivateKey({
-			key: privateKey,
-			format: "pem",
-			type: "pkcs8",
-		});
-		return true;
-	} catch (error) {
-		return false;
-	}
-};
-
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
 	logger: Logger;
@@ -76,9 +61,6 @@ export class ClientTaskManager {
 	 * @returns CaptchaDatabase
 	 */
 	getCaptchaDB(mongoCaptchaUri: string): CaptchaDatabase {
-		if (this.captchaDB) {
-			return this.captchaDB;
-		}
 		if (!this.captchaDB) {
 			this.captchaDB = new CaptchaDatabase(
 				mongoCaptchaUri,
@@ -118,7 +100,6 @@ export class ClientTaskManager {
 			// `pendingStage: true` and is picked up on the next sweep.
 			const sweepStartedAt = new Date();
 
-			// Process image commitments with cursor
 			let processedCommitments = 0;
 
 			await this.processBatchesWithCursor(
@@ -128,11 +109,6 @@ export class ClientTaskManager {
 						afterId,
 					),
 				async (batch) => {
-					const filteredBatch = (
-						lastTask?.updated
-							? batch.filter((commitment) => this.isRecordUpdated(commitment))
-							: batch
-					).filter((commitment) => commitment.id !== "");
 					// Skip placeholder records — `storePendingImageCommitment`
 					// inserts with `id: ""` until the user submits a solution.
 					// Defense in depth: even if a stray placeholder slips into
@@ -141,6 +117,11 @@ export class ClientTaskManager {
 					// `{ id: { $in: ["", "", ...] } }` to a single empty-string
 					// bound and the IXSCAN on `id_-1` then walks every
 					// empty-id document on the node (~100K rows).
+					const filteredBatch = (
+						lastTask?.updated
+							? batch.filter((commitment) => this.isRecordUpdated(commitment))
+							: batch
+					).filter((commitment) => commitment.id !== "");
 
 					if (filteredBatch.length > 0) {
 						await captchaDB.saveCaptchas([], filteredBatch, []);
@@ -154,7 +135,6 @@ export class ClientTaskManager {
 				(row) => (row as { _id?: unknown })._id,
 			);
 
-			// Process PoW records with cursor
 			let processedPowRecords = 0;
 			await this.processBatchesWithCursor(
 				async (afterId?: unknown) =>
@@ -179,7 +159,6 @@ export class ClientTaskManager {
 				(row) => (row as { _id?: unknown })._id,
 			);
 
-			// process session records with cursor
 			let processedSessionRecords = 0;
 			await this.processBatchesWithCursor(
 				async (afterId?: unknown) =>
@@ -258,7 +237,8 @@ export class ClientTaskManager {
 			// Get updated client records within a ten minute window of the last completed task
 			const tenMinuteWindow = 10 * 60 * 1000;
 
-			// Handle non-existent or invalid last updated times (were previously numbers). Delete this code after a few runs.
+			// Tolerates a missing or non-Date `updated` (legacy records stored
+			// numbers). TODO: delete once no legacy values remain.
 			const updatedAtTimestamp = (() => {
 				const raw = lastTask?.updated;
 				if (!raw) return 0;
@@ -314,8 +294,8 @@ export class ClientTaskManager {
 		await this.providerDB.updateClientRecords([
 			{
 				account: siteKey,
-				tier: tier,
-				settings: settings,
+				tier,
+				settings,
 			} as ClientRecord,
 		]);
 	}
@@ -502,6 +482,7 @@ export class ClientTaskManager {
 			deletedCount,
 		};
 	}
+
 	/**
 	 * Matches a request referrer against an allowed domain pattern.
 	 * Supports global '*', subdomain '*.example.com', glob '*example*',
@@ -513,24 +494,20 @@ export class ClientTaskManager {
 			const referrerHost = parseUrl(referrer).hostname.replace(/\.$/, "");
 			const pattern = clientDomain.trim().toLowerCase();
 
-			// Global wildcard
 			if (pattern === "*") return true;
 
-			// Localhost allowance
 			if (pattern === "localhost") {
 				return (
 					referrerHost === "localhost" || referrerHost.startsWith("localhost:")
 				);
 			}
 
-			// Subdomain wildcard: *.example.com
 			if (pattern.startsWith("*.")) {
 				const suffix = pattern.slice(2);
 				const allowed = parseUrl(suffix).hostname.replace(/\.$/, "");
 				return referrerHost.endsWith(`.${allowed}`) || referrerHost === allowed;
 			}
 
-			// General glob pattern: convert * to .*
 			if (pattern.includes("*")) {
 				const escaped = pattern
 					.replace(/[.+?^${}()|\[\]\\]/g, "\\$&")
@@ -539,7 +516,6 @@ export class ClientTaskManager {
 				return regex.test(referrerHost);
 			}
 
-			// Exact or subdomain match for plain domains
 			const allowedHost = parseUrl(pattern).hostname.replace(/\.$/, "");
 			return (
 				referrerHost === allowedHost || referrerHost.endsWith(`.${allowedHost}`)
@@ -567,8 +543,8 @@ export class ClientTaskManager {
 	/**
 	 * Drive a keyset-paginated sweep. Each iteration passes the `_id` of the
 	 * previous batch's last row to `fetchBatch` so the query resumes from
-	 * `_id > afterId` — see `getUnstoredDappUserCommitments` for why we
-	 * moved off `skip(N)`. `getLastId` extracts the resumption cursor from
+	 * `_id > afterId` — see `getUnstoredDappUserCommitments` for why this
+	 * is used instead of `skip(N)`. `getLastId` extracts the resumption cursor from
 	 * a batch row; both `PoWCaptchaRecord` and `UserCommitmentRecord` are
 	 * `mongoose.Document` subtypes so `_id` is always present at runtime
 	 * even though our stored types don't spell it out.

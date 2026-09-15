@@ -87,10 +87,10 @@ export default (
 			simdReadings,
 		} = parsed;
 
-		// Clients no longer send datasetId (DNS routes them to an arbitrary
-		// pronode; they can't know in advance which dataset to pin). Fall back
-		// to the env's default — populated from the most-recently-uploaded
-		// dataset at startup, see `Environment.isReady` in packages/env.
+		// Clients don't send datasetId: DNS routes them to an arbitrary pronode,
+		// so they can't know which dataset to pin. The env default is the
+		// most-recently-uploaded dataset at startup (`Environment.isReady` in
+		// packages/env).
 		const datasetId = clientDatasetId ?? env.datasetId;
 
 		if (!datasetId) {
@@ -109,9 +109,8 @@ export default (
 		validateSiteKey(dapp);
 		validateAddr(user);
 
-		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
-		// because the Tasks constructor calls `env.getDb()`, which throws when
-		// `env.db` is undefined (the maintenance-mode case).
+		// Must run before `new Tasks(env, ...)`, whose constructor throws in
+		// maintenance mode (`env.getDb()` with no `env.db`).
 		if (getMaintenanceMode()) {
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning dummy image challenge",
@@ -122,8 +121,7 @@ export default (
 
 		// Reserved CI test site keys have no client record, so the lookup
 		// below would reject them as unregistered. Checked before
-		// `new Tasks(env, ...)` for the same reason as maintenance mode: the
-		// constructor calls `env.getDb()`.
+		// `new Tasks(env, ...)` for the same reason as maintenance mode.
 		if (isReservedTestSiteKey(dapp)) {
 			req.logger.warn(() => ({
 				msg: "Reserved TEST site key - returning dummy image challenge",
@@ -147,7 +145,6 @@ export default (
 				);
 			}
 
-			// Get country code for geoblocking from middleware-provided IP info
 			const countryCode =
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.countryCode
@@ -177,14 +174,11 @@ export default (
 				asn,
 			);
 			// Skip deferToVerify policies at request time — they enforce at
-			// verify time via checkForHardBlock. Without this filter a
-			// Block+deferToVerify rule matches here, and because
-			// sanitizeAccessPolicy strips `captchaType` from every Block
-			// policy on write, `isValidRequest`'s `captchaType` equality
-			// check fails (undefined !== "image") and returns 400
-			// INCORRECT_CAPTCHA_TYPE — defeating the whole "solve normally,
-			// block at verify" pattern deferToVerify is meant to enable.
-			// Mirrors blockMiddleware's own deferToVerify filter.
+			// verify time via checkForHardBlock. sanitizeAccessPolicy strips
+			// `captchaType` from every Block policy, so a deferred Block reaching
+			// `isValidRequest` fails its captchaType check with 400
+			// INCORRECT_CAPTCHA_TYPE, defeating "solve normally, block at
+			// verify". Mirrors blockMiddleware's own deferToVerify filter.
 			const accessPolicies =
 				await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
@@ -290,9 +284,6 @@ export default (
 					captchaConfig,
 					clientRecord.settings.imageThreshold ?? 0.8,
 					validSessionId,
-					// Persist the full ipinfo payload — consumers read
-					// individual flags off this object instead of separate
-					// flat fields.
 					req.ipInfo,
 				);
 			// Signed URLs are minted per request so each challenge's images
@@ -343,7 +334,6 @@ export default (
 				new ProsopoApiError("API.BAD_REQUEST", {
 					context: {
 						error: err,
-
 						code: 500,
 						params: req.params,
 					},

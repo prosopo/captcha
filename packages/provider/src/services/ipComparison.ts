@@ -39,7 +39,6 @@ export async function compareIPs(
 	ipInfoService: IIpInfoService,
 ): Promise<IPComparisonResponse> {
 	try {
-		// Validate inputs
 		if (!ip1 || !ip2 || typeof ip1 !== "string" || typeof ip2 !== "string") {
 			return {
 				error: "Invalid IP addresses provided",
@@ -48,7 +47,6 @@ export async function compareIPs(
 			};
 		}
 
-		// Check for exact match first
 		if (ip1 === ip2) {
 			return {
 				ipsMatch: true,
@@ -57,20 +55,18 @@ export async function compareIPs(
 			};
 		}
 
-		// Get information for both IPs via local service
 		const [ip1Info, ip2Info] = await Promise.all([
 			ipInfoService.lookup(ip1),
 			ipInfoService.lookup(ip2),
 		]);
 
-		// Check for errors in IP lookups
 		if (!ip1Info.isValid && !ip2Info.isValid) {
 			return {
 				error: "Failed to lookup both IP addresses",
 				ip1,
 				ip2,
-				ip1Error: (ip1Info as { isValid: false; error: string }).error,
-				ip2Error: (ip2Info as { isValid: false; error: string }).error,
+				ip1Error: ip1Info.error,
+				ip2Error: ip2Info.error,
 			};
 		}
 
@@ -79,7 +75,7 @@ export async function compareIPs(
 				error: "Failed to lookup first IP address",
 				ip1,
 				ip2,
-				ip1Error: (ip1Info as { isValid: false; error: string }).error,
+				ip1Error: ip1Info.error,
 			};
 		}
 
@@ -88,11 +84,10 @@ export async function compareIPs(
 				error: "Failed to lookup second IP address",
 				ip1,
 				ip2,
-				ip2Error: (ip2Info as { isValid: false; error: string }).error,
+				ip2Error: ip2Info.error,
 			};
 		}
 
-		// Determine connection types based on provider info
 		const determineConnectionType = (
 			ipInfo: IPInfoResult,
 		): IPConnectionType => {
@@ -119,7 +114,6 @@ export async function compareIPs(
 
 		const differentConnectionTypes = ip1ConnectionType !== ip2ConnectionType;
 
-		// Different providers?
 		const ip1Provider =
 			ip1Info.providerName || ip1Info.asnOrganization || "Unknown";
 		const ip2Provider =
@@ -127,27 +121,6 @@ export async function compareIPs(
 
 		const differentProviders = ip1Provider !== ip2Provider;
 
-		// Coords for checking distance between ips
-		let distanceKm: number | undefined;
-		if (
-			ip1Info.latitude !== undefined &&
-			ip1Info.longitude !== undefined &&
-			ip2Info.latitude !== undefined &&
-			ip2Info.longitude !== undefined
-		) {
-			// getDistance returns meters, convert to kilometers
-			const distanceMeters = getDistance(
-				{ latitude: ip1Info.latitude, longitude: ip1Info.longitude },
-				{ latitude: ip2Info.latitude, longitude: ip2Info.longitude },
-			);
-			distanceKm = distanceMeters / 1000;
-		}
-
-		const ip1IsVpnOrProxy = ip1Info.isVPN || ip1Info.isProxy || ip1Info.isTor;
-		const ip2IsVpnOrProxy = ip2Info.isVPN || ip2Info.isProxy || ip2Info.isTor;
-		const anyVpnOrProxy = ip1IsVpnOrProxy || ip2IsVpnOrProxy;
-
-		// Build coordinate objects if available
 		const ip1Coordinates =
 			ip1Info.latitude !== undefined && ip1Info.longitude !== undefined
 				? { latitude: ip1Info.latitude, longitude: ip1Info.longitude }
@@ -157,6 +130,15 @@ export async function compareIPs(
 			ip2Info.latitude !== undefined && ip2Info.longitude !== undefined
 				? { latitude: ip2Info.latitude, longitude: ip2Info.longitude }
 				: undefined;
+
+		const distanceKm: number | undefined =
+			ip1Coordinates && ip2Coordinates
+				? getDistance(ip1Coordinates, ip2Coordinates) / 1000
+				: undefined;
+
+		const ip1IsVpnOrProxy = ip1Info.isVPN || ip1Info.isProxy || ip1Info.isTor;
+		const ip2IsVpnOrProxy = ip2Info.isVPN || ip2Info.isProxy || ip2Info.isTor;
+		const anyVpnOrProxy = ip1IsVpnOrProxy || ip2IsVpnOrProxy;
 
 		return {
 			ipsMatch: false,

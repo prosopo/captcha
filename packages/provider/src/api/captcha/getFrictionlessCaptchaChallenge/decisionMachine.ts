@@ -107,94 +107,62 @@ export const runDecisionMachine = async (
 	const { req, res } = handle;
 	let { botScore, scoreComponents } = input;
 
+	const serveImageCaptcha = async (
+		decision: string,
+		reason: FrictionlessReason,
+		solvedImagesCount: number,
+	): Promise<Response> => {
+		req.logger.info(() => ({
+			msg: "Frictionless decision",
+			data: {
+				decision,
+				captchaType: CaptchaType.image,
+			},
+		}));
+		recordFrictionlessDecision(decision);
+		attachHoneypot(res, clientRecord);
+		return res.json(
+			await tasks.frictionlessManager.sendImageCaptcha({
+				solvedImagesCount,
+				userSitekeyIpHash,
+				reason,
+				siteKey: dapp,
+				ipInfo,
+				headers: flatHeaders,
+			}),
+		);
+	};
+
 	// An absent payload is never a pass. A client that ran no detector — for any
 	// reason, self-reported or not — has told us nothing about itself, so it
 	// solves an image captcha. Only the provider itself can skip detection
 	// (maintenance mode, empty bundle pool), and both do so before this point.
 	if (!input.token) {
-		req.logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "missing_token",
-				captchaType: CaptchaType.image,
-			},
-		}));
-		recordFrictionlessDecision("missing_token");
-		attachHoneypot(res, clientRecord);
-		return res.json(
-			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: clampImageRounds(
-					MISSING_TOKEN_IMAGE_ROUNDS,
-					clientRecord.settings,
-				),
-				userSitekeyIpHash,
-				reason: FrictionlessReason.MISSING_TOKEN,
-				siteKey: dapp,
-				ipInfo,
-				headers: flatHeaders,
-			}),
+		return serveImageCaptcha(
+			"missing_token",
+			FrictionlessReason.MISSING_TOKEN,
+			clampImageRounds(MISSING_TOKEN_IMAGE_ROUNDS, clientRecord.settings),
 		);
 	}
 
 	if (!input.headHash) {
-		req.logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "missing_head_hash",
-				captchaType: CaptchaType.image,
-			},
-		}));
-		recordFrictionlessDecision("missing_head_hash");
-		attachHoneypot(res, clientRecord);
-		return res.json(
-			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: clampImageRounds(
-					MISSING_HEAD_HASH_IMAGE_ROUNDS,
-					clientRecord.settings,
-				),
-				userSitekeyIpHash,
-				reason: FrictionlessReason.MISSING_HEAD_HASH,
-				siteKey: dapp,
-				ipInfo,
-				headers: flatHeaders,
-			}),
+		return serveImageCaptcha(
+			"missing_head_hash",
+			FrictionlessReason.MISSING_HEAD_HASH,
+			clampImageRounds(MISSING_HEAD_HASH_IMAGE_ROUNDS, clientRecord.settings),
 		);
 	}
 
-	// A payload we couldn't decrypt tells us nothing about the client — it is
-	// not evidence of a bot, it is absence of evidence. Handle it explicitly and
-	// first, before any check that reads a decrypted field.
-	//
-	// This has to precede the user-agent check specifically. `decryptPayload`
-	// leaves `userAgent` and `userId` undefined on failure, so the comparison
-	// below is a real hash against `undefined` — it can never match, and every
-	// undecryptable session was being reported as USER_AGENT_MISMATCH and sized
-	// by `timestampDecayFunction`'s decryption-failed arm (6 rounds). Behind
-	// that sat two more accidents waiting on the synthetic `baseBotScore = 1` /
-	// `timestamp = 0`: a hard 401 on any sitekey with `autoBanScoreThreshold`
-	// set, and the old-timestamp branch. None of the three was meant for this.
+	// A payload we couldn't decrypt is absence of evidence, not evidence of a
+	// bot, so it must be handled before any check that reads a decrypted field.
+	// On failure `decryptPayload` leaves `userAgent` / `userId` undefined and
+	// synthesises `baseBotScore = 1` / `timestamp = 0`, which would otherwise
+	// trip the user-agent mismatch, autoBan and old-timestamp gates below.
 	if (input.decryptionFailed) {
-		req.logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "decryption_failed",
-				captchaType: CaptchaType.image,
-			},
-		}));
-		recordFrictionlessDecision("decryption_failed");
-		attachHoneypot(res, clientRecord);
-		return res.json(
-			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: clampImageRounds(
-					DECRYPTION_FAILED_IMAGE_ROUNDS,
-					clientRecord.settings,
-				),
-				userSitekeyIpHash,
-				reason: FrictionlessReason.DECRYPTION_FAILED,
-				siteKey: dapp,
-				ipInfo,
-				headers: flatHeaders,
-			}),
+		return serveImageCaptcha(
+			"decryption_failed",
+			FrictionlessReason.DECRYPTION_FAILED,
+			clampImageRounds(DECRYPTION_FAILED_IMAGE_ROUNDS, clientRecord.settings),
 		);
 	}
 
@@ -257,55 +225,27 @@ export const runDecisionMachine = async (
 	}
 
 	if (webViewTripped) {
-		req.logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "webview_detected",
-				captchaType: CaptchaType.image,
-			},
-		}));
-		recordFrictionlessDecision("webview_detected");
-		attachHoneypot(res, clientRecord);
-		return res.json(
-			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: clampImageRounds(
-					env.config.captchas.solved.count * 2,
-					clientRecord.settings,
-				),
-				userSitekeyIpHash,
-				reason: FrictionlessReason.WEBVIEW_DETECTED,
-				siteKey: dapp,
-				ipInfo,
-				headers: flatHeaders,
-			}),
+		return serveImageCaptcha(
+			"webview_detected",
+			FrictionlessReason.WEBVIEW_DETECTED,
+			clampImageRounds(
+				env.config.captchas.solved.count * 2,
+				clientRecord.settings,
+			),
 		);
 	}
 
 	if (timestampTripped) {
-		req.logger.info(() => ({
-			msg: "Frictionless decision",
-			data: {
-				decision: "timestamp_too_old",
-				captchaType: CaptchaType.image,
-			},
-		}));
-		recordFrictionlessDecision("timestamp_too_old");
-		attachHoneypot(res, clientRecord);
-		return res.json(
-			await tasks.frictionlessManager.sendImageCaptcha({
-				solvedImagesCount: clampImageRounds(
-					timestampDecayFunction(
-						input.timestamp,
-						clientRecord.settings.imageMaxRounds,
-					),
-					clientRecord.settings,
+		return serveImageCaptcha(
+			"timestamp_too_old",
+			FrictionlessReason.OLD_TIMESTAMP,
+			clampImageRounds(
+				timestampDecayFunction(
+					input.timestamp,
+					clientRecord.settings.imageMaxRounds,
 				),
-				userSitekeyIpHash,
-				reason: FrictionlessReason.OLD_TIMESTAMP,
-				siteKey: dapp,
-				ipInfo,
-				headers: flatHeaders,
-			}),
+				clientRecord.settings,
+			),
 		);
 	}
 
@@ -322,11 +262,6 @@ export const runDecisionMachine = async (
 		clientRecord.settings,
 	);
 
-	// Middle rung of the ladder: "not clean enough for a silent PoW" is split
-	// in two, so merely suspicious sessions drag a puzzle and only the ones
-	// past the upper rung are handed an image captcha. A sitekey that puts
-	// both rungs on the same value collapses the band and keeps the original
-	// two outcomes.
 	const botImageThreshold = input.botImageThreshold;
 	if (
 		botImageThreshold > input.botThreshold &&

@@ -58,6 +58,28 @@ const getSessionIDPrefix = (host?: string): string => {
 	return host ? host.replace(".prosopo.io", "") : "local";
 };
 
+// Awaited (not fire-and-forget): the next request from this client consumes
+// the session and `await`s its Redis invalidation. A cache write landing after
+// that invalidation would leave the stale entry resolving to a Mongo-deleted
+// row for the rest of the TTL.
+const cacheSessionRecord = async (
+	writeQueue: CaptchaManager["writeQueue"],
+	sessionRecord: Session,
+	userSitekeyIpHash: string | undefined,
+): Promise<void> => {
+	if (!writeQueue) return;
+	const cacheData = sessionRecord as unknown as Record<string, unknown>;
+	const cachePromises: Promise<boolean>[] = [
+		writeQueue.cacheSession(sessionRecord.sessionId, cacheData),
+	];
+	if (userSitekeyIpHash) {
+		cachePromises.push(
+			writeQueue.cacheSessionByHash(userSitekeyIpHash, sessionRecord.sessionId),
+		);
+	}
+	await Promise.all(cachePromises).catch(() => {});
+};
+
 export { FrictionlessReason };
 
 export interface ImageCaptchaSessionParams extends Session {}
@@ -105,7 +127,6 @@ export class FrictionlessManager extends CaptchaManager {
 		usageCounters?: UsageCounters | null,
 	) {
 		super(db, pair, config, logger, writeQueue);
-		this.config = config;
 		this.decisionMachineRunner =
 			decisionMachineRunner ?? new DecisionMachineRunner(db);
 		this.usageCounters = usageCounters ?? null;
@@ -122,8 +143,7 @@ export class FrictionlessManager extends CaptchaManager {
 
 	/**
 	 * Evaluate the configured routing machine without going through
-	 * `sendCaptcha`. Returns the supplied baseline on any failure (no machine,
-	 * machine throws, counter fetch failure), matching applyRouter's contract.
+	 * `sendCaptcha`. Same fallback-to-baseline contract as `applyRouter`.
 	 */
 	async applyRoutingMachine(
 		baseline: RoutingMachineBaseline,
@@ -211,9 +231,8 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	async createSession(input: CreateSessionInput): Promise<Session> {
-		// Destructured rather than spread: this list is the set of fields a
-		// session record is built from, so anything else on `input` is ignored
-		// exactly as it was when these were positional parameters.
+		// Destructured rather than spread so that only these fields reach the
+		// session record; anything else on `input` is ignored.
 		const {
 			token,
 			score,
@@ -340,26 +359,7 @@ export class FrictionlessManager extends CaptchaManager {
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
-
-		// Awaited (not fire-and-forget): the next request from this client
-		// consumes the session and `await`s its Redis invalidation. A cache
-		// write landing after that invalidation would leave the stale entry
-		// resolving to a Mongo-deleted row for the rest of the TTL.
-		if (this.writeQueue) {
-			const cacheData = sessionRecord as unknown as Record<string, unknown>;
-			const cachePromises: Promise<boolean>[] = [
-				this.writeQueue.cacheSession(sessionRecord.sessionId, cacheData),
-			];
-			if (userSitekeyIpHash) {
-				cachePromises.push(
-					this.writeQueue.cacheSessionByHash(
-						userSitekeyIpHash,
-						sessionRecord.sessionId,
-					),
-				);
-			}
-			await Promise.all(cachePromises).catch(() => {});
-		}
+		await cacheSessionRecord(this.writeQueue, sessionRecord, userSitekeyIpHash);
 
 		return sessionRecord;
 	}
@@ -407,22 +407,7 @@ export class FrictionlessManager extends CaptchaManager {
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);
-
-		if (this.writeQueue) {
-			const cacheData = sessionRecord as unknown as Record<string, unknown>;
-			const cachePromises: Promise<boolean>[] = [
-				this.writeQueue.cacheSession(sessionRecord.sessionId, cacheData),
-			];
-			if (userSitekeyIpHash) {
-				cachePromises.push(
-					this.writeQueue.cacheSessionByHash(
-						userSitekeyIpHash,
-						sessionRecord.sessionId,
-					),
-				);
-			}
-			await Promise.all(cachePromises).catch(() => {});
-		}
+		await cacheSessionRecord(this.writeQueue, sessionRecord, userSitekeyIpHash);
 
 		return sessionRecord;
 	}
@@ -469,10 +454,6 @@ export class FrictionlessManager extends CaptchaManager {
 				status: "API.AUTHENTICATED_IP_MISMATCH",
 			};
 		}
-		// Shared helper so the authenticated flow can't drift from the other
-		// captcha types: a site that doesn't opt in to correlation is a no-op,
-		// anything else — including "supplied but nothing recorded" — is a
-		// mismatch.
 		if (
 			isClientSessionMismatch(
 				clientSessionId,
@@ -575,9 +556,8 @@ export class FrictionlessManager extends CaptchaManager {
 				: undefined;
 		// A router that overrode the captcha type is the more specific
 		// explanation of what was served, so its reason wins over the one the
-		// score ladder left on the session params. Resolved here rather than
-		// beside its use on the session record below, because the puzzle
-		// overrides need it to tell an escalation from a missing measurement.
+		// score ladder left on the session params. The puzzle overrides below
+		// need it to tell an escalation from a missing measurement.
 		const finalReason =
 			(routed.reason as FrictionlessReason | undefined) ??
 			(effectiveParams.reason as FrictionlessReason | undefined);
@@ -590,8 +570,6 @@ export class FrictionlessManager extends CaptchaManager {
 		const finalPuzzleOverrides: Pick<Session, "puzzleTolerance" | "puzzle"> =
 			finalCaptchaType === CaptchaType.puzzle
 				? (() => {
-						// The site's own ceiling on automatic escalation; 0 pins the
-						// level to 0 so its configured puzzle settings render every time.
 						const maxLevel =
 							this.routingContext?.puzzleMaxDifficulty ??
 							puzzleMaxDifficultyDefault;
@@ -794,7 +772,7 @@ export class FrictionlessManager extends CaptchaManager {
 	/**
 	 * A single deterministic decrypt with the session's own RSA keypair + inner
 	 * cipher config, resolved from the `detectorSessionId → bundleId` Redis
-	 * binding. There is no legacy key pool: if the binding can't be resolved the
+	 * binding. If the binding can't be resolved there are no attempts and the
 	 * caller fails closed (score treated as bot ⇒ PoW).
 	 */
 	async resolveDecryptAttempts(detectorSessionId?: string): Promise<{
@@ -845,12 +823,12 @@ export class FrictionlessManager extends CaptchaManager {
 		let entropyWallClockOffsetMs: number | undefined;
 		let entropyMathRandomFirst: number | undefined;
 		let g: string | undefined;
-		let ii: boolean | undefined;
-		let cvv: number | undefined;
-		let sqq: number | undefined;
-		let cgg: string | undefined;
-		let smm: string | undefined;
-		let bb: Record<string, string[]> | undefined;
+		let i: boolean | undefined;
+		let cv: number | undefined;
+		let sq: number | undefined;
+		let cg: string | undefined;
+		let sm: string | undefined;
+		let b: Record<string, string[]> | undefined;
 		let sw: boolean | undefined;
 		let md: boolean | undefined;
 		let bn: boolean | undefined;
@@ -870,76 +848,54 @@ export class FrictionlessManager extends CaptchaManager {
 					attempt.innerConfig,
 				);
 				decryptedHeadHash = decrypted.decryptedHeadHash || "";
-				const s = decrypted.baseBotScore;
-				const t = decrypted.timestamp;
-				const a = decrypted.userId;
-				const u = decrypted.userAgent;
-				const w = decrypted.isWebView;
-				const i = decrypted.isIframe;
-				const td = decrypted.triggeredDetectors;
-				const sd = decrypted.shadowDomPenalty;
-				const ef = decrypted.entropyMathRandomFingerprint;
-				const ec = decrypted.entropyCryptoFingerprint;
-				const eo = decrypted.entropyWallClockOffsetMs;
-				const em = decrypted.entropyMathRandomFirst;
-				const gv = decrypted.g;
-				const iv = decrypted.i;
-				const cvv2 = decrypted.cv;
-				const sqq2 = decrypted.sq;
-				const cgg2 = decrypted.cg;
-				const smm2 = decrypted.sm;
-				const bv = decrypted.b;
-				const swv = decrypted.sw;
-				const mdv = decrypted.md;
-				const bnv = decrypted.bn;
-				const fsv = decrypted.fs;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
 						key: this.redactKeyForLogging(attempt.key),
-						baseBotScore: s,
-						timestamp: t,
-						userId: a,
-						userAgent: u,
-						webView: w,
-						iFrame: i,
-						triggeredDetectors: td,
-						shadowDomPenalty: sd,
-						entropyMathRandomFingerprint: ef,
-						entropyCryptoFingerprint: ec,
-						entropyWallClockOffsetMs: eo,
-						entropyMathRandomFirst: em,
-						sw: swv,
-						md: mdv,
-						bn: bnv,
-						fs: fsv,
+						baseBotScore: decrypted.baseBotScore,
+						timestamp: decrypted.timestamp,
+						userId: decrypted.userId,
+						userAgent: decrypted.userAgent,
+						webView: decrypted.isWebView,
+						iFrame: decrypted.isIframe,
+						triggeredDetectors: decrypted.triggeredDetectors,
+						shadowDomPenalty: decrypted.shadowDomPenalty,
+						entropyMathRandomFingerprint:
+							decrypted.entropyMathRandomFingerprint,
+						entropyCryptoFingerprint: decrypted.entropyCryptoFingerprint,
+						entropyWallClockOffsetMs: decrypted.entropyWallClockOffsetMs,
+						entropyMathRandomFirst: decrypted.entropyMathRandomFirst,
+						sw: decrypted.sw,
+						md: decrypted.md,
+						bn: decrypted.bn,
+						fs: decrypted.fs,
 					},
 				}));
-				baseBotScore = s;
-				timestamp = t;
-				userId = a;
-				userAgent = u;
-				webView = w;
-				iFrame = i;
-				triggeredDetectors = td;
-				shadowDomPenalty = sd;
-				entropyMathRandomFingerprint = ef;
-				entropyCryptoFingerprint = ec;
-				entropyWallClockOffsetMs = eo;
-				entropyMathRandomFirst = em;
-				g = gv;
-				ii = iv;
-				cvv = cvv2;
-				sqq = sqq2;
-				cgg = cgg2;
-				smm = smm2;
-				bb = bv;
-				sw = swv;
-				md = mdv;
-				bn = bnv;
-				fs = fsv;
+				baseBotScore = decrypted.baseBotScore;
+				timestamp = decrypted.timestamp;
+				userId = decrypted.userId;
+				userAgent = decrypted.userAgent;
+				webView = decrypted.isWebView;
+				iFrame = decrypted.isIframe;
+				triggeredDetectors = decrypted.triggeredDetectors;
+				shadowDomPenalty = decrypted.shadowDomPenalty;
+				entropyMathRandomFingerprint = decrypted.entropyMathRandomFingerprint;
+				entropyCryptoFingerprint = decrypted.entropyCryptoFingerprint;
+				entropyWallClockOffsetMs = decrypted.entropyWallClockOffsetMs;
+				entropyMathRandomFirst = decrypted.entropyMathRandomFirst;
+				g = decrypted.g;
+				i = decrypted.i;
+				cv = decrypted.cv;
+				sq = decrypted.sq;
+				cg = decrypted.cg;
+				sm = decrypted.sm;
+				b = decrypted.b;
+				sw = decrypted.sw;
+				md = decrypted.md;
+				bn = decrypted.bn;
+				fs = decrypted.fs;
 				break;
-			} catch (err) {
+			} catch {
 				if (keyIndex === decryptKeys.length - 1) {
 					this.logger.warn(() => ({
 						msg: "Error decrypting score: no more keys to try",
@@ -956,9 +912,7 @@ export class FrictionlessManager extends CaptchaManager {
 			baseBotScore === undefined || Number.isNaN(baseBotScore);
 		const timestampUndefined =
 			timestamp === undefined || Number.isNaN(timestamp);
-		const undefinedCount =
-			Number(baseBotScoreUndefined) + Number(timestampUndefined);
-		if (undefinedCount > 0) {
+		if (baseBotScoreUndefined || timestampUndefined) {
 			this.logger.error(() => ({
 				msg: "Error decrypting score: baseBotScore or timestamp is undefined",
 			}));
@@ -970,8 +924,8 @@ export class FrictionlessManager extends CaptchaManager {
 		this.logger.info(() => ({
 			msg: "decryptPayload result",
 			data: {
-				baseBotScore: baseBotScore,
-				timestamp: timestamp,
+				baseBotScore,
+				timestamp,
 				userId,
 				userAgent,
 				webView,
@@ -1002,12 +956,12 @@ export class FrictionlessManager extends CaptchaManager {
 			entropyWallClockOffsetMs,
 			entropyMathRandomFirst,
 			g,
-			i: ii,
-			cv: cvv,
-			sq: sqq,
-			cg: cgg,
-			sm: smm,
-			b: bb,
+			i,
+			cv,
+			sq,
+			cg,
+			sm,
+			b,
 			sw,
 			md,
 			bn,
