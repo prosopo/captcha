@@ -1605,6 +1605,11 @@ export class ProviderDatabase
 						serverChecked: 1,
 						userSubmitted: 1,
 						coords: 1,
+						// The shared verify pipeline correlates the dapp server's
+						// clientSessionId against this. Leaving it out of the
+						// projection reads as "no session recorded", which rejects
+						// every verify that sends one with CLIENT_SESSION_MISMATCH.
+						clientMetaData: 1,
 					} as { [key in keyof Partial<AudioCaptchaRecord>]: 1 })
 					.lean<AudioCaptchaRecord>();
 			if (record) {
@@ -1704,6 +1709,49 @@ export class ProviderDatabase
 			this.logger.error(() => ({
 				err: err,
 				msg: "Failed to retrieve IconOrderCaptcha record",
+			}));
+			throw err;
+		}
+	}
+
+	/**
+	 * Atomically take the single submission an audio challenge allows.
+	 *
+	 * The filter is the guard: `userSubmitted: { $ne: true }` matches only a
+	 * record nobody has claimed, so of N concurrent submitters exactly one sees
+	 * `modifiedCount === 1`. A read-then-check would let all N through the gap
+	 * between the read and the write, and each would come back with a verdict —
+	 * enough to enumerate a five-digit answer.
+	 *
+	 * `submittedAtTimestamp` is stamped here rather than left to
+	 * `updateAudioCaptchaRecordResult` so the claim is self-contained: the
+	 * record is consistent even if the caller dies before writing a result.
+	 */
+	async claimAudioCaptchaSubmission(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		const tables = this.getTables();
+		try {
+			const claim = await tables.audiocaptcha.updateOne(
+				{ challenge, userSubmitted: { $ne: true } },
+				{ $set: { userSubmitted: true, submittedAtTimestamp: new Date() } },
+			);
+			const won = claim.modifiedCount === 1;
+			this.logger.info(() => ({
+				data: { challenge, won },
+				msg: won
+					? "AudioCaptcha submission claimed"
+					: "AudioCaptcha submission already claimed",
+			}));
+			return won;
+		} catch (error) {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+				context: { error, challenge },
+				logger: this.logger,
+			});
+			this.logger.error(() => ({
+				err: err,
+				msg: "Failed to claim AudioCaptcha submission",
 			}));
 			throw err;
 		}

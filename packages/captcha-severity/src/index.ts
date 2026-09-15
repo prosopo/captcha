@@ -105,14 +105,11 @@ const CAPTCHA_TYPE_TIER: Record<string, number> = {
 	// than one drag. Below image, and a whole tier below it, so no intra-tier
 	// component can lift an icon-order policy over an image one.
 	iconOrder: 4 * TIER_GAP,
+	// No `audio` entry, on purpose. Audio is not a type anything selects —
+	// it is only served as the accessibility alternative a user picks from a
+	// visual challenge — so it has no place in a strictness contest and ranks
+	// 0 like any unrecognised value.
 	puzzle: 3 * TIER_GAP,
-	// Audio shares the puzzle tier rather than sitting above it. Severity
-	// ranks how demanding a challenge is on the user, and audio is a
-	// different modality at comparable effort, not a harsher challenge.
-	// Ranking it top would let a single Restrict-to-audio rule or traffic
-	// category win every tie and quietly turn an accessibility affordance
-	// into the default challenge.
-	audio: 3 * TIER_GAP,
 	pow: 2 * TIER_GAP,
 	frictionless: 1 * TIER_GAP,
 };

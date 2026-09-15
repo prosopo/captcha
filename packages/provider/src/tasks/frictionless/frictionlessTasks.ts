@@ -46,6 +46,7 @@ import {
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
 import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
+import { isAudioAlternativeSessionType } from "../audioAlternative.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { coerceToEnabledCaptchaType } from "../captchaTypeSelection.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
@@ -65,8 +66,6 @@ export interface ImageCaptchaSessionParams extends Session {}
 export interface PowCaptchaSessionParams extends Session {}
 
 export interface PuzzleCaptchaSessionParams extends Session {}
-
-export interface AudioCaptchaSessionParams extends Session {}
 
 /**
  * Everything a caller supplies when minting a session. `sessionId` and
@@ -523,12 +522,6 @@ export class FrictionlessManager extends CaptchaManager {
 		return this.sendCaptcha(CaptchaType.puzzle, params);
 	}
 
-	async sendAudioCaptcha(
-		params?: Partial<AudioCaptchaSessionParams>,
-	): Promise<GetFrictionlessCaptchaResponse> {
-		return this.sendCaptcha(CaptchaType.audio, params);
-	}
-
 	async sendIconOrderCaptcha(
 		params?: Partial<Session>,
 	): Promise<GetFrictionlessCaptchaResponse> {
@@ -543,7 +536,6 @@ export class FrictionlessManager extends CaptchaManager {
 			| CaptchaType.image
 			| CaptchaType.pow
 			| CaptchaType.puzzle
-			| CaptchaType.audio
 			| CaptchaType.iconOrder,
 		params?: Partial<Session>,
 	): Promise<GetFrictionlessCaptchaResponse> {
@@ -714,10 +706,8 @@ export class FrictionlessManager extends CaptchaManager {
 			[ApiParams.status]: "ok",
 			dns_url: buildDnsEventUrl(sessionRecord.sessionId),
 			// Only advertised when the challenge actually has something to
-			// switch away from. Offering "listen instead" on an audio
-			// challenge is nonsense, and PoW has no UI to hang it off.
-			...((finalCaptchaType === CaptchaType.image ||
-				finalCaptchaType === CaptchaType.puzzle) &&
+			// switch away from: PoW has no UI to hang the control off.
+			...(isAudioAlternativeSessionType(finalCaptchaType) &&
 				this.audioAlternativeAvailable && {
 					audioAlternativeAvailable: true,
 				}),

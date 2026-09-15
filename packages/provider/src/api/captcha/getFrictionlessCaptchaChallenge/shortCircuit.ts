@@ -182,10 +182,6 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 			return res.json(
 				await input.tasks.frictionlessManager.sendPuzzleCaptcha(sessionParams),
 			);
-		case CaptchaType.audio:
-			return res.json(
-				await input.tasks.frictionlessManager.sendAudioCaptcha(sessionParams),
-			);
 		case CaptchaType.iconOrder:
 			return res.json(
 				await input.tasks.frictionlessManager.sendIconOrderCaptcha(

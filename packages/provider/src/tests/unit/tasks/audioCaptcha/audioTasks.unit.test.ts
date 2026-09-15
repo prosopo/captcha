@@ -17,7 +17,9 @@ import { ProsopoApiError } from "@prosopo/common";
 import {
 	type AudioCaptchaStored,
 	CaptchaStatus,
+	CaptchaType,
 	type ClientMetaData,
+	DecisionMachineDecision,
 	type KeyringPair,
 	POW_SEPARATOR,
 	type PoWChallengeId,
@@ -89,8 +91,9 @@ describe("AudioCaptchaManager", () => {
 	let mockEnv: ProviderEnvironment;
 	let originalDecide: DecideFn | undefined;
 
-	// The decisionMachineRunner is a private field on AudioCaptchaManager; the
-	// cast lets the test stub it without making it public on the class.
+	// The decisionMachineRunner is a protected field on the shared
+	// InteractiveCaptchaManager base; the cast lets the test stub it without
+	// making it public on the class.
 	const decisionMachineHandle = () =>
 		audioCaptchaManager as unknown as {
 			decisionMachineRunner: { decide: DecideFn };
@@ -112,6 +115,9 @@ describe("AudioCaptchaManager", () => {
 		db = {
 			storeAudioCaptchaRecord: vi.fn(),
 			getAudioCaptchaRecordByChallenge: vi.fn(),
+			// Default to winning the claim: every test but the re-submission
+			// ones is the first and only submitter for its challenge.
+			claimAudioCaptchaSubmission: vi.fn().mockResolvedValue(true),
 			updateAudioCaptchaRecord: vi.fn(),
 			updateAudioCaptchaRecordResult: vi.fn(),
 			getClientRecord: vi.fn(),
@@ -134,6 +140,7 @@ describe("AudioCaptchaManager", () => {
 		audioCaptchaManager = new AudioCaptchaManager(db, pair, mockEnv.config);
 
 		vi.clearAllMocks();
+		vi.mocked(db.claimAudioCaptchaSubmission).mockResolvedValue(true);
 		vi.mocked(u8aToHex).mockReturnValue("0xsigned");
 		vi.mocked(stringToHex).mockImplementation((s) => `0xhex:${s}`);
 		vi.mocked(verifyRecency).mockReturnValue(true);
@@ -368,11 +375,47 @@ describe("AudioCaptchaManager", () => {
 			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
 				pendingRecord(a, { userSubmitted: true }),
 			);
+			vi.mocked(db.claimAudioCaptchaSubmission).mockResolvedValue(false);
 
 			// The answer space is small enough that repeated attempts against
 			// a single challenge would matter.
 			await expect(submit(a, "96475")).resolves.toBe(false);
 			expect(db.updateAudioCaptchaRecordResult).not.toHaveBeenCalled();
+		});
+
+		// The claim is what makes the challenge single-use, so a losing claim
+		// has to stop the request even when the record still reads unsubmitted
+		// — which is exactly the state a concurrent submitter sees.
+		it("grades nothing when it loses the claim on an unsubmitted record", async () => {
+			const a = buildArgs();
+			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
+				pendingRecord(a, { userSubmitted: false }),
+			);
+			vi.mocked(db.claimAudioCaptchaSubmission).mockResolvedValue(false);
+
+			// The correct answer: it must still be refused.
+			await expect(submit(a, "96475")).resolves.toBe(false);
+			expect(db.updateAudioCaptchaRecordResult).not.toHaveBeenCalled();
+			expect(db.updateAudioCaptchaRecord).not.toHaveBeenCalled();
+		});
+
+		it("claims the submission before grading it", async () => {
+			const a = buildArgs();
+			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
+				pendingRecord(a, { userSubmitted: false }),
+			);
+
+			await submit(a, "96475");
+
+			expect(db.claimAudioCaptchaSubmission).toHaveBeenCalledTimes(1);
+			expect(db.claimAudioCaptchaSubmission).toHaveBeenCalledWith(a.challenge);
+			const claimOrder = vi
+				.mocked(db.claimAudioCaptchaSubmission)
+				.mock.invocationCallOrder.at(0);
+			const gradeOrder = vi
+				.mocked(db.updateAudioCaptchaRecordResult)
+				.mock.invocationCallOrder.at(0);
+			expect(claimOrder).toBeLessThan(gradeOrder ?? Number.POSITIVE_INFINITY);
 		});
 
 		it("will not let a replay of a correct answer pass either", async () => {
@@ -383,6 +426,7 @@ describe("AudioCaptchaManager", () => {
 					result: { status: CaptchaStatus.approved },
 				}),
 			);
+			vi.mocked(db.claimAudioCaptchaSubmission).mockResolvedValue(false);
 
 			await expect(submit(a, "96475")).resolves.toBe(false);
 		});
@@ -637,6 +681,74 @@ describe("AudioCaptchaManager", () => {
 			const result = await invoke(challenge, DAPP_ACCOUNT, "jti-1");
 
 			expect(result.verified).toBe(true);
+		});
+
+		// The shared pipeline returns the linked session on success so the
+		// dapp server can correlate the verdict; the hand-rolled audio copy
+		// dropped it.
+		it("returns the linked session id on a successful verify", async () => {
+			const challenge = "14___u___dappAccount";
+			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
+				asAudioRecord({
+					challenge: challenge as PoWChallengeId,
+					dappAccount: DAPP_ACCOUNT,
+					userAccount: "user",
+					answer: "96475",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+					sessionId: "session-1",
+				}),
+			);
+			vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(undefined);
+			mockDecisionMachine(
+				vi.fn().mockResolvedValue({
+					decision: "allow",
+					reason: undefined,
+					score: 1,
+				}),
+			);
+
+			const result = await invoke(challenge, DAPP_ACCOUNT, undefined);
+
+			expect(result).toEqual(
+				expect.objectContaining({ verified: true, sessionId: "session-1" }),
+			);
+		});
+
+		it("hands the decision machine the site's traffic policies", async () => {
+			const challenge = "15___u___dappAccount";
+			const decide = vi.fn<DecideFn>().mockResolvedValue({
+				decision: DecisionMachineDecision.Allow,
+				reason: undefined,
+				score: 1,
+			});
+			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
+				asAudioRecord({
+					challenge: challenge as PoWChallengeId,
+					dappAccount: DAPP_ACCOUNT,
+					userAccount: "user",
+					answer: "96475",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+					audioEvents: [{ kind: "play", t: 1 }],
+					replays: 2,
+				}),
+			);
+			mockDecisionMachine(decide);
+
+			await invoke(challenge, DAPP_ACCOUNT, undefined);
+
+			const [input] = decide.mock.calls[0] ?? [];
+			expect(input).toEqual(
+				expect.objectContaining({
+					captchaType: CaptchaType.audio,
+					audioEvents: [{ kind: "play", t: 1 }],
+					audioReplays: 2,
+				}),
+			);
+			expect(input).toHaveProperty("trafficPolicies");
 		});
 
 		it("rejects with CLIENT_SESSION_MISMATCH when the ids differ", async () => {

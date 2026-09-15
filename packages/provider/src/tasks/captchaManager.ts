@@ -17,7 +17,7 @@ import type { TranslationKey } from "@prosopo/locale";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	ApiParams,
-	type CaptchaType,
+	CaptchaType,
 	type CompositeIpAddress,
 	type EnrichedDnsEvent,
 	type IPInfoResponse,
@@ -32,7 +32,6 @@ import {
 	TrafficFilterAction,
 } from "@prosopo/types";
 import type {
-	AudioCaptchaRecord,
 	ClientRecord,
 	IProviderDatabase,
 	IUserDataSlim,
@@ -53,6 +52,7 @@ import {
 	normalizeHeadersForMatching,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
+import { isAudioAlternativeAllowed } from "./audioAlternative.js";
 import { getDetectorBundlePool } from "./detection/bundlePool.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
@@ -609,8 +609,18 @@ export class CaptchaManager {
 				}
 			}
 
-			// Check the captcha type of the session is the same as the requested captcha type
-			if (sessionRecord.captchaType !== requestedCaptchaType) {
+			// Check the captcha type of the session is the same as the requested
+			// captcha type. The one exception is the audio accessibility
+			// alternative, which is served against the visual session the user
+			// was given — see `isAudioAlternativeAllowed`.
+			if (
+				sessionRecord.captchaType !== requestedCaptchaType &&
+				!isAudioAlternativeAllowed(
+					requestedCaptchaType,
+					sessionRecord.captchaType,
+					clientSettings.settings,
+				)
+			) {
 				this.logger.warn(() => ({
 					msg: "Session captcha type does not match requested type",
 					data: {
@@ -642,6 +652,21 @@ export class CaptchaManager {
 		}
 
 		// No Session ID
+
+		// Audio is only ever served against a visual session, as the
+		// accessibility alternative. With no session there is nothing to
+		// exchange, and no site setting can select audio directly.
+		if (requestedCaptchaType === CaptchaType.audio) {
+			this.logger.warn(() => ({
+				msg: "Sessionless audio captcha request rejected",
+				data: { account: clientSettings.account },
+			}));
+			return {
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: requestedCaptchaType,
+			};
+		}
 
 		// Sessionless request: policy captchaType (if pinned by an active
 		// restrict rule) still takes precedence over the client's configured

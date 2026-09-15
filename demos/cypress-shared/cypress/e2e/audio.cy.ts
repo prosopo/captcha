@@ -13,11 +13,15 @@
 // limitations under the License.
 /// <reference types="cypress" />
 
-// End-to-end proof that the audio captcha works, all the way from
-// challenge issuance to the dapp server's verify call.
+// End-to-end proof that the audio accessibility alternative works, all the
+// way from the visual challenge to the dapp server's verify call.
 //
-// Drives the audio-implicit demo page: fill signup form → click checkbox →
-// audio widget appears → read the answer out of Mongo (Cypress cannot
+// Audio is not a type a site selects: the site key is an image site with
+// `audioAccessibilityEnabled` on, and the only way to audio is the "use audio
+// instead" control on the image challenge. So the flow is: click checkbox →
+// image challenge appears → press the audio control → widget re-runs
+// /frictionless and asks for an audio challenge against the fresh visual
+// session → read the answer out of Mongo (Cypress cannot
 // listen to synthesised speech; see the `audioAnswer` task in
 // cypress.audio.config.js for why this is the honest approach rather than
 // adding a "make anything pass" setting) → type it → widget mints token →
@@ -43,7 +47,8 @@ describe("Audio CAPTCHA — signup", () => {
 			delay = 2000,
 		): Cypress.Chainable => {
 			return cy
-				.registerSiteKey(baseCaptchaType, CaptchaType.audio, {
+				.registerSiteKey(baseCaptchaType, CaptchaType.image, {
+					audioAccessibilityEnabled: true,
 					// Deliberately NOT made easier than production. The whole
 					// point of grading real synthesised speech against a real
 					// transcript is that the test exercises the same path a
@@ -90,8 +95,8 @@ describe("Audio CAPTCHA — signup", () => {
 	});
 
 	after(() => {
-		// Restore the site key to its baseline captcha type so sibling tests
-		// don't inherit audio mode.
+		// Restore the image site key to its baseline so sibling tests start
+		// from a known registration.
 		cy.registerSiteKey(CaptchaType.image).then((response) => {
 			if (response.status === 200) {
 				cy.task("log", "Site key successfully re-registered as image");
@@ -104,7 +109,7 @@ describe("Audio CAPTCHA — signup", () => {
 		});
 	});
 
-	it("audio token verifies via /signup — proves the SDK dispatched to the audio endpoint", () => {
+	it("audio chosen from the image challenge verifies via /signup — proves the SDK dispatched to the audio endpoint", () => {
 		cy.intercept("POST", "/signup").as("signup");
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/audio").as(
 			"audioChallenge",
@@ -114,11 +119,20 @@ describe("Audio CAPTCHA — signup", () => {
 		);
 
 		// Widget renders implicitly. Wait for the "I am human" checkbox and
-		// click it to open the audio challenge.
+		// click it to open the site's visual challenge.
 		getWidgetElement(checkboxClass, { timeout: 15000 })
 			.first()
 			.should("be.visible")
 			.realClick();
+
+		// The image challenge offers the alternative because the site turned
+		// it on. Pressing it is the only route to audio.
+		getWidgetElement('[data-cy="prosopo-audio-alternative"]', {
+			timeout: 15000,
+		})
+			.first()
+			.should("be.visible")
+			.click();
 
 		cy.wait("@audioChallenge", { timeout: 15000 })
 			.its("response")

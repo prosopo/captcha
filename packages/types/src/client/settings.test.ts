@@ -19,6 +19,7 @@ import {
 } from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import {
+	AudioSettingsSchema,
 	ClientSettingsSchema,
 	ContextType,
 	DeviceType,
@@ -29,6 +30,8 @@ import {
 	IPValidationRulesSchema,
 	IconOrderSettingsSchema,
 	SpamFilterRulesSchema,
+	TrafficCategoryPolicySchema,
+	TrafficFilterAction,
 	TrafficFilterSchema,
 	abuseScoreThresholdDefault,
 	captchaTypeDefault,
@@ -186,10 +189,37 @@ describe("ClientSettingsSchema", () => {
 		});
 	});
 
-	it("accepts every captcha type", () => {
+	it("accepts every selectable captcha type", () => {
 		for (const captchaType of Object.values(CaptchaType)) {
+			if (captchaType === CaptchaType.audio) continue;
 			expect(parse({ ...minimal, captchaType }).captchaType).toBe(captchaType);
 		}
+	});
+
+	// Audio is only served as the accessibility alternative a user picks from a
+	// visual challenge, so no site can be configured with it as its type.
+	it("rejects audio as a site's captcha type", () => {
+		expect(
+			ClientSettingsSchema.safeParse({
+				...minimal,
+				captchaType: CaptchaType.audio,
+			}).success,
+		).toBe(false);
+	});
+
+	it("rejects audio as a traffic category's captcha type", () => {
+		expect(
+			TrafficCategoryPolicySchema.safeParse({
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.audio,
+			}).success,
+		).toBe(false);
+		expect(
+			TrafficCategoryPolicySchema.safeParse({
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.image,
+			}).success,
+		).toBe(true);
 	});
 
 	it("rejects an unknown captcha type", () => {
@@ -763,5 +793,52 @@ describe("ClientSettingsSchema icon-order fields", () => {
 		expect(
 			parse({ ...minimal, iconOrderTolerance: 12 }).iconOrderTolerance,
 		).toBe(12);
+	});
+});
+
+describe("AudioSettingsSchema", () => {
+	it("accepts a partial override without restating the defaults", () => {
+		const parsed = AudioSettingsSchema.parse({ digitCount: 6 });
+		expect(parsed.digitCount).toBe(6);
+		expect(parsed.noiseSnrDb).toBeUndefined();
+	});
+
+	// The ceiling is a working-memory limit for a spoken sequence and the
+	// noise floor is where speech stops being followable. Both exist for the
+	// listener, so neither should be loosened in passing.
+	it("bounds the render tunables", () => {
+		expect(() => AudioSettingsSchema.parse({ digitCount: 2 })).toThrow();
+		expect(() => AudioSettingsSchema.parse({ digitCount: 9 })).toThrow();
+		expect(() => AudioSettingsSchema.parse({ noiseSnrDb: 2 })).toThrow();
+		expect(() => AudioSettingsSchema.parse({ babbleGain: 0.7 })).toThrow();
+		expect(() => AudioSettingsSchema.parse({ babbleVoices: 5 })).toThrow();
+		expect(() => AudioSettingsSchema.parse({ reverbMix: 0.7 })).toThrow();
+		expect(() => AudioSettingsSchema.parse({ gapMs: 1501 })).toThrow();
+	});
+});
+
+describe("ClientSettingsSchema audio fields", () => {
+	// The audio challenge is a paid accessibility alternative: a site that
+	// has not opted in must never offer it.
+	it("leaves the accessibility alternative off by default", () => {
+		const parsed = parse(minimal);
+		expect(parsed.audioAccessibilityEnabled).toBe(false);
+		expect(parsed.audio).toBeUndefined();
+	});
+
+	it("keeps an explicit opt-in", () => {
+		expect(
+			parse({ ...minimal, audioAccessibilityEnabled: true })
+				.audioAccessibilityEnabled,
+		).toBe(true);
+	});
+
+	it("keeps a site-wide render override", () => {
+		const parsed = parse({ ...minimal, audio: { digitCount: 4, gapMs: 400 } });
+		expect(parsed.audio).toEqual({ digitCount: 4, gapMs: 400 });
+	});
+
+	it("rejects a render override outside the field bounds", () => {
+		expect(() => parse({ ...minimal, audio: { digitCount: 12 } })).toThrow();
 	});
 });

@@ -26,7 +26,7 @@
  * against. A generator with a continuous parameter space has no such set.
  */
 
-import type { Prng } from "./prng.js";
+import type { Prng } from "@prosopo/puzzle-assets";
 import type { AudioBuffer, Phoneme, Utterance } from "./types.js";
 
 export const SAMPLE_RATE = 16000;
