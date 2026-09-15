@@ -305,20 +305,34 @@ function generateAudioExplanation(
 	isInvisible: boolean,
 ): string {
 	const renderType = isExplicit ? "Explicit" : "Implicit";
-	const codeExample = escapeHtml(`<div
+
+	// Nothing on the page asks for audio. The site key names an image site
+	// with `audioAccessibilityEnabled` turned on, and the widget offers the
+	// switch from inside the image challenge.
+	const codeExample = isExplicit
+		? escapeHtml(`// Import the render function
+import { render } from "%VITE_BUNDLE_URL%"
+
+// Render CAPTCHA
+const widgetId = render(document.getElementById('procaptcha-container'), {
+    siteKey: import.meta.env.PROSOPO_SITE_KEY_AUDIO,
+    callback: handleCaptchaResponse,
+    "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
+});`)
+		: escapeHtml(`<div
     class="procaptcha"
-    data-sitekey="YOUR_SITE_KEY"
     data-theme="light"
+    data-sitekey="%PROSOPO_SITE_KEY_AUDIO%"
     data-failed-callback="onCaptchaFailed"
     data-callback="onCaptchaVerified"${isInvisible ? '\n    data-size="invisible"' : ""}
 ></div>`);
 
 	return `
 	<div class="explanation">
-		<h2>How ${isInvisible ? "Invisible " : ""}Audio CAPTCHA Works (${renderType} Rendering)</h2>
+		<h2>How the ${isInvisible ? "Invisible " : ""}Audio Accessibility Alternative Works (${renderType} Rendering)</h2>
 
 		<h3>Implementation Details</h3>
-		<p>This example demonstrates how to use Procaptcha in audio mode with ${renderType.toLowerCase()} rendering. The user listens to a short clip of spoken digits and types what they hear.</p>
+		<p>Audio is not a captcha type a site selects. It is an accessibility alternative, the way reCAPTCHA offers one: when a site turns on <code>audioAccessibilityEnabled</code>, every visual challenge (image, puzzle and icon order) shows a &ldquo;Use audio instead&rdquo; control. The integration itself is unchanged &mdash; this page renders an ordinary widget with ${renderType.toLowerCase()} rendering.</p>
 		<ol>
 			<li>Import the Procaptcha ${isExplicit ? "render function" : "script"}</li>
 			<li>${escapeHtml(isExplicit ? "Create a container for the CAPTCHA" : "Add a div with the procaptcha class")}</li>
@@ -331,15 +345,15 @@ function generateAudioExplanation(
 
 		<h3>Execution Flow</h3>
 		<ol>
-			<li>On page load, ${escapeHtml(isExplicit ? "the render function is called to initialize" : "Procaptcha scans for elements with the procaptcha class")}</li>
+			<li>The widget opens the site's visual challenge, with the audio control underneath</li>
+			<li>A user who cannot use the visual challenge presses &ldquo;Use audio instead&rdquo;</li>
 			<li>The provider synthesises a clip of spoken digits and sends the audio &mdash; never the transcript</li>
 			<li>The user presses play, listens, and types the digits</li>
-			<li>The provider grades the typed answer against the transcript it kept server-side</li>
-			<li>On successful verification, the form can be submitted with the token</li>
+			<li>The provider grades the typed answer against the transcript it kept server-side, and the form can be submitted with the token</li>
 		</ol>
 
 		<h3>A note on strength</h3>
-		<p>This challenge exists primarily as an <strong>accessibility alternative</strong> for users who cannot complete a visual challenge. Speech recognition solves transcription tasks of this kind readily, so the audio itself is not the security control &mdash; the surrounding signals are. Sites can also enable it as an opt-in alternative offered from the image and puzzle challenges rather than as the primary type.</p>
+		<p>Speech recognition solves transcription tasks of this kind readily, so the audio itself is not the security control &mdash; the surrounding signals are. That is why audio is only ever offered as an alternative a user chooses, and is off unless the site turns it on.</p>
 	</div>
 	`;
 }
