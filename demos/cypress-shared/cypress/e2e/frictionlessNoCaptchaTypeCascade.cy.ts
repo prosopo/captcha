@@ -42,7 +42,7 @@ import "@cypress/xpath";
 import { CaptchaType } from "@prosopo/types";
 
 describe("Frictionless response missing captchaType does not cascade to a pow call", () => {
-	const siteKey: string = Cypress.env(
+	const siteKey: string = Cypress.expose(
 		`PROSOPO_SITE_KEY_${CaptchaType.frictionless.toUpperCase()}`,
 	);
 
@@ -89,7 +89,7 @@ describe("Frictionless response missing captchaType does not cascade to a pow ca
 			req.reply({ statusCode: 500, body: { error: "should-not-be-called" } });
 		}).as("puzzleChallenge");
 
-		cy.visit(Cypress.env("default_page"));
+		cy.visit(Cypress.expose("default_page"));
 		cy.waitForProcaptchaScript();
 
 		cy.wait("@frictionless", { timeout: 15000 })

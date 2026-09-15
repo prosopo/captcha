@@ -41,6 +41,10 @@ export const connectToRedis = (options: RedisOptions): RedisConnection => {
 	const masterClient = createClient({
 		url: options.url,
 		password: options.password,
+		// redis v6 added a 5s default command timeout and raised the keep-alive
+		// delay; keep the v5 values so large FT.AGGREGATE reads are not cut off.
+		socket: { keepAliveInitialDelay: 5000 },
+		commandOptions: { timeout: undefined },
 	});
 
 	masterClient.on("error", (error) => {

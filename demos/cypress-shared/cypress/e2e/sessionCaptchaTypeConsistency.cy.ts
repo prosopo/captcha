@@ -72,7 +72,7 @@ const KEEP_POW_ROUTING_MACHINE = `
 `;
 
 describe("Session captchaType agrees between Mongo and Redis at each stage", () => {
-	const siteKey: string = Cypress.env(
+	const siteKey: string = Cypress.expose(
 		`PROSOPO_SITE_KEY_${CaptchaType.frictionless.toUpperCase()}`,
 	);
 
