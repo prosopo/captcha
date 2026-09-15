@@ -1,6 +1,5 @@
 ---
 "@prosopo/account": patch
-"@prosopo/angular-procaptcha-integration-demo": patch
 "@prosopo/api-express-router": patch
 "@prosopo/captcha-severity": patch
 "@prosopo/cli": patch
