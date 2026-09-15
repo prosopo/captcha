@@ -43,7 +43,7 @@ const FORCE_PUZZLE_ROUTING_MACHINE = `
 
 describe("Post-PoW route() escalation surfaces the puzzle captcha", () => {
 	// The frictionless siteKey from .env. Same one as other suites.
-	const siteKey: string = Cypress.env(
+	const siteKey: string = Cypress.expose(
 		`PROSOPO_SITE_KEY_${CaptchaType.frictionless.toUpperCase()}`,
 	);
 

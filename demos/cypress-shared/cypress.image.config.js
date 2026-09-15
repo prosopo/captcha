@@ -29,10 +29,10 @@ export default defineConfig({
 	screenshotsFolder: "./cypress/snapshots/actual",
 	trashAssetsBeforeRuns: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
-	env: {
+	expose: {
 		...process.env,
 		// For the client-example, the default page is the captcha type. For the client-bundle-example, the default_page
-		// is sometimes passed via --env default_page='/THE_PAGE.html'" inside package.json scripts.
+		// is sometimes passed via --expose default_page='/THE_PAGE.html'" inside package.json scripts.
 		default_page: "/",
 		visualRegressionType: "regression",
 		visualRegressionBaseDirectory: "cypress/snapshots/baseline",

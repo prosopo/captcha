@@ -19,7 +19,7 @@ import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
 
 describe("Captchas", () => {
 	beforeEach(() => {
@@ -49,7 +49,7 @@ describe("Captchas", () => {
 		cy.intercept("/dummy").as("dummy");
 
 		// visit the base URL specified on command line when running cypress
-		return cy.visit(Cypress.env("default_page")).then(() => {
+		return cy.visit(Cypress.expose("default_page")).then(() => {
 			// Wait for the procaptcha script to be loaded
 			// This ensures tests work with both async and non-async script loading
 			cy.waitForProcaptchaScript();
@@ -75,7 +75,7 @@ describe("Captchas", () => {
 	});
 
 	it("Captchas load when 'I am human' is pressed", () => {
-		cy.visit(Cypress.env("default_page"));
+		cy.visit(Cypress.expose("default_page"));
 
 		// Wait for the procaptcha script to be loaded after navigation
 		cy.waitForProcaptchaScript();

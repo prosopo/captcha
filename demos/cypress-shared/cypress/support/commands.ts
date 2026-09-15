@@ -453,7 +453,7 @@ function registerSiteKey(
 	captchaType?: CaptchaType,
 	settingsOverrides?: RegisterSiteKeySettings,
 ) {
-	const siteKey = Cypress.env(
+	const siteKey = Cypress.expose(
 		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
 	);
 	if (!siteKey) {
@@ -468,7 +468,7 @@ function registerSiteKey(
 	);
 
 	return cy.then(() => {
-		const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+		const pair = getPair(Cypress.expose("PROSOPO_PROVIDER_MNEMONIC"));
 		const jwt = pair.jwtIssue();
 		const adminSiteKeyURL = `https://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 
@@ -517,7 +517,7 @@ function registerSiteKey(
 }
 
 function adminJwtAndUrl(path: AdminApiPaths): { url: string; jwt: string } {
-	const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+	const pair = getPair(Cypress.expose("PROSOPO_PROVIDER_MNEMONIC"));
 	return {
 		url: `https://localhost:9229${path}`,
 		jwt: pair.jwtIssue(),
@@ -615,7 +615,7 @@ const ACCESS_RULE_DELETE_ALL_PATH =
 // biome-ignore lint/suspicious/noExplicitAny: rule shape lives in @prosopo/user-access-policy
 function addAccessRules(rules: any[]) {
 	return cy.then(() => {
-		const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+		const pair = getPair(Cypress.expose("PROSOPO_PROVIDER_MNEMONIC"));
 		const jwt = pair.jwtIssue();
 		return cy.request({
 			method: "POST",
@@ -635,7 +635,7 @@ function addAccessRules(rules: any[]) {
 
 function deleteAllAccessRules() {
 	return cy.then(() => {
-		const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+		const pair = getPair(Cypress.expose("PROSOPO_PROVIDER_MNEMONIC"));
 		const jwt = pair.jwtIssue();
 		return cy.request({
 			method: "POST",
