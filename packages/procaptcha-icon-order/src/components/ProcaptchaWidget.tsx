@@ -229,6 +229,16 @@ const Procaptcha = (props: ProcaptchaProps) => {
 					showRetry={showRetry}
 					submitting={iconOrderPhase === "submitting"}
 					theme={theme}
+					audioAlternative={
+						props.audioAlternativeAvailable && props.onRequestAudioAlternative
+							? {
+									onRequestAudio: props.onRequestAudioAlternative,
+									label: isTranslationReady
+										? t("WIDGET.AUDIO_ALTERNATIVE")
+										: "",
+								}
+							: undefined
+					}
 				/>
 			)}
 

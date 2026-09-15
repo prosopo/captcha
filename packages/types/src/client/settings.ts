@@ -17,7 +17,7 @@ import {
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 } from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
-import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
+import { SelectableCaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
 export const captchaTypeDefault = CaptchaType.frictionless;
 export const domainsDefault: string[] = [];
@@ -677,7 +677,7 @@ export const TrafficFilterActionSchema = z.nativeEnum(TrafficFilterAction);
 // are reused verbatim from the site-wide settings so bounds stay in sync.
 export const TrafficCategoryPolicySchema = object({
 	action: TrafficFilterActionSchema,
-	captchaType: CaptchaTypeSpec.optional(),
+	captchaType: SelectableCaptchaTypeSpec.optional(),
 	powDifficulty: powDifficultyFieldSchema.optional(),
 	solvedImagesCount: imageMaxRoundsFieldSchema.optional(),
 	puzzleTolerance: puzzleToleranceFieldSchema.optional(),
@@ -764,7 +764,7 @@ export const HoneypotSettingsSchema = object({
 export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
 
 export const ClientSettingsSchema = object({
-	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
+	captchaType: SelectableCaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
 	// Maximum ms between user submission and the dapp's /verify call.
 	verifiedTimeout: number()
@@ -840,8 +840,9 @@ export const ClientSettingsSchema = object({
 	// Offer the audio challenge as an accessibility alternative from the
 	// image and puzzle widgets.
 	//
-	// Distinct from `captchaType: "audio"`, which makes audio the primary
-	// challenge for every visitor. This flag leaves the primary challenge
+	// This is the only route to the audio challenge. Audio is not a type a
+	// site, access rule or traffic category can select (see
+	// `SelectableCaptchaTypeSchema`), so the flag leaves the primary challenge
 	// alone and adds an opt-in control the user reaches for themselves —
 	// the visual challenge stays the default, and someone who cannot use
 	// it has a route that does not involve contacting support.

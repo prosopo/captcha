@@ -13,8 +13,11 @@
 // limitations under the License.
 
 import { nativeEnum } from "zod";
-import { CaptchaType } from "./captchaType.js";
+import { CaptchaType, SelectableCaptchaTypeSchema } from "./captchaType.js";
 
 const CaptchaTypeSpec = nativeEnum(CaptchaType);
 
-export { CaptchaTypeSpec };
+// See `SelectableCaptchaTypeSchema`: every type except `audio`.
+const SelectableCaptchaTypeSpec = SelectableCaptchaTypeSchema;
+
+export { CaptchaTypeSpec, SelectableCaptchaTypeSpec };

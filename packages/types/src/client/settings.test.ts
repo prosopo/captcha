@@ -30,6 +30,8 @@ import {
 	IPValidationRulesSchema,
 	IconOrderSettingsSchema,
 	SpamFilterRulesSchema,
+	TrafficCategoryPolicySchema,
+	TrafficFilterAction,
 	TrafficFilterSchema,
 	abuseScoreThresholdDefault,
 	captchaTypeDefault,
@@ -187,10 +189,37 @@ describe("ClientSettingsSchema", () => {
 		});
 	});
 
-	it("accepts every captcha type", () => {
+	it("accepts every selectable captcha type", () => {
 		for (const captchaType of Object.values(CaptchaType)) {
+			if (captchaType === CaptchaType.audio) continue;
 			expect(parse({ ...minimal, captchaType }).captchaType).toBe(captchaType);
 		}
+	});
+
+	// Audio is only served as the accessibility alternative a user picks from a
+	// visual challenge, so no site can be configured with it as its type.
+	it("rejects audio as a site's captcha type", () => {
+		expect(
+			ClientSettingsSchema.safeParse({
+				...minimal,
+				captchaType: CaptchaType.audio,
+			}).success,
+		).toBe(false);
+	});
+
+	it("rejects audio as a traffic category's captcha type", () => {
+		expect(
+			TrafficCategoryPolicySchema.safeParse({
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.audio,
+			}).success,
+		).toBe(false);
+		expect(
+			TrafficCategoryPolicySchema.safeParse({
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.image,
+			}).success,
+		).toBe(true);
 	});
 
 	it("rejects an unknown captcha type", () => {

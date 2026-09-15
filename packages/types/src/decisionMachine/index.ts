@@ -316,7 +316,6 @@ export interface RoutingMachineBaseline {
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
-		| CaptchaType.audio
 		| CaptchaType.iconOrder;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
@@ -422,7 +421,6 @@ export interface RoutingMachineOutput {
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
-		| CaptchaType.audio
 		| CaptchaType.iconOrder;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
@@ -448,11 +446,12 @@ export interface RoutingMachineOutput {
 }
 
 export const RoutingMachineOutputSchema = z.object({
+	// No `audio`: a routing machine cannot send a user to the audio
+	// challenge. It is only reachable as the accessibility alternative.
 	captchaType: z.union([
 		z.literal(CaptchaType.pow),
 		z.literal(CaptchaType.image),
 		z.literal(CaptchaType.puzzle),
-		z.literal(CaptchaType.audio),
 		z.literal(CaptchaType.iconOrder),
 	]),
 	solvedImagesCount: z.number().int().positive().optional(),

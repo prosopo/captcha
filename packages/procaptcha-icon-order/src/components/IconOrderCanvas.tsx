@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { AudioAlternativeButton } from "@prosopo/procaptcha-common";
 import type { IconClick, IconOrderEvent } from "@prosopo/types";
 import type { Theme } from "@prosopo/widget-skeleton";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -27,6 +28,14 @@ interface IconOrderCanvasProps {
 	showRetry: boolean;
 	submitting: boolean;
 	theme: Theme;
+	/**
+	 * "Use audio instead", shown when the site offers the audio accessibility
+	 * alternative. Absent means no such control is rendered.
+	 */
+	audioAlternative?: {
+		onRequestAudio: () => void;
+		label: string;
+	};
 }
 
 /**
@@ -59,6 +68,7 @@ export const IconOrderCanvas = ({
 	showRetry,
 	submitting,
 	theme,
+	audioAlternative,
 }: IconOrderCanvasProps) => {
 	const [clicks, setClicks] = useState<IconClick[]>([]);
 	const events = useRef<IconOrderEvent[]>([]);
@@ -316,7 +326,7 @@ export const IconOrderCanvas = ({
 				<div
 					style={{
 						backgroundColor: theme.palette.surface,
-						borderRadius: "0 0 20px 20px",
+						borderRadius: audioAlternative ? "0" : "0 0 20px 20px",
 						padding: "10px 16px",
 						width: `${CONTAINER_WIDTH}px`,
 						boxSizing: "border-box",
@@ -371,6 +381,27 @@ export const IconOrderCanvas = ({
 						{submitting ? "Checking…" : "OK"}
 					</button>
 				</div>
+
+				{/* Audio alternative — below the controls, so it reads as "or do
+				    this instead" rather than as part of the challenge. */}
+				{audioAlternative && (
+					<div
+						style={{
+							backgroundColor: theme.palette.surface,
+							borderRadius: "0 0 20px 20px",
+							padding: "8px",
+							width: `${CONTAINER_WIDTH}px`,
+							boxSizing: "border-box",
+							textAlign: "center",
+						}}
+					>
+						<AudioAlternativeButton
+							themeColor={theme.palette.mode === "dark" ? "dark" : "light"}
+							onRequestAudio={audioAlternative.onRequestAudio}
+							label={audioAlternative.label}
+						/>
+					</div>
+				)}
 			</div>
 		</div>
 	);

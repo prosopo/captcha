@@ -568,11 +568,12 @@ export interface IconOrderCaptchaSolutionResponse extends ApiResponse {
 }
 
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
+	// Never `audio`: the audio challenge is reached only through
+	// `audioAlternativeAvailable` below.
 	[ApiParams.captchaType]:
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
-		| CaptchaType.audio
 		| CaptchaType.iconOrder
 		| CaptchaType.authenticated;
 	[ApiParams.sessionId]?: string;
@@ -589,7 +590,7 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	// widget's badge so the operator can see WHICH agent verified.
 	agent?: string;
 	// Mirrors the site's `audioAccessibilityEnabled` setting. When true the
-	// image and puzzle widgets render a control offering the audio
+	// image, puzzle and icon-order widgets render a control offering the audio
 	// challenge instead. Absent or false means no such control is shown.
 	audioAlternativeAvailable?: boolean;
 }
@@ -598,7 +599,6 @@ export interface PowCaptchaSolutionEscalation {
 	[ApiParams.captchaType]:
 		| CaptchaType.image
 		| CaptchaType.puzzle
-		| CaptchaType.audio
 		| CaptchaType.iconOrder;
 	[ApiParams.sessionId]: string;
 }

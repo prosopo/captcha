@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { AllKeys } from "@prosopo/common";
-import { CaptchaTypeSchema } from "@prosopo/types";
+import { SelectableCaptchaTypeSchema } from "@prosopo/types";
 import { z } from "zod";
 import {
 	type AccessPolicy,
@@ -46,7 +46,8 @@ import {
 // `ZodEffects`, which loses `.shape`.
 export const accessPolicyInputShape = z.object({
 	type: z.nativeEnum(AccessPolicyType),
-	captchaType: CaptchaTypeSchema.optional(),
+	// A Restrict rule cannot pin audio — see `SelectableCaptchaTypeSchema`.
+	captchaType: SelectableCaptchaTypeSchema.optional(),
 	description: z.coerce.string().optional(),
 	// Redis stores values as strings, so coerce is needed to parse properly
 	solvedImagesCount: z.coerce.number().optional(),
