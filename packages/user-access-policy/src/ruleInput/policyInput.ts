@@ -64,10 +64,6 @@ export const accessPolicyInputShape = z.object({
 	deferToVerify: z
 		.preprocess((v) => (typeof v === "string" ? v === "true" : v), z.boolean())
 		.optional(),
-	// Constrained to the ResultReason enum rather than a free string: the value
-	// is handed to i18n and rendered into a 403 body, so an arbitrary string
-	// here would put caller-controlled text in front of a user. The enum's
-	// values are the translation keys, so a valid reason always resolves.
 	messageKey: z.nativeEnum(ResultReason).optional(),
 } satisfies AllKeys<AccessPolicy>);
 
