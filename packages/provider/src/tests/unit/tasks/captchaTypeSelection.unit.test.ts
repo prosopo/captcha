@@ -103,6 +103,20 @@ describe("coerceToEnabledCaptchaType", () => {
 		).toBe(CaptchaType.puzzle);
 	});
 
+	it("never hands out audio, which is only reachable as the accessibility alternative", () => {
+		const requested: ConcreteCaptchaType[] = [
+			...ALL_TYPES,
+			CaptchaType.iconOrder,
+		];
+		for (const settings of [BOTH, NO_IMAGE, NO_PUZZLE, NEITHER, undefined]) {
+			for (const type of requested) {
+				expect(coerceToEnabledCaptchaType(type, settings)).not.toBe(
+					CaptchaType.audio,
+				);
+			}
+		}
+	});
+
 	it("only ever narrows — coercion cannot introduce an interactive type", () => {
 		// pow is the least friction of the three; a coercion that turned pow
 		// into image or puzzle would hand a user a harder challenge than any

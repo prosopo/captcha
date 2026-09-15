@@ -21,12 +21,15 @@ import {
 import { isIconOrderRenderAvailable } from "./iconOrder/iconOrderRenderer.js";
 import { isPuzzleRenderAvailable } from "./puzzle/puzzleRenderer.js";
 
-/** The concrete types a session can actually be minted as. */
+/**
+ * The concrete types a session can actually be minted as. `audio` is not one:
+ * the audio challenge is served against a visual session, as the
+ * accessibility alternative (see `isAudioAlternativeAllowed`).
+ */
 export type ConcreteCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
 	| CaptchaType.puzzle
-	| CaptchaType.audio
 	| CaptchaType.iconOrder;
 
 /**
@@ -70,12 +73,6 @@ export const coerceToEnabledCaptchaType = (
 				// Always available: no interaction requirement, and the terminal
 				// fallback for the two branches below.
 				return CaptchaType.pow;
-			case CaptchaType.audio:
-				// Nothing to coerce against. The synthesiser is pure TypeScript
-				// with no native dependency, so unlike puzzle rendering it cannot
-				// be unavailable on a provider that has the code, and audio is
-				// not one of the types `frictionlessTypes` gates.
-				return CaptchaType.audio;
 			case CaptchaType.puzzle:
 				if (puzzleAllowed) return CaptchaType.puzzle;
 				return imageAllowed ? CaptchaType.image : CaptchaType.pow;

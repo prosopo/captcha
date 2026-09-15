@@ -31,6 +31,7 @@ import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
+import { isAudioAlternativeSessionType } from "../../../tasks/audioAlternative.js";
 import { Tasks } from "../../../tasks/index.js";
 import {
 	derivePlatform,
@@ -316,7 +317,7 @@ export default (
 					| CaptchaType.image
 					| CaptchaType.pow
 					| CaptchaType.puzzle
-					| CaptchaType.audio;
+					| CaptchaType.iconOrder;
 				const dedupRouted = normalizedIp
 					? await tasks.frictionlessManager.applyRoutingMachine(
 							{
@@ -500,12 +501,11 @@ export default (
 							| CaptchaType.image
 							| CaptchaType.pow
 							| CaptchaType.puzzle
-							| CaptchaType.audio,
+							| CaptchaType.iconOrder,
 						[ApiParams.sessionId]: dedup.sessionId,
 						[ApiParams.status]: "ok",
 						dns_url: buildDnsEventUrl(dedup.sessionId),
-						...((dedup.captchaType === CaptchaType.image ||
-							dedup.captchaType === CaptchaType.puzzle) &&
+						...(isAudioAlternativeSessionType(dedup.captchaType) &&
 							clientRecord.settings?.audioAccessibilityEnabled === true && {
 								audioAlternativeAvailable: true,
 							}),

@@ -44,6 +44,10 @@ interface CanvasProps {
 	showRetry: boolean;
 	submitting: boolean;
 	theme: Theme;
+	audioAlternative?: {
+		onRequestAudio: () => void;
+		label: string;
+	};
 }
 
 let container: HTMLDivElement;
@@ -214,6 +218,40 @@ describe("what it puts on screen", () => {
 		// has started passing target geometry to the client.
 		render(props());
 		expect(container.innerHTML).not.toContain("targets");
+	});
+});
+
+describe("the audio accessibility alternative", () => {
+	const audioButton = (): HTMLButtonElement | null =>
+		container.querySelector<HTMLButtonElement>(
+			'[data-cy="prosopo-audio-alternative"]',
+		);
+
+	test("is not offered unless the site turned it on", () => {
+		render(props());
+		expect(audioButton()).toBeNull();
+	});
+
+	test("is offered, labelled, when the site turned it on", () => {
+		render(
+			props({
+				audioAlternative: {
+					onRequestAudio: vi.fn(),
+					label: "Use audio instead",
+				},
+			}),
+		);
+		expect(audioButton()?.textContent).toBe("Use audio instead");
+	});
+
+	test("asks for audio when pressed, without submitting an answer", () => {
+		const onRequestAudio = vi.fn<() => void>();
+		render(props({ audioAlternative: { onRequestAudio, label: "Audio" } }));
+		act(() => {
+			audioButton()?.click();
+		});
+		expect(onRequestAudio).toHaveBeenCalledTimes(1);
+		expect(onComplete).not.toHaveBeenCalled();
 	});
 });
 
