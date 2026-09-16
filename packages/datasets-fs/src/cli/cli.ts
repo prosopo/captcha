@@ -1,6 +1,6 @@
 import { ProsopoCliError } from "@prosopo/common";
 import { LogLevel, getLogger } from "@prosopo/logger";
-import yargs, { type Argv } from "yargs";
+import yargs, { type ArgumentsCamelCase, type Argv } from "yargs";
 import { hideBin } from "yargs/helpers";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
@@ -35,8 +35,7 @@ export class Cli {
 				default: LogLevel.enum.info,
 				description: "The log level",
 			})
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-			.middleware((argv: any) => {
+			.middleware((argv: ArgumentsCamelCase<{ "log-level": LogLevel }>) => {
 				this.logger.setLogLevel(argv.logLevel);
 			}, true);
 
@@ -45,8 +44,7 @@ export class Cli {
 				command: command.getCommandName(),
 				describe: command.getDescription(),
 				builder: command.getOptions(),
-				// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-				handler: async (argv: any) => {
+				handler: async (argv: ArgumentsCamelCase) => {
 					this.logger.debug(() => ({
 						msg: `running ${command.getCommandName()}`,
 					}));
