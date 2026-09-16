@@ -35,7 +35,12 @@ const writeBundle = (
 	id: string,
 	js: string,
 	secrets:
-		| { privateKey?: string; innerConfig?: string; release?: string }
+		| {
+				privateKey?: string;
+				innerConfig?: string;
+				release?: string;
+				payloadLayout?: string;
+		  }
 		| string,
 ): void => {
 	writeFileSync(join(dir, `${id}.js`), js);
@@ -222,6 +227,49 @@ describe("DetectorBundlePool", () => {
 		expect(reloaded.get("pushed")?.js).toBe("PJS");
 		expect(reloaded.get("pushed")?.privateKey).toBe("PPK");
 		expect(reloaded.get("pushed")?.release).toBe("3.6.64");
+	});
+
+	it("carries a bundle's payload layout through load and persist", () => {
+		// The decoder cannot read a bundle's payload without it, so losing it
+		// anywhere on this path silently fails every session on that bundle.
+		writeBundle(dir, "laid-out", "JS", {
+			privateKey: "PK",
+			innerConfig: "C",
+			payloadLayout: "TFY=",
+		});
+		const pool = new DetectorBundlePool();
+		pool.loadFromDir(dir);
+		expect(pool.get("laid-out")?.payloadLayout).toBe("TFY=");
+
+		const persistDir = mkdtempSync(join(tmpdir(), "pool-persist-"));
+		try {
+			persistDetectorBundlePool(
+				new Map([
+					[
+						"laid-out",
+						{
+							js: "JS",
+							privateKey: "PK",
+							innerConfig: "C",
+							payloadLayout: "TFY=",
+						},
+					],
+				]),
+				persistDir,
+			);
+			const reloaded = new DetectorBundlePool();
+			reloaded.loadFromDir(persistDir);
+			expect(reloaded.get("laid-out")?.payloadLayout).toBe("TFY=");
+		} finally {
+			rmSync(persistDir, { recursive: true, force: true });
+		}
+	});
+
+	it("loads a bundle with no payload layout, which decodes canonically", () => {
+		writeBundle(dir, "legacy", "JS", { privateKey: "PK", innerConfig: "C" });
+		const pool = new DetectorBundlePool();
+		pool.loadFromDir(dir);
+		expect(pool.get("legacy")?.payloadLayout).toBeUndefined();
 	});
 
 	it("persists without replacing the pool directory itself", () => {
