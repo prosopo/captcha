@@ -1,5 +1,23 @@
 # @prosopo/procaptcha-puzzle
 
+## 2.13.1
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d710b7f]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/common@3.1.56
+  - @prosopo/locale@3.4.3
+  - @prosopo/procaptcha-common@2.14.1
+  - @prosopo/types@5.8.4
+  - @prosopo/util-crypto@13.5.32
+  - @prosopo/util@3.3.10
+  - @prosopo/api@4.2.4
+
 ## 2.13.0
 ### Minor Changes
 

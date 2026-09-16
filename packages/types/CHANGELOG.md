@@ -1,5 +1,25 @@
 # @prosopo/types
 
+## 5.8.4
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- c386199: Carry each detector bundle's `payloadLayout` from its pool entry through to the decoder.
+  
+  Pool bundles now ship an extra opaque per-bundle value alongside the private key and inner config, and the decoder needs it to read what that bundle's detector produced. The pool loader reads it from `{id}.json`, the persist and admin-push paths keep it, and the frictionless decrypt passes it to `decodePayload` along with the key.
+  
+  Bundles without one — pools built before this — behave exactly as before, so a provider can be updated ahead of its pool.
+  
+  Covered by pool tests that the value survives load, persist and reload, and by the existing decrypt tests.
+- d4e9425: Replace `any` with real types: the PoW challenge id validator now takes a `string`, and scheduled task result `data` is `Record<string, unknown>`.
+- 0be8838: Look up user callbacks on `window` without `any`, so each callback is type-checked against the arguments it is actually called with. Only a leading `window.` is now stripped from a callback name. The `error-callback` render option type now accepts the `Error` it is called with.
+- Updated dependencies [f4e4a83]
+- Updated dependencies [d710b7f]
+- Updated dependencies [ae121df]
+  - @prosopo/locale@3.4.3
+  - @prosopo/util-crypto@13.5.32
+  - @prosopo/util@3.3.10
+
 ## 5.8.3
 ### Patch Changes
 
