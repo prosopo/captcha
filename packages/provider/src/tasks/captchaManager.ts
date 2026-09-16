@@ -73,6 +73,12 @@ import {
 export interface PoolBundleDecrypt {
 	key: string;
 	innerConfig: string;
+	/**
+	 * Opaque per-bundle decode parameter from the bundle's `{id}.json`. Only
+	 * meaningful to the decoder, and only alongside the bundle it was built
+	 * with. Absent for bundles from a pool built before it existed.
+	 */
+	payloadLayout?: string;
 }
 
 /**
@@ -780,7 +786,13 @@ export class CaptchaManager {
 			? getDetectorBundlePool()?.get(bundleId)
 			: undefined;
 		return bundle
-			? { key: bundle.privateKey, innerConfig: bundle.innerConfig }
+			? {
+					key: bundle.privateKey,
+					innerConfig: bundle.innerConfig,
+					...(bundle.payloadLayout && {
+						payloadLayout: bundle.payloadLayout,
+					}),
+				}
 			: undefined;
 	}
 

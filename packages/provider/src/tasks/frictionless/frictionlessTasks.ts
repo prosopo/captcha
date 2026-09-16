@@ -833,13 +833,23 @@ export class FrictionlessManager extends CaptchaManager {
 	 * caller fails closed (score treated as bot ⇒ PoW).
 	 */
 	async resolveDecryptAttempts(detectorSessionId?: string): Promise<{
-		attempts: { key: string; innerConfig?: string }[];
+		attempts: {
+			key: string;
+			innerConfig?: string;
+			payloadLayout?: string;
+		}[];
 		bundleId?: string;
 	}> {
 		const bundle = await this.resolveBundleByDetectorSession(detectorSessionId);
 		if (bundle) {
 			return {
-				attempts: [{ key: bundle.key, innerConfig: bundle.innerConfig }],
+				attempts: [
+					{
+						key: bundle.key,
+						innerConfig: bundle.innerConfig,
+						payloadLayout: bundle.payloadLayout,
+					},
+				],
 				bundleId: bundle.bundleId,
 			};
 		}
@@ -903,6 +913,7 @@ export class FrictionlessManager extends CaptchaManager {
 					headHash,
 					attempt.key,
 					attempt.innerConfig,
+					attempt.payloadLayout,
 				);
 				decryptedHeadHash = decrypted.decryptedHeadHash || "";
 				const s = decrypted.baseBotScore;

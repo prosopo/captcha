@@ -67,12 +67,14 @@ export const getBotScore = async (
 	headHash: string,
 	privateKeyString?: string,
 	innerConfigEncoded?: string,
+	payloadLayoutEncoded?: string,
 ) => {
 	const result = (await getBotScoreFromPayload(
 		payload,
 		headHash,
 		privateKeyString,
 		innerConfigEncoded,
+		payloadLayoutEncoded,
 	)) as DetectorResult;
 	const baseBotScore: number = result.score;
 	const timestamp: number = result.timestamp;

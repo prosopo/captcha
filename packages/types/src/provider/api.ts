@@ -768,7 +768,7 @@ export interface AssignDetectorBundleResponse extends ApiResponse {
 }
 
 export const ReplaceDetectorPoolBody = object({
-	// Map of bundleId -> { js, privateKey, innerConfig, release }.
+	// Map of bundleId -> { js, privateKey, innerConfig, release, payloadLayout }.
 	bundles: record(
 		string(),
 		object({
@@ -780,6 +780,9 @@ export const ReplaceDetectorPoolBody = object({
 			// pool built from a different release. Optional for pools predating
 			// the stamp.
 			release: string().optional(),
+			// Opaque per-bundle decode parameter, paired with this bundle's js.
+			// Optional for pools built before it existed.
+			payloadLayout: string().optional(),
 		}),
 	),
 });
