@@ -144,6 +144,9 @@ describe("decryptPayload", () => {
 					md: false,
 					bn: false,
 					fs: true,
+					cg: "p3",
+					sm: "0.10",
+					dz: "nc",
 				};
 			}),
 		}));
@@ -182,6 +185,9 @@ describe("decryptPayload", () => {
 		expect(result.triggeredDetectors).toEqual([50, 51]);
 		expect(result.sw).toBe(true);
 		expect(result.fs).toBe(true);
+		expect(result.cg).toBe("p3");
+		expect(result.sm).toBe("0.10");
+		expect(result.dz).toBe("nc");
 	});
 
 	it("fails closed (treated as bot) when no detector bundle can be resolved", async () => {

@@ -26,10 +26,16 @@ import type {
 // signature is declared locally here (mirroring `@prosopo/detector`'s default
 // export) from shared @prosopo/types primitives, rather than importing the
 // detector package as a build-time type dependency.
+export type DetectorOptions = {
+	clientUrl?: string;
+	assetOrigin?: string;
+};
+
 export type DetectorType = (
 	container: HTMLElement | undefined,
 	restart: () => void,
 	accountGenerator: () => Promise<Account>,
+	options?: DetectorOptions,
 ) => Promise<{
 	token: string;
 	shadowDomCleanup: () => void;

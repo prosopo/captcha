@@ -655,6 +655,8 @@ export interface AssignDetectorBundleResponse extends ApiResponse {
 	[ApiParams.detectorSessionId]?: string;
 	// The obfuscated, self-contained detector ESM, served inline.
 	[ApiParams.detectorScript]?: string;
+	[ApiParams.clientUrl]?: string;
+	[ApiParams.assetOrigin]?: string;
 }
 
 export const ReplaceDetectorPoolBody = object({

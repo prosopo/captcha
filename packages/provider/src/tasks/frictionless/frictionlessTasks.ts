@@ -860,6 +860,7 @@ export class FrictionlessManager extends CaptchaManager {
 		let sqq: number | undefined;
 		let cgg: string | undefined;
 		let smm: string | undefined;
+		let dzz: string | undefined;
 		let bb: Record<string, string[]> | undefined;
 		let sw: boolean | undefined;
 		let md: boolean | undefined;
@@ -899,6 +900,7 @@ export class FrictionlessManager extends CaptchaManager {
 				const sqq2 = decrypted.sq;
 				const cgg2 = decrypted.cg;
 				const smm2 = decrypted.sm;
+				const dzz2 = decrypted.dz;
 				const bv = decrypted.b;
 				const swv = decrypted.sw;
 				const mdv = decrypted.md;
@@ -944,6 +946,7 @@ export class FrictionlessManager extends CaptchaManager {
 				sqq = sqq2;
 				cgg = cgg2;
 				smm = smm2;
+				dzz = dzz2;
 				bb = bv;
 				sw = swv;
 				md = mdv;
@@ -1018,6 +1021,7 @@ export class FrictionlessManager extends CaptchaManager {
 			sq: sqq,
 			cg: cgg,
 			sm: smm,
+			dz: dzz,
 			b: bb,
 			sw,
 			md,

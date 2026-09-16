@@ -27,6 +27,7 @@ import type {
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import {
 	DetectorLoaderFromScript,
+	type DetectorOptions,
 	type DetectorType,
 } from "./detectorLoader.js";
 import {
@@ -219,6 +220,7 @@ const customDetectBot: BotDetectionFunction = async (
 	// timeout) we have NO detector to run and there is no bundled fallback.
 	let detectorSessionId: string | undefined;
 	let providerDetect: DetectorType | undefined;
+	let detectorOptions: DetectorOptions | undefined;
 	try {
 		// Reuse the prefetched assignment when the entry already fetched one for
 		// this provider; otherwise issue it now.
@@ -234,6 +236,10 @@ const customDetectBot: BotDetectionFunction = async (
 			// we are already holding.
 			providerDetect = await DetectorLoaderFromScript(assigned.detectorScript);
 			detectorSessionId = assigned.detectorSessionId;
+			detectorOptions = {
+				clientUrl: assigned.clientUrl,
+				assetOrigin: assigned.assetOrigin,
+			};
 		}
 	} catch (err) {
 		// No detector available — fall through to the PoW request below.
@@ -303,8 +309,11 @@ const customDetectBot: BotDetectionFunction = async (
 
 	const detect: DetectorType = providerDetect;
 
-	const detectionResult = await detect(container, restartFn, () =>
-		ext.getAccount(config),
+	const detectionResult = await detect(
+		container,
+		restartFn,
+		() => ext.getAccount(config),
+		detectorOptions,
 	);
 
 	const userAccount = detectionResult.userAccount;
