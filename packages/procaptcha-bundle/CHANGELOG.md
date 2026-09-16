@@ -1,5 +1,14 @@
 # @prosopo/procaptcha-bundle
 
+## 4.4.7
+### Patch Changes
+
+- c300bc9: Tests now clear the fake `document` and `window` globals without switching off type checking, so the last `any` suppressions in the bundle's tests are gone. No change to the published code.
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/procaptcha-frictionless@2.16.5
+  - @prosopo/procaptcha-common@2.14.2
+
 ## 4.4.6
 ### Patch Changes
 

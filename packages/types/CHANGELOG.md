@@ -1,5 +1,11 @@
 # @prosopo/types
 
+## 5.8.5
+### Patch Changes
+
+- be25974: Two optional per-site settings are now passed through to the client. Sites that
+  do not set them are unaffected.
+
 ## 5.8.4
 ### Patch Changes
 

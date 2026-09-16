@@ -1,5 +1,12 @@
 # @prosopo/cypress-shared
 
+## 2.8.140
+### Patch Changes
+
+- 737d72c: Remove the `any` default from the shared Cypress `Chainable` command declarations so the subject type comes from Cypress's own definition.
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+
 ## 2.8.139
 ### Patch Changes
 

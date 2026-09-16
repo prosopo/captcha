@@ -1,5 +1,12 @@
 # @prosopo/datasets-fs
 
+## 3.0.133
+### Patch Changes
+
+- b60b2b0: Replace the remaining `any` types in the datasets CLI (command-line arguments and the `get` command's JSON walk) with proper types. No behaviour change.
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+
 ## 3.0.132
 ### Patch Changes
 
