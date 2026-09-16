@@ -1,5 +1,19 @@
 # @prosopo/datasets-fs
 
+## 3.0.132
+### Patch Changes
+
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/common@3.1.56
+  - @prosopo/types@5.8.4
+  - @prosopo/util-crypto@13.5.32
+  - @prosopo/util@3.3.10
+  - @prosopo/logger@2.0.10
+
 ## 3.0.131
 ### Patch Changes
 
