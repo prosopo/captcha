@@ -1,5 +1,18 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.16.5
+### Patch Changes
+
+- be25974: Two optional per-site settings are now passed through to the client. Sites that
+  do not set them are unaffected.
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/api@4.2.5
+  - @prosopo/procaptcha-common@2.14.2
+  - @prosopo/procaptcha-pow@2.12.6
+  - @prosopo/procaptcha-puzzle@2.13.2
+  - @prosopo/procaptcha-react@2.11.2
+
 ## 2.16.4
 ### Patch Changes
 

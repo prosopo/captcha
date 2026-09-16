@@ -1,5 +1,27 @@
 # @prosopo/provider
 
+## 5.10.4
+### Patch Changes
+
+- be25974: Two optional per-site settings are now passed through to the client. Sites that
+  do not set them are unaffected.
+- 8d158a1: Type the mocks in the provider's PoW, client, dataset and scheduler unit tests with `vi.mocked` and correctly-typed fixtures instead of `any`, so the test mocks now match the real function signatures.
+- be25974: Fixes a decoded session field that was being dropped before it reached the
+  session record.
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/api@4.2.5
+  - @prosopo/api-express-router@3.1.89
+  - @prosopo/database@4.0.35
+  - @prosopo/datasets@3.1.84
+  - @prosopo/env@3.6.58
+  - @prosopo/ipinfo@0.4.4
+  - @prosopo/keyring@2.9.91
+  - @prosopo/load-balancer@2.10.46
+  - @prosopo/types-database@5.5.5
+  - @prosopo/types-env@2.11.4
+  - @prosopo/user-access-policy@3.14.5
+
 ## 5.10.3
 ### Patch Changes
 
