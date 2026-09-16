@@ -1,5 +1,14 @@
 # @prosopo/common
 
+## 3.1.56
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- Updated dependencies [f4e4a83]
+- Updated dependencies [d710b7f]
+  - @prosopo/locale@3.4.3
+  - @prosopo/logger@2.0.10
+
 ## 3.1.55
 ### Patch Changes
 

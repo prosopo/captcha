@@ -1,5 +1,10 @@
 # @prosopo/util
 
+## 3.3.10
+### Patch Changes
+
+- ae121df: Type the internal hex encoding helper's input as `Uint8Array` instead of `any`.
+
 ## 3.3.9
 ### Patch Changes
 
