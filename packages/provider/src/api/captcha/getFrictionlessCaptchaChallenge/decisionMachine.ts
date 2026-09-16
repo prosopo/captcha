@@ -245,7 +245,9 @@ export const runDecisionMachine = async (
 			},
 		}));
 		recordFrictionlessDecision("auto_ban_score");
-		await tasks.frictionlessManager.registerBlockedSession({
+		// Auto-ban fires before any challenge is chosen; image is what the
+		// built-in heuristics below would have served.
+		await tasks.frictionlessManager.registerBlockedSession(CaptchaType.image, {
 			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
 			userSitekeyIpHash,
 			reason: FrictionlessReason.AUTO_BAN_SCORE,

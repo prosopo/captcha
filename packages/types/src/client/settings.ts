@@ -615,7 +615,35 @@ export const HoneypotSettingsSchema = object({
 
 export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
 
-export const ClientSettingsSchema = object({
+/**
+ * Per-challenge settings, grouped under the challenge they configure.
+ *
+ * These are derived, not stored-and-edited: the flat `imageThreshold`,
+ * `imageMaxRounds`, `powDifficulty` and `puzzleTolerance` keys remain the
+ * source of truth (that is what the portal writes and what every current
+ * reader consumes), and the transform on `ClientSettingsSchema` recomputes
+ * these groups from them on every parse. Consumers that want "the image knobs"
+ * as one object can read `settings.image` instead of picking flat keys out of
+ * a shared namespace; a later phase can flip the direction once the portal and
+ * the stored records have moved over.
+ *
+ * Puzzle has no derived group: `settings.puzzle` is already taken by the
+ * operator's stored render overrides (`PuzzleSettingsSchema`), so its one knob
+ * stays on the flat `puzzleTolerance` key.
+ */
+const ImageSettingsSchema = object({
+	threshold: number().min(0).max(1),
+	maxRounds: number().int().min(2),
+});
+
+const PowSettingsSchema = object({
+	difficulty: number().positive().min(1).max(10),
+});
+
+export type IImageSettings = output<typeof ImageSettingsSchema>;
+export type IPowSettings = output<typeof PowSettingsSchema>;
+
+const ClientSettingsBaseSchema = object({
 	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
 	// Maximum ms between user submission and the dapp's /verify call.
@@ -717,6 +745,31 @@ export const ClientSettingsSchema = object({
 	message: "imageMinRounds must be <= imageMaxRounds",
 	path: ["imageMinRounds"],
 });
+
+/**
+ * The grouped view is declared optional even though `parse` always populates
+ * it. Plenty of call sites (tests, demos, seed scripts) hand-build an
+ * `IUserSettings` literal from the flat keys; making the groups required would
+ * force every one of them to restate derived data. Readers that want a group
+ * should either parse through this schema or fall back to the flat key.
+ */
+type ClientSettingsGroups = {
+	image?: IImageSettings;
+	pow?: IPowSettings;
+};
+
+export const ClientSettingsSchema = ClientSettingsBaseSchema.transform(
+	(
+		settings,
+	): output<typeof ClientSettingsBaseSchema> & ClientSettingsGroups => ({
+		...settings,
+		image: {
+			threshold: settings.imageThreshold,
+			maxRounds: settings.imageMaxRounds,
+		},
+		pow: { difficulty: settings.powDifficulty },
+	}),
+);
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;
 

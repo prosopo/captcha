@@ -20,6 +20,7 @@ import {
 	type RequestHeaders,
 	type ScoreComponents,
 	clampImageRounds,
+	isChallengeCaptchaType,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -27,6 +28,7 @@ import type { Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import type { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import { getDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
+import { sendChallenge } from "../../../tasks/frictionless/challengeDispatch.js";
 import type { Tasks } from "../../../tasks/index.js";
 import { resolveScoreLadder } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
@@ -150,6 +152,11 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 	if (!configuredType || configuredType === CaptchaType.frictionless) {
 		return null;
 	}
+	if (!isChallengeCaptchaType(configuredType)) {
+		throw new Error(
+			`Unhandled configured captchaType in /frictionless short-circuit: ${configuredType}`,
+		);
+	}
 
 	const sessionParams = await buildBypassSessionParams(input);
 
@@ -162,28 +169,18 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 	}));
 
 	attachHoneypot(res, input.clientRecord);
-	switch (configuredType) {
-		case CaptchaType.image:
-			return res.json(
-				await input.tasks.frictionlessManager.sendImageCaptcha({
-					...sessionParams,
-					solvedImagesCount: clampImageRounds(
-						input.env.config.captchas.solved.count,
-						input.clientRecord.settings,
-					),
-				}),
-			);
-		case CaptchaType.pow:
-			return res.json(
-				await input.tasks.frictionlessManager.sendPowCaptcha(sessionParams),
-			);
-		case CaptchaType.puzzle:
-			return res.json(
-				await input.tasks.frictionlessManager.sendPuzzleCaptcha(sessionParams),
-			);
-		default:
-			throw new Error(
-				`Unhandled configured captchaType in /frictionless short-circuit: ${configuredType}`,
-			);
-	}
+	// Only image is sized here: pow takes no count, and a puzzle reads
+	// `solvedImagesCount` as a difficulty signal that the configured-type
+	// default has no business setting.
+	return res.json(
+		await sendChallenge(input.tasks.frictionlessManager, configuredType, {
+			...sessionParams,
+			...(configuredType === CaptchaType.image && {
+				solvedImagesCount: clampImageRounds(
+					input.env.config.captchas.solved.count,
+					input.clientRecord.settings,
+				),
+			}),
+		}),
+	);
 };

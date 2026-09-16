@@ -18,6 +18,7 @@ import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
 	ApiParams,
 	CaptchaType,
+	type ChallengeCaptchaType,
 	type CompositeIpAddress,
 	DEFAULT_MAX_TIMESTAMP_AGE,
 	FrictionlessReason,
@@ -34,6 +35,7 @@ import {
 	type Session,
 	SimdReadingsStage,
 	clampImageRounds,
+	deriveChallengeParams,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -273,6 +275,19 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptedHeadHash = "",
 		} = input;
 
+		// Dual-write: the flat `solvedImagesCount` / `powDifficulty` / `blocked`
+		// / `puzzleTolerance` fields stay the source of truth for existing
+		// readers, while `challengeParams` carries the same values in the typed,
+		// per-challenge shape new readers migrate onto. Undefined for
+		// `frictionless` and `authenticated`, which never name a concrete
+		// challenge.
+		const challengeParams = deriveChallengeParams(captchaType, {
+			solvedImagesCount,
+			powDifficulty,
+			blocked,
+			puzzleTolerance,
+		});
+
 		const sessionRecord: Session = {
 			sessionId: `${getSessionIDPrefix(this.config.host)}-${uuidv4()}`,
 			createdAt: new Date(),
@@ -287,6 +302,7 @@ export class FrictionlessManager extends CaptchaManager {
 			powDifficulty,
 			...(puzzleTolerance !== undefined && { puzzleTolerance }),
 			...(puzzle && { puzzle }),
+			...(challengeParams && { challengeParams }),
 			userSitekeyIpHash,
 			webView,
 			iFrame,
@@ -507,7 +523,7 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	private async sendCaptcha(
-		captchaType: CaptchaType.image | CaptchaType.pow | CaptchaType.puzzle,
+		captchaType: ChallengeCaptchaType,
 		params?: Partial<Session>,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
@@ -679,8 +695,19 @@ export class FrictionlessManager extends CaptchaManager {
 		};
 	}
 
+	/**
+	 * Persist a synthetic "blocked session" record for a request that was
+	 * rejected before any challenge was issued.
+	 *
+	 * `captchaType` is the challenge this request *would* have been served —
+	 * it used to be hardcoded to `image` here, which meant every blocked
+	 * session was labelled image regardless of what the sitekey or the matched
+	 * access rule actually routes to. Callers pass it explicitly so the
+	 * recorded label matches what they already log.
+	 */
 	async registerBlockedSession(
-		params?: Partial<ImageCaptchaSessionParams>,
+		captchaType: ChallengeCaptchaType,
+		params?: Partial<Session>,
 	): Promise<void> {
 		const effectiveParams = { ...this.sessionParams, ...params };
 		if (
@@ -704,7 +731,7 @@ export class FrictionlessManager extends CaptchaManager {
 			scoreComponents: effectiveParams.scoreComponents,
 			ipAddress: effectiveParams.ipAddress,
 			siteKey: effectiveParams.siteKey,
-			captchaType: CaptchaType.image,
+			captchaType,
 			powDifficulty: undefined,
 			blocked: true,
 			deleted: true,

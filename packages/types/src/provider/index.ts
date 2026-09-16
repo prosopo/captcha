@@ -13,6 +13,7 @@
 // limitations under the License.
 export * from "./accounts.js";
 export * from "./api.js";
+export * from "./challengeParams.js";
 export * from "./scheduler.js";
 export * from "./detection.js";
 export * from "./database.js";
