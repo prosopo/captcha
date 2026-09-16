@@ -39,6 +39,8 @@ import { evaluateFrictionlessResult } from "./frictionlessResultGuard.js";
 import {
 	type RetryCoords,
 	consumeRetryMountProps,
+	consumeRetryPrompt,
+	handleChallengeFailed,
 	handleSessionInvalidated,
 	normaliseRetryCoords,
 } from "./sessionInvalidatedRecovery.js";
@@ -149,6 +151,9 @@ export const ProcaptchaFrictionless = ({
 	const manualStartedRef = useRef(false);
 	// The placeholder is built before `start()` exists in this scope.
 	const manualCheckboxHandlerRef = useRef(noopCheckboxHandler);
+	// Raised when the inner widget reports a wrong answer, and consumed by the
+	// widget mounted immediately afterwards so it opens with the retry prompt.
+	const pendingRetryPromptRef = useRef(false);
 
 	useEffect(() => {
 		if (!config.language) return;
@@ -304,6 +309,21 @@ export const ProcaptchaFrictionless = ({
 			void start();
 		};
 
+		// The user answered, and got it wrong. Re-run the frictionless flow so
+		// the provider mints a session for a fresh challenge, and flag the next
+		// mount to open with the retry prompt. Unlike the session-invalidated
+		// path this is not capped — every wrong answer earns another go. As with
+		// `onReload`, the next mount opens its challenge without waiting for
+		// click coords (a keyboard answer has none), and the fresh session
+		// starts with a full invalidation budget.
+		const onChallengeFailed = (x?: number, y?: number) => {
+			handleChallengeFailed(x, y, pendingRetryCoordsRef, pendingRetryPromptRef);
+			nextMountAutoStartRef.current = true;
+			sessionInvalidatedAttemptsRef.current = 0;
+			resetState(0);
+			void start();
+		};
+
 		// Consume any pending retry coords now — the resumed widget owns them
 		// for exactly one auto-fired `manager.start(x, y)`. Cleared so a
 		// subsequent escalation/re-render doesn't accidentally re-inject.
@@ -321,6 +341,9 @@ export const ProcaptchaFrictionless = ({
 		const startCoords = escalationCoords ?? retryStartCoords;
 		mountCountRef.current += 1;
 		const mountKey = mountCountRef.current;
+		// Consumed here for the same reason as the coords: this mount owns the
+		// prompt, and a later escalation must not inherit it.
+		const showRetryPrompt = consumeRetryPrompt(pendingRetryPromptRef);
 
 		if (captchaType === CaptchaType.authenticated) {
 			// Web Bot Auth pre-verified pass-through. No challenge, no
@@ -360,6 +383,8 @@ export const ProcaptchaFrictionless = ({
 					onSessionInvalidated={onSessionInvalidated}
 					container={container}
 					onReload={onReload}
+					onChallengeFailed={onChallengeFailed}
+					showRetryPrompt={showRetryPrompt}
 				/>,
 			);
 		} else if (captchaType === CaptchaType.puzzle) {
@@ -375,6 +400,8 @@ export const ProcaptchaFrictionless = ({
 					startCoords={startCoords}
 					onSessionInvalidated={onSessionInvalidated}
 					container={container}
+					onChallengeFailed={onChallengeFailed}
+					showRetryPrompt={showRetryPrompt}
 				/>,
 			);
 		} else {

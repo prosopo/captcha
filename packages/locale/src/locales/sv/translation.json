@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "Konto hittades inte",
 		"NO_EXTENSION_FOUND": "Ingen förlängning hittades",
 		"INSECURE_CONTEXT": "Procaptcha kräver en säker (HTTPS) anslutning",
+		"INCORRECT_TRY_AGAIN": "Fel, försök igen",
 		"CHECKING": "Kontrollerar att du är en människa",
 		"IMAGE_DIALOG_LABEL": "Bilduppgift",
 		"PUZZLE": {

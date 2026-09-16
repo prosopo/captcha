@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "Учетная запись не найдена",
 		"NO_EXTENSION_FOUND": "Расширение не найдено",
 		"INSECURE_CONTEXT": "Procaptcha требует безопасного соединения (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "Неверно, попробуйте ещё раз",
 		"CHECKING": "Проверяем, что вы человек",
 		"IMAGE_DIALOG_LABEL": "Задание с картинками",
 		"PUZZLE": {

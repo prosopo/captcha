@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "Н��лог није пронађен",
 		"NO_EXTENSION_FOUND": "Нису пронађене екстензије",
 		"INSECURE_CONTEXT": "Procaptcha захтева безбедну (HTTPS) везу",
+		"INCORRECT_TRY_AGAIN": "Нетачно, покушајте поново",
 		"CHECKING": "Проверавамо да ли сте човек",
 		"IMAGE_DIALOG_LABEL": "Провера сликама",
 		"PUZZLE": {

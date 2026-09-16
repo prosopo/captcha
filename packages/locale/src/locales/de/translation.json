@@ -79,6 +79,7 @@
 		"ACCOUNT_NOT_FOUND": "Konto nicht gefunden",
 		"NO_EXTENSION_FOUND": "Keine Erweiterung gefunden",
 		"INSECURE_CONTEXT": "Procaptcha erfordert eine sichere (HTTPS-)Verbindung",
+		"INCORRECT_TRY_AGAIN": "Falsch, bitte versuchen Sie es erneut",
 		"CHECKING": "Es wird geprüft, ob du ein Mensch bist",
 		"IMAGE_DIALOG_LABEL": "Bild-Aufgabe",
 		"PUZZLE": {

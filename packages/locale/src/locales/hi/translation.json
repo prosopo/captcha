@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "खत नह मल",
 		"NO_EXTENSION_FOUND": "कई एकसटशन नह मल",
 		"INSECURE_CONTEXT": "Procaptcha के लिए सुरक्षित (HTTPS) कनेक्शन आवश्यक है",
+		"INCORRECT_TRY_AGAIN": "गलत, कृपया पुनः प्रयास करें",
 		"CHECKING": "जाँचा जा रहा है कि आप मनुष्य हैं",
 		"IMAGE_DIALOG_LABEL": "छवि चुनौती",
 		"PUZZLE": {

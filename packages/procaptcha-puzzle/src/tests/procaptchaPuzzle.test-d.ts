@@ -158,6 +158,7 @@ describe("PuzzleCanvas' types", () => {
 			pieceSize: 44,
 			onComplete,
 			showRetry: false,
+			retryMessage: "Incorrect, please try again",
 			theme: lightTheme,
 		});
 	});
@@ -172,6 +173,7 @@ describe("PuzzleCanvas' types", () => {
 				pieceSize: 44,
 				onComplete,
 				showRetry: false,
+				retryMessage: "Incorrect, please try again",
 				submitting: false,
 				theme: lightTheme,
 			}),

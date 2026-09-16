@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "Account not found",
 		"NO_EXTENSION_FOUND": "No extension found",
 		"INSECURE_CONTEXT": "Procaptcha потребує безпечного з'єднання (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "Неправильно, спробуйте ще раз",
 		"CHECKING": "Перевіряємо, що ви людина",
 		"IMAGE_DIALOG_LABEL": "Завдання із зображеннями",
 		"PUZZLE": {

@@ -13,6 +13,7 @@
 		"ACCOUNT_NOT_FOUND": "Account not found",
 		"NO_EXTENSION_FOUND": "No extension found",
 		"INSECURE_CONTEXT": "Procaptcha requires a secure (HTTPS) connection",
+		"INCORRECT_TRY_AGAIN": "Incorrect, please try again",
 		"CHECKING": "Checking that you are human",
 		"IMAGE_DIALOG_LABEL": "Image challenge",
 		"PUZZLE": {

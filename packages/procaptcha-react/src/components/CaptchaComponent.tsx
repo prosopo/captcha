@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { useTranslation } from "@prosopo/locale";
-import { ReloadButton } from "@prosopo/procaptcha-common";
+import { ReloadButton, RetryBanner } from "@prosopo/procaptcha-common";
 import type { CaptchaResponseBody } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
@@ -31,6 +31,8 @@ export interface CaptchaComponentProps {
 	onNext: () => void;
 	onReload: () => void;
 	themeColor: "light" | "dark";
+	/** The previous attempt was wrong; these are fresh images to try again on. */
+	showRetryPrompt?: boolean;
 }
 
 const CaptchaComponent = ({
@@ -43,6 +45,7 @@ const CaptchaComponent = ({
 	onNext,
 	onReload,
 	themeColor,
+	showRetryPrompt = false,
 }: CaptchaComponentProps) => {
 	const { t } = useTranslation();
 	// `noWrap`, so an out-of-range round throws rather than wrapping round to a
@@ -89,6 +92,20 @@ const CaptchaComponent = ({
 						justifyContent: "center",
 					}}
 				>
+					{/* Retry prompt. Above the instruction header so the failure
+					    reads first and the "select all …" line then applies to the
+					    replacement images below it. */}
+					{showRetryPrompt && (
+						<div style={{ width: "100%", marginTop: fullSpacing }}>
+							<RetryBanner
+								message={t("WIDGET.INCORRECT_TRY_AGAIN")}
+								theme={theme}
+								{...(process.env.NODE_ENV !== "production" && {
+									dataCy: "retry-banner",
+								})}
+							/>
+						</div>
+					)}
 					<div
 						style={{
 							display: "flex",

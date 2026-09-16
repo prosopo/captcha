@@ -170,6 +170,12 @@ export const lightTheme = {
 		border: purple[100],
 		error: {
 			main: "#b3261e",
+			// M3 "error container" role — the tonal fill behind an inline
+			// error message, paired with onContainer for its text. Used by
+			// the retry prompt so a failed attempt reads as a recoverable
+			// state rather than a hard error.
+			container: "#f9dedc",
+			onContainer: "#410e0b",
 		},
 		logoFill: purple[700],
 	},
@@ -228,6 +234,10 @@ export const darkTheme = {
 		border: "#332c50",
 		error: {
 			main: "#f2b8b5",
+			// M3 dark error container: the roles invert relative to light —
+			// a dark tonal fill carrying light text.
+			container: "#8c1d18",
+			onContainer: "#f9dedc",
 		},
 		logoFill: "#cfc9e6",
 	},

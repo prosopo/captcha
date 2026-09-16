@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "Hesap bulunamadı",
 		"NO_EXTENSION_FOUND": "Eklenti bulunamadı",
 		"INSECURE_CONTEXT": "Procaptcha güvenli bir (HTTPS) bağlantı gerektirir",
+		"INCORRECT_TRY_AGAIN": "Yanlış, lütfen tekrar deneyin",
 		"CHECKING": "İnsan olduğunuz doğrulanıyor",
 		"IMAGE_DIALOG_LABEL": "Görsel doğrulama",
 		"PUZZLE": {

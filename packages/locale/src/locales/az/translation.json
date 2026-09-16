@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "Hesab tapılmadı",
 		"NO_EXTENSION_FOUND": "Tətbiq tapılmadı",
 		"INSECURE_CONTEXT": "Procaptcha təhlükəsiz (HTTPS) bağlantı tələb edir",
+		"INCORRECT_TRY_AGAIN": "Yanlışdır, zəhmət olmasa yenidən cəhd edin",
 		"CHECKING": "İnsan olduğunuz yoxlanılır",
 		"IMAGE_DIALOG_LABEL": "Şəkil yoxlaması",
 		"PUZZLE": {

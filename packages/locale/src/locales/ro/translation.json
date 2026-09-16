@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "Contul nu a fost gasit",
 		"NO_EXTENSION_FOUND": "Nicio extensie gasita",
 		"INSECURE_CONTEXT": "Procaptcha necesită o conexiune securizată (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "Incorect, încercați din nou",
 		"CHECKING": "Verificăm că ești om",
 		"IMAGE_DIALOG_LABEL": "Test cu imagini",
 		"PUZZLE": {

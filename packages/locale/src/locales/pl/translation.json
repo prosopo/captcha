@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "Nie znaleziono konta",
 		"NO_EXTENSION_FOUND": "Nie znaleziono rozszerzenia",
 		"INSECURE_CONTEXT": "Procaptcha wymaga bezpiecznego połączenia (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "Niepoprawnie, spróbuj ponownie",
 		"CHECKING": "Sprawdzanie, czy jesteś człowiekiem",
 		"IMAGE_DIALOG_LABEL": "Zadanie z obrazkami",
 		"PUZZLE": {

@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "Δεν βρέθηκε λογαριασμός",
 		"NO_EXTENSION_FOUND": "Δε βρέθηκε επέκταση",
 		"INSECURE_CONTEXT": "Το Procaptcha απαιτεί ασφαλή σύνδεση (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "Λάθος, δοκιμάστε ξανά",
 		"CHECKING": "Ελέγχουμε ότι είστε άνθρωπος",
 		"IMAGE_DIALOG_LABEL": "Δοκιμασία με εικόνες",
 		"PUZZLE": {

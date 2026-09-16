@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "Felhasználó nem található",
 		"NO_EXTENSION_FOUND": "Nincs kiterjesztés található",
 		"INSECURE_CONTEXT": "A Procaptcha biztonságos (HTTPS) kapcsolatot igényel",
+		"INCORRECT_TRY_AGAIN": "Helytelen, kérjük, próbálja újra",
 		"CHECKING": "Ellenőrizzük, hogy ember vagy-e",
 		"IMAGE_DIALOG_LABEL": "Képes feladat",
 		"PUZZLE": {

@@ -133,15 +133,17 @@ describe("callbacks/defaultCallbacks", () => {
 			consoleErrorSpy.mockRestore();
 		});
 
-		it("onFailed should show alert", () => {
+		// The widgets render their own in-style retry prompt over a fresh
+		// challenge now. A browser alert() would say the same thing twice and,
+		// being modal, would block the user from acting on the new challenge
+		// until dismissed.
+		it("onFailed should not show a browser alert", () => {
 			const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
 			const callbacks = getDefaultCallbacks();
 
 			callbacks.onFailed();
 
-			expect(alertSpy).toHaveBeenCalledWith(
-				"Captcha challenge failed. Please try again",
-			);
+			expect(alertSpy).not.toHaveBeenCalled();
 
 			alertSpy.mockRestore();
 		});

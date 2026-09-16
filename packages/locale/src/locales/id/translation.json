@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
 		"NO_EXTENSION_FOUND": "Tidak ada ekstensi ditemukan",
 		"INSECURE_CONTEXT": "Procaptcha memerlukan koneksi aman (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "Salah, silakan coba lagi",
 		"CHECKING": "Memeriksa bahwa Anda manusia",
 		"IMAGE_DIALOG_LABEL": "Tantangan gambar",
 		"PUZZLE": {

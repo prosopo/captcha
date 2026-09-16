@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "Account dili makita",
 		"NO_EXTENSION_FOUND": "Walay nakitang extension",
 		"INSECURE_CONTEXT": "Procaptcha-യ്ക്ക് സുരക്ഷിതമായ (HTTPS) കണക്ഷൻ ആവശ്യമാണ്",
+		"INCORRECT_TRY_AGAIN": "തെറ്റാണ്, ദയവായി വീണ്ടും ശ്രമിക്കുക",
 		"CHECKING": "നിങ്ങൾ മനുഷ്യനാണെന്ന് പരിശോധിക്കുന്നു",
 		"IMAGE_DIALOG_LABEL": "ചിത്ര പരിശോധന",
 		"PUZZLE": {

@@ -413,6 +413,7 @@
 		"ACCOUNT_NOT_FOUND": "Tiliä ei löytynyt",
 		"NO_EXTENSION_FOUND": "Laajennusta ei löytynyt",
 		"INSECURE_CONTEXT": "Procaptcha vaatii suojatun (HTTPS) yhteyden",
+		"INCORRECT_TRY_AGAIN": "Virheellinen, yritä uudelleen",
 		"CHECKING": "Tarkistetaan, että olet ihminen",
 		"IMAGE_DIALOG_LABEL": "Kuvatehtävä",
 		"PUZZLE": {

@@ -43,7 +43,9 @@ export const getDefaultCallbacks = (element?: Element): Callbacks => ({
 		console.log("Challenge opened");
 	},
 	onFailed: () => {
-		alert("Captcha challenge failed. Please try again");
+		// No alert(): the image and puzzle widgets now render an in-style
+		// retry prompt over a fresh challenge, so a modal browser dialog would
+		// both duplicate that message and block the user from acting on it.
 		console.log("Challenge failed");
 	},
 	onReset: () => {

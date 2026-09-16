@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "ไม่พบบัญชี",
 		"NO_EXTENSION_FOUND": "ไม่พบส่วนขยาย",
 		"INSECURE_CONTEXT": "Procaptcha ต้องใช้การเชื่อมต่อที่ปลอดภัย (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "ไม่ถูกต้อง โปรดลองอีกครั้ง",
 		"CHECKING": "กำลังตรวจสอบว่าคุณเป็นมนุษย์",
 		"IMAGE_DIALOG_LABEL": "แบบทดสอบรูปภาพ",
 		"PUZZLE": {

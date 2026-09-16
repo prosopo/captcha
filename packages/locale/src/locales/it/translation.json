@@ -79,6 +79,7 @@
 		"ACCOUNT_NOT_FOUND": "Account non trovato",
 		"NO_EXTENSION_FOUND": "Nessuna estensione trovata",
 		"INSECURE_CONTEXT": "Procaptcha richiede una connessione sicura (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "Errato, riprova",
 		"CHECKING": "Verifica che tu sia umano in corso",
 		"IMAGE_DIALOG_LABEL": "Verifica con immagini",
 		"PUZZLE": {

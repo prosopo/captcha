@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "Không tìm thấy tài khoản",
 		"NO_EXTENSION_FOUND": "Không tìm thấy tiện ích",
 		"INSECURE_CONTEXT": "Procaptcha yêu cầu kết nối an toàn (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "Không đúng, vui lòng thử lại",
 		"CHECKING": "Đang xác minh bạn là người thật",
 		"IMAGE_DIALOG_LABEL": "Thử thách hình ảnh",
 		"PUZZLE": {

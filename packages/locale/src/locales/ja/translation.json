@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "アカウントが見つかりません",
 		"NO_EXTENSION_FOUND": "拡張機能が見つかりません",
 		"INSECURE_CONTEXT": "Procaptcha には安全な (HTTPS) 接続が必要です",
+		"INCORRECT_TRY_AGAIN": "正しくありません。もう一度お試しください",
 		"CHECKING": "人間であることを確認しています",
 		"IMAGE_DIALOG_LABEL": "画像による認証",
 		"PUZZLE": {

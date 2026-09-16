@@ -54,6 +54,10 @@ const useRefAsState = <T>(
 export const useProcaptcha = (
 	useState: useStateType,
 	useRef: useRefType,
+	// Seeds state that must be correct on the very first render. Used for
+	// `retryPrompt` so a widget re-mounted after a wrong answer paints the
+	// prompt with its first challenge rather than a frame later.
+	initialState?: { retryPrompt?: boolean },
 ): [ProcaptchaState, ProcaptchaStateUpdateFn] => {
 	const [isHuman, setIsHuman] = useState(false);
 	const [index, setIndex] = useState(0);
@@ -85,6 +89,9 @@ export const useProcaptcha = (
 		{ message: string; key: string } | undefined
 	>(undefined);
 	const [sessionId, setSessionId] = useState<string | undefined>(undefined);
+	const [retryPrompt, setRetryPrompt] = useState(
+		initialState?.retryPrompt ?? false,
+	);
 	return [
 		// the state
 		{
@@ -104,6 +111,7 @@ export const useProcaptcha = (
 			attemptCount,
 			error,
 			sessionId,
+			retryPrompt,
 		},
 		// and method to update the state
 		(nextState: Partial<ProcaptchaState>) => {
@@ -132,6 +140,8 @@ export const useProcaptcha = (
 				setAttemptCount(nextState.attemptCount);
 			if (nextState.error !== undefined) setError(nextState.error);
 			if (nextState.sessionId !== undefined) setSessionId(nextState.sessionId);
+			if (nextState.retryPrompt !== undefined)
+				setRetryPrompt(nextState.retryPrompt);
 		},
 	];
 };

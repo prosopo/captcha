@@ -56,6 +56,7 @@ export interface ProcaptchaState {
 	attemptCount: number; // Number of attempts to successfully complete captcha without errors
 	error: { message: string; key: string } | undefined; // any error message
 	sessionId: string | undefined; // the session id for the captcha challenge
+	retryPrompt: boolean; // whether the last attempt was wrong, so the widget shows "incorrect, try again" over the fresh challenge
 }
 
 /**

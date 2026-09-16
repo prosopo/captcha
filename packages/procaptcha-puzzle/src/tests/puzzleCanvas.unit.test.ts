@@ -68,6 +68,7 @@ interface CanvasProps {
 		(finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => void
 	>;
 	showRetry: boolean;
+	retryMessage: string;
 	submitting: boolean;
 	theme: Theme;
 }
@@ -86,6 +87,7 @@ const props = (overrides: Partial<CanvasProps> = {}): CanvasProps => ({
 	pieceSize: 44,
 	onComplete,
 	showRetry: false,
+	retryMessage: "Incorrect, please try again",
 	submitting: false,
 	theme: lightTheme,
 	...overrides,
@@ -266,9 +268,34 @@ describe("what it puts on screen", () => {
 		expect(overlay().textContent).toContain("Drag the piece to the target");
 	});
 
-	test("a retry says so instead", () => {
+	// The banner states the failure; the instruction below it stays put and
+	// keeps telling the user what to do with the replacement puzzle.
+	test("a retry adds the prompt without dropping the instruction", () => {
 		render(props({ showRetry: true }));
-		expect(overlay().textContent).toContain("Not quite");
+		expect(overlay().textContent).toContain("Incorrect, please try again");
+		expect(overlay().textContent).toContain("Drag the piece to the target");
+	});
+
+	test("the retry prompt is announced to assistive tech", () => {
+		render(props({ showRetry: true }));
+		const banner = overlay().querySelector('[data-cy="prosopo-retry-banner"]');
+		expect(banner?.getAttribute("role")).toBe("alert");
+		expect(banner?.getAttribute("aria-live")).toBe("polite");
+	});
+
+	test("no prompt on the first go", () => {
+		render(props());
+		expect(
+			overlay().querySelector('[data-cy="prosopo-retry-banner"]'),
+		).toBeNull();
+		expect(overlay().textContent).not.toContain("Incorrect");
+	});
+
+	// The widget supplies translated copy, so the canvas must render whatever
+	// it is handed rather than a hardcoded English string.
+	test("the prompt renders the message it is given", () => {
+		render(props({ showRetry: true, retryMessage: "Faux — réessayez" }));
+		expect(overlay().textContent).toContain("Faux — réessayez");
 	});
 
 	test("the piece cannot be grabbed while a solution is in flight", () => {

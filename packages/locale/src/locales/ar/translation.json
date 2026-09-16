@@ -378,6 +378,7 @@
 		"ACCOUNT_NOT_FOUND": "حساب غير موجود",
 		"NO_EXTENSION_FOUND": "لم يتم العثور على امتداد",
 		"INSECURE_CONTEXT": "يتطلب Procaptcha اتصالاً آمنًا (HTTPS)",
+		"INCORRECT_TRY_AGAIN": "غير صحيح، يرجى المحاولة مرة أخرى",
 		"CHECKING": "جارٍ التحقق من أنك إنسان",
 		"IMAGE_DIALOG_LABEL": "اختبار الصور",
 		"PUZZLE": {
