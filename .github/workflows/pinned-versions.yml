@@ -31,6 +31,7 @@ defaults:
 
 jobs:
   check:
+    name: pinned-versions
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR would run on the
     # self-hosted fleet -- executing arbitrary contributor code on hardware we

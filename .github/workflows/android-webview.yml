@@ -28,6 +28,7 @@ concurrency:
 
 jobs:
   build:
+    name: android-webview
     if: ${{ github.event.action != 'converted_to_draft' }}
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR running on the
@@ -49,6 +50,18 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
+        with:
+          # Drop the action's default `tools platform-tools`. `tools` is an
+          # obsolete SDK package that Google has removed from the repository,
+          # and it is what broke this job: the runner image ships cmdline-tools
+          # 12.0, the action decides that is the "wrong version" and downloads
+          # 20.0, and 20.0 cannot resolve `tools` at all --
+          # `Warning: Failed to find package 'tools'`, then exit 1. Licence
+          # acceptance was never the problem; it succeeded on the line above.
+          #
+          # `platform-tools` is the half that is real (adb and friends). Gradle
+          # resolves the build-tools and platform it needs on its own.
+          packages: platform-tools
 
       - name: Gradle build + unit tests
         run: ./gradlew --no-daemon --stacktrace testReleaseUnitTest assembleRelease
