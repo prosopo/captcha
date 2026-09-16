@@ -28,6 +28,7 @@ concurrency:
 
 jobs:
   build:
+    name: android-webview
     if: ${{ github.event.action != 'converted_to_draft' }}
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR running on the

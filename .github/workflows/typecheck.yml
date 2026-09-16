@@ -10,9 +10,14 @@ on:
     # CI. Only paths that cannot possibly affect this workflow belong below.
     #
     # Safe against the "required check never reports" trap: the one required
-    # context on main is `check`, and changesets.yml publishes a job named
-    # `check` with no path filter at all, so a PR touching only ignored paths
-    # still gets a `check` and does not sit pending forever.
+    # context on main is `check`, and required-check.yml publishes it with no
+    # path filter at all, so a PR touching only ignored paths still gets a
+    # `check` and does not sit pending forever.
+    #
+    # That role used to be filled by changesets.yml, which published a job also
+    # *named* `check` -- which is precisely why the required context resolved
+    # from whichever of seven same-named jobs reported first, and why this
+    # paragraph used to describe the defect as the safeguard.
     paths-ignore:
       - '.changeset/**' # release metadata; nothing here reads it
       - '.github/ISSUE_TEMPLATE/**'
@@ -49,6 +54,7 @@ defaults:
 
 jobs:
   check:
+    name: typecheck
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR would run on the
     # self-hosted fleet -- executing arbitrary contributor code on hardware we
