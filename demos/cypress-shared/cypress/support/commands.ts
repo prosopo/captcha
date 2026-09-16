@@ -63,8 +63,7 @@ export function buildTestSolutions(
 
 declare global {
 	namespace Cypress {
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
-		interface Chainable<Subject = any> {
+		interface Chainable<Subject> {
 			clickIAmHuman(): Cypress.Chainable<Captcha[]>;
 
 			clickCheckbox(): Cypress.Chainable<JQuery<HTMLElement>>;

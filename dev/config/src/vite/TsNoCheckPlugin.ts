@@ -11,14 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import type { Rollup } from "vite";
+
 export function tsNoCheckPlugin() {
 	return {
 		name: "vite-plugin-ts-nocheck",
-		// biome-ignore lint/suspicious/noExplicitAny: TODO not sure of options/bundle type (same as NodejsPolarsNativeFilePlugin)
-		generateBundle(_: any, bundle: any) {
+		generateBundle(
+			_: Rollup.NormalizedOutputOptions,
+			bundle: Rollup.OutputBundle,
+		) {
 			for (const fileName in bundle) {
 				const chunk = bundle[fileName];
-				if (chunk.type === "chunk" && chunk.code) {
+				if (chunk?.type === "chunk" && chunk.code) {
 					chunk.code = `// @ts-nocheck\n${chunk.code}`;
 				}
 			}
