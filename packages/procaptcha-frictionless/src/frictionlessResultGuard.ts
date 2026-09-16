@@ -14,7 +14,41 @@
 
 export type FrictionlessGuardOutcome =
 	| { kind: "pass" }
-	| { kind: "error"; message: string; key?: string };
+	| { kind: "error"; message: string; key?: string; retryable: boolean };
+
+/**
+ * Error keys that describe the caller's situation rather than the provider's
+ * health, so re-rolling onto another provider would return the same answer.
+ *
+ * Two groups. Integration faults (site key, origin, captcha type) need the
+ * site owner to change something and the text is what tells them what. Policy
+ * denials are a decision about this visitor that every provider shares —
+ * retrying them would both mislead the user and hammer the fleet on behalf of
+ * traffic we have just refused.
+ *
+ * Anything outside this list is treated as the provider failing, not the
+ * caller: see {@link evaluateFrictionlessResult}.
+ */
+const TERMINAL_ERROR_KEYS: ReadonlySet<string> = new Set([
+	"API.SITE_KEY_NOT_REGISTERED",
+	"API.INVALID_SITE_KEY",
+	"API.UNAUTHORIZED_ORIGIN_URL",
+	"API.INCORRECT_CAPTCHA_TYPE",
+	"API.ACCESS_POLICY_BLOCK",
+	"API.ABUSER_BLOCKED",
+	"API.CRAWLER_BLOCKED",
+	"API.DATACENTER_BLOCKED",
+	"API.DISALLOWED_WEBVIEW",
+	"API.MOBILE_BLOCKED",
+	"API.PROXY_BLOCKED",
+	"API.SATELLITE_BLOCKED",
+	"API.TOR_BLOCKED",
+	"API.VPN_BLOCKED",
+	"API.FORBIDDEN",
+	"API.UNAUTHORIZED",
+	// carries its own ten-second restart in ProcaptchaFrictionless
+	"CAPTCHA.NO_SESSION_FOUND",
+]);
 
 // Fields the guard reads off the `/frictionless` result. Kept minimal
 // (subset of BotDetectionFunctionResult) so the helper can be exercised
@@ -49,14 +83,26 @@ export const evaluateFrictionlessResult = (
 	result: FrictionlessGuardInput,
 ): FrictionlessGuardOutcome => {
 	if (result.error?.message) {
+		const key = result.error.key;
 		return {
 			kind: "error",
 			message: result.error.message,
-			...(result.error.key !== undefined && { key: result.error.key }),
+			...(key !== undefined && { key }),
+			// A key we do not recognise means the provider failed in a way it
+			// has no vocabulary for — API.BAD_REQUEST is what an unhandled throw
+			// inside a handler serialises to. That is worth trying another
+			// provider for. Retrying is gated on having a key at all: the
+			// bare-string errors handled below are hard blocks, and re-rolling
+			// those would hammer the fleet for traffic already refused.
+			retryable: key !== undefined && !TERMINAL_ERROR_KEYS.has(key),
 		};
 	}
 	if (!result.captchaType) {
-		return { kind: "error", message: MISSING_CAPTCHA_TYPE_MESSAGE };
+		return {
+			kind: "error",
+			message: MISSING_CAPTCHA_TYPE_MESSAGE,
+			retryable: false,
+		};
 	}
 	return { kind: "pass" };
 };

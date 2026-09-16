@@ -423,6 +423,14 @@ export const ProcaptchaFrictionless = ({
 
 				const guard = evaluateFrictionlessResult(result);
 				if (guard.kind === "error") {
+					// Throwing hands this to providerRetry, which re-rolls onto a
+					// different provider. The client does not throw on a 400 with a
+					// JSON body, so without this an unrecognised provider-side
+					// failure stranded the user on the first response even when
+					// every other node was healthy.
+					if (guard.retryable) {
+						throw new Error(guard.message);
+					}
 					stateRef.current = {
 						...stateRef.current,
 						loading: false,
@@ -461,6 +469,10 @@ export const ProcaptchaFrictionless = ({
 			5,
 		).finally(() => {
 			if (stateRef.current.attemptCount >= 5) {
+				// Retries swallow the underlying error, so without this a site's
+				// error callback never fires for a failure that retried — it would
+				// have fired immediately before retrying was introduced.
+				events.onError(new Error("Cannot load CAPTCHA"));
 				fallOverWithStyle();
 				restartComponentTimeout();
 			}

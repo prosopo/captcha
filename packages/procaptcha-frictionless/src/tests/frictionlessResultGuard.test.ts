@@ -51,7 +51,12 @@ describe("evaluateFrictionlessResult", () => {
 				captchaType: "pow",
 				error: { message: "Boom", key: "API.SOMETHING" },
 			}),
-		).toEqual({ kind: "error", message: "Boom", key: "API.SOMETHING" });
+		).toEqual({
+			kind: "error",
+			message: "Boom",
+			key: "API.SOMETHING",
+			retryable: true,
+		});
 	});
 
 	it("omits key from the outcome when the server error carries no key", () => {
@@ -78,13 +83,18 @@ describe("evaluateFrictionlessResult", () => {
 				// the wire but is not the object shape the guard reads.
 				error: undefined,
 			}),
-		).toEqual({ kind: "error", message: MISSING_CAPTCHA_TYPE_MESSAGE });
+		).toEqual({
+			kind: "error",
+			message: MISSING_CAPTCHA_TYPE_MESSAGE,
+			retryable: false,
+		});
 	});
 
 	it("halts when both captchaType and error are absent (opaque parse failure)", () => {
 		expect(evaluateFrictionlessResult({})).toEqual({
 			kind: "error",
 			message: MISSING_CAPTCHA_TYPE_MESSAGE,
+			retryable: false,
 		});
 	});
 
@@ -99,6 +109,71 @@ describe("evaluateFrictionlessResult", () => {
 			kind: "error",
 			message: "Server error",
 			key: "API.SERVER_ERROR",
+			retryable: true,
+		});
+	});
+
+	describe("retryable classification", () => {
+		const retryableOf = (key?: string): boolean => {
+			const outcome = evaluateFrictionlessResult({
+				error: { message: "msg", ...(key !== undefined && { key }) },
+			});
+			if (outcome.kind !== "error") throw new Error("expected error outcome");
+			return outcome.retryable;
+		};
+
+		it.each([
+			"API.SITE_KEY_NOT_REGISTERED",
+			"API.INVALID_SITE_KEY",
+			"API.UNAUTHORIZED_ORIGIN_URL",
+			"API.INCORRECT_CAPTCHA_TYPE",
+		])("shows integration fault %s rather than re-rolling", (key: string) => {
+			// Another provider returns the same answer, and the text is what
+			// tells the site owner what to change.
+			expect(retryableOf(key)).toBe(false);
+		});
+
+		it.each([
+			"API.ACCESS_POLICY_BLOCK",
+			"API.ABUSER_BLOCKED",
+			"API.CRAWLER_BLOCKED",
+			"API.DATACENTER_BLOCKED",
+			"API.DISALLOWED_WEBVIEW",
+			"API.MOBILE_BLOCKED",
+			"API.PROXY_BLOCKED",
+			"API.SATELLITE_BLOCKED",
+			"API.TOR_BLOCKED",
+			"API.VPN_BLOCKED",
+			"API.FORBIDDEN",
+			"API.UNAUTHORIZED",
+		])("does not re-roll policy denial %s", (key: string) => {
+			// Every provider shares the decision; retrying would hammer the
+			// fleet on behalf of traffic already refused.
+			expect(retryableOf(key)).toBe(false);
+		});
+
+		it("leaves CAPTCHA.NO_SESSION_FOUND to its own restart timer", () => {
+			expect(retryableOf("CAPTCHA.NO_SESSION_FOUND")).toBe(false);
+		});
+
+		it("re-rolls API.BAD_REQUEST, which is what an unhandled provider throw becomes", () => {
+			// An unhandled throw in a handler serialises to this with a 400, and
+			// the client does not throw on a 400 with a JSON body — so without
+			// re-rolling, one unhealthy provider stranded the user on the first
+			// response while the rest of the fleet was up.
+			expect(retryableOf("API.BAD_REQUEST")).toBe(true);
+		});
+
+		it.each(["API.UNKNOWN", "API.INTERNAL_SERVER_ERROR", "DATABASE.UNKNOWN"])(
+			"re-rolls unrecognised provider fault %s",
+			(key: string) => {
+				expect(retryableOf(key)).toBe(true);
+			},
+		);
+
+		it("does not re-roll an error with no key at all", () => {
+			// Hard blocks arrive as a bare `{ error: "..." }` string with no key.
+			expect(retryableOf(undefined)).toBe(false);
 		});
 	});
 });
