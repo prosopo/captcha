@@ -47,7 +47,7 @@
 		"@prosopo/util": "3.3.9",
 		"@prosopo/web-bot-auth": "0.1.0",
 		"@prosopo/util-crypto": "13.5.31",
-		"cron": "3.1.7",
+		"cron": "4.4.0",
 		"express": "4.22.2",
 		"express-rate-limit": "7.4.0",
 		"geolib": "3.3.14",
