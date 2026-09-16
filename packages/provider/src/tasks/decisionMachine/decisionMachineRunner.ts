@@ -136,15 +136,17 @@ interface NamedExport {
 }
 
 /**
- * WeakSet-style registry of every live runner. Populated in the constructor
- * and consulted by {@link invalidateAllDecisionMachineArtifactCaches} so an
- * artifact upload can flush every runner's in-memory artifact cache in one
- * call. Held as `WeakRef` so a runner that goes out of scope is garbage
- * collected — this map only ever grows in prod (runners are constructed
- * per task class at process start and live for the process's lifetime) so
- * a plain array would also work, but `WeakRef` is defensive.
+ * Bumped by {@link invalidateAllDecisionMachineArtifactCaches}. A runner
+ * caches the value it last saw and drops its artifact cache whenever the two
+ * diverge, which flushes every runner — including ones built after the
+ * invalidation — without holding a reference to any of them.
+ *
+ * This replaces a registry of live runners, which assumed runners were built
+ * once per process. They are built per request, so the registry grew without
+ * bound and construction eventually began to fail. `WeakRef` did not bound
+ * it: the set held the wrapper, which outlives its referent.
  */
-const liveRunners = new Set<WeakRef<DecisionMachineRunner>>();
+let artifactCacheGeneration = 0;
 
 /**
  * Flush every runner's in-memory artifact cache. Companion to
@@ -152,26 +154,26 @@ const liveRunners = new Set<WeakRef<DecisionMachineRunner>>();
  * `upsertDecisionMachineArtifact` upload.
  */
 export const invalidateAllDecisionMachineArtifactCaches = (): void => {
-	for (const ref of liveRunners) {
-		const runner = ref.deref();
-		if (runner === undefined) {
-			liveRunners.delete(ref);
-			continue;
-		}
-		runner.invalidateArtifactCache();
-	}
+	artifactCacheGeneration++;
 };
 
 export class DecisionMachineRunner {
 	private readonly artifactCache = new Map<string, CachedArtifact>();
+	private seenArtifactCacheGeneration = artifactCacheGeneration;
 
-	constructor(private readonly db: IProviderDatabase) {
-		liveRunners.add(new WeakRef(this));
-	}
+	constructor(private readonly db: IProviderDatabase) {}
 
 	/** Drop every entry in this runner's artifact cache. */
 	public invalidateArtifactCache(): void {
 		this.artifactCache.clear();
+	}
+
+	/** Drop the cache if an invalidation happened since it was last consulted. */
+	private dropArtifactCacheIfStale(): void {
+		if (this.seenArtifactCacheGeneration !== artifactCacheGeneration) {
+			this.seenArtifactCacheGeneration = artifactCacheGeneration;
+			this.artifactCache.clear();
+		}
 	}
 
 	/** Build a cache key for a given scope + kind + dappAccount tuple. */
@@ -189,6 +191,7 @@ export class DecisionMachineRunner {
 		kind: DecisionMachineKind,
 		dappAccount?: string,
 	): DecisionMachineArtifact | undefined | null {
+		this.dropArtifactCacheIfStale();
 		const entry = this.artifactCache.get(
 			DecisionMachineRunner.cacheKey(scope, kind, dappAccount),
 		);
