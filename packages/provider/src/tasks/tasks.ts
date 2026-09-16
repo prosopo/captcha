@@ -24,10 +24,12 @@ import type {
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { UsageCounters } from "../util/usageCounters.js";
+import { AudioCaptchaManager } from "./audioCaptcha/audioTasks.js";
 import { ClientTaskManager } from "./client/clientTasks.js";
 import { DatasetManager } from "./dataset/datasetTasks.js";
 import { DecisionMachineRunner } from "./decisionMachine/decisionMachineRunner.js";
 import { FrictionlessManager } from "./frictionless/frictionlessTasks.js";
+import { IconOrderCaptchaManager } from "./iconOrderCaptcha/iconOrderTasks.js";
 import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
 import { PuzzleCaptchaManager } from "./puzzleCaptcha/puzzleTasks.js";
@@ -50,6 +52,8 @@ export class Tasks {
 	pair: KeyringPair;
 	powCaptchaManager: PowCaptchaManager;
 	puzzleCaptchaManager: PuzzleCaptchaManager;
+	audioCaptchaManager: AudioCaptchaManager;
+	iconOrderCaptchaManager: IconOrderCaptchaManager;
 	datasetManager: DatasetManager;
 	imgCaptchaManager: ImgCaptchaManager;
 	clientTaskManager: ClientTaskManager;
@@ -102,6 +106,20 @@ export class Tasks {
 			this.usageCounters,
 		);
 		this.puzzleCaptchaManager = new PuzzleCaptchaManager(
+			this.db,
+			this.pair,
+			this.config,
+			this.logger,
+			this.usageCounters,
+		);
+		this.audioCaptchaManager = new AudioCaptchaManager(
+			this.db,
+			this.pair,
+			this.config,
+			this.logger,
+			this.usageCounters,
+		);
+		this.iconOrderCaptchaManager = new IconOrderCaptchaManager(
 			this.db,
 			this.pair,
 			this.config,
@@ -226,6 +244,8 @@ export class Tasks {
 		this.logger = logger;
 		this.powCaptchaManager.logger = logger;
 		this.puzzleCaptchaManager.logger = logger;
+		this.audioCaptchaManager.logger = logger;
+		this.iconOrderCaptchaManager.logger = logger;
 		this.datasetManager.logger = logger;
 		this.imgCaptchaManager.logger = logger;
 		this.clientTaskManager.logger = logger;

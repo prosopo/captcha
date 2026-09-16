@@ -27,6 +27,11 @@ import type {
 } from "./types.js";
 
 export { createPrng, createSeed, SEED_BYTES } from "./prng.js";
+export type { Prng } from "./prng.js";
+// Re-exported for sibling asset generators (e.g. @prosopo/icon-order-assets)
+// so every captcha type draws from one colour vocabulary.
+export { drawPalette, hslToRgb } from "./palette.js";
+export type { Rgb } from "./palette.js";
 export { generateBackground } from "./background.js";
 export { paintDecoys, paintDecoyPiece } from "./decoys.js";
 export {

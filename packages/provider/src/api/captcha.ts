@@ -23,10 +23,14 @@ import express, {
 } from "express";
 import assignDetectorBundle from "./captcha/assignDetectorBundle.js";
 import checkSpamEmail from "./captcha/checkSpamEmail.js";
+import getAudioCaptchaChallenge from "./captcha/getAudioCaptchaChallenge.js";
 import getFrictionlessCaptchaChallenge from "./captcha/getFrictionlessCaptchaChallenge.js";
+import getIconOrderCaptchaChallenge from "./captcha/getIconOrderCaptchaChallenge.js";
 import getImageCaptchaChallenge from "./captcha/getImageCaptchaChallenge.js";
 import getPoWCaptchaChallenge from "./captcha/getPoWCaptchaChallenge.js";
 import getPuzzleCaptchaChallenge from "./captcha/getPuzzleCaptchaChallenge.js";
+import submitAudioCaptchaSolution from "./captcha/submitAudioCaptchaSolution.js";
+import submitIconOrderCaptchaSolution from "./captcha/submitIconOrderCaptchaSolution.js";
 import submitImageCaptchaSolution from "./captcha/submitImageCaptchaSolution.js";
 import submitPoWCaptchaSolution from "./captcha/submitPoWCaptchaSolution.js";
 import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.js";
@@ -137,6 +141,38 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.SubmitPuzzleCaptchaSolution,
 		asyncHandler(submitPuzzleCaptchaSolution(env)),
+	);
+
+	/**
+	 * Supplies an Audio challenge to a Dapp User
+	 */
+	router.post(
+		ClientApiPaths.GetAudioCaptchaChallenge,
+		asyncHandler(getAudioCaptchaChallenge(env, userAccessRulesStorage)),
+	);
+
+	/**
+	 * Verifies a user's Audio solution as being approved or not
+	 */
+	router.post(
+		ClientApiPaths.SubmitAudioCaptchaSolution,
+		asyncHandler(submitAudioCaptchaSolution(env)),
+	);
+
+	/**
+	 * Supplies an icon-order challenge to a Dapp User
+	 */
+	router.post(
+		ClientApiPaths.GetIconOrderCaptchaChallenge,
+		asyncHandler(getIconOrderCaptchaChallenge(env, userAccessRulesStorage)),
+	);
+
+	/**
+	 * Verifies a user's icon-order solution as being approved or not
+	 */
+	router.post(
+		ClientApiPaths.SubmitIconOrderCaptchaSolution,
+		asyncHandler(submitIconOrderCaptchaSolution(env)),
 	);
 
 	/**

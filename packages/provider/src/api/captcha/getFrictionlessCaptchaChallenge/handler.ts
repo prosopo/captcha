@@ -31,6 +31,7 @@ import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
+import { isAudioAlternativeSessionType } from "../../../tasks/audioAlternative.js";
 import { Tasks } from "../../../tasks/index.js";
 import {
 	derivePlatform,
@@ -234,6 +235,13 @@ export default (
 				);
 			}
 
+			// Surfaced on every frictionless response below, so it must be
+			// set before both the dedup fast-path and the short-circuit /
+			// decision-machine dispatch paths.
+			tasks.frictionlessManager.setAudioAlternativeAvailable(
+				clientRecord.settings?.audioAccessibilityEnabled === true,
+			);
+
 			if (dedup) {
 				// A reused session must still honour an active user access policy
 				// AND the configured routing machine. This fast-path returns
@@ -308,7 +316,8 @@ export default (
 				const cachedCaptchaType = dedup.captchaType as
 					| CaptchaType.image
 					| CaptchaType.pow
-					| CaptchaType.puzzle;
+					| CaptchaType.puzzle
+					| CaptchaType.iconOrder;
 				const dedupRouted = normalizedIp
 					? await tasks.frictionlessManager.applyRoutingMachine(
 							{
@@ -491,10 +500,15 @@ export default (
 						[ApiParams.captchaType]: dedup.captchaType as
 							| CaptchaType.image
 							| CaptchaType.pow
-							| CaptchaType.puzzle,
+							| CaptchaType.puzzle
+							| CaptchaType.iconOrder,
 						[ApiParams.sessionId]: dedup.sessionId,
 						[ApiParams.status]: "ok",
 						dns_url: buildDnsEventUrl(dedup.sessionId),
+						...(isAudioAlternativeSessionType(dedup.captchaType) &&
+							clientRecord.settings?.audioAccessibilityEnabled === true && {
+								audioAlternativeAvailable: true,
+							}),
 					});
 				}
 			}

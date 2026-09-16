@@ -17,11 +17,12 @@ import { ProviderEnvironment } from "@prosopo/env";
 import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import {
-	CaptchaTypeSpec,
 	type ProsopoConfigOutput,
+	SelectableCaptchaTypeSpec,
 	Tier,
 	frictionlessImageThresholdDefault,
 	frictionlessTypesDefault,
+	iconOrderToleranceDefault,
 	puzzleMaxDifficultyDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
@@ -127,7 +128,7 @@ export default (
 					sitekey as string,
 					argv.tier as Tier,
 					{
-						captchaType: CaptchaTypeSpec.parse(captcha_type),
+						captchaType: SelectableCaptchaTypeSpec.parse(captcha_type),
 						frictionlessThreshold: {
 							frictionlessPuzzleThreshold: frictionless_threshold as number,
 							frictionlessImageThreshold:
@@ -143,7 +144,9 @@ export default (
 						imageMaxRounds: image_max_rounds as number,
 						imageMinRounds: image_min_rounds as number,
 						puzzleTolerance: puzzleToleranceDefault,
+						iconOrderTolerance: iconOrderToleranceDefault,
 						puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+						audioAccessibilityEnabled: false,
 						disallowWebView: false,
 						verifiedTimeout: 60000,
 						solutionTimeout: 60000,

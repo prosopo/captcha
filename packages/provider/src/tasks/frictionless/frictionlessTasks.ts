@@ -46,6 +46,7 @@ import {
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
 import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
+import { isAudioAlternativeSessionType } from "../audioAlternative.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { coerceToEnabledCaptchaType } from "../captchaTypeSelection.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
@@ -92,6 +93,7 @@ export class FrictionlessManager extends CaptchaManager {
 		"sessionId" | "createdAt" | "captchaType"
 	>;
 	private routingContext?: RoutingContext;
+	private audioAlternativeAvailable = false;
 	private readonly decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
 
@@ -118,6 +120,20 @@ export class FrictionlessManager extends CaptchaManager {
 	 */
 	setRoutingContext(ctx: RoutingContext): void {
 		this.routingContext = ctx;
+	}
+
+	/**
+	 * Whether this site offers the audio challenge as an accessibility
+	 * alternative from the image and puzzle widgets.
+	 *
+	 * Set once per request from the client record, before either the
+	 * short-circuit or the decision-machine dispatch path runs, so every
+	 * `send*Captcha` return carries it. Kept separate from
+	 * `setSessionParams` because the short-circuit path builds its own
+	 * params object and would otherwise miss it.
+	 */
+	setAudioAlternativeAvailable(available: boolean): void {
+		this.audioAlternativeAvailable = available;
 	}
 
 	/**
@@ -506,8 +522,21 @@ export class FrictionlessManager extends CaptchaManager {
 		return this.sendCaptcha(CaptchaType.puzzle, params);
 	}
 
+	async sendIconOrderCaptcha(
+		params?: Partial<Session>,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		return this.sendCaptcha(CaptchaType.iconOrder, params);
+	}
+
+	// Shared body for the concrete `send*Captcha` helpers. Each helper is
+	// kept as its own thin wrapper so call-sites read clearly, but session
+	// validation and the createSession invocation only live in one place.
 	private async sendCaptcha(
-		captchaType: CaptchaType.image | CaptchaType.pow | CaptchaType.puzzle,
+		captchaType:
+			| CaptchaType.image
+			| CaptchaType.pow
+			| CaptchaType.puzzle
+			| CaptchaType.iconOrder,
 		params?: Partial<Session>,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
@@ -676,6 +705,12 @@ export class FrictionlessManager extends CaptchaManager {
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
 			dns_url: buildDnsEventUrl(sessionRecord.sessionId),
+			// Only advertised when the challenge actually has something to
+			// switch away from: PoW has no UI to hang the control off.
+			...(isAudioAlternativeSessionType(finalCaptchaType) &&
+				this.audioAlternativeAvailable && {
+					audioAlternativeAvailable: true,
+				}),
 		};
 	}
 

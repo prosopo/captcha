@@ -92,6 +92,8 @@ export class ProsopoServer {
 	 * Verify a token with the issuing provider. Dispatches to the correct
 	 * verify endpoint by inspecting the token's declared captchaType:
 	 *  - puzzle        → submitPuzzleCaptchaVerify
+	 *  - audio         → submitAudioCaptchaVerify
+	 *  - iconOrder     → submitIconOrderCaptchaVerify
 	 *  - pow           → submitPowCaptchaVerify
 	 *  - image         → verifyDappUser
 	 *  - authenticated → submitAuthenticatedCaptchaVerify (Web Bot Auth fast-path)
@@ -137,12 +139,42 @@ export class ProsopoServer {
 		const signatureHex = u8aToHex(dappUserSignature);
 		const providerApi = this.getProviderApi(providerUrl);
 
+		if (captchaType === CaptchaType.iconOrder) {
+			const iconOrderTimeout = this.config.timeouts.iconOrder.cachedTimeout;
+			if (!this.isRecent(timestamp, iconOrderTimeout, "IconOrder")) {
+				return this.notRecentResponse();
+			}
+			return await providerApi.submitIconOrderCaptchaVerify(
+				token,
+				signatureHex,
+				user,
+				ip,
+				email,
+				clientSessionId,
+			);
+		}
+
 		if (captchaType === CaptchaType.puzzle) {
 			const puzzleTimeout = this.config.timeouts.puzzle.cachedTimeout;
 			if (!this.isRecent(timestamp, puzzleTimeout, "Puzzle")) {
 				return this.notRecentResponse();
 			}
 			return await providerApi.submitPuzzleCaptchaVerify(
+				token,
+				signatureHex,
+				user,
+				ip,
+				email,
+				clientSessionId,
+			);
+		}
+
+		if (captchaType === CaptchaType.audio) {
+			const audioTimeout = this.config.timeouts.audio.cachedTimeout;
+			if (!this.isRecent(timestamp, audioTimeout, "Audio")) {
+				return this.notRecentResponse();
+			}
+			return await providerApi.submitAudioCaptchaVerify(
 				token,
 				signatureHex,
 				user,

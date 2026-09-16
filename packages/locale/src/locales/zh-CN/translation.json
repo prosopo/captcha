@@ -390,7 +390,19 @@
 			"POSITION": "距左边 {{x}} %，距顶部 {{y}} %",
 			"CHECKING": "正在检查您的答案",
 			"RETRY_ANNOUNCEMENT": "差一点。已加载新的拼图，拼块回到了起点。"
-		}
+		},
+		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
+		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
+		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
+		"AUDIO_PLAY": "Play",
+		"AUDIO_REPLAY": "Play again",
+		"AUDIO_PLAYING": "Playing",
+		"AUDIO_FINISHED": "Playback finished",
+		"AUDIO_PLAYBACK_FAILED": "Audio could not be played. Check your device volume and try again.",
+		"AUDIO_INCORRECT": "That wasn't right. Here's a new one.",
+		"AUDIO_SUBMIT": "Verify",
+		"AUDIO_CHECKING": "Checking",
+		"AUDIO_ALTERNATIVE": "Use audio instead"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "无法编码无效地址",

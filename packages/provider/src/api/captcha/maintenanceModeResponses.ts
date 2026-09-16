@@ -17,13 +17,20 @@ import {
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaType,
+	type GetAudioCaptchaResponse,
 	type GetFrictionlessCaptchaResponse,
+	type GetIconOrderCaptchaResponse,
 	type GetPowCaptchaResponse,
 	type GetPuzzleCaptchaResponse,
 	POW_SEPARATOR,
 	type PoWChallengeId,
 	type VerificationResponse,
 } from "@prosopo/types";
+import {
+	renderAudioClip,
+	resolveAudioRenderSettings,
+} from "../../tasks/audio/audioRenderer.js";
+import { renderIconOrderImages } from "../../tasks/iconOrder/iconOrderRenderer.js";
 import { renderPuzzleImages } from "../../tasks/puzzle/puzzleRenderer.js";
 
 // Maintenance mode dummies. The matching submit/verify endpoints already
@@ -69,7 +76,11 @@ export const buildMaintenanceVerificationResponse = (
 });
 
 export const buildFrictionlessMaintenanceResponse = (
-	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle,
+	captchaType:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder,
 	host: string | undefined,
 ): GetFrictionlessCaptchaResponse => ({
 	[ApiParams.captchaType]: captchaType,
@@ -112,6 +123,32 @@ export const buildImageMaintenanceResponse = (): CaptchaResponseBody => ({
 // all — there are no coordinates left to fake a challenge out of. Generation is
 // in-process and needs no database, so it works fine while Mongo is away, and
 // /submit/puzzle doesn't validate in maintenance mode so any drop resolves.
+/**
+ * Maintenance-mode audio challenge.
+ *
+ * Renders a real clip so the widget has something playable and the user
+ * sees the normal flow rather than a broken player. The answer is
+ * discarded — during maintenance every submission is accepted anyway, so
+ * there is nothing to grade against and nothing worth persisting.
+ */
+export const buildAudioMaintenanceResponse = async (
+	user: string,
+	dapp: string,
+): Promise<GetAudioCaptchaResponse> => {
+	const timestamp = Date.now();
+	const rendered = renderAudioClip(resolveAudioRenderSettings());
+	return {
+		[ApiParams.status]: "ok",
+		[ApiParams.challenge]: buildChallenge(user, dapp),
+		[ApiParams.clip]: rendered.clip,
+		[ApiParams.characterCount]: rendered.characterCount,
+		[ApiParams.timestamp]: timestamp.toString(),
+		[ApiParams.signature]: {
+			[ApiParams.provider]: { [ApiParams.challenge]: "" },
+		},
+	};
+};
+
 export const buildPuzzleMaintenanceResponse = async (
 	user: string,
 	dapp: string,
@@ -126,6 +163,29 @@ export const buildPuzzleMaintenanceResponse = async (
 		[ApiParams.pieceSize]: images.pieceSize,
 		[ApiParams.originX]: 60,
 		[ApiParams.originY]: 100,
+		[ApiParams.timestamp]: timestamp.toString(),
+		[ApiParams.signature]: {
+			[ApiParams.provider]: { [ApiParams.challenge]: "" },
+		},
+	};
+};
+
+// Rendered for real, for the same reason as the puzzle response above: the
+// widget has nothing to show without imagery. The targets the renderer picks
+// are thrown away here — /submit/icon-order doesn't grade in maintenance mode,
+// so there is nothing to score them against.
+export const buildIconOrderMaintenanceResponse = async (
+	user: string,
+	dapp: string,
+): Promise<GetIconOrderCaptchaResponse> => {
+	const timestamp = Date.now();
+	const images = await renderIconOrderImages();
+	return {
+		[ApiParams.status]: "ok",
+		[ApiParams.challenge]: buildChallenge(user, dapp),
+		[ApiParams.background]: images.background,
+		[ApiParams.legend]: images.legend,
+		[ApiParams.legendIconSize]: images.legendIconSize,
 		[ApiParams.timestamp]: timestamp.toString(),
 		[ApiParams.signature]: {
 			[ApiParams.provider]: { [ApiParams.challenge]: "" },

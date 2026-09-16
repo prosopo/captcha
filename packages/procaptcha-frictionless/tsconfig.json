@@ -19,7 +19,22 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
+			"path": "../api"
+		},
+		{
+			"path": "../common"
+		},
+		{
 			"path": "../locale"
+		},
+		{
+			"path": "../procaptcha-audio"
+		},
+		{
+			"path": "../procaptcha-common"
+		},
+		{
+			"path": "../procaptcha-icon-order"
 		},
 		{
 			"path": "../procaptcha-pow"
@@ -35,15 +50,6 @@
 		},
 		{
 			"path": "../widget-skeleton"
-		},
-		{
-			"path": "../api"
-		},
-		{
-			"path": "../common"
-		},
-		{
-			"path": "../procaptcha-common"
 		}
 	]
 }

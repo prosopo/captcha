@@ -22,6 +22,7 @@ export * from "./extensionLoader.js";
 export * from "./simdReadings.js";
 export * from "./elements/window.js";
 export * from "./reactComponents/Reload.js";
+export * from "./reactComponents/AudioAlternative.js";
 export * from "./reactComponents/Checkbox.js";
 export * from "./reactComponents/ChallengeSurface.js";
 export * from "./reactComponents/Honeypot.js";

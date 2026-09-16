@@ -495,8 +495,8 @@ export class PowCaptchaManager extends CaptchaManager {
 			: undefined;
 
 		// Missing coords forces at least an image escalation, unless the routing
-		// machine already escalated to a visual challenge (image/puzzle) that we
-		// would keep anyway.
+		// machine already escalated to a challenge that collects its own
+		// interaction telemetry (image/puzzle) which we would keep anyway.
 		if (
 			escalateForMissingCoords &&
 			routingOutput?.captchaType !== CaptchaType.image &&

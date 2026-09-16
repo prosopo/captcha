@@ -82,6 +82,13 @@ export enum ApiParams {
 	background = "background",
 	piece = "piece",
 	pieceSize = "pieceSize",
+	// Icon-order captcha. `legend` is the strip naming the icons to click, in
+	// order; `clicks` is the user's ordered answer. Icon coordinates are never
+	// an ApiParam because they never leave the provider.
+	legend = "legend",
+	legendIconSize = "legendIconSize",
+	clicks = "clicks",
+	iconOrderEvents = "iconOrderEvents",
 	mode = "mode",
 	reason = "reason",
 	escalation = "escalation",
@@ -95,4 +102,9 @@ export enum ApiParams {
 	clientSessionId = "clientSessionId",
 	honeypot = "honeypot",
 	fingerprintProof = "fingerprintProof",
+	clip = "clip",
+	answer = "answer",
+	audioEvents = "audioEvents",
+	replays = "replays",
+	characterCount = "characterCount",
 }

@@ -50,8 +50,13 @@ const ProcaptchaLoader = async () =>
 	(await import("@prosopo/procaptcha-react")).Procaptcha;
 const ProcaptchaPuzzleLoader = async () =>
 	(await import("@prosopo/procaptcha-puzzle")).ProcaptchaPuzzle;
+
+const ProcaptchaIconOrderLoader = async () =>
+	(await import("@prosopo/procaptcha-icon-order")).ProcaptchaIconOrder;
 const ProcaptchaPowLoader = async () =>
 	(await import("@prosopo/procaptcha-pow")).ProcaptchaPow;
+const ProcaptchaAudioLoader = async () =>
+	(await import("@prosopo/procaptcha-audio")).ProcaptchaAudio;
 
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
@@ -103,6 +108,15 @@ const defaultLoadingState = (
 	attemptCount,
 });
 
+/**
+ * The visual challenges, which are the only ones that offer "use audio
+ * instead". Mirrors the provider's `isAudioAlternativeSessionType`.
+ */
+const offersAudioAlternative = (captchaType: string): boolean =>
+	captchaType === CaptchaType.image ||
+	captchaType === CaptchaType.puzzle ||
+	captchaType === CaptchaType.iconOrder;
+
 export const ProcaptchaFrictionless = ({
 	config,
 	callbacks,
@@ -149,6 +163,15 @@ export const ProcaptchaFrictionless = ({
 	const manualStartedRef = useRef(false);
 	// The placeholder is built before `start()` exists in this scope.
 	const manualCheckboxHandlerRef = useRef(noopCheckboxHandler);
+	// Set when the user has asked for the audio alternative. The next mount
+	// forces the audio widget regardless of what /frictionless returns for
+	// the fresh session — the server has no idea the user made this choice,
+	// and would hand back the site's configured visual type again.
+	const forceAudioNextMountRef = useRef(false);
+	// Whether the site has `audioAccessibilityEnabled`. Read off the
+	// /frictionless response and held so a re-mint (which re-runs
+	// /frictionless) keeps offering the control.
+	const audioAlternativeAvailableRef = useRef(false);
 
 	useEffect(() => {
 		if (!config.language) return;
@@ -230,8 +253,23 @@ export const ProcaptchaFrictionless = ({
 		autoStart = false,
 		escalationCoords?: RetryCoords,
 	) => {
+		// Consume the audio-alternative request before anything else, so the
+		// handlers below know whether this mount is the audio challenge.
+		//
+		// Audio is never a type the provider hands back from /frictionless: it
+		// is only reachable as the accessibility alternative. So the audio
+		// widget is mounted here, on the user's request, against the visual
+		// session the re-run just minted — the provider accepts an audio
+		// challenge request against that session when the site has
+		// `audioAccessibilityEnabled`. If the re-run came back as something
+		// with no visual challenge (PoW, a verified agent) there is nothing to
+		// exchange, and the widget the provider chose is mounted instead.
+		const mountAudio =
+			forceAudioNextMountRef.current && offersAudioAlternative(captchaType);
+		forceAudioNextMountRef.current = false;
+
 		const onEscalate = (
-			next: CaptchaType.image | CaptchaType.puzzle,
+			next: CaptchaType.image | CaptchaType.puzzle | CaptchaType.iconOrder,
 			newSessionId: string,
 			coords?: RetryCoords,
 		) => {
@@ -274,6 +312,9 @@ export const ProcaptchaFrictionless = ({
 				pendingRetryCoordsRef,
 			);
 			if (shouldRestart) {
+				// Stay on audio: the user already chose it over the visual
+				// challenge the re-run will mint.
+				if (mountAudio) forceAudioNextMountRef.current = true;
 				resetState(0);
 				void start();
 				return;
@@ -300,6 +341,27 @@ export const ProcaptchaFrictionless = ({
 			// A reload mints a genuinely new session, so the invalidation
 			// budget for the *previous* one shouldn't count against it.
 			sessionInvalidatedAttemptsRef.current = 0;
+			// A wrong audio answer lands here too. The re-run mints a visual
+			// session, so without this the user who asked for audio would be
+			// dropped back onto the challenge they could not use.
+			if (mountAudio) forceAudioNextMountRef.current = true;
+			resetState(0);
+			void start();
+		};
+
+		// The user asked for the audio alternative from a visual challenge.
+		//
+		// Same constraint as `onReload`: the provider consumed this session
+		// when it issued the visual challenge, so there is no way to ask it
+		// for an audio one against the same session. Re-run frictionless to
+		// mint a fresh visual session, then force the audio widget on the next
+		// mount, which requests its challenge against that session.
+		//
+		// Not one-shot: a user who switches to audio, fails, and switches
+		// back must be able to switch again.
+		const onRequestAudioAlternative = () => {
+			forceAudioNextMountRef.current = true;
+			nextMountAutoStartRef.current = true;
 			resetState(0);
 			void start();
 		};
@@ -321,6 +383,19 @@ export const ProcaptchaFrictionless = ({
 		const startCoords = escalationCoords ?? retryStartCoords;
 		mountCountRef.current += 1;
 		const mountKey = mountCountRef.current;
+
+		// Only visual challenges can offer the switch. Passing it to the
+		// audio widget itself would render a "use audio instead" control on
+		// an audio challenge.
+		const audioAlternativeProps =
+			audioAlternativeAvailableRef.current &&
+			!mountAudio &&
+			offersAudioAlternative(captchaType)
+				? {
+						audioAlternativeAvailable: true,
+						onRequestAudioAlternative,
+					}
+				: {};
 
 		if (captchaType === CaptchaType.authenticated) {
 			// Web Bot Auth pre-verified pass-through. No challenge, no
@@ -346,6 +421,22 @@ export const ProcaptchaFrictionless = ({
 					callbacks={callbacks}
 				/>,
 			);
+		} else if (mountAudio) {
+			const ProcaptchaAudio = await ProcaptchaAudioLoader();
+			setComponentToRender(
+				<ProcaptchaAudio
+					key={mountKey}
+					config={config}
+					callbacks={callbacks}
+					frictionlessState={frictionlessState}
+					i18n={i18n}
+					autoStart={resumedAutoStart}
+					startCoords={startCoords}
+					onSessionInvalidated={onSessionInvalidated}
+					container={container}
+					onReload={onReload}
+				/>,
+			);
 		} else if (captchaType === CaptchaType.image) {
 			const Procaptcha = await ProcaptchaLoader();
 			setComponentToRender(
@@ -360,6 +451,22 @@ export const ProcaptchaFrictionless = ({
 					onSessionInvalidated={onSessionInvalidated}
 					container={container}
 					onReload={onReload}
+					{...audioAlternativeProps}
+				/>,
+			);
+		} else if (captchaType === CaptchaType.iconOrder) {
+			const ProcaptchaIconOrder = await ProcaptchaIconOrderLoader();
+			setComponentToRender(
+				<ProcaptchaIconOrder
+					key={mountKey}
+					config={config}
+					callbacks={callbacks}
+					frictionlessState={frictionlessState}
+					i18n={i18n}
+					autoStart={resumedAutoStart}
+					startCoords={startCoords}
+					onSessionInvalidated={onSessionInvalidated}
+					{...audioAlternativeProps}
 				/>,
 			);
 		} else if (captchaType === CaptchaType.puzzle) {
@@ -375,6 +482,7 @@ export const ProcaptchaFrictionless = ({
 					startCoords={startCoords}
 					onSessionInvalidated={onSessionInvalidated}
 					container={container}
+					{...audioAlternativeProps}
 				/>,
 			);
 		} else {
@@ -455,6 +563,9 @@ export const ProcaptchaFrictionless = ({
 					hp: result.hp,
 					agent: result.agent,
 				};
+
+				audioAlternativeAvailableRef.current =
+					result.audioAlternativeAvailable === true;
 
 				await renderForCaptchaType(result.captchaType, frictionlessState);
 

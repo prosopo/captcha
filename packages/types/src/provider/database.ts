@@ -32,7 +32,11 @@ import {
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
 import { CaptchaType } from "../client/index.js";
-import type { ContextType, IPuzzleSettings } from "../client/settings.js";
+import type {
+	ContextType,
+	IIconOrderSettings,
+	IPuzzleSettings,
+} from "../client/settings.js";
 import { ModeEnum } from "../config/mode.js";
 import {
 	type CaptchaResult,
@@ -49,7 +53,13 @@ import type {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
-import type { PuzzleEvent, RequestHeaders } from "./api.js";
+import type {
+	AudioEvent,
+	IconClick,
+	IconOrderEvent,
+	PuzzleEvent,
+	RequestHeaders,
+} from "./api.js";
 import type { SimdReadings } from "./detection.js";
 import {
 	type MatchedAccessRule,
@@ -579,6 +589,11 @@ export type Session = {
 	// trafficFilter challenge-policy fields of the same names.
 	puzzleTolerance?: number;
 	puzzle?: IPuzzleSettings;
+	// Icon-order equivalents of the two fields above, with identical
+	// semantics: persisted by the routing machine so
+	// getIconOrderCaptchaChallenge can layer them in.
+	iconOrderTolerance?: number;
+	iconOrder?: IIconOrderSettings;
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
 	// See StoredCaptcha.pendingStage — same semantics on Session records.
@@ -804,6 +819,67 @@ export interface PuzzleCaptchaStored extends StoredCaptcha {
 	puzzleEvents?: PuzzleEvent[];
 }
 
+/**
+ * An audio challenge as stored by the provider.
+ *
+ * `answer` is the spoken transcript. It is the secret: it never appears
+ * in any response body, and the audio-challenge response type has no
+ * field it could be written to. The puzzle captcha shipped its target
+ * coordinates to the client once, which let any caller echo them back
+ * and pass without rendering anything — this is the same secret in a
+ * different medium.
+ */
+export interface AudioCaptchaStored extends StoredCaptcha {
+	challenge: PoWChallengeId;
+	answer: string;
+	providerSignature: string;
+	userSignature?: string;
+	userAccount: string;
+	dappAccount: string;
+	/** What the user typed. Kept for audit and for tuning difficulty. */
+	submittedAnswer?: string;
+	/** How many times the clip was played before submitting. */
+	replays?: number;
+	audioEvents?: AudioEvent[];
+}
+
+/**
+ * The icon-order answer, at rest.
+ *
+ * `targets` is the whole secret: the ordered icon placements the user has to
+ * click. It is written here at challenge time and read back at submit time,
+ * and it is the reason the challenge response can be pure imagery — nothing
+ * in this record is ever serialised to a client. Decoy placements are
+ * deliberately NOT stored: they are already expressed in the pixels and
+ * grading never consults them.
+ */
+export interface IconOrderCaptchaStored extends StoredCaptcha {
+	challenge: PoWChallengeId;
+	targets: StoredIconTarget[];
+	/** Hit radius as a multiple of each icon's own size. */
+	tolerance: number;
+	providerSignature: string;
+	userSignature?: string;
+	userAccount: string;
+	dappAccount: string;
+	clicks?: IconClick[];
+	iconOrderEvents?: IconOrderEvent[];
+}
+
+/**
+ * One target icon as persisted. Mirrors `IconPlacement` from
+ * `@prosopo/icon-order-assets` minus the fields that only matter to the
+ * renderer (rotation, hue): grading needs the centre and the size, and
+ * storing the rest would put more of the frame's construction in the
+ * database than the grader has any use for.
+ */
+export interface StoredIconTarget {
+	x: number;
+	y: number;
+	size: number;
+	kind: string;
+}
+
 export interface SolutionRecord extends CaptchaSolution {
 	datasetId: string;
 	datasetContentId: string;
@@ -847,7 +923,12 @@ export type DecisionMachineArtifact = {
 	source: string;
 	name?: string;
 	version?: string;
-	captchaType?: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType?:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.audio
+		| CaptchaType.iconOrder;
 	createdAt: Date;
 	updatedAt: Date;
 };

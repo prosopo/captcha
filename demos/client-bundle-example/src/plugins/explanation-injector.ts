@@ -58,8 +58,15 @@ export default function explanationInjector(): Plugin {
 					explanationHtml = generateImageExplanation(isExplicit, isInvisible);
 				} else if (isPow) {
 					explanationHtml = generatePowExplanation(isExplicit, isInvisible);
+				} else if (pageName.includes("icon-order")) {
+					explanationHtml = generateIconOrderExplanation(
+						isExplicit,
+						isInvisible,
+					);
 				} else if (pageName.includes("puzzle")) {
 					explanationHtml = generatePuzzleExplanation(isExplicit, isInvisible);
+				} else if (pageName.includes("audio")) {
+					explanationHtml = generateAudioExplanation(isExplicit, isInvisible);
 				}
 
 				// No explanation needed or couldn't determine type
@@ -287,6 +294,115 @@ const widgetId = render(document.getElementById('procaptcha-container'), {
 			<li>On page load, ${escapeHtml(isExplicit ? "the render function is called to initialize" : "Procaptcha scans for elements with the procaptcha class")}</li>
 			<li>A drag-to-target puzzle challenge is presented to the user</li>
 			<li>When the user completes the puzzle, the callback function is called</li>
+			<li>On successful verification, the form can be submitted with the token</li>
+		</ol>
+	</div>
+	`;
+}
+
+function generateAudioExplanation(
+	isExplicit: boolean,
+	isInvisible: boolean,
+): string {
+	const renderType = isExplicit ? "Explicit" : "Implicit";
+
+	// Nothing on the page asks for audio. The site key names an image site
+	// with `audioAccessibilityEnabled` turned on, and the widget offers the
+	// switch from inside the image challenge.
+	const codeExample = isExplicit
+		? escapeHtml(`// Import the render function
+import { render } from "%VITE_BUNDLE_URL%"
+
+// Render CAPTCHA
+const widgetId = render(document.getElementById('procaptcha-container'), {
+    siteKey: import.meta.env.PROSOPO_SITE_KEY_AUDIO,
+    callback: handleCaptchaResponse,
+    "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
+});`)
+		: escapeHtml(`<div
+    class="procaptcha"
+    data-theme="light"
+    data-sitekey="%PROSOPO_SITE_KEY_AUDIO%"
+    data-failed-callback="onCaptchaFailed"
+    data-callback="onCaptchaVerified"${isInvisible ? '\n    data-size="invisible"' : ""}
+></div>`);
+
+	return `
+	<div class="explanation">
+		<h2>How the ${isInvisible ? "Invisible " : ""}Audio Accessibility Alternative Works (${renderType} Rendering)</h2>
+
+		<h3>Implementation Details</h3>
+		<p>Audio is not a captcha type a site selects. It is an accessibility alternative, the way reCAPTCHA offers one: when a site turns on <code>audioAccessibilityEnabled</code>, every visual challenge (image, puzzle and icon order) shows a &ldquo;Use audio instead&rdquo; control. The integration itself is unchanged &mdash; this page renders an ordinary widget with ${renderType.toLowerCase()} rendering.</p>
+		<ol>
+			<li>Import the Procaptcha ${isExplicit ? "render function" : "script"}</li>
+			<li>${escapeHtml(isExplicit ? "Create a container for the CAPTCHA" : "Add a div with the procaptcha class")}</li>
+			<li>${escapeHtml(isExplicit ? "Render the CAPTCHA explicitly" : "Set data-* attributes to configure the CAPTCHA")}</li>
+			<li>Handle the verification result in the callback function</li>
+		</ol>
+
+		<h3>Key Code Example</h3>
+		<pre>${codeExample}</pre>
+
+		<h3>Execution Flow</h3>
+		<ol>
+			<li>The widget opens the site's visual challenge, with the audio control underneath</li>
+			<li>A user who cannot use the visual challenge presses &ldquo;Use audio instead&rdquo;</li>
+			<li>The provider synthesises a clip of spoken digits and sends the audio &mdash; never the transcript</li>
+			<li>The user presses play, listens, and types the digits</li>
+			<li>The provider grades the typed answer against the transcript it kept server-side, and the form can be submitted with the token</li>
+		</ol>
+
+		<h3>A note on strength</h3>
+		<p>Speech recognition solves transcription tasks of this kind readily, so the audio itself is not the security control &mdash; the surrounding signals are. That is why audio is only ever offered as an alternative a user chooses, and is off unless the site turns it on.</p>
+	</div>
+	`;
+}
+
+function generateIconOrderExplanation(
+	isExplicit: boolean,
+	isInvisible: boolean,
+): string {
+	const renderType = isExplicit ? "Explicit" : "Implicit";
+
+	const codeExample = isExplicit
+		? escapeHtml(`// Import the render function
+import { render } from "%VITE_BUNDLE_URL%"
+
+// Render CAPTCHA
+const widgetId = render(document.getElementById('procaptcha-container'), {
+    siteKey: import.meta.env.PROSOPO_SITE_KEY_ICONORDER,
+    callback: handleCaptchaResponse,
+    "failed-callback": handleCaptchaFailed${isInvisible ? ',\n    size: "invisible"' : ""}
+});`)
+		: escapeHtml(`<div
+    class="procaptcha"
+    data-theme="light"
+    data-sitekey="%PROSOPO_SITE_KEY_ICONORDER%"
+    data-failed-callback="onCaptchaFailed"
+    data-callback="onCaptchaVerified"${isInvisible ? '\n    data-size="invisible"' : ""}
+></div>`);
+
+	return `
+	<div class="explanation">
+		<h2>How ${isInvisible ? "Invisible " : ""}Icon Order CAPTCHA Works (${renderType} Rendering)</h2>
+
+		<h3>Implementation Details</h3>
+		<p>This example demonstrates how to use Procaptcha in icon-order mode with ${renderType.toLowerCase()} rendering:</p>
+		<ol>
+			<li>Import the Procaptcha ${isExplicit ? "render function" : "script"}</li>
+			<li>${escapeHtml(isExplicit ? "Create a container for the CAPTCHA" : "Add a div with the procaptcha class")}</li>
+			<li>${escapeHtml(isExplicit ? "Render the CAPTCHA explicitly" : "Set data-* attributes to configure the CAPTCHA")}</li>
+			<li>Handle the verification result in the callback function</li>
+		</ol>
+
+		<h3>Key Code Example</h3>
+		<pre>${codeExample}</pre>
+
+		<h3>Execution Flow</h3>
+		<ol>
+			<li>On page load, ${escapeHtml(isExplicit ? "the render function is called to initialize" : "Procaptcha scans for elements with the procaptcha class")}</li>
+			<li>A frame of icons is presented, with a legend naming which of them to click and in what order</li>
+			<li>When the user has clicked them in order and confirmed, the callback function is called</li>
 			<li>On successful verification, the form can be submitted with the token</li>
 		</ol>
 	</div>

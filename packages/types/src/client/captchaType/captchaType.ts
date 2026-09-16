@@ -19,6 +19,8 @@ enum CaptchaType {
 	pow = "pow",
 	frictionless = "frictionless",
 	puzzle = "puzzle",
+	audio = "audio",
+	iconOrder = "iconOrder",
 	// Web Bot Auth verified — no user-facing challenge. Issued only by the
 	// frictionless flow when the request carried a valid Ed25519 signature
 	// per RFC 9421 / draft-meunier-web-bot-auth AND no operator-authored
@@ -31,13 +33,33 @@ enum CaptchaType {
 
 const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
 
-// Decision machines only work with pow, image and puzzle captcha types.
-// Frictionless is the outer flow that dispatches to these; authenticated
-// is a pre-verified pass-through and has no scoring surface.
+// Every type a decision machine may route to. Excludes `frictionless`,
+// which is the flow that *runs* the machine rather than an outcome of it,
+// and `authenticated`, a pre-verified pass-through with no scoring surface.
 const DecisionMachineCaptchaTypeSchema = z.union([
 	z.literal(CaptchaType.pow),
 	z.literal(CaptchaType.image),
 	z.literal(CaptchaType.puzzle),
+	z.literal(CaptchaType.audio),
+	z.literal(CaptchaType.iconOrder),
 ]);
 
-export { CaptchaType, CaptchaTypeSchema, DecisionMachineCaptchaTypeSchema };
+// Every type a site, access rule or traffic category may select. Excludes
+// `audio`: the audio challenge is only ever served as the accessibility
+// alternative a user picks from a visual challenge, on a site that has
+// `audioAccessibilityEnabled` turned on. It is never a type anything else
+// can route a user to, so a record naming it is rejected on write rather
+// than stored and silently ignored.
+const SelectableCaptchaTypeSchema = CaptchaTypeSchema.refine(
+	// Annotated `boolean` so TypeScript does not infer a type predicate and
+	// narrow the output: settings and rules keep the full `CaptchaType`.
+	(captchaType): boolean => captchaType !== CaptchaType.audio,
+	{ message: "audio is only served as an accessibility alternative" },
+);
+
+export {
+	CaptchaType,
+	CaptchaTypeSchema,
+	DecisionMachineCaptchaTypeSchema,
+	SelectableCaptchaTypeSchema,
+};

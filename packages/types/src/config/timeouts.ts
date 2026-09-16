@@ -39,6 +39,24 @@ export const DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT =
 // The time in milliseconds that a Provider cached, verified, puzzle captcha solution is valid for (3 minutes)
 export const DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT =
 	DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT * 3;
+// The timeframe in which an audio captcha solution remains valid on the page before timing out (1 minute)
+export const DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT = ONE_MINUTE;
+// The timeframe in which an audio captcha must be completed and verified (2 minutes)
+export const DEFAULT_AUDIO_CAPTCHA_VERIFIED_TIMEOUT =
+	DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT * 2;
+// The time in milliseconds that a Provider cached, verified, audio captcha solution is valid for (3 minutes)
+export const DEFAULT_AUDIO_CAPTCHA_CACHED_TIMEOUT =
+	DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT * 3;
+
+// The icon-order captcha asks the user to find several icons and click them in
+// order, so it takes longer to solve than dragging one puzzle piece. The
+// solution window is doubled accordingly; the verified and cached windows keep
+// the same multiples of it that the puzzle type uses.
+export const DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT = ONE_MINUTE * 2;
+export const DEFAULT_ICON_ORDER_CAPTCHA_VERIFIED_TIMEOUT =
+	DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT * 2;
+export const DEFAULT_ICON_ORDER_CAPTCHA_CACHED_TIMEOUT =
+	DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT * 3;
 // The time in milliseconds since the last correct captcha recorded in the contract (15 minutes), after which point, the
 // user will be required to complete another captcha
 export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = ONE_MINUTE * 15;

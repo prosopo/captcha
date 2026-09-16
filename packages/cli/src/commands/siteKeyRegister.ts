@@ -19,14 +19,15 @@ import {
 	type KeyringPair,
 	frictionlessImageThresholdDefault,
 	frictionlessTypesDefault,
+	iconOrderToleranceDefault,
 	imageMaxRoundsDefault,
 	imageMinRoundsDefault,
 	puzzleMaxDifficultyDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import {
-	CaptchaTypeSpec,
 	type ProsopoConfigOutput,
+	SelectableCaptchaTypeSpec,
 	Tier,
 } from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
@@ -36,7 +37,7 @@ import { validateSiteKey } from "./validators.js";
 export const SiteKeyRegisterCommandArgsSpec = z.object({
 	sitekey: z.string(),
 	tier: z.nativeEnum(Tier),
-	captcha_type: CaptchaTypeSpec,
+	captcha_type: SelectableCaptchaTypeSpec,
 	frictionless_threshold: z.number().max(1).min(0),
 	// Optional upper rung of the score ladder. Omit for the two-outcome
 	// ladder (pow below the threshold, image above it). Uncapped: the score
@@ -140,7 +141,7 @@ export default (
 				} = SiteKeyRegisterCommandArgsSpec.parse(argv);
 				const tasks = new Tasks(env);
 				await tasks.clientTaskManager.registerSiteKey(sitekey, tier, {
-					captchaType: CaptchaTypeSpec.parse(captcha_type),
+					captchaType: SelectableCaptchaTypeSpec.parse(captcha_type),
 					frictionlessThreshold: {
 						frictionlessPuzzleThreshold: frictionless_threshold as number,
 						frictionlessImageThreshold:
@@ -155,7 +156,9 @@ export default (
 					imageMaxRounds: image_max_rounds as number,
 					imageMinRounds: image_min_rounds as number,
 					puzzleTolerance: puzzleToleranceDefault,
+					iconOrderTolerance: iconOrderToleranceDefault,
 					puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+					audioAccessibilityEnabled: false,
 					disallowWebView: false,
 					verifiedTimeout: 60000,
 					solutionTimeout: 60000,

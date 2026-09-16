@@ -20,22 +20,35 @@ import {
 	rankCaptchaType,
 } from "./index.js";
 
-// The four members of CaptchaType, as bare strings. Not imported from
+// The scoreable members of CaptchaType, as bare strings. Not imported from
 // @prosopo/types — this package deliberately has no dependencies, and the
 // coupling is asserted on the consuming side instead.
-const TYPES = ["image", "puzzle", "pow", "frictionless"] as const;
-const STRICTEST_FIRST = ["image", "puzzle", "pow", "frictionless"] as const;
+const TYPES = ["image", "iconOrder", "puzzle", "pow", "frictionless"] as const;
+const STRICTEST_FIRST = [
+	"image",
+	"iconOrder",
+	"puzzle",
+	"pow",
+	"frictionless",
+] as const;
 
 // Well above imageMaxRoundsDefault (32). `solvedImagesCount` is validated by
 // `number().int().min(2)` with no upper bound, so "absurd" is reachable.
 const ABSURD_ROUNDS = 100_000;
 
 describe("rankCaptchaType", () => {
-	it("ranks image > puzzle > pow > frictionless", () => {
+	it("ranks image > iconOrder > puzzle > pow > frictionless", () => {
 		const ascending = [...STRICTEST_FIRST].reverse();
 		const ranks = ascending.map(rankCaptchaType);
 		expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
 		expect(new Set(ranks).size).toBe(ascending.length);
+	});
+
+	// Audio is only ever the accessibility alternative a user picks from a
+	// visual challenge, never a type a policy selects, so it has no tier.
+	it("does not rank audio above unset", () => {
+		expect(rankCaptchaType("audio")).toBe(0);
+		expect(isStricterCaptchaType("audio", undefined)).toBe(false);
 	});
 
 	it("ranks unset and unrecognised values at 0", () => {
@@ -56,8 +69,10 @@ describe("isStricterCaptchaType — type only, settings ignored", () => {
 	// Adjacent pairs in both orderings — non-adjacent comparisons would still
 	// pass with an off-by-one in the table.
 	it.each([
-		["image", "puzzle", true],
-		["puzzle", "image", false],
+		["image", "iconOrder", true],
+		["iconOrder", "image", false],
+		["iconOrder", "puzzle", true],
+		["puzzle", "iconOrder", false],
 		["puzzle", "pow", true],
 		["pow", "puzzle", false],
 		["pow", "frictionless", true],
@@ -90,6 +105,9 @@ describe("isStricterCaptchaType — type only, settings ignored", () => {
 describe("captchaPolicySeverity — type dominates", () => {
 	it("orders by type before any setting", () => {
 		expect(captchaPolicySeverity({ captchaType: "image" })).toBeGreaterThan(
+			captchaPolicySeverity({ captchaType: "iconOrder" }),
+		);
+		expect(captchaPolicySeverity({ captchaType: "iconOrder" })).toBeGreaterThan(
 			captchaPolicySeverity({ captchaType: "puzzle" }),
 		);
 		expect(captchaPolicySeverity({ captchaType: "puzzle" })).toBeGreaterThan(
