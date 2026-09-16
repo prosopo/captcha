@@ -1,5 +1,233 @@
 # @prosopo/client-example-server
 
+## 2.7.159
+### Patch Changes
+
+- ca03f7e: Stop the staging database being killed by the host, and let it come back on its own.
+  
+  The `database1` mongo container had no memory limit and no restart policy. The
+  staging host has 5.8GB of RAM and no swap, so mongod grew until the kernel
+  OOM-killer took it — three times, on 18 August, 5 September and 8 September.
+  Because it was the only service in this compose file without
+  `restart: unless-stopped`, nothing brought it back, and the last crash left the
+  database down for two days.
+  
+  It now has `mem_limit: 3g`, which keeps it clear of the host limit, and a
+  WiredTiger cache pinned to 1.5GB so the rest of the budget is left for
+  connections and sorts rather than being handed to the cache. `restart:
+  unless-stopped` matches the other two services, so a crash costs seconds
+  instead of days.
+- Updated dependencies [98ab052]
+- Updated dependencies [028a158]
+- Updated dependencies [1f0598c]
+- Updated dependencies [3958046]
+- Updated dependencies [028a158]
+  - @prosopo/database@4.0.33
+  - @prosopo/types@5.8.3
+  - @prosopo/common@3.1.55
+  - @prosopo/keyring@2.9.89
+  - @prosopo/server@2.12.3
+
+## 2.7.158
+### Patch Changes
+
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/types@5.8.2
+  - @prosopo/server@2.12.2
+  - @prosopo/database@4.0.32
+  - @prosopo/keyring@2.9.88
+
+## 2.7.157
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+  - @prosopo/database@4.0.31
+  - @prosopo/keyring@2.9.87
+  - @prosopo/server@2.12.1
+
+## 2.7.156
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [b2183f9]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/database@4.0.30
+  - @prosopo/server@2.12.0
+  - @prosopo/keyring@2.9.86
+
+## 2.7.155
+### Patch Changes
+
+- Updated dependencies [8a63ea3]
+  - @prosopo/database@4.0.29
+
+## 2.7.154
+### Patch Changes
+
+- Updated dependencies [f8a41fe]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/database@4.0.28
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/common@3.1.54
+  - @prosopo/dotenv@3.0.55
+  - @prosopo/keyring@2.9.85
+  - @prosopo/logger@2.0.9
+  - @prosopo/server@2.11.7
+
+## 2.7.153
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/common@3.1.53
+  - @prosopo/database@4.0.27
+  - @prosopo/dotenv@3.0.54
+  - @prosopo/keyring@2.9.84
+  - @prosopo/logger@2.0.8
+  - @prosopo/server@2.11.6
+  - @prosopo/types@5.6.0
+  - @prosopo/util@3.3.8
+
+## 2.7.152
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/database@4.0.26
+  - @prosopo/keyring@2.9.83
+  - @prosopo/server@2.11.5
+
+## 2.7.151
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/database@4.0.25
+  - @prosopo/keyring@2.9.82
+  - @prosopo/server@2.11.4
+
+## 2.7.150
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/database@4.0.24
+  - @prosopo/types@5.5.1
+  - @prosopo/keyring@2.9.81
+  - @prosopo/server@2.11.3
+
+## 2.7.149
+### Patch Changes
+
+- Updated dependencies [d7a0a64]
+  - @prosopo/server@2.11.2
+  - @prosopo/database@4.0.23
+
+## 2.7.148
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types@5.5.0
+  - @prosopo/database@4.0.22
+  - @prosopo/keyring@2.9.80
+  - @prosopo/server@2.11.1
+
+## 2.7.147
+### Patch Changes
+
+- 5a17a65: Fix client session id correlation rejecting every token.
+  
+  #3139 added `clientMetaData.clientSessionId` and a verify-time check that the solve carries the same session id the widget was rendered with. The check never passed: `getPowCaptchaRecordByChallenge` and `getPuzzleCaptchaRecordByChallenge` project an explicit field list, and `clientMetaData` was not in it. The verify path therefore read `undefined` and `isClientSessionMismatch(suppliedId, undefined)` returned true for *every* token carrying a session id, disapproving it with `API.CLIENT_SESSION_MISMATCH`.
+  
+  Nothing else was wrong: the widget attached the id, the wire format carried it, and the write path persisted it (the session record — read without a projection — had it all along). Only the read dropped it, which is why unit tests over the comparison helper and the escalation handoff all passed. `getSessionRecordBySessionId` had the same omission and is fixed too.
+  
+  This is the third instance of this class of bug — the projection-contract helper's own docstring already cites #3107 and #3116. The guard existed but its `consumerReads` manifest was not updated when #3139 started reading a new field, so the manifests for the PoW and puzzle contracts now list `clientMetaData` and their fixtures populate it. Reverting the projection fix makes that test fail with "serverVerifyPowCaptchaSolution reads a field that the projection stripped: clientMetaData".
+  
+  Adds an end-to-end Cypress spec (`clientSessionId.cy.ts`) that solves a real PoW captcha rendered with `data-sessionid` and asserts the dapp server's verify succeeds, plus a mismatch case that must be rejected — the half that proves the correlation actually runs rather than being silently skipped. This required wiring `clientSessionId` through the demo server's `/signup` into `isVerified`, which #3139 left unwired; that omission is why no e2e covered the feature.
+- Updated dependencies [5a17a65]
+  - @prosopo/database@4.0.21
+
+## 2.7.146
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/server@2.11.0
+  - @prosopo/common@3.1.52
+  - @prosopo/database@4.0.20
+  - @prosopo/keyring@2.9.79
+
+## 2.7.145
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/database@4.0.19
+  - @prosopo/keyring@2.9.78
+  - @prosopo/server@2.10.59
+
+## 2.7.144
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- f850d07: chore(deps): bump body-parser and express
+- Updated dependencies [a2f4b13]
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+- Updated dependencies [179a2b0]
+  - @prosopo/database@4.0.18
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/common@3.1.51
+  - @prosopo/dotenv@3.0.53
+  - @prosopo/keyring@2.9.77
+  - @prosopo/logger@2.0.7
+  - @prosopo/server@2.10.58
+
 ## 2.7.143
 ### Patch Changes
 

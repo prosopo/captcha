@@ -14,7 +14,13 @@
 
 import type { Server } from "node:net";
 import { stringToU8a, u8aToHex } from "@polkadot/util";
-import { buildDataset, datasetWithSolutionHashes } from "@prosopo/datasets";
+import {
+	CaptchaMerkleTree,
+	buildDataset,
+	computeCaptchaSolutionHash,
+	datasetWithSolutionHashes,
+	parseAndSortCaptchaSolutions,
+} from "@prosopo/datasets";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";
 import { Tasks, isTlsAvailable, startProviderApi } from "@prosopo/provider";
@@ -30,6 +36,7 @@ import {
 	ClientSettingsSchema,
 	DatabaseTypes,
 	type ImageVerificationResponse,
+	type KeyringPair,
 	ProsopoConfigSchema,
 	Tier,
 	type VerifySolutionBodyTypeInput,
@@ -44,6 +51,7 @@ import { reservePort } from "./testUtils.js";
 
 const solutions = datasetWithSolutionHashes;
 const userAccount = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
+const origin = "https://localhost";
 
 /**
  * Register a site key directly in the database using Tasks
@@ -78,6 +86,207 @@ describe("Image Captcha Integration Tests", () => {
 	let testPort: number;
 	let baseUrl: string;
 	let builtDataset: Awaited<ReturnType<typeof buildDataset>>;
+
+	// --- Shared challenge/solve/verify helpers -------------------------------
+	// The image captcha flow is always the same three calls (request a
+	// challenge, submit a solution, have the dapp verify the result), so the
+	// tests below drive it through these rather than repeating the fetches.
+
+	/**
+	 * Correct solution and full item hash list for each captcha, keyed by the
+	 * content ID the provider serves.
+	 *
+	 * We read from builtDataset (not datasetWithSolutionHashes) because
+	 * buildDataset recomputes captchaContentId via merkle tree hashing, so the
+	 * IDs stored in the DB differ from the pre-set ones in the static fixture.
+	 */
+	const getCaptchaInfo = (): Map<
+		string,
+		{ solution: string[]; itemHashes: string[] }
+	> =>
+		new Map(
+			(builtDataset.captchas as Captcha[])
+				.filter((captcha) => captcha.solution)
+				.map((captcha) => [
+					captcha.captchaContentId,
+					{
+						solution: captcha.solution?.map((s) => s.toString()) ?? [],
+						itemHashes: captcha.items.map((item) => item.hash),
+					},
+				]),
+		);
+
+	const requestChallenge = async (
+		siteKey: string,
+		user: string,
+	): Promise<CaptchaResponseBody> => {
+		const body: CaptchaRequestBodyType = {
+			[ApiParams.dapp]: siteKey,
+			[ApiParams.user]: user,
+			[ApiParams.datasetId]: solutions.datasetId,
+		};
+		const response = await fetch(
+			`${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`,
+			{
+				method: "POST",
+				body: JSON.stringify(body),
+				headers: {
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": siteKey,
+					"Prosopo-User": user,
+				},
+			},
+		);
+
+		expect(response.status).toBe(200);
+
+		return (await response.json()) as CaptchaResponseBody;
+	};
+
+	/**
+	 * Build a solution body for a challenge. "correct" picks the images in the
+	 * dataset solution; "incorrect" deliberately picks every image that is NOT
+	 * in the solution, which guarantees 0% correctness and so a disapproval.
+	 */
+	const buildSolution = (
+		challenge: CaptchaResponseBody,
+		siteKey: string,
+		user: string,
+		userPair: KeyringPair,
+		answer: "correct" | "incorrect",
+	): CaptchaSolutionBodyType => {
+		const captchaInfo = getCaptchaInfo();
+
+		return {
+			[ApiParams.captchas]: challenge.captchas.map((captcha, index) => {
+				const info = captchaInfo.get(captcha.captchaContentId);
+				if (!info) {
+					throw new Error(
+						`Captcha info not found for captchaContentId: ${captcha.captchaContentId}`,
+					);
+				}
+
+				return {
+					captchaContentId: captcha.captchaContentId,
+					captchaId: captcha.captchaId,
+					salt: embedData(randomAsHex(), [
+						1 + index,
+						2 + index,
+						3 + index,
+						4 + index,
+					]),
+					solution:
+						answer === "correct"
+							? info.solution
+							: info.itemHashes.filter((hash) => !info.solution.includes(hash)),
+				};
+			}),
+			[ApiParams.dapp]: siteKey,
+			[ApiParams.requestHash]: challenge.requestHash,
+			[ApiParams.signature]: {
+				[ApiParams.user]: {
+					[ApiParams.timestamp]: u8aToHex(
+						userPair.sign(stringToU8a(challenge.timestamp)),
+					),
+				},
+				[ApiParams.provider]:
+					challenge[ApiParams.signature][ApiParams.provider],
+			},
+			[ApiParams.timestamp]: challenge.timestamp,
+			[ApiParams.user]: user,
+		};
+	};
+
+	const submitSolution = async (
+		solution: CaptchaSolutionBodyType,
+		siteKey: string,
+		user: string,
+	): Promise<CaptchaSolutionResponse> => {
+		const response = await fetch(
+			`${baseUrl}${ClientApiPaths.SubmitImageCaptchaSolution}`,
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": siteKey,
+					"Prosopo-User": user,
+				},
+				body: JSON.stringify(solution),
+			},
+		);
+
+		expect(response.status).toBe(200);
+
+		return (await response.json()) as CaptchaSolutionResponse;
+	};
+
+	/**
+	 * The commitment ID the provider stored for a solution. The widget derives
+	 * it client-side from the solutions it submitted (it is never returned by
+	 * the API) and puts it in the procaptcha token, so the test does the same.
+	 */
+	const getCommitmentId = (solution: CaptchaSolutionBodyType): string => {
+		const tree = new CaptchaMerkleTree();
+		tree.build(
+			parseAndSortCaptchaSolutions(solution[ApiParams.captchas]).map(
+				(captcha) => computeCaptchaSolutionHash(captcha),
+			),
+		);
+		return tree.getRoot().hash;
+	};
+
+	/**
+	 * Verify the challenge the way a dapp's server would. Without a commitment
+	 * ID the provider falls back to looking up the latest approved commitment
+	 * for this user and site key, which is what a challenge that never got as
+	 * far as storing a commitment has to be checked against.
+	 */
+	const dappVerify = async (
+		siteKey: string,
+		siteKeyMnemonic: string,
+		user: string,
+		commitmentId?: string,
+	): Promise<ImageVerificationResponse> => {
+		const dappPair = getPair(siteKeyMnemonic);
+		const verifyTimestamp = Date.now().toString();
+		const token = encodeProcaptchaOutput({
+			[ApiParams.dapp]: siteKey,
+			[ApiParams.user]: user,
+			...(commitmentId ? { [ApiParams.commitmentId]: commitmentId } : {}),
+			[ApiParams.timestamp]: verifyTimestamp,
+			[ApiParams.signature]: {
+				[ApiParams.provider]: {},
+				[ApiParams.user]: {},
+			},
+		});
+		const verifyBody: VerifySolutionBodyTypeInput = {
+			[ApiParams.token]: token,
+			[ApiParams.dappSignature]: u8aToHex(
+				dappPair.sign(stringToU8a(verifyTimestamp)),
+			),
+		};
+
+		const response = await fetch(
+			`${baseUrl}${ClientApiPaths.VerifyImageCaptchaSolutionDapp}`,
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Origin: origin,
+					"Prosopo-Site-Key": siteKey,
+					"Prosopo-User": user,
+				},
+				body: JSON.stringify(verifyBody),
+			},
+		);
+
+		expect(response.status).toBe(200);
+
+		return (await response.json()) as ImageVerificationResponse;
+	};
+	// ------------------------------------------------------------------------
 
 	beforeAll(async () => {
 		testPort = await reservePort();
@@ -429,237 +638,103 @@ describe("Image Captcha Integration Tests", () => {
 	});
 
 	describe("SubmitImageCaptchaSolution", () => {
+		// Use dummyUserAccount for signing, but dappAccount (registered in
+		// beforeEach) as the site key.
+		const getUser = (): { pair: KeyringPair; userAccount: string } => ({
+			pair: getPair(dummyUserAccount.seed, undefined, "sr25519", 42),
+			userAccount: dummyUserAccount.address,
+		});
+
 		it("should verify a correctly completed image captcha as true", async () => {
-			// Use dummyUserAccount for signing, but dappAccount (registered in beforeEach) as the site key
-			const pair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
-			const userAccount = dummyUserAccount.address;
-			const origin = "https://localhost";
+			const { pair, userAccount } = getUser();
 
-			// Get captcha challenge using the site key registered in beforeEach
-			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
-			const getImgCaptchaBody: CaptchaRequestBodyType = {
-				[ApiParams.dapp]: dappAccount,
-				[ApiParams.user]: userAccount,
-				[ApiParams.datasetId]: solutions.datasetId,
-			};
-			const response = await fetch(getImageCaptchaURL, {
-				method: "POST",
-				body: JSON.stringify(getImgCaptchaBody),
-				headers: {
-					"Content-Type": "application/json",
-					Origin: origin,
-					"Prosopo-Site-Key": dappAccount,
-					"Prosopo-User": userAccount,
-				},
-			});
+			const challenge = await requestChallenge(dappAccount, userAccount);
 
-			expect(response.status).toBe(200);
-
-			const data = (await response.json()) as CaptchaResponseBody;
-
-			// Create a map of solutions from the built dataset for quick lookup.
-			// We use builtDataset (not datasetWithSolutionHashes) because buildDataset
-			// recomputes captchaContentId via merkle tree hashing, so the IDs stored
-			// in the DB differ from the pre-set ones in the static fixture.
-			const solutionMap = new Map<string, string[]>(
-				(builtDataset.captchas as Captcha[])
-					.filter((captcha) => captcha.solution)
-					.map((captcha) => [
-						captcha.captchaContentId,
-						captcha.solution?.map((s) => s.toString()) ?? [],
-					]),
+			const res = await submitSolution(
+				buildSolution(challenge, dappAccount, userAccount, pair, "correct"),
+				dappAccount,
+				userAccount,
 			);
 
-			// Map the returned captchas to their solutions
-			const temp = data.captchas.map((captcha, index) => {
-				const solution = solutionMap.get(captcha.captchaContentId);
-				if (!solution) {
-					throw new Error(
-						`Solution not found for captchaContentId: ${captcha.captchaContentId}`,
-					);
-				}
-
-				return {
-					captchaContentId: captcha.captchaContentId,
-					captchaId: captcha.captchaId,
-					salt: embedData(randomAsHex(), [
-						1 + index,
-						2 + index,
-						3 + index,
-						4 + index,
-					]),
-					solution: solution,
-				};
-			});
-
-			const solveImgCaptchaBody: CaptchaSolutionBodyType = {
-				[ApiParams.captchas]: temp,
-				[ApiParams.dapp]: dappAccount,
-				[ApiParams.requestHash]: data.requestHash,
-				[ApiParams.signature]: {
-					[ApiParams.user]: {
-						[ApiParams.timestamp]: u8aToHex(
-							pair.sign(stringToU8a(data.timestamp)),
-						),
-					},
-					[ApiParams.provider]: data[ApiParams.signature][ApiParams.provider],
-				},
-				[ApiParams.timestamp]: data.timestamp,
-				[ApiParams.user]: userAccount,
-			};
-
-			const solveThatCaptcha = await fetch(
-				`${baseUrl}${ClientApiPaths.SubmitImageCaptchaSolution}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						Origin: origin,
-						"Prosopo-Site-Key": dappAccount,
-						"Prosopo-User": userAccount,
-					},
-					body: JSON.stringify(solveImgCaptchaBody),
-				},
-			);
-			const jsonRes = await solveThatCaptcha.json();
-
-			const res = jsonRes as CaptchaSolutionResponse;
 			expect(res.status).toBe("You correctly answered the captchas");
 		});
 
-		it("should mark an incorrectly completed image captcha as disapproved", async () => {
-			// Use dummyUserAccount for signing, but dappAccount (registered in beforeEach) as the site key
-			const pair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
-			const userAccount = dummyUserAccount.address;
-			const origin = "https://localhost";
+		it("should mark an incorrectly completed image captcha as disapproved, and the dapp should verify the challenge as disapproved", async () => {
+			const { pair, userAccount } = getUser();
 
-			// Get captcha challenge using the site key registered in beforeEach
-			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
-			const getImgCaptchaBody: CaptchaRequestBodyType = {
-				[ApiParams.dapp]: dappAccount,
-				[ApiParams.user]: userAccount,
-				[ApiParams.datasetId]: solutions.datasetId,
-			};
-			const response = await fetch(getImageCaptchaURL, {
-				method: "POST",
-				body: JSON.stringify(getImgCaptchaBody),
-				headers: {
-					"Content-Type": "application/json",
-					Origin: origin,
-					"Prosopo-Site-Key": dappAccount,
-					"Prosopo-User": userAccount,
-				},
-			});
+			const challenge = await requestChallenge(dappAccount, userAccount);
 
-			expect(response.status).toBe(200);
-
-			const data = (await response.json()) as CaptchaResponseBody;
-
-			// Build a map of the correct solution and all item hashes for each captcha
-			// from the built dataset (which recomputes captchaContentId via merkle hashing).
-			const captchaInfoMap = new Map<
-				string,
-				{ solution: string[]; itemHashes: string[] }
-			>(
-				(builtDataset.captchas as Captcha[])
-					.filter((captcha) => captcha.solution)
-					.map((captcha) => [
-						captcha.captchaContentId,
-						{
-							solution: captcha.solution?.map((s) => s.toString()) ?? [],
-							itemHashes: captcha.items.map((item) => item.hash),
-						},
-					]),
+			// Select the wrong images and submit within the time limit.
+			const solution = buildSolution(
+				challenge,
+				dappAccount,
+				userAccount,
+				pair,
+				"incorrect",
 			);
+			const res = await submitSolution(solution, dappAccount, userAccount);
 
-			// Deliberately select the wrong images: every image that is NOT part of the
-			// correct solution. This guarantees 0% correctness, below the 0.8 threshold.
-			const temp = data.captchas.map((captcha, index) => {
-				const info = captchaInfoMap.get(captcha.captchaContentId);
-				if (!info) {
-					throw new Error(
-						`Captcha info not found for captchaContentId: ${captcha.captchaContentId}`,
-					);
-				}
-
-				return {
-					captchaContentId: captcha.captchaContentId,
-					captchaId: captcha.captchaId,
-					salt: embedData(randomAsHex(), [
-						1 + index,
-						2 + index,
-						3 + index,
-						4 + index,
-					]),
-					solution: info.itemHashes.filter(
-						(hash) => !info.solution.includes(hash),
-					),
-				};
-			});
-
-			const solveImgCaptchaBody: CaptchaSolutionBodyType = {
-				[ApiParams.captchas]: temp,
-				[ApiParams.dapp]: dappAccount,
-				[ApiParams.requestHash]: data.requestHash,
-				[ApiParams.signature]: {
-					[ApiParams.user]: {
-						[ApiParams.timestamp]: u8aToHex(
-							pair.sign(stringToU8a(data.timestamp)),
-						),
-					},
-					[ApiParams.provider]: data[ApiParams.signature][ApiParams.provider],
-				},
-				[ApiParams.timestamp]: data.timestamp,
-				[ApiParams.user]: userAccount,
-			};
-
-			const solveThatCaptcha = await fetch(
-				`${baseUrl}${ClientApiPaths.SubmitImageCaptchaSolution}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						Origin: origin,
-						"Prosopo-Site-Key": dappAccount,
-						"Prosopo-User": userAccount,
-					},
-					body: JSON.stringify(solveImgCaptchaBody),
-				},
-			);
-
-			const res = (await solveThatCaptcha.json()) as CaptchaSolutionResponse;
+			// The provider marks the solution as disapproved.
 			expect(res.verified).toBe(false);
 			expect(res.status).toBe(
 				"You answered one or more captchas incorrectly. Please try again",
 			);
+
+			// The dapp verifies the challenge and is told it is disapproved.
+			const verifyResult = await dappVerify(
+				dappAccount,
+				mnemonic,
+				userAccount,
+				getCommitmentId(solution),
+			);
+			expect(verifyResult.verified).toBe(false);
+		});
+
+		it("should allow a successful challenge after a failed one", async () => {
+			const { pair, userAccount } = getUser();
+
+			// Fail a challenge first.
+			const failedChallenge = await requestChallenge(dappAccount, userAccount);
+			const failedRes = await submitSolution(
+				buildSolution(
+					failedChallenge,
+					dappAccount,
+					userAccount,
+					pair,
+					"incorrect",
+				),
+				dappAccount,
+				userAccount,
+			);
+			expect(failedRes.verified).toBe(false);
+
+			// Nothing is left in a broken state: the same user can request a fresh
+			// challenge, solve it, and have the dapp verify it as approved.
+			const challenge = await requestChallenge(dappAccount, userAccount);
+			const solution = buildSolution(
+				challenge,
+				dappAccount,
+				userAccount,
+				pair,
+				"correct",
+			);
+			const res = await submitSolution(solution, dappAccount, userAccount);
+			expect(res.verified).toBe(true);
+			expect(res.status).toBe("You correctly answered the captchas");
+
+			const verifyResult = await dappVerify(
+				dappAccount,
+				mnemonic,
+				userAccount,
+				getCommitmentId(solution),
+			);
+			expect(verifyResult.verified).toBe(true);
 		});
 
 		it("should disapprove a correct solution submitted after the time limit, and the dapp should verify the challenge as disapproved", async () => {
-			const pair = getPair(dummyUserAccount.seed, undefined, "sr25519", 42);
-			const userAccount = dummyUserAccount.address;
-			const origin = "https://localhost";
+			const { pair, userAccount } = getUser();
 
-			// Get an image captcha challenge using the site key registered in beforeEach
-			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
-			const getImgCaptchaBody: CaptchaRequestBodyType = {
-				[ApiParams.dapp]: dappAccount,
-				[ApiParams.user]: userAccount,
-				[ApiParams.datasetId]: solutions.datasetId,
-			};
-			const response = await fetch(getImageCaptchaURL, {
-				method: "POST",
-				body: JSON.stringify(getImgCaptchaBody),
-				headers: {
-					"Content-Type": "application/json",
-					Origin: origin,
-					"Prosopo-Site-Key": dappAccount,
-					"Prosopo-User": userAccount,
-				},
-			});
-
-			expect(response.status).toBe(200);
-
-			const data = (await response.json()) as CaptchaResponseBody;
+			const challenge = await requestChallenge(dappAccount, userAccount);
 
 			// Force the solution time limit to be exceeded by pushing the stored
 			// deadline for this pending commitment into the past, so the subsequent
@@ -670,124 +745,34 @@ describe("Image Captcha Integration Tests", () => {
 				.getDb()
 				.getTables()
 				.commitment.updateOne(
-					{ requestHash: data.requestHash, pending: true },
+					{ requestHash: challenge.requestHash, pending: true },
 					{ $set: { deadlineTimestamp: new Date(Date.now() - 60 * 1000) } },
 				);
 			expect(expireResult.modifiedCount).toBe(1);
 
-			// Build the CORRECT solution for the returned challenge
-			const solutionMap = new Map<string, string[]>(
-				(builtDataset.captchas as Captcha[])
-					.filter((captcha) => captcha.solution)
-					.map((captcha) => [
-						captcha.captchaContentId,
-						captcha.solution?.map((s) => s.toString()) ?? [],
-					]),
-			);
-
-			const temp = data.captchas.map((captcha, index) => {
-				const solution = solutionMap.get(captcha.captchaContentId);
-				if (!solution) {
-					throw new Error(
-						`Solution not found for captchaContentId: ${captcha.captchaContentId}`,
-					);
-				}
-
-				return {
-					captchaContentId: captcha.captchaContentId,
-					captchaId: captcha.captchaId,
-					salt: embedData(randomAsHex(), [
-						1 + index,
-						2 + index,
-						3 + index,
-						4 + index,
-					]),
-					solution: solution,
-				};
-			});
-
-			const solveImgCaptchaBody: CaptchaSolutionBodyType = {
-				[ApiParams.captchas]: temp,
-				[ApiParams.dapp]: dappAccount,
-				[ApiParams.requestHash]: data.requestHash,
-				[ApiParams.signature]: {
-					[ApiParams.user]: {
-						[ApiParams.timestamp]: u8aToHex(
-							pair.sign(stringToU8a(data.timestamp)),
-						),
-					},
-					[ApiParams.provider]: data[ApiParams.signature][ApiParams.provider],
-				},
-				[ApiParams.timestamp]: data.timestamp,
-				[ApiParams.user]: userAccount,
-			};
-
-			const solveThatCaptcha = await fetch(
-				`${baseUrl}${ClientApiPaths.SubmitImageCaptchaSolution}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						Origin: origin,
-						"Prosopo-Site-Key": dappAccount,
-						"Prosopo-User": userAccount,
-					},
-					body: JSON.stringify(solveImgCaptchaBody),
-				},
-			);
-
-			expect(solveThatCaptcha.status).toBe(200);
-
-			const solutionResult =
-				(await solveThatCaptcha.json()) as CaptchaSolutionResponse;
-
 			// The provider disapproves the correct solution because the time limit
 			// has been exceeded.
+			const solution = buildSolution(
+				challenge,
+				dappAccount,
+				userAccount,
+				pair,
+				"correct",
+			);
+			const solutionResult = await submitSolution(
+				solution,
+				dappAccount,
+				userAccount,
+			);
 			expect(solutionResult.verified).toBe(false);
 			expect(solutionResult.status).toBe(
 				"You answered one or more captchas incorrectly. Please try again",
 			);
 
-			// The dapp verifies the challenge and is told it is disapproved: no
-			// approved commitment was stored for this user/site key.
-			const dappPair = getPair(mnemonic);
-			const verifyTimestamp = Date.now().toString();
-			const token = encodeProcaptchaOutput({
-				[ApiParams.dapp]: dappAccount,
-				[ApiParams.user]: userAccount,
-				[ApiParams.timestamp]: verifyTimestamp,
-				[ApiParams.signature]: {
-					[ApiParams.provider]: {},
-					[ApiParams.user]: {},
-				},
-			});
-			const dappSignature = u8aToHex(
-				dappPair.sign(stringToU8a(verifyTimestamp)),
-			);
-
-			const verifyBody: VerifySolutionBodyTypeInput = {
-				[ApiParams.token]: token,
-				[ApiParams.dappSignature]: dappSignature,
-			};
-
-			const verifyResponse = await fetch(
-				`${baseUrl}${ClientApiPaths.VerifyImageCaptchaSolutionDapp}`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						Origin: origin,
-						"Prosopo-Site-Key": dappAccount,
-						"Prosopo-User": userAccount,
-					},
-					body: JSON.stringify(verifyBody),
-				},
-			);
-
-			expect(verifyResponse.status).toBe(200);
-
-			const verifyResult =
-				(await verifyResponse.json()) as ImageVerificationResponse;
+			// The dapp verifies the challenge and is told it is disapproved: the
+			// late solution is rejected before a commitment is stored, so there is
+			// no approved commitment for this user/site key.
+			const verifyResult = await dappVerify(dappAccount, mnemonic, userAccount);
 			expect(verifyResult.verified).toBe(false);
 		});
 	});

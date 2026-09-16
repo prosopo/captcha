@@ -1,5 +1,831 @@
 # @prosopo/provider
 
+## 5.10.2
+### Patch Changes
+
+- 98ab052: Serve a repeat caller the same detector bundle.
+  
+  `/detector/assign` picked a bundle at random on every request. The provider now
+  records which bundle it served a caller and returns that one for a bounded
+  period, so a returning visitor gets a stable bundle instead of a fresh draw each
+  time. Any bundle performs identically, so this is not visible to users. If Redis
+  cannot answer, assign falls back to the previous behaviour rather than failing.
+  
+  Also fixes the `assignDetectorBundle` tests, which were failing on main and had
+  gone unnoticed because the file was named `*.test.ts` while CI only runs
+  `*.unit.test.ts`. Renamed so it runs, and replaced the mock that
+  `clearAllMocks` was silently emptying.
+- 028a158: Add optional field `dz` to detector payload
+- 1f0598c: Derive the detector bundle for a caller instead of storing it.
+  
+  `assignDetectorBundle` now picks the bundle with a keyed hash of the caller's
+  address, using a per-provider secret kept on the pool volume. Same caller, same
+  bundle, with nothing recorded and nothing to expire — which also means the
+  result no longer changes when the cache is unavailable.
+  
+  Replaces the Redis client → bundle entry added in the previous patch, so
+  `bindDetectorBundleToClient` and its TTL constant are gone.
+- 3958046: Keep a detector bundle binding for as long as its payload is accepted
+  
+  The `detectorSessionId → bundleId` binding held the only key able to read a
+  detector payload, and expired after 60 seconds. The frictionless flow accepts a
+  payload for ten minutes (`DEFAULT_MAX_TIMESTAMP_AGE`). For nine of those ten
+  minutes the provider would therefore accept a payload it had already discarded
+  the means to decrypt: `resolveDecryptAttempts` returns an empty key list, the
+  decrypt loop never runs, the score is forced to 1 and the caller is challenged
+  despite nothing having been measured about them.
+  
+  Sixty seconds is ample for the assign → submit gap in the normal case — it is
+  around 1.5s — but it only has to stall once to be lost, and a backgrounded
+  mobile tab is enough.
+  
+  The two values are now one value. `DEFAULT_MAX_TIMESTAMP_AGE` moves from a
+  private constant in `frictionlessTasks` to `@prosopo/types`, the only package
+  both the provider and the database can see, and `DETECTOR_BUNDLE_TTL_SECONDS` is
+  derived from it instead of being written down a second time. A unit test pins
+  the relationship so they cannot drift apart again.
+  
+  The TTL cannot now outlive the payload-age check, so this does not widen the
+  window in which any payload is usable. Bundle selection is unaffected: which
+  bundle a caller receives is derived from their IP and a server secret, not from
+  this binding's lifetime.
+- 0cdf286: Log why a detector bundle could not be resolved
+  
+  `resolveBundleByDetectorSession` returns undefined on three unrelated
+  conditions: the caller sent no detector session id, the
+  `detectorSessionId → bundleId` Redis binding was absent or had expired, or the
+  binding named a bundle this provider no longer holds in its pool.
+  
+  All three surface downstream as the same thing — `resolveDecryptAttempts`
+  hands back an empty key list, the decrypt loop never runs, and the score is
+  forced to 1 with `DECRYPTION_FAILED`, so the caller is challenged despite
+  nothing having been measured about it. They need different fixes, but nothing
+  recorded which one had happened: the only line carrying that detail logged at
+  `debug`, which is below the level aggregated log search runs at, and it could
+  not have separated them anyway because `resolveDecryptAttempts` omits the
+  `bundleId` whenever the attempt list is empty.
+  
+  Adds a single `info` line, `"Detector bundle not resolved"`, carrying a `cause`
+  of `noDetectorSession`, `noBinding` or `bundleNotInPool`, plus the `bundleId`
+  in the last case. It is emitted only on the failure path, so there is no cost
+  on the hot path, and the pool lookup now happens after the binding check rather
+  than before it.
+  
+  No behavioural change — the same conditions return undefined as before.
+- ea4e6aa: Persist the optional `cg` and `sm` session fields, which were not being written.
+- 028a158: Add optional session field `dz`.
+- Updated dependencies [98ab052]
+- Updated dependencies [028a158]
+- Updated dependencies [1f0598c]
+- Updated dependencies [3958046]
+- Updated dependencies [864ddde]
+- Updated dependencies [028a158]
+  - @prosopo/database@4.0.33
+  - @prosopo/types-database@5.5.3
+  - @prosopo/types@5.8.3
+  - @prosopo/locale@3.4.2
+  - @prosopo/env@3.6.56
+  - @prosopo/types-env@2.11.2
+  - @prosopo/api@4.2.3
+  - @prosopo/api-express-router@3.1.87
+  - @prosopo/common@3.1.55
+  - @prosopo/datasets@3.1.82
+  - @prosopo/ipinfo@0.4.2
+  - @prosopo/keyring@2.9.89
+  - @prosopo/load-balancer@2.10.44
+  - @prosopo/user-access-policy@3.14.3
+
+## 5.10.1
+### Patch Changes
+
+- fad87b7: Populate `abuserScore` on the IP comparison result so `ipValidationRules` can use it. The field was read when evaluating `abuseScoreExceedAction` but never set, so that rule never fired for any site. Also counts both IPs exceeding the threshold as one condition rather than two, which previously mis-counted under `requireAllConditions`.
+- 477b4e7: Persist cv and sq from detector payload, and refresh the decoder bundle
+- e4d6f06: Persist cg and sm opaque payload keys
+- 24d6b7b: Persist `cv` and `sq` on the session record. Both were decoded from the detector
+  payload and copied onto the session params, but `createSession` had no entry for
+  them and dropped them before the write — the same hop where `b` was being lost.
+  Escalation sessions now carry them forward alongside `g` / `i` / `b`.
+  
+  The client-supplied `b` signal map is bounded and stripped of keys Mongo cannot
+  store as field names before it reaches the record, so a malformed or oversized
+  payload can no longer fail the session insert and turn into a failed captcha
+  request.
+- Updated dependencies [0d479f9]
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/load-balancer@2.10.43
+  - @prosopo/types-database@5.5.2
+  - @prosopo/types@5.8.2
+  - @prosopo/api@4.2.2
+  - @prosopo/api-express-router@3.1.86
+  - @prosopo/database@4.0.32
+  - @prosopo/datasets@3.1.81
+  - @prosopo/env@3.6.55
+  - @prosopo/ipinfo@0.4.1
+  - @prosopo/keyring@2.9.88
+  - @prosopo/types-env@2.11.1
+  - @prosopo/user-access-policy@3.14.2
+
+## 5.10.0
+### Minor Changes
+
+- 886b664: Optionally answer `/healthz` with the node nearest the caller.
+  
+  `/healthz` tells a client which node to pin its captcha calls to, and a node has always answered with its own name — so the pin is whatever the DNS layer picked. The DNS layer only sees the client's address when the client's resolver forwards it, which many do not. The provider always sees it, because the connection is already open.
+  
+  Behind `PROSOPO_HEALTHZ_GEO_STEERING`, off by default. With it off nothing in this change runs and the response is unchanged, headers included.
+  
+  - `IpInfoService.country(ip)` is a new MaxMind-only fast path: an in-process, synchronous read of the memory-mapped database, returning an ISO 3166-1 alpha-2 code or `undefined`. `lookup()` is unchanged and still prefers ipapi.is for its threat data; a country lookup does not need that data and must not pay a network call for it. Added to `IIpInfoService` in `@prosopo/ipinfo` and `@prosopo/types-env`.
+  - The country → host map is configuration, supplied by the deployment as JSON in `PROSOPO_HEALTHZ_GEO_ROUTES`. It is also the candidate set: a host that must not receive traffic simply does not appear in it. An unparseable or empty map leaves steering off rather than failing startup.
+  - A background poller (`PROSOPO_HEALTHZ_GEO_PROBE_INTERVAL_MS`, `PROSOPO_HEALTHZ_GEO_PROBE_TIMEOUT_MS`) tracks each candidate's health. Every candidate starts down and only becomes up on a successful probe, so a poller that has not run or is failing leaves steering off. The request path reads a boolean and never awaits a probe.
+  - The handler never awaits readiness. It reads `ipInfoService.isAvailable()`, which is false before the environment is ready, and answers with its own name. Loopback and private-range callers — deploy gates, container health checks — short-circuit the same way. `/healthz` stays dependency-free.
+  - `Cache-Control: no-store, private` is set whenever steering is on, before the decision, so it covers every branch. The answer varies per caller and no intermediary may cache and replay it.
+  - `prosopo_healthz_geo_outcomes_total{outcome}` on `/metrics` counts `steered`, `not_steered`, `target_down` and `geo_unavailable`. Every outcome but the first falls back to the node's own name, which is also the behaviour with steering off, so nothing else would show that steering had stopped working.
+  
+  No client-side change: the load balancer already pins to whatever `host` the response carries.
+
+### Patch Changes
+
+- 0c1f301: feat(types,provider): report `host` in `/details`
+  
+  `providerDetailsSchema` grows an optional `host`, and the `/details` handler
+  populates it from `config.host`, falling back to the request's hostname when
+  that is unset — the same shape `/healthz` already uses.
+  
+  `/details` already reports the version and Redis readiness; it just did not
+  say which node answered. Callers that want the answering node's identity can
+  now read it there instead of inferring it from a liveness endpoint.
+  
+  The field is optional on purpose. A fleet is mixed-version part-way through a
+  rolling deploy, so a required field would fail validation against a node that
+  has not been upgraded yet. Consumers should treat it as absent-or-string.
+  Purely additive: nothing existing changes shape.
+- 32d286d: Persist b from detector payload
+- Updated dependencies [886b664]
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/ipinfo@0.4.0
+  - @prosopo/types-env@2.11.0
+  - @prosopo/types@5.8.1
+  - @prosopo/types-database@5.5.1
+  - @prosopo/env@3.6.54
+  - @prosopo/api@4.2.1
+  - @prosopo/api-express-router@3.1.85
+  - @prosopo/database@4.0.31
+  - @prosopo/datasets@3.1.80
+  - @prosopo/keyring@2.9.87
+  - @prosopo/load-balancer@2.10.42
+  - @prosopo/user-access-policy@3.14.1
+
+## 5.9.0
+### Minor Changes
+
+- af267c2: Web Bot Auth verifier and an authenticated frictionless flow for pre-verified agents.
+  
+  **`@prosopo/web-bot-auth`** — a new package: an RFC 9421 HTTP Message Signatures verifier built on `@noble/curves/ed25519`, with no Cloudflare dependency. It parses `Signature-Agent` in both its bare-string and dictionary forms, resolves the signer's JWKS at `/.well-known/http-message-signatures-directory` honouring the response's cache-control TTL, and verifies the Ed25519 signature over the RFC 9421 signature base.
+  
+  **Provider fast path.** `/captcha/frictionless` returns `captchaType: authenticated` when a non-`deferToVerify` `AccessPolicyType.Allow` rule matches the request's user scope, and writes a session with `serverChecked: false`, `agent: true` and the issuing IP frozen for verify-time binding. Decrypt, bot score and the decision machine are all skipped. A verified `Signature-Agent` is one way to qualify — the userScope gains a `webBotAuthAgent` field, set only when signature verification succeeded so a rule scoped to a signer can never be matched by a spoofed header — but an IP CIDR, JA4, user agent, ASN or country rule qualifies the same way. A `Block` or `Restrict` on the same match set always wins, because severity outranks Allow.
+  
+  **`/client/authenticated/verify`.** A separate router with mandatory IP binding — the operator must forward the client IP (`API.AUTHENTICATED_IP_REQUIRED`) and it must match the one the session was issued to (`API.AUTHENTICATED_IP_MISMATCH`), so a leaked token cannot be replayed from elsewhere. Single use is enforced through `serverChecked`, and `captchaType` is checked so an ordinary captcha token cannot be redeemed on this route. `clientSessionId` correlation goes through the same `isClientSessionMismatch` helper as pow / image / puzzle, so the authenticated path cannot drift from the others.
+  
+  **Surface.** `AccessPolicyType.Allow` and `CaptchaType.authenticated`; `webBotAuthAgent` on the user scope (indexed, normalised at parse time to a lowercase scheme+host with no trailing slash); `Session.agent` / `Session.webBotAuthAgent` for the Traffic view's "pre-verified pass" filter; `submitAuthenticatedCaptchaVerify` on `ProviderApi` and the matching branch in `@prosopo/server.verifyProvider`; `AuthenticatedBadge` and a dispatch branch in `procaptcha-frictionless`.
+  
+  Three fixes the new end-to-end coverage turned up, each of which broke the flow outright:
+  
+  - `ipMatchesSession` compared the operator's parsed IP against the session's composite halves with `===`. A session read back from Mongo carries BSON (`Decimal128`, or `Long` on pre-migration records), not the `bigint` the type claims, so the comparison was false for every session that had been through the database — every legitimate redemption was rejected as `API.AUTHENTICATED_IP_MISMATCH`. Both halves are now normalised before comparison, and an unparseable half fails closed rather than defaulting to `0n`, so garbage still cannot match garbage.
+  - `serverChecked` was never written onto the authenticated session, so "never set" and "consumed" were distinguishable only by an absence. It is now written as `false` at issuance.
+  - `serverChecked` was missing from `SESSION_PROJECTION`. Left out, the single-use check reads `undefined` and an authenticated token verifies an unlimited number of times.
+
+### Patch Changes
+
+- 934fa5d: feat(types,provider): carry the client's `b` signal map on DetectorResult
+  
+  `DetectorResult` grows an optional `b?: Record<string, string[]>`, and
+  `getBotScore` forwards it, following the same shape as the existing `g`, `i`,
+  `sw`, `md`, `bn` and `fs` fields: read off the decoded payload, passed through
+  untouched, absent for clients that predate it.
+  
+  Typing it is the whole change. Without it the field arrives on the provider
+  untyped and any rule reading it has to assert its shape at the call site.
+  
+  The map is keyed by signal name with a short list of strings per key. It is
+  empty for the great majority of sessions, so anything consuming it should
+  treat absent and empty as the same thing. Adding a key is a client-side
+  change and needs no deploy here — an existing decoder passes through keys it
+  predates rather than dropping the ones it knows, which is the property that
+  lets the two sides move independently.
+- 27f525e: Stop the puzzle difficulty ladder silently replacing a site's own puzzle settings.
+  
+  An escalated puzzle session samples its render settings from a difficulty band, and a sampled band sets every knob — decoy count, edge darkness, hole darken, piece scale and tolerance. While that is happening the site's configured `puzzle` block and `puzzleTolerance` are not consulted at all. For a site using escalation that is the intent; for a site that deliberately configured an easier puzzle it means the settings it saved never render, which reads as "my settings aren't being saved".
+  
+  Two changes:
+  
+  `puzzleMaxDifficulty` is a new client setting — the puzzle counterpart to `imageMaxRounds`. It caps how far automatic escalation may climb the ladder, and `0` pins the site to level 0, the documented "nothing escalated" case where the session is left bare and the site's own settings render every time. It defaults to `MAX_AUTO_ESCALATION_LEVEL`, so sites that never set it keep the behaviour they have.
+  
+  Separately, the paths that measured nothing about a client — `MISSING_TOKEN`, `MISSING_HEAD_HASH` and `DECRYPTION_FAILED` — no longer feed the ladder. Each sizes its challenge from a fixed constant chosen to be short ("prove you're human quickly", per their own comments), not from any signal the client produced, but those constants sit above the default baseline of `DEFAULT_SOLVED_COUNT` and so scored as an escalation. A site whose CSP blocks the detector bundle sends no token on every request, so every one of its users was permanently escalated. `OLD_TIMESTAMP` deliberately keeps the ladder: its round count comes from `timestampDecayFunction`, which scales with staleness and is a real graduated measurement.
+  
+  Explicit router and traffic-filter overrides are unaffected in both cases — an operator naming a value still gets it.
+- a0c87c7: feat(provider): sign captcha image URLs with short-lived tokens
+  
+  Captcha image URLs are permanent, unauthenticated and cacheable. Harvest the
+  URLs once and the entire image pool can be refetched indefinitely, offline and
+  unattributably — which is what makes scraping the demo dataset cheap, and why
+  regenerating the dataset alone never fixes it.
+  
+  `AssetsResolver` has been declared in `@prosopo/types` and called by
+  `parseCaptchaAssets` since the image flow was written, but nothing ever assigned
+  it. `env.assetsResolver` was always `undefined`, so `item.data` went out exactly
+  as stored. This fills that hook with a bunny.net token-authentication signer.
+  
+  Signing happens strictly below `item.data`. The item hash stays
+  `blake2b(image bytes)`, so `captchaId`, `captchaContentId` and `datasetId` are
+  untouched and no dataset has to be rebuilt to adopt this — a signed URL is never
+  itself hashed. The resolver is constructed per request rather than per process,
+  so each challenge's URLs expire on their own clock and can optionally be bound
+  to the requesting IP via `ZoneSecurityIncludeHashRemoteIP`.
+  
+  The scheme was checked against a live token-auth pull zone before being written:
+  a correctly signed URL returns 200, while a tampered token, an expired token,
+  and a token replayed against a different path all return 403. The token is bound
+  to its exact path, so one harvested URL cannot be rewritten across the pool.
+  
+  Inactive unless `PROSOPO_ASSET_TOKEN_KEY` is set. Without it the resolver is
+  `undefined` and the response is byte-for-byte what it is today, so this can ship
+  ahead of the infrastructure change.
+  
+  Ordering matters when it is switched on. The pull zone only excludes
+  `token`/`expires` from its cache key while token authentication is enabled: with
+  it on, repeated requests carrying different tokens still hit cache; with it off,
+  every distinct `expires` becomes its own cache entry and every image misses.
+  Enabling the zone first is worse still — unsigned requests 403 and image
+  captchas break — so the zone has to be switched over promptly after providers
+  begin signing, not before.
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [b2183f9]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/types-database@5.5.0
+  - @prosopo/database@4.0.30
+  - @prosopo/web-bot-auth@0.1.0
+  - @prosopo/user-access-policy@3.14.0
+  - @prosopo/api@4.2.0
+  - @prosopo/api-express-router@3.1.84
+  - @prosopo/datasets@3.1.79
+  - @prosopo/env@3.6.53
+  - @prosopo/ipinfo@0.3.25
+  - @prosopo/keyring@2.9.86
+  - @prosopo/load-balancer@2.10.41
+  - @prosopo/types-env@2.10.46
+
+## 5.8.1
+### Patch Changes
+
+- 162f591: Make the MaxMind fallback answer lookups instead of silently failing all of them.
+  
+  `MaxMindBackend` was configured with `cityDbPath` pointing at `GeoLite2-Country.mmdb` (`MAXMIND_DB_PATH`), and only ever called `city()`. `Reader.open()` accepts any valid `.mmdb`, so the reader opened, `isAvailable()` reported `true`, and the backend advertised itself as a working fallback — but `city()` checks `metadata.databaseType` and throws `BadMethodCallError` against a Country database. The throw was swallowed at `debug` level, `asnReader` was never configured because nothing read a path for it, and every lookup fell through to `{ isValid: false, error: "No MaxMind data available for IP" }`.
+  
+  The failure was invisible for as long as ipapi.is was up, because `IpInfoService` only reaches MaxMind when the ipapi.is lookup fails. When the self-hosted ipapi.is sidecar went down on five production provider nodes, IP lookups did not degrade to MaxMind — they failed outright, and `compareIPs` returned "Failed to lookup both IP addresses" for every request whose challenge IP differed from its solution IP.
+  
+  Three changes:
+  
+  - `MaxMindBackend` latches the database kind on the first `BadMethodCallError` and uses `country()` from then on, so a Country database yields country and country code rather than nothing. The latch means the rejection is constructed once per process, not once per request, and a genuine City database never pays for a second lookup. The mismatch is logged once at `warn` with the offending path, because silent degradation is what let this sit unnoticed.
+  - `maxmindAsnDbPath` is read from `MAXMIND_ASN_DB_PATH`. The image has downloaded `GeoLite2-ASN.mmdb` alongside City and Country since the Dockerfile was written, but nothing ever opened it, so the fallback could not name a provider or an AS number.
+  - `deepValidateIpAddress` logs `ip1Error` and `ip2Error` alongside the top-level comparison error. "Failed to lookup both IP addresses" on its own does not distinguish an IP that is absent from the database from a backend that is down, and diagnosing the difference meant going onto the host.
+  
+  Deployments should also point `MAXMIND_DB_PATH` at `GeoLite2-City.mmdb`, which the image already ships: country-level data is enough for geoblocking but carries no coordinates, so the IP distance rule cannot run against it.
+- 9149dff: fix(provider): give the routing machine the request user agent, not the hashed one
+  
+  `decryptPayload` returns `userAgent` already hashed — it exists so
+  `runUserAgentMismatchCheck` can compare it against `hashUserAgent(request UA)`.
+  The frictionless handler was also passing that hash into `derivePlatform` and
+  `raw.userAgent` on the routing context, so every UA-derived signal the routing
+  machine sees was computed from a 32-character hex digest.
+  
+  `platform.isApple` was therefore always false on the fresh frictionless path.
+  Not usually — always: the regex matches `iPhone` / `iPad` / `Macintosh`, and
+  every one of those contains a letter outside `[0-9a-f]`, so no hash can match.
+  The UA fallback inside `isMobile` was dead for the same reason and only worked
+  when ipInfo supplied the bit.
+  
+  The dedup replay a few hundred lines above already read
+  `req.headers["user-agent"]` directly, so the two paths disagreed about the same
+  request. The fresh path now reads the header too. The hashed value is untouched
+  where it belongs — it still goes to the decision machine for the mismatch check.
+  
+  Two live consequences, both of which restore intended behaviour:
+  
+  - `pow-baseline-apple-passthrough` in the global routing machine could never
+    fire on a fresh session. Apple devices on a PoW baseline fell through to the
+    rate ladder and were escalated to image captchas on volume alone. This is
+    what put a genuine iPhone — bot score 0.219 against a 0.5 threshold, zero
+    triggered detectors — into an image challenge.
+  - `isUndeclaredMiddlebox` in the shared route checks gates on
+    `isAppleUa(raw.userAgent)`, so the `UNDECLARED_VPN_TCP_STACK` escalation was
+    unreachable on that path. It is not new or untested logic — it already fires
+    on the paths that carry the real UA — it simply becomes reachable here too.
+  
+  Rules classifying on `platform.osNameIn` / `browserNameIn` / `deviceTypeIn` were
+  misclassifying on this path for the same reason, and now resolve correctly.
+  
+  Covered by a regression test that asserts the routing context receives the real
+  user agent and resolves `isApple` for an iPhone UA; it fails against the old
+  code with `isApple: false`.
+- Updated dependencies [8a63ea3]
+- Updated dependencies [162f591]
+  - @prosopo/database@4.0.29
+  - @prosopo/ipinfo@0.3.24
+  - @prosopo/env@3.6.52
+  - @prosopo/api-express-router@3.1.83
+
+## 5.8.0
+### Minor Changes
+
+- e22d5fb: Add an arbitrary-header match dimension to user access policies.
+  
+  A `Block` or `Restrict` rule can now target a named request header with an `equals`, `contains`, `notEquals`, `notContains`, `notEqualsAny` or `notContainsAny` operator. The negated operators back the portal's allow-list mode — block unless the header matches; the `*Any` pair carries a list of accepted values in `headerValue` so an allow-list over several values of the same header fires only when the header matches none of them (separate single-value rules would each fire on the other's value and block everything). Because substring `contains` and per-rule operators can't be expressed as a Redis TAG query — and an allow-list rule must still fire on a request that omits the header — the header condition is carried on the rule as `headerName`/`headerValue`/`headerOperator` and evaluated in code against the raw request headers, while an indexed `headerMatch` sentinel makes every header rule a matching candidate for every request. Header rules contribute one point to rule specificity ranking, mirroring the other scalar dimensions.
+  
+  The raw request headers are a **required** argument of `getPrioritisedAccessRule` / `CaptchaManager.getPrioritisedAccessPolicies`, with no default. A negated header operator treats a missing header as "does not match", so a lookup that quietly ran with an empty header map would fire every allow-list rule on every request. Every lookup now passes them: the request-time block middleware, the verify-path hard-block check, the `/frictionless` policy and dedup lookups, and the image / PoW / puzzle challenge endpoints.
+  
+  `getPrioritisedAccessRule` now caches only the candidate fetch and ranks per request, because the header verdict depends on data that is not part of the cache key. This also closes a latent gap where `os` was never part of `hardBlockCacheKey`, so a cached ranked list could serve one operating system's verdict to a request from another.
+
+### Patch Changes
+
+- 6f57ee9: chore(deps-dev): bump @types/uuid from 10.0.0 to 11.0.0
+- 6f57ee9: chore(deps): bump the npm-minor-and-patch group across 1 directory with 3 updates
+- c59f8a6: Remove the account-wide commitment fallback from image captcha verification.
+  
+  `verifyImageCaptchaSolution` fell back to `getDappUserCommitmentByAccount` when
+  the token carried no `commitmentId`, returning the first *approved* commitment
+  in the account's history — any age, any session.
+  
+  That fallback predates the Procaptcha token (#1263, 2024-06-06), which has
+  carried `commitmentId` on every image solve since; `Manager.ts` sets it
+  unconditionally for this captcha type, and it is `optional()` on the schema only
+  because PoW shares the token shape and identifies its work by `challenge`.
+  
+  It could only ever return the wrong record. For a returning user whose current
+  solve was not yet approved it produced an approved commitment from an earlier
+  visit, which carries no `clientSessionId`, so the session correlation compared
+  the live id against `undefined` and reported `CLIENT_SESSION_MISMATCH` — a token
+  replay that never happened. Observed in production at scale on the image
+  path while PoW, which resolves its exact challenge record, was unaffected.
+  
+  Verification now requires a `commitmentId` and returns
+  `API.USER_NOT_VERIFIED_NO_SOLUTION` without one. A token that names no
+  commitment cannot be verified against one.
+- Updated dependencies [f8a41fe]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [e22d5fb]
+- Updated dependencies [9386e5e]
+- Updated dependencies [6fd727c]
+- Updated dependencies [b6918c0]
+- Updated dependencies [d288371]
+  - @prosopo/database@4.0.28
+  - @prosopo/user-access-policy@3.13.0
+  - @prosopo/native-ja4@0.0.5
+  - @prosopo/native-merkle@0.0.5
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/puzzle-assets@0.1.4
+  - @prosopo/types-database@5.4.1
+  - @prosopo/env@3.6.51
+  - @prosopo/api@4.1.6
+  - @prosopo/api-express-router@3.1.82
+  - @prosopo/api-route@2.6.58
+  - @prosopo/common@3.1.54
+  - @prosopo/datasets@3.1.78
+  - @prosopo/ipinfo@0.3.23
+  - @prosopo/keyring@2.9.85
+  - @prosopo/load-balancer@2.10.40
+  - @prosopo/logger@2.0.9
+  - @prosopo/redis-client@1.0.35
+  - @prosopo/types-env@2.10.45
+
+## 5.7.0
+### Minor Changes
+
+- 8a670d3: Remove the provider-side context validation path.
+  
+  The provider read a per-context baseline out of `clientcontextentropies` on the frictionless path and compared a session's head hash against it. The task that wrote that collection was removed from the provider on 2026-08-21, so the read has returned `undefined` ever since and the branch has been dead in every deployment since then. Computing and applying the baseline now happens off-provider.
+  
+  Removed: `contextAwareValidation.ts`, the decision-machine branch that used it, `getClientContextEntropy` on the provider and its database method, the `clientContextEntropy` table registration, the unused `getRoundsFromSimScore` helper, and the `contextAwareEnabled` parameter threaded into image verification — which logged and then did nothing, its return commented out.
+  
+  Also removes the per-site `settings.contextAware` block that configured it, along with `ContextAwareSchema`, `IContextAware`, `IContexts`, `ContextConfigSchema`, `contextAwareThresholdDefault` and `expandContexts`, the legacy `default`/`webview` context keys and their helpers, and `FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED`. The site-key registration CLI no longer writes a `contextAware` default into new sites.
+  
+  `ContextType`, `contextTypeFromSession` and `deviceContextTypes` stay — the off-provider work keys on them. `ClientContextEntropyRecord` and its schema stay for the same reason; only the provider's use of them goes.
+  
+  No behaviour change: every path removed here was already inert.
+
+### Patch Changes
+
+- 7fd6eb2: Add a `browser` match dimension to access rules.
+  
+  Rules can now be scoped to the browser classified server-side from the request
+  User-Agent (`chrome`, `safari`, `firefox`, `edge`, `opera`, `samsung_internet`,
+  `wechat`, `facebook`, `instagram`, `ie`, `unknown`), mirroring the existing `os`
+  dimension. The classifier duplicates `@prosopo/decision-machines`' `uaClassify`
+  because the provider request path cannot depend on that package.
+  
+  Also fixes `os` never getting its own probe on the Redis split-query hot path:
+  `SCALAR_USER_SCOPE_FIELDS` in `redisRulesSplitQuery` had not been updated when
+  the OS dimension landed, so an OS-only rule was reachable only via the
+  `no-user-scope` fall-through, competing for that probe's candidate budget
+  against genuine client-wide blocks.
+  
+  The Redis index gains a `browser` TAG field. `createRedisIndex` hashes the index
+  definition and drops/recreates when the hash changes, so this needs no manual
+  migration — verified locally: the index came back carrying `browser` and the
+  stored hash moved to match.
+- 424e467: Add `@prosopo/captcha-severity` and use it for the access rules and the traffic filter.
+  
+  "Which captcha challenge is stricter" is one idea with several callers, and each answered it with its own table: the traffic filter combining multiple `challenge` matches on one request (`resolveChallengePolicy`), the access rules breaking ties between equally-specific rules (`ruleHarshness`), and downstream routing consumers. They agreed on the order — image > puzzle > pow > frictionless — but nothing held them to it, and they disagreed on the encoding.
+  
+  The new package has **zero dependencies**, deliberately. Captcha types are string enums, so a plain `string` parameter accepts them without importing `CaptchaType` — and that import would not be free, because it lives in a module that pulls zod in for its schemas. Some consumers bundle this standalone under a hard source-size ceiling that a runtime dependency on the `@prosopo/types` barrel has breached before.
+  
+  Two APIs, because "stricter" means two different things:
+  
+  - `rankCaptchaType` / `isStricterCaptchaType` compare the **type alone**, for callers that choose the type independently of its settings — as the traffic filter does, picking the strictest type and then separately merging the hardest parameters from every matched category.
+  - `captchaPolicySeverity` / `isStricterCaptchaPolicy` compare a **whole policy**, type first and its own difficulty setting second, for callers where one complete policy must beat another and a tie on type alone would otherwise be decided by argument order.
+  
+  **Fixes an ordering bug in the access rules.** `ruleHarshness` scored `base + solvedImagesCount` with tiers 10 apart, and `solvedImagesCount` is validated by `imageMaxRoundsFieldSchema` — `number().int().min(2)`, with no upper bound and an `imageMaxRounds` default of 32. A `Restrict[pow]` rule carrying 32 rounds therefore scored 42 and outranked a `Restrict[image]` rule at 30, exactly inverting the intended order; 11 rounds on a puzzle rule was enough to do it. The intra-type component is now clamped below the tier gap, so no setting can lift a rule over a stricter captcha type.
+  
+  One further behaviour change: pow rules now break ties on `powDifficulty` rather than `solvedImagesCount`. Rule authoring drops `solvedImagesCount` for pow, so every pow rule previously scored at the bottom of its tier regardless of difficulty. Image and puzzle both keep `solvedImagesCount` — it is the severity currency they share, which the provider maps onto a puzzle difficulty level via `severityToPuzzleDifficulty` rather than treating as a literal round count.
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- 4810cb3: Fix `computeFrictionlessScore` returning `NaN` when `scoreComponents` carries a non-numeric field.
+  
+  The score was summed with `Object.values(...).reduce((acc, val) => acc + val, 0)` over every defined value. `ScoreComponents` also carries two non-numeric diagnostic fields — `triggeredDetectors` (`number[]`) and `shadowDomPenalty` (`boolean`) — and neither has an arithmetic weight anywhere in the scoring path. `+` on an array coerces the accumulator to a string, so any numeric component summed *after* an array turned the running total into string concatenation and the final `Math.min(1, ...)` into `NaN`:
+  
+  ```
+  0.42 + []    -> "0.42"
+  "0.42" + 0.3 -> "0.420.3"
+  Math.min(1, "0.420.3") -> NaN
+  ```
+  
+  This was reachable in production rather than theoretical. The Mongoose schema declares `triggeredDetectors` as an array path and Mongoose defaults array paths to `[]`, so the field is present on every session read back from the database even when the frictionless handler omitted it; the pow / puzzle / image tasks then spread `dnsAsymmetry` on afterwards, landing it after the array in key order. Every solve-time recompute on a session with `dnsAsymmetry > 0` produced `NaN`.
+  
+  Only numeric values now contribute. `shadowDomPenalty` no longer silently adds a full `1.0` when true. A genuinely numeric `NaN` component still propagates — `typeof NaN === "number"`, so it survives the filter deliberately — because a score that cannot be computed must not read as a low one.
+  
+  The recomputed value is not persisted (neither `sessions` nor `usercommitments` stores it) and no decide rule currently branches on `input.score`, so the impact to date was a `NaN` in the solve-time log line and in `DecisionMachineInput.score`.
+- 3d2176d: Move the puzzle difficulty ladder into `@prosopo/captcha-severity`, so every consumer derives a difficulty from one table.
+  
+  `PUZZLE_DIFFICULTY_LEVELS`, `MAX_AUTO_ESCALATION_LEVEL`, `MIN_DECOY_HOLE_DARKEN_MARGIN`, `clampDifficultyLevel` and `severityToPuzzleDifficulty` lived in `provider/src/tasks/puzzle/puzzleDifficulty.ts`, reachable only from inside the provider — the severity package's own docs described the ladder at length but did not hold it. Anything else that has to answer "what difficulty is this puzzle" had to restate the mapping, and the consumers that author and edit puzzle rules sit outside the provider.
+  
+  They can import it now. The severity package already answers "which of these policies is stricter" off `solvedImagesCount`; the ladder answers what a puzzle policy carrying that number is actually served at, which is the same question one step further in.
+  
+  Sampling a concrete render from a level's bands stays in the provider as `samplePuzzleDifficulty`: it needs `IPuzzleSettings` from `@prosopo/types` and a `node:crypto`-backed sampler, and the severity package's zero-dependency, browser-safe property is load-bearing for consumers that bundle it standalone.
+  
+  Adds `puzzleDifficultyToSeverity`, the inverse of `severityToPuzzleDifficulty`. Writers need that direction — a rule editor turning a chosen difficulty into the field the rule carries, or rule authoring normalising a count inherited from the image path. Each level spans two rounds, so without a canonical value per level a writer picks between numbers that produce the identical puzzle, and the difference survives only to break severity ties arbitrarily. The round-trip is pinned by tests.
+  
+  No behaviour change in the provider: same table, same thresholds, same clamping.
+- Updated dependencies [7fd6eb2]
+- Updated dependencies [424e467]
+- Updated dependencies [1b77849]
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [3d2176d]
+- Updated dependencies [8fce190]
+- Updated dependencies [8a670d3]
+  - @prosopo/user-access-policy@3.12.33
+  - @prosopo/captcha-severity@1.1.0
+  - @prosopo/util-crypto@13.5.31
+  - @prosopo/api@4.1.5
+  - @prosopo/api-express-router@3.1.81
+  - @prosopo/api-route@2.6.57
+  - @prosopo/common@3.1.53
+  - @prosopo/database@4.0.27
+  - @prosopo/datasets@3.1.77
+  - @prosopo/env@3.6.50
+  - @prosopo/ipinfo@0.3.22
+  - @prosopo/keyring@2.9.84
+  - @prosopo/load-balancer@2.10.39
+  - @prosopo/locale@3.4.1
+  - @prosopo/logger@2.0.8
+  - @prosopo/redis-client@1.0.34
+  - @prosopo/types@5.6.0
+  - @prosopo/types-database@5.4.0
+  - @prosopo/types-env@2.10.44
+  - @prosopo/util@3.3.8
+  - @prosopo/native-ja4@0.0.4
+  - @prosopo/native-merkle@0.0.4
+
+## 5.6.4
+### Patch Changes
+
+- a62b994: Context-aware validation buckets by device type, not just webview.
+  
+  Context-aware validation compares a session's head SimHash against a baseline
+  for its context. That context was `default | webview`, which puts a phone and
+  a desktop in the same bucket — and those two emit genuinely different
+  `<head>`s, so the blended baseline matches neither well. Contexts are now the
+  device family crossed with the webview flag: `desktop`, `desktop-webview`,
+  `mobile`, `mobile-webview`, `tablet`, `tablet-webview`.
+  
+  `desktop-webview` is included deliberately. Desktop webviews are a real and
+  notably fraudulent population here (see the Twickets desktop-webview rules),
+  and folding them into the plain `desktop` baseline would let exactly the
+  traffic we want excluded define what "normal desktop" looks like.
+  
+  **Classification.** `deviceTypeFromUserAgent` in `@prosopo/types` is a
+  dependency-free UA classifier, deliberately not ua-parser-js: this module is
+  imported by the browser bundles, and the off-provider entropy sweep has to
+  bucket stored sessions *identically* or it writes baselines the decision
+  machine never looks up. One shared function keeps the two sides in lockstep.
+  Tablets are matched before phones because an iPad's UA carries a
+  `Mobile/<build>` token and an Android tablet is exactly "Android without
+  Mobile". Known gap, documented at the call site: an iPadOS 13+ Safari in
+  desktop mode identifies as a Mac and lands in `desktop` — nothing in the UA
+  separates it from a real Mac, and both sides make the same call, which is
+  what matters for the lookup.
+  
+  **Back-compat.** `default` and `webview` remain valid `ContextType` members,
+  so settings already stored against them keep parsing. `expandContexts` maps a
+  legacy `default` onto the three non-webview families and a legacy `webview`
+  onto the three webview families, at the threshold they were saved with; an
+  explicit device entry always wins over the legacy entry covering it. Nothing
+  downstream of settings parsing branches on the legacy keys, and no data
+  migration is required.
+  
+  **Behaviour change.** A request whose context is not configured now skips
+  context validation instead of borrowing another context's baseline.
+  Previously, configuring a single context validated *every* request against it
+  — with six contexts that would measure desktop traffic against a tablet
+  baseline and reject real users wholesale. `isContextConfigured` is the new
+  guard; `determineContextType` now takes the raw request UA alongside the
+  webview flag.
+  
+  New site-key registrations default to all six device contexts.
+- a447afa: Per-sitekey `imageMinRounds` alongside the existing `imageMaxRounds`.
+  
+  Every source of an image round count — access-policy rules, traffic-filter categories, routing machines, the staleness curve, and the provider's own heuristics — is now clamped into `[imageMinRounds, imageMaxRounds]` via `clampImageRounds`, so the sitekey's settings override its rules in both directions rather than only capping them. `imageMinRounds` defaults to 2, matching the floor that was previously hard-coded, so existing sitekeys are unaffected.
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/types-database@5.3.4
+  - @prosopo/api@4.1.4
+  - @prosopo/api-express-router@3.1.80
+  - @prosopo/database@4.0.26
+  - @prosopo/datasets@3.1.76
+  - @prosopo/env@3.6.49
+  - @prosopo/ipinfo@0.3.21
+  - @prosopo/keyring@2.9.83
+  - @prosopo/load-balancer@2.10.38
+  - @prosopo/types-env@2.10.43
+  - @prosopo/user-access-policy@3.12.32
+
+## 5.6.3
+### Patch Changes
+
+- 458cf17: Let a site disable image or puzzle under frictionless, and give the puzzle a difficulty ladder.
+  
+  Adds `frictionlessTypes: { image, puzzle }` to `ClientSettingsSchema`. PoW is deliberately not toggleable: it is the decision machine's terminal fallback and the only type with no interaction requirement, so a site with both of these off still has a way to challenge. This replaces the practice of expressing "no image" as a `frictionlessImageThreshold` nobody can reach — the rung is a score boundary, and a site that wants image off should not have to encode that as an unreachable threshold.
+  
+  Enforcement is a single seam. `downgradePuzzleIfUnavailable` is replaced by `coerceToEnabledCaptchaType`, which folds render-availability together with the site's enabled-type constraint; the old helper fell back to image unconditionally, which on an image-disabled site would have served exactly the type the customer asked us never to serve. It is applied at the two points a session's captchaType is decided — `sendCaptcha` (after the routing machine, so it is the last word) and `buildEscalation` — which transitively covers the score ladder, the no-measurement gates, access-policy Restrict rules, traffic-filter category policies, routing-machine actions and detector-generated rules. Coercion only ever narrows, so it cannot hand a user a harder challenge than was asked for. A PoW escalation is not an escalation, so a site with both interactive types disabled no longer escalates a verified PoW solve at all.
+  
+  An image captcha expresses severity as a round count; a puzzle has none, so on an image-disabled site every escalation would otherwise collapse into an identical challenge. `PUZZLE_DIFFICULTY_LEVELS` is an ordered ladder mapped from that same round-count currency by `severityToPuzzleDifficulty`, expressed as rounds *above* the site's ordinary count so it means the same thing across sites. Each level is a band per knob rather than a fixed config, sampled per challenge: fixed values are learnable, and adjacent bands overlap so a single observed render does not identify the level a session was placed in. Level 0 samples nothing, leaving a site's own configured `puzzleTolerance` / `puzzle` settings in force — escalation should not silently rewrite configuration. Automatic escalation is capped below the hardest level, because with image disabled there is no fallback modality for a user who genuinely cannot solve it.
+  
+  Sampling reuses the stratified interleaved draw already used for piece size, extracted to `stratifiedSampler`, with one cursor per knob — a shared cursor would make the knobs advance in lockstep and let a solver infer the whole config, and hence the level, from a single value. Draws are server-side and per-challenge, never seeded from client-supplied input, so a request cannot be replayed to reproduce a render. The invariant the ladder walks toward — the real cutout staying the deepest region on the frame — is now enforced in `resolvePuzzleRenderSettings`, the only point the final pair is known, since site settings and a traffic-filter policy each set one half without sight of the other and can invert it through individually valid overrides.
+  
+  Also closes two paths that issued image challenges without honouring the sitekey's `imageMaxRounds`: `buildEscalation` took a router-supplied round count entirely unbounded, and `sendCaptcha` skipped its clamp whenever the routing context carried no ceiling. Both now fall back to the schema default rather than leaving the count unbounded.
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/api@4.1.3
+  - @prosopo/api-express-router@3.1.79
+  - @prosopo/database@4.0.25
+  - @prosopo/datasets@3.1.75
+  - @prosopo/env@3.6.48
+  - @prosopo/ipinfo@0.3.20
+  - @prosopo/keyring@2.9.82
+  - @prosopo/load-balancer@2.10.37
+  - @prosopo/types-database@5.3.3
+  - @prosopo/types-env@2.10.42
+  - @prosopo/user-access-policy@3.12.31
+
+## 5.6.2
+### Patch Changes
+
+- 0a88895: Project the session fields callers read, and let routing machines set puzzle overrides.
+  
+  `getSessionRecordBySessionId` lists its fields explicitly but declared a full `Session` return type. That type lie let callers read fields the projection never selected — they get `undefined`, with no error anywhere. This is the fourth time it has shipped: after the tcp-probe fields (verify-time TCP decide rules received `undefined` and never fired) and `clientMetaData` (#3141), this round found the entropy fingerprints plus the `g`/`i`/`sw`/`md`/`bn`/`fs` flags — which silently disabled the origin-session fallback in `getSessionRecordWithOriginFallback` *and* made it issue a redundant second query on every escalation, since every `needsX` check was trivially true and the origin read back `undefined` too — along with `ruleType` (fed into `DecisionMachineInput` by all three verify paths, so any decide rule gating on the matched access rule was dead), `powDifficulty` and `isProtect`.
+  
+  Adds the 13 missing fields, then makes it structural: the projection is now `SESSION_PROJECTION` and the return type is derived from it as `ProjectedSession`, so reading an unprojected field is a compile error. The other three projected queries were audited and are correct; `getClientRecord` is safe by construction for the same reason, its return type being `Pick`-narrowed to match.
+  
+  Separately, `RoutingMachineOutput` gains `puzzleTolerance` and `puzzle`, so a routing machine that inherits a trafficFilter `challenge` policy can reproduce it exactly. `getPuzzleCaptchaChallenge` re-derives its overrides from a live trafficFilter verdict, which a machine-chosen puzzle has no counterpart for, so the values are persisted on the session and layered in there. Both are bounded by the same field validators the portal uses.
+  
+  Also: `deriveTrafficPolicies` forwards a site's per-category `trafficFilter` policies to routing and decision machines, so a machine can tell "the operator rejects this egress class" from "the operator deliberately accepts it"; `sendCaptcha` now persists the router's `reason`, which previously never reached the session on the route phase and was invisible in the portal; and `runArtifactExport`'s schema generic is corrected from `z.ZodSchema<T>` (which pins Input === Output === T, so any `.default()` in the tree made `T` unify with the input shape) to `z.ZodType<T, z.ZodTypeDef, unknown>`.
+- Updated dependencies [0a88895]
+- Updated dependencies [360b737]
+  - @prosopo/types-database@5.3.2
+  - @prosopo/database@4.0.24
+  - @prosopo/types@5.5.1
+  - @prosopo/types-env@2.10.41
+  - @prosopo/env@3.6.47
+  - @prosopo/api@4.1.2
+  - @prosopo/api-express-router@3.1.78
+  - @prosopo/datasets@3.1.74
+  - @prosopo/ipinfo@0.3.19
+  - @prosopo/keyring@2.9.81
+  - @prosopo/load-balancer@2.10.36
+  - @prosopo/user-access-policy@3.12.30
+
+## 5.6.1
+### Patch Changes
+
+- 8a9f7e9: Deferred access rules are now fetched at verify and excluded at request time.
+  
+  `deferToVerify` rules are skipped by the request-time middleware and enforced by `checkForHardBlock`, so a deferred rule is a hard block whatever its policy type. But `checkForHardBlock` fetched with `blockOnly`, which narrows the Redis pool to `@type:{block}` — a deferred `Restrict` was never fetched and so could never fire, despite `findHardBlockPolicy` being written to accept one.
+  
+  `deferToVerify` is now indexed. The request-time middleware uses `@type:{block} -@deferToVerify:{true}`, so deferred rules are filtered out in Redis instead of being fetched and discarded in JS. Verify emits a second, disjoint probe set for deferred rules rather than widening the block clause — merging the two populations into one probe would make them share a single `SPLIT_MAX_CANDIDATES_PER_SUB` budget, letting a dense deferred cohort truncate hard blocks out of the candidate set. The verdict cache key includes the distinction so the two lookups can't share a result. Adding the indexed field changes the index hash, so the index is rebuilt once on startup.
+- e6d2dbc: Make the reserved test site keys usable end to end.
+  
+  They were honoured in some places and rejected in others, so a reserved key could not complete a flow. Two gaps are closed.
+  
+  `blockMiddleware` is mounted ahead of `domainMiddleware` and decides purely on IP/JA4/ASN, so it never saw the site key and a reserved key was refused before any site-key logic ran. It now skips access-rule evaluation for reserved keys. This only skips access-rule evaluation: the keys already force a deterministic verdict, and a token is bound to the reserved key it was issued under, so one cannot clear a captcha on a site protected by a real key.
+  
+  The challenge issuers — `getPoWCaptchaChallenge`, `getPuzzleCaptchaChallenge` and `getImageCaptchaChallenge` — each fetched a client record and rejected with `SITE_KEY_NOT_REGISTERED` when it was missing, which reserved keys have no reason to have. That broke the path the frictionless handler sets up, since it hands a reserved key an invisible PoW session whose next call is `getPowCaptchaChallenge`. Each now serves the existing dummy response, guarded directly after the maintenance-mode short-circuit it mirrors.
+  
+  Routing and decision machines needed no equivalent: `applyRoutingMachine` and `runDecisionMachine` are reached only from the frictionless handler, after its reserved-key early return.
+- Updated dependencies [8a9f7e9]
+- Updated dependencies [d7a0a64]
+  - @prosopo/user-access-policy@3.12.29
+  - @prosopo/load-balancer@2.10.35
+  - @prosopo/database@4.0.23
+  - @prosopo/types-database@5.3.1
+  - @prosopo/env@3.6.46
+  - @prosopo/types-env@2.10.40
+  - @prosopo/api-express-router@3.1.77
+
+## 5.6.0
+### Minor Changes
+
+- eb34de6: Add a puzzle band to the frictionless flow.
+  
+  `settings.frictionlessThreshold` becomes an object with two rungs instead of a single number:
+  
+  ```
+  frictionlessThreshold: {
+    frictionlessPuzzleThreshold: 0.5,
+    frictionlessImageThreshold: 1.0,
+  }
+  ```
+  
+  Scores at or below the puzzle rung still pass silently to PoW and scores at or above the image rung still get an image captcha, but everything in between — suspicious without being conclusive — now gets a puzzle rather than being lumped in with the worst traffic.
+  
+  The puzzle rung defaults to the value `frictionlessThreshold` already had, so no site's silent-pass boundary moves. Putting both rungs on the same value opts out of the middle band.
+  
+  A bare number is still accepted wherever the setting is read or parsed, and means what it always meant (the puzzle rung), so records written before this release keep working while they are migrated. Unlike the puzzle rung, the image rung is not capped at 1: the score it is compared against is a total that server-side penalties add to.
+  
+  Image challenges served on the score path are now sized by how many signals fired, rather than a fixed count.
+
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types-database@5.3.0
+  - @prosopo/types@5.5.0
+  - @prosopo/database@4.0.22
+  - @prosopo/types-env@2.10.39
+  - @prosopo/api@4.1.1
+  - @prosopo/api-express-router@3.1.76
+  - @prosopo/datasets@3.1.73
+  - @prosopo/env@3.6.45
+  - @prosopo/ipinfo@0.3.18
+  - @prosopo/keyring@2.9.80
+  - @prosopo/load-balancer@2.10.34
+  - @prosopo/user-access-policy@3.12.28
+
+## 5.5.1
+### Patch Changes
+
+- Updated dependencies [5a17a65]
+  - @prosopo/database@4.0.21
+  - @prosopo/env@3.6.44
+  - @prosopo/api-express-router@3.1.75
+
+## 5.5.0
+### Minor Changes
+
+- 4b1cb19: Correlate a site-supplied session id across render and verify.
+  
+  A site can now hand the widget its own session identifier — Protect's JTI, or any per-user session id it already holds — and have the provider confirm at verify time that the token was earned in that same session. Render it with `data-sessionid="..."` or `renderOptions.sessionId`, resolved the same way `mode` and `language` already are, so implicit, explicit and invisible-button renders all pick it up. Pass the same value as the new trailing `clientSessionId` argument to `ProsopoServer.isVerified`.
+  
+  The widget attaches it to the solution as `clientMetaData.clientSessionId`. It is persisted on the captcha record (PoW, puzzle and image alike) and mirrored to a new top-level `clientMetaData` key on the session record — an object rather than a flat field, because more render-time metadata is expected to land there. It survives the PoW→image/puzzle escalation handoff, since the escalated widget is mounted with the same config.
+  
+  At verify, when the value is supplied and the solve does not carry exactly that value — including carrying none at all, which is what a token minted outside the site's session looks like — the token is disapproved with the new `ResultReason.CLIENT_SESSION_MISMATCH` (`API.CLIENT_SESSION_MISMATCH`, translated in all 31 locales), recorded on both the captcha record and the session.
+  
+  Omitting the id preserves existing behaviour, so this is opt-in and backward compatible. The verify request field is `clientSessionId` rather than `sessionId` because `VerificationResponse.sessionId` already means the provider's own frictionless session; same-named request and response fields meaning different things would be a trap for integrators.
+
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/types-database@5.2.0
+  - @prosopo/locale@3.4.0
+  - @prosopo/api@4.1.0
+  - @prosopo/api-express-router@3.1.74
+  - @prosopo/common@3.1.52
+  - @prosopo/database@4.0.20
+  - @prosopo/datasets@3.1.72
+  - @prosopo/env@3.6.43
+  - @prosopo/ipinfo@0.3.17
+  - @prosopo/keyring@2.9.79
+  - @prosopo/load-balancer@2.10.33
+  - @prosopo/types-env@2.10.38
+  - @prosopo/user-access-policy@3.12.27
+
+## 5.4.0
+### Minor Changes
+
+- b30ad41: Return the verified record's `sessionId` on the verify endpoints.
+  
+  `VerificationResponse` gains an optional `sessionId`, populated by the image, PoW and puzzle verify paths from the challenge/commitment record they looked up. It lets a caller correlate its own logs with the provider's: the sessionId is carried in neither the procaptcha token nor the verify request body, so the provider is the only party that can supply it. Absent when no record was found, or when the flow carried no session. Not tier-gated, since it is a correlation handle rather than a scoring signal.
+
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/api@4.0.15
+  - @prosopo/api-express-router@3.1.73
+  - @prosopo/database@4.0.19
+  - @prosopo/datasets@3.1.71
+  - @prosopo/env@3.6.42
+  - @prosopo/ipinfo@0.3.16
+  - @prosopo/keyring@2.9.78
+  - @prosopo/load-balancer@2.10.32
+  - @prosopo/types-database@5.1.12
+  - @prosopo/types-env@2.10.37
+  - @prosopo/user-access-policy@3.12.26
+
+## 5.3.10
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- f850d07: chore(deps): bump body-parser and express
+- 4cd6b04: Extend the failed image captcha integration test to assert the dapp verifies the challenge as disapproved, and add a test that a successful challenge still works after a failed one
+- Updated dependencies [a2f4b13]
+- Updated dependencies [68a9b41]
+- Updated dependencies [68a9b41]
+- Updated dependencies [f850d07]
+- Updated dependencies [ce5a3d7]
+- Updated dependencies [a9c0406]
+- Updated dependencies [179a2b0]
+- Updated dependencies [9bf4570]
+  - @prosopo/database@4.0.18
+  - @prosopo/locale@3.3.1
+  - @prosopo/types@5.2.6
+  - @prosopo/user-access-policy@3.12.25
+  - @prosopo/util@3.3.7
+  - @prosopo/ipinfo@0.3.15
+  - @prosopo/api-express-router@3.1.72
+  - @prosopo/puzzle-assets@0.1.3
+  - @prosopo/env@3.6.41
+  - @prosopo/api@4.0.14
+  - @prosopo/api-route@2.6.56
+  - @prosopo/common@3.1.51
+  - @prosopo/datasets@3.1.70
+  - @prosopo/keyring@2.9.77
+  - @prosopo/load-balancer@2.10.31
+  - @prosopo/logger@2.0.7
+  - @prosopo/redis-client@1.0.33
+  - @prosopo/types-database@5.1.11
+  - @prosopo/types-env@2.10.36
+
 ## 5.3.9
 ### Patch Changes
 

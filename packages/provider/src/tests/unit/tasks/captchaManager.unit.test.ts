@@ -14,19 +14,14 @@
 
 import type { RedisWriteQueue } from "@prosopo/database";
 import { type Logger, getLogger } from "@prosopo/logger";
-import {
-	ContextType,
-	IpAddressType,
-	type KeyringPair,
-	type Session,
-	contextAwareThresholdDefault,
-} from "@prosopo/types";
+import { IpAddressType, type KeyringPair, type Session } from "@prosopo/types";
 import {
 	CaptchaType,
 	type IUserSettings,
 	ResultReason,
 	Tier,
 	TrafficFilterAction,
+	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -46,25 +41,22 @@ vi.mock("../../../tasks/detection/decodeBehavior.js", () => ({
 const loggerOuter = getLogger("info", "test:captcha-manager");
 
 const defaultUserSettings: IUserSettings = {
-	frictionlessThreshold: 0.8,
+	frictionlessThreshold: {
+		frictionlessPuzzleThreshold: 0.8,
+		frictionlessImageThreshold: 1,
+	},
+	frictionlessTypes: { image: true, puzzle: true },
 	domains: [],
 	captchaType: CaptchaType.frictionless,
 	powDifficulty: 4,
 	imageThreshold: 0.8,
 	imageMaxRounds: 3,
+	imageMinRounds: 2,
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
 	puzzleTolerance: 15,
+	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 	disallowWebView: false,
-	contextAware: {
-		enabled: false,
-		contexts: {
-			default: {
-				type: ContextType.Default,
-				threshold: contextAwareThresholdDefault,
-			},
-		},
-	},
 };
 
 describe("CaptchaManager", () => {
@@ -113,6 +105,7 @@ describe("CaptchaManager", () => {
 			cacheSessionEscalation: vi.fn().mockResolvedValue(true),
 			getCachedSessionEscalation: vi.fn().mockResolvedValue(null),
 			invalidateCachedSessionEscalation: vi.fn().mockResolvedValue(undefined),
+			getDetectorBundle: vi.fn().mockResolvedValue(null),
 		} as unknown as RedisWriteQueue;
 
 		captchaManager = new CaptchaManager(
@@ -1730,6 +1723,38 @@ describe("CaptchaManager", () => {
 				score: 0.5,
 			});
 		});
+		it("should return the sessionId even on the free tier, which hides the score", () => {
+			const result = captchaManager.getVerificationResponse(
+				true,
+				{
+					account: "account",
+					tier: Tier.Free,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0.5,
+				undefined,
+				"session-abc",
+			);
+			expect(result).toEqual({
+				status: "translated",
+				verified: true,
+				sessionId: "session-abc",
+			});
+		});
+		it("should omit the sessionId when there isn't one", () => {
+			const result = captchaManager.getVerificationResponse(
+				true,
+				{
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0.5,
+				undefined,
+				undefined,
+			);
+			expect(result).not.toHaveProperty("sessionId");
+		});
 	});
 
 	describe("decryptBehavioralData", () => {
@@ -2096,6 +2121,70 @@ describe("CaptchaManager", () => {
 				"1.2.3.4",
 			);
 			expect(check.isBlocked).toBe(false);
+		});
+	});
+
+	// Every one of these branches leaves the frictionless decrypt with no keys
+	// and fails closed to a challenge, so the cause has to be distinguishable
+	// from the logs alone.
+	describe("resolveBundleByDetectorSession", () => {
+		type LogPayload = { msg: string; data?: { cause?: string } };
+		const causeOf = (): string | undefined => {
+			const calls = (logger.info as ReturnType<typeof vi.fn>).mock
+				.calls as unknown as Array<[() => LogPayload]>;
+			for (const [build] of calls) {
+				const payload = build();
+				if (payload.msg === "Detector bundle not resolved") {
+					return payload.data?.cause;
+				}
+			}
+			return undefined;
+		};
+
+		it("reports noDetectorSession when the caller sent no detector session", async () => {
+			const result =
+				await captchaManager.resolveBundleByDetectorSession(undefined);
+			expect(result).toBeUndefined();
+			expect(causeOf()).toBe("noDetectorSession");
+		});
+
+		it("reports noBinding when the Redis binding is absent or expired", async () => {
+			(
+				mockWriteQueue.getDetectorBundle as ReturnType<typeof vi.fn>
+			).mockResolvedValue(null);
+			const result =
+				await captchaManager.resolveBundleByDetectorSession("detector-1");
+			expect(result).toBeUndefined();
+			expect(causeOf()).toBe("noBinding");
+		});
+
+		it("reports bundleNotInPool when the binding names a bundle this provider lacks", async () => {
+			(
+				mockWriteQueue.getDetectorBundle as ReturnType<typeof vi.fn>
+			).mockResolvedValue("bundle-1");
+			vi.spyOn(captchaManager, "resolveBundleById").mockReturnValue(undefined);
+			const result =
+				await captchaManager.resolveBundleByDetectorSession("detector-1");
+			expect(result).toBeUndefined();
+			expect(causeOf()).toBe("bundleNotInPool");
+		});
+
+		it("resolves the bundle and logs nothing on the success path", async () => {
+			(
+				mockWriteQueue.getDetectorBundle as ReturnType<typeof vi.fn>
+			).mockResolvedValue("bundle-1");
+			vi.spyOn(captchaManager, "resolveBundleById").mockReturnValue({
+				key: "private-key",
+				innerConfig: "inner-config",
+			});
+			const result =
+				await captchaManager.resolveBundleByDetectorSession("detector-1");
+			expect(result).toEqual({
+				key: "private-key",
+				innerConfig: "inner-config",
+				bundleId: "bundle-1",
+			});
+			expect(causeOf()).toBeUndefined();
 		});
 	});
 });

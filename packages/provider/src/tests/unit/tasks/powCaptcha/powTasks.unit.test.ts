@@ -18,6 +18,7 @@ import {
 	type BehavioralDataPacked,
 	CaptchaStatus,
 	CaptchaType,
+	type ClientMetaData,
 	FrictionlessReason,
 	type KeyringPair,
 	POW_SEPARATOR,
@@ -568,6 +569,56 @@ describe("PowCaptchaManager", () => {
 			expect(db.markDappUserPoWCommitmentsChecked).toHaveBeenCalledWith(
 				...markDappUserPoWCommitmentsCheckedArgs,
 			);
+		});
+
+		it("should return the record's sessionId, on both the verified and already-checked paths", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const timeout = 1000;
+			const challengeRecord: Partial<PoWCaptchaStored> = {
+				challenge,
+				dappAccount,
+				userAccount,
+				sessionId: "session-abc",
+				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
+				serverChecked: false,
+				result: { status: CaptchaStatus.approved },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+			};
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(
+				challengeRecord,
+			);
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(verifyRecency as any).mockImplementation(() => true);
+
+			const verified = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+			);
+			expect(verified.verified).toBe(true);
+			expect(verified.sessionId).toBe("session-abc");
+
+			// A replay exits before the session is ever loaded, but the record
+			// it read still carries the id.
+			// biome-ignore lint/suspicious/noExplicitAny: TODO fix
+			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue({
+				...challengeRecord,
+				serverChecked: true,
+			});
+			const replayed = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				timeout,
+				mockEnv,
+			);
+			expect(replayed.verified).toBe(false);
+			expect(replayed.sessionId).toBe("session-abc");
 		});
 
 		it("should return verified:false if a challenge cannot be found", async () => {
@@ -3119,6 +3170,126 @@ module.exports = (input) => {
 
 			expect(result.verified).toBe(true);
 			expect(db.countCommitmentsByNormalisedEmail).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("serverVerifyPowCaptchaSolution client session correlation", () => {
+		// Positional call — clientSessionId is the last argument, after
+		// storeMetadata.
+		const invoke = async (
+			challenge: PoWChallengeId,
+			dappAccount: string,
+			clientSessionId: string | undefined,
+		) =>
+			powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				60_000, // timeout
+				mockEnv,
+				undefined, // ip
+				undefined, // userAccessRulesStorage
+				undefined, // email
+				false, // spamEmailDomainCheckingEnabled
+				undefined, // spamFilter
+				undefined, // trafficFilter
+				false, // storeMetadata
+				clientSessionId,
+			);
+
+		const seedApprovedChallenge = (
+			challenge: PoWChallengeId,
+			dappAccount: string,
+			clientMetaData?: ClientMetaData,
+		): PoWCaptchaStored => {
+			const record: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount,
+				userAccount: "user",
+				requestedAtTimestamp: new Date(),
+				submittedAtTimestamp: new Date(),
+				serverChecked: false,
+				result: { status: CaptchaStatus.approved },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+				providerSignature: "sig",
+				userSubmitted: true,
+				headers: {},
+				ja4: "j",
+				...(clientMetaData && { clientMetaData }),
+			};
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				// PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored; the
+				// verify path only reads the stored fields (same widening as
+				// the mocks above).
+				record as unknown as PoWCaptchaRecord,
+			);
+			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(
+				undefined,
+			);
+			vi.mocked(db.updatePowCaptchaRecord).mockResolvedValue(undefined);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			return record;
+		};
+
+		it("verifies when the recorded session id matches", async () => {
+			const dappAccount = "dappAccount";
+			const challenge: PoWChallengeId =
+				`1${POW_SEPARATOR}u${POW_SEPARATOR}${dappAccount}` as PoWChallengeId;
+			seedApprovedChallenge(challenge, dappAccount, {
+				clientSessionId: "jti-1",
+			});
+
+			const result = await invoke(challenge, dappAccount, "jti-1");
+
+			expect(result.verified).toBe(true);
+		});
+
+		it("rejects with CLIENT_SESSION_MISMATCH when the ids differ", async () => {
+			const dappAccount = "dappAccount";
+			const challenge: PoWChallengeId =
+				`2${POW_SEPARATOR}u${POW_SEPARATOR}${dappAccount}` as PoWChallengeId;
+			seedApprovedChallenge(challenge, dappAccount, {
+				clientSessionId: "jti-1",
+			});
+
+			const result = await invoke(challenge, dappAccount, "jti-2");
+
+			expect(result.verified).toBe(false);
+			expect(result.reason).toBe("API.CLIENT_SESSION_MISMATCH");
+			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(
+				challenge,
+				expect.objectContaining({
+					result: {
+						status: CaptchaStatus.disapproved,
+						reason: ResultReason.CLIENT_SESSION_MISMATCH,
+					},
+				}),
+			);
+		});
+
+		it("rejects when the solve carries no session id at all", async () => {
+			const dappAccount = "dappAccount";
+			const challenge: PoWChallengeId =
+				`3${POW_SEPARATOR}u${POW_SEPARATOR}${dappAccount}` as PoWChallengeId;
+			seedApprovedChallenge(challenge, dappAccount);
+
+			const result = await invoke(challenge, dappAccount, "jti-1");
+
+			expect(result.verified).toBe(false);
+			expect(result.reason).toBe("API.CLIENT_SESSION_MISMATCH");
+		});
+
+		it("does not correlate when the dapp server sends no session id", async () => {
+			const dappAccount = "dappAccount";
+			const challenge: PoWChallengeId =
+				`4${POW_SEPARATOR}u${POW_SEPARATOR}${dappAccount}` as PoWChallengeId;
+			seedApprovedChallenge(challenge, dappAccount, {
+				clientSessionId: "jti-1",
+			});
+
+			const result = await invoke(challenge, dappAccount, undefined);
+
+			expect(result.verified).toBe(true);
 		});
 	});
 });

@@ -26,17 +26,24 @@ import {
 	type AccessRulesStorage,
 } from "@prosopo/user-access-policy";
 import { flatten, isProtectDeployment, sanitisePageUrl } from "@prosopo/util";
+import { verifyWebBotAuth } from "@prosopo/web-bot-auth";
 import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
 import { Tasks } from "../../../tasks/index.js";
-import { derivePlatform } from "../../../utils/devicePlatform.js";
+import {
+	derivePlatform,
+	deriveTrafficPolicies,
+} from "../../../utils/devicePlatform.js";
 import { hashUserAgent } from "../../../utils/hashUserAgent.js";
 import { hashUserIp } from "../../../utils/hashUserIp.js";
 import { normalizeRequestIp } from "../../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../../admin/apiToggleMaintenanceModeEndpoint.js";
-import { getRequestUserScope } from "../../blacklistRequestInspector.js";
+import {
+	getRequestUserScope,
+	normalizeHeadersForMatching,
+} from "../../blacklistRequestInspector.js";
 import { buildDnsEventUrl } from "../../dnsEventUrl.js";
 import {
 	recordBotScore,
@@ -51,7 +58,7 @@ import {
 	handleFrictionlessTrafficFilter,
 } from "../trafficFilterRequestTime.js";
 import { handleAccessPolicy } from "./accessPolicy.js";
-import { DEFAULT_FRICTIONLESS_THRESHOLD } from "./constants.js";
+import { resolveScoreLadder } from "./constants.js";
 import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
 import { attachHoneypot } from "./honeypotResponse.js";
@@ -92,6 +99,7 @@ export default (
 				detectorSessionId,
 				currentUrl: reportedCurrentUrl,
 				iframeUrl: reportedIframeUrl,
+				clientSessionId,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
 			// Re-sanitise whatever the client reported: keep only scheme + host
@@ -254,6 +262,9 @@ export default (
 						: undefined;
 				const dedupFlatHeaders = flatten(req.headers);
 				const dedupUserAgent = String(req.headers["user-agent"] ?? "");
+				const dedupTrafficPolicies = deriveTrafficPolicies(
+					clientRecord.settings?.trafficFilter,
+				);
 				const dedupUserScope = getRequestUserScope(
 					dedupFlatHeaders,
 					req.ja4,
@@ -273,6 +284,7 @@ export default (
 						userAccessRulesStorage,
 						dapp,
 						dedupUserScope,
+						normalizeHeadersForMatching(req.headers),
 					)
 				).find((p) => !p.deferToVerify);
 				const dedupConflictsWithPolicy =
@@ -357,6 +369,9 @@ export default (
 									...(dedup.session.iframeUrl && {
 										iframeUrl: dedup.session.iframeUrl,
 									}),
+									...(dedupTrafficPolicies && {
+										trafficPolicies: dedupTrafficPolicies,
+									}),
 								},
 							},
 						)
@@ -368,10 +383,9 @@ export default (
 				// use to decrypt every later behavioural / SIMD payload for
 				// this session (via resolveBundleBySessionId). But the client
 				// on this request just did a fresh /detector/assign that
-				// bound `detectorSessionId` to whichever bundle
-				// DetectorBundlePool.pickRandom returned — almost never the
-				// same one the cached session stored, because the pick is
-				// uniform-random across the pool. If we hand the client the
+				// bound `detectorSessionId` to the bundle this caller now
+				// resolves to, which need not be the one the cached session
+				// stored. If we hand the client the
 				// cached sessionId, every later hop encrypts with the fresh
 				// detector's public key and the provider tries to decrypt
 				// with the cached bundle's private key, yielding
@@ -541,6 +555,22 @@ export default (
 				req.headers["accept-language"] || "",
 			);
 
+			// Web Bot Auth (RFC 9421): if the request carries a valid Ed25519
+			// signature and the signer's JWKS at /.well-known/http-message-
+			// signatures-directory verifies it, promote the canonical signer
+			// URL onto the userScope so `webBotAuthAgent` access rules can
+			// match on the verified identity. Unsigned traffic falls through
+			// with webBotAuthAgent=undefined and hits the normal detector
+			// stack.
+			const verified = await verifyWebBotAuth({
+				method: req.method,
+				url: `https://${req.headers.host ?? ""}${req.originalUrl ?? req.url}`,
+				headers: flatten(req.headers),
+			});
+			const verifiedSignerUrl = verified.verified
+				? verified.signerUrl
+				: undefined;
+
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
@@ -550,6 +580,7 @@ export default (
 				undefined,
 				countryCode,
 				asn,
+				verifiedSignerUrl,
 			);
 
 			// Fan out the three independent post-shortcircuit awaits:
@@ -572,8 +603,77 @@ export default (
 					userAccessRulesStorage,
 					dapp,
 					userScope,
+					normalizeHeadersForMatching(req.headers),
 				),
 			]);
+
+			// Authenticated fast-path. Fires when any non-deferToVerify Allow
+			// rule matches the userScope — the qualifier can be a verified
+			// Web Bot Auth agent, an IP CIDR, a JA4 fingerprint, a UA
+			// substring, an ASN, a country, or any combination. Web Bot Auth
+			// is one of the ways to qualify, not the only one.
+			//
+			// Skips decrypt/detect/decision-machine entirely, mints an
+			// authenticated session with `serverChecked: false`, and the
+			// operator's `/client/authenticated/verify` call is what marks
+			// it consumed. deferToVerify policies are ignored here for the
+			// same reason the ordinary flow ignores them at frictionless
+			// entry — they enforce at verify time only.
+			//
+			// A Block or Restrict policy on the same match set always wins
+			// (severity outranks Allow) so an operator who wrote both
+			// "allow /24" and "block 10.0.0.5" gets what they asked for.
+			// getPrioritisedAccessPolicies returns policies in matched-order,
+			// so the presence of a blocking policy short-circuits the check.
+			const blockingPolicy = accessPolicies.find(
+				(p) =>
+					!p.deferToVerify &&
+					(p.type === AccessPolicyType.Block ||
+						p.type === AccessPolicyType.Restrict),
+			);
+			const allowingPolicy = blockingPolicy
+				? undefined
+				: accessPolicies.find(
+						(p) => !p.deferToVerify && p.type === AccessPolicyType.Allow,
+					);
+			if (allowingPolicy) {
+				const authenticatedSession =
+					await tasks.frictionlessManager.createAuthenticatedSession(
+						token,
+						ipAddress,
+						// May be empty string when the Allow was matched by IP /
+						// JA4 / UA instead of webBotAuthAgent. The session field
+						// stays unset in that case so verify-side observability
+						// distinguishes "verified signer" from "trusted IP".
+						verifiedSignerUrl ?? "",
+						dapp,
+						userSitekeyIpHash,
+						flatHeaders,
+						req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
+							? req.ipInfo
+							: undefined,
+						clientSessionId,
+					);
+				req.logger.info(() => ({
+					msg: "Frictionless decision",
+					data: {
+						decision: "authenticated_allow_rule",
+						captchaType: CaptchaType.authenticated,
+						sessionId: authenticatedSession.sessionId,
+						webBotAuthAgent: verifiedSignerUrl,
+						ruleType: allowingPolicy.description,
+					},
+				}));
+				recordFrictionlessDecision("authenticated_allow_rule");
+				attachHoneypot(res, clientRecord);
+				return res.json({
+					[ApiParams.captchaType]: CaptchaType.authenticated,
+					[ApiParams.sessionId]: authenticatedSession.sessionId,
+					[ApiParams.status]: "ok",
+					dns_url: buildDnsEventUrl(authenticatedSession.sessionId),
+					...(verifiedSignerUrl && { agent: verifiedSignerUrl }),
+				});
+			}
 
 			const {
 				baseBotScore: rawBaseBotScore,
@@ -591,6 +691,12 @@ export default (
 				entropyWallClockOffsetMs,
 				entropyMathRandomFirst,
 				g,
+				i,
+				cv,
+				sq,
+				cg,
+				sm,
+				b,
 				sw,
 				md,
 				bn,
@@ -653,9 +759,12 @@ export default (
 				recordDetectorTriggered(triggeredDetectors);
 			}
 
-			const botThreshold =
-				clientRecord.settings?.frictionlessThreshold ||
-				DEFAULT_FRICTIONLESS_THRESHOLD;
+			// Both rungs of the score ladder. `resolveScoreLadder` tolerates the
+			// pre-ladder shape (a bare number) so a client record that predates
+			// the migration still routes rather than throwing.
+			const { botThreshold, botImageThreshold } = resolveScoreLadder(
+				clientRecord.settings?.frictionlessThreshold,
+			);
 
 			let scoreComponents: ScoreComponents = {
 				baseScore: baseBotScore,
@@ -699,6 +808,12 @@ export default (
 					entropyMathRandomFirst,
 				}),
 				...(g !== undefined && { g }),
+				...(i !== undefined && { i }),
+				...(cv !== undefined && { cv }),
+				...(sq !== undefined && { sq }),
+				...(cg !== undefined && { cg }),
+				...(sm !== undefined && { sm }),
+				...(b !== undefined && { b }),
 				...(sw !== undefined && { sw }),
 				...(md !== undefined && { md }),
 				...(bn !== undefined && { bn }),
@@ -716,19 +831,33 @@ export default (
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.isMobile
 					: undefined;
-			const safeUserAgent = userAgent ?? "";
+			// `userAgent` is hashed and only meaningful to
+			// `runUserAgentMismatchCheck`; passing it here left `isApple` and any
+			// UA classification permanently false. The dedup replay above already
+			// reads the header directly.
+			const requestUserAgent = String(req.headers["user-agent"] ?? "");
+			const trafficPolicies = deriveTrafficPolicies(
+				clientRecord.settings?.trafficFilter,
+			);
 			tasks.frictionlessManager.setRoutingContext({
 				dappAccount: dapp,
 				userAccount: user,
 				ip: normalizedIp,
 				countryCode,
 				score: botScore,
-				platform: derivePlatform(safeUserAgent, webView, {
+				imageMaxRounds: clientRecord.settings.imageMaxRounds,
+				imageMinRounds: clientRecord.settings.imageMinRounds,
+				// Constrains what `sendCaptcha` may finally mint, and sizes a
+				// puzzle chosen in place of a disabled image challenge.
+				frictionlessTypes: clientRecord.settings.frictionlessTypes,
+				baseImageRounds: env.config.captchas.solved.count,
+				puzzleMaxDifficulty: clientRecord.settings.puzzleMaxDifficulty,
+				platform: derivePlatform(requestUserAgent, webView, {
 					...(typeof ipInfoMobile === "boolean" && { isMobile: ipInfoMobile }),
 				}),
 				raw: {
 					headers: flatHeaders,
-					userAgent: safeUserAgent,
+					userAgent: requestUserAgent,
 					...(req.ja4 && { ja4: req.ja4 }),
 					...(req.tcpToChelloUs !== undefined && {
 						tcpToChelloUs: req.tcpToChelloUs,
@@ -745,16 +874,25 @@ export default (
 						req.ipInfo.isValid && { ipInfo: req.ipInfo }),
 					...(currentUrl && { currentUrl }),
 					...(iframeUrl && { iframeUrl }),
+					// Which egress categories this site blocks, so egress-sensitive
+					// route rules can skip sites that accept VPN / proxy / DC users.
+					...(trafficPolicies && { trafficPolicies }),
 				},
 			});
 
-			// Skip deferToVerify policies at the frictionless entry — they
-			// enforce at verify time only. handleAccessPolicy treats a
-			// Block policy as a 401 short-circuit; a deferToVerify Block
-			// hitting here would 401 the frictionless response, defeating
-			// the "solve normally, block at verify" contract deferToVerify
-			// is meant to enable.
-			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
+			// Skip deferred *Block* policies only. handleAccessPolicy
+			// treats a Block as a 401 short-circuit, so a deferred Block
+			// reaching here would reject at request time and defeat the
+			// "solve normally, block at verify" contract.
+			//
+			// A deferred Restrict is deliberately let through: it never
+			// takes the 401 branch, and it is how a deferred rule sets
+			// the captcha type it wants served. The rule then blocks at
+			// verify via checkForHardBlock. Filtering it out here would
+			// mean the challenge type it names is silently ignored.
+			const userAccessPolicy = accessPolicies.find(
+				(p) => !(p.deferToVerify === true && p.type === AccessPolicyType.Block),
+			);
 
 			const accessPolicyOutcome = await handleAccessPolicy(
 				{
@@ -822,6 +960,8 @@ export default (
 					token,
 					headHash,
 					botThreshold,
+					botImageThreshold,
+					triggeredDetectors,
 					currentUrl,
 					iframeUrl,
 				},

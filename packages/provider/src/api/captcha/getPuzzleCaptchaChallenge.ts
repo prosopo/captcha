@@ -34,8 +34,12 @@ import {
 } from "../../tasks/puzzle/puzzleRenderer.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
-import { getRequestUserScope } from "../blacklistRequestInspector.js";
+import {
+	getRequestUserScope,
+	normalizeHeadersForMatching,
+} from "../blacklistRequestInspector.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
+import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildPuzzleMaintenanceResponse } from "./maintenanceModeResponses.js";
 import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
@@ -74,6 +78,18 @@ export default (
 		if (getMaintenanceMode()) {
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning dummy puzzle challenge",
+				data: { dapp, user, sessionId },
+			}));
+			return res.json(await buildPuzzleMaintenanceResponse(user, dapp));
+		}
+
+		// Reserved CI test site keys have no client record, so the lookup
+		// below would reject them as unregistered. Checked before
+		// `new Tasks(env, ...)` for the same reason as maintenance mode: the
+		// constructor calls `env.getDb()`.
+		if (isReservedTestSiteKey(dapp)) {
+			req.logger.warn(() => ({
+				msg: "Reserved TEST site key - returning dummy puzzle challenge",
 				data: { dapp, user, sessionId },
 			}));
 			return res.json(await buildPuzzleMaintenanceResponse(user, dapp));
@@ -134,6 +150,7 @@ export default (
 					userAccessRulesStorage,
 					dapp,
 					userScope,
+					normalizeHeadersForMatching(req.headers),
 				)
 			).find((p) => !p.deferToVerify);
 
@@ -197,8 +214,15 @@ export default (
 					? trafficVerdict.puzzleTolerance
 					: undefined;
 
+			// Overrides a routing machine asked for, persisted on the session.
+			// The router runs only where the live trafficFilter verdict did
+			// NOT match (it evaluates after the request-time filter), so in
+			// practice these are mutually exclusive; the live verdict wins if
+			// both are somehow present.
 			const tolerance =
-				trafficPuzzleTolerance ?? clientSettings?.settings?.puzzleTolerance;
+				trafficPuzzleTolerance ??
+				sessionRecord?.puzzleTolerance ??
+				clientSettings?.settings?.puzzleTolerance;
 
 			// Resolve per-render puzzle tunables the same way as tolerance:
 			// asset defaults <- clientSettings.puzzle <- trafficFilter category
@@ -208,9 +232,11 @@ export default (
 				trafficVerdict.kind === "challenge"
 					? trafficVerdict.puzzleSettings
 					: undefined;
+			const routedPuzzleSettings =
+				trafficPuzzleSettings ?? sessionRecord?.puzzle;
 			const effectivePuzzleSettings = resolvePuzzleRenderSettings(
 				clientSettings?.settings?.puzzle,
-				trafficPuzzleSettings,
+				routedPuzzleSettings,
 			);
 			// Piece size is drawn per-challenge from the effective scale
 			// range so a solver can't hard-code the expected silhouette
@@ -218,7 +244,7 @@ export default (
 			// order as the render settings above.
 			const effectivePieceSize = resolvePuzzlePieceSize(
 				clientSettings?.settings?.puzzle,
-				trafficPuzzleSettings,
+				routedPuzzleSettings,
 			);
 			const challenge =
 				await tasks.puzzleCaptchaManager.getPuzzleCaptchaChallenge(

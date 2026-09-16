@@ -24,6 +24,7 @@ import {
 	nativeEnum,
 	number,
 	object,
+	record,
 	string,
 	tuple,
 	union,
@@ -31,7 +32,7 @@ import {
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
 import { CaptchaType } from "../client/index.js";
-import type { ContextType } from "../client/settings.js";
+import type { ContextType, IPuzzleSettings } from "../client/settings.js";
 import { ModeEnum } from "../config/mode.js";
 import {
 	type CaptchaResult,
@@ -159,6 +160,12 @@ export interface StoredCaptchaMetadata {
 // signal channel for the honeypot (and any future widget-side traps).
 export interface ClientMetaData {
 	hp?: string;
+	// The site-owner session id the widget was rendered with (`data-sessionid`
+	// / `renderOptions.sessionId`). Named `clientSessionId` rather than
+	// `sessionId` because the record already carries a top-level `sessionId`
+	// for the provider's own frictionless session — these are different
+	// things and both appear on the same document.
+	clientSessionId?: string;
 }
 
 /**
@@ -281,6 +288,7 @@ export const StoredCaptchaMetadataSchema = object({
 
 export const ClientMetaDataDbSchema = object({
 	hp: string().optional(),
+	clientSessionId: string().optional(),
 }) satisfies ZodType<ClientMetaData, ZodTypeDef, unknown>;
 
 export const UserCommitmentSchema = object({
@@ -495,6 +503,12 @@ export const SessionSchema = object({
 	entropyMathRandomFirst: number().optional(),
 	g: string().optional(),
 	i: boolean().optional(),
+	cv: number().optional(),
+	sq: number().optional(),
+	cg: string().optional(),
+	sm: string().optional(),
+	dz: string().optional(),
+	b: record(string(), array(string())).optional(),
 	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
 	// classifier folds into `webView`. Persisted per session so
 	// decision-machine rules can key off the individual signals
@@ -541,6 +555,8 @@ export const SessionSchema = object({
 		pathValid: boolean().optional(),
 		receivedAt: date(),
 	}).optional(),
+	// See Session.clientMetaData.
+	clientMetaData: ClientMetaDataDbSchema.optional(),
 }) satisfies ZodType<Session, ZodTypeDef, unknown>;
 
 // Session now includes all frictionless token fields
@@ -556,6 +572,13 @@ export type Session = {
 	mode?: ModeEnum;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
+	// Puzzle-only render overrides chosen by the routing machine, persisted
+	// so getPuzzleCaptchaChallenge can layer them in. That endpoint otherwise
+	// re-derives its overrides from a live trafficFilter verdict, which a
+	// machine-chosen puzzle has no counterpart for. Same semantics as the
+	// trafficFilter challenge-policy fields of the same names.
+	puzzleTolerance?: number;
+	puzzle?: IPuzzleSettings;
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
 	// See StoredCaptcha.pendingStage — same semantics on Session records.
@@ -621,6 +644,17 @@ export type Session = {
 	};
 	userSubmitted?: boolean;
 	serverChecked?: boolean;
+	// True on sessions issued because the request was Web Bot Auth verified
+	// (captchaType === CaptchaType.authenticated). Boolean shortcut for the
+	// Traffic view's "pre-verified pass" filter; the full signer URL lives
+	// on `webBotAuthAgent`.
+	agent?: boolean;
+	// Canonical Signature-Agent URL (e.g. "https://chatgpt.com") captured
+	// from the verified Ed25519 signature at issuance. Read at
+	// `/verify` time to enforce IP binding: `ipAddress` on the session
+	// must equal the `ip` the operator forwards on the verify call, so a
+	// leaked authenticated token can't be replayed from a different IP.
+	webBotAuthAgent?: string;
 	// WASM SIMD CPU fingerprint readings forwarded by the catcher client.
 	simdReadings?: SimdReadings;
 	// Stage at which the readings first arrived.
@@ -631,6 +665,12 @@ export type Session = {
 	entropyMathRandomFirst?: number;
 	g?: string;
 	i?: boolean;
+	cv?: number;
+	sq?: number;
+	cg?: string;
+	sm?: string;
+	dz?: string;
+	b?: Record<string, string[]>;
 	// Raw iOS WKWebView-vs-Safari DOM signals — see SessionSchema above.
 	sw?: boolean;
 	md?: boolean;
@@ -676,6 +716,14 @@ export type Session = {
 		// above but don't bump this timestamp.
 		receivedAt: Date;
 	};
+	// Site-owner-supplied metadata the widget was rendered with, mirrored up
+	// from the captcha record so the session row carries it too. Today that is
+	// just `clientSessionId` (Protect's JTI or any per-user session id the site
+	// holds); it is an object rather than a flat field because more render-time
+	// metadata is expected to land here. The verify endpoints correlate the
+	// `clientSessionId` the dapp server sends against the one recorded here /
+	// on the captcha record, and reject the token when they disagree.
+	clientMetaData?: ClientMetaData;
 };
 
 // Zod schema for PoWCaptchaStored
@@ -804,10 +852,40 @@ export type DecisionMachineArtifact = {
 	updatedAt: Date;
 };
 
+/**
+ * The baseline for one normalised URL inside a context — "what this page type
+ * is expected to look like". Head hashes vary far more between page types
+ * than between visitors, so a per-URL baseline is a much tighter comparison
+ * than the context-wide one, which has to average every page together.
+ */
+export type ClientContextEntropyUrl = {
+	/** Normalised `currentUrl`, e.g. `example.com/en/results/:id`. */
+	url: string;
+	sessions: number;
+	entropy: string;
+};
+
 export type ClientContextEntropy = {
 	account: string;
 	contextType: ContextType;
 	entropy: string;
+	/**
+	 * Per-page-type baselines, best-sampled first. Only URLs whose own sample
+	 * cleared the sweep's floors appear here, so a page type nobody visits
+	 * much is absent rather than represented by a thin average.
+	 */
+	urls?: ClientContextEntropyUrl[];
+	/**
+	 * Sessions behind this baseline, and how many distinct head hashes voted
+	 * in it.
+	 *
+	 * Kept so detectors have a measured sense of what normal volume looks
+	 * like for this site and context, instead of comparing every site against
+	 * the same absolute number. A cluster of 30 sessions is noise on a site
+	 * doing 12,000 an hour and is most of the traffic on one doing 200.
+	 */
+	totalSessions?: number;
+	distinctHashes?: number;
 	createdAt: Date;
 	updatedAt: Date;
 };

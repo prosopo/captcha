@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/user-access-policy",
-	"version": "3.12.24",
+	"version": "3.14.3",
 	"type": "module",
 	"engines": {
 		"node": "^24",
@@ -43,29 +43,29 @@
 		"test": "npm run test:unit && npm run test:integration"
 	},
 	"dependencies": {
-		"@prosopo/api": "4.0.13",
-		"@prosopo/api-route": "2.6.55",
-		"@prosopo/common": "3.1.50",
-		"@prosopo/logger": "2.0.6",
-		"@prosopo/redis-client": "1.0.32",
-		"@prosopo/types": "5.2.5",
-		"@prosopo/util": "3.3.6",
-		"@redis/search": "5.0.0",
+		"@prosopo/api": "4.2.3",
+		"@prosopo/api-route": "2.6.58",
+		"@prosopo/common": "3.1.55",
+		"@prosopo/logger": "2.0.9",
+		"@prosopo/redis-client": "1.0.35",
+		"@prosopo/types": "5.8.3",
+		"@prosopo/util": "3.3.9",
+		"@redis/search": "6.2.1",
 		"cidr-calc": "1.0.4",
 		"dotenv": "16.4.5",
-		"ip-address": "10.5.0",
-		"redis": "5.0.0",
+		"ip-address": "10.7.0",
+		"redis": "6.2.1",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.11",
-		"@prosopo/util-crypto": "13.5.30",
+		"@prosopo/config": "3.3.16",
+		"@prosopo/util-crypto": "13.5.31",
 		"@types/node": "22.10.2",
-		"fast-glob": "3.3.2",
-		"mongoose": "8.24.1",
+		"fast-glob": "3.3.3",
+		"mongoose": "9.10.0",
 		"vite": "8.1.5",
-		"vitest": "4.1.10",
-		"yargs": "17.7.2"
+		"vitest": "4.1.11",
+		"yargs": "18.1.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

@@ -147,6 +147,10 @@ const verify = async (
 	secret: string,
 	ip: string,
 	email?: string,
+	// The session id the widget was rendered with. Forwarded so the provider
+	// can confirm the token was earned in this same session; omitted, no
+	// correlation is attempted.
+	clientSessionId?: string,
 ) => {
 	if (verifyType === "api") {
 		// verify using the API endpoint
@@ -172,7 +176,12 @@ const verify = async (
 		return response.verified;
 	}
 	// verify using the TypeScript library
-	const verified = await prosopoServer.isVerified(token, ip, email);
+	const verified = await prosopoServer.isVerified(
+		token,
+		ip,
+		email,
+		clientSessionId,
+	);
 	logger.info(() => ({
 		data: {
 			verified,
@@ -225,6 +234,7 @@ const signup = async (
 			secret,
 			req.headers["x-client-ip"]?.toString() || "127.0.0.1",
 			email,
+			req.body[ApiParams.clientSessionId],
 		);
 
 		if (verified === true) {
@@ -303,6 +313,11 @@ const login = async (
 					token,
 					secret,
 					req.headers["x-client-ip"]?.toString() || NO_IP,
+					// login carries no email; the session id still has to reach
+					// the provider or a widget rendered with data-sessionid is
+					// silently unverified against its session.
+					undefined,
+					req.body[ApiParams.clientSessionId],
 				);
 
 				logger.info(() => ({

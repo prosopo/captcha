@@ -81,6 +81,11 @@ export type FrictionlessState = {
 	// bot fills it, the value is sent back as `clientMetaData.hp` on
 	// solution submission. Undefined when honeypot is disabled for the site.
 	hp?: string;
+	// Canonical Signature-Agent URL from the /frictionless response when
+	// the request was Web Bot Auth verified. Only present when the response
+	// carried `captchaType: authenticated`; consumed by the badge widget so
+	// the operator can see which agent verified (e.g. "chatgpt.com").
+	agent?: string;
 };
 
 export type ProcaptchaCallbacks = Partial<Callbacks>;
@@ -118,6 +123,17 @@ export interface ProcaptchaProps {
 	// `onSessionInvalidated` fires without asking the user to click the
 	// checkbox a second time.
 	startCoords?: { x: number; y: number };
+	// Called by the inner widget when the user presses the reload button on
+	// the challenge. The frictionless wrapper owns the response: the
+	// sessionId behind the current challenge has already been consumed by the
+	// provider, so a replacement challenge needs a replacement session. The
+	// wrapper re-runs the frictionless flow and re-mounts the widget with
+	// `autoStart`, so the user gets a new challenge rather than being dropped
+	// back to an unticked checkbox. Coords are the checkbox click position
+	// the user already made, preserved for the same reason as on
+	// `onSessionInvalidated`. When absent the widget falls back to the
+	// manager's own reload behaviour.
+	onReload?: (x?: number, y?: number) => void;
 	// Called by the inner widget when the user's answer was wrong. The
 	// provider consumes the session when it issues a challenge, so a second
 	// attempt cannot reuse it — the frictionless wrapper mints a fresh

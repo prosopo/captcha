@@ -90,6 +90,11 @@ export enum ClientApiPaths {
 	GetPuzzleCaptchaChallenge = "/v1/prosopo/provider/client/captcha/puzzle",
 	SubmitPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/solution",
 	VerifyPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/verify",
+	// Verify path for Web Bot Auth authenticated sessions. Only accepts tokens
+	// minted with captchaType=authenticated. Requires the operator to forward
+	// the client IP so the session's `ipAddress` binding can be enforced;
+	// a leaked authenticated token cannot be replayed from a different IP.
+	VerifyAuthenticatedSession = "/v1/prosopo/provider/client/authenticated/verify",
 	GetProviderStatus = "/v1/prosopo/provider/client/status",
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
@@ -107,6 +112,9 @@ export enum PublicApiPaths {
 export const providerDetailsSchema = object({
 	version: string(),
 	message: string(),
+	// Identity of the node that answered. Optional because the fleet is
+	// mixed-version during a rolling deploy and older nodes omit it.
+	host: string().optional(),
 	redis: object({
 		actor: string(),
 		isReady: boolean(),
@@ -183,6 +191,10 @@ export const ProviderDefaultRateLimits = {
 		limit: 15000,
 	},
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: {
+		windowMs: 60000,
+		limit: 15000,
+	},
+	[ClientApiPaths.VerifyAuthenticatedSession]: {
 		windowMs: 60000,
 		limit: 15000,
 	},
@@ -312,13 +324,16 @@ export interface CaptchaResponseBody extends ApiResponse {
 	};
 }
 
-// Widget-controlled metadata sent alongside the captcha solution. The widget
-// only populates this when the honeypot input has been filled in (which
-// should only happen for bots). Server-side: persisted on the StoredCaptcha
-// record, no automatic verdict. The TS shape (`ClientMetaData`) lives in
+// Widget-controlled metadata sent alongside the captcha solution. `hp` is only
+// populated when the honeypot input has been filled in (which should only
+// happen for bots); `clientSessionId` is only populated when the site owner
+// rendered the widget with a session id. Server-side: persisted on the
+// StoredCaptcha record, no automatic verdict at submit time — the session
+// alignment check happens at verify. The TS shape (`ClientMetaData`) lives in
 // ./database.ts — this schema is the wire-level zod for request bodies.
 export const ClientMetaDataSchema = object({
 	[ApiParams.hp]: safeText(INPUT_LIMITS.TEXT).optional(),
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 // Request-body-level bounded variants of shared schemas. The shared schemas
@@ -368,6 +383,10 @@ export const VerifySolutionBody = object({
 		.default(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
 	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).optional(),
+	// The session id the site rendered the widget with. When supplied, the
+	// provider rejects the token unless the solved captcha carries the same
+	// value — see `ResultReason.CLIENT_SESSION_MISMATCH`.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type VerifySolutionBodyTypeInput = input<typeof VerifySolutionBody>;
@@ -390,6 +409,9 @@ export interface VerificationResponse extends ApiResponse {
 	[ApiParams.verified]: boolean;
 	[ApiParams.score]?: number;
 	[ApiParams.reason]?: string;
+	// For log correlation only. Neither the token nor the verify request
+	// carries it, so the caller cannot know it without us echoing it back.
+	[ApiParams.sessionId]?: string;
 }
 
 export interface UpdateDecisionMachineResponse extends ApiResponse {
@@ -449,7 +471,8 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.captchaType]:
 		| CaptchaType.pow
 		| CaptchaType.image
-		| CaptchaType.puzzle;
+		| CaptchaType.puzzle
+		| CaptchaType.authenticated;
 	[ApiParams.sessionId]?: string;
 	// Encoded honeypot question. NOT serialised by the provider on the wire
 	// (it travels in the `x-prosopo-meta` response header so it doesn't sit
@@ -459,6 +482,10 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.hp]?: string;
 	// Per-session DNS observation URL; undefined when no dns sidecar.
 	dns_url?: string;
+	// Web Bot Auth: canonical Signature-Agent URL of the verified signer.
+	// Only present when captchaType === "authenticated". Rendered by the
+	// widget's badge so the operator can see WHICH agent verified.
+	agent?: string;
 }
 
 export interface PowCaptchaSolutionEscalation {
@@ -480,6 +507,8 @@ export const ServerPowCaptchaVerifyRequestBody = object({
 	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).email().optional(),
+	// See `VerifySolutionBody.clientSessionId`.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type ServerPowCaptchaVerifyRequestBodyOutput = output<
@@ -594,6 +623,15 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// server-side; not gated in the decision machine.
 	[ApiParams.currentUrl]: boundedString(INPUT_LIMITS.URL).optional(),
 	[ApiParams.iframeUrl]: boundedString(INPUT_LIMITS.URL).optional(),
+	// Same wire semantics as VerifySolutionBody.clientSessionId — a per-render
+	// session id the client (Bumblebee's JTI, a customer widget's `sessionId`,
+	// anything else the site owner supplies) uses to bind a captcha token to
+	// the render it was earned in. On the authenticated fast-path the value is
+	// persisted onto the session's clientMetaData; /authenticated/verify
+	// rejects with API.CLIENT_SESSION_MISMATCH when the forwarded value
+	// doesn't match, so a token exfiltrated to a different render is dead on
+	// arrival even if it clears the IP-binding check.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
@@ -713,6 +751,8 @@ export const ServerPuzzleCaptchaVerifyRequestBody = object({
 	[ApiParams.dappSignature]: boundedString(INPUT_LIMITS.TOKEN),
 	[ApiParams.ip]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.email]: boundedString(INPUT_LIMITS.EMAIL).email().optional(),
+	// See `VerifySolutionBody.clientSessionId`.
+	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type ServerPuzzleCaptchaVerifyRequestBodyType = zInfer<

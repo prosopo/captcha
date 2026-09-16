@@ -152,6 +152,16 @@ export const CompositeIpAddressRecordSchemaObj = {
  * d: Device capability string
  */
 
+// Widget-controlled metadata (see `ClientMetaData` in @prosopo/types). Shared
+// by the three captcha-record schemas and the session record so a new field
+// only has to be added once. `clientSessionId` is the site's own session id,
+// supplied at render time via `data-sessionid`; the verify endpoints correlate
+// it against the value the dapp server sends.
+export const ClientMetaDataRecordSchemaObj = {
+	hp: { type: String, required: false },
+	clientSessionId: { type: String, required: false },
+};
+
 export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
 export type PuzzleCaptchaRecord = mongoose.Document & PuzzleCaptchaStored;
@@ -238,7 +248,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		required: false,
 	},
 	clientMetaData: {
-		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
+		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
 		required: false,
 	},
 	headers: { type: Object, required: true },
@@ -397,7 +407,7 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 		required: false,
 	},
 	clientMetaData: {
-		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
+		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
 		required: false,
 	},
 	headers: { type: Object, required: true },
@@ -506,7 +516,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		required: false,
 	},
 	clientMetaData: {
-		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
+		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
 		required: false,
 	},
 	headers: { type: Object, required: true },
@@ -717,6 +727,12 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	mode: { type: String, enum: ModeEnum, required: false },
 	solvedImagesCount: { type: Number, required: false },
 	powDifficulty: { type: Number, required: false },
+	// Puzzle render overrides chosen by the routing machine. Stored as a
+	// free-form subdocument so the shape stays in step with
+	// PuzzleSettingsSchema without a second place to update — the value is
+	// already validated by RoutingMachineOutputSchema before it gets here.
+	puzzleTolerance: { type: Number, required: false },
+	puzzle: { type: Object, required: false },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	// See `StoredCaptcha.pendingStage` — same semantics on Session records.
@@ -790,6 +806,13 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	},
 	userSubmitted: { type: Boolean, required: false },
 	serverChecked: { type: Boolean, required: false },
+	// Web Bot Auth: true on sessions issued to a verified Ed25519 signer.
+	// Boolean shortcut; the full Signature-Agent URL is on webBotAuthAgent.
+	agent: { type: Boolean, required: false },
+	// Verified Signature-Agent URL (e.g. "https://chatgpt.com"). Presence
+	// on a session makes the `/verify` path require the operator to pass
+	// `ip` and enforces `session.ipAddress === ip` for replay defence.
+	webBotAuthAgent: { type: String, required: false },
 	// WASM SIMD CPU fingerprint readings collected by the catcher client.
 	// Stored as a free-form Mixed sub-document because the shape is a
 	// discriminated union and the dataset is still evolving — Zod validates
@@ -804,6 +827,12 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	entropyMathRandomFirst: { type: Number, required: false },
 	g: { type: String, required: false },
 	i: { type: Boolean, required: false },
+	cv: { type: Number, required: false },
+	sq: { type: Number, required: false },
+	cg: { type: String, required: false },
+	sm: { type: String, required: false },
+	dz: { type: String, required: false },
+	b: { type: Schema.Types.Mixed, required: false },
 	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
 	// classifier folds into `webView` (see @prosopo/types Session for
 	// per-key semantics). Persisted so server-side rules can retune
@@ -845,6 +874,14 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		),
 		required: false,
 	},
+	// Site-owner metadata the widget was rendered with — see
+	// `Session.clientMetaData`. Mirrored up from the captcha record so the
+	// session row carries the same `clientSessionId` the verify call
+	// correlates against.
+	clientMetaData: {
+		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
+		required: false,
+	},
 } satisfies AllKeys<Session>);
 
 SessionRecordSchema.index({ createdAt: 1 });
@@ -858,6 +895,10 @@ SessionRecordSchema.index(
 );
 SessionRecordSchema.index({ token: 1 });
 SessionRecordSchema.index({ siteKey: 1 }, { background: true, sparse: true });
+// Per-IP session lookups. Already present in production, created by hand;
+// declaring it here so every environment gets it and the lookups stay index
+// point-lookups rather than dropping to a collection scan.
+SessionRecordSchema.index({ siteKey: 1, "ipInfo.ip": 1 }, { background: true });
 // Traffic-page aggregations group blocked-session records by rule. Sparse
 // so legit sessions (no rule fields) don't bloat the index.
 SessionRecordSchema.index(
@@ -957,6 +998,21 @@ export const ClientContextEntropyRecordSchema =
 				required: true,
 			},
 			entropy: { type: String, required: true },
+			totalSessions: { type: Number, required: false },
+			distinctHashes: { type: Number, required: false },
+			urls: {
+				type: [
+					new Schema(
+						{
+							url: { type: String, required: true },
+							sessions: { type: Number, required: true },
+							entropy: { type: String, required: true },
+						},
+						{ _id: false },
+					),
+				],
+				required: false,
+			},
 		},
 		{ timestamps: { createdAt: true, updatedAt: true } },
 	);
@@ -964,6 +1020,162 @@ ClientContextEntropyRecordSchema.index(
 	{ account: 1, contextType: 1 },
 	{ unique: true },
 );
+
+/**
+ * Field list for `ProviderDatabase.getSessionRecordBySessionId`.
+ *
+ * Hoisted to a `const` so the method's return type is *derived* from it — see
+ * {@link ProjectedSession}. A caller that reads a field this projection does
+ * not select now fails to compile, instead of silently receiving `undefined`
+ * at runtime.
+ *
+ * That silent failure has shipped three times: the tcp-probe fields (decide
+ * rules got `undefined` and never fired), the entropy fingerprints plus the
+ * g / i / sw / md / bn / fs flags (which disabled the origin-session fallback
+ * in `captchaManager.getSessionRecordWithOriginFallback` *and* made it issue a
+ * redundant second query on every escalation), and the router's puzzle render
+ * overrides. Adding a field to `Session` no longer implies it is readable
+ * here; it has to be added below as well, and the compiler now says so.
+ *
+ * `headers` is selected by individual key rather than as a whole blob: the
+ * flattened `req.headers` persisted at frictionless time can contain
+ * `x-tls-clienthello` (a base64-encoded full TLS ClientHello, multi-KB per
+ * session). That field is only consumed by `ja4Middleware` from the live
+ * `req.headers` at the entry point — never re-read off the persisted Session —
+ * so it just bloats every subsequent lookup. The enumerated list covers the
+ * headers `buildEscalation` forwards onto the escalation session. New headers
+ * that need to round-trip must be added here explicitly.
+ */
+export const SESSION_PROJECTION = {
+	sessionId: 1,
+	token: 1,
+	score: 1,
+	threshold: 1,
+	scoreComponents: 1,
+	ipAddress: 1,
+	ipInfo: 1,
+	webView: 1,
+	iFrame: 1,
+	isEscalation: 1,
+	decryptedHeadHash: 1,
+	siteKey: 1,
+	reason: 1,
+	mode: 1,
+	solvedImagesCount: 1,
+	// Puzzle render overrides a routing machine asked for.
+	// getPuzzleCaptchaChallenge reads these off the session to
+	// layer over the site defaults — without them projected the
+	// overrides silently never apply.
+	puzzleTolerance: 1,
+	puzzle: 1,
+	// Read by captchaManager.peek* to report the session's own
+	// difficulty alongside solvedImagesCount.
+	powDifficulty: 1,
+	// Fed into DecisionMachineInput.ruleType by the pow / image /
+	// puzzle verify paths, so decide rules can gate on which
+	// access rule matched at frictionless entry.
+	ruleType: 1,
+	// Carried onto escalation sessions by `buildEscalation` so the
+	// escalated record keeps the Protect tag.
+	isProtect: 1,
+	// Entropy fingerprints and the compact client-capability flags.
+	// Read in two places, both of which silently degraded without
+	// them: `buildEscalation` copies them onto the escalation
+	// session, and `getSessionRecordWithOriginFallback` compares
+	// them against the origin session to decide whether a second
+	// lookup is even needed. Unprojected, every one read as
+	// undefined — so the fallback always fired and always copied
+	// nothing.
+	entropyMathRandomFingerprint: 1,
+	entropyCryptoFingerprint: 1,
+	entropyWallClockOffsetMs: 1,
+	entropyMathRandomFirst: 1,
+	g: 1,
+	i: 1,
+	cv: 1,
+	sq: 1,
+	cg: 1,
+	sm: 1,
+	dz: 1,
+	b: 1,
+	sw: 1,
+	md: 1,
+	bn: 1,
+	fs: 1,
+	userSitekeyIpHash: 1,
+	simdReadings: 1,
+	bundleId: 1,
+	dnsEvent: 1,
+	originSessionId: 1,
+	currentUrl: 1,
+	iframeUrl: 1,
+	// Mirrored up from the captcha record at solve time. Projected
+	// so session-level readers see the same clientSessionId the
+	// captcha record carries.
+	clientMetaData: 1,
+	// captchaType is required by the peek-before-consume path
+	// in `CaptchaManager.isValidRequest` — without it, every
+	// escalation peek would compare `undefined !== <requested>`
+	// and forcibly return INCORRECT_CAPTCHA_TYPE on the happy
+	// path too. Keep this projection in sync with whatever
+	// fields the read-only callers need.
+	captchaType: 1,
+	// Single-use marker for the authenticated (Web Bot Auth) verify path.
+	// `verifyAuthenticatedSession` reads it to reject a token that has already
+	// been redeemed, then sets it — without the projection the check would read
+	// `undefined` and every authenticated token would verify an unlimited
+	// number of times.
+	serverChecked: 1,
+	// Raw per-connection TCP-handshake signals populated by the
+	// tcp-probe eBPF sidecar (see @prosopo/types Session for the
+	// wire semantics). The verify-time DM input surface exposes
+	// these to decide rules (e.g. `tcp-stack-dc-linux-ts-off`,
+	// `tcp-ttl-windows-ua-linux-stack`); every one of the img /
+	// pow / puzzle verify paths forwards `sessionRecord?.tcpX`
+	// into the DecisionMachineInput. Missed on the original
+	// projection: the rules got `undefined` for every field and
+	// silently never fired against real traffic even though
+	// matching sessions were sitting in the DB.
+	synNs: 1,
+	synackNs: 1,
+	ackNs: 1,
+	observedTtl: 1,
+	tcpMss: 1,
+	tcpWscale: 1,
+	tcpOptsFlags: 1,
+	tcpOptsOrder: 1,
+	tcpWindow: 1,
+	"headers.user-agent": 1,
+	"headers.accept": 1,
+	"headers.accept-language": 1,
+	"headers.accept-encoding": 1,
+	"headers.sec-ch-ua": 1,
+	"headers.sec-ch-ua-mobile": 1,
+	"headers.sec-ch-ua-platform": 1,
+	"headers.sec-ch-ua-platform-version": 1,
+	"headers.sec-fetch-dest": 1,
+	"headers.sec-fetch-mode": 1,
+	"headers.sec-fetch-site": 1,
+	"headers.sec-fetch-user": 1,
+	"headers.referer": 1,
+	"headers.origin": 1,
+	"headers.prosopo-user": 1,
+	"headers.prosopo-site-key": 1,
+	"headers.prosopo-type": 1,
+	"headers.x-tls-version": 1,
+} as const;
+
+/**
+ * The subset of `Session` that {@link SESSION_PROJECTION} actually returns.
+ *
+ * Dotted header keys are not `keyof Session`, so `Extract` drops them and
+ * `headers` is re-added whole — the projected subset still arrives under that
+ * key, just with fewer entries.
+ */
+export type ProjectedSession = Pick<
+	Session,
+	Extract<keyof typeof SESSION_PROJECTION, keyof Session> | "headers"
+>;
 
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -1082,7 +1294,7 @@ export interface IProviderDatabase extends IDatabase {
 	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
 
 	updateDappUserCommitment(
-		commitmentId: Hash,
+		commitmentId: UserCommitment["id"],
 		updates: Partial<UserCommitment>,
 	): Promise<void>;
 
@@ -1206,7 +1418,9 @@ export interface IProviderDatabase extends IDatabase {
 		updates: Partial<PuzzleCaptchaRecord>,
 	): Promise<void>;
 
-	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
+	// Accepts plain records: the client-list poll builds these from the
+	// portal's account documents and they are never mongoose Documents.
+	updateClientRecords(clientRecords: IUserDataSlim[]): Promise<void>;
 
 	removeClientRecords(accounts: string[]): Promise<void>;
 
@@ -1218,7 +1432,9 @@ export interface IProviderDatabase extends IDatabase {
 
 	storeBlockedSession(sessionRecord: Session): Promise<void>;
 
-	getSessionRecordBySessionId(sessionId: string): Promise<Session | undefined>;
+	getSessionRecordBySessionId(
+		sessionId: string,
+	): Promise<ProjectedSession | undefined>;
 
 	getSessionRecordByToken(token: string): Promise<Session | undefined>;
 
@@ -1304,11 +1520,6 @@ export interface IProviderDatabase extends IDatabase {
 	removeDecisionMachineArtifact(id: string): Promise<boolean>;
 
 	removeAllDecisionMachineArtifacts(): Promise<number>;
-
-	getClientContextEntropy(
-		account: string,
-		contextType: ContextType,
-	): Promise<string | undefined>;
 
 	getSpamEmailDomain(domain: string): Promise<SpamEmailDomainRecord | null>;
 

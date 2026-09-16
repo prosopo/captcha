@@ -18,6 +18,7 @@ import {
 	type CompositeIpAddress,
 	type IPInfoResponse,
 	IpAddressType,
+	type PoWChallengeId,
 } from "@prosopo/types";
 import type { PuzzleCaptchaRecord } from "@prosopo/types-database";
 import { MongoMemoryServer } from "mongodb-memory-server";
@@ -55,7 +56,7 @@ const validIpInfo: IPInfoResponse = {
 };
 
 const buildPuzzleRecord = (
-	challenge: string,
+	challenge: PoWChallengeId,
 	overrides?: Partial<PuzzleCaptchaRecord>,
 ): PuzzleCaptchaRecord =>
 	({
@@ -120,7 +121,7 @@ describe("CentralDbStreamer end-to-end: puzzle records", () => {
 	});
 
 	it("streamPuzzleRecord upserts the record to central puzzlecaptcha collection", async () => {
-		const challenge = "puzzle-e2e-1";
+		const challenge: PoWChallengeId = "1___puzzle___e2e-1";
 		const record = buildPuzzleRecord(challenge);
 
 		streamer.streamPuzzleRecord(record);
@@ -153,7 +154,7 @@ describe("CentralDbStreamer end-to-end: puzzle records", () => {
 	});
 
 	it("streamPuzzleRecord calls markStored with the record's lastUpdatedTimestamp", async () => {
-		const challenge = "puzzle-e2e-2";
+		const challenge: PoWChallengeId = "2___puzzle___e2e-2";
 		const record = buildPuzzleRecord(challenge);
 
 		let capturedTimestamp: Date | undefined;
@@ -179,7 +180,7 @@ describe("CentralDbStreamer end-to-end: puzzle records", () => {
 		// stream (pending) → update → local write completes → stream (approved).
 		// The fetch step between streams gives the first write time to land, so
 		// the second write really is the last one to hit the central DB.
-		const challenge = "puzzle-e2e-upsert";
+		const challenge: PoWChallengeId = "3___puzzle___e2e-upsert";
 		const first = buildPuzzleRecord(challenge, {
 			result: { status: CaptchaStatus.pending },
 			userSubmitted: false,
@@ -230,7 +231,7 @@ describe("CentralDbStreamer end-to-end: puzzle records", () => {
 	});
 
 	it("streamPuzzleUpdate fetches the full record and streams it", async () => {
-		const challenge = "puzzle-e2e-update";
+		const challenge: PoWChallengeId = "4___puzzle___e2e-update";
 		const record = buildPuzzleRecord(challenge, {
 			result: { status: CaptchaStatus.approved },
 			userSubmitted: true,

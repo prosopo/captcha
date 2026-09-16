@@ -1,7 +1,7 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { utils } from "@scure/base";
+import { base32nopad } from "@scure/base";
 
 import {
 	createDecode,
@@ -14,15 +14,16 @@ const chars = "abcdefghijklmnopqrstuvwxyz234567";
 
 const config = {
 	chars,
-	coder: utils.chain(
-		// We define our own chain, the default base32 has padding
-		utils.radix2(5),
-		utils.alphabet(chars),
-		{
-			decode: (input: string) => input.split(""),
-			encode: (input: string[]) => input.join(""),
-		},
-	),
+	// RFC 4648 base32 without padding, in lowercase. @scure/base v2 no longer
+	// exports the chain/radix2/alphabet primitives, so wrap its unpadded codec.
+	// Input is checked against `chars` before decoding, so upper-casing here
+	// never admits an upper-case string.
+	coder: {
+		decode: (input: string): Uint8Array =>
+			base32nopad.decode(input.toUpperCase()),
+		encode: (input: Uint8Array): string =>
+			base32nopad.encode(input).toLowerCase(),
+	},
 	ipfs: "b",
 	type: "base32",
 };

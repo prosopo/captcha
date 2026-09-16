@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "الطابع الزمني قديم للغاية",
 		"FAILED_IP_VALIDATION": "فشل التحقق من صحة IP",
 		"ACCESS_POLICY_BLOCK": "تم حظر الوصول بواسطة السياسة",
+		"CLIENT_SESSION_MISMATCH": "عدم تطابق الجلسة. لم يتم إكمال اختبار التحقق في هذه الجلسة.",
 		"FORBIDDEN": "ممنوع",
 		"PROVIDER_VERIFY_FAILED": "فشل التحقق من الجهة الخارجية",
 		"SPAM_EMAIL_DOMAIN": "نطاق البريد الإلكتروني غير مسموح به",
@@ -377,7 +378,20 @@
 		"ACCOUNT_NOT_FOUND": "حساب غير موجود",
 		"NO_EXTENSION_FOUND": "لم يتم العثور على امتداد",
 		"INSECURE_CONTEXT": "يتطلب Procaptcha اتصالاً آمنًا (HTTPS)",
-		"INCORRECT_TRY_AGAIN": "غير صحيح، يرجى المحاولة مرة أخرى"
+		"INCORRECT_TRY_AGAIN": "غير صحيح، يرجى المحاولة مرة أخرى",
+		"CHECKING": "جارٍ التحقق من أنك إنسان",
+		"IMAGE_DIALOG_LABEL": "اختبار الصور",
+		"PUZZLE": {
+			"DIALOG_LABEL": "اختبار الأحجية",
+			"DRAG": "اسحب القطعة إلى الهدف",
+			"RETRY": "اقتربت — حاول مرة أخرى",
+			"PIECE_LABEL": "قطعة الأحجية",
+			"PIECE_ROLE": "قطعة أحجية قابلة للسحب",
+			"KEYBOARD_HINT": "استخدم مفاتيح الأسهم لتحريك القطعة، مع الضغط على Shift لخطوات أصغر. اضغط Enter لإرسالها، أو Home لإعادتها إلى البداية، أو Escape للإلغاء.",
+			"POSITION": "{{x}} بالمئة من اليسار، {{y}} بالمئة من الأعلى",
+			"CHECKING": "جارٍ التحقق من إجابتك",
+			"RETRY_ANNOUNCEMENT": "اقتربت. تم تحميل أحجية جديدة وعادت القطعة إلى البداية."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "فشل في ترميز عنوان غير صالح",

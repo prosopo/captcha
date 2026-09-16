@@ -1,7 +1,7 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { secp256k1 } from "@noble/curves/secp256k1";
+import { secp256k1 } from "@noble/curves/secp256k1.js";
 
 export function secp256k1Compress(
 	publicKey: Uint8Array,
@@ -17,5 +17,5 @@ export function secp256k1Compress(
 		return publicKey;
 	}
 
-	return secp256k1.ProjectivePoint.fromHex(publicKey).toRawBytes(true);
+	return secp256k1.Point.fromBytes(publicKey).toBytes(true);
 }

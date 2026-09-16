@@ -1,5 +1,231 @@
 # @prosopo/procaptcha
 
+## 2.11.12
+### Patch Changes
+
+- Updated dependencies [028a158]
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [864ddde]
+- Updated dependencies [028a158]
+  - @prosopo/procaptcha-common@2.14.0
+  - @prosopo/types@5.8.3
+  - @prosopo/api@4.2.3
+  - @prosopo/common@3.1.55
+  - @prosopo/datasets@3.1.82
+  - @prosopo/load-balancer@2.10.44
+
+## 2.11.11
+### Patch Changes
+
+- Updated dependencies [0d479f9]
+- Updated dependencies [124784f]
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/load-balancer@2.10.43
+  - @prosopo/procaptcha-common@2.13.3
+  - @prosopo/types@5.8.2
+  - @prosopo/api@4.2.2
+  - @prosopo/datasets@3.1.81
+
+## 2.11.10
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+  - @prosopo/api@4.2.1
+  - @prosopo/datasets@3.1.80
+  - @prosopo/load-balancer@2.10.42
+  - @prosopo/procaptcha-common@2.13.2
+
+## 2.11.9
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/api@4.2.0
+  - @prosopo/datasets@3.1.79
+  - @prosopo/load-balancer@2.10.41
+  - @prosopo/procaptcha-common@2.13.1
+
+## 2.11.8
+### Patch Changes
+
+- 9e06d72: Stop `CAPTCHA.NO_SESSION_FOUND` leaving the widget on a dead checkbox.
+  
+  Users reported a checkbox reading "No session found" that never recovered, usually after pressing the image-challenge reload button. Provider logs show the shape clearly: `POST /captcha/image` returns 200 and issues a challenge, then 2-6 seconds later the *same* sessionId is POSTed again and the provider answers 400 `CAPTCHA.NO_SESSION_FOUND` — `checkAndRemoveSession` consumed the session when it issued the first challenge, so a second challenge fetch on that id can never succeed.
+  
+  Three defects combined to turn that into a permanent dead end.
+  
+  - **The manager re-sent a sessionId it had already spent.** `defaultState()` doesn't clear `sessionId` and `buildUpdateState` skips `undefined`, so a stale id survives `resetState()` and any path that re-enters `start()` re-sends it. `Manager` now remembers the id it exchanged for a challenge and, rather than making a request it knows the provider will reject, routes straight to the `CAPTCHA.NO_SESSION_FOUND` state the wrapper already listens for.
+  
+  - **Recovery was one-shot per outer widget lifetime and had no terminal branch.** `ProcaptchaWidget` always takes the `onSessionInvalidated` branch and returns before its own `frictionlessState.restart()` fallback, and its guard ref is fresh on every re-mount because the wrapper bumps the mount key. So once the wrapper's one-shot was spent, the second failure was handled by nobody: no re-mint, no restart, no message — just a stuck checkbox. `handleSessionInvalidated` is now a bounded counter (`MAX_SESSION_INVALIDATED_RETRIES`) rather than a boolean, it reports `exhausted` to the caller, a reload press clears it (a reload mints a genuinely new session, so it shouldn't spend the budget for the old one), and exhaustion falls over visibly through `fallOverWithStyle` — which schedules the existing 10-second full restart, so there is always a way back.
+  
+  - **`resetState(0)` never reset anything.** `0 || stateRef.current.attemptCount` kept the old count, so `attemptCount` accumulated across every re-mint and `start()`'s own `attemptCount >= 5` fall-over fired after five *cumulative* runs in a widget lifetime. Five successful reload presses were enough to drop the user onto the error placeholder. Now `??`, so callers passing literal `0` get the reset they asked for.
+
+## 2.11.7
+### Patch Changes
+
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/procaptcha-common@2.13.0
+  - @prosopo/api@4.1.6
+  - @prosopo/common@3.1.54
+  - @prosopo/datasets@3.1.78
+  - @prosopo/load-balancer@2.10.40
+
+## 2.11.6
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [1b77849]
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/util-crypto@13.5.31
+  - @prosopo/api@4.1.5
+  - @prosopo/common@3.1.53
+  - @prosopo/datasets@3.1.77
+  - @prosopo/load-balancer@2.10.39
+  - @prosopo/procaptcha-common@2.12.6
+  - @prosopo/types@5.6.0
+  - @prosopo/util@3.3.8
+
+## 2.11.5
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/api@4.1.4
+  - @prosopo/datasets@3.1.76
+  - @prosopo/load-balancer@2.10.38
+  - @prosopo/procaptcha-common@2.12.5
+
+## 2.11.4
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/api@4.1.3
+  - @prosopo/datasets@3.1.75
+  - @prosopo/load-balancer@2.10.37
+  - @prosopo/procaptcha-common@2.12.4
+
+## 2.11.3
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/types@5.5.1
+  - @prosopo/api@4.1.2
+  - @prosopo/datasets@3.1.74
+  - @prosopo/load-balancer@2.10.36
+  - @prosopo/procaptcha-common@2.12.3
+
+## 2.11.2
+### Patch Changes
+
+- Updated dependencies [d7a0a64]
+  - @prosopo/load-balancer@2.10.35
+  - @prosopo/procaptcha-common@2.12.2
+
+## 2.11.1
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types@5.5.0
+  - @prosopo/api@4.1.1
+  - @prosopo/datasets@3.1.73
+  - @prosopo/load-balancer@2.10.34
+  - @prosopo/procaptcha-common@2.12.1
+
+## 2.11.0
+### Minor Changes
+
+- 4b1cb19: Correlate a site-supplied session id across render and verify.
+  
+  A site can now hand the widget its own session identifier — Protect's JTI, or any per-user session id it already holds — and have the provider confirm at verify time that the token was earned in that same session. Render it with `data-sessionid="..."` or `renderOptions.sessionId`, resolved the same way `mode` and `language` already are, so implicit, explicit and invisible-button renders all pick it up. Pass the same value as the new trailing `clientSessionId` argument to `ProsopoServer.isVerified`.
+  
+  The widget attaches it to the solution as `clientMetaData.clientSessionId`. It is persisted on the captcha record (PoW, puzzle and image alike) and mirrored to a new top-level `clientMetaData` key on the session record — an object rather than a flat field, because more render-time metadata is expected to land there. It survives the PoW→image/puzzle escalation handoff, since the escalated widget is mounted with the same config.
+  
+  At verify, when the value is supplied and the solve does not carry exactly that value — including carrying none at all, which is what a token minted outside the site's session looks like — the token is disapproved with the new `ResultReason.CLIENT_SESSION_MISMATCH` (`API.CLIENT_SESSION_MISMATCH`, translated in all 31 locales), recorded on both the captcha record and the session.
+  
+  Omitting the id preserves existing behaviour, so this is opt-in and backward compatible. The verify request field is `clientSessionId` rather than `sessionId` because `VerificationResponse.sessionId` already means the provider's own frictionless session; same-named request and response fields meaning different things would be a trap for integrators.
+
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/procaptcha-common@2.12.0
+  - @prosopo/api@4.1.0
+  - @prosopo/common@3.1.52
+  - @prosopo/datasets@3.1.72
+  - @prosopo/load-balancer@2.10.33
+
+## 2.10.76
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/api@4.0.15
+  - @prosopo/datasets@3.1.71
+  - @prosopo/load-balancer@2.10.32
+  - @prosopo/procaptcha-common@2.11.35
+
+## 2.10.75
+### Patch Changes
+
+- ce5a3d7: Fix the reload button on the image captcha closing the challenge instead of loading a new one. Reload now asks the frictionless wrapper for a fresh session and re-mounts the widget so a new challenge opens straight away, and the checkbox click position is carried over to the replacement solve
+- Updated dependencies [68a9b41]
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/procaptcha-common@2.11.34
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/api@4.0.14
+  - @prosopo/common@3.1.51
+  - @prosopo/datasets@3.1.70
+  - @prosopo/load-balancer@2.10.31
+
 ## 2.10.74
 ### Patch Changes
 

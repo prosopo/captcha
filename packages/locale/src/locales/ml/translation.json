@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Imestamptay ootay oldway",
 		"FAILED_IP_VALIDATION": "IP സാധൂകരണം പരാജയപ്പെട്ടു",
 		"ACCESS_POLICY_BLOCK": "നയം മൂലം പ്രവേശനം തടഞ്ഞു",
+		"CLIENT_SESSION_MISMATCH": "സെഷൻ പൊരുത്തപ്പെടുന്നില്ല. ഈ സെഷനിൽ ക്യാപ്ച പൂർത്തിയാക്കിയിട്ടില്ല.",
 		"FORBIDDEN": "Forbiddenway",
 		"PROVIDER_VERIFY_FAILED": "Oviderpray erificationvay ailedfay",
 		"SPAM_EMAIL_DOMAIN": "ഇമെയിൽ ഡൊമെയ്ൻ അനുവദനീയമല്ല",
@@ -377,7 +378,20 @@
 		"ACCOUNT_NOT_FOUND": "Account dili makita",
 		"NO_EXTENSION_FOUND": "Walay nakitang extension",
 		"INSECURE_CONTEXT": "Procaptcha-യ്ക്ക് സുരക്ഷിതമായ (HTTPS) കണക്ഷൻ ആവശ്യമാണ്",
-		"INCORRECT_TRY_AGAIN": "തെറ്റാണ്, ദയവായി വീണ്ടും ശ്രമിക്കുക"
+		"INCORRECT_TRY_AGAIN": "തെറ്റാണ്, ദയവായി വീണ്ടും ശ്രമിക്കുക",
+		"CHECKING": "നിങ്ങൾ മനുഷ്യനാണെന്ന് പരിശോധിക്കുന്നു",
+		"IMAGE_DIALOG_LABEL": "ചിത്ര പരിശോധന",
+		"PUZZLE": {
+			"DIALOG_LABEL": "പസിൽ പരിശോധന",
+			"DRAG": "കഷണം ലക്ഷ്യസ്ഥാനത്തേക്ക് വലിച്ചിടുക",
+			"RETRY": "ഏതാണ്ട് ശരിയായി — വീണ്ടും ശ്രമിക്കുക",
+			"PIECE_LABEL": "പസിൽ കഷണം",
+			"PIECE_ROLE": "വലിച്ചുനീക്കാവുന്ന പസിൽ കഷണം",
+			"KEYBOARD_HINT": "കഷണം നീക്കാൻ ആരോ കീകൾ ഉപയോഗിക്കുക; ചെറിയ അളവിൽ നീക്കാൻ Shift അമർത്തിപ്പിടിക്കുക. അയയ്ക്കാൻ Enter, തുടക്കത്തിലേക്ക് മടക്കാൻ Home, റദ്ദാക്കാൻ Escape അമർത്തുക.",
+			"POSITION": "ഇടത്തുനിന്ന് {{x}} ശതമാനം, മുകളിൽനിന്ന് {{y}} ശതമാനം",
+			"CHECKING": "നിങ്ങളുടെ ഉത്തരം പരിശോധിക്കുന്നു",
+			"RETRY_ANNOUNCEMENT": "ഏതാണ്ട് ശരിയായി. പുതിയ പസിൽ വന്നു, കഷണം വീണ്ടും തുടക്കത്തിലാണ്."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nahimong pakyas ang pag-encode sa dili balido nga address",

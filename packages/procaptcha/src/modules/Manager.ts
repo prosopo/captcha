@@ -21,6 +21,7 @@ import {
 } from "@prosopo/common";
 import {
 	ExtensionLoader,
+	buildClientMetaData,
 	buildUpdateState,
 	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
@@ -79,6 +80,12 @@ export function Manager(
 	// Reads the live honeypot input value at submit time. Returns undefined
 	// when the honeypot is disabled or the input hasn't been filled.
 	getHoneypotValue?: () => string | undefined,
+	// Hands the reload button back to the caller. Supplied when something
+	// above the manager owns re-minting the challenge — under frictionless the
+	// sessionId this challenge was issued against has already been consumed
+	// provider-side, so only the wrapper (which can run /frictionless again)
+	// can produce a fresh one. When absent the manager reloads itself.
+	onReloadRequest?: (x?: number, y?: number) => void,
 	// Set by the widget when a frictionless wrapper is present. A wrong answer
 	// needs a session the provider hasn't already consumed, which only the
 	// wrapper can mint, so the retry is delegated rather than run in place.
@@ -94,6 +101,15 @@ export function Manager(
 	// URL of the provider used on the previous attempt. On a retry we exclude it
 	// from the candidate pool so the fallback lands on a different provider.
 	let previousProviderUrl: string | undefined;
+	// The sessionId this manager has already exchanged for a challenge. The
+	// provider consumes a session the moment it issues a challenge against it
+	// (`checkAndRemoveSession`), so asking for a second challenge with the same
+	// id is a guaranteed 400 CAPTCHA.NO_SESSION_FOUND. `defaultState()` doesn't
+	// clear `sessionId` and `buildUpdateState` skips `undefined`, so a stale id
+	// survives `resetState()` — any path that re-enters `start()` (a
+	// providerRetry after a late failure, a `procaptcha:execute` event, a
+	// non-delegated reload) would otherwise re-send it.
+	let spentSessionId: string | undefined;
 
 	/**
 	 * Build the config on demand, using the optional config passed in from the outside. State may override various
@@ -189,13 +205,38 @@ export function Manager(
 					updateState({ captchaApi });
 				}
 
+				// Short-circuit a challenge fetch we already know the provider
+				// will reject, and route straight to the recovery path the
+				// wrapper listens for — re-minting a session is the only way
+				// forward, and the doomed round trip only delays it.
+				if (state.sessionId && state.sessionId === spentSessionId) {
+					updateState({
+						loading: false,
+						error: {
+							message: "No session found",
+							key: "CAPTCHA.NO_SESSION_FOUND",
+						},
+					});
+					events.onError(new Error("No session found"));
+					return;
+				}
+
 				// Non-blocking check — attach SIMD readings only if the
 				// prefetched benchmark has already resolved by this point.
 				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
 					? await frictionlessState.getSimdReadings(0)
 					: undefined;
+				// Mark the id spent as soon as the request goes out: once the
+				// provider has seen it we must assume it is consumed, whether
+				// the response is a challenge, a 4xx, or never arrives. A
+				// transport failure is the only case where it may still be
+				// live, and treating it as spent there costs one extra
+				// /frictionless on the retry — cheaper than re-sending a dead
+				// id and stranding the user on "No session found".
+				const challengeSessionId = state.sessionId;
+				if (challengeSessionId) spentSessionId = challengeSessionId;
 				const challenge = await captchaApi?.getCaptchaChallenge(
-					state.sessionId,
+					challengeSessionId,
 					simdReadingsOnChallenge,
 				);
 
@@ -352,8 +393,10 @@ export function Manager(
 
 				// Wait 5 secs for ongoing SIMD, else submit without
 				const simdReadings = await getSimdReadingsForSubmit(frictionlessState);
-				const hpValue = getHoneypotValue?.();
-				const clientMetaData = hpValue ? { hp: hpValue } : undefined;
+				const clientMetaData = buildClientMetaData(
+					getHoneypotValue?.(),
+					getConfig().clientSessionId,
+				);
 				// send the commitment to the provider
 				const submission: TCaptchaSubmitResult =
 					await captchaApi.submitCaptchaSolution(
@@ -439,13 +482,25 @@ export function Manager(
 	const reload = async () => {
 		// disable the time limit
 		clearTimeout();
-		// trigger the onClose event
+		// trigger the onReload event
 		events.onReload();
+		if (onReloadRequest) {
+			// Drop the spent challenge but leave the frictionless flow alone:
+			// the caller re-runs it and re-mounts us against the new session.
+			// Restarting frictionless from here instead would tear the widget
+			// back down to an unticked checkbox, which is what made reload
+			// look like it merely closed the modal.
+			resetState();
+			onReloadRequest(checkboxClickX, checkboxClickY);
+			return;
+		}
 		// abandon the captcha process and restart frictionless, if it exists
 		resetState(frictionlessState?.restart);
 		if (!frictionlessState?.restart) {
-			// start the captcha process again unless we need a new session
-			await start();
+			// start the captcha process again unless we need a new session,
+			// keeping the checkbox click position so the replacement solution
+			// still carries the real entry point rather than (0, 0)
+			await start(checkboxClickX, checkboxClickY);
 		}
 	};
 

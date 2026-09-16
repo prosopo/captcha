@@ -18,7 +18,7 @@ import { ProsopoDatasetError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { CaptchaType } from "@prosopo/types";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
 
 describe("Captchas", () => {
 	beforeEach(() => {
@@ -47,7 +47,7 @@ describe("Captchas", () => {
 		cy.intercept("/dummy").as("dummy");
 
 		// visit the base URL specified on command line when running cypress
-		return cy.visit(Cypress.env("default_page"));
+		return cy.visit(Cypress.expose("default_page"));
 	});
 
 	after(() => {
@@ -66,7 +66,7 @@ describe("Captchas", () => {
 	});
 
 	it("Captchas load when 'I am human' is pressed", () => {
-		cy.visit(Cypress.env("default_page"));
+		cy.visit(Cypress.expose("default_page"));
 
 		// Fill in name and email
 		cy.get("input[name='name']").type("John Doe");

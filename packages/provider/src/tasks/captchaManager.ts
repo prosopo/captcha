@@ -36,6 +36,7 @@ import type {
 	IProviderDatabase,
 	IUserDataSlim,
 	PoWCaptchaRecord,
+	ProjectedSession,
 	PuzzleCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -50,6 +51,7 @@ import {
 import {
 	getPrioritisedAccessRule,
 	getRequestUserScope,
+	normalizeHeadersForMatching,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import { getDetectorBundlePool } from "./detection/bundlePool.js";
@@ -198,7 +200,7 @@ export class CaptchaManager {
 	 */
 	public async getSessionRecordWithOriginFallback(
 		sessionId: string,
-	): Promise<Session | undefined> {
+	): Promise<ProjectedSession | undefined> {
 		const session = await this.db.getSessionRecordBySessionId(sessionId);
 		if (!session) return undefined;
 		if (!session.originSessionId) return session;
@@ -683,6 +685,7 @@ export class CaptchaManager {
 		translateFn: (key: string) => string,
 		score?: number,
 		reason?: string,
+		sessionId?: string,
 	) {
 		return {
 			status: translateFn(
@@ -697,6 +700,8 @@ export class CaptchaManager {
 				reason && {
 					[ApiParams.reason]: reason,
 				}),
+			// Not tier-gated — a log correlation handle, not a scoring signal.
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
 		};
 	}
 
@@ -704,8 +709,14 @@ export class CaptchaManager {
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
 		userScope: UserScope | UserScopeRecord,
+		// Raw request headers for header-restriction rules — see
+		// getPrioritisedAccessRule for why this has no default.
+		requestHeaders: Record<string, string>,
 		options?: {
 			blockOnly?: boolean;
+			// Widen a blockOnly pool to admit deferred rules of any type
+			// — see AccessRulesFilter.includeDeferred.
+			includeDeferred?: boolean;
 			// When a caller has an Express request in scope (e.g. the
 			// verify handler), passing it here shares the per-request memo
 			// with the block middleware — a duplicate lookup within one
@@ -717,6 +728,7 @@ export class CaptchaManager {
 			userAccessRulesStorage,
 			userScope,
 			clientId,
+			requestHeaders,
 			options,
 		);
 	}
@@ -744,10 +756,42 @@ export class CaptchaManager {
 	async resolveBundleByDetectorSession(
 		detectorSessionId?: string,
 	): Promise<(PoolBundleDecrypt & { bundleId: string }) | undefined> {
-		if (!detectorSessionId || !this.writeQueue) return undefined;
+		if (!detectorSessionId || !this.writeQueue) {
+			this.logUnresolvedDetectorBundle("noDetectorSession");
+			return undefined;
+		}
 		const bundleId = await this.writeQueue.getDetectorBundle(detectorSessionId);
+		if (!bundleId) {
+			this.logUnresolvedDetectorBundle("noBinding");
+			return undefined;
+		}
 		const decrypt = this.resolveBundleById(bundleId);
-		return bundleId && decrypt ? { ...decrypt, bundleId } : undefined;
+		if (!decrypt) {
+			this.logUnresolvedDetectorBundle("bundleNotInPool", bundleId);
+			return undefined;
+		}
+		return { ...decrypt, bundleId };
+	}
+
+	/**
+	 * Returning undefined here leaves the frictionless decrypt with no keys to
+	 * try, which fails closed: the score is forced to 1 and the caller is
+	 * challenged despite nothing having been measured about it. The three causes
+	 * need different fixes — a caller that sent no detector session, a binding
+	 * that was absent or had expired (see `DETECTOR_BUNDLE_TTL_SECONDS`), and a
+	 * bundle this provider no longer holds — but they are indistinguishable
+	 * downstream, where all three surface as the same decrypt failure. Logged at
+	 * info because that is the level aggregated log search runs at, and only on
+	 * the failure path, so this costs nothing on the hot path.
+	 */
+	private logUnresolvedDetectorBundle(
+		cause: "noDetectorSession" | "noBinding" | "bundleNotInPool",
+		bundleId?: string,
+	): void {
+		this.logger?.info(() => ({
+			msg: "Detector bundle not resolved",
+			data: { cause, ...(bundleId !== undefined && { bundleId }) },
+		}));
 	}
 
 	/**
@@ -894,11 +938,22 @@ export class CaptchaManager {
 			userAccessRulesStorage,
 			challengeRecord.dappAccount,
 			userScope,
+			// Raw headers for the in-code header-condition check. Available
+			// on the verify path too, so header rules fire there (e.g. an
+			// allow-list rule marked deferToVerify).
+			normalizeHeadersForMatching(headers),
 			// Hard-block lookup only — restrict the Redis-side candidate
-			// pool to Block rules so the SERVER_SIDE_RANK_TOP_N cap can't
-			// crowd a hard-block out of the top-N with Restrict or
-			// routing-Block (captchaType-scoped) entries.
-			{ blockOnly: true },
+			// pool so the SERVER_SIDE_RANK_TOP_N cap can't crowd a
+			// hard-block out of the top-N with routing-Block
+			// (captchaType-scoped) or plain Restrict entries.
+			//
+			// `includeDeferred` widens that pool to
+			// `(@type:{block} | @deferToVerify:{true})`. A deferred rule
+			// is skipped at request time and enforced here, so it is a
+			// valid hard block whatever its type — findHardBlockPolicy
+			// below already accepts one (case c), but a Block-only pool
+			// meant a deferred Restrict was never fetched to be found.
+			{ blockOnly: true, includeDeferred: true },
 		);
 
 		return findHardBlockPolicy(accessPolicies);

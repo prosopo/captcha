@@ -1,5 +1,220 @@
 # @prosopo/env
 
+## 3.6.56
+### Patch Changes
+
+- Updated dependencies [98ab052]
+- Updated dependencies [028a158]
+- Updated dependencies [1f0598c]
+- Updated dependencies [3958046]
+- Updated dependencies [028a158]
+  - @prosopo/database@4.0.33
+  - @prosopo/types@5.8.3
+  - @prosopo/types-env@2.11.2
+  - @prosopo/common@3.1.55
+  - @prosopo/ipinfo@0.4.2
+  - @prosopo/keyring@2.9.89
+
+## 3.6.55
+### Patch Changes
+
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/types@5.8.2
+  - @prosopo/database@4.0.32
+  - @prosopo/ipinfo@0.4.1
+  - @prosopo/keyring@2.9.88
+  - @prosopo/types-env@2.11.1
+
+## 3.6.54
+### Patch Changes
+
+- Updated dependencies [886b664]
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/ipinfo@0.4.0
+  - @prosopo/types-env@2.11.0
+  - @prosopo/types@5.8.1
+  - @prosopo/database@4.0.31
+  - @prosopo/keyring@2.9.87
+
+## 3.6.53
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [b2183f9]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/database@4.0.30
+  - @prosopo/ipinfo@0.3.25
+  - @prosopo/keyring@2.9.86
+  - @prosopo/types-env@2.10.46
+
+## 3.6.52
+### Patch Changes
+
+- Updated dependencies [8a63ea3]
+- Updated dependencies [162f591]
+  - @prosopo/database@4.0.29
+  - @prosopo/ipinfo@0.3.24
+
+## 3.6.51
+### Patch Changes
+
+- Updated dependencies [f8a41fe]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/database@4.0.28
+  - @prosopo/types@5.7.0
+  - @prosopo/common@3.1.54
+  - @prosopo/ipinfo@0.3.23
+  - @prosopo/keyring@2.9.85
+  - @prosopo/logger@2.0.9
+  - @prosopo/types-env@2.10.45
+
+## 3.6.50
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [1b77849]
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/util-crypto@13.5.31
+  - @prosopo/common@3.1.53
+  - @prosopo/database@4.0.27
+  - @prosopo/ipinfo@0.3.22
+  - @prosopo/keyring@2.9.84
+  - @prosopo/logger@2.0.8
+  - @prosopo/types@5.6.0
+  - @prosopo/types-env@2.10.44
+
+## 3.6.49
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/database@4.0.26
+  - @prosopo/ipinfo@0.3.21
+  - @prosopo/keyring@2.9.83
+  - @prosopo/types-env@2.10.43
+
+## 3.6.48
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/database@4.0.25
+  - @prosopo/ipinfo@0.3.20
+  - @prosopo/keyring@2.9.82
+  - @prosopo/types-env@2.10.42
+
+## 3.6.47
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/database@4.0.24
+  - @prosopo/types@5.5.1
+  - @prosopo/types-env@2.10.41
+  - @prosopo/ipinfo@0.3.19
+  - @prosopo/keyring@2.9.81
+
+## 3.6.46
+### Patch Changes
+
+  - @prosopo/database@4.0.23
+  - @prosopo/types-env@2.10.40
+
+## 3.6.45
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types@5.5.0
+  - @prosopo/database@4.0.22
+  - @prosopo/types-env@2.10.39
+  - @prosopo/ipinfo@0.3.18
+  - @prosopo/keyring@2.9.80
+
+## 3.6.44
+### Patch Changes
+
+- Updated dependencies [5a17a65]
+  - @prosopo/database@4.0.21
+
+## 3.6.43
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/common@3.1.52
+  - @prosopo/database@4.0.20
+  - @prosopo/ipinfo@0.3.17
+  - @prosopo/keyring@2.9.79
+  - @prosopo/types-env@2.10.38
+
+## 3.6.42
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/database@4.0.19
+  - @prosopo/ipinfo@0.3.16
+  - @prosopo/keyring@2.9.78
+  - @prosopo/types-env@2.10.37
+
+## 3.6.41
+### Patch Changes
+
+- Updated dependencies [a2f4b13]
+- Updated dependencies [68a9b41]
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+- Updated dependencies [179a2b0]
+  - @prosopo/database@4.0.18
+  - @prosopo/types@5.2.6
+  - @prosopo/ipinfo@0.3.15
+  - @prosopo/common@3.1.51
+  - @prosopo/keyring@2.9.77
+  - @prosopo/logger@2.0.7
+  - @prosopo/types-env@2.10.36
+
 ## 3.6.40
 ### Patch Changes
 

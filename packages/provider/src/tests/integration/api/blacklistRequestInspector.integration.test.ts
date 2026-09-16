@@ -173,6 +173,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					userAgent: userAgent1,
 				},
 				siteKey,
+				{},
 			);
 
 			// One query, matchingFieldsOnly=true engages server-side
@@ -219,6 +220,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					userAgent: userAgent1,
 				},
 				siteKey,
+				{},
 			);
 
 			// matchingFieldsOnly=true: the strict AND-of-disjunctions
@@ -274,6 +276,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					numericIp: BigInt(16843009),
 				},
 				siteKey,
+				{},
 			);
 
 			expect(spy).toHaveBeenCalledTimes(1);
@@ -308,6 +311,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					numericIp: BigInt(16843009),
 				},
 				siteKey,
+				{},
 			);
 
 			expect(spy).toHaveBeenCalledTimes(1);
@@ -322,6 +326,8 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					ja4Hash: ja4Hash2,
 					numericIp: BigInt(16843009),
 				},
+				undefined,
+				{},
 			);
 			expect(nonClientResult.length).toBe(0);
 		});
@@ -349,6 +355,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					numericIp: BigInt(17843009),
 				},
 				siteKey,
+				{},
 			);
 
 			expect(result.length).toBe(0);
@@ -378,6 +385,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					ip: getIPAddressFromBigInt(numericIp).address,
 				},
 				siteKey,
+				{},
 			);
 
 			expect(result.length).toBe(1);
@@ -406,6 +414,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					ip: "1.1.1.2",
 				},
 				siteKey,
+				{},
 			);
 			expect(result).toEqual([]);
 			expect(result.length).toBe(0);
@@ -434,6 +443,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					numericIp: BigInt(16843010),
 				},
 				siteKey,
+				{},
 			);
 			expect(result.length).toBe(0);
 		});
@@ -462,6 +472,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					numericIpMaskMax: BigInt(16843010),
 				},
 				siteKey,
+				{},
 			);
 			expect(result.length).toBe(0);
 		});
@@ -485,6 +496,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					headHash: headHash1,
 				},
 				siteKey,
+				{},
 			);
 
 			expect(result).toHaveLength(1);
@@ -511,6 +523,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					headHash: headHash2,
 				},
 				siteKey,
+				{},
 			);
 
 			expect(result).toHaveLength(0);
@@ -535,6 +548,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					coords: coords1,
 				},
 				siteKey,
+				{},
 			);
 
 			expect(result).toHaveLength(1);
@@ -561,6 +575,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					coords: coords2,
 				},
 				siteKey,
+				{},
 			);
 
 			expect(result).toHaveLength(0);
@@ -588,6 +603,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					coords: coords1,
 				},
 				siteKey,
+				{},
 			);
 
 			expect(result).toHaveLength(1);
@@ -620,6 +636,7 @@ describe("blacklistRequestInspector Integration Tests", () => {
 					ip: getIPAddressFromBigInt(numericIp).address,
 				},
 				siteKey,
+				{},
 			);
 
 			expect(result).toHaveLength(1);

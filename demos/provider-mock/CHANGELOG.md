@@ -1,5 +1,251 @@
 # @prosopo/provider-mock
 
+## 2.8.177
+### Patch Changes
+
+- Updated dependencies [98ab052]
+- Updated dependencies [028a158]
+- Updated dependencies [1f0598c]
+- Updated dependencies [3958046]
+- Updated dependencies [864ddde]
+- Updated dependencies [0cdf286]
+- Updated dependencies [ea4e6aa]
+- Updated dependencies [028a158]
+  - @prosopo/provider@5.10.2
+  - @prosopo/database@4.0.33
+  - @prosopo/types-database@5.5.3
+  - @prosopo/types@5.8.3
+  - @prosopo/locale@3.4.2
+  - @prosopo/api-express-router@3.1.87
+  - @prosopo/common@3.1.55
+
+## 2.8.176
+### Patch Changes
+
+- Updated dependencies [fad87b7]
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+- Updated dependencies [24d6b7b]
+  - @prosopo/provider@5.10.1
+  - @prosopo/types-database@5.5.2
+  - @prosopo/types@5.8.2
+  - @prosopo/api-express-router@3.1.86
+  - @prosopo/database@4.0.32
+
+## 2.8.175
+### Patch Changes
+
+- Updated dependencies [886b664]
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/provider@5.10.0
+  - @prosopo/types@5.8.1
+  - @prosopo/types-database@5.5.1
+  - @prosopo/api-express-router@3.1.85
+  - @prosopo/database@4.0.31
+
+## 2.8.174
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [b2183f9]
+- Updated dependencies [27f525e]
+- Updated dependencies [a0c87c7]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/types-database@5.5.0
+  - @prosopo/provider@5.9.0
+  - @prosopo/database@4.0.30
+  - @prosopo/api-express-router@3.1.84
+
+## 2.8.173
+### Patch Changes
+
+- Updated dependencies [8a63ea3]
+- Updated dependencies [162f591]
+- Updated dependencies [9149dff]
+  - @prosopo/database@4.0.29
+  - @prosopo/provider@5.8.1
+  - @prosopo/api-express-router@3.1.83
+
+## 2.8.172
+### Patch Changes
+
+- Updated dependencies [f8a41fe]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [e22d5fb]
+- Updated dependencies [b6918c0]
+- Updated dependencies [c59f8a6]
+- Updated dependencies [d288371]
+  - @prosopo/database@4.0.28
+  - @prosopo/provider@5.8.0
+  - @prosopo/types@5.7.0
+  - @prosopo/types-database@5.4.1
+  - @prosopo/api-express-router@3.1.82
+  - @prosopo/common@3.1.54
+  - @prosopo/dotenv@3.0.55
+  - @prosopo/logger@2.0.9
+
+## 2.8.171
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [7fd6eb2]
+- Updated dependencies [424e467]
+- Updated dependencies [89dd38a]
+- Updated dependencies [4810cb3]
+- Updated dependencies [80f73c1]
+- Updated dependencies [3d2176d]
+- Updated dependencies [8a670d3]
+  - @prosopo/provider@5.7.0
+  - @prosopo/api-express-router@3.1.81
+  - @prosopo/common@3.1.53
+  - @prosopo/database@4.0.27
+  - @prosopo/dotenv@3.0.54
+  - @prosopo/locale@3.4.1
+  - @prosopo/logger@2.0.8
+  - @prosopo/types@5.6.0
+  - @prosopo/types-database@5.4.0
+
+## 2.8.170
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/types-database@5.3.4
+  - @prosopo/provider@5.6.4
+  - @prosopo/api-express-router@3.1.80
+  - @prosopo/database@4.0.26
+
+## 2.8.169
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/provider@5.6.3
+  - @prosopo/types@5.5.2
+  - @prosopo/api-express-router@3.1.79
+  - @prosopo/database@4.0.25
+  - @prosopo/types-database@5.3.3
+
+## 2.8.168
+### Patch Changes
+
+- Updated dependencies [0a88895]
+- Updated dependencies [360b737]
+  - @prosopo/types-database@5.3.2
+  - @prosopo/database@4.0.24
+  - @prosopo/provider@5.6.2
+  - @prosopo/types@5.5.1
+  - @prosopo/api-express-router@3.1.78
+
+## 2.8.167
+### Patch Changes
+
+- Updated dependencies [8a9f7e9]
+- Updated dependencies [e6d2dbc]
+  - @prosopo/provider@5.6.1
+  - @prosopo/database@4.0.23
+  - @prosopo/types-database@5.3.1
+  - @prosopo/api-express-router@3.1.77
+
+## 2.8.166
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types-database@5.3.0
+  - @prosopo/provider@5.6.0
+  - @prosopo/types@5.5.0
+  - @prosopo/database@4.0.22
+  - @prosopo/api-express-router@3.1.76
+
+## 2.8.165
+### Patch Changes
+
+- Updated dependencies [5a17a65]
+  - @prosopo/database@4.0.21
+  - @prosopo/provider@5.5.1
+  - @prosopo/api-express-router@3.1.75
+
+## 2.8.164
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/types-database@5.2.0
+  - @prosopo/locale@3.4.0
+  - @prosopo/provider@5.5.0
+  - @prosopo/api-express-router@3.1.74
+  - @prosopo/common@3.1.52
+  - @prosopo/database@4.0.20
+
+## 2.8.163
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/provider@5.4.0
+  - @prosopo/api-express-router@3.1.73
+  - @prosopo/database@4.0.19
+  - @prosopo/types-database@5.1.12
+
+## 2.8.162
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- f850d07: chore(deps): bump body-parser and express
+- Updated dependencies [a2f4b13]
+- Updated dependencies [68a9b41]
+- Updated dependencies [f850d07]
+- Updated dependencies [ce5a3d7]
+- Updated dependencies [179a2b0]
+- Updated dependencies [4cd6b04]
+  - @prosopo/database@4.0.18
+  - @prosopo/locale@3.3.1
+  - @prosopo/provider@5.3.10
+  - @prosopo/types@5.2.6
+  - @prosopo/api-express-router@3.1.72
+  - @prosopo/common@3.1.51
+  - @prosopo/dotenv@3.0.53
+  - @prosopo/logger@2.0.7
+  - @prosopo/types-database@5.1.11
+
 ## 2.8.161
 ### Patch Changes
 

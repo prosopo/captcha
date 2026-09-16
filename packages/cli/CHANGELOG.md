@@ -1,5 +1,349 @@
 # @prosopo/cli
 
+## 3.8.11
+### Patch Changes
+
+- Updated dependencies [98ab052]
+- Updated dependencies [028a158]
+- Updated dependencies [1f0598c]
+- Updated dependencies [3958046]
+- Updated dependencies [864ddde]
+- Updated dependencies [0cdf286]
+- Updated dependencies [ea4e6aa]
+- Updated dependencies [028a158]
+  - @prosopo/provider@5.10.2
+  - @prosopo/types@5.8.3
+  - @prosopo/locale@3.4.2
+  - @prosopo/env@3.6.56
+  - @prosopo/api@4.2.3
+  - @prosopo/common@3.1.55
+  - @prosopo/keyring@2.9.89
+
+## 3.8.10
+### Patch Changes
+
+- Updated dependencies [fad87b7]
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+- Updated dependencies [24d6b7b]
+  - @prosopo/provider@5.10.1
+  - @prosopo/types@5.8.2
+  - @prosopo/api@4.2.2
+  - @prosopo/env@3.6.55
+  - @prosopo/keyring@2.9.88
+
+## 3.8.9
+### Patch Changes
+
+- Updated dependencies [886b664]
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/provider@5.10.0
+  - @prosopo/types@5.8.1
+  - @prosopo/env@3.6.54
+  - @prosopo/api@4.2.1
+  - @prosopo/keyring@2.9.87
+
+## 3.8.8
+### Patch Changes
+
+- af267c2: Web Bot Auth verifier and an authenticated frictionless flow for pre-verified agents.
+  
+  **`@prosopo/web-bot-auth`** — a new package: an RFC 9421 HTTP Message Signatures verifier built on `@noble/curves/ed25519`, with no Cloudflare dependency. It parses `Signature-Agent` in both its bare-string and dictionary forms, resolves the signer's JWKS at `/.well-known/http-message-signatures-directory` honouring the response's cache-control TTL, and verifies the Ed25519 signature over the RFC 9421 signature base.
+  
+  **Provider fast path.** `/captcha/frictionless` returns `captchaType: authenticated` when a non-`deferToVerify` `AccessPolicyType.Allow` rule matches the request's user scope, and writes a session with `serverChecked: false`, `agent: true` and the issuing IP frozen for verify-time binding. Decrypt, bot score and the decision machine are all skipped. A verified `Signature-Agent` is one way to qualify — the userScope gains a `webBotAuthAgent` field, set only when signature verification succeeded so a rule scoped to a signer can never be matched by a spoofed header — but an IP CIDR, JA4, user agent, ASN or country rule qualifies the same way. A `Block` or `Restrict` on the same match set always wins, because severity outranks Allow.
+  
+  **`/client/authenticated/verify`.** A separate router with mandatory IP binding — the operator must forward the client IP (`API.AUTHENTICATED_IP_REQUIRED`) and it must match the one the session was issued to (`API.AUTHENTICATED_IP_MISMATCH`), so a leaked token cannot be replayed from elsewhere. Single use is enforced through `serverChecked`, and `captchaType` is checked so an ordinary captcha token cannot be redeemed on this route. `clientSessionId` correlation goes through the same `isClientSessionMismatch` helper as pow / image / puzzle, so the authenticated path cannot drift from the others.
+  
+  **Surface.** `AccessPolicyType.Allow` and `CaptchaType.authenticated`; `webBotAuthAgent` on the user scope (indexed, normalised at parse time to a lowercase scheme+host with no trailing slash); `Session.agent` / `Session.webBotAuthAgent` for the Traffic view's "pre-verified pass" filter; `submitAuthenticatedCaptchaVerify` on `ProviderApi` and the matching branch in `@prosopo/server.verifyProvider`; `AuthenticatedBadge` and a dispatch branch in `procaptcha-frictionless`.
+  
+  Three fixes the new end-to-end coverage turned up, each of which broke the flow outright:
+  
+  - `ipMatchesSession` compared the operator's parsed IP against the session's composite halves with `===`. A session read back from Mongo carries BSON (`Decimal128`, or `Long` on pre-migration records), not the `bigint` the type claims, so the comparison was false for every session that had been through the database — every legitimate redemption was rejected as `API.AUTHENTICATED_IP_MISMATCH`. Both halves are now normalised before comparison, and an unparseable half fails closed rather than defaulting to `0n`, so garbage still cannot match garbage.
+  - `serverChecked` was never written onto the authenticated session, so "never set" and "consumed" were distinguishable only by an absence. It is now written as `false` at issuance.
+  - `serverChecked` was missing from `SESSION_PROJECTION`. Left out, the single-use check reads `undefined` and an authenticated token verifies an unlimited number of times.
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [27f525e]
+- Updated dependencies [a0c87c7]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/provider@5.9.0
+  - @prosopo/api@4.2.0
+  - @prosopo/env@3.6.53
+  - @prosopo/keyring@2.9.86
+
+## 3.8.7
+### Patch Changes
+
+- 162f591: Make the MaxMind fallback answer lookups instead of silently failing all of them.
+  
+  `MaxMindBackend` was configured with `cityDbPath` pointing at `GeoLite2-Country.mmdb` (`MAXMIND_DB_PATH`), and only ever called `city()`. `Reader.open()` accepts any valid `.mmdb`, so the reader opened, `isAvailable()` reported `true`, and the backend advertised itself as a working fallback — but `city()` checks `metadata.databaseType` and throws `BadMethodCallError` against a Country database. The throw was swallowed at `debug` level, `asnReader` was never configured because nothing read a path for it, and every lookup fell through to `{ isValid: false, error: "No MaxMind data available for IP" }`.
+  
+  The failure was invisible for as long as ipapi.is was up, because `IpInfoService` only reaches MaxMind when the ipapi.is lookup fails. When the self-hosted ipapi.is sidecar went down on five production provider nodes, IP lookups did not degrade to MaxMind — they failed outright, and `compareIPs` returned "Failed to lookup both IP addresses" for every request whose challenge IP differed from its solution IP.
+  
+  Three changes:
+  
+  - `MaxMindBackend` latches the database kind on the first `BadMethodCallError` and uses `country()` from then on, so a Country database yields country and country code rather than nothing. The latch means the rejection is constructed once per process, not once per request, and a genuine City database never pays for a second lookup. The mismatch is logged once at `warn` with the offending path, because silent degradation is what let this sit unnoticed.
+  - `maxmindAsnDbPath` is read from `MAXMIND_ASN_DB_PATH`. The image has downloaded `GeoLite2-ASN.mmdb` alongside City and Country since the Dockerfile was written, but nothing ever opened it, so the fallback could not name a provider or an AS number.
+  - `deepValidateIpAddress` logs `ip1Error` and `ip2Error` alongside the top-level comparison error. "Failed to lookup both IP addresses" on its own does not distinguish an IP that is absent from the database from a backend that is down, and diagnosing the difference meant going onto the host.
+  
+  Deployments should also point `MAXMIND_DB_PATH` at `GeoLite2-City.mmdb`, which the image already ships: country-level data is enough for geoblocking but carries no coordinates, so the IP distance rule cannot run against it.
+- Updated dependencies [162f591]
+- Updated dependencies [9149dff]
+  - @prosopo/provider@5.8.1
+  - @prosopo/env@3.6.52
+
+## 3.8.6
+### Patch Changes
+
+- 6f57ee9: chore(deps): bump yargs from 17.7.2 to 18.1.0
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [e22d5fb]
+- Updated dependencies [c59f8a6]
+- Updated dependencies [d288371]
+  - @prosopo/provider@5.8.0
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/env@3.6.51
+  - @prosopo/api@4.1.6
+  - @prosopo/common@3.1.54
+  - @prosopo/dotenv@3.0.55
+  - @prosopo/keyring@2.9.85
+  - @prosopo/logger@2.0.9
+
+## 3.8.5
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- 8a670d3: Remove the provider-side context validation path.
+  
+  The provider read a per-context baseline out of `clientcontextentropies` on the frictionless path and compared a session's head hash against it. The task that wrote that collection was removed from the provider on 2026-08-21, so the read has returned `undefined` ever since and the branch has been dead in every deployment since then. Computing and applying the baseline now happens off-provider.
+  
+  Removed: `contextAwareValidation.ts`, the decision-machine branch that used it, `getClientContextEntropy` on the provider and its database method, the `clientContextEntropy` table registration, the unused `getRoundsFromSimScore` helper, and the `contextAwareEnabled` parameter threaded into image verification — which logged and then did nothing, its return commented out.
+  
+  Also removes the per-site `settings.contextAware` block that configured it, along with `ContextAwareSchema`, `IContextAware`, `IContexts`, `ContextConfigSchema`, `contextAwareThresholdDefault` and `expandContexts`, the legacy `default`/`webview` context keys and their helpers, and `FrictionlessReason.CONTEXT_AWARE_VALIDATION_FAILED`. The site-key registration CLI no longer writes a `contextAware` default into new sites.
+  
+  `ContextType`, `contextTypeFromSession` and `deviceContextTypes` stay — the off-provider work keys on them. `ClientContextEntropyRecord` and its schema stay for the same reason; only the provider's use of them goes.
+  
+  No behaviour change: every path removed here was already inert.
+- Updated dependencies [7fd6eb2]
+- Updated dependencies [424e467]
+- Updated dependencies [89dd38a]
+- Updated dependencies [4810cb3]
+- Updated dependencies [80f73c1]
+- Updated dependencies [3d2176d]
+- Updated dependencies [8a670d3]
+  - @prosopo/provider@5.7.0
+  - @prosopo/workspace@3.2.1
+  - @prosopo/api@4.1.5
+  - @prosopo/common@3.1.53
+  - @prosopo/dotenv@3.0.54
+  - @prosopo/env@3.6.50
+  - @prosopo/keyring@2.9.84
+  - @prosopo/locale@3.4.1
+  - @prosopo/logger@2.0.8
+  - @prosopo/types@5.6.0
+  - @prosopo/util@3.3.8
+
+## 3.8.4
+### Patch Changes
+
+- a62b994: Context-aware validation buckets by device type, not just webview.
+  
+  Context-aware validation compares a session's head SimHash against a baseline
+  for its context. That context was `default | webview`, which puts a phone and
+  a desktop in the same bucket — and those two emit genuinely different
+  `<head>`s, so the blended baseline matches neither well. Contexts are now the
+  device family crossed with the webview flag: `desktop`, `desktop-webview`,
+  `mobile`, `mobile-webview`, `tablet`, `tablet-webview`.
+  
+  `desktop-webview` is included deliberately. Desktop webviews are a real and
+  notably fraudulent population here (see the Twickets desktop-webview rules),
+  and folding them into the plain `desktop` baseline would let exactly the
+  traffic we want excluded define what "normal desktop" looks like.
+  
+  **Classification.** `deviceTypeFromUserAgent` in `@prosopo/types` is a
+  dependency-free UA classifier, deliberately not ua-parser-js: this module is
+  imported by the browser bundles, and the off-provider entropy sweep has to
+  bucket stored sessions *identically* or it writes baselines the decision
+  machine never looks up. One shared function keeps the two sides in lockstep.
+  Tablets are matched before phones because an iPad's UA carries a
+  `Mobile/<build>` token and an Android tablet is exactly "Android without
+  Mobile". Known gap, documented at the call site: an iPadOS 13+ Safari in
+  desktop mode identifies as a Mac and lands in `desktop` — nothing in the UA
+  separates it from a real Mac, and both sides make the same call, which is
+  what matters for the lookup.
+  
+  **Back-compat.** `default` and `webview` remain valid `ContextType` members,
+  so settings already stored against them keep parsing. `expandContexts` maps a
+  legacy `default` onto the three non-webview families and a legacy `webview`
+  onto the three webview families, at the threshold they were saved with; an
+  explicit device entry always wins over the legacy entry covering it. Nothing
+  downstream of settings parsing branches on the legacy keys, and no data
+  migration is required.
+  
+  **Behaviour change.** A request whose context is not configured now skips
+  context validation instead of borrowing another context's baseline.
+  Previously, configuring a single context validated *every* request against it
+  — with six contexts that would measure desktop traffic against a tablet
+  baseline and reject real users wholesale. `isContextConfigured` is the new
+  guard; `determineContextType` now takes the raw request UA alongside the
+  webview flag.
+  
+  New site-key registrations default to all six device contexts.
+- a447afa: Per-sitekey `imageMinRounds` alongside the existing `imageMaxRounds`.
+  
+  Every source of an image round count — access-policy rules, traffic-filter categories, routing machines, the staleness curve, and the provider's own heuristics — is now clamped into `[imageMinRounds, imageMaxRounds]` via `clampImageRounds`, so the sitekey's settings override its rules in both directions rather than only capping them. `imageMinRounds` defaults to 2, matching the floor that was previously hard-coded, so existing sitekeys are unaffected.
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/provider@5.6.4
+  - @prosopo/api@4.1.4
+  - @prosopo/env@3.6.49
+  - @prosopo/keyring@2.9.83
+
+## 3.8.3
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/provider@5.6.3
+  - @prosopo/types@5.5.2
+  - @prosopo/api@4.1.3
+  - @prosopo/env@3.6.48
+  - @prosopo/keyring@2.9.82
+
+## 3.8.2
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/provider@5.6.2
+  - @prosopo/types@5.5.1
+  - @prosopo/env@3.6.47
+  - @prosopo/api@4.1.2
+  - @prosopo/keyring@2.9.81
+
+## 3.8.1
+### Patch Changes
+
+- Updated dependencies [8a9f7e9]
+- Updated dependencies [e6d2dbc]
+  - @prosopo/provider@5.6.1
+  - @prosopo/env@3.6.46
+
+## 3.8.0
+### Minor Changes
+
+- eb34de6: Add a puzzle band to the frictionless flow.
+  
+  `settings.frictionlessThreshold` becomes an object with two rungs instead of a single number:
+  
+  ```
+  frictionlessThreshold: {
+    frictionlessPuzzleThreshold: 0.5,
+    frictionlessImageThreshold: 1.0,
+  }
+  ```
+  
+  Scores at or below the puzzle rung still pass silently to PoW and scores at or above the image rung still get an image captcha, but everything in between — suspicious without being conclusive — now gets a puzzle rather than being lumped in with the worst traffic.
+  
+  The puzzle rung defaults to the value `frictionlessThreshold` already had, so no site's silent-pass boundary moves. Putting both rungs on the same value opts out of the middle band.
+  
+  A bare number is still accepted wherever the setting is read or parsed, and means what it always meant (the puzzle rung), so records written before this release keep working while they are migrated. Unlike the puzzle rung, the image rung is not capped at 1: the score it is compared against is a total that server-side penalties add to.
+  
+  Image challenges served on the score path are now sized by how many signals fired, rather than a fixed count.
+
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/provider@5.6.0
+  - @prosopo/types@5.5.0
+  - @prosopo/api@4.1.1
+  - @prosopo/env@3.6.45
+  - @prosopo/keyring@2.9.80
+
+## 3.7.27
+### Patch Changes
+
+  - @prosopo/env@3.6.44
+  - @prosopo/provider@5.5.1
+
+## 3.7.26
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/locale@3.4.0
+  - @prosopo/api@4.1.0
+  - @prosopo/provider@5.5.0
+  - @prosopo/common@3.1.52
+  - @prosopo/env@3.6.43
+  - @prosopo/keyring@2.9.79
+
+## 3.7.25
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/provider@5.4.0
+  - @prosopo/api@4.0.15
+  - @prosopo/env@3.6.42
+  - @prosopo/keyring@2.9.78
+
+## 3.7.24
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- f850d07: chore(deps): bump body-parser and express
+- Updated dependencies [68a9b41]
+- Updated dependencies [f850d07]
+- Updated dependencies [ce5a3d7]
+- Updated dependencies [4cd6b04]
+  - @prosopo/locale@3.3.1
+  - @prosopo/provider@5.3.10
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/env@3.6.41
+  - @prosopo/api@4.0.14
+  - @prosopo/common@3.1.51
+  - @prosopo/dotenv@3.0.53
+  - @prosopo/keyring@2.9.77
+  - @prosopo/logger@2.0.7
+
 ## 3.7.23
 ### Patch Changes
 

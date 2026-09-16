@@ -1,5 +1,167 @@
 # @prosopo/ipinfo
 
+## 0.4.2
+### Patch Changes
+
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [028a158]
+  - @prosopo/types@5.8.3
+
+## 0.4.1
+### Patch Changes
+
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/types@5.8.2
+
+## 0.4.0
+### Minor Changes
+
+- 886b664: Optionally answer `/healthz` with the node nearest the caller.
+  
+  `/healthz` tells a client which node to pin its captcha calls to, and a node has always answered with its own name — so the pin is whatever the DNS layer picked. The DNS layer only sees the client's address when the client's resolver forwards it, which many do not. The provider always sees it, because the connection is already open.
+  
+  Behind `PROSOPO_HEALTHZ_GEO_STEERING`, off by default. With it off nothing in this change runs and the response is unchanged, headers included.
+  
+  - `IpInfoService.country(ip)` is a new MaxMind-only fast path: an in-process, synchronous read of the memory-mapped database, returning an ISO 3166-1 alpha-2 code or `undefined`. `lookup()` is unchanged and still prefers ipapi.is for its threat data; a country lookup does not need that data and must not pay a network call for it. Added to `IIpInfoService` in `@prosopo/ipinfo` and `@prosopo/types-env`.
+  - The country → host map is configuration, supplied by the deployment as JSON in `PROSOPO_HEALTHZ_GEO_ROUTES`. It is also the candidate set: a host that must not receive traffic simply does not appear in it. An unparseable or empty map leaves steering off rather than failing startup.
+  - A background poller (`PROSOPO_HEALTHZ_GEO_PROBE_INTERVAL_MS`, `PROSOPO_HEALTHZ_GEO_PROBE_TIMEOUT_MS`) tracks each candidate's health. Every candidate starts down and only becomes up on a successful probe, so a poller that has not run or is failing leaves steering off. The request path reads a boolean and never awaits a probe.
+  - The handler never awaits readiness. It reads `ipInfoService.isAvailable()`, which is false before the environment is ready, and answers with its own name. Loopback and private-range callers — deploy gates, container health checks — short-circuit the same way. `/healthz` stays dependency-free.
+  - `Cache-Control: no-store, private` is set whenever steering is on, before the decision, so it covers every branch. The answer varies per caller and no intermediary may cache and replay it.
+  - `prosopo_healthz_geo_outcomes_total{outcome}` on `/metrics` counts `steered`, `not_steered`, `target_down` and `geo_unavailable`. Every outcome but the first falls back to the node's own name, which is also the behaviour with steering off, so nothing else would show that steering had stopped working.
+  
+  No client-side change: the load balancer already pins to whatever `host` the response carries.
+
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+
+## 0.3.25
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+
+## 0.3.24
+### Patch Changes
+
+- 162f591: Make the MaxMind fallback answer lookups instead of silently failing all of them.
+  
+  `MaxMindBackend` was configured with `cityDbPath` pointing at `GeoLite2-Country.mmdb` (`MAXMIND_DB_PATH`), and only ever called `city()`. `Reader.open()` accepts any valid `.mmdb`, so the reader opened, `isAvailable()` reported `true`, and the backend advertised itself as a working fallback — but `city()` checks `metadata.databaseType` and throws `BadMethodCallError` against a Country database. The throw was swallowed at `debug` level, `asnReader` was never configured because nothing read a path for it, and every lookup fell through to `{ isValid: false, error: "No MaxMind data available for IP" }`.
+  
+  The failure was invisible for as long as ipapi.is was up, because `IpInfoService` only reaches MaxMind when the ipapi.is lookup fails. When the self-hosted ipapi.is sidecar went down on five production provider nodes, IP lookups did not degrade to MaxMind — they failed outright, and `compareIPs` returned "Failed to lookup both IP addresses" for every request whose challenge IP differed from its solution IP.
+  
+  Three changes:
+  
+  - `MaxMindBackend` latches the database kind on the first `BadMethodCallError` and uses `country()` from then on, so a Country database yields country and country code rather than nothing. The latch means the rejection is constructed once per process, not once per request, and a genuine City database never pays for a second lookup. The mismatch is logged once at `warn` with the offending path, because silent degradation is what let this sit unnoticed.
+  - `maxmindAsnDbPath` is read from `MAXMIND_ASN_DB_PATH`. The image has downloaded `GeoLite2-ASN.mmdb` alongside City and Country since the Dockerfile was written, but nothing ever opened it, so the fallback could not name a provider or an AS number.
+  - `deepValidateIpAddress` logs `ip1Error` and `ip2Error` alongside the top-level comparison error. "Failed to lookup both IP addresses" on its own does not distinguish an IP that is absent from the database from a backend that is down, and diagnosing the difference meant going onto the host.
+  
+  Deployments should also point `MAXMIND_DB_PATH` at `GeoLite2-City.mmdb`, which the image already ships: country-level data is enough for geoblocking but carries no coordinates, so the IP distance rule cannot run against it.
+
+## 0.3.23
+### Patch Changes
+
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/logger@2.0.9
+
+## 0.3.22
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/logger@2.0.8
+  - @prosopo/types@5.6.0
+
+## 0.3.21
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+
+## 0.3.20
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+
+## 0.3.19
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/types@5.5.1
+
+## 0.3.18
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types@5.5.0
+
+## 0.3.17
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+
+## 0.3.16
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+
+## 0.3.15
+### Patch Changes
+
+- 68a9b41: chore(deps): bump @maxmind/geoip2-node from 5.0.0 to 7.1.0
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/types@5.2.6
+  - @prosopo/logger@2.0.7
+
 ## 0.3.14
 ### Patch Changes
 

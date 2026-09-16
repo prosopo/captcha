@@ -26,13 +26,10 @@ export type RetryCoords = { x: number; y: number };
 export type MutableRef<T> = { current: T };
 
 /**
- * Semantics of the outer recovery handler. Returns whether the caller
- * should proceed to re-run the frictionless flow (`start()`), and mutates
- * the passed refs to record the one-shot fire + pending coords.
+ * The checkbox click position a re-mounted widget should start from, or
+ * `null` when there isn't a real one to carry over.
  *
- * - Second calls are ignored (one-shot per outer widget lifetime) so a
- *   persistently broken session doesn't loop.
- * - Coords are recorded only for a real trusted checkbox click. A partial
+ * - Coords are kept only for a real trusted checkbox click. A partial
  *   pair (only x or only y numeric) is treated as "no coords" so we
  *   never accidentally embed `NaN` into the solution salt.
  * - `(0, 0)` is treated as "no coords" too — that's what the widgets
@@ -42,18 +39,53 @@ export type MutableRef<T> = { current: T };
  *   is identical; we discard the pair here so future readers can tell
  *   the two apart.
  */
+export const normaliseRetryCoords = (
+	x: number | undefined,
+	y: number | undefined,
+): RetryCoords | null => {
+	if (typeof x !== "number" || typeof y !== "number") return null;
+	if (x === 0 && y === 0) return null;
+	return { x, y };
+};
+
+/**
+ * How many times a single outer widget will re-mint a session in response to
+ * `CAPTCHA.NO_SESSION_FOUND` on the inner widget before giving up and handing
+ * over to the terminal fallback.
+ *
+ * This used to be one-shot per outer widget lifetime, which stranded users:
+ * the inner widget always takes the `onSessionInvalidated` branch (its own
+ * guard ref is fresh on every re-mount, because the outer widget bumps its
+ * mount key) and returns without touching its own `restart()` fallback. Once
+ * the outer one-shot was spent nothing at all handled the second failure, so
+ * the checkbox sat on "No session found" forever. A widget legitimately mints
+ * many sessions over its lifetime — every reload press is a new one — so a
+ * single lifetime-wide attempt is far too coarse a bound.
+ */
+export const MAX_SESSION_INVALIDATED_RETRIES = 3;
+
+/**
+ * Semantics of the outer recovery handler. Returns whether the caller should
+ * proceed to re-run the frictionless flow (`start()`), and mutates the passed
+ * refs to record the attempt + pending coords.
+ *
+ * Bounded rather than one-shot: a persistently broken session still stops
+ * looping, but the caller is told (`exhausted`) so it can fall back visibly
+ * instead of silently doing nothing.
+ */
 export const handleSessionInvalidated = (
 	x: number | undefined,
 	y: number | undefined,
-	firedRef: MutableRef<boolean>,
+	attemptsRef: MutableRef<number>,
 	pendingCoordsRef: MutableRef<RetryCoords | null>,
-): { shouldRestart: boolean } => {
-	if (firedRef.current) return { shouldRestart: false };
-	firedRef.current = true;
-	const bothNumeric = typeof x === "number" && typeof y === "number";
-	const isRealClick = bothNumeric && (x !== 0 || y !== 0);
-	pendingCoordsRef.current = isRealClick ? { x, y } : null;
-	return { shouldRestart: true };
+	maxAttempts: number = MAX_SESSION_INVALIDATED_RETRIES,
+): { shouldRestart: boolean; exhausted: boolean } => {
+	if (attemptsRef.current >= maxAttempts) {
+		return { shouldRestart: false, exhausted: true };
+	}
+	attemptsRef.current += 1;
+	pendingCoordsRef.current = normaliseRetryCoords(x, y);
+	return { shouldRestart: true, exhausted: false };
 };
 
 /**

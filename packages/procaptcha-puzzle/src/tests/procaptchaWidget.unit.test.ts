@@ -666,6 +666,32 @@ describe("invisible mode", () => {
 		expect(mocks.start).not.toHaveBeenCalled();
 	});
 
+	test("a targeted execute on the container runs a visible widget", async () => {
+		const target = document.createElement("div");
+		render(props({ container: target }));
+		await act(async () => {
+			target.dispatchEvent(new Event("procaptcha:execute"));
+			await Promise.resolve();
+		});
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+		expect(canvas()).not.toBeNull();
+	});
+
+	test("a targeted execute on the container runs an invisible widget", async () => {
+		const target = document.createElement("div");
+		render(
+			props({
+				config: config({ mode: ModeEnum.invisible }),
+				container: target,
+			}),
+		);
+		await act(async () => {
+			target.dispatchEvent(new Event("procaptcha:execute"));
+			await Promise.resolve();
+		});
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+	});
+
 	test("an execute that yields no challenge shows no puzzle", async () => {
 		mocks.start.mockResolvedValue(undefined);
 		render(props({ config: config({ mode: ModeEnum.invisible }) }));

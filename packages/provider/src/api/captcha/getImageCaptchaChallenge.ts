@@ -22,7 +22,7 @@ import {
 	CaptchaType,
 	type ProsopoCaptchaCountConfigSchemaOutput,
 	SimdReadingsStage,
-	imageMaxRoundsDefault,
+	clampImageRounds,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -32,10 +32,15 @@ import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
-import { getRequestUserScope } from "../blacklistRequestInspector.js";
+import {
+	getRequestUserScope,
+	normalizeHeadersForMatching,
+} from "../blacklistRequestInspector.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
+import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
+import { getSignedAssetsResolver } from "./signedAssetsResolver.js";
 import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
 
 export default (
@@ -115,6 +120,18 @@ export default (
 			return res.json(buildImageMaintenanceResponse());
 		}
 
+		// Reserved CI test site keys have no client record, so the lookup
+		// below would reject them as unregistered. Checked before
+		// `new Tasks(env, ...)` for the same reason as maintenance mode: the
+		// constructor calls `env.getDb()`.
+		if (isReservedTestSiteKey(dapp)) {
+			req.logger.warn(() => ({
+				msg: "Reserved TEST site key - returning dummy image challenge",
+				data: { dapp, user, sessionId },
+			}));
+			return res.json(buildImageMaintenanceResponse());
+		}
+
 		const tasks = new Tasks(env, req.logger);
 
 		try {
@@ -168,13 +185,22 @@ export default (
 			// INCORRECT_CAPTCHA_TYPE — defeating the whole "solve normally,
 			// block at verify" pattern deferToVerify is meant to enable.
 			// Mirrors blockMiddleware's own deferToVerify filter.
-			const userAccessPolicy = (
+			const accessPolicies =
 				await tasks.imgCaptchaManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
 					userScope,
-				)
-			).find((p) => !p.deferToVerify);
+					normalizeHeadersForMatching(req.headers),
+				);
+			const userAccessPolicy = accessPolicies.find((p) => !p.deferToVerify);
+			// A deferred rule must never reject at request time, so it is
+			// kept out of `isValidRequest` above. It does still carry the
+			// challenge difficulty it wants imposed — that is the point of
+			// the compute-burn detectors — so its round counts are applied
+			// below when no enforcing policy supplies them.
+			const deferredParamsPolicy = accessPolicies.find(
+				(p) => p.deferToVerify === true,
+			);
 
 			const {
 				valid,
@@ -221,17 +247,22 @@ export default (
 
 			const captchaConfig: ProsopoCaptchaCountConfigSchemaOutput = {
 				solved: {
-					count: Math.min(
+					// Serve time is the last word on how many rounds the user
+					// actually sees, so the site's bounds are applied here
+					// regardless of which upstream source won.
+					count: clampImageRounds(
 						trafficSolvedImagesCount ||
 							solvedImagesCount ||
 							userAccessPolicy?.solvedImagesCount ||
+							deferredParamsPolicy?.solvedImagesCount ||
 							env.config.captchas.solved.count,
-						clientRecord.settings.imageMaxRounds ?? imageMaxRoundsDefault,
+						clientRecord.settings,
 					),
 				},
 				unsolved: {
 					count:
 						userAccessPolicy?.unsolvedImagesCount ||
+						deferredParamsPolicy?.unsolvedImagesCount ||
 						env.config.captchas.unsolved.count,
 				},
 			};
@@ -264,13 +295,20 @@ export default (
 					// flat fields.
 					req.ipInfo,
 				);
+			// Signed URLs are minted per request so each challenge's images
+			// expire on their own clock (and can be bound to the requesting
+			// IP). Falls back to the env resolver, and thence to passing
+			// `item.data` through untouched, when no signing key is set.
+			const assetsResolver =
+				getSignedAssetsResolver(ipAddress.toString()) ?? env.assetsResolver;
+
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",
 				[ApiParams.captchas]: taskData.captchas.map((captcha: Captcha) => ({
 					...captcha,
 					target: req.t(`TARGET.${captcha.target}`),
 					items: captcha.items.map((item) =>
-						parseCaptchaAssets(item, env.assetsResolver),
+						parseCaptchaAssets(item, assetsResolver),
 					),
 				})),
 				[ApiParams.requestHash]: taskData.requestHash,
