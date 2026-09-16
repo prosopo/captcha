@@ -14,6 +14,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import type { Rollup } from "vite";
 
 /**
  * Each entry is either a plain path (copied under its original basename) or
@@ -37,8 +38,11 @@ export const nodejsPolarsNativeFilePlugin = (
 	const name = "nodejs-polars-native-file-plugin";
 	return {
 		name,
-		// biome-ignore lint/suspicious/noExplicitAny: TODO not sure of options type
-		resolveId(source: string, importer: string | undefined, options: any) {
+		resolveId(
+			source: string,
+			importer: string | undefined,
+			options: Rollup.ResolveIdExtraOptions,
+		) {
 			// return the id if this plugin can resolve the import
 			for (const entry of nodeFiles) {
 				if (path.basename(source) === path.basename(entrySrc(entry))) {
@@ -83,8 +87,10 @@ export const nodejsPolarsNativeFilePlugin = (
 			}
 			return null;
 		},
-		// biome-ignore lint/suspicious/noExplicitAny: TODO not sure of options/bundle type
-		generateBundle(options: any, bundle: any) {
+		generateBundle(
+			options: Rollup.NormalizedOutputOptions,
+			bundle: Rollup.OutputBundle,
+		) {
 			for (const entry of nodeFiles) {
 				const src = entrySrc(entry);
 				const destBasename = entryDestBasename(entry);
