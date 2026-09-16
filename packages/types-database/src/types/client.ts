@@ -163,6 +163,11 @@ export const TrafficCategoryPolicySchema = new Schema(
 		powDifficulty: { type: Number, required: false },
 		solvedImagesCount: { type: Number, required: false },
 		puzzleTolerance: { type: Number, required: false },
+		iconOrderTolerance: { type: Number, required: false },
+		// Mixed for the same reason as `frictionlessThreshold` below: zod owns
+		// the shape, and a typed sub-document would make mongoose cast-fail on
+		// read instead of letting the provider resolve it.
+		iconOrder: { type: MongooseSchema.Types.Mixed, required: false },
 		// Per-category puzzle render overrides, layered on top of the
 		// site-wide `puzzle` block by the traffic filter.
 		puzzle: { type: PuzzleRenderSettingsSchema, required: false },
@@ -206,6 +211,7 @@ export const UserSettingsSchema = new Schema({
 			{
 				image: { type: Boolean, default: true },
 				puzzle: { type: Boolean, default: true },
+				iconOrder: { type: Boolean, default: true },
 			},
 			{ _id: false },
 		),
@@ -228,6 +234,17 @@ export const UserSettingsSchema = new Schema({
 	},
 	puzzleTolerance: {
 		type: Number,
+		required: false,
+	},
+	iconOrderTolerance: {
+		type: Number,
+		required: false,
+	},
+	// Declared explicitly because mongoose is strict — see the
+	// `frictionlessTypes` note above for what happens to a field that is only
+	// in the zod schema.
+	iconOrder: {
+		type: MongooseSchema.Types.Mixed,
 		required: false,
 	},
 	// Ceiling on automatic puzzle escalation, in difficulty-ladder levels.

@@ -17,6 +17,7 @@ import {
 	CaptchaType,
 	type IUserSettings,
 	Tier,
+	iconOrderToleranceDefault,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -67,7 +68,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 				frictionlessPuzzleThreshold: 0.5,
 				frictionlessImageThreshold: 1,
 			},
-			frictionlessTypes: { image: true, puzzle: true },
+			frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
 			powDifficulty: 100000,
 			imageThreshold: 0.5,
 			imageMaxRounds: 3,
@@ -75,6 +76,7 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 			verifiedTimeout: 120000,
 			solutionTimeout: 60000,
 			puzzleTolerance: 15,
+			iconOrderTolerance: iconOrderToleranceDefault,
 			puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 			disallowWebView: false,
 		};

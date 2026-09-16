@@ -18,22 +18,22 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
-			"path": "../api-route"
+			"path": "../../dev/config"
+		},
+		{
+			"path": "../api"
 		},
 		{
 			"path": "../api-express-router"
 		},
 		{
-			"path": "../common"
-		},
-		{
-			"path": "../logger"
-		},
-		{
-			"path": "../../dev/config"
+			"path": "../api-route"
 		},
 		{
 			"path": "../captcha-severity"
+		},
+		{
+			"path": "../common"
 		},
 		{
 			"path": "../database"
@@ -45,16 +45,28 @@
 			"path": "../env"
 		},
 		{
+			"path": "../icon-order-assets"
+		},
+		{
 			"path": "../ipinfo"
+		},
+		{
+			"path": "../keyring"
 		},
 		{
 			"path": "../load-balancer"
 		},
 		{
+			"path": "../locale"
+		},
+		{
+			"path": "../logger"
+		},
+		{
 			"path": "../puzzle-assets"
 		},
 		{
-			"path": "../keyring"
+			"path": "../redis-client"
 		},
 		{
 			"path": "../types"
@@ -66,25 +78,16 @@
 			"path": "../types-env"
 		},
 		{
+			"path": "../user-access-policy"
+		},
+		{
 			"path": "../util"
 		},
 		{
 			"path": "../util-crypto"
 		},
 		{
-			"path": "../user-access-policy"
-		},
-		{
 			"path": "../web-bot-auth"
-		},
-		{
-			"path": "../api"
-		},
-		{
-			"path": "../locale"
-		},
-		{
-			"path": "../redis-client"
 		}
 	]
 }

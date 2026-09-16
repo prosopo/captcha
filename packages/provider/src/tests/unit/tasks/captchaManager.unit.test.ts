@@ -14,7 +14,12 @@
 
 import type { RedisWriteQueue } from "@prosopo/database";
 import { type Logger, getLogger } from "@prosopo/logger";
-import { IpAddressType, type KeyringPair, type Session } from "@prosopo/types";
+import {
+	IpAddressType,
+	type KeyringPair,
+	type Session,
+	iconOrderToleranceDefault,
+} from "@prosopo/types";
 import {
 	CaptchaType,
 	type IUserSettings,
@@ -45,7 +50,7 @@ const defaultUserSettings: IUserSettings = {
 		frictionlessPuzzleThreshold: 0.8,
 		frictionlessImageThreshold: 1,
 	},
-	frictionlessTypes: { image: true, puzzle: true },
+	frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
 	domains: [],
 	captchaType: CaptchaType.frictionless,
 	powDifficulty: 4,
@@ -55,6 +60,7 @@ const defaultUserSettings: IUserSettings = {
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
 	puzzleTolerance: 15,
+	iconOrderTolerance: iconOrderToleranceDefault,
 	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 	disallowWebView: false,
 };
