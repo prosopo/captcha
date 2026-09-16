@@ -26,7 +26,7 @@ export interface ProcaptchaRenderOptions {
 	"expired-callback"?: string | (() => void);
 	"open-callback"?: string | (() => void);
 	"close-callback"?: string | (() => void);
-	"error-callback"?: string | (() => void);
+	"error-callback"?: string | ((error: Error) => void);
 	"failed-callback"?: string | (() => void);
 	"reset-callback"?: string | (() => void);
 	language?: (typeof Languages)[keyof typeof Languages];

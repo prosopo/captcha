@@ -12,10 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-export const getWindowCallback = (callbackName: string) => {
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
-	const fn = (window as any)[callbackName.replace("window.", "")];
-	if (typeof fn !== "function") {
+type WindowCallback = (...args: unknown[]) => unknown;
+
+const WINDOW_PREFIX = "window.";
+
+const isWindowCallback = (value: unknown): value is WindowCallback =>
+	typeof value === "function";
+
+export const getWindowCallback = (callbackName: string): WindowCallback => {
+	const name = callbackName.startsWith(WINDOW_PREFIX)
+		? callbackName.slice(WINDOW_PREFIX.length)
+		: callbackName;
+	const fn: unknown = Reflect.get(window, name);
+	if (!isWindowCallback(fn)) {
 		throw new Error(
 			`Callback ${callbackName} is not defined on the window object`,
 		);
