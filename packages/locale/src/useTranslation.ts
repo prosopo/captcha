@@ -21,8 +21,7 @@ import initializeI18n from "./i18nFrontend.js";
 
 function useTranslation(
 	options?: UseTranslationOptions<"translation">,
-	// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
-): UseTranslationResponse<"translation", any> & {
+): UseTranslationResponse<"translation", "translation"> & {
 	t: ReturnType<typeof initializeI18n>["t"];
 } {
 	const i18n = initializeI18n();
