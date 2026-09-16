@@ -31,7 +31,8 @@
 import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "iconOrder";
+const baseCaptchaType: CaptchaType =
+	Cypress.expose("CAPTCHA_TYPE") || "iconOrder";
 
 /**
  * Hit radius as a multiple of each icon's own size, pinned to the ceiling
@@ -85,7 +86,7 @@ describe("Icon Order CAPTCHA — signup", () => {
 		cy.intercept("/dummy").as("dummy");
 
 		return cy
-			.visit(Cypress.env("default_page"), {
+			.visit(Cypress.expose("default_page"), {
 				timeout: 30000,
 				failOnStatusCode: false,
 			})
