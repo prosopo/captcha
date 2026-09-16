@@ -30,13 +30,14 @@ import { ProviderEnvironment } from "@prosopo/env";
 import { Tasks } from "@prosopo/provider";
 import {
 	CaptchaType,
-	ContextType,
 	DatabaseTypes,
 	EncodingType,
 	IPValidationAction,
 	type IUserSettings,
 	ProsopoConfigSchema,
 	Tier,
+	TrafficFilterAction,
+	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -47,28 +48,21 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 const FULLY_POPULATED_SETTINGS = {
 	captchaType: CaptchaType.frictionless,
 	domains: ["example.com", "*.example.com"],
-	frictionlessThreshold: 0.42,
+	frictionlessThreshold: {
+		frictionlessPuzzleThreshold: 0.42,
+		frictionlessImageThreshold: 1.3,
+	},
+	frictionlessTypes: { image: false, puzzle: true },
 	powDifficulty: 6,
 	imageThreshold: 0.81,
 	imageMaxRounds: 12,
+	imageMinRounds: 4,
 	autoBanScoreThreshold: 0.95,
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
 	puzzleTolerance: 20,
+	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 	disallowWebView: true,
-	contextAware: {
-		enabled: true,
-		contexts: {
-			[ContextType.Default]: {
-				type: ContextType.Default,
-				threshold: 0.72,
-			},
-			[ContextType.Webview]: {
-				type: ContextType.Webview,
-				threshold: 0.68,
-			},
-		},
-	},
 	ipValidationRules: {
 		enabled: true,
 		actions: {
@@ -113,18 +107,25 @@ const FULLY_POPULATED_SETTINGS = {
 		},
 	},
 	trafficFilter: {
-		blockVpn: true,
-		blockProxy: true,
-		blockTor: true,
-		blockAbuser: true,
+		vpn: { action: TrafficFilterAction.Block },
+		proxy: { action: TrafficFilterAction.Block },
+		tor: { action: TrafficFilterAction.Block },
+		abuser: { action: TrafficFilterAction.Block },
 		abuserScoreThreshold: 0.33,
-		blockDatacenter: true,
+		datacenter: {
+			action: TrafficFilterAction.Challenge,
+			captchaType: CaptchaType.image,
+			solvedImagesCount: 5,
+		},
 		datacenterNameAllowlist: ["iCloud Private Relay"],
 		datacenterNameDenylist: ["ScrapyIPLeaser"],
 		skipExtrasOnValidDnsPath: true,
-		blockMobile: false,
-		blockSatellite: true,
-		blockCrawler: true,
+		satellite: { action: TrafficFilterAction.Block },
+		crawler: {
+			action: TrafficFilterAction.Challenge,
+			captchaType: CaptchaType.pow,
+			powDifficulty: 8,
+		},
 	},
 	storeMetadata: true,
 	honeypot: {
@@ -221,12 +222,15 @@ describe("Client settings Mongo persistence", () => {
 		// rather than dumping the whole settings diff.
 		expect(stored.captchaType).toBe(FULLY_POPULATED_SETTINGS.captchaType);
 		expect(stored.domains).toEqual(FULLY_POPULATED_SETTINGS.domains);
-		expect(stored.frictionlessThreshold).toBe(
+		// Both ladder rungs must survive the round-trip. The field is stored
+		// as Mixed, so a mongoose regression here silently flattens it.
+		expect(stored.frictionlessThreshold).toMatchObject(
 			FULLY_POPULATED_SETTINGS.frictionlessThreshold,
 		);
 		expect(stored.powDifficulty).toBe(FULLY_POPULATED_SETTINGS.powDifficulty);
 		expect(stored.imageThreshold).toBe(FULLY_POPULATED_SETTINGS.imageThreshold);
 		expect(stored.imageMaxRounds).toBe(FULLY_POPULATED_SETTINGS.imageMaxRounds);
+		expect(stored.imageMinRounds).toBe(FULLY_POPULATED_SETTINGS.imageMinRounds);
 		expect(stored.autoBanScoreThreshold).toBe(
 			FULLY_POPULATED_SETTINGS.autoBanScoreThreshold,
 		);
@@ -242,9 +246,6 @@ describe("Client settings Mongo persistence", () => {
 		expect(stored.storeMetadata).toBe(FULLY_POPULATED_SETTINGS.storeMetadata);
 
 		// Nested objects — compare wholesale so any nested drop also fails.
-		expect(stored.contextAware).toMatchObject(
-			FULLY_POPULATED_SETTINGS.contextAware,
-		);
 		expect(stored.ipValidationRules).toMatchObject(
 			FULLY_POPULATED_SETTINGS.ipValidationRules,
 		);
@@ -278,23 +279,23 @@ describe("Client settings Mongo persistence", () => {
 		const trafficFilter = stored.trafficFilter;
 		expect(trafficFilter).toBeDefined();
 		if (!trafficFilter) return;
-		expect(trafficFilter.blockVpn).toBe(
-			FULLY_POPULATED_SETTINGS.trafficFilter.blockVpn,
+		expect(trafficFilter.vpn).toEqual(
+			FULLY_POPULATED_SETTINGS.trafficFilter.vpn,
 		);
-		expect(trafficFilter.blockProxy).toBe(
-			FULLY_POPULATED_SETTINGS.trafficFilter.blockProxy,
+		expect(trafficFilter.proxy).toEqual(
+			FULLY_POPULATED_SETTINGS.trafficFilter.proxy,
 		);
-		expect(trafficFilter.blockTor).toBe(
-			FULLY_POPULATED_SETTINGS.trafficFilter.blockTor,
+		expect(trafficFilter.tor).toEqual(
+			FULLY_POPULATED_SETTINGS.trafficFilter.tor,
 		);
-		expect(trafficFilter.blockAbuser).toBe(
-			FULLY_POPULATED_SETTINGS.trafficFilter.blockAbuser,
+		expect(trafficFilter.abuser).toEqual(
+			FULLY_POPULATED_SETTINGS.trafficFilter.abuser,
 		);
 		expect(trafficFilter.abuserScoreThreshold).toBe(
 			FULLY_POPULATED_SETTINGS.trafficFilter.abuserScoreThreshold,
 		);
-		expect(trafficFilter.blockDatacenter).toBe(
-			FULLY_POPULATED_SETTINGS.trafficFilter.blockDatacenter,
+		expect(trafficFilter.datacenter).toEqual(
+			FULLY_POPULATED_SETTINGS.trafficFilter.datacenter,
 		);
 		expect(trafficFilter.datacenterNameAllowlist).toEqual(
 			FULLY_POPULATED_SETTINGS.trafficFilter.datacenterNameAllowlist,
@@ -305,14 +306,12 @@ describe("Client settings Mongo persistence", () => {
 		expect(trafficFilter.skipExtrasOnValidDnsPath).toBe(
 			FULLY_POPULATED_SETTINGS.trafficFilter.skipExtrasOnValidDnsPath,
 		);
-		expect(trafficFilter.blockMobile).toBe(
-			FULLY_POPULATED_SETTINGS.trafficFilter.blockMobile,
+		expect(trafficFilter.mobile).toBeUndefined();
+		expect(trafficFilter.satellite).toEqual(
+			FULLY_POPULATED_SETTINGS.trafficFilter.satellite,
 		);
-		expect(trafficFilter.blockSatellite).toBe(
-			FULLY_POPULATED_SETTINGS.trafficFilter.blockSatellite,
-		);
-		expect(trafficFilter.blockCrawler).toBe(
-			FULLY_POPULATED_SETTINGS.trafficFilter.blockCrawler,
+		expect(trafficFilter.crawler).toEqual(
+			FULLY_POPULATED_SETTINGS.trafficFilter.crawler,
 		);
 
 		// Honeypot — per-field, same rationale as trafficFilter.

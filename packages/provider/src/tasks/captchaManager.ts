@@ -28,6 +28,7 @@ import {
 	type Session,
 	type SimdReadingsStage,
 	Tier,
+	TrafficFilterAction,
 	type UserCommitment,
 } from "@prosopo/types";
 import type {
@@ -35,12 +36,14 @@ import type {
 	IProviderDatabase,
 	IUserDataSlim,
 	PoWCaptchaRecord,
+	ProjectedSession,
 	PuzzleCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import {
 	type AccessPolicy,
 	AccessPolicyType,
+	type AccessRule,
 	type AccessRulesStorage,
 	type UserScope,
 	type UserScopeRecord,
@@ -48,6 +51,7 @@ import {
 import {
 	getPrioritisedAccessRule,
 	getRequestUserScope,
+	normalizeHeadersForMatching,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import { getDetectorBundlePool } from "./detection/bundlePool.js";
@@ -94,8 +98,8 @@ export interface PoolBundleDecrypt {
  * rules — they pick which challenge type to serve, not whether to reject.
  */
 const findHardBlockPolicy = (
-	accessPolicies: AccessPolicy[],
-): AccessPolicy | undefined => {
+	accessPolicies: AccessRule[],
+): AccessRule | undefined => {
 	return accessPolicies.find((policy) => {
 		if (policy.deferToVerify === true) {
 			return true;
@@ -196,7 +200,7 @@ export class CaptchaManager {
 	 */
 	public async getSessionRecordWithOriginFallback(
 		sessionId: string,
-	): Promise<Session | undefined> {
+	): Promise<ProjectedSession | undefined> {
 		const session = await this.db.getSessionRecordBySessionId(sessionId);
 		if (!session) return undefined;
 		if (!session.originSessionId) return session;
@@ -210,6 +214,11 @@ export class CaptchaManager {
 		const needsEntropyWall = session.entropyWallClockOffsetMs === undefined;
 		const needsEntropyFirst = session.entropyMathRandomFirst === undefined;
 		const needsG = session.g === undefined;
+		const needsI = session.i === undefined;
+		const needsSw = session.sw === undefined;
+		const needsMd = session.md === undefined;
+		const needsBn = session.bn === undefined;
+		const needsFs = session.fs === undefined;
 
 		if (
 			!needsSimd &&
@@ -218,7 +227,12 @@ export class CaptchaManager {
 			!needsEntropyCrypto &&
 			!needsEntropyWall &&
 			!needsEntropyFirst &&
-			!needsG
+			!needsG &&
+			!needsI &&
+			!needsSw &&
+			!needsMd &&
+			!needsBn &&
+			!needsFs
 		) {
 			return session;
 		}
@@ -250,6 +264,11 @@ export class CaptchaManager {
 					entropyMathRandomFirst: origin.entropyMathRandomFirst,
 				}),
 			...(needsG && origin.g !== undefined && { g: origin.g }),
+			...(needsI && origin.i !== undefined && { i: origin.i }),
+			...(needsSw && origin.sw !== undefined && { sw: origin.sw }),
+			...(needsMd && origin.md !== undefined && { md: origin.md }),
+			...(needsBn && origin.bn !== undefined && { bn: origin.bn }),
+			...(needsFs && origin.fs !== undefined && { fs: origin.fs }),
 		};
 	}
 
@@ -666,6 +685,7 @@ export class CaptchaManager {
 		translateFn: (key: string) => string,
 		score?: number,
 		reason?: string,
+		sessionId?: string,
 	) {
 		return {
 			status: translateFn(
@@ -680,6 +700,8 @@ export class CaptchaManager {
 				reason && {
 					[ApiParams.reason]: reason,
 				}),
+			// Not tier-gated — a log correlation handle, not a scoring signal.
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
 		};
 	}
 
@@ -687,8 +709,14 @@ export class CaptchaManager {
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
 		userScope: UserScope | UserScopeRecord,
+		// Raw request headers for header-restriction rules — see
+		// getPrioritisedAccessRule for why this has no default.
+		requestHeaders: Record<string, string>,
 		options?: {
 			blockOnly?: boolean;
+			// Widen a blockOnly pool to admit deferred rules of any type
+			// — see AccessRulesFilter.includeDeferred.
+			includeDeferred?: boolean;
 			// When a caller has an Express request in scope (e.g. the
 			// verify handler), passing it here shares the per-request memo
 			// with the block middleware — a duplicate lookup within one
@@ -700,6 +728,7 @@ export class CaptchaManager {
 			userAccessRulesStorage,
 			userScope,
 			clientId,
+			requestHeaders,
 			options,
 		);
 	}
@@ -727,10 +756,42 @@ export class CaptchaManager {
 	async resolveBundleByDetectorSession(
 		detectorSessionId?: string,
 	): Promise<(PoolBundleDecrypt & { bundleId: string }) | undefined> {
-		if (!detectorSessionId || !this.writeQueue) return undefined;
+		if (!detectorSessionId || !this.writeQueue) {
+			this.logUnresolvedDetectorBundle("noDetectorSession");
+			return undefined;
+		}
 		const bundleId = await this.writeQueue.getDetectorBundle(detectorSessionId);
+		if (!bundleId) {
+			this.logUnresolvedDetectorBundle("noBinding");
+			return undefined;
+		}
 		const decrypt = this.resolveBundleById(bundleId);
-		return bundleId && decrypt ? { ...decrypt, bundleId } : undefined;
+		if (!decrypt) {
+			this.logUnresolvedDetectorBundle("bundleNotInPool", bundleId);
+			return undefined;
+		}
+		return { ...decrypt, bundleId };
+	}
+
+	/**
+	 * Returning undefined here leaves the frictionless decrypt with no keys to
+	 * try, which fails closed: the score is forced to 1 and the caller is
+	 * challenged despite nothing having been measured about it. The three causes
+	 * need different fixes — a caller that sent no detector session, a binding
+	 * that was absent or had expired (see `DETECTOR_BUNDLE_TTL_SECONDS`), and a
+	 * bundle this provider no longer holds — but they are indistinguishable
+	 * downstream, where all three surface as the same decrypt failure. Logged at
+	 * info because that is the level aggregated log search runs at, and only on
+	 * the failure path, so this costs nothing on the hot path.
+	 */
+	private logUnresolvedDetectorBundle(
+		cause: "noDetectorSession" | "noBinding" | "bundleNotInPool",
+		bundleId?: string,
+	): void {
+		this.logger?.info(() => ({
+			msg: "Detector bundle not resolved",
+			data: { cause, ...(bundleId !== undefined && { bundleId }) },
+		}));
 	}
 
 	/**
@@ -842,7 +903,10 @@ export class CaptchaManager {
 		coords?: [number, number][][],
 		countryCode?: string,
 		asn?: number,
-	): Promise<AccessPolicy | undefined> {
+		// Returns the whole rule, not just its policy half: callers persist
+		// the matched rule (scope fields included) onto the record they
+		// disapprove, so the audit page can name the exact policy.
+	): Promise<AccessRule | undefined> {
 		// Get headHash from session record if available
 		let headHash: string | undefined;
 		if (challengeRecord.sessionId) {
@@ -874,11 +938,22 @@ export class CaptchaManager {
 			userAccessRulesStorage,
 			challengeRecord.dappAccount,
 			userScope,
+			// Raw headers for the in-code header-condition check. Available
+			// on the verify path too, so header rules fire there (e.g. an
+			// allow-list rule marked deferToVerify).
+			normalizeHeadersForMatching(headers),
 			// Hard-block lookup only — restrict the Redis-side candidate
-			// pool to Block rules so the SERVER_SIDE_RANK_TOP_N cap can't
-			// crowd a hard-block out of the top-N with Restrict or
-			// routing-Block (captchaType-scoped) entries.
-			{ blockOnly: true },
+			// pool so the SERVER_SIDE_RANK_TOP_N cap can't crowd a
+			// hard-block out of the top-N with routing-Block
+			// (captchaType-scoped) or plain Restrict entries.
+			//
+			// `includeDeferred` widens that pool to
+			// `(@type:{block} | @deferToVerify:{true})`. A deferred rule
+			// is skipped at request time and enforced here, so it is a
+			// valid hard block whatever its type — findHardBlockPolicy
+			// below already accepts one (case c), but a Block-only pool
+			// meant a deferred Restrict was never fetched to be found.
+			{ blockOnly: true, includeDeferred: true },
 		);
 
 		return findHardBlockPolicy(accessPolicies);
@@ -894,7 +969,10 @@ export class CaptchaManager {
 	}
 
 	/**
-	 * Resolves the IP info to feed to `checkTrafficFilter` and runs the check.
+	 * Resolves the IP info to feed to `checkTrafficFilter` and runs the check
+	 * at submit time. Only `action: "block"` matches produce `isBlocked:true`;
+	 * `action: "challenge"` matches were already applied at request time and
+	 * are ignored here.
 	 *
 	 * - The captcha record already carries the IPInfoResponse from request
 	 *   time (ipInfoMiddleware → storeXxxRecord), so by default we reuse it
@@ -904,9 +982,10 @@ export class CaptchaManager {
 	 *   and may differ from the IP that originally requested the captcha.
 	 * - When the session carries a `dnsEvent`, its `peerIp` and `resolverIp`
 	 *   are enriched and passed alongside the primary IP.
-	 * - `blockAbuser` defaults to true so abusive networks are always
-	 *   blocked even when the site hasn't configured a trafficFilter.
-	 * - Returns `{ isBlocked: false }` if every filter flag is off, without
+	 * - The abuser category defaults to `{action:"block"}` so abusive
+	 *   networks are always blocked even when the site hasn't configured a
+	 *   trafficFilter.
+	 * - Returns `{ isBlocked: false }` if no category is active, without
 	 *   consulting the payload at all.
 	 *
 	 * Callers handle the "blocked" branch themselves (each verify path
@@ -920,10 +999,21 @@ export class CaptchaManager {
 		currentIp?: string,
 		enrichedDnsEvent?: EnrichedDnsEvent,
 	): Promise<TrafficCheckResult> {
-		const effective = { blockAbuser: true, ...trafficFilter };
-		const hasAny = Object.values(effective).some((v) => v);
+		const effective: Partial<ITrafficFilter> = {
+			abuser: { action: TrafficFilterAction.Block },
+			...trafficFilter,
+		};
+		const hasAny =
+			effective.vpn !== undefined ||
+			effective.proxy !== undefined ||
+			effective.tor !== undefined ||
+			effective.abuser !== undefined ||
+			effective.datacenter !== undefined ||
+			effective.mobile !== undefined ||
+			effective.satellite !== undefined ||
+			effective.crawler !== undefined;
 		if (!hasAny) {
-			return { isBlocked: false };
+			return { isBlocked: false, matches: [] };
 		}
 
 		const ipInfo = currentIp

@@ -1,5 +1,388 @@
 # @prosopo/procaptcha-react
 
+## 2.11.0
+### Minor Changes
+
+- 864ddde: Make the challenges usable with a keyboard and a screen reader.
+  
+  The puzzle could only be solved by dragging with a mouse or a finger. The piece
+  was a plain `div`, so it could not be tabbed to, had no name or role, and a
+  screen reader announced nothing at all — a user on assistive tech could tick "I
+  am human", get a silent overlay, and have no way forward. The image captcha had
+  the same problem in its tiles.
+  
+  What changed:
+  
+  - The puzzle piece can now be focused and moved with the arrow keys (hold shift
+    for smaller steps, Home to start over, Enter or Space to submit). It has a
+    name, a role, and a visible focus ring.
+  - The puzzle announces its state as you go: where the piece is, as a percentage
+    across and down the board; that an answer is being checked; and that a failed
+    go has been replaced by a fresh puzzle.
+  - The image captcha tiles are now buttons rather than clickable `div`s, so they
+    can be tabbed to and activated with Enter or Space, and they report whether
+    they are selected instead of only looking selected.
+  - Both challenges now open as a proper dialog: it takes focus when it opens,
+    keeps Tab inside itself, and gives focus back to the checkbox on close.
+  - The spinner that replaces the checkbox while a check runs used to drop focus
+    to the top of the page without saying why. It now takes focus in the
+    checkbox's place, names itself, and hands focus back when the check finishes.
+    This affects the pow, image and puzzle flows.
+  - The puzzle's on-screen text was hardcoded English. It now goes through the
+    locale package, and the new strings are translated into all 32 locales.
+  
+  A visual puzzle still cannot be solved by someone who cannot see it — the widget
+  is never told where the target is, so there is nothing it could describe. Sites
+  that need a challenge a blind user can complete should use the pow captcha type,
+  which needs no interaction beyond the checkbox.
+
+### Patch Changes
+
+- 028a158: Stop the widget taking focus off the form the user is filling in.
+  
+  While the widget checks a user, its checkbox is replaced by a spinner, and the
+  box takes focus back when the check finishes so a keyboard user is not left
+  stranded at the top of the page. It did that unconditionally, so if the user
+  spent the wait typing into the page's own form, the box grabbed focus off
+  whatever field they were in — and the keystroke that arrived with it went
+  nowhere. It now only claims focus back when nothing else holds it, which is
+  where removing the spinner leaves it.
+  
+  This is what made the `puzzle` cypress spec flaky: it fills the signup form as
+  soon as the puzzle is solved, and lost the race with the widget often enough to
+  fail CI.
+  
+  Covered by a new unit test in `procaptcha-react` that focuses an element outside
+  the widget mid-check and asserts focus is still there afterwards.
+- Updated dependencies [028a158]
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [864ddde]
+- Updated dependencies [028a158]
+  - @prosopo/procaptcha-common@2.14.0
+  - @prosopo/types@5.8.3
+  - @prosopo/locale@3.4.2
+  - @prosopo/procaptcha@2.11.12
+  - @prosopo/common@3.1.55
+
+## 2.10.4
+### Patch Changes
+
+- 124784f: Stop the image captcha losing its instruction line and top row of images on mobile.
+  
+  On iOS the challenge panel was being shifted up by 100% of its own height, so
+  anything taller than half the screen ran off the top with no way to scroll back
+  to it. Users saw nine images and a Next button but no "Select all containing
+  ..." prompt, which made the challenge unsolvable.
+  
+  The lift was compensating for the layer underneath it being sized with
+  `100vh` — on iOS Safari that is the height the page would have if the browser
+  toolbars retracted, so the centring box was taller than the visible area and
+  pushed the panel down under the bottom bar. Sizing that box with `100dvh`
+  instead centres correctly on its own, so the lift is gone. The panel is now
+  centred as a flex item and capped at the viewport height, scrolling when it
+  does not fit rather than overflowing off both edges.
+- Updated dependencies [124784f]
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/procaptcha-common@2.13.3
+  - @prosopo/types@5.8.2
+  - @prosopo/procaptcha@2.11.11
+
+## 2.10.3
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+  - @prosopo/procaptcha@2.11.10
+  - @prosopo/procaptcha-common@2.13.2
+
+## 2.10.2
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/procaptcha@2.11.9
+  - @prosopo/procaptcha-common@2.13.1
+
+## 2.10.1
+### Patch Changes
+
+- Updated dependencies [9e06d72]
+  - @prosopo/procaptcha@2.11.8
+
+## 2.10.0
+### Minor Changes
+
+- d288371: Let a site choose where a challenge opens, and which button triggers it.
+  
+  - `placement: "popup" | "float"`, also `data-placement`. `popup` is the default and unchanged. `float` opens the challenge directly above the widget and keeps it pinned there as the page scrolls, leaves the page usable behind it, and dismisses on Escape or an outside click. An invisible widget always uses popup.
+  - `bind: "#selector"`, also `data-bind`. The matching host-page button triggers that one widget, in visible or invisible mode. The click's default action is prevented so a submit button does not post the form before a token exists.
+  - `execute(widgetId?)`. Called with no argument every widget responds, as before. Called with the id `render()` returns, only that widget runs. Implicitly rendered invisible buttons now trigger only their own widget.
+  
+  Behaviour changes for existing widgets:
+  
+  - Escape now closes the image and puzzle challenge in both placements. For the image captcha this runs the cancel path, which fires `onClose` and restarts frictionless.
+  - Image and puzzle now present on one shared `ChallengeSurface`. Both were already portalled to `document.body`, so neither moves in the page, but the markup around them changed: the outer layer keeps `prosopo-modalOuter` for the image captcha and also carries `prosopo-challenge-surface`, and a new `prosopo-challenge-content` element sits between it and `prosopo-modalInner`. A direct-child selector such as `.prosopo-modalOuter > .prosopo-modalInner` no longer matches, and the centring transform now lives on `prosopo-challenge-content` rather than on `prosopo-modalInner`.
+  
+  `createConfig` takes a named options object.
+
+### Patch Changes
+
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/procaptcha-common@2.13.0
+  - @prosopo/common@3.1.54
+  - @prosopo/procaptcha@2.11.7
+
+## 2.9.122
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/common@3.1.53
+  - @prosopo/locale@3.4.1
+  - @prosopo/procaptcha@2.11.6
+  - @prosopo/procaptcha-common@2.12.6
+  - @prosopo/types@5.6.0
+  - @prosopo/util@3.3.8
+  - @prosopo/widget-skeleton@2.8.7
+
+## 2.9.121
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/procaptcha@2.11.5
+  - @prosopo/procaptcha-common@2.12.5
+
+## 2.9.120
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/procaptcha@2.11.4
+  - @prosopo/procaptcha-common@2.12.4
+
+## 2.9.119
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/types@5.5.1
+  - @prosopo/procaptcha@2.11.3
+  - @prosopo/procaptcha-common@2.12.3
+
+## 2.9.118
+### Patch Changes
+
+  - @prosopo/procaptcha@2.11.2
+  - @prosopo/procaptcha-common@2.12.2
+
+## 2.9.117
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types@5.5.0
+  - @prosopo/procaptcha@2.11.1
+  - @prosopo/procaptcha-common@2.12.1
+
+## 2.9.116
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/locale@3.4.0
+  - @prosopo/procaptcha-common@2.12.0
+  - @prosopo/procaptcha@2.11.0
+  - @prosopo/common@3.1.52
+
+## 2.9.115
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/procaptcha@2.10.76
+  - @prosopo/procaptcha-common@2.11.35
+
+## 2.9.114
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- 68a9b41: chore(deps): bump react and @types/react
+- ce5a3d7: Fix the reload button on the image captcha closing the challenge instead of loading a new one. Reload now asks the frictionless wrapper for a fresh session and re-mounts the widget so a new challenge opens straight away, and the checkbox click position is carried over to the replacement solve
+- Updated dependencies [68a9b41]
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/locale@3.3.1
+  - @prosopo/procaptcha-common@2.11.34
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/procaptcha@2.10.75
+  - @prosopo/common@3.1.51
+
+## 2.9.113
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/types@5.2.5
+  - @prosopo/procaptcha@2.10.74
+  - @prosopo/procaptcha-common@2.11.33
+
+## 2.9.112
+### Patch Changes
+
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+  - @prosopo/procaptcha@2.10.73
+  - @prosopo/procaptcha-common@2.11.32
+
+## 2.9.111
+### Patch Changes
+
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+  - @prosopo/types@5.2.3
+  - @prosopo/procaptcha@2.10.72
+  - @prosopo/procaptcha-common@2.11.31
+
+## 2.9.110
+### Patch Changes
+
+- Updated dependencies [ae475a5]
+  - @prosopo/types@5.2.2
+  - @prosopo/procaptcha@2.10.71
+  - @prosopo/procaptcha-common@2.11.30
+
+## 2.9.109
+### Patch Changes
+
+- Updated dependencies [35f640f]
+  - @prosopo/types@5.2.1
+  - @prosopo/procaptcha@2.10.70
+  - @prosopo/procaptcha-common@2.11.29
+
+## 2.9.108
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/procaptcha@2.10.69
+  - @prosopo/procaptcha-common@2.11.28
+
+## 2.9.107
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+  - @prosopo/procaptcha@2.10.68
+  - @prosopo/procaptcha-common@2.11.27
+
+## 2.9.106
+### Patch Changes
+
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/procaptcha@2.10.67
+  - @prosopo/procaptcha-common@2.11.26
+
+## 2.9.105
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+  - @prosopo/procaptcha@2.10.66
+  - @prosopo/procaptcha-common@2.11.25
+
+## 2.9.104
+### Patch Changes
+
+- Updated dependencies [216f8cd]
+- Updated dependencies [cc3ffe3]
+  - @prosopo/types@5.0.4
+  - @prosopo/procaptcha-common@2.11.24
+  - @prosopo/procaptcha@2.10.65
+
+## 2.9.103
+### Patch Changes
+
+- 729349e: Run the cypress suite in firefox as well as chrome whenever the PR is a release
+  PR, via a new cypress-firefox workflow. cypress.yml is untouched.
+  
+  The trusted-event checks scattered across the widget components now go through a
+  single `isEventTrusted()` helper in `@prosopo/procaptcha-common`. Behaviour is
+  unchanged: it still returns early for synthetic input, unless the bundle was
+  built with `PROSOPO_ALLOW_UNTRUSTED_EVENTS=1`, which only the firefox CI leg
+  sets. Production builds pin the define to `false`, so the branch is folded away
+  at build time and the allowance cannot reach a shipped bundle.
+  
+  The allowance exists because cypress-real-events dispatches input over the chrome
+  devtools protocol, which cypress exposes for chromium browsers only — on firefox
+  the specs fall back to cypress' own synthetic clicks.
+- b525956: Refresh the captcha widget appearance with a Material 3 theme across the widget-skeleton, procaptcha-common, procaptcha-react and procaptcha-puzzle packages.
+  
+  - Split the single tinted surface into M3 surface roles: the widget now sits on a white `surface` (surfaceContainerLowest) and the challenge dialog on `surfaceContainerHigh`.
+  - Removed all drop shadows. Separation comes from surface roles and outlines; hover and drag feedback use M3 state layers and outline rings instead.
+  - Added shared `typography` (label large / title medium / body medium) and `stateLayer` (8%/10%/10%) tokens, and aligned the shape scale to M3 steps.
+  - Buttons: M3 label-large type, 40dp height, spec padding, state-layer hover in place of a brightness filter, and no resting elevation on the filled variant.
+  - Added the missing focus indicators (3dp outline, 2dp offset, keyboard-only) to the checkbox, buttons and reload control.
+  - Secondary dialog text now uses the `onSurfaceVariant` role rather than reduced opacity.
+- Updated dependencies [729349e]
+- Updated dependencies [16dbab0]
+- Updated dependencies [b525956]
+- Updated dependencies [9091a78]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+- Updated dependencies [8a4d6ad]
+  - @prosopo/procaptcha-common@2.11.23
+  - @prosopo/types@5.0.3
+  - @prosopo/util@3.3.6
+  - @prosopo/widget-skeleton@2.8.6
+  - @prosopo/locale@3.3.0
+  - @prosopo/procaptcha@2.10.64
+  - @prosopo/common@3.1.50
+
 ## 2.9.102
 ### Patch Changes
 

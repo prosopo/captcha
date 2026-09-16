@@ -17,7 +17,6 @@ import { ProsopoApiError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import type { Logger } from "@prosopo/logger";
 import {
-	type ContextType,
 	type DecisionMachineCaptchaType,
 	type DecisionMachineKind,
 	type DecisionMachineLanguage,
@@ -28,7 +27,7 @@ import {
 	type ProsopoConfigOutput,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
-	Tier,
+	type Tier,
 	type UserCommitment,
 } from "@prosopo/types";
 import type {
@@ -36,10 +35,13 @@ import type {
 	IProviderDatabase,
 	SessionRecord,
 } from "@prosopo/types-database";
-import { majorityAverage, parseUrl } from "@prosopo/util";
+import { parseUrl } from "@prosopo/util";
 import { validateSiteKey } from "../../api/validateAddress.js";
+import {
+	invalidateAllDecisionMachineArtifactCaches,
+	invalidateDecisionMachineScriptCache,
+} from "../decisionMachine/decisionMachineRunner.js";
 
-const SAMPLE_SIZE = 75;
 const isValidPrivateKey = (privateKeyString: string) => {
 	const privateKey = Buffer.from(privateKeyString, "base64").toString("ascii");
 	try {
@@ -120,10 +122,10 @@ export class ClientTaskManager {
 			let processedCommitments = 0;
 
 			await this.processBatchesWithCursor(
-				async (skip: number) =>
+				async (afterId?: unknown) =>
 					await this.providerDB.getUnstoredDappUserCommitments(
 						BATCH_SIZE,
-						skip,
+						afterId,
 					),
 				async (batch) => {
 					const filteredBatch = (
@@ -149,15 +151,16 @@ export class ClientTaskManager {
 					}
 					processedCommitments += filteredBatch.length;
 				},
+				(row) => (row as { _id?: unknown })._id,
 			);
 
 			// Process PoW records with cursor
 			let processedPowRecords = 0;
 			await this.processBatchesWithCursor(
-				async (skip: number) =>
+				async (afterId?: unknown) =>
 					await this.providerDB.getUnstoredDappUserPoWCommitments(
 						BATCH_SIZE,
-						skip,
+						afterId,
 					),
 				async (batch) => {
 					const filteredBatch = lastTask?.updated
@@ -173,13 +176,14 @@ export class ClientTaskManager {
 					}
 					processedPowRecords += filteredBatch.length;
 				},
+				(row) => (row as { _id?: unknown })._id,
 			);
 
 			// process session records with cursor
 			let processedSessionRecords = 0;
 			await this.processBatchesWithCursor(
-				async (skip: number) =>
-					await this.providerDB.getUnstoredSessionRecords(BATCH_SIZE, skip),
+				async (afterId?: unknown) =>
+					await this.providerDB.getUnstoredSessionRecords(BATCH_SIZE, afterId),
 				async (batch) => {
 					const filteredBatch = lastTask?.updated
 						? batch.filter((record) => this.isRecordUpdated(record))
@@ -194,6 +198,7 @@ export class ClientTaskManager {
 					}
 					processedSessionRecords += filteredBatch.length;
 				},
+				(row) => (row as { _id?: unknown })._id,
 			);
 
 			await this.providerDB.updateScheduledTaskStatus(
@@ -300,90 +305,6 @@ export class ClientTaskManager {
 		}
 	}
 
-	/**
-	 * @description Calculate client entropy scores and update in db
-	 * @returns Promise<void>
-	 */
-	async calculateClientEntropy(): Promise<void> {
-		const taskID = await this.providerDB.createScheduledTaskStatus(
-			ScheduledTaskNames.SetClientEntropy,
-			ScheduledTaskStatus.Running,
-		);
-
-		try {
-			let clients = await this.providerDB.getAllClientRecords();
-
-			clients = clients.filter((client) => client.tier !== Tier.Free);
-
-			this.logger.info(() => ({
-				msg: `Calculating entropies for ${clients.length} clients`,
-			}));
-
-			for (const client of clients) {
-				// Calculate context-specific entropy if client has context awareness enabled
-				if (client.settings?.contextAware?.enabled) {
-					// Get context types from client settings
-					const contextTypes = Object.keys(
-						client.settings.contextAware.contexts ?? {},
-					) as ContextType[];
-
-					for (const contextType of contextTypes) {
-						const contextSamples = await this.providerDB.sampleContextEntropy(
-							SAMPLE_SIZE,
-							client.account,
-							contextType,
-						);
-
-						if (contextSamples.length < SAMPLE_SIZE) {
-							this.logger.info(() => ({
-								msg: `Skipping ${contextType} entropy calculation for client ${client.account} due to insufficient samples (${contextSamples.length}/${SAMPLE_SIZE})`,
-							}));
-							continue;
-						}
-
-						const contextAvgEntropy = majorityAverage(contextSamples);
-
-						this.logger.info(() => ({
-							msg: `Calculated ${contextType} entropy for client ${client.account}: ${contextAvgEntropy}`,
-						}));
-
-						await this.providerDB.setClientContextEntropy(
-							client.account,
-							contextType,
-							contextAvgEntropy,
-						);
-					}
-				}
-			}
-			await this.providerDB.updateScheduledTaskStatus(
-				taskID,
-				ScheduledTaskStatus.Completed,
-				{
-					data: {
-						clientRecords: clients.length,
-					},
-				},
-			);
-		} catch (e: unknown) {
-			const calculateClientEntropiesError = new ProsopoApiError(
-				"DATABASE.UNKNOWN",
-				{
-					context: { error: e },
-					logger: this.logger,
-				},
-			);
-			this.logger.error(() => ({
-				err: calculateClientEntropiesError,
-				msg: "Error calculating client entropy",
-			}));
-			await this.providerDB.updateScheduledTaskStatus(
-				taskID,
-				ScheduledTaskStatus.Failed,
-				{ error: String(e) },
-			);
-		}
-	}
-
 	async registerSiteKey(
 		siteKey: string,
 		tier: Tier,
@@ -465,6 +386,15 @@ export class ClientTaskManager {
 			createdAt: now,
 			updatedAt: now,
 		});
+
+		// Flush both DM caches so the new artifact + source take effect on the
+		// next request instead of waiting for TTL. Script cache is content-
+		// addressed (a new source gets a new key) so `clear()` is defensive
+		// against a source that reuses a prior SHA; the artifact cache is
+		// keyed by (scope, kind, dappAccount) so a same-key overwrite would
+		// otherwise return stale for up to 5 minutes.
+		invalidateAllDecisionMachineArtifactCaches();
+		invalidateDecisionMachineScriptCache();
 
 		return {
 			scope,
@@ -634,17 +564,31 @@ export class ClientTaskManager {
 		);
 	}
 
+	/**
+	 * Drive a keyset-paginated sweep. Each iteration passes the `_id` of the
+	 * previous batch's last row to `fetchBatch` so the query resumes from
+	 * `_id > afterId` — see `getUnstoredDappUserCommitments` for why we
+	 * moved off `skip(N)`. `getLastId` extracts the resumption cursor from
+	 * a batch row; both `PoWCaptchaRecord` and `UserCommitmentRecord` are
+	 * `mongoose.Document` subtypes so `_id` is always present at runtime
+	 * even though our stored types don't spell it out.
+	 */
 	private async processBatchesWithCursor<T>(
-		fetchBatch: (skip: number) => Promise<T[]>,
+		fetchBatch: (afterId?: unknown) => Promise<T[]>,
 		processBatch: (batch: T[]) => Promise<void>,
+		getLastId: (row: T) => unknown,
 	): Promise<void> {
-		let skip = 0;
+		let afterId: unknown | undefined;
 		while (true) {
-			const batch = await fetchBatch(skip);
+			const batch = await fetchBatch(afterId);
 			if (!batch.length) break;
 
 			await processBatch(batch);
-			skip += batch.length;
+			const last = batch[batch.length - 1];
+			if (last === undefined) break;
+			const nextId = getLastId(last);
+			if (nextId === undefined) break;
+			afterId = nextId;
 		}
 	}
 }

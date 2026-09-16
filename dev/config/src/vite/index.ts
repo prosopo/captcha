@@ -25,3 +25,4 @@ export { default as VitePluginRemoveUnusedTranslations } from "./vite-plugin-rem
 export * from "./TsNoCheckPlugin.js";
 export { default as VitePluginCopy } from "./vite-plugin-copy.js";
 export { default as VitePluginModifyExportsFiles } from "./vite-plugin-modify-exports-files.js";
+export { nodejsPolarsNativeFilePlugin } from "./NodejsPolarsNativeFilePlugin.js";

@@ -56,6 +56,7 @@ import { ipInfoMiddleware } from "./ipInfoMiddleware.js";
 import { ja4Middleware } from "./ja4Middleware.js";
 import { metricsMiddleware } from "./metrics.js";
 import { publicRouter } from "./public.js";
+import { rawTlsSignalsMiddleware } from "./rawTlsSignalsMiddleware.js";
 import { robotsMiddleware } from "./robotsMiddleware.js";
 import { prosopoVerifyRouter } from "./verify.js";
 
@@ -373,6 +374,7 @@ export async function startProviderApi(
 	apiApp.use(i18Middleware);
 	apiApp.use(ja4Middleware(env));
 	apiApp.use(handshakeTimingMiddleware(env));
+	apiApp.use(rawTlsSignalsMiddleware(env));
 	apiApp.use(ipInfoMiddleware(env));
 
 	// Run Header check middleware on all client routes

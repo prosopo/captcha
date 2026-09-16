@@ -17,7 +17,7 @@ import type { Captcha, HashedItem } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import type { Properties } from "csstype";
 import type React from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 export interface CaptchaWidgetProps {
 	challenge: Captcha;
@@ -49,6 +49,8 @@ export const CaptchaWidget = ({
 		() => (themeColor === "light" ? lightTheme : darkTheme),
 		[themeColor],
 	);
+	// Matched imperatively so the ring is keyboard-only, as ReloadButton does.
+	const [focusedHash, setFocusedHash] = useState<string | null>(null);
 
 	const fullSpacing = `${theme.spacing.unit}px`;
 
@@ -70,6 +72,7 @@ export const CaptchaWidget = ({
 		>
 			{items.map((item, index) => {
 				const hash = getHash(item);
+				const selected = solution.some((s) => s[0] === hash);
 				const imageStyle: Properties<string | number, string> = {
 					// enable the items in the grid to grow in width to use up excess space
 					flexGrow: 1,
@@ -80,7 +83,13 @@ export const CaptchaWidget = ({
 				};
 				return (
 					<div style={imageStyle} key={item.hash}>
-						<div
+						{/* A button rather than a clickable div: the tiles are the
+						    whole challenge, and a div cannot be tabbed to, cannot be
+						    activated by Enter or Space, and tells a screen reader
+						    nothing about being selectable or already picked. */}
+						<button
+							type="button"
+							aria-pressed={selected}
 							style={{
 								position: "relative",
 								cursor: "pointer",
@@ -88,7 +97,21 @@ export const CaptchaWidget = ({
 								width: "100%",
 								padding: 0,
 								margin: 0,
+								border: "none",
+								background: "none",
+								appearance: "none",
+								display: "block",
+								...(focusedHash === hash
+									? {
+											outline: `3px solid ${theme.palette.primary.main}`,
+											outlineOffset: "2px",
+										}
+									: { outline: "none" }),
 							}}
+							onFocus={(e: React.FocusEvent<HTMLButtonElement>) =>
+								setFocusedHash(e.target.matches(":focus-visible") ? hash : null)
+							}
+							onBlur={() => setFocusedHash(null)}
 							// A tap delivers a click too, and React's synthetic click
 							// carries only clientX/clientY — never `touches` — so
 							// there is one set of coordinates to read, not three.
@@ -109,7 +132,13 @@ export const CaptchaWidget = ({
 									overflow: "hidden",
 									borderStyle: "solid",
 									borderWidth: "1px",
-									borderColor: theme.palette.grey[300],
+									borderColor: theme.palette.tile.border,
+									borderRadius: selected
+										? theme.shape.tileSelected
+										: theme.shape.tile,
+									transform: selected ? "scale(0.9)" : "none",
+									transition:
+										"transform 200ms cubic-bezier(0.2, 0, 0, 1), border-radius 200ms",
 								}}
 								src={item.data}
 								// biome-ignore lint/a11y/noRedundantAlt: has to contain image
@@ -142,23 +171,26 @@ export const CaptchaWidget = ({
 									alignItems: "center",
 									justifyContent: "center",
 									// make bg half opacity, i.e. shadowing the item's img
-									backgroundColor: "rgba(0,0,0,0.5)",
-									visibility: solution.some((s) => s[0] === hash)
-										? "visible"
-										: "hidden",
+									backgroundColor: theme.palette.overlay,
+									borderRadius: theme.shape.tileSelected,
+									visibility: selected ? "visible" : "hidden",
 								}}
 							>
 								<svg
 									style={{
-										backgroundColor: "transparent",
+										// rounded "secondary container" badge holding the tick
+										backgroundColor: theme.palette.checkbox.fill,
 										// img must be displayed as block otherwise gets a bottom whitespace border
 										display: "block",
-										// how big the overlay icon is
-										width: "35%",
-										height: "35%",
+										// how big the overlay badge is
+										width: "34px",
+										height: "34px",
+										padding: "7px",
+										borderRadius: "50%",
+										boxSizing: "border-box",
 										transition: "fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
 										userSelect: "none",
-										fill: "currentcolor",
+										fill: theme.palette.checkbox.tick,
 									}}
 									focusable="false"
 									color="#fff"
@@ -170,7 +202,7 @@ export const CaptchaWidget = ({
 									<path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
 								</svg>
 							</div>
-						</div>
+						</button>
 					</div>
 				);
 			})}

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 export * from "./providers.js";
+export * from "./clientMetaData.js";
 export * from "./events/trust.js";
 export * from "./state/builder.js";
 export * from "./callbacks/defaultCallbacks.js";
@@ -22,5 +23,6 @@ export * from "./simdReadings.js";
 export * from "./elements/window.js";
 export * from "./reactComponents/Reload.js";
 export * from "./reactComponents/Checkbox.js";
+export * from "./reactComponents/ChallengeSurface.js";
 export * from "./reactComponents/Honeypot.js";
 export * from "./reactComponents/TestModeBanner.js";

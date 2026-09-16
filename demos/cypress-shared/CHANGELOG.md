@@ -1,5 +1,184 @@
 # @prosopo/cypress-shared
 
+## 2.8.138
+### Patch Changes
+
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [028a158]
+  - @prosopo/types@5.8.3
+
+## 2.8.137
+### Patch Changes
+
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/types@5.8.2
+
+## 2.8.136
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+
+## 2.8.135
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+
+## 2.8.134
+### Patch Changes
+
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+
+## 2.8.133
+### Patch Changes
+
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/types@5.6.0
+  - @prosopo/util@3.3.8
+
+## 2.8.132
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+
+## 2.8.131
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+
+## 2.8.130
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/types@5.5.1
+
+## 2.8.129
+### Patch Changes
+
+- 8a2a589: Drop the warm-up visit from the score ladder spec.
+  
+  `/frictionless` deduplicates on user + IP + sitekey and replays a live session instead of scoring again, and the widget's identity is fingerprint-derived, so it is the same for every test in the run. The `beforeEach` warm-up visit mounted the widget, which created a score-0 session — and the request the test had just set its language header on got that session replayed back. Every banded case returned `pow`.
+- Updated dependencies [eb34de6]
+  - @prosopo/types@5.5.0
+
+## 2.8.128
+### Patch Changes
+
+- 5a17a65: Fix client session id correlation rejecting every token.
+  
+  #3139 added `clientMetaData.clientSessionId` and a verify-time check that the solve carries the same session id the widget was rendered with. The check never passed: `getPowCaptchaRecordByChallenge` and `getPuzzleCaptchaRecordByChallenge` project an explicit field list, and `clientMetaData` was not in it. The verify path therefore read `undefined` and `isClientSessionMismatch(suppliedId, undefined)` returned true for *every* token carrying a session id, disapproving it with `API.CLIENT_SESSION_MISMATCH`.
+  
+  Nothing else was wrong: the widget attached the id, the wire format carried it, and the write path persisted it (the session record — read without a projection — had it all along). Only the read dropped it, which is why unit tests over the comparison helper and the escalation handoff all passed. `getSessionRecordBySessionId` had the same omission and is fixed too.
+  
+  This is the third instance of this class of bug — the projection-contract helper's own docstring already cites #3107 and #3116. The guard existed but its `consumerReads` manifest was not updated when #3139 started reading a new field, so the manifests for the PoW and puzzle contracts now list `clientMetaData` and their fixtures populate it. Reverting the projection fix makes that test fail with "serverVerifyPowCaptchaSolution reads a field that the projection stripped: clientMetaData".
+  
+  Adds an end-to-end Cypress spec (`clientSessionId.cy.ts`) that solves a real PoW captcha rendered with `data-sessionid` and asserts the dapp server's verify succeeds, plus a mismatch case that must be rejected — the half that proves the correlation actually runs rather than being silently skipped. This required wiring `clientSessionId` through the demo server's `/signup` into `isVerified`, which #3139 left unwired; that omission is why no e2e covered the feature.
+
+## 2.8.127
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+
+## 2.8.126
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+
+## 2.8.125
+### Patch Changes
+
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+
+## 2.8.124
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/types@5.2.5
+
+## 2.8.123
+### Patch Changes
+
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+
+## 2.8.122
+### Patch Changes
+
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+  - @prosopo/types@5.2.3
+
+## 2.8.121
+### Patch Changes
+
+- Updated dependencies [ae475a5]
+  - @prosopo/types@5.2.2
+
+## 2.8.120
+### Patch Changes
+
+- Updated dependencies [35f640f]
+  - @prosopo/types@5.2.1
+
+## 2.8.119
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+
+## 2.8.118
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+
+## 2.8.117
+### Patch Changes
+
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+
+## 2.8.116
+### Patch Changes
+
+- Updated dependencies [0def557]
+  - @prosopo/types@5.1.0
+
+## 2.8.115
+### Patch Changes
+
+- Updated dependencies [216f8cd]
+  - @prosopo/types@5.0.4
+
+## 2.8.114
+### Patch Changes
+
+- Updated dependencies [16dbab0]
+- Updated dependencies [d5e104b]
+- Updated dependencies [063e69d]
+  - @prosopo/types@5.0.3
+  - @prosopo/util@3.3.6
+
 ## 2.8.113
 ### Patch Changes
 

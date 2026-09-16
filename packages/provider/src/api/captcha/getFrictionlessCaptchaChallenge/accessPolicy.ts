@@ -18,10 +18,16 @@ import {
 	type IPInfoResponse,
 	type RequestHeaders,
 	type ScoreComponents,
+	clampImageRounds,
 	isChallengeCaptchaType,
+	resolveImageRoundsBounds,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
-import type { AccessPolicy, UserScope } from "@prosopo/user-access-policy";
+import {
+	type AccessRule,
+	type UserScope,
+	describeMatchedRule,
+} from "@prosopo/user-access-policy";
 import type { Response } from "express";
 import { sendChallenge } from "../../../tasks/frictionless/challengeDispatch.js";
 import { FrictionlessReason } from "../../../tasks/frictionless/frictionlessTasks.js";
@@ -31,7 +37,10 @@ import { attachHoneypot } from "./honeypotResponse.js";
 export type AccessPolicyInput = {
 	tasks: Tasks;
 	clientRecord: ClientRecord;
-	userAccessPolicy: AccessPolicy | undefined;
+	// The full matched rule, not just its policy half: the user-scope fields
+	// are what `describeMatchedRule` turns into the audit page's "this is the
+	// condition that matched you" breakdown.
+	userAccessPolicy: AccessRule | undefined;
 	baseBotScore: number;
 	botScore: number;
 	scoreComponents: ScoreComponents;
@@ -67,6 +76,16 @@ export const handleAccessPolicy = async (
 
 	const { tasks, clientRecord, userAccessPolicy, logger } = input;
 
+	// Snapshot the rule onto the session bag so it lands on whichever record
+	// this request goes on to write — the 401'd block below, the auto-ban a
+	// score bump triggers, the captcha type a Restrict rule forces, or the
+	// plain decision-machine session left behind by a score-only Restrict.
+	// Without it those rows say only "ACCESS_POLICY_BLOCK" /
+	// "USER_ACCESS_POLICY", with no way to tell which of a site's rules did it.
+	tasks.frictionlessManager.setMatchedRule(
+		describeMatchedRule(userAccessPolicy),
+	);
+
 	logger.info(() => ({
 		msg: "User access policy matched",
 		data: {
@@ -95,7 +114,7 @@ export const handleAccessPolicy = async (
 			},
 		}));
 		await tasks.frictionlessManager.registerBlockedSession(CaptchaType.image, {
-			solvedImagesCount: clientRecord.settings.imageMaxRounds,
+			solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
 			userSitekeyIpHash: input.userSitekeyIpHash,
 			reason: FrictionlessReason.ACCESS_POLICY_BLOCK,
 			siteKey: input.dapp,
@@ -130,7 +149,7 @@ export const handleAccessPolicy = async (
 				? userAccessPolicy.captchaType
 				: CaptchaType.image,
 			{
-				solvedImagesCount: clientRecord.settings.imageMaxRounds,
+				solvedImagesCount: resolveImageRoundsBounds(clientRecord.settings).max,
 				userSitekeyIpHash: input.userSitekeyIpHash,
 				reason: FrictionlessReason.AUTO_BAN_SCORE,
 				siteKey: input.dapp,
@@ -153,9 +172,10 @@ export const handleAccessPolicy = async (
 	};
 
 	// A policy that pins a concrete challenge type serves it directly. The
-	// three per-type branches this replaces were identical apart from the
-	// image-only `solvedImagesCount`, which `sendCaptcha` discards for the
-	// other types — so passing it unconditionally is behaviour-preserving.
+	// per-type branches this replaces differed only in `solvedImagesCount`:
+	// image clamps it to the sitekey's rounds, puzzle carries the rule's raw
+	// count so its severity reaches the difficulty ladder (a puzzle has no
+	// rounds), and pow takes none.
 	if (isChallengeCaptchaType(userAccessPolicy.captchaType)) {
 		logger.info(() => ({
 			msg: "Frictionless decision",
@@ -165,6 +185,17 @@ export const handleAccessPolicy = async (
 			},
 		}));
 		attachHoneypot(res, clientRecord);
+		const solvedImagesCount =
+			userAccessPolicy.captchaType === CaptchaType.image
+				? userAccessPolicy.solvedImagesCount
+					? clampImageRounds(
+							userAccessPolicy.solvedImagesCount,
+							clientRecord.settings,
+						)
+					: resolveImageRoundsBounds(clientRecord.settings).max
+				: userAccessPolicy.captchaType === CaptchaType.puzzle
+					? userAccessPolicy.solvedImagesCount
+					: undefined;
 		return {
 			handled: true,
 			response: res.json(
@@ -173,12 +204,7 @@ export const handleAccessPolicy = async (
 					userAccessPolicy.captchaType,
 					{
 						...captchaTypeBaseParams,
-						solvedImagesCount: userAccessPolicy.solvedImagesCount
-							? Math.min(
-									userAccessPolicy.solvedImagesCount,
-									clientRecord.settings.imageMaxRounds,
-								)
-							: clientRecord.settings.imageMaxRounds,
+						...(solvedImagesCount !== undefined && { solvedImagesCount }),
 					},
 				),
 			),

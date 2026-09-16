@@ -1,5 +1,66 @@
 # @prosopo/widget-skeleton
 
+## 2.8.7
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+
+## 2.8.6
+### Patch Changes
+
+- b525956: Refresh the captcha widget appearance with a Material 3 theme across the widget-skeleton, procaptcha-common, procaptcha-react and procaptcha-puzzle packages.
+  
+  - Split the single tinted surface into M3 surface roles: the widget now sits on a white `surface` (surfaceContainerLowest) and the challenge dialog on `surfaceContainerHigh`.
+  - Removed all drop shadows. Separation comes from surface roles and outlines; hover and drag feedback use M3 state layers and outline rings instead.
+  - Added shared `typography` (label large / title medium / body medium) and `stateLayer` (8%/10%/10%) tokens, and aligned the shape scale to M3 steps.
+  - Buttons: M3 label-large type, 40dp height, spec padding, state-layer hover in place of a brightness filter, and no resting elevation on the filled variant.
+  - Added the missing focus indicators (3dp outline, 2dp offset, keyboard-only) to the checkbox, buttons and reload control.
+  - Secondary dialog text now uses the `onSurfaceVariant` role rather than reduced opacity.
+- 8a4d6ad: Add unit and type tests for the widget skeleton, and harden the two places a
+  silent failure was possible:
+  
+  - The checkbox and logo placeholders were swapped in with an optional chain, so
+    renaming a class in the markup produced a widget missing one of them with no
+    error at all. `replacePlaceholder` now throws.
+  - The build mode was read straight from `process.env` / `import.meta.env`.
+    Neither exists everywhere the widget runs, so reading it is now isolated
+    behind `readEnvironmentSources`, an unset `NODE_ENV` falls back to the
+    bundler's mode rather than defaulting to development, and a bundler shim that
+    fails to resolve no longer stops the widget rendering.
+
 ## 2.8.5
 ### Patch Changes
 

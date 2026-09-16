@@ -1,8 +1,8 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { bytesToNumberLE } from "@noble/curves/abstract/utils";
-import { RistrettoPoint } from "@noble/curves/ed25519";
+import { ristretto255 } from "@noble/curves/ed25519.js";
+import { bytesToNumberLE } from "@noble/curves/utils.js";
 import { u8aToU8a } from "@polkadot/util";
 import { secretFromSeed } from "@scure/sr25519";
 import type { Keypair } from "../../types.js";
@@ -19,7 +19,7 @@ export function sr25519FromSeed(seed: string | Uint8Array): Keypair {
 	const secretKey = secretFromSeed(seedU8a);
 
 	const scalar = bytesToNumberLE(secretKey.subarray(0, 32)) >> 3n;
-	const publicKey = RistrettoPoint.BASE.multiply(scalar).toRawBytes();
+	const publicKey = ristretto255.Point.BASE.multiply(scalar).toBytes();
 
 	return {
 		publicKey: new Uint8Array(publicKey),

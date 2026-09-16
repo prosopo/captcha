@@ -45,7 +45,7 @@ const HEADER_DRIVEN_ROUTER = `
 	};
 `;
 
-const siteKey: string = Cypress.env(
+const siteKey: string = Cypress.expose(
 	`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
 );
 
@@ -74,7 +74,7 @@ describe("Routing machine at the frictionless phase picks the captcha type", () 
 		// AFTER setting up intercepts — the frictionless widget auto-fires
 		// /frictionless on mount, so intercepts have to be in place BEFORE
 		// that mount (same pattern as escalation.cy.ts).
-		return cy.visit(Cypress.env("default_page")).then(() => {
+		return cy.visit(Cypress.expose("default_page")).then(() => {
 			cy.waitForProcaptchaScript();
 			getWidgetElement(checkboxClass).should("be.visible");
 		});
@@ -104,7 +104,7 @@ describe("Routing machine at the frictionless phase picks the captcha type", () 
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/puzzle").as(
 			"puzzle",
 		);
-		cy.visit(Cypress.env("default_page"));
+		cy.visit(Cypress.expose("default_page"));
 		cy.waitForProcaptchaScript();
 	};
 

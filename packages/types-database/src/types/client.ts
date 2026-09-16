@@ -14,32 +14,35 @@
 
 import {
 	CaptchaType,
-	ContextType,
 	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 	type IUserData,
 	type IUserSettings,
 	type Timestamp,
+	TrafficFilterAction,
 	abuseScoreThresholdDefault,
 	abuseScoreThresholdExceedActionDefault,
 	captchaTypeDefault,
 	cityChangeActionDefault,
-	contextAwareThresholdDefault,
 	countryChangeActionDefault,
 	distanceExceedActionDefault,
 	distanceThresholdKmDefault,
 	domainsDefault,
 	frictionlessThresholdDefault,
+	frictionlessTypesDefault,
 	imageMaxRoundsDefault,
+	imageMinRoundsDefault,
 	imageThresholdDefault,
 	ispChangeActionDefault,
 	powDifficultyDefault,
+	puzzleMaxDifficultyMax,
 	requireAllConditionsDefault,
+	trafficFilterAbuserScoreThresholdDefault,
 } from "@prosopo/types";
-import mongoose from "mongoose";
-import { Schema } from "mongoose";
+import type mongoose from "mongoose";
+import { Schema as MongooseSchema, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
-import type { ClientRecord, Tables } from "./provider.js";
+import type { IUserDataSlim, Tables } from "./provider.js";
 
 export type UserDataRecord = mongoose.Document & IUserData;
 
@@ -112,6 +115,61 @@ export const IPValidationRulesSchema = new Schema({
 	},
 });
 
+// Per-render puzzle tunables, mirroring `PuzzleSettingsSchema` in
+// @prosopo/types. Every field is optional: the provider merges whatever is
+// set on top of the asset package's defaults, so a site that overrides one
+// value must not have the other five written into its record.
+//
+// Declared explicitly rather than left to the strict-mode default for the
+// same reason as `frictionlessTypes` below: an undeclared field is dropped
+// on write, so the portal's puzzle settings would round-trip through zod,
+// reach the database and vanish. Bounds mirror the zod field schemas.
+// `_id: false` because this is a value object, not a document.
+export const PuzzleRenderSettingsSchema = new Schema(
+	{
+		decoyCount: { type: Number, min: 0, max: 200, required: false },
+		decoyEdgeDarkness: { type: Number, min: 0, max: 40, required: false },
+		decoyBodyBrightness: { type: Number, min: -20, max: 20, required: false },
+		decoyHoleDarken: { type: Number, min: 0, max: 1, required: false },
+		holeDarken: { type: Number, min: 0, max: 1, required: false },
+		pieceScale: {
+			type: new Schema(
+				{
+					min: { type: Number, min: 0.05, max: 0.95, required: false },
+					max: { type: Number, min: 0.05, max: 0.95, required: false },
+				},
+				{ _id: false },
+			),
+			required: false,
+		},
+	},
+	{ _id: false },
+);
+
+// Sub-schema for one trafficFilter category's policy. `_id: false` prevents
+// Mongoose from stamping an implicit ObjectId onto each subdoc.
+export const TrafficCategoryPolicySchema = new Schema(
+	{
+		action: {
+			type: String,
+			enum: TrafficFilterAction,
+			required: true,
+		},
+		captchaType: {
+			type: String,
+			enum: CaptchaType,
+			required: false,
+		},
+		powDifficulty: { type: Number, required: false },
+		solvedImagesCount: { type: Number, required: false },
+		puzzleTolerance: { type: Number, required: false },
+		// Per-category puzzle render overrides, layered on top of the
+		// site-wide `puzzle` block by the traffic filter.
+		puzzle: { type: PuzzleRenderSettingsSchema, required: false },
+	},
+	{ _id: false },
+);
+
 export const UserSettingsSchema = new Schema({
 	captchaType: {
 		type: String,
@@ -126,9 +184,32 @@ export const UserSettingsSchema = new Schema({
 		type: Number,
 		default: DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	},
+	// The score ladder. Declared `Mixed` rather than as a nested schema
+	// because the field used to hold a bare number and unmigrated documents
+	// still do: a typed sub-document would make mongoose cast-fail on read
+	// instead of letting `resolveScoreLadder` interpret it. Zod owns the
+	// shape; this just has to not throw the value away.
 	frictionlessThreshold: {
-		type: Number,
-		default: frictionlessThresholdDefault,
+		type: MongooseSchema.Types.Mixed,
+		default: () => ({ ...frictionlessThresholdDefault }),
+	},
+	// Which challenge types the frictionless flow may serve. Declared here
+	// because mongoose is strict by default: a field absent from the schema is
+	// silently dropped on write, so without this the setting round-trips
+	// through zod, reaches the database, and vanishes — leaving the provider to
+	// read `undefined` and serve every type as though nothing were disabled.
+	//
+	// `_id: false` because this is a value object, not a document; mongoose
+	// would otherwise stamp an ObjectId into every site's settings.
+	frictionlessTypes: {
+		type: new Schema(
+			{
+				image: { type: Boolean, default: true },
+				puzzle: { type: Boolean, default: true },
+			},
+			{ _id: false },
+		),
+		default: () => ({ ...frictionlessTypesDefault }),
 	},
 	powDifficulty: { type: Number, default: powDifficultyDefault },
 	imageThreshold: {
@@ -140,8 +221,31 @@ export const UserSettingsSchema = new Schema({
 		default: imageMaxRoundsDefault,
 		required: false,
 	},
+	imageMinRounds: {
+		type: Number,
+		default: imageMinRoundsDefault,
+		required: false,
+	},
 	puzzleTolerance: {
 		type: Number,
+		required: false,
+	},
+	// Ceiling on automatic puzzle escalation, in difficulty-ladder levels.
+	// No default: an absent value means "site never set this", and the
+	// provider falls back to `puzzleMaxDifficultyDefault` at read time. A
+	// schema default would be indistinguishable from an operator explicitly
+	// choosing that level.
+	puzzleMaxDifficulty: {
+		type: Number,
+		min: 0,
+		max: puzzleMaxDifficultyMax,
+		required: false,
+	},
+	// Site-wide puzzle render overrides. No default: an absent block means
+	// "use the provider defaults", and defaulting it would write an empty
+	// subdocument onto every site regardless of captcha type.
+	puzzle: {
+		type: PuzzleRenderSettingsSchema,
 		required: false,
 	},
 	ipValidationRules: IPValidationRulesSchema,
@@ -152,22 +256,6 @@ export const UserSettingsSchema = new Schema({
 	disallowWebView: {
 		type: Boolean,
 		default: false,
-	},
-	contextAware: {
-		enabled: { type: Boolean, default: false },
-		contexts: {
-			type: mongoose.Schema.Types.Mixed,
-			default: {
-				[ContextType.Default]: {
-					type: ContextType.Default,
-					threshold: contextAwareThresholdDefault,
-				},
-				[ContextType.Webview]: {
-					type: ContextType.Webview,
-					threshold: contextAwareThresholdDefault,
-				},
-			},
-		},
 	},
 	spamEmailDomainCheckEnabled: {
 		type: Boolean,
@@ -191,18 +279,23 @@ export const UserSettingsSchema = new Schema({
 		},
 	},
 	trafficFilter: {
-		blockVpn: { type: Boolean, default: false },
-		blockProxy: { type: Boolean, default: false },
-		blockTor: { type: Boolean, default: false },
-		blockAbuser: { type: Boolean, default: true },
-		abuserScoreThreshold: { type: Number, min: 0, max: 1, default: 0 },
-		blockDatacenter: { type: Boolean, default: false },
+		vpn: { type: TrafficCategoryPolicySchema, required: false },
+		proxy: { type: TrafficCategoryPolicySchema, required: false },
+		tor: { type: TrafficCategoryPolicySchema, required: false },
+		abuser: { type: TrafficCategoryPolicySchema, required: false },
+		abuserScoreThreshold: {
+			type: Number,
+			min: 0,
+			max: 1,
+			default: trafficFilterAbuserScoreThresholdDefault,
+		},
+		datacenter: { type: TrafficCategoryPolicySchema, required: false },
 		datacenterNameAllowlist: { type: [String], required: false },
 		datacenterNameDenylist: { type: [String], required: false },
 		skipExtrasOnValidDnsPath: { type: Boolean, default: true },
-		blockMobile: { type: Boolean, default: false },
-		blockSatellite: { type: Boolean, default: false },
-		blockCrawler: { type: Boolean, default: false },
+		mobile: { type: TrafficCategoryPolicySchema, required: false },
+		satellite: { type: TrafficCategoryPolicySchema, required: false },
+		crawler: { type: TrafficCategoryPolicySchema, required: false },
 	},
 	storeMetadata: {
 		type: Boolean,
@@ -292,7 +385,8 @@ export const AccountSchema = new Schema<AccountRecord>({
 				domains: [String],
 				powDifficulty: Number,
 				captchaType: String,
-				frictionlessThreshold: Number,
+				frictionlessThreshold: MongooseSchema.Types.Mixed,
+				frictionlessTypes: MongooseSchema.Types.Mixed,
 				ipValidationRules: IPValidationRulesSchema,
 			},
 			createdAt: Number,
@@ -309,5 +403,7 @@ export enum TableNames {
 
 export interface IClientDatabase extends IDatabase {
 	getTables(): Tables<TableNames>;
-	getUpdatedClients(updatedAtTimestamp: Timestamp): Promise<ClientRecord[]>;
+	// Plain objects built from the portal's account documents, not mongoose
+	// Documents — `IUserDataSlim` is what this actually returns.
+	getUpdatedClients(updatedAtTimestamp: Timestamp): Promise<IUserDataSlim[]>;
 }

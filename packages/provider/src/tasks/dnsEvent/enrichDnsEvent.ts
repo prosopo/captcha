@@ -86,16 +86,24 @@ export const extraIpInfosFromEnrichedDnsEvent = (
  *   - resolver / peer classified `isAbuser`
  *   - client IP is a consumer ISP but resolver is datacenter (compound)
  *
- * When `trafficFilter` is supplied, the datacenter and abuser contributions
- * are gated on the same rules `checkTrafficFilter` uses for the client IP:
+ * When `trafficFilter` is supplied, the datacenter contribution is gated
+ * on operator-policy-aware shielding, *not* on the strict per-IP precedence
+ * chain the client-IP path uses. DNS resolvers are legitimately often on
+ * datacenter ranges (Google/Cloudflare/consumer-VPN DNS), so signal
+ * counting has to consider the operator's stance:
  *
- *   - `blockDatacenter` must be opted in (default off); IPs whose
- *     `providerType === "isp"` short-circuit; named allowlist skips
- *   - `blockAbuser` opt-in (default on) with the abuser-score threshold
- *   - cross-category suppression: VPN / proxy / Tor / crawler IPs that also
- *     carry `isDatacenter=true` are NOT counted as datacenter when the
- *     operator hasn't opted into blocking that more specific category —
- *     mirrors the `datacenterSuppressedByCategory` rule in evaluateIpInfo.
+ *   - datacenter category must be configured; `providerType === "isp"`
+ *     short-circuits; `datacenterNameAllowlist` skips; `datacenterNameDenylist`
+ *     forces the signal through (denylist wins over all other exemptions)
+ *   - a higher-precedence flag the operator has left **unconfigured** (VPN,
+ *     proxy, Tor, crawler) on the same resolver IP shields the datacenter
+ *     signal — the flag "explains" the DC status and the operator has said
+ *     they don't care about that category. Flags that are configured (block
+ *     or challenge) do *not* shield, because the operator is treating that
+ *     category as suspicious in its own right.
+ *   - abuser is not shielded by any other category: its signal counts
+ *     whenever the abuser category is configured and the score meets the
+ *     threshold.
  *
  * `pathValid` is a protocol signal, not a category — it always contributes
  * regardless of trafficFilter. When `trafficFilter` is omitted, all
@@ -114,20 +122,23 @@ export const computeDnsAsymmetry = (
 	const countDc = (ip: IPInfoResponse | undefined): boolean => {
 		if (!ip?.isValid || !ip.isDatacenter) return false;
 		if (!trafficFilter) return true;
-		if (trafficFilter.blockDatacenter !== true) return false;
-		// Denylist wins: an explicitly listed provider counts as datacenter
-		// even when the ISP short-circuit or category suppression would
-		// otherwise exempt it.
+		if (trafficFilter.datacenter === undefined) return false;
+		// Denylist wins over shielding and over the ISP / allowlist checks —
+		// an explicitly named provider counts as DC no matter what.
 		if (isDatacenterDenylisted(ip, trafficFilter.datacenterNameDenylist)) {
 			return true;
 		}
-		// Cross-category suppression: don't penalise datacenter classification
-		// when the operator has left the more specific category unblocked.
+		// Policy-aware shielding: a higher-precedence flag the operator has
+		// left unconfigured (i.e. is allowing) "explains" why this resolver
+		// is on a datacenter range and suppresses the DC signal. When the
+		// operator has actually configured that category (block or challenge)
+		// there's no shielding, because they're treating that category as
+		// suspicious in its own right.
 		if (
-			(ip.isVPN && trafficFilter.blockVpn !== true) ||
-			(ip.isProxy && trafficFilter.blockProxy !== true) ||
-			(ip.isTor && trafficFilter.blockTor !== true) ||
-			(ip.isCrawler && trafficFilter.blockCrawler !== true)
+			(ip.isVPN && trafficFilter.vpn === undefined) ||
+			(ip.isProxy && trafficFilter.proxy === undefined) ||
+			(ip.isTor && trafficFilter.tor === undefined) ||
+			(ip.isCrawler && trafficFilter.crawler === undefined)
 		) {
 			return false;
 		}
@@ -138,7 +149,7 @@ export const computeDnsAsymmetry = (
 	const countAbuser = (ip: IPInfoResponse | undefined): boolean => {
 		if (!ip?.isValid || !ip.isAbuser) return false;
 		if (!trafficFilter) return true;
-		if (trafficFilter.blockAbuser === false) return false;
+		if (trafficFilter.abuser === undefined) return false;
 		const threshold =
 			trafficFilter.abuserScoreThreshold ??
 			trafficFilterAbuserScoreThresholdDefault;

@@ -19,6 +19,7 @@ import { ApiClearAllCountersEndpoint } from "./apiClearAllCountersEndpoint.js";
 import { ApiDnsEventEndpoint } from "./apiDnsEventEndpoint.js";
 import { ApiGetAllDecisionMachinesEndpoint } from "./apiGetAllDecisionMachinesEndpoint.js";
 import { ApiGetDecisionMachineEndpoint } from "./apiGetDecisionMachineEndpoint.js";
+import { ApiGetSessionEndpoint } from "./apiGetSessionEndpoint.js";
 import { ApiRegisterSiteKeyEndpoint } from "./apiRegisterSiteKeyEndpoint.js";
 import { ApiRegisterSiteKeysEndpoint } from "./apiRegisterSiteKeysEndpoint.js";
 import { ApiRemoveAllDecisionMachinesEndpoint } from "./apiRemoveAllDecisionMachinesEndpoint.js";
@@ -67,6 +68,7 @@ class ApiAdminRoutesProvider implements ApiRoutesProvider {
 				this.tasks.env.ipInfoService,
 			),
 			[AdminApiPaths.ReplaceDetectorPool]: new ApiReplaceDetectorPoolEndpoint(),
+			[AdminApiPaths.GetSession]: new ApiGetSessionEndpoint(this.tasks),
 		};
 	}
 }

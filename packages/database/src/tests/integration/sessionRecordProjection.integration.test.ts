@@ -289,6 +289,65 @@ describe("getSessionRecordBySessionId projection", () => {
 		expect(got?.isEscalation).toBe(true);
 	});
 
+	// Regression guard for the 2026-08-20 finding: the verify-phase decision
+	// machines added TCP-fingerprint deny rules (`tcp-stack-dc-linux-ts-off`,
+	// `tcp-ttl-windows-ua-linux-stack`) that read `input.tcpOptsFlags`,
+	// `input.tcpOptsOrder`, and `input.observedTtl`. The img / pow / puzzle
+	// verify paths forward the sibling group of nine tcp-probe fields from
+	// `sessionRecord?.tcpX` into the DecisionMachineInput, but the projection
+	// here had never been extended past the pre-tcp-probe set. Result: DM
+	// input got `undefined` for every tcp-probe field, the rules returned
+	// null, and zero denies fired for weeks in production even though matching
+	// sessions were sitting in the DB (~11 exact-fingerprint hits per hour on
+	// the DC-linux tuple; thousands of windows-UA + linux-TTL sessions).
+	//
+	// Guard: persist a session with every tcp-probe field set, read it back,
+	// assert each one round-trips. A future projection narrowing that drops
+	// any of them re-introduces the silent no-op.
+	it("returns tcp-probe fields so DM decide rules can match TCP fingerprints", async () => {
+		const sessionId = "session-tcp-probe-roundtrip";
+		await db.tables.session.create({
+			sessionId,
+			createdAt: new Date(),
+			token: "tok-tcp-probe",
+			score: 0.1,
+			threshold: 0.5,
+			scoreComponents: { baseScore: 0.1 },
+			ipAddress: ipv4Composite(16843009n),
+			captchaType: CaptchaType.pow,
+			webView: false,
+			iFrame: false,
+			// Fingerprint the `tcp-stack-dc-linux-ts-off` rule denies on.
+			tcpOptsFlags: 19,
+			tcpOptsOrder: 786,
+			// Linux-family initial TTL (post-decrement) — the
+			// `tcp-ttl-windows-ua-linux-stack` rule denies on <=64 under a
+			// Windows UA.
+			observedTtl: 52,
+			// Remaining raw signals — surfaced on the DM input for future
+			// RTT / handshake-shape rules.
+			synNs: 1_700_000_000_000_000_000,
+			synackNs: 1_700_000_000_000_500_000,
+			ackNs: 1_700_000_000_000_800_000,
+			tcpMss: 1460,
+			tcpWscale: 7,
+			tcpWindow: 65535,
+		});
+
+		const got = await db.getSessionRecordBySessionId(sessionId);
+		if (!got) throw new Error("session not returned");
+
+		expect(got.tcpOptsFlags).toBe(19);
+		expect(got.tcpOptsOrder).toBe(786);
+		expect(got.observedTtl).toBe(52);
+		expect(got.synNs).toBe(1_700_000_000_000_000_000);
+		expect(got.synackNs).toBe(1_700_000_000_000_500_000);
+		expect(got.ackNs).toBe(1_700_000_000_000_800_000);
+		expect(got.tcpMss).toBe(1460);
+		expect(got.tcpWscale).toBe(7);
+		expect(got.tcpWindow).toBe(65535);
+	});
+
 	// Schema-contract guard: any field marked `required: true` on
 	// SessionRecordSchema must be present in the projection — otherwise
 	// callers like buildEscalation that forward the field into a new

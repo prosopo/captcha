@@ -111,18 +111,28 @@ describe("ViteTestConfig", () => {
 		// the repo-root globs only match `packages/*/src/**`.
 		asPackage();
 		const config = ViteTestConfig();
-		expect(config.test?.coverage?.include).toContain("src/**/*.ts");
-		expect(config.test?.coverage?.exclude).toContain("src/**/*.test.ts");
+		// Vitest's coverage type is a discriminated union on `provider`; the
+		// custom-provider variant doesn't declare `include`/`exclude` even
+		// though they're valid at runtime for every provider. Cast to the v8
+		// variant (which does declare them) for assertion purposes only.
+		const coverage = config.test?.coverage as
+			| { include?: unknown; exclude?: unknown }
+			| undefined;
+		expect(coverage?.include).toContain("src/**/*.ts");
+		expect(coverage?.exclude).toContain("src/**/*.test.ts");
 	});
 
 	it("falls back to repo-wide globs when there is no src directory", () => {
 		asRepoRoot();
 		const config = ViteTestConfig();
-		expect(config.test?.coverage?.include).toEqual([
+		const coverage = config.test?.coverage as
+			| { include?: unknown; exclude?: unknown }
+			| undefined;
+		expect(coverage?.include).toEqual([
 			"packages/*/src/**",
 			"captcha/packages/*/src/**",
 		]);
-		expect(config.test?.coverage?.exclude).toContain("**/node_modules/**");
+		expect(coverage?.exclude).toContain("**/node_modules/**");
 	});
 
 	it("adds the tsconfig-paths plugin only when given a tsconfig", () => {

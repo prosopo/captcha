@@ -200,6 +200,7 @@ export default class ProviderApi
 		maxVerifiedTime?: number,
 		ip?: string,
 		email?: string,
+		clientSessionId?: string,
 	): Promise<ImageVerificationResponse> {
 		const payload: VerifySolutionBodyTypeInput = {
 			[ApiParams.token]: token,
@@ -211,6 +212,9 @@ export default class ProviderApi
 		}
 		if (email) {
 			payload[ApiParams.email] = email;
+		}
+		if (clientSessionId) {
+			payload[ApiParams.clientSessionId] = clientSessionId;
 		}
 
 		return this.post(ClientApiPaths.VerifyImageCaptchaSolutionDapp, payload, {
@@ -356,6 +360,7 @@ export default class ProviderApi
 		user: string,
 		ip?: string,
 		email?: string,
+		clientSessionId?: string,
 	): Promise<VerificationResponse> {
 		const body: ServerPuzzleCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
@@ -364,6 +369,9 @@ export default class ProviderApi
 		};
 		if (email) {
 			body[ApiParams.email] = email;
+		}
+		if (clientSessionId) {
+			body[ApiParams.clientSessionId] = clientSessionId;
 		}
 		return this.post(ClientApiPaths.VerifyPuzzleCaptchaSolution, body, {
 			headers: {
@@ -489,6 +497,7 @@ export default class ProviderApi
 		user: string,
 		ip?: string,
 		email?: string,
+		clientSessionId?: string,
 	): Promise<VerificationResponse> {
 		const body: ServerPowCaptchaVerifyRequestBodyType = {
 			[ApiParams.token]: token,
@@ -498,7 +507,52 @@ export default class ProviderApi
 		if (email) {
 			body[ApiParams.email] = email;
 		}
+		if (clientSessionId) {
+			body[ApiParams.clientSessionId] = clientSessionId;
+		}
 		return this.post(ClientApiPaths.VerifyPowCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": user,
+			},
+		});
+	}
+
+	/**
+	 * Verify an authenticated (Web Bot Auth fast-path) session token. Wire
+	 * shape matches the pow/image/puzzle verify calls — same `ip` binding, same
+	 * optional `clientSessionId` correlation, so `@prosopo/server` can dispatch
+	 * without a token-shape branch. Provider-side the router routes to
+	 * `verifyAuthenticatedSession`, which additionally requires `ip` (a token
+	 * minted for a signed request is meaningless without the IP it was issued
+	 * to) and flips `serverChecked=true` on first use for single-consumption.
+	 */
+	public submitAuthenticatedCaptchaVerify(
+		token: string,
+		signatureHex: string,
+		user: string,
+		ip?: string,
+		email?: string,
+		clientSessionId?: string,
+	): Promise<VerificationResponse> {
+		const body: ServerPowCaptchaVerifyRequestBodyType = {
+			[ApiParams.token]: token,
+			[ApiParams.dappSignature]: signatureHex,
+			[ApiParams.ip]: ip,
+		};
+		// Email is a wire-parity passthrough: the authenticated flow has no
+		// email captured at issuance (Web Bot Auth doesn't carry one), so no
+		// spam-filter / correlation runs on it server-side. Forwarded anyway so
+		// operator logs and verdict rows on the provider stay symmetric with
+		// pow/image/puzzle and a customer's siteverify call doesn't have to
+		// know which captchaType the token was minted with.
+		if (email) {
+			body[ApiParams.email] = email;
+		}
+		if (clientSessionId) {
+			body[ApiParams.clientSessionId] = clientSessionId;
+		}
+		return this.post(ClientApiPaths.VerifyAuthenticatedSession, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,

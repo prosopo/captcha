@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "时间戳过旧",
 		"FAILED_IP_VALIDATION": "IP验证失败",
 		"ACCESS_POLICY_BLOCK": "访问被策略阻止",
+		"CLIENT_SESSION_MISMATCH": "会话不匹配。此验证码不是在本会话中完成的。",
 		"FORBIDDEN": "禁止",
 		"PROVIDER_VERIFY_FAILED": "提供商验证失败",
 		"SPAM_EMAIL_DOMAIN": "不允许此电子邮件域名",
@@ -376,7 +377,20 @@
 		"NO_ACCOUNTS_FOUND": "找不到帐户",
 		"ACCOUNT_NOT_FOUND": "找不到帐户",
 		"NO_EXTENSION_FOUND": "找不到扩展",
-		"INSECURE_CONTEXT": "Procaptcha 需要安全连接 (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha 需要安全连接 (HTTPS)",
+		"CHECKING": "正在验证您是真人",
+		"IMAGE_DIALOG_LABEL": "图片验证",
+		"PUZZLE": {
+			"DIALOG_LABEL": "拼图验证",
+			"DRAG": "将拼块拖到目标位置",
+			"RETRY": "差一点 — 请再试一次",
+			"PIECE_LABEL": "拼图块",
+			"PIECE_ROLE": "可拖动的拼图块",
+			"KEYBOARD_HINT": "用方向键移动拼块，按住 Shift 可以小步移动。按 Enter 提交，按 Home 让它回到起点，按 Escape 取消。",
+			"POSITION": "距左边 {{x}} %，距顶部 {{y}} %",
+			"CHECKING": "正在检查您的答案",
+			"RETRY_ANNOUNCEMENT": "差一点。已加载新的拼图，拼块回到了起点。"
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "无法编码无效地址",

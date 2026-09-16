@@ -170,7 +170,7 @@ describe("maintenance mode short-circuit", () => {
 			expect(res.json).toHaveBeenCalledTimes(1);
 			const body = res.json.mock.calls[0]?.[0];
 			expect(body[ApiParams.status]).toBe("ok");
-			expect(body[ApiParams.tolerance]).toBeGreaterThanOrEqual(1000);
+			expect(body[ApiParams.background]).toMatch(/^data:image\/webp;base64,/);
 			expect(body[ApiParams.challenge].split(POW_SEPARATOR)).toHaveLength(4);
 
 			expect(mockedDbMethods.getClientRecord).not.toHaveBeenCalled();

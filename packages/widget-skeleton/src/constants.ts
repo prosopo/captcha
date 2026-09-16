@@ -22,7 +22,7 @@ export const WIDGET_DIMENSIONS = {
 	maxWidth: WIDGET_MAX_WIDTH,
 	minHeight: `${WIDGET_OUTER_HEIGHT}px`,
 };
-export const WIDGET_BORDER_RADIUS = "8px";
+export const WIDGET_BORDER_RADIUS = "16px";
 export const WIDGET_PADDING = "2px";
 export const WIDGET_BORDER = "1px solid";
 export const WIDGET_CHECKBOX_SPINNER_CSS_CLASS =

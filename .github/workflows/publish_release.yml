@@ -24,17 +24,24 @@ defaults:
     shell: bash
 
 env:
+  # Dependency debuginfo dominates a dev build and nothing here steps through
+  # third-party code; incremental state is worthless on a cold CI runner.
+  CARGO_INCREMENTAL: "0"
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
   NODE_ENV: "production"
 
 jobs:
   publish:
     name: Publish Release
-    # GH_RUNNER unset -> GitHub-hosted. Set to a JSON array (the self-hosted
-    # fleet) -> this job's capacity requirement is appended to it: cores, RAM,
-    # disk. Runners advertise one label per step up to their own size, so a job
-    # only lands on a host big enough for it. Set to a JSON string -> used as
-    # given, which is how a repo opts back out to a hosted runner.
-    runs-on: ${{ vars.GH_RUNNER && startsWith(vars.GH_RUNNER, '[') && fromJSON(format('["{0}","2c","4g","20d"]', join(fromJSON(vars.GH_RUNNER), '","'))) || fromJSON(vars.GH_RUNNER || '"ubuntu-latest"') }}
+    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
+    # other repos: this repository is public, so a fork PR would run on the
+    # self-hosted fleet -- executing arbitrary contributor code on hardware we
+    # own, where it can also persist and poison later trusted jobs. Nothing is
+    # given up by staying hosted: standard GitHub-hosted runners are free and
+    # unlimited on public repos, macOS and Windows included. Only *larger*
+    # runners are billed, so do not "upgrade" a job to one.
+    # https://docs.github.com/en/billing/reference/actions-runner-pricing
+    runs-on: ubuntu-latest
     steps:
       - name: Get token for gh app
         id: app_token
@@ -71,6 +78,21 @@ jobs:
           fi
           echo "version=$version" >> $GITHUB_OUTPUT
           echo "Version: $version"
+
+      - name: Preflight publishability check
+        # Runs before the install and build because it needs neither, and a
+        # release that cannot publish should fail in seconds rather than after
+        # three minutes of building artifacts nobody will ship.
+        #
+        # `changeset publish` publishes serially and cannot roll back, so a
+        # package that fails part way through leaves the release half-applied,
+        # with the earlier packages already live and immutable on the registry.
+        # This turns that into a failure before anything is published. It
+        # catches the two ways a package is unpublishable: a first publish
+        # (trusted publishing cannot bootstrap a package that does not exist
+        # yet, and npm reports it as a misleading ENEEDAUTH) and a private
+        # workspace package leaked into a published package's runtime deps.
+        run: node .github/scripts/check-publishable.mjs
 
       - run: npm ci --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
 
@@ -150,6 +172,32 @@ jobs:
           gh release create "v${{ steps.version.outputs.version }}" \
             --title "Release v${{ steps.version.outputs.version }}" \
             --generate-notes
+
+      - name: Open the private release PR
+        # The release is not finished when this repo's packages are out: the
+        # private repo still has to move its captcha submodule to the new tag,
+        # cascade the version bumps through its own packages and repoint the
+        # ansible inventories at the new provider image. Its create_release_pr
+        # workflow does all of that, but it was dispatch-only, so it happened
+        # only when somebody remembered. v3.8.7 and v3.8.8 both shipped from
+        # here with no release PR opened there at all, and production's
+        # compose_provider_image_version was hand-edited to 3.8.7 in an
+        # unrelated PR to paper over it.
+        #
+        # Fired after the GitHub Release exists so the private side never opens
+        # a PR for a release that did not finish. Non-fatal on purpose: at this
+        # point the packages, images and release are already published, and
+        # failing here would both mark a successful release as failed and fire
+        # the failure notification below. A missed dispatch just means running
+        # create_release_pr by hand, which is where this started.
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ steps.app_token.outputs.token }}
+        run: |
+          gh api repos/prosopo/captcha-private/dispatches \
+            --method POST \
+            --field event_type=captcha_released \
+            --field 'client_payload[version]=${{ steps.version.outputs.version }}'
 
       - name: Send success notification
         if: success()

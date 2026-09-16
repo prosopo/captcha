@@ -114,7 +114,11 @@ describe("what the grid renders", () => {
 
 	test("renders an item with no image url as an empty image", () => {
 		render({ items: [item("hash-1", "")] });
-		expect(tiles()[0]?.getAttribute("src")).toBe("");
+		// React 19 drops an empty src instead of rendering src="", which would
+		// make the browser re-request the current page. The tile still renders,
+		// it just has no image to show.
+		expect(tiles()).toHaveLength(1);
+		expect(tiles()[0]?.getAttribute("src")).toBeNull();
 	});
 
 	test("refuses to render an item with no hash", () => {
@@ -127,17 +131,17 @@ describe("what the grid renders", () => {
 });
 
 describe("theming", () => {
-	test("borders the images with the light theme grey", () => {
+	test("borders the images with the light theme tile outline", () => {
 		render({ themeColor: "light" });
 		expect(tiles()[0]?.style.borderColor).toBe(
-			asRgb(lightTheme.palette.grey[300]),
+			asRgb(lightTheme.palette.tile.border),
 		);
 	});
 
-	test("borders the images with the dark theme grey", () => {
+	test("borders the images with the dark theme tile outline", () => {
 		render({ themeColor: "dark" });
 		expect(tiles()[0]?.style.borderColor).toBe(
-			asRgb(darkTheme.palette.grey[300]),
+			asRgb(darkTheme.palette.tile.border),
 		);
 	});
 });
@@ -173,6 +177,31 @@ describe("selection", () => {
 			"hidden",
 			"hidden",
 		]);
+	});
+});
+
+describe("reaching the tiles without a mouse", () => {
+	test("each tile is a button, so it can be tabbed to and pressed", () => {
+		render();
+		expect(clickable(0).tagName).toBe("BUTTON");
+		expect(clickable(0).getAttribute("type")).toBe("button");
+	});
+
+	test("an unpicked tile says so", () => {
+		render();
+		expect(clickable(0).getAttribute("aria-pressed")).toBe("false");
+	});
+
+	test("a picked tile says so, rather than only looking picked", () => {
+		render({ solution: [["hash-2", 1, 2]] });
+		expect(clickable(0).getAttribute("aria-pressed")).toBe("false");
+		expect(clickable(1).getAttribute("aria-pressed")).toBe("true");
+	});
+
+	test("the tile takes its name from the image it holds", () => {
+		render();
+		expect(clickable(0).textContent).toBe("");
+		expect(tiles()[0]?.alt).toBe("Captcha image 1");
 	});
 });
 

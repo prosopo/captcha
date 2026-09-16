@@ -41,7 +41,10 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import {
+	type AccessRulesStorage,
+	describeMatchedRule,
+} from "@prosopo/user-access-policy";
 import {
 	assertCoordsSafe,
 	at,
@@ -57,6 +60,11 @@ import {
 	type UsageCounters,
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
+import {
+	isClientSessionMismatch,
+	toStoredClientMetaData,
+} from "../../utils/clientMetaData.js";
+import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
@@ -319,6 +327,16 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			);
 		}
 
+		// Persist puzzleEvents unconditionally so the raw event trail survives
+		// even when the behavioural payload is absent or its decryption fails
+		// (missing bundle, ciphertext / key mismatch, etc.). Previously the
+		// puzzleEvents write was gated on decryption succeeding, so legitimate
+		// solves whose bundle couldn't be resolved lost the event trail AND
+		// tripped the "no-cache request with no behavioural data" DM rule.
+		await this.db.updatePuzzleCaptchaRecord(challenge, {
+			puzzleEvents,
+		});
+
 		// Process behavioral data if provided
 		if (behavioralData) {
 			try {
@@ -361,11 +379,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 						d: decryptedData.deviceCapability,
 					};
 
-					// Store the packed data to database
 					await this.db.updatePuzzleCaptchaRecord(challenge, {
 						behavioralDataPacked: packedData,
 						deviceCapability: decryptedData.deviceCapability,
-						puzzleEvents,
 					});
 				}
 			} catch (error) {
@@ -375,16 +391,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				}));
 				// Don't fail the captcha if behavioral analysis fails
 			}
-		} else {
-			// Store puzzle events even without behavioral data
-			await this.db.updatePuzzleCaptchaRecord(challenge, {
-				puzzleEvents,
-			});
 		}
 
-		if (clientMetaData?.hp) {
+		const storedClientMetaData = toStoredClientMetaData(clientMetaData);
+		if (storedClientMetaData) {
 			await this.db.updatePuzzleCaptchaRecord(challenge, {
-				clientMetaData: { hp: clientMetaData.hp },
+				clientMetaData: storedClientMetaData,
 			});
 		}
 
@@ -405,6 +417,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				result,
 				...(isBlockingCaptchaResult(CaptchaType.puzzle, result) && {
 					blocked: true,
+				}),
+				// Mirror the render-time metadata onto the session so the session
+				// row carries the same clientSessionId the verify call correlates
+				// against.
+				...(storedClientMetaData && {
+					clientMetaData: storedClientMetaData,
 				}),
 			});
 			if (simdReadings) {
@@ -435,6 +453,9 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 	 * @param trafficFilter
 	 * @param storeMetadata - when true, persists the dapp-server-provided
 	 *   `email` on the captcha record for spam-rate analysis.
+	 * @param clientSessionId - the session id the site rendered the widget
+	 *   with. When supplied, the solve must carry the same value in its
+	 *   `clientMetaData` or it is disapproved.
 	 */
 	async serverVerifyPuzzleCaptchaSolution(
 		dappAccount: string,
@@ -448,8 +469,14 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		spamFilter?: ISpamFilterRules,
 		trafficFilter?: ITrafficFilter,
 		storeMetadata = false,
-	): Promise<{ verified: boolean; score?: number }> {
-		const notVerifiedResponse = { verified: false };
+		clientSessionId?: string,
+	): Promise<{ verified: boolean; score?: number; sessionId?: string }> {
+		// Shared by every not-verified exit; sessionId is stamped on below
+		// once the record is loaded, so each exit needn't repeat it.
+		const notVerifiedResponse: {
+			verified: false;
+			sessionId?: string;
+		} = { verified: false };
 
 		// Bind the challenge/dappAccount context once so every log line in this
 		// method carries it without repeating the fields in each `data` block.
@@ -465,6 +492,8 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 
 			return notVerifiedResponse;
 		}
+
+		notVerifiedResponse.sessionId = challengeRecord.sessionId;
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
 			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
@@ -528,6 +557,46 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			return notVerifiedResponse;
 		}
 
+		// The site rendered the widget with a session id, so the solve has to
+		// carry the same one — otherwise the token was earned in a different
+		// session (or outside the widget entirely) and is being replayed here.
+		// Cheap and purely local, so it runs before any I/O-bound check.
+		if (
+			isClientSessionMismatch(
+				clientSessionId,
+				challengeRecord.clientMetaData?.clientSessionId,
+			)
+		) {
+			logger.info(() => ({
+				msg: "Client session mismatch in server puzzle verification",
+				data: {
+					hasRecordedClientSessionId: Boolean(
+						challengeRecord.clientMetaData?.clientSessionId,
+					),
+				},
+			}));
+			const mismatchResult = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.CLIENT_SESSION_MISMATCH,
+			};
+			const isBlocked = isBlockingCaptchaResult(
+				CaptchaType.puzzle,
+				mismatchResult,
+			);
+			await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
+				result: mismatchResult,
+				...(isBlocked && { blocked: true }),
+			});
+			if (challengeRecord.sessionId) {
+				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+					serverChecked: true,
+					result: mismatchResult,
+					...(isBlocked && { blocked: true }),
+				});
+			}
+			return notVerifiedResponse;
+		}
+
 		// Check user access policies for hard blocks
 		if (userAccessRulesStorage) {
 			try {
@@ -570,6 +639,11 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 							serverChecked: true,
 							result: blockedResult,
 							...(isBlocked && { blocked: true }),
+							// Name the rule behind the ACCESS_POLICY_BLOCK on the
+							// audit row. This path is where `deferToVerify` rules
+							// land, which is precisely where "why was I rejected?"
+							// is least obvious.
+							matchedRule: describeMatchedRule(blockPolicy),
 						});
 					}
 					return notVerifiedResponse;
@@ -830,6 +904,22 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				iFrame: sessionRecord?.iFrame,
 				coords: challengeRecord.coords,
 				puzzleEvents: challengeRecord.puzzleEvents,
+				// tcp-probe fields — see powTasks.ts for the reasoning.
+				synNs: sessionRecord?.synNs,
+				synackNs: sessionRecord?.synackNs,
+				ackNs: sessionRecord?.ackNs,
+				observedTtl: sessionRecord?.observedTtl,
+				tcpMss: sessionRecord?.tcpMss,
+				tcpWscale: sessionRecord?.tcpWscale,
+				tcpOptsFlags: sessionRecord?.tcpOptsFlags,
+				tcpOptsOrder: sessionRecord?.tcpOptsOrder,
+				tcpWindow: sessionRecord?.tcpWindow,
+				// Which egress categories this site blocks. Gates the
+				// egress-sensitive TCP-stack deny rules — a VPN
+				// concentrator legitimately terminates the handshake, so
+				// on a site that accepts VPN users the observed stack
+				// says nothing about the client.
+				trafficPolicies: deriveTrafficPolicies(trafficFilter),
 			};
 
 			const decision = await this.decisionMachineRunner.decide(
@@ -895,6 +985,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 			});
 		}
 
-		return { verified: true, ...(score ? { score } : {}) };
+		return {
+			verified: true,
+			...(score ? { score } : {}),
+			...(challengeRecord.sessionId && {
+				sessionId: challengeRecord.sessionId,
+			}),
+		};
 	}
 }

@@ -15,8 +15,23 @@
 import fs from "node:fs";
 import path from "node:path";
 
+/**
+ * Each entry is either a plain path (copied under its original basename) or
+ * `{ src, dest }` where `dest` is the basename to write into `outDir`.
+ * Explicit `dest` lets consumers avoid collisions when they copy multiple
+ * .node files that napi-rs happens to name the same thing (each package it
+ * generates puts its binary at `index.<triple>.node`).
+ */
+export type NativeFileEntry = string | { src: string; dest: string };
+
+const entrySrc = (e: NativeFileEntry): string =>
+	typeof e === "string" ? e : e.src;
+
+const entryDestBasename = (e: NativeFileEntry): string =>
+	typeof e === "string" ? path.basename(e) : e.dest;
+
 export const nodejsPolarsNativeFilePlugin = (
-	nodeFiles: string[],
+	nodeFiles: NativeFileEntry[],
 	outDir: string,
 ) => {
 	const name = "nodejs-polars-native-file-plugin";
@@ -25,8 +40,8 @@ export const nodejsPolarsNativeFilePlugin = (
 		// biome-ignore lint/suspicious/noExplicitAny: TODO not sure of options type
 		resolveId(source: string, importer: string | undefined, options: any) {
 			// return the id if this plugin can resolve the import
-			for (const file of nodeFiles) {
-				if (path.basename(source) === path.basename(file)) {
+			for (const entry of nodeFiles) {
+				if (path.basename(source) === path.basename(entrySrc(entry))) {
 					console.debug(name, "resolves", source, "imported by", importer);
 					return source;
 				}
@@ -34,20 +49,22 @@ export const nodejsPolarsNativeFilePlugin = (
 			return null; // otherwise return null indicating that this plugin can't handle the import
 		},
 		transform(code: string, id: string) {
-			for (const file of nodeFiles) {
+			for (const entry of nodeFiles) {
 				// rewrite the code to import the .node file
-				if (path.basename(id) === path.basename(file)) {
+				if (path.basename(id) === path.basename(entrySrc(entry))) {
 					console.debug(name, "transform", id);
+					// Load the (possibly renamed) copy that lives beside the bundle.
+					const destBasename = entryDestBasename(entry);
 					// https://stackoverflow.com/questions/66378682/nodejs-loading-es-modules-and-native-addons-in-the-same-project
 					// this makes the .node file load at runtime from an esm context. .node files aren't native to esm, so we have to create a custom require function to load them. The custom require function is equivalent to the require function in commonjs, thus allowing the .node file to be loaded.
 					return `
                         // create a custom require function to load .node files
                         import { createRequire } from 'module';
                         const customRequire = createRequire(import.meta.url)
-    
+
                         // load the .node file expecting it to be in the same directory as the output bundle
-                        const content = customRequire('./${file}')
-    
+                        const content = customRequire('./${destBasename}')
+
                         // export the content straight back out again
                         export default content
                         `;
@@ -56,8 +73,8 @@ export const nodejsPolarsNativeFilePlugin = (
 			return code;
 		},
 		load(id: string) {
-			for (const file of nodeFiles) {
-				if (path.basename(id) === path.basename(file)) {
+			for (const entry of nodeFiles) {
+				if (path.basename(id) === path.basename(entrySrc(entry))) {
 					console.debug(name, "load", id);
 					// whenever we encounter an import of the .node file, we return an empty string. This makes it look like the .node file is empty to the bundler. This is because we're going to copy the .node file to the output directory ourselves, so we don't want the bundler to include it in the output bundle (also because the bundler can't handle .node files, it tries to read them as js and then complains that it's invalid js)
 					const newCode = "";
@@ -68,11 +85,10 @@ export const nodejsPolarsNativeFilePlugin = (
 		},
 		// biome-ignore lint/suspicious/noExplicitAny: TODO not sure of options/bundle type
 		generateBundle(options: any, bundle: any) {
-			for (const fileAbs of nodeFiles) {
-				const file = path.basename(fileAbs);
-				// copy the .node file to the output directory
-				const out = `${outDir}/${file}`;
-				const src = `${fileAbs}`;
+			for (const entry of nodeFiles) {
+				const src = entrySrc(entry);
+				const destBasename = entryDestBasename(entry);
+				const out = `${outDir}/${destBasename}`;
 				console.debug(name, "copy", src, "to", out);
 				const nodeFile = fs.readFileSync(src);
 				fs.mkdirSync(path.dirname(out), { recursive: true });

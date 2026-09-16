@@ -19,6 +19,14 @@ enum CaptchaType {
 	pow = "pow",
 	frictionless = "frictionless",
 	puzzle = "puzzle",
+	// Web Bot Auth verified — no user-facing challenge. Issued only by the
+	// frictionless flow when the request carried a valid Ed25519 signature
+	// per RFC 9421 / draft-meunier-web-bot-auth AND no operator-authored
+	// Block/Restrict rule matched the verified Signature-Agent URL. The
+	// widget renders a "Verified agent" badge and auto-submits the token.
+	// The captcha record carries `webBotAuthAgent` + `clientIp` so the
+	// verify path can enforce IP binding.
+	authenticated = "authenticated",
 }
 
 const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
@@ -27,9 +35,11 @@ const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
  * The three concrete challenges a user can actually be asked to solve.
  *
  * `frictionless` is deliberately excluded: it is the *router* that picks one
- * of these, not a challenge in its own right. Anything that describes "what
- * the user was shown" — session records, decision-machine inputs, routing
- * outputs, usage counters, metrics labels — is a `ChallengeCaptchaType`.
+ * of these, not a challenge in its own right, and `authenticated` is a
+ * pre-verified pass-through with no scoring surface. Anything that describes
+ * "what the user was shown" — session records, decision-machine inputs,
+ * routing outputs, usage counters, metrics labels — is a
+ * `ChallengeCaptchaType`.
  */
 type ChallengeCaptchaType =
 	| CaptchaType.pow

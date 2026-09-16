@@ -79,11 +79,20 @@ export enum ApiParams {
 	finalY = "finalY",
 	puzzleEvents = "puzzleEvents",
 	tolerance = "tolerance",
+	background = "background",
+	piece = "piece",
+	pieceSize = "pieceSize",
 	mode = "mode",
 	reason = "reason",
 	escalation = "escalation",
 	hp = "hp",
 	clientMetaData = "clientMetaData",
+	// Site-owner-supplied session identifier (Protect's JTI, or any per-user
+	// session id the site already holds). Handed to the widget at render time
+	// and handed back on verify so the provider can confirm the session that
+	// solved the captcha is the session being verified. Deliberately distinct
+	// from `sessionId`, which is the provider's own frictionless session.
+	clientSessionId = "clientSessionId",
 	honeypot = "honeypot",
 	fingerprintProof = "fingerprintProof",
 }

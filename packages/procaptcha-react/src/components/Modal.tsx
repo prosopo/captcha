@@ -12,56 +12,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { css } from "@emotion/react";
-import React, { type CSSProperties } from "react";
-import { createPortal } from "react-dom";
+import { ChallengeSurface } from "@prosopo/procaptcha-common";
+import type { PlacementType } from "@prosopo/types";
+import React from "react";
+
 type ModalProps = {
 	show: boolean;
 	children: React.ReactNode;
+	placement?: PlacementType;
+	anchor?: HTMLElement | null;
+	onDismiss?: () => void;
+	dialogLabel?: string;
 };
 
-const ModalInnerDivCSS = css`
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	max-width: 500px;
-	background-color: transparent;
-	border: none;
-	border-radius: 4px;
-	z-index: 2147483647;
-	align-self: center;
-	box-shadow: rgba(0, 0, 0, 0.2) 0px 11px 15px -7px,
-		rgba(0, 0, 0, 0.14) 0px 24px 38px 3px,
-		rgba(0, 0, 0, 0.12) 0px 9px 46px 8px;
-	box-sizing: border-box; /* Ensures border is part of width */
-	/* iOS only */
-    @supports (-webkit-touch-callout: none) { 
-		transform: translate(-50%, -100%);
-    }
-`;
-
+/** The image captcha's dialog frame; positioning lives in `ChallengeSurface`. */
 const ModalComponent = React.memo((props: ModalProps) => {
-	const { show, children } = props;
-	const display = show ? "flex" : "none";
-	const ModalOuterDivCss: CSSProperties = {
-		position: "fixed",
-		zIndex: 2147483646,
-		inset: 0,
-		display,
-		alignItems: "center",
-		justifyContent: "center",
-		minHeight: "100vh",
-	};
+	const { show, children, placement, anchor, onDismiss, dialogLabel } = props;
 
-	return createPortal(
-		<div className="prosopo-modalOuter" style={ModalOuterDivCss}>
-			<div className="prosopo-modalInner" css={ModalInnerDivCSS}>
+	return (
+		<ChallengeSurface
+			show={show}
+			placement={placement}
+			anchor={anchor}
+			onDismiss={onDismiss}
+			scrim="none"
+			className="prosopo-modalOuter"
+			dialogLabel={dialogLabel}
+		>
+			<div
+				className="prosopo-modalInner"
+				style={{
+					maxWidth: "500px",
+					maxHeight: "100%",
+					backgroundColor: "transparent",
+					border: "none",
+					borderRadius: "28px",
+					alignSelf: "center",
+					boxSizing: "border-box",
+				}}
+			>
 				{children}
 			</div>
-		</div>,
-		document.body,
+		</ChallengeSurface>
 	);
 });
+
+ModalComponent.displayName = "ModalComponent";
 
 export default ModalComponent;

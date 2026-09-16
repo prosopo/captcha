@@ -17,5 +17,6 @@ export * from "./challengeParams.js";
 export * from "./scheduler.js";
 export * from "./detection.js";
 export * from "./database.js";
+export * from "./matchedAccessRule.js";
 export * from "./isBlockingCaptchaResult.js";
 export * from "./reasons.js";

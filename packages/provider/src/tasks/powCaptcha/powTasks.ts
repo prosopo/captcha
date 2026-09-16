@@ -43,6 +43,7 @@ import {
 	type RoutingMachineOutput,
 	type RoutingMachinePlatform,
 	type RoutingMachineRawSignals,
+	type Session,
 	SimdReadingsStage,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
@@ -51,7 +52,10 @@ import type {
 	PoWCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import type { AccessRulesStorage } from "@prosopo/user-access-policy";
+import {
+	type AccessRulesStorage,
+	describeMatchedRule,
+} from "@prosopo/user-access-policy";
 import {
 	assertCoordsSafe,
 	at,
@@ -67,6 +71,11 @@ import {
 	type UsageCounters,
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
+import {
+	isClientSessionMismatch,
+	toStoredClientMetaData,
+} from "../../utils/clientMetaData.js";
+import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
@@ -409,8 +418,9 @@ export class PowCaptchaManager extends CaptchaManager {
 		// updatePowCaptchaRecordResult triggers centralStreamer.streamPowUpdate(),
 		// which reads back the full record.
 		const recordUpdates: Partial<PoWCaptchaRecord> = { ...behavioralUpdates };
-		if (clientMetaData?.hp) {
-			recordUpdates.clientMetaData = { hp: clientMetaData.hp };
+		const storedClientMetaData = toStoredClientMetaData(clientMetaData);
+		if (storedClientMetaData) {
+			recordUpdates.clientMetaData = storedClientMetaData;
 		}
 		if (Object.keys(recordUpdates).length > 0) {
 			await this.db.updatePowCaptchaRecord(challenge, recordUpdates);
@@ -436,6 +446,12 @@ export class PowCaptchaManager extends CaptchaManager {
 					result,
 					...(isBlockingCaptchaResult(CaptchaType.pow, result) && {
 						blocked: true,
+					}),
+					// Mirror the render-time metadata onto the session so the
+					// session row carries the same clientSessionId the verify
+					// call correlates against.
+					...(storedClientMetaData && {
+						clientMetaData: storedClientMetaData,
 					}),
 				}),
 			);
@@ -601,6 +617,9 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param storeMetadata - when true, persists the dapp-server-provided
 	 *   `email` (and any future metadata fields) on the captcha record so
 	 *   it can be inspected for spam-rate analysis.
+	 * @param clientSessionId - the session id the site rendered the widget
+	 *   with. When supplied, the solve must carry the same value in its
+	 *   `clientMetaData` or it is disapproved.
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -614,12 +633,20 @@ export class PowCaptchaManager extends CaptchaManager {
 		spamFilter?: ISpamFilterRules,
 		trafficFilter?: ITrafficFilter,
 		storeMetadata = false,
-	): Promise<{ verified: boolean; score?: number; reason?: string }> {
+		clientSessionId?: string,
+	): Promise<{
+		verified: boolean;
+		score?: number;
+		reason?: string;
+		sessionId?: string;
+	}> {
 		const notVerified = (
 			reason: string,
-		): { verified: false; reason: string } => ({
+			sessionId?: string,
+		): { verified: false; reason: string; sessionId?: string } => ({
 			verified: false,
 			reason,
+			...(sessionId && { sessionId }),
 		});
 
 		// Bind the challenge/dappAccount context once so every log line in this
@@ -648,7 +675,10 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		if (challengeRecord.serverChecked)
-			return notVerified("API.USER_ALREADY_VERIFIED");
+			return notVerified(
+				"API.USER_ALREADY_VERIFIED",
+				challengeRecord.sessionId,
+			);
 
 		const challengeDappAccount = challengeRecord.dappAccount;
 
@@ -678,6 +708,11 @@ export class PowCaptchaManager extends CaptchaManager {
 		const powRecordUpdates: Partial<PoWCaptchaRecord> = {};
 		let failResult: CaptchaResult | undefined;
 		let failReason: string | undefined;
+		// Set only by the access-policy branch below, and stamped onto the
+		// session at the end so the audit page can name the rule behind an
+		// ACCESS_POLICY_BLOCK. This path is where `deferToVerify` rules land,
+		// which is precisely where "why was I rejected?" is least obvious.
+		let matchedRule: Session["matchedRule"];
 
 		const submittedAt = challengeRecord.submittedAtTimestamp;
 		const submitToVerifyMs =
@@ -690,6 +725,32 @@ export class PowCaptchaManager extends CaptchaManager {
 				reason: ResultReason.TIMESTAMP_TOO_OLD,
 			};
 			failReason = "API.TIMESTAMP_TOO_OLD";
+		}
+
+		// The site rendered the widget with a session id, so the solve has to
+		// carry the same one — otherwise the token was earned in a different
+		// session (or outside the widget entirely) and is being replayed here.
+		// Cheap and purely local, so it runs before any I/O-bound check.
+		if (
+			!failResult &&
+			isClientSessionMismatch(
+				clientSessionId,
+				challengeRecord.clientMetaData?.clientSessionId,
+			)
+		) {
+			logger.info(() => ({
+				msg: "Client session mismatch in server PoW verification",
+				data: {
+					hasRecordedClientSessionId: Boolean(
+						challengeRecord.clientMetaData?.clientSessionId,
+					),
+				},
+			}));
+			failResult = {
+				status: CaptchaStatus.disapproved,
+				reason: ResultReason.CLIENT_SESSION_MISMATCH,
+			};
+			failReason = "API.CLIENT_SESSION_MISMATCH";
 		}
 
 		// Check user access policies for hard blocks
@@ -722,6 +783,7 @@ export class PowCaptchaManager extends CaptchaManager {
 						reason: ResultReason.ACCESS_POLICY_BLOCK,
 					};
 					failReason = "API.ACCESS_POLICY_BLOCK";
+					matchedRule = describeMatchedRule(blockPolicy);
 				}
 			} catch (error) {
 				logger.warn(() => ({
@@ -966,6 +1028,24 @@ export class PowCaptchaManager extends CaptchaManager {
 					webView: sessionRecord?.webView,
 					iFrame: sessionRecord?.iFrame,
 					coords: challengeRecord.coords,
+					// tcp-probe fields from the frictionless Session — the
+					// middleware persists them at entry, verify surfaces them
+					// so decide rules can gate on the raw TCP fingerprint.
+					synNs: sessionRecord?.synNs,
+					synackNs: sessionRecord?.synackNs,
+					ackNs: sessionRecord?.ackNs,
+					observedTtl: sessionRecord?.observedTtl,
+					tcpMss: sessionRecord?.tcpMss,
+					tcpWscale: sessionRecord?.tcpWscale,
+					tcpOptsFlags: sessionRecord?.tcpOptsFlags,
+					tcpOptsOrder: sessionRecord?.tcpOptsOrder,
+					tcpWindow: sessionRecord?.tcpWindow,
+					// Which egress categories this site blocks. Gates the
+					// egress-sensitive TCP-stack deny rules — a VPN
+					// concentrator legitimately terminates the handshake, so
+					// on a site that accepts VPN users the observed stack
+					// says nothing about the client.
+					trafficPolicies: deriveTrafficPolicies(trafficFilter),
 				};
 
 				const decision = await this.decisionMachineRunner.decide(
@@ -1051,6 +1131,7 @@ export class PowCaptchaManager extends CaptchaManager {
 						...(isBlockingCaptchaResult(CaptchaType.pow, finalResult) && {
 							blocked: true,
 						}),
+						...(matchedRule && { matchedRule }),
 					},
 					true,
 				),
@@ -1062,9 +1143,15 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		if (failReason) {
-			return notVerified(failReason);
+			return notVerified(failReason, challengeRecord.sessionId);
 		}
 
-		return { verified: true, ...(score ? { score } : {}) };
+		return {
+			verified: true,
+			...(score ? { score } : {}),
+			...(challengeRecord.sessionId && {
+				sessionId: challengeRecord.sessionId,
+			}),
+		};
 	}
 }

@@ -42,3 +42,10 @@ export const DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT =
 // The time in milliseconds since the last correct captcha recorded in the contract (15 minutes), after which point, the
 // user will be required to complete another captcha
 export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = ONE_MINUTE * 15;
+// How old a detector payload may be before the frictionless flow penalises it
+// as stale (10 minutes). This is the window in which a payload is still worth
+// reading, so it is also the window in which the provider must keep the key
+// that reads it — see `DETECTOR_BUNDLE_TTL_SECONDS`, which is derived from this
+// rather than set independently. A binding shorter than this makes the provider
+// accept payloads it has already thrown away the means to decrypt.
+export const DEFAULT_MAX_TIMESTAMP_AGE = ONE_MINUTE * 10;

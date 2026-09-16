@@ -12,9 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { IPInfoResult, ITrafficFilter } from "@prosopo/types";
+import {
+	CaptchaType,
+	type IPInfoResult,
+	type ITrafficFilter,
+	TrafficFilterAction,
+} from "@prosopo/types";
 import { describe, expect, it } from "vitest";
-import { checkTrafficFilter } from "../../../../tasks/spam/checkTrafficFilter.js";
+import {
+	type TrafficFilterMatch,
+	checkTrafficFilter,
+	resolveChallengePolicy,
+} from "../../../../tasks/spam/checkTrafficFilter.js";
 
 const baseInfo = (overrides: Partial<IPInfoResult> = {}): IPInfoResult => ({
 	ip: "1.2.3.4",
@@ -30,38 +39,52 @@ const baseInfo = (overrides: Partial<IPInfoResult> = {}): IPInfoResult => ({
 	...overrides,
 });
 
+const block = { action: TrafficFilterAction.Block } as const;
+
 const allBlocked: ITrafficFilter = {
-	blockVpn: true,
-	blockProxy: true,
-	blockTor: true,
-	blockAbuser: true,
+	vpn: block,
+	proxy: block,
+	tor: block,
+	abuser: block,
 	abuserScoreThreshold: 0,
-	blockDatacenter: true,
+	datacenter: block,
 	skipExtrasOnValidDnsPath: false,
-	blockMobile: true,
-	blockSatellite: true,
-	blockCrawler: true,
+	mobile: block,
+	satellite: block,
+	crawler: block,
 };
 
 describe("checkTrafficFilter", () => {
 	it("blocks VPN when blockVpn is true", () => {
 		const result = checkTrafficFilter(baseInfo({ isVPN: true }), allBlocked);
-		expect(result).toEqual({ isBlocked: true, reason: "API.VPN_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.VPN_BLOCKED",
+		});
 	});
 
 	it("blocks proxy when blockProxy is true", () => {
 		const result = checkTrafficFilter(baseInfo({ isProxy: true }), allBlocked);
-		expect(result).toEqual({ isBlocked: true, reason: "API.PROXY_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.PROXY_BLOCKED",
+		});
 	});
 
 	it("blocks Tor when blockTor is true", () => {
 		const result = checkTrafficFilter(baseInfo({ isTor: true }), allBlocked);
-		expect(result).toEqual({ isBlocked: true, reason: "API.TOR_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.TOR_BLOCKED",
+		});
 	});
 
 	it("blocks abusive ASN when blockAbuser is true", () => {
 		const result = checkTrafficFilter(baseInfo({ isAbuser: true }), allBlocked);
-		expect(result).toEqual({ isBlocked: true, reason: "API.ABUSER_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.ABUSER_BLOCKED",
+		});
 	});
 
 	it("blocks abuser when score meets threshold", () => {
@@ -69,7 +92,10 @@ describe("checkTrafficFilter", () => {
 			baseInfo({ isAbuser: true, abuserScore: 0.06, companyAbuserScore: 0.03 }),
 			{ ...allBlocked, abuserScoreThreshold: 0.05 },
 		);
-		expect(result).toEqual({ isBlocked: true, reason: "API.ABUSER_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.ABUSER_BLOCKED",
+		});
 	});
 
 	it("allows abuser when score is below threshold", () => {
@@ -81,7 +107,7 @@ describe("checkTrafficFilter", () => {
 			}),
 			{ ...allBlocked, abuserScoreThreshold: 0.05 },
 		);
-		expect(result).toEqual({ isBlocked: false });
+		expect(result).toMatchObject({ isBlocked: false });
 	});
 
 	it("uses company abuser score when it is higher than ASN score", () => {
@@ -93,7 +119,10 @@ describe("checkTrafficFilter", () => {
 			}),
 			{ ...allBlocked, abuserScoreThreshold: 0.05 },
 		);
-		expect(result).toEqual({ isBlocked: true, reason: "API.ABUSER_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.ABUSER_BLOCKED",
+		});
 	});
 
 	it("blocks datacenter when blockDatacenter is true", () => {
@@ -101,7 +130,7 @@ describe("checkTrafficFilter", () => {
 			baseInfo({ isDatacenter: true }),
 			allBlocked,
 		);
-		expect(result).toEqual({
+		expect(result).toMatchObject({
 			isBlocked: true,
 			reason: "API.DATACENTER_BLOCKED",
 		});
@@ -113,59 +142,71 @@ describe("checkTrafficFilter", () => {
 		// catch VPN end-users.
 		const result = checkTrafficFilter(
 			baseInfo({ isDatacenter: true, isVPN: true }),
-			{ ...allBlocked, blockVpn: false },
+			{ ...allBlocked, vpn: undefined },
 		);
-		expect(result).toEqual({ isBlocked: false });
+		expect(result).toMatchObject({ isBlocked: false });
 	});
 
 	it("does not block proxy-on-datacenter IPs when blockDatacenter is on but blockProxy is off", () => {
 		const result = checkTrafficFilter(
 			baseInfo({ isDatacenter: true, isProxy: true }),
-			{ ...allBlocked, blockProxy: false },
+			{ ...allBlocked, proxy: undefined },
 		);
-		expect(result).toEqual({ isBlocked: false });
+		expect(result).toMatchObject({ isBlocked: false });
 	});
 
 	it("does not block Tor-on-datacenter IPs when blockDatacenter is on but blockTor is off", () => {
 		const result = checkTrafficFilter(
 			baseInfo({ isDatacenter: true, isTor: true }),
-			{ ...allBlocked, blockTor: false },
+			{ ...allBlocked, tor: undefined },
 		);
-		expect(result).toEqual({ isBlocked: false });
+		expect(result).toMatchObject({ isBlocked: false });
 	});
 
-	it("does not block crawler-on-datacenter IPs when blockDatacenter is on but blockCrawler is off", () => {
+	it("blocks crawler-on-datacenter IPs as datacenter even when crawler policy is off", () => {
+		// Under per-IP precedence, datacenter outranks crawler. An IP flagged
+		// as both is acted on by the datacenter policy; the operator's
+		// crawler policy is not consulted.
 		const result = checkTrafficFilter(
 			baseInfo({ isDatacenter: true, isCrawler: true }),
-			{ ...allBlocked, blockCrawler: false },
+			{ ...allBlocked, crawler: undefined },
 		);
-		expect(result).toEqual({ isBlocked: false });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.DATACENTER_BLOCKED",
+		});
 	});
 
 	it("still blocks raw datacenter (non-VPN) IPs when blockDatacenter is on and blockVpn is off", () => {
 		const result = checkTrafficFilter(
 			baseInfo({ isDatacenter: true, isVPN: false }),
-			{ ...allBlocked, blockVpn: false },
+			{ ...allBlocked, vpn: undefined },
 		);
-		expect(result).toEqual({
+		expect(result).toMatchObject({
 			isBlocked: true,
 			reason: "API.DATACENTER_BLOCKED",
 		});
 	});
 
 	it("blocks VPN-on-datacenter IPs as VPN when both filters are enabled", () => {
-		// The VPN check runs first and short-circuits before the
-		// datacenter rule, so the reason should be VPN_BLOCKED.
+		// VPN outranks datacenter in the per-IP precedence chain, so an IP
+		// carrying both flags is acted on as VPN and the reason is VPN_BLOCKED.
 		const result = checkTrafficFilter(
 			baseInfo({ isDatacenter: true, isVPN: true }),
 			allBlocked,
 		);
-		expect(result).toEqual({ isBlocked: true, reason: "API.VPN_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.VPN_BLOCKED",
+		});
 	});
 
 	it("blocks mobile when blockMobile is true", () => {
 		const result = checkTrafficFilter(baseInfo({ isMobile: true }), allBlocked);
-		expect(result).toEqual({ isBlocked: true, reason: "API.MOBILE_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.MOBILE_BLOCKED",
+		});
 	});
 
 	it("blocks satellite when blockSatellite is true", () => {
@@ -173,7 +214,7 @@ describe("checkTrafficFilter", () => {
 			baseInfo({ isSatellite: true }),
 			allBlocked,
 		);
-		expect(result).toEqual({
+		expect(result).toMatchObject({
 			isBlocked: true,
 			reason: "API.SATELLITE_BLOCKED",
 		});
@@ -184,26 +225,29 @@ describe("checkTrafficFilter", () => {
 			baseInfo({ isCrawler: true }),
 			allBlocked,
 		);
-		expect(result).toEqual({ isBlocked: true, reason: "API.CRAWLER_BLOCKED" });
+		expect(result).toMatchObject({
+			isBlocked: true,
+			reason: "API.CRAWLER_BLOCKED",
+		});
 	});
 
 	it("allows traffic when all filters are disabled", () => {
 		const result = checkTrafficFilter(baseInfo({ isVPN: true }), {
-			blockVpn: false,
-			blockProxy: false,
-			blockTor: false,
-			blockAbuser: false,
-			blockDatacenter: false,
-			blockMobile: false,
-			blockSatellite: false,
-			blockCrawler: false,
+			vpn: undefined,
+			proxy: undefined,
+			tor: undefined,
+			abuser: undefined,
+			datacenter: undefined,
+			mobile: undefined,
+			satellite: undefined,
+			crawler: undefined,
 		});
-		expect(result).toEqual({ isBlocked: false });
+		expect(result).toMatchObject({ isBlocked: false });
 	});
 
 	it("allows residential IPs through", () => {
 		const result = checkTrafficFilter(baseInfo(), allBlocked);
-		expect(result).toEqual({ isBlocked: false });
+		expect(result).toMatchObject({ isBlocked: false });
 	});
 
 	it("allows through if IP info is missing entirely", () => {
@@ -211,7 +255,7 @@ describe("checkTrafficFilter", () => {
 		// outage, middleware error) must fall back to allowing the
 		// request, not blocking it.
 		const result = checkTrafficFilter(undefined, allBlocked);
-		expect(result).toEqual({ isBlocked: false });
+		expect(result).toMatchObject({ isBlocked: false });
 	});
 
 	it("allows through if IP info is invalid", () => {
@@ -219,7 +263,7 @@ describe("checkTrafficFilter", () => {
 			{ isValid: false, error: "lookup failed", ip: "1.2.3.4" },
 			allBlocked,
 		);
-		expect(result).toEqual({ isBlocked: false });
+		expect(result).toMatchObject({ isBlocked: false });
 	});
 
 	describe("extraIpInfos", () => {
@@ -229,7 +273,7 @@ describe("checkTrafficFilter", () => {
 			const result = checkTrafficFilter(cleanPrimary, allBlocked, [
 				baseInfo({ ip: "198.51.100.10", isDatacenter: true }),
 			]);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -247,14 +291,14 @@ describe("checkTrafficFilter", () => {
 					}),
 				],
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.ABUSER_BLOCKED",
 			});
 		});
 
 		it("applies VPN-datacenter suppression to extra IPs when blockVpn is off", () => {
-			const noVpnBlock: ITrafficFilter = { ...allBlocked, blockVpn: false };
+			const noVpnBlock: ITrafficFilter = { ...allBlocked, vpn: undefined };
 			const result = checkTrafficFilter(cleanPrimary, noVpnBlock, [
 				baseInfo({
 					ip: "198.51.100.10",
@@ -262,11 +306,11 @@ describe("checkTrafficFilter", () => {
 					isDatacenter: true,
 				}),
 			]);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
 		it("still blocks a datacenter extra that is not a VPN when blockVpn is off", () => {
-			const noVpnBlock: ITrafficFilter = { ...allBlocked, blockVpn: false };
+			const noVpnBlock: ITrafficFilter = { ...allBlocked, vpn: undefined };
 			const result = checkTrafficFilter(cleanPrimary, noVpnBlock, [
 				baseInfo({
 					ip: "198.51.100.10",
@@ -274,19 +318,19 @@ describe("checkTrafficFilter", () => {
 					isDatacenter: true,
 				}),
 			]);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
 		});
 
 		it("does apply VPN-datacenter suppression to the primary IP", () => {
-			const noVpnBlock: ITrafficFilter = { ...allBlocked, blockVpn: false };
+			const noVpnBlock: ITrafficFilter = { ...allBlocked, vpn: undefined };
 			const result = checkTrafficFilter(
 				baseInfo({ isVPN: true, isDatacenter: true }),
 				noVpnBlock,
 			);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
 		it("allows through when extra IPs are clean", () => {
@@ -294,7 +338,7 @@ describe("checkTrafficFilter", () => {
 				baseInfo({ ip: "8.8.8.8" }),
 				baseInfo({ ip: "1.1.1.1" }),
 			]);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
 		it("ignores undefined / invalid entries in the extras list", () => {
@@ -303,7 +347,7 @@ describe("checkTrafficFilter", () => {
 				{ isValid: false, error: "lookup failed", ip: "1.2.3.4" },
 				baseInfo({ ip: "198.51.100.10", isDatacenter: true }),
 			]);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -313,14 +357,17 @@ describe("checkTrafficFilter", () => {
 			const result = checkTrafficFilter(baseInfo({ isTor: true }), allBlocked, [
 				baseInfo({ ip: "198.51.100.10", isDatacenter: true }),
 			]);
-			expect(result).toEqual({ isBlocked: true, reason: "API.TOR_BLOCKED" });
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.TOR_BLOCKED",
+			});
 		});
 
 		it("does not check the crawler flag on extra IPs even when blockCrawler is on", () => {
 			const result = checkTrafficFilter(cleanPrimary, allBlocked, [
 				baseInfo({ ip: "8.8.8.8", isCrawler: true }),
 			]);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
 		it("still blocks the crawler flag on the primary IP when an extra is present", () => {
@@ -329,14 +376,14 @@ describe("checkTrafficFilter", () => {
 				allBlocked,
 				[baseInfo({ ip: "8.8.8.8" })],
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.CRAWLER_BLOCKED",
 			});
 		});
 
 		it("applies proxy-datacenter suppression to extra IPs when blockProxy is off", () => {
-			const noProxyBlock: ITrafficFilter = { ...allBlocked, blockProxy: false };
+			const noProxyBlock: ITrafficFilter = { ...allBlocked, proxy: undefined };
 			const result = checkTrafficFilter(cleanPrimary, noProxyBlock, [
 				baseInfo({
 					ip: "198.51.100.10",
@@ -344,11 +391,11 @@ describe("checkTrafficFilter", () => {
 					isDatacenter: true,
 				}),
 			]);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
 		it("applies Tor-datacenter suppression to extra IPs when blockTor is off", () => {
-			const noTorBlock: ITrafficFilter = { ...allBlocked, blockTor: false };
+			const noTorBlock: ITrafficFilter = { ...allBlocked, tor: undefined };
 			const result = checkTrafficFilter(cleanPrimary, noTorBlock, [
 				baseInfo({
 					ip: "198.51.100.10",
@@ -356,13 +403,15 @@ describe("checkTrafficFilter", () => {
 					isDatacenter: true,
 				}),
 			]);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
-		it("applies crawler-datacenter suppression to extra IPs when blockCrawler is off", () => {
+		it("blocks crawler-on-datacenter extras as datacenter even when crawler policy is off", () => {
+			// Same precedence rule for extras: datacenter outranks crawler,
+			// so the datacenter policy fires regardless of crawler policy.
 			const noCrawlerBlock: ITrafficFilter = {
 				...allBlocked,
-				blockCrawler: false,
+				crawler: undefined,
 			};
 			const result = checkTrafficFilter(cleanPrimary, noCrawlerBlock, [
 				baseInfo({
@@ -371,7 +420,10 @@ describe("checkTrafficFilter", () => {
 					isDatacenter: true,
 				}),
 			]);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
 		});
 	});
 
@@ -388,7 +440,7 @@ describe("checkTrafficFilter", () => {
 				}),
 				{ ...allBlocked, datacenterNameAllowlist: ["iCloud Private Relay"] },
 			);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
 		it("matches the allowlist case-insensitively and ignores whitespace", () => {
@@ -402,7 +454,7 @@ describe("checkTrafficFilter", () => {
 					datacenterNameAllowlist: ["icloud private relay"],
 				},
 			);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
 		it("still blocks datacenter IPs whose name does not match", () => {
@@ -410,7 +462,7 @@ describe("checkTrafficFilter", () => {
 				baseInfo({ isDatacenter: true, datacenterName: "Amazon AWS" }),
 				{ ...allBlocked, datacenterNameAllowlist: ["iCloud Private Relay"] },
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -423,7 +475,7 @@ describe("checkTrafficFilter", () => {
 				...allBlocked,
 				datacenterNameAllowlist: ["iCloud Private Relay"],
 			});
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -437,7 +489,7 @@ describe("checkTrafficFilter", () => {
 				}),
 				allBlocked,
 			);
-			expect(missing).toEqual({
+			expect(missing).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -449,7 +501,7 @@ describe("checkTrafficFilter", () => {
 				}),
 				{ ...allBlocked, datacenterNameAllowlist: [] },
 			);
-			expect(empty).toEqual({
+			expect(empty).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -467,7 +519,7 @@ describe("checkTrafficFilter", () => {
 				}),
 				{ ...allBlocked, datacenterNameAllowlist: ["iCloud Private Relay"] },
 			);
-			expect(torResult).toEqual({
+			expect(torResult).toMatchObject({
 				isBlocked: true,
 				reason: "API.TOR_BLOCKED",
 			});
@@ -480,7 +532,7 @@ describe("checkTrafficFilter", () => {
 				}),
 				{ ...allBlocked, datacenterNameAllowlist: ["iCloud Private Relay"] },
 			);
-			expect(vpnResult).toEqual({
+			expect(vpnResult).toMatchObject({
 				isBlocked: true,
 				reason: "API.VPN_BLOCKED",
 			});
@@ -498,7 +550,7 @@ describe("checkTrafficFilter", () => {
 					}),
 				],
 			);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
 		it("matches the allowlist against providerName when datacenterName is absent", () => {
@@ -512,7 +564,7 @@ describe("checkTrafficFilter", () => {
 				}),
 				{ ...allBlocked, datacenterNameAllowlist: ["iCloud Private Relay"] },
 			);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
 		it("matches the allowlist against asnOrganization when neither datacenterName nor providerName carries the operator", () => {
@@ -523,7 +575,7 @@ describe("checkTrafficFilter", () => {
 				}),
 				{ ...allBlocked, datacenterNameAllowlist: ["Cloudflare, Inc."] },
 			);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
 		it("still blocks datacenter IPs that carry none of the three name fields", () => {
@@ -531,7 +583,7 @@ describe("checkTrafficFilter", () => {
 				...allBlocked,
 				datacenterNameAllowlist: ["iCloud Private Relay"],
 			});
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -552,7 +604,7 @@ describe("checkTrafficFilter", () => {
 				}),
 				allBlocked,
 			);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
 		it("still blocks datacenter IPs when providerType is 'hosting'", () => {
@@ -560,7 +612,7 @@ describe("checkTrafficFilter", () => {
 				baseInfo({ isDatacenter: true, providerType: "hosting" }),
 				allBlocked,
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -573,7 +625,7 @@ describe("checkTrafficFilter", () => {
 				baseInfo({ isDatacenter: true }),
 				allBlocked,
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -591,7 +643,7 @@ describe("checkTrafficFilter", () => {
 				}),
 				allBlocked,
 			);
-			expect(torResult).toEqual({
+			expect(torResult).toMatchObject({
 				isBlocked: true,
 				reason: "API.TOR_BLOCKED",
 			});
@@ -604,7 +656,7 @@ describe("checkTrafficFilter", () => {
 				}),
 				allBlocked,
 			);
-			expect(vpnResult).toEqual({
+			expect(vpnResult).toMatchObject({
 				isBlocked: true,
 				reason: "API.VPN_BLOCKED",
 			});
@@ -622,7 +674,7 @@ describe("checkTrafficFilter", () => {
 					}),
 				],
 			);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 	});
 
@@ -643,7 +695,7 @@ describe("checkTrafficFilter", () => {
 					datacenterNameDenylist: ["proxy-lease-provider"],
 				},
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -661,7 +713,7 @@ describe("checkTrafficFilter", () => {
 					datacenterNameDenylist: ["proxy-lease-provider"],
 				},
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -679,7 +731,7 @@ describe("checkTrafficFilter", () => {
 					datacenterNameDenylist: ["proxy-lease-provider"],
 				},
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -697,7 +749,7 @@ describe("checkTrafficFilter", () => {
 					datacenterNameDenylist: ["Proxy Lease Ltd"],
 				},
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -717,7 +769,7 @@ describe("checkTrafficFilter", () => {
 					datacenterNameDenylist: ["shared-name"],
 				},
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -736,7 +788,7 @@ describe("checkTrafficFilter", () => {
 					datacenterNameDenylist: ["proxy-lease-provider"],
 				},
 			);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
 		it("does not fire when blockDatacenter is off", () => {
@@ -750,11 +802,11 @@ describe("checkTrafficFilter", () => {
 				}),
 				{
 					...allBlocked,
-					blockDatacenter: false,
+					datacenter: undefined,
 					datacenterNameDenylist: ["proxy-lease-provider"],
 				},
 			);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
 		it("preserves legacy behaviour when denylist is missing or empty", () => {
@@ -768,7 +820,7 @@ describe("checkTrafficFilter", () => {
 				}),
 				allBlocked,
 			);
-			expect(missing).toEqual({ isBlocked: false });
+			expect(missing).toMatchObject({ isBlocked: false });
 
 			const empty = checkTrafficFilter(
 				baseInfo({
@@ -778,7 +830,7 @@ describe("checkTrafficFilter", () => {
 				}),
 				{ ...allBlocked, datacenterNameDenylist: [] },
 			);
-			expect(empty).toEqual({ isBlocked: false });
+			expect(empty).toMatchObject({ isBlocked: false });
 		});
 
 		it("still lets earlier category rules fire before the datacenter check", () => {
@@ -796,7 +848,7 @@ describe("checkTrafficFilter", () => {
 					datacenterNameDenylist: ["proxy-lease-provider"],
 				},
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.TOR_BLOCKED",
 			});
@@ -818,9 +870,94 @@ describe("checkTrafficFilter", () => {
 					}),
 				],
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+	});
+
+	describe("per-IP precedence", () => {
+		it("picks Tor over every other flag when all are set", () => {
+			// Precedence order: tor > vpn > proxy > datacenter > abuser > crawler
+			// > satellite > mobile. An IP carrying every flag is acted on as Tor.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isTor: true,
+					isVPN: true,
+					isProxy: true,
+					isDatacenter: true,
+					isAbuser: true,
+					isCrawler: true,
+					isSatellite: true,
+					isMobile: true,
+				}),
+				allBlocked,
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.TOR_BLOCKED",
+			});
+		});
+
+		it("does not block a VPN+proxy IP when only the proxy policy is set", () => {
+			// VPN outranks proxy: if the operator hasn't configured a VPN
+			// policy, the IP passes even when proxy blocking is on.
+			const result = checkTrafficFilter(
+				baseInfo({ isVPN: true, isProxy: true }),
+				{ ...allBlocked, vpn: undefined },
+			);
+			expect(result).toMatchObject({ isBlocked: false });
+		});
+
+		it("blocks a datacenter+abuser IP as datacenter (datacenter outranks abuser)", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					isAbuser: true,
+					abuserScore: 1,
+				}),
+				allBlocked,
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it("falls through when the top flag disqualifies itself (abuser score below threshold)", () => {
+			// isAbuser is set but score is below threshold, so the abuser flag
+			// does not own the IP. Evaluation falls through to the next flag —
+			// here isMobile — and picks that up instead.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isAbuser: true,
+					abuserScore: 0.01,
+					companyAbuserScore: 0.01,
+					isMobile: true,
+				}),
+				{ ...allBlocked, abuserScoreThreshold: 0.5 },
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.MOBILE_BLOCKED",
+			});
+		});
+
+		it("falls through when the top flag disqualifies itself (datacenter suppressed by ISP heuristic)", () => {
+			// providerType='isp' rejects the datacenter flag ownership, so
+			// evaluation falls through to isMobile.
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					providerType: "isp",
+					isMobile: true,
+				}),
+				allBlocked,
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.MOBILE_BLOCKED",
 			});
 		});
 	});
@@ -839,7 +976,7 @@ describe("checkTrafficFilter", () => {
 				],
 				true,
 			);
-			expect(result).toEqual({ isBlocked: false });
+			expect(result).toMatchObject({ isBlocked: false });
 		});
 
 		it("still evaluates extras when the setting is off, even if pathValid is true", () => {
@@ -855,7 +992,7 @@ describe("checkTrafficFilter", () => {
 				],
 				true,
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -874,7 +1011,7 @@ describe("checkTrafficFilter", () => {
 				],
 				false,
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -893,7 +1030,7 @@ describe("checkTrafficFilter", () => {
 				],
 				undefined,
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
@@ -909,10 +1046,169 @@ describe("checkTrafficFilter", () => {
 				[],
 				true,
 			);
-			expect(result).toEqual({
+			expect(result).toMatchObject({
 				isBlocked: true,
 				reason: "API.DATACENTER_BLOCKED",
 			});
 		});
+	});
+});
+
+describe("resolveChallengePolicy", () => {
+	const challenge = (
+		category: TrafficFilterMatch["category"],
+		policy: TrafficFilterMatch["policy"],
+	): TrafficFilterMatch => ({ category, policy });
+
+	it("returns undefined when there are no challenge matches", () => {
+		expect(resolveChallengePolicy([])).toBeUndefined();
+		expect(
+			resolveChallengePolicy([
+				challenge("vpn", { action: TrafficFilterAction.Block }),
+			]),
+		).toBeUndefined();
+	});
+
+	it("returns the sole challenge policy verbatim when only one matches", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.pow,
+				powDifficulty: 7,
+			}),
+		]);
+		expect(resolved).toEqual({
+			captchaType: CaptchaType.pow,
+			powDifficulty: 7,
+			solvedImagesCount: undefined,
+			puzzleTolerance: undefined,
+			sourceCategories: ["vpn"],
+		});
+	});
+
+	it("picks image over puzzle over pow when multiple categories name a captchaType", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.pow,
+			}),
+			challenge("proxy", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.puzzle,
+			}),
+			challenge("datacenter", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.image,
+			}),
+		]);
+		expect(resolved?.captchaType).toBe(CaptchaType.image);
+	});
+
+	it("picks puzzle over pow when no image challenge is present", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.pow,
+			}),
+			challenge("proxy", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.puzzle,
+			}),
+		]);
+		expect(resolved?.captchaType).toBe(CaptchaType.puzzle);
+	});
+
+	it("takes the highest pow difficulty across challenge matches", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.pow,
+				powDifficulty: 4,
+			}),
+			challenge("proxy", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.pow,
+				powDifficulty: 9,
+			}),
+			challenge("datacenter", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.pow,
+				powDifficulty: 6,
+			}),
+		]);
+		expect(resolved?.powDifficulty).toBe(9);
+	});
+
+	it("takes the highest image count across challenge matches", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.image,
+				solvedImagesCount: 3,
+			}),
+			challenge("datacenter", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.image,
+				solvedImagesCount: 8,
+			}),
+		]);
+		expect(resolved?.solvedImagesCount).toBe(8);
+	});
+
+	it("takes the lowest puzzle tolerance across challenge matches (stricter accuracy)", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.puzzle,
+				puzzleTolerance: 40,
+			}),
+			challenge("datacenter", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.puzzle,
+				puzzleTolerance: 15,
+			}),
+		]);
+		expect(resolved?.puzzleTolerance).toBe(15);
+	});
+
+	it("ignores block matches when combining challenge params", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", { action: TrafficFilterAction.Block }),
+			challenge("proxy", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.pow,
+				powDifficulty: 5,
+			}),
+		]);
+		// Block category is not counted in sourceCategories or the combine.
+		expect(resolved?.sourceCategories).toEqual(["proxy"]);
+		expect(resolved?.powDifficulty).toBe(5);
+	});
+
+	it("leaves fields undefined when no matched policy sets them", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.image,
+			}),
+		]);
+		expect(resolved).toEqual({
+			captchaType: CaptchaType.image,
+			powDifficulty: undefined,
+			solvedImagesCount: undefined,
+			puzzleTolerance: undefined,
+			sourceCategories: ["vpn"],
+		});
+	});
+
+	it("keeps captchaType undefined when no matched policy specifies one (falls through to site default)", () => {
+		const resolved = resolveChallengePolicy([
+			challenge("vpn", {
+				action: TrafficFilterAction.Challenge,
+				powDifficulty: 7,
+			}),
+		]);
+		expect(resolved?.captchaType).toBeUndefined();
+		expect(resolved?.powDifficulty).toBe(7);
 	});
 });

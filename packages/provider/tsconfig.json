@@ -33,6 +33,9 @@
 			"path": "../../dev/config"
 		},
 		{
+			"path": "../captcha-severity"
+		},
+		{
 			"path": "../database"
 		},
 		{
@@ -46,6 +49,9 @@
 		},
 		{
 			"path": "../load-balancer"
+		},
+		{
+			"path": "../puzzle-assets"
 		},
 		{
 			"path": "../keyring"
@@ -67,6 +73,9 @@
 		},
 		{
 			"path": "../user-access-policy"
+		},
+		{
+			"path": "../web-bot-auth"
 		},
 		{
 			"path": "../api"

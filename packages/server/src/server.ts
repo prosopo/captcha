@@ -44,6 +44,38 @@ const VERIFY_RECENCY: Record<
 	[CaptchaType.puzzle]: { timeout: "puzzle", label: "Puzzle" },
 };
 
+// Detect which section of the provider list the token's `providerUrl`
+// was minted from.
+//
+// The provider list at https://provider-list.prosopo.io/ carries three
+// concurrent views of the same provider set: the dual-stack entries at
+// the top level (`https://pronode15.prosopo.io`), an `ipv4` sub-object
+// (`https://ipv4.pronode15.prosopo.io`), and an `ipv6` sub-object.
+// A session that pinned itself to a single-stack sub-zone advertises
+// the sub-zone URL on the token, so an exact-string lookup against the
+// dual-stack section returns nothing and the lambda logs
+// `Provider not found` — leaving every affected session's
+// `serverChecked` on mongo1 false.
+//
+// Deriving the ipMode from the token's own hostname and asking the
+// load-balancer for the matching section keeps the equality check
+// exact-string on both sides. Exported so tests can pin the exact
+// contract.
+export const detectIpMode = (
+	providerUrl: string | undefined,
+): "ipv4" | "ipv6" | undefined => {
+	if (!providerUrl) return undefined;
+	let hostname: string;
+	try {
+		hostname = new URL(providerUrl).hostname;
+	} catch {
+		return undefined;
+	}
+	if (hostname.startsWith("ipv4.")) return "ipv4";
+	if (hostname.startsWith("ipv6.")) return "ipv6";
+	return undefined;
+};
+
 export class ProsopoServer {
 	config: ProsopoServerConfigOutput;
 	dappAccount: string | undefined;
@@ -73,9 +105,10 @@ export class ProsopoServer {
 	/**
 	 * Verify a token with the issuing provider. Dispatches to the correct
 	 * verify endpoint by inspecting the token's declared captchaType:
-	 *  - puzzle  → submitPuzzleCaptchaVerify
-	 *  - pow     → submitPowCaptchaVerify
-	 *  - image   → verifyDappUser
+	 *  - puzzle        → submitPuzzleCaptchaVerify
+	 *  - pow           → submitPowCaptchaVerify
+	 *  - image         → verifyDappUser
+	 *  - authenticated → submitAuthenticatedCaptchaVerify (Web Bot Auth fast-path)
 	 * When captchaType is absent (a legacy token minted before the field was
 	 * added), fall back to the historical heuristic: presence of `challenge`
 	 * routes to PoW, absence routes to image. Legacy puzzle tokens follow the
@@ -89,6 +122,9 @@ export class ProsopoServer {
 	 * @param ip
 	 * @param email
 	 * @param captchaType
+	 * @param clientSessionId - the session id the widget was rendered with
+	 *   (`data-sessionid` / `renderOptions.sessionId`). When supplied, the
+	 *   provider only verifies the token if the solve carries the same value.
 	 */
 	public async verifyProvider(
 		token: string,
@@ -100,6 +136,7 @@ export class ProsopoServer {
 		ip?: string,
 		email?: string,
 		captchaType?: CaptchaType,
+		clientSessionId?: string,
 	): Promise<VerificationResponse> {
 		this.logger.info(() => ({
 			data: { providerUrl, captchaType: captchaType ?? "legacy" },
@@ -128,6 +165,7 @@ export class ProsopoServer {
 					user,
 					ip,
 					email,
+					clientSessionId,
 				),
 			[CaptchaType.pow]: () =>
 				providerApi.submitPowCaptchaVerify(
@@ -136,6 +174,7 @@ export class ProsopoServer {
 					user,
 					ip,
 					email,
+					clientSessionId,
 				),
 			[CaptchaType.image]: () =>
 				providerApi.verifyDappUser(
@@ -145,8 +184,32 @@ export class ProsopoServer {
 					timeouts.image.cachedTimeout,
 					ip,
 					email,
+					clientSessionId,
 				),
 		};
+
+		if (captchaType === CaptchaType.authenticated) {
+			// Web Bot Auth fast-path — the token was minted for a request that
+			// already cleared cryptographic signer verification, so there is no
+			// captcha to solve and no bot score to reason about. Freshness
+			// piggybacks on the PoW timeout (same order of magnitude, no need
+			// for a separate config value). `ip` is mandatory server-side and
+			// enforced there; passed through here as-is so the provider can
+			// return API.AUTHENTICATED_IP_REQUIRED with a real error label
+			// rather than a generic "verify failed".
+			const authenticatedTimeout = this.config.timeouts.pow.cachedTimeout;
+			if (!this.isRecent(timestamp, authenticatedTimeout, "Authenticated")) {
+				return this.notRecentResponse();
+			}
+			return await providerApi.submitAuthenticatedCaptchaVerify(
+				token,
+				signatureHex,
+				user,
+				ip,
+				email,
+				clientSessionId,
+			);
+		}
 
 		if (isChallengeCaptchaType(captchaType)) {
 			const { timeout, label } = VERIFY_RECENCY[captchaType];
@@ -184,6 +247,7 @@ export class ProsopoServer {
 				user,
 				ip,
 				email,
+				clientSessionId,
 			);
 		}
 		const imageTimeout = this.config.timeouts.image.cachedTimeout;
@@ -197,6 +261,7 @@ export class ProsopoServer {
 			timeouts.image.cachedTimeout,
 			ip,
 			email,
+			clientSessionId,
 		);
 	}
 
@@ -227,11 +292,13 @@ export class ProsopoServer {
 	 * @param token
 	 * @param ip
 	 * @param email
+	 * @param clientSessionId - see `verifyProvider`
 	 */
 	public async isVerified(
 		token: ProcaptchaToken,
 		ip?: string,
 		email?: string,
+		clientSessionId?: string,
 	): Promise<VerificationResponse> {
 		try {
 			const payload = decodeProcaptchaOutput(token);
@@ -239,8 +306,17 @@ export class ProsopoServer {
 			const { providerUrl, challenge, timestamp, user, captchaType } =
 				ProcaptchaOutputSchema.parse(payload);
 
-			// check provides URL is valid
-			const providers = await loadBalancer(this.config.defaultEnvironment);
+			// Detect which section of the provider list this token was
+			// minted against — dual-stack, `ipv4`, or `ipv6` — and load
+			// only that section. The single-stack sections carry sub-zone
+			// URLs (`https://ipv4.pronode15.prosopo.io`), so an exact-string
+			// `find` against the dual-stack default would miss and the
+			// lambda would emit `Provider not found`. See `detectIpMode`.
+			const ipMode = detectIpMode(providerUrl);
+			const providers = await loadBalancer(
+				this.config.defaultEnvironment,
+				ipMode,
+			);
 
 			// find the provider by URL in providers
 			const provider = providers.find((p) => p.url === providerUrl);
@@ -266,6 +342,7 @@ export class ProsopoServer {
 				ip,
 				email,
 				captchaType,
+				clientSessionId,
 			);
 
 			this.logger.info(() => ({

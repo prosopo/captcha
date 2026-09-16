@@ -47,10 +47,12 @@ export default function navigationInjector(): Plugin {
 			frictionless: {
 				implicit: { path: "frictionless-implicit.html", exists: true },
 				explicit: { path: "frictionless-explicit.html", exists: true },
+				manual: { path: "frictionless-manual-start.html", exists: true },
 			},
 			puzzle: {
 				implicit: { path: "puzzle-implicit.html", exists: true },
 				explicit: { path: "puzzle-explicit.html", exists: true },
+				bound: { path: "puzzle-bind-explicit.html", exists: true },
 			},
 		},
 		invisible: {
@@ -87,13 +89,16 @@ export default function navigationInjector(): Plugin {
         padding: 0;
         margin-bottom: 20px;
         transition: all 0.3s ease;
-        overflow: hidden;
-        max-height: 500px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        max-height: 90vh;
         box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
       }
       .nav-topbar.collapsed {
         max-height: 60px;
+        overflow: hidden;
       }
       .nav-container {
         max-width: 1200px;
@@ -272,12 +277,6 @@ export default function navigationInjector(): Plugin {
       }
       
       @media (max-width: 480px) {
-        .nav-topbar {
-          max-height: 60px;
-        }
-        .nav-topbar.collapsed {
-          max-height: 60px;
-        }
         .nav-title {
           font-size: 1rem;
         }
@@ -372,8 +371,11 @@ export default function navigationInjector(): Plugin {
         const navHeader = document.getElementById('nav-header');
         const isMobile = window.innerWidth <= 768;
         
-        // Check if navigation was previously collapsed
-        const navCollapsed = localStorage.getItem('navCollapsed') === 'true';
+        // Check if navigation was previously collapsed. On mobile default to
+        // collapsed on the first visit so the nav does not dominate the
+        // viewport; on desktop default to expanded.
+        const storedCollapsed = localStorage.getItem('navCollapsed');
+        const navCollapsed = storedCollapsed === null ? isMobile : storedCollapsed === 'true';
         if (navCollapsed) {
           navBar.classList.add('collapsed');
         }
@@ -530,7 +532,9 @@ export default function navigationInjector(): Plugin {
 
 				// Inject navigation after <body> tag and script before </body>
 				if (html.includes("<body>") && html.includes("</body>")) {
+					const viewportMeta = `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`;
 					return html
+						.replace("<head>", `<head>\n    ${viewportMeta}`)
 						.replace("</head>", `${navStyle}</head>`)
 						.replace("<body>", `<body>\n${navHtml}`)
 						.replace("</body>", `${navScript}\n</body>`);

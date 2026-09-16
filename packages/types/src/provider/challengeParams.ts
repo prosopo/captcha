@@ -43,12 +43,11 @@ export type ChallengeParams =
 	  }
 	| {
 			type: CaptchaType.puzzle;
-			// Pixel tolerance the solution is judged against. Currently unset at
-			// session-creation time: the puzzle flow resolves tolerance from the
-			// client record when the challenge itself is issued
-			// (`getPuzzleCaptchaChallenge`), not when the session is minted.
-			// Present so a later change can record the resolved value without
-			// another schema migration.
+			// Pixel tolerance the solution is judged against. Set at
+			// session-creation time only when the routing machine chose an
+			// override (mirrors the flat `puzzleTolerance`); otherwise the puzzle
+			// flow resolves it from the client record when the challenge itself
+			// is issued (`getPuzzleCaptchaChallenge`).
 			tolerance?: number;
 	  };
 

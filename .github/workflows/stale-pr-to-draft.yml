@@ -1,0 +1,115 @@
+name: stale-pr-to-draft
+
+# Converts inactive non-draft PRs back to draft.
+#
+# The point is not tidiness, it is runner capacity. A non-draft PR keeps
+# reporting checks and, whenever its branch moves, launches a full CI run on a
+# fleet that is the scarce resource here. Re-drafting a PR nobody has touched
+# for a day stops that, and the `converted_to_draft` trigger added to the other
+# workflows makes the transition cancel whatever that PR still has in flight.
+# Marking it ready again with `gh pr ready` restores everything.
+
+on:
+  schedule:
+    # Every 6 hours. The cadence has to be well inside the staleness threshold
+    # or the threshold does not mean what it says: on a daily run a PR touched
+    # at 07:01 is not looked at until 07:00 the next day, is then 23h59m old,
+    # survives, and only gets drafted the day after -- an effective threshold of
+    # up to ~48h against a stated 24h. At 6-hourly the worst-case overshoot is
+    # 6h. Nothing depends on the exact times.
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Log which PRs would be drafted without changing anything"
+        type: boolean
+        default: true
+      stale-days:
+        description: "Days without an update before a PR counts as stale"
+        type: string
+        default: "1"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  draft-stale:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Deliberately hosted, not the self-hosted fleet: this workflow exists to
+      # free fleet capacity, and it does nothing but call the API.
+      - name: Convert stale PRs to draft
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # A scheduled run has no inputs, so these fall back rather than being
+          # empty. Scheduled runs are never dry — the manual path is the one for
+          # looking before leaping.
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run || 'false' }}
+          # Both defaults have to agree: a scheduled run supplies no inputs and
+          # takes this fallback, so changing only the workflow_dispatch default
+          # above would leave every real run on the old threshold.
+          STALE_DAYS: ${{ inputs.stale-days || '1' }}
+        run: |
+          set -euo pipefail
+
+          cutoff=$(date -u -d "-${STALE_DAYS} days" +%Y-%m-%dT%H:%M:%SZ)
+          echo "Cutoff: $cutoff (updatedAt older than this is stale)"
+
+          # updatedAt, not createdAt: a long-lived PR that is still being worked
+          # on is not stale, and an old-but-active one is exactly what we must
+          # not touch.
+          #
+          # Exclusions, each for its own reason:
+          #   isDraft            already draft, nothing to do
+          #   autoMergeRequest   the PR is actively trying to land; drafting it
+          #                      would silently cancel that (converting to draft
+          #                      disables auto-merge, and re-readying does not
+          #                      restore it)
+          #   reviewDecision     an approved PR is waiting on a human to merge,
+          #                      not abandoned
+          #   keep-ready label   the manual opt-out
+          gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 200 \
+            --json number,title,updatedAt,isDraft,autoMergeRequest,reviewDecision,labels,author \
+            > prs.json
+
+          jq -r --arg cutoff "$cutoff" '
+            .[]
+            | select(.isDraft            | not)
+            | select(.autoMergeRequest   == null)
+            | select(.reviewDecision     != "APPROVED")
+            | select([.labels[].name] | index("keep-ready") | not)
+            | select(.updatedAt < $cutoff)
+            | [.number, .updatedAt, .author.login, .title] | @tsv
+          ' prs.json > stale.tsv
+
+          count=$(wc -l < stale.tsv)
+          echo "Stale PRs: $count"
+          cat stale.tsv
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "Dry run — no PRs changed."
+            exit 0
+          fi
+
+          while IFS=$'\t' read -r number updated author title; do
+            [ -n "$number" ] || continue
+            echo "Drafting #$number (last updated $updated)"
+            # Comment first. A PR that goes draft with no explanation reads as a
+            # bug, and if the conversion fails we would rather have said nothing
+            # than explained something that did not happen — so comment, then
+            # convert, and let a failure here stop the loop via set -e.
+            # printf, not an indented multi-line string: YAML block scalars keep
+            # the leading whitespace and it shows up in the posted comment.
+            body=$(printf '%s\n\n%s\n\n%s' \
+              "No updates since \`$updated\` (over $STALE_DAYS days), so this PR has been converted to draft. That stops it holding CI runners." \
+              "Nothing is lost — \`gh pr ready $number\`, or the \"Ready for review\" button, picks it straight back up. Add the \`keep-ready\` label to exempt it permanently." \
+              "Converting to draft disables auto-merge, so PRs with auto-merge enabled are excluded from this entirely.")
+            gh pr comment "$number" --repo "$GITHUB_REPOSITORY" --body "$body"
+            gh pr ready "$number" --repo "$GITHUB_REPOSITORY" --undo
+          done < stale.tsv

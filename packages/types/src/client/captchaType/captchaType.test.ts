@@ -24,14 +24,16 @@ import {
 } from "./captchaType.js";
 
 describe("challenge captcha types", () => {
-	it("covers every enum member except frictionless", () => {
-		// Frictionless is the router, not a challenge — if a new challenge is
-		// added to the enum without being added to CHALLENGE_CAPTCHA_TYPES,
-		// this catches it.
+	it("covers every enum member except frictionless and authenticated", () => {
+		// Frictionless is the router and authenticated is a pre-verified
+		// pass-through; neither is a challenge. If a new challenge is added to
+		// the enum without being added to CHALLENGE_CAPTCHA_TYPES, this catches
+		// it.
 		expect(new Set(CHALLENGE_CAPTCHA_TYPES)).toEqual(
 			new Set(
 				Object.values(CaptchaType).filter(
-					(t) => t !== CaptchaType.frictionless,
+					(t) =>
+						t !== CaptchaType.frictionless && t !== CaptchaType.authenticated,
 				),
 			),
 		);

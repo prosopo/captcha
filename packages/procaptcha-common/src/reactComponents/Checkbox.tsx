@@ -17,12 +17,15 @@ import styled from "@emotion/styled";
 import {
 	type Theme,
 	WIDGET_CHECKBOX_SPINNER_CSS_CLASS,
+	withAlpha,
 } from "@prosopo/widget-skeleton";
 import {
 	type ButtonHTMLAttributes,
 	type CSSProperties,
 	type FC,
+	useEffect,
 	useMemo,
+	useRef,
 	useState,
 } from "react";
 import { isEventTrusted } from "../events/trust.js";
@@ -35,6 +38,8 @@ interface CheckboxProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	labelText: string;
 	error?: string;
 	loading: boolean;
+	/** Name for the spinner that stands in for the box while it is working. */
+	loadingText?: string;
 }
 
 const checkboxBefore = css`{
@@ -46,23 +51,46 @@ const checkboxBefore = css`{
     }
 }`;
 
+// In forced-colors mode (Windows High Contrast) backgrounds are overridden, so
+// the custom-painted tick can disappear — fall back to the native control,
+// which the OS draws in system colors. !important beats the inline styles.
+const checkboxForcedColors = css`
+	@media (forced-colors: active) {
+		appearance: auto !important;
+		background-image: none !important;
+	}
+`;
+
+// 28px container with a 2dp stroke, centred in a 58px touch target. Larger
+// than the 18dp M3 checkbox spec — kept at the original size deliberately, as
+// the widget needs a more prominent target than a form checkbox.
+const CHECKBOX_SIZE = "28px";
+
 const baseStyle: CSSProperties = {
-	width: "28px",
-	height: "28px",
-	minWidth: "14px",
-	minHeight: "14px",
+	width: CHECKBOX_SIZE,
+	height: CHECKBOX_SIZE,
+	minWidth: CHECKBOX_SIZE,
+	minHeight: CHECKBOX_SIZE,
 	top: "auto",
 	left: "auto",
 	opacity: "1",
-	borderRadius: "12.5%",
 	appearance: "none",
 	cursor: "pointer",
 	margin: "0",
 	borderStyle: "solid",
-	borderWidth: "1px",
+	borderWidth: "2px",
 };
 
 const ID_LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+/**
+ * Whether nothing on the page holds focus, which is where the browser leaves it
+ * when the focused element is removed.
+ */
+const focusIsStranded = (element: HTMLElement): boolean => {
+	const { activeElement, body } = element.ownerDocument;
+	return activeElement === null || activeElement === body;
+};
 
 const FAQ_LINK = process.env.PROSOPO_DOCS_URL
 	? `${new URL(`${process.env.PROSOPO_DOCS_URL}/en/basics/faq/`).href}/`
@@ -86,15 +114,49 @@ export const Checkbox: FC<CheckboxProps> = ({
 	labelText,
 	error,
 	loading,
+	loadingText = "Checking that you are human",
 }: CheckboxProps) => {
-	const checkboxStyleBase: CSSProperties = {
-		...baseStyle,
-		border: `1px solid ${theme.palette.background.contrastText}`,
-	};
 	const [hover, setHover] = useState(false);
+	const inputRef = useRef<HTMLInputElement>(null);
+	const spinnerRef = useRef<HTMLDivElement>(null);
+	// Removing a focused element drops focus to the body without firing blur,
+	// so this survives the swap and says whether the swap cost the user their
+	// place on the page.
+	const hadFocus = useRef(false);
+
+	// The spinner replaces the box in the DOM rather than covering it, which
+	// strands a keyboard user at the top of the page for as long as the check
+	// runs, with nothing said about why the box vanished. Handing focus across
+	// the swap and back keeps them where they were and gets each side's name
+	// read out as it arrives.
+	//
+	// Only focus the swap itself stranded is claimed back. The check lasts as
+	// long as the network does, and a user who spent that time moving on to the
+	// host page's own fields would otherwise be dragged out of them, mid
+	// keystroke, by a widget they had finished with.
+	useEffect(() => {
+		if (!hadFocus.current) return;
+		const target = loading ? spinnerRef.current : inputRef.current;
+		if (!target || !focusIsStranded(target)) return;
+		target.focus();
+	}, [loading]);
+
+	// M3 focus indicator: a 3dp outline offset by 2dp, drawn only for keyboard
+	// focus. The control previously had no focus affordance at all.
+	const checkboxFocus = useMemo(
+		() => css`
+			&:focus-visible {
+				outline: 3px solid ${theme.palette.primary.main};
+				outline-offset: 2px;
+			}
+		`,
+		[theme],
+	);
 
 	const ResponsiveLabel = styled.label<ResponsiveLabelProps>`
-		color: ${theme.palette.background.contrastText};
+		/* The label sits on the widget surface, so it takes onSurface — not the
+		   dialog container's on-colour. */
+		color: ${theme.palette.onSurface};
 		position: relative;
 		display: flex !important;
 		cursor: pointer;
@@ -118,18 +180,37 @@ export const Checkbox: FC<CheckboxProps> = ({
 		}
 	`;
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: TODO fix
 	const checkboxStyle: CSSProperties = useMemo(() => {
+		// White (token) tick painted directly onto the box so the checked state is
+		// identical in light and dark mode — the native control can't be themed.
+		const tickColor = encodeURIComponent(theme.palette.checkbox.tick);
+		const checkImage = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='${tickColor}' d='M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E")`;
+		// M3 hover feedback is a state layer — the on-colour at 8% expressed as a
+		// spread ring around the container — not a change of stroke colour.
+		const stateLayerColor = checked
+			? theme.palette.checkbox.fill
+			: theme.palette.onSurface;
 		return {
-			...checkboxStyleBase,
-			borderColor: hover
-				? theme.palette.background.contrastText
-				: theme.palette.border,
-			appearance: checked ? "auto" : "none",
-			flex: 1,
+			...baseStyle,
+			// 15px each side around a 28px box gives a 58px touch target.
 			margin: "15px",
-			minWidth: "28px",
-			minHeight: "28px",
+			borderRadius: theme.shape.checkbox,
+			borderColor: checked
+				? theme.palette.checkbox.fill
+				: theme.palette.checkbox.border,
+			backgroundColor: checked
+				? theme.palette.checkbox.fill
+				: theme.palette.surface,
+			backgroundImage: checked ? checkImage : "none",
+			backgroundRepeat: "no-repeat",
+			backgroundPosition: "center",
+			// Tick inset within the 28px container.
+			backgroundSize: "20px 20px",
+			boxShadow: hover
+				? `0 0 0 10px ${withAlpha(stateLayerColor, theme.stateLayer.hover)}`
+				: "none",
+			transition:
+				"background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
 		};
 	}, [hover, theme, checked]);
 	const id = generateRandomId();
@@ -144,18 +225,30 @@ export const Checkbox: FC<CheckboxProps> = ({
 		>
 			{loading ? (
 				<div
+					ref={spinnerRef}
 					className={WIDGET_CHECKBOX_SPINNER_CSS_CLASS}
-					aria-label="Loading spinner"
+					role="status"
+					// Focusable only programmatically: it stands in for the input it
+					// replaced, so the name below is what a screen reader reads when
+					// focus is handed over.
+					tabIndex={-1}
+					aria-label={loadingText}
 				/>
 			) : (
 				<input
+					ref={inputRef}
 					name={id}
 					id={id}
 					onMouseEnter={() => setHover(true)}
 					onMouseLeave={() => setHover(false)}
-					css={checkboxBefore}
+					onFocus={() => {
+						hadFocus.current = true;
+					}}
+					onBlur={() => {
+						hadFocus.current = false;
+					}}
+					css={[checkboxBefore, checkboxForcedColors, checkboxFocus]}
 					type={"checkbox"}
-					aria-live={"assertive"}
 					aria-label={labelText}
 					onKeyDown={(e) => {
 						if (!isEventTrusted(e)) {
@@ -185,10 +278,14 @@ export const Checkbox: FC<CheckboxProps> = ({
 				/>
 			)}
 			{error ? (
-				<ResponsiveLabel htmFor={id}>
+				<ResponsiveLabel
+					htmFor={id}
+					style={{ userSelect: "text", cursor: "text" }}
+				>
 					<a
 						css={{
 							color: theme.palette.error.main,
+							userSelect: "text",
 						}}
 						href={FAQ_LINK}
 					>

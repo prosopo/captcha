@@ -9,6 +9,12 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=root
       - MONGO_INITDB_DATABASE=prosopo
+    # Cap the json log file so a chatty container can't fill the host disk.
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
   redis-stack:
     container_name: redis-stack
     # unlike "redis/redis-stack-server" this image includes Insights
@@ -21,3 +27,9 @@ services:
       - '8001:8001' # Insight tool
     environment:
       - REDIS_ARGS=--requirepass root
+    # Cap the json log file so a chatty container can't fill the host disk.
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'

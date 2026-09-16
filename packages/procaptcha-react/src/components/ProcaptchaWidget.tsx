@@ -41,6 +41,14 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	const [state, updateState] = useProcaptcha(useState, useRef);
 	const [loading, setLoading] = useState(false);
 	const hpRef = useRef<HTMLInputElement>(null);
+	// Read at call time rather than captured, so a wrapper that re-renders
+	// with a new handler is still the one the reload button reaches.
+	const onReloadRef = useRef(props.onReload);
+	onReloadRef.current = props.onReload;
+	// Whether the reload button is delegated is decided at mount: handing the
+	// manager a handler the wrapper never supplied would leave reload with
+	// nothing to re-mint the challenge with.
+	const delegatesReload = useRef(Boolean(props.onReload));
 	// Held in a ref so the closure variables that capture the checkbox
 	// click coords (set on start) survive across re-renders and are
 	// still in scope when submit() runs. PoW and Puzzle widgets do the
@@ -55,6 +63,9 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 			callbacks,
 			frictionlessState,
 			() => hpRef.current?.value || undefined,
+			delegatesReload.current
+				? (x?: number, y?: number) => onReloadRef.current?.(x, y)
+				: undefined,
 		),
 	);
 	// See procaptcha-pow ProcaptchaWidget — same session-invalidation
@@ -128,24 +139,42 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 
 		document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
 
+		// A targeted execute() is dispatched on the container, not document.
+		const container = props.container;
+		container?.addEventListener(PROCAPTCHA_EXECUTE_EVENT, handleExecuteEvent);
+
 		// Cleanup function to remove event listener
 		return () => {
 			document.removeEventListener(
 				PROCAPTCHA_EXECUTE_EVENT,
 				handleExecuteEvent,
 			);
+			container?.removeEventListener(
+				PROCAPTCHA_EXECUTE_EVENT,
+				handleExecuteEvent,
+			);
 		};
-	}, [state.challenge, updateState]);
+	}, [state.challenge, updateState, props.container]);
 
 	const honeypot = frictionlessState?.hp ? (
 		<Honeypot ref={hpRef} encodedQuestion={frictionlessState.hp} />
 	) : null;
 
+	const imageDialogLabel = t("WIDGET.IMAGE_DIALOG_LABEL", {
+		defaultValue: "Image challenge",
+	});
+
 	if (config.mode === "invisible") {
 		return (
 			<>
 				{honeypot}
-				<Modal show={state.showModal}>
+				<Modal
+					show={state.showModal}
+					placement={config.placement}
+					anchor={props.container}
+					onDismiss={manager.current.cancel}
+					dialogLabel={imageDialogLabel}
+				>
 					{state.challenge ? (
 						<CaptchaComponent
 							challenge={state.challenge}
@@ -167,7 +196,13 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 	return (
 		<div className={"image-captcha"}>
 			{honeypot}
-			<Modal show={state.showModal}>
+			<Modal
+				show={state.showModal}
+				placement={config.placement}
+				anchor={props.container}
+				onDismiss={manager.current.cancel}
+				dialogLabel={imageDialogLabel}
+			>
 				{state.challenge ? (
 					<CaptchaComponent
 						challenge={state.challenge}
@@ -227,6 +262,9 @@ const ProcaptchaWidget = (props: ProcaptchaProps) => {
 				labelText={isTranslationReady ? t("WIDGET.I_AM_HUMAN") : ""}
 				error={state.error?.message}
 				aria-label="human checkbox"
+				loadingText={t("WIDGET.CHECKING", {
+					defaultValue: "Checking that you are human",
+				})}
 				loading={loading}
 			/>
 		</div>

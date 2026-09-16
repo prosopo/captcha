@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/locale",
-	"version": "3.2.9",
+	"version": "3.4.2",
 	"description": "Prosopo locale library",
 	"type": "module",
 	"engines": {
@@ -32,20 +32,20 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"i18next": "24.2.2",
-		"i18next-browser-languagedetector": "8.0.2",
+		"i18next": "26.4.2",
+		"i18next-browser-languagedetector": "8.2.1",
 		"i18next-chained-backend": "4.6.2",
-		"i18next-fs-backend": "2.6.6",
+		"i18next-fs-backend": "2.6.8",
 		"i18next-http-backend": "3.0.2",
-		"i18next-http-middleware": "3.9.7",
-		"i18next-resources-to-backend": "1.2.1",
-		"react-i18next": "15.4.0",
+		"i18next-http-middleware": "3.9.9",
+		"i18next-resources-to-backend": "1.2.3",
+		"react-i18next": "17.0.13",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.7",
+		"@prosopo/config": "3.3.16",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "4.1.10",
+		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"dotenv": "16.4.5",
@@ -54,7 +54,7 @@
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
 		"vite": "8.1.5",
-		"vitest": "4.1.10"
+		"vitest": "4.1.11"
 	},
 	"repository": {
 		"type": "git",

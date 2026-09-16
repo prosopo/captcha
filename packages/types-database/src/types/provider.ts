@@ -153,6 +153,16 @@ export const CompositeIpAddressRecordSchemaObj = {
  * d: Device capability string
  */
 
+// Widget-controlled metadata (see `ClientMetaData` in @prosopo/types). Shared
+// by the three captcha-record schemas and the session record so a new field
+// only has to be added once. `clientSessionId` is the site's own session id,
+// supplied at render time via `data-sessionid`; the verify endpoints correlate
+// it against the value the dapp server sends.
+export const ClientMetaDataRecordSchemaObj = {
+	hp: { type: String, required: false },
+	clientSessionId: { type: String, required: false },
+};
+
 export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
 export type PuzzleCaptchaRecord = mongoose.Document & PuzzleCaptchaStored;
@@ -239,7 +249,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		required: false,
 	},
 	clientMetaData: {
-		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
+		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
 		required: false,
 	},
 	headers: { type: Object, required: true },
@@ -318,12 +328,17 @@ PoWCaptchaRecordSchema.index(
 		},
 	},
 );
-// Tiny partial index serving the StoreCommitmentsExternal sweep. Only
-// records with `pendingStage: true` are indexed — typically a small
-// rolling set — so the query examines only the pending rows instead of
-// scanning the whole powcaptchas collection.
+// Compound partial index serving the StoreCommitmentsExternal sweep. Only
+// records with `pendingStage: true` are indexed and the `_id` component
+// preserves sort ordering, so the paginated sweep can use ONE index for
+// both the filter AND the `sort({_id:1})` without falling back to the
+// `_id` index (which would then filter `pendingStage:true` in memory,
+// touching the whole collection). The keyset sweep in
+// `getUnstoredDappUserPoWCommitments` compares `_id > afterId` on this
+// index directly. Old callers passing `skip(N)` still work but are O(N)
+// on the pending set only — much smaller than the collection scan.
 PoWCaptchaRecordSchema.index(
-	{ pendingStage: 1 },
+	{ pendingStage: 1, _id: 1 },
 	{
 		name: "pendingStage_partial",
 		partialFilterExpression: { pendingStage: true },
@@ -393,7 +408,7 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 		required: false,
 	},
 	clientMetaData: {
-		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
+		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
 		required: false,
 	},
 	headers: { type: Object, required: true },
@@ -441,8 +456,10 @@ PuzzleCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
 PuzzleCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
 PuzzleCaptchaRecordSchema.index({ ipInfo: 1 });
 PuzzleCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
+// Compound `{pendingStage:1, _id:1}` partial — see PoWCaptchaRecordSchema's
+// pendingStage_partial for rationale.
 PuzzleCaptchaRecordSchema.index(
-	{ pendingStage: 1 },
+	{ pendingStage: 1, _id: 1 },
 	{
 		name: "pendingStage_partial",
 		partialFilterExpression: { pendingStage: true },
@@ -500,7 +517,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		required: false,
 	},
 	clientMetaData: {
-		type: new Schema({ hp: { type: String, required: false } }, { _id: false }),
+		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
 		required: false,
 	},
 	headers: { type: Object, required: true },
@@ -559,6 +576,15 @@ UserCommitmentRecordSchema.index({
 	lastUpdatedTimestamp: 1,
 });
 UserCommitmentRecordSchema.index({ userAccount: 1, dappAccount: 1 });
+// Compound for the anomaly-detector top-level match
+// (`{dappAccount: {$in: [...]}, requestedAtTimestamp: {$gte, $lt}}` followed
+// by `{$sort: {requestedAtTimestamp: -1}}`). Mirrors the equivalent index on
+// `PoWCaptchaRecordSchema` / `PuzzleCaptchaRecordSchema`; without it, the
+// query planner falls back to a range scan on `{requestedAtTimestamp}` and
+// FETCH-filters every doc by `dappAccount` — measured 2.7× wasted docs on a
+// 1h window for a single high-share tenant, degrades linearly with window
+// length and inversely with tenant share.
+UserCommitmentRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.lower": 1 });
 UserCommitmentRecordSchema.index({ "ipAddress.upper": 1 });
 UserCommitmentRecordSchema.index({ "result.reason": 1 });
@@ -568,8 +594,12 @@ UserCommitmentRecordSchema.index({ requestHash: -1 });
 UserCommitmentRecordSchema.index({ pending: 1 });
 UserCommitmentRecordSchema.index({ ipInfo: 1 });
 UserCommitmentRecordSchema.index({ parsedUserAgentInfo: 1 });
+// Compound `{pendingStage:1, _id:1}` partial — see PoWCaptchaRecordSchema's
+// pendingStage_partial for rationale. Fixes the runaway
+// `getUnstoredDappUserCommitments` sweep that was choosing the plain `_id: 1`
+// index and scanning ~1M docs per page under a large pending backlog.
 UserCommitmentRecordSchema.index(
-	{ pendingStage: 1 },
+	{ pendingStage: 1, _id: 1 },
 	{
 		name: "pendingStage_partial",
 		partialFilterExpression: { pendingStage: true },
@@ -698,10 +728,16 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	mode: { type: String, enum: ModeEnum, required: false },
 	solvedImagesCount: { type: Number, required: false },
 	powDifficulty: { type: Number, required: false },
+	// Puzzle render overrides chosen by the routing machine. Stored as a
+	// free-form subdocument so the shape stays in step with
+	// PuzzleSettingsSchema without a second place to update — the value is
+	// already validated by RoutingMachineOutputSchema before it gets here.
+	puzzleTolerance: { type: Number, required: false },
+	puzzle: { type: Object, required: false },
 	// Discriminated per-challenge params. Declared as a loose subdocument
 	// because the shape varies by `challengeParams.type`; the zod
 	// `ChallengeParamsSchema` on `@prosopo/types` is the validating contract.
-	// Dual-written with the two flat fields above during the migration.
+	// Dual-written with the flat fields above during the migration.
 	challengeParams: { type: Schema.Types.Mixed, required: false },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
@@ -746,6 +782,14 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	ruleHash: { type: String, required: false },
 	ruleType: { type: [String], required: false },
 	ruleDescription: { type: String, required: false },
+	// The matched rule itself, denormalised at enforcement time. Written by
+	// every access-policy path (block middleware, frictionless entry, and the
+	// verify-time hard-block check) — not just the middleware — so the audit
+	// page can name the exact policy that acted on a request after the rule
+	// itself has expired. Mixed rather than a sub-schema: the shape is owned
+	// by MatchedAccessRuleSchema in @prosopo/types, which validates on the
+	// way in, and a second mongoose-side definition would only drift from it.
+	matchedRule: { type: Schema.Types.Mixed, required: false },
 	// Full ipinfo payload — replaces flat `countryCode` / `geolocation`
 	// fields. Mirrors the captcha record schemas (PoW / Puzzle /
 	// UserCommitment).
@@ -768,6 +812,13 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	},
 	userSubmitted: { type: Boolean, required: false },
 	serverChecked: { type: Boolean, required: false },
+	// Web Bot Auth: true on sessions issued to a verified Ed25519 signer.
+	// Boolean shortcut; the full Signature-Agent URL is on webBotAuthAgent.
+	agent: { type: Boolean, required: false },
+	// Verified Signature-Agent URL (e.g. "https://chatgpt.com"). Presence
+	// on a session makes the `/verify` path require the operator to pass
+	// `ip` and enforces `session.ipAddress === ip` for replay defence.
+	webBotAuthAgent: { type: String, required: false },
 	// WASM SIMD CPU fingerprint readings collected by the catcher client.
 	// Stored as a free-form Mixed sub-document because the shape is a
 	// discriminated union and the dataset is still evolving — Zod validates
@@ -781,11 +832,39 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	entropyWallClockOffsetMs: { type: Number, required: false },
 	entropyMathRandomFirst: { type: Number, required: false },
 	g: { type: String, required: false },
+	i: { type: Boolean, required: false },
+	cv: { type: Number, required: false },
+	sq: { type: Number, required: false },
+	cg: { type: String, required: false },
+	sm: { type: String, required: false },
+	dz: { type: String, required: false },
+	b: { type: Schema.Types.Mixed, required: false },
+	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
+	// classifier folds into `webView` (see @prosopo/types Session for
+	// per-key semantics). Persisted so server-side rules can retune
+	// the aggregation from live traffic without a catcher release.
+	sw: { type: Boolean, required: false },
+	md: { type: Boolean, required: false },
+	bn: { type: Boolean, required: false },
+	fs: { type: Boolean, required: false },
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// See @prosopo/types Session.tcpToChelloUs for full semantics.
 	tcpToChelloUs: { type: Number, required: false },
 	chelloToHandshakeUs: { type: Number, required: false },
+	// Raw per-connection TCP-handshake signals forwarded by chaddy from
+	// its co-located tcp-probe eBPF sidecar. Wire-observed primitives
+	// (RFC-793 / RFC-9293) — see @prosopo/types Session for full schema.
+	// Undefined on sessions that came in without the tcp-probe pipeline.
+	synNs: { type: Number, required: false },
+	synackNs: { type: Number, required: false },
+	ackNs: { type: Number, required: false },
+	observedTtl: { type: Number, required: false },
+	tcpMss: { type: Number, required: false },
+	tcpWscale: { type: Number, required: false },
+	tcpOptsFlags: { type: Number, required: false },
+	tcpOptsOrder: { type: Number, required: false },
+	tcpWindow: { type: Number, required: false },
 	// DNS observation merge target. Populated by
 	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
 	// sidecar (see types/provider/database.ts → Session.dnsEvent).
@@ -801,6 +880,14 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		),
 		required: false,
 	},
+	// Site-owner metadata the widget was rendered with — see
+	// `Session.clientMetaData`. Mirrored up from the captcha record so the
+	// session row carries the same `clientSessionId` the verify call
+	// correlates against.
+	clientMetaData: {
+		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
+		required: false,
+	},
 } satisfies AllKeys<Session>);
 
 SessionRecordSchema.index({ createdAt: 1 });
@@ -814,6 +901,10 @@ SessionRecordSchema.index(
 );
 SessionRecordSchema.index({ token: 1 });
 SessionRecordSchema.index({ siteKey: 1 }, { background: true, sparse: true });
+// Per-IP session lookups. Already present in production, created by hand;
+// declaring it here so every environment gets it and the lookups stay index
+// point-lookups rather than dropping to a collection scan.
+SessionRecordSchema.index({ siteKey: 1, "ipInfo.ip": 1 }, { background: true });
 // Traffic-page aggregations group blocked-session records by rule. Sparse
 // so legit sessions (no rule fields) don't bloat the index.
 SessionRecordSchema.index(
@@ -848,10 +939,10 @@ SessionRecordSchema.index(
 	{ "result.status": 1 },
 	{ background: true, sparse: true },
 );
-// See PoWCaptchaRecordSchema's pendingStage_partial — same purpose for
-// the unstored-session sweep.
+// Compound `{pendingStage:1, _id:1}` partial — see PoWCaptchaRecordSchema's
+// pendingStage_partial for rationale.
 SessionRecordSchema.index(
-	{ pendingStage: 1 },
+	{ pendingStage: 1, _id: 1 },
 	{
 		name: "pendingStage_partial",
 		partialFilterExpression: { pendingStage: true },
@@ -913,6 +1004,21 @@ export const ClientContextEntropyRecordSchema =
 				required: true,
 			},
 			entropy: { type: String, required: true },
+			totalSessions: { type: Number, required: false },
+			distinctHashes: { type: Number, required: false },
+			urls: {
+				type: [
+					new Schema(
+						{
+							url: { type: String, required: true },
+							sessions: { type: Number, required: true },
+							entropy: { type: String, required: true },
+						},
+						{ _id: false },
+					),
+				],
+				required: false,
+			},
 		},
 		{ timestamps: { createdAt: true, updatedAt: true } },
 	);
@@ -920,6 +1026,162 @@ ClientContextEntropyRecordSchema.index(
 	{ account: 1, contextType: 1 },
 	{ unique: true },
 );
+
+/**
+ * Field list for `ProviderDatabase.getSessionRecordBySessionId`.
+ *
+ * Hoisted to a `const` so the method's return type is *derived* from it — see
+ * {@link ProjectedSession}. A caller that reads a field this projection does
+ * not select now fails to compile, instead of silently receiving `undefined`
+ * at runtime.
+ *
+ * That silent failure has shipped three times: the tcp-probe fields (decide
+ * rules got `undefined` and never fired), the entropy fingerprints plus the
+ * g / i / sw / md / bn / fs flags (which disabled the origin-session fallback
+ * in `captchaManager.getSessionRecordWithOriginFallback` *and* made it issue a
+ * redundant second query on every escalation), and the router's puzzle render
+ * overrides. Adding a field to `Session` no longer implies it is readable
+ * here; it has to be added below as well, and the compiler now says so.
+ *
+ * `headers` is selected by individual key rather than as a whole blob: the
+ * flattened `req.headers` persisted at frictionless time can contain
+ * `x-tls-clienthello` (a base64-encoded full TLS ClientHello, multi-KB per
+ * session). That field is only consumed by `ja4Middleware` from the live
+ * `req.headers` at the entry point — never re-read off the persisted Session —
+ * so it just bloats every subsequent lookup. The enumerated list covers the
+ * headers `buildEscalation` forwards onto the escalation session. New headers
+ * that need to round-trip must be added here explicitly.
+ */
+export const SESSION_PROJECTION = {
+	sessionId: 1,
+	token: 1,
+	score: 1,
+	threshold: 1,
+	scoreComponents: 1,
+	ipAddress: 1,
+	ipInfo: 1,
+	webView: 1,
+	iFrame: 1,
+	isEscalation: 1,
+	decryptedHeadHash: 1,
+	siteKey: 1,
+	reason: 1,
+	mode: 1,
+	solvedImagesCount: 1,
+	// Puzzle render overrides a routing machine asked for.
+	// getPuzzleCaptchaChallenge reads these off the session to
+	// layer over the site defaults — without them projected the
+	// overrides silently never apply.
+	puzzleTolerance: 1,
+	puzzle: 1,
+	// Read by captchaManager.peek* to report the session's own
+	// difficulty alongside solvedImagesCount.
+	powDifficulty: 1,
+	// Fed into DecisionMachineInput.ruleType by the pow / image /
+	// puzzle verify paths, so decide rules can gate on which
+	// access rule matched at frictionless entry.
+	ruleType: 1,
+	// Carried onto escalation sessions by `buildEscalation` so the
+	// escalated record keeps the Protect tag.
+	isProtect: 1,
+	// Entropy fingerprints and the compact client-capability flags.
+	// Read in two places, both of which silently degraded without
+	// them: `buildEscalation` copies them onto the escalation
+	// session, and `getSessionRecordWithOriginFallback` compares
+	// them against the origin session to decide whether a second
+	// lookup is even needed. Unprojected, every one read as
+	// undefined — so the fallback always fired and always copied
+	// nothing.
+	entropyMathRandomFingerprint: 1,
+	entropyCryptoFingerprint: 1,
+	entropyWallClockOffsetMs: 1,
+	entropyMathRandomFirst: 1,
+	g: 1,
+	i: 1,
+	cv: 1,
+	sq: 1,
+	cg: 1,
+	sm: 1,
+	dz: 1,
+	b: 1,
+	sw: 1,
+	md: 1,
+	bn: 1,
+	fs: 1,
+	userSitekeyIpHash: 1,
+	simdReadings: 1,
+	bundleId: 1,
+	dnsEvent: 1,
+	originSessionId: 1,
+	currentUrl: 1,
+	iframeUrl: 1,
+	// Mirrored up from the captcha record at solve time. Projected
+	// so session-level readers see the same clientSessionId the
+	// captcha record carries.
+	clientMetaData: 1,
+	// captchaType is required by the peek-before-consume path
+	// in `CaptchaManager.isValidRequest` — without it, every
+	// escalation peek would compare `undefined !== <requested>`
+	// and forcibly return INCORRECT_CAPTCHA_TYPE on the happy
+	// path too. Keep this projection in sync with whatever
+	// fields the read-only callers need.
+	captchaType: 1,
+	// Single-use marker for the authenticated (Web Bot Auth) verify path.
+	// `verifyAuthenticatedSession` reads it to reject a token that has already
+	// been redeemed, then sets it — without the projection the check would read
+	// `undefined` and every authenticated token would verify an unlimited
+	// number of times.
+	serverChecked: 1,
+	// Raw per-connection TCP-handshake signals populated by the
+	// tcp-probe eBPF sidecar (see @prosopo/types Session for the
+	// wire semantics). The verify-time DM input surface exposes
+	// these to decide rules (e.g. `tcp-stack-dc-linux-ts-off`,
+	// `tcp-ttl-windows-ua-linux-stack`); every one of the img /
+	// pow / puzzle verify paths forwards `sessionRecord?.tcpX`
+	// into the DecisionMachineInput. Missed on the original
+	// projection: the rules got `undefined` for every field and
+	// silently never fired against real traffic even though
+	// matching sessions were sitting in the DB.
+	synNs: 1,
+	synackNs: 1,
+	ackNs: 1,
+	observedTtl: 1,
+	tcpMss: 1,
+	tcpWscale: 1,
+	tcpOptsFlags: 1,
+	tcpOptsOrder: 1,
+	tcpWindow: 1,
+	"headers.user-agent": 1,
+	"headers.accept": 1,
+	"headers.accept-language": 1,
+	"headers.accept-encoding": 1,
+	"headers.sec-ch-ua": 1,
+	"headers.sec-ch-ua-mobile": 1,
+	"headers.sec-ch-ua-platform": 1,
+	"headers.sec-ch-ua-platform-version": 1,
+	"headers.sec-fetch-dest": 1,
+	"headers.sec-fetch-mode": 1,
+	"headers.sec-fetch-site": 1,
+	"headers.sec-fetch-user": 1,
+	"headers.referer": 1,
+	"headers.origin": 1,
+	"headers.prosopo-user": 1,
+	"headers.prosopo-site-key": 1,
+	"headers.prosopo-type": 1,
+	"headers.x-tls-version": 1,
+} as const;
+
+/**
+ * The subset of `Session` that {@link SESSION_PROJECTION} actually returns.
+ *
+ * Dotted header keys are not `keyof Session`, so `Extract` drops them and
+ * `headers` is re-added whole — the projected subset still arrives under that
+ * key, just with fewer entries.
+ */
+export type ProjectedSession = Pick<
+	Session,
+	Extract<keyof typeof SESSION_PROJECTION, keyof Session> | "headers"
+>;
 
 export interface IProviderDatabase extends IDatabase {
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
@@ -1018,9 +1280,16 @@ export interface IProviderDatabase extends IDatabase {
 
 	getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]>;
 
+	/**
+	 * Keyset-paginated sweep of pending user commitments. Callers pass the
+	 * `_id` of the last row from the previous page (or omit for the first
+	 * page); the query resumes from `_id > afterId` sorted ascending. Backed
+	 * by the compound `pendingStage_partial` index — cost scales with page
+	 * size, not with total collection size.
+	 */
 	getUnstoredDappUserCommitments(
 		limit?: number,
-		skip?: number,
+		afterId?: unknown,
 	): Promise<UserCommitmentRecord[]>;
 
 	markDappUserCommitmentsStored(
@@ -1031,7 +1300,7 @@ export interface IProviderDatabase extends IDatabase {
 	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
 
 	updateDappUserCommitment(
-		commitmentId: Hash,
+		commitmentId: UserCommitment["id"],
 		updates: Partial<UserCommitment>,
 	): Promise<void>;
 
@@ -1046,9 +1315,13 @@ export interface IProviderDatabase extends IDatabase {
 		emailNormalised: string,
 	): Promise<number>;
 
+	/**
+	 * Keyset-paginated sweep of pending PoW captchas. See
+	 * {@link getUnstoredDappUserCommitments} for the resumption contract.
+	 */
 	getUnstoredDappUserPoWCommitments(
 		limit?: number,
-		skip?: number,
+		afterId?: unknown,
 	): Promise<PoWCaptchaRecord[]>;
 
 	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<void>;
@@ -1151,7 +1424,9 @@ export interface IProviderDatabase extends IDatabase {
 		updates: Partial<PuzzleCaptchaRecord>,
 	): Promise<void>;
 
-	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
+	// Accepts plain records: the client-list poll builds these from the
+	// portal's account documents and they are never mongoose Documents.
+	updateClientRecords(clientRecords: IUserDataSlim[]): Promise<void>;
 
 	removeClientRecords(accounts: string[]): Promise<void>;
 
@@ -1163,7 +1438,9 @@ export interface IProviderDatabase extends IDatabase {
 
 	storeBlockedSession(sessionRecord: Session): Promise<void>;
 
-	getSessionRecordBySessionId(sessionId: string): Promise<Session | undefined>;
+	getSessionRecordBySessionId(
+		sessionId: string,
+	): Promise<ProjectedSession | undefined>;
 
 	getSessionRecordByToken(token: string): Promise<Session | undefined>;
 
@@ -1212,9 +1489,13 @@ export interface IProviderDatabase extends IDatabase {
 		userSitekeyIpHash: string,
 	): Promise<SessionRecord | undefined>;
 
+	/**
+	 * Keyset-paginated sweep of pending session records. See
+	 * {@link getUnstoredDappUserCommitments} for the resumption contract.
+	 */
 	getUnstoredSessionRecords(
 		limit: number,
-		skip: number,
+		afterId?: unknown,
 	): Promise<SessionRecord[]>;
 
 	markSessionRecordsStored(
@@ -1245,23 +1526,6 @@ export interface IProviderDatabase extends IDatabase {
 	removeDecisionMachineArtifact(id: string): Promise<boolean>;
 
 	removeAllDecisionMachineArtifacts(): Promise<number>;
-
-	setClientContextEntropy(
-		account: string,
-		contextType: ContextType,
-		entropy: string,
-	): Promise<void>;
-
-	getClientContextEntropy(
-		account: string,
-		contextType: ContextType,
-	): Promise<string | undefined>;
-
-	sampleContextEntropy(
-		sampleSize: number,
-		siteKey: string,
-		contextType: ContextType,
-	): Promise<string[]>;
 
 	getSpamEmailDomain(domain: string): Promise<SpamEmailDomainRecord | null>;
 

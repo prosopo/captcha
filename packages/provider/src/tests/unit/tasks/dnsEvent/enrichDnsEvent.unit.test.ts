@@ -13,11 +13,12 @@
 // limitations under the License.
 
 import type { IIpInfoService } from "@prosopo/ipinfo";
-import type {
-	EnrichedDnsEvent,
-	IPInfoResponse,
-	ITrafficFilter,
-	Session,
+import {
+	type EnrichedDnsEvent,
+	type IPInfoResponse,
+	type ITrafficFilter,
+	type Session,
+	TrafficFilterAction,
 } from "@prosopo/types";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -146,12 +147,8 @@ describe("computeDnsAsymmetry", () => {
 		baseInfo({ isDatacenter: true, isVPN: true, ...overrides });
 
 	const filterAllowingVpn: Partial<ITrafficFilter> = {
-		blockVpn: false,
-		blockProxy: false,
-		blockTor: false,
-		blockCrawler: false,
-		blockDatacenter: true,
-		blockAbuser: true,
+		datacenter: { action: TrafficFilterAction.Block },
+		abuser: { action: TrafficFilterAction.Block },
 	};
 
 	it("returns 0 when the enriched event is undefined", () => {
@@ -224,10 +221,13 @@ describe("computeDnsAsymmetry", () => {
 		});
 
 		it("keeps the datacenter penalty when isVPN but blockVpn is on", () => {
+			// Policy-aware shielding: VPN only shields DC when the operator
+			// has left VPN unconfigured. When the operator is blocking VPNs,
+			// VPN doesn't shield — the DC signal still counts.
 			const score = computeDnsAsymmetry(
 				enrichedWith({ resolverIpInfo: dcVpn(), peerIpInfo: dcVpn() }),
 				undefined,
-				{ ...filterAllowingVpn, blockVpn: true },
+				{ ...filterAllowingVpn, vpn: { action: TrafficFilterAction.Block } },
 			);
 			expect(score).toBeCloseTo(0.5);
 		});
@@ -255,6 +255,10 @@ describe("computeDnsAsymmetry", () => {
 		});
 
 		it("suppresses when isCrawler and blockCrawler off", () => {
+			// Crawler+DC on a resolver is often Googlebot / a legit crawler's
+			// DNS resolver. When the operator hasn't configured crawler
+			// blocking, the crawler flag shields the DC signal — the DC-ness
+			// is explained by the crawler status.
 			const score = computeDnsAsymmetry(
 				enrichedWith({
 					resolverIpInfo: baseInfo({ isDatacenter: true, isCrawler: true }),
@@ -284,7 +288,7 @@ describe("computeDnsAsymmetry", () => {
 					peerIpInfo: baseInfo({ isDatacenter: true }),
 				}),
 				undefined,
-				{ ...filterAllowingVpn, blockDatacenter: false },
+				{ ...filterAllowingVpn, datacenter: undefined },
 			);
 			expect(score).toBe(0);
 		});
@@ -337,7 +341,7 @@ describe("computeDnsAsymmetry", () => {
 					peerIpInfo: baseInfo({ isAbuser: true, abuserScore: 1 }),
 				}),
 				undefined,
-				{ ...filterAllowingVpn, blockAbuser: false },
+				{ ...filterAllowingVpn, abuser: undefined },
 			);
 			expect(score).toBe(0);
 		});

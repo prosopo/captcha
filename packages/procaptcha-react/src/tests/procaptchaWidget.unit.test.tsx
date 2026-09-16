@@ -22,6 +22,7 @@ import {
 	type ProcaptchaState,
 	type ProcaptchaStateUpdateFn,
 } from "@prosopo/types";
+import { lightTheme } from "@prosopo/widget-skeleton";
 import { act } from "react";
 import {
 	afterEach,
@@ -34,7 +35,7 @@ import {
 } from "vitest";
 import ProcaptchaWidget from "../components/ProcaptchaWidget.js";
 import { challengeResponse, config, frictionless } from "./harness.js";
-import { type Mounted, fire, mount } from "./render.js";
+import { type Mounted, asRgb, fire, mount } from "./render.js";
 
 type ManagerApi = ReturnType<typeof ManagerType>;
 
@@ -268,9 +269,7 @@ describe("clicking the checkbox", () => {
 		fire(checkbox(), "click", { clientX: 1, clientY: 1 });
 		// The checkbox is swapped for a spinner while loading, so a second
 		// click cannot even reach it — the guard covers the race where it can.
-		expect(
-			mounted.container.querySelector('[aria-label="Loading spinner"]'),
-		).not.toBeNull();
+		expect(mounted.container.querySelector('[role="status"]')).not.toBeNull();
 		expect(start).toHaveBeenCalledTimes(1);
 		finish?.();
 	});
@@ -282,6 +281,69 @@ describe("clicking the checkbox", () => {
 		expect(checkbox()).toBeDefined();
 	});
 
+	test("the spinner takes over focus from the box it replaced", () => {
+		let finish: (() => void) | undefined;
+		start.mockImplementation(
+			() =>
+				new Promise<void>((resolve) => {
+					finish = resolve;
+				}),
+		);
+		render();
+		checkbox().focus();
+		fire(checkbox(), "click", { clientX: 1, clientY: 1 });
+
+		// Otherwise focus falls to the body and a keyboard user is dumped back
+		// at the top of the page with nothing said about why.
+		const spinner = mounted.container.querySelector('[role="status"]');
+		expect(document.activeElement).toBe(spinner);
+		expect(spinner?.getAttribute("aria-label")).toBe("WIDGET.CHECKING");
+		finish?.();
+	});
+
+	test("focus comes back to the box when the check is done", async () => {
+		render();
+		checkbox().focus();
+		fire(checkbox(), "click");
+		await flush();
+		expect(document.activeElement).toBe(checkbox());
+	});
+
+	test("a box the user never focused does not steal focus", async () => {
+		render();
+		fire(checkbox(), "click");
+		await flush();
+		expect(document.activeElement).not.toBe(checkbox());
+	});
+
+	test("focus the user moved on to is left where they put it", async () => {
+		// The check runs for as long as the network takes, and the user is free
+		// to carry on filling in the form behind the widget while it does. The
+		// box handing focus back at that point would take it off whatever they
+		// were typing into, losing the keystroke that arrived with it.
+		let finish: (() => void) | undefined;
+		start.mockImplementation(
+			() =>
+				new Promise<void>((resolve) => {
+					finish = resolve;
+				}),
+		);
+		render();
+		checkbox().focus();
+		fire(checkbox(), "click");
+
+		const elsewhere = document.createElement("input");
+		document.body.appendChild(elsewhere);
+		elsewhere.focus();
+
+		finish?.();
+		await flush();
+
+		const focused = document.activeElement;
+		elsewhere.remove();
+		expect(focused).toBe(elsewhere);
+	});
+
 	test("shows the checkbox again when the start fails", async () => {
 		// A failed start still has to give the user their click back, otherwise
 		// the widget spins forever.
@@ -289,9 +351,7 @@ describe("clicking the checkbox", () => {
 		render();
 		fire(checkbox(), "click");
 		await flush();
-		expect(
-			mounted.container.querySelector('[aria-label="Loading spinner"]'),
-		).toBeNull();
+		expect(mounted.container.querySelector('[role="status"]')).toBeNull();
 	});
 
 	test("reflects a verified user as a ticked box", () => {
@@ -341,9 +401,7 @@ describe("recovering from an error", () => {
 		render();
 		fire(checkbox(), "click");
 		setState({ error: { message: "boom", key: "CAPTCHA.UNKNOWN" } });
-		expect(
-			mounted.container.querySelector('[aria-label="Loading spinner"]'),
-		).toBeNull();
+		expect(mounted.container.querySelector('[role="status"]')).toBeNull();
 	});
 
 	test("shows the error text against the checkbox", () => {
@@ -436,9 +494,7 @@ describe("starting without a click", () => {
 		start.mockImplementation(() => Promise.reject(new Error("network down")));
 		render({ autoStart: true });
 		await flush();
-		expect(
-			mounted.container.querySelector('[aria-label="Loading spinner"]'),
-		).toBeNull();
+		expect(mounted.container.querySelector('[role="status"]')).toBeNull();
 	});
 });
 
@@ -533,7 +589,11 @@ describe("theming", () => {
 		const panel = document.querySelector<HTMLElement>(
 			".prosopo-modalInner > div",
 		);
-		expect(panel?.style.backgroundColor).toBe("rgb(255, 255, 255)");
+		// The challenge panel is the M3 dialog container, so it takes
+		// surfaceContainerHigh rather than the flat surface behind the widget.
+		expect(panel?.style.backgroundColor).toBe(
+			asRgb(lightTheme.palette.background.default),
+		);
 	});
 });
 
@@ -565,5 +625,22 @@ describe("the manager itself", () => {
 	test("is given an empty callback set when the host passes none", () => {
 		render({ callbacks: undefined as unknown as ProcaptchaProps["callbacks"] });
 		expect(managerArgs[0]?.[3]).toEqual({});
+	});
+
+	test("hands reload back to the wrapper that offered to handle it", () => {
+		// Under frictionless the wrapper is the only thing that can mint the
+		// session a replacement challenge needs, so the manager must ask it
+		// rather than reloading itself.
+		const onReload = vi.fn<(x?: number, y?: number) => void>();
+		render({ onReload });
+		managerArgs[0]?.[6]?.(120, 340);
+		expect(onReload).toHaveBeenCalledWith(120, 340);
+	});
+
+	test("keeps reload to itself when no wrapper offered to handle it", () => {
+		// A delegate the host never supplied would leave reload with nothing
+		// to re-mint the challenge with — the modal would just close.
+		render();
+		expect(managerArgs[0]?.[6]).toBeUndefined();
 	});
 });

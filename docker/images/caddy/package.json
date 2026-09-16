@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/caddy-docker",
-	"version": "2.5.8",
+	"version": "2.5.9",
 	"engines": {
 		"node": "^24",
 		"npm": "^11"

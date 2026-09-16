@@ -18,6 +18,7 @@ import {
 	type IpMode,
 	loadBalancer,
 } from "./balancer.js";
+import { getDevelopmentProviderUrl } from "./developmentProviderUrl.js";
 import { retryWithBackoff } from "./retry.js";
 
 // Base DNS endpoint per env — the `pronode.prosopo.io` family is latency-routed
@@ -25,11 +26,13 @@ import { retryWithBackoff } from "./retry.js";
 // once to discover which specific pronodeN the DNS layer picked, then pin
 // subsequent captcha calls to that pronode so session creation and submission
 // land on the same backend.
-const DNS_ENDPOINT: Record<EnvironmentTypes, string> = {
-	development: "https://localhost:9229",
+// Resolved per call rather than once at module load, so a development override
+// set after this module is imported is still picked up.
+const dnsEndpoints = (): Record<EnvironmentTypes, string> => ({
+	development: getDevelopmentProviderUrl(),
 	staging: "https://staging.pronode.prosopo.io",
 	production: "https://pronode.prosopo.io",
-};
+});
 
 // Apply the `ipv4.` / `ipv6.` DNS label to a hostname. The single-stack
 // sub-zones only resolve to A or AAAA records respectively, so this pins the
@@ -93,8 +96,10 @@ const fetchPinnedHostWithRetry = (baseUrl: string): Promise<string> =>
 		maxDelayMs: healthzRetryMaxDelayMs,
 	});
 
-const resolveBaseUrl = (env: EnvironmentTypes): string =>
-	DNS_ENDPOINT[env] ?? DNS_ENDPOINT.development;
+const resolveBaseUrl = (env: EnvironmentTypes): string => {
+	const endpoints = dnsEndpoints();
+	return endpoints[env] ?? endpoints.development;
+};
 
 const resolvePinnedUrl = async (
 	env: EnvironmentTypes,

@@ -13,7 +13,12 @@
 // limitations under the License.
 
 import { ApiEndpointResponseStatus } from "@prosopo/api-route";
-import { CaptchaType, type IUserSettings, Tier } from "@prosopo/types";
+import {
+	CaptchaType,
+	type IUserSettings,
+	Tier,
+	puzzleMaxDifficultyDefault,
+} from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiRegisterSiteKeyEndpoint } from "../../../../api/admin/apiRegisterSiteKeyEndpoint.js";
 
@@ -58,13 +63,19 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 		const settings = {
 			domains: ["example.com"],
 			captchaType: CaptchaType.pow,
-			frictionlessThreshold: 0.5,
+			frictionlessThreshold: {
+				frictionlessPuzzleThreshold: 0.5,
+				frictionlessImageThreshold: 1,
+			},
+			frictionlessTypes: { image: true, puzzle: true },
 			powDifficulty: 100000,
 			imageThreshold: 0.5,
 			imageMaxRounds: 3,
+			imageMinRounds: 2,
 			verifiedTimeout: 120000,
 			solutionTimeout: 60000,
 			puzzleTolerance: 15,
+			puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 			disallowWebView: false,
 		};
 

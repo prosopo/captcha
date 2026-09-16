@@ -19,6 +19,7 @@ import {
 	type ModeEnum,
 	type RequestHeaders,
 	type ScoreComponents,
+	clampImageRounds,
 	isChallengeCaptchaType,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
@@ -29,7 +30,7 @@ import type { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import { getDetectorBundlePool } from "../../../tasks/detection/bundlePool.js";
 import { sendChallenge } from "../../../tasks/frictionless/challengeDispatch.js";
 import type { Tasks } from "../../../tasks/index.js";
-import { DEFAULT_FRICTIONLESS_THRESHOLD } from "./constants.js";
+import { resolveScoreLadder } from "./constants.js";
 import { attachHoneypot } from "./honeypotResponse.js";
 
 export type ShortCircuitInput = {
@@ -41,7 +42,7 @@ export type ShortCircuitInput = {
 	ipAddress: ReturnType<typeof getCompositeIpAddress>;
 	ipInfo: IPInfoResponse | undefined;
 	flatHeaders: RequestHeaders;
-	sessionMode: ModeEnum | undefined;
+	sessionMode: ModeEnum;
 	userSitekeyIpHash: string;
 	requestId: string | undefined;
 	logger: Logger;
@@ -79,9 +80,12 @@ const buildBypassSessionParams = async (input: ShortCircuitInput) => {
 		// synthesise one when the client had no detector to produce it.
 		token: input.token || `nodetector-${uuidv4()}`,
 		score: 0,
-		threshold:
-			input.clientRecord.settings?.frictionlessThreshold ??
-			DEFAULT_FRICTIONLESS_THRESHOLD,
+		// `Session.threshold` keeps its original meaning — the rung a silent
+		// pass has to stay under — so it records the puzzle rung, not the
+		// image one.
+		threshold: resolveScoreLadder(
+			input.clientRecord.settings?.frictionlessThreshold,
+		).botThreshold,
 		scoreComponents: { baseScore: 0 } as ScoreComponents,
 		ipAddress: input.ipAddress,
 		webView: false,
@@ -165,16 +169,18 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 	}));
 
 	attachHoneypot(res, input.clientRecord);
-	// `solvedImagesCount` is passed unconditionally: `sendCaptcha` discards it
-	// for any type other than image, so the pow / puzzle results are identical
-	// to the previous per-type branches.
+	// Only image is sized here: pow takes no count, and a puzzle reads
+	// `solvedImagesCount` as a difficulty signal that the configured-type
+	// default has no business setting.
 	return res.json(
 		await sendChallenge(input.tasks.frictionlessManager, configuredType, {
 			...sessionParams,
-			solvedImagesCount: Math.min(
-				input.env.config.captchas.solved.count,
-				input.clientRecord.settings.imageMaxRounds,
-			),
+			...(configuredType === CaptchaType.image && {
+				solvedImagesCount: clampImageRounds(
+					input.env.config.captchas.solved.count,
+					input.clientRecord.settings,
+				),
+			}),
 		}),
 	);
 };

@@ -1,5 +1,154 @@
 # @prosopo/config
 
+## 3.3.16
+### Patch Changes
+
+- 0d479f9: Let the development provider URL be set with an environment variable.
+  
+  In development the widget looked for its provider at a hardcoded
+  `https://localhost:9229`. That is right when the page and the provider share a
+  machine and wrong as soon as they do not: a phone or an iOS simulator loading
+  the demo over the LAN resolves `localhost` to itself, never reaches the
+  provider, and reports the site key as unregistered — which is a confusing way
+  to be told the request went nowhere.
+  
+  `PROSOPO_PROVIDER_URL_DEVELOPMENT` now overrides it, so that case can be
+  pointed at the host actually running the provider. Unset, it still defaults to
+  `https://localhost:9229`, so existing setups are unaffected. Staging and
+  production resolve through their DNS-routed endpoints and ignore it.
+
+## 3.3.15
+### Patch Changes
+
+- af267c2: Web Bot Auth verifier and an authenticated frictionless flow for pre-verified agents.
+  
+  **`@prosopo/web-bot-auth`** — a new package: an RFC 9421 HTTP Message Signatures verifier built on `@noble/curves/ed25519`, with no Cloudflare dependency. It parses `Signature-Agent` in both its bare-string and dictionary forms, resolves the signer's JWKS at `/.well-known/http-message-signatures-directory` honouring the response's cache-control TTL, and verifies the Ed25519 signature over the RFC 9421 signature base.
+  
+  **Provider fast path.** `/captcha/frictionless` returns `captchaType: authenticated` when a non-`deferToVerify` `AccessPolicyType.Allow` rule matches the request's user scope, and writes a session with `serverChecked: false`, `agent: true` and the issuing IP frozen for verify-time binding. Decrypt, bot score and the decision machine are all skipped. A verified `Signature-Agent` is one way to qualify — the userScope gains a `webBotAuthAgent` field, set only when signature verification succeeded so a rule scoped to a signer can never be matched by a spoofed header — but an IP CIDR, JA4, user agent, ASN or country rule qualifies the same way. A `Block` or `Restrict` on the same match set always wins, because severity outranks Allow.
+  
+  **`/client/authenticated/verify`.** A separate router with mandatory IP binding — the operator must forward the client IP (`API.AUTHENTICATED_IP_REQUIRED`) and it must match the one the session was issued to (`API.AUTHENTICATED_IP_MISMATCH`), so a leaked token cannot be replayed from elsewhere. Single use is enforced through `serverChecked`, and `captchaType` is checked so an ordinary captcha token cannot be redeemed on this route. `clientSessionId` correlation goes through the same `isClientSessionMismatch` helper as pow / image / puzzle, so the authenticated path cannot drift from the others.
+  
+  **Surface.** `AccessPolicyType.Allow` and `CaptchaType.authenticated`; `webBotAuthAgent` on the user scope (indexed, normalised at parse time to a lowercase scheme+host with no trailing slash); `Session.agent` / `Session.webBotAuthAgent` for the Traffic view's "pre-verified pass" filter; `submitAuthenticatedCaptchaVerify` on `ProviderApi` and the matching branch in `@prosopo/server.verifyProvider`; `AuthenticatedBadge` and a dispatch branch in `procaptcha-frictionless`.
+  
+  Three fixes the new end-to-end coverage turned up, each of which broke the flow outright:
+  
+  - `ipMatchesSession` compared the operator's parsed IP against the session's composite halves with `===`. A session read back from Mongo carries BSON (`Decimal128`, or `Long` on pre-migration records), not the `bigint` the type claims, so the comparison was false for every session that had been through the database — every legitimate redemption was rejected as `API.AUTHENTICATED_IP_MISMATCH`. Both halves are now normalised before comparison, and an unparseable half fails closed rather than defaulting to `0n`, so garbage still cannot match garbage.
+  - `serverChecked` was never written onto the authenticated session, so "never set" and "consumed" were distinguishable only by an absence. It is now written as `false` at issuance.
+  - `serverChecked` was missing from `SESSION_PROJECTION`. Left out, the single-use check reads `undefined` and an authenticated token verifies an unlimited number of times.
+
+## 3.3.14
+### Patch Changes
+
+- 56e5502: chore(deps-dev): bump webpack-cli from 5.1.4 to 7.2.3
+- 6f57ee9: chore(deps): bump the npm-minor-and-patch group across 1 directory with 3 updates
+
+## 3.3.13
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+
+## 3.3.12
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- 68a9b41: chore(deps-dev): bump @babel/plugin-transform-object-rest-spread from 7.28.4 to 8.0.1
+
+## 3.3.11
+### Patch Changes
+
+- 6db5d8b: Move image-captcha merkle tree computation and per-solution leaf hashing to a Rust napi module (@prosopo/native-merkle). ~4× faster on realistic 9-solution commits. Extends the cli bundle plugin so multiple native-* .node files can coexist without basename collision.
+
+## 3.3.10
+### Patch Changes
+
+- 721c5ba: Move JA4 TLS fingerprint computation to a Rust napi module (@prosopo/native-ja4). Provider-side JA4 middleware is ~2.7× faster on realistic ClientHellos. The cli bundle plugin now copies the .node binary next to the bundle so it works in the container.
+
+## 3.3.9
+### Patch Changes
+
+- e46e0bd: Keep the server-only i18next backend out of frontend bundles.
+  
+  `i18next-fs-backend` has been on the frontend config's exclusion list for a long
+  time, but it was still being bundled. `external` only ever matches a specifier
+  exactly, and `i18nBackend.ts` imports the subpath `i18next-fs-backend/cjs`
+  (i18next/i18next-fs-backend#57), which is a different string. So the fs backend
+  shipped in the browser artifact along with its YAML, JSON5 and JSONC parsers.
+  `i18next-http-middleware` — Express request handling — was never on the list at
+  all.
+  
+  The subpath is now listed literally, and `i18next-http-middleware` joins the
+  exclusion list.
+  
+  Both are listed one by one rather than by matching `pkg/*` against the whole
+  exclusion list. That broader rule looks tidier but is wrong: the `vite` filter
+  is a substring match, so it also selects `vite-plugin-node-polyfills`, and
+  `vite-plugin-node-polyfills/shims/process` is injected into the served and IIFE
+  bundles as a bare import. Externalising it leaves the browser unable to resolve
+  the specifier and the widget dies on load.
+  
+  Measured on `@prosopo/procaptcha-bundle`, production mode:
+  
+  | | before | after |
+  | --- | --- | --- |
+  | `i18nBackend` chunk, raw | 153,593 | 788 |
+  | all chunks, raw | 1,247,449 | 1,094,644 (−12.2%) |
+  | all chunks, gzip | 474,695 | 434,408 (−8.5%) |
+  
+  This is not a first-paint change — the critical path is unchanged, because the
+  chunk is only reachable through `loadI18next(true)` and the widget always calls
+  `loadI18next(false, language)`. It is dead weight in the published artifact.
+  
+  No browser behaviour can regress: that chunk already imported `node:path`, which
+  is already external, so it was never loadable in a browser to begin with. The
+  i18next packages the browser does use — `http-backend`,
+  `browser-languagedetector`, `chained-backend`, `resources-to-backend` — are
+  unaffected and still bundled.
+
+## 3.3.8
+### Patch Changes
+
+- bde0cb9: Enable whitespace minification for production frontend bundles.
+  
+  For a `lib` + `es` build, Vite downgrades `build.minify: true` to
+  `{ compress: true, mangle: true, codegen: false }`, so bundles shipped compressed
+  and mangled but still pretty-printed. Setting `output.minify` explicitly fixes it.
+  
+  On `@prosopo/procaptcha-bundle`, the critical path drops 22.5% raw (658KB → 510KB)
+  and 9.6% gzipped. Chunk membership is unchanged. Production builds only.
+
 ## 3.3.7
 ### Patch Changes
 

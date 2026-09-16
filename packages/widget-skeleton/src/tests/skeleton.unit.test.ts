@@ -87,7 +87,10 @@ describe("createWidgetSkeletonElement", () => {
 			const styles: string =
 				createWidgetSkeletonElement(theme).querySelector("style")
 					?.textContent ?? "";
-			expect(styles).toContain(theme.palette.background.default);
+			// The on-page widget sits on `surface`. `background.default` is the
+			// dialog container's role (surfaceContainerHigh), which is how M3
+			// separates a resting affordance from a modal container.
+			expect(styles).toContain(theme.palette.surface);
 			expect(styles).toContain(theme.font.color);
 			expect(styles).toContain(theme.font.fontFamily);
 			// Never the literal "undefined", which is what a renamed theme key would

@@ -24,6 +24,7 @@ import {
 	nativeEnum,
 	number,
 	object,
+	record,
 	string,
 	tuple,
 	union,
@@ -32,7 +33,7 @@ import {
 import type { IPInfoResponse } from "../api/ipapi.js";
 import type { ChallengeCaptchaType } from "../client/captchaType/captchaType.js";
 import { CaptchaType } from "../client/index.js";
-import type { ContextType } from "../client/settings.js";
+import type { ContextType, IPuzzleSettings } from "../client/settings.js";
 import { ModeEnum } from "../config/mode.js";
 import {
 	type CaptchaResult,
@@ -55,6 +56,10 @@ import {
 	ChallengeParamsSchema,
 } from "./challengeParams.js";
 import type { SimdReadings } from "./detection.js";
+import {
+	type MatchedAccessRule,
+	MatchedAccessRuleSchema,
+} from "./matchedAccessRule.js";
 import type { FrictionlessReason, ResultReason } from "./reasons.js";
 
 export interface BrowserInfo {
@@ -160,6 +165,12 @@ export interface StoredCaptchaMetadata {
 // signal channel for the honeypot (and any future widget-side traps).
 export interface ClientMetaData {
 	hp?: string;
+	// The site-owner session id the widget was rendered with (`data-sessionid`
+	// / `renderOptions.sessionId`). Named `clientSessionId` rather than
+	// `sessionId` because the record already carries a top-level `sessionId`
+	// for the provider's own frictionless session — these are different
+	// things and both appear on the same document.
+	clientSessionId?: string;
 }
 
 /**
@@ -282,6 +293,7 @@ export const StoredCaptchaMetadataSchema = object({
 
 export const ClientMetaDataDbSchema = object({
 	hp: string().optional(),
+	clientSessionId: string().optional(),
 }) satisfies ZodType<ClientMetaData, ZodTypeDef, unknown>;
 
 export const UserCommitmentSchema = object({
@@ -466,6 +478,8 @@ export const SessionSchema = object({
 	ruleHash: string().optional(),
 	ruleType: string().array().optional(),
 	ruleDescription: string().optional(),
+	// See Session.matchedRule.
+	matchedRule: MatchedAccessRuleSchema.optional(),
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields —
 	// consumers narrow on `ipInfo.isValid` and read whichever sub-field
@@ -496,6 +510,26 @@ export const SessionSchema = object({
 	entropyWallClockOffsetMs: number().optional(),
 	entropyMathRandomFirst: number().optional(),
 	g: string().optional(),
+	i: boolean().optional(),
+	cv: number().optional(),
+	sq: number().optional(),
+	cg: string().optional(),
+	sm: string().optional(),
+	dz: string().optional(),
+	b: record(string(), array(string())).optional(),
+	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
+	// classifier folds into `webView`. Persisted per session so
+	// decision-machine rules can key off the individual signals
+	// without a catcher release. Undefined on non-iOS / non-WebKit
+	// clients and on catcher versions predating the fields.
+	//   sw = navigator.serviceWorker present
+	//   md = navigator.mediaDevices present
+	//   bn = window.browser namespace present (WebExtensions)
+	//   fs = document.fullscreenEnabled present
+	sw: boolean().optional(),
+	md: boolean().optional(),
+	bn: boolean().optional(),
+	fs: boolean().optional(),
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// Server-observed microsecond deltas across the TLS handshake
@@ -505,12 +539,32 @@ export const SessionSchema = object({
 	// write.
 	tcpToChelloUs: number().optional(),
 	chelloToHandshakeUs: number().optional(),
+	// Raw per-connection TCP-handshake signals forwarded by chaddy from
+	// its co-located tcp-probe eBPF sidecar. Wire-observed primitives
+	// (RFC-793 / RFC-9293) — kernel nanosecond timestamps of SYN /
+	// SYN-ACK / ACK, the SYN's TTL byte, and its TCP options. Deliberately
+	// stored raw with no derived latency / hop-count / stack-hash fields
+	// so consumers are free to compute any equivalent metric at query
+	// time. Undefined on sessions that came in without the tcp-probe
+	// pipeline (pre-rollout traffic, dev, or requests through a
+	// non-chaddy front).
+	synNs: number().optional(),
+	synackNs: number().optional(),
+	ackNs: number().optional(),
+	observedTtl: number().min(0).max(255).optional(),
+	tcpMss: number().min(0).max(65535).optional(),
+	tcpWscale: number().min(0).max(255).optional(),
+	tcpOptsFlags: number().min(0).max(255).optional(),
+	tcpOptsOrder: number().min(0).max(4_294_967_295).optional(),
+	tcpWindow: number().min(0).max(65535).optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
 		pathValid: boolean().optional(),
 		receivedAt: date(),
 	}).optional(),
+	// See Session.clientMetaData.
+	clientMetaData: ClientMetaDataDbSchema.optional(),
 }) satisfies ZodType<Session, ZodTypeDef, unknown>;
 
 // Session now includes all frictionless token fields
@@ -526,6 +580,13 @@ export type Session = {
 	mode?: ModeEnum;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
+	// Puzzle-only render overrides chosen by the routing machine, persisted
+	// so getPuzzleCaptchaChallenge can layer them in. That endpoint otherwise
+	// re-derives its overrides from a live trafficFilter verdict, which a
+	// machine-chosen puzzle has no counterpart for. Same semantics as the
+	// trafficFilter challenge-policy fields of the same names.
+	puzzleTolerance?: number;
+	puzzle?: IPuzzleSettings;
 	// Discriminated view of the challenge-specific knobs above. Dual-written
 	// with the flat fields until every reader has migrated and the backfill
 	// has run; see `deriveChallengeParams`.
@@ -577,6 +638,13 @@ export type Session = {
 	ruleHash?: string; // == the redis-key suffix of the matched rule
 	ruleType?: string[]; // populated scope fields, e.g. ['ja4Hash'], ['ja4Hash','coords']
 	ruleDescription?: string; // operator-set description copied from the rule's AccessPolicy
+	// The full matched rule, denormalised at enforcement time. Unlike the three
+	// fields above it is written by EVERY access-policy path — the request-time
+	// block middleware, the frictionless entry (block and restrict alike), and
+	// the verify-time hard-block check — so the audit page can name the exact
+	// policy that acted on a request rather than just echoing its description.
+	// See MatchedAccessRule for why the rule is copied rather than joined.
+	matchedRule?: MatchedAccessRule;
 	// Full ipinfo payload from ipInfoMiddleware at session-creation
 	// time. Replaces the flat `countryCode` / `geolocation` fields.
 	ipInfo?: IPInfoResponse;
@@ -588,6 +656,17 @@ export type Session = {
 	};
 	userSubmitted?: boolean;
 	serverChecked?: boolean;
+	// True on sessions issued because the request was Web Bot Auth verified
+	// (captchaType === CaptchaType.authenticated). Boolean shortcut for the
+	// Traffic view's "pre-verified pass" filter; the full signer URL lives
+	// on `webBotAuthAgent`.
+	agent?: boolean;
+	// Canonical Signature-Agent URL (e.g. "https://chatgpt.com") captured
+	// from the verified Ed25519 signature at issuance. Read at
+	// `/verify` time to enforce IP binding: `ipAddress` on the session
+	// must equal the `ip` the operator forwards on the verify call, so a
+	// leaked authenticated token can't be replayed from a different IP.
+	webBotAuthAgent?: string;
 	// WASM SIMD CPU fingerprint readings forwarded by the catcher client.
 	simdReadings?: SimdReadings;
 	// Stage at which the readings first arrived.
@@ -597,12 +676,37 @@ export type Session = {
 	entropyWallClockOffsetMs?: number;
 	entropyMathRandomFirst?: number;
 	g?: string;
+	i?: boolean;
+	cv?: number;
+	sq?: number;
+	cg?: string;
+	sm?: string;
+	dz?: string;
+	b?: Record<string, string[]>;
+	// Raw iOS WKWebView-vs-Safari DOM signals — see SessionSchema above.
+	sw?: boolean;
+	md?: boolean;
+	bn?: boolean;
+	fs?: boolean;
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin. See the SessionSchema block above for full semantics —
 	// elevated values indicate the client's ClientHello traversed a
 	// proxy chain before reaching Caddy.
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
+	// Raw per-connection TCP-handshake signals — see SessionSchema block
+	// above. Wire primitives from the tcp-probe eBPF sidecar; consumers
+	// derive whatever timing / hop / stack fingerprints they want at
+	// query time from these fields.
+	synNs?: number;
+	synackNs?: number;
+	ackNs?: number;
+	observedTtl?: number;
+	tcpMss?: number;
+	tcpWscale?: number;
+	tcpOptsFlags?: number;
+	tcpOptsOrder?: number;
+	tcpWindow?: number;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the
@@ -624,6 +728,14 @@ export type Session = {
 		// above but don't bump this timestamp.
 		receivedAt: Date;
 	};
+	// Site-owner-supplied metadata the widget was rendered with, mirrored up
+	// from the captcha record so the session row carries it too. Today that is
+	// just `clientSessionId` (Protect's JTI or any per-user session id the site
+	// holds); it is an object rather than a flat field because more render-time
+	// metadata is expected to land here. The verify endpoints correlate the
+	// `clientSessionId` the dapp server sends against the one recorded here /
+	// on the captcha record, and reject the token when they disagree.
+	clientMetaData?: ClientMetaData;
 };
 
 // Zod schema for PoWCaptchaStored
@@ -752,10 +864,40 @@ export type DecisionMachineArtifact = {
 	updatedAt: Date;
 };
 
+/**
+ * The baseline for one normalised URL inside a context — "what this page type
+ * is expected to look like". Head hashes vary far more between page types
+ * than between visitors, so a per-URL baseline is a much tighter comparison
+ * than the context-wide one, which has to average every page together.
+ */
+export type ClientContextEntropyUrl = {
+	/** Normalised `currentUrl`, e.g. `example.com/en/results/:id`. */
+	url: string;
+	sessions: number;
+	entropy: string;
+};
+
 export type ClientContextEntropy = {
 	account: string;
 	contextType: ContextType;
 	entropy: string;
+	/**
+	 * Per-page-type baselines, best-sampled first. Only URLs whose own sample
+	 * cleared the sweep's floors appear here, so a page type nobody visits
+	 * much is absent rather than represented by a thin average.
+	 */
+	urls?: ClientContextEntropyUrl[];
+	/**
+	 * Sessions behind this baseline, and how many distinct head hashes voted
+	 * in it.
+	 *
+	 * Kept so detectors have a measured sense of what normal volume looks
+	 * like for this site and context, instead of comparing every site against
+	 * the same absolute number. A cluster of 30 sessions is noise on a site
+	 * doing 12,000 an hour and is most of the traffic on one doing 200.
+	 */
+	totalSessions?: number;
+	distinctHashes?: number;
 	createdAt: Date;
 	updatedAt: Date;
 };
