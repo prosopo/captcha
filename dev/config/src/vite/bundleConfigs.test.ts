@@ -36,6 +36,12 @@ afterEach(() => {
 	fs.rmSync(root, { recursive: true, force: true });
 });
 
+const resolveOptions: Rollup.ResolveIdExtraOptions = {
+	isEntry: false,
+	kind: "import-statement",
+};
+const outputOptions = {} as Rollup.NormalizedOutputOptions;
+
 /** A tsconfig with no references, so no npm lookups are needed. */
 const leafTsConfig = (): string => {
 	const dir = path.join(root, "pkg");
@@ -260,10 +266,12 @@ describe("ViteCommonJSConfig", () => {
 describe("nodejsPolarsNativeFilePlugin", () => {
 	it("claims a native file by basename, wherever it is imported from", () => {
 		const plugin = nodejsPolarsNativeFilePlugin(["/abs/polars.node"], "dist");
-		expect(plugin.resolveId("./polars.node", "/src/a.ts", {})).toBe(
+		expect(plugin.resolveId("./polars.node", "/src/a.ts", resolveOptions)).toBe(
 			"./polars.node",
 		);
-		expect(plugin.resolveId("./other.node", "/src/a.ts", {})).toBeNull();
+		expect(
+			plugin.resolveId("./other.node", "/src/a.ts", resolveOptions),
+		).toBeNull();
 	});
 
 	it("replaces the module with a createRequire shim", () => {
@@ -293,7 +301,10 @@ describe("nodejsPolarsNativeFilePlugin", () => {
 		const bytes = Buffer.from([0, 1, 2, 255]);
 		fs.writeFileSync(src, bytes);
 
-		nodejsPolarsNativeFilePlugin([src], outDir).generateBundle({}, {});
+		nodejsPolarsNativeFilePlugin([src], outDir).generateBundle(
+			outputOptions,
+			{},
+		);
 
 		expect(fs.readFileSync(path.join(outDir, "polars.node"))).toEqual(bytes);
 	});
@@ -305,14 +316,14 @@ describe("nodejsPolarsNativeFilePlugin", () => {
 			[path.join(root, "absent.node")],
 			path.join(root, "dist"),
 		);
-		expect(() => plugin.generateBundle({}, {})).toThrow();
+		expect(() => plugin.generateBundle(outputOptions, {})).toThrow();
 	});
 
 	it("does nothing at all when there are no native files", () => {
 		const plugin = nodejsPolarsNativeFilePlugin([], "dist");
-		expect(plugin.resolveId("anything", undefined, {})).toBeNull();
+		expect(plugin.resolveId("anything", undefined, resolveOptions)).toBeNull();
 		expect(plugin.load("anything")).toBeNull();
-		expect(() => plugin.generateBundle({}, {})).not.toThrow();
+		expect(() => plugin.generateBundle(outputOptions, {})).not.toThrow();
 	});
 });
 
