@@ -16,9 +16,6 @@ import { ProsopoEnvError } from "@prosopo/common";
 import { CaptchaMerkleTree } from "@prosopo/datasets";
 import type { CaptchaSolution } from "@prosopo/types";
 
-// Load the Rust napi module. In dev the workspace symlink resolves the
-// package; in the cli bundle vite copies the .node file next to the bundle
-// and node_modules is not shipped, so we fall through to a direct load.
 type NativeMerkleModule = {
 	computeCaptchaSolutionHash: (
 		captchaId: string,
@@ -28,6 +25,9 @@ type NativeMerkleModule = {
 	) => string;
 	buildMerkleLayers: (leaves: string[]) => string[][];
 };
+// In dev the workspace symlink resolves the package; the cli bundle ships no
+// node_modules, so there the .node file copied next to the bundle is loaded
+// directly.
 const req = createRequire(import.meta.url);
 const nativeMerkle: NativeMerkleModule = (() => {
 	try {
@@ -49,10 +49,8 @@ const nativeMerkle: NativeMerkleModule = (() => {
 export const buildTreeAndGetCommitmentId = (
 	captchaSolutions: CaptchaSolution[],
 ): { tree: CaptchaMerkleTree; commitmentId: string } => {
-	// Preserve the "no commitment" error contract the old JS impl exposed:
-	// native throws Error("leaves is empty") for zero solutions, but callers
-	// pattern-match on ProsopoEnvError with the CAPTCHA_SOLUTION_COMMITMENT_
-	// DOES_NOT_EXIST translation key.
+	// Native throws a plain Error("leaves is empty") for zero solutions, but
+	// callers expect a ProsopoEnvError with this translation key.
 	if (captchaSolutions.length === 0) {
 		throw new ProsopoEnvError(
 			"CONTRACT.CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST",
@@ -85,7 +83,7 @@ export const buildTreeAndGetCommitmentId = (
 			{
 				context: {
 					failedFuncName: buildTreeAndGetCommitmentId.name,
-					commitmentId: commitmentId,
+					commitmentId,
 				},
 			},
 		);

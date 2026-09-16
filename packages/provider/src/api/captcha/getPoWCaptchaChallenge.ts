@@ -67,9 +67,8 @@ export default (
 		validateSiteKey(dapp);
 		validateAddr(user);
 
-		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
-		// because the Tasks constructor calls `env.getDb()`, which throws when
-		// `env.db` is undefined (the maintenance-mode case).
+		// Must run before `new Tasks(env, ...)`, whose constructor throws in
+		// maintenance mode (`env.getDb()` with no `env.db`).
 		if (getMaintenanceMode()) {
 			req.logger.info(() => ({
 				msg: "Maintenance mode active - returning dummy PoW challenge",
@@ -83,7 +82,7 @@ export default (
 		// hands these keys an invisible PoW session, which lands right here,
 		// so without this the reserved key cannot complete a flow at all.
 		// Checked before `new Tasks(env, ...)` for the same reason as
-		// maintenance mode: the constructor calls `env.getDb()`.
+		// maintenance mode.
 		if (isReservedTestSiteKey(dapp)) {
 			req.logger.warn(() => ({
 				msg: "Reserved TEST site key - returning dummy PoW challenge",
@@ -114,7 +113,6 @@ export default (
 				}));
 			}
 
-			// Get country code for geoblocking from middleware-provided IP info
 			const countryCode =
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.countryCode
@@ -124,11 +122,9 @@ export default (
 					? req.ipInfo.asnNumber
 					: undefined;
 
-			// Pull decryptedHeadHash off the frictionless session (indexed
-			// lookup on sessionId) so headHash-scoped access rules can match
-			// at challenge time — otherwise a rule keyed on the hash can only
-			// fire at server-verify, by which point the challenge has already
-			// been issued at the client-configured difficulty.
+			// Pull decryptedHeadHash off the frictionless session so
+			// headHash-scoped access rules can match at challenge time rather
+			// than only at server-verify, after the challenge was issued.
 			const sessionRecord = sessionId
 				? await tasks.db.getSessionRecordBySessionId(sessionId)
 				: undefined;
@@ -208,11 +204,8 @@ export default (
 				);
 			}
 
-			// Evaluate the site's trafficFilter against the connecting IP.
-			// Only `challenge` policies affect the request-time gate — they
-			// contribute powDifficulty overrides. `block` policies are
-			// enforced at submit / verify time so the user still receives a
-			// captcha and produces a billable interaction.
+			// Only `challenge` policies apply at request time, as powDifficulty
+			// overrides; see applyTrafficFilterAtRequestTime.
 			const trafficVerdict = applyTrafficFilterAtRequestTime(
 				req.ipInfo,
 				clientSettings.settings?.trafficFilter,
@@ -267,10 +260,6 @@ export default (
 				undefined,
 				undefined,
 				undefined,
-				// Persist the full ipinfo payload — consumers (portal,
-				// anomaly detection, CHECK_IP_INFO backfill) read the
-				// individual flags off this object instead of separate
-				// flat fields.
 				req.ipInfo,
 			);
 

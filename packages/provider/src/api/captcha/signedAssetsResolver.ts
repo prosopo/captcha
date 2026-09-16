@@ -111,8 +111,7 @@ export class SignedAssetsResolver implements AssetsResolver {
 /**
  * Build the resolver from the environment, or `undefined` when it is not
  * configured. Undefined means `parseCaptchaAssets` passes `item.data`
- * through unchanged — the behaviour before this existed — so the feature is
- * off until a key is deliberately supplied.
+ * through unchanged, so signing is off until a key is deliberately supplied.
  */
 export function getSignedAssetsResolver(
 	clientIp?: string,

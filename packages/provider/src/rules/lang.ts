@@ -17,18 +17,18 @@ export const checkLangRules = (
 	config: ProsopoConfigOutput,
 	acceptLanguage: string,
 ): number => {
-	const lConfig = config.lRules;
-	let lScore = 0;
-	if (lConfig && acceptLanguage) {
+	const languagePenalties = config.lRules;
+	let score = 0;
+	if (languagePenalties && acceptLanguage) {
 		const languages = acceptLanguage
 			.split(",")
 			.map((lang) => lang.trim().split(";")[0]);
 
 		for (const lang of languages) {
-			if (lang && lConfig[lang]) {
-				lScore += lConfig[lang];
+			if (lang && languagePenalties[lang]) {
+				score += languagePenalties[lang];
 			}
 		}
 	}
-	return lScore;
+	return score;
 };

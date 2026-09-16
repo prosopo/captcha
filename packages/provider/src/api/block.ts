@@ -42,20 +42,17 @@ export const blockMiddleware = (providerEnvironment: ProviderEnvironment) => {
 	return (req: Request, res: Response, next: NextFunction) => {
 		// In maintenance mode the captcha path short-circuits to a pass and the
 		// access-rules store (Redis) may be unavailable — skip the blocklist
-		// check so a slow or down store can't gate requests. env.getDb() now
-		// returns a handle during maintenance (so the admin endpoints work), so
-		// this explicit guard — not a thrown getDb() — is what keeps the
-		// blocklist check off the hot path.
+		// check so a slow or down store can't gate requests. env.getDb() still
+		// returns a handle during maintenance (for the admin endpoints), so this
+		// guard is what keeps the check off the hot path.
 		if (getMaintenanceMode()) {
 			return next();
 		}
 		// Reserved CI test site keys skip the blocklist. This middleware runs
-		// ahead of domainMiddleware and decides purely on IP/JA4/ASN, so it
-		// never sees a site key — which means CI running on shared cloud
-		// runners gets caught by rules aimed at the bot operators who scrape
-		// from those same ranges. Without this, a reserved key cannot make a
-		// test suite deterministic, because the request is refused before any
-		// site-key logic runs.
+		// ahead of domainMiddleware and decides purely on IP/JA4/ASN, so CI on
+		// shared cloud runners gets caught by rules aimed at bot operators
+		// scraping from the same ranges, and a reserved key could not make a
+		// test suite deterministic.
 		//
 		// The exemption is deliberately narrow: it only skips access-rule
 		// evaluation. These keys already force a deterministic verdict and

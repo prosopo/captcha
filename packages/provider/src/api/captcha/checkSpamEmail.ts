@@ -40,7 +40,6 @@ export default (env: ProviderEnvironment) =>
 		try {
 			({ email, dapp } = CheckSpamEmailRequestBody.parse(req.body));
 		} catch (err) {
-			// A malformed request body is a client error (400), not a 500.
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
 					context: { code: 400, error: err },
@@ -61,11 +60,9 @@ export default (env: ProviderEnvironment) =>
 				},
 			}));
 
-			// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
-			// because the Tasks constructor calls `env.getDb()`, which throws when
-			// `env.db` is undefined (the maintenance-mode case). Let the user
-			// through (isSpam=false) so the form submission isn't blocked while
-			// Mongo is unavailable.
+			// Must run before `new Tasks(env, ...)`, whose constructor throws in
+			// maintenance mode (`env.getDb()` with no `env.db`). Reports isSpam=false
+			// so form submissions aren't blocked while Mongo is unavailable.
 			if (getMaintenanceMode()) {
 				req.logger.info(() => ({
 					msg: "Maintenance mode active - returning isSpam=false",
@@ -75,7 +72,6 @@ export default (env: ProviderEnvironment) =>
 			}
 
 			const tasks = new Tasks(env, req.logger);
-			// Get client record and perform the same validation as frictionless flow
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 			if (!clientRecord) {
 				return next(
@@ -86,9 +82,7 @@ export default (env: ProviderEnvironment) =>
 					}),
 				);
 			}
-			// Validate client is allowed to use spam email domain checking
-			const valid = clientRecord.settings.spamEmailDomainCheckEnabled;
-			if (!valid) {
+			if (!clientRecord.settings.spamEmailDomainCheckEnabled) {
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
 						context: {
@@ -100,7 +94,6 @@ export default (env: ProviderEnvironment) =>
 					}),
 				);
 			}
-			// Check if email is spam
 			const isSpam = await checkSpamEmailFn(
 				email,
 				tasks.db,

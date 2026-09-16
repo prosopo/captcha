@@ -39,11 +39,11 @@ class ApiRegisterSiteKeyEndpoint
 			? logger.with({}, "admin:site-key:register")
 			: getLogger("info", "provider:admin:site-key:register");
 
-		const temp = settings || ClientSettingsSchema.parse({});
+		const siteSettings = settings || ClientSettingsSchema.parse({});
 
 		logger.info(() => ({ data: { siteKey }, msg: "`Registering site key" }));
 
-		await this.clientTaskManager.registerSiteKey(siteKey, tier, temp);
+		await this.clientTaskManager.registerSiteKey(siteKey, tier, siteSettings);
 
 		logger.info(() => ({ msg: "Site key registered" }));
 

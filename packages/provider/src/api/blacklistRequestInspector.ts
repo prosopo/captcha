@@ -84,14 +84,12 @@ export const getRequestUserScope = (
 	return {
 		...(user && { userId: user }),
 		...(ja4 && { ja4Hash: ja4 }),
-		...(userAgent && { userAgent: userAgent }),
+		...(userAgent && { userAgent }),
 		...(ip && { ip }),
 		...(headHash && { headHash }),
 		...(coords && { coords }),
 		...(countryCode && { countryCode }),
 		...(typeof asn === "number" && { asn }),
-		// Only set when signature verification succeeded, so a rule scoped to
-		// a signer can never be matched by a spoofed header.
 		...(webBotAuthAgent && { webBotAuthAgent }),
 		// Unconditional, unlike the fields above: an allow-list has to match a
 		// request whose UA we can't classify, which lands on "unknown".
@@ -137,11 +135,9 @@ const SCALAR_USER_SCOPE_FIELDS = [
 	"asn",
 	"os",
 	"browser",
-	// The header-rule candidacy sentinel. Its equality check ("1" === "1") is
-	// always trivially true; the real header condition (name/value/operator) is
-	// evaluated separately by `accessRuleHeaderMatches`. Listed here so a header
-	// rule scores one specificity point, mirroring `exists(@headerMatch)` in the
-	// reader's SPECIFICITY_EXPR.
+	// Always-equal sentinel (the real header condition is checked by
+	// `accessRuleHeaderMatches`). Listed so a header rule scores one specificity
+	// point, mirroring `exists(@headerMatch)` in the reader's SPECIFICITY_EXPR.
 	"headerMatch",
 	"webBotAuthAgent",
 ] as const satisfies ReadonlyArray<keyof UserScope>;
@@ -260,41 +256,22 @@ const ruleSpecificity = (
 	return score;
 };
 
-// Harshness within an equal-specificity tier (issue #3713). On equal
-// specificity, the harshest matching rule wins:
+// Tiebreaker within an equal-specificity tier (issue #3713):
 //   Block  >  Restrict[image, rounds DESC]  >  Restrict[puzzle]  >  Restrict[pow]
 // Specificity still dominates — a more-specific Restrict[pow] beats a
 // less-specific Block, because the operator deliberately narrowed scope
-// for that combination. Harshness only decides ties between rules at the
-// same specificity, replacing the prior Block-vs-Restrict-only tiebreaker.
+// for that combination.
 //
 // The ordering comes from `@prosopo/captcha-severity`, shared with the
-// traffic filter's `resolveChallengePolicy` and with downstream routing
-// consumers — all of them rank competing policies by the same notion of
-// "stricter". `captchaPolicySeverity` ranks the captcha type first
-// and its own difficulty setting second, so a rule's settings break ties
-// within a type without ever crossing between types.
-//
-// This previously kept its own table with tiers 10 apart and a raw
-// `base + solvedImagesCount`. `solvedImagesCount` is validated by
-// `imageMaxRoundsFieldSchema` (`number().int().min(2)`, no upper bound, and
-// `imageMaxRounds` defaults to 32), so a Restrict[pow] carrying 32 rounds
-// scored 42 and outranked a Restrict[image] at 30 — inverting the intended
-// order. The intra-type component is now clamped below the tier gap, so no
-// setting can lift a rule over a stricter captcha type.
-//
-// One deliberate change: pow rules now break ties on `powDifficulty` rather
-// than `solvedImagesCount`. Rule authoring drops `solvedImagesCount` for pow,
-// so every pow rule previously scored at the bottom of its tier regardless of
-// difficulty.
-// Image and puzzle both keep `solvedImagesCount` — it is the severity
-// currency they share, which the provider maps onto a puzzle difficulty
-// level via `severityToPuzzleDifficulty` rather than a literal round count.
+// traffic filter's `resolveChallengePolicy` and downstream routing consumers
+// so they all agree on "stricter". `captchaPolicySeverity` ranks the captcha
+// type first and its difficulty setting second, clamped below the tier gap,
+// so no setting (e.g. an unbounded `solvedImagesCount`) can lift a rule over
+// a stricter captcha type. Pow breaks ties on `powDifficulty`; image and
+// puzzle share `solvedImagesCount` as their severity currency.
 //
 // `deferToVerify` doesn't affect this ordering: it controls *when* a Block
-// fires (request-time vs verify-time), not how severe it is. The flag
-// rides on the chosen rule and downstream consumers (`findHardBlockPolicy`,
-// blockMiddleware's `enforceable` filter) read it after ranking.
+// fires (request-time vs verify-time), not how severe it is.
 const ruleHarshness = (rule: AccessRule): number => {
 	if (rule.type === AccessPolicyType.Block) {
 		return Number.MAX_SAFE_INTEGER;
@@ -333,46 +310,16 @@ export const rankCandidateRules = (
 			return ruleHarshness(b) - ruleHarshness(a);
 		});
 
-/**
- * Fetch the access rules that apply to a request, most specific first.
- *
- * Evolution of this lookup:
- *
- *  - Original: 2 × (2^n − 1) `FT.SEARCH` round trips, one per non-empty
- *    subset of the populated user-scope fields × {clientId, undefined}.
- *    n=6 fields ⇒ 126 RTTs per request.
- *  - #2657 (greedy): one OR-of-fields `FT.SEARCH`, JS-side rank picks
- *    the most-specific. 1 RTT but pulled hundreds of irrelevant hashes
- *    every request.
- *  - #2689 / 3.6.38: greedy + FT.AGGREGATE+CURSOR to defeat the silent
- *    1000-cap truncation. Tipped CPU into 125% peg in production.
- *  - 3.6.38.1 hotfix: reverted to greedy + FT.SEARCH (this file's old
- *    shape with the truncation bug back).
- *  - Now (this fix): strict-match query so every returned candidate
- *    actually applies, with specificity ranked server-side via
- *    FT.AGGREGATE+APPLY+SORTBY+LIMIT in the storage layer. Node receives
- *    at most 20 already-ranked rules — no JS sort needed for
- *    correctness, but `rankCandidateRules` is kept as defence so any
- *    mismatch between the Redis-side score and the JS semantics surfaces
- *    as ordering rather than letting traffic through.
- */
-// Process-wide TTL cache for hard-block verdicts. Same key across
-// requests collapses to one Redis round-trip within the TTL window.
-// The workload this defends against is burst-y traffic with high scope
-// overlap — every identical banned scope would otherwise hit the
-// FT.AGGREGATE against the full rule set on every request. The cache
-// is process-scoped: multi-process providers each maintain their own;
-// staleness is bounded by DEFAULT_VERDICT_CACHE_TTL_MS.
+// Process-scoped (each provider process keeps its own); staleness is bounded
+// by DEFAULT_VERDICT_CACHE_TTL_MS.
 const verdictCache = new HardBlockVerdictCache();
 
 // Exposed for tests + admin tooling that needs to bound the staleness
 // window after a rule mutation. Not on the request path.
 export const getVerdictCache = (): HardBlockVerdictCache => verdictCache;
 
-// Per-request memo attached to the Express request. Multiple middlewares
-// / task-level checks in the same request that call
-// getPrioritisedAccessRule with the same inputs share one Redis
-// round-trip. No TTL — the map lives for the request lifetime only.
+// Per-request memo attached to the Express request, so every check in one
+// request that looks up the same scope shares one Redis round-trip.
 type RequestMemo = Map<string, AccessRule[]>;
 const REQUEST_MEMO_SYMBOL = Symbol.for("prosopo.accessRuleRequestMemo");
 type RequestWithMemo = {
@@ -407,6 +354,15 @@ export type GetPrioritisedAccessRuleOptions = {
 	skipCache?: boolean;
 };
 
+/**
+ * Fetch the access rules that apply to a request, most specific first.
+ *
+ * The storage layer runs a strict-match query, so every returned candidate
+ * applies, and ranks specificity server-side (FT.AGGREGATE+APPLY+SORTBY+LIMIT),
+ * returning at most 20 rules. `rankCandidateRules` still runs as a defence, so
+ * any mismatch between the Redis-side score and the JS semantics surfaces as
+ * ordering rather than letting traffic through.
+ */
 export const getPrioritisedAccessRule = async (
 	userAccessRulesStorage: AccessRulesStorage,
 	userScope: UserScope | UserScopeRecord,
@@ -453,30 +409,18 @@ export const getPrioritisedAccessRule = async (
 		...(includeDeferred && { includeDeferred: true }),
 	};
 
-	// The compute closure defers work until the singleflight coordinator
-	// decides who does the actual storage call. When N concurrent
-	// callers race for the same scope, only one closure runs — the
-	// others await the same Promise. Kills the wave-1 stampede where
-	// every retry-storm identity misses simultaneously.
 	const compute = async (): Promise<AccessRule[]> =>
 		userAccessRulesStorage.findRules(
 			filter,
 			true, // matchingFieldsOnly — engages the split-query hot path
-			true,
+			true, // skipEmptyUserScopes
 		);
 
-	// Only the *candidate fetch* is cached — the Redis round-trip is what the
-	// cache exists to absorb. Ranking stays outside it because `ruleApplies`
-	// now consults the raw request headers, and `hardBlockCacheKey` is built
-	// from the user scope alone (arbitrary header values can't go in a cache
-	// key without destroying its hit rate). Caching a ranked list would let
-	// one request's header-rule verdict be served to a different request that
-	// shares a user scope but sends different headers.
-	//
-	// Process-wide cache with singleflight dedupe: absorbs burst traffic
-	// with identical scope, and coalesces concurrent identical misses
-	// onto one storage call. Callers that must bypass (e.g. write-path
-	// revalidation) pass skipCache=true.
+	// Only the candidate fetch is cached, never the ranked list: `ruleApplies`
+	// consults the raw request headers, but `hardBlockCacheKey` is built from
+	// the user scope alone (header values in the key would destroy its hit
+	// rate). Caching a ranked list would serve one request's header-rule
+	// verdict to another request that shares a scope but sends other headers.
 	let candidates: AccessRule[];
 	if (memoHit !== undefined) {
 		candidates = memoHit;
@@ -499,9 +443,8 @@ export class BlacklistRequestInspector {
 	public constructor(
 		private readonly userAccessRulesStorage: AccessRulesStorage,
 		private readonly environmentReadinessWaiter: () => Promise<void>,
-		// Optional so existing test-suite construction (where the DB isn't
-		// always plumbed) keeps working. When provided, requests blocked by a
-		// matched access-policy `Block` rule also write a synthetic
+		// Optional because not every caller (e.g. tests) has a DB. When provided,
+		// requests blocked by a matched `Block` rule also write a synthetic
 		// `blocked=true, deleted=true` session record so the Traffic page can
 		// aggregate per-rule block counts. Other 403 cases (missing IP, or a
 		// fail-closed middleware error) are not persisted, since there's no
@@ -535,15 +478,11 @@ export class BlacklistRequestInspector {
 		);
 
 		if (shouldAbortRequest) {
-			// Any deny decision from shouldAbortRequest - a matched Block rule
-			// (blocked IP / JA4 / user / country / ASN), a request with no IP, or
-			// a fail-closed middleware error - is a 403 Forbidden, not a 401
-			// Unauthorized: the client isn't lacking credentials, it is denied
-			// access. Body must be a structured `{ message, code }` object
-			// (not a plain string) so the widget's `result.error?.message`
-			// extractor picks it up — a plain string falls through to the
-			// generic "Cannot load CAPTCHA" fallback. Surfacing the
-			// requestId lets support quote it back on tickets.
+			// 403, not 401: the client isn't lacking credentials, it is denied
+			// access. The body must be a structured `{ message, code }` object so
+			// the widget's `result.error?.message` extractor picks it up — a plain
+			// string falls through to the generic "Cannot load CAPTCHA" fallback.
+			// The requestId lets support quote it back on tickets.
 			res.status(403).json({
 				error: {
 					message: `Forbidden: ${request.requestId ?? "unknown"}`,
@@ -571,13 +510,12 @@ export class BlacklistRequestInspector {
 			return false;
 		}
 
-		// block if no IP is present
 		if (!rawIp) {
 			logger.info(() => ({
 				data: {
-					requestedRoute: requestedRoute,
-					requestHeaders: requestHeaders,
-					requestBody: requestBody,
+					requestedRoute,
+					requestHeaders,
+					requestBody,
 				},
 				msg: "Request without IP",
 			}));
@@ -594,10 +532,8 @@ export class BlacklistRequestInspector {
 				requestBody,
 			);
 
-			// Country comes from req.ipInfo (populated by ipInfoMiddleware,
-			// which runs before blockMiddleware). Threading it in here lets
-			// country-based access rules fire at the earliest entry point —
-			// in particular, *before* a frictionless session is created.
+			// ipInfoMiddleware runs before blockMiddleware, so country/ASN rules
+			// can fire here — before a frictionless session is created.
 			const countryCode = ipInfo?.isValid ? ipInfo.countryCode : undefined;
 			const asn = ipInfo?.isValid ? ipInfo.asnNumber : undefined;
 
@@ -615,34 +551,27 @@ export class BlacklistRequestInspector {
 				),
 				clientId,
 				normalizeHeadersForMatching(requestHeaders),
-				// Request-time middleware only ever fires on Block policies
-				// (Restrict rules flow through and let the captcha-creation
-				// path decorate the response). Restrict the Redis-side
-				// candidate pool so the SERVER_SIDE_RANK_TOP_N cap can't
-				// crowd out hard-block rules in clients with dense Restrict
-				// rule populations.
+				// Only Block policies act at request time (Restrict rules flow
+				// through to the captcha-creation path). Narrowing the Redis-side
+				// pool stops the SERVER_SIDE_RANK_TOP_N cap crowding out
+				// hard-block rules for clients with many Restrict rules.
 				{ blockOnly: true, requestMemoHost },
 			);
-			// Skip policies that have explicitly opted out of request-time
-			// enforcement (`deferToVerify`). Those are matched again from
-			// `checkForHardBlock` inside each captcha task's verify path —
-			// same pattern coords rules already use, just driven by a
-			// per-policy flag rather than by blanking the scope field.
+			// `deferToVerify` policies are matched again by `checkForHardBlock`
+			// in each captcha task's verify path instead.
 			const enforceable = (accessPolicies ?? []).filter(
 				(p) => !p.deferToVerify,
 			);
-			if (enforceable.length === 0 || !enforceable[0]) {
+			const accessPolicy = enforceable[0];
+			if (!accessPolicy) {
 				return false;
 			}
-			const accessPolicy = enforceable[0];
 
 			const isBlock = AccessPolicyType.Block === accessPolicy.type;
 			if (isBlock) {
 				recordBlockedRequest("access_policy");
-				// `Restrict` policies aren't logged or persisted here — those
-				// don't 403, they let the request through with modified
-				// captcha params and the downstream captcha-creation path
-				// already writes a normal session record.
+				// `Restrict` policies don't 403; the captcha-creation path
+				// writes their normal session record.
 				this.recordBlockDecision(
 					accessPolicy,
 					{
@@ -699,7 +628,7 @@ export class BlacklistRequestInspector {
 		const ruleDescription = accessPolicy.description;
 		const userAgent =
 			typeof ctx.requestHeaders["user-agent"] === "string"
-				? (ctx.requestHeaders["user-agent"] as string)
+				? ctx.requestHeaders["user-agent"]
 				: undefined;
 
 		logger.info(() => ({
@@ -723,16 +652,14 @@ export class BlacklistRequestInspector {
 			},
 		}));
 
-		// Persistence is optional and best-effort. The log line above is the
-		// primary record; storeBlockedSession swallows its own errors so the
-		// 401 path is unaffected if Mongo is unhappy.
+		// storeBlockedSession swallows its own errors so the 403 is unaffected
+		// if Mongo is unhappy.
 		if (!this.db) {
 			return;
 		}
 		const ipAddress = ctx.rawIp ? getCompositeIpAddress(ctx.rawIp) : undefined;
 		if (!ipAddress) {
-			// Schema requires ipAddress; without a parseable IP we drop the
-			// persistence and rely on the log line.
+			// The session schema requires ipAddress.
 			return;
 		}
 		const headers = sanitizeRequestHeaders(ctx.requestHeaders);

@@ -31,7 +31,6 @@ function extractDomain(urlOrDomain: string): string {
 		);
 		return url.hostname;
 	} catch {
-		// Assume it's already a domain
 		return urlOrDomain;
 	}
 }
@@ -46,12 +45,10 @@ export async function checkSpamEmail(
 	config: ProsopoConfigOutput,
 	logger: Logger,
 ): Promise<boolean> {
-	// Extract domain from email
 	const normalizedDomain = extractDomainFromEmail(email);
 	if (!normalizedDomain) {
-		return true; // Empty or invalid email is spam
+		return true;
 	}
-	// Check if domain is in spam list
 	try {
 		const record = await db.getSpamEmailDomain(normalizedDomain);
 		if (record !== null && record !== undefined) {
@@ -65,7 +62,7 @@ export async function checkSpamEmail(
 		return false;
 	}
 
-	// SSRF Protection: Validate domain before performing network operations
+	// SSRF protection: the DNS and HTTPS checks below reach out to this domain.
 	const domainValidation = validateDomainForOutboundRequest(normalizedDomain);
 	if (!domainValidation.isValid) {
 		logger.warn(() => ({
@@ -73,10 +70,9 @@ export async function checkSpamEmail(
 			domain: normalizedDomain,
 			reason: domainValidation.reason,
 		}));
-		return true; // Treat as spam - suspicious domain
+		return true;
 	}
 
-	// Domain not found in spam list, run DNS checks
 	let dnsCheckResult: Awaited<ReturnType<typeof runDnsChecks>> | null = null;
 	try {
 		dnsCheckResult = await runDnsChecks(normalizedDomain, {
@@ -88,7 +84,7 @@ export async function checkSpamEmail(
 			error,
 			domain: normalizedDomain,
 		}));
-		return false; // Allow if DNS check fails
+		return false;
 	}
 	// TLS error on the apex website is NOT evidence that the email domain
 	// is spam. Small-business domains legitimately host email on modern
@@ -102,7 +98,6 @@ export async function checkSpamEmail(
 			domain: normalizedDomain,
 		}));
 	}
-	// If redirect domain found, check it in spam list
 	if (dnsCheckResult.redirectResult.redirectUrl) {
 		const redirectUrl = dnsCheckResult.redirectResult.redirectUrl;
 		const redirectDomain = extractDomain(redirectUrl).toLowerCase().trim();
@@ -124,9 +119,7 @@ export async function checkSpamEmail(
 			}));
 			return false;
 		}
-	}
-	// If CNAME found, check it in spam list
-	else if (
+	} else if (
 		dnsCheckResult.cnameResult &&
 		dnsCheckResult.cnameResult.length > 0
 	) {
@@ -138,7 +131,6 @@ export async function checkSpamEmail(
 			}));
 			return false;
 		}
-		// CNAME results may have trailing dots, remove them
 		const cnameDomain = firstCname.replace(/\.$/, "").toLowerCase().trim();
 		logger.info(() => ({
 			msg: "Email domain has CNAME",
@@ -158,9 +150,7 @@ export async function checkSpamEmail(
 			}));
 			return false;
 		}
-	}
-	// If MX record found, check the domain associated with it
-	else if (
+	} else if (
 		dnsCheckResult.mxRecordResult &&
 		dnsCheckResult.mxRecordResult.length > 0
 	) {
@@ -172,7 +162,6 @@ export async function checkSpamEmail(
 			}));
 			return false;
 		}
-		// MX exchange may have trailing dots, remove them
 		const mxDomain = firstMxRecord.exchange
 			.replace(/\.$/, "")
 			.toLowerCase()
@@ -202,6 +191,5 @@ export async function checkSpamEmail(
 			return false;
 		}
 	}
-	// All checks passed
 	return false;
 }

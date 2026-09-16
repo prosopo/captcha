@@ -108,10 +108,9 @@ export const buildImageMaintenanceResponse = (): CaptchaResponseBody => ({
 	},
 });
 
-// Rendered for real, because the widget now needs imagery to show anything at
-// all — there are no coordinates left to fake a challenge out of. Generation is
-// in-process and needs no database, so it works fine while Mongo is away, and
-// /submit/puzzle doesn't validate in maintenance mode so any drop resolves.
+// Rendered for real: the widget needs imagery to show anything at all.
+// Generation is in-process and needs no database, and /submit/puzzle doesn't
+// validate in maintenance mode, so any drop resolves.
 export const buildPuzzleMaintenanceResponse = async (
 	user: string,
 	dapp: string,

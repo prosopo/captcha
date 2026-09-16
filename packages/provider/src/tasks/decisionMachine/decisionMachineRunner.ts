@@ -42,28 +42,23 @@ const EXEC_TIMEOUT_MS =
 	Number.parseInt(process.env.DECISION_MACHINE_EXEC_TIMEOUT_MS ?? "", 10) ||
 	2000;
 
-/**
- * Module-level cache of loaded machine sandboxes, keyed by SHA-256 of
- * `artifact.source`. Each entry holds the extracted `module.exports` for a
- * given source blob so subsequent invocations skip both `new vm.Script(...)`
- * (JIT compilation) and `script.runInContext(...)` (top-level execution).
- *
- * Shared across every `DecisionMachineRunner` instance in the process —
- * multiple task classes (pow / img / puzzle / frictionless) each construct
- * their own runner, and there's no reason to compile the same source once
- * per runner. The exported functions are treated as stateless: they run
- * against the caller's `input` and don't mutate module-local state.
- *
- * Invalidation is triggered externally via {@link invalidateDecisionMachineScriptCache}
- * — call after any `upsertDecisionMachineArtifact` so a new artifact takes
- * effect immediately rather than waiting for the artifact TTL to expire.
- * Absent an explicit invalidate the cache is content-addressed: a new source
- * gets a new key, the old entry just sits until process restart.
- */
 interface CachedMachine {
 	exports: Record<string, unknown>;
 }
 
+/**
+ * Module-level cache of loaded machine sandboxes, keyed by SHA-256 of
+ * `artifact.source`, so repeat invocations skip both `new vm.Script(...)`
+ * and the top-level `script.runInContext(...)`.
+ *
+ * Shared across every `DecisionMachineRunner` in the process, since each task
+ * class constructs its own runner. The exported functions are treated as
+ * stateless: they run against the caller's `input` and don't mutate
+ * module-local state.
+ *
+ * Content-addressed, so a new source gets a new key and the old entry sits
+ * until restart; {@link invalidateDecisionMachineScriptCache} clears it.
+ */
 const machineCache = new Map<string, CachedMachine>();
 
 const hashSource = (source: string): string =>
@@ -103,10 +98,10 @@ const loadMachine = (source: string): CachedMachine => {
 };
 
 /**
- * Clear the module-level script cache. Call after any decision-machine
- * artifact upload so the new source is executed on the next request instead
- * of waiting for the artifact TTL. Also clear every `DecisionMachineRunner`
- * instance's artifact cache — see {@link DecisionMachineRunner.invalidateAllArtifactCaches}.
+ * Clear the module-level script cache. Call together with
+ * {@link invalidateAllDecisionMachineArtifactCaches} after any
+ * `upsertDecisionMachineArtifact` so the new artifact takes effect on the next
+ * request instead of waiting for the artifact TTL.
  */
 export const invalidateDecisionMachineScriptCache = (): void => {
 	machineCache.clear();
@@ -117,7 +112,7 @@ const ARTIFACT_CACHE_TTL_MS =
 	Number.parseInt(
 		process.env.DECISION_MACHINE_ARTIFACT_CACHE_TTL_MS ?? "",
 		10,
-	) || 5 * 60 * 1000; // 5 minutes
+	) || 5 * 60 * 1000;
 
 const DEFAULT_DECISION: DecisionMachineOutput = {
 	decision: DecisionMachineDecision.Allow,
@@ -136,21 +131,13 @@ interface NamedExport {
 }
 
 /**
- * WeakSet-style registry of every live runner. Populated in the constructor
- * and consulted by {@link invalidateAllDecisionMachineArtifactCaches} so an
- * artifact upload can flush every runner's in-memory artifact cache in one
- * call. Held as `WeakRef` so a runner that goes out of scope is garbage
- * collected — this map only ever grows in prod (runners are constructed
- * per task class at process start and live for the process's lifetime) so
- * a plain array would also work, but `WeakRef` is defensive.
+ * Every live runner, so {@link invalidateAllDecisionMachineArtifactCaches} can
+ * flush all their artifact caches in one call. Held as `WeakRef` so a runner
+ * that goes out of scope can still be garbage collected.
  */
 const liveRunners = new Set<WeakRef<DecisionMachineRunner>>();
 
-/**
- * Flush every runner's in-memory artifact cache. Companion to
- * {@link invalidateDecisionMachineScriptCache}. Call both after any
- * `upsertDecisionMachineArtifact` upload.
- */
+/** Flush every runner's artifact cache. See {@link invalidateDecisionMachineScriptCache}. */
 export const invalidateAllDecisionMachineArtifactCaches = (): void => {
 	for (const ref of liveRunners) {
 		const runner = ref.deref();
@@ -169,12 +156,10 @@ export class DecisionMachineRunner {
 		liveRunners.add(new WeakRef(this));
 	}
 
-	/** Drop every entry in this runner's artifact cache. */
 	public invalidateArtifactCache(): void {
 		this.artifactCache.clear();
 	}
 
-	/** Build a cache key for a given scope + kind + dappAccount tuple. */
 	private static cacheKey(
 		scope: DecisionMachineScope,
 		kind: DecisionMachineKind,
@@ -183,26 +168,26 @@ export class DecisionMachineRunner {
 		return `${scope}:${kind}:${dappAccount ?? ""}`;
 	}
 
-	/** Return a cached artifact if still fresh, or undefined. */
+	/**
+	 * Returns `null` on a miss or expired entry, and `undefined` for a cached
+	 * negative result (no artifact exists).
+	 */
 	private getCachedArtifact(
 		scope: DecisionMachineScope,
 		kind: DecisionMachineKind,
 		dappAccount?: string,
 	): DecisionMachineArtifact | undefined | null {
-		const entry = this.artifactCache.get(
-			DecisionMachineRunner.cacheKey(scope, kind, dappAccount),
-		);
-		if (!entry) return null; // cache miss
+		const key = DecisionMachineRunner.cacheKey(scope, kind, dappAccount);
+		const entry = this.artifactCache.get(key);
+		if (!entry) return null;
 		if (Date.now() - entry.cachedAt > ARTIFACT_CACHE_TTL_MS) {
-			this.artifactCache.delete(
-				DecisionMachineRunner.cacheKey(scope, kind, dappAccount),
-			);
-			return null; // expired
+			this.artifactCache.delete(key);
+			return null;
 		}
-		return entry.artifact; // may be undefined (negative cache)
+		return entry.artifact;
 	}
 
-	/** Store an artifact (or undefined for negative cache) in the cache. */
+	/** Pass `undefined` as the artifact to cache a negative result. */
 	private setCachedArtifact(
 		scope: DecisionMachineScope,
 		kind: DecisionMachineKind,
@@ -357,7 +342,6 @@ export class DecisionMachineRunner {
 		kind: DecisionMachineKind,
 		captchaType?: DecisionMachineCaptchaType,
 	): Promise<DecisionMachineArtifact | undefined> {
-		// Try cache first for both scopes
 		const cachedDapp = this.getCachedArtifact(
 			DecisionMachineScope.Dapp,
 			kind,
@@ -368,56 +352,48 @@ export class DecisionMachineRunner {
 			kind,
 		);
 
-		// Both cached (including negative cache) — use priority logic without DB calls
 		if (cachedDapp !== null && cachedGlobal !== null) {
-			if (cachedDapp && this.matchesCaptchaType(cachedDapp, captchaType)) {
-				return cachedDapp;
-			}
-			if (cachedGlobal && this.matchesCaptchaType(cachedGlobal, captchaType)) {
-				return cachedGlobal;
-			}
-			return undefined;
+			return this.pickByPriority(cachedDapp, cachedGlobal, captchaType);
 		}
 
-		// Fetch both scopes in parallel when cache misses
 		const [dappArtifact, globalArtifact] = await Promise.all([
 			cachedDapp !== null
 				? Promise.resolve(cachedDapp)
-				: this.db
-						.getDecisionMachineArtifact(
-							DecisionMachineScope.Dapp,
-							dappAccount,
-							kind,
-						)
-						.then((a) => {
-							this.setCachedArtifact(
-								DecisionMachineScope.Dapp,
-								kind,
-								dappAccount,
-								a ?? undefined,
-							);
-							return a ?? undefined;
-						}),
+				: this.fetchAndCacheArtifact(
+						DecisionMachineScope.Dapp,
+						kind,
+						dappAccount,
+					),
 			cachedGlobal !== null
 				? Promise.resolve(cachedGlobal)
-				: this.db
-						.getDecisionMachineArtifact(
-							DecisionMachineScope.Global,
-							undefined,
-							kind,
-						)
-						.then((a) => {
-							this.setCachedArtifact(
-								DecisionMachineScope.Global,
-								kind,
-								undefined,
-								a ?? undefined,
-							);
-							return a ?? undefined;
-						}),
+				: this.fetchAndCacheArtifact(
+						DecisionMachineScope.Global,
+						kind,
+						undefined,
+					),
 		]);
 
-		// Apply priority: dapp-specific first, then global
+		return this.pickByPriority(dappArtifact, globalArtifact, captchaType);
+	}
+
+	private fetchAndCacheArtifact(
+		scope: DecisionMachineScope,
+		kind: DecisionMachineKind,
+		dappAccount: string | undefined,
+	): Promise<DecisionMachineArtifact | undefined> {
+		return this.db
+			.getDecisionMachineArtifact(scope, dappAccount, kind)
+			.then((a) => {
+				this.setCachedArtifact(scope, kind, dappAccount, a ?? undefined);
+				return a ?? undefined;
+			});
+	}
+
+	private pickByPriority(
+		dappArtifact: DecisionMachineArtifact | undefined,
+		globalArtifact: DecisionMachineArtifact | undefined,
+		captchaType: DecisionMachineCaptchaType | undefined,
+	): DecisionMachineArtifact | undefined {
 		if (dappArtifact && this.matchesCaptchaType(dappArtifact, captchaType)) {
 			return dappArtifact;
 		}
@@ -427,7 +403,6 @@ export class DecisionMachineRunner {
 		) {
 			return globalArtifact;
 		}
-
 		return undefined;
 	}
 
@@ -444,11 +419,9 @@ export class DecisionMachineRunner {
 		artifact: DecisionMachineArtifact,
 		captchaType?: string,
 	): boolean {
-		// If artifact has no captchaType filter, it runs on all captcha types
 		if (!artifact.captchaType) {
 			return true;
 		}
-		// If artifact has captchaType filter, it only runs on matching type
 		return artifact.captchaType === captchaType;
 	}
 
@@ -502,7 +475,7 @@ export class DecisionMachineRunner {
 		exportNames: string[],
 	): NamedExport | undefined {
 		// Treat the entire module.exports as the default function only when
-		// "default" is acceptable.
+		// "default" (or "decide") is acceptable.
 		if (
 			typeof exported === "function" &&
 			(exportNames.includes("default") || exportNames.includes("decide"))

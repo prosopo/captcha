@@ -24,18 +24,13 @@ import { setMaintenanceModeGauge } from "../metrics.js";
 
 type ToggleMaintenanceModeBodyType = typeof ToggleMaintenanceModeBody;
 
-/**
- * Get the current maintenance mode state
- * Defaults to false if not set in environment
- */
 export function getMaintenanceMode(): boolean {
 	return process.env.MAINTENANCE_MODE?.toLowerCase() === "true";
 }
 
 /**
- * Set the maintenance mode state
- * Note: This modifies process.env which persists for the lifetime of the Node.js process
- * In Lambda, this means it persists until the container is recycled
+ * Stored in process.env, so it lasts for the lifetime of the process (in
+ * Lambda, until the container is recycled).
  */
 export function setMaintenanceMode(enabled: boolean): void {
 	process.env.MAINTENANCE_MODE = enabled ? "true" : "false";

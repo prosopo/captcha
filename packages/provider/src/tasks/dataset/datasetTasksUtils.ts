@@ -20,7 +20,6 @@ export const providerValidateDataset = async (
 	minSolvedCaptchas: number,
 	minUnsolvedCaptchas: number,
 ) => {
-	// Check that the number of captchas in the dataset is greater or equal to min number of solved captchas
 	if (datasetRaw.captchas.length < minSolvedCaptchas + minUnsolvedCaptchas) {
 		throw new ProsopoEnvError("DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED", {
 			context: { failedFuncName: providerValidateDataset.name },
@@ -31,7 +30,6 @@ export const providerValidateDataset = async (
 		.map((captcha): number => (captcha.solution ? 1 : 0))
 		.reduce((partialSum, b) => partialSum + b, 0);
 
-	// Check enough solved captchas
 	if (solutions < minSolvedCaptchas) {
 		throw new ProsopoEnvError("DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED", {
 			context: { failedFuncName: providerValidateDataset.name },
@@ -47,7 +45,6 @@ export const providerValidateDataset = async (
 
 	const dataset = await buildDataset(datasetRaw);
 
-	// Check DSetID and DSetContentID are defined
 	if (!dataset.datasetId || !dataset.datasetContentId) {
 		throw new ProsopoEnvError("DATASET.DATASET_ID_UNDEFINED", {
 			context: {

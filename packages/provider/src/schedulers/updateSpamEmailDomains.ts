@@ -21,9 +21,6 @@ import { checkIfTaskIsRunning } from "../util.js";
 
 /**
  * Update spam email domains from configured URLs on a schedule.
- * @param pair
- * @param cronSchedule
- * @param config
  */
 export async function updateSpamEmailDomainsScheduler(
 	pair: KeyringPair,

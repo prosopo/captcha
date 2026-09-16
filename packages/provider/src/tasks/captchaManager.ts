@@ -86,8 +86,7 @@ export interface PoolBundleDecrypt {
  * Finds a hard block policy from access policies.
  *
  * A hard block is either:
- *   (a) A Block policy with no captchaType (the historical "block all
- *       challenge types" case).
+ *   (a) A Block policy with no captchaType (blocks all challenge types).
  *   (b) A Block policy with `deferToVerify: true` — request-time
  *       middleware skips these, so verify-time is the only place they
  *       can reject the commitment.
@@ -140,9 +139,8 @@ export class CaptchaManager {
 	 * the Redis cache patch is awaited (so the in-request view of the
 	 * session is up-to-date for any subsequent fast-path read), and the
 	 * Mongo write is fire-and-forget so the response isn't gated on a
-	 * round-trip to Mongo. Matches the `RedisWriteQueue` design where
-	 * Redis is the source of truth for the in-flight request and Mongo is
-	 * eventually consistent.
+	 * round-trip to Mongo. Redis is the source of truth for the in-flight
+	 * request and Mongo is eventually consistent.
 	 *
 	 * Prefer this over `this.db.updateSessionRecord` in any in-request
 	 * handler.
@@ -152,15 +150,12 @@ export class CaptchaManager {
 		updates: Partial<Session>,
 		streamToCentral?: boolean,
 	): Promise<void> {
-		// Cache first — this is what the rest of the request sees.
 		if (this.writeQueue) {
 			await this.writeQueue.patchCachedSession(
 				sessionId,
 				updates as unknown as Record<string, unknown>,
 			);
 		}
-		// Mongo write happens in the background. Errors are logged but the
-		// response has already been served on the strength of the cache.
 		this.scheduleMongoSessionUpdate(sessionId, updates, streamToCentral);
 	}
 
@@ -371,8 +366,8 @@ export class CaptchaManager {
 		currentIP: string,
 		env: ProviderEnvironment,
 	): Promise<{ valid: boolean; reason?: TranslationKey }> {
-		// Session record now contains IP address directly
-		// No validation needed as the session already has all required info
+		// Intentionally a no-op: the session record already carries the IP
+		// address, so nothing is re-validated here.
 		return { valid: true };
 	}
 
@@ -411,25 +406,13 @@ export class CaptchaManager {
 		// invalidate the widget's in-flight solve. The policy still fires at
 		// verify time (decisionMachineRunner + checkForHardBlock), so the
 		// abuse signal is not lost — only the false-positive
-		// INCORRECT_CAPTCHA_TYPE on the widget's second call is avoided.
+		// INCORRECT_CAPTCHA_TYPE on the widget's second call is avoided (see
+		// "user access policy precedence over session" in
+		// captchaManager.unit.test.ts).
 		//
-		// Historical shape (removed 2026-08-06): the check ran up here BEFORE
-		// the sessionId lookup, so any restrict-to-image rule inserted by an
-		// anomaly detector between /frictionless and /captcha/pow surfaced
-		// as a sustained baseline of INCORRECT_CAPTCHA_TYPE 400s. The
-		// specific race is captured in captchaManager.unit.test.ts under
-		// "user access policy precedence over session".
-		//
-		// Block policies have their captchaType stripped by sanitizeAccessPolicy
-		// on write, and a policy without a pinned captchaType applies to all
-		// captcha types (not rejects all of them). deferToVerify policies are
-		// filtered by callers — see getImageCaptchaChallenge et al.
-		//
-		// Session ID
-		// All client flows now go through the unified /frictionless entry point,
+		// All client flows go through the unified /frictionless entry point,
 		// so a sessionId may accompany any configured captchaType (frictionless
-		// runs the decision machine; image/pow/puzzle short-circuit). We trust
-		// the session record's captchaType as the source of truth.
+		// runs the decision machine; image/pow/puzzle short-circuit).
 		if (sessionId) {
 			// Look up the cache record before consuming the session so we
 			// can invalidate the hash → sessionId mapping even when the DB
@@ -446,26 +429,18 @@ export class CaptchaManager {
 				typeof cachedBeforeRemove?.userSitekeyIpHash === "string"
 					? cachedBeforeRemove.userSitekeyIpHash
 					: undefined;
-			await Promise.all([
-				this.writeQueue?.invalidateCachedSession(sessionId),
-				cachedHash
-					? this.writeQueue?.invalidateCachedSessionByHash(cachedHash)
-					: Promise.resolve(),
-			]);
+			await this.invalidateCachedSessionAndHash(sessionId, cachedHash);
 
 			let sessionRecord = await this.db.checkAndRemoveSession(sessionId);
 			let resolvedSessionId = sessionId;
 			if (!sessionRecord && this.writeQueue) {
-				// Origin session was consumed (or never existed). Before
-				// returning NO_SESSION_FOUND, check whether a post-PoW
-				// escalation minted a follow-up session for this origin.
-				// `buildEscalation` in submitPoWCaptchaSolution.ts writes
-				// this mapping when the routing machine returns image or
-				// puzzle from postPow. Real-world widgets and dapps that
-				// don't fully wire `onEscalate` keep calling /captcha/*
-				// with the original sessionId — without this fallback they
-				// see CAPTCHA.NO_SESSION_FOUND and the user lands on the
-				// FAQ page.
+				// Origin session was consumed (or never existed). Check
+				// whether a post-PoW escalation minted a follow-up session
+				// for this origin (`buildEscalation` in
+				// submitPoWCaptchaSolution.ts writes this mapping). Widgets
+				// and dapps that don't fully wire `onEscalate` keep calling
+				// /captcha/* with the original sessionId and would otherwise
+				// get CAPTCHA.NO_SESSION_FOUND.
 				const escalationSessionId =
 					await this.writeQueue.getCachedSessionEscalation(sessionId);
 				if (escalationSessionId && escalationSessionId !== sessionId) {
@@ -498,13 +473,6 @@ export class CaptchaManager {
 								resolvedSessionId = escalationSessionId;
 							}
 						} else {
-							// Type mismatch: do NOT consume the escalation
-							// session, drop the pointer, and surface
-							// INCORRECT_CAPTCHA_TYPE directly. A widget
-							// that knows how to follow the PoW-submit
-							// escalation envelope can still reach
-							// `escalationSessionId` via the correct
-							// /captcha/{type} endpoint.
 							this.logger.warn(() => ({
 								msg: "Escalation captcha type does not match requested type",
 								data: {
@@ -537,7 +505,7 @@ export class CaptchaManager {
 					msg: "No session found",
 					data: {
 						account: clientSettings.account,
-						sessionId: sessionId,
+						sessionId,
 					},
 				}));
 				// DB and cache have drifted (e.g. cache outlived the DB
@@ -546,16 +514,7 @@ export class CaptchaManager {
 				// and /frictionless keeps "Reusing existing session" →
 				// /captcha/* keeps failing in an infinite loop.
 				if (this.writeQueue) {
-					const cachedHash =
-						typeof cachedBeforeRemove?.userSitekeyIpHash === "string"
-							? cachedBeforeRemove.userSitekeyIpHash
-							: undefined;
-					await Promise.all([
-						this.writeQueue.invalidateCachedSession(sessionId),
-						cachedHash
-							? this.writeQueue.invalidateCachedSessionByHash(cachedHash)
-							: Promise.resolve(),
-					]);
+					await this.invalidateCachedSessionAndHash(sessionId, cachedHash);
 				}
 				return {
 					valid: false,
@@ -563,31 +522,21 @@ export class CaptchaManager {
 					type: requestedCaptchaType,
 				};
 			}
-			// From here on, `sessionId` (the variable) tracks whichever
-			// sessionId we actually resolved against. Subsequent cache
-			// invalidations and downstream consumers should use that, not
-			// the originally requested id — otherwise the escalation
-			// session's own cache entries leak past the consume.
+			// Use the resolved (possibly escalation) sessionId from here on,
+			// otherwise the escalation session's own cache entries leak past
+			// the consume.
 			sessionId = resolvedSessionId;
 
-			// Invalidate the Redis session cache so that subsequent
-			// requests do not receive this now-deleted sessionId from
-			// the stale cache. Both the sessionId cache and the
-			// hash → sessionId mapping must be invalidated, awaited so
-			// no concurrent write (e.g. solution-submit `patchCachedSession`)
-			// can re-populate the entry between consume and response.
+			// Awaited so no concurrent write (e.g. solution-submit
+			// `patchCachedSession`) can re-populate the consumed session's
+			// cache entries between consume and response.
 			if (this.writeQueue) {
-				await Promise.all([
-					this.writeQueue.invalidateCachedSession(sessionId),
-					sessionRecord.userSitekeyIpHash
-						? this.writeQueue.invalidateCachedSessionByHash(
-								sessionRecord.userSitekeyIpHash,
-							)
-						: Promise.resolve(),
-				]);
+				await this.invalidateCachedSessionAndHash(
+					sessionId,
+					sessionRecord.userSitekeyIpHash,
+				);
 			}
 
-			// Validate IP address if currentIP is provided
 			if (currentIP) {
 				const ipValidation = await this.validateSessionIP(
 					sessionRecord,
@@ -603,13 +552,12 @@ export class CaptchaManager {
 				}
 			}
 
-			// Check the captcha type of the session is the same as the requested captcha type
 			if (sessionRecord.captchaType !== requestedCaptchaType) {
 				this.logger.warn(() => ({
 					msg: "Session captcha type does not match requested type",
 					data: {
 						account: clientSettings.account,
-						sessionId: sessionId,
+						sessionId,
 						sessionCaptchaType: sessionRecord.captchaType,
 						requestedCaptchaType,
 					},
@@ -635,14 +583,14 @@ export class CaptchaManager {
 			};
 		}
 
-		// No Session ID
-
-		// Sessionless request: policy captchaType (if pinned by an active
-		// restrict rule) still takes precedence over the client's configured
+		// Sessionless request (widget hitting /captcha/{type} without going
+		// through /frictionless first): policy captchaType, if pinned by an
+		// active restrict rule, takes precedence over the client's configured
 		// captchaType, because there's no minted-in-context session to trust.
-		// This preserves the pre-2026-08-06 behaviour for the direct-entry
-		// case (widget hitting /captcha/{type} without going through
-		// /frictionless first).
+		// Block policies have their captchaType stripped by sanitizeAccessPolicy
+		// on write, and a policy without a pinned captchaType applies to all
+		// captcha types (not rejects all of them). deferToVerify policies are
+		// filtered by callers — see getImageCaptchaChallenge et al.
 		if (
 			userAccessPolicy?.captchaType !== undefined &&
 			userAccessPolicy.captchaType !== requestedCaptchaType
@@ -662,16 +610,12 @@ export class CaptchaManager {
 			};
 		}
 
-		// To pass here a user must be requesting the captchaType that is stored on the client's settings.
-		// - If `captchaType` is `image` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `image`
-		// - If `captchaType` is `pow` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `pow`
-		// - If `captchaType` is `frictionless` and there is no `sessionId` then `clientSettings?.settings?.captchaType,` must be set to `frictionless`
 		if (clientSettings?.settings?.captchaType !== requestedCaptchaType) {
 			this.logger.warn(() => ({
 				msg: `Invalid ${requestedCaptchaType} request`,
 				data: {
 					account: clientSettings.account,
-					requestedCaptchaType: requestedCaptchaType,
+					requestedCaptchaType,
 					settingsCaptchaType: clientSettings?.settings?.captchaType,
 				},
 			}));
@@ -683,6 +627,18 @@ export class CaptchaManager {
 		}
 
 		return { valid: true, type: requestedCaptchaType };
+	}
+
+	private invalidateCachedSessionAndHash(
+		sessionId: string,
+		userSitekeyIpHash: string | undefined,
+	): Promise<unknown[]> {
+		return Promise.all([
+			this.writeQueue?.invalidateCachedSession(sessionId),
+			userSitekeyIpHash
+				? this.writeQueue?.invalidateCachedSessionByHash(userSitekeyIpHash)
+				: Promise.resolve(),
+		]);
 	}
 
 	getVerificationResponse(
@@ -830,11 +786,9 @@ export class CaptchaManager {
 	/**
 	 * Decrypt the catcher's WASM SIMD CPU fingerprint readings via the
 	 * obfuscated `decodeSimd.js` bundle (source lives in the private
-	 * @prosopo/catcher repo). The detector lives only in provider-served pool
-	 * bundles, so decryption uses that session's single bundle (RSA key + inner
-	 * cipher) — there is no key pool. Returns null when no bundle is resolved or
-	 * decryption fails, so the caller can drop the field rather than fail the
-	 * whole request.
+	 * @prosopo/catcher repo), using the session's pool bundle. Returns null when
+	 * no bundle is resolved or decryption fails, so the caller can drop the
+	 * field rather than fail the whole request.
 	 */
 	async decryptSimdReadings(
 		encryptedData: string,
@@ -902,8 +856,8 @@ export class CaptchaManager {
 	}
 
 	/**
-	 * Checks if a user should be hard blocked based on access policies
-	 * Only checks for Block policies without captchaType
+	 * Checks if a user should be hard blocked based on access policies (see
+	 * `findHardBlockPolicy` for what counts as a hard block).
 	 *
 	 * @returns The blocking policy if user should be blocked, undefined otherwise
 	 */
@@ -919,7 +873,6 @@ export class CaptchaManager {
 		// the matched rule (scope fields included) onto the record they
 		// disapprove, so the audit page can name the exact policy.
 	): Promise<AccessRule | undefined> {
-		// Get headHash from session record if available
 		let headHash: string | undefined;
 		if (challengeRecord.sessionId) {
 			const sessionRecord = await this.db.getSessionRecordBySessionId(
@@ -928,7 +881,6 @@ export class CaptchaManager {
 			headHash = sessionRecord?.decryptedHeadHash;
 		}
 
-		// Serialize coords to string for querying
 		const coordsString = coords ? JSON.stringify(coords) : undefined;
 
 		const ipAddressRecord = getIpAddressFromComposite(
@@ -962,9 +914,8 @@ export class CaptchaManager {
 			// `includeDeferred` widens that pool to
 			// `(@type:{block} | @deferToVerify:{true})`. A deferred rule
 			// is skipped at request time and enforced here, so it is a
-			// valid hard block whatever its type — findHardBlockPolicy
-			// below already accepts one (case c), but a Block-only pool
-			// meant a deferred Restrict was never fetched to be found.
+			// valid hard block whatever its type (findHardBlockPolicy
+			// case c) and has to be in the fetched pool to be found.
 			{ blockOnly: true, includeDeferred: true },
 		);
 

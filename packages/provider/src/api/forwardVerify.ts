@@ -18,25 +18,6 @@ import type { Logger } from "@prosopo/logger";
 import type { ClientApiPaths, VerificationResponse } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 
-/**
- * A client can send a verify request to *any* pronode, not necessarily the
- * provider that issued the token. This determines the issuing provider from the
- * `providerUrl` embedded in the token and, when it is a *different* provider to
- * this one, forwards the verification request to it and returns its response —
- * mirroring the AWS Lambda verify endpoint, but running on a provider.
- *
- * Returns `null` when this provider is the issuer (or the issuer cannot be
- * determined), signalling the caller to verify locally as before.
- *
- * @param env - The provider environment
- * @param logger - Request-scoped logger
- * @param path - The verify path to forward to (kept identical, so the issuer
- *   routes the request to the correct captcha-type verification)
- * @param providerUrl - The issuing provider url, decoded from the token
- * @param dapp - The site key (used as the `Prosopo-Site-Key` header)
- * @param user - The user account (used as the `Prosopo-User` header)
- * @param body - The original, already-parsed request body, forwarded verbatim
- */
 // Strip the `ipv4.`/`ipv6.` single-stack DNS label and any trailing slash so a
 // token's `providerUrl` and a provider-list entry compare equal regardless of
 // which stack the token was minted on. Falls back to a trailing-slash-trimmed
@@ -51,6 +32,25 @@ function normalizeProviderUrl(url: string): string {
 	}
 }
 
+/**
+ * A client can send a verify request to *any* pronode, not necessarily the
+ * provider that issued the token. This determines the issuing provider from the
+ * `providerUrl` embedded in the token and, when it is a *different* provider to
+ * this one, forwards the verification request to it and returns its response —
+ * mirroring the AWS Lambda verify endpoint, but running on a provider.
+ *
+ * Returns `null` when this provider is the issuer (or the issuer cannot be
+ * determined), signalling the caller to verify locally.
+ *
+ * @param env - The provider environment
+ * @param logger - Request-scoped logger
+ * @param path - The verify path to forward to (kept identical, so the issuer
+ *   routes the request to the correct captcha-type verification)
+ * @param providerUrl - The issuing provider url, decoded from the token
+ * @param dapp - The site key (used as the `Prosopo-Site-Key` header)
+ * @param user - The user account (used as the `Prosopo-User` header)
+ * @param body - The original, already-parsed request body, forwarded verbatim
+ */
 export async function forwardVerifyIfNotIssuer(args: {
 	env: ProviderEnvironment;
 	logger: Logger;
@@ -72,15 +72,12 @@ export async function forwardVerifyIfNotIssuer(args: {
 		return null;
 	}
 
-	// No issuer url in the token → we can't forward; verify locally (this also
-	// preserves behaviour for any older tokens that omit providerUrl).
 	if (!providerUrl) {
 		return null;
 	}
 
-	// Loading the provider list can fail (e.g. network/RPC error). Honour the
-	// "returns null when the issuer cannot be determined" contract and degrade
-	// gracefully to local verification rather than surfacing a 500.
+	// A provider-list load failure means the issuer cannot be determined:
+	// verify locally rather than surfacing a 500.
 	let providers: Awaited<ReturnType<typeof getProviders>>;
 	try {
 		providers = await getProviders(env.defaultEnvironment);
@@ -96,8 +93,7 @@ export async function forwardVerifyIfNotIssuer(args: {
 	// SSRF guard: only ever forward to a url that belongs to a known provider.
 	// Match on a normalised url so a single-stack issuer (a token minted with an
 	// `ipv4.`/`ipv6.`-labelled hostname, as `getRandomActiveProvider` can hand
-	// back) still resolves to its canonical dual-stack provider-list entry. We
-	// still forward to the vetted `issuer.url`, so the guard is unchanged.
+	// back) still resolves to its canonical dual-stack provider-list entry.
 	const normalizedProviderUrl = normalizeProviderUrl(providerUrl);
 	const issuer = providers.find(
 		(provider) => normalizeProviderUrl(provider.url) === normalizedProviderUrl,
@@ -110,8 +106,6 @@ export async function forwardVerifyIfNotIssuer(args: {
 		return null;
 	}
 
-	// If this node is the provider that issued the token, verify locally rather
-	// than forwarding to ourselves (which would just add a redundant hop/loop).
 	if (env.pair?.address && issuer.address === env.pair.address) {
 		return null;
 	}

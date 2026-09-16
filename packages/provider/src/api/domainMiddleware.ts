@@ -35,7 +35,6 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
-			// If maintenance mode is active, skip domain validation
 			if (getMaintenanceMode()) {
 				req.logger.info(() => ({
 					msg: "Maintenance mode active - skipping domain validation",
@@ -59,7 +58,7 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 
 			try {
 				validateAddress(siteKey, false, 42);
-			} catch (err) {
+			} catch {
 				throw invalidSiteKeyError(req.i18n, siteKey, req.logger);
 			}
 
@@ -149,7 +148,7 @@ const invalidSiteKeyError = (
 	logger?: Logger,
 ) => {
 	return new ProsopoApiError("API.INVALID_SITE_KEY", {
-		context: { code: 400, siteKey: siteKey },
+		context: { code: 400, siteKey },
 		i18n,
 		logger,
 	});

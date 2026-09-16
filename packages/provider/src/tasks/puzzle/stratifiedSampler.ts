@@ -17,10 +17,9 @@ import { randomBytes, randomInt } from "node:crypto";
 /**
  * Stratified, interleaved sampling over a numeric range.
  *
- * Generalised out of the piece-size draw in `puzzleRenderer`, which needed
- * more than `Math.random()`: a plain uniform draw permits runs that cluster
- * at one end of the range purely by chance, and a clustered run is exactly
- * what an automated solver calibrates against. Splitting the range into
+ * A plain uniform draw permits runs that cluster at one end of the range
+ * purely by chance, and a clustered run is exactly what an automated solver
+ * calibrates against. Splitting the range into
  * buckets and visiting every bucket once per cycle bounds how unrepresentative
  * any window of N consecutive draws can be.
  *
@@ -90,7 +89,8 @@ export const createStratifiedSampler = (
 ): StratifiedSampler => {
 	// Even bucket count is required by the interleave below; fall back to the
 	// default rather than silently producing an unbalanced cycle.
-	const bucketCount = buckets > 0 && buckets % 2 === 0 ? buckets : 8;
+	const bucketCount =
+		buckets > 0 && buckets % 2 === 0 ? buckets : STRATIFIED_BUCKETS;
 	let order: number[] = [];
 	let cursor = 0;
 

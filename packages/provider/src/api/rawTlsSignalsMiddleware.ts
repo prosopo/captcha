@@ -96,16 +96,12 @@ const parseIntHeader = (
 	return parsed;
 };
 
-// Kernel monotonic ns bumps into Number.MAX_SAFE_INTEGER (2^53) territory
-// after ~104 days of uptime and hosts stay up longer than that (staging
-// caught the bug immediately — first pronode had ~119-day uptime and
-// every syn_ns / synack_ns / ack_ns was rejected as malformed, wiping
-// the raw timings from every Session record). Cap at 2^63 so bogus
-// values (negatives, non-numeric text) are still rejected but real
-// long-uptime timestamps land. Values above 2^53 lose ~ns precision on
-// storage (Mongo Double follows IEEE-754 like Number), which is fine
-// since every consumer subtracts them before use — a delta of two
-// low-nanosecond noise floors carries no useful information anyway.
+// Kernel monotonic ns passes Number.MAX_SAFE_INTEGER (2^53) after ~104 days
+// of uptime, and hosts stay up longer than that, so the cap is 2^63: bogus
+// values (negatives, non-numeric text) are still rejected but long-uptime
+// timestamps land. Values above 2^53 lose ~ns precision (Number and Mongo
+// Double are both IEEE-754), which is fine since every consumer only uses
+// deltas.
 const MAX_NS = 2 ** 63;
 const MAX_U8 = 255;
 const MAX_U16 = 65535;
@@ -164,12 +160,8 @@ export const getRawTlsSignals = (
 	};
 };
 
-// Helper for the session-write path: pull the raw TLS signals off `req`
-// into a plain object with only the defined fields. Callers spread it into
-// their session record (or into a routing `raw` bag) alongside the existing
-// tcpToChelloUs / chelloToHandshakeUs conditional spreads. Undefined fields
-// are omitted so the resulting Mongo document stays slim on requests that
-// came in without a tcp-probe pipeline.
+// Copies only the defined raw TLS signals, so a session record spread from it
+// stays slim on requests that came in without a tcp-probe pipeline.
 export const rawTlsSignalsForSession = (
 	req: Pick<Request, keyof RawTlsSignals>,
 ): Partial<RawTlsSignals> => {
@@ -186,26 +178,12 @@ export const rawTlsSignalsForSession = (
 	return out;
 };
 
-// env kept in the signature for parity with the other provider middlewares
-// (ja4Middleware, ipInfoMiddleware, handshakeTimingMiddleware). Currently
-// unused but reserved so future per-tenant configuration can hook in without
-// changing the startProviderApi wiring.
+// env is unused; kept for signature parity with handshakeTimingMiddleware.
 export const rawTlsSignalsMiddleware = (env: ProviderEnvironment) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const signals = getRawTlsSignals(req.headers, req.logger);
-			if (signals.synNs !== undefined) req.synNs = signals.synNs;
-			if (signals.synackNs !== undefined) req.synackNs = signals.synackNs;
-			if (signals.ackNs !== undefined) req.ackNs = signals.ackNs;
-			if (signals.observedTtl !== undefined)
-				req.observedTtl = signals.observedTtl;
-			if (signals.tcpMss !== undefined) req.tcpMss = signals.tcpMss;
-			if (signals.tcpWscale !== undefined) req.tcpWscale = signals.tcpWscale;
-			if (signals.tcpOptsFlags !== undefined)
-				req.tcpOptsFlags = signals.tcpOptsFlags;
-			if (signals.tcpOptsOrder !== undefined)
-				req.tcpOptsOrder = signals.tcpOptsOrder;
-			if (signals.tcpWindow !== undefined) req.tcpWindow = signals.tcpWindow;
+			Object.assign(req, rawTlsSignalsForSession(signals));
 
 			const hasAny = Object.values(signals).some((v) => v !== undefined);
 			if (hasAny) {

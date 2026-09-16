@@ -23,11 +23,7 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 			const user = req.headers["prosopo-user"] as string;
 			const siteKey = req.headers["prosopo-site-key"] as string;
 
-			if (!user) {
-				unauthorised(res);
-				return;
-			}
-			if (!siteKey) {
+			if (!user || !siteKey) {
 				unauthorised(res);
 				return;
 			}
@@ -39,7 +35,6 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 			req.user = user;
 			req.siteKey = siteKey;
 
-			// Attach site key and user to the request logger
 			req.logger = req.logger.with(
 				{
 					user,

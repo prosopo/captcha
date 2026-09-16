@@ -70,10 +70,10 @@ const VERIFY_PATH_TYPE: Partial<Record<ClientApiPaths, CaptchaType>> = {
 };
 
 /**
- * Returns a router connected to the database which can interact with the Proposo protocol
+ * Returns a router connected to the database which can interact with the Prosopo protocol
  *
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
- * @param {Environment} env - The Prosopo environment
+ * @param {ProviderEnvironment} env - The Prosopo environment
  */
 export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
@@ -120,21 +120,12 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	});
 
 	/**
-	 * Verifies a dapp's solution as being approved or not
-	 *
-	 * @param {string} user - Dapp User AccountId
-	 * @param {string} dapp - Dapp Contract AccountId
-	 * @param {string} blockNumber - The block number at which the captcha was requested
-	 * @param {string} dappUserSignature - The signature fo dapp user
-	 * @param {string} commitmentId - The captcha solution to look up
-	 * @param {number} maxVerifiedTime - The maximum time in milliseconds since the blockNumber
+	 * Verifies a dapp's image captcha solution as being approved or not
 	 */
 	router.post(
 		ClientApiPaths.VerifyImageCaptchaSolutionDapp,
 		async (req, res, next) => {
-			// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
-			// because the Tasks constructor calls `env.getDb()`, which throws when
-			// `env.db` is undefined (the maintenance-mode case).
+			// Maintenance mode returns a pass before anything touches the DB.
 			if (getMaintenanceMode()) {
 				req.logger.info(() => ({
 					msg: "Maintenance mode active - returning verified for image captcha verification",
@@ -277,18 +268,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 	);
 
 	/**
-	 * Verifies a dapp's solution as being approved or not
-	 *
-	 * @param {string} token - Token containing dapp, blockNumber and challenge
-	 * @param {string} dappSignature - Signed token
-	 * @param {number} verifiedTimeout - The maximum time in milliseconds to be valid
+	 * Verifies a dapp's PoW captcha solution as being approved or not
 	 */
 	router.post(
 		ClientApiPaths.VerifyPowCaptchaSolution,
 		async (req, res, next) => {
-			// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
-			// because the Tasks constructor calls `env.getDb()`, which throws when
-			// `env.db` is undefined (the maintenance-mode case).
 			if (getMaintenanceMode()) {
 				req.logger.info(() => ({
 					msg: "Maintenance mode active - returning verified for PoW captcha verification",
@@ -299,8 +283,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			}
 
 			let parsed: ServerPowCaptchaVerifyRequestBodyOutput;
-
-			// We can be helpful and provide a more detailed error message when there are missing fields
 			try {
 				parsed = ServerPowCaptchaVerifyRequestBody.parse(req.body);
 			} catch (err) {
@@ -313,17 +295,12 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			// We don't want to expose any other errors to the client
 			try {
 				const { token, dappSignature, ip, email, clientSessionId } = parsed;
 
-				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge, providerUrl } =
 					decodeProcaptchaOutput(token);
 
-				// Reserved CI test site keys force a deterministic verdict before
-				// the signature and registered-key checks, so the dapp server needs
-				// no real secret and the key works in every environment.
 				const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
 				if (testVerdict !== null) {
 					const verificationResponse: VerificationResponse = {
@@ -333,10 +310,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					return res.json(verificationResponse);
 				}
 
-				// A client can verify against any pronode: if this node did not
-				// issue the token, forward the request to the provider that did
-				// and return its result. Only this provider can verify its own
-				// challenge, so do this before any local lookup.
 				const forwarded = await forwardVerifyIfNotIssuer({
 					env,
 					logger: req.logger,
@@ -351,16 +324,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					return res.json(forwarded);
 				}
 
-				// Only construct Tasks (which opens the DB) once we know this node
-				// is the issuer and must verify locally — non-issuer nodes forward
-				// above and never touch the DB.
 				const tasks = new Tasks(env, req.logger);
 
-				// Do this before checking the db
 				validateAddress(dapp, false, 42);
 				validateAddress(user, false, 42);
 
-				// Reject any unregistered site keys
 				const clientRecord = await tasks.db.getClientRecord(dapp);
 				if (!clientRecord) {
 					return next(
@@ -380,10 +348,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					return res.json(unverifiedResponse);
 				}
 
-				// Verify using the dapp pair passed in the request
 				const dappPair = env.keyring.addFromAddress(dapp);
-
-				// Will throw an error if the signature is invalid
 				verifySignature(dappSignature, timestamp.toString(), dappPair);
 
 				const { verified, score, reason, sessionId } =
@@ -432,17 +397,10 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 	/**
 	 * Verifies a dapp's puzzle captcha solution as being approved or not
-	 *
-	 * @param {string} token - Token containing dapp, blockNumber and challenge
-	 * @param {string} dappSignature - Signed token
-	 * @param {number} verifiedTimeout - The maximum time in milliseconds to be valid
 	 */
 	router.post(
 		ClientApiPaths.VerifyPuzzleCaptchaSolution,
 		async (req, res, next) => {
-			// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
-			// because the Tasks constructor calls `env.getDb()`, which throws when
-			// `env.db` is undefined (the maintenance-mode case).
 			if (getMaintenanceMode()) {
 				req.logger.info(() => ({
 					msg: "Maintenance mode active - returning verified for puzzle captcha verification",
@@ -453,8 +411,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			}
 
 			let parsed: ServerPuzzleCaptchaVerifyRequestBodyOutput;
-
-			// We can be helpful and provide a more detailed error message when there are missing fields
 			try {
 				parsed = ServerPuzzleCaptchaVerifyRequestBody.parse(req.body);
 			} catch (err) {
@@ -467,17 +423,12 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				);
 			}
 
-			// We don't want to expose any other errors to the client
 			try {
 				const { token, dappSignature, ip, email, clientSessionId } = parsed;
 
-				// This can error if the token is invalid
 				const { dapp, user, timestamp, challenge, providerUrl } =
 					decodeProcaptchaOutput(token);
 
-				// Reserved CI test site keys force a deterministic verdict before
-				// the signature and registered-key checks, so the dapp server needs
-				// no real secret and the key works in every environment.
 				const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
 				if (testVerdict !== null) {
 					const verificationResponse: VerificationResponse = {
@@ -487,10 +438,6 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					return res.json(verificationResponse);
 				}
 
-				// A client can verify against any pronode: if this node did not
-				// issue the token, forward the request to the provider that did
-				// and return its result. Only this provider can verify its own
-				// challenge, so do this before any local lookup.
 				const forwarded = await forwardVerifyIfNotIssuer({
 					env,
 					logger: req.logger,
@@ -505,16 +452,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					return res.json(forwarded);
 				}
 
-				// Only construct Tasks (which opens the DB) once we know this node
-				// is the issuer and must verify locally — non-issuer nodes forward
-				// above and never touch the DB.
 				const tasks = new Tasks(env, req.logger);
 
-				// Do this before checking the db
 				validateAddress(dapp, false, 42);
 				validateAddress(user, false, 42);
 
-				// Reject any unregistered site keys
 				const clientRecord = await tasks.db.getClientRecord(dapp);
 				if (!clientRecord) {
 					return next(
@@ -534,10 +476,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					return res.json(unverifiedResponse);
 				}
 
-				// Verify using the dapp pair passed in the request
 				const dappPair = env.keyring.addFromAddress(dapp);
-
-				// Will throw an error if the signature is invalid
 				verifySignature(dappSignature, timestamp.toString(), dappPair);
 
 				const { verified, score, sessionId } =
@@ -620,10 +559,8 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					user,
 					dapp,
 					timestamp,
-					// commitmentId carries the authenticated session's sessionId
-					// (the widget encodes it there since the ProcaptchaToken schema
-					// has no dedicated sessionId slot). This is why we don't need
-					// a token codec change to ship the authenticated flow.
+					// The widget encodes the authenticated session's sessionId in
+					// commitmentId; the ProcaptchaToken schema has no sessionId slot.
 					commitmentId: sessionId,
 					providerUrl,
 				} = decodeProcaptchaOutput(token);
@@ -694,8 +631,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		},
 	);
 
-	// Your error handler should always be at the end of your application stack. Apparently it means not only after all
-	// app.use() but also after all your app.get() and app.post() calls.
+	// Must be registered after every route, not just after app.use() calls.
 	// https://stackoverflow.com/a/62358794/1178971
 	router.use(handleErrors);
 

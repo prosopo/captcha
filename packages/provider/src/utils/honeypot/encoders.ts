@@ -88,25 +88,12 @@ const SEMAPHORE_MAP: Record<string, string> = {
 	z: "↘→",
 };
 
-const encodeMorse = (text: string): string => {
+const encodeWords = (text: string, codeMap: Record<string, string>): string => {
 	const words = text.toLowerCase().split(/\s+/).filter(Boolean);
 	return words
 		.map((word) =>
 			[...word]
-				.map((ch) => MORSE_MAP[ch])
-				.filter((code): code is string => Boolean(code))
-				.join(" "),
-		)
-		.filter(Boolean)
-		.join(" / ");
-};
-
-const encodeSemaphore = (text: string): string => {
-	const words = text.toLowerCase().split(/\s+/).filter(Boolean);
-	return words
-		.map((word) =>
-			[...word]
-				.map((ch) => SEMAPHORE_MAP[ch])
+				.map((ch) => codeMap[ch])
 				.filter((code): code is string => Boolean(code))
 				.join(" "),
 		)
@@ -118,8 +105,10 @@ export const encodeHoneypotQuestion = (
 	text: string,
 	encoding: EncodingType,
 ): string => {
-	const encoded =
-		encoding === EncodingType.morse ? encodeMorse(text) : encodeSemaphore(text);
+	const encoded = encodeWords(
+		text,
+		encoding === EncodingType.morse ? MORSE_MAP : SEMAPHORE_MAP,
+	);
 	// Wrap in base64 so the wire/DOM value looks like any other opaque token
 	// rather than recognisable morse / semaphore. The widget renders the
 	// base64 string into the hidden input verbatim — bots that auto-fill see

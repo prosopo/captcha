@@ -136,7 +136,7 @@ export class PowCaptchaManager extends CaptchaManager {
 	/**
 	 * Provide the request-side data needed to run the post-pow routing pass
 	 * inside `verifyPowCaptchaSolution`. When unset, the routing pass is
-	 * skipped and verification behaves exactly as before.
+	 * skipped.
 	 */
 	setPostPowContext(ctx: PostPowRoutingContext): void {
 		this.postPowContext = ctx;
@@ -158,11 +158,7 @@ export class PowCaptchaManager extends CaptchaManager {
 	): Promise<PoWCaptcha> {
 		const difficulty = powDifficulty || DEFAULT_POW_DIFFICULTY;
 		const requestedAtTimestamp = Date.now();
-
-		// Create nonce for the challenge
 		const nonce = Math.floor(Math.random() * 1000000);
-
-		// Use blockhash, userAccount and dappAccount for string for challenge
 		const challenge: PoWChallengeId = `${requestedAtTimestamp}___${userAccount}___${dappAccount}___${nonce}`;
 		const challengeSignature = u8aToHex(this.pair.sign(stringToHex(challenge)));
 		return {
@@ -225,7 +221,6 @@ export class PowCaptchaManager extends CaptchaManager {
 			this.logger.debug(() => ({
 				msg: `No record of this challenge: ${challenge}`,
 			}));
-			// no record of this challenge
 			return { verified: false };
 		}
 
@@ -275,10 +270,9 @@ export class PowCaptchaManager extends CaptchaManager {
 					this.updateSessionRecordWithCache(challengeRecord.sessionId, {
 						userSubmitted: true,
 						result: badSaltResult,
-						// Stamp `blocked=true` so downstream aggregations (portal
-						// Overview, audit search, etc.) can key off a single
-						// field without re-deriving from result.status /
-						// result.reason. See `isBlockingCaptchaResult`.
+						// Stamped so aggregations can count blocks without
+						// re-deriving them from result.reason. See
+						// `isBlockingCaptchaResult`.
 						...(isBlockingCaptchaResult(CaptchaType.pow, badSaltResult) && {
 							blocked: true,
 						}),
@@ -294,7 +288,6 @@ export class PowCaptchaManager extends CaptchaManager {
 				status: CaptchaStatus.disapproved,
 				reason: ResultReason.CAPTCHA_INVALID_TIMESTAMP,
 			};
-			// Write pow record and session update in parallel
 			const writePromises: Promise<void>[] = [
 				this.db.updatePowCaptchaRecordResult(
 					challenge,
@@ -347,13 +340,9 @@ export class PowCaptchaManager extends CaptchaManager {
 			);
 		}
 
-		// Accumulate behavioral data for a combined write with the result update.
-		// Previously this was a separate DB write; now we merge it into a single
-		// updatePowCaptchaRecord call below.
 		let behavioralUpdates: Partial<PoWCaptchaRecord> = {};
-		// Hoisted so the post-pow routing pass (below) can feed it into the
-		// routing machine. Falsy if behavioural data was absent or failed to
-		// decrypt — in either case routing still runs but without this signal.
+		// Fed to the post-pow routing pass. Undefined if behavioural data was
+		// absent or failed to decrypt; routing still runs without this signal.
 		let decryptedBehavioralDataPacked:
 			| DecisionMachineBehavioralDataPacked
 			| undefined;
@@ -367,7 +356,6 @@ export class PowCaptchaManager extends CaptchaManager {
 					challengeRecord.sessionId,
 				);
 
-				// Decrypt the behavioral data (returns unpacked format)
 				const decryptedData = await this.decryptBehavioralData(
 					behavioralData,
 					bundle,
@@ -375,7 +363,6 @@ export class PowCaptchaManager extends CaptchaManager {
 
 				if (decryptedData) {
 					const dappAccount = at(challengeSplit, 2);
-					// Log behavioral analytics using unpacked data counts
 					this.logger?.info(() => ({
 						msg: "Behavioral analysis completed",
 						data: {
@@ -390,7 +377,6 @@ export class PowCaptchaManager extends CaptchaManager {
 						},
 					}));
 
-					// Convert to packed format — will be written with the result update
 					const packedData: BehavioralDataPacked = {
 						c1: decryptedData.collector1 || [],
 						c2: decryptedData.collector2 || [],
@@ -570,12 +556,9 @@ export class PowCaptchaManager extends CaptchaManager {
 				// (decryptAndAttachSimdReadingsIfAbsent) before this re-fetch, so
 				// they are available here in decoded form for the routing machine.
 				...(sessionRecord.simdReadings && { simd: sessionRecord.simdReadings }),
-				// currentUrl / iframeUrl were captured at frictionless time
-				// from the widget's payload — the submit request has no
-				// equivalent signal (its Referer is the captcha iframe, not
-				// the host page) so we surface them from the persisted
-				// session. iframeUrl is only present when the widget was
-				// embedded at frictionless time.
+				// Taken from the session because the submit request has no
+				// equivalent signal: its Referer is the captcha iframe, not the
+				// host page. iframeUrl is only present when the widget was embedded.
 				...(sessionRecord.currentUrl && {
 					currentUrl: sessionRecord.currentUrl,
 				}),
@@ -649,8 +632,6 @@ export class PowCaptchaManager extends CaptchaManager {
 			...(sessionId && { sessionId }),
 		});
 
-		// Bind the challenge/dappAccount context once so every log line in this
-		// method carries it without repeating the fields in each `data` block.
 		const logger = this.logger.with({ challenge, dappAccount });
 
 		const challengeRecord =
@@ -701,10 +682,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		]);
 		// -- END WARNING --
 
-		// Accumulate all pow captcha record updates in memory.
-		// Instead of writing to the database after each validation check,
-		// we collect updates and perform a single batch write at the end.
-		// This reduces 6-11 individual writes down to 1-2 writes.
+		// Collected in memory and written in a single batch at the end.
 		const powRecordUpdates: Partial<PoWCaptchaRecord> = {};
 		let failResult: CaptchaResult | undefined;
 		let failReason: string | undefined;
@@ -727,9 +705,6 @@ export class PowCaptchaManager extends CaptchaManager {
 			failReason = "API.TIMESTAMP_TOO_OLD";
 		}
 
-		// The site rendered the widget with a session id, so the solve has to
-		// carry the same one — otherwise the token was earned in a different
-		// session (or outside the widget entirely) and is being replayed here.
 		// Cheap and purely local, so it runs before any I/O-bound check.
 		if (
 			!failResult &&
@@ -753,7 +728,6 @@ export class PowCaptchaManager extends CaptchaManager {
 			failReason = "API.CLIENT_SESSION_MISMATCH";
 		}
 
-		// Check user access policies for hard blocks
 		if (!failResult && userAccessRulesStorage) {
 			try {
 				const blockPolicy = await this.checkForHardBlock(
@@ -793,7 +767,6 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Check email domain against spam list if email is provided
 		if (!failResult && email && spamEmailDomainCheckingEnabled) {
 			try {
 				const isSpam = await this.checkSpamEmail(email);
@@ -839,9 +812,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		// Per-email submission-count check — see `imgCaptchaTasks` for the
-		// full rationale. Gated by `storeMetadata` because we can only
-		// count records that carry `metadata.emailNormalised`, and that
-		// field is only ever written when `storeMetadata` is on.
+		// rationale.
 		const maxEmailSubmissionCount =
 			spamFilter?.enabled && spamFilter.emailRules?.enabled
 				? spamFilter.emailRules.maxEmailSubmissionCount
@@ -880,11 +851,8 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Walk to the origin session when this is an escalation record —
-		// simdReadings / dnsEvent / entropy fields are populated on the
-		// origin and don't automatically end up on the escalation. Non-
-		// escalations pass through unchanged (walker no-ops when there's
-		// no originSessionId).
+		// Walker fills simdReadings / dnsEvent / entropy fields from the origin
+		// when this is an escalation record. See CaptchaManager.getSessionRecordWithOriginFallback.
 		const sessionRecord = challengeRecord.sessionId
 			? await this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
 			: undefined;
@@ -924,10 +892,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Persist dapp-server-provided metadata when the site opts in.
-		// Gated purely by `storeMetadata`; `emailNormalised` piggybacks
-		// on the same write so the per-email submission-count check has
-		// an indexed field to query against.
+		// See `imgCaptchaTasks` for why `emailNormalised` is stored.
 		if (storeMetadata && email) {
 			powRecordUpdates.metadata = {
 				email,
@@ -941,11 +906,9 @@ export class PowCaptchaManager extends CaptchaManager {
 				challengeRecord.ipAddress,
 			);
 
-			// Get client settings for IP validation rules
 			const clientRecord = await this.db.getClientRecord(dappAccount);
 			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
 
-			// Accumulate providedIp update instead of writing immediately
 			powRecordUpdates.providedIp = getCompositeIpAddress(ip);
 
 			if (ipValidationRules?.enabled === true) {
@@ -1040,11 +1003,10 @@ export class PowCaptchaManager extends CaptchaManager {
 					tcpOptsFlags: sessionRecord?.tcpOptsFlags,
 					tcpOptsOrder: sessionRecord?.tcpOptsOrder,
 					tcpWindow: sessionRecord?.tcpWindow,
-					// Which egress categories this site blocks. Gates the
-					// egress-sensitive TCP-stack deny rules — a VPN
-					// concentrator legitimately terminates the handshake, so
-					// on a site that accepts VPN users the observed stack
-					// says nothing about the client.
+					// Gates the egress-sensitive TCP-stack deny rules: a VPN
+					// concentrator legitimately terminates the handshake, so on a
+					// site that accepts VPN users the observed stack says nothing
+					// about the client.
 					trafficPolicies: deriveTrafficPolicies(trafficFilter),
 				};
 
@@ -1064,10 +1026,9 @@ export class PowCaptchaManager extends CaptchaManager {
 						},
 					}));
 
-					// Decision machines are operator-authored JS — their `reason`
-					// is just `string | undefined`. Cast to `ResultReason` at the
-					// boundary so the strict types on `CaptchaResult` hold; the
-					// canonical fallback is used when the DM returns no reason.
+					// Decision machines are operator-authored JS, so `reason` is an
+					// arbitrary string; it is cast at this boundary to satisfy
+					// `CaptchaResult`.
 					const dmReason = (decision.reason ||
 						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason;
 					failResult = {
@@ -1109,7 +1070,6 @@ export class PowCaptchaManager extends CaptchaManager {
 			);
 		}
 
-		// Write pow record updates and session update in parallel
 		const writePromises: Promise<void>[] = [];
 
 		if (Object.keys(powRecordUpdates).length > 0) {

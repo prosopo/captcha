@@ -26,40 +26,41 @@ import {
 } from "./metrics.js";
 
 /**
- * Returns a router connected to the database which can interact with the Proposo protocol
+ * Returns a router connected to the database which can interact with the Prosopo protocol
  *
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
  */
 export function publicRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
 
+	// `config.host` is the per-pronode identity (e.g. `pronode4.prosopo.io`),
+	// set via ansible inventory (CADDY_DOMAIN). Falls back to the request's
+	// Host header in the rare case it's unset.
+	const nodeHost = (requestHostname: string): string =>
+		env.config.host && env.config.host.length > 0
+			? env.config.host
+			: requestHostname;
+
 	// Built here rather than per request so the target health poller starts
 	// with the API and has converged before real traffic arrives. It is a
 	// no-op, and starts nothing, when steering is off.
 	const geo = getHealthzGeoRouter(env);
 
-	// The `host` field is the per-pronode identity (e.g. `pronode4.prosopo.io`).
 	// Clients hit `pronode.prosopo.io/healthz` to discover which pronode the
 	// DNS layer picked, then pin all subsequent captcha calls to that host so
-	// session creation and submission land on the same backend. `config.host`
-	// is set per-pronode via ansible inventory (CADDY_DOMAIN). Falls back to
-	// the request's Host header in the rare case it's unset.
+	// session creation and submission land on the same backend.
 	//
 	// Optionally the answer is the node the CALLER's country maps to instead —
-	// see `healthzGeo.ts`. Off by default; when off this handler behaves
-	// exactly as it did before, including sending no cache headers.
+	// see `healthzGeo.ts`. Off by default; when off no cache headers are sent.
 	router.get(PublicApiPaths.Healthz, (req, res) => {
-		const ownHost =
-			env.config.host && env.config.host.length > 0
-				? env.config.host
-				: req.hostname;
+		const ownHost = nodeHost(req.hostname);
 
 		if (!geo.enabled) {
 			return res.status(200).json({ ok: true, host: ownHost });
 		}
 
-		// The answer now varies per caller, so no intermediary may cache and
-		// replay it — that would hand one client another client's pin. Set
+		// With steering on the answer varies per caller, so no intermediary may
+		// cache and replay it — that would hand one client another client's pin. Set
 		// before the decision so it covers every branch, including the
 		// fallbacks. The widget already sends `cache: "no-store"`, but that
 		// only binds the browser.
@@ -87,17 +88,11 @@ export function publicRouter(env: ProviderEnvironment): Router {
 			const redisConnection = db.getRedisConnection();
 			const redisAccessRulesConnection = db.getRedisAccessRulesConnection();
 
-			// Identity of the node answering this request, so callers can tell
-			// which node they reached without relying on /healthz.
-			const host =
-				env.config.host && env.config.host.length > 0
-					? env.config.host
-					: req.hostname;
-
 			const response: ProviderDetails = {
 				version,
 				message: "Provider online",
-				host,
+				// Lets callers tell which node they reached without relying on /healthz.
+				host: nodeHost(req.hostname),
 				redis: [
 					{
 						actor: "General",
@@ -131,8 +126,7 @@ export function publicRouter(env: ProviderEnvironment): Router {
 		}
 	});
 
-	// Your error handler should always be at the end of your application stack. Apparently it means not only after all
-	// app.use() but also after all your app.get() and app.post() calls.
+	// Must be registered after every route, not just after app.use() calls.
 	// https://stackoverflow.com/a/62358794/1178971
 	router.use(handleErrors);
 

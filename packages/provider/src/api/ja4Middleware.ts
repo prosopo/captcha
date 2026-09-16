@@ -33,19 +33,15 @@ export const getJA4 = async (headers: IncomingHttpHeaders, logger?: Logger) => {
 	}
 
 	try {
-		// Validate headers and make sure they're strings
 		const xTlsClientHello = (headers["x-tls-clienthello"] || "").toString();
-
-		// Decode the base64 ClientHello message
 		const clientHelloBuffer = Buffer.from(xTlsClientHello, "base64");
 
-		// Debug: Check first few bytes
 		logger.debug(() => ({
 			msg: "ClientHello First Bytes:",
 			data: { hex: clientHelloBuffer.subarray(0, 5).toString("hex") },
 		}));
 
-		// Check first byte after the initial 5
+		// Handshake type byte after the 5-byte TLS record header; 0x01 is ClientHello.
 		if (clientHelloBuffer[5] !== 0x01) {
 			logger.debug(() => ({
 				msg: "Invalid ClientHello message: First byte is not 0x01",

@@ -51,7 +51,7 @@ export const asyncHandler =
 	};
 
 /**
- * Returns a router connected to the database which can interact with the Proposo protocol
+ * Returns a router connected to the database which can interact with the Prosopo protocol
  *
  * @return {Router} - A middleware router that can interact with the Prosopo protocol
  * @param {ProviderEnvironment} env - The Prosopo environment
@@ -144,8 +144,7 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	 */
 	router.post(ClientApiPaths.CheckSpamEmail, asyncHandler(checkSpamEmail(env)));
 
-	// Your error handler should always be at the end of your application stack. Apparently it means not only after all
-	// app.use() but also after all your app.get() and app.post() calls.
+	// Must be registered after every route, not just after app.use() calls.
 	// https://stackoverflow.com/a/62358794/1178971
 	router.use(handleErrors);
 

@@ -13,11 +13,14 @@
 // limitations under the License.
 
 import { ProsopoEnvError } from "@prosopo/common";
-import { CentralDbStreamer, ProviderDatabase } from "@prosopo/database";
-import { RedisWriteQueue } from "@prosopo/database";
+import {
+	CentralDbStreamer,
+	ProviderDatabase,
+	RedisWriteQueue,
+} from "@prosopo/database";
 import { type Logger, getLogger, parseLogLevel } from "@prosopo/logger";
-import type { KeyringPair } from "@prosopo/types";
 import type {
+	KeyringPair,
 	ProsopoCaptchaCountConfigSchemaOutput,
 	ProsopoConfigOutput,
 } from "@prosopo/types";
@@ -88,7 +91,6 @@ export class Tasks {
 			}));
 		}
 
-		// Initialize write queue from existing Redis connection
 		this.writeQueue = this.initWriteQueue();
 		this.decisionMachineRunner = new DecisionMachineRunner(this.db);
 		this.usageCounters = this.initUsageCounters();
@@ -213,16 +215,11 @@ export class Tasks {
 	}
 
 	setLogger(logger: Logger): void {
-		// Use a logger from the request.
-		//
 		// The Tasks instance and its managers are constructed per-request, so
-		// overwriting their `.logger` refs is safe. `this.db`, however, is a
-		// process-wide singleton from `env.getDb()` — mutating `db.logger` here
-		// races between concurrent requests and stamps the wrong user/siteKey/
-		// sessionId onto log lines emitted from inside DB methods. If a DB
-		// method needs request context in its log output, wrap the call in the
-		// caller (which already has the per-request logger via `this.logger`)
-		// or thread the logger through as an explicit argument.
+		// overwriting their `.logger` refs is safe. `this.db` is a process-wide
+		// singleton from `env.getDb()`: setting `db.logger` here would race
+		// between concurrent requests and stamp the wrong user/siteKey/sessionId
+		// onto DB log lines. Thread the logger through explicitly instead.
 		this.logger = logger;
 		this.powCaptchaManager.logger = logger;
 		this.puzzleCaptchaManager.logger = logger;

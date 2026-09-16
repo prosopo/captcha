@@ -51,12 +51,11 @@ export default (env: ProviderEnvironment) =>
 		res: Response,
 		_next: NextFunction,
 	): Promise<Response> => {
+		const noBundle: AssignDetectorBundleResponse = {
+			[ApiParams.useProviderBundle]: false,
+			status: "ok",
+		};
 		try {
-			const noBundle: AssignDetectorBundleResponse = {
-				[ApiParams.useProviderBundle]: false,
-				status: "ok",
-			};
-
 			const pool = getDetectorBundlePool();
 			if (!pool || pool.size() === 0) {
 				return res.json(noBundle);
@@ -72,10 +71,8 @@ export default (env: ProviderEnvironment) =>
 			);
 			const detectorSessionId = `det-${uuidv4()}`;
 
-			// Persist the ephemeral session→bundle binding. If Redis is
-			// unavailable we cannot guarantee the decrypt side can resolve the
-			// bundle, so we fall back to the bundled detector rather than handing
-			// out a binding that would later fail closed.
+			// Without a stored binding the decrypt side cannot resolve the bundle,
+			// so hand out no bundle rather than one that would later fail closed.
 			const tasks = new Tasks(env, req.logger);
 			const writeQueue = tasks.frictionlessManager.writeQueue;
 			if (!writeQueue) {
@@ -97,15 +94,12 @@ export default (env: ProviderEnvironment) =>
 			};
 			return res.json(response);
 		} catch (err) {
-			// Any failure (e.g. DB-down Tasks construction) degrades to the
-			// bundled detector rather than breaking the widget.
+			// Any failure (e.g. DB-down Tasks construction) degrades to no bundle
+			// rather than breaking the widget.
 			req.logger.warn(() => ({
 				msg: "assignDetectorBundle failed; falling back to bundled detector",
 				err,
 			}));
-			return res.json({
-				[ApiParams.useProviderBundle]: false,
-				status: "ok",
-			} satisfies AssignDetectorBundleResponse);
+			return res.json(noBundle);
 		}
 	};
