@@ -18,8 +18,8 @@
  * Loads a pool of precomputed, obfuscated detector bundles from disk and caches
  * them in memory — the Node analogue of the Rust "bumblebee" `bundle_manager`.
  * Each bundle is a `{id}.js` (served to the browser) paired with a `{id}.json`
- * (`{ privateKey, innerConfig }`, kept server-side) produced by the catcher
- * `bundle:pool` build script.
+ * (`{ privateKey, innerConfig, payloadLayout }`, kept server-side) produced by
+ * the catcher `bundle:pool` build script.
  *
  * A bundle is assigned per detector session by {@link DetectorBundlePool.at},
  * served by id, and resolved again at decryption time so the provider uses the
@@ -64,6 +64,12 @@ export interface PoolBundle {
 	 * built before stamping existed; those load with a warning.
 	 */
 	readonly release?: string;
+	/**
+	 * Opaque per-bundle parameter the decoder needs to read what this bundle's
+	 * detector produces. Built with the bundle and only meaningful with it.
+	 * Absent for pools built before it existed, which decode without it.
+	 */
+	readonly payloadLayout?: string;
 }
 
 interface LoadLogger {
@@ -113,6 +119,7 @@ export class DetectorBundlePool {
 					privateKey?: unknown;
 					innerConfig?: unknown;
 					release?: unknown;
+					payloadLayout?: unknown;
 				};
 				if (
 					typeof secrets.privateKey !== "string" ||
@@ -135,11 +142,16 @@ export class DetectorBundlePool {
 				if (expectedRelease && !release) {
 					unstamped++;
 				}
+				const payloadLayout =
+					typeof secrets.payloadLayout === "string"
+						? secrets.payloadLayout
+						: undefined;
 				next.set(bundleId, {
 					js,
 					privateKey: secrets.privateKey,
 					innerConfig: secrets.innerConfig,
 					...(release && { release }),
+					...(payloadLayout && { payloadLayout }),
 				});
 			} catch (error) {
 				logger.warn?.("failed to load bundle pool entry", {
@@ -261,6 +273,9 @@ export function persistDetectorBundlePool(
 				privateKey: bundle.privateKey,
 				innerConfig: bundle.innerConfig,
 				...(bundle.release && { release: bundle.release }),
+				...(bundle.payloadLayout && {
+					payloadLayout: bundle.payloadLayout,
+				}),
 			}),
 			// Secrets: owner read/write only. The volume is host-mounted, so this
 			// is the only thing standing between the pool and any other process
