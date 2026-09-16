@@ -14,14 +14,22 @@
 
 import express, { type Router } from "express";
 
+const scriptLiteral = (value: string): string =>
+	JSON.stringify(value).replace(/</g, "\\u003c").replace(/>/g, "\\u003e");
+
 const page = (inner: string, id: string): string => `<!doctype html>
 <meta charset="utf-8">
 <body><script>
 var f=document.createElement('iframe');
-f.src=${JSON.stringify(inner)};
-f.onload=function(){window.top.postMessage({p:'n',i:${JSON.stringify(id)}},'*')};
+f.src=${scriptLiteral(inner)};
+f.onload=function(){window.top.postMessage({p:'n',i:${scriptLiteral(id)}},'*')};
 document.body.appendChild(f);
 </script></body>`;
+
+const ID_PATTERN = /^[A-Za-z0-9]{1,64}$/;
+
+const probeId = (raw: unknown): string =>
+	"string" === typeof raw && ID_PATTERN.test(raw) ? raw : "";
 
 const innerUrl = (raw: unknown): string | undefined => {
 	if ("string" !== typeof raw || 0 === raw.length) {
@@ -50,7 +58,7 @@ export function assetDocumentRouter(): Router {
 			return next();
 		}
 
-		const id = "string" === typeof req.query.i ? req.query.i : "";
+		const id = probeId(req.query.i);
 
 		res.removeHeader("X-Frame-Options");
 		res.set({
