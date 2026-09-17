@@ -23,6 +23,7 @@ import {
 import {
 	CaptchaType,
 	type FrictionlessState,
+	ModeEnum,
 	type ModeType,
 	PROCAPTCHA_START_EVENT,
 	ProcaptchaConfigSchema,
@@ -149,6 +150,13 @@ export const ProcaptchaFrictionless = ({
 	const manualStartedRef = useRef(false);
 	// The placeholder is built before `start()` exists in this scope.
 	const manualCheckboxHandlerRef = useRef(noopCheckboxHandler);
+	// The inner widget only listens for `procaptcha:execute` once /frictionless
+	// has answered, its chunk has loaded and it has mounted. An execute() in
+	// that window (e.g. a fast form submit) would otherwise be dropped and the
+	// challenge never open, so it is held here and replayed on mount.
+	const innerWidgetRenderedRef = useRef(false);
+	const innerWidgetListeningRef = useRef(false);
+	const pendingExecuteRef = useRef(false);
 
 	useEffect(() => {
 		if (!config.language) return;
@@ -199,6 +207,7 @@ export const ProcaptchaFrictionless = ({
 				restartComponentTimeout();
 			}, 0);
 		}
+		innerWidgetRenderedRef.current = false;
 		setComponentToRender(
 			renderPlaceholder(
 				config.theme,
@@ -321,6 +330,7 @@ export const ProcaptchaFrictionless = ({
 		const startCoords = escalationCoords ?? retryStartCoords;
 		mountCountRef.current += 1;
 		const mountKey = mountCountRef.current;
+		innerWidgetRenderedRef.current = true;
 
 		if (captchaType === CaptchaType.authenticated) {
 			// Web Bot Auth pre-verified pass-through. No challenge, no
@@ -423,6 +433,14 @@ export const ProcaptchaFrictionless = ({
 
 				const guard = evaluateFrictionlessResult(result);
 				if (guard.kind === "error") {
+					// Throwing hands this to providerRetry, which re-rolls onto a
+					// different provider. The client does not throw on a 400 with a
+					// JSON body, so without this an unrecognised provider-side
+					// failure stranded the user on the first response even when
+					// every other node was healthy.
+					if (guard.retryable) {
+						throw new Error(guard.message);
+					}
 					stateRef.current = {
 						...stateRef.current,
 						loading: false,
@@ -461,6 +479,10 @@ export const ProcaptchaFrictionless = ({
 			5,
 		).finally(() => {
 			if (stateRef.current.attemptCount >= 5) {
+				// Retries swallow the underlying error, so without this a site's
+				// error callback never fires for a failure that retried — it would
+				// have fired immediately before retrying was introduced.
+				events.onError(new Error("Cannot load CAPTCHA"));
 				fallOverWithStyle();
 				restartComponentTimeout();
 			}
@@ -475,6 +497,7 @@ export const ProcaptchaFrictionless = ({
 		manualStartedRef.current = true;
 		pendingRetryCoordsRef.current = coords ?? null;
 		nextMountAutoStartRef.current = autoStart;
+		innerWidgetRenderedRef.current = false;
 		setComponentToRender(
 			renderPlaceholder(
 				config.theme,
@@ -519,6 +542,40 @@ export const ProcaptchaFrictionless = ({
 			document.removeEventListener(PROCAPTCHA_EXECUTE_EVENT, onExecuteEvent);
 		};
 	}, [manualStart, container]);
+
+	// Mirrors the inner widgets' own listeners: a targeted execute() arrives on
+	// the container in either mode, a bare one on document in invisible mode.
+	// Manual start has its own listener above that defers the whole flow.
+	useEffect(() => {
+		if (manualStart) return;
+		const invisible = config.mode === ModeEnum.invisible;
+		const onExecuteEvent = () => {
+			if (!innerWidgetListeningRef.current) pendingExecuteRef.current = true;
+		};
+		container?.addEventListener(PROCAPTCHA_EXECUTE_EVENT, onExecuteEvent);
+		if (invisible) {
+			document.addEventListener(PROCAPTCHA_EXECUTE_EVENT, onExecuteEvent);
+		}
+		return () => {
+			container?.removeEventListener(PROCAPTCHA_EXECUTE_EVENT, onExecuteEvent);
+			if (invisible) {
+				document.removeEventListener(PROCAPTCHA_EXECUTE_EVENT, onExecuteEvent);
+			}
+		};
+	}, [manualStart, config.mode, container]);
+
+	// Child effects run before this one, so a newly mounted inner widget is
+	// already listening when the held execute() is replayed. It goes to the
+	// container, not document, so other widgets on the page don't run twice.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: intentional — must run after every commit that swaps the rendered widget.
+	useEffect(() => {
+		innerWidgetListeningRef.current = innerWidgetRenderedRef.current;
+		if (!innerWidgetListeningRef.current || !pendingExecuteRef.current) return;
+		pendingExecuteRef.current = false;
+		(container ?? document).dispatchEvent(
+			new CustomEvent(PROCAPTCHA_EXECUTE_EVENT),
+		);
+	}, [componentToRender, container]);
 
 	// Track which config identity has already been started for. Host
 	// pages often recreate the `callbacks` object (and sometimes the whole

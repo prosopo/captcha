@@ -25,13 +25,13 @@
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve ./src --port 9232 --config vite.config.ts --mode=$NODE_ENV",
 		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
 	},
-	"version": "2.10.23",
+	"version": "2.10.24",
 	"devDependencies": {
 		"@emotion/cache": "11.14.0",
-		"@prosopo/config": "3.3.16",
-		"@prosopo/dotenv": "3.0.55",
-		"@prosopo/locale": "3.4.2",
-		"@prosopo/types": "5.8.3",
+		"@prosopo/config": "3.3.17",
+		"@prosopo/dotenv": "3.0.56",
+		"@prosopo/locale": "3.4.3",
+		"@prosopo/types": "5.8.5",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",

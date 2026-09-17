@@ -1,5 +1,40 @@
 # @prosopo/cli
 
+## 3.8.13
+### Patch Changes
+
+- Updated dependencies [be25974]
+- Updated dependencies [8d158a1]
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/provider@5.10.4
+  - @prosopo/api@4.2.5
+  - @prosopo/env@3.6.58
+  - @prosopo/keyring@2.9.91
+
+## 3.8.12
+### Patch Changes
+
+- 3334ef2: Replace loose `any` types in the CLI's JSON file writer and env file reloader with real types. No behaviour change.
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [4d45e3d]
+- Updated dependencies [d710b7f]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/common@3.1.56
+  - @prosopo/keyring@2.9.90
+  - @prosopo/locale@3.4.3
+  - @prosopo/provider@5.10.3
+  - @prosopo/types@5.8.4
+  - @prosopo/util@3.3.10
+  - @prosopo/api@4.2.4
+  - @prosopo/dotenv@3.0.56
+  - @prosopo/env@3.6.57
+  - @prosopo/logger@2.0.10
+
 ## 3.8.11
 ### Patch Changes
 

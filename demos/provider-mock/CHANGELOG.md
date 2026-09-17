@@ -1,5 +1,37 @@
 # @prosopo/provider-mock
 
+## 2.8.179
+### Patch Changes
+
+- Updated dependencies [be25974]
+- Updated dependencies [8d158a1]
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/provider@5.10.4
+  - @prosopo/api-express-router@3.1.89
+  - @prosopo/database@4.0.35
+  - @prosopo/types-database@5.5.5
+
+## 2.8.178
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [4d45e3d]
+- Updated dependencies [d710b7f]
+- Updated dependencies [d4e9425]
+- Updated dependencies [0be8838]
+  - @prosopo/api-express-router@3.1.88
+  - @prosopo/common@3.1.56
+  - @prosopo/database@4.0.34
+  - @prosopo/locale@3.4.3
+  - @prosopo/provider@5.10.3
+  - @prosopo/types-database@5.5.4
+  - @prosopo/types@5.8.4
+  - @prosopo/dotenv@3.0.56
+  - @prosopo/logger@2.0.10
+
 ## 2.8.177
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/datasets-fs",
-	"version": "3.0.131",
+	"version": "3.0.133",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -30,11 +30,11 @@
 	},
 	"dependencies": {
 		"@noble/hashes": "1.8.0",
-		"@prosopo/common": "3.1.55",
-		"@prosopo/logger": "2.0.9",
-		"@prosopo/types": "5.8.3",
-		"@prosopo/util": "3.3.9",
-		"@prosopo/util-crypto": "13.5.31",
+		"@prosopo/common": "3.1.56",
+		"@prosopo/logger": "2.0.10",
+		"@prosopo/types": "5.8.5",
+		"@prosopo/util": "3.3.10",
+		"@prosopo/util-crypto": "13.5.32",
 		"@prosopo/workspace": "3.2.1",
 		"bcrypt": "6.0.0",
 		"cli-progress": "3.12.0",
@@ -43,7 +43,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.16",
+		"@prosopo/config": "3.3.17",
 		"@types/bcrypt": "6.0.0",
 		"@types/cli-progress": "3.11.6",
 		"@types/node": "22.10.2",

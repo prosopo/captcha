@@ -28,8 +28,7 @@ describe("Config utility functions", () => {
 	});
 
 	afterEach(() => {
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
-		(global as any).document = undefined;
+		Object.assign(global, { document: undefined });
 	});
 
 	describe("getProcaptchaScript", () => {

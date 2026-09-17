@@ -1,5 +1,42 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.16.5
+### Patch Changes
+
+- be25974: Two optional per-site settings are now passed through to the client. Sites that
+  do not set them are unaffected.
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/api@4.2.5
+  - @prosopo/procaptcha-common@2.14.2
+  - @prosopo/procaptcha-pow@2.12.6
+  - @prosopo/procaptcha-puzzle@2.13.2
+  - @prosopo/procaptcha-react@2.11.2
+
+## 2.16.4
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- 08e2254: Don't lose an `execute()` call that arrives before the captcha widget has finished loading. Previously, submitting a form quickly on an invisible captcha could do nothing: the widget only starts listening once the provider has answered and its code has loaded, so an earlier `execute()` was dropped and the challenge never opened. The call is now held and replayed as soon as the widget is ready.
+- 4d45e3d: Stop `DecisionMachineRunner` retaining every instance, and re-roll the frictionless widget onto another provider on an unrecognised error.
+  
+  `DecisionMachineRunner` enrolled itself in a module-level `Set` so an artifact upload could flush every runner's cache. That assumed runners were built once per process; they are built per request, and nothing pruned the set, so it grew for as long as the process lived and construction eventually began to fail. `WeakRef` did not bound it — the set held the wrapper, which outlives its referent. The registry is replaced by a generation counter: an invalidation bumps it, and a runner drops its cache when the value it carries no longer matches. Nothing holds a runner reference, so there is nothing to grow.
+  
+  The widget compounded it. The HTTP client does not throw on a 400 with a JSON body, so a provider-side failure came back looking like a normal result, and the frictionless guard turned it into a terminal error — no fallback, no retry, no restart timer. One unhealthy provider stranded the user on its first response even when every other node was healthy. Errors whose key we do not recognise are now thrown, which hands them to the existing provider re-roll. Integration faults (site key, origin, captcha type) and policy denials still display as before: another provider returns the same answer, and for those the message is the point. Errors with no key at all are unchanged, since hard blocks arrive in that shape. A site's error callback now also fires once retries are exhausted, which it previously did not.
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d710b7f]
+- Updated dependencies [d4e9425]
+- Updated dependencies [0be8838]
+  - @prosopo/common@3.1.56
+  - @prosopo/locale@3.4.3
+  - @prosopo/procaptcha-common@2.14.1
+  - @prosopo/procaptcha-pow@2.12.5
+  - @prosopo/procaptcha-puzzle@2.13.1
+  - @prosopo/procaptcha-react@2.11.1
+  - @prosopo/types@5.8.4
+  - @prosopo/api@4.2.4
+
 ## 2.16.3
 ### Patch Changes
 

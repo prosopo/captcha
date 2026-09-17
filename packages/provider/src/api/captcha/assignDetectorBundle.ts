@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import { createHmac } from "node:crypto";
-import { ApiParams, type AssignDetectorBundleResponse } from "@prosopo/types";
+import {
+	ApiParams,
+	AssignDetectorBundleRequestBody,
+	type AssignDetectorBundleResponse,
+} from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
@@ -29,6 +33,42 @@ import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
 /** Pool position for this caller: a keyed hash of their address. */
 const clientIndex = (ip: string, secret: Buffer): number =>
 	createHmac("sha256", secret).update(ip).digest().readUIntBE(0, 6);
+
+type SiteConfig = {
+	[ApiParams.clientUrl]?: string;
+	[ApiParams.assetOrigin]?: string;
+};
+
+const siteConfig = async (
+	tasks: Tasks,
+	body: unknown,
+	logger: AugmentedRequest["logger"],
+): Promise<SiteConfig> => {
+	const parsed = AssignDetectorBundleRequestBody.safeParse(body);
+	if (!parsed.success) {
+		return {};
+	}
+
+	try {
+		const client = await tasks.db.getClientRecord(parsed.data[ApiParams.dapp]);
+		const clientUrl = client?.settings?.clientUrl;
+		const assetOrigin = client?.settings?.assetOrigin;
+		if (!clientUrl || !assetOrigin) {
+			return {};
+		}
+
+		return {
+			[ApiParams.clientUrl]: clientUrl,
+			[ApiParams.assetOrigin]: assetOrigin,
+		};
+	} catch (err) {
+		logger.warn(() => ({
+			msg: "assignDetectorBundle site config failed",
+			err,
+		}));
+		return {};
+	}
+};
 
 /**
  * Assigns a precomputed detector bundle for this detection session.
@@ -93,6 +133,7 @@ export default (env: ProviderEnvironment) =>
 				[ApiParams.useProviderBundle]: true,
 				[ApiParams.detectorSessionId]: detectorSessionId,
 				[ApiParams.detectorScript]: bundle.js,
+				...(await siteConfig(tasks, req.body, req.logger)),
 				status: "ok",
 			};
 			return res.json(response);

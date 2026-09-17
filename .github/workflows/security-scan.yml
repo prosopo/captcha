@@ -1,0 +1,225 @@
+# Secret scanning (gitleaks), SAST (semgrep) and dependency audit (npm, cargo).
+#
+# Until now this repository had none of it -- dependabot opens PRs for
+# known-vulnerable versions, which is useful but is not a scan and gates
+# nothing.
+#
+# Both scanners are run as their own binaries rather than via their vendor
+# Actions: the gitleaks Action requires a paid licence for organisation-owned
+# repos. The CLIs are free and the findings are identical.
+
+name: security-scan
+
+on:
+  pull_request:
+    # `main` and release branches only. `dev` and `staging` are dead -- last
+    # commits 2024 and 2025, no open PR targets either, and in Protect the
+    # branches do not exist at all -- so there is nothing to gate there.
+    branches: [main, release/*]
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+      # Not a type this workflow wants to run for -- the jobs below skip it. It
+      # exists so the run is created and cancels the in-flight one.
+      - converted_to_draft
+  schedule:
+    # Weekly full-history sweep. The PR jobs only see the commits a PR adds, so
+    # without this nothing ever re-examines what is already on main.
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  secrets:
+    name: gitleaks
+    if: ${{ github.event.action != 'converted_to_draft' && github.event.pull_request.draft != true }}
+    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
+    # private repos: this repository is public, so a fork PR would run on the
+    # self-hosted fleet -- executing arbitrary contributor code on hardware we
+    # own, where it can also persist and poison later trusted jobs.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # gitleaks walks git history, so the default depth-1 checkout would
+          # give it nothing to walk.
+          fetch-depth: 0
+          # No submodules. packages/fingerprintjs is a separate private repo
+          # with its own history, and checking it out needs a PAT that a fork
+          # PR does not get -- which would make this job fail for contributors
+          # rather than scan their change.
+          submodules: false
+
+      - name: Install gitleaks
+        run: |
+          version=8.28.0
+          curl -sSfL -o /tmp/gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz"
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          sudo install /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      # On a PR, scan only the commits the PR adds. Scanning all of history on
+      # every PR would block unrelated work on anything already committed --
+      # that is what the scheduled sweep below is for. This step is the gating
+      # one, and it only ever sees commits the PR adds, so it stays clean
+      # without needing any exception list.
+      - name: Scan pull request commits
+        if: github.event_name == 'pull_request'
+        run: |
+          gitleaks git \
+            --log-opts="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" \
+            --redact \
+            --verbose
+
+      # Report-only, and deliberately without a committed baseline.
+      #
+      # A `.gitleaksignore` is the normal way to stop a sweep repeating findings
+      # that are already known. It cannot be used here: this repository is
+      # public, and each entry is `<commit>:<path>:<rule>:<line>` -- a precise
+      # index to a credential, readable with one `git show`. Out of hundreds of
+      # entropy hits that are almost all false positives, such a file publishes
+      # exactly the ones that are real. That is the triage step done for anyone
+      # looking, so it does not belong in a public tree.
+      #
+      # The known history findings are tracked privately instead. This job
+      # therefore reports a small, stable set of findings every week and must
+      # not gate on them -- hence continue-on-error. Read the log, compare
+      # against the private list, and investigate anything new.
+      #
+      # Once those credentials are rotated there is nothing left to except, and
+      # this should become gating: drop continue-on-error.
+      - name: Scan full history (report only)
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        run: gitleaks git --redact --verbose
+
+  sast:
+    name: semgrep
+    if: ${{ github.event.action != 'converted_to_draft' && github.event.pull_request.draft != true }}
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:1.145.0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # `--baseline-commit` below diffs against the PR base, so that commit
+          # has to be in the clone. The default depth-1 checkout does not have
+          # it and semgrep fails with "baseline commit is not a parent".
+          fetch-depth: 0
+          submodules: false
+
+      - name: Trust the workspace
+        run: git config --global --add safe.directory "$PWD"
+
+      # p/default is semgrep's curated free ruleset; p/secrets and the language
+      # packs add the injection/authz rules that matter most here. No token is
+      # set, so nothing is uploaded to semgrep.dev -- findings stay in the log.
+      #
+      # `--baseline-commit` reports only findings the PR *introduces*. This tree
+      # has never been scanned, so it certainly carries a backlog; gating on the
+      # total would mean every unrelated PR is blocked by debt its author did
+      # not create, which reliably ends with the job being deleted rather than
+      # the debt being paid. New code is gated from day one; the backlog is
+      # measured by the weekly full scan below and burned down against the
+      # register.
+      - name: Semgrep (findings introduced by this PR)
+        if: github.event_name == 'pull_request'
+        run: |
+          semgrep scan \
+            --config=p/default \
+            --config=p/typescript \
+            --config=p/nodejs \
+            --config=p/secrets \
+            --baseline-commit "${{ github.event.pull_request.base.sha }}" \
+            --error \
+            --skip-unknown-extensions \
+            --exclude=node_modules \
+            --exclude=dist \
+            --exclude=packages/fingerprintjs \
+            --exclude='**/*.min.js' \
+            --metrics=off
+
+      # Informational: measures the whole backlog so the trend is visible.
+      # Does not gate -- see above.
+      - name: Semgrep (full tree, report only)
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        run: |
+          semgrep scan \
+            --config=p/default \
+            --config=p/typescript \
+            --config=p/nodejs \
+            --config=p/secrets \
+            --skip-unknown-extensions \
+            --exclude=node_modules \
+            --exclude=dist \
+            --exclude=packages/fingerprintjs \
+            --exclude='**/*.min.js' \
+            --metrics=off
+
+  dependencies:
+    name: npm audit
+    if: ${{ github.event.action != 'converted_to_draft' && github.event.pull_request.draft != true }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+
+      # Gates at `critical` and reports `high` separately without failing, for
+      # the same reason semgrep uses a baseline: this tree has never been
+      # audited in CI, so an unknown backlog gated at `high` would block every
+      # PR on day one. Ratchet to `high` once it is clear.
+      #
+      # `npm audit` needs no install step -- it resolves the lockfile against
+      # the advisory database over the network.
+      - name: npm audit (critical - gating)
+        run: npm audit --audit-level=critical
+
+      - name: npm audit (high - report only)
+        continue-on-error: true
+        run: npm audit --audit-level=high
+
+  cargo:
+    name: cargo audit
+    if: ${{ github.event.action != 'converted_to_draft' && github.event.pull_request.draft != true }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Two independent crates, each with its own lockfile -- there is no
+        # workspace here to audit in one pass.
+        crate: [packages/native-ja4, packages/native-merkle]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+
+      - uses: taiki-e/install-action@26e9283f268b880168bdbd2c545dfcd60ec2c6ab # v2.87.13
+        with:
+          tool: cargo-audit
+
+      # This is what caught RUSTSEC-2026-0285 in Protect -- an advisory that
+      # appeared with no change to the tree at all. Gating, unlike npm audit:
+      # these two crates have a handful of dependencies between them, so there
+      # is no backlog to grandfather in.
+      - name: cargo audit
+        working-directory: ${{ matrix.crate }}
+        run: cargo audit

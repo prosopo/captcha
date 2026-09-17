@@ -1,5 +1,73 @@
 # @prosopo/provider
 
+## 5.10.4
+### Patch Changes
+
+- be25974: Two optional per-site settings are now passed through to the client. Sites that
+  do not set them are unaffected.
+- 8d158a1: Type the mocks in the provider's PoW, client, dataset and scheduler unit tests with `vi.mocked` and correctly-typed fixtures instead of `any`, so the test mocks now match the real function signatures.
+- be25974: Fixes a decoded session field that was being dropped before it reached the
+  session record.
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/api@4.2.5
+  - @prosopo/api-express-router@3.1.89
+  - @prosopo/database@4.0.35
+  - @prosopo/datasets@3.1.84
+  - @prosopo/env@3.6.58
+  - @prosopo/ipinfo@0.4.4
+  - @prosopo/keyring@2.9.91
+  - @prosopo/load-balancer@2.10.46
+  - @prosopo/types-database@5.5.5
+  - @prosopo/types-env@2.11.4
+  - @prosopo/user-access-policy@3.14.5
+
+## 5.10.3
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- c386199: Carry each detector bundle's `payloadLayout` from its pool entry through to the decoder.
+  
+  Pool bundles now ship an extra opaque per-bundle value alongside the private key and inner config, and the decoder needs it to read what that bundle's detector produced. The pool loader reads it from `{id}.json`, the persist and admin-push paths keep it, and the frictionless decrypt passes it to `decodePayload` along with the key.
+  
+  Bundles without one — pools built before this — behave exactly as before, so a provider can be updated ahead of its pool.
+  
+  Covered by pool tests that the value survives load, persist and reload, and by the existing decrypt tests.
+- 4d45e3d: Stop `DecisionMachineRunner` retaining every instance, and re-roll the frictionless widget onto another provider on an unrecognised error.
+  
+  `DecisionMachineRunner` enrolled itself in a module-level `Set` so an artifact upload could flush every runner's cache. That assumed runners were built once per process; they are built per request, and nothing pruned the set, so it grew for as long as the process lived and construction eventually began to fail. `WeakRef` did not bound it — the set held the wrapper, which outlives its referent. The registry is replaced by a generation counter: an invalidation bumps it, and a runner drops its cache when the value it carries no longer matches. Nothing holds a runner reference, so there is nothing to grow.
+  
+  The widget compounded it. The HTTP client does not throw on a 400 with a JSON body, so a provider-side failure came back looking like a normal result, and the frictionless guard turned it into a terminal error — no fallback, no retry, no restart timer. One unhealthy provider stranded the user on its first response even when every other node was healthy. Errors whose key we do not recognise are now thrown, which hands them to the existing provider re-roll. Integration faults (site key, origin, captcha type) and policy denials still display as before: another provider returns the same answer, and for those the message is the point. Errors with no key at all are unchanged, since hard blocks arrive in that shape. A site's error callback now also fires once retries are exhausted, which it previously did not.
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d710b7f]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/api-express-router@3.1.88
+  - @prosopo/captcha-severity@1.1.1
+  - @prosopo/common@3.1.56
+  - @prosopo/database@4.0.34
+  - @prosopo/datasets@3.1.83
+  - @prosopo/keyring@2.9.90
+  - @prosopo/locale@3.4.3
+  - @prosopo/native-ja4@0.0.6
+  - @prosopo/native-merkle@0.0.6
+  - @prosopo/redis-client@1.0.36
+  - @prosopo/types-database@5.5.4
+  - @prosopo/types@5.8.4
+  - @prosopo/user-access-policy@3.14.4
+  - @prosopo/util-crypto@13.5.32
+  - @prosopo/web-bot-auth@0.1.1
+  - @prosopo/util@3.3.10
+  - @prosopo/api@4.2.4
+  - @prosopo/api-route@2.6.59
+  - @prosopo/env@3.6.57
+  - @prosopo/ipinfo@0.4.3
+  - @prosopo/load-balancer@2.10.45
+  - @prosopo/logger@2.0.10
+  - @prosopo/types-env@2.11.3
+
 ## 5.10.2
 ### Patch Changes
 
