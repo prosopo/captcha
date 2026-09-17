@@ -167,6 +167,10 @@ export default defineConfig(({ command, mode }) => {
 					"image-explicit": path.resolve(__dirname, "src/image-explicit.html"),
 					"pow-implicit": path.resolve(__dirname, "src/pow-implicit.html"),
 					"image-implicit": path.resolve(__dirname, "src/image-implicit.html"),
+					"frictionless-implicit": path.resolve(
+						__dirname,
+						"src/frictionless-implicit.html",
+					),
 					"frictionless-explicit": path.resolve(
 						__dirname,
 						"src/frictionless-explicit.html",
