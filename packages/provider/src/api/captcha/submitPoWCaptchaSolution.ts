@@ -402,10 +402,11 @@ export const buildEscalation = async (
 		headers: originSession.headers,
 		mode: originSession.mode,
 		simdReadings: originSession.simdReadings,
-		entropyMathRandomFingerprint: originSession.entropyMathRandomFingerprint,
-		entropyCryptoFingerprint: originSession.entropyCryptoFingerprint,
-		entropyWallClockOffsetMs: originSession.entropyWallClockOffsetMs,
-		entropyMathRandomFirst: originSession.entropyMathRandomFirst,
+		// The whole detector bag, so the escalated session answers the same
+		// rules the origin would have. Previously each signal was named here
+		// individually and several were never added, so they stopped existing
+		// the moment a user was escalated.
+		d: originSession.d,
 		// Carry the detector pool bundle forward so the escalated image/puzzle
 		// solve can decrypt the (same-origin) behavioural payload.
 		bundleId: originSession.bundleId,
@@ -419,15 +420,6 @@ export const buildEscalation = async (
 		// fire-and-forget, races the escalation read), dnsEvent (set by the DNS
 		// sidecar on the origin's TLS connection only).
 		originSessionId: originSession.sessionId,
-		g: originSession.g,
-		i: originSession.i,
-		cv: originSession.cv,
-		sq: originSession.sq,
-		b: originSession.b,
-		sw: originSession.sw,
-		md: originSession.md,
-		bn: originSession.bn,
-		fs: originSession.fs,
 		// Raw signals for the current PoW-submit TCP connection — not the
 		// origin's. The escalation session belongs on this hop's fingerprint.
 		tcpToChelloUs: perConnectionSignals?.tcpToChelloUs,

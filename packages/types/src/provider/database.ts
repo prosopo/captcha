@@ -28,6 +28,7 @@ import {
 	string,
 	tuple,
 	union,
+	unknown as unknownType,
 	type infer as zInfer,
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
@@ -50,7 +51,7 @@ import type {
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
 import type { PuzzleEvent, RequestHeaders } from "./api.js";
-import type { SimdReadings } from "./detection.js";
+import type { DetectorData, SimdReadings } from "./detection.js";
 import {
 	type MatchedAccessRule,
 	MatchedAccessRuleSchema,
@@ -384,6 +385,19 @@ export const SimdReadingsSchema = union([
 	}),
 ]);
 
+// Whatever the detector reported, left unvalidated on purpose: the point of
+// the bag is that no schema here knows what is in it.
+//
+// Values keep their own types all the way through — a boolean is stored as a
+// boolean and a number as a number, because the bag travels as JSON and is
+// persisted as a Mongo subdocument, both of which are typed. Only the keys are
+// strings, in the sense that object keys always are.
+//
+// The caps that make it safe to persist are applied on ingress by the
+// provider's `sanitiseDetectorData` — not here, since this schema also has to
+// parse records that were stored before any given cap existed.
+export const DetectorDataSchema = record(string(), unknownType());
+
 // Stage at which the catcher's SIMD readings first reached the provider.
 // Tracked once on the Session record (first hop wins) so analytics can see
 // when in the user's journey the CPU fingerprint became available.
@@ -497,31 +511,9 @@ export const SessionSchema = object({
 	// indicator reflects when the catcher's CPU fingerprint became
 	// available relative to the user's journey.
 	simdReadingsStage: SimdReadingsStageSchema.optional(),
-	entropyMathRandomFingerprint: string().optional(),
-	entropyCryptoFingerprint: string().optional(),
-	entropyWallClockOffsetMs: number().optional(),
-	entropyMathRandomFirst: number().optional(),
-	g: string().optional(),
-	i: boolean().optional(),
-	cv: number().optional(),
-	sq: number().optional(),
-	cg: string().optional(),
-	sm: string().optional(),
-	dz: string().optional(),
-	b: record(string(), array(string())).optional(),
-	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
-	// classifier folds into `webView`. Persisted per session so
-	// decision-machine rules can key off the individual signals
-	// without a catcher release. Undefined on non-iOS / non-WebKit
-	// clients and on catcher versions predating the fields.
-	//   sw = navigator.serviceWorker present
-	//   md = navigator.mediaDevices present
-	//   bn = window.browser namespace present (WebExtensions)
-	//   fs = document.fullscreenEnabled present
-	sw: boolean().optional(),
-	md: boolean().optional(),
-	bn: boolean().optional(),
-	fs: boolean().optional(),
+	// Everything the detector reported beyond the fields above. See
+	// Session.d.
+	d: DetectorDataSchema.optional(),
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// Server-observed microsecond deltas across the TLS handshake
@@ -659,23 +651,17 @@ export type Session = {
 	simdReadings?: SimdReadings;
 	// Stage at which the readings first arrived.
 	simdReadingsStage?: SimdReadingsStage;
-	entropyMathRandomFingerprint?: string;
-	entropyCryptoFingerprint?: string;
-	entropyWallClockOffsetMs?: number;
-	entropyMathRandomFirst?: number;
-	g?: string;
-	i?: boolean;
-	cv?: number;
-	sq?: number;
-	cg?: string;
-	sm?: string;
-	dz?: string;
-	b?: Record<string, string[]>;
-	// Raw iOS WKWebView-vs-Safari DOM signals — see SessionSchema above.
-	sw?: boolean;
-	md?: boolean;
-	bn?: boolean;
-	fs?: boolean;
+	// Everything the detector reported that the provider does not itself
+	// branch on, carried verbatim from the client and handed to decision and
+	// routing machines as `input.d`.
+	//
+	// Signals live here rather than as named columns so that adding, removing
+	// or reshaping one is a detector-side change alone: no `types` release, no
+	// `provider` release, no migration, and no risk of a signal being dropped
+	// by one of the several hand-maintained field lists it used to have to
+	// pass through. Keys are assigned by the detector; nothing in this repo
+	// enumerates them.
+	d?: DetectorData;
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin. See the SessionSchema block above for full semantics —
 	// elevated values indicate the client's ClientHello traversed a

@@ -70,6 +70,13 @@ export interface PoolBundle {
 	 * Absent for pools built before it existed, which decode without it.
 	 */
 	readonly payloadLayout?: string;
+	/**
+	 * Second opaque per-bundle parameter, with the same contract as
+	 * {@link payloadLayout}: built with the bundle, meaningless without it,
+	 * forwarded to the decoder unread. Absent for pools built before it
+	 * existed, which decode without it.
+	 */
+	readonly keyMap?: string;
 }
 
 interface LoadLogger {
@@ -120,6 +127,7 @@ export class DetectorBundlePool {
 					innerConfig?: unknown;
 					release?: unknown;
 					payloadLayout?: unknown;
+					keyMap?: unknown;
 				};
 				if (
 					typeof secrets.privateKey !== "string" ||
@@ -146,12 +154,15 @@ export class DetectorBundlePool {
 					typeof secrets.payloadLayout === "string"
 						? secrets.payloadLayout
 						: undefined;
+				const keyMap =
+					typeof secrets.keyMap === "string" ? secrets.keyMap : undefined;
 				next.set(bundleId, {
 					js,
 					privateKey: secrets.privateKey,
 					innerConfig: secrets.innerConfig,
 					...(release && { release }),
 					...(payloadLayout && { payloadLayout }),
+					...(keyMap && { keyMap }),
 				});
 			} catch (error) {
 				logger.warn?.("failed to load bundle pool entry", {
