@@ -59,7 +59,7 @@ export default function statusLogInjector(): Plugin {
 		};
 
 		const originalOnActionHandler = window.onActionHandler;
-		window.onActionHandler = function() {
+		window.onActionHandler = function(token) {
 			const procaptchaElements = document.getElementsByName('procaptcha-response');
 
 			if (!procaptchaElements.length) {
@@ -69,7 +69,7 @@ export default function statusLogInjector(): Plugin {
 			}
 
 			updateCaptchaStatus('Form submission initiated with valid CAPTCHA token', 'info');
-			if (originalOnActionHandler) originalOnActionHandler();
+			if (originalOnActionHandler) originalOnActionHandler(token);
 		};
 
 		document.addEventListener('procaptcha:execute', function(e) {
