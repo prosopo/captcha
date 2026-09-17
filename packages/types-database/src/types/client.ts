@@ -311,6 +311,9 @@ export const UserSettingsSchema = new Schema({
 			default: "morse",
 		},
 	},
+	allowAgents: { type: Boolean, required: false },
+	assetOrigin: { type: String, required: false },
+	clientUrl: { type: String, required: false },
 });
 
 export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({
