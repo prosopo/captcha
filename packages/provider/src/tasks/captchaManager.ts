@@ -80,6 +80,8 @@ export interface PoolBundleDecrypt {
 	 * with. Absent for bundles from a pool built before it existed.
 	 */
 	payloadLayout?: string;
+	/** Second opaque decode parameter, same contract as `payloadLayout`. */
+	keyMap?: string;
 }
 
 /**
@@ -186,7 +188,7 @@ export class CaptchaManager {
 	 * Read a session and, if it's an escalation missing one of the
 	 * inherently-origin-populated fields, walk to `originSessionId` and fill
 	 * the gap. Intended for the decision-machine input read path only —
-	 * `simdReadings`, `dnsEvent`, `entropyMathRandomFingerprint` etc. are
+	 * `simdReadings`, `dnsEvent` and the detector bag are
 	 * populated on the origin session (SIMD via pow-submit's fire-and-forget
 	 * attach; DNS via the sidecar's origin-TLS-scoped patch) and don't
 	 * automatically end up on the escalation record because
@@ -215,31 +217,14 @@ export class CaptchaManager {
 			session.simdReadings === undefined || session.simdReadings === null;
 		const needsDns =
 			session.dnsEvent === undefined || session.dnsEvent === null;
-		const needsEntropyMath = session.entropyMathRandomFingerprint === undefined;
-		const needsEntropyCrypto = session.entropyCryptoFingerprint === undefined;
-		const needsEntropyWall = session.entropyWallClockOffsetMs === undefined;
-		const needsEntropyFirst = session.entropyMathRandomFirst === undefined;
-		const needsG = session.g === undefined;
-		const needsI = session.i === undefined;
-		const needsSw = session.sw === undefined;
-		const needsMd = session.md === undefined;
-		const needsBn = session.bn === undefined;
-		const needsFs = session.fs === undefined;
+		// An absent bag is reason enough to walk to the origin. A present one
+		// is not — but if the walk happens anyway for simd or dns, the bags
+		// are merged key by key, since the origin can have gained keys after
+		// the escalation copied it. The escalation's own keys always win.
+		const escalationData = session.d ?? {};
+		const needsData = session.d === undefined;
 
-		if (
-			!needsSimd &&
-			!needsDns &&
-			!needsEntropyMath &&
-			!needsEntropyCrypto &&
-			!needsEntropyWall &&
-			!needsEntropyFirst &&
-			!needsG &&
-			!needsI &&
-			!needsSw &&
-			!needsMd &&
-			!needsBn &&
-			!needsFs
-		) {
+		if (!needsSimd && !needsDns && !needsData) {
 			return session;
 		}
 
@@ -248,33 +233,15 @@ export class CaptchaManager {
 		);
 		if (!origin) return session;
 
+		const mergedData =
+			origin.d === undefined ? session.d : { ...origin.d, ...escalationData };
+
 		return {
 			...session,
 			...(needsSimd &&
 				origin.simdReadings && { simdReadings: origin.simdReadings }),
 			...(needsDns && origin.dnsEvent && { dnsEvent: origin.dnsEvent }),
-			...(needsEntropyMath &&
-				origin.entropyMathRandomFingerprint !== undefined && {
-					entropyMathRandomFingerprint: origin.entropyMathRandomFingerprint,
-				}),
-			...(needsEntropyCrypto &&
-				origin.entropyCryptoFingerprint !== undefined && {
-					entropyCryptoFingerprint: origin.entropyCryptoFingerprint,
-				}),
-			...(needsEntropyWall &&
-				origin.entropyWallClockOffsetMs !== undefined && {
-					entropyWallClockOffsetMs: origin.entropyWallClockOffsetMs,
-				}),
-			...(needsEntropyFirst &&
-				origin.entropyMathRandomFirst !== undefined && {
-					entropyMathRandomFirst: origin.entropyMathRandomFirst,
-				}),
-			...(needsG && origin.g !== undefined && { g: origin.g }),
-			...(needsI && origin.i !== undefined && { i: origin.i }),
-			...(needsSw && origin.sw !== undefined && { sw: origin.sw }),
-			...(needsMd && origin.md !== undefined && { md: origin.md }),
-			...(needsBn && origin.bn !== undefined && { bn: origin.bn }),
-			...(needsFs && origin.fs !== undefined && { fs: origin.fs }),
+			...(mergedData !== undefined && { d: mergedData }),
 		};
 	}
 
@@ -755,6 +722,7 @@ export class CaptchaManager {
 					...(bundle.payloadLayout && {
 						payloadLayout: bundle.payloadLayout,
 					}),
+					...(bundle.keyMap && { keyMap: bundle.keyMap }),
 				}
 			: undefined;
 	}
