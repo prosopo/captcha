@@ -32,9 +32,9 @@ export default defineConfig({
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	expose: {
 		...process.env,
-		// The image implicit demo (root path) has the signup form — the
+		// The image implicit demo has the signup form — the
 		// spec drives /signup end-to-end to observe the DM-deny surface.
-		default_page: "/",
+		default_page: "/image-implicit.html",
 		visualRegressionType: "regression",
 		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
 		visualRegressionDiffDirectory: "cypress/snapshots/diff",
