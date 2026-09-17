@@ -898,6 +898,8 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				decryptedHeadHash: sessionRecord?.decryptedHeadHash,
 				userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
 				simdReadings: sessionRecord?.simdReadings,
+				// Everything the detector reported for this session.
+				d: sessionRecord?.d,
 				frictionlessReason: sessionRecord?.reason,
 				ruleType: sessionRecord?.ruleType,
 				webView: sessionRecord?.webView,

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CaptchaType, type Session } from "@prosopo/types";
+import { CaptchaType, type DetectorData, type Session } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildEscalation } from "../../../../api/captcha/submitPoWCaptchaSolution.js";
 import type { CreateSessionInput } from "../../../../tasks/frictionless/frictionlessTasks.js";
@@ -399,18 +399,24 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		expect(createSessionInput().bundleId).toBe("bundle-17");
 	});
 
-	it("carries the origin's b onto the escalation", async () => {
-		// `b` travels with g / i / sw / md / bn / fs rather than being
-		// re-collected: the escalation is the same client and never re-runs
-		// the collection step.
-		const originB: Record<string, string[]> = { k1: ["v1", "v2"] };
+	it("carries the origin's detector bag onto the escalation", async () => {
+		// The bag travels rather than being re-collected: the escalation is
+		// the same client and never re-runs the collection step. Copied whole,
+		// so a signal cannot be left behind by having been forgotten in a list
+		// — which is how several of them used to disappear on escalation.
+		const originData: DetectorData = {
+			k1: { k2: ["v1", "v2"] },
+			k3: 42,
+			k4: 7,
+			aKeyThisRepoDoesNotKnow: true,
+		};
 		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
 			sessionId: "origin-id",
 			dappAccount: "dapp",
 		});
 		env.spies.getSessionRecordBySessionId.mockResolvedValue({
 			...makeOriginSession(),
-			b: originB,
+			d: originData,
 		});
 
 		await buildEscalation(
@@ -419,30 +425,7 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 			"challenge",
 		);
 
-		expect(createSessionInput().b).toBe(originB);
-	});
-
-	it("carries the origin's cv and sq onto the escalation", async () => {
-		// Same client, same collection step as `b` above.
-		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
-			sessionId: "origin-id",
-			dappAccount: "dapp",
-		});
-		env.spies.getSessionRecordBySessionId.mockResolvedValue({
-			...makeOriginSession(),
-			cv: 42,
-			sq: 7,
-		});
-
-		await buildEscalation(
-			env.tasks,
-			{ verified: true, routingOutput: { captchaType: CaptchaType.image } },
-			"challenge",
-		);
-
-		const input = createSessionInput();
-		expect(input.cv).toBe(42);
-		expect(input.sq).toBe(7);
+		expect(createSessionInput().d).toBe(originData);
 	});
 
 	// Behavioural data (the decrypted BDP struct produced from the pow-solve

@@ -49,7 +49,10 @@ import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { coerceToEnabledCaptchaType } from "../captchaTypeSelection.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
-import { getBotScore } from "../detection/getBotScore.js";
+import {
+	type DecodedDetectorPayload,
+	getBotScore,
+} from "../detection/getBotScore.js";
 import { samplePuzzleDifficulty } from "../puzzle/puzzleDifficulty.js";
 import { ipMatchesSession } from "./ipMatch.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
@@ -159,22 +162,7 @@ export class FrictionlessManager extends CaptchaManager {
 			headers: params.headers,
 			mode: params.mode,
 			simdReadings: params.simdReadings,
-			entropyMathRandomFingerprint: params.entropyMathRandomFingerprint,
-			entropyCryptoFingerprint: params.entropyCryptoFingerprint,
-			entropyWallClockOffsetMs: params.entropyWallClockOffsetMs,
-			sw: params.sw,
-			md: params.md,
-			bn: params.bn,
-			fs: params.fs,
-			entropyMathRandomFirst: params.entropyMathRandomFirst,
-			g: params.g,
-			i: params.i,
-			cv: params.cv,
-			sq: params.sq,
-			cg: params.cg,
-			sm: params.sm,
-			dz: params.dz,
-			b: params.b,
+			d: params.d,
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
 			synNs: params.synNs,
@@ -234,22 +222,7 @@ export class FrictionlessManager extends CaptchaManager {
 			bundleId,
 			currentUrl,
 			iframeUrl,
-			entropyMathRandomFingerprint,
-			entropyCryptoFingerprint,
-			entropyWallClockOffsetMs,
-			entropyMathRandomFirst,
-			g,
-			i,
-			cv,
-			sq,
-			cg,
-			sm,
-			dz,
-			b,
-			sw,
-			md,
-			bn,
-			fs,
+			d,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
 			synNs,
@@ -309,22 +282,7 @@ export class FrictionlessManager extends CaptchaManager {
 			...(simdReadings && {
 				simdReadingsStage: SimdReadingsStage.frictionless,
 			}),
-			entropyMathRandomFingerprint,
-			entropyCryptoFingerprint,
-			entropyWallClockOffsetMs,
-			entropyMathRandomFirst,
-			g,
-			i,
-			cv,
-			sq,
-			cg,
-			sm,
-			dz,
-			b,
-			sw,
-			md,
-			bn,
-			fs,
+			d,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
 			synNs,
@@ -802,6 +760,7 @@ export class FrictionlessManager extends CaptchaManager {
 			key: string;
 			innerConfig?: string;
 			payloadLayout?: string;
+			keyMap?: string;
 		}[];
 		bundleId?: string;
 	}> {
@@ -813,6 +772,7 @@ export class FrictionlessManager extends CaptchaManager {
 						key: bundle.key,
 						innerConfig: bundle.innerConfig,
 						payloadLayout: bundle.payloadLayout,
+						keyMap: bundle.keyMap,
 					},
 				],
 				bundleId: bundle.bundleId,
@@ -840,32 +800,12 @@ export class FrictionlessManager extends CaptchaManager {
 			};
 		});
 
-		let baseBotScore: number | undefined;
-		let timestamp: number | undefined;
-		let userId: string | undefined;
-		let userAgent: string | undefined;
-		let webView: boolean | undefined;
-		let iFrame: boolean | undefined;
-		let decryptedHeadHash = "";
+		// One decoded result rather than a local per field. What the detector
+		// reports is its own business: the previous field-by-field unpacking
+		// meant every new signal had to be threaded through here by hand, and
+		// anything missed was dropped without a trace.
+		let decrypted: DecodedDetectorPayload | undefined;
 		let decryptionFailed = false;
-		let triggeredDetectors: number[] | undefined;
-		let shadowDomPenalty: boolean | undefined;
-		let entropyMathRandomFingerprint: string | undefined;
-		let entropyCryptoFingerprint: string | undefined;
-		let entropyWallClockOffsetMs: number | undefined;
-		let entropyMathRandomFirst: number | undefined;
-		let g: string | undefined;
-		let ii: boolean | undefined;
-		let cvv: number | undefined;
-		let sqq: number | undefined;
-		let cgg: string | undefined;
-		let smm: string | undefined;
-		let dzz: string | undefined;
-		let bb: Record<string, string[]> | undefined;
-		let sw: boolean | undefined;
-		let md: boolean | undefined;
-		let bn: boolean | undefined;
-		let fs: boolean | undefined;
 		for (const [keyIndex, attempt] of decryptKeys.entries()) {
 			try {
 				this.logger.info(() => ({
@@ -874,105 +814,51 @@ export class FrictionlessManager extends CaptchaManager {
 						key: this.redactKeyForLogging(attempt.key),
 					},
 				}));
-				const decrypted = await getBotScore(
+				const result = await getBotScore(
 					token,
 					headHash,
 					attempt.key,
 					attempt.innerConfig,
 					attempt.payloadLayout,
+					attempt.keyMap,
 				);
-				decryptedHeadHash = decrypted.decryptedHeadHash || "";
-				const s = decrypted.baseBotScore;
-				const t = decrypted.timestamp;
-				const a = decrypted.userId;
-				const u = decrypted.userAgent;
-				const w = decrypted.isWebView;
-				const i = decrypted.isIframe;
-				const td = decrypted.triggeredDetectors;
-				const sd = decrypted.shadowDomPenalty;
-				const ef = decrypted.entropyMathRandomFingerprint;
-				const ec = decrypted.entropyCryptoFingerprint;
-				const eo = decrypted.entropyWallClockOffsetMs;
-				const em = decrypted.entropyMathRandomFirst;
-				const gv = decrypted.g;
-				const iv = decrypted.i;
-				const cvv2 = decrypted.cv;
-				const sqq2 = decrypted.sq;
-				const cgg2 = decrypted.cg;
-				const smm2 = decrypted.sm;
-				const dzz2 = decrypted.dz;
-				const bv = decrypted.b;
-				const swv = decrypted.sw;
-				const mdv = decrypted.md;
-				const bnv = decrypted.bn;
-				const fsv = decrypted.fs;
+				decrypted = result;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",
 					data: {
 						key: this.redactKeyForLogging(attempt.key),
-						baseBotScore: s,
-						timestamp: t,
-						userId: a,
-						userAgent: u,
-						webView: w,
-						iFrame: i,
-						triggeredDetectors: td,
-						shadowDomPenalty: sd,
-						entropyMathRandomFingerprint: ef,
-						entropyCryptoFingerprint: ec,
-						entropyWallClockOffsetMs: eo,
-						entropyMathRandomFirst: em,
-						sw: swv,
-						md: mdv,
-						bn: bnv,
-						fs: fsv,
+						baseBotScore: result.baseBotScore,
+						timestamp: result.timestamp,
+						userId: result.userId,
+						userAgent: result.userAgent,
+						webView: result.isWebView,
+						iFrame: result.isIframe,
+						triggeredDetectors: result.triggeredDetectors,
+						shadowDomPenalty: result.shadowDomPenalty,
+						// Keys only. The values are the detector's output and
+						// have no business in a log line.
+						detectorData: Object.keys(result.d ?? {}),
 					},
 				}));
-				baseBotScore = s;
-				timestamp = t;
-				userId = a;
-				userAgent = u;
-				webView = w;
-				iFrame = i;
-				triggeredDetectors = td;
-				shadowDomPenalty = sd;
-				entropyMathRandomFingerprint = ef;
-				entropyCryptoFingerprint = ec;
-				entropyWallClockOffsetMs = eo;
-				entropyMathRandomFirst = em;
-				g = gv;
-				ii = iv;
-				cvv = cvv2;
-				sqq = sqq2;
-				cgg = cgg2;
-				smm = smm2;
-				dzz = dzz2;
-				bb = bv;
-				sw = swv;
-				md = mdv;
-				bn = bnv;
-				fs = fsv;
 				break;
-			} catch (err) {
+			} catch {
 				if (keyIndex === decryptKeys.length - 1) {
 					this.logger.warn(() => ({
 						msg: "Error decrypting score: no more keys to try",
 					}));
-					baseBotScore = 1;
-					timestamp = 0;
-					decryptedHeadHash = "";
-					decryptionFailed = true;
 				}
 			}
 		}
 
-		const baseBotScoreUndefined =
-			baseBotScore === undefined || Number.isNaN(baseBotScore);
-		const timestampUndefined =
-			timestamp === undefined || Number.isNaN(timestamp);
-		const undefinedCount =
-			Number(baseBotScoreUndefined) + Number(timestampUndefined);
-		if (undefinedCount > 0) {
+		let baseBotScore = decrypted?.baseBotScore;
+		let timestamp = decrypted?.timestamp;
+		let decryptedHeadHash = decrypted?.decryptedHeadHash || "";
+		if (
+			baseBotScore === undefined ||
+			Number.isNaN(baseBotScore) ||
+			timestamp === undefined ||
+			Number.isNaN(timestamp)
+		) {
 			this.logger.error(() => ({
 				msg: "Error decrypting score: baseBotScore or timestamp is undefined",
 			}));
@@ -981,52 +867,35 @@ export class FrictionlessManager extends CaptchaManager {
 			decryptedHeadHash = "";
 			decryptionFailed = true;
 		}
+
 		this.logger.info(() => ({
 			msg: "decryptPayload result",
 			data: {
-				baseBotScore: baseBotScore,
-				timestamp: timestamp,
-				userId,
-				userAgent,
-				webView,
-				iFrame,
+				baseBotScore,
+				timestamp,
+				userId: decrypted?.userId,
+				userAgent: decrypted?.userAgent,
+				webView: decrypted?.isWebView,
+				iFrame: decrypted?.isIframe,
 				decryptedHeadHash,
 				decryptionFailed,
-				shadowDomPenalty,
-				sw,
-				md,
-				bn,
-				fs,
+				shadowDomPenalty: decrypted?.shadowDomPenalty,
+				detectorData: Object.keys(decrypted?.d ?? {}),
 			},
 		}));
 
 		return {
 			baseBotScore: Number(baseBotScore),
 			timestamp: Number(timestamp),
-			userId,
-			userAgent,
-			webView: webView || false,
-			iFrame: iFrame || false,
+			userId: decrypted?.userId,
+			userAgent: decrypted?.userAgent,
+			webView: decrypted?.isWebView ?? false,
+			iFrame: decrypted?.isIframe ?? false,
 			decryptedHeadHash,
 			decryptionFailed,
-			triggeredDetectors,
-			shadowDomPenalty,
-			entropyMathRandomFingerprint,
-			entropyCryptoFingerprint,
-			entropyWallClockOffsetMs,
-			entropyMathRandomFirst,
-			g,
-			i: ii,
-			cv: cvv,
-			sq: sqq,
-			cg: cgg,
-			sm: smm,
-			dz: dzz,
-			b: bb,
-			sw,
-			md,
-			bn,
-			fs,
+			triggeredDetectors: decrypted?.triggeredDetectors,
+			shadowDomPenalty: decrypted?.shadowDomPenalty,
+			d: decrypted?.d,
 			// Promoted onto the session so the later behavioural-data hop can
 			// resolve the same keypair/inner cfg.
 			bundleId,

@@ -26,7 +26,7 @@ import {
 } from "../client/settings.js";
 import type { PuzzleEvent, RequestHeaders } from "../provider/api.js";
 import type { ScoreComponents } from "../provider/database.js";
-import type { SimdReadings } from "../provider/detection.js";
+import type { DetectorData, SimdReadings } from "../provider/detection.js";
 import type { FrictionlessReason } from "../provider/reasons.js";
 
 export type EnrichedDnsEvent = {
@@ -178,6 +178,13 @@ export type DecisionMachineInput = {
 	// egress-sensitive TCP-stack rules and supplies the action they inherit —
 	// see TrafficCategoryPolicies.
 	trafficPolicies?: TrafficCategoryPolicies;
+	// Everything the detector reported for the session this verify belongs
+	// to, as persisted on the Session record. Keys are whatever the detector
+	// chose to emit: nothing in this repo declares them, and a rule may read
+	// a key that no release of `types` or `provider` has ever heard of.
+	// Undefined when no frictionless session preceded, or when the detector
+	// reported nothing.
+	d?: DetectorData;
 };
 
 export type DecisionMachineOutput = {
@@ -374,6 +381,15 @@ export interface RoutingMachineInputBase {
 	score: number;
 	platform: RoutingMachinePlatform;
 	raw: RoutingMachineRawSignals;
+	// Everything the detector reported. Same bag, same key names and the same
+	// "nothing here declares them" contract as `DecisionMachineInput.d`, so a
+	// rule reads `input.d.<key>` identically in either machine kind.
+	//
+	// On the `route` phase this is the bag freshly decoded from the payload
+	// that arrived with this request; on `postPow` it is the bag persisted on
+	// the originating Session. Undefined when the detector reported nothing,
+	// or when the payload could not be read.
+	d?: DetectorData;
 }
 
 export interface RoutingMachineInput extends RoutingMachineInputBase {

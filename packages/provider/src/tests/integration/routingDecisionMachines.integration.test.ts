@@ -730,12 +730,14 @@ describe("Routing Decision Machines (live local Mongo + Redis)", () => {
 		expect(session?.ipInfo?.isValid).toBe(true);
 	});
 
-	// The entropy fingerprints and the compact g/i/sw/md/bn/fs flags were
-	// written but never projected, so `getSessionRecordWithOriginFallback`
-	// saw every one as undefined: it always believed the escalation session
-	// was missing them, always issued a second query for the origin, and
-	// always copied nothing back because the origin read as undefined too.
-	it("projects the entropy fingerprints and capability flags", async () => {
+	// Detector signals were once projected one by one, and the ones nobody
+	// remembered to add read as undefined forever:
+	// `getSessionRecordWithOriginFallback` believed every escalation was
+	// missing them, issued a second query for the origin, and copied nothing
+	// back because the origin read as undefined too. The bag is projected as
+	// a single field so there is nothing left to forget — including keys this
+	// repo has never heard of, which is what this asserts.
+	it("projects the detector bag whole, including undeclared keys", async () => {
 		await removeAll();
 		tasks.frictionlessManager.setSessionParams({
 			token: `tok-entropy-${Date.now()}`,
@@ -748,16 +750,13 @@ describe("Routing Decision Machines (live local Mongo + Redis)", () => {
 			decryptedHeadHash: "",
 			siteKey: dappAccount,
 			headers: {},
-			entropyMathRandomFingerprint: "mathfp",
-			entropyCryptoFingerprint: "cryptofp",
-			entropyWallClockOffsetMs: 42,
-			entropyMathRandomFirst: 0.5,
-			g: "gval",
-			i: true,
-			sw: true,
-			md: true,
-			bn: true,
-			fs: true,
+			d: {
+				k1: "text",
+				k2: 42,
+				k3: true,
+				nested: { k4: true, k5: false },
+				aKeyThisRepoDoesNotKnow: ["x", "y"],
+			},
 			isProtect: true,
 		});
 		const response = await tasks.frictionlessManager.sendPowCaptcha({
@@ -773,16 +772,16 @@ describe("Routing Decision Machines (live local Mongo + Redis)", () => {
 			});
 		const session = await latestSession(response[ApiParams.sessionId]);
 
-		expect(session?.entropyMathRandomFingerprint).toBe("mathfp");
-		expect(session?.entropyCryptoFingerprint).toBe("cryptofp");
-		expect(session?.entropyWallClockOffsetMs).toBe(42);
-		expect(session?.entropyMathRandomFirst).toBe(0.5);
-		expect(session?.g).toBe("gval");
-		expect(session?.i).toBe(true);
-		expect(session?.sw).toBe(true);
-		expect(session?.md).toBe(true);
-		expect(session?.bn).toBe(true);
-		expect(session?.fs).toBe(true);
+		// Round-tripped through Mongo: types survive (42 is still a number,
+		// false is still false), nesting survives, and the undeclared key is
+		// neither dropped by the Mongoose schema nor by the projection.
+		expect(session?.d).toEqual({
+			k1: "text",
+			k2: 42,
+			k3: true,
+			nested: { k4: true, k5: false },
+			aKeyThisRepoDoesNotKnow: ["x", "y"],
+		});
 		expect(session?.isProtect).toBe(true);
 		expect(session?.ruleType).toEqual(["some-rule"]);
 		expect(session?.powDifficulty).toBe(7);

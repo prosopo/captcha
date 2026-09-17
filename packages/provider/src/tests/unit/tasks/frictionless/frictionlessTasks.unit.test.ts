@@ -15,6 +15,7 @@
 import {
 	CaptchaType,
 	ClientSettingsSchema,
+	type DetectorData,
 	FrictionlessPenalties,
 	type KeyringPair,
 	type ProsopoConfigOutput,
@@ -201,18 +202,24 @@ describe("Frictionless Task Manager", () => {
 			);
 		});
 
-		it("threads b from setSessionParams through to the stored session record", async () => {
-			// Same path as ipInfo above. `b` reached setSessionParams and then
-			// stopped: createSession had no parameter for it, so the field was
-			// decoded on every request and dropped before the write. The Mongo
-			// schema and the read projection have carried it all along.
+		it("threads the detector bag from setSessionParams through to the stored session record", async () => {
+			// Same path as ipInfo above, and the one that used to leak:
+			// individual signals reached setSessionParams and then stopped,
+			// because createSession had no parameter for them. They were
+			// decoded on every request and dropped before the write, while the
+			// Mongo schema and the read projection carried them all along.
+			// One field cannot go missing from one list and not another.
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
 
-			const stubB: Record<string, string[]> = { k1: ["v1", "v2"] };
+			const stubData: DetectorData = {
+				k1: { k2: ["v1", "v2"] },
+				k3: 42,
+				k4: 7,
+			};
 
 			frictionlessTaskManager.setSessionParams({
-				token: "tok-b",
+				token: "tok-d",
 				score: 0.5,
 				threshold: 0.7,
 				scoreComponents: { baseScore: 0.5 },
@@ -220,8 +227,8 @@ describe("Frictionless Task Manager", () => {
 				webView: false,
 				iFrame: false,
 				decryptedHeadHash: "",
-				siteKey: "siteKey-b",
-				b: stubB,
+				siteKey: "siteKey-d",
+				d: stubData,
 			});
 
 			await frictionlessTaskManager.sendImageCaptcha({
@@ -229,37 +236,7 @@ describe("Frictionless Task Manager", () => {
 			});
 
 			expect(db.storeSessionRecord).toHaveBeenCalledWith(
-				expect.objectContaining({ b: stubB }),
-			);
-		});
-
-		it("threads cv and sq from setSessionParams through to the stored session record", async () => {
-			// Same drop as `b` above: both were wired through the payload
-			// decoder, the Mongo schema and the read projection, but had no
-			// parameter on createSession and so never reached the record.
-			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.storeSessionRecord as any).mockResolvedValue(undefined);
-
-			frictionlessTaskManager.setSessionParams({
-				token: "tok-cvsq",
-				score: 0.5,
-				threshold: 0.7,
-				scoreComponents: { baseScore: 0.5 },
-				ipAddress: getCompositeIpAddress("1.2.3.4"),
-				webView: false,
-				iFrame: false,
-				decryptedHeadHash: "",
-				siteKey: "siteKey-cvsq",
-				cv: 42,
-				sq: 7,
-			});
-
-			await frictionlessTaskManager.sendImageCaptcha({
-				solvedImagesCount: 0,
-			});
-
-			expect(db.storeSessionRecord).toHaveBeenCalledWith(
-				expect.objectContaining({ cv: 42, sq: 7 }),
+				expect.objectContaining({ d: stubData }),
 			);
 		});
 
