@@ -240,6 +240,58 @@ describe("Frictionless Task Manager", () => {
 			);
 		});
 
+		it("stamps the widget's session id onto the session at issuance", async () => {
+			// Until the widget sent this on the frictionless hop, a session only
+			// gained a clientSessionId when it was mirrored up from a solved
+			// captcha — so a session that was allowed frictionlessly, or
+			// abandoned before a solve, could never be correlated back to the
+			// render it came from.
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			frictionlessTaskManager.setSessionParams({
+				token: "tok-csid",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.2.3.4"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "siteKey-csid",
+				clientMetaData: { clientSessionId: "bumblebee-abc" },
+			});
+
+			await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(
+				expect.objectContaining({
+					clientMetaData: { clientSessionId: "bumblebee-abc" },
+				}),
+			);
+		});
+
+		it("leaves clientMetaData off a session the widget reported none for", async () => {
+			// Absent rather than an empty subdocument, so a reader can tell
+			// "no session id" from "session id we failed to record".
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			const session = await frictionlessTaskManager.createSession({
+				token: "tok-no-csid",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.2.3.4"),
+				captchaType: CaptchaType.image,
+				siteKey: "siteKey-no-csid",
+			});
+
+			expect(session).not.toHaveProperty("clientMetaData");
+		});
+
 		it("persists every field setSessionParams carries", async () => {
 			// `b`, `cv` and `sq` were each lost the same way: wired into
 			// setSessionParams, then dropped because createSession's

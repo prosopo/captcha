@@ -18,6 +18,7 @@ import {
 	ExtensionLoader,
 	getProcaptchaRandomActiveProvider,
 	pickIpMode,
+	resolveClientSessionId,
 } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
@@ -261,6 +262,12 @@ const customDetectBot: BotDetectionFunction = async (
 	const ExtClass = await extClassPromise;
 	const ext = new ExtClass();
 
+	// Sent on this hop as well as on solution submit, so a session that is
+	// allowed frictionlessly — or abandoned before a solve — still correlates
+	// back to the site's (or Protect's) session. Undefined when Protect has not
+	// finished initialising yet; the solve-time read then supplies it.
+	const clientSessionId = resolveClientSessionId(config.clientSessionId);
+
 	// No provider detector ⇒ no detection is possible, so there is nothing to
 	// send. The request goes out with an empty token and the provider decides
 	// what to serve; the client gets no say in that.
@@ -279,6 +286,7 @@ const customDetectBot: BotDetectionFunction = async (
 				undefined,
 				fallbackUrl,
 				fallbackIframeUrl,
+				clientSessionId,
 			),
 			10000,
 		);
@@ -335,6 +343,7 @@ const customDetectBot: BotDetectionFunction = async (
 		detectorSessionId,
 		currentUrl,
 		iframeUrl,
+		clientSessionId,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

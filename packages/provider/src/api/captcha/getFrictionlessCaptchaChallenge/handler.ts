@@ -787,6 +787,7 @@ export default (
 				...(bundleId && { bundleId }),
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
 				...(d !== undefined && { d }),
+				...(clientSessionId && { clientMetaData: { clientSessionId } }),
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),
