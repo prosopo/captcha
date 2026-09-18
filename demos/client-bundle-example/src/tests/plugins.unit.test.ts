@@ -24,7 +24,7 @@ import codeSnippetInjector, {
 	snippetFor,
 } from "../plugins/code-snippet-injector.js";
 import formFillerInjector from "../plugins/form-filler-injector.js";
-import layoutInjector from "../plugins/layout-injector.js";
+import layoutInjector, { DEMO_HOSTNAME } from "../plugins/layout-injector.js";
 import {
 	type DemoRendering,
 	demoPages,
@@ -159,6 +159,47 @@ describe("layoutInjector", () => {
 		expect(html.indexOf("<p>hello</p>")).toBeLessThan(
 			html.indexOf('class="demo-panel"'),
 		);
+	});
+
+	it("loads Plausible only when served from the public demo host", () => {
+		const html = handler(page(), ctx(`${cwd}/src/pow-explicit.html`));
+		const inlineScript = html.match(
+			/<script>\s*\(function \(\) \{([\s\S]*?)\}\)\(\);\s*<\/script>/,
+		)?.[1];
+		expect(inlineScript).toBeDefined();
+
+		type FakeElement = Record<string, unknown>;
+		const loadedFrom = (hostname: string): FakeElement[] => {
+			const appended: FakeElement[] = [];
+			const fakeDocument = {
+				createElement: (): FakeElement => {
+					const element: FakeElement = {};
+					element.setAttribute = (name: string, value: string): void => {
+						element[name] = value;
+					};
+					return element;
+				},
+				head: {
+					appendChild: (element: FakeElement): void => {
+						appended.push(element);
+					},
+				},
+			};
+			new Function("location", "document", inlineScript ?? "")(
+				{ hostname },
+				fakeDocument,
+			);
+			return appended;
+		};
+
+		expect(loadedFrom("localhost")).toHaveLength(0);
+		expect(loadedFrom(`staging.${DEMO_HOSTNAME}`)).toHaveLength(0);
+		const [tracker] = loadedFrom(DEMO_HOSTNAME);
+		expect(tracker).toMatchObject({
+			defer: true,
+			"data-domain": DEMO_HOSTNAME,
+			src: "https://prosopo.io/js/script.kairee5buy1chae8eit0so8ahphae9Oo.js",
+		});
 	});
 
 	it("marks the current type, mode and rendering", () => {
