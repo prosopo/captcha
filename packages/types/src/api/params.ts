@@ -95,6 +95,7 @@ export enum ApiParams {
 	// solved the captcha is the session being verified. Deliberately distinct
 	// from `sessionId`, which is the provider's own frictionless session.
 	clientSessionId = "clientSessionId",
+	bypassKey = "bypassKey",
 	honeypot = "honeypot",
 	fingerprintProof = "fingerprintProof",
 }

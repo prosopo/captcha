@@ -30,6 +30,8 @@ export {
 
 export { describeMatchedRule } from "./matchedRule.js";
 
+export { BYPASS_KEY_HASH_PATTERN, hashBypassKey } from "./bypassKey.js";
+
 export { classifyOs, OS_NAMES, type OsName } from "./classifyOs.js";
 
 export {

@@ -62,6 +62,7 @@ export const getRequestUserScope = (
 	// inbound request. Passed through to rule matching so `webBotAuthAgent`
 	// rules match the verified signer URL, never a spoofed header.
 	webBotAuthAgent?: string,
+	bypassKeyHash?: string,
 ): Pick<
 	UserScopeRecord,
 	| "userId"
@@ -76,6 +77,7 @@ export const getRequestUserScope = (
 	| "browser"
 	| "headerMatch"
 	| "webBotAuthAgent"
+	| "bypassKeyHash"
 > => {
 	const userAgent = requestHeaders["user-agent"]
 		? requestHeaders["user-agent"].toString()
@@ -93,6 +95,7 @@ export const getRequestUserScope = (
 		// Only set when signature verification succeeded, so a rule scoped to
 		// a signer can never be matched by a spoofed header.
 		...(webBotAuthAgent && { webBotAuthAgent }),
+		...(bypassKeyHash && { bypassKeyHash }),
 		// Unconditional, unlike the fields above: an allow-list has to match a
 		// request whose UA we can't classify, which lands on "unknown".
 		os: classifyOs(userAgent),
@@ -144,6 +147,7 @@ const SCALAR_USER_SCOPE_FIELDS = [
 	// reader's SPECIFICITY_EXPR.
 	"headerMatch",
 	"webBotAuthAgent",
+	"bypassKeyHash",
 ] as const satisfies ReadonlyArray<keyof UserScope>;
 
 // Derive the populated-scope field list for a matched rule (the same shape

@@ -25,6 +25,7 @@ import type {
 	ProviderSelectRetryContext,
 } from "@prosopo/types";
 import type { BotDetectionFunctionResult } from "@prosopo/types";
+import { readBypassKeyCookie } from "./bypassKeyCookie.js";
 import {
 	DetectorLoaderFromScript,
 	type DetectorOptions,
@@ -279,6 +280,7 @@ const customDetectBot: BotDetectionFunction = async (
 				undefined,
 				fallbackUrl,
 				fallbackIframeUrl,
+				readBypassKeyCookie(),
 			),
 			10000,
 		);
@@ -335,6 +337,7 @@ const customDetectBot: BotDetectionFunction = async (
 		detectorSessionId,
 		currentUrl,
 		iframeUrl,
+		readBypassKeyCookie(),
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

@@ -17,6 +17,7 @@ import type { AllKeys } from "@prosopo/common";
 import { getIPAddress } from "@prosopo/util";
 import { Address4, Address6 } from "ip-address";
 import { type ZodType, z } from "zod";
+import { BYPASS_KEY_HASH_PATTERN } from "#policy/bypassKey.js";
 import type { UserAttributes, UserIp, UserScope } from "#policy/rule.js";
 import type { UserAttributesRecord, UserIpRecord } from "#policy/ruleRecord.js";
 
@@ -65,6 +66,7 @@ const userAttributesSchema = z.object({
 		.url()
 		.transform(normaliseSignatureAgentUrl)
 		.optional(),
+	bypassKeyHash: z.string().regex(BYPASS_KEY_HASH_PATTERN).optional(),
 } satisfies AllKeys<UserAttributes>) satisfies ZodType<UserAttributes>;
 
 const userAttributesInput = z
