@@ -861,9 +861,10 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		required: false,
 	},
 	// Site-owner metadata the widget was rendered with — see
-	// `Session.clientMetaData`. Mirrored up from the captcha record so the
-	// session row carries the same `clientSessionId` the verify call
-	// correlates against.
+	// `Session.clientMetaData`. Written at issuance when the widget reported a
+	// session id, and mirrored up from the captcha record at solve time, so the
+	// session row carries the same `clientSessionId` the verify call correlates
+	// against either way.
 	clientMetaData: {
 		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
 		required: false,
