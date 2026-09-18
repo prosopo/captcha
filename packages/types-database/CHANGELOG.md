@@ -1,5 +1,54 @@
 # @prosopo/types-database
 
+## 5.6.0
+### Minor Changes
+
+- a606f54: Detector signals now travel in a single open field, `d`, instead of one named
+  field each.
+  
+  Previously every signal the detector reported needed adding by hand in about a
+  dozen places — the decoder, two type files, the Mongoose schema, the read
+  projection, the session write path, the escalation copy, and each machine's
+  input — and missing any one of them dropped the signal with no error. Signals
+  were in fact being dropped that way: one was persisted but never reached a
+  decision machine at all, and three more were lost whenever a user was escalated
+  from PoW to another challenge.
+  
+  Now the provider carries whatever the detector reported without knowing what it
+  is, and hands it to decision and routing machines as `input.d`. A rule can read
+  a signal that no release of `@prosopo/types` or `@prosopo/provider` has ever
+  heard of, so adding one no longer requires a release of either. Values keep
+  their types: a boolean arrives as a boolean and a number as a number.
+  
+  The bag is client-controlled data that gets persisted, so it is sanitised and
+  capped on ingress — key names Mongo cannot store are dropped, values that are
+  not JSON are dropped, and there are limits on key count, string length, array
+  length, nesting depth and total size.
+  
+  Two things to note when deploying. Sessions written before this change carry
+  the old named fields and no `d`, so queries and dashboards that read those
+  fields need a `d.` prefix; the sessions collection expires after a day, so the
+  overlap is short. And the sparse session index moves to a dotted path inside
+  the bag.
+- 0f23010: Correlate captcha sessions with Prosopo Protect sessions on sites that run both.
+  
+  Protect's challenge page already renders the widget with `data-sessionid=<its session id>`, so captchas served from the interstitial can be matched back to the Protect session. A widget the site embeds itself — on its own pages — had no way to know that id, so those sessions could not be matched to anything.
+  
+  The widget now falls back to reading Protect's session id from the page (`window.prosopo_protect.jti`, or the `prosopo_session` cookie Protect sets on the site's domain) when the site has not supplied a session id of its own. A session id the site does supply always wins, so nothing changes for sites that use the field themselves, and sites without Protect are unaffected. Only the id is read — the session token that shares the cookie never leaves the page.
+  
+  Two gaps in the existing field are closed alongside it: the widget now sends the session id when it first asks for a captcha rather than only when submitting a solution, and the provider records it on the session at that point. Previously a session that was allowed without a challenge, or abandoned before the user solved one, carried no session id at all. An escalated session now inherits the id from the session it escalated from.
+
+### Patch Changes
+
+- ce2500b: `allowAgents`, `assetOrigin` and `clientUrl` are now declared on the stored
+  client settings schema. Mongoose is strict by default, so these three were
+  accepted by the API and then dropped on write, leaving the provider to read
+  `undefined` for settings that had been registered successfully.
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/user-access-policy@3.14.6
+
 ## 5.5.5
 ### Patch Changes
 
