@@ -351,3 +351,6 @@ describe("sanitiseDetectorData", () => {
 		expect(sanitiseDetectorData({})).toBeUndefined();
 	});
 });
+
+// Control run only: touches a non-ignored path so the cypress workflow runs
+// against an unmodified main. Not for merge.
