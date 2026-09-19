@@ -1,5 +1,67 @@
 # @prosopo/scripts
 
+## 3.1.185
+### Patch Changes
+
+- Updated dependencies [6c00bca]
+  - @prosopo/provider@5.11.1
+  - @prosopo/cli@3.8.15
+
+## 3.1.184
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+- Updated dependencies [a4a71be]
+  - @prosopo/types@5.9.0
+  - @prosopo/provider@5.11.0
+  - @prosopo/cli@3.8.14
+  - @prosopo/datasets@3.1.85
+  - @prosopo/env@3.6.59
+  - @prosopo/keyring@2.9.92
+  - @prosopo/types-env@2.11.5
+
+## 3.1.183
+### Patch Changes
+
+- Updated dependencies [be25974]
+- Updated dependencies [8d158a1]
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/provider@5.10.4
+  - @prosopo/cli@3.8.13
+  - @prosopo/datasets@3.1.84
+  - @prosopo/env@3.6.58
+  - @prosopo/keyring@2.9.91
+  - @prosopo/types-env@2.11.4
+
+## 3.1.182
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- 9282236: Type the Cargo.toml handling in the setVersion script using the TOML parser's own types instead of `any`. The script writes exactly the same files as before.
+- Updated dependencies [3334ef2]
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [4d45e3d]
+- Updated dependencies [d710b7f]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/cli@3.8.12
+  - @prosopo/common@3.1.56
+  - @prosopo/datasets@3.1.83
+  - @prosopo/keyring@2.9.90
+  - @prosopo/locale@3.4.3
+  - @prosopo/provider@5.10.3
+  - @prosopo/types@5.8.4
+  - @prosopo/util-crypto@13.5.32
+  - @prosopo/util@3.3.10
+  - @prosopo/dotenv@3.0.56
+  - @prosopo/env@3.6.57
+  - @prosopo/logger@2.0.10
+  - @prosopo/types-env@2.11.3
+
 ## 3.1.181
 ### Patch Changes
 

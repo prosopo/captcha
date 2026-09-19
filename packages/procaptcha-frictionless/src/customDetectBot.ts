@@ -18,6 +18,7 @@ import {
 	ExtensionLoader,
 	getProcaptchaRandomActiveProvider,
 	pickIpMode,
+	resolveClientSessionId,
 } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
@@ -27,6 +28,7 @@ import type {
 import type { BotDetectionFunctionResult } from "@prosopo/types";
 import {
 	DetectorLoaderFromScript,
+	type DetectorOptions,
 	type DetectorType,
 } from "./detectorLoader.js";
 import {
@@ -219,6 +221,7 @@ const customDetectBot: BotDetectionFunction = async (
 	// timeout) we have NO detector to run and there is no bundled fallback.
 	let detectorSessionId: string | undefined;
 	let providerDetect: DetectorType | undefined;
+	let detectorOptions: DetectorOptions | undefined;
 	try {
 		// Reuse the prefetched assignment when the entry already fetched one for
 		// this provider; otherwise issue it now.
@@ -234,6 +237,10 @@ const customDetectBot: BotDetectionFunction = async (
 			// we are already holding.
 			providerDetect = await DetectorLoaderFromScript(assigned.detectorScript);
 			detectorSessionId = assigned.detectorSessionId;
+			detectorOptions = {
+				clientUrl: assigned.clientUrl,
+				assetOrigin: assigned.assetOrigin,
+			};
 		}
 	} catch (err) {
 		// No detector available — fall through to the PoW request below.
@@ -255,6 +262,12 @@ const customDetectBot: BotDetectionFunction = async (
 	const ExtClass = await extClassPromise;
 	const ext = new ExtClass();
 
+	// Sent on this hop as well as on solution submit, so a session that is
+	// allowed frictionlessly — or abandoned before a solve — still correlates
+	// back to the site's (or Protect's) session. Undefined when Protect has not
+	// finished initialising yet; the solve-time read then supplies it.
+	const clientSessionId = resolveClientSessionId(config.clientSessionId);
+
 	// No provider detector ⇒ no detection is possible, so there is nothing to
 	// send. The request goes out with an empty token and the provider decides
 	// what to serve; the client gets no say in that.
@@ -273,6 +286,7 @@ const customDetectBot: BotDetectionFunction = async (
 				undefined,
 				fallbackUrl,
 				fallbackIframeUrl,
+				clientSessionId,
 			),
 			10000,
 		);
@@ -303,8 +317,11 @@ const customDetectBot: BotDetectionFunction = async (
 
 	const detect: DetectorType = providerDetect;
 
-	const detectionResult = await detect(container, restartFn, () =>
-		ext.getAccount(config),
+	const detectionResult = await detect(
+		container,
+		restartFn,
+		() => ext.getAccount(config),
+		detectorOptions,
 	);
 
 	const userAccount = detectionResult.userAccount;
@@ -326,6 +343,7 @@ const customDetectBot: BotDetectionFunction = async (
 		detectorSessionId,
 		currentUrl,
 		iframeUrl,
+		clientSessionId,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

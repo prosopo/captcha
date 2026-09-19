@@ -157,16 +157,7 @@ describe("CaptchaManager", () => {
 				captchaType: CaptchaType.puzzle,
 				simdReadings: { supported: true, results: [] },
 				dnsEvent: { receivedAt: new Date() },
-				entropyMathRandomFingerprint: "a",
-				entropyCryptoFingerprint: "b",
-				entropyWallClockOffsetMs: 0,
-				entropyMathRandomFirst: 0.1,
-				g: "c",
-				i: false,
-				sw: true,
-				md: true,
-				bn: false,
-				fs: true,
+				d: { k1: "v1", k2: false },
 			} as unknown as Session;
 			dbGet().mockResolvedValue(session);
 
@@ -209,11 +200,11 @@ describe("CaptchaManager", () => {
 			expect(got?.captchaType).toBe(CaptchaType.puzzle);
 		});
 
-		it("fills g from origin when the escalation is missing it", async () => {
+		it("fills the detector bag from origin when the escalation has none", async () => {
 			const origin = {
 				sessionId: "origin",
 				captchaType: CaptchaType.pow,
-				g: "Google Inc. (NVIDIA)~ANGLE (NVIDIA, NVIDIA GeForce RTX 3080)",
+				d: { k1: "v1", k2: false },
 			} as unknown as Session;
 			const escalation = {
 				sessionId: "esc",
@@ -225,89 +216,56 @@ describe("CaptchaManager", () => {
 			const got =
 				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
-			expect(got?.g).toBe(
-				"Google Inc. (NVIDIA)~ANGLE (NVIDIA, NVIDIA GeForce RTX 3080)",
-			);
+			expect(got?.d).toEqual({
+				k1: "v1",
+				// A false value is a measurement, not an absence, and has to
+				// survive the walk as one.
+				k2: false,
+			});
 			expect(got?.sessionId).toBe("esc");
 		});
 
-		it("keeps the escalation's own g rather than the origin's", async () => {
+		it("keeps the escalation's own keys and takes only what it lacks", async () => {
 			const origin = {
 				sessionId: "origin",
 				captchaType: CaptchaType.pow,
-				g: "origin-value",
+				d: { k1: "origin-value", k2: 1 },
 			} as unknown as Session;
 			const escalation = {
 				sessionId: "esc",
 				originSessionId: "origin",
 				captchaType: CaptchaType.puzzle,
-				g: "escalation-value",
+				// Absent simdReadings is what sends the walker to the origin
+				// at all; the bag is then merged because it is already loaded.
+				d: { k1: "escalation-value" },
 			} as unknown as Session;
 			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
 
 			const got =
 				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
-			expect(got?.g).toBe("escalation-value");
+			expect(got?.d).toEqual({
+				k1: "escalation-value",
+				k2: 1,
+			});
 		});
 
-		it("fills i from origin when the escalation is missing it", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				i: true,
-			} as unknown as Session;
+		it("does not walk to the origin when the escalation has everything", async () => {
 			const escalation = {
 				sessionId: "esc",
 				originSessionId: "origin",
 				captchaType: CaptchaType.puzzle,
+				d: { k1: "escalation-value" },
+				simdReadings: { supported: false, reason: "n/a" },
+				dnsEvent: { receivedAt: new Date() },
 			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+			dbGet().mockResolvedValueOnce(escalation);
 
 			const got =
 				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
-			expect(got?.i).toBe(true);
-			expect(got?.sessionId).toBe("esc");
-		});
-
-		it("carries a false i forward rather than treating it as absent", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				i: false,
-			} as unknown as Session;
-			const escalation = {
-				sessionId: "esc",
-				originSessionId: "origin",
-				captchaType: CaptchaType.puzzle,
-			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
-
-			const got =
-				await captchaManager.getSessionRecordWithOriginFallback("esc");
-
-			expect(got?.i).toBe(false);
-		});
-
-		it("keeps the escalation's own i rather than the origin's", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				i: false,
-			} as unknown as Session;
-			const escalation = {
-				sessionId: "esc",
-				originSessionId: "origin",
-				captchaType: CaptchaType.puzzle,
-				i: true,
-			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
-
-			const got =
-				await captchaManager.getSessionRecordWithOriginFallback("esc");
-
-			expect(got?.i).toBe(true);
+			expect(got?.d).toEqual({ k1: "escalation-value" });
+			expect(dbGet()).toHaveBeenCalledTimes(1);
 		});
 
 		it("does not fill anything when origin also lacks the fields", async () => {
@@ -419,82 +377,6 @@ describe("CaptchaManager", () => {
 
 			expect(got?.dnsEvent).toEqual({ receivedAt, ja4: "ja4y" });
 			expect(got?.captchaType).toBe(CaptchaType.puzzle);
-		});
-
-		it("fills entropyMathRandomFingerprint from origin when the escalation is missing it", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				entropyMathRandomFingerprint: "0x1234abcd",
-			} as unknown as Session;
-			const escalation = {
-				sessionId: "esc",
-				originSessionId: "origin",
-				captchaType: CaptchaType.image,
-			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
-
-			const got =
-				await captchaManager.getSessionRecordWithOriginFallback("esc");
-
-			expect(got?.entropyMathRandomFingerprint).toBe("0x1234abcd");
-		});
-
-		it("fills entropyCryptoFingerprint from origin when the escalation is missing it", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				entropyCryptoFingerprint: "0xdeadbeef",
-			} as unknown as Session;
-			const escalation = {
-				sessionId: "esc",
-				originSessionId: "origin",
-				captchaType: CaptchaType.puzzle,
-			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
-
-			const got =
-				await captchaManager.getSessionRecordWithOriginFallback("esc");
-
-			expect(got?.entropyCryptoFingerprint).toBe("0xdeadbeef");
-		});
-
-		it("fills entropyWallClockOffsetMs from origin including exact-zero (must not be treated as absent)", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				entropyWallClockOffsetMs: 0,
-			} as unknown as Session;
-			const escalation = {
-				sessionId: "esc",
-				originSessionId: "origin",
-				captchaType: CaptchaType.image,
-			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
-
-			const got =
-				await captchaManager.getSessionRecordWithOriginFallback("esc");
-
-			expect(got?.entropyWallClockOffsetMs).toBe(0);
-		});
-
-		it("fills entropyMathRandomFirst from origin when the escalation is missing it", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				entropyMathRandomFirst: 0.123456,
-			} as unknown as Session;
-			const escalation = {
-				sessionId: "esc",
-				originSessionId: "origin",
-				captchaType: CaptchaType.image,
-			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
-
-			const got =
-				await captchaManager.getSessionRecordWithOriginFallback("esc");
-
-			expect(got?.entropyMathRandomFirst).toBe(0.123456);
 		});
 
 		// Explicit non-inheritance surface. These fields are NOT in the

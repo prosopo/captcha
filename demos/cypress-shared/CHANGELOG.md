@@ -1,5 +1,31 @@
 # @prosopo/cypress-shared
 
+## 2.8.141
+### Patch Changes
+
+- 2256f94: Redesign the demo site as a Prosopo-branded playground. Every demo page now has the prosopo.io header, a sidebar to switch captcha type, mode, rendering and challenge placement, the event log and the code for the current setup side by side, and sign-up links. The home page is now the frictionless captcha instead of the image captcha, which moves to `/image-implicit.html`; the cypress configs that opened the home page for the image captcha now open that page. The MUI stylesheet and the float-label script are gone.
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+
+## 2.8.140
+### Patch Changes
+
+- 737d72c: Remove the `any` default from the shared Cypress `Chainable` command declarations so the subject type comes from Cypress's own definition.
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+
+## 2.8.139
+### Patch Changes
+
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/types@5.8.4
+  - @prosopo/util@3.3.10
+
 ## 2.8.138
 ### Patch Changes
 

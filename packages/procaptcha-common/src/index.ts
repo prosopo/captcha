@@ -14,6 +14,7 @@
 
 export * from "./providers.js";
 export * from "./clientMetaData.js";
+export * from "./protectSession.js";
 export * from "./events/trust.js";
 export * from "./state/builder.js";
 export * from "./callbacks/defaultCallbacks.js";

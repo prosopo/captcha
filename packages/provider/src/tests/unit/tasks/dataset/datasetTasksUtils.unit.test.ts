@@ -1,6 +1,6 @@
 import { ProsopoEnvError } from "@prosopo/common";
 import { buildDataset } from "@prosopo/datasets";
-import type { DatasetRaw } from "@prosopo/types";
+import { CaptchaTypes, type Dataset, type DatasetRaw } from "@prosopo/types";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -93,10 +93,11 @@ describe("providerValidateDataset", () => {
 		} as unknown as DatasetRaw;
 		const minSolvedCaptchas = 1;
 		const minUnsolvedCaptchas = 1;
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(buildDataset as any).mockResolvedValue({
-			datasetId: null,
-			datasetContentId: null,
+		vi.mocked(buildDataset).mockResolvedValue({
+			datasetId: undefined,
+			datasetContentId: undefined,
+			captchas: [],
+			format: CaptchaTypes.SelectAll,
 		});
 
 		await expect(
@@ -109,8 +110,8 @@ describe("providerValidateDataset", () => {
 			new ProsopoEnvError("DATASET.DATASET_ID_UNDEFINED", {
 				context: {
 					failedFuncName: "providerValidateDataset",
-					datasetId: null,
-					datasetContentId: null,
+					datasetId: undefined,
+					datasetContentId: undefined,
 				},
 			}),
 		);
@@ -123,12 +124,13 @@ describe("providerValidateDataset", () => {
 		const minSolvedCaptchas = 1;
 		const minUnsolvedCaptchas = 1;
 
-		const mockDataset = {
+		const mockDataset: Dataset = {
 			datasetId: "datasetId",
 			datasetContentId: "datasetContentId",
+			captchas: [],
+			format: CaptchaTypes.SelectAll,
 		};
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(buildDataset as any).mockResolvedValue(mockDataset);
+		vi.mocked(buildDataset).mockResolvedValue(mockDataset);
 
 		const result = await providerValidateDataset(
 			datasetRaw,

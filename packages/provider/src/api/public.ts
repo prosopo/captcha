@@ -18,6 +18,7 @@ import type { ProviderEnvironment } from "@prosopo/env";
 import { type ProviderDetails, PublicApiPaths } from "@prosopo/types";
 import { version } from "@prosopo/util";
 import express, { type Router } from "express";
+import { assetDocumentRouter } from "./assetDocument.js";
 import { getHealthzGeoRouter } from "./healthzGeo.js";
 import {
 	metricsEnabled,
@@ -130,6 +131,8 @@ export function publicRouter(env: ProviderEnvironment): Router {
 			);
 		}
 	});
+
+	router.use(assetDocumentRouter());
 
 	// Your error handler should always be at the end of your application stack. Apparently it means not only after all
 	// app.use() but also after all your app.get() and app.post() calls.

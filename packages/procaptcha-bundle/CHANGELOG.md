@@ -1,5 +1,42 @@
 # @prosopo/procaptcha-bundle
 
+## 4.4.8
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/procaptcha-common@2.15.0
+  - @prosopo/procaptcha-frictionless@2.17.0
+
+## 4.4.7
+### Patch Changes
+
+- c300bc9: Tests now clear the fake `document` and `window` globals without switching off type checking, so the last `any` suppressions in the bundle's tests are gone. No change to the published code.
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/procaptcha-frictionless@2.16.5
+  - @prosopo/procaptcha-common@2.14.2
+
+## 4.4.6
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [08e2254]
+- Updated dependencies [4d45e3d]
+- Updated dependencies [d710b7f]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/locale@3.4.3
+  - @prosopo/procaptcha-common@2.14.1
+  - @prosopo/procaptcha-frictionless@2.16.4
+  - @prosopo/types@5.8.4
+  - @prosopo/util@3.3.10
+  - @prosopo/dotenv@3.0.56
+
 ## 4.4.5
 ### Patch Changes
 

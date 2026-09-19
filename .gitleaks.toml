@@ -1,0 +1,103 @@
+# gitleaks configuration for a public repository whose main published artefact
+# is a client bundle.
+#
+# Everything here narrows the `generic-api-key` entropy heuristic, which is the
+# only rule that fires on this tree. Nothing disables a rule that looks for a
+# real credential format, and nothing is allowlisted by directory alone when the
+# value itself can be recognised instead -- a path allowlist also hides whatever
+# lands in that path later.
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = """
+Prosopo site keys. A site key is a public identifier, not a secret: it is
+embedded in the HTML of every site that loads the widget, and it is handed out
+in the portal precisely so it can be. It is 48 base58 characters of an ss58
+address, so the entropy heuristic flags every one of them. The large majority of
+this rule's hits on this tree are a site key under one of these names.
+"""
+regexTarget = "line"
+regexes = [
+  '''(?i)(data-)?site[_-]?key\s*[:=]''',
+  '''(?i)PROSOPO_SITE_KEY(_[A-Z]+)?\s*[:=]''',
+  '''(?i)(VITE_|REACT_APP_|NEXT_PUBLIC_)?(PROCAPTCHA|DAPP)_SITE_KEY\s*[:=]''',
+]
+
+[[allowlists]]
+description = """
+Deliberately published demo keys. These are the always-pass / always-fail keys
+documented for integrators to test against, and the fixed site keys the test
+suite asserts on. They are checked into the client packages because the client
+has to ship them.
+"""
+paths = [
+  '''(^|/)demoKeys\.ts$''',
+  '''^packages/types/src/client/testSiteKeys\.ts$''',
+]
+
+[[allowlists]]
+description = """
+Cryptographic test vectors. tweetnacl's published vectors are the reference
+values the implementation is checked against -- they are supposed to be
+identical to everyone else's copy.
+"""
+paths = [
+  '''^packages/util-crypto/src/nacl/tweetnacl-.*-data\.spec\.ts$''',
+]
+
+[[allowlists]]
+description = """
+An Ethereum contract ABI in a marketplace demo. Function selectors and topic
+hashes are high-entropy hex by construction.
+"""
+paths = [
+  '''^demos/demo-nft-marketplace/src/api/abi\.json$''',
+]
+
+[[allowlists]]
+description = """
+Substrate dev-chain account seeds -- [mnemonic, address] pairs for the local
+development chain, from when the protocol ran on Substrate. The chain they
+belong to is long retired. The file should be generated at first run rather than
+committed; tracked as such rather than silently ignored.
+"""
+paths = [
+  '''(^|/)database_accounts\.json$''',
+]
+
+[[allowlists]]
+description = """
+Test and spec files. What this suppresses is `generic-api-key` firing on the
+fabricated 48-character keys that middleware and domain tests have to pass in to
+exercise a code path at all.
+
+This is broader than it should be, and deliberately so after measuring the
+alternative. `targetRules = ["generic-api-key"]` would scope it to the entropy
+heuristic and leave every format-specific rule live here, and gitleaks 8.28
+parses that key without complaint and then IGNORES it -- with the key present
+this allowlist matches nothing at all. A silently-inert suppression fails safe,
+so it shows up as a count that does not move rather than as anything breaking.
+Do not re-add the key believing it narrows anything.
+
+The cost is that a credential in a *recognisable* format -- an AWS key, a Stripe
+key, a PEM block -- would not be reported from a test file. Accepted against the
+alternative, which is a permanently noisy sweep that becomes unreadable and then
+gets deleted. Revisit if gitleaks gains working rule scoping.
+"""
+paths = [
+  '''(^|/)tests?/''',
+  '''\.(test|spec|unit\.test|integration\.test)\.[cm]?[jt]sx?$''',
+  '''(^|/)testing\.spec\.ts$''',
+]
+
+[[allowlists]]
+description = """
+Built client bundles checked into a demo. These are the compiled output of this
+repo's own packages, so anything in them is duplicated from source that is
+scanned on its own account.
+"""
+paths = [
+  '''\.main\.bundle\.js$''',
+]

@@ -445,6 +445,17 @@ describe("UserSettingsSchema", () => {
 		expect([...doc.domains]).toEqual(domainsDefault);
 	});
 
+	it("keeps allowAgents, assetOrigin and clientUrl on write", () => {
+		const doc = settings({
+			allowAgents: true,
+			assetOrigin: "https://example.com",
+			clientUrl: "/robots.txt",
+		});
+		expect(doc.allowAgents).toBe(true);
+		expect(doc.assetOrigin).toBe("https://example.com");
+		expect(doc.clientUrl).toBe("/robots.txt");
+	});
+
 	it("rejects a captcha type outside the enum", () => {
 		expect(
 			errorPaths(settings({ captchaType: "sudoku" }).validateSync()),

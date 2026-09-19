@@ -821,26 +821,12 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// Stage at which the SIMD readings first arrived on this session
 	// (frictionless / challenge / submit). First-hop-wins.
 	simdReadingsStage: { type: String, required: false },
-	entropyMathRandomFingerprint: { type: String, required: false },
-	entropyCryptoFingerprint: { type: String, required: false },
-	entropyWallClockOffsetMs: { type: Number, required: false },
-	entropyMathRandomFirst: { type: Number, required: false },
-	g: { type: String, required: false },
-	i: { type: Boolean, required: false },
-	cv: { type: Number, required: false },
-	sq: { type: Number, required: false },
-	cg: { type: String, required: false },
-	sm: { type: String, required: false },
-	dz: { type: String, required: false },
-	b: { type: Schema.Types.Mixed, required: false },
-	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
-	// classifier folds into `webView` (see @prosopo/types Session for
-	// per-key semantics). Persisted so server-side rules can retune
-	// the aggregation from live traffic without a catcher release.
-	sw: { type: Boolean, required: false },
-	md: { type: Boolean, required: false },
-	bn: { type: Boolean, required: false },
-	fs: { type: Boolean, required: false },
+	// Everything the detector reported — see @prosopo/types `Session.d`.
+	// Mixed because the whole point is that its shape is not declared here;
+	// the provider caps and sanitises it on ingress so it is always safe to
+	// store. Mongoose would silently drop an undeclared subdocument under
+	// strict mode, which is exactly the failure this field exists to end.
+	d: { type: Schema.Types.Mixed, required: false },
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// See @prosopo/types Session.tcpToChelloUs for full semantics.
@@ -875,9 +861,10 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		required: false,
 	},
 	// Site-owner metadata the widget was rendered with — see
-	// `Session.clientMetaData`. Mirrored up from the captcha record so the
-	// session row carries the same `clientSessionId` the verify call
-	// correlates against.
+	// `Session.clientMetaData`. Written at issuance when the widget reported a
+	// session id, and mirrored up from the captcha record at solve time, so the
+	// session row carries the same `clientSessionId` the verify call correlates
+	// against either way.
 	clientMetaData: {
 		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
 		required: false,
@@ -889,8 +876,10 @@ SessionRecordSchema.index({ deleted: 1 });
 SessionRecordSchema.index({ blocked: 1 });
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 SessionRecordSchema.index({ userSitekeyIpHash: 1 });
+// Dotted path into the detector bag. Sparse, so only sessions whose detector
+// actually reported this key are carried.
 SessionRecordSchema.index(
-	{ siteKey: 1, entropyMathRandomFingerprint: 1, createdAt: -1 },
+	{ siteKey: 1, "d.em": 1, createdAt: -1 },
 	{ sparse: true },
 );
 SessionRecordSchema.index({ token: 1 });
@@ -1078,30 +1067,14 @@ export const SESSION_PROJECTION = {
 	// Carried onto escalation sessions by `buildEscalation` so the
 	// escalated record keeps the Protect tag.
 	isProtect: 1,
-	// Entropy fingerprints and the compact client-capability flags.
-	// Read in two places, both of which silently degraded without
-	// them: `buildEscalation` copies them onto the escalation
-	// session, and `getSessionRecordWithOriginFallback` compares
-	// them against the origin session to decide whether a second
-	// lookup is even needed. Unprojected, every one read as
-	// undefined — so the fallback always fired and always copied
-	// nothing.
-	entropyMathRandomFingerprint: 1,
-	entropyCryptoFingerprint: 1,
-	entropyWallClockOffsetMs: 1,
-	entropyMathRandomFirst: 1,
-	g: 1,
-	i: 1,
-	cv: 1,
-	sq: 1,
-	cg: 1,
-	sm: 1,
-	dz: 1,
-	b: 1,
-	sw: 1,
-	md: 1,
-	bn: 1,
-	fs: 1,
+	// The detector bag, whole. Read by `buildEscalation` (copied onto
+	// the escalation session), by `getSessionRecordWithOriginFallback`
+	// (merged from the origin), and by the verify paths that build
+	// decision-machine input. Projecting it as one field is the reason
+	// a new signal no longer needs a line here — the previous
+	// per-signal list silently read `undefined` for anything anyone
+	// forgot to add, and several were forgotten.
+	d: 1,
 	userSitekeyIpHash: 1,
 	simdReadings: 1,
 	bundleId: 1,

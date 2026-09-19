@@ -1,0 +1,150 @@
+name: required-check
+
+# The single required status context for main, and the only job in the repo
+# named `check`.
+#
+# Before this existed, SEVEN workflows each published a job called `check` --
+# changesets, cypress, lint, pinned-versions, provider_image, tests and
+# typecheck. GitHub collapses same-named check runs into one context and
+# resolves it from whichever reported, so a green `check` from the cheapest of
+# the seven satisfied the requirement while the other six were still running.
+# The path-filter comments in those workflows even described this as the safety
+# mechanism that stopped a docs-only PR hanging: it was, and it was also the
+# hole. Another of our repos had the same defect and merged a failing PR through
+# it, which is how this was found.
+#
+# The other seven are now named after their workflow, so each reports its own
+# distinct context and nothing can mask anything else. This job takes over the
+# `check` name and earns it: it waits for every other check run on the commit
+# and fails if any of them failed.
+#
+# Deliberately NO paths filter. It is the required context, so it MUST report on
+# every pull request -- a required context that never reports leaves the PR
+# blocked forever, which is exactly the trap that stops the other seven from
+# being required directly (they are path-filtered, so a docs-only PR skips them
+# entirely and they never report at all).
+
+on:
+  pull_request:
+    # `main` and release branches only. `dev` and `staging` are dead -- last
+    # commits 2024 and 2025, no open PR targets either, and in Protect the
+    # branches do not exist at all -- so there is nothing to gate there.
+    branches: [main, release/*]
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+  # The merge queue is not enabled here today. Supported anyway: inside a queue a
+  # required context that never reports leaves the entry stalled until it is
+  # ejected, and that is cheaper to cover now than to debug the first time
+  # someone turns the queue on.
+  merge_group:
+
+permissions:
+  contents: read
+  checks: read
+  statuses: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check:
+    name: check
+    # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
+    # private repos: this repository is public, so a fork PR would run on the
+    # self-hosted fleet -- executing arbitrary contributor code on hardware we
+    # own, where it can also persist and poison later trusted jobs. This job is
+    # pure API polling and costs seconds of compute either way.
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft != true
+    timeout-minutes: 90
+    steps:
+      - name: Wait for every other check on this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
+        run: |
+          set -euo pipefail
+
+          # Poll rather than use `needs:`, because `needs` cannot reach across
+          # workflows -- and the suites that matter (tests, cypress, typecheck,
+          # security-scan) each live in their own workflow file.
+          deadline=$(( SECONDS + 80 * 60 ))
+          # Give the other workflows a moment to register their check runs, so
+          # "nothing else has reported yet" is not mistaken for "all done".
+          grace=$(( SECONDS + 120 ))
+
+          # One commit can carry several check runs with the SAME name: a manual
+          # re-run, or -- far more often -- a run cancelled by its workflow's
+          # concurrency group the instant a replacement starts. The API's
+          # `filter=latest` only dedupes within a single check suite, and each
+          # workflow run is its own suite, so both the dead and the live copy
+          # come back. Keep the highest id per name; check run ids increase
+          # monotonically, so that one is the live copy.
+          #
+          # This is why no two jobs in this repo may share a display name: the
+          # dedupe is by name, so a second workflow reusing a name would be
+          # silently dropped here. `build` was shared by android-webview and
+          # ios-webview and both are renamed.
+          latest_runs() {
+            gh api "repos/${GITHUB_REPOSITORY}/commits/${SHA}/check-runs?per_page=100" --paginate \
+              --jq '.check_runs[] | [.id, .status, (.conclusion // "-"), .name] | @tsv' 2>/dev/null \
+            | awk -F'\t' '
+                NF>=4 && $4!="check" {
+                  if (!($4 in id) || $1+0 > id[$4]) { id[$4]=$1+0; st[$4]=$2; cc[$4]=$3 }
+                }
+                END { for (n in id) printf "%s\t%s\t%s\n", st[n], cc[n], n }'
+          }
+
+          failures() {
+            awk -F'\t' '$1=="completed" && $2!="success" && $2!="skipped" && $2!="neutral" {print $3"="$2}' | sort -u
+          }
+
+          while :; do
+            runs=$(latest_runs || true)
+
+            total=$(printf '%s' "$runs" | grep -c . || true)
+            pending=$(printf '%s\n' "$runs" | awk -F'\t' '$1!="completed"' | grep -c . || true)
+            bad=$(printf '%s\n' "$runs" | failures || true)
+
+            echo "checks: ${total} total, ${pending} pending"
+
+            # Fail as soon as something has definitively failed -- no point
+            # holding a runner for another hour to confirm the obvious. But
+            # re-read once first: a cancel and its replacement are not atomic,
+            # so a poll landing in that gap sees only the cancelled copy.
+            if [ -n "$bad" ]; then
+              sleep 30
+              bad=$(latest_runs | failures || true)
+              if [ -n "$bad" ]; then
+                echo "::error::failing checks: $(printf '%s' "$bad" | tr '\n' ' ')"
+                exit 1
+              fi
+              echo "transient failure cleared on re-read, still waiting"
+              continue
+            fi
+
+            # `total -eq 0` is a pass once the grace period is over, not a wait.
+            # Requiring `total > 0` here would loop to the 80 minute deadline and
+            # then FAIL if no other check ever reported. Nothing reaches that
+            # state today -- changesets, pinned-versions and provider_image all
+            # run unfiltered, so something always reports -- but "no other checks
+            # exist on this commit" is a green condition, and a required gate
+            # should not be one path filter away from blocking every PR.
+            if [ "$pending" -eq 0 ] && [ "$SECONDS" -gt "$grace" ]; then
+              echo "all ${total} checks passed or were skipped"
+              exit 0
+            fi
+
+            if [ "$SECONDS" -gt "$deadline" ]; then
+              echo "::error::timed out waiting for checks; ${pending} still pending"
+              printf '%s\n' "$runs" | awk -F'\t' '$1!="completed"{print "  pending: "$3}'
+              exit 1
+            fi
+
+            sleep 20
+          done
