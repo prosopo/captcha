@@ -47,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "För många inskickningar från denna e-postadress",
 		"VPN_BLOCKED": "Förfrågningar från VPN-anslutningar är inte tillåtna för denna webbplats",
 		"PROXY_BLOCKED": "Förfrågningar från proxyservrar är inte tillåtna för denna webbplats",
+		"TOO_MANY_LOCALHOST": "För många CAPTCHA-förfrågningar från localhost för denna webbplatsnyckel",
 		"TOR_BLOCKED": "Förfrågningar från Tor-utgångsnoder är inte tillåtna för denna webbplats",
 		"ABUSER_BLOCKED": "Förfrågningar från nätverk markerade för missbruk är inte tillåtna för denna webbplats",
 		"DATACENTER_BLOCKED": "Förfrågningar från datacenter-IP-adresser är inte tillåtna för denna webbplats",

@@ -47,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Túl sok beküldés erről az e-mail címről",
 		"VPN_BLOCKED": "VPN-kapcsolatokról érkező kérések nem engedélyezettek ezen az oldalon",
 		"PROXY_BLOCKED": "Proxy szerverekről érkező kérések nem engedélyezettek ezen az oldalon",
+		"TOO_MANY_LOCALHOST": "Túl sok CAPTCHA-kérés a localhostról ehhez a webhelykulcshoz",
 		"TOR_BLOCKED": "Tor kilépési csomópontokról érkező kérések nem engedélyezettek ezen az oldalon",
 		"ABUSER_BLOCKED": "Visszaélésért megjelölt hálózatokról érkező kérések nem engedélyezettek ezen az oldalon",
 		"DATACENTER_BLOCKED": "Adatközponti IP-címekről érkező kérések nem engedélyezettek ezen az oldalon",

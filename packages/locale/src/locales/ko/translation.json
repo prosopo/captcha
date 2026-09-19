@@ -47,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "이 이메일 주소에서 너무 많은 제출이 있었습니다",
 		"VPN_BLOCKED": "이 사이트에서는 VPN 연결의 요청이 허용되지 않습니다",
 		"PROXY_BLOCKED": "이 사이트에서는 프록시 서버의 요청이 허용되지 않습니다",
+		"TOO_MANY_LOCALHOST": "이 사이트 키에 대한 localhost의 CAPTCHA 요청이 너무 많습니다",
 		"TOR_BLOCKED": "이 사이트에서는 Tor 출구 노드의 요청이 허용되지 않습니다",
 		"ABUSER_BLOCKED": "악용으로 표시된 네트워크의 요청은 이 사이트에서 허용되지 않습니다",
 		"DATACENTER_BLOCKED": "이 사이트에서는 데이터센터 IP 주소의 요청이 허용되지 않습니다",
