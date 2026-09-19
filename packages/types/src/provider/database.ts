@@ -139,6 +139,7 @@ export interface BehavioralDataPacked {
 	c1: unknown[];
 	c2: unknown[];
 	c3: unknown[];
+	c4?: unknown[];
 	d: string;
 }
 
@@ -279,6 +280,7 @@ const BehavioralDataPackedSchema = object({
 	c1: array(any()),
 	c2: array(any()),
 	c3: array(any()),
+	c4: array(any()).optional(),
 	d: string(),
 });
 

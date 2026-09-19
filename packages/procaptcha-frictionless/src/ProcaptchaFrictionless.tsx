@@ -459,6 +459,7 @@ export const ProcaptchaFrictionless = ({
 					behaviorCollector1: result.behaviorCollector1,
 					behaviorCollector2: result.behaviorCollector2,
 					behaviorCollector3: result.behaviorCollector3,
+					behaviorCollector4: result.behaviorCollector4,
 					deviceCapability: result.deviceCapability,
 					encryptBehavioralData: result.encryptBehavioralData,
 					getSimdReadings: result.getSimdReadings,
