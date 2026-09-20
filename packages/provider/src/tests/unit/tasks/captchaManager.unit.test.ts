@@ -34,8 +34,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
 import type { BehavioralDataResult } from "../../../tasks/detection/decodeBehavior.js";
 
-vi.mock("../../../tasks/detection/decodeBehavior.js", () => ({
-	default: vi.fn(),
+vi.mock("../../../tasks/detection/decoderPool.js", () => ({
+	decode: vi.fn(),
 }));
 
 const loggerOuter = getLogger("info", "test:captcha-manager");
@@ -1644,9 +1644,8 @@ describe("CaptchaManager", () => {
 		let decryptFn: any;
 
 		beforeEach(async () => {
-			// Get the mocked default export
-			const mod = await import("../../../tasks/detection/decodeBehavior.js");
-			decryptFn = mod.default;
+			const mod = await import("../../../tasks/detection/decoderPool.js");
+			decryptFn = mod.decode;
 			vi.mocked(decryptFn).mockReset();
 		});
 
@@ -1678,7 +1677,11 @@ describe("CaptchaManager", () => {
 			);
 			expect(result).toEqual(mockResult);
 			expect(decryptFn).toHaveBeenCalledTimes(1);
-			expect(decryptFn).toHaveBeenCalledWith("encryptedData", "pk", "cfg");
+			expect(decryptFn).toHaveBeenCalledWith("behaviour", [
+				"encryptedData",
+				"pk",
+				"cfg",
+			]);
 		});
 
 		it("should return null when the bundle fails to decrypt", async () => {

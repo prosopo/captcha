@@ -14,14 +14,14 @@
 
 import type { DetectorData, DetectorResult } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import * as decodePayloadModule from "../../../../tasks/detection/decodePayload.js";
+import * as decoderPool from "../../../../tasks/detection/decoderPool.js";
 import {
 	getBotScore,
 	sanitiseDetectorData,
 } from "../../../../tasks/detection/getBotScore.js";
 
-vi.mock("../../../../tasks/detection/decodePayload.js", () => ({
-	default: vi.fn(),
+vi.mock("../../../../tasks/detection/decoderPool.js", () => ({
+	decode: vi.fn(),
 }));
 
 describe("getBotScore", () => {
@@ -29,7 +29,7 @@ describe("getBotScore", () => {
 		vi.clearAllMocks();
 	});
 
-	it("returns bot score with all fields when decodePayload succeeds", async () => {
+	it("returns bot score with all fields when the decoder succeeds", async () => {
 		const mockResult: DetectorResult = {
 			score: 0.85,
 			timestamp: 1234567890,
@@ -40,7 +40,7 @@ describe("getBotScore", () => {
 			decryptedHeadHash: "hash123",
 		};
 
-		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
+		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
 		const result = await getBotScore("payload", "headHash", "privateKey");
 
@@ -56,14 +56,14 @@ describe("getBotScore", () => {
 			shadowDomPenalty: undefined,
 			d: undefined,
 		});
-		expect(decodePayloadModule.default).toHaveBeenCalledWith(
+		expect(decoderPool.decode).toHaveBeenCalledWith("payload", [
 			"payload",
 			"headHash",
 			"privateKey",
 			undefined,
 			undefined,
 			undefined,
-		);
+		]);
 	});
 
 	it("returns default values when baseBotScore is undefined", async () => {
@@ -72,7 +72,7 @@ describe("getBotScore", () => {
 			timestamp: 1234567890,
 		} as unknown as DetectorResult;
 
-		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
+		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
 		const result = await getBotScore("payload", "headHash");
 
@@ -91,7 +91,7 @@ describe("getBotScore", () => {
 			timestamp: 1234567890,
 		} as unknown as DetectorResult;
 
-		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
+		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
 		const result = await getBotScore("payload", "headHash");
 
@@ -121,7 +121,7 @@ describe("getBotScore", () => {
 			},
 		} as unknown as DetectorResult;
 
-		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
+		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
 		const result = await getBotScore("payload", "headHash");
 
@@ -138,7 +138,7 @@ describe("getBotScore", () => {
 			d: {},
 		} as unknown as DetectorResult;
 
-		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
+		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
 		const result = await getBotScore("payload", "headHash");
 
@@ -152,7 +152,7 @@ describe("getBotScore", () => {
 			d: { ok: 1, "has.dot": 2 },
 		} as unknown as DetectorResult;
 
-		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
+		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
 		const result = await getBotScore("payload", "headHash");
 
@@ -166,7 +166,7 @@ describe("getBotScore", () => {
 			isWebView: undefined,
 		} as unknown as DetectorResult;
 
-		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
+		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
 		const result = await getBotScore("payload", "headHash");
 
@@ -180,7 +180,7 @@ describe("getBotScore", () => {
 			isIframe: undefined,
 		} as unknown as DetectorResult;
 
-		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
+		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
 		const result = await getBotScore("payload", "headHash");
 
@@ -193,7 +193,7 @@ describe("getBotScore", () => {
 			timestamp: 1234567890,
 		} as unknown as DetectorResult;
 
-		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
+		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
 		await getBotScore(
 			"testPayload",
@@ -204,17 +204,17 @@ describe("getBotScore", () => {
 			"keyMap",
 		);
 
-		expect(decodePayloadModule.default).toHaveBeenCalledWith(
+		expect(decoderPool.decode).toHaveBeenCalledWith("payload", [
 			"testPayload",
 			"testHeadHash",
 			"testPrivateKey",
 			"innerConfig",
 			"layout",
 			"keyMap",
-		);
+		]);
 	});
 
-	it("calls decodePayload without privateKey when not provided", async () => {
+	it("calls the decoder without privateKey when not provided", async () => {
 		const mockResult = {
 			score: 0.5,
 			timestamp: 1234567890,
@@ -223,18 +223,18 @@ describe("getBotScore", () => {
 			decryptedHeadHash: "",
 		} as DetectorResult;
 
-		vi.mocked(decodePayloadModule.default).mockResolvedValue(mockResult);
+		vi.mocked(decoderPool.decode).mockResolvedValue(mockResult);
 
 		await getBotScore("testPayload", "testHeadHash");
 
-		expect(decodePayloadModule.default).toHaveBeenCalledWith(
+		expect(decoderPool.decode).toHaveBeenCalledWith("payload", [
 			"testPayload",
 			"testHeadHash",
 			undefined,
 			undefined,
 			undefined,
 			undefined,
-		);
+		]);
 	});
 });
 
