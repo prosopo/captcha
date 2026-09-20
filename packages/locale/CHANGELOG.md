@@ -1,5 +1,10 @@
 # @prosopo/locale
 
+## 3.4.4
+### Patch Changes
+
+- a22069d: Let a Block access rule name the reason it fired, so the 403 says why instead of "Forbidden"
+
 ## 3.4.3
 ### Patch Changes
 

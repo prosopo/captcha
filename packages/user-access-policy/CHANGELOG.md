@@ -1,5 +1,14 @@
 # @prosopo/user-access-policy
 
+## 3.14.7
+### Patch Changes
+
+- a22069d: Let a Block access rule name the reason it fired, so the 403 says why instead of "Forbidden"
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+  - @prosopo/api@4.3.1
+  - @prosopo/common@3.1.57
+
 ## 3.14.6
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/native-puzzle",
-	"version": "0.0.1",
+	"version": "0.1.0",
 	"description": "Rust puzzle background synthesis for the Prosopo captcha provider (napi-rs).",
 	"license": "Apache-2.0",
 	"author": "Prosopo Limited",

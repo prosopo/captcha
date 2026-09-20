@@ -28,10 +28,10 @@
 	"version": "2.11.0",
 	"devDependencies": {
 		"@emotion/cache": "11.14.0",
-		"@prosopo/config": "3.3.17",
+		"@prosopo/config": "3.4.0",
 		"@prosopo/dotenv": "3.0.56",
-		"@prosopo/locale": "3.4.3",
-		"@prosopo/types": "5.9.0",
+		"@prosopo/locale": "3.4.4",
+		"@prosopo/types": "5.9.1",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
