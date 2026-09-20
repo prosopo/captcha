@@ -1,5 +1,44 @@
 # @prosopo/cli
 
+## 3.8.16
+### Patch Changes
+
+- 6d9711f: Measure where the provider's CPU actually goes, and move puzzle background generation to Rust.
+  
+  **Measuring first.** We have been choosing what to optimise by reading the code and guessing, and the guesses have been wrong in both directions — a decoder shipped nine times slower than its predecessor without anyone noticing, and a background generator we assumed would be ten to twenty times faster in Rust turned out to be three. Two things now answer the question with numbers instead.
+  
+  `measureSync` wraps a named block of synchronous work and records the CPU it burns, so `prosopo_sync_span_cpu_seconds_total` gives a per-day ranking of which blocks cost the most. Seven blocks are instrumented: the three payload decoders, puzzle background generation and rendering, the merkle build, and decision machine execution. The measurement is only honest for work that holds the event loop, which is why the helper takes a plain function and not an async one — billing a function for the requests served during its awaits would produce a confident wrong answer.
+  
+  A periodic CPU profiler covers what nobody thought to instrument. It samples the isolate for a few seconds, logs the busiest call frames by self time, and sleeps. It is off unless `PROSOPO_CPU_PROFILE_ENABLED=true`, samples a short window every fifteen minutes by default, and cannot take the provider down with it if it fails.
+  
+  Event loop lag and process CPU were already being collected by the default Prometheus metrics; nothing was added there.
+  
+  **Puzzle backgrounds in Rust.** The new `@prosopo/native-puzzle` package generates the mesh-gradient background the slider puzzle sits on. It produces byte-identical output to the JavaScript for the same seed — verified against the existing implementation, which stays in place as the reference — and takes about a third of the time, so a buffer refill now stalls the event loop for around eleven milliseconds instead of thirty-two. The JavaScript remains the browser-side implementation and the thing the differential test compares against.
+- c151f8a: Decode detector payloads on worker threads instead of on the request path, and fix the CPU metric that was measuring the wrong thing.
+  
+  **The measurement was wrong.** `prosopo_sync_span_cpu_seconds_total` claimed to report the CPU a block of synchronous work costs, on the reasoning that nothing else can run while it holds the event loop. That is true of the main thread but not of the process: `process.cpuUsage()` counts every thread, so V8's background garbage collector and compiler and the image encoder's thread pool were all billed to whichever block happened to be open. In production it reported *more* CPU than wall-clock time, which is impossible for work on one thread, and that is what gave it away. Node offers no per-thread CPU clock, so the counter is removed rather than corrected — process-wide CPU is already reported as `prosopo_process_cpu_seconds_total`. The wall-time counter was never affected and is the one to rank by: for a synchronous block it is exactly the delay imposed on everything else waiting.
+  
+  **What that measurement found.** The three detector decoders held the event loop for 15–47 ms every time they ran, and together accounted for about 84% of all the blocking we measured. That cost does not stay with the request doing the decoding — it delays every other request being served at that moment, health checks included. It is the same shape of problem as the decoder that shipped nine times slower in 3.8.14.
+  
+  **The fix.** The decoders now run on a small pool of worker threads. The decoders themselves are untouched: the same file, the same input, the same output, including the same failures — the tests check that decoding through the pool is indistinguishable from decoding inline. A round trip to a worker costs between 0.01 and 0.2 ms against the 15–47 ms it takes off the request path.
+  
+  Set `PROSOPO_DECODER_WORKERS=0` to go back to decoding inline; it takes a restart but not a rollback. `PROSOPO_DECODER_WORKERS` sets the pool size (default: up to four, leaving a core spare) and `PROSOPO_DECODER_TIMEOUT_MS` caps how long one decode may take before the worker is replaced. If workers cannot be started at all the provider decodes inline and says so in the log, because serving slowly is better than not serving.
+  
+  Two new metrics replace the decoder spans: `prosopo_decoder_duration_seconds` and `prosopo_decoder_calls_total`. Watch them next to `prosopo_nodejs_eventloop_lag_p99_seconds` — that pair is how you confirm the work moved rather than disappeared.
+  
+  The decoders are now copied next to the bundle under fixed names and loaded by path, because a worker cannot ask the bundler what it called a chunk. `copyAssetsPlugin` does the copying.
+- Updated dependencies [a22069d]
+- Updated dependencies [6d9711f]
+- Updated dependencies [c151f8a]
+- Updated dependencies [de1dc32]
+  - @prosopo/provider@5.12.0
+  - @prosopo/types@5.9.1
+  - @prosopo/locale@3.4.4
+  - @prosopo/api@4.3.1
+  - @prosopo/common@3.1.57
+  - @prosopo/env@3.6.60
+  - @prosopo/keyring@2.9.93
+
 ## 3.8.15
 ### Patch Changes
 

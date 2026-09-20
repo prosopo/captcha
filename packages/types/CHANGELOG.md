@@ -1,5 +1,12 @@
 # @prosopo/types
 
+## 5.9.1
+### Patch Changes
+
+- a22069d: Let a Block access rule name the reason it fired, so the 403 says why instead of "Forbidden"
+- Updated dependencies [a22069d]
+  - @prosopo/locale@3.4.4
+
 ## 5.9.0
 ### Minor Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/database",
-	"version": "4.0.36",
+	"version": "4.0.37",
 	"description": "Prosopo database plugins for provider",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -38,12 +38,12 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@polkadot/util": "14.0.3",
-		"@prosopo/common": "3.1.56",
+		"@prosopo/common": "3.1.57",
 		"@prosopo/logger": "2.0.10",
 		"@prosopo/redis-client": "1.0.36",
-		"@prosopo/types": "5.9.0",
-		"@prosopo/types-database": "5.6.0",
-		"@prosopo/user-access-policy": "3.14.6",
+		"@prosopo/types": "5.9.1",
+		"@prosopo/types-database": "5.6.1",
+		"@prosopo/user-access-policy": "3.14.7",
 		"@prosopo/util": "3.3.10",
 		"bson": "7.3.2",
 		"make-dir": "5.1.0",
@@ -52,7 +52,7 @@
 		"mongoose": "9.10.0"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.17",
+		"@prosopo/config": "3.4.0",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
