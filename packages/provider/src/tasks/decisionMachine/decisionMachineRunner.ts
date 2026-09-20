@@ -34,6 +34,7 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { z } from "zod";
+import { measureSync } from "../../api/metrics.js";
 
 const LOAD_TIMEOUT_MS =
 	Number.parseInt(process.env.DECISION_MACHINE_LOAD_TIMEOUT_MS ?? "", 10) ||
@@ -488,7 +489,9 @@ export class DecisionMachineRunner {
 		}
 
 		const result = await this.withTimeout(
-			Promise.resolve(named.fn(options.input)),
+			Promise.resolve(
+				measureSync("decision_machine_decide", () => named.fn(options.input)),
+			),
 			EXEC_TIMEOUT_MS,
 		);
 		const parsed = schema.safeParse(result);

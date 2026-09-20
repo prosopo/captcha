@@ -48,6 +48,29 @@ const LATENCY_BUCKETS = [
 const SCORE_BUCKETS = [
 	0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 3, 5, 10,
 ];
+// Sync spans are sub-millisecond to tens of milliseconds; LATENCY_BUCKETS
+// starts at 5 ms and would put almost every observation in the first bucket.
+const SPAN_BUCKETS = [
+	0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25,
+	0.5, 1,
+];
+
+/**
+ * Blocks of synchronous work big enough to be worth attributing. Kept as a
+ * closed list so the `span` label cannot grow unbounded, and so the set of
+ * things we claim to have measured is reviewable in one place.
+ */
+export const SYNC_SPANS = [
+	"decode_payload",
+	"decode_simd",
+	"decode_behaviour",
+	"puzzle_background",
+	"puzzle_render",
+	"merkle_build",
+	"decision_machine_decide",
+] as const;
+
+export type SyncSpan = (typeof SYNC_SPANS)[number];
 
 // The set of API paths we expose as the `route` label. Restricting to the known
 // enum values keeps label cardinality bounded — anything unmatched is recorded
@@ -85,6 +108,10 @@ interface ProviderMetrics {
 	maintenanceMode: Gauge<never>;
 	redisReady: Gauge<"actor">;
 	healthzGeoOutcomesTotal: Counter<"outcome">;
+	syncSpanCpuSecondsTotal: Counter<"span">;
+	syncSpanWallSecondsTotal: Counter<"span">;
+	syncSpanCallsTotal: Counter<"span">;
+	syncSpanDuration: Histogram<"span">;
 }
 
 let metrics: ProviderMetrics | undefined;
@@ -188,6 +215,32 @@ const buildMetrics = (): ProviderMetrics => {
 		registers: [registry],
 	});
 
+	const syncSpanCpuSecondsTotal = new Counter({
+		name: `${PREFIX}sync_span_cpu_seconds_total`,
+		help: "CPU seconds spent inside named blocks of synchronous work",
+		labelNames: ["span"] as const,
+		registers: [registry],
+	});
+	const syncSpanWallSecondsTotal = new Counter({
+		name: `${PREFIX}sync_span_wall_seconds_total`,
+		help: "Wall seconds spent inside named blocks of synchronous work",
+		labelNames: ["span"] as const,
+		registers: [registry],
+	});
+	const syncSpanCallsTotal = new Counter({
+		name: `${PREFIX}sync_span_calls_total`,
+		help: "Calls into each named block of synchronous work, successful or not",
+		labelNames: ["span"] as const,
+		registers: [registry],
+	});
+	const syncSpanDuration = new Histogram({
+		name: `${PREFIX}sync_span_duration_seconds`,
+		help: "Duration of each named block of synchronous work",
+		labelNames: ["span"] as const,
+		buckets: SPAN_BUCKETS,
+		registers: [registry],
+	});
+
 	return {
 		registry,
 		httpRequestsTotal,
@@ -204,6 +257,10 @@ const buildMetrics = (): ProviderMetrics => {
 		maintenanceMode,
 		redisReady,
 		healthzGeoOutcomesTotal,
+		syncSpanCpuSecondsTotal,
+		syncSpanWallSecondsTotal,
+		syncSpanCallsTotal,
+		syncSpanDuration,
 	};
 };
 
@@ -286,6 +343,46 @@ export const recordHealthzGeoOutcome = (outcome: HealthzGeoOutcome): void => {
 export const setMaintenanceModeGauge = (on: boolean): void => {
 	if (!metricsEnabled()) return;
 	getMetrics().maintenanceMode.set(on ? 1 : 0);
+};
+
+/**
+ * Attribute the CPU a named block of synchronous work costs.
+ *
+ * `increase(prosopo_sync_span_cpu_seconds_total[1d])` by span is the ranking
+ * this exists to produce: which blocks of our own code are worth moving off
+ * the event loop, ordered by how much CPU they actually burn rather than by
+ * how expensive they look.
+ *
+ * WHAT THIS MEASURES HONESTLY. A `process.cpuUsage()` delta is process-wide,
+ * so it is only attributable to `fn` while nothing else can be running — i.e.
+ * while `fn` holds the event loop. That is the whole measurement, and the
+ * reason this takes `() => T` and not an async callback: wrapping an awaiting
+ * function would bill it for every other request served during its awaits.
+ *
+ * Passing a function that *returns* a promise is fine and intended — several
+ * of our decoders are async in signature but do their work synchronously
+ * before resolving. Only the synchronous part is counted, so if one of them
+ * later grows a real await the span under-reports rather than over-reports.
+ */
+export const measureSync = <T>(span: SyncSpan, fn: () => T): T => {
+	if (!metricsEnabled()) return fn();
+	const cpuBefore = process.cpuUsage();
+	const wallBefore = process.hrtime.bigint();
+	try {
+		return fn();
+	} finally {
+		const cpu = process.cpuUsage(cpuBefore);
+		const wallSeconds = Number(process.hrtime.bigint() - wallBefore) / 1e9;
+		// cpuUsage reports microseconds.
+		const cpuSeconds = (cpu.user + cpu.system) / 1e6;
+		const m = getMetrics();
+		// Counted in `finally` so a span that throws — a decoder handed the
+		// wrong key, say — still shows the CPU it burned getting there.
+		m.syncSpanCallsTotal.inc({ span });
+		m.syncSpanCpuSecondsTotal.inc({ span }, cpuSeconds);
+		m.syncSpanWallSecondsTotal.inc({ span }, wallSeconds);
+		m.syncSpanDuration.observe({ span }, wallSeconds);
+	}
 };
 
 // ---------------------------------------------------------------------------

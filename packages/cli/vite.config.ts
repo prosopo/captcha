@@ -51,6 +51,12 @@ const nativeBinaryPaths = [
 		),
 		dest: "prosopo-native-merkle.node",
 	},
+	{
+		src: nativeRequire.resolve(
+			"@prosopo/native-puzzle/index.linux-x64-gnu.node",
+		),
+		dest: "prosopo-native-puzzle.node",
+	},
 ];
 const bundleOutDir = path.resolve(dir, "dist/bundle");
 

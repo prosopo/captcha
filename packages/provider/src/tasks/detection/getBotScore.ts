@@ -17,6 +17,7 @@ import type {
 	DetectorDataValue,
 	DetectorResult,
 } from "@prosopo/types";
+import { measureSync } from "../../api/metrics.js";
 import getBotScoreFromPayload from "./decodePayload.js";
 
 // Mongo rejects field names containing "." or starting with "$", and the bag
@@ -165,13 +166,15 @@ export const getBotScore = async (
 	payloadLayoutEncoded?: string,
 	keyMapEncoded?: string,
 ): Promise<DecodedDetectorPayload> => {
-	const result = (await getBotScoreFromPayload(
-		payload,
-		headHash,
-		privateKeyString,
-		innerConfigEncoded,
-		payloadLayoutEncoded,
-		keyMapEncoded,
+	const result = (await measureSync("decode_payload", () =>
+		getBotScoreFromPayload(
+			payload,
+			headHash,
+			privateKeyString,
+			innerConfigEncoded,
+			payloadLayoutEncoded,
+			keyMapEncoded,
+		),
 	)) as DetectorResult;
 
 	const baseBotScore: number = result.score;

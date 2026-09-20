@@ -53,6 +53,7 @@ import {
 	getRequestUserScope,
 	normalizeHeadersForMatching,
 } from "../api/blacklistRequestInspector.js";
+import { measureSync } from "../api/metrics.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import { getDetectorBundlePool } from "./detection/bundlePool.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
@@ -817,10 +818,8 @@ export class CaptchaManager {
 		const decryptSimdReadings = (await import("./detection/decodeSimd.js"))
 			.default;
 		try {
-			return await decryptSimdReadings(
-				encryptedData,
-				bundle.key,
-				bundle.innerConfig,
+			return await measureSync("decode_simd", () =>
+				decryptSimdReadings(encryptedData, bundle.key, bundle.innerConfig),
 			);
 		} catch (err) {
 			this.logger?.warn(() => ({
@@ -845,10 +844,8 @@ export class CaptchaManager {
 			await import("./detection/decodeBehavior.js")
 		).default;
 		try {
-			const result = await decryptBehavioralData(
-				encryptedData,
-				bundle.key,
-				bundle.innerConfig,
+			const result = await measureSync("decode_behaviour", () =>
+				decryptBehavioralData(encryptedData, bundle.key, bundle.innerConfig),
 			);
 			this.logger?.info(() => ({
 				msg: "Behavioral data decrypted successfully",
