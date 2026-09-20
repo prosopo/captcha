@@ -204,9 +204,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Two independent crates, each with its own lockfile -- there is no
-        # workspace here to audit in one pass.
-        crate: [packages/native-ja4, packages/native-merkle]
+        # Independent crates, each with its own lockfile -- there is no
+        # workspace here to audit in one pass. A new packages/native-* crate
+        # is not audited until it is listed here.
+        crate:
+          [packages/native-ja4, packages/native-merkle, packages/native-puzzle]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
