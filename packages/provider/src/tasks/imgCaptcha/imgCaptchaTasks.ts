@@ -298,16 +298,15 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		const pendingRecord = await this.db.getPendingImageCommitment(requestHash);
 
-		// The detector lives only in provider pool bundles; resolve THIS session's
-		// bundle (promoted onto the session record at frictionless time) once and
-		// reuse it for both the SIMD readings and behavioural-data decrypts below.
-		// img submit may attach to multiple sessions, all sharing this bundle.
-		const sessionBundle = await this.resolveBundleBySessionId(
+		// The detector lives only in provider pool bundles; THIS session's bundle
+		// (promoted onto the session record at frictionless time) is resolved once
+		// and both payloads decode together. img submit may attach to multiple
+		// sessions, all sharing this bundle.
+		const decodedPayloads = await this.decodeSubmissionPayloads(
 			pendingRecord?.sessionId,
+			{ behavioural: behavioralData, simd: simdReadings },
 		);
-		const decodedSimdReadings = simdReadings
-			? await this.decryptSimdReadingsForAttach(simdReadings, sessionBundle)
-			: undefined;
+		const decodedSimdReadings = decodedPayloads.simd;
 		const pushSimdAttachIfAny = (
 			sessionId: string,
 			writes: Promise<void>[],
@@ -364,12 +363,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			let deviceCapability: string | undefined;
 			if (behavioralData) {
 				try {
-					// Decrypt the behavioural data with this session's detector pool
-					// bundle (resolved above; no key pool).
-					const decryptedData = await this.decryptBehavioralData(
-						behavioralData,
-						sessionBundle,
-					);
+					const decryptedData = decodedPayloads.behavioural;
 
 					if (decryptedData) {
 						// Log behavioral analytics using unpacked data counts

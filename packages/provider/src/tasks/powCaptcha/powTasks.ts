@@ -357,21 +357,17 @@ export class PowCaptchaManager extends CaptchaManager {
 		let decryptedBehavioralDataPacked:
 			| DecisionMachineBehavioralDataPacked
 			| undefined;
+		// Both payloads were encrypted by this session's detector pool bundle, so
+		// they share one bundle lookup and decode together — see
+		// decodeSubmissionPayloads.
+		const decodedPayloads = await this.decodeSubmissionPayloads(
+			challengeRecord.sessionId,
+			{ behavioural: behavioralData, simd: simdReadings },
+		);
+
 		if (behavioralData) {
 			try {
-				// The behavioural payload was encrypted by this session's detector
-				// pool bundle; resolve it from the bundleId promoted onto the
-				// session record (no key pool — the detector lives only on
-				// providers).
-				const bundle = await this.resolveBundleBySessionId(
-					challengeRecord.sessionId,
-				);
-
-				// Decrypt the behavioral data (returns unpacked format)
-				const decryptedData = await this.decryptBehavioralData(
-					behavioralData,
-					bundle,
-				);
+				const decryptedData = decodedPayloads.behavioural;
 
 				if (decryptedData) {
 					const dappAccount = at(challengeSplit, 2);
@@ -454,11 +450,11 @@ export class PowCaptchaManager extends CaptchaManager {
 					}),
 				}),
 			);
-			if (simdReadings) {
+			if (decodedPayloads.simd) {
 				writePromises.push(
-					this.decryptAndAttachSimdReadingsIfAbsent(
+					this.recordSessionSimdReadingsIfAbsentWithCache(
 						linkedSessionId,
-						simdReadings,
+						decodedPayloads.simd,
 						SimdReadingsStage.submit,
 					),
 				);
