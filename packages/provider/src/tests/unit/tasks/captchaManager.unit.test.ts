@@ -1639,6 +1639,124 @@ describe("CaptchaManager", () => {
 		});
 	});
 
+	describe("decodeSubmissionPayloads", () => {
+		const bundle = { key: "pk", innerConfig: "cfg" };
+
+		beforeEach(() => {
+			vi.spyOn(captchaManager, "resolveBundleBySessionId").mockResolvedValue(
+				bundle,
+			);
+		});
+
+		it("resolves the session bundle once for both payloads", async () => {
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockResolvedValue(null);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockResolvedValue(undefined);
+
+			await captchaManager.decodeSubmissionPayloads("session-1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(captchaManager.resolveBundleBySessionId).toHaveBeenCalledTimes(1);
+		});
+
+		// The regression this exists to prevent: decoding moved to worker
+		// threads, so two serialised decodes cost two round trips on the submit
+		// path. Both must be in flight at once.
+		it("runs the two decodes concurrently", async () => {
+			let behaviouralStarted = false;
+			let simdStartedWhileBehaviouralInFlight = false;
+			let releaseBehavioural: () => void = () => undefined;
+			const behaviouralGate = new Promise<void>((resolve) => {
+				releaseBehavioural = resolve;
+			});
+
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockImplementation(
+				async () => {
+					behaviouralStarted = true;
+					await behaviouralGate;
+					return null;
+				},
+			);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockImplementation(async () => {
+				simdStartedWhileBehaviouralInFlight = behaviouralStarted;
+				releaseBehavioural();
+				return undefined;
+			});
+
+			await captchaManager.decodeSubmissionPayloads("session-1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(simdStartedWhileBehaviouralInFlight).toBe(true);
+		});
+
+		it("returns both decoded payloads", async () => {
+			const behaviouralResult = {
+				collector1: [{ event: "click" }],
+				collector2: [],
+				collector3: [],
+				deviceCapability: "desktop",
+				timestamp: 1000,
+			} as BehavioralDataResult;
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockResolvedValue(
+				behaviouralResult,
+			);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockResolvedValue({ ops: [1, 2] } as never);
+
+			const decoded = await captchaManager.decodeSubmissionPayloads("s1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(decoded.behavioural).toEqual(behaviouralResult);
+			expect(decoded.simd).toEqual({ ops: [1, 2] });
+		});
+
+		it("keeps one payload when the other decode throws", async () => {
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockRejectedValue(
+				new Error("decoder blew up"),
+			);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockResolvedValue({ ops: [1] } as never);
+
+			const decoded = await captchaManager.decodeSubmissionPayloads("s1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(decoded.behavioural).toBeUndefined();
+			expect(decoded.simd).toEqual({ ops: [1] });
+		});
+
+		it("does not resolve a bundle when there is nothing to decode", async () => {
+			const decoded = await captchaManager.decodeSubmissionPayloads("s1", {});
+			expect(decoded).toEqual({});
+			expect(captchaManager.resolveBundleBySessionId).not.toHaveBeenCalled();
+		});
+
+		it("yields nothing when the bundle lookup throws", async () => {
+			vi.spyOn(captchaManager, "resolveBundleBySessionId").mockRejectedValue(
+				new Error("redis down"),
+			);
+			await expect(
+				captchaManager.decodeSubmissionPayloads("s1", { behavioural: "b" }),
+			).resolves.toEqual({});
+		});
+	});
+
 	describe("decryptBehavioralData", () => {
 		// biome-ignore lint/suspicious/noExplicitAny: tests
 		let decryptFn: any;
