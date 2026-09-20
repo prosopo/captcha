@@ -18,6 +18,7 @@ import type {
 	ClickEventPoint,
 	MouseMovementPoint,
 	PackedBehavioralData,
+	ScrollEventPoint,
 	TouchEventPoint,
 } from "@prosopo/types";
 
@@ -56,6 +57,12 @@ export type DetectorType = (
 		start: () => void;
 		stop: () => void;
 		getData: () => ClickEventPoint[];
+		clear: () => void;
+	};
+	scrollTracker?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => ScrollEventPoint[];
 		clear: () => void;
 	};
 	hasTouchSupport?: string;

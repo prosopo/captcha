@@ -311,7 +311,8 @@ export const Manager = (
 						frictionlessState?.encryptBehavioralData &&
 						(frictionlessState?.behaviorCollector1 ||
 							frictionlessState?.behaviorCollector2 ||
-							frictionlessState?.behaviorCollector3)
+							frictionlessState?.behaviorCollector3 ||
+							frictionlessState?.behaviorCollector4)
 					) {
 						try {
 							const behavioralData = {
@@ -321,6 +322,8 @@ export const Manager = (
 									frictionlessState.behaviorCollector2?.getData() || [],
 								collector3:
 									frictionlessState.behaviorCollector3?.getData() || [],
+								collector4:
+									frictionlessState.behaviorCollector4?.getData() || [],
 								deviceCapability:
 									frictionlessState.deviceCapability || "unknown",
 							};

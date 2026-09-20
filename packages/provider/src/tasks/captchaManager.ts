@@ -852,6 +852,7 @@ export class CaptchaManager {
 					c1Length: result.collector1?.length || 0,
 					c2Length: result.collector2?.length || 0,
 					c3Length: result.collector3?.length || 0,
+					c4Length: result.collector4?.length || 0,
 					deviceCapability: result.deviceCapability,
 				},
 			}));
