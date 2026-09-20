@@ -53,11 +53,11 @@ import {
 	getRequestUserScope,
 	normalizeHeadersForMatching,
 } from "../api/blacklistRequestInspector.js";
-import { measureSync } from "../api/metrics.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import { getDetectorBundlePool } from "./detection/bundlePool.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
+import { decode } from "./detection/decoderPool.js";
 import { extraIpInfosFromEnrichedDnsEvent } from "./dnsEvent/enrichDnsEvent.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
 import {
@@ -815,12 +815,12 @@ export class CaptchaManager {
 			}));
 			return null;
 		}
-		const decryptSimdReadings = (await import("./detection/decodeSimd.js"))
-			.default;
 		try {
-			return await measureSync("decode_simd", () =>
-				decryptSimdReadings(encryptedData, bundle.key, bundle.innerConfig),
-			);
+			return await decode<SimdReadingsResult>("simd", [
+				encryptedData,
+				bundle.key,
+				bundle.innerConfig,
+			]);
 		} catch (err) {
 			this.logger?.warn(() => ({
 				msg: "Failed to decrypt SIMD readings with the session's bundle",
@@ -840,13 +840,12 @@ export class CaptchaManager {
 			}));
 			return null;
 		}
-		const decryptBehavioralData = (
-			await import("./detection/decodeBehavior.js")
-		).default;
 		try {
-			const result = await measureSync("decode_behaviour", () =>
-				decryptBehavioralData(encryptedData, bundle.key, bundle.innerConfig),
-			);
+			const result = await decode<BehavioralDataResult>("behaviour", [
+				encryptedData,
+				bundle.key,
+				bundle.innerConfig,
+			]);
 			this.logger?.info(() => ({
 				msg: "Behavioral data decrypted successfully",
 				data: {

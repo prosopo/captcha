@@ -61,9 +61,6 @@ const SPAN_BUCKETS = [
  * things we claim to have measured is reviewable in one place.
  */
 export const SYNC_SPANS = [
-	"decode_payload",
-	"decode_simd",
-	"decode_behaviour",
 	"puzzle_background",
 	"puzzle_render",
 	"merkle_build",
@@ -108,7 +105,8 @@ interface ProviderMetrics {
 	maintenanceMode: Gauge<never>;
 	redisReady: Gauge<"actor">;
 	healthzGeoOutcomesTotal: Counter<"outcome">;
-	syncSpanCpuSecondsTotal: Counter<"span">;
+	decoderDuration: Histogram<"decoder">;
+	decoderCallsTotal: Counter<"decoder" | "outcome">;
 	syncSpanWallSecondsTotal: Counter<"span">;
 	syncSpanCallsTotal: Counter<"span">;
 	syncSpanDuration: Histogram<"span">;
@@ -215,15 +213,22 @@ const buildMetrics = (): ProviderMetrics => {
 		registers: [registry],
 	});
 
-	const syncSpanCpuSecondsTotal = new Counter({
-		name: `${PREFIX}sync_span_cpu_seconds_total`,
-		help: "CPU seconds spent inside named blocks of synchronous work",
-		labelNames: ["span"] as const,
+	const decoderDuration = new Histogram({
+		name: `${PREFIX}decoder_duration_seconds`,
+		help: "End-to-end duration of a detector payload decode, worker round trip included",
+		labelNames: ["decoder"] as const,
+		buckets: SPAN_BUCKETS,
+		registers: [registry],
+	});
+	const decoderCallsTotal = new Counter({
+		name: `${PREFIX}decoder_calls_total`,
+		help: "Detector payload decodes by decoder and outcome",
+		labelNames: ["decoder", "outcome"] as const,
 		registers: [registry],
 	});
 	const syncSpanWallSecondsTotal = new Counter({
 		name: `${PREFIX}sync_span_wall_seconds_total`,
-		help: "Wall seconds spent inside named blocks of synchronous work",
+		help: "Seconds the event loop was held by named blocks of synchronous work",
 		labelNames: ["span"] as const,
 		registers: [registry],
 	});
@@ -257,7 +262,8 @@ const buildMetrics = (): ProviderMetrics => {
 		maintenanceMode,
 		redisReady,
 		healthzGeoOutcomesTotal,
-		syncSpanCpuSecondsTotal,
+		decoderDuration,
+		decoderCallsTotal,
 		syncSpanWallSecondsTotal,
 		syncSpanCallsTotal,
 		syncSpanDuration,
@@ -346,40 +352,64 @@ export const setMaintenanceModeGauge = (on: boolean): void => {
 };
 
 /**
- * Attribute the CPU a named block of synchronous work costs.
+ * Time one detector decode end to end, worker round trip included.
  *
- * `increase(prosopo_sync_span_cpu_seconds_total[1d])` by span is the ranking
- * this exists to produce: which blocks of our own code are worth moving off
- * the event loop, ordered by how much CPU they actually burn rather than by
- * how expensive they look.
+ * Wall time here is not event-loop time — the decode runs on a worker, so
+ * this is latency the request sees rather than delay it imposes on its
+ * neighbours. That is the point: watching it alongside
+ * `prosopo_nodejs_eventloop_lag_p99_seconds` is how you tell that the work
+ * moved rather than vanished.
+ */
+export const recordDecoderOutcome = (
+	decoder: string,
+	outcome: "ok" | "error",
+	durationSeconds: number,
+): void => {
+	if (!metricsEnabled()) return;
+	const m = getMetrics();
+	m.decoderCallsTotal.inc({ decoder, outcome });
+	m.decoderDuration.observe({ decoder }, durationSeconds);
+};
+
+/**
+ * Measure how long a named block of synchronous work holds the event loop.
  *
- * WHAT THIS MEASURES HONESTLY. A `process.cpuUsage()` delta is process-wide,
- * so it is only attributable to `fn` while nothing else can be running — i.e.
- * while `fn` holds the event loop. That is the whole measurement, and the
- * reason this takes `() => T` and not an async callback: wrapping an awaiting
- * function would bill it for every other request served during its awaits.
+ * `increase(prosopo_sync_span_wall_seconds_total[1d])` by span is the ranking
+ * this exists to produce: which blocks are worth moving off the loop, ordered
+ * by how much of it they actually consume rather than by how expensive they
+ * look.
  *
- * Passing a function that *returns* a promise is fine and intended — several
- * of our decoders are async in signature but do their work synchronously
- * before resolving. Only the synchronous part is counted, so if one of them
- * later grows a real await the span under-reports rather than over-reports.
+ * Wall time, not CPU time, and that is not a compromise. Nothing else on this
+ * thread can run while `fn` does, so its wall time *is* the delay it imposes
+ * on every other request in flight — which is the quantity we care about.
+ *
+ * An earlier version also recorded a `process.cpuUsage()` delta and claimed it
+ * was exact for the same reason. It was not: cpuUsage covers the whole
+ * process, so V8's background GC and compiler threads and libuv's threadpool
+ * all landed on whichever span happened to be open. In production it read
+ * consistently *higher* than wall time, which is impossible for single-thread
+ * work and is what gave it away. Node exposes no per-thread CPU clock, so
+ * there is no fixed version of that metric to keep — process-wide CPU is
+ * already available as `prosopo_process_cpu_seconds_total`.
+ *
+ * This takes `() => T` and not an async callback for the same reason: wrapping
+ * an awaiting function would time every other request served during its awaits.
+ * Passing a function that *returns* a promise is fine and intended — several of
+ * our decoders are async in signature but do their work synchronously before
+ * resolving. Only the synchronous part is timed, so if one of them later grows
+ * a real await the span under-reports rather than over-reports.
  */
 export const measureSync = <T>(span: SyncSpan, fn: () => T): T => {
 	if (!metricsEnabled()) return fn();
-	const cpuBefore = process.cpuUsage();
 	const wallBefore = process.hrtime.bigint();
 	try {
 		return fn();
 	} finally {
-		const cpu = process.cpuUsage(cpuBefore);
 		const wallSeconds = Number(process.hrtime.bigint() - wallBefore) / 1e9;
-		// cpuUsage reports microseconds.
-		const cpuSeconds = (cpu.user + cpu.system) / 1e6;
 		const m = getMetrics();
 		// Counted in `finally` so a span that throws — a decoder handed the
-		// wrong key, say — still shows the CPU it burned getting there.
+		// wrong key, say — still shows the time it burned getting there.
 		m.syncSpanCallsTotal.inc({ span });
-		m.syncSpanCpuSecondsTotal.inc({ span }, cpuSeconds);
 		m.syncSpanWallSecondsTotal.inc({ span }, wallSeconds);
 		m.syncSpanDuration.observe({ span }, wallSeconds);
 	}

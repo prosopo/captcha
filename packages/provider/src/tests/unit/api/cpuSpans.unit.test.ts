@@ -16,7 +16,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { getMetrics, measureSync } from "../../../api/metrics.js";
 
 const readCounter = async (
-	name: "sync_span_cpu_seconds_total" | "sync_span_calls_total",
+	name: "sync_span_wall_seconds_total" | "sync_span_calls_total",
 	span: string,
 ): Promise<number> => {
 	const metric = await getMetrics()
@@ -30,12 +30,12 @@ const readCounter = async (
 // across a call rather than on absolute values.
 describe("measureSync", () => {
 	let callsBefore: number;
-	let cpuBefore: number;
+	let wallBefore: number;
 
 	beforeEach(async () => {
 		callsBefore = await readCounter("sync_span_calls_total", "merkle_build");
-		cpuBefore = await readCounter(
-			"sync_span_cpu_seconds_total",
+		wallBefore = await readCounter(
+			"sync_span_wall_seconds_total",
 			"merkle_build",
 		);
 	});
@@ -44,7 +44,7 @@ describe("measureSync", () => {
 		expect(measureSync("merkle_build", () => 42)).toBe(42);
 	});
 
-	it("bills CPU to the span", async () => {
+	it("bills the time the span held the loop", async () => {
 		measureSync("merkle_build", () => {
 			// Enough arithmetic to register above the clock's resolution.
 			let total = 0;
@@ -52,8 +52,8 @@ describe("measureSync", () => {
 			return total;
 		});
 		expect(
-			await readCounter("sync_span_cpu_seconds_total", "merkle_build"),
-		).toBeGreaterThan(cpuBefore);
+			await readCounter("sync_span_wall_seconds_total", "merkle_build"),
+		).toBeGreaterThan(wallBefore);
 	});
 
 	it("counts a span that throws, and rethrows", async () => {

@@ -15,6 +15,7 @@ import { createRequire } from "node:module";
 import * as path from "node:path";
 import {
 	ViteBackendConfig,
+	copyAssetsPlugin,
 	nodejsPolarsNativeFilePlugin,
 } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
@@ -58,6 +59,17 @@ const nativeBinaryPaths = [
 		dest: "prosopo-native-puzzle.node",
 	},
 ];
+// The obfuscated decoders are loaded by URL at runtime, not by import, so a
+// decoder worker can load the same file the main thread would — a bundled
+// dynamic import becomes a content-hashed chunk that a worker cannot name.
+// Copying them under stable basenames is what makes that URL constructible.
+const decoderDir = path.resolve(dir, "../provider/src/tasks/detection");
+const decoderAssets = [
+	"decodePayload.js",
+	"decodeSimd.js",
+	"decodeBehavior.js",
+].map((file) => ({ src: path.join(decoderDir, file), dest: file }));
+
 const bundleOutDir = path.resolve(dir, "dist/bundle");
 
 // Merge with generic backend config
@@ -74,6 +86,7 @@ export default defineConfig(async ({ command, mode }) => {
 	backendConfig.plugins = [
 		...(backendConfig.plugins ?? []),
 		nodejsPolarsNativeFilePlugin(nativeBinaryPaths, bundleOutDir),
+		copyAssetsPlugin(decoderAssets, bundleOutDir),
 	];
 	return defineConfig({
 		ssr: {
