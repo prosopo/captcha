@@ -16,8 +16,8 @@ import {
 	DEFAULT_GEOMETRY,
 	type PuzzleGeometry,
 	type RgbaImage,
-	createBackground,
 } from "@prosopo/puzzle-assets";
+import { createBackgroundNative } from "./nativeBackground.js";
 
 /**
  * Pre-generated puzzle backgrounds, handed out exactly once each.
@@ -29,8 +29,8 @@ import {
  * buffer never hands the same image out twice.
  *
  * The buffer itself exists only to keep generation off the request path — each
- * background costs a few milliseconds of CPU and width*height*4 bytes while it
- * waits (about 240 KB at the default geometry).
+ * background costs a couple of milliseconds of CPU and width*height*4 bytes
+ * while it waits (about 240 KB at the default geometry).
  */
 export interface PuzzleBackgroundBuffer {
 	/** Consume one background, or null when the buffer has run dry. */
@@ -71,7 +71,7 @@ export const createPuzzleBackgroundBuffer = (
 
 	const topUp = (limit: number): void => {
 		for (let i = 0; i < limit && ready.length < capacity; i++) {
-			ready.push(createBackground(geometry));
+			ready.push(createBackgroundNative(geometry));
 		}
 	};
 
@@ -90,7 +90,7 @@ export const createPuzzleBackgroundBuffer = (
 				starved++;
 				// Generate inline rather than failing the request. Slower, but a
 				// puzzle is still served and single-use is preserved.
-				return createBackground(geometry);
+				return createBackgroundNative(geometry);
 			}
 			return image;
 		},
