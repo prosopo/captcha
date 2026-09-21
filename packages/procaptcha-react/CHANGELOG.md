@@ -1,5 +1,53 @@
 # @prosopo/procaptcha-react
 
+## 2.13.1
+### Patch Changes
+
+- aed164d: Make asset signing survive contact with a CDN that actually enforces it.
+  
+  Signing image URLs is optional and has been off in practice, so two paths that only break when a zone starts checking tokens have never been exercised. Both are fixed here, so enabling enforcement is a config change rather than a config change plus an incident.
+  
+  **A dataset could not be imported.** Hashing an item downloads the image from the URL stored in the dataset, and that URL is the canonical, unsigned one. Against an enforcing zone every one of those downloads is rejected, so a dataset becomes impossible to import on exactly the configuration it is meant to be served from. `downloadImage` now signs the URL when a signing key is configured, and leaves it alone when one is not.
+  
+  **A failed image never recovered.** The widget retried a broken image by appending a cache-busting query parameter. A token is a signature over the query string, so on a signed URL that parameter invalidates it and every retry is rejected — a transient failure turned permanent. The retry now re-requests the signed URL unchanged, and keeps the cache-buster for unsigned URLs, where it is still worth having and costs nothing.
+  
+  The token scheme itself now lives in one place, `@prosopo/datasets`, rather than being written out twice. The provider keeps its synchronous implementation, because `resolveAsset` cannot await, but both ends build the string to hash and encode the result through the same helpers.
+- 3d45c37: Stop the widget's hover highlights costing a phone user their first tap.
+  
+  Tapping the checkbox on an iPhone did nothing the first time. The second tap worked. The cause is a rule iOS applies to every page: if the first tap on a control changes what is under the finger, Safari treats it as "show me the hover state" rather than "activate this", and withholds the click. Every control in the widget that lights up on hover was therefore asking to be tapped twice.
+  
+  Hover feedback is now drawn only where a pointer can actually rest on something. On a desktop nothing changes. On a touch screen the highlight never appears and the first tap activates the control, which is what a visitor expects.
+  
+  Four places had it, and only one of them was the checkbox:
+  
+  - the **checkbox** — a state layer around the box
+  - the **reload button** in the challenge dialog — a fill change
+  - the dialog's **action buttons**, Cancel, Next and Submit — a state layer
+  - the **widget container** itself, via a CSS `:hover` rule. This one is easy to miss and matters most: the box that lights up is the one the checkbox sits inside, so it repaints under the finger even when the tap never touches a control with its own hover.
+  
+  The first three ask `matchMedia("(hover: hover)")` before listening for the pointer at all; the fourth is wrapped in the matching media query. The image tiles never had hover feedback and are unchanged.
+  
+  None of this came from the recent randomisation work — the React components these replaced carried the same handlers, so it has been there as long as the widget has.
+  
+  Covered by a test per control asserting no state layer is drawn when the device reports it cannot hover, plus tests for the check itself, including that it assumes a pointer when the environment cannot answer — which is what keeps the existing desktop behaviour, and every existing hover test, intact.
+- 4cc28db: Fix the image challenge laying out two columns instead of three on a phone, which pushed the last images below the screen where they could not be reached.
+  
+  On a Samsung A52s the image grid is 345.578px wide. Each tile asked for `calc(33.333% - 5.33px)` at an 8px gap, so three tiles and the two gaps between them came to 345.584px — **six thousandths of a pixel too wide**. That is enough for the browser to wrap, so the challenge drew two columns and five rows rather than three and three. The panel went from about 370px tall to about 1080px, and three of the nine images ended up below a 718px viewport.
+  
+  The tile width is now written as `calc((100% - 16px) / 3)`, leaving both the subtraction and the division to the browser. There is nothing left to round, so three tiles and their gaps come to exactly the width of the row at every gap the grid draws.
+  
+  This arrived with the dialog randomisation, which replaced a fixed `calc(33.333% - 10px)` with a width derived from the randomised gap. The old value subtracted a whole gap per tile where only two thirds was needed, so it happened to leave about 10px of slack and always fitted. Deriving the width exactly removed the slack, and the rounding then tipped it over. Which gaps break depends on the arithmetic — 8, 11 and 14 round down and overflow, the rest do not — so it looked intermittent.
+  
+  The panel that holds the images is also `touch-action: pan-y` rather than `touch-action: none` now. It is an `overflow-y: auto` box, so on a phone it is the thing a finger has to drag when the images do not fit, and `none` told the browser not to pan it at all — which is what turned "some images are off-screen" into "some images cannot be reached". Stopping the page behind from scrolling is `overscroll-behavior`'s job and it still does it. That one is older than the randomisation; it came in with the React to vanilla rewrite, and the React component before it had the same thing.
+  
+  Covered by a test that works out where three tiles and two gaps land for every gap the challenge draws, against a set of panel widths including the A52s' 345.578px. It fails on the old expression with exactly the numbers measured on the device.
+- Updated dependencies [3d45c37]
+- Updated dependencies [4cc28db]
+- Updated dependencies [d3b3286]
+  - @prosopo/widget-skeleton@2.10.0
+  - @prosopo/procaptcha-common@2.17.1
+  - @prosopo/procaptcha@2.11.19
+
 ## 2.13.0
 ### Minor Changes
 
