@@ -78,6 +78,10 @@
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
 		"@changesets/cli": "2.29.7",
+		"@noble/curves": "2.4.0",
+		"@noble/hashes": "2.4.0",
+		"@scure/base": "2.4.0",
+		"@scure/sr25519": "2.4.0",
 		"@types/node": "22.5.5",
 		"@vitest/spy": "4.1.11",
 		"concurrently": "9.0.1",

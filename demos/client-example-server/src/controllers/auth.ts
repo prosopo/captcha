@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { blake2b } from "@noble/hashes/blake2b";
+import { blake2b } from "@noble/hashes/blake2.js";
+import { utf8ToBytes } from "@noble/hashes/utils.js";
 import { u8aToHex } from "@polkadot/util";
 import { randomAsHex } from "@polkadot/util-crypto";
 import { ProsopoEnvError } from "@prosopo/common";
@@ -45,7 +46,7 @@ const SubscribeBodySpec = ProcaptchaResponse.merge(
 );
 
 function hashPassword(password: string): string {
-	return u8aToHex(blake2b(password));
+	return u8aToHex(blake2b(utf8ToBytes(password)));
 }
 
 const NO_IP = "NO_IP";

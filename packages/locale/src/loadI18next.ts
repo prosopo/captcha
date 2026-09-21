@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { i18n } from "i18next";
-let i18nInstance: i18n;
+import type { Ti18n } from "./types.js";
+
+let i18nInstance: Ti18n;
 
 /**
  * How long to wait for i18next to report `loaded` before giving up on it.
@@ -28,16 +29,16 @@ let i18nInstance: i18n;
 export const I18N_LOAD_TIMEOUT_MS = 10_000;
 
 const reconcileLanguage = async (
-	instance: i18n,
+	instance: Ti18n,
 	lng: string | undefined,
-): Promise<i18n> => {
+): Promise<Ti18n> => {
 	if (lng && instance.language !== lng) {
 		await instance.changeLanguage(lng);
 	}
 	return instance;
 };
 
-async function loadI18next(backend: boolean, lng?: string): Promise<i18n> {
+async function loadI18next(backend: boolean, lng?: string): Promise<Ti18n> {
 	return new Promise((resolve, reject) => {
 		// On timeout we resolve with the (possibly not fully loaded) instance
 		// rather than rejecting. i18next falls back to the key itself when a
@@ -69,7 +70,7 @@ async function loadI18next(backend: boolean, lng?: string): Promise<i18n> {
 		// Both latches are one-shot: i18next can emit `loaded` more than once
 		// (per namespace, and again after changeLanguage), and a late event
 		// arriving after the timeout must not re-settle or leak a second timer.
-		const done = (instance: i18n): void => {
+		const done = (instance: Ti18n): void => {
 			if (settled) {
 				return;
 			}
@@ -131,7 +132,5 @@ async function loadI18next(backend: boolean, lng?: string): Promise<i18n> {
 		}
 	});
 }
-
-export type { i18n as Ti18n };
 
 export default loadI18next;

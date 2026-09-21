@@ -13,25 +13,46 @@
 // limitations under the License.
 import { ProsopoEnvError } from "@prosopo/common";
 import type { EnvironmentTypes } from "@prosopo/types";
-import { z } from "zod";
 import { getDevelopmentProviderUrl } from "./developmentProviderUrl.js";
 
-const HardcodedProviderSchema = z.object({
-	address: z.string(),
-	url: z.string(),
-	datasetId: z.string(),
-	weight: z
-		.number()
-		.optional()
-		.default(1)
-		.transform((val) => {
-			// weight coerced to int 1-100
-			const weight = Math.round(val);
-			return Math.max(1, Math.min(100, weight));
-		}),
-});
+export interface HardcodedProvider {
+	address: string;
+	url: string;
+	datasetId: string;
+	weight: number;
+}
 
-export type HardcodedProvider = z.infer<typeof HardcodedProviderSchema>;
+/**
+ * The provider list is fetched JSON, so entries are checked rather than
+ * trusted. Hand-written rather than a zod schema: this module is on the
+ * widget's critical path and zod costs 14KB gzipped to validate three strings
+ * and a number.
+ */
+const parseHardcodedProvider = (value: unknown): HardcodedProvider => {
+	const entry = value as Record<string, unknown>;
+	if (
+		!isProviderRecord(value) ||
+		typeof entry.address !== "string" ||
+		typeof entry.url !== "string" ||
+		typeof entry.datasetId !== "string" ||
+		(entry.weight !== undefined && typeof entry.weight !== "number")
+	) {
+		// A plain Error, as before: zod threw an untranslated ZodError here,
+		// and a malformed provider list is a deployment fault rather than
+		// something to show a visitor.
+		throw new Error(
+			`Malformed provider entry in the provider list: ${JSON.stringify(value)}`,
+		);
+	}
+
+	return {
+		address: entry.address,
+		url: entry.url,
+		datasetId: entry.datasetId,
+		// weight coerced to int 1-100
+		weight: Math.max(1, Math.min(100, Math.round(entry.weight ?? 1))),
+	};
+};
 
 export type IpMode = "ipv4" | "ipv6";
 
@@ -57,7 +78,7 @@ export const convertHostedProvider = (
 
 	const providers = Object.entries(source)
 		.filter(([key]) => !IP_MODE_KEYS.includes(key as IpMode))
-		.map(([, value]) => HardcodedProviderSchema.parse(value));
+		.map(([, value]) => parseHardcodedProvider(value));
 	return providers.sort((a, b) => a.url.localeCompare(b.url));
 };
 

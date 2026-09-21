@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { stringifyBigInts } from "@prosopo/util";
-import { z } from "zod";
 
 export type LogObject = object;
 export type LogRecord = {
@@ -61,15 +60,37 @@ const WarnLevel = "warn";
 const ErrorLevel = "error";
 const FatalLevel = "fatal";
 
-export const LogLevel = z.enum([
+const LogLevels = [
 	InfoLevel,
 	DebugLevel,
 	TraceLevel,
 	WarnLevel,
 	ErrorLevel,
 	FatalLevel,
-]);
-export type LogLevel = z.infer<typeof LogLevel>;
+] as const;
+
+export type LogLevel = (typeof LogLevels)[number];
+
+/**
+ * Shaped like the zod enum it replaced, because `LogLevel.enum.info` and
+ * `LogLevel.options` are what callers across the repo already write. zod itself
+ * is 14KB gzipped and this module is on the widget's critical path, which is a
+ * poor trade for validating six strings.
+ */
+export const LogLevel = {
+	enum: {
+		[InfoLevel]: InfoLevel,
+		[DebugLevel]: DebugLevel,
+		[TraceLevel]: TraceLevel,
+		[WarnLevel]: WarnLevel,
+		[ErrorLevel]: ErrorLevel,
+		[FatalLevel]: FatalLevel,
+	},
+	options: LogLevels,
+} as const;
+
+const isLogLevel = (value: string): value is LogLevel =>
+	(LogLevels as readonly string[]).includes(value);
 
 const logLevelMap: Record<LogLevel, number> = {
 	[TraceLevel]: 0,
@@ -89,8 +110,7 @@ export function parseLogLevel(
 	for (const part of level.split(",")) {
 		const trimmed = part.trim();
 		if (trimmed && !trimmed.includes("=")) {
-			const parsed = LogLevel.safeParse(trimmed);
-			if (parsed.success) return parsed.data;
+			if (isLogLevel(trimmed)) return trimmed;
 		}
 	}
 	return or;
@@ -122,15 +142,14 @@ export function parseDirectives(raw: string): Directives {
 		if (!trimmed) continue;
 		const eqIdx = trimmed.indexOf("=");
 		if (eqIdx === -1) {
-			const parsed = LogLevel.safeParse(trimmed);
-			if (parsed.success) map.set("", parsed.data);
+			if (isLogLevel(trimmed)) map.set("", trimmed);
 		} else {
 			const scope = trimmed.slice(0, eqIdx).trim();
 			// Ignore entries with an empty scope (e.g. "=debug") — only a bare
 			// level (no "=") may set the global default.
 			if (!scope) continue;
-			const parsed = LogLevel.safeParse(trimmed.slice(eqIdx + 1).trim());
-			if (parsed.success) map.set(scope, parsed.data);
+			const level = trimmed.slice(eqIdx + 1).trim();
+			if (isLogLevel(level)) map.set(scope, level);
 		}
 	}
 	return map;
@@ -189,8 +208,7 @@ const inBrowser =
 
 const FormatJson = "json";
 const FormatPlain = "plain";
-export const Format = z.enum([FormatJson, FormatPlain]);
-export type Format = z.infer<typeof Format>;
+export type Format = typeof FormatJson | typeof FormatPlain;
 
 /**
  * Native logger which uses console.log, console.error, etc, without any libraries.

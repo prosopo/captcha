@@ -29,7 +29,7 @@
 		}
 	},
 	"dependencies": {
-		"@noble/hashes": "1.8.0",
+		"@noble/hashes": "2.4.0",
 		"@prosopo/common": "3.1.58",
 		"@prosopo/logger": "2.0.10",
 		"@prosopo/types": "5.9.2",

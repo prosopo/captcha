@@ -1,9 +1,8 @@
 // Copyright 2017-2025 @polkadot/keyring authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { EncryptedJsonEncoding } from "@polkadot/util-crypto/types";
-
 import { u8aEq } from "@polkadot/util";
+import type { EncryptedJsonEncoding } from "@prosopo/util-crypto";
 import { jsonDecryptData } from "@prosopo/util-crypto";
 
 import {

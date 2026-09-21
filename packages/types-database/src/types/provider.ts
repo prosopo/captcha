@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { AllKeys } from "@prosopo/common";
-import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
+import { type TranslationKey, translationKeys } from "@prosopo/locale";
 import {
 	CaptchaLabel,
 	CaptchaType,
@@ -226,7 +226,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		status: { type: String, enum: CaptchaStatus, required: true },
 		reason: {
 			type: String,
-			enum: TranslationKeysSchema.options,
+			enum: translationKeys,
 			required: false,
 		},
 		error: { type: String, required: false },
@@ -368,7 +368,7 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 		status: { type: String, enum: CaptchaStatus, required: true },
 		reason: {
 			type: String,
-			enum: TranslationKeysSchema.options,
+			enum: translationKeys,
 			required: false,
 		},
 		error: { type: String, required: false },
@@ -495,7 +495,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		status: { type: String, enum: CaptchaStatus, required: true },
 		reason: {
 			type: String,
-			enum: TranslationKeysSchema.options,
+			enum: translationKeys,
 			required: false,
 		},
 		error: { type: String, required: false },
