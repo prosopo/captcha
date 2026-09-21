@@ -1,5 +1,30 @@
 # @prosopo/procaptcha-puzzle
 
+## 2.14.1
+### Patch Changes
+
+- c3300ee: Stop a tap on the puzzle piece from spending the challenge.
+  
+  Pressing the piece and letting go without moving it submitted an answer: the piece's own starting position. That position is never the right one, so the solution failed, the widget fetched a replacement — which the provider rejected, because the challenge had already been spent — and the user was dropped back to an unticked checkbox with "challenge failed".
+  
+  On a mouse this was hard to do by accident. On a phone it is the normal thing to do: the panel opens centred, under the finger that just pressed the checkbox, so a tap lands on the piece far more often than a drag does. The visible symptom is that the first press appears to do nothing and the challenge only works on the second try.
+  
+  A press and release with no movement now reports nothing and leaves the piece where it was, so the challenge stays open and can still be solved. A real drag is unaffected, including one that returns the piece to where it started — that still carries a movement trail, and is still submitted.
+- Updated dependencies [94929c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [e180281]
+- Updated dependencies [5e5fb9e]
+  - @prosopo/procaptcha-common@2.17.0
+  - @prosopo/locale@3.6.0
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/util-crypto@13.5.33
+  - @prosopo/util@3.3.11
+  - @prosopo/widget-skeleton@2.9.0
+  - @prosopo/api@4.3.3
+
 ## 2.14.0
 ### Minor Changes
 
