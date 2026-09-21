@@ -14,7 +14,11 @@
 
 import type { ProcaptchaState } from "@prosopo/types";
 import { describe, expect, it, vi } from "vitest";
-import { buildUpdateState, useProcaptcha } from "../state/builder.js";
+import { buildUpdateState } from "../state/builder.js";
+import {
+	createProcaptchaState,
+	createRenderScheduler,
+} from "../state/store.js";
 
 describe("state/builder", () => {
 	describe("buildUpdateState", () => {
@@ -110,13 +114,9 @@ describe("state/builder", () => {
 		});
 	});
 
-	describe("useProcaptcha", () => {
+	describe("createProcaptchaState", () => {
 		it("should initialize with default state values", () => {
-			const useState = vi.fn((defaultValue) => [defaultValue, vi.fn()]);
-			const useRef = vi.fn((defaultValue) => ({ current: defaultValue }));
-
-			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
-			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
+			const { state } = createProcaptchaState();
 
 			expect(state.isHuman).toBe(false);
 			expect(state.index).toBe(0);
@@ -129,136 +129,92 @@ describe("state/builder", () => {
 			expect(state.captchaApi).toBeUndefined();
 			expect(state.challenge).toBeUndefined();
 			expect(state.error).toBeUndefined();
-			expect(typeof updateFn).toBe("function");
 		});
 
-		it("should call appropriate setters when updating state", () => {
-			// biome-ignore lint/suspicious/noExplicitAny: Mock setter functions
-			const setters: Record<string, any> = {};
+		it("should assign the partial update onto the live state object", () => {
+			const { state, update } = createProcaptchaState();
 
-			const useState = vi.fn((defaultValue) => {
-				// Create a unique key based on the type and value to track different state variables
-				const key =
-					typeof defaultValue === "boolean"
-						? `boolean-${defaultValue}`
-						: typeof defaultValue === "number"
-							? `number-${defaultValue}`
-							: Array.isArray(defaultValue)
-								? "array"
-								: "other";
+			update({ isHuman: true, index: 5, loading: true, attemptCount: 3 });
 
-				if (!setters[key]) {
-					setters[key] = vi.fn();
-				}
-				return [defaultValue, setters[key]];
-			});
-
-			const useRef = vi.fn((defaultValue) => ({ current: defaultValue }));
-
-			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
-			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
-
-			updateFn({
-				isHuman: true,
-				index: 5,
-				loading: true,
-				attemptCount: 3,
-			});
-
-			// Check that setters were called
-			// isHuman setter (boolean-false)
-			expect(setters["boolean-false"]).toHaveBeenCalledWith(true);
-			// index and attemptCount setters (both number-0)
-			expect(setters["number-0"]).toHaveBeenCalledWith(5);
-			expect(setters["number-0"]).toHaveBeenCalledWith(3);
+			expect(state.isHuman).toBe(true);
+			expect(state.index).toBe(5);
+			expect(state.loading).toBe(true);
+			expect(state.attemptCount).toBe(3);
 		});
 
-		it("should handle solutions array correctly with slice", () => {
-			const setSolutions = vi.fn();
-			// biome-ignore lint/suspicious/noExplicitAny: Mock solutions array
-			let solutionsValue: any[] = [];
+		it("should notify subscribers with only the changed keys", () => {
+			const { update, subscribe } = createProcaptchaState();
+			const listener = vi.fn();
+			subscribe(listener);
 
-			const useState = vi.fn((defaultValue) => {
-				if (Array.isArray(defaultValue)) {
-					return [
-						solutionsValue,
-						// biome-ignore lint/suspicious/noExplicitAny: Mock setter function
-						(newValue: any) => {
-							solutionsValue = newValue;
-							setSolutions(newValue);
-						},
-					];
-				}
-				return [defaultValue, vi.fn()];
-			});
+			update({ isHuman: true });
 
-			const useRef = vi.fn((defaultValue) => ({ current: defaultValue }));
-
-			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
-			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
-
-			const newSolutions: [string, number, number][][] = [[["test", 1, 2]]];
-			updateFn({ solutions: newSolutions });
-
-			expect(setSolutions).toHaveBeenCalled();
-			// Verify that slice was called by checking that we got a new array reference
-			const callArg = setSolutions.mock.calls[0]?.[0];
-			expect(callArg).toBeDefined();
-			expect(callArg).not.toBe(newSolutions);
-			expect(callArg).toEqual(newSolutions);
+			expect(listener).toHaveBeenCalledWith({ isHuman: true });
 		});
 
-		it("should not call setters for undefined values in partial update", () => {
-			const setIsHuman = vi.fn();
-			const setIndex = vi.fn();
+		it("should stop notifying after unsubscribe", () => {
+			const { update, subscribe } = createProcaptchaState();
+			const listener = vi.fn();
+			const unsubscribe = subscribe(listener);
 
-			// biome-ignore lint/suspicious/noExplicitAny: Mock setter tracking
-			let isHumanSetter: any;
-			// biome-ignore lint/suspicious/noExplicitAny: Mock setter tracking
-			let indexSetter: any;
+			unsubscribe();
+			update({ isHuman: true });
 
-			const useState = vi.fn((defaultValue) => {
-				if (defaultValue === false) {
-					isHumanSetter = setIsHuman;
-					return [false, setIsHuman];
-				}
-				if (defaultValue === 0) {
-					indexSetter = setIndex;
-					return [0, setIndex];
-				}
-				return [defaultValue, vi.fn()];
-			});
+			expect(listener).not.toHaveBeenCalled();
+		});
 
-			const useRef = vi.fn((defaultValue) => ({ current: defaultValue }));
+		it("should leave untouched keys alone on a partial update", () => {
+			const { state, update } = createProcaptchaState();
 
-			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
-			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
+			update({ isHuman: true });
 
-			updateFn({ isHuman: true });
-
-			expect(setIsHuman).toHaveBeenCalledWith(true);
-			expect(setIndex).not.toHaveBeenCalled();
+			expect(state.isHuman).toBe(true);
+			expect(state.index).toBe(0);
 		});
 
 		it("should handle error state update", () => {
-			const setError = vi.fn();
-
-			const useState = vi.fn((defaultValue) => {
-				if (defaultValue === undefined && setError.mock.calls.length === 0) {
-					return [undefined, setError];
-				}
-				return [defaultValue, vi.fn()];
-			});
-
-			const useRef = vi.fn((defaultValue) => ({ current: defaultValue }));
-
-			// biome-ignore lint/suspicious/noExplicitAny: Mock useState/useRef functions
-			const [state, updateFn] = useProcaptcha(useState as any, useRef as any);
-
+			const { state, update } = createProcaptchaState();
 			const errorObj = { message: "Test error", key: "testKey" };
-			updateFn({ error: errorObj });
 
-			expect(setError).toHaveBeenCalledWith(errorObj);
+			update({ error: errorObj });
+
+			expect(state.error).toEqual(errorObj);
+		});
+	});
+
+	describe("createRenderScheduler", () => {
+		it("should coalesce repeat schedules into one render", async () => {
+			const render = vi.fn();
+			const scheduler = createRenderScheduler(render);
+
+			scheduler.schedule();
+			scheduler.schedule();
+			scheduler.schedule();
+			expect(render).not.toHaveBeenCalled();
+
+			await Promise.resolve();
+			expect(render).toHaveBeenCalledTimes(1);
+		});
+
+		it("should render synchronously on flush", () => {
+			const render = vi.fn();
+			const scheduler = createRenderScheduler(render);
+
+			scheduler.schedule();
+			scheduler.flush();
+
+			expect(render).toHaveBeenCalledTimes(1);
+		});
+
+		it("should not render after cancel", async () => {
+			const render = vi.fn();
+			const scheduler = createRenderScheduler(render);
+
+			scheduler.schedule();
+			scheduler.cancel();
+			await Promise.resolve();
+
+			expect(render).not.toHaveBeenCalled();
 		});
 	});
 });

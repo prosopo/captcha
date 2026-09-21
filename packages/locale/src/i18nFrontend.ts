@@ -17,13 +17,9 @@ import I18nextBrowserLanguageDetector from "i18next-browser-languagedetector";
 import ChainedBackend from "i18next-chained-backend";
 import HttpBackend from "i18next-http-backend";
 import resourcesToBackend from "i18next-resources-to-backend";
-import { initReactI18next } from "react-i18next";
 import { i18nSharedOptions } from "./i18SharedOptions.js";
 
-const reactOptions: InitOptions = {
-	react: {
-		useSuspense: true,
-	},
+const detectionOptions: InitOptions = {
 	detection: {
 		order: ["navigator", "htmlTag", "path", "subdomain"],
 		caches: ["localStorage", "cookie"],
@@ -52,7 +48,6 @@ export function initializeI18n(
 					caches: ["localStorage", "cookie"],
 				}),
 			)
-			.use(initReactI18next)
 			.init({
 				...i18nSharedOptions,
 				// When the site owner has resolved a language upfront (via widget
@@ -77,7 +72,7 @@ export function initializeI18n(
 						},
 					],
 				},
-				...reactOptions,
+				...detectionOptions,
 			} as InitOptions);
 		// "loaded" fires once per namespace, and again after changeLanguage(),
 		// so the raw event is not the one-shot signal the callback expects.
@@ -92,7 +87,7 @@ export function initializeI18n(
 			i18nLoadedCallback?.(i18n);
 		});
 	} else {
-		// Already initialised (e.g. useTranslation() ran first, or a second
+		// Already initialised (e.g. createTranslator() ran first, or a second
 		// widget mounted). The `loaded` handler is only registered in the init
 		// branch, so the callback has to fire here or loadI18next() never
 		// settles. Resources are already present, so resolving immediately is

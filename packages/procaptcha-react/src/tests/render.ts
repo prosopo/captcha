@@ -12,10 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ReactElement } from "react";
-import { act } from "react";
-import { type Root, createRoot } from "react-dom/client";
-
 /**
  * A minimal mount/unmount harness. The suite deliberately drives real DOM
  * events rather than calling handlers directly, because every interactive
@@ -24,42 +20,26 @@ import { type Root, createRoot } from "react-dom/client";
  */
 export interface Mounted {
 	container: HTMLDivElement;
-	root: Root;
-	render: (element: ReactElement) => void;
 	unmount: () => void;
 }
 
 export const mount = (): Mounted => {
 	const container = document.createElement("div");
 	document.body.appendChild(container);
-	let root: Root | undefined;
-	act(() => {
-		root = createRoot(container);
-	});
-	if (!root) throw new Error("expected a react root");
-	const created = root;
 	return {
 		container,
-		root: created,
-		render: (element: ReactElement) => {
-			act(() => {
-				created.render(element);
-			});
-		},
 		unmount: () => {
-			act(() => {
-				created.unmount();
-			});
 			container.remove();
 		},
 	};
 };
 
-interface ClickOptions {
+interface FireOptions {
 	trusted?: boolean;
 	clientX?: number;
 	clientY?: number;
 	touches?: { clientX: number; clientY: number }[];
+	key?: string;
 }
 
 /**
@@ -86,6 +66,22 @@ const setTrusted = (event: Event, trusted: boolean): void => {
 	throw new Error("could not reach the jsdom event implementation");
 };
 
+const build = (type: string, options: FireOptions): Event => {
+	if (undefined !== options.key) {
+		return new KeyboardEvent(type, {
+			bubbles: true,
+			cancelable: true,
+			key: options.key,
+		});
+	}
+	return new MouseEvent(type, {
+		bubbles: true,
+		cancelable: true,
+		clientX: options.clientX ?? 0,
+		clientY: options.clientY ?? 0,
+	});
+};
+
 /**
  * Dispatches a real event at the element. Touch points are plain objects:
  * jsdom has no Touch constructor.
@@ -93,21 +89,9 @@ const setTrusted = (event: Event, trusted: boolean): void => {
 export const fire = (
 	element: Element,
 	type: string,
-	options: ClickOptions = {},
+	options: FireOptions = {},
 ): void => {
-	const event = new MouseEvent(type, {
-		bubbles: true,
-		cancelable: true,
-		clientX: options.clientX ?? 0,
-		clientY: options.clientY ?? 0,
-	});
-	setTrusted(event, options.trusted ?? true);
-	if (options.touches) {
-		Object.defineProperty(event, "touches", { value: options.touches });
-	}
-	act(() => {
-		element.dispatchEvent(event);
-	});
+	fireAndReturn(element, type, options);
 };
 
 /** Like `fire`, but hands back the event so a test can inspect what the
@@ -115,15 +99,37 @@ export const fire = (
 export const fireAndReturn = (
 	element: Element,
 	type: string,
-	options: ClickOptions = {},
-): MouseEvent => {
-	const event = new MouseEvent(type, { bubbles: true, cancelable: true });
+	options: FireOptions = {},
+): Event => {
+	const event = build(type, options);
 	setTrusted(event, options.trusted ?? true);
-	act(() => {
-		element.dispatchEvent(event);
-	});
+	if (options.touches) {
+		Object.defineProperty(event, "touches", { value: options.touches });
+	}
+	element.dispatchEvent(event);
 	return event;
 };
+
+/**
+ * Renders coalesce onto the microtask queue, so a state change is not visible
+ * in the DOM until it has drained.
+ */
+export const settle = async (): Promise<void> => {
+	// A macrotask turn, so a pending dynamic import resolves too — draining the
+	// microtask queue alone is not enough for the code-split boundaries.
+	await new Promise<void>((resolve: () => void) => setTimeout(resolve, 0));
+	await Promise.resolve();
+};
+
+/**
+ * Inline styles as a sorted `name: value` list. Re-applying a shorthand such as
+ * `border` moves it to the end of `cssText`, so comparing the serialised string
+ * would report a difference where the resolved styling is identical.
+ */
+export const styleSnapshot = (element: HTMLElement): string[] =>
+	Array.from(element.style)
+		.map((name: string) => `${name}: ${element.style.getPropertyValue(name)}`)
+		.sort();
 
 /**
  * jsdom reports inline colours as `rgb(...)`, while the theme states them as
@@ -136,7 +142,7 @@ export const asRgb = (hex: string): string => {
 		short.length === 3
 			? short
 					.split("")
-					.map((c) => c + c)
+					.map((c: string) => c + c)
 					.join("")
 			: short;
 	const channel = (start: number): number =>

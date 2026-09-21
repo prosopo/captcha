@@ -96,7 +96,6 @@ const load = async (
 			return "InMemoryBackend";
 		},
 	}));
-	vi.doMock("react-i18next", () => ({ initReactI18next: "initReactI18next" }));
 
 	const imported = await import("../i18nFrontend.js");
 	return { initializeI18n: imported.default, harness };
@@ -118,7 +117,6 @@ afterEach(() => {
 		"i18next-http-backend",
 		"i18next-browser-languagedetector",
 		"i18next-resources-to-backend",
-		"react-i18next",
 	]) {
 		vi.doUnmock(module);
 	}
@@ -131,12 +129,11 @@ describe("i18nFrontend, first initialisation", () => {
 		expect(harness.initOptions).toHaveLength(1);
 	});
 
-	test("registers the chained backend, the detector and the react binding", async () => {
+	test("registers the chained backend and the language detector", async () => {
 		const { initializeI18n, harness } = await load();
 		initializeI18n();
-		expect(harness.plugins).toHaveLength(3);
+		expect(harness.plugins).toHaveLength(2);
 		expect(harness.plugins[0]).toBe("ChainedBackend");
-		expect(harness.plugins[2]).toBe("initReactI18next");
 	});
 
 	test("carries the shared options through to init", async () => {

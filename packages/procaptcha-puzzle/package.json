@@ -40,13 +40,9 @@
 		"@prosopo/types": "5.9.1",
 		"@prosopo/util": "3.3.10",
 		"@prosopo/util-crypto": "13.5.32",
-		"@prosopo/widget-skeleton": "2.8.7",
-		"react": "19.3.0",
-		"react-dom": "19.3.0"
+		"@prosopo/widget-skeleton": "2.8.7"
 	},
 	"devDependencies": {
-		"@emotion/react": "11.14.0",
-		"@emotion/styled": "11.14.1",
 		"@prosopo/config": "3.4.0",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "4.1.11",
