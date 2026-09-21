@@ -278,27 +278,21 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 	});
 }
 
+/**
+ * The tiles of the round currently on screen.
+ *
+ * The widget draws its class names and its nesting depth fresh on every load,
+ * so there is nothing here to walk up from and nothing to name: this waits on
+ * the instruction line's test hook and then takes the images out of the round's
+ * own hook. The walk this replaced climbed four parents and stepped sideways,
+ * which only ever worked because the markup was the same for everyone.
+ */
 function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
-	// Wait for the modal to be visible first
-	return getWidgetElement(".prosopo-modalInner p", { timeout: 10000 })
+	return getWidgetElement('[data-cy="captcha-prompt"]', { timeout: 10000 })
 		.should("be.visible")
-		.then(($p) => {
-			const $pWithText = $p.filter((index, el) => {
-				return Cypress.$(el).text().includes("all containing");
-			});
-
-			cy.wrap($pWithText)
-				.should("be.visible")
-				.parent()
-				.parent()
-				.parent()
-				.parent()
-				.children()
-				.next()
-				.children()
-				.first()
-				.children()
-				.should("have.length.gte", 1) // Ensure at least one image exists
+		.then(() => {
+			getWidgetElement('[data-cy="captcha-panel"] img', { timeout: 10000 })
+				.should("have.length.gte", 1)
 				.as("captchaImages");
 		});
 }
@@ -394,7 +388,10 @@ function clickNextButton(): Chainable<JQuery<HTMLElement>> {
 	cy.task("log", "Next button: waiting for it to be visible...");
 	// Nothing may sit between the query and the click: a `.then()` that queues
 	// a command yields that command's subject, and realClick needs the button.
-	return getWidgetElement('button[data-cy="button-next"]')
+	// Not `button[data-cy=...]`: the widget draws the element each control is
+	// made of per load, so half of all runs render this one as a div carrying the
+	// button role. The hook is the only part that holds.
+	return getWidgetElement('[data-cy="button-next"]')
 		.should("exist")
 		.should("be.visible")
 		.realClick();

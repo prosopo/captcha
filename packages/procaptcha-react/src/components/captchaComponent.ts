@@ -19,10 +19,17 @@ import {
 	applyStyles,
 	createElement,
 	mountReloadButton,
+	threeColumnBasis,
+	wrapRandomly,
 } from "@prosopo/procaptcha-common";
 import type { CaptchaResponseBody } from "@prosopo/types";
 import { at } from "@prosopo/util";
-import { type Theme, darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import {
+	type Theme,
+	darkTheme,
+	lightTheme,
+	randomInt,
+} from "@prosopo/widget-skeleton";
 import addDataAttr from "../util/index.js";
 import { mountButton } from "./button.js";
 import { mountCaptchaWidget } from "./captchaWidget.js";
@@ -77,12 +84,33 @@ const targetStyle = (theme: Theme): StyleMap => ({
 	fontWeight: 700,
 });
 
-const columnStyle: StyleMap = {
+const columnStyle = (gap: number): StyleMap => ({
 	position: "relative",
 	flexGrow: 1,
 	// make the width of each item 1/3rd of the width overall, i.e. 3 columns
-	flexBasis: "calc(33.333% - 10px)",
-};
+	flexBasis: threeColumnBasis(gap),
+});
+
+// Padding and spacing are nudged per mount, so a solver cannot write down where
+// in the dialog the controls and the tiles land. Every one of these changes the
+// panel's own size rather than moving it, so the surface still centres it and a
+// panel taller than the viewport still scrolls to its own edges.
+const SPACING_JITTER = 4;
+const MIN_CONTROL_GAP = 6;
+const MAX_CONTROL_GAP = 14;
+const HEADER_PADDING_Y = 12;
+const HEADER_PADDING_X = 14;
+const HEADER_PADDING_JITTER = 3;
+
+const MIN_WRAPPER_DEPTH = 0;
+const MAX_WRAPPER_DEPTH = 2;
+
+const decoy = (element: HTMLElement): HTMLElement =>
+	wrapRandomly(element, MIN_WRAPPER_DEPTH, MAX_WRAPPER_DEPTH);
+
+/** A spacing token moved by a few pixels, never below zero. */
+const jittered = (base: number, jitter: number = SPACING_JITTER): number =>
+	Math.max(0, base + randomInt(-jitter, jitter));
 
 export const mountCaptchaComponent = (
 	container: HTMLElement,
@@ -105,21 +133,24 @@ export const mountCaptchaComponent = (
 	const isLastRound = () => props.index >= props.challenge.captchas.length - 1;
 
 	const theme = themeOf(props.themeColor);
-	const doubleSpacing = `${theme.spacing.unit * 2}px`;
-	const fullSpacing = `${theme.spacing.unit}px`;
+	const controlGap = randomInt(MIN_CONTROL_GAP, MAX_CONTROL_GAP);
+	const column = columnStyle(controlGap);
 
 	const targetLabel = createElement("span", { style: targetStyle(theme) });
 
-	const promptText = createElement("p", { style: promptStyle(theme) });
+	const promptText = createElement("p", {
+		style: promptStyle(theme),
+		attributes: addDataAttr({ dev: { cy: "captcha-prompt" } }),
+	});
 
 	const hintText = createElement("p", { style: hintStyle(theme) });
 
 	const header = createElement("div", {
 		style: {
-			padding: "12px 14px",
+			padding: `${jittered(HEADER_PADDING_Y, HEADER_PADDING_JITTER)}px ${jittered(HEADER_PADDING_X, HEADER_PADDING_JITTER)}px`,
 			fontFamily: theme.font.fontFamily,
 		},
-		children: [promptText, hintText],
+		children: [decoy(promptText), decoy(hintText)],
 	});
 
 	const headerBar = createElement("div", {
@@ -127,14 +158,14 @@ export const mountCaptchaComponent = (
 			backgroundColor: theme.palette.primaryContainer.main,
 			borderRadius: theme.shape.header,
 			width: "100%",
-			marginTop: fullSpacing,
+			marginTop: `${jittered(theme.spacing.unit)}px`,
 		},
-		children: [header],
+		children: [decoy(header)],
 	});
 
 	const headerRow = createElement("div", {
 		style: { display: "flex", alignItems: "center", width: "100%" },
-		children: [headerBar],
+		children: [decoy(headerBar)],
 	});
 
 	const gridHost = createElement("div", {
@@ -142,9 +173,9 @@ export const mountCaptchaComponent = (
 		attributes: addDataAttr({ dev: { cy: `captcha-${props.index}` } }),
 	});
 
-	const cancelHost = createElement("div", { style: columnStyle });
-	const reloadHost = createElement("div", { style: columnStyle });
-	const nextHost = createElement("div", { style: columnStyle });
+	const cancelHost = createElement("div", { style: column });
+	const reloadHost = createElement("div", { style: column });
+	const nextHost = createElement("div", { style: column });
 
 	const controls = createElement("div", {
 		style: {
@@ -155,9 +186,9 @@ export const mountCaptchaComponent = (
 			display: "flex",
 			flexDirection: "row",
 			justifyContent: "space-between",
-			gap: "10px",
+			gap: `${controlGap}px`,
 		},
-		children: [cancelHost, reloadHost, nextHost],
+		children: [decoy(cancelHost), decoy(reloadHost), decoy(nextHost)],
 	});
 
 	const controlsRow = createElement("div", {
@@ -166,9 +197,9 @@ export const mountCaptchaComponent = (
 			alignItems: "center",
 			justifyContent: "space-between",
 			lineHeight: 1.75,
-			padding: `${fullSpacing} 0 ${doubleSpacing} 0`,
+			padding: `${jittered(theme.spacing.unit)}px 0 ${jittered(theme.spacing.unit * 2)}px 0`,
 		},
-		children: [controls],
+		children: [decoy(controls)],
 	});
 
 	const inner = createElement("div", {
@@ -177,16 +208,17 @@ export const mountCaptchaComponent = (
 			display: "flex",
 			flexDirection: "column",
 			minWidth: "300px",
-			marginLeft: fullSpacing,
-			marginRight: fullSpacing,
+			marginLeft: `${jittered(theme.spacing.unit)}px`,
+			marginRight: `${jittered(theme.spacing.unit)}px`,
 			justifyContent: "center",
 		},
-		children: [headerRow, gridHost, controlsRow],
+		children: [decoy(headerRow), decoy(gridHost), decoy(controlsRow)],
 	});
 
 	const root = createElement("div", {
 		style: outerStyle(theme),
-		children: [inner],
+		attributes: addDataAttr({ dev: { cy: "captcha-panel" } }),
+		children: [decoy(inner)],
 	});
 
 	const grid = mountCaptchaWidget(gridHost, {

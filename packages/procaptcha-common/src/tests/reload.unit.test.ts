@@ -37,16 +37,42 @@ let mounted: Mounted;
 let reload: Component<ReloadButtonProps> | undefined;
 const onReload = vi.fn<() => void>();
 
-const render = (themeColor: "light" | "dark" = "light"): HTMLButtonElement => {
+/**
+ * The control is found by its development-only test hook, never by class or by
+ * tag: both are drawn per mount, which is the point of the change that made
+ * them so.
+ */
+const CONTROL_SELECTOR = '[data-cy="reload-button"]';
+
+const render = (themeColor: "light" | "dark" = "light"): HTMLElement => {
 	const props: ReloadButtonProps = { themeColor, onReload };
 	if (reload) {
 		reload.update(props);
 	} else {
 		reload = mountReloadButton(mounted.container, props);
 	}
-	const element = mounted.container.querySelector("button");
-	if (!element) throw new Error("expected a button to be rendered");
+	const element =
+		mounted.container.querySelector<HTMLElement>(CONTROL_SELECTOR);
+	if (!element) throw new Error("expected a reload control to be rendered");
 	return element;
+};
+
+/**
+ * Pins the draw that picks the element the control is made of, so both variants
+ * are exercised rather than whichever one this run happened to get.
+ */
+const renderAs = (
+	kind: "button" | "generic",
+	themeColor: "light" | "dark" = "light",
+): HTMLElement => {
+	const draws = vi
+		.spyOn(Math, "random")
+		.mockReturnValue("button" === kind ? 0 : 0.99);
+	try {
+		return render(themeColor);
+	} finally {
+		draws.mockRestore();
+	}
 };
 
 beforeEach(() => {
@@ -65,13 +91,56 @@ describe("what the button renders", () => {
 		expect(render().getAttribute("aria-label")).toBe("Reload");
 	});
 
-	test("is a plain button, not a form submit", () => {
+	test("is a plain button, not a form submit, when it is a button", () => {
 		// The widget is usually rendered inside the dapp's own form.
-		expect(render().getAttribute("type")).toBe("button");
+		const element = renderAs("button");
+		expect(element.tagName).toBe("BUTTON");
+		expect(element.getAttribute("type")).toBe("button");
 	});
 
-	test("carries the class the skeleton's css hooks onto", () => {
-		expect(render().className).toBe("reload-button");
+	test("is a tabbable button by role when it is not a button", () => {
+		const element = renderAs("generic");
+		expect(element.tagName).toBe("DIV");
+		expect(element.getAttribute("role")).toBe("button");
+		expect(element.getAttribute("tabindex")).toBe("0");
+	});
+
+	test("goes by a different name on every mount", () => {
+		// A class scraped from one page load names nothing on the next.
+		const names = new Set(
+			Array.from({ length: 20 }, () => {
+				const container = mount();
+				const control = mountReloadButton(container.container, {
+					themeColor: "light",
+					onReload,
+				});
+				const className =
+					container.container.querySelector<HTMLElement>(CONTROL_SELECTOR)
+						?.className ?? "";
+				control.destroy();
+				container.unmount();
+				return className;
+			}),
+		);
+		expect(names.size).toBe(20);
+	});
+
+	test("withholds the test hook from a production build", () => {
+		const originalNodeEnv = process.env.NODE_ENV;
+		process.env.NODE_ENV = "production";
+		try {
+			reload = mountReloadButton(mounted.container, {
+				themeColor: "light",
+				onReload,
+			});
+			expect(mounted.container.querySelector(CONTROL_SELECTOR)).toBeNull();
+		} finally {
+			if (undefined === originalNodeEnv) {
+				Reflect.deleteProperty(process.env, "NODE_ENV");
+			} else {
+				process.env.NODE_ENV = originalNodeEnv;
+			}
+		}
 	});
 
 	test("renders the reload glyph as inline svg", () => {
@@ -187,6 +256,31 @@ describe("clicking", () => {
 		expect(onReload).toHaveBeenCalledTimes(2);
 	});
 
+	test("ignores a click no user made", () => {
+		// A script-dispatched click is how a solver asks for a fresh challenge.
+		fire(render(), "click", { trusted: false });
+		expect(onReload).not.toHaveBeenCalled();
+	});
+
+	test("reloads on Enter and on Space when it is not a button", () => {
+		// A real button does this for free; the generic variant has to be given
+		// it, or the control drops out of reach of a keyboard user.
+		const element = renderAs("generic");
+		fire(element, "keydown", { key: "Enter" });
+		fire(element, "keydown", { key: " " });
+		expect(onReload).toHaveBeenCalledTimes(2);
+	});
+
+	test("stops Space scrolling the dialog", () => {
+		const event = fireAndReturn(renderAs("generic"), "keydown", { key: " " });
+		expect(event.defaultPrevented).toBe(true);
+	});
+
+	test("ignores keys that do not activate a button", () => {
+		fire(renderAs("generic"), "keydown", { key: "a" });
+		expect(onReload).not.toHaveBeenCalled();
+	});
+
 	test("calls the handler the latest props carry", () => {
 		// The dialog rebuilds its callbacks on each render; a stale closure would
 		// reload against a challenge that is no longer on screen.
@@ -206,7 +300,7 @@ describe("tearing down", () => {
 		render();
 		reload?.destroy();
 		reload = undefined;
-		expect(mounted.container.querySelector("button")).toBeNull();
+		expect(mounted.container.querySelector(CONTROL_SELECTOR)).toBeNull();
 	});
 
 	test("stops listening", () => {

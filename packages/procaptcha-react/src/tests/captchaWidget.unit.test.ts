@@ -56,6 +56,16 @@ const render = (overrides: Parameters<typeof props>[0] = {}): void => {
 const tiles = (): HTMLImageElement[] =>
 	Array.from(mounted.container.querySelectorAll("img"));
 
+const grid = (): HTMLElement => {
+	const element = mounted.container.firstElementChild;
+	if (!(element instanceof HTMLElement)) {
+		throw new Error("expected a grid to be rendered");
+	}
+	return element;
+};
+
+const pixels = (value: string): number => Number.parseFloat(value);
+
 const clickable = (index: number): HTMLElement => {
 	const image = tiles()[index];
 	const target = image?.parentElement;
@@ -158,20 +168,52 @@ describe("theming", () => {
 
 	test("pads the grid away from the header and the button row", () => {
 		// Neither the instruction header above nor the controls below pad against
-		// the grid, so this is the only thing separating them from the images.
+		// the grid, so this is the only thing separating them from the images. The
+		// exact amount is drawn per mount, so only the range is fixed.
 		render();
-		const grid = mounted.container.firstElementChild as HTMLElement;
-		expect(grid.style.paddingTop).toBe(`${lightTheme.spacing.unit}px`);
-		expect(grid.style.paddingBottom).toBe(`${lightTheme.spacing.unit}px`);
+		expect(pixels(grid().style.paddingTop)).toBeGreaterThanOrEqual(6);
+		expect(pixels(grid().style.paddingTop)).toBeLessThanOrEqual(14);
+		expect(pixels(grid().style.paddingBottom)).toBeGreaterThanOrEqual(6);
+		expect(pixels(grid().style.paddingBottom)).toBeLessThanOrEqual(14);
 	});
 
-	test("keeps the padding after a rebuild", () => {
+	test("keeps the same padding after a rebuild", () => {
 		// The grid styles are re-applied on rebuild, which is what a theme change
-		// triggers — dropping them there would lose the spacing on the second round.
+		// triggers — dropping them there would lose the spacing on the second
+		// round, and redrawing them would shift the tiles under the user's cursor.
 		render();
+		const before = grid().style.paddingTop;
 		render({ themeColor: "dark" });
-		const grid = mounted.container.firstElementChild as HTMLElement;
-		expect(grid.style.paddingTop).toBe(`${darkTheme.spacing.unit}px`);
+		expect(grid().style.paddingTop).toBe(before);
+	});
+});
+
+describe("the geometry a solver would write down", () => {
+	test("spaces the tiles differently on every mount", () => {
+		const gaps = new Set(
+			Array.from({ length: 30 }, () => {
+				const container = mount();
+				const instance = mountCaptchaWidget(container.container, props());
+				const gap =
+					container.container.querySelector<HTMLElement>("div")?.style.gap ??
+					"";
+				instance.destroy();
+				container.unmount();
+				return gap;
+			}),
+		);
+		expect(gaps.size).toBeGreaterThan(1);
+	});
+
+	test("gives each cell room for the gap it was drawn with", () => {
+		// Three columns fit only if each cell gives up two thirds of a gap. A
+		// basis written independently of the gap wraps the row at the wide end of
+		// the range, which is four rows of images instead of three.
+		render();
+		const gap = pixels(grid().style.gap);
+		const cell = tiles()[0]?.parentElement?.parentElement;
+		const deducted = Math.round((200 * gap) / 3) / 100;
+		expect(cell?.style.flexBasis).toBe(`calc(33.333% - ${deducted}px)`);
 	});
 });
 
@@ -233,10 +275,54 @@ describe("selection", () => {
 });
 
 describe("reaching the tiles without a mouse", () => {
-	test("each tile is a button, so it can be tabbed to and pressed", () => {
+	test("each tile is a button, whichever element it is made of", () => {
+		// The element is drawn per tile, so `button` no longer finds them all —
+		// but every variant is still a button to assistive tech and to the
+		// keyboard.
 		render();
-		expect(clickable(0).tagName).toBe("BUTTON");
-		expect(clickable(0).getAttribute("type")).toBe("button");
+		for (const index of [0, 1]) {
+			const tile = clickable(index);
+			if ("BUTTON" === tile.tagName) {
+				expect(tile.getAttribute("type")).toBe("button");
+			} else {
+				expect(tile.getAttribute("role")).toBe("button");
+				expect(tile.getAttribute("tabindex")).toBe("0");
+			}
+		}
+	});
+
+	test("picks the element per tile, not once for the grid", () => {
+		const tags = new Set<string>();
+		for (let attempt = 0; attempt < 40; attempt += 1) {
+			const container = mount();
+			const instance = mountCaptchaWidget(container.container, props());
+			for (const image of container.container.querySelectorAll("img")) {
+				const tag = image.parentElement?.tagName;
+				if (tag) {
+					tags.add(tag);
+				}
+			}
+			instance.destroy();
+			container.unmount();
+		}
+		expect(Array.from(tags).sort()).toEqual(["BUTTON", "DIV"]);
+	});
+
+	test("selects a tile on Enter and on Space", () => {
+		// A tile only a mouse can reach is no challenge at all for a keyboard
+		// user, and the generic variant gets none of this for free.
+		const draws = vi.spyOn(Math, "random").mockReturnValue(0.99);
+		try {
+			render();
+		} finally {
+			draws.mockRestore();
+		}
+
+		fire(clickable(0), "keydown", { key: "Enter" });
+		fire(clickable(1), "keydown", { key: " " });
+
+		expect(onClick).toHaveBeenNthCalledWith(1, "hash-1", 0, 0);
+		expect(onClick).toHaveBeenNthCalledWith(2, "hash-2", 0, 0);
 	});
 
 	test("an unpicked tile says so", () => {

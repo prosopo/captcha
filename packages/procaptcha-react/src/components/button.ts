@@ -17,8 +17,7 @@ import {
 	Teardown,
 	applyAttributes,
 	applyStyles,
-	createElement,
-	isEventTrusted,
+	createControl,
 } from "@prosopo/procaptcha-common";
 import { darkTheme, lightTheme, withAlpha } from "@prosopo/widget-skeleton";
 import addDataAttr from "../util/index.js";
@@ -68,7 +67,12 @@ export const mountButton = (
 	// imperatively so the ring appears for keyboard focus but not mouse clicks.
 	let focusVisible = false;
 
-	const button = createElement("button");
+	const button = createControl(teardown, {
+		onActivate: (event: MouseEvent | KeyboardEvent) => {
+			event.preventDefault();
+			props.onClick();
+		},
+	});
 
 	const buttonStyle = (): StyleMap => {
 		const theme = "light" === props.themeColor ? lightTheme : darkTheme;
@@ -139,14 +143,6 @@ export const mountButton = (
 		focusVisible = false;
 		render();
 	});
-	teardown.addEventListener(button, "click", (event: Event) => {
-		if (!isEventTrusted(event)) {
-			return;
-		}
-		event.preventDefault();
-		props.onClick();
-	});
-
 	render();
 	container.appendChild(button);
 

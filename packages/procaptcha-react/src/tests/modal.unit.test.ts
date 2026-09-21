@@ -33,8 +33,14 @@ const render = (show: boolean, children = "challenge"): ModalComponent => {
 	return modal;
 };
 
+// Every class the modal renders is drawn per mount, so the tests find the
+// layer and the panel by their development-only hooks and the inner panel by
+// the handle the component hands back — which is what a caller has too.
+const OUTER_SELECTOR = '[data-cy="challenge-surface"]';
+const PANEL_SELECTOR = '[data-cy="challenge-content"]';
+
 const outer = (): HTMLElement => {
-	const element = document.querySelector<HTMLElement>(".prosopo-modalOuter");
+	const element = document.querySelector<HTMLElement>(OUTER_SELECTOR);
 	if (!element) throw new Error("expected the modal to be rendered");
 	return element;
 };
@@ -55,25 +61,44 @@ describe("where the modal renders", () => {
 		// the challenge, which is why this is portalled in the first place.
 		render(true);
 		expect(outer().parentElement).toBe(document.body);
-		expect(mounted.container.querySelector(".prosopo-modalOuter")).toBeNull();
+		expect(mounted.container.querySelector(OUTER_SELECTOR)).toBeNull();
 	});
 
 	test("renders its children inside the inner panel", () => {
-		render(true);
-		const inner = outer().querySelector(".prosopo-modalInner");
-		expect(inner?.textContent).toBe("challenge");
+		const inner = render(true).content;
+		expect(inner.textContent).toBe("challenge");
+		expect(outer().contains(inner)).toBe(true);
 	});
 
 	test("renders an empty panel when there is nothing to show", () => {
-		render(true, "");
-		expect(outer().querySelector(".prosopo-modalInner")?.textContent).toBe("");
+		expect(render(true, "").content.textContent).toBe("");
 	});
 
 	test("is removed from the body when the widget unmounts", () => {
 		render(true);
 		modal?.destroy();
 		modal = undefined;
-		expect(document.querySelector(".prosopo-modalOuter")).toBeNull();
+		expect(document.querySelector(OUTER_SELECTOR)).toBeNull();
+	});
+
+	test("nothing about its markup survives to the next page load", () => {
+		// Names, nesting depth and the panel's exact offset are all drawn per
+		// mount, so a selector or a click coordinate written down once is dead.
+		const shapes = new Set(
+			Array.from({ length: 10 }, () => {
+				const instance = mountModal({ show: true });
+				const panel = document.querySelector<HTMLElement>(PANEL_SELECTOR);
+				const shape = [
+					document.querySelector<HTMLElement>(OUTER_SELECTOR)?.className,
+					panel?.className,
+					instance.content.className,
+					panel?.innerHTML,
+				].join("|");
+				instance.destroy();
+				return shape;
+			}),
+		);
+		expect(shapes.size).toBe(10);
 	});
 });
 
@@ -118,9 +143,7 @@ describe("stacking", () => {
 		// top row of images off the top of the screen, with no way to scroll to
 		// them. Centring is the layer's job now.
 		render(true);
-		const panel = outer().querySelector<HTMLElement>(
-			".prosopo-challenge-content",
-		);
+		const panel = outer().querySelector<HTMLElement>(PANEL_SELECTOR);
 
 		expect(panel?.className).not.toContain("ios-lift");
 		expect(panel?.style.transform).toBe("");
@@ -131,9 +154,7 @@ describe("stacking", () => {
 
 	test("lets a challenge taller than the viewport scroll instead of clipping", () => {
 		render(true);
-		const panel = outer().querySelector<HTMLElement>(
-			".prosopo-challenge-content",
-		);
+		const panel = outer().querySelector<HTMLElement>(PANEL_SELECTOR);
 
 		expect(panel?.style.maxHeight).toBe("100%");
 		expect(panel?.style.overflowY).toBe("auto");
