@@ -27,6 +27,15 @@ import {
 const CIPHER = "aes-256-gcm";
 const TAG_BYTES = 16;
 
+// Stated to node rather than left to the default, so the tag length is enforced
+// by the cipher itself. GCM will otherwise accept a truncated tag — down to 4
+// bytes — and a shorter tag is proportionally easier to forge. Nothing here can
+// currently pass one, since `unsealAssetPath` rejects anything not longer than
+// the tag and always slices exactly `TAG_BYTES` off the end, but this is the
+// sealing format for a public repository: the invariant belongs where it cannot
+// be lost to a later edit somewhere else in the file.
+const GCM_OPTIONS = { authTagLength: TAG_BYTES } as const;
+
 export interface SealAssetPathParams {
 	readonly path: string;
 	readonly key: Uint8Array;
@@ -39,7 +48,7 @@ export const sealAssetPath = (params: SealAssetPathParams): string => {
 		throw new Error(`Refusing to seal an unusable asset path: ${params.path}`);
 	}
 	const iv = randomBytes(IV_BYTES);
-	const cipher = createCipheriv(CIPHER, params.key, iv);
+	const cipher = createCipheriv(CIPHER, params.key, iv, GCM_OPTIONS);
 	cipher.setAAD(additionalData(params.keyId));
 	const ciphertext = Buffer.concat([
 		cipher.update(
@@ -92,7 +101,7 @@ const open = (
 	keyId: number,
 ): SealedPayload | undefined => {
 	try {
-		const decipher = createDecipheriv(CIPHER, key, iv);
+		const decipher = createDecipheriv(CIPHER, key, iv, GCM_OPTIONS);
 		decipher.setAAD(additionalData(keyId));
 		decipher.setAuthTag(sealed.subarray(sealed.length - TAG_BYTES));
 		const plaintext = Buffer.concat([
