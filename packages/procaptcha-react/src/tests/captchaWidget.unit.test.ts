@@ -400,7 +400,7 @@ describe("images that fail to load", () => {
 		image.dispatchEvent(new Event("error", { bubbles: true }));
 	};
 
-	test("retries with a cache-busting url", () => {
+	test("cache-busts an unsigned url, as it always did", () => {
 		render();
 		const image = tiles()[0];
 		if (!image) throw new Error("expected an image");
@@ -408,6 +408,22 @@ describe("images that fail to load", () => {
 		expect(image.getAttribute("src")).toMatch(
 			/^https:\/\/provider\.one\/img\/1\.png\?retry=\d+$/,
 		);
+		expect(image.dataset.retryCount).toBe("1");
+	});
+
+	test("leaves a signed url's query string alone", () => {
+		// The token is a signature over the query string, so a cache-busting
+		// parameter would make every retry 403 — a transient failure turned
+		// permanent.
+		const signed =
+			"https://provider.one/img/1.png?token=abc123&expires=1790003327";
+		render({ items: [item("hash-1", signed)] });
+		const image = tiles()[0];
+		if (!image) throw new Error("expected an image");
+
+		failLoad(image);
+
+		expect(image.getAttribute("src")).toBe(signed);
 	});
 
 	test("gives up after three retries rather than looping forever", () => {
@@ -429,6 +445,7 @@ describe("images that fail to load", () => {
 		if (!first || !second) throw new Error("expected two images");
 		for (let attempt = 0; attempt < 4; attempt++) failLoad(first);
 		failLoad(second);
-		expect(second.getAttribute("src")).toMatch(/\?retry=\d+$/);
+		expect(first.dataset.retryCount).toBe("4");
+		expect(second.dataset.retryCount).toBe("1");
 	});
 });
