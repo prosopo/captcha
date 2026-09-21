@@ -334,6 +334,14 @@ const validateDependencies = async (args: {
 				imports.push("@types/node");
 			}
 
+			// A URL import is fetched over the network rather than resolved
+			// through node_modules, so it is never a package.json dependency.
+			// Bunny's edge runtime takes its SDK this way
+			// (`https://esm.sh/@bunny.net/edgescript-sdk`), and without this the
+			// specifier's scheme is read as the package name — the provider was
+			// reported as missing a dependency called `https:`.
+			imports = imports.filter((importPath) => !/^https?:/.test(importPath));
+
 			// Process imports to extract package names and handle relative imports
 			imports = imports.flatMap((importPath) => {
 				// Handle relative imports (./ or ../)
