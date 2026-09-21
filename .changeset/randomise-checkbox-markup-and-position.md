@@ -3,15 +3,14 @@
 "@prosopo/procaptcha-common": minor
 ---
 
-Give the checkbox a different set of class names, a different DOM shape and a slightly different position on every page load, so a solver script cannot hardcode a way to find it.
+Give the checkbox a different set of class names and a different DOM shape on every page load, so a solver script cannot hardcode a way to find it.
 
 Until now the widget rendered the same markup for every user, forever. The control was always `input.prosopo-checkbox__box`, the label was always `.prosopo-checkbox__label`, and the box always sat inside the same four nested divs at the same pixel offset. Anyone writing a script to click it only had to work that out once. The element `id` was already randomised per render, which bought nothing while everything around it stayed fixed.
 
-Three things change, all generated fresh each time a widget mounts:
+Two things change, both generated fresh each time a widget mounts:
 
 - **The names.** Every class inside the checkbox's shadow root is now an 8-character token drawn at mount, in both the loading skeleton and the live control. Selectors scraped from one page load are dead on the next.
 - **The shape.** The fixed four-div nest is now between two and five wrappers, each randomly a `div` or a `span`, so structural and `nth-child` selectors do not hold either. Only elements with no accessible role are used, so no landmark is introduced for a screen reader.
-- **The position.** The 30px of margin around the 28px box is now split unevenly, moving the box up to 10px horizontally and 8px vertically. The two margins still total 30px each way, so the 58px touch target and the widget's outer dimensions are unchanged and nothing on the host page reflows.
 
 Two related fixes come with it:
 
