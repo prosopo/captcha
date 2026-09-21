@@ -144,6 +144,14 @@ services:
       - ./provider.Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+      # Shared with the tcp-probe sidecar (`tcp-probe` profile). Chaddy's
+      # `tcp_probe_socket` directive dials the sidecar's Unix socket
+      # here to look up raw TCP handshake signals for the current
+      # request and forward them as `X-TLS-*` headers. If the socket
+      # isn't there (sidecar not enabled) chaddy debug-logs and drops
+      # the extra headers per-request — Caddy startup is unaffected.
+      # `ro`: only the sidecar creates / writes the socket.
+      - /var/run/tcp-probe:/var/run/tcp-probe:ro
       # PEM for the load-balanced pronode.prosopo.io hostname. The cert
       # getter (pronode4) obtains it via certbot DNS-01 against Bunny,
       # then provider.yml's distribute step rsyncs it to every pronode
@@ -173,6 +181,62 @@ services:
       - 8.8.8.8
       - 1.1.1.1
       - 208.67.222.222
+  # eBPF sidecar that captures raw TCP handshake data (SYN / SYN-ACK / ACK)
+  # off the WAN interface and serves per-request lookups over a Unix socket.
+  # Chaddy (adjacent `caddy` service) reads that socket at accept() time and
+  # forwards the raw fields (`X-TLS-Syn-Ns`, `X-TLS-Observed-Ttl`, `X-TLS-Tcp-*`)
+  # onto the reverse-proxy request; the provider persists them onto the Session
+  # record. Nothing here is on by default: this service sits behind the
+  # `tcp-probe` profile so `docker compose --profile production` (which is
+  # what ansible sets today) does not pull or start it. Enable per host by
+  # appending `--profile tcp-probe` to the compose command AND publishing
+  # `prosopo/tcp-probe:${TCP_PROBE_IMAGE}` to Docker Hub — currently only
+  # built locally under `protect/tcp-probe`. See `deploy/DEPLOY.md` there
+  # for the bumblebee-side reference deployment; the same wire protocol
+  # (12-byte req, 80-byte reply) and image are reused here.
+  #
+  # `network_mode: host` is mandatory: XDP/TC hooks attach to real host
+  # interfaces, and the container-network veth wouldn't see the outside
+  # traffic. Caps are the minimum needed to load BPF programs and attach
+  # them; the probe never modifies traffic (XDP_PASS / TC_ACT_PIPE) so a
+  # crash cannot black-hole requests — worst case is the socket disappears
+  # and chaddy silently degrades to the pre-sidecar header set.
+  tcp-probe:
+    container_name: tcp-probe
+    profiles:
+      - tcp-probe
+    image: prosopo/tcp-probe:${TCP_PROBE_IMAGE:-latest}
+    network_mode: host
+    cap_add:
+      - BPF
+      - NET_ADMIN
+      - SYS_RESOURCE
+      - PERFMON
+    labels:
+      - "vector.tcp-probe=true"
+      - "vector.docker=true"
+    volumes:
+      # Host-side socket dir; caddy mounts the same path read-only so both
+      # containers see the same inode. Docker will create the dir if it
+      # doesn't exist yet.
+      - /var/run/tcp-probe:/var/run/tcp-probe
+    command:
+      - "--iface"
+      # Each pronode's WAN NIC name is different (contabo/hetzner/etc.);
+      # ansible sets TCP_PROBE_IFACE per-host in .env.1.$NODE_ENV.
+      - "${TCP_PROBE_IFACE}"
+      - "--port"
+      - "443"
+      - "--format"
+      - "jsonl"
+      - "--lookup-socket"
+      - "/var/run/tcp-probe/lookup.sock"
+    restart: unless-stopped
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
   redis-stack:
     container_name: redis-stack
     # unlike "redis/redis-stack-server" this image includes Insights
@@ -189,6 +253,12 @@ services:
       internal:
         ipv4_address: 172.18.0.8
         ipv6_address: fd00:aaaa::8
+    # Cap the json log file so a chatty container can't fill the host disk.
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
   vector:
     container_name: vector
     profiles:
@@ -247,6 +317,12 @@ services:
       - ./ipinfo/ipapi_database_ram:/usr/src/app/ipapi_database_ram:ro
       # Config override
       - ./ipinfo/config:/usr/src/app/config:ro
+    # Cap the json log file so a chatty container can't fill the host disk.
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
   dns:
     # DNS observation sidecar. Caddy fronts TLS for *.t.{CADDY_DOMAIN}
     # and reverse-proxies HTTP to this container — see provider.Caddyfile.
@@ -302,6 +378,12 @@ services:
         ipv4_address: 172.18.0.10
         ipv6_address: fd00:aaaa::a
     restart: unless-stopped
+    # Cap the json log file so a chatty container can't fill the host disk.
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
 networks:
   internal:
     enable_ipv6: true

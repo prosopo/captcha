@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Marca de tiempo demasiado antigua",
 		"FAILED_IP_VALIDATION": "La validación de IP falló",
 		"ACCESS_POLICY_BLOCK": "Acceso bloqueado por política",
+		"CLIENT_SESSION_MISMATCH": "Discrepancia de sesión. El captcha no se completó en esta sesión.",
 		"FORBIDDEN": "Prohibido",
 		"PROVIDER_VERIFY_FAILED": "Fallo en la verificación del proveedor",
 		"SPAM_EMAIL_DOMAIN": "Dominio de correo electrónico no permitido",
@@ -46,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Demasiados envíos desde esta dirección de correo electrónico",
 		"VPN_BLOCKED": "Las solicitudes desde conexiones VPN no están permitidas para este sitio",
 		"PROXY_BLOCKED": "Las solicitudes desde servidores proxy no están permitidas para este sitio",
+		"TOO_MANY_LOCALHOST": "Demasiadas solicitudes de CAPTCHA desde localhost para esta clave de sitio",
 		"TOR_BLOCKED": "Las solicitudes desde nodos de salida Tor no están permitidas para este sitio",
 		"ABUSER_BLOCKED": "Las solicitudes desde redes marcadas por abuso no están permitidas para este sitio",
 		"DATACENTER_BLOCKED": "Las solicitudes desde direcciones IP de centros de datos no están permitidas para este sitio",
@@ -77,7 +79,20 @@
 		"NO_ACCOUNTS_FOUND": "No se encontraron cuentas",
 		"ACCOUNT_NOT_FOUND": "Cuenta no encontrada",
 		"NO_EXTENSION_FOUND": "Extensión no encontrada",
-		"INSECURE_CONTEXT": "Procaptcha requiere una conexión segura (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha requiere una conexión segura (HTTPS)",
+		"CHECKING": "Comprobando que eres humano",
+		"IMAGE_DIALOG_LABEL": "Desafío de imágenes",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Desafío de rompecabezas",
+			"DRAG": "Arrastra la pieza hasta el objetivo",
+			"RETRY": "Casi — inténtalo de nuevo",
+			"PIECE_LABEL": "Pieza del rompecabezas",
+			"PIECE_ROLE": "pieza de rompecabezas arrastrable",
+			"KEYBOARD_HINT": "Usa las teclas de flecha para mover la pieza, manteniendo Mayús para pasos más pequeños. Pulsa Intro para enviarla, Inicio para devolverla al principio o Escape para cancelar.",
+			"POSITION": "{{x}} por ciento desde la izquierda, {{y}} por ciento desde arriba",
+			"CHECKING": "Comprobando tu respuesta",
+			"RETRY_ANNOUNCEMENT": "Casi. Se ha cargado un rompecabezas nuevo y la pieza vuelve a estar al principio."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Error al codificar dirección inválida",

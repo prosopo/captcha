@@ -16,3 +16,13 @@ with `update`/`destroy`. `useTranslation` is replaced by `createTranslator`,
 which exposes i18next's `t` plus the events that used to trigger a re-render.
 The rendered markup, styling and behaviour are unchanged — only the
 implementation is.
+
+Everything the widget has gained since this rewrite started is carried over,
+so nothing is lost by dropping React: the shared challenge surface (popup and
+float placement, escape/outside-click dismissal and the dialog focus trap),
+the image-tile and puzzle-piece keyboard paths, the checkbox's focus handover
+across the loading swap, the server-rendered puzzle imagery, `startMode:
+"manual"` with `window.procaptcha.start()`, `data-bind` / targeted
+`execute(widgetId)`, the Web Bot Auth "authenticated" badge, the client
+session id, and the bounded session re-mint and reload handling in the
+frictionless wrapper.

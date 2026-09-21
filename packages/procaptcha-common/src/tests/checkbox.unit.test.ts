@@ -377,3 +377,68 @@ describe("tearing down", () => {
 		).toBeNull();
 	});
 });
+
+describe("handing focus across the loading swap", () => {
+	const spinner = (): HTMLElement => {
+		const element = mounted.container.querySelector<HTMLElement>(
+			`.${WIDGET_CHECKBOX_SPINNER_CSS_CLASS}`,
+		);
+		if (!element) throw new Error("expected a spinner to be rendered");
+		return element;
+	};
+
+	test("names the spinner so a screen reader says what is happening", () => {
+		render({ loading: true, loadingText: "Checking that you are human" });
+		expect(spinner().getAttribute("aria-label")).toBe(
+			"Checking that you are human",
+		);
+		expect(spinner().getAttribute("role")).toBe("status");
+	});
+
+	test("moves focus onto the spinner when the box it was on disappears", () => {
+		render();
+		box().focus();
+
+		render({ loading: true });
+
+		expect(document.activeElement).toBe(spinner());
+	});
+
+	test("gives focus back to the box when the check finishes", () => {
+		render();
+		box().focus();
+		render({ loading: true });
+
+		render({ loading: false });
+
+		expect(document.activeElement).toBe(box());
+	});
+
+	test("leaves focus alone when the user never had it on the box", () => {
+		const elsewhere = document.createElement("input");
+		document.body.appendChild(elsewhere);
+		render();
+		elsewhere.focus();
+
+		render({ loading: true });
+
+		expect(document.activeElement).toBe(elsewhere);
+		elsewhere.remove();
+	});
+
+	test("leaves focus alone when the user moved on during the check", () => {
+		// The check lasts as long as the network does; dragging the user out of
+		// a field they have since started typing in is worse than saying nothing.
+		const elsewhere = document.createElement("input");
+		document.body.appendChild(elsewhere);
+		render();
+		box().focus();
+		render({ loading: true });
+		elsewhere.focus();
+
+		render({ loading: false });
+
+		expect(document.activeElement).toBe(elsewhere);
+		elsewhere.remove();
+	});
+});

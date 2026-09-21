@@ -17,10 +17,8 @@ import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
 	ClientSettingsSchema,
-	ContextType,
 	type ProsopoConfigOutput,
 	Tier,
-	contextAwareThresholdDefault,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import { describe, expect, it, vi } from "vitest";
@@ -68,15 +66,6 @@ describe("apiRegisterSiteKeysEndpoint", () => {
 		imageMaxRounds: 3,
 		powDifficulty: 1,
 		disallowWebView: false,
-		contextAware: {
-			enabled: false,
-			contexts: {
-				default: {
-					type: ContextType.Default,
-					threshold: contextAwareThresholdDefault,
-				},
-			},
-		},
 	});
 
 	it("should register or update multiple site keys", async () => {

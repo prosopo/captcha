@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Mốc thời gian quá cũ",
 		"FAILED_IP_VALIDATION": "Xác thực IP thất bại",
 		"ACCESS_POLICY_BLOCK": "Truy cập bị chặn bởi chính sách",
+		"CLIENT_SESSION_MISMATCH": "Phiên không khớp. Captcha không được hoàn thành trong phiên này.",
 		"FORBIDDEN": "Bị cấm",
 		"PROVIDER_VERIFY_FAILED": "Xác thực nhà cung cấp không thành công",
 		"SPAM_EMAIL_DOMAIN": "Tên miền email không được phép",
@@ -46,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Quá nhiều lượt gửi từ địa chỉ email này",
 		"VPN_BLOCKED": "Các yêu cầu từ kết nối VPN không được phép cho trang web này",
 		"PROXY_BLOCKED": "Các yêu cầu từ máy chủ proxy không được phép cho trang web này",
+		"TOO_MANY_LOCALHOST": "Quá nhiều yêu cầu CAPTCHA từ localhost cho khóa trang web này",
 		"TOR_BLOCKED": "Các yêu cầu từ nút thoát Tor không được phép cho trang web này",
 		"ABUSER_BLOCKED": "Các yêu cầu từ mạng bị gắn cờ lạm dụng không được phép cho trang web này",
 		"DATACENTER_BLOCKED": "Các yêu cầu từ địa chỉ IP trung tâm dữ liệu không được phép cho trang web này",
@@ -376,7 +378,20 @@
 		"NO_ACCOUNTS_FOUND": "Không tìm thấy tài khoản",
 		"ACCOUNT_NOT_FOUND": "Không tìm thấy tài khoản",
 		"NO_EXTENSION_FOUND": "Không tìm thấy tiện ích",
-		"INSECURE_CONTEXT": "Procaptcha yêu cầu kết nối an toàn (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha yêu cầu kết nối an toàn (HTTPS)",
+		"CHECKING": "Đang xác minh bạn là người thật",
+		"IMAGE_DIALOG_LABEL": "Thử thách hình ảnh",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Thử thách ghép hình",
+			"DRAG": "Kéo mảnh ghép đến vị trí đích",
+			"RETRY": "Suýt nữa — hãy thử lại",
+			"PIECE_LABEL": "Mảnh ghép",
+			"PIECE_ROLE": "mảnh ghép có thể kéo",
+			"KEYBOARD_HINT": "Dùng các phím mũi tên để di chuyển mảnh ghép, giữ Shift để đi từng bước nhỏ hơn. Nhấn Enter để gửi, Home để đưa nó về vị trí ban đầu, hoặc Escape để hủy.",
+			"POSITION": "{{x}} phần trăm từ bên trái, {{y}} phần trăm từ trên xuống",
+			"CHECKING": "Đang kiểm tra câu trả lời của bạn",
+			"RETRY_ANNOUNCEMENT": "Suýt nữa. Một hình ghép mới đã được tải và mảnh ghép trở lại vị trí ban đầu."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Không thể mã hóa địa chỉ không hợp lệ",

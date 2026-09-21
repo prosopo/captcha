@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Timestamp too old",
 		"FAILED_IP_VALIDATION": "Validasi IP gagal",
 		"ACCESS_POLICY_BLOCK": "Akses diblokir oleh kebijakan",
+		"CLIENT_SESSION_MISMATCH": "Sesi tidak cocok. Captcha tidak diselesaikan dalam sesi ini.",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
 		"SPAM_EMAIL_DOMAIN": "Domain email tidak diizinkan",
@@ -46,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Terlalu banyak pengiriman dari alamat email ini",
 		"VPN_BLOCKED": "Permintaan dari koneksi VPN tidak diizinkan untuk situs ini",
 		"PROXY_BLOCKED": "Permintaan dari server proxy tidak diizinkan untuk situs ini",
+		"TOO_MANY_LOCALHOST": "Terlalu banyak permintaan CAPTCHA dari localhost untuk kunci situs ini",
 		"TOR_BLOCKED": "Permintaan dari node keluar Tor tidak diizinkan untuk situs ini",
 		"ABUSER_BLOCKED": "Permintaan dari jaringan yang ditandai karena penyalahgunaan tidak diizinkan untuk situs ini",
 		"DATACENTER_BLOCKED": "Permintaan dari alamat IP pusat data tidak diizinkan untuk situs ini",
@@ -376,7 +378,20 @@
 		"NO_ACCOUNTS_FOUND": "Tidak ada akun ditemukan",
 		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
 		"NO_EXTENSION_FOUND": "Tidak ada ekstensi ditemukan",
-		"INSECURE_CONTEXT": "Procaptcha memerlukan koneksi aman (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha memerlukan koneksi aman (HTTPS)",
+		"CHECKING": "Memeriksa bahwa Anda manusia",
+		"IMAGE_DIALOG_LABEL": "Tantangan gambar",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Tantangan teka-teki",
+			"DRAG": "Seret kepingan ke sasaran",
+			"RETRY": "Nyaris — coba lagi",
+			"PIECE_LABEL": "Kepingan teka-teki",
+			"PIECE_ROLE": "kepingan teka-teki yang dapat diseret",
+			"KEYBOARD_HINT": "Gunakan tombol panah untuk menggeser kepingan, tahan Shift untuk langkah yang lebih kecil. Tekan Enter untuk mengirimnya, Home untuk mengembalikannya ke awal, atau Escape untuk membatalkan.",
+			"POSITION": "{{x}} persen dari kiri, {{y}} persen dari atas",
+			"CHECKING": "Memeriksa jawaban Anda",
+			"RETRY_ANNOUNCEMENT": "Nyaris. Teka-teki baru telah dimuat dan kepingan kembali ke awal."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Gagal mengkodekan alamat yang tidak valid",

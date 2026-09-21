@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Zeitstempel zu alt",
 		"FAILED_IP_VALIDATION": "IP-Validierung fehlgeschlagen",
 		"ACCESS_POLICY_BLOCK": "Zugriff durch Richtlinie blockiert",
+		"CLIENT_SESSION_MISMATCH": "Sitzungskonflikt. Das Captcha wurde nicht in dieser Sitzung gelöst.",
 		"FORBIDDEN": "Verboten",
 		"PROVIDER_VERIFY_FAILED": "Anbieterüberprüfung fehlgeschlagen",
 		"SPAM_EMAIL_DOMAIN": "E-Mail-Domain nicht erlaubt",
@@ -46,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Zu viele Einsendungen von dieser E-Mail-Adresse",
 		"VPN_BLOCKED": "Anfragen über VPN-Verbindungen sind für diese Website nicht erlaubt",
 		"PROXY_BLOCKED": "Anfragen über Proxy-Server sind für diese Website nicht erlaubt",
+		"TOO_MANY_LOCALHOST": "Zu viele CAPTCHA-Anfragen von localhost für diesen Site-Key",
 		"TOR_BLOCKED": "Anfragen über Tor-Exit-Knoten sind für diese Website nicht erlaubt",
 		"ABUSER_BLOCKED": "Anfragen von als missbräuchlich markierten Netzwerken sind für diese Website nicht erlaubt",
 		"DATACENTER_BLOCKED": "Anfragen von Rechenzentrum-IP-Adressen sind für diese Website nicht erlaubt",
@@ -77,7 +79,20 @@
 		"NO_ACCOUNTS_FOUND": "Keine Konten gefunden",
 		"ACCOUNT_NOT_FOUND": "Konto nicht gefunden",
 		"NO_EXTENSION_FOUND": "Keine Erweiterung gefunden",
-		"INSECURE_CONTEXT": "Procaptcha erfordert eine sichere (HTTPS-)Verbindung"
+		"INSECURE_CONTEXT": "Procaptcha erfordert eine sichere (HTTPS-)Verbindung",
+		"CHECKING": "Es wird geprüft, ob du ein Mensch bist",
+		"IMAGE_DIALOG_LABEL": "Bild-Aufgabe",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Puzzle-Aufgabe",
+			"DRAG": "Ziehe das Teil auf die Zielstelle",
+			"RETRY": "Knapp daneben — versuche es erneut",
+			"PIECE_LABEL": "Puzzleteil",
+			"PIECE_ROLE": "verschiebbares Puzzleteil",
+			"KEYBOARD_HINT": "Bewege das Teil mit den Pfeiltasten, mit gedrückter Umschalttaste in kleineren Schritten. Drücke die Eingabetaste zum Absenden, Pos1, um das Teil zurückzusetzen, oder Escape zum Abbrechen.",
+			"POSITION": "{{x}} Prozent von links, {{y}} Prozent von oben",
+			"CHECKING": "Deine Antwort wird geprüft",
+			"RETRY_ANNOUNCEMENT": "Knapp daneben. Ein neues Puzzle wurde geladen und das Teil steht wieder am Anfang."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Ungültige Adresse konnte nicht codiert werden",

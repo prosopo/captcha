@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Timestamp too old",
 		"FAILED_IP_VALIDATION": "Перевірка IP не вдалася",
 		"ACCESS_POLICY_BLOCK": "Доступ заблоковано політикою",
+		"CLIENT_SESSION_MISMATCH": "Невідповідність сеансу. Капчу не було пройдено в цьому сеансі.",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
 		"SPAM_EMAIL_DOMAIN": "Домен електронної пошти не дозволено",
@@ -46,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Забагато надсилань з цієї адреси електронної пошти",
 		"VPN_BLOCKED": "Запити з VPN-з'єднань не дозволені для цього сайту",
 		"PROXY_BLOCKED": "Запити з проксі-серверів не дозволені для цього сайту",
+		"TOO_MANY_LOCALHOST": "Забагато запитів CAPTCHA з localhost для цього ключа сайту",
 		"TOR_BLOCKED": "Запити з вихідних вузлів Tor не дозволені для цього сайту",
 		"ABUSER_BLOCKED": "Запити з мереж, позначених за зловживання, не дозволені для цього сайту",
 		"DATACENTER_BLOCKED": "Запити з IP-адрес дата-центрів не дозволені для цього сайту",
@@ -376,7 +378,20 @@
 		"NO_ACCOUNTS_FOUND": "No accounts found",
 		"ACCOUNT_NOT_FOUND": "Account not found",
 		"NO_EXTENSION_FOUND": "No extension found",
-		"INSECURE_CONTEXT": "Procaptcha потребує безпечного з'єднання (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha потребує безпечного з'єднання (HTTPS)",
+		"CHECKING": "Перевіряємо, що ви людина",
+		"IMAGE_DIALOG_LABEL": "Завдання із зображеннями",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Завдання з пазлом",
+			"DRAG": "Перетягніть фрагмент до цілі",
+			"RETRY": "Майже — спробуйте ще раз",
+			"PIECE_LABEL": "Фрагмент пазла",
+			"PIECE_ROLE": "фрагмент пазла, який можна перетягувати",
+			"KEYBOARD_HINT": "Переміщуйте фрагмент клавішами зі стрілками, утримуйте Shift для менших кроків. Натисніть Enter, щоб надіслати, Home, щоб повернути його на початок, або Escape, щоб скасувати.",
+			"POSITION": "{{x}} відсотків зліва, {{y}} відсотків згори",
+			"CHECKING": "Перевіряємо вашу відповідь",
+			"RETRY_ANNOUNCEMENT": "Майже. Завантажено новий пазл, і фрагмент знову на початку."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Failed to encode invalid address",

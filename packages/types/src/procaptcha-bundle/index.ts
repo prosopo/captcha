@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Languages } from "@prosopo/locale";
+import type { StartMode } from "../config/startMode.js";
 
 // note: do not use any Zod-related types inside the interface,
 // as this interface is re-exported by '@prosopo/procaptcha-wrapper' to external customers
@@ -25,11 +26,16 @@ export interface ProcaptchaRenderOptions {
 	"expired-callback"?: string | (() => void);
 	"open-callback"?: string | (() => void);
 	"close-callback"?: string | (() => void);
-	"error-callback"?: string | (() => void);
+	"error-callback"?: string | ((error: Error) => void);
 	"failed-callback"?: string | (() => void);
 	"reset-callback"?: string | (() => void);
 	language?: (typeof Languages)[keyof typeof Languages];
 	size?: "invisible";
+	// "popup" (default) centres the challenge over the page; "float" anchors
+	// it to the widget. An invisible widget always uses popup.
+	placement?: "popup" | "float";
+	// CSS selector for a host-page button that triggers this widget.
+	bind?: string;
 	web3?: boolean;
 	userAccountAddress?: string;
 	// When true, restrict provider DNS resolution to A records only. Mutually
@@ -38,4 +44,11 @@ export interface ProcaptchaRenderOptions {
 	ipv4?: boolean;
 	// When true, restrict provider DNS resolution to AAAA records only.
 	ipv6?: boolean;
+	// The site's own session identifier for this user (Protect's JTI, or any
+	// per-session id the site already holds). Equivalent to the
+	// `data-sessionid` attribute. The widget attaches it to the captcha
+	// solution; pass the same value to the server-side verify call and the
+	// provider will reject the token unless the two agree.
+	sessionId?: string;
+	startMode?: StartMode;
 }

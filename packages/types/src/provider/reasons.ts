@@ -20,12 +20,15 @@
  * on the server-side provider package.
  */
 export enum FrictionlessReason {
-	CONTEXT_AWARE_VALIDATION_FAILED = "CONTEXT_AWARE_VALIDATION_FAILED",
 	USER_ACCESS_POLICY = "USER_ACCESS_POLICY",
 	ACCESS_POLICY_BLOCK = "ACCESS_POLICY_BLOCK",
 	USER_AGENT_MISMATCH = "USER_AGENT_MISMATCH",
 	OLD_TIMESTAMP = "OLD_TIMESTAMP",
 	BOT_SCORE_ABOVE_THRESHOLD = "BOT_SCORE_ABOVE_THRESHOLD",
+	// Score landed in the middle band of the frictionless ladder: past the
+	// point where a silent PoW pass is warranted, but short of the image
+	// rung, so the user gets a puzzle instead.
+	BOT_SCORE_PUZZLE_BAND = "BOT_SCORE_PUZZLE_BAND",
 	WEBVIEW_DETECTED = "WEBVIEW_DETECTED",
 	AUTO_BAN_SCORE = "AUTO_BAN_SCORE",
 	FINGERPRINT_PROOF_INVALID = "FINGERPRINT_PROOF_INVALID",
@@ -51,6 +54,34 @@ export enum FrictionlessReason {
 }
 
 /**
+ * Reasons that mean "we measured nothing", as opposed to "we measured
+ * something bad".
+ *
+ * Each of these paths sizes its challenge from a fixed constant
+ * (`MISSING_TOKEN_IMAGE_ROUNDS` and friends) chosen to be short — "prove
+ * you're human quickly", per their own doc comments — not from any signal the
+ * client produced. Those constants nonetheless sit above the default baseline
+ * of `DEFAULT_SOLVED_COUNT`, so anything reading a round count as severity
+ * scores them as an escalation and applies a graduated response to a session
+ * that never produced a measurement to grade.
+ *
+ * That is wrong wherever the "severity" changes what a legitimate user
+ * experiences rather than what a suspected bot pays. The concrete case: a site
+ * whose CSP blocks the detector bundle sends no token on EVERY request, so
+ * every one of its users was permanently escalated and the site's own puzzle
+ * settings were never rendered.
+ *
+ * `OLD_TIMESTAMP` is deliberately absent: its round count comes from
+ * `timestampDecayFunction`, which scales with how stale the payload is. That
+ * is a real graduated measurement, not a fixed fallback.
+ */
+export const NO_MEASUREMENT_REASONS: ReadonlySet<FrictionlessReason> = new Set([
+	FrictionlessReason.MISSING_TOKEN,
+	FrictionlessReason.MISSING_HEAD_HASH,
+	FrictionlessReason.DECRYPTION_FAILED,
+]);
+
+/**
  * Reason persisted at `result.reason` to record the outcome of a captcha
  * verification. Provider task code previously inlined these as string
  * literals — the enum lifts the canonical set into one place so callers
@@ -65,6 +96,10 @@ export enum ResultReason {
 	CAPTCHA_FAILED = "API.CAPTCHA_FAILED",
 	ABUSER_BLOCKED = "API.ABUSER_BLOCKED",
 	ACCESS_POLICY_BLOCK = "API.ACCESS_POLICY_BLOCK",
+	// The dapp server verified with a `clientSessionId` that does not match the
+	// one the widget was rendered with (or the solve carries none at all). Stops
+	// a token earned in one session being replayed against another.
+	CLIENT_SESSION_MISMATCH = "API.CLIENT_SESSION_MISMATCH",
 	CRAWLER_BLOCKED = "API.CRAWLER_BLOCKED",
 	DATACENTER_BLOCKED = "API.DATACENTER_BLOCKED",
 	FAILED_IP_VALIDATION = "API.FAILED_IP_VALIDATION",
@@ -76,6 +111,7 @@ export enum ResultReason {
 	SPAM_EMAIL_RULE = "API.SPAM_EMAIL_RULE",
 	SPAM_EMAIL_COUNT_EXCEEDED = "API.SPAM_EMAIL_COUNT_EXCEEDED",
 	TIMESTAMP_TOO_OLD = "API.TIMESTAMP_TOO_OLD",
+	TOO_MANY_LOCALHOST = "API.TOO_MANY_LOCALHOST",
 	TOR_BLOCKED = "API.TOR_BLOCKED",
 	VPN_BLOCKED = "API.VPN_BLOCKED",
 	CAPTCHA_INVALID_SALT = "CAPTCHA.INVALID_SALT",

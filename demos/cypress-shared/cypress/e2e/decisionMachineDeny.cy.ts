@@ -38,7 +38,7 @@ import {
 	getWidgetElement,
 } from "../support/commands.js";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
 
 // Test-only decide() DM: always deny with a recognisable reason string so
 // the test can pin the assertion on the reason rather than a generic
@@ -57,7 +57,7 @@ const ALWAYS_DENY_DM = `
 `;
 
 describe("Decision machine denies an otherwise-valid solve at verify", () => {
-	const siteKey: string = Cypress.env(
+	const siteKey: string = Cypress.expose(
 		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
 	);
 
@@ -114,7 +114,7 @@ describe("Decision machine denies an otherwise-valid solve at verify", () => {
 		cy.intercept("/dummy").as("dummy");
 
 		return cy
-			.visit(Cypress.env("default_page"), {
+			.visit(Cypress.expose("default_page"), {
 				timeout: 30000,
 				failOnStatusCode: false,
 			})

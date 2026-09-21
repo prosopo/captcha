@@ -86,18 +86,24 @@ export const extraIpInfosFromEnrichedDnsEvent = (
  *   - resolver / peer classified `isAbuser`
  *   - client IP is a consumer ISP but resolver is datacenter (compound)
  *
- * When `trafficFilter` is supplied, the datacenter and abuser contributions
- * are gated on the same rules `checkTrafficFilter` uses for the client IP.
- * A category counts here whenever the operator has configured any policy
- * for it (block or challenge) — either intent signals suspicion.
+ * When `trafficFilter` is supplied, the datacenter contribution is gated
+ * on operator-policy-aware shielding, *not* on the strict per-IP precedence
+ * chain the client-IP path uses. DNS resolvers are legitimately often on
+ * datacenter ranges (Google/Cloudflare/consumer-VPN DNS), so signal
+ * counting has to consider the operator's stance:
  *
- *   - datacenter category must be configured; IPs whose
- *     `providerType === "isp"` short-circuit; named allowlist skips
- *   - abuser category defaults to configured, with the score threshold
- *   - cross-category suppression: VPN / proxy / Tor / crawler IPs that also
- *     carry `isDatacenter=true` are NOT counted as datacenter when the
- *     operator hasn't configured that more specific category — mirrors
- *     the `datacenterSuppressedByCategory` rule in evaluateIpInfo.
+ *   - datacenter category must be configured; `providerType === "isp"`
+ *     short-circuits; `datacenterNameAllowlist` skips; `datacenterNameDenylist`
+ *     forces the signal through (denylist wins over all other exemptions)
+ *   - a higher-precedence flag the operator has left **unconfigured** (VPN,
+ *     proxy, Tor, crawler) on the same resolver IP shields the datacenter
+ *     signal — the flag "explains" the DC status and the operator has said
+ *     they don't care about that category. Flags that are configured (block
+ *     or challenge) do *not* shield, because the operator is treating that
+ *     category as suspicious in its own right.
+ *   - abuser is not shielded by any other category: its signal counts
+ *     whenever the abuser category is configured and the score meets the
+ *     threshold.
  *
  * `pathValid` is a protocol signal, not a category — it always contributes
  * regardless of trafficFilter. When `trafficFilter` is omitted, all
@@ -117,14 +123,17 @@ export const computeDnsAsymmetry = (
 		if (!ip?.isValid || !ip.isDatacenter) return false;
 		if (!trafficFilter) return true;
 		if (trafficFilter.datacenter === undefined) return false;
-		// Denylist wins: an explicitly listed provider counts as datacenter
-		// even when the ISP short-circuit or category suppression would
-		// otherwise exempt it.
+		// Denylist wins over shielding and over the ISP / allowlist checks —
+		// an explicitly named provider counts as DC no matter what.
 		if (isDatacenterDenylisted(ip, trafficFilter.datacenterNameDenylist)) {
 			return true;
 		}
-		// Cross-category suppression: don't penalise datacenter classification
-		// when the operator has not configured the more specific category.
+		// Policy-aware shielding: a higher-precedence flag the operator has
+		// left unconfigured (i.e. is allowing) "explains" why this resolver
+		// is on a datacenter range and suppresses the DC signal. When the
+		// operator has actually configured that category (block or challenge)
+		// there's no shielding, because they're treating that category as
+		// suspicious in its own right.
 		if (
 			(ip.isVPN && trafficFilter.vpn === undefined) ||
 			(ip.isProxy && trafficFilter.proxy === undefined) ||

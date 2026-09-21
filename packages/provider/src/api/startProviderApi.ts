@@ -48,6 +48,7 @@ import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvid
 import { getVerdictCache } from "./blacklistRequestInspector.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
+import { startCpuProfiler } from "./cpuProfiler.js";
 import { domainMiddleware } from "./domainMiddleware.js";
 import { handshakeTimingMiddleware } from "./handshakeTimingMiddleware.js";
 import { headerCheckMiddleware } from "./headerCheckMiddleware.js";
@@ -56,6 +57,7 @@ import { ipInfoMiddleware } from "./ipInfoMiddleware.js";
 import { ja4Middleware } from "./ja4Middleware.js";
 import { metricsMiddleware } from "./metrics.js";
 import { publicRouter } from "./public.js";
+import { rawTlsSignalsMiddleware } from "./rawTlsSignalsMiddleware.js";
 import { robotsMiddleware } from "./robotsMiddleware.js";
 import { prosopoVerifyRouter } from "./verify.js";
 
@@ -296,6 +298,9 @@ export async function startProviderApi(
 	// Mounted after the public router so the /metrics scrape isn't self-counted.
 	apiApp.use(metricsMiddleware());
 
+	// No-op unless PROSOPO_CPU_PROFILE_ENABLED=true.
+	startCpuProfiler(env.logger);
+
 	// Rate limiting
 	// In test environments, disable rate limiting to allow parallel tests
 	const isTestOrDevelopmentEnv =
@@ -373,6 +378,7 @@ export async function startProviderApi(
 	apiApp.use(i18Middleware);
 	apiApp.use(ja4Middleware(env));
 	apiApp.use(handshakeTimingMiddleware(env));
+	apiApp.use(rawTlsSignalsMiddleware(env));
 	apiApp.use(ipInfoMiddleware(env));
 
 	// Run Header check middleware on all client routes

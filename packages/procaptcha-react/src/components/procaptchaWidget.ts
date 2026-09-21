@@ -38,7 +38,7 @@ import {
 	type CaptchaComponentProps,
 	mountCaptchaComponent,
 } from "./captchaComponent.js";
-import { mountModal } from "./modal.js";
+import { type ModalProps, mountModal } from "./modal.js";
 
 // Define the same event name as in the bundle
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
@@ -75,6 +75,11 @@ export const mountProcaptchaImageWidget = (
 	let captcha: Component<CaptchaComponentProps> | undefined;
 	let checkbox: Component<CheckboxProps> | undefined;
 
+	// Whether the reload button is delegated is decided at mount: handing the
+	// manager a handler the wrapper never supplied would leave reload with
+	// nothing to re-mint the challenge with.
+	const delegatesReload = Boolean(props.onReload);
+
 	const manager = Manager(
 		config,
 		store.state,
@@ -82,6 +87,9 @@ export const mountProcaptchaImageWidget = (
 		callbacks,
 		frictionlessState,
 		() => honeypot?.getValue(),
+		delegatesReload
+			? (x?: number, y?: number) => props.onReload?.(x, y)
+			: undefined,
 	);
 
 	const root = createElement("div", {
@@ -93,7 +101,17 @@ export const mountProcaptchaImageWidget = (
 		honeypot = mountHoneypot(root, { encodedQuestion: frictionlessState.hp });
 	}
 
-	const modal = mountModal({ show: store.state.showModal });
+	const modalProps = (): ModalProps => ({
+		show: store.state.showModal,
+		placement: config.placement,
+		anchor: props.container,
+		onDismiss: manager.cancel,
+		dialogLabel: translator.t("WIDGET.IMAGE_DIALOG_LABEL", {
+			defaultValue: "Image challenge",
+		}),
+	});
+
+	const modal = mountModal(modalProps());
 	const emptyChallenge = createElement("div", { text: "No challenge set." });
 
 	const banner = isInvisible
@@ -116,7 +134,7 @@ export const mountProcaptchaImageWidget = (
 	});
 
 	const renderModal = () => {
-		modal.update({ show: store.state.showModal });
+		modal.update(modalProps());
 
 		const challenge = store.state.challenge;
 		if (undefined !== challenge) {
@@ -177,6 +195,9 @@ export const mountProcaptchaImageWidget = (
 		checked: store.state.isHuman,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",
 		error: store.state.error?.message,
+		loadingText: translator.t("WIDGET.CHECKING", {
+			defaultValue: "Checking that you are human",
+		}),
 		loading,
 		onChange: async (
 			event: MouseEvent | KeyboardEvent | TouchEvent,
@@ -225,8 +246,7 @@ export const mountProcaptchaImageWidget = (
 	teardown.add(store.subscribe(scheduler.schedule));
 	teardown.add(translator.subscribe(scheduler.schedule));
 
-	// Add event listener for the execute event
-	teardown.addEventListener(document, PROCAPTCHA_EXECUTE_EVENT, () => {
+	const handleExecute = () => {
 		// Show the modal
 		store.update({ showModal: true });
 
@@ -239,7 +259,18 @@ export const mountProcaptchaImageWidget = (
 				console.error("Error starting verification:", error);
 			}
 		}
-	});
+	};
+
+	teardown.addEventListener(document, PROCAPTCHA_EXECUTE_EVENT, handleExecute);
+
+	// A targeted execute() is dispatched on the container, not document.
+	if (props.container) {
+		teardown.addEventListener(
+			props.container,
+			PROCAPTCHA_EXECUTE_EVENT,
+			handleExecute,
+		);
+	}
 
 	if (config.language) {
 		if (i18n) {

@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Příliš starý časový údaj",
 		"FAILED_IP_VALIDATION": "Ověření IP selhalo",
 		"ACCESS_POLICY_BLOCK": "Přístup blokován zásadami",
+		"CLIENT_SESSION_MISMATCH": "Neshoda relace. Captcha nebyla dokončena v této relaci.",
 		"FORBIDDEN": "Zakázáno",
 		"PROVIDER_VERIFY_FAILED": "Ověření poskytovatele selhalo",
 		"SPAM_EMAIL_DOMAIN": "E-mailová doména není povolena",
@@ -46,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Příliš mnoho odeslání z této e-mailové adresy",
 		"VPN_BLOCKED": "Požadavky z VPN připojení nejsou pro tento web povoleny",
 		"PROXY_BLOCKED": "Požadavky z proxy serverů nejsou pro tento web povoleny",
+		"TOO_MANY_LOCALHOST": "Příliš mnoho požadavků CAPTCHA z localhost pro tento klíč webu",
 		"TOR_BLOCKED": "Požadavky z výstupních uzlů Tor nejsou pro tento web povoleny",
 		"ABUSER_BLOCKED": "Požadavky ze sítí označených za zneužívající nejsou pro tento web povoleny",
 		"DATACENTER_BLOCKED": "Požadavky z IP adres datových center nejsou pro tento web povoleny",
@@ -376,7 +378,20 @@
 		"NO_ACCOUNTS_FOUND": "Nebyly nalezeny žádné účty",
 		"ACCOUNT_NOT_FOUND": "Účet nenalezen",
 		"NO_EXTENSION_FOUND": "Nenalezeno žádné rozšíření",
-		"INSECURE_CONTEXT": "Procaptcha vyžaduje zabezpečené připojení (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha vyžaduje zabezpečené připojení (HTTPS)",
+		"CHECKING": "Ověřujeme, že jste člověk",
+		"IMAGE_DIALOG_LABEL": "Obrázkový úkol",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Skládačkový úkol",
+			"DRAG": "Přetáhněte dílek na cíl",
+			"RETRY": "Skoro — zkuste to znovu",
+			"PIECE_LABEL": "Dílek skládačky",
+			"PIECE_ROLE": "přetažitelný dílek skládačky",
+			"KEYBOARD_HINT": "Dílek posouvejte šipkami, s podrženým Shiftem se posouvá po menších krocích. Stisknutím Enter jej odešlete, klávesou Home jej vrátíte na začátek, klávesou Escape akci zrušíte.",
+			"POSITION": "{{x}} procent zleva, {{y}} procent shora",
+			"CHECKING": "Ověřujeme vaši odpověď",
+			"RETRY_ANNOUNCEMENT": "Skoro. Načetla se nová skládačka a dílek je zpět na začátku."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nepodařilo se zakódovat neplatnou adresu",

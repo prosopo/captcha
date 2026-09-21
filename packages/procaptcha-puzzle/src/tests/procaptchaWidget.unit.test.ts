@@ -94,13 +94,12 @@ vi.mock("../services/Manager.js", () => ({
 // simulating a drag.
 vi.mock("../components/puzzleCanvas.js", () => ({
 	mountPuzzleCanvas: (
-		container: HTMLElement,
 		canvasProps: PuzzleCanvasProps,
 	): Component<PuzzleCanvasProps> => {
 		mocks.canvasProps.current = canvasProps;
 		const element = document.createElement("div");
 		element.setAttribute("data-cy", "canvas-stub");
-		container.appendChild(element);
+		document.body.appendChild(element);
 		return {
 			update: (next: PuzzleCanvasProps) => {
 				mocks.canvasProps.current = next;
@@ -178,11 +177,13 @@ const checkbox = (): HTMLInputElement => {
 	return element;
 };
 
+// The canvas puts itself on the body rather than inside the widget, so it can
+// escape the skeleton's query container.
 const canvas = (): Element | null =>
-	mounted.container.querySelector('[data-cy="canvas-stub"]');
+	document.body.querySelector('[data-cy="canvas-stub"]');
 
 const spinner = (): Element | null =>
-	mounted.container.querySelector('[aria-label="Loading spinner"]');
+	mounted.container.querySelector('[role="status"]');
 
 const honeypotInput = (): HTMLInputElement => {
 	const element = document.querySelector<HTMLInputElement>(
@@ -333,7 +334,7 @@ describe("starting from the checkbox", () => {
 		expect(canvas()).not.toBeNull();
 		expect(mocks.canvasProps.current).toMatchObject({
 			originX: challengeResponse().originX,
-			targetY: challengeResponse().targetY,
+			piece: challengeResponse().piece,
 			submitting: false,
 			showRetry: false,
 		});
@@ -479,7 +480,10 @@ describe("finishing the drag", () => {
 
 	test("a rejected solution asks for another go on a fresh challenge", async () => {
 		mocks.submitSolution.mockResolvedValue(false);
-		const retryChallenge = challengeResponse({ originX: 40, targetX: 250 });
+		const retryChallenge = challengeResponse({
+			originX: 40,
+			piece: "data:image/webp;base64,cmV0cnk=",
+		});
 		mocks.start
 			.mockResolvedValueOnce(challengeResponse())
 			.mockResolvedValue(retryChallenge);
@@ -489,7 +493,7 @@ describe("finishing the drag", () => {
 		expect(mocks.canvasProps.current).toMatchObject({
 			showRetry: true,
 			originX: 40,
-			targetX: 250,
+			piece: "data:image/webp;base64,cmV0cnk=",
 			submitting: false,
 		});
 	});
@@ -570,6 +574,28 @@ describe("invisible mode", () => {
 		render(props());
 		await execute();
 		expect(mocks.start).not.toHaveBeenCalled();
+	});
+
+	test("a targeted execute on the container runs a visible widget", async () => {
+		const target = document.createElement("div");
+		render(props({ container: target }));
+		target.dispatchEvent(new Event("procaptcha:execute"));
+		await settle();
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+		expect(canvas()).not.toBeNull();
+	});
+
+	test("a targeted execute on the container runs an invisible widget", async () => {
+		const target = document.createElement("div");
+		render(
+			props({
+				config: config({ mode: ModeEnum.invisible }),
+				container: target,
+			}),
+		);
+		target.dispatchEvent(new Event("procaptcha:execute"));
+		await settle();
+		expect(mocks.start).toHaveBeenCalledTimes(1);
 	});
 
 	test("an execute that yields no challenge shows no puzzle", async () => {

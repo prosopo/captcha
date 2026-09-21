@@ -23,6 +23,7 @@ import {
 	CaptchaType,
 	ClientSettingsSchema,
 	DatabaseTypes,
+	DecisionMachineKind,
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
@@ -657,6 +658,117 @@ describe("Decision Machine Database Integration Tests", () => {
 
 			const jsonResponse = await verifyResponse.json();
 			expect(jsonResponse.status).toBe("FAIL"); // Should fail - machine not found
+		});
+	});
+
+	describe("artifact cache across many Tasks instances", () => {
+		// A Tasks is built per request and builds its own DecisionMachineRunner,
+		// each with its own artifact cache. An upload has to reach all of them,
+		// including instances built before it happened. The upload goes through
+		// the real admin endpoint, and the API server runs in this process, so
+		// the invalidation these assertions depend on is the production one.
+		//
+		// Note this only covers the semantics. That repeated construction is not
+		// itself bounded is covered in decisionMachineRunner.unit.test.ts, which
+		// can drive the constructor far harder than a container test can.
+
+		/** Upload a global decision machine whose decide() returns `reason`. */
+		const uploadDecisionMachine = async (reason: string): Promise<void> => {
+			const response = await fetch(
+				`${baseUrl}${AdminApiPaths.UpdateDecisionMachine}`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						"Prosopo-Site-Key": dappAccount,
+						Authorization: `Bearer ${adminJwt}`,
+					},
+					body: JSON.stringify({
+						[ApiParams.decisionMachineScope]: DecisionMachineScope.Global,
+						[ApiParams.decisionMachineKind]: DecisionMachineKind.Decision,
+						[ApiParams.decisionMachineRuntime]: DecisionMachineRuntime.Node,
+						// CommonJS: the source is stored verbatim and executed in a
+						// bare vm context, so the ESM form used elsewhere in this file
+						// would not produce a callable export.
+						[ApiParams.decisionMachineSource]: `module.exports.decide = () => ({ decision: "allow", reason: "${reason}" });`,
+						[ApiParams.decisionMachineLanguage]:
+							DecisionMachineLanguage.JavaScript,
+						[ApiParams.decisionMachineName]: "Cache Coherence Machine",
+						[ApiParams.decisionMachineVersion]: "1.0.0",
+					}),
+				},
+			);
+			expect(response.status).toBe(200);
+		};
+
+		/** Run the decision machine through a given Tasks and report its reason. */
+		const reasonFrom = async (instance: Tasks): Promise<string | undefined> => {
+			const output = await instance.decisionMachineRunner.decide({
+				userAccount: "user",
+				dappAccount,
+				captchaResult: "passed",
+				headers: {},
+			});
+			return output.reason;
+		};
+
+		it("reaches a Tasks built before the upload and one built after it", async () => {
+			await uploadDecisionMachine("before-after-v1");
+
+			const existing = new Tasks(env);
+			// Warm the cache, so a stale read would be observable: the artifact
+			// TTL is minutes, far longer than this test.
+			expect(await reasonFrom(existing)).toBe("before-after-v1");
+
+			await uploadDecisionMachine("before-after-v2");
+
+			expect(await reasonFrom(existing)).toBe("before-after-v2");
+			expect(await reasonFrom(new Tasks(env))).toBe("before-after-v2");
+		});
+
+		it("keeps many concurrent Tasks instances on the same machine", async () => {
+			const instances = Array.from({ length: 25 }, () => new Tasks(env));
+
+			await uploadDecisionMachine("fleet-v1");
+			expect(await Promise.all(instances.map(reasonFrom))).toEqual(
+				Array(25).fill("fleet-v1"),
+			);
+
+			await uploadDecisionMachine("fleet-v2");
+			expect(await Promise.all(instances.map(reasonFrom))).toEqual(
+				Array(25).fill("fleet-v2"),
+			);
+		});
+
+		it("tracks repeated inserts without going stale", async () => {
+			// Each upload bumps the counter once. Walking several in a row pins
+			// that a runner compares against the current value rather than, say,
+			// a single already-invalidated flag that only fires once.
+			const instance = new Tasks(env);
+
+			for (const version of ["r1", "r2", "r3", "r4", "r5"]) {
+				await uploadDecisionMachine(version);
+				expect(await reasonFrom(instance)).toBe(version);
+			}
+		});
+
+		it("serves the current machine to Tasks built between two inserts", async () => {
+			await uploadDecisionMachine("interleaved-v1");
+
+			const first = new Tasks(env);
+			expect(await reasonFrom(first)).toBe("interleaved-v1");
+
+			await uploadDecisionMachine("interleaved-v2");
+
+			// Built after the second upload but never used before it, so its
+			// cache starts empty and must still read the newer artifact.
+			const second = new Tasks(env);
+
+			await uploadDecisionMachine("interleaved-v3");
+
+			for (const instance of [first, second, new Tasks(env)]) {
+				expect(await reasonFrom(instance)).toBe("interleaved-v3");
+			}
 		});
 	});
 });

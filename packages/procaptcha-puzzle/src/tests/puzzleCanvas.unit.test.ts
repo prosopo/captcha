@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Translator } from "@prosopo/locale";
 import type { Component } from "@prosopo/procaptcha-common";
 import type { PuzzleEvent } from "@prosopo/types";
 import { lightTheme } from "@prosopo/widget-skeleton";
@@ -28,7 +29,6 @@ import {
 	type PuzzleCanvasProps,
 	mountPuzzleCanvas,
 } from "../components/puzzleCanvas.js";
-import { type Mounted, mount } from "./domHarness.js";
 
 /**
  * The canvas is the only piece of the puzzle flow the user actually touches:
@@ -39,9 +39,28 @@ import { type Mounted, mount } from "./domHarness.js";
 
 const CONTAINER_WIDTH = 300;
 const CONTAINER_HEIGHT = 200;
-const PIECE_SIZE = 24;
+const PIECE_SIZE = 44;
 
-let mounted: Mounted;
+/**
+ * The real translator reaches for an http backend the moment it is asked for a
+ * string, which jsdom refuses. The English defaults the canvas ships stand in
+ * instead, interpolated the way i18next would, so the assertions below read as
+ * the copy a user is actually given.
+ */
+const translator = (): Translator => ({
+	t: (key: string, options?: Record<string, unknown>): string => {
+		const template = (options?.defaultValue as string | undefined) ?? key;
+		return template.replace(
+			/{{(\w+)}}/g,
+			(placeholder: string, name: string) =>
+				options && name in options ? String(options[name]) : placeholder,
+		);
+	},
+	isReady: () => true,
+	subscribe: () => () => undefined,
+	i18n: {} as Translator["i18n"],
+});
+
 let canvas: Component<PuzzleCanvasProps> | undefined;
 let onComplete: Mock<
 	(finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => void
@@ -52,12 +71,14 @@ const props = (
 ): PuzzleCanvasProps => ({
 	originX: 20,
 	originY: 100,
-	targetX: 200,
-	targetY: 80,
+	background: "data:image/webp;base64,UklGRg==",
+	piece: "data:image/webp;base64,UklGRg==",
+	pieceSize: PIECE_SIZE,
 	onComplete,
 	showRetry: false,
 	submitting: false,
 	theme: lightTheme,
+	translator: translator(),
 	...overrides,
 });
 
@@ -65,7 +86,7 @@ const render = (canvasProps: PuzzleCanvasProps): void => {
 	if (canvas) {
 		canvas.update(canvasProps);
 	} else {
-		canvas = mountPuzzleCanvas(mounted.container, canvasProps);
+		canvas = mountPuzzleCanvas(canvasProps);
 	}
 };
 
@@ -74,8 +95,15 @@ const destroy = (): void => {
 	canvas = undefined;
 };
 
+/**
+ * The canvas puts itself on the body — it has to escape the query container
+ * the widget skeleton wraps it in — so everything that reads the rendered
+ * output reads the body.
+ */
+const overlay = (): HTMLElement => document.body;
+
 const piece = (): HTMLElement => {
-	const element = mounted.container.querySelector<HTMLElement>(
+	const element = overlay().querySelector<HTMLElement>(
 		'[data-cy="prosopo-puzzle-piece"]',
 	);
 	if (!element) throw new Error("expected the puzzle piece to be rendered");
@@ -129,19 +157,62 @@ const touchEnd = (): void => {
 	document.dispatchEvent(touchEvent("touchend", []));
 };
 
+const keyDown = (key: string, options: { shiftKey?: boolean } = {}): void => {
+	piece().dispatchEvent(
+		new KeyboardEvent("keydown", {
+			key,
+			bubbles: true,
+			cancelable: true,
+			shiftKey: options.shiftKey ?? false,
+		}),
+	);
+};
+
+/**
+ * `isTrusted` is unforgeable, so jsdom can only ever produce the synthetic
+ * events the canvas refuses. Opening the allowance is how the firefox cypress
+ * leg drives the widget too; the gate itself is covered by the one test that
+ * shuts it again.
+ */
+const allowSyntheticEvents = (allowed: boolean): void => {
+	vi.stubGlobal("__PROSOPO_ALLOW_UNTRUSTED_EVENTS__", allowed);
+};
+
+const required = (element: HTMLElement | null, what: string): HTMLElement => {
+	if (!element) throw new Error(`expected ${what} to be rendered`);
+	return element;
+};
+
+const dialog = (): HTMLElement =>
+	required(
+		overlay().querySelector<HTMLElement>('[role="dialog"]'),
+		"the dialog",
+	);
+
+/** An `output` element carries the implicit `status` role a live region needs. */
+const liveRegion = (): HTMLElement =>
+	required(overlay().querySelector<HTMLElement>("output"), "the live region");
+
+/** The text a screen reader reads out when the piece takes focus. */
+const pieceDescription = (): string =>
+	(piece().getAttribute("aria-describedby") ?? "")
+		.split(" ")
+		.map((id) => document.getElementById(id)?.textContent ?? "")
+		.join(" ");
+
 beforeEach(() => {
+	allowSyntheticEvents(true);
 	onComplete =
 		vi.fn<
 			(finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => void
 		>();
-	mounted = mount();
 	canvas = undefined;
 });
 
 afterEach(() => {
 	destroy();
-	mounted.unmount();
 	vi.useRealTimers();
+	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 });
 
@@ -169,14 +240,12 @@ describe("what it puts on screen", () => {
 
 	test("the first go asks the user to drag the piece", () => {
 		render(props());
-		expect(mounted.container.textContent).toContain(
-			"Drag the piece to the target",
-		);
+		expect(overlay().textContent).toContain("Drag the piece to the target");
 	});
 
 	test("a retry says so instead", () => {
 		render(props({ showRetry: true }));
-		expect(mounted.container.textContent).toContain("Not quite");
+		expect(overlay().textContent).toContain("Not quite");
 	});
 
 	test("the piece cannot be grabbed while a solution is in flight", () => {
@@ -211,7 +280,7 @@ describe("what it puts on screen", () => {
 		destroy();
 		vi.advanceTimersByTime(600);
 		expect(
-			mounted.container.querySelector('[data-cy="prosopo-puzzle-piece"]'),
+			overlay().querySelector('[data-cy="prosopo-puzzle-piece"]'),
 		).toBeNull();
 	});
 });
@@ -378,6 +447,190 @@ describe("dragging with a finger", () => {
 		touchStart([{ clientX: 20, clientY: 100 }]);
 		touchMove([{ clientX: 9999, clientY: -9999 }]);
 		expect(piecePosition()).toEqual({ x: CONTAINER_WIDTH, y: 0 });
+	});
+});
+
+describe("driving it from the keyboard", () => {
+	test("the piece takes focus as soon as the puzzle opens", () => {
+		render(props());
+		expect(document.activeElement).toBe(piece());
+	});
+
+	test("an arrow key walks the piece a step across the board", () => {
+		render(props());
+		keyDown("ArrowRight");
+		expect(piecePosition()).toEqual({ x: 30, y: 100 });
+	});
+
+	test("holding shift walks it a finer step", () => {
+		render(props());
+		keyDown("ArrowRight", { shiftKey: true });
+		expect(piecePosition()).toEqual({ x: 22, y: 100 });
+	});
+
+	test("all four arrows move the piece the way they point", () => {
+		render(props());
+		keyDown("ArrowRight");
+		keyDown("ArrowDown");
+		keyDown("ArrowLeft");
+		keyDown("ArrowUp");
+		expect(piecePosition()).toEqual({ x: 20, y: 100 });
+	});
+
+	test("the board's edge stops the piece just as a drag does", () => {
+		render(props());
+		for (let press = 0; press < 5; press++) keyDown("ArrowLeft");
+		expect(piecePosition()).toEqual({ x: 0, y: 100 });
+	});
+
+	test("home puts the piece back where it started", () => {
+		render(props());
+		keyDown("ArrowRight");
+		keyDown("ArrowDown");
+		keyDown("Home");
+		expect(piecePosition()).toEqual({ x: 20, y: 100 });
+	});
+
+	test("enter hands over where the piece is, with the trail", () => {
+		render(props());
+		keyDown("ArrowRight");
+		keyDown("ArrowRight");
+		keyDown("Enter");
+		expect(onComplete).toHaveBeenCalledTimes(1);
+		const [finalX, finalY, events] = onComplete.mock.calls[0] ?? [];
+		expect(finalX).toBe(40);
+		expect(finalY).toBe(100);
+		expect(events?.map((event) => [event.x, event.y])).toEqual([
+			[30, 100],
+			[40, 100],
+		]);
+	});
+
+	test("space submits too", () => {
+		render(props());
+		keyDown("ArrowRight");
+		keyDown(" ");
+		expect(onComplete).toHaveBeenCalledWith(30, 100, [
+			expect.objectContaining({ x: 30, y: 100 }),
+		]);
+	});
+
+	test("a second keyboard go starts from a clean trail", () => {
+		render(props());
+		keyDown("ArrowRight");
+		keyDown("Enter");
+		keyDown("ArrowDown");
+		keyDown("Enter");
+		const events = onComplete.mock.calls[1]?.[2];
+		expect(events?.map((event) => [event.x, event.y])).toEqual([[30, 110]]);
+	});
+
+	test("a key press no user made is ignored", () => {
+		allowSyntheticEvents(false);
+		render(props());
+		keyDown("ArrowRight");
+		keyDown("Enter");
+		expect(piecePosition()).toEqual({ x: 20, y: 100 });
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	test("keys that mean nothing here are left to the page", () => {
+		render(props());
+		keyDown("a");
+		expect(piecePosition()).toEqual({ x: 20, y: 100 });
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	test("the piece cannot be moved or submitted while a solution is in flight", () => {
+		render(props({ submitting: true }));
+		keyDown("ArrowRight");
+		keyDown("Enter");
+		expect(piecePosition()).toEqual({ x: 20, y: 100 });
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	test("nor can it be tabbed to while a solution is in flight", () => {
+		render(props({ submitting: true }));
+		expect(piece().tabIndex).toBe(-1);
+	});
+
+	test("tab cannot leave the dialog for the page behind it", () => {
+		render(props());
+		document.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "Tab", bubbles: true }),
+		);
+		expect(document.activeElement).toBe(piece());
+	});
+
+	test("closing hands focus back to whatever opened the puzzle", () => {
+		const opener = document.createElement("button");
+		document.body.appendChild(opener);
+		opener.focus();
+
+		render(props());
+		expect(document.activeElement).toBe(piece());
+
+		destroy();
+		expect(document.activeElement).toBe(opener);
+
+		opener.remove();
+	});
+});
+
+describe("what it says to a screen reader", () => {
+	test("the panel announces itself as a named dialog", () => {
+		render(props());
+		expect(dialog().getAttribute("aria-label")).toBe("Puzzle challenge");
+		expect(dialog().getAttribute("aria-modal")).toBe("true");
+	});
+
+	test("the piece carries a name and says it can be dragged", () => {
+		render(props());
+		expect(piece().getAttribute("aria-label")).toBe("Puzzle piece");
+		expect(piece().getAttribute("aria-roledescription")).toBe(
+			"draggable puzzle piece",
+		);
+	});
+
+	test("the piece is described by the instruction and the key help", () => {
+		render(props());
+		expect(pieceDescription()).toContain("Drag the piece to the target");
+		expect(pieceDescription()).toContain("arrow keys");
+		expect(pieceDescription()).toContain("Escape");
+	});
+
+	test("taking focus reports where the piece is, in proportions", () => {
+		render(props());
+		expect(liveRegion().textContent).toBe("7 percent across, 50 percent down");
+	});
+
+	test("a move is reported once the keys stop, not on every press", () => {
+		vi.useFakeTimers();
+		render(props());
+		keyDown("ArrowRight");
+		keyDown("ArrowRight");
+		expect(liveRegion().textContent).toBe("7 percent across, 50 percent down");
+		vi.advanceTimersByTime(500);
+		expect(liveRegion().textContent).toBe("13 percent across, 50 percent down");
+	});
+
+	test("a solution in flight is announced", () => {
+		render(props({ submitting: true }));
+		expect(liveRegion().textContent).toBe("Checking your answer");
+	});
+
+	test("a retry says the puzzle has been replaced", () => {
+		render(props({ showRetry: true }));
+		expect(liveRegion().textContent).toContain("A new puzzle has loaded");
+	});
+
+	test("the background tiles are left out of the reading order", () => {
+		render(props());
+		const images = Array.from(overlay().querySelectorAll("img"));
+		expect(images.length).toBeGreaterThan(0);
+		expect(images.every((image) => image.getAttribute("alt") === "")).toBe(
+			true,
+		);
 	});
 });
 

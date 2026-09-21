@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Horodatage trop ancien",
 		"FAILED_IP_VALIDATION": "Échec de la validation IP",
 		"ACCESS_POLICY_BLOCK": "Accès bloqué par la politique",
+		"CLIENT_SESSION_MISMATCH": "Session non concordante. Le captcha n'a pas été complété dans cette session.",
 		"FORBIDDEN": "Interdit",
 		"PROVIDER_VERIFY_FAILED": "Échec de la vérification du fournisseur",
 		"SPAM_EMAIL_DOMAIN": "Domaine de messagerie non autorisé",
@@ -46,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Trop de soumissions depuis cette adresse e-mail",
 		"VPN_BLOCKED": "Les requêtes provenant de connexions VPN ne sont pas autorisées pour ce site",
 		"PROXY_BLOCKED": "Les requêtes provenant de serveurs proxy ne sont pas autorisées pour ce site",
+		"TOO_MANY_LOCALHOST": "Trop de requêtes CAPTCHA provenant de localhost pour cette clé de site",
 		"TOR_BLOCKED": "Les requêtes provenant de nœuds de sortie Tor ne sont pas autorisées pour ce site",
 		"ABUSER_BLOCKED": "Les requêtes provenant de réseaux signalés pour abus ne sont pas autorisées pour ce site",
 		"DATACENTER_BLOCKED": "Les requêtes provenant d'adresses IP de centres de données ne sont pas autorisées pour ce site",
@@ -77,7 +79,20 @@
 		"NO_ACCOUNTS_FOUND": "Aucun compte trouvé",
 		"ACCOUNT_NOT_FOUND": "Compte non trouvé",
 		"NO_EXTENSION_FOUND": "Aucune extension trouvée",
-		"INSECURE_CONTEXT": "Procaptcha nécessite une connexion sécurisée (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha nécessite une connexion sécurisée (HTTPS)",
+		"CHECKING": "Vérification que vous êtes humain",
+		"IMAGE_DIALOG_LABEL": "Défi d'images",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Défi de puzzle",
+			"DRAG": "Faites glisser la pièce jusqu'à la cible",
+			"RETRY": "Presque — réessayez",
+			"PIECE_LABEL": "Pièce du puzzle",
+			"PIECE_ROLE": "pièce de puzzle déplaçable",
+			"KEYBOARD_HINT": "Utilisez les touches fléchées pour déplacer la pièce, en maintenant Maj pour des pas plus petits. Appuyez sur Entrée pour valider, Origine pour la remettre au départ, ou Échap pour annuler.",
+			"POSITION": "{{x}} pour cent depuis la gauche, {{y}} pour cent depuis le haut",
+			"CHECKING": "Vérification de votre réponse",
+			"RETRY_ANNOUNCEMENT": "Presque. Un nouveau puzzle a été chargé et la pièce est revenue au départ."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Échec de l'encodage de l'adresse invalide",

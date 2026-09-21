@@ -143,19 +143,33 @@ export const mountProcaptchaPuzzleWidget = (
 		scheduler.schedule();
 	};
 
+	// Dismissing returns to the checkbox; clicking away is not a wrong answer.
+	const handleDismiss = () => {
+		puzzlePhase = "checkbox";
+		challengeData = null;
+		showRetry = false;
+		loading = false;
+		scheduler.schedule();
+	};
+
 	const puzzleProps = (
 		challenge: GetPuzzleCaptchaResponse,
 	): PuzzleCanvasProps => ({
 		originX: challenge.originX,
 		originY: challenge.originY,
-		targetX: challenge.targetX,
-		targetY: challenge.targetY,
+		background: challenge.background,
+		piece: challenge.piece,
+		pieceSize: challenge.pieceSize,
 		onComplete: (finalX: number, finalY: number, events: PuzzleEvent[]) => {
 			void handlePuzzleComplete(finalX, finalY, events);
 		},
 		showRetry,
 		submitting: "submitting" === puzzlePhase,
 		theme: "light" === config.theme ? lightTheme : darkTheme,
+		translator,
+		placement: config.placement,
+		anchor: props.container,
+		onDismiss: handleDismiss,
 	});
 
 	const runErrorEffect = () => {
@@ -189,16 +203,15 @@ export const mountProcaptchaPuzzleWidget = (
 	const render = () => {
 		runErrorEffect();
 
-		// Puzzle overlay — rendered outside the shadow DOM flow via fixed
-		// positioning. Shown in both visible and invisible modes once a challenge
-		// has been fetched; puzzle is inherently interactive.
+		// Puzzle overlay — shown in both visible and invisible modes once a
+		// challenge has been fetched; puzzle is inherently interactive.
 		const showOverlay =
 			("dragging" === puzzlePhase || "submitting" === puzzlePhase) &&
 			null !== challengeData;
 
 		if (showOverlay && null !== challengeData) {
 			if (undefined === puzzle) {
-				puzzle = mountPuzzleCanvas(root, puzzleProps(challengeData));
+				puzzle = mountPuzzleCanvas(puzzleProps(challengeData));
 			} else {
 				puzzle.update(puzzleProps(challengeData));
 			}
@@ -217,6 +230,9 @@ export const mountProcaptchaPuzzleWidget = (
 		theme: "light" === config.theme ? lightTheme : darkTheme,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",
 		error: store.state.error?.message,
+		loadingText: translator.t("WIDGET.CHECKING", {
+			defaultValue: "Checking that you are human",
+		}),
 		loading: loading || "submitting" === puzzlePhase,
 		onChange: async (
 			event: MouseEvent | KeyboardEvent | TouchEvent,
@@ -279,33 +295,49 @@ export const mountProcaptchaPuzzleWidget = (
 	teardown.add(store.subscribe(scheduler.schedule));
 	teardown.add(translator.subscribe(scheduler.schedule));
 
-	if (isInvisible) {
-		// Fetch a challenge then drive the puzzle UI through the same phase
-		// transitions as the visible checkbox flow.
-		teardown.addEventListener(document, PROCAPTCHA_EXECUTE_EVENT, () => {
-			void (async () => {
-				if (loading) {
-					return;
+	// A bare execute() reaches every invisible widget via document. A targeted
+	// execute() is dispatched on this widget's container and works in either
+	// mode, which is what lets a bound button drive a visible widget. Either
+	// way it fetches a challenge and drives the puzzle UI through the same
+	// phase transitions as the visible checkbox flow.
+	const handleExecute = () => {
+		void (async () => {
+			if (loading) {
+				return;
+			}
+			loading = true;
+			showRetry = false;
+			scheduler.schedule();
+			try {
+				const challenge = await manager.start();
+				if (challenge) {
+					challengeData = challenge;
+					puzzlePhase = "dragging";
 				}
-				loading = true;
-				showRetry = false;
+			} catch (error) {
+				callbacks.onError?.(
+					error instanceof Error ? error : new Error(String(error)),
+				);
+			} finally {
+				loading = false;
 				scheduler.schedule();
-				try {
-					const challenge = await manager.start();
-					if (challenge) {
-						challengeData = challenge;
-						puzzlePhase = "dragging";
-					}
-				} catch (error) {
-					callbacks.onError?.(
-						error instanceof Error ? error : new Error(String(error)),
-					);
-				} finally {
-					loading = false;
-					scheduler.schedule();
-				}
-			})();
-		});
+			}
+		})();
+	};
+
+	if (props.container) {
+		teardown.addEventListener(
+			props.container,
+			PROCAPTCHA_EXECUTE_EVENT,
+			handleExecute,
+		);
+	}
+	if (isInvisible) {
+		teardown.addEventListener(
+			document,
+			PROCAPTCHA_EXECUTE_EVENT,
+			handleExecute,
+		);
 	}
 
 	if (config.language) {

@@ -22,7 +22,7 @@ import {
 	getWidgetElement,
 } from "../support/commands.js";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
 
 describe("Captchas", () => {
 	before(() => {
@@ -74,7 +74,7 @@ describe("Captchas", () => {
 
 		// visit the base URL specified on command line when running cypress
 		return cy
-			.visit(Cypress.env("default_page"), {
+			.visit(Cypress.expose("default_page"), {
 				timeout: 30000,
 				failOnStatusCode: false, // Don't fail immediately on non-2xx status codes
 			})

@@ -29,10 +29,7 @@ describe("procaptcha:ready event", () => {
 	});
 
 	afterEach(() => {
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
-		(global as any).document = undefined;
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
-		(global as any).window = undefined;
+		Object.assign(global, { document: undefined, window: undefined });
 	});
 
 	it("should dispatch procaptcha:ready event when window.procaptcha is set", (done) => {
@@ -50,6 +47,7 @@ describe("procaptcha:ready event", () => {
 			expect(window.procaptcha?.ready).toBeDefined();
 			expect(window.procaptcha?.reset).toBeDefined();
 			expect(window.procaptcha?.execute).toBeDefined();
+			expect(window.procaptcha?.start).toBeDefined();
 		});
 
 		// Import the module which should set window.procaptcha and dispatch the event

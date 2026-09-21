@@ -43,7 +43,7 @@ const FORCE_IMAGE_ROUTING_MACHINE = `
 
 describe("Post-PoW route() escalation surfaces the image captcha", () => {
 	// The frictionless siteKey from .env. Same one as other suites.
-	const siteKey: string = Cypress.env(
+	const siteKey: string = Cypress.expose(
 		`PROSOPO_SITE_KEY_${CaptchaType.frictionless.toUpperCase()}`,
 	);
 
@@ -93,7 +93,7 @@ describe("Post-PoW route() escalation surfaces the image captcha", () => {
 		}
 		cy.intercept("/dummy").as("dummy");
 
-		return cy.visit(Cypress.env("default_page")).then(() => {
+		return cy.visit(Cypress.expose("default_page")).then(() => {
 			cy.waitForProcaptchaScript();
 			getWidgetElement(checkboxClass).should("be.visible");
 			cy.wrap(solutions).as("solutions");
@@ -117,7 +117,7 @@ describe("Post-PoW route() escalation surfaces the image captcha", () => {
 	});
 
 	it("displays the image captcha after PoW is solved and route() escalates", () => {
-		cy.visit(Cypress.env("default_page"));
+		cy.visit(Cypress.expose("default_page"));
 		cy.waitForProcaptchaScript();
 
 		// Watch every leg of the flow so the test fails on a specific edge

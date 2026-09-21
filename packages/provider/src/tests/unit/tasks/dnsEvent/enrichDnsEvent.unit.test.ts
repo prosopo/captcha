@@ -221,6 +221,9 @@ describe("computeDnsAsymmetry", () => {
 		});
 
 		it("keeps the datacenter penalty when isVPN but blockVpn is on", () => {
+			// Policy-aware shielding: VPN only shields DC when the operator
+			// has left VPN unconfigured. When the operator is blocking VPNs,
+			// VPN doesn't shield — the DC signal still counts.
 			const score = computeDnsAsymmetry(
 				enrichedWith({ resolverIpInfo: dcVpn(), peerIpInfo: dcVpn() }),
 				undefined,
@@ -252,6 +255,10 @@ describe("computeDnsAsymmetry", () => {
 		});
 
 		it("suppresses when isCrawler and blockCrawler off", () => {
+			// Crawler+DC on a resolver is often Googlebot / a legit crawler's
+			// DNS resolver. When the operator hasn't configured crawler
+			// blocking, the crawler flag shields the DC signal — the DC-ness
+			// is explained by the crawler status.
 			const score = computeDnsAsymmetry(
 				enrichedWith({
 					resolverIpInfo: baseInfo({ isDatacenter: true, isCrawler: true }),

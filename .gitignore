@@ -1,3 +1,4 @@
+.nx
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
@@ -154,9 +155,6 @@ captcha.json
 
 *.angular
 
-.nx/cache
-.nx/workspace-data
-
 .github/instructions/
 
 .angular
@@ -176,3 +174,27 @@ docker/dns-tenants.json
 # Android SDK location -- machine-specific, and if committed it overrides
 # ANDROID_HOME and breaks the build everywhere else, CI included.
 local.properties
+
+# napi builds only the linux target (see `napi.targets` in each native package),
+# and that artefact is committed. A local build on any other platform is not.
+packages/native-*/index.*.node
+!packages/native-*/index.linux-x64-gnu.node
+
+# Private key material, by shape rather than by path. A path-specific ignore
+# only covers the directory someone thought of; this covers the shape. Nothing
+# matching these is tracked, so there are no exceptions. If a public certificate
+# or trust anchor ever needs committing, add a `!` line for that exact file.
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+service-account*.json
+id_rsa*
+id_ecdsa*
+id_ed25519*
+
+# Public keys are not secrets, and the `id_*` patterns above would otherwise
+# catch them. `accounts/ssh/id_ecdsa_prosopo.pub` is tracked on purpose -- it is
+# what gets deployed into authorized_keys.
+!*.pub

@@ -23,4 +23,6 @@ export default function getBotScoreFromPayload(
 	headHash: string,
 	privateKeyString?: string,
 	innerConfigEncoded?: string,
+	payloadLayoutEncoded?: string,
+	keyMapEncoded?: string,
 ): Promise<DetectorResult>;

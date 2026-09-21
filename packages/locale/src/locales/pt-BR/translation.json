@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Carimbo de data/hora muito antigo",
 		"FAILED_IP_VALIDATION": "Validação de IP falhou",
 		"ACCESS_POLICY_BLOCK": "Acesso bloqueado por política",
+		"CLIENT_SESSION_MISMATCH": "Sessão não corresponde. O captcha não foi concluído nesta sessão.",
 		"FORBIDDEN": "Proibido",
 		"PROVIDER_VERIFY_FAILED": "Falha na verificação do provedor",
 		"SPAM_EMAIL_DOMAIN": "Domínio de e-mail não permitido",
@@ -46,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Muitos envios deste endereço de e-mail",
 		"VPN_BLOCKED": "Solicitações de conexões VPN não são permitidas para este site",
 		"PROXY_BLOCKED": "Solicitações de servidores proxy não são permitidas para este site",
+		"TOO_MANY_LOCALHOST": "Muitas solicitações de CAPTCHA do localhost para esta chave de site",
 		"TOR_BLOCKED": "Solicitações de nós de saída Tor não são permitidas para este site",
 		"ABUSER_BLOCKED": "Solicitações de redes sinalizadas por abuso não são permitidas para este site",
 		"DATACENTER_BLOCKED": "Solicitações de endereços IP de datacenters não são permitidas para este site",
@@ -77,7 +79,20 @@
 		"NO_ACCOUNTS_FOUND": "Nenhuma conta encontrada",
 		"ACCOUNT_NOT_FOUND": "Conta não encontrada",
 		"NO_EXTENSION_FOUND": "Nenhuma extensão encontrada",
-		"INSECURE_CONTEXT": "O Procaptcha requer uma conexão segura (HTTPS)"
+		"INSECURE_CONTEXT": "O Procaptcha requer uma conexão segura (HTTPS)",
+		"CHECKING": "Verificando se você é humano",
+		"IMAGE_DIALOG_LABEL": "Desafio de imagens",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Desafio de quebra-cabeça",
+			"DRAG": "Arraste a peça até o alvo",
+			"RETRY": "Quase — tente de novo",
+			"PIECE_LABEL": "Peça do quebra-cabeça",
+			"PIECE_ROLE": "peça de quebra-cabeça arrastável",
+			"KEYBOARD_HINT": "Use as teclas de seta para mover a peça, segurando Shift para passos menores. Pressione Enter para enviar, Home para voltar ao início ou Esc para cancelar.",
+			"POSITION": "{{x}} por cento a partir da esquerda, {{y}} por cento a partir do topo",
+			"CHECKING": "Verificando sua resposta",
+			"RETRY_ANNOUNCEMENT": "Quase. Um novo quebra-cabeça foi carregado e a peça voltou ao início."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Falha ao codificar endereço inválido",

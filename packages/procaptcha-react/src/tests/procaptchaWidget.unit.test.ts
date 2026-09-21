@@ -118,7 +118,7 @@ const checkbox = (): HTMLInputElement => {
 };
 
 const spinner = (): Element | null =>
-	mounted.container.querySelector('[aria-label="Loading spinner"]');
+	mounted.container.querySelector('[role="status"]');
 
 const modalText = (): string =>
 	document.querySelector(".prosopo-modalOuter")?.textContent ?? "";
@@ -284,6 +284,69 @@ describe("clicking the checkbox", () => {
 		fire(checkbox(), "click");
 		await settle();
 		expect(checkbox()).toBeDefined();
+	});
+
+	test("the spinner takes over focus from the box it replaced", async () => {
+		let finish: (() => void) | undefined;
+		start.mockImplementation(
+			() =>
+				new Promise<void>((resolve) => {
+					finish = resolve;
+				}),
+		);
+		render();
+		checkbox().focus();
+		fire(checkbox(), "click", { clientX: 1, clientY: 1 });
+		await settle();
+
+		// Otherwise focus falls to the body and a keyboard user is dumped back
+		// at the top of the page with nothing said about why.
+		expect(document.activeElement).toBe(spinner());
+		expect(spinner()?.getAttribute("aria-label")).toBe("WIDGET.CHECKING");
+		finish?.();
+	});
+
+	test("focus comes back to the box when the check is done", async () => {
+		render();
+		checkbox().focus();
+		fire(checkbox(), "click");
+		await settle();
+		expect(document.activeElement).toBe(checkbox());
+	});
+
+	test("a box the user never focused does not steal focus", async () => {
+		render();
+		fire(checkbox(), "click");
+		await settle();
+		expect(document.activeElement).not.toBe(checkbox());
+	});
+
+	test("focus the user moved on to is left where they put it", async () => {
+		// The check runs for as long as the network takes, and the user is free
+		// to carry on filling in the form behind the widget while it does. The
+		// box handing focus back at that point would take it off whatever they
+		// were typing into, losing the keystroke that arrived with it.
+		let finish: (() => void) | undefined;
+		start.mockImplementation(
+			() =>
+				new Promise<void>((resolve) => {
+					finish = resolve;
+				}),
+		);
+		render();
+		checkbox().focus();
+		fire(checkbox(), "click");
+
+		const elsewhere = document.createElement("input");
+		document.body.appendChild(elsewhere);
+		elsewhere.focus();
+
+		finish?.();
+		await settle();
+
+		const focused = document.activeElement;
+		elsewhere.remove();
+		expect(focused).toBe(elsewhere);
 	});
 
 	test("shows the checkbox again when the start fails", async () => {
@@ -577,5 +640,22 @@ describe("the manager itself", () => {
 	test("is given an empty callback set when the host passes none", () => {
 		render({ callbacks: undefined as unknown as ProcaptchaProps["callbacks"] });
 		expect(managerArgs[0]?.[3]).toEqual({});
+	});
+
+	test("hands reload back to the wrapper that offered to handle it", () => {
+		// Under frictionless the wrapper is the only thing that can mint the
+		// session a replacement challenge needs, so the manager must ask it
+		// rather than reloading itself.
+		const onReload = vi.fn<(x?: number, y?: number) => void>();
+		render({ onReload });
+		managerArgs[0]?.[6]?.(120, 340);
+		expect(onReload).toHaveBeenCalledWith(120, 340);
+	});
+
+	test("keeps reload to itself when no wrapper offered to handle it", () => {
+		// A delegate the host never supplied would leave reload with nothing
+		// to re-mint the challenge with — the modal would just close.
+		render();
+		expect(managerArgs[0]?.[6]).toBeUndefined();
 	});
 });

@@ -85,6 +85,7 @@ interface Tile {
 	readonly hash: string;
 	readonly image: HTMLImageElement;
 	readonly overlay: HTMLElement;
+	readonly clickable: HTMLButtonElement;
 }
 
 /**
@@ -104,6 +105,7 @@ export const mountCaptchaWidget = (
 	let props = initialProps;
 	let renderedChallenge: Captcha | undefined;
 	let tiles: Tile[] = [];
+	let focusedHash: string | null = null;
 
 	const grid = createElement("div", {
 		style: gridStyle(themeOf(initialProps.themeColor)),
@@ -194,7 +196,11 @@ export const mountCaptchaWidget = (
 			children: [icon],
 		});
 
-		const clickable = createElement("div", {
+		// A button rather than a clickable div: the tiles are the whole
+		// challenge, and a div cannot be tabbed to, cannot be activated by Enter
+		// or Space, and tells a screen reader nothing about being selectable or
+		// already picked.
+		const clickable = createElement("button", {
 			style: {
 				position: "relative",
 				cursor: "pointer",
@@ -202,7 +208,12 @@ export const mountCaptchaWidget = (
 				width: "100%",
 				padding: 0,
 				margin: 0,
+				border: "none",
+				background: "none",
+				appearance: "none",
+				display: "block",
 			},
+			attributes: { type: "button" },
 			children: [image, overlay],
 		});
 
@@ -217,13 +228,39 @@ export const mountCaptchaWidget = (
 			props.onClick(hash, mouseEvent.clientX, mouseEvent.clientY);
 		});
 
+		// Matched imperatively so the ring is keyboard-only, as the reload
+		// button does.
+		teardown.addEventListener(clickable, "focus", () => {
+			focusedHash = clickable.matches(":focus-visible") ? hash : null;
+			applyFocusRing();
+		});
+		teardown.addEventListener(clickable, "blur", () => {
+			focusedHash = null;
+			applyFocusRing();
+		});
+
 		const cell = createElement("div", {
 			style: imageStyle,
 			children: [clickable],
 		});
 		grid.appendChild(cell);
 
-		return { hash, image, overlay };
+		return { hash, image, overlay, clickable };
+	};
+
+	const applyFocusRing = () => {
+		const theme = themeOf(props.themeColor);
+		for (const tile of tiles) {
+			applyStyles(
+				tile.clickable,
+				focusedHash === tile.hash
+					? {
+							outline: `3px solid ${theme.palette.primary.main}`,
+							outlineOffset: "2px",
+						}
+					: { outline: "none", outlineOffset: undefined },
+			);
+		}
 	};
 
 	const rebuild = () => {
@@ -247,11 +284,13 @@ export const mountCaptchaWidget = (
 			applyStyles(tile.overlay, {
 				visibility: selected ? "visible" : "hidden",
 			});
+			tile.clickable.setAttribute("aria-pressed", String(selected));
 		}
 	};
 
 	rebuild();
 	applySelection();
+	applyFocusRing();
 	container.appendChild(grid);
 
 	return {
@@ -261,9 +300,13 @@ export const mountCaptchaWidget = (
 				nextProps.themeColor !== props.themeColor;
 			props = nextProps;
 			if (needsRebuild) {
+				// The tiles that carried focus are gone, so the ring has nothing
+				// left to track.
+				focusedHash = null;
 				rebuild();
 			}
 			applySelection();
+			applyFocusRing();
 		},
 		destroy: () => {
 			teardown.run();

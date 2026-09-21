@@ -11,11 +11,20 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { CaptchaType } from "@prosopo/types";
+import type { CaptchaType, ResultReason } from "@prosopo/types";
 
 export enum AccessPolicyType {
 	Block = "block",
 	Restrict = "restrict",
+	// Explicit allow-list: request that matches an Allow rule bypasses the
+	// challenge flow and gets an `authenticated` session (captchaType =
+	// authenticated on the frictionless response). Fires for any qualifying
+	// scope — verified Web Bot Auth agent, allow-listed IP, ja4/ja4_and_ip
+	// match, UA substring, ASN, country. IP-binding on the resulting
+	// session token defends against replay from a different IP. Opt-in per
+	// rule; the operator authors an Allow rule the same way they'd author
+	// a Block or Restrict rule.
+	Allow = "allow",
 }
 
 // Sentinel stamped on the Redis `clientId` field for rules that would
@@ -51,6 +60,8 @@ export type AccessPolicy = {
 	// signals (ja4, headersHash, etc.) when the operator wants the
 	// attacker to pay the captcha-solving cost before being rejected.
 	deferToVerify?: boolean;
+	// Replaces "Forbidden" in the 403 body of a matched Block policy.
+	messageKey?: ResultReason;
 };
 
 export type PolicyScope = {
@@ -78,6 +89,27 @@ export type UserAttributes = {
 	// drop/limit requests from a given OS even when the client omits client
 	// hints.
 	os?: string;
+	browser?: string;
+	// Arbitrary-header matching (see `headerMatch.ts` and the portal Header
+	// Restriction card). A header rule carries `headerName` + `headerValue` +
+	// `headerOperator`; unlike the other dimensions these are checked in code
+	// against the raw request headers — Redis TAG can't express substring
+	// `contains` or per-rule operators — so they are not part of the Redis
+	// matching query. `headerMatch` is the indexed sentinel (always
+	// `HEADER_RULE_MARKER`) that makes such a rule a matching candidate for
+	// every request, so an allow-list rule still fires on a request that omits
+	// the target header.
+	headerMatch?: string;
+	headerName?: string;
+	headerValue?: string;
+	headerOperator?: string;
+	// Canonical Web Bot Auth Signature-Agent URL — e.g.
+	// "https://signatures.openai.com/". Matched at runtime against the
+	// `Signature-Agent` header after RFC 9421 Ed25519 verification succeeds.
+	// Stored as-is like `countryCode` (exact equality after normalisation).
+	// Rules with this field only match requests carrying a valid Web Bot
+	// Auth signature; unverified traffic falls through.
+	webBotAuthAgent?: string;
 };
 
 export type UserScope = UserAttributes & UserIp;

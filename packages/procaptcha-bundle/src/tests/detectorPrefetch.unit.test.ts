@@ -20,7 +20,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { BundleCaptchaHandle } from "../util/captcha/components/bundleCaptcha.js";
+import type { CreatedWidget } from "../util/widgetFactory.js";
 
 const mocks = vi.hoisted(() => ({
 	prefetchDetector: vi.fn(),
@@ -59,7 +59,7 @@ const renderAndFlush = async (
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	mocks.createWidgets.mockResolvedValue([] as BundleCaptchaHandle[]);
+	mocks.createWidgets.mockResolvedValue([] as CreatedWidget[]);
 });
 
 describe("render", () => {

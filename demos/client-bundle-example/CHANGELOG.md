@@ -1,5 +1,91 @@
 # @prosopo/client-bundle-example
 
+## 2.11.0
+### Minor Changes
+
+- 2256f94: Redesign the demo site as a Prosopo-branded playground. Every demo page now has the prosopo.io header, a sidebar to switch captcha type, mode, rendering and challenge placement, the event log and the code for the current setup side by side, and sign-up links. The home page is now the frictionless captcha instead of the image captcha, which moves to `/image-implicit.html`; the cypress configs that opened the home page for the image captcha now open that page. The MUI stylesheet and the float-label script are gone.
+
+### Patch Changes
+
+- 7291d30: Fix the demo pages' status log dropping the captcha token. Its `onActionHandler` wrapper took no arguments, so invisible implicit pages (image and frictionless) called the real handler without a token, showed "Must complete captcha" and never submitted the form.
+- 2fc615d: Restore the `frictionless-implicit.html` demo page.
+  
+  The playground redesign renamed it to `image-implicit.html` and switched it to
+  an image site key, which left nothing serving that path. Suites outside this
+  repo navigate to it directly and were being answered by the dev server's
+  fallback to the index page — which happens to render a frictionless widget, so
+  they passed by luck rather than because the page they asked for existed.
+
+## 2.10.24
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+
+## 2.10.23
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- 80f73c1: Sites can now control when the widget starts working.
+  
+  By default the widget runs bot detection, starts the behavioural collectors and calls `/frictionless` as soon as it mounts. Rendering with `data-start-mode="manual"` (or `startMode: "manual"` in the render options) keeps all of that off the page load: the checkbox still appears immediately, at its final size, so nothing shifts, but the widget does nothing else until one of two things happens.
+  
+  - The site calls `window.procaptcha.start()`, optionally with a widget id, or dispatches a `procaptcha:start` event on `document`. The frictionless flow runs and the widget then waits for a click exactly as it does today.
+  - The visitor clicks the checkbox. The frictionless flow runs and whichever challenge the provider chooses opens straight away, carrying that click's position, so the visitor is never asked to click twice.
+  
+  Both triggers are one-shot: whichever comes first wins and the other is ignored. `window.procaptcha.execute()` also starts a manual widget, opening its challenge immediately. Widgets in the default `auto` mode are unaffected.
+
+## 2.10.22
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- 68a9b41: chore(deps): bump react and @types/react
+
+## 2.10.21
+### Patch Changes
+
+- 2a07421: Make the puzzle CAPTCHA usable on mobile.
+  
+  - `procaptcha-puzzle`: add `touch-action: none` to the puzzle piece. Without
+    it, on a zoomed-in mobile viewport the browser claims the touch as a pan
+    gesture before the `touchmove` handler runs, so the page scrolls instead
+    of the piece moving.
+  - `client-bundle-example`: inject a viewport meta tag on every demo page and
+    fix the collapsible page-picker nav on ≤480px screens (a media-query max
+    height was clamping the bar even when expanded).
+
 ## 2.10.20
 ### Patch Changes
 

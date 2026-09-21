@@ -68,6 +68,9 @@ vi.mock("@prosopo/procaptcha-pow", () => ({
 const { mountProcaptchaFrictionless } = await import(
 	"../procaptchaFrictionless.js"
 );
+const { MAX_SESSION_INVALIDATED_RETRIES } = await import(
+	"../sessionInvalidatedRecovery.js"
+);
 
 const SITE_KEY = "5CcNvLUdiXFpzKDMjThGLSK9rhWHA1H4EF3zrgkpkjAdqmuP";
 
@@ -117,6 +120,12 @@ const props = (
 const settle = async (): Promise<void> => {
 	await new Promise<void>((resolve: () => void) => setTimeout(resolve, 0));
 	await Promise.resolve();
+};
+
+const waitFor = async (condition: () => boolean): Promise<void> => {
+	for (let poll = 0; poll < 100 && !condition(); poll++) {
+		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 20));
+	}
 };
 
 const solvers = (): string[] =>
@@ -195,9 +204,7 @@ describe("the loading placeholder", () => {
 		);
 		// The spinner is the checkbox's loading state; either way there must be
 		// something widget-shaped on the page while the round trip is in flight.
-		expect(container.querySelector('[aria-label="Loading spinner"]')).not.toBe(
-			null,
-		);
+		expect(container.querySelector('[role="status"]')).not.toBe(null);
 	});
 
 	test("is replaced by the solver, not left behind it", async () => {
@@ -206,13 +213,11 @@ describe("the loading placeholder", () => {
 			props(() => Promise.resolve(detection(CaptchaType.image))),
 		);
 		await settle();
-		expect(
-			container.querySelector('[aria-label="Loading spinner"]'),
-		).toBeNull();
+		expect(container.querySelector('[role="status"]')).toBeNull();
 		expect(solvers()).toEqual(["image"]);
 	});
 
-	test("shows the detection error instead of a solver", async () => {
+	test("shows a terminal detection error instead of a solver", async () => {
 		const onError = vi.fn<(error: Error) => void>();
 		widget = mountProcaptchaFrictionless(
 			container,
@@ -220,7 +225,10 @@ describe("the loading placeholder", () => {
 				() =>
 					Promise.resolve(
 						detection(CaptchaType.image, {
-							error: { message: "no capacity", key: "API.UNKNOWN_ERROR" },
+							error: {
+								message: "site key not registered",
+								key: "API.SITE_KEY_NOT_REGISTERED",
+							},
 						} as Partial<BotDetectionFunctionResult>),
 					),
 				{ callbacks: { onError } },
@@ -228,7 +236,47 @@ describe("the loading placeholder", () => {
 		);
 		await settle();
 		expect(solvers()).toEqual([]);
-		expect(container.textContent).toContain("no capacity");
+		expect(container.textContent).toContain("site key not registered");
+		expect(onError).toHaveBeenCalledWith(expect.any(Error));
+	});
+
+	test("re-rolls onto another provider for a failure that is not the caller's fault", async () => {
+		// An unrecognised key means the provider broke in a way it has no
+		// vocabulary for; another node may well be healthy, so the user should
+		// not be stranded on the first answer.
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValueOnce(
+				detection(CaptchaType.image, {
+					error: { message: "no capacity", key: "API.UNKNOWN_ERROR" },
+				} as Partial<BotDetectionFunctionResult>),
+			)
+			.mockResolvedValue(detection(CaptchaType.image));
+		widget = mountProcaptchaFrictionless(container, props(detectBot));
+		// providerRetry backs off before re-rolling, so the second call lands a
+		// randomised delay later rather than on the next tick.
+		await waitFor(() => detectBot.mock.calls.length > 1);
+		await settle();
+		expect(solvers()).toEqual(["image"]);
+	});
+
+	test("refuses to mount anything when the response names no captcha type", async () => {
+		// A hard block short-circuits the request and answers with a bare
+		// `{ error: "..." }`; mounting the PoW default against it only earns an
+		// API.INCORRECT_CAPTCHA_TYPE from the next call.
+		const onError = vi.fn<(error: Error) => void>();
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(
+				() =>
+					Promise.resolve({
+						sessionId: "session-1",
+					} as unknown as BotDetectionFunctionResult),
+				{ callbacks: { onError } },
+			),
+		);
+		await settle();
+		expect(solvers()).toEqual([]);
 		expect(onError).toHaveBeenCalledWith(expect.any(Error));
 	});
 });
@@ -301,19 +349,27 @@ describe("recovering an invalidated session", () => {
 		});
 	});
 
-	test("recovers once only, so a persistently broken session cannot loop", async () => {
+	test("stops re-minting once the budget is spent, so a persistently broken session cannot loop", async () => {
 		const detectBot = vi
 			.fn<BotDetectionFunction>()
 			.mockResolvedValue(detection(CaptchaType.image));
 		widget = mountProcaptchaFrictionless(container, props(detectBot));
 		await settle();
 
-		mocks.mounted[0]?.props.onSessionInvalidated?.(11, 22);
-		await settle();
-		mocks.mounted[1]?.props.onSessionInvalidated?.(11, 22);
-		await settle();
+		// One more failure than the budget allows; the last one falls over
+		// visibly rather than asking for yet another session.
+		for (
+			let attempt = 0;
+			attempt <= MAX_SESSION_INVALIDATED_RETRIES;
+			attempt++
+		) {
+			mocks.mounted.at(-1)?.props.onSessionInvalidated?.(11, 22);
+			await settle();
+		}
 
-		expect(detectBot).toHaveBeenCalledTimes(2);
+		expect(detectBot).toHaveBeenCalledTimes(
+			MAX_SESSION_INVALIDATED_RETRIES + 1,
+		);
 	});
 });
 

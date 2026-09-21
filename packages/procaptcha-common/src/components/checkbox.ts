@@ -45,7 +45,11 @@ export interface CheckboxProps {
 	labelText: string;
 	error?: string;
 	loading: boolean;
+	/** Name for the spinner that stands in for the box while it is working. */
+	loadingText?: string;
 }
+
+const DEFAULT_LOADING_TEXT = "Checking that you are human";
 
 const CHECKBOX_STYLE_ID = "checkbox";
 const LABEL_CLASS = "prosopo-checkbox__label";
@@ -56,6 +60,15 @@ const ID_LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const FAQ_LINK = process.env.PROSOPO_DOCS_URL
 	? `${new URL(`${process.env.PROSOPO_DOCS_URL}/en/basics/faq/`).href}/`
 	: "https://docs.prosopo.io/en/basics/faq/";
+
+/**
+ * Whether nothing on the page holds focus, which is where the browser leaves it
+ * when the focused element is removed.
+ */
+const focusIsStranded = (element: HTMLElement): boolean => {
+	const { activeElement, body } = element.ownerDocument;
+	return null === activeElement || activeElement === body;
+};
 
 const generateRandomId = (): string =>
 	Array.from(
@@ -163,6 +176,7 @@ export const mountCheckbox = (
 	const teardown = new Teardown();
 	let props = initialProps;
 	let hover = false;
+	let hadFocus = false;
 
 	// The sheet bakes in theme tokens, so light and dark are separate documents
 	// rather than one that gets rewritten — that keeps the id stable per theme
@@ -188,14 +202,19 @@ export const mountCheckbox = (
 
 	const spinner = createElement("div", {
 		className: WIDGET_CHECKBOX_SPINNER_CSS_CLASS,
-		attributes: { "aria-label": "Loading spinner" },
+		attributes: {
+			role: "status",
+			// Focusable only programmatically: it stands in for the input it
+			// replaced, so its name is what a screen reader reads when focus is
+			// handed over.
+			tabindex: "-1",
+		},
 	});
 
 	const input = createElement("input", {
 		className: BOX_CLASS,
 		attributes: {
 			type: "checkbox",
-			"aria-live": "assertive",
 			"data-cy": "captcha-checkbox",
 		},
 	});
@@ -234,6 +253,16 @@ export const mountCheckbox = (
 				"background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
 		});
 	};
+
+	// Removing a focused element drops focus to the body without firing blur,
+	// so this survives the swap below and says whether the swap cost the user
+	// their place on the page.
+	teardown.addEventListener(input, "focus", () => {
+		hadFocus = true;
+	});
+	teardown.addEventListener(input, "blur", () => {
+		hadFocus = false;
+	});
 
 	teardown.addEventListener(input, "mouseenter", () => {
 		hover = true;
@@ -291,15 +320,38 @@ export const mountCheckbox = (
 		label.textContent = props.labelText;
 	};
 
+	// The spinner replaces the box in the DOM rather than covering it, which
+	// strands a keyboard user at the top of the page for as long as the check
+	// runs, with nothing said about why the box vanished. Handing focus across
+	// the swap and back keeps them where they were and gets each side's name
+	// read out as it arrives.
+	//
+	// Only focus the swap itself stranded is claimed back. The check lasts as
+	// long as the network does, and a user who spent that time moving on to the
+	// host page's own fields would otherwise be dragged out of them, mid
+	// keystroke, by a widget they had finished with.
+	const restoreFocusAfterSwap = (control: HTMLElement) => {
+		if (!hadFocus || !focusIsStranded(control)) {
+			return;
+		}
+		control.focus();
+	};
+
 	const render = () => {
 		const control = props.loading ? spinner : input;
-		if (control.parentNode !== root) {
+		const swapped = control.parentNode !== root;
+		if (swapped) {
 			clearElement(root);
 			root.appendChild(control);
 			root.appendChild(label);
 		}
 
-		if (!props.loading) {
+		if (props.loading) {
+			spinner.setAttribute(
+				"aria-label",
+				props.loadingText ?? DEFAULT_LOADING_TEXT,
+			);
+		} else {
 			// Regenerated per render, as the React component did — the id is only
 			// ever a per-instance handle, never referenced across renders.
 			const id = generateRandomId();
@@ -312,6 +364,10 @@ export const mountCheckbox = (
 		}
 
 		renderLabel();
+
+		if (swapped) {
+			restoreFocusAfterSwap(control);
+		}
 	};
 
 	render();

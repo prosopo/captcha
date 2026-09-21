@@ -1,5 +1,299 @@
 # @prosopo/types-env
 
+## 2.11.6
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+  - @prosopo/types-database@5.6.1
+  - @prosopo/keyring@2.9.93
+
+## 2.11.5
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [ce2500b]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/types-database@5.6.0
+  - @prosopo/keyring@2.9.92
+
+## 2.11.4
+### Patch Changes
+
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/keyring@2.9.91
+  - @prosopo/types-database@5.5.5
+
+## 2.11.3
+### Patch Changes
+
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d4e9425]
+- Updated dependencies [0be8838]
+  - @prosopo/keyring@2.9.90
+  - @prosopo/types-database@5.5.4
+  - @prosopo/types@5.8.4
+  - @prosopo/logger@2.0.10
+
+## 2.11.2
+### Patch Changes
+
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [028a158]
+  - @prosopo/types-database@5.5.3
+  - @prosopo/types@5.8.3
+  - @prosopo/keyring@2.9.89
+
+## 2.11.1
+### Patch Changes
+
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/types-database@5.5.2
+  - @prosopo/types@5.8.2
+  - @prosopo/keyring@2.9.88
+
+## 2.11.0
+### Minor Changes
+
+- 886b664: Optionally answer `/healthz` with the node nearest the caller.
+  
+  `/healthz` tells a client which node to pin its captcha calls to, and a node has always answered with its own name — so the pin is whatever the DNS layer picked. The DNS layer only sees the client's address when the client's resolver forwards it, which many do not. The provider always sees it, because the connection is already open.
+  
+  Behind `PROSOPO_HEALTHZ_GEO_STEERING`, off by default. With it off nothing in this change runs and the response is unchanged, headers included.
+  
+  - `IpInfoService.country(ip)` is a new MaxMind-only fast path: an in-process, synchronous read of the memory-mapped database, returning an ISO 3166-1 alpha-2 code or `undefined`. `lookup()` is unchanged and still prefers ipapi.is for its threat data; a country lookup does not need that data and must not pay a network call for it. Added to `IIpInfoService` in `@prosopo/ipinfo` and `@prosopo/types-env`.
+  - The country → host map is configuration, supplied by the deployment as JSON in `PROSOPO_HEALTHZ_GEO_ROUTES`. It is also the candidate set: a host that must not receive traffic simply does not appear in it. An unparseable or empty map leaves steering off rather than failing startup.
+  - A background poller (`PROSOPO_HEALTHZ_GEO_PROBE_INTERVAL_MS`, `PROSOPO_HEALTHZ_GEO_PROBE_TIMEOUT_MS`) tracks each candidate's health. Every candidate starts down and only becomes up on a successful probe, so a poller that has not run or is failing leaves steering off. The request path reads a boolean and never awaits a probe.
+  - The handler never awaits readiness. It reads `ipInfoService.isAvailable()`, which is false before the environment is ready, and answers with its own name. Loopback and private-range callers — deploy gates, container health checks — short-circuit the same way. `/healthz` stays dependency-free.
+  - `Cache-Control: no-store, private` is set whenever steering is on, before the decision, so it covers every branch. The answer varies per caller and no intermediary may cache and replay it.
+  - `prosopo_healthz_geo_outcomes_total{outcome}` on `/metrics` counts `steered`, `not_steered`, `target_down` and `geo_unavailable`. Every outcome but the first falls back to the node's own name, which is also the behaviour with steering off, so nothing else would show that steering had stopped working.
+  
+  No client-side change: the load balancer already pins to whatever `host` the response carries.
+
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+  - @prosopo/types-database@5.5.1
+  - @prosopo/keyring@2.9.87
+
+## 2.10.46
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [b2183f9]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/types-database@5.5.0
+  - @prosopo/keyring@2.9.86
+
+## 2.10.45
+### Patch Changes
+
+- Updated dependencies [6f57ee9]
+- Updated dependencies [b6918c0]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/types-database@5.4.1
+  - @prosopo/keyring@2.9.85
+  - @prosopo/logger@2.0.9
+
+## 2.10.44
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/keyring@2.9.84
+  - @prosopo/logger@2.0.8
+  - @prosopo/types@5.6.0
+  - @prosopo/types-database@5.4.0
+
+## 2.10.43
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/types-database@5.3.4
+  - @prosopo/keyring@2.9.83
+
+## 2.10.42
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/keyring@2.9.82
+  - @prosopo/types-database@5.3.3
+
+## 2.10.41
+### Patch Changes
+
+- Updated dependencies [0a88895]
+- Updated dependencies [360b737]
+  - @prosopo/types-database@5.3.2
+  - @prosopo/types@5.5.1
+  - @prosopo/keyring@2.9.81
+
+## 2.10.40
+### Patch Changes
+
+  - @prosopo/types-database@5.3.1
+
+## 2.10.39
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/types-database@5.3.0
+  - @prosopo/types@5.5.0
+  - @prosopo/keyring@2.9.80
+
+## 2.10.38
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/types-database@5.2.0
+  - @prosopo/keyring@2.9.79
+
+## 2.10.37
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/keyring@2.9.78
+  - @prosopo/types-database@5.1.12
+
+## 2.10.36
+### Patch Changes
+
+- Updated dependencies [68a9b41]
+- Updated dependencies [ce5a3d7]
+  - @prosopo/types@5.2.6
+  - @prosopo/keyring@2.9.77
+  - @prosopo/logger@2.0.7
+  - @prosopo/types-database@5.1.11
+
+## 2.10.35
+### Patch Changes
+
+- Updated dependencies [dfc1fa6]
+  - @prosopo/types-database@5.1.10
+
+## 2.10.34
+### Patch Changes
+
+- Updated dependencies [1afe466]
+  - @prosopo/types-database@5.1.9
+
+## 2.10.33
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/types@5.2.5
+  - @prosopo/keyring@2.9.76
+  - @prosopo/types-database@5.1.8
+
+## 2.10.32
+### Patch Changes
+
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+  - @prosopo/keyring@2.9.75
+  - @prosopo/types-database@5.1.7
+
+## 2.10.31
+### Patch Changes
+
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+- Updated dependencies [3c88239]
+  - @prosopo/types-database@5.1.6
+  - @prosopo/types@5.2.3
+  - @prosopo/keyring@2.9.74
+
+## 2.10.30
+### Patch Changes
+
+- Updated dependencies [ae475a5]
+  - @prosopo/types@5.2.2
+  - @prosopo/types-database@5.1.5
+  - @prosopo/keyring@2.9.73
+
+## 2.10.29
+### Patch Changes
+
+- Updated dependencies [35f640f]
+  - @prosopo/types@5.2.1
+  - @prosopo/keyring@2.9.72
+  - @prosopo/types-database@5.1.4
+
+## 2.10.28
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/keyring@2.9.71
+  - @prosopo/types-database@5.1.3
+
+## 2.10.27
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+  - @prosopo/types@5.1.2
+  - @prosopo/keyring@2.9.70
+  - @prosopo/types-database@5.1.2
+
+## 2.10.26
+### Patch Changes
+
+- Updated dependencies [cec44bb]
+  - @prosopo/types@5.1.1
+  - @prosopo/types-database@5.1.1
+  - @prosopo/keyring@2.9.69
+
 ## 2.10.25
 ### Patch Changes
 

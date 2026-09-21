@@ -15,12 +15,18 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import type { Rollup } from "vite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { nodejsPolarsDirnamePlugin } from "./NodejsPolarsDirnamePlugin.js";
 import ViteTestConfig from "./vite.test.config.js";
 import ViteThreadsTestConfig from "./vite.threads.test.config.js";
 
 const NATIVE_POLARS = "/repo/node_modules/nodejs-polars/bin/native-polars.js";
+
+const resolveOptions: Rollup.ResolveIdExtraOptions = {
+	isEntry: false,
+	kind: "import-statement",
+};
 
 let root: string;
 let cwd: string;
@@ -111,18 +117,28 @@ describe("ViteTestConfig", () => {
 		// the repo-root globs only match `packages/*/src/**`.
 		asPackage();
 		const config = ViteTestConfig();
-		expect(config.test?.coverage?.include).toContain("src/**/*.ts");
-		expect(config.test?.coverage?.exclude).toContain("src/**/*.test.ts");
+		// Vitest's coverage type is a discriminated union on `provider`; the
+		// custom-provider variant doesn't declare `include`/`exclude` even
+		// though they're valid at runtime for every provider. Cast to the v8
+		// variant (which does declare them) for assertion purposes only.
+		const coverage = config.test?.coverage as
+			| { include?: unknown; exclude?: unknown }
+			| undefined;
+		expect(coverage?.include).toContain("src/**/*.ts");
+		expect(coverage?.exclude).toContain("src/**/*.test.ts");
 	});
 
 	it("falls back to repo-wide globs when there is no src directory", () => {
 		asRepoRoot();
 		const config = ViteTestConfig();
-		expect(config.test?.coverage?.include).toEqual([
+		const coverage = config.test?.coverage as
+			| { include?: unknown; exclude?: unknown }
+			| undefined;
+		expect(coverage?.include).toEqual([
 			"packages/*/src/**",
 			"captcha/packages/*/src/**",
 		]);
-		expect(config.test?.coverage?.exclude).toContain("**/node_modules/**");
+		expect(coverage?.exclude).toContain("**/node_modules/**");
 	});
 
 	it("adds the tsconfig-paths plugin only when given a tsconfig", () => {
@@ -169,10 +185,12 @@ describe("nodejsPolarsDirnamePlugin", () => {
 	const plugin = nodejsPolarsDirnamePlugin();
 
 	it("claims only the native polars entry point", () => {
-		expect(plugin.resolveId(NATIVE_POLARS, undefined, {})).toBe(NATIVE_POLARS);
-		expect(plugin.resolveId("zod", undefined, {})).toBeNull();
+		expect(plugin.resolveId(NATIVE_POLARS, undefined, resolveOptions)).toBe(
+			NATIVE_POLARS,
+		);
+		expect(plugin.resolveId("zod", undefined, resolveOptions)).toBeNull();
 		expect(
-			plugin.resolveId("nodejs-polars/bin/other.js", undefined, {}),
+			plugin.resolveId("nodejs-polars/bin/other.js", undefined, resolveOptions),
 		).toBeNull();
 	});
 

@@ -14,6 +14,7 @@
 
 import type { Logger } from "@prosopo/logger";
 import type { RedisConnection } from "@prosopo/redis-client";
+import { DEFAULT_MAX_TIMESTAMP_AGE } from "@prosopo/types";
 
 /** The Redis client type returned by RedisConnection.getClient() */
 type RedisClient = Awaited<ReturnType<RedisConnection["getClient"]>>;
@@ -38,13 +39,21 @@ const SESSION_KEY_PATTERNS = [
 ] as const;
 
 /**
- * Default TTL (seconds) for the ephemeral detector-session → bundle mapping.
- * Deliberately short: it only needs to bridge bundle assignment → the first
- * provider call (load + run detector + submit). The bundleId is promoted onto
- * the session record for later (behavioural) hops. An expired mapping makes
- * decryption fail closed (invalid payload).
+ * TTL (seconds) for the ephemeral detector-session → bundle mapping. It bridges
+ * bundle assignment → the first provider call (load + run detector + submit);
+ * the bundleId is promoted onto the session record for later (behavioural) hops.
+ * An expired mapping makes decryption fail closed, which costs the caller a
+ * challenge despite nothing having been measured about them.
+ *
+ * Derived from `DEFAULT_MAX_TIMESTAMP_AGE` rather than set independently. That
+ * is how long the frictionless flow will still read a detector payload, so it is
+ * exactly how long the key that reads it has to survive. Held separately the two
+ * drifted: at 60s against a 10 minute payload window, the provider spent nine of
+ * those ten minutes accepting payloads it had already discarded the means to
+ * decrypt, and the assign → submit gap only has to be stalled once — a
+ * backgrounded mobile tab is enough — to lose the binding.
  */
-export const DETECTOR_BUNDLE_TTL_SECONDS = 60;
+export const DETECTOR_BUNDLE_TTL_SECONDS = DEFAULT_MAX_TIMESTAMP_AGE / 1000;
 
 /**
  * Redis-backed write queue and read cache for reducing MongoDB load.
@@ -289,12 +298,13 @@ export class RedisWriteQueue {
 		}
 	}
 
-	// ── Detector bundle assignment (short-TTL ephemeral mapping) ─────────
+	// ── Detector bundle assignment (ephemeral mapping) ───────────────────
 
 	/**
-	 * Bind a detector session id to the precomputed bundle assigned to it. Short
-	 * TTL by design (see {@link DETECTOR_BUNDLE_TTL_SECONDS}). Returns false if
-	 * Redis is unavailable so the caller can fail closed.
+	 * Bind a detector session id to the precomputed bundle assigned to it. Lives
+	 * as long as a detector payload is still accepted (see
+	 * {@link DETECTOR_BUNDLE_TTL_SECONDS}). Returns false if Redis is unavailable
+	 * so the caller can fail closed.
 	 */
 	async cacheDetectorBundle(
 		detectorSessionId: string,

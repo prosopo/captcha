@@ -28,7 +28,6 @@ import {
 	CaptchaStatus,
 	CaptchaType,
 	type CompositeIpAddress,
-	ContextType,
 	type Dataset,
 	type DatasetBase,
 	type DatasetWithIds,
@@ -61,8 +60,6 @@ import {
 import type { SessionRecord, StoredSession } from "@prosopo/types-database";
 import {
 	CaptchaRecordSchema,
-	type ClientContextEntropyRecord,
-	ClientContextEntropyRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
 	DatasetRecordSchema,
@@ -71,8 +68,10 @@ import {
 	type IUserDataSlim,
 	type PoWCaptchaRecord,
 	PoWCaptchaRecordSchema,
+	type ProjectedSession,
 	type PuzzleCaptchaRecord,
 	PuzzleCaptchaRecordSchema,
+	SESSION_PROJECTION,
 	type ScheduledTask,
 	type ScheduledTaskRecord,
 	ScheduledTaskRecordSchema,
@@ -116,7 +115,6 @@ enum TableNames {
 	session = "session",
 	detector = "detector",
 	decisionMachine = "decisionMachine",
-	clientContextEntropy = "clientContextEntropy",
 	spamEmailDomain = "spamEmailDomain",
 }
 
@@ -175,11 +173,6 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.decisionMachine,
 		modelName: "DecisionMachine",
 		schema: DecisionMachineArtifactRecordSchema,
-	},
-	{
-		collectionName: TableNames.clientContextEntropy,
-		modelName: "ClientContextEntropy",
-		schema: ClientContextEntropyRecordSchema,
 	},
 	{
 		collectionName: TableNames.spamEmailDomain,
@@ -744,9 +737,17 @@ export class ProviderDatabase
 			const filter: Pick<UserCommitmentRecord, "id"> = {
 				id: commit.id,
 			};
-			await this.tables?.commitment.updateOne(filter, commitmentRecord, {
-				upsert: true,
-			});
+			// Wrap in an explicit `$set` over a shallow copy. Passing the
+			// record itself lets mongoose mutate it in place on an upsert:
+			// `moveImmutableProperties` hoists immutable paths into a
+			// `$setOnInsert` key it adds to the object you handed it. The
+			// same object is then streamed below, and mongoose 9 rejects a
+			// `$set` payload carrying a `$setOnInsert` key.
+			await this.tables?.commitment.updateOne(
+				filter,
+				{ $set: { ...commitmentRecord } },
+				{ upsert: true },
+			);
 
 			const ops = captchas.map((captcha: CaptchaSolution) => ({
 				updateOne: {
@@ -919,6 +920,11 @@ export class ProviderDatabase
 						serverChecked: 1,
 						userSubmitted: 1,
 						coords: 1,
+						// Read by the verify path to correlate the site's
+						// session id against the one recorded at solve time.
+						// Omitting it made every clientSessionId-carrying token
+						// look like it was solved in another session.
+						clientMetaData: 1,
 					} as { [key in keyof Partial<PoWCaptchaRecord>]: 1 })
 					.lean<PoWCaptchaRecord>();
 			if (record) {
@@ -993,9 +999,13 @@ export class ProviderDatabase
 			};
 		}
 		try {
-			const updateResult = await tables.powcaptcha.updateOne({ challenge }, [
-				{ $set: setStage },
-			]);
+			const updateResult = await tables.powcaptcha.updateOne(
+				{ challenge },
+				[{ $set: setStage }],
+				// mongoose 9 refuses an array update unless the caller opts
+				// in, so every pipeline-form write below carries this flag.
+				{ updatePipeline: true },
+			);
 			if (updateResult.matchedCount === 0) {
 				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
 					context: {
@@ -1202,6 +1212,8 @@ export class ProviderDatabase
 						serverChecked: 1,
 						userSubmitted: 1,
 						coords: 1,
+						// See the PoW projection above — same verify-time read.
+						clientMetaData: 1,
 					} as { [key in keyof Partial<PuzzleCaptchaRecord>]: 1 })
 					.lean<PuzzleCaptchaRecord>();
 			if (record) {
@@ -1391,22 +1403,44 @@ export class ProviderDatabase
 	/** @description Get Dapp User captcha commitments from the commitments table that have not been counted towards the
 	 * client's total.
 	 *
-	 * Served by the `pendingStage_partial` index. Records have
-	 * `pendingStage: true` set on insert and on every mutation (see
+	 * Served by the compound `pendingStage_partial` index
+	 * (`{pendingStage:1, _id:1}` partial where pendingStage:true). Records
+	 * have `pendingStage: true` set on insert and on every mutation (see
 	 * `updateDappUserCommitment`, `markDappUserCommitmentsChecked`,
 	 * `approveDappUserCommitment`, `disapproveDappUserCommitment`,
 	 * `storePendingImageCommitment`). `markDappUserCommitmentsStored` clears
 	 * the flag after a successful stage, guarded by `lastUpdatedTimestamp`
 	 * so an in-flight update isn't lost.
+	 *
+	 * Keyset pagination: pass the `_id` of the last row from the previous
+	 * page as `afterId` to resume. The old `skip(N)` shape walked N docs
+	 * per page even with the right index; under a 1M-row pending backlog
+	 * that hit multi-second query durations and thrashed the WT cache,
+	 * dragging every co-tenant query with it.
+	 *
+	 * `.hint("pendingStage_partial")` pins the compound index against a
+	 * planner regression seen in prod on 2026-08-21: on collections with
+	 * both a plain `_id` index and the compound `{pendingStage:1, _id:1}`
+	 * partial, the planner sometimes picks `_id` alone for
+	 * `find({pendingStage:true}).sort({_id:1})` and scans the entire
+	 * collection filtering in memory. Clearing the plan cache re-plans
+	 * once but doesn't prevent the regression re-appearing after future
+	 * catalog changes — the hint makes the choice explicit.
 	 */
 	async getUnstoredDappUserCommitments(
 		limit = 1000,
-		skip = 0,
+		afterId?: unknown,
 	): Promise<UserCommitmentRecord[]> {
+		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
+			pendingStage: true,
+		};
+		if (afterId !== undefined) {
+			filter._id = { $gt: afterId };
+		}
 		const docs = await this.tables?.commitment
-			.find({ pendingStage: true })
+			.find(filter)
+			.hint("pendingStage_partial")
 			.sort({ _id: 1 })
-			.skip(skip)
 			.limit(limit)
 			.lean<UserCommitmentRecord[]>();
 		return docs || [];
@@ -1441,27 +1475,31 @@ export class ProviderDatabase
 	 */
 	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
 		const timestamp = new Date();
-		await this.tables?.commitment.updateMany({ id: { $in: commitmentIds } }, [
-			{
-				$set: {
-					serverChecked: true,
-					lastUpdatedTimestamp: timestamp,
-					pendingStage: true,
-					verifiedAtTimestamp: {
-						$ifNull: ["$verifiedAtTimestamp", timestamp],
+		await this.tables?.commitment.updateMany(
+			{ id: { $in: commitmentIds } },
+			[
+				{
+					$set: {
+						serverChecked: true,
+						lastUpdatedTimestamp: timestamp,
+						pendingStage: true,
+						verifiedAtTimestamp: {
+							$ifNull: ["$verifiedAtTimestamp", timestamp],
+						},
 					},
 				},
-			},
-		]);
+			],
+			{ updatePipeline: true },
+		);
 	}
 
 	/** @description Update an image captcha commitment
 	 */
 	async updateDappUserCommitment(
-		commitmentId: Hash,
+		commitmentId: UserCommitment["id"],
 		updates: Partial<UserCommitment>,
 	) {
-		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
+		const filter: Pick<UserCommitment, "id"> = { id: commitmentId };
 		const timestamp = new Date();
 		const baseSet: Record<string, unknown> = {
 			...updates,
@@ -1493,9 +1531,11 @@ export class ProviderDatabase
 			await this.tables?.commitment.updateOne(filter, { $set: baseSet });
 			return;
 		}
-		await this.tables?.commitment.updateOne(filter, [
-			{ $set: { ...baseSet, ...pipelineExprs } },
-		]);
+		await this.tables?.commitment.updateOne(
+			filter,
+			[{ $set: { ...baseSet, ...pipelineExprs } }],
+			{ updatePipeline: true },
+		);
 	}
 
 	/**
@@ -1534,14 +1574,21 @@ export class ProviderDatabase
 	 */
 	async getUnstoredDappUserPoWCommitments(
 		limit = 1000,
-		skip = 0,
+		afterId?: unknown,
 	): Promise<PoWCaptchaRecord[]> {
-		// Served by the `pendingStage_partial` index — see
-		// `getUnstoredDappUserCommitments` for the lifecycle of the flag.
+		// Served by the compound `pendingStage_partial` index — see
+		// `getUnstoredDappUserCommitments` for the lifecycle of the flag
+		// and the keyset-pagination contract.
+		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
+			pendingStage: true,
+		};
+		if (afterId !== undefined) {
+			filter._id = { $gt: afterId };
+		}
 		const docs = await this.tables?.powcaptcha
-			.find({ pendingStage: true })
+			.find(filter)
+			.hint("pendingStage_partial")
 			.sort({ _id: 1 })
-			.skip(skip)
 			.limit(limit)
 			.lean<PoWCaptchaRecord[]>();
 		return docs || [];
@@ -1588,7 +1635,7 @@ export class ProviderDatabase
 					},
 				},
 			],
-			{ upsert: false },
+			{ upsert: false, updatePipeline: true },
 		);
 	}
 
@@ -1695,70 +1742,12 @@ export class ProviderDatabase
 	 */
 	async getSessionRecordBySessionId(
 		sessionId: string,
-	): Promise<Session | undefined> {
+	): Promise<ProjectedSession | undefined> {
 		const filter: Pick<SessionRecord, "sessionId"> = { sessionId };
-		// Projection lists every field a caller of this function actually
-		// reads. `headers` is selected by individual key rather than as a
-		// whole blob: the flattened `req.headers` persisted at frictionless
-		// time can contain `x-tls-clienthello` (a base64-encoded full TLS
-		// ClientHello, multi-KB per session). That field is only consumed
-		// by `ja4Middleware` from the live `req.headers` at the entry
-		// point — never re-read off the persisted Session — so it just
-		// bloats every subsequent lookup. The enumerated list below covers
-		// the headers `buildEscalation` forwards onto the escalation
-		// session. New headers that need to round-trip must be added
-		// here explicitly.
+		// See SESSION_PROJECTION for what is selected and why.
 		const doc = await this.tables.session
-			.findOne(filter, {
-				sessionId: 1,
-				token: 1,
-				score: 1,
-				threshold: 1,
-				scoreComponents: 1,
-				ipAddress: 1,
-				ipInfo: 1,
-				webView: 1,
-				iFrame: 1,
-				isEscalation: 1,
-				decryptedHeadHash: 1,
-				siteKey: 1,
-				reason: 1,
-				mode: 1,
-				solvedImagesCount: 1,
-				userSitekeyIpHash: 1,
-				simdReadings: 1,
-				bundleId: 1,
-				dnsEvent: 1,
-				originSessionId: 1,
-				currentUrl: 1,
-				iframeUrl: 1,
-				// captchaType is required by the peek-before-consume path
-				// in `CaptchaManager.isValidRequest` — without it, every
-				// escalation peek would compare `undefined !== <requested>`
-				// and forcibly return INCORRECT_CAPTCHA_TYPE on the happy
-				// path too. Keep this projection in sync with whatever
-				// fields the read-only callers need.
-				captchaType: 1,
-				"headers.user-agent": 1,
-				"headers.accept": 1,
-				"headers.accept-language": 1,
-				"headers.accept-encoding": 1,
-				"headers.sec-ch-ua": 1,
-				"headers.sec-ch-ua-mobile": 1,
-				"headers.sec-ch-ua-platform": 1,
-				"headers.sec-ch-ua-platform-version": 1,
-				"headers.sec-fetch-dest": 1,
-				"headers.sec-fetch-mode": 1,
-				"headers.sec-fetch-site": 1,
-				"headers.sec-fetch-user": 1,
-				"headers.referer": 1,
-				"headers.origin": 1,
-				"headers.prosopo-user": 1,
-				"headers.prosopo-site-key": 1,
-				"headers.prosopo-type": 1,
-				"headers.x-tls-version": 1,
-			})
-			.lean<Session>();
+			.findOne(filter, SESSION_PROJECTION)
+			.lean<ProjectedSession>();
 		return doc || undefined;
 	}
 
@@ -1872,16 +1861,20 @@ export class ProviderDatabase
 		stage: SimdReadingsStage,
 	): Promise<void> {
 		try {
-			await this.tables.session.updateOne({ sessionId }, [
-				{
-					$set: {
-						simdReadings: { $ifNull: ["$simdReadings", readings] },
-						simdReadingsStage: { $ifNull: ["$simdReadingsStage", stage] },
-						lastUpdatedTimestamp: new Date(),
-						pendingStage: true,
+			await this.tables.session.updateOne(
+				{ sessionId },
+				[
+					{
+						$set: {
+							simdReadings: { $ifNull: ["$simdReadings", readings] },
+							simdReadingsStage: { $ifNull: ["$simdReadingsStage", stage] },
+							lastUpdatedTimestamp: new Date(),
+							pendingStage: true,
+						},
 					},
-				},
-			]);
+				],
+				{ updatePipeline: true },
+			);
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
 				context: { error: err, sessionId, stage },
@@ -1929,9 +1922,11 @@ export class ProviderDatabase
 			setStage["dnsEvent.pathValid"] = fields.pathValid;
 		}
 		try {
-			const result = await this.tables.session.updateOne({ sessionId }, [
-				{ $set: setStage },
-			]);
+			const result = await this.tables.session.updateOne(
+				{ sessionId },
+				[{ $set: setStage }],
+				{ updatePipeline: true },
+			);
 			return result.matchedCount > 0;
 		} catch (err) {
 			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
@@ -1976,20 +1971,28 @@ export class ProviderDatabase
 	/** Get unstored session records
 	 * @description Get session records that have not been stored yet.
 	 *
-	 * Served by the `pendingStage_partial` index — see
-	 * `getUnstoredDappUserCommitments` for the lifecycle of the flag.
-	 * `checkAndRemoveSession` also flips the flag so consumed sessions
-	 * propagate to the central DB via the next sweep.
-	 * @param limit
-	 * @param skip
+	 * Served by the compound `pendingStage_partial` index — see
+	 * `getUnstoredDappUserCommitments` for the lifecycle of the flag and
+	 * the keyset-pagination contract. `checkAndRemoveSession` also flips
+	 * the flag so consumed sessions propagate to the central DB via the
+	 * next sweep.
 	 */
-	getUnstoredSessionRecords(limit = 1000, skip = 0): Promise<SessionRecord[]> {
+	getUnstoredSessionRecords(
+		limit = 1000,
+		afterId?: unknown,
+	): Promise<SessionRecord[]> {
+		const filter: { pendingStage: true; _id?: { $gt: unknown } } = {
+			pendingStage: true,
+		};
+		if (afterId !== undefined) {
+			filter._id = { $gt: afterId };
+		}
 		return Promise.resolve(this.tables?.session)
 			.then((tbl) =>
 				tbl
-					?.find({ pendingStage: true })
+					?.find(filter)
+					.hint("pendingStage_partial")
 					.sort({ _id: 1 })
-					.skip(skip)
 					.limit(limit)
 					.lean<SessionRecord[]>(),
 			)
@@ -2293,6 +2296,37 @@ export class ProviderDatabase
 		});
 	}
 
+	// Shared projection for both commitment fetchers below. Must include
+	// every field the downstream verify path (`verifyImageCaptchaSolution`)
+	// reads off the returned record. Same failure mode as the projection
+	// bug fixed in #3107: extend this list whenever the verify path starts
+	// reading a new field off the solution.
+	private static readonly DAPP_USER_COMMITMENT_PROJECTION = {
+		id: 1,
+		result: 1,
+		serverChecked: 1,
+		requestedAtTimestamp: 1,
+		submittedAtTimestamp: 1,
+		verifiedAtTimestamp: 1,
+		failedAtTimestamp: 1,
+		ipAddress: 1,
+		sessionId: 1,
+		userAccount: 1,
+		dappAccount: 1,
+		headers: 1,
+		ipInfo: 1,
+		behavioralDataPacked: 1,
+		deviceCapability: 1,
+		coords: 1,
+		// Read by `verifyImageCaptchaSolution` for the client-session
+		// correlation. Added in 5.5.0 but never added here, so
+		// `solution.clientMetaData` came back `undefined` on every fetch and
+		// `isClientSessionMismatch(id, undefined)` was true for every caller
+		// that supplied a session id — a token replay reported on solves that
+		// were earned in exactly the session they claimed.
+		clientMetaData: 1,
+	} as { [key in keyof Partial<UserCommitmentRecord>]: 1 };
+
 	/**
 	 * @description Get dapp user commitment by user account
 	 * @param commitmentId
@@ -2302,21 +2336,7 @@ export class ProviderDatabase
 	): Promise<UserCommitmentRecord | undefined> {
 		const filter: Pick<UserCommitmentRecord, "id"> = { id: commitmentId };
 		const commitmentCursor = this.tables?.commitment
-			?.findOne(filter, {
-				id: 1,
-				result: 1,
-				serverChecked: 1,
-				requestedAtTimestamp: 1,
-				submittedAtTimestamp: 1,
-				verifiedAtTimestamp: 1,
-				failedAtTimestamp: 1,
-				ipAddress: 1,
-				sessionId: 1,
-				userAccount: 1,
-				dappAccount: 1,
-				headers: 1,
-				ipInfo: 1,
-			} as { [key in keyof Partial<UserCommitmentRecord>]: 1 })
+			?.findOne(filter, ProviderDatabase.DAPP_USER_COMMITMENT_PROJECTION)
 			.lean<UserCommitmentRecord>();
 
 		const doc = await commitmentCursor;
@@ -2337,15 +2357,11 @@ export class ProviderDatabase
 			userAccount,
 			dappAccount,
 		};
-		const project = {
-			_id: 0,
-			result: 1,
-		};
 		const sort = { sort: { _id: -1 } };
 		const docs: UserCommitmentRecord[] | null | undefined =
 			await this.tables?.commitment
 				// sort by most recent first to avoid old solutions being used in development
-				?.find(filter, project, sort)
+				?.find(filter, ProviderDatabase.DAPP_USER_COMMITMENT_PROJECTION, sort)
 				.lean<UserCommitmentRecord[]>();
 
 		return docs ? (docs as UserCommitmentRecord[]) : [];
@@ -2605,8 +2621,20 @@ export class ProviderDatabase
 	/**
 	 * @description Update the client records
 	 */
-	async updateClientRecords(clientRecords: ClientRecord[]): Promise<void> {
-		const ops = clientRecords.map((record) => {
+	async updateClientRecords(clientRecords: IUserDataSlim[]): Promise<void> {
+		// An upsert filtered on a missing account matches nothing and inserts,
+		// so a batch of records with no account collapses into a single row
+		// keyed on `account: undefined` and silently replaces every site's
+		// settings with the last one in the batch. Drop them instead.
+		const usable = clientRecords.filter((record) => !!record.account);
+		const skipped = clientRecords.length - usable.length;
+		if (skipped > 0) {
+			await this.logger.error(() => ({
+				msg: "Refusing to upsert client records with no account",
+				data: { skipped, received: clientRecords.length },
+			}));
+		}
+		const ops = usable.map((record) => {
 			const clientRecord: IUserDataSlim = {
 				account: record.account,
 				settings: record.settings,
@@ -2786,138 +2814,6 @@ export class ProviderDatabase
 	async removeAllDecisionMachineArtifacts(): Promise<number> {
 		const result = await this.tables?.decisionMachine.deleteMany({});
 		return result?.deletedCount ?? 0;
-	}
-
-	/**
-	 * @description set client context-specific entropy
-	 */
-	async setClientContextEntropy(
-		account: string,
-		contextType: ContextType,
-		entropy: string,
-	): Promise<void> {
-		const filter: Pick<ClientContextEntropyRecord, "account" | "contextType"> =
-			{ account, contextType };
-		await this.tables?.clientContextEntropy.updateOne(
-			filter,
-			{ $set: { account, contextType, entropy } },
-			{ upsert: true },
-		);
-	}
-
-	/**
-	 * @description get client context-specific entropy
-	 */
-	async getClientContextEntropy(
-		account: string,
-		contextType: ContextType,
-	): Promise<string | undefined> {
-		const filter: Pick<ClientContextEntropyRecord, "account" | "contextType"> =
-			{ account, contextType };
-		const doc = await this.tables?.clientContextEntropy
-			.findOne(filter)
-			.lean<ClientContextEntropyRecord>();
-		return doc ? doc.entropy : undefined;
-	}
-
-	/** Sample captcha records from the database for a specific context */
-	async sampleContextEntropy(
-		sampleSize: number,
-		siteKey: string,
-		contextType: ContextType,
-	): Promise<string[]> {
-		const size = sampleSize ? Math.abs(Math.trunc(sampleSize)) : 1;
-		const max = 10000;
-		if (size > max) {
-			throw new ProsopoDBError("DATABASE.CAPTCHA_SAMPLE_SIZE_EXCEEDED", {
-				context: {
-					failedFuncName: this.sampleContextEntropy.name,
-					sampleSize,
-				},
-			});
-		}
-
-		// Use aggregation to join with session records and filter by
-		// context. `$sample` runs *before* `$lookup` so the join only
-		// processes the bounded random pool (`max`) instead of every
-		// matched powcaptcha. The previous ordering let `$lookup` chew
-		// through the full match (>30K docs for the busiest dapp,
-		// ~4.7s per call) before the trailing `$limit` had any effect.
-		// A second `$sample` after the post-join filter trims down to
-		// the requested `size`.
-		// biome-ignore lint/suspicious/noExplicitAny: Dynamic pipeline construction requires flexible typing
-		const pipeline: any[] = [
-			{
-				$match: {
-					dappAccount: siteKey,
-					requestedAtTimestamp: {
-						$gt: new Date(new Date().getTime() - TWENTY_FOUR_HOURS_IN_MS),
-					},
-				},
-			},
-			{ $sample: { size: max } },
-			{
-				$lookup: {
-					from: "sessions",
-					localField: "sessionId",
-					foreignField: "sessionId",
-					as: "sessionData",
-				},
-			},
-			{
-				$unwind: {
-					path: "$sessionData",
-					preserveNullAndEmptyArrays: false,
-				},
-			},
-		];
-
-		// Add context-specific filter
-		if (contextType === ContextType.Webview) {
-			pipeline.push({
-				$match: {
-					"sessionData.webView": true,
-				},
-			});
-		} else if (contextType === ContextType.Default) {
-			pipeline.push({
-				$match: {
-					"sessionData.webView": false,
-				},
-			});
-		}
-
-		pipeline.push(
-			{ $sample: { size } },
-			{
-				$project: {
-					_id: 0,
-					sessionId: 1,
-				},
-			},
-		);
-
-		const cursor = this.tables?.powcaptcha.aggregate(pipeline);
-		const docs = await cursor;
-
-		if (docs?.length === 0) {
-			return [];
-		}
-
-		// Get the associated entropies from sessions
-		return (
-			await Promise.all(
-				docs.map(async (doc) => {
-					if (doc.sessionId) {
-						const tokenRecord = await this.getSessionRecordBySessionId(
-							doc.sessionId,
-						);
-						return tokenRecord?.decryptedHeadHash;
-					}
-					return undefined;
-				}),
-			)
-		).filter((headHash): headHash is string => headHash !== undefined);
 	}
 
 	async getSpamEmailDomain(

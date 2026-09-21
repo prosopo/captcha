@@ -65,6 +65,9 @@ export const mountProcaptchaPowWidget = (
 	// to `onSessionInvalidated`. If the retry also fails, we fall through to
 	// the pre-existing `frictionlessState.restart()` path instead of looping.
 	let sessionInvalidatedFired = false;
+	// A bound button can be clicked again while the first run is still going,
+	// and in invisible mode there is no spinner standing in the way of it.
+	let executeRunning = false;
 
 	let honeypot: HoneypotComponent | undefined;
 	let checkbox: Component<CheckboxProps> | undefined;
@@ -134,6 +137,9 @@ export const mountProcaptchaPowWidget = (
 		theme: "light" === config.theme ? lightTheme : darkTheme,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",
 		error: store.state.error?.message,
+		loadingText: translator.t("WIDGET.CHECKING", {
+			defaultValue: "Checking that you are human",
+		}),
 		loading,
 		onChange: async (
 			event: MouseEvent | KeyboardEvent | TouchEvent,
@@ -182,18 +188,49 @@ export const mountProcaptchaPowWidget = (
 	teardown.add(store.subscribe(scheduler.schedule));
 	teardown.add(translator.subscribe(scheduler.schedule));
 
-	// Only set up the execute listener in invisible mode: it starts verification
-	// directly, without showing any UI.
-	if (isInvisible) {
-		teardown.addEventListener(document, PROCAPTCHA_EXECUTE_EVENT, () => {
-			try {
-				void manager.start().catch((error: unknown) => {
-					console.error("Error starting PoW verification:", error);
-				});
-			} catch (error) {
-				console.error("Error starting PoW verification:", error);
+	// A bare execute() reaches every invisible widget via document. A targeted
+	// execute() is dispatched on this widget's container and works in either
+	// mode, which is what lets a bound button drive a visible widget.
+	const handleExecute = () => {
+		if (executeRunning) {
+			return;
+		}
+		executeRunning = true;
+		if (!isInvisible) {
+			loading = true;
+			scheduler.schedule();
+		}
+		const logError = (error: unknown) => {
+			console.error("Error starting PoW verification:", error);
+		};
+		const done = () => {
+			executeRunning = false;
+			if (!isInvisible) {
+				loading = false;
+				scheduler.schedule();
 			}
-		});
+		};
+		try {
+			void manager.start().catch(logError).finally(done);
+		} catch (error) {
+			logError(error);
+			done();
+		}
+	};
+
+	if (props.container) {
+		teardown.addEventListener(
+			props.container,
+			PROCAPTCHA_EXECUTE_EVENT,
+			handleExecute,
+		);
+	}
+	if (isInvisible) {
+		teardown.addEventListener(
+			document,
+			PROCAPTCHA_EXECUTE_EVENT,
+			handleExecute,
+		);
 	}
 
 	if (config.language) {

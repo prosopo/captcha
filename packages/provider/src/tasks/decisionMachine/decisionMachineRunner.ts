@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { createHash } from "node:crypto";
 import vm from "node:vm";
 import type { Logger } from "@prosopo/logger";
 import {
@@ -33,6 +34,7 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import { z } from "zod";
+import { measureSync } from "../../api/metrics.js";
 
 const LOAD_TIMEOUT_MS =
 	Number.parseInt(process.env.DECISION_MACHINE_LOAD_TIMEOUT_MS ?? "", 10) ||
@@ -40,6 +42,76 @@ const LOAD_TIMEOUT_MS =
 const EXEC_TIMEOUT_MS =
 	Number.parseInt(process.env.DECISION_MACHINE_EXEC_TIMEOUT_MS ?? "", 10) ||
 	2000;
+
+/**
+ * Module-level cache of loaded machine sandboxes, keyed by SHA-256 of
+ * `artifact.source`. Each entry holds the extracted `module.exports` for a
+ * given source blob so subsequent invocations skip both `new vm.Script(...)`
+ * (JIT compilation) and `script.runInContext(...)` (top-level execution).
+ *
+ * Shared across every `DecisionMachineRunner` instance in the process —
+ * multiple task classes (pow / img / puzzle / frictionless) each construct
+ * their own runner, and there's no reason to compile the same source once
+ * per runner. The exported functions are treated as stateless: they run
+ * against the caller's `input` and don't mutate module-local state.
+ *
+ * Invalidation is triggered externally via {@link invalidateDecisionMachineScriptCache}
+ * — call after any `upsertDecisionMachineArtifact` so a new artifact takes
+ * effect immediately rather than waiting for the artifact TTL to expire.
+ * Absent an explicit invalidate the cache is content-addressed: a new source
+ * gets a new key, the old entry just sits until process restart.
+ */
+interface CachedMachine {
+	exports: Record<string, unknown>;
+}
+
+const machineCache = new Map<string, CachedMachine>();
+
+const hashSource = (source: string): string =>
+	createHash("sha256").update(source).digest("hex");
+
+/**
+ * Compile + execute the artifact source in a fresh vm sandbox on first use,
+ * then reuse the resulting `module.exports` for every subsequent invocation
+ * of the same source. See {@link machineCache}.
+ */
+const loadMachine = (source: string): CachedMachine => {
+	const key = hashSource(source);
+	const cached = machineCache.get(key);
+	if (cached) return cached;
+
+	const sandbox = {
+		module: { exports: {} as unknown },
+		exports: {} as Record<string, unknown>,
+	};
+	const context = vm.createContext(sandbox);
+	const script = new vm.Script(source, {
+		filename: "decision-machine.js",
+	});
+	script.runInContext(context, { timeout: LOAD_TIMEOUT_MS });
+
+	const exported = (sandbox.module as { exports: unknown }).exports;
+	const exportsObj: Record<string, unknown> =
+		typeof exported === "function"
+			? { default: exported }
+			: exported && typeof exported === "object"
+				? (exported as Record<string, unknown>)
+				: {};
+
+	const entry: CachedMachine = { exports: exportsObj };
+	machineCache.set(key, entry);
+	return entry;
+};
+
+/**
+ * Clear the module-level script cache. Call after any decision-machine
+ * artifact upload so the new source is executed on the next request instead
+ * of waiting for the artifact TTL. Also clear every `DecisionMachineRunner`
+ * instance's artifact cache — see {@link DecisionMachineRunner.invalidateAllArtifactCaches}.
+ */
+export const invalidateDecisionMachineScriptCache = (): void => {
+	machineCache.clear();
+};
 
 /** How long cached artifacts are considered fresh (ms). */
 const ARTIFACT_CACHE_TTL_MS =
@@ -64,10 +136,46 @@ interface NamedExport {
 	fn: (...args: unknown[]) => unknown;
 }
 
+/**
+ * Bumped by {@link invalidateAllDecisionMachineArtifactCaches}. A runner
+ * caches the value it last saw and drops its artifact cache whenever the two
+ * diverge, which flushes every runner — including ones built after the
+ * invalidation — without holding a reference to any of them.
+ *
+ * This replaces a registry of live runners, which assumed runners were built
+ * once per process. They are built per request, so the registry grew without
+ * bound and construction eventually began to fail. `WeakRef` did not bound
+ * it: the set held the wrapper, which outlives its referent.
+ */
+let artifactCacheGeneration = 0;
+
+/**
+ * Flush every runner's in-memory artifact cache. Companion to
+ * {@link invalidateDecisionMachineScriptCache}. Call both after any
+ * `upsertDecisionMachineArtifact` upload.
+ */
+export const invalidateAllDecisionMachineArtifactCaches = (): void => {
+	artifactCacheGeneration++;
+};
+
 export class DecisionMachineRunner {
 	private readonly artifactCache = new Map<string, CachedArtifact>();
+	private seenArtifactCacheGeneration = artifactCacheGeneration;
 
 	constructor(private readonly db: IProviderDatabase) {}
+
+	/** Drop every entry in this runner's artifact cache. */
+	public invalidateArtifactCache(): void {
+		this.artifactCache.clear();
+	}
+
+	/** Drop the cache if an invalidation happened since it was last consulted. */
+	private dropArtifactCacheIfStale(): void {
+		if (this.seenArtifactCacheGeneration !== artifactCacheGeneration) {
+			this.seenArtifactCacheGeneration = artifactCacheGeneration;
+			this.artifactCache.clear();
+		}
+	}
 
 	/** Build a cache key for a given scope + kind + dappAccount tuple. */
 	private static cacheKey(
@@ -84,6 +192,7 @@ export class DecisionMachineRunner {
 		kind: DecisionMachineKind,
 		dappAccount?: string,
 	): DecisionMachineArtifact | undefined | null {
+		this.dropArtifactCacheIfStale();
 		const entry = this.artifactCache.get(
 			DecisionMachineRunner.cacheKey(scope, kind, dappAccount),
 		);
@@ -348,31 +457,30 @@ export class DecisionMachineRunner {
 	}
 
 	/**
-	 * Load the artifact source into a fresh vm sandbox, locate a callable
-	 * matching one of {exportNames} (or `module.exports` itself if it's a
-	 * function), invoke it with {input}, and validate the result with
-	 * {schema}. Returns undefined when {options.optional} is true and no
-	 * matching export exists. Otherwise throws on missing export, invalid
-	 * output, or sandbox failure.
+	 * Look up the (cached) module exports for `artifact.source`, locate a
+	 * callable matching one of {exportNames} (or the cached `default` slot
+	 * if `module.exports` was itself a function), invoke it with {input},
+	 * and validate the result with {schema}. Returns undefined when
+	 * {options.optional} is true and no matching export exists. Otherwise
+	 * throws on missing export, invalid output, or sandbox failure.
+	 *
+	 * The vm.Script compilation + top-level `runInContext` runs at most
+	 * once per source blob (see {@link loadMachine} / {@link machineCache}).
 	 */
 	private async runArtifactExport<T>(
 		artifact: DecisionMachineArtifact,
 		exportNames: string[],
 		options: { input: unknown; optional?: boolean },
-		schema: z.ZodSchema<T>,
+		// `z.ZodType<T, _, unknown>` rather than `z.ZodSchema<T>`: the latter
+		// pins Input === Output === T, so a schema with `.default()`s
+		// anywhere in its tree (RoutingMachineOutputSchema's puzzle settings)
+		// makes T unify with the *input* shape and the parsed result stops
+		// matching the declared output type. This says only "a schema that
+		// produces T from unknown input", which is what the caller wants.
+		schema: z.ZodType<T, z.ZodTypeDef, unknown>,
 	): Promise<T | undefined> {
-		const sandbox = {
-			module: { exports: {} as unknown },
-			exports: {} as Record<string, unknown>,
-		};
-		const context = vm.createContext(sandbox);
-		const script = new vm.Script(artifact.source, {
-			filename: "decision-machine.js",
-		});
-		script.runInContext(context, { timeout: LOAD_TIMEOUT_MS });
-
-		const exported = (sandbox.module as { exports: unknown }).exports;
-		const named = this.findExport(exported, exportNames);
+		const { exports } = loadMachine(artifact.source);
+		const named = this.findExport(exports, exportNames);
 		if (!named) {
 			if (options.optional) return undefined;
 			throw new Error(
@@ -381,7 +489,9 @@ export class DecisionMachineRunner {
 		}
 
 		const result = await this.withTimeout(
-			Promise.resolve(named.fn(options.input)),
+			Promise.resolve(
+				measureSync("decision_machine_decide", () => named.fn(options.input)),
+			),
 			EXEC_TIMEOUT_MS,
 		);
 		const parsed = schema.safeParse(result);

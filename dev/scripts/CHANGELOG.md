@@ -1,5 +1,509 @@
 # @prosopo/scripts
 
+## 3.1.186
+### Patch Changes
+
+- Updated dependencies [a22069d]
+- Updated dependencies [6d9711f]
+- Updated dependencies [c151f8a]
+- Updated dependencies [de1dc32]
+  - @prosopo/provider@5.12.0
+  - @prosopo/types@5.9.1
+  - @prosopo/locale@3.4.4
+  - @prosopo/cli@3.8.16
+  - @prosopo/common@3.1.57
+  - @prosopo/datasets@3.1.86
+  - @prosopo/env@3.6.60
+  - @prosopo/keyring@2.9.93
+  - @prosopo/types-env@2.11.6
+
+## 3.1.185
+### Patch Changes
+
+- Updated dependencies [6c00bca]
+  - @prosopo/provider@5.11.1
+  - @prosopo/cli@3.8.15
+
+## 3.1.184
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+- Updated dependencies [a4a71be]
+  - @prosopo/types@5.9.0
+  - @prosopo/provider@5.11.0
+  - @prosopo/cli@3.8.14
+  - @prosopo/datasets@3.1.85
+  - @prosopo/env@3.6.59
+  - @prosopo/keyring@2.9.92
+  - @prosopo/types-env@2.11.5
+
+## 3.1.183
+### Patch Changes
+
+- Updated dependencies [be25974]
+- Updated dependencies [8d158a1]
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/provider@5.10.4
+  - @prosopo/cli@3.8.13
+  - @prosopo/datasets@3.1.84
+  - @prosopo/env@3.6.58
+  - @prosopo/keyring@2.9.91
+  - @prosopo/types-env@2.11.4
+
+## 3.1.182
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- 9282236: Type the Cargo.toml handling in the setVersion script using the TOML parser's own types instead of `any`. The script writes exactly the same files as before.
+- Updated dependencies [3334ef2]
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [4d45e3d]
+- Updated dependencies [d710b7f]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/cli@3.8.12
+  - @prosopo/common@3.1.56
+  - @prosopo/datasets@3.1.83
+  - @prosopo/keyring@2.9.90
+  - @prosopo/locale@3.4.3
+  - @prosopo/provider@5.10.3
+  - @prosopo/types@5.8.4
+  - @prosopo/util-crypto@13.5.32
+  - @prosopo/util@3.3.10
+  - @prosopo/dotenv@3.0.56
+  - @prosopo/env@3.6.57
+  - @prosopo/logger@2.0.10
+  - @prosopo/types-env@2.11.3
+
+## 3.1.181
+### Patch Changes
+
+- Updated dependencies [98ab052]
+- Updated dependencies [028a158]
+- Updated dependencies [1f0598c]
+- Updated dependencies [3958046]
+- Updated dependencies [864ddde]
+- Updated dependencies [0cdf286]
+- Updated dependencies [ea4e6aa]
+- Updated dependencies [028a158]
+  - @prosopo/provider@5.10.2
+  - @prosopo/types@5.8.3
+  - @prosopo/locale@3.4.2
+  - @prosopo/cli@3.8.11
+  - @prosopo/env@3.6.56
+  - @prosopo/types-env@2.11.2
+  - @prosopo/common@3.1.55
+  - @prosopo/datasets@3.1.82
+  - @prosopo/keyring@2.9.89
+
+## 3.1.180
+### Patch Changes
+
+- Updated dependencies [fad87b7]
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+- Updated dependencies [24d6b7b]
+  - @prosopo/provider@5.10.1
+  - @prosopo/types@5.8.2
+  - @prosopo/cli@3.8.10
+  - @prosopo/datasets@3.1.81
+  - @prosopo/env@3.6.55
+  - @prosopo/keyring@2.9.88
+  - @prosopo/types-env@2.11.1
+
+## 3.1.179
+### Patch Changes
+
+- Updated dependencies [886b664]
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/provider@5.10.0
+  - @prosopo/types-env@2.11.0
+  - @prosopo/types@5.8.1
+  - @prosopo/cli@3.8.9
+  - @prosopo/env@3.6.54
+  - @prosopo/datasets@3.1.80
+  - @prosopo/keyring@2.9.87
+
+## 3.1.178
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [27f525e]
+- Updated dependencies [a0c87c7]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/provider@5.9.0
+  - @prosopo/cli@3.8.8
+  - @prosopo/datasets@3.1.79
+  - @prosopo/env@3.6.53
+  - @prosopo/keyring@2.9.86
+  - @prosopo/types-env@2.10.46
+
+## 3.1.177
+### Patch Changes
+
+- Updated dependencies [162f591]
+- Updated dependencies [9149dff]
+  - @prosopo/provider@5.8.1
+  - @prosopo/cli@3.8.7
+  - @prosopo/env@3.6.52
+
+## 3.1.176
+### Patch Changes
+
+- 6f57ee9: chore(deps): bump yargs from 17.7.2 to 18.1.0
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [e22d5fb]
+- Updated dependencies [c59f8a6]
+- Updated dependencies [d288371]
+  - @prosopo/cli@3.8.6
+  - @prosopo/provider@5.8.0
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/env@3.6.51
+  - @prosopo/common@3.1.54
+  - @prosopo/datasets@3.1.78
+  - @prosopo/dotenv@3.0.55
+  - @prosopo/keyring@2.9.85
+  - @prosopo/logger@2.0.9
+  - @prosopo/types-env@2.10.45
+
+## 3.1.175
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [7fd6eb2]
+- Updated dependencies [424e467]
+- Updated dependencies [1b77849]
+- Updated dependencies [89dd38a]
+- Updated dependencies [4810cb3]
+- Updated dependencies [80f73c1]
+- Updated dependencies [3d2176d]
+- Updated dependencies [8a670d3]
+  - @prosopo/provider@5.7.0
+  - @prosopo/util-crypto@13.5.31
+  - @prosopo/workspace@3.2.1
+  - @prosopo/cli@3.8.5
+  - @prosopo/common@3.1.53
+  - @prosopo/datasets@3.1.77
+  - @prosopo/dotenv@3.0.54
+  - @prosopo/env@3.6.50
+  - @prosopo/keyring@2.9.84
+  - @prosopo/locale@3.4.1
+  - @prosopo/logger@2.0.8
+  - @prosopo/types@5.6.0
+  - @prosopo/types-env@2.10.44
+  - @prosopo/util@3.3.8
+
+## 3.1.174
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/provider@5.6.4
+  - @prosopo/cli@3.8.4
+  - @prosopo/datasets@3.1.76
+  - @prosopo/env@3.6.49
+  - @prosopo/keyring@2.9.83
+  - @prosopo/types-env@2.10.43
+
+## 3.1.173
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/provider@5.6.3
+  - @prosopo/types@5.5.2
+  - @prosopo/cli@3.8.3
+  - @prosopo/datasets@3.1.75
+  - @prosopo/env@3.6.48
+  - @prosopo/keyring@2.9.82
+  - @prosopo/types-env@2.10.42
+
+## 3.1.172
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/provider@5.6.2
+  - @prosopo/types@5.5.1
+  - @prosopo/types-env@2.10.41
+  - @prosopo/env@3.6.47
+  - @prosopo/cli@3.8.2
+  - @prosopo/datasets@3.1.74
+  - @prosopo/keyring@2.9.81
+
+## 3.1.171
+### Patch Changes
+
+- Updated dependencies [8a9f7e9]
+- Updated dependencies [e6d2dbc]
+  - @prosopo/provider@5.6.1
+  - @prosopo/cli@3.8.1
+  - @prosopo/env@3.6.46
+  - @prosopo/types-env@2.10.40
+
+## 3.1.170
+### Patch Changes
+
+- Updated dependencies [eb34de6]
+  - @prosopo/provider@5.6.0
+  - @prosopo/types@5.5.0
+  - @prosopo/cli@3.8.0
+  - @prosopo/types-env@2.10.39
+  - @prosopo/datasets@3.1.73
+  - @prosopo/env@3.6.45
+  - @prosopo/keyring@2.9.80
+
+## 3.1.169
+### Patch Changes
+
+  - @prosopo/env@3.6.44
+  - @prosopo/provider@5.5.1
+  - @prosopo/cli@3.7.27
+
+## 3.1.168
+### Patch Changes
+
+- Updated dependencies [4b1cb19]
+  - @prosopo/types@5.4.0
+  - @prosopo/locale@3.4.0
+  - @prosopo/provider@5.5.0
+  - @prosopo/cli@3.7.26
+  - @prosopo/common@3.1.52
+  - @prosopo/datasets@3.1.72
+  - @prosopo/env@3.6.43
+  - @prosopo/keyring@2.9.79
+  - @prosopo/types-env@2.10.38
+
+## 3.1.167
+### Patch Changes
+
+- Updated dependencies [b30ad41]
+  - @prosopo/types@5.3.0
+  - @prosopo/provider@5.4.0
+  - @prosopo/cli@3.7.25
+  - @prosopo/datasets@3.1.71
+  - @prosopo/env@3.6.42
+  - @prosopo/keyring@2.9.78
+  - @prosopo/types-env@2.10.37
+
+## 3.1.166
+### Patch Changes
+
+- 68a9b41: chore(deps): bump the npm-minor-and-patch group across 1 directory with 36 updates
+- Updated dependencies [68a9b41]
+- Updated dependencies [f850d07]
+- Updated dependencies [ce5a3d7]
+- Updated dependencies [4cd6b04]
+  - @prosopo/cli@3.7.24
+  - @prosopo/locale@3.3.1
+  - @prosopo/provider@5.3.10
+  - @prosopo/types@5.2.6
+  - @prosopo/util@3.3.7
+  - @prosopo/env@3.6.41
+  - @prosopo/common@3.1.51
+  - @prosopo/datasets@3.1.70
+  - @prosopo/dotenv@3.0.53
+  - @prosopo/keyring@2.9.77
+  - @prosopo/logger@2.0.7
+  - @prosopo/types-env@2.10.36
+
+## 3.1.165
+### Patch Changes
+
+- Updated dependencies [dfc1fa6]
+  - @prosopo/provider@5.3.9
+  - @prosopo/cli@3.7.23
+  - @prosopo/env@3.6.40
+  - @prosopo/types-env@2.10.35
+
+## 3.1.164
+### Patch Changes
+
+  - @prosopo/env@3.6.39
+  - @prosopo/provider@5.3.8
+  - @prosopo/cli@3.7.22
+
+## 3.1.163
+### Patch Changes
+
+- Updated dependencies [1afe466]
+  - @prosopo/provider@5.3.7
+  - @prosopo/cli@3.7.21
+  - @prosopo/env@3.6.38
+  - @prosopo/types-env@2.10.34
+
+## 3.1.162
+### Patch Changes
+
+- Updated dependencies [6411f64]
+  - @prosopo/provider@5.3.6
+  - @prosopo/types@5.2.5
+  - @prosopo/cli@3.7.20
+  - @prosopo/datasets@3.1.69
+  - @prosopo/env@3.6.37
+  - @prosopo/keyring@2.9.76
+  - @prosopo/types-env@2.10.33
+
+## 3.1.161
+### Patch Changes
+
+- Updated dependencies [c629c01]
+  - @prosopo/types@5.2.4
+  - @prosopo/provider@5.3.5
+  - @prosopo/cli@3.7.19
+  - @prosopo/datasets@3.1.68
+  - @prosopo/env@3.6.36
+  - @prosopo/keyring@2.9.75
+  - @prosopo/types-env@2.10.32
+
+## 3.1.160
+### Patch Changes
+
+- Updated dependencies [620a96e]
+  - @prosopo/provider@5.3.4
+  - @prosopo/cli@3.7.18
+
+## 3.1.159
+### Patch Changes
+
+- Updated dependencies [7faca4d]
+- Updated dependencies [c971ef7]
+- Updated dependencies [c88c6a5]
+  - @prosopo/provider@5.3.3
+  - @prosopo/types@5.2.3
+  - @prosopo/types-env@2.10.31
+  - @prosopo/cli@3.7.17
+  - @prosopo/datasets@3.1.67
+  - @prosopo/env@3.6.35
+  - @prosopo/keyring@2.9.74
+
+## 3.1.158
+### Patch Changes
+
+- Updated dependencies [6db5d8b]
+- Updated dependencies [ae475a5]
+  - @prosopo/provider@5.3.2
+  - @prosopo/datasets@3.1.66
+  - @prosopo/cli@3.7.16
+  - @prosopo/types@5.2.2
+  - @prosopo/env@3.6.34
+  - @prosopo/keyring@2.9.73
+  - @prosopo/types-env@2.10.30
+
+## 3.1.157
+### Patch Changes
+
+- Updated dependencies [721c5ba]
+  - @prosopo/provider@5.3.1
+  - @prosopo/cli@3.7.15
+
+## 3.1.156
+### Patch Changes
+
+- Updated dependencies [35f640f]
+- Updated dependencies [9e53a48]
+  - @prosopo/provider@5.3.0
+  - @prosopo/types@5.2.1
+  - @prosopo/cli@3.7.14
+  - @prosopo/datasets@3.1.65
+  - @prosopo/env@3.6.33
+  - @prosopo/keyring@2.9.72
+  - @prosopo/types-env@2.10.29
+
+## 3.1.155
+### Patch Changes
+
+- Updated dependencies [c2bfcb8]
+  - @prosopo/provider@5.2.1
+  - @prosopo/cli@3.7.13
+
+## 3.1.154
+### Patch Changes
+
+- Updated dependencies [234c737]
+  - @prosopo/types@5.2.0
+  - @prosopo/provider@5.2.0
+  - @prosopo/cli@3.7.12
+  - @prosopo/datasets@3.1.64
+  - @prosopo/env@3.6.32
+  - @prosopo/keyring@2.9.71
+  - @prosopo/types-env@2.10.28
+
+## 3.1.153
+### Patch Changes
+
+- Updated dependencies [ee5d250]
+- Updated dependencies [1214dd3]
+  - @prosopo/provider@5.1.3
+  - @prosopo/types@5.1.2
+  - @prosopo/cli@3.7.11
+  - @prosopo/datasets@3.1.63
+  - @prosopo/env@3.6.31
+  - @prosopo/keyring@2.9.70
+  - @prosopo/types-env@2.10.27
+
+## 3.1.152
+### Patch Changes
+
+- Updated dependencies [6e21eb5]
+  - @prosopo/provider@5.1.2
+  - @prosopo/cli@3.7.10
+
+## 3.1.151
+### Patch Changes
+
+- Updated dependencies [ec5fca9]
+- Updated dependencies [cec44bb]
+  - @prosopo/provider@5.1.1
+  - @prosopo/types@5.1.1
+  - @prosopo/cli@3.7.9
+  - @prosopo/datasets@3.1.62
+  - @prosopo/env@3.6.30
+  - @prosopo/keyring@2.9.69
+  - @prosopo/types-env@2.10.26
+
 ## 3.1.150
 ### Patch Changes
 

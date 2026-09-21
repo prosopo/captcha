@@ -70,11 +70,11 @@ const powChallenge: GetPowCaptchaResponse = {
 const puzzleChallenge: GetPuzzleCaptchaResponse = {
 	status: "ok",
 	[ApiParams.challenge]: CHALLENGE,
-	[ApiParams.targetX]: 10,
-	[ApiParams.targetY]: 20,
+	[ApiParams.background]: "data:image/webp;base64,UklGRg==",
+	[ApiParams.piece]: "data:image/webp;base64,UklGRg==",
+	[ApiParams.pieceSize]: 44,
 	[ApiParams.originX]: 1,
 	[ApiParams.originY]: 2,
-	[ApiParams.tolerance]: 5,
 	[ApiParams.timestamp]: "1753900000000",
 	[ApiParams.signature]: {
 		[ApiParams.provider]: { [ApiParams.challenge]: "0xproviderchallengesig" },
@@ -559,13 +559,21 @@ describe("getFrictionlessCaptcha", () => {
 			undefined, // detectorSessionId
 			"https://site.example/page",
 			"https://iframe.example",
+			"bumblebee-abc",
 		);
 		expect(body()).toMatchObject({
 			[ApiParams.mode]: ModeEnum.invisible,
 			[ApiParams.simdReadings]: "readings",
 			[ApiParams.currentUrl]: "https://site.example/page",
 			[ApiParams.iframeUrl]: "https://iframe.example",
+			[ApiParams.clientSessionId]: "bumblebee-abc",
 		});
+	});
+
+	test("omits the session id when the widget has none to report", async () => {
+		fetchStub.respond(frictionlessBody);
+		await api().getFrictionlessCaptcha("token", "0xhead", SITE_KEY, USER);
+		expect(body()).not.toHaveProperty(ApiParams.clientSessionId);
 	});
 
 	test("moves the honeypot from the meta header onto the response", async () => {

@@ -15,9 +15,11 @@
 import {
 	CaptchaType,
 	ClientSettingsSchema,
+	type DetectorData,
 	FrictionlessPenalties,
 	type KeyringPair,
 	type ProsopoConfigOutput,
+	SessionSchema,
 	imageMaxRoundsDefault,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -132,15 +134,15 @@ describe("Frictionless Task Manager", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.storeSessionRecord as any).mockResolvedValue(undefined);
 
-			const session = await frictionlessTaskManager.createSession(
-				mockToken,
-				mockScore,
-				mockThreshold,
-				mockScoreComponents,
-				mockIpAddress,
-				CaptchaType.image,
-				mockSiteKey,
-			);
+			const session = await frictionlessTaskManager.createSession({
+				token: mockToken,
+				score: mockScore,
+				threshold: mockThreshold,
+				scoreComponents: mockScoreComponents,
+				ipAddress: mockIpAddress,
+				captchaType: CaptchaType.image,
+				siteKey: mockSiteKey,
+			});
 
 			expect(session).toHaveProperty("sessionId");
 			expect(session).toHaveProperty("token", mockToken);
@@ -198,6 +200,152 @@ describe("Frictionless Task Manager", () => {
 			expect(db.storeSessionRecord).toHaveBeenCalledWith(
 				expect.objectContaining({ ipInfo: stubIpInfo }),
 			);
+		});
+
+		it("threads the detector bag from setSessionParams through to the stored session record", async () => {
+			// Same path as ipInfo above, and the one that used to leak:
+			// individual signals reached setSessionParams and then stopped,
+			// because createSession had no parameter for them. They were
+			// decoded on every request and dropped before the write, while the
+			// Mongo schema and the read projection carried them all along.
+			// One field cannot go missing from one list and not another.
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			const stubData: DetectorData = {
+				k1: { k2: ["v1", "v2"] },
+				k3: 42,
+				k4: 7,
+			};
+
+			frictionlessTaskManager.setSessionParams({
+				token: "tok-d",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.2.3.4"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "siteKey-d",
+				d: stubData,
+			});
+
+			await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(
+				expect.objectContaining({ d: stubData }),
+			);
+		});
+
+		it("stamps the widget's session id onto the session at issuance", async () => {
+			// Until the widget sent this on the frictionless hop, a session only
+			// gained a clientSessionId when it was mirrored up from a solved
+			// captcha — so a session that was allowed frictionlessly, or
+			// abandoned before a solve, could never be correlated back to the
+			// render it came from.
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			frictionlessTaskManager.setSessionParams({
+				token: "tok-csid",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.2.3.4"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "siteKey-csid",
+				clientMetaData: { clientSessionId: "bumblebee-abc" },
+			});
+
+			await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+
+			expect(db.storeSessionRecord).toHaveBeenCalledWith(
+				expect.objectContaining({
+					clientMetaData: { clientSessionId: "bumblebee-abc" },
+				}),
+			);
+		});
+
+		it("leaves clientMetaData off a session the widget reported none for", async () => {
+			// Absent rather than an empty subdocument, so a reader can tell
+			// "no session id" from "session id we failed to record".
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			const session = await frictionlessTaskManager.createSession({
+				token: "tok-no-csid",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.2.3.4"),
+				captchaType: CaptchaType.image,
+				siteKey: "siteKey-no-csid",
+			});
+
+			expect(session).not.toHaveProperty("clientMetaData");
+		});
+
+		it("persists every field setSessionParams carries", async () => {
+			// `b`, `cv` and `sq` were each lost the same way: wired into
+			// setSessionParams, then dropped because createSession's
+			// destructure — which is the persisted-field allow-list — had no
+			// entry for them. Nothing in the types catches that, so walk the
+			// hop that broke rather than waiting for the next field to go
+			// missing in production.
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			(db.storeSessionRecord as any).mockResolvedValue(undefined);
+
+			const sentinel = (key: string): string => `sentinel-${key}`;
+			const params: Record<string, unknown> = {
+				token: "tok-all",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("1.2.3.4"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				headers: {},
+			};
+			for (const key of Object.keys(SessionSchema.shape)) {
+				if (key in params) continue;
+				params[key] = sentinel(key);
+			}
+
+			frictionlessTaskManager.setSessionParams(
+				// biome-ignore lint/suspicious/noExplicitAny: sentinels are deliberately off-type
+				params as any,
+			);
+			// biome-ignore lint/complexity/useLiteralKeys: sessionParams is private
+			const carried = frictionlessTaskManager["sessionParams"] as Record<
+				string,
+				unknown
+			>;
+
+			await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+
+			// biome-ignore lint/suspicious/noExplicitAny: tests
+			const record = (db.storeSessionRecord as any).mock.calls[0][0] as Record<
+				string,
+				unknown
+			>;
+
+			// Presence, not equality: createSession normalises some of these
+			// (isProtect/isEscalation are persisted as literal `true`).
+			const dropped = Object.keys(carried).filter(
+				(key: string) =>
+					carried[key] !== undefined && record[key] === undefined,
+			);
+			expect(dropped).toEqual([]);
 		});
 
 		it("threads ipInfo through registerBlockedSession too", async () => {

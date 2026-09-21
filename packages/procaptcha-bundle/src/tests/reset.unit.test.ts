@@ -22,6 +22,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BundleCaptchaHandle } from "../util/captcha/components/bundleCaptcha.js";
+import type { CreatedWidget } from "../util/widgetFactory.js";
 
 const mocks = vi.hoisted(() => ({
 	prefetchDetector: vi.fn(),
@@ -49,10 +50,17 @@ const SITE_KEY = "5CcNvLUdiXFpzKDMjThGLSK9rhWHA1H4EF3zrgkpkjAdqmuP";
 
 const makeHandle = (): BundleCaptchaHandle => ({ destroy: vi.fn() });
 
+const makeWidget = (
+	handle: BundleCaptchaHandle = makeHandle(),
+): CreatedWidget => ({
+	handle,
+	container: document.createElement("div"),
+});
+
 /** Each createWidgets call yields a distinct handle, as the real factory does. */
 const queueHandles = (...handles: BundleCaptchaHandle[]): void => {
 	for (const handle of handles) {
-		mocks.createWidgets.mockResolvedValueOnce([handle]);
+		mocks.createWidgets.mockResolvedValueOnce([makeWidget(handle)]);
 	}
 };
 
@@ -61,7 +69,7 @@ beforeEach(async () => {
 	// Drop any widgets registered by a previous test — module state persists
 	// across tests in the same file.
 	await remove();
-	mocks.createWidgets.mockResolvedValue([makeHandle()]);
+	mocks.createWidgets.mockResolvedValue([makeWidget()]);
 });
 
 describe("render", () => {
@@ -77,7 +85,7 @@ describe("render", () => {
 	});
 
 	it("returns undefined when the factory creates no widget", async () => {
-		mocks.createWidgets.mockResolvedValueOnce([] as BundleCaptchaHandle[]);
+		mocks.createWidgets.mockResolvedValueOnce([] as CreatedWidget[]);
 
 		const widgetId = await render(document.createElement("div"), {
 			siteKey: SITE_KEY,

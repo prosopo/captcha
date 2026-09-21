@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-common",
-	"version": "2.11.25",
+	"version": "2.15.1",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -30,18 +30,20 @@
 		"test:watch": "NODE_ENV=${NODE_ENV:-test}; npx vitest --config ./vite.test.config.ts",
 		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --coverage --config ./vite.test.config.ts"
 	},
-	"browserslist": ["> 0.5%, last 2 versions, not dead"],
+	"browserslist": [
+		"> 0.5%, last 2 versions, not dead"
+	],
 	"dependencies": {
-		"@prosopo/account": "2.8.71",
-		"@prosopo/load-balancer": "2.10.22",
-		"@prosopo/types": "5.1.0",
-		"@prosopo/widget-skeleton": "2.8.6"
+		"@prosopo/account": "2.8.96",
+		"@prosopo/load-balancer": "2.10.48",
+		"@prosopo/types": "5.9.1",
+		"@prosopo/widget-skeleton": "2.8.7"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.8",
-		"@types/jsdom": "21.1.7",
+		"@prosopo/config": "3.4.0",
+		"@types/jsdom": "30.0.0",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "4.1.10",
+		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"dotenv": "16.4.5",
@@ -51,7 +53,7 @@
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
 		"vite": "8.1.5",
-		"vitest": "4.1.10"
+		"vitest": "4.1.11"
 	},
 	"repository": {
 		"type": "git",

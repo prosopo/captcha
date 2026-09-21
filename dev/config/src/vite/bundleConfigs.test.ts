@@ -18,6 +18,7 @@ import os from "node:os";
 import path from "node:path";
 import type { Rollup, UserConfig } from "vite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { copyAssetsPlugin } from "./CopyAssetsPlugin.js";
 import { nodejsPolarsNativeFilePlugin } from "./NodejsPolarsNativeFilePlugin.js";
 import VitePluginCloseAndCopy from "./vite-plugin-close-and-copy.js";
 import ViteCommonJSConfig from "./vite.commonjs.config.js";
@@ -35,6 +36,12 @@ afterEach(() => {
 	process.chdir(cwd);
 	fs.rmSync(root, { recursive: true, force: true });
 });
+
+const resolveOptions: Rollup.ResolveIdExtraOptions = {
+	isEntry: false,
+	kind: "import-statement",
+};
+const outputOptions = {} as Rollup.NormalizedOutputOptions;
 
 /** A tsconfig with no references, so no npm lookups are needed. */
 const leafTsConfig = (): string => {
@@ -260,10 +267,12 @@ describe("ViteCommonJSConfig", () => {
 describe("nodejsPolarsNativeFilePlugin", () => {
 	it("claims a native file by basename, wherever it is imported from", () => {
 		const plugin = nodejsPolarsNativeFilePlugin(["/abs/polars.node"], "dist");
-		expect(plugin.resolveId("./polars.node", "/src/a.ts", {})).toBe(
+		expect(plugin.resolveId("./polars.node", "/src/a.ts", resolveOptions)).toBe(
 			"./polars.node",
 		);
-		expect(plugin.resolveId("./other.node", "/src/a.ts", {})).toBeNull();
+		expect(
+			plugin.resolveId("./other.node", "/src/a.ts", resolveOptions),
+		).toBeNull();
 	});
 
 	it("replaces the module with a createRequire shim", () => {
@@ -293,7 +302,10 @@ describe("nodejsPolarsNativeFilePlugin", () => {
 		const bytes = Buffer.from([0, 1, 2, 255]);
 		fs.writeFileSync(src, bytes);
 
-		nodejsPolarsNativeFilePlugin([src], outDir).generateBundle({}, {});
+		nodejsPolarsNativeFilePlugin([src], outDir).generateBundle(
+			outputOptions,
+			{},
+		);
 
 		expect(fs.readFileSync(path.join(outDir, "polars.node"))).toEqual(bytes);
 	});
@@ -305,14 +317,58 @@ describe("nodejsPolarsNativeFilePlugin", () => {
 			[path.join(root, "absent.node")],
 			path.join(root, "dist"),
 		);
-		expect(() => plugin.generateBundle({}, {})).toThrow();
+		expect(() => plugin.generateBundle(outputOptions, {})).toThrow();
 	});
 
 	it("does nothing at all when there are no native files", () => {
 		const plugin = nodejsPolarsNativeFilePlugin([], "dist");
-		expect(plugin.resolveId("anything", undefined, {})).toBeNull();
+		expect(plugin.resolveId("anything", undefined, resolveOptions)).toBeNull();
 		expect(plugin.load("anything")).toBeNull();
-		expect(() => plugin.generateBundle({}, {})).not.toThrow();
+		expect(() => plugin.generateBundle(outputOptions, {})).not.toThrow();
+	});
+});
+
+describe("copyAssetsPlugin", () => {
+	it("copies each asset under its declared basename", () => {
+		const src = path.join(root, "decodePayload.js");
+		const outDir = path.join(root, "nested", "dist");
+		fs.writeFileSync(src, "export default 1;");
+
+		copyAssetsPlugin(
+			[{ src, dest: "decodePayload.js" }],
+			outDir,
+		).generateBundle();
+
+		expect(fs.readFileSync(path.join(outDir, "decodePayload.js"), "utf8")).toBe(
+			"export default 1;",
+		);
+	});
+
+	it("renames on copy when dest differs from the source basename", () => {
+		const src = path.join(root, "a.js");
+		const outDir = path.join(root, "dist");
+		fs.writeFileSync(src, "x");
+
+		copyAssetsPlugin([{ src, dest: "b.js" }], outDir).generateBundle();
+
+		expect(fs.existsSync(path.join(outDir, "b.js"))).toBe(true);
+		expect(fs.existsSync(path.join(outDir, "a.js"))).toBe(false);
+	});
+
+	it("throws when a declared asset is missing", () => {
+		// Skipping silently would ship a bundle whose decoders resolve to
+		// nothing, and the first request would be the one to find out.
+		const plugin = copyAssetsPlugin(
+			[{ src: path.join(root, "absent.js"), dest: "absent.js" }],
+			path.join(root, "dist"),
+		);
+		expect(() => plugin.generateBundle()).toThrow();
+	});
+
+	it("does nothing at all when there are no assets", () => {
+		expect(() =>
+			copyAssetsPlugin([], path.join(root, "dist")).generateBundle(),
+		).not.toThrow();
 	});
 });
 

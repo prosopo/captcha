@@ -27,6 +27,7 @@ import {
 	Registry,
 	collectDefaultMetrics,
 } from "prom-client";
+import type { HealthzGeoOutcome } from "./healthzGeo.js";
 
 // Whether the /metrics endpoint and instrumentation are active. Defaults to on;
 // set PROSOPO_METRICS_ENABLED=false to disable. The endpoint only ever listens
@@ -47,6 +48,26 @@ const LATENCY_BUCKETS = [
 const SCORE_BUCKETS = [
 	0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 3, 5, 10,
 ];
+// Sync spans are sub-millisecond to tens of milliseconds; LATENCY_BUCKETS
+// starts at 5 ms and would put almost every observation in the first bucket.
+const SPAN_BUCKETS = [
+	0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25,
+	0.5, 1,
+];
+
+/**
+ * Blocks of synchronous work big enough to be worth attributing. Kept as a
+ * closed list so the `span` label cannot grow unbounded, and so the set of
+ * things we claim to have measured is reviewable in one place.
+ */
+export const SYNC_SPANS = [
+	"puzzle_background",
+	"puzzle_render",
+	"merkle_build",
+	"decision_machine_decide",
+] as const;
+
+export type SyncSpan = (typeof SYNC_SPANS)[number];
 
 // The set of API paths we expose as the `route` label. Restricting to the known
 // enum values keeps label cardinality bounded — anything unmatched is recorded
@@ -83,6 +104,12 @@ interface ProviderMetrics {
 	spamEmailTotal: Counter<"result">;
 	maintenanceMode: Gauge<never>;
 	redisReady: Gauge<"actor">;
+	healthzGeoOutcomesTotal: Counter<"outcome">;
+	decoderDuration: Histogram<"decoder">;
+	decoderCallsTotal: Counter<"decoder" | "outcome">;
+	syncSpanWallSecondsTotal: Counter<"span">;
+	syncSpanCallsTotal: Counter<"span">;
+	syncSpanDuration: Histogram<"span">;
 }
 
 let metrics: ProviderMetrics | undefined;
@@ -175,6 +202,49 @@ const buildMetrics = (): ProviderMetrics => {
 		labelNames: ["actor"] as const,
 		registers: [registry],
 	});
+	// Every non-"steered" outcome falls back to the node's own name, which is
+	// also the behaviour with steering off — so a degraded geo lookup or an
+	// unreachable target changes nothing observable in the response. This
+	// counter is the only place that difference shows up.
+	const healthzGeoOutcomesTotal = new Counter({
+		name: `${PREFIX}healthz_geo_outcomes_total`,
+		help: "Healthz geo steering outcomes (steered/not_steered/target_down/geo_unavailable)",
+		labelNames: ["outcome"] as const,
+		registers: [registry],
+	});
+
+	const decoderDuration = new Histogram({
+		name: `${PREFIX}decoder_duration_seconds`,
+		help: "End-to-end duration of a detector payload decode, worker round trip included",
+		labelNames: ["decoder"] as const,
+		buckets: SPAN_BUCKETS,
+		registers: [registry],
+	});
+	const decoderCallsTotal = new Counter({
+		name: `${PREFIX}decoder_calls_total`,
+		help: "Detector payload decodes by decoder and outcome",
+		labelNames: ["decoder", "outcome"] as const,
+		registers: [registry],
+	});
+	const syncSpanWallSecondsTotal = new Counter({
+		name: `${PREFIX}sync_span_wall_seconds_total`,
+		help: "Seconds the event loop was held by named blocks of synchronous work",
+		labelNames: ["span"] as const,
+		registers: [registry],
+	});
+	const syncSpanCallsTotal = new Counter({
+		name: `${PREFIX}sync_span_calls_total`,
+		help: "Calls into each named block of synchronous work, successful or not",
+		labelNames: ["span"] as const,
+		registers: [registry],
+	});
+	const syncSpanDuration = new Histogram({
+		name: `${PREFIX}sync_span_duration_seconds`,
+		help: "Duration of each named block of synchronous work",
+		labelNames: ["span"] as const,
+		buckets: SPAN_BUCKETS,
+		registers: [registry],
+	});
 
 	return {
 		registry,
@@ -191,6 +261,12 @@ const buildMetrics = (): ProviderMetrics => {
 		spamEmailTotal,
 		maintenanceMode,
 		redisReady,
+		healthzGeoOutcomesTotal,
+		decoderDuration,
+		decoderCallsTotal,
+		syncSpanWallSecondsTotal,
+		syncSpanCallsTotal,
+		syncSpanDuration,
 	};
 };
 
@@ -265,9 +341,78 @@ export const recordSpamEmail = (result: string): void => {
 	getMetrics().spamEmailTotal.inc({ result });
 };
 
+export const recordHealthzGeoOutcome = (outcome: HealthzGeoOutcome): void => {
+	if (!metricsEnabled()) return;
+	getMetrics().healthzGeoOutcomesTotal.inc({ outcome });
+};
+
 export const setMaintenanceModeGauge = (on: boolean): void => {
 	if (!metricsEnabled()) return;
 	getMetrics().maintenanceMode.set(on ? 1 : 0);
+};
+
+/**
+ * Time one detector decode end to end, worker round trip included.
+ *
+ * Wall time here is not event-loop time — the decode runs on a worker, so
+ * this is latency the request sees rather than delay it imposes on its
+ * neighbours. That is the point: watching it alongside
+ * `prosopo_nodejs_eventloop_lag_p99_seconds` is how you tell that the work
+ * moved rather than vanished.
+ */
+export const recordDecoderOutcome = (
+	decoder: string,
+	outcome: "ok" | "error",
+	durationSeconds: number,
+): void => {
+	if (!metricsEnabled()) return;
+	const m = getMetrics();
+	m.decoderCallsTotal.inc({ decoder, outcome });
+	m.decoderDuration.observe({ decoder }, durationSeconds);
+};
+
+/**
+ * Measure how long a named block of synchronous work holds the event loop.
+ *
+ * `increase(prosopo_sync_span_wall_seconds_total[1d])` by span is the ranking
+ * this exists to produce: which blocks are worth moving off the loop, ordered
+ * by how much of it they actually consume rather than by how expensive they
+ * look.
+ *
+ * Wall time, not CPU time, and that is not a compromise. Nothing else on this
+ * thread can run while `fn` does, so its wall time *is* the delay it imposes
+ * on every other request in flight — which is the quantity we care about.
+ *
+ * An earlier version also recorded a `process.cpuUsage()` delta and claimed it
+ * was exact for the same reason. It was not: cpuUsage covers the whole
+ * process, so V8's background GC and compiler threads and libuv's threadpool
+ * all landed on whichever span happened to be open. In production it read
+ * consistently *higher* than wall time, which is impossible for single-thread
+ * work and is what gave it away. Node exposes no per-thread CPU clock, so
+ * there is no fixed version of that metric to keep — process-wide CPU is
+ * already available as `prosopo_process_cpu_seconds_total`.
+ *
+ * This takes `() => T` and not an async callback for the same reason: wrapping
+ * an awaiting function would time every other request served during its awaits.
+ * Passing a function that *returns* a promise is fine and intended — several of
+ * our decoders are async in signature but do their work synchronously before
+ * resolving. Only the synchronous part is timed, so if one of them later grows
+ * a real await the span under-reports rather than over-reports.
+ */
+export const measureSync = <T>(span: SyncSpan, fn: () => T): T => {
+	if (!metricsEnabled()) return fn();
+	const wallBefore = process.hrtime.bigint();
+	try {
+		return fn();
+	} finally {
+		const wallSeconds = Number(process.hrtime.bigint() - wallBefore) / 1e9;
+		const m = getMetrics();
+		// Counted in `finally` so a span that throws — a decoder handed the
+		// wrong key, say — still shows the time it burned getting there.
+		m.syncSpanCallsTotal.inc({ span });
+		m.syncSpanWallSecondsTotal.inc({ span }, wallSeconds);
+		m.syncSpanDuration.observe({ span }, wallSeconds);
+	}
 };
 
 // ---------------------------------------------------------------------------

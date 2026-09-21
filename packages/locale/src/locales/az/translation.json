@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Zaman damgası çox köhnədir",
 		"FAILED_IP_VALIDATION": "IP yoxlanması uğursuz oldu",
 		"ACCESS_POLICY_BLOCK": "Siyasət tərəfindən giriş bloklandı",
+		"CLIENT_SESSION_MISMATCH": "Sessiya uyğunsuzluğu. Captcha bu sessiyada tamamlanmayıb.",
 		"FORBIDDEN": "Qadağan edilir",
 		"PROVIDER_VERIFY_FAILED": "Təchizatçı doğrulaması alınmadı",
 		"SPAM_EMAIL_DOMAIN": "E-poçt domeni icazə verilmir",
@@ -46,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Bu e-poçt ünvanından çox sayda göndəriş",
 		"VPN_BLOCKED": "Bu sayt üçün VPN bağlantılarından sorğulara icazə verilmir",
 		"PROXY_BLOCKED": "Bu sayt üçün proksi serverlərdən sorğulara icazə verilmir",
+		"TOO_MANY_LOCALHOST": "Bu sayt açarı üçün localhost-dan həddindən artıq çox CAPTCHA sorğusu",
 		"TOR_BLOCKED": "Bu sayt üçün Tor çıxış qovşaqlarından sorğulara icazə verilmir",
 		"ABUSER_BLOCKED": "Bu sayt üçün sui-istifadə üçün işarələnmiş şəbəkələrdən sorğulara icazə verilmir",
 		"DATACENTER_BLOCKED": "Bu sayt üçün məlumat mərkəzi IP ünvanlarından sorğulara icazə verilmir",
@@ -376,7 +378,20 @@
 		"NO_ACCOUNTS_FOUND": "Hesab tapılmadı",
 		"ACCOUNT_NOT_FOUND": "Hesab tapılmadı",
 		"NO_EXTENSION_FOUND": "Tətbiq tapılmadı",
-		"INSECURE_CONTEXT": "Procaptcha təhlükəsiz (HTTPS) bağlantı tələb edir"
+		"INSECURE_CONTEXT": "Procaptcha təhlükəsiz (HTTPS) bağlantı tələb edir",
+		"CHECKING": "İnsan olduğunuz yoxlanılır",
+		"IMAGE_DIALOG_LABEL": "Şəkil yoxlaması",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Tapmaca yoxlaması",
+			"DRAG": "Hissəni hədəfə sürüşdürün",
+			"RETRY": "Az qaldı — yenidən cəhd edin",
+			"PIECE_LABEL": "Tapmaca hissəsi",
+			"PIECE_ROLE": "sürüşdürülə bilən tapmaca hissəsi",
+			"KEYBOARD_HINT": "Hissəni ox düymələri ilə hərəkət etdirin, daha kiçik addımlar üçün Shift düyməsini basılı saxlayın. Göndərmək üçün Enter, başlanğıca qaytarmaq üçün Home, ləğv etmək üçün Escape düyməsini basın.",
+			"POSITION": "soldan {{x}} faiz, yuxarıdan {{y}} faiz",
+			"CHECKING": "Cavabınız yoxlanılır",
+			"RETRY_ANNOUNCEMENT": "Az qaldı. Yeni tapmaca yükləndi və hissə yenidən başlanğıcdadır."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Geçərsiz ünvan kodlanmadı",

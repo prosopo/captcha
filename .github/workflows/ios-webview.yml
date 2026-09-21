@@ -28,6 +28,7 @@ concurrency:
 
 jobs:
   build:
+    name: ios-webview
     if: ${{ github.event.action != 'converted_to_draft' }}
     # Hosted, deliberately: this repository is public, so a fork PR running on
     # the self-hosted macOS runner would execute arbitrary code on it.
@@ -37,7 +38,7 @@ jobs:
       run:
         working-directory: demos/ios-webview
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Toolchain versions
         run: xcodebuild -version

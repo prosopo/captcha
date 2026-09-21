@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import type { Ti18n, Translator } from "@prosopo/locale";
 import type {
 	FrictionlessState,
 	GetPuzzleCaptchaResponse,
@@ -150,7 +150,7 @@ describe("Manager's types", () => {
 });
 
 describe("PuzzleCanvas' types", () => {
-	const host = (): HTMLElement => undefined as unknown as HTMLElement;
+	const translator = (): Translator => undefined as unknown as Translator;
 	const onComplete = (
 		_finalX: number,
 		_finalY: number,
@@ -158,31 +158,35 @@ describe("PuzzleCanvas' types", () => {
 	): void => undefined;
 
 	test("every prop is required, since none has a sensible default", () => {
-		// @ts-expect-error - a board with no target cannot be solved.
-		mountPuzzleCanvas(host(), { originX: 0, originY: 0 });
+		// @ts-expect-error - a board with no imagery cannot be rendered.
+		mountPuzzleCanvas({ originX: 0, originY: 0 });
 		// @ts-expect-error - `submitting` gates the drag; omitting it unlocks it.
-		mountPuzzleCanvas(host(), {
+		mountPuzzleCanvas({
 			originX: 0,
 			originY: 0,
-			targetX: 1,
-			targetY: 1,
+			background: "data:image/webp;base64,UklGRg==",
+			piece: "data:image/webp;base64,UklGRg==",
+			pieceSize: 44,
 			onComplete,
 			showRetry: false,
 			theme: lightTheme,
+			translator: translator(),
 		});
 	});
 
 	test("the full prop set mounts a component that can be updated and torn down", () => {
 		expectTypeOf(
-			mountPuzzleCanvas(host(), {
+			mountPuzzleCanvas({
 				originX: 0,
 				originY: 0,
-				targetX: 1,
-				targetY: 1,
+				background: "data:image/webp;base64,UklGRg==",
+				piece: "data:image/webp;base64,UklGRg==",
+				pieceSize: 44,
 				onComplete,
 				showRetry: false,
 				submitting: false,
 				theme: lightTheme,
+				translator: translator(),
 			}),
 		).toExtend<{
 			update: (props: PuzzleCanvasProps) => void;

@@ -12,11 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { applyStyles, createElement } from "@prosopo/procaptcha-common";
+import {
+	type ChallengeSurfaceComponent,
+	applyStyles,
+	createElement,
+	mountChallengeSurface,
+} from "@prosopo/procaptcha-common";
 import type { Component } from "@prosopo/procaptcha-common";
+import type { PlacementType } from "@prosopo/types";
 
 export interface ModalProps {
 	show: boolean;
+	placement?: PlacementType;
+	anchor?: HTMLElement | null;
+	onDismiss?: () => void;
+	dialogLabel?: string;
 }
 
 export interface ModalComponent extends Component<ModalProps> {
@@ -25,43 +35,39 @@ export interface ModalComponent extends Component<ModalProps> {
 }
 
 /**
- * Full-viewport backdrop appended straight to `document.body`, replacing the
- * React portal that used to do the same.
- *
- * The inner element carries `prosopo-modalInner` and no styling of its own.
- * That matches what shipped: the Emotion rules for it were emitted into the
- * widget's Emotion cache, whose container is the checkbox shadow root, so they
- * never applied to an element portalled out into light DOM. Centering has
- * always come from the outer flex box below.
+ * The image captcha's dialog frame; positioning lives in `ChallengeSurface`.
  */
 export const mountModal = (initialProps: ModalProps): ModalComponent => {
-	const content = createElement("div", { className: "prosopo-modalInner" });
+	const inner = createElement("div", { className: "prosopo-modalInner" });
 
-	const outer = createElement("div", {
-		className: "prosopo-modalOuter",
-		children: [content],
+	applyStyles(inner, {
+		maxWidth: "500px",
+		maxHeight: "100%",
+		backgroundColor: "transparent",
+		border: "none",
+		borderRadius: "28px",
+		alignSelf: "center",
+		boxSizing: "border-box",
 	});
 
-	const render = (props: ModalProps) => {
-		applyStyles(outer, {
-			position: "fixed",
-			zIndex: 2147483646,
-			inset: 0,
-			display: props.show ? "flex" : "none",
-			alignItems: "center",
-			justifyContent: "center",
-			minHeight: "100vh",
-		});
-	};
+	const surfaceProps = (props: ModalProps) => ({
+		show: props.show,
+		placement: props.placement,
+		anchor: props.anchor,
+		onDismiss: props.onDismiss,
+		scrim: "none" as const,
+		className: "prosopo-modalOuter",
+		dialogLabel: props.dialogLabel,
+	});
 
-	render(initialProps);
-	document.body.appendChild(outer);
+	const surface: ChallengeSurfaceComponent = mountChallengeSurface(
+		surfaceProps(initialProps),
+	);
+	surface.content.appendChild(inner);
 
 	return {
-		content,
-		update: render,
-		destroy: () => {
-			outer.parentNode?.removeChild(outer);
-		},
+		content: inner,
+		update: (props: ModalProps) => surface.update(surfaceProps(props)),
+		destroy: () => surface.destroy(),
 	};
 };

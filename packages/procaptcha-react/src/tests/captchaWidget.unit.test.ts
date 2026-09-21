@@ -127,6 +127,8 @@ describe("what the grid renders", () => {
 
 	test("renders an item with no image url as an empty image", () => {
 		render({ items: [item("hash-1", "")] });
+		// The tile still renders, it just has no image to show.
+		expect(tiles()).toHaveLength(1);
 		expect(tiles()[0]?.getAttribute("src")).toBe("");
 	});
 
@@ -227,6 +229,31 @@ describe("selection", () => {
 		widget?.update(props({ items: [item("fresh")] }));
 		expect(tiles()).toHaveLength(1);
 		expect(tiles()[0]).not.toBe(before[0]);
+	});
+});
+
+describe("reaching the tiles without a mouse", () => {
+	test("each tile is a button, so it can be tabbed to and pressed", () => {
+		render();
+		expect(clickable(0).tagName).toBe("BUTTON");
+		expect(clickable(0).getAttribute("type")).toBe("button");
+	});
+
+	test("an unpicked tile says so", () => {
+		render();
+		expect(clickable(0).getAttribute("aria-pressed")).toBe("false");
+	});
+
+	test("a picked tile says so, rather than only looking picked", () => {
+		render({ solution: [["hash-2", 1, 2]] });
+		expect(clickable(0).getAttribute("aria-pressed")).toBe("false");
+		expect(clickable(1).getAttribute("aria-pressed")).toBe("true");
+	});
+
+	test("the tile takes its name from the image it holds", () => {
+		render();
+		expect(clickable(0).textContent).toBe("");
+		expect(tiles()[0]?.alt).toBe("Captcha image 1");
 	});
 });
 

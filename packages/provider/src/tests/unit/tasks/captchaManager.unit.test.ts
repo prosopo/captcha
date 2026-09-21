@@ -14,18 +14,14 @@
 
 import type { RedisWriteQueue } from "@prosopo/database";
 import { type Logger, getLogger } from "@prosopo/logger";
-import {
-	ContextType,
-	IpAddressType,
-	type KeyringPair,
-	type Session,
-	contextAwareThresholdDefault,
-} from "@prosopo/types";
+import { IpAddressType, type KeyringPair, type Session } from "@prosopo/types";
 import {
 	CaptchaType,
 	type IUserSettings,
 	ResultReason,
 	Tier,
+	TrafficFilterAction,
+	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -38,32 +34,29 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
 import type { BehavioralDataResult } from "../../../tasks/detection/decodeBehavior.js";
 
-vi.mock("../../../tasks/detection/decodeBehavior.js", () => ({
-	default: vi.fn(),
+vi.mock("../../../tasks/detection/decoderPool.js", () => ({
+	decode: vi.fn(),
 }));
 
 const loggerOuter = getLogger("info", "test:captcha-manager");
 
 const defaultUserSettings: IUserSettings = {
-	frictionlessThreshold: 0.8,
+	frictionlessThreshold: {
+		frictionlessPuzzleThreshold: 0.8,
+		frictionlessImageThreshold: 1,
+	},
+	frictionlessTypes: { image: true, puzzle: true },
 	domains: [],
 	captchaType: CaptchaType.frictionless,
 	powDifficulty: 4,
 	imageThreshold: 0.8,
 	imageMaxRounds: 3,
+	imageMinRounds: 2,
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
 	puzzleTolerance: 15,
+	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 	disallowWebView: false,
-	contextAware: {
-		enabled: false,
-		contexts: {
-			default: {
-				type: ContextType.Default,
-				threshold: contextAwareThresholdDefault,
-			},
-		},
-	},
 };
 
 describe("CaptchaManager", () => {
@@ -112,6 +105,7 @@ describe("CaptchaManager", () => {
 			cacheSessionEscalation: vi.fn().mockResolvedValue(true),
 			getCachedSessionEscalation: vi.fn().mockResolvedValue(null),
 			invalidateCachedSessionEscalation: vi.fn().mockResolvedValue(undefined),
+			getDetectorBundle: vi.fn().mockResolvedValue(null),
 		} as unknown as RedisWriteQueue;
 
 		captchaManager = new CaptchaManager(
@@ -163,12 +157,7 @@ describe("CaptchaManager", () => {
 				captchaType: CaptchaType.puzzle,
 				simdReadings: { supported: true, results: [] },
 				dnsEvent: { receivedAt: new Date() },
-				entropyMathRandomFingerprint: "a",
-				entropyCryptoFingerprint: "b",
-				entropyWallClockOffsetMs: 0,
-				entropyMathRandomFirst: 0.1,
-				g: "c",
-				i: false,
+				d: { k1: "v1", k2: false },
 			} as unknown as Session;
 			dbGet().mockResolvedValue(session);
 
@@ -211,11 +200,11 @@ describe("CaptchaManager", () => {
 			expect(got?.captchaType).toBe(CaptchaType.puzzle);
 		});
 
-		it("fills g from origin when the escalation is missing it", async () => {
+		it("fills the detector bag from origin when the escalation has none", async () => {
 			const origin = {
 				sessionId: "origin",
 				captchaType: CaptchaType.pow,
-				g: "Google Inc. (NVIDIA)~ANGLE (NVIDIA, NVIDIA GeForce RTX 3080)",
+				d: { k1: "v1", k2: false },
 			} as unknown as Session;
 			const escalation = {
 				sessionId: "esc",
@@ -227,89 +216,56 @@ describe("CaptchaManager", () => {
 			const got =
 				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
-			expect(got?.g).toBe(
-				"Google Inc. (NVIDIA)~ANGLE (NVIDIA, NVIDIA GeForce RTX 3080)",
-			);
+			expect(got?.d).toEqual({
+				k1: "v1",
+				// A false value is a measurement, not an absence, and has to
+				// survive the walk as one.
+				k2: false,
+			});
 			expect(got?.sessionId).toBe("esc");
 		});
 
-		it("keeps the escalation's own g rather than the origin's", async () => {
+		it("keeps the escalation's own keys and takes only what it lacks", async () => {
 			const origin = {
 				sessionId: "origin",
 				captchaType: CaptchaType.pow,
-				g: "origin-value",
+				d: { k1: "origin-value", k2: 1 },
 			} as unknown as Session;
 			const escalation = {
 				sessionId: "esc",
 				originSessionId: "origin",
 				captchaType: CaptchaType.puzzle,
-				g: "escalation-value",
+				// Absent simdReadings is what sends the walker to the origin
+				// at all; the bag is then merged because it is already loaded.
+				d: { k1: "escalation-value" },
 			} as unknown as Session;
 			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
 
 			const got =
 				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
-			expect(got?.g).toBe("escalation-value");
+			expect(got?.d).toEqual({
+				k1: "escalation-value",
+				k2: 1,
+			});
 		});
 
-		it("fills i from origin when the escalation is missing it", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				i: true,
-			} as unknown as Session;
+		it("does not walk to the origin when the escalation has everything", async () => {
 			const escalation = {
 				sessionId: "esc",
 				originSessionId: "origin",
 				captchaType: CaptchaType.puzzle,
+				d: { k1: "escalation-value" },
+				simdReadings: { supported: false, reason: "n/a" },
+				dnsEvent: { receivedAt: new Date() },
 			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+			dbGet().mockResolvedValueOnce(escalation);
 
 			const got =
 				await captchaManager.getSessionRecordWithOriginFallback("esc");
 
-			expect(got?.i).toBe(true);
-			expect(got?.sessionId).toBe("esc");
-		});
-
-		it("carries a false i forward rather than treating it as absent", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				i: false,
-			} as unknown as Session;
-			const escalation = {
-				sessionId: "esc",
-				originSessionId: "origin",
-				captchaType: CaptchaType.puzzle,
-			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
-
-			const got =
-				await captchaManager.getSessionRecordWithOriginFallback("esc");
-
-			expect(got?.i).toBe(false);
-		});
-
-		it("keeps the escalation's own i rather than the origin's", async () => {
-			const origin = {
-				sessionId: "origin",
-				captchaType: CaptchaType.pow,
-				i: false,
-			} as unknown as Session;
-			const escalation = {
-				sessionId: "esc",
-				originSessionId: "origin",
-				captchaType: CaptchaType.puzzle,
-				i: true,
-			} as unknown as Session;
-			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
-
-			const got =
-				await captchaManager.getSessionRecordWithOriginFallback("esc");
-
-			expect(got?.i).toBe(true);
+			expect(got?.d).toEqual({ k1: "escalation-value" });
+			expect(dbGet()).toHaveBeenCalledTimes(1);
 		});
 
 		it("does not fill anything when origin also lacks the fields", async () => {
@@ -371,6 +327,109 @@ describe("CaptchaManager", () => {
 			expect(got?.sessionId).toBe("esc");
 			expect(got?.captchaType).toBe(CaptchaType.puzzle);
 			expect(got?.score).toBe(0.5);
+		});
+
+		// Chain fallback surface. The DM's post-pow / verify-time input
+		// read path relies on each of these fields being visible on the
+		// escalation session; if any of them isn't in the fallback allowlist
+		// the DM sees an incomplete view of the origin's signal at verify
+		// time and its decision can diverge from what it would have made
+		// pre-escalation. One test per field so a future refactor that drops
+		// one from the allowlist has to explicitly delete or flip its test.
+		it("fills dnsEvent from origin when the escalation is missing it", async () => {
+			const receivedAt = new Date();
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				dnsEvent: { receivedAt, ja4: "ja4x" },
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.image,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.dnsEvent).toEqual({ receivedAt, ja4: "ja4x" });
+			expect(got?.sessionId).toBe("esc");
+			expect(got?.captchaType).toBe(CaptchaType.image);
+		});
+
+		it("fills dnsEvent from origin for puzzle escalations too", async () => {
+			const receivedAt = new Date();
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				dnsEvent: { receivedAt, ja4: "ja4y" },
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.dnsEvent).toEqual({ receivedAt, ja4: "ja4y" });
+			expect(got?.captchaType).toBe(CaptchaType.puzzle);
+		});
+
+		// Explicit non-inheritance surface. These fields are NOT in the
+		// fallback allowlist; the tests document that so a future change
+		// that decides to persist them has to explicitly flip the assertion.
+		it("does NOT chain decryptedHeadHash from origin — escalation records carry their own via buildEscalation's copy at creation time; if that copy raced Mongo the DM sees `undefined` at verify", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				decryptedHeadHash: "origin-head-hash-xyz",
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.image,
+				// decryptedHeadHash intentionally absent on the escalation.
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.decryptedHeadHash).toBeUndefined();
+		});
+
+		it("does NOT chain behavioural data from origin — BDP lives only in the pow-solve payload, decrypted per-request and never persisted; verify-time DM sees `undefined`", async () => {
+			// Uses an off-schema field name to represent behavioural data
+			// on the origin (the type doesn't declare it — that's the
+			// whole point of this documentation test).
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				behavioralDataPacked: {
+					c1: [{ t: 1, x: 2, y: 3 }],
+					c2: [],
+					c3: [],
+				},
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.image,
+				simdReadings: undefined,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(
+				(got as unknown as { behavioralDataPacked?: unknown })
+					.behavioralDataPacked,
+			).toBeUndefined();
 		});
 	});
 
@@ -1546,6 +1605,156 @@ describe("CaptchaManager", () => {
 				score: 0.5,
 			});
 		});
+		it("should return the sessionId even on the free tier, which hides the score", () => {
+			const result = captchaManager.getVerificationResponse(
+				true,
+				{
+					account: "account",
+					tier: Tier.Free,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0.5,
+				undefined,
+				"session-abc",
+			);
+			expect(result).toEqual({
+				status: "translated",
+				verified: true,
+				sessionId: "session-abc",
+			});
+		});
+		it("should omit the sessionId when there isn't one", () => {
+			const result = captchaManager.getVerificationResponse(
+				true,
+				{
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0.5,
+				undefined,
+				undefined,
+			);
+			expect(result).not.toHaveProperty("sessionId");
+		});
+	});
+
+	describe("decodeSubmissionPayloads", () => {
+		const bundle = { key: "pk", innerConfig: "cfg" };
+
+		beforeEach(() => {
+			vi.spyOn(captchaManager, "resolveBundleBySessionId").mockResolvedValue(
+				bundle,
+			);
+		});
+
+		it("resolves the session bundle once for both payloads", async () => {
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockResolvedValue(null);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockResolvedValue(undefined);
+
+			await captchaManager.decodeSubmissionPayloads("session-1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(captchaManager.resolveBundleBySessionId).toHaveBeenCalledTimes(1);
+		});
+
+		// The regression this exists to prevent: decoding moved to worker
+		// threads, so two serialised decodes cost two round trips on the submit
+		// path. Both must be in flight at once.
+		it("runs the two decodes concurrently", async () => {
+			let behaviouralStarted = false;
+			let simdStartedWhileBehaviouralInFlight = false;
+			let releaseBehavioural: () => void = () => undefined;
+			const behaviouralGate = new Promise<void>((resolve) => {
+				releaseBehavioural = resolve;
+			});
+
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockImplementation(
+				async () => {
+					behaviouralStarted = true;
+					await behaviouralGate;
+					return null;
+				},
+			);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockImplementation(async () => {
+				simdStartedWhileBehaviouralInFlight = behaviouralStarted;
+				releaseBehavioural();
+				return undefined;
+			});
+
+			await captchaManager.decodeSubmissionPayloads("session-1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(simdStartedWhileBehaviouralInFlight).toBe(true);
+		});
+
+		it("returns both decoded payloads", async () => {
+			const behaviouralResult = {
+				collector1: [{ event: "click" }],
+				collector2: [],
+				collector3: [],
+				deviceCapability: "desktop",
+				timestamp: 1000,
+			} as BehavioralDataResult;
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockResolvedValue(
+				behaviouralResult,
+			);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockResolvedValue({ ops: [1, 2] } as never);
+
+			const decoded = await captchaManager.decodeSubmissionPayloads("s1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(decoded.behavioural).toEqual(behaviouralResult);
+			expect(decoded.simd).toEqual({ ops: [1, 2] });
+		});
+
+		it("keeps one payload when the other decode throws", async () => {
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockRejectedValue(
+				new Error("decoder blew up"),
+			);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockResolvedValue({ ops: [1] } as never);
+
+			const decoded = await captchaManager.decodeSubmissionPayloads("s1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(decoded.behavioural).toBeUndefined();
+			expect(decoded.simd).toEqual({ ops: [1] });
+		});
+
+		it("does not resolve a bundle when there is nothing to decode", async () => {
+			const decoded = await captchaManager.decodeSubmissionPayloads("s1", {});
+			expect(decoded).toEqual({});
+			expect(captchaManager.resolveBundleBySessionId).not.toHaveBeenCalled();
+		});
+
+		it("yields nothing when the bundle lookup throws", async () => {
+			vi.spyOn(captchaManager, "resolveBundleBySessionId").mockRejectedValue(
+				new Error("redis down"),
+			);
+			await expect(
+				captchaManager.decodeSubmissionPayloads("s1", { behavioural: "b" }),
+			).resolves.toEqual({});
+		});
 	});
 
 	describe("decryptBehavioralData", () => {
@@ -1553,9 +1762,8 @@ describe("CaptchaManager", () => {
 		let decryptFn: any;
 
 		beforeEach(async () => {
-			// Get the mocked default export
-			const mod = await import("../../../tasks/detection/decodeBehavior.js");
-			decryptFn = mod.default;
+			const mod = await import("../../../tasks/detection/decoderPool.js");
+			decryptFn = mod.decode;
 			vi.mocked(decryptFn).mockReset();
 		});
 
@@ -1587,7 +1795,11 @@ describe("CaptchaManager", () => {
 			);
 			expect(result).toEqual(mockResult);
 			expect(decryptFn).toHaveBeenCalledTimes(1);
-			expect(decryptFn).toHaveBeenCalledWith("encryptedData", "pk", "cfg");
+			expect(decryptFn).toHaveBeenCalledWith("behaviour", [
+				"encryptedData",
+				"pk",
+				"cfg",
+			]);
 		});
 
 		it("should return null when the bundle fails to decrypt", async () => {
@@ -1793,6 +2005,189 @@ describe("CaptchaManager", () => {
 				mockHeaders,
 			);
 			expect(result).toBeUndefined();
+		});
+	});
+
+	// Verify-time traffic-filter enforcement. Callers (powTasks /
+	// imgCaptchaTasks / puzzleTasks) branch on `isBlocked` to mark the
+	// submission verified:false and stamp the reason on the record —
+	// blocked interactions still bill because the widget produced them.
+	// Request-time no longer blocks on any category (see
+	// `applyTrafficFilterAtRequestTime` and its unit tests), so verify-time
+	// is the sole enforcement point for `action: block` categories.
+	describe("resolveTrafficFilterCheck (verify-time enforcement)", () => {
+		const ipInfoResponse = (
+			overrides: Partial<{
+				isVPN: boolean;
+				isDatacenter: boolean;
+				isAbuser: boolean;
+				abuserScore: number;
+				companyAbuserScore: number;
+				providerType: "isp" | "hosting" | undefined;
+				datacenterName: string | undefined;
+				providerName: string | undefined;
+				asnOrganization: string | undefined;
+			}> = {},
+		) => ({
+			ip: "1.2.3.4",
+			isValid: true as const,
+			isVPN: false,
+			isProxy: false,
+			isTor: false,
+			isDatacenter: false,
+			isAbuser: false,
+			isMobile: false,
+			isSatellite: false,
+			isCrawler: false,
+			...overrides,
+		});
+
+		const mkEnvWithIpLookup = (
+			// biome-ignore lint/suspicious/noExplicitAny: only ipInfoService.lookup is read
+			ipLookup: () => Promise<any>,
+		): ProviderEnvironment =>
+			({
+				config: {},
+				ipInfoService: { lookup: ipLookup },
+			}) as unknown as ProviderEnvironment;
+
+		it("blocks a datacenter IP at verify time when the site configures datacenter:{action:block}", async () => {
+			const check = await captchaManager.resolveTrafficFilterCheck(
+				mkEnvWithIpLookup(() =>
+					Promise.resolve(
+						ipInfoResponse({ isDatacenter: true, providerType: "hosting" }),
+					),
+				),
+				undefined,
+				{ datacenter: { action: TrafficFilterAction.Block } },
+				"1.2.3.4",
+			);
+			expect(check.isBlocked).toBe(true);
+			if (check.isBlocked) {
+				expect(check.reason).toBe(ResultReason.DATACENTER_BLOCKED);
+			}
+		});
+
+		it("does NOT block at verify time when the operator configured datacenter:{action:challenge} — challenge is a request-time concern", async () => {
+			// This is the mirror of the request-time behaviour: challenge
+			// overrides only affect the captcha-type / difficulty at
+			// request-time; at verify-time they don't produce a block, so
+			// the interaction succeeds and is billed as normal.
+			const check = await captchaManager.resolveTrafficFilterCheck(
+				mkEnvWithIpLookup(() =>
+					Promise.resolve(
+						ipInfoResponse({ isDatacenter: true, providerType: "hosting" }),
+					),
+				),
+				undefined,
+				{
+					datacenter: {
+						action: TrafficFilterAction.Challenge,
+						captchaType: CaptchaType.image,
+					},
+				},
+				"1.2.3.4",
+			);
+			expect(check.isBlocked).toBe(false);
+		});
+
+		it("applies the abuser default at verify time even when the operator did not configure it (protects unconfigured sites)", async () => {
+			// Mirror of the "does NOT apply abuser default at request time"
+			// invariant in trafficFilterRequestTime.unit.test.ts — the
+			// asymmetry is deliberate. At verify-time we default the
+			// abuser block; at request-time we defer to the operator.
+			const check = await captchaManager.resolveTrafficFilterCheck(
+				mkEnvWithIpLookup(() =>
+					Promise.resolve(
+						ipInfoResponse({
+							isAbuser: true,
+							abuserScore: 0.9,
+							companyAbuserScore: 0.9,
+						}),
+					),
+				),
+				undefined,
+				{},
+				"1.2.3.4",
+			);
+			expect(check.isBlocked).toBe(true);
+			if (check.isBlocked) {
+				expect(check.reason).toBe(ResultReason.ABUSER_BLOCKED);
+			}
+		});
+
+		it("passes when no category is active and the abuser default doesn't match (clean IP)", async () => {
+			const check = await captchaManager.resolveTrafficFilterCheck(
+				mkEnvWithIpLookup(() => Promise.resolve(ipInfoResponse())),
+				undefined,
+				{},
+				"1.2.3.4",
+			);
+			expect(check.isBlocked).toBe(false);
+		});
+	});
+
+	// Every one of these branches leaves the frictionless decrypt with no keys
+	// and fails closed to a challenge, so the cause has to be distinguishable
+	// from the logs alone.
+	describe("resolveBundleByDetectorSession", () => {
+		type LogPayload = { msg: string; data?: { cause?: string } };
+		const causeOf = (): string | undefined => {
+			const calls = (logger.info as ReturnType<typeof vi.fn>).mock
+				.calls as unknown as Array<[() => LogPayload]>;
+			for (const [build] of calls) {
+				const payload = build();
+				if (payload.msg === "Detector bundle not resolved") {
+					return payload.data?.cause;
+				}
+			}
+			return undefined;
+		};
+
+		it("reports noDetectorSession when the caller sent no detector session", async () => {
+			const result =
+				await captchaManager.resolveBundleByDetectorSession(undefined);
+			expect(result).toBeUndefined();
+			expect(causeOf()).toBe("noDetectorSession");
+		});
+
+		it("reports noBinding when the Redis binding is absent or expired", async () => {
+			(
+				mockWriteQueue.getDetectorBundle as ReturnType<typeof vi.fn>
+			).mockResolvedValue(null);
+			const result =
+				await captchaManager.resolveBundleByDetectorSession("detector-1");
+			expect(result).toBeUndefined();
+			expect(causeOf()).toBe("noBinding");
+		});
+
+		it("reports bundleNotInPool when the binding names a bundle this provider lacks", async () => {
+			(
+				mockWriteQueue.getDetectorBundle as ReturnType<typeof vi.fn>
+			).mockResolvedValue("bundle-1");
+			vi.spyOn(captchaManager, "resolveBundleById").mockReturnValue(undefined);
+			const result =
+				await captchaManager.resolveBundleByDetectorSession("detector-1");
+			expect(result).toBeUndefined();
+			expect(causeOf()).toBe("bundleNotInPool");
+		});
+
+		it("resolves the bundle and logs nothing on the success path", async () => {
+			(
+				mockWriteQueue.getDetectorBundle as ReturnType<typeof vi.fn>
+			).mockResolvedValue("bundle-1");
+			vi.spyOn(captchaManager, "resolveBundleById").mockReturnValue({
+				key: "private-key",
+				innerConfig: "inner-config",
+			});
+			const result =
+				await captchaManager.resolveBundleByDetectorSession("detector-1");
+			expect(result).toEqual({
+				key: "private-key",
+				innerConfig: "inner-config",
+				bundleId: "bundle-1",
+			});
+			expect(causeOf()).toBeUndefined();
 		});
 	});
 });

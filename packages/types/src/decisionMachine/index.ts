@@ -18,9 +18,15 @@ import {
 	CaptchaType,
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
+import {
+	type IPuzzleSettings,
+	type ITrafficCategoryPolicy,
+	PuzzleSettingsSchema,
+	puzzleToleranceFieldSchema,
+} from "../client/settings.js";
 import type { PuzzleEvent, RequestHeaders } from "../provider/api.js";
 import type { ScoreComponents } from "../provider/database.js";
-import type { SimdReadings } from "../provider/detection.js";
+import type { DetectorData, SimdReadings } from "../provider/detection.js";
 import type { FrictionlessReason } from "../provider/reasons.js";
 
 export type EnrichedDnsEvent = {
@@ -74,6 +80,45 @@ export type DecisionMachineBehavioralDataPacked = {
 	d: string;
 };
 
+/**
+ * The site's per-category `settings.trafficFilter` policies, projected down to
+ * just the egress categories (the filter's thresholds and name lists are left
+ * behind). Derived server-side by `deriveTrafficPolicies` and surfaced to
+ * routing / decision machines.
+ *
+ * Two distinct jobs:
+ *
+ * 1. **Consent gate.** A rule that reasons about middleboxes must know whether
+ *    the operator actually rejects that egress class. A VPN concentrator
+ *    legitimately terminates the client's TCP handshake, so on a site that
+ *    welcomes VPN users the observed stack says nothing and the check must not
+ *    run. `action === "block"` is the only value that counts as "not opted in".
+ *
+ * 2. **Policy inheritance.** A machine that classifies a connection as, say,
+ *    a VPN the IP-intel feed missed should act exactly as the operator
+ *    configured for VPNs — deny when they block, serve their nominated captcha
+ *    when they challenge — rather than invent its own escalation.
+ *
+ * An absent key means the operator left that category unconfigured. A missing
+ * bag entirely (no trafficFilter, or a provider that pre-dates the field) means
+ * nothing is configured, so machines must fall through to no extra friction.
+ *
+ * NB `puzzleTolerance` / `puzzle` render overrides on a challenge policy are
+ * not expressible in `RoutingMachineOutput`, so a machine inheriting a
+ * challenge policy can honour `captchaType`, `powDifficulty` and
+ * `solvedImagesCount` only.
+ */
+export type TrafficCategoryPolicies = {
+	vpn?: ITrafficCategoryPolicy;
+	proxy?: ITrafficCategoryPolicy;
+	tor?: ITrafficCategoryPolicy;
+	datacenter?: ITrafficCategoryPolicy;
+	abuser?: ITrafficCategoryPolicy;
+	mobile?: ITrafficCategoryPolicy;
+	satellite?: ITrafficCategoryPolicy;
+	crawler?: ITrafficCategoryPolicy;
+};
+
 export type DecisionMachineInput = {
 	phase?: "verify";
 	userAccount: string;
@@ -114,6 +159,32 @@ export type DecisionMachineInput = {
 	// captured client-side and persisted on the puzzle captcha record.
 	// Always undefined on pow / image inputs.
 	puzzleEvents?: PuzzleEvent[];
+	// Raw per-connection TCP-handshake signals persisted on the Session
+	// at frictionless entry (see rawTlsSignalsMiddleware). Surfaced here
+	// so verify-time decide rules can gate on the raw TCP fingerprint
+	// alongside the existing ipInfo field. Undefined on sessions
+	// captured before tcp-probe deploy or served through an ingress
+	// without the sidecar.
+	synNs?: number;
+	synackNs?: number;
+	ackNs?: number;
+	observedTtl?: number;
+	tcpMss?: number;
+	tcpWscale?: number;
+	tcpOptsFlags?: number;
+	tcpOptsOrder?: number;
+	tcpWindow?: number;
+	// The site's per-category traffic-filter policies. Gates the
+	// egress-sensitive TCP-stack rules and supplies the action they inherit —
+	// see TrafficCategoryPolicies.
+	trafficPolicies?: TrafficCategoryPolicies;
+	// Everything the detector reported for the session this verify belongs
+	// to, as persisted on the Session record. Keys are whatever the detector
+	// chose to emit: nothing in this repo declares them, and a rule may read
+	// a key that no release of `types` or `provider` has ever heard of.
+	// Undefined when no frictionless session preceded, or when the detector
+	// reported nothing.
+	d?: DetectorData;
 };
 
 export type DecisionMachineOutput = {
@@ -245,6 +316,40 @@ export interface RoutingMachineRawSignals {
 	// traverse a chaddy-enabled ingress (e.g. dev requests, HTTP/3).
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
+	// Raw per-connection TCP-handshake signals forwarded by chaddy from
+	// its co-located tcp-probe eBPF sidecar. Wire-observed primitives
+	// (RFC-793 / RFC-9293) captured off the WAN NIC before caddy sees the
+	// TLS bytes. All optional — a request that came in through an ingress
+	// without a running tcp-probe pipeline has all fields undefined.
+	//
+	// Fields decoded from the sidecar's `X-TLS-*` headers by
+	// `rawTlsSignalsMiddleware`. See @prosopo/types Session for full
+	// per-field semantics (kernel monotonic ns for the syn/synack/ack
+	// timestamps, TTL byte for observedTtl, MSS / window-scale / options
+	// bitfield / packed options order / window from the client's SYN).
+	synNs?: number;
+	synackNs?: number;
+	ackNs?: number;
+	observedTtl?: number;
+	tcpMss?: number;
+	tcpWscale?: number;
+	tcpOptsFlags?: number;
+	tcpOptsOrder?: number;
+	tcpWindow?: number;
+	// IP metadata as looked up by `ipInfoMiddleware` from the provider's
+	// ipapi/isp mirror at request time. Undefined when the lookup failed
+	// or the middleware wasn't reached (dev requests bypassing the
+	// standard chain). Undefined-check any field before use — an IPInfo
+	// with `isValid:false` means the lookup errored and no threat
+	// indicators are populated.
+	//
+	// Route-time surfacing of `ipInfo` complements the existing
+	// decide-kind `input.ipInfo`: decide loads the persisted ipapi
+	// payload from the Session record at verify time, route now carries
+	// the live per-request lookup so a routing machine can reason on
+	// asn / isProxy / isMobile / isDatacenter at the frictionless entry
+	// (e.g. escalate iPhone-UA + isProxy:true to puzzle).
+	ipInfo?: IPInfoResponse;
 	// Full page URL the widget was rendered on (origin + path only; query
 	// string, fragment and any embedded credentials are stripped client- and
 	// server-side). Available on the `route` phase from the freshly decrypted
@@ -258,6 +363,10 @@ export interface RoutingMachineRawSignals {
 	// client / persisted session pre-dates the field.
 	currentUrl?: string;
 	iframeUrl?: string;
+	// The site's per-category traffic-filter policies. Gates the
+	// egress-sensitive middlebox route rules and supplies the challenge
+	// policy they inherit — see TrafficCategoryPolicies.
+	trafficPolicies?: TrafficCategoryPolicies;
 }
 
 export type RoutingMachinePhase = "route" | "postPow";
@@ -272,6 +381,15 @@ export interface RoutingMachineInputBase {
 	score: number;
 	platform: RoutingMachinePlatform;
 	raw: RoutingMachineRawSignals;
+	// Everything the detector reported. Same bag, same key names and the same
+	// "nothing here declares them" contract as `DecisionMachineInput.d`, so a
+	// rule reads `input.d.<key>` identically in either machine kind.
+	//
+	// On the `route` phase this is the bag freshly decoded from the payload
+	// that arrived with this request; on `postPow` it is the bag persisted on
+	// the originating Session. Undefined when the detector reported nothing,
+	// or when the payload could not be read.
+	d?: DetectorData;
 }
 
 export interface RoutingMachineInput extends RoutingMachineInputBase {
@@ -286,6 +404,16 @@ export interface RoutingMachineOutput {
 	// (e.g. why it chose image over pow). Persisted to `session.reason` by the
 	// provider. Free-form string because machines are operator-authored.
 	reason?: string;
+	// Puzzle-only tunables, with the same override semantics as a
+	// trafficFilter `challenge` policy: lower tolerance = stricter accuracy,
+	// and `puzzle` carries per-render overrides (decoy count, scale range, …).
+	// Both are persisted on the Session and layered in by
+	// getPuzzleCaptchaChallenge, because that endpoint re-derives its
+	// overrides from the live trafficFilter verdict and a machine-chosen
+	// puzzle has no matching verdict to re-derive from.
+	// Ignored unless the resolved captchaType is `puzzle`.
+	puzzleTolerance?: number;
+	puzzle?: IPuzzleSettings;
 }
 
 export const RoutingMachineOutputSchema = z.object({
@@ -297,4 +425,9 @@ export const RoutingMachineOutputSchema = z.object({
 	solvedImagesCount: z.number().int().positive().optional(),
 	powDifficulty: z.number().positive().optional(),
 	reason: z.string().optional(),
+	// Bounded by the same validators the site-wide settings use, so a machine
+	// cannot hand the renderer a tolerance or decoy count the portal would
+	// reject.
+	puzzleTolerance: puzzleToleranceFieldSchema.optional(),
+	puzzle: PuzzleSettingsSchema.optional(),
 });

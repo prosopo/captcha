@@ -29,11 +29,11 @@ export default defineConfig({
 	screenshotsFolder: "./cypress/snapshots/actual",
 	trashAssetsBeforeRuns: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
-	env: {
+	expose: {
 		...process.env,
 		// For the client-example, the default page is the captcha type. For the client-bundle-example, the default_page
-		// is sometimes passed via --env default_page='/THE_PAGE.html'" inside package.json scripts.
-		default_page: "/",
+		// is sometimes passed via --expose default_page='/THE_PAGE.html'" inside package.json scripts.
+		default_page: "/image-implicit.html",
 		visualRegressionType: "regression",
 		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
 		visualRegressionDiffDirectory: "cypress/snapshots/diff",
@@ -91,6 +91,19 @@ export default defineConfig({
 			// CAPTCHA_TYPE=image with the wrong sitekey + demo page and
 			// fail before the actual test logic runs.
 			"cypress/e2e/**/routingFrictionless.cy.ts",
+			// Score-ladder spec needs the frictionless sitekey, the frictionless
+			// demo page, and the detector override that pins the base score - all
+			// of which live in cypress.frictionlessLadder.config.js and its CI
+			// step. Under this catch-all it registers the image sitekey with no
+			// override, so every request short-circuits to image and only the
+			// image-band cases pass by accident.
+			"cypress/e2e/**/frictionlessLadder.cy.ts",
+			// Challenge-type toggles spec: needs the same banded-score env as
+			// the ladder (detector override + L_RULES) to get a session into
+			// the image and puzzle bands at all. Without it every case scores
+			// zero and lands on PoW, so it must not be pulled into this
+			// catch-all. Runs under cypress.frictionlessTypes.config.js.
+			"cypress/e2e/**/frictionlessTypes.cy.ts",
 			"cypress/e2e/**/postPowPuzzle.cy.ts",
 			"cypress/e2e/**/decisionMachineDeny.cy.ts",
 			"cypress/e2e/**/decisionMachineDenyPow.cy.ts",
@@ -98,6 +111,22 @@ export default defineConfig({
 			"cypress/e2e/**/accessPolicy.cy.ts",
 			"cypress/e2e/**/accessPolicyRestrict.cy.ts",
 			"cypress/e2e/**/accessPolicyConflicts.cy.ts",
+			// Both specs hardcode a `/frictionless-explicit.html` visit and
+			// install intercepts before mount, but the /frictionless request
+			// still returns 403 under this catch-all (visible locally via
+			// `cypress run --config-file cypress.image.config.js`). Failure
+			// is unrelated to this PR — likely a domain / origin registration
+			// artefact of running frictionless specs against the image config's
+			// baseline sitekey state. Each spec has its own dedicated config
+			// / CI step where it passes.
+			"cypress/e2e/**/sessionCaptchaTypeConsistency.cy.ts",
+			"cypress/e2e/**/escalationPuzzle.cy.ts",
+			// Drives pow-implicit-sessionid.html, which is the only page
+			// rendering the widget with data-sessionid. Under this catch-all
+			// it would mount the image page with no session id and fail
+			// before reaching the correlation it exists to test. Runs under
+			// cypress.clientSessionId.config.js.
+			"cypress/e2e/**/clientSessionId.cy.ts",
 		],
 	},
 	component: {

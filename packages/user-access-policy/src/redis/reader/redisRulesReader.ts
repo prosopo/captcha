@@ -95,6 +95,10 @@ const SPECIFICITY_EXPR = [
 	"exists(@countryCode)",
 	"exists(@asn)",
 	"exists(@os)",
+	"exists(@browser)",
+	// A header rule is one logical dimension: only the sentinel counts toward
+	// specificity, not the name/value/operator triple it also carries.
+	"exists(@headerMatch)",
 	"exists(@numericIp)",
 	"exists(@numericIpMaskMin)",
 ].join(" + ");
@@ -124,6 +128,7 @@ const RULE_LOAD_FIELDS = [
 	"@unsolvedImagesCount",
 	"@frictionlessScore",
 	"@deferToVerify",
+	"@messageKey",
 	"@clientId",
 	"@groupId",
 	"@userId",
@@ -135,6 +140,11 @@ const RULE_LOAD_FIELDS = [
 	"@countryCode",
 	"@asn",
 	"@os",
+	"@browser",
+	"@headerMatch",
+	"@headerName",
+	"@headerValue",
+	"@headerOperator",
 	"@numericIp",
 	"@numericIpMaskMin",
 	"@numericIpMaskMax",
@@ -156,6 +166,7 @@ const readerSpecificity = (rule: AccessRule): number => {
 	if (rule.countryCode !== undefined) score++;
 	if (rule.asn !== undefined) score++;
 	if (rule.os !== undefined) score++;
+	if (rule.browser !== undefined) score++;
 	if (rule.numericIp !== undefined) score++;
 	if (rule.numericIpMaskMin !== undefined) score++;
 	return score;
@@ -273,6 +284,7 @@ export class RedisRulesReader implements AccessRulesReader {
 
 		const subQueries = buildScopedRulesSubQueries(userScope, clientId, {
 			...(filter.blockOnly === true && { blockOnly: true }),
+			...(filter.includeDeferred === true && { includeDeferred: true }),
 		});
 
 		try {

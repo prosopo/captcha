@@ -98,6 +98,7 @@ export const accessRulesFilterInput = z.object({
 		.default(FilterScopeMatch.Exact),
 	groupId: z.string().optional(),
 	blockOnly: z.boolean().optional(),
+	includeDeferred: z.boolean().optional(),
 } satisfies AllKeys<AccessRulesFilterInput>);
 
 export const getAccessRuleFiltersFromInput = (

@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Data/hora muito antiga",
 		"FAILED_IP_VALIDATION": "Convalida IP fallita",
 		"ACCESS_POLICY_BLOCK": "Accesso bloccato dalla politica",
+		"CLIENT_SESSION_MISMATCH": "Sessione non corrispondente. Il captcha non è stato completato in questa sessione.",
 		"FORBIDDEN": "Proibido",
 		"PROVIDER_VERIFY_FAILED": "Falha na verificação do provedor",
 		"SPAM_EMAIL_DOMAIN": "Dominio email non consentito",
@@ -46,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Troppi invii da questo indirizzo email",
 		"VPN_BLOCKED": "Le richieste da connessioni VPN non sono consentite per questo sito",
 		"PROXY_BLOCKED": "Le richieste da server proxy non sono consentite per questo sito",
+		"TOO_MANY_LOCALHOST": "Troppe richieste CAPTCHA da localhost per questa chiave del sito",
 		"TOR_BLOCKED": "Le richieste da nodi di uscita Tor non sono consentite per questo sito",
 		"ABUSER_BLOCKED": "Le richieste da reti segnalate per abuso non sono consentite per questo sito",
 		"DATACENTER_BLOCKED": "Le richieste da indirizzi IP di data center non sono consentite per questo sito",
@@ -77,7 +79,20 @@
 		"NO_ACCOUNTS_FOUND": "Nessun account trovato",
 		"ACCOUNT_NOT_FOUND": "Account non trovato",
 		"NO_EXTENSION_FOUND": "Nessuna estensione trovata",
-		"INSECURE_CONTEXT": "Procaptcha richiede una connessione sicura (HTTPS)"
+		"INSECURE_CONTEXT": "Procaptcha richiede una connessione sicura (HTTPS)",
+		"CHECKING": "Verifica che tu sia umano in corso",
+		"IMAGE_DIALOG_LABEL": "Verifica con immagini",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Verifica con puzzle",
+			"DRAG": "Trascina il pezzo fino al bersaglio",
+			"RETRY": "Quasi — riprova",
+			"PIECE_LABEL": "Pezzo del puzzle",
+			"PIECE_ROLE": "pezzo del puzzle trascinabile",
+			"KEYBOARD_HINT": "Usa i tasti freccia per spostare il pezzo, tenendo premuto Maiusc per passi più piccoli. Premi Invio per inviarlo, Home per riportarlo all'inizio o Esc per annullare.",
+			"POSITION": "{{x}} percento da sinistra, {{y}} percento dall'alto",
+			"CHECKING": "Verifica della tua risposta in corso",
+			"RETRY_ANNOUNCEMENT": "Quasi. È stato caricato un nuovo puzzle e il pezzo è tornato all'inizio."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Impossibile codificare l'indirizzo non valido",

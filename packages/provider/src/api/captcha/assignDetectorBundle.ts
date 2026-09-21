@@ -12,25 +12,78 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ApiParams, type AssignDetectorBundleResponse } from "@prosopo/types";
+import { createHmac } from "node:crypto";
+import {
+	ApiParams,
+	AssignDetectorBundleRequestBody,
+	type AssignDetectorBundleResponse,
+} from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import type { AugmentedRequest } from "../../express.js";
-import { getDetectorBundlePool } from "../../tasks/detection/bundlePool.js";
+import { getAssignSecret } from "../../tasks/detection/assignSecret.js";
+import {
+	getDetectorBundlePool,
+	getDetectorBundlePoolDir,
+} from "../../tasks/detection/bundlePool.js";
 import { Tasks } from "../../tasks/index.js";
+import { normalizeRequestIp } from "../../utils/normalizeRequestIp.js";
+
+/** Pool position for this caller: a keyed hash of their address. */
+const clientIndex = (ip: string, secret: Buffer): number =>
+	createHmac("sha256", secret).update(ip).digest().readUIntBE(0, 6);
+
+type SiteConfig = {
+	[ApiParams.clientUrl]?: string;
+	[ApiParams.assetOrigin]?: string;
+};
+
+const siteConfig = async (
+	tasks: Tasks,
+	body: unknown,
+	logger: AugmentedRequest["logger"],
+): Promise<SiteConfig> => {
+	const parsed = AssignDetectorBundleRequestBody.safeParse(body);
+	if (!parsed.success) {
+		return {};
+	}
+
+	try {
+		const client = await tasks.db.getClientRecord(parsed.data[ApiParams.dapp]);
+		const clientUrl = client?.settings?.clientUrl;
+		const assetOrigin = client?.settings?.assetOrigin;
+		if (!clientUrl || !assetOrigin) {
+			return {};
+		}
+
+		return {
+			[ApiParams.clientUrl]: clientUrl,
+			[ApiParams.assetOrigin]: assetOrigin,
+		};
+	} catch (err) {
+		logger.warn(() => ({
+			msg: "assignDetectorBundle site config failed",
+			err,
+		}));
+		return {};
+	}
+};
 
 /**
  * Assigns a precomputed detector bundle for this detection session.
  *
- * When the provider has a non-empty pool it picks a random bundle, records the
- * (short-TTL) `detectorSessionId → bundleId` binding in Redis, and returns the
- * obfuscated detector script inline.
+ * The bundle is derived from the caller's address and this provider's secret,
+ * so a repeat caller keeps getting the same one with nothing stored and nothing
+ * to expire. Any bundle detects equally well, so this is not visible to users.
  *
- * When it cannot (no pool loaded, or Redis unavailable so the binding could not
- * be persisted) it returns `useProviderBundle: false`. There is NO bundled
- * detector and no legacy key pool to fall back to — the client sends an empty
- * token on the frictionless hop and the provider decides what to serve.
+ * The `detectorSessionId → bundleId` binding is still written to Redis; the
+ * decrypt side resolves the session's bundle from it on the next hop.
+ *
+ * Returns `useProviderBundle: false` when there is no pool, no secret, or Redis
+ * could not store that binding. There is NO bundled detector to fall back to —
+ * the client sends an empty token on the frictionless hop and the provider
+ * decides what to serve.
  */
 export default (env: ProviderEnvironment) =>
 	async (
@@ -49,7 +102,14 @@ export default (env: ProviderEnvironment) =>
 				return res.json(noBundle);
 			}
 
-			const { bundleId, bundle } = pool.pickRandom();
+			const secret = getAssignSecret(getDetectorBundlePoolDir(), {
+				info: (msg, data) => req.logger.info(() => ({ msg, data })),
+				warn: (msg, data) => req.logger.warn(() => ({ msg, data })),
+			});
+
+			const { bundleId, bundle } = pool.at(
+				clientIndex(normalizeRequestIp(req.ip, req.logger), secret),
+			);
 			const detectorSessionId = `det-${uuidv4()}`;
 
 			// Persist the ephemeral session→bundle binding. If Redis is
@@ -73,6 +133,7 @@ export default (env: ProviderEnvironment) =>
 				[ApiParams.useProviderBundle]: true,
 				[ApiParams.detectorSessionId]: detectorSessionId,
 				[ApiParams.detectorScript]: bundle.js,
+				...(await siteConfig(tasks, req.body, req.logger)),
 				status: "ok",
 			};
 			return res.json(response);

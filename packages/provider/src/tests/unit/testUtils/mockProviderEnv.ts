@@ -142,6 +142,7 @@ export function createMockProviderEnvironment(): ProviderEnvironment {
 			isSatellite: false,
 			isCrawler: false,
 		}),
+		country: vi.fn().mockReturnValue(undefined),
 		isAvailable: vi.fn().mockReturnValue(true),
 	};
 

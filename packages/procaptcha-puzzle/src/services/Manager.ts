@@ -17,6 +17,7 @@ import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
 import {
 	ExtensionLoader,
+	buildClientMetaData,
 	buildUpdateState,
 	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
@@ -411,8 +412,10 @@ export const Manager = (
 
 			// Wait 5 secs for ongoing SIMD, else submit without
 			const simdReadings = await getSimdReadingsForSubmit(frictionlessState);
-			const hpValue = getHoneypotValue?.();
-			const clientMetaData = hpValue ? { hp: hpValue } : undefined;
+			const clientMetaData = buildClientMetaData(
+				getHoneypotValue?.(),
+				getConfig().clientSessionId,
+			);
 			const verifiedSolution = await providerApi.submitPuzzleCaptchaSolution(
 				challenge,
 				getAccount().account.account.address,

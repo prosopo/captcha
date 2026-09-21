@@ -12,14 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { TOptions } from "i18next";
 import initializeI18n from "./i18nFrontend.js";
 import type { Ti18n } from "./loadI18next.js";
 
 const NAMESPACE = "translation";
 
 export interface Translator {
-	/** Translate a key against the current language. */
-	t(key: string): string;
+	/**
+	 * Translate a key against the current language. `options` carries
+	 * interpolation values and the `defaultValue` a widget falls back to when
+	 * its key has not been added to the bundled catalogues yet.
+	 */
+	t(key: string, options?: TOptions): string;
 	/**
 	 * Whether the namespace for the active language has finished loading.
 	 * Mirrors `ready` from the old react-i18next hook: widgets render an empty
@@ -46,7 +51,7 @@ export const createTranslator = (existing?: Ti18n): Translator => {
 		i18n.isInitialized && i18n.hasLoadedNamespace(NAMESPACE);
 
 	return {
-		t: (key: string): string => i18n.t(key),
+		t: (key: string, options?: TOptions): string => i18n.t(key, options),
 		isReady,
 		i18n,
 		subscribe: (listener: () => void): (() => void) => {

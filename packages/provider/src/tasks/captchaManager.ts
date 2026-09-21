@@ -36,6 +36,7 @@ import type {
 	IProviderDatabase,
 	IUserDataSlim,
 	PoWCaptchaRecord,
+	ProjectedSession,
 	PuzzleCaptchaRecord,
 } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -50,11 +51,13 @@ import {
 import {
 	getPrioritisedAccessRule,
 	getRequestUserScope,
+	normalizeHeadersForMatching,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import { getDetectorBundlePool } from "./detection/bundlePool.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
+import { decode } from "./detection/decoderPool.js";
 import { extraIpInfosFromEnrichedDnsEvent } from "./dnsEvent/enrichDnsEvent.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
 import {
@@ -72,6 +75,14 @@ import {
 export interface PoolBundleDecrypt {
 	key: string;
 	innerConfig: string;
+	/**
+	 * Opaque per-bundle decode parameter from the bundle's `{id}.json`. Only
+	 * meaningful to the decoder, and only alongside the bundle it was built
+	 * with. Absent for bundles from a pool built before it existed.
+	 */
+	payloadLayout?: string;
+	/** Second opaque decode parameter, same contract as `payloadLayout`. */
+	keyMap?: string;
 }
 
 /**
@@ -178,7 +189,7 @@ export class CaptchaManager {
 	 * Read a session and, if it's an escalation missing one of the
 	 * inherently-origin-populated fields, walk to `originSessionId` and fill
 	 * the gap. Intended for the decision-machine input read path only —
-	 * `simdReadings`, `dnsEvent`, `entropyMathRandomFingerprint` etc. are
+	 * `simdReadings`, `dnsEvent` and the detector bag are
 	 * populated on the origin session (SIMD via pow-submit's fire-and-forget
 	 * attach; DNS via the sidecar's origin-TLS-scoped patch) and don't
 	 * automatically end up on the escalation record because
@@ -198,7 +209,7 @@ export class CaptchaManager {
 	 */
 	public async getSessionRecordWithOriginFallback(
 		sessionId: string,
-	): Promise<Session | undefined> {
+	): Promise<ProjectedSession | undefined> {
 		const session = await this.db.getSessionRecordBySessionId(sessionId);
 		if (!session) return undefined;
 		if (!session.originSessionId) return session;
@@ -207,23 +218,14 @@ export class CaptchaManager {
 			session.simdReadings === undefined || session.simdReadings === null;
 		const needsDns =
 			session.dnsEvent === undefined || session.dnsEvent === null;
-		const needsEntropyMath = session.entropyMathRandomFingerprint === undefined;
-		const needsEntropyCrypto = session.entropyCryptoFingerprint === undefined;
-		const needsEntropyWall = session.entropyWallClockOffsetMs === undefined;
-		const needsEntropyFirst = session.entropyMathRandomFirst === undefined;
-		const needsG = session.g === undefined;
-		const needsI = session.i === undefined;
+		// An absent bag is reason enough to walk to the origin. A present one
+		// is not — but if the walk happens anyway for simd or dns, the bags
+		// are merged key by key, since the origin can have gained keys after
+		// the escalation copied it. The escalation's own keys always win.
+		const escalationData = session.d ?? {};
+		const needsData = session.d === undefined;
 
-		if (
-			!needsSimd &&
-			!needsDns &&
-			!needsEntropyMath &&
-			!needsEntropyCrypto &&
-			!needsEntropyWall &&
-			!needsEntropyFirst &&
-			!needsG &&
-			!needsI
-		) {
+		if (!needsSimd && !needsDns && !needsData) {
 			return session;
 		}
 
@@ -232,29 +234,93 @@ export class CaptchaManager {
 		);
 		if (!origin) return session;
 
+		const mergedData =
+			origin.d === undefined ? session.d : { ...origin.d, ...escalationData };
+
 		return {
 			...session,
 			...(needsSimd &&
 				origin.simdReadings && { simdReadings: origin.simdReadings }),
 			...(needsDns && origin.dnsEvent && { dnsEvent: origin.dnsEvent }),
-			...(needsEntropyMath &&
-				origin.entropyMathRandomFingerprint !== undefined && {
-					entropyMathRandomFingerprint: origin.entropyMathRandomFingerprint,
-				}),
-			...(needsEntropyCrypto &&
-				origin.entropyCryptoFingerprint !== undefined && {
-					entropyCryptoFingerprint: origin.entropyCryptoFingerprint,
-				}),
-			...(needsEntropyWall &&
-				origin.entropyWallClockOffsetMs !== undefined && {
-					entropyWallClockOffsetMs: origin.entropyWallClockOffsetMs,
-				}),
-			...(needsEntropyFirst &&
-				origin.entropyMathRandomFirst !== undefined && {
-					entropyMathRandomFirst: origin.entropyMathRandomFirst,
-				}),
-			...(needsG && origin.g !== undefined && { g: origin.g }),
-			...(needsI && origin.i !== undefined && { i: origin.i }),
+			...(mergedData !== undefined && { d: mergedData }),
+		};
+	}
+
+	/**
+	 * Decode the payloads a solution submission can carry, in one pass.
+	 *
+	 * Both decodes want the same session bundle and neither depends on the
+	 * other, so the bundle is resolved once and the two decodes run together.
+	 * Done separately they cost two bundle lookups and two serialised decoder
+	 * round trips on the submit path, which measured as a ~22-25% latency
+	 * regression on `pow/solution` and `puzzle/solution` once decoding moved
+	 * to worker threads.
+	 *
+	 * Absent or undecodable payloads come back undefined rather than throwing,
+	 * matching what the individual decoders already do: a submission is not
+	 * worth failing over a signal we could not read.
+	 */
+	public async decodeSubmissionPayloads(
+		sessionId: string | undefined,
+		payloads: { behavioural?: string; simd?: string },
+	): Promise<{
+		behavioural?: BehavioralDataResult;
+		simd?: NonNullable<Session["simdReadings"]>;
+	}> {
+		const { behavioural, simd } = payloads;
+		if (!behavioural && !simd) return {};
+
+		let bundle: PoolBundleDecrypt | undefined;
+		try {
+			bundle = await this.resolveBundleBySessionId(sessionId);
+		} catch (err) {
+			this.logger?.warn(() => ({
+				msg: "Could not resolve the detector bundle for a submission",
+				data: { sessionId },
+				err,
+			}));
+			return {};
+		}
+
+		// Caught per decode, not around the pair. Both decoders already return
+		// null for a payload they cannot read, but anything they throw for some
+		// other reason used to be contained by the caller's try/catch; running
+		// them together moved them outside it, so the tolerance has to live here.
+		// Per decode rather than around both, or one failure would discard the
+		// other's perfectly good result.
+		const tolerate = async <T>(
+			decoding: Promise<T | null | undefined> | undefined,
+			which: string,
+		): Promise<T | undefined> => {
+			if (!decoding) return undefined;
+			try {
+				return (await decoding) ?? undefined;
+			} catch (err) {
+				this.logger?.warn(() => ({
+					msg: "Failed to decode a submission payload",
+					data: { decoder: which, sessionId },
+					err,
+				}));
+				return undefined;
+			}
+		};
+
+		const [decodedBehavioural, decodedSimd] = await Promise.all([
+			tolerate(
+				behavioural
+					? this.decryptBehavioralData(behavioural, bundle)
+					: undefined,
+				"behaviour",
+			),
+			tolerate(
+				simd ? this.decryptSimdReadingsForAttach(simd, bundle) : undefined,
+				"simd",
+			),
+		]);
+
+		return {
+			...(decodedBehavioural && { behavioural: decodedBehavioural }),
+			...(decodedSimd && { simd: decodedSimd }),
 		};
 	}
 
@@ -671,6 +737,7 @@ export class CaptchaManager {
 		translateFn: (key: string) => string,
 		score?: number,
 		reason?: string,
+		sessionId?: string,
 	) {
 		return {
 			status: translateFn(
@@ -685,6 +752,8 @@ export class CaptchaManager {
 				reason && {
 					[ApiParams.reason]: reason,
 				}),
+			// Not tier-gated — a log correlation handle, not a scoring signal.
+			...(sessionId && { [ApiParams.sessionId]: sessionId }),
 		};
 	}
 
@@ -692,8 +761,14 @@ export class CaptchaManager {
 		userAccessRulesStorage: AccessRulesStorage,
 		clientId: string,
 		userScope: UserScope | UserScopeRecord,
+		// Raw request headers for header-restriction rules — see
+		// getPrioritisedAccessRule for why this has no default.
+		requestHeaders: Record<string, string>,
 		options?: {
 			blockOnly?: boolean;
+			// Widen a blockOnly pool to admit deferred rules of any type
+			// — see AccessRulesFilter.includeDeferred.
+			includeDeferred?: boolean;
 			// When a caller has an Express request in scope (e.g. the
 			// verify handler), passing it here shares the per-request memo
 			// with the block middleware — a duplicate lookup within one
@@ -705,6 +780,7 @@ export class CaptchaManager {
 			userAccessRulesStorage,
 			userScope,
 			clientId,
+			requestHeaders,
 			options,
 		);
 	}
@@ -719,7 +795,14 @@ export class CaptchaManager {
 			? getDetectorBundlePool()?.get(bundleId)
 			: undefined;
 		return bundle
-			? { key: bundle.privateKey, innerConfig: bundle.innerConfig }
+			? {
+					key: bundle.privateKey,
+					innerConfig: bundle.innerConfig,
+					...(bundle.payloadLayout && {
+						payloadLayout: bundle.payloadLayout,
+					}),
+					...(bundle.keyMap && { keyMap: bundle.keyMap }),
+				}
 			: undefined;
 	}
 
@@ -732,10 +815,42 @@ export class CaptchaManager {
 	async resolveBundleByDetectorSession(
 		detectorSessionId?: string,
 	): Promise<(PoolBundleDecrypt & { bundleId: string }) | undefined> {
-		if (!detectorSessionId || !this.writeQueue) return undefined;
+		if (!detectorSessionId || !this.writeQueue) {
+			this.logUnresolvedDetectorBundle("noDetectorSession");
+			return undefined;
+		}
 		const bundleId = await this.writeQueue.getDetectorBundle(detectorSessionId);
+		if (!bundleId) {
+			this.logUnresolvedDetectorBundle("noBinding");
+			return undefined;
+		}
 		const decrypt = this.resolveBundleById(bundleId);
-		return bundleId && decrypt ? { ...decrypt, bundleId } : undefined;
+		if (!decrypt) {
+			this.logUnresolvedDetectorBundle("bundleNotInPool", bundleId);
+			return undefined;
+		}
+		return { ...decrypt, bundleId };
+	}
+
+	/**
+	 * Returning undefined here leaves the frictionless decrypt with no keys to
+	 * try, which fails closed: the score is forced to 1 and the caller is
+	 * challenged despite nothing having been measured about it. The three causes
+	 * need different fixes — a caller that sent no detector session, a binding
+	 * that was absent or had expired (see `DETECTOR_BUNDLE_TTL_SECONDS`), and a
+	 * bundle this provider no longer holds — but they are indistinguishable
+	 * downstream, where all three surface as the same decrypt failure. Logged at
+	 * info because that is the level aggregated log search runs at, and only on
+	 * the failure path, so this costs nothing on the hot path.
+	 */
+	private logUnresolvedDetectorBundle(
+		cause: "noDetectorSession" | "noBinding" | "bundleNotInPool",
+		bundleId?: string,
+	): void {
+		this.logger?.info(() => ({
+			msg: "Detector bundle not resolved",
+			data: { cause, ...(bundleId !== undefined && { bundleId }) },
+		}));
 	}
 
 	/**
@@ -778,14 +893,12 @@ export class CaptchaManager {
 			}));
 			return null;
 		}
-		const decryptSimdReadings = (await import("./detection/decodeSimd.js"))
-			.default;
 		try {
-			return await decryptSimdReadings(
+			return await decode<SimdReadingsResult>("simd", [
 				encryptedData,
 				bundle.key,
 				bundle.innerConfig,
-			);
+			]);
 		} catch (err) {
 			this.logger?.warn(() => ({
 				msg: "Failed to decrypt SIMD readings with the session's bundle",
@@ -805,15 +918,12 @@ export class CaptchaManager {
 			}));
 			return null;
 		}
-		const decryptBehavioralData = (
-			await import("./detection/decodeBehavior.js")
-		).default;
 		try {
-			const result = await decryptBehavioralData(
+			const result = await decode<BehavioralDataResult>("behaviour", [
 				encryptedData,
 				bundle.key,
 				bundle.innerConfig,
-			);
+			]);
 			this.logger?.info(() => ({
 				msg: "Behavioral data decrypted successfully",
 				data: {
@@ -882,11 +992,22 @@ export class CaptchaManager {
 			userAccessRulesStorage,
 			challengeRecord.dappAccount,
 			userScope,
+			// Raw headers for the in-code header-condition check. Available
+			// on the verify path too, so header rules fire there (e.g. an
+			// allow-list rule marked deferToVerify).
+			normalizeHeadersForMatching(headers),
 			// Hard-block lookup only — restrict the Redis-side candidate
-			// pool to Block rules so the SERVER_SIDE_RANK_TOP_N cap can't
-			// crowd a hard-block out of the top-N with Restrict or
-			// routing-Block (captchaType-scoped) entries.
-			{ blockOnly: true },
+			// pool so the SERVER_SIDE_RANK_TOP_N cap can't crowd a
+			// hard-block out of the top-N with routing-Block
+			// (captchaType-scoped) or plain Restrict entries.
+			//
+			// `includeDeferred` widens that pool to
+			// `(@type:{block} | @deferToVerify:{true})`. A deferred rule
+			// is skipped at request time and enforced here, so it is a
+			// valid hard block whatever its type — findHardBlockPolicy
+			// below already accepts one (case c), but a Block-only pool
+			// meant a deferred Restrict was never fetched to be found.
+			{ blockOnly: true, includeDeferred: true },
 		);
 
 		return findHardBlockPolicy(accessPolicies);

@@ -66,6 +66,12 @@ services:
     database1:
         container_name: database1
         image: mongo:8.2.3
+        restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+        # The staging host has 5.8GB and no swap. Left unbounded, mongod grows past it
+        # and the kernel OOM-killer takes the whole container, so cap it well clear of
+        # the host limit and size the WiredTiger cache to leave room for connections.
+        mem_limit: 3g
+        command: ["mongod", "--wiredTigerCacheSizeGB", "1.5"]
         volumes:
             - /data/client-example-server:/data/db
         ports:

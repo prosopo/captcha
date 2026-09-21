@@ -15,6 +15,8 @@
 import type { Logger } from "@prosopo/logger";
 import type {
 	CounterSpec,
+	DetectorData,
+	IFrictionlessTypes,
 	RoutingMachineBaseline,
 	RoutingMachineInput,
 	RoutingMachineInputBase,
@@ -37,6 +39,33 @@ export interface RoutingContext {
 	score: number;
 	platform: RoutingMachinePlatform;
 	raw: RoutingMachineRawSignals;
+	// Everything the detector reported, forwarded to the machine as
+	// `input.d`. See RoutingMachineInputBase.d.
+	d?: DetectorData;
+	// The sitekey's image-round bounds, so a router-supplied
+	// `solvedImagesCount` can be held to the same floor and ceiling every
+	// other path respects. Optional because the dedup replay only asks the
+	// router which captchaType it would pick and never creates a session from
+	// the answer.
+	imageMaxRounds?: number;
+	imageMinRounds?: number;
+	// Which challenge types this site permits. Carried here for the same
+	// reason as `imageMaxRounds`: `sendCaptcha` is the point a session's type
+	// is finalised and it has no other handle on the client record. Optional
+	// for the dedup replay; absent means "no constraint recorded", which
+	// `coerceToEnabledCaptchaType` reads as every type enabled.
+	frictionlessTypes?: IFrictionlessTypes;
+	// The site's ordinary image round count (`captchas.solved.count`). Used
+	// as the zero point when translating a requested round count into a
+	// puzzle difficulty level — severity is "rounds above normal", which
+	// means the same thing across sites where an absolute count does not.
+	baseImageRounds?: number;
+	// Ceiling on that difficulty level, from the sitekey's
+	// `puzzleMaxDifficulty`. Same rationale as `imageMaxRounds` above: this is
+	// the site's own bound on how far a rule may escalate it, and 0 keeps the
+	// site's configured puzzle settings on every challenge. Optional for the
+	// dedup replay; absent falls back to `puzzleMaxDifficultyDefault`.
+	puzzleMaxDifficulty?: number;
 }
 
 /**
@@ -64,6 +93,7 @@ export const applyRouter = async (
 			score: ctx.score,
 			platform: ctx.platform,
 			raw: ctx.raw,
+			...(ctx.d !== undefined && { d: ctx.d }),
 		};
 
 		const specs = await runner.getRequiredCounters(partial, logger);

@@ -1,0 +1,97 @@
+# Cancel a PR's still-running workflows once that PR is merged or closed.
+#
+# Why: with admin bypass and advisory (non-required) workflows, a PR can be
+# merged while its own CI is still running. GitHub does not stop those runs --
+# measured on a sandbox repo, neither merging the PR nor deleting its head
+# branch cancels anything. They bill their full duration (and occupy runners
+# other PRs are queueing for) to produce a result nobody will read.
+#
+# What gets cancelled: only runs that were already in flight while the PR was
+# open. The discriminator is created_at < (merged_at || closed_at). A run
+# created after the PR closed is by definition a reaction to the close -- this
+# workflow itself, auto-update-pr, release automation -- and must survive.
+# Causal ordering makes that exact, so no allowlist of workflow names is needed
+# and workflows added later are handled correctly without editing this file.
+#
+# `.event == "pull_request"` is load-bearing, not cosmetic: it keeps
+# merge_group runs out, which must never be cancelled if a merge queue is ever
+# adopted here.
+#
+# Known limitation, measured: GitHub only creates the `closed` run when the
+# PR's merge ref (refs/pull/N/merge) is current. Merging resolves that ref, so
+# merged PRs -- the case this exists for -- are always covered. A PR closed
+# WITHOUT merging after the base branch has moved produces no run at all, so
+# nothing is cancelled; a later push to the PR branch recomputes the ref and
+# restores it. Treat this workflow as an optimisation, never a correctness
+# guarantee: when it does not fire, runs simply continue as they would have.
+
+name: cancel-runs-on-pr-close
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  actions: write
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  cancel:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      # merged_at is null for a PR closed without merging; closed_at is always set.
+      CUTOFF: ${{ github.event.pull_request.merged_at || github.event.pull_request.closed_at }}
+      SELF_RUN_ID: ${{ github.run_id }}
+    steps:
+      - name: Cancel runs that were in flight while the PR was open
+        run: |
+          set -euo pipefail
+
+          echo "PR #$PR_NUMBER head=$HEAD_SHA cutoff=$CUTOFF"
+
+          runs_json="$(gh api "repos/$REPO/actions/runs?head_sha=$HEAD_SHA&per_page=100")"
+
+          echo "::group::All pull_request runs on this commit"
+          jq -r '.workflow_runs[]
+                 | select(.event == "pull_request")
+                 | "  \(.id) \(.status) created=\(.created_at) \(.name)"' <<<"$runs_json"
+          echo "::endgroup::"
+
+          # Two traps worth keeping in mind if this is ever edited:
+          #   * `gh api --jq` does NOT accept --arg/--argjson. Pipe to real jq.
+          #   * SELF_RUN_ID must be --argjson (numeric). As a string, the
+          #     `.id != $self` guard silently never matches and this run
+          #     cancels itself.
+          # Both timestamps are ISO-8601 UTC from the same API, so lexicographic
+          # comparison is valid -- do not reformat or round them, the gap
+          # between the cutoff and post-close runs is only a couple of seconds.
+          mapfile -t ids < <(
+            jq -r --arg cutoff "$CUTOFF" --argjson self "$SELF_RUN_ID" '
+              .workflow_runs[]
+              | select(.event == "pull_request")
+              | select(.status == "queued" or .status == "in_progress")
+              | select(.created_at < $cutoff)
+              | select(.id != $self)
+              | .id' <<<"$runs_json"
+          )
+
+          if [ "${#ids[@]}" -eq 0 ]; then
+            echo "No runs were still in flight for this PR. Nothing to do."
+            exit 0
+          fi
+
+          for id in "${ids[@]}"; do
+            echo "Cancelling run $id"
+            # A run that finishes between listing and cancelling returns 409.
+            # That is the desired end state, so never fail the job over it.
+            gh api -X POST "repos/$REPO/actions/runs/$id/cancel" >/dev/null \
+              || echo "  could not cancel $id (most likely it just finished)"
+          done

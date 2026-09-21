@@ -56,6 +56,11 @@ vi.mock("@prosopo/procaptcha-common", () => ({
 	}),
 	getProcaptchaRandomActiveProvider: mocks.getProcaptchaRandomActiveProvider,
 	pickIpMode: vi.fn(() => undefined),
+	// Nothing here runs Protect, so the real function would return the site's
+	// own value unchanged.
+	resolveClientSessionId: vi.fn(
+		(clientSessionId?: string): string | undefined => clientSessionId,
+	),
 }));
 
 vi.mock("../detectorLoader.js", () => ({

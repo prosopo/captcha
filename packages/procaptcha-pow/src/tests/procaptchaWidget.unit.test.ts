@@ -139,7 +139,7 @@ const honeypotInput = (): HTMLInputElement => {
 };
 
 const spinner = (): Element | null =>
-	mounted.container.querySelector('[aria-label="Loading spinner"]');
+	mounted.container.querySelector('[role="status"]');
 
 interface ClickOptions {
 	trusted?: boolean;
@@ -379,6 +379,30 @@ describe("the invisible-mode execute event", () => {
 		render(props());
 		execute();
 		expect(mocks.start).not.toHaveBeenCalled();
+	});
+
+	const executeOn = async (target: Element): Promise<void> => {
+		target.dispatchEvent(new Event("procaptcha:execute"));
+		await settle();
+	};
+
+	test("a targeted execute on the container runs a visible widget", async () => {
+		const target = document.createElement("div");
+		render(props({ container: target }));
+		await executeOn(target);
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+	});
+
+	test("a targeted execute on the container runs an invisible widget", async () => {
+		const target = document.createElement("div");
+		render(
+			props({
+				config: config({ mode: ModeEnum.invisible }),
+				container: target,
+			}),
+		);
+		await executeOn(target);
+		expect(mocks.start).toHaveBeenCalledTimes(1);
 	});
 
 	test("stops being listened for once the widget is gone", () => {

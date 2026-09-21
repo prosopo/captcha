@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Imestamptay ootay oldway",
 		"FAILED_IP_VALIDATION": "IP സാധൂകരണം പരാജയപ്പെട്ടു",
 		"ACCESS_POLICY_BLOCK": "നയം മൂലം പ്രവേശനം തടഞ്ഞു",
+		"CLIENT_SESSION_MISMATCH": "സെഷൻ പൊരുത്തപ്പെടുന്നില്ല. ഈ സെഷനിൽ ക്യാപ്ച പൂർത്തിയാക്കിയിട്ടില്ല.",
 		"FORBIDDEN": "Forbiddenway",
 		"PROVIDER_VERIFY_FAILED": "Oviderpray erificationvay ailedfay",
 		"SPAM_EMAIL_DOMAIN": "ഇമെയിൽ ഡൊമെയ്ൻ അനുവദനീയമല്ല",
@@ -46,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "ഈ ഇമെയിൽ വിലാസത്തിൽ നിന്ന് വളരെയധികം സമർപ്പണങ്ങൾ",
 		"VPN_BLOCKED": "ഈ സൈറ്റിന് VPN കണക്ഷനുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
 		"PROXY_BLOCKED": "ഈ സൈറ്റിന് പ്രോക്സി സെർവറുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
+		"TOO_MANY_LOCALHOST": "ഈ സൈറ്റ് കീയ്ക്കായി localhost-ൽ നിന്ന് വളരെയധികം CAPTCHA അഭ്യർത്ഥനകൾ",
 		"TOR_BLOCKED": "ഈ സൈറ്റിന് Tor എക്സിറ്റ് നോഡുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
 		"ABUSER_BLOCKED": "ദുരുപയോഗത്തിന് ഫ്ലാഗ് ചെയ്ത നെറ്റ്വർക്കുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ ഈ സൈറ്റിന് അനുവദനീയമല്ല",
 		"DATACENTER_BLOCKED": "ഈ സൈറ്റിന് ഡാറ്റാസെന്റർ IP വിലാസങ്ങളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
@@ -376,7 +378,20 @@
 		"NO_ACCOUNTS_FOUND": "Walay makitang mga account",
 		"ACCOUNT_NOT_FOUND": "Account dili makita",
 		"NO_EXTENSION_FOUND": "Walay nakitang extension",
-		"INSECURE_CONTEXT": "Procaptcha-യ്ക്ക് സുരക്ഷിതമായ (HTTPS) കണക്ഷൻ ആവശ്യമാണ്"
+		"INSECURE_CONTEXT": "Procaptcha-യ്ക്ക് സുരക്ഷിതമായ (HTTPS) കണക്ഷൻ ആവശ്യമാണ്",
+		"CHECKING": "നിങ്ങൾ മനുഷ്യനാണെന്ന് പരിശോധിക്കുന്നു",
+		"IMAGE_DIALOG_LABEL": "ചിത്ര പരിശോധന",
+		"PUZZLE": {
+			"DIALOG_LABEL": "പസിൽ പരിശോധന",
+			"DRAG": "കഷണം ലക്ഷ്യസ്ഥാനത്തേക്ക് വലിച്ചിടുക",
+			"RETRY": "ഏതാണ്ട് ശരിയായി — വീണ്ടും ശ്രമിക്കുക",
+			"PIECE_LABEL": "പസിൽ കഷണം",
+			"PIECE_ROLE": "വലിച്ചുനീക്കാവുന്ന പസിൽ കഷണം",
+			"KEYBOARD_HINT": "കഷണം നീക്കാൻ ആരോ കീകൾ ഉപയോഗിക്കുക; ചെറിയ അളവിൽ നീക്കാൻ Shift അമർത്തിപ്പിടിക്കുക. അയയ്ക്കാൻ Enter, തുടക്കത്തിലേക്ക് മടക്കാൻ Home, റദ്ദാക്കാൻ Escape അമർത്തുക.",
+			"POSITION": "ഇടത്തുനിന്ന് {{x}} ശതമാനം, മുകളിൽനിന്ന് {{y}} ശതമാനം",
+			"CHECKING": "നിങ്ങളുടെ ഉത്തരം പരിശോധിക്കുന്നു",
+			"RETRY_ANNOUNCEMENT": "ഏതാണ്ട് ശരിയായി. പുതിയ പസിൽ വന്നു, കഷണം വീണ്ടും തുടക്കത്തിലാണ്."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nahimong pakyas ang pag-encode sa dili balido nga address",

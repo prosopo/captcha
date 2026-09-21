@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/account",
-	"version": "2.8.71",
+	"version": "2.8.96",
 	"description": "Services and Utils for Prosopo account gen and management",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -47,22 +47,22 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@polkadot/extension-base": "0.62.3",
-		"@polkadot/extension-dapp": "0.62.3",
-		"@polkadot/extension-inject": "0.62.3",
-		"@polkadot/util": "13.5.7",
-		"@polkadot/util-crypto": "13.5.7",
-		"@prosopo/common": "3.1.50",
-		"@prosopo/fingerprint": "2.7.25",
-		"@prosopo/keyring": "2.9.68",
-		"@prosopo/types": "5.1.0",
-		"@prosopo/util": "3.3.6",
-		"@prosopo/util-crypto": "13.5.30"
+		"@polkadot/extension-base": "0.63.1",
+		"@polkadot/extension-dapp": "0.63.1",
+		"@polkadot/extension-inject": "0.63.1",
+		"@polkadot/util": "14.0.3",
+		"@polkadot/util-crypto": "14.0.3",
+		"@prosopo/common": "3.1.57",
+		"@prosopo/fingerprint": "2.7.50",
+		"@prosopo/keyring": "2.9.93",
+		"@prosopo/types": "5.9.1",
+		"@prosopo/util": "3.3.10",
+		"@prosopo/util-crypto": "13.5.32"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.8",
+		"@prosopo/config": "3.4.0",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "4.1.10",
+		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"dotenv": "16.4.5",
@@ -71,7 +71,7 @@
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
 		"vite": "8.1.5",
-		"vitest": "4.1.10"
+		"vitest": "4.1.11"
 	},
 	"sideEffects": false
 }

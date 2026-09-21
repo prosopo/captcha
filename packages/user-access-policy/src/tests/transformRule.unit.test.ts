@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CaptchaType } from "@prosopo/types";
+import { CaptchaType, ResultReason } from "@prosopo/types";
 import { Address4, Address6 } from "ip-address";
 import { describe, expect, it } from "vitest";
 import { AccessPolicyType, type AccessRule } from "#policy/rule.js";
@@ -107,6 +107,7 @@ describe("transformRule", () => {
 		unsolvedImagesCount: 1,
 		frictionlessScore: 1,
 		deferToVerify: false,
+		messageKey: ResultReason.TOO_MANY_LOCALHOST,
 		headersHash: "headersHash",
 		ja4Hash: "js4Hash",
 		clientId: "client",
@@ -116,6 +117,12 @@ describe("transformRule", () => {
 		countryCode: "US",
 		asn: 205016,
 		os: "macos",
+		browser: "firefox",
+		headerMatch: "1",
+		headerName: "x-test",
+		headerValue: "test",
+		headerOperator: "equals",
+		webBotAuthAgent: "https://signatures.openai.com",
 	} satisfies AccessRule;
 
 	it("should transform access rule record into rule", () => {

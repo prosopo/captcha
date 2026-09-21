@@ -19,6 +19,7 @@
 		"TIMESTAMP_TOO_OLD": "Timestamp too old",
 		"FAILED_IP_VALIDATION": "IP doğrulaması başarısız oldu",
 		"ACCESS_POLICY_BLOCK": "Erişim politika tarafından engellendi",
+		"CLIENT_SESSION_MISMATCH": "Oturum uyuşmuyor. Captcha bu oturumda tamamlanmadı.",
 		"FORBIDDEN": "Forbidden",
 		"PROVIDER_VERIFY_FAILED": "Provider verification failed",
 		"SPAM_EMAIL_DOMAIN": "E-posta alan adına izin verilmiyor",
@@ -46,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Bu e-posta adresinden çok fazla gönderi",
 		"VPN_BLOCKED": "Bu site için VPN bağlantılarından gelen isteklere izin verilmiyor",
 		"PROXY_BLOCKED": "Bu site için proxy sunucularından gelen isteklere izin verilmiyor",
+		"TOO_MANY_LOCALHOST": "Bu site anahtarı için localhost'tan çok fazla CAPTCHA isteği",
 		"TOR_BLOCKED": "Bu site için Tor çıkış düğümlerinden gelen isteklere izin verilmiyor",
 		"ABUSER_BLOCKED": "Bu site için kötüye kullanım olarak işaretlenen ağlardan gelen isteklere izin verilmiyor",
 		"DATACENTER_BLOCKED": "Bu site için veri merkezi IP adreslerinden gelen isteklere izin verilmiyor",
@@ -376,7 +378,20 @@
 		"NO_ACCOUNTS_FOUND": "Hesap bulunamadı",
 		"ACCOUNT_NOT_FOUND": "Hesap bulunamadı",
 		"NO_EXTENSION_FOUND": "Eklenti bulunamadı",
-		"INSECURE_CONTEXT": "Procaptcha güvenli bir (HTTPS) bağlantı gerektirir"
+		"INSECURE_CONTEXT": "Procaptcha güvenli bir (HTTPS) bağlantı gerektirir",
+		"CHECKING": "İnsan olduğunuz doğrulanıyor",
+		"IMAGE_DIALOG_LABEL": "Görsel doğrulama",
+		"PUZZLE": {
+			"DIALOG_LABEL": "Yapboz doğrulaması",
+			"DRAG": "Parçayı hedefe sürükleyin",
+			"RETRY": "Az kaldı — tekrar deneyin",
+			"PIECE_LABEL": "Yapboz parçası",
+			"PIECE_ROLE": "sürüklenebilir yapboz parçası",
+			"KEYBOARD_HINT": "Parçayı ok tuşlarıyla taşıyın, daha küçük adımlar için Shift tuşunu basılı tutun. Göndermek için Enter'a, başa döndürmek için Home'a, iptal etmek için Escape'e basın.",
+			"POSITION": "soldan yüzde {{x}}, yukarıdan yüzde {{y}}",
+			"CHECKING": "Cevabınız kontrol ediliyor",
+			"RETRY_ANNOUNCEMENT": "Az kaldı. Yeni bir yapboz yüklendi ve parça yeniden başlangıçta."
+		}
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Geçersiz adresi kodlama başarısız oldu",
