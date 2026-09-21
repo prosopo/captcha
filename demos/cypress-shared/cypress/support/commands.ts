@@ -388,7 +388,10 @@ function clickNextButton(): Chainable<JQuery<HTMLElement>> {
 	cy.task("log", "Next button: waiting for it to be visible...");
 	// Nothing may sit between the query and the click: a `.then()` that queues
 	// a command yields that command's subject, and realClick needs the button.
-	return getWidgetElement('button[data-cy="button-next"]')
+	// Not `button[data-cy=...]`: the widget draws the element each control is
+	// made of per load, so half of all runs render this one as a div carrying the
+	// button role. The hook is the only part that holds.
+	return getWidgetElement('[data-cy="button-next"]')
 		.should("exist")
 		.should("be.visible")
 		.realClick();
