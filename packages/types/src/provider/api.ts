@@ -32,13 +32,9 @@ import {
 	type z,
 	type infer as zInfer,
 } from "zod";
+import { INPUT_LIMITS } from "../api/inputLimits.js";
 import { ApiParams } from "../api/params.js";
-import {
-	INPUT_LIMITS,
-	boundedString,
-	safeLine,
-	safeText,
-} from "../api/sanitise.js";
+import { boundedString, safeLine, safeText } from "../api/sanitise.js";
 import {
 	type CaptchaType,
 	DecisionMachineCaptchaTypeSchema,

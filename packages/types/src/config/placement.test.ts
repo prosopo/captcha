@@ -13,17 +13,17 @@
 // limitations under the License.
 
 import { describe, expect, it } from "vitest";
-import { Placement, PlacementEnum, resolvePlacement } from "./placement.js";
+import { PlacementEnum, isPlacement, resolvePlacement } from "./placement.js";
 
-describe("Placement", () => {
+describe("isPlacement", () => {
 	it("accepts the two supported placements", () => {
-		expect(Placement.parse("popup")).toBe(PlacementEnum.popup);
-		expect(Placement.parse("float")).toBe(PlacementEnum.float);
+		expect(isPlacement(PlacementEnum.popup)).toBe(true);
+		expect(isPlacement(PlacementEnum.float)).toBe(true);
 	});
 
 	it("rejects anything else", () => {
-		expect(Placement.safeParse("inline").success).toBe(false);
-		expect(Placement.safeParse("").success).toBe(false);
+		expect(isPlacement("inline")).toBe(false);
+		expect(isPlacement("")).toBe(false);
 	});
 });
 

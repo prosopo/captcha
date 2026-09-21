@@ -17,7 +17,8 @@ import {
 	type ProcaptchaRenderOptions,
 	type StartMode,
 	StartModeEnum,
-	StartModeSchema,
+	StartModes,
+	isStartMode,
 } from "@prosopo/types";
 
 export const START_MODE_ATTRIBUTE = "data-start-mode";
@@ -33,15 +34,14 @@ export const resolveStartMode = (
 		return StartModeEnum.auto;
 	}
 
-	const parsed = StartModeSchema.safeParse(requested);
-	if (!parsed.success) {
+	if (!isStartMode(requested)) {
 		console.error(
-			`Ignoring unknown start mode "${requested}"; expected one of ${StartModeSchema.options.join(", ")}`,
+			`Ignoring unknown start mode "${requested}"; expected one of ${StartModes.join(", ")}`,
 		);
 		return StartModeEnum.auto;
 	}
 
-	return parsed.data;
+	return requested;
 };
 
 export const setStartMode = (

@@ -30,9 +30,9 @@
 	},
 	"dependencies": {
 		"@noble/curves": "2.4.0",
-		"@noble/hashes": "1.8.0",
+		"@noble/hashes": "2.4.0",
 		"@polkadot/util": "14.0.3",
-		"@polkadot/x-randomvalues": "13.5.7",
+		"@polkadot/x-randomvalues": "14.0.3",
 		"@scure/base": "2.4.0",
 		"@scure/sr25519": "2.4.0",
 		"dotenv": "16.4.5"

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { sha256 } from "@noble/hashes/sha256";
+import { sha256 } from "@noble/hashes/sha2.js";
 import { stringToHex } from "@polkadot/util";
 import { ProsopoApiError } from "@prosopo/common";
 import { hashMeetsDifficulty } from "@prosopo/util";

@@ -16,10 +16,10 @@ import type { Ti18n } from "@prosopo/locale";
 import { clearElement } from "@prosopo/procaptcha-common";
 import {
 	type Callbacks,
-	Placement,
 	type PlacementType,
 	type ProcaptchaClientConfigOutput,
 	type ProcaptchaRenderOptions,
+	isPlacement,
 } from "@prosopo/types";
 import { setClientSessionId } from "../clientSession.js";
 import { createConfig } from "../configCreator.js";
@@ -39,8 +39,7 @@ const resolveRequestedPlacement = (
 		renderOptions.placement ?? element.getAttribute("data-placement");
 	if (!requested) return undefined;
 
-	const parsed = Placement.safeParse(requested);
-	return parsed.success ? parsed.data : undefined;
+	return isPlacement(requested) ? requested : undefined;
 };
 
 class CaptchaRenderer {

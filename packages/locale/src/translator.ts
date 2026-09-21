@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { TOptions } from "i18next";
 import initializeI18n from "./i18nFrontend.js";
-import type { Ti18n } from "./loadI18next.js";
+import type { Ti18n, TranslateOptions } from "./types.js";
 
 const NAMESPACE = "translation";
 
@@ -24,7 +23,7 @@ export interface Translator {
 	 * interpolation values and the `defaultValue` a widget falls back to when
 	 * its key has not been added to the bundled catalogues yet.
 	 */
-	t(key: string, options?: TOptions): string;
+	t(key: string, options?: TranslateOptions): string;
 	/**
 	 * Whether the namespace for the active language has finished loading.
 	 * Mirrors `ready` from the old react-i18next hook: widgets render an empty
@@ -40,9 +39,8 @@ export interface Translator {
 }
 
 /**
- * Vanilla replacement for the `useTranslation` hook. i18next is already
- * framework-agnostic and event-driven; this just exposes its `t` plus the three
- * events that used to trigger a React re-render.
+ * Vanilla replacement for the `useTranslation` hook: the instance's `t` plus
+ * the three events that used to trigger a React re-render.
  */
 export const createTranslator = (existing?: Ti18n): Translator => {
 	const i18n: Ti18n = existing ?? initializeI18n();
@@ -51,7 +49,8 @@ export const createTranslator = (existing?: Ti18n): Translator => {
 		i18n.isInitialized && i18n.hasLoadedNamespace(NAMESPACE);
 
 	return {
-		t: (key: string, options?: TOptions): string => i18n.t(key, options),
+		t: (key: string, options?: TranslateOptions): string =>
+			i18n.t(key, options),
 		isReady,
 		i18n,
 		subscribe: (listener: () => void): (() => void) => {
