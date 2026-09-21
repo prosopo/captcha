@@ -454,10 +454,15 @@ export const mountPuzzleCanvas = (
 		applyBackgroundMotion();
 
 		const lastEvent = puzzleEvents[puzzleEvents.length - 1];
-		complete(
-			lastEvent ? lastEvent.x : props.originX,
-			lastEvent ? lastEvent.y : props.originY,
-		);
+		// Pressing and releasing without moving is not an answer. Submitting the
+		// origin spends the challenge on a position that cannot be correct, and
+		// the provider then rejects the replacement fetch — so one stray tap ends
+		// the attempt. A touch screen produces that tap constantly: the panel
+		// opens under the finger that just pressed the checkbox.
+		if (!lastEvent) {
+			return;
+		}
+		complete(lastEvent.x, lastEvent.y);
 	};
 
 	const beginDrag = (clientX: number, clientY: number) => {
