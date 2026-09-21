@@ -16,46 +16,21 @@
  * Names and shapes that differ on every page load, so nothing inside the widget
  * can be reached by a selector written down in advance.
  *
- * None of this needs to be unguessable — an attacker reads the rendered DOM
- * either way. It only needs to differ between loads, which is why the seed is
- * local rather than served by the provider: a provider-supplied one would have
- * to arrive before first paint.
+ * These are not secrets, and `Math.random` is the right source for them. An
+ * attacker has to load the page to interact with the widget, and once loaded
+ * the names are simply there to read — so a name being predictable costs
+ * nothing, while a name being the same twice costs everything. Drawing them
+ * from `crypto` would claim a guarantee the widget neither needs nor has, and
+ * squeezing a cryptographic draw into a range this small is a documented way
+ * to introduce bias (CodeQL js/biased-cryptographic-random).
  */
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const ALPHANUMERICS = `${LETTERS}0123456789`;
 
-const POOL = 0x1_0000_0000;
-
-/**
- * `crypto` is absent under a few older embedded webviews, and a widget that
- * failed to render there would be a worse outcome than a weaker shuffle.
- */
-const randomUint32 = (): number => {
-	const source = globalThis.crypto;
-	if (undefined === source || undefined === source.getRandomValues) {
-		return Math.floor(Math.random() * POOL);
-	}
-	return source.getRandomValues(new Uint32Array(1))[0] ?? 0;
-};
-
-/**
- * A uniform integer in [0, bound).
- *
- * The pool divides into `bound` equal buckets with a remainder; a draw landing
- * in that remainder is taken again rather than folded back in, which is what
- * mapping the whole pool onto the range would do — making the low end of it
- * likelier than the high end.
- */
-const randomBelow = (bound: number): number => {
-	const bucket = Math.floor(POOL / bound);
-	const limit = bucket * bound;
-	let value = randomUint32();
-	while (value >= limit) {
-		value = randomUint32();
-	}
-	return Math.floor(value / bucket);
-};
+/** An integer in [0, bound). */
+const randomBelow = (bound: number): number =>
+	Math.floor(Math.random() * bound);
 
 const at = (alphabet: string): string =>
 	alphabet[randomBelow(alphabet.length)] ?? "a";

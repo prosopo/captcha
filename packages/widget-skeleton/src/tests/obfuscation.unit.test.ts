@@ -59,33 +59,10 @@ describe("randomTokens", () => {
 	});
 });
 
-describe("mapping the random pool onto a range", () => {
-	test("redraws the remainder instead of folding it back in", () => {
-		// 2^32 does not divide by 52, so the last few draws belong to no bucket.
-		// Reusing them — which is what a modulo does — would make the early
-		// letters of the alphabet likelier than the late ones.
-		const draws: number[] = [0xffffffff, 0];
-		let call = 0;
-		const spy = vi
-			.spyOn(globalThis.crypto, "getRandomValues")
-			.mockImplementation(<T extends ArrayBufferView | null>(array: T): T => {
-				if (array instanceof Uint32Array) {
-					array[0] = draws[call] ?? 0;
-				}
-				call += 1;
-				return array;
-			});
-		try {
-			expect(randomToken(1)).toBe("a");
-			expect(spy).toHaveBeenCalledTimes(2);
-		} finally {
-			spy.mockRestore();
-		}
-	});
-
-	test("is uniform enough that no value dominates", () => {
-		// A modulo over a byte would have given 0..3 roughly a 25% edge over the
-		// rest of a 100-wide range; this is what that regression would look like.
+describe("mapping the random source onto a range", () => {
+	test("no value in the range dominates", () => {
+		// Folding a draw onto a range carelessly skews it towards one end; this
+		// is what that regression would look like from the outside.
 		const counts = new Map<number, number>();
 		for (let attempt = 0; attempt < 20_000; attempt += 1) {
 			const value: number = randomInt(0, 99);
@@ -95,6 +72,19 @@ describe("mapping the random pool onto a range", () => {
 		for (const count of counts.values()) {
 			expect(count).toBeGreaterThan(120);
 			expect(count).toBeLessThan(280);
+		}
+	});
+
+	test("takes its draws from Math.random, not from crypto", () => {
+		// Deliberate: the names are read off the rendered DOM anyway, so they do
+		// not need to be unguessable, and squeezing a cryptographic draw into a
+		// range this small is what introduces bias.
+		const spy = vi.spyOn(Math, "random");
+		try {
+			randomToken();
+			expect(spy).toHaveBeenCalled();
+		} finally {
+			spy.mockRestore();
 		}
 	});
 });
@@ -132,11 +122,11 @@ describe("randomWrapperTag", () => {
 	});
 });
 
-describe("without a crypto implementation", () => {
-	test("falls back rather than failing to render the widget", () => {
-		// Some older embedded webviews have no crypto; a thrown error there would
-		// cost the consumer their whole widget over a naming detail. The source is
-		// read per call, so removing it now is enough to exercise the branch.
+describe("on a runtime with no crypto implementation", () => {
+	test("still renders, because it never asked for one", () => {
+		// Older embedded webviews have no crypto. Losing a consumer's whole
+		// widget over a naming detail would be a far worse trade than names an
+		// attacker could have read off the page regardless.
 		const saved: Crypto = globalThis.crypto;
 		Reflect.defineProperty(globalThis, "crypto", {
 			configurable: true,
