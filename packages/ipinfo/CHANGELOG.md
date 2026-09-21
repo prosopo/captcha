@@ -1,5 +1,10 @@
 # @prosopo/ipinfo
 
+## 0.4.7
+### Patch Changes
+
+  - @prosopo/types@5.9.2
+
 ## 0.4.6
 ### Patch Changes
 

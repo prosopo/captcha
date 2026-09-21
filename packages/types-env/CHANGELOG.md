@@ -1,5 +1,12 @@
 # @prosopo/types-env
 
+## 2.11.7
+### Patch Changes
+
+  - @prosopo/types@5.9.2
+  - @prosopo/types-database@5.6.2
+  - @prosopo/keyring@2.9.94
+
 ## 2.11.6
 ### Patch Changes
 

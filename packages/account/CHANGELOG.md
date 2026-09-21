@@ -1,5 +1,13 @@
 # @prosopo/account
 
+## 2.8.97
+### Patch Changes
+
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+  - @prosopo/keyring@2.9.94
+  - @prosopo/fingerprint@2.7.51
+
 ## 2.8.96
 ### Patch Changes
 

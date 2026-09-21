@@ -1,5 +1,14 @@
 # @prosopo/server
 
+## 2.12.8
+### Patch Changes
+
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+  - @prosopo/keyring@2.9.94
+  - @prosopo/load-balancer@2.10.49
+  - @prosopo/api@4.3.2
+
 ## 2.12.7
 ### Patch Changes
 
