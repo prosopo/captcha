@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	WIDGET_CHECKBOX_SPINNER_CSS_CLASS,
-	darkTheme,
-	lightTheme,
-	withAlpha,
-} from "@prosopo/widget-skeleton";
+import { darkTheme, lightTheme, withAlpha } from "@prosopo/widget-skeleton";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { type CheckboxProps, mountCheckbox } from "../components/checkbox.js";
 import type { Component } from "../dom/component.js";
@@ -34,6 +29,14 @@ import {
  * whole trusted-input gate: a script-dispatched click is exactly how a solver
  * would ask for a captcha, and honouring one hands the challenge over.
  */
+
+// The class names are drawn per mount, so the tests reach for what the control
+// means rather than what this render happened to call it — which is the same
+// constraint the change puts on anyone scripting the widget from outside.
+const SPINNER_SELECTOR = '[role="status"]';
+
+const STYLE_SELECTOR = (mode: string): string =>
+	`style[data-prosopo-style^="checkbox-"][data-prosopo-style$="-${mode}"]`;
 
 let mounted: Mounted;
 let checkbox: Component<CheckboxProps> | undefined;
@@ -102,6 +105,24 @@ describe("what the checkbox renders", () => {
 		expect(box().getAttribute("data-cy")).toBe("captcha-checkbox");
 	});
 
+	test("withholds the test hook from a production build", () => {
+		// It is a fixed selector for the one control a solver wants to click, so
+		// it must not survive the build that ships to real sites. isDevMode is
+		// read per render, which is what lets this be set after import.
+		const originalNodeEnv: string | undefined = process.env.NODE_ENV;
+		process.env.NODE_ENV = "production";
+		try {
+			render();
+			expect(box().getAttribute("data-cy")).toBeNull();
+		} finally {
+			if (originalNodeEnv === undefined) {
+				Reflect.deleteProperty(process.env, "NODE_ENV");
+			} else {
+				process.env.NODE_ENV = originalNodeEnv;
+			}
+		}
+	});
+
 	test("reflects the checked prop", () => {
 		render({ checked: true });
 		expect(box().checked).toBe(true);
@@ -110,18 +131,14 @@ describe("what the checkbox renders", () => {
 	test("swaps the box for a spinner while loading", () => {
 		render({ loading: true });
 		expect(mounted.container.querySelector("input")).toBeNull();
-		expect(
-			mounted.container.querySelector(`.${WIDGET_CHECKBOX_SPINNER_CSS_CLASS}`),
-		).not.toBeNull();
+		expect(mounted.container.querySelector(SPINNER_SELECTOR)).not.toBeNull();
 	});
 
 	test("puts the box back when loading finishes", () => {
 		render({ loading: true });
 		render({ loading: false });
 		expect(box()).not.toBeNull();
-		expect(
-			mounted.container.querySelector(`.${WIDGET_CHECKBOX_SPINNER_CSS_CLASS}`),
-		).toBeNull();
+		expect(mounted.container.querySelector(SPINNER_SELECTOR)).toBeNull();
 	});
 
 	test("keeps the label visible alongside the spinner", () => {
@@ -134,9 +151,7 @@ describe("what the checkbox renders", () => {
 		// dapp around it.
 		render();
 		expect(
-			mounted.container.querySelector(
-				'style[data-prosopo-style="checkbox-light"]',
-			),
+			mounted.container.querySelector(STYLE_SELECTOR("light")),
 		).not.toBeNull();
 	});
 
@@ -146,16 +161,103 @@ describe("what the checkbox renders", () => {
 		render();
 		render({ theme: darkTheme });
 
-		expect(
-			mounted.container.querySelector(
-				'style[data-prosopo-style="checkbox-light"]',
-			),
-		).toBeNull();
-		const dark = mounted.container.querySelector(
-			'style[data-prosopo-style="checkbox-dark"]',
-		);
+		expect(mounted.container.querySelector(STYLE_SELECTOR("light"))).toBeNull();
+		const dark = mounted.container.querySelector(STYLE_SELECTOR("dark"));
 		expect(dark).not.toBeNull();
 		expect(dark?.textContent).toContain(darkTheme.palette.onSurface);
+	});
+});
+
+describe("what a scripted solver can hold on to", () => {
+	const mountFresh = (): Mounted => {
+		const fresh: Mounted = mount();
+		mountCheckbox(fresh.container, props());
+		return fresh;
+	};
+
+	const inputIn = (target: Mounted): HTMLInputElement => {
+		const element = target.container.querySelector("input");
+		if (!element) throw new Error("expected a checkbox to be rendered");
+		return element;
+	};
+
+	test("names the box and the label differently on every mount", () => {
+		render();
+		const other: Mounted = mountFresh();
+		try {
+			expect(box().className).not.toBe(inputIn(other).className);
+			expect(box().className).not.toBe("");
+			expect(label().className).not.toBe(
+				other.container.querySelector("label")?.className,
+			);
+		} finally {
+			other.unmount();
+		}
+	});
+
+	test("the names it renders are the names its stylesheet targets", () => {
+		// A generated name reaching the markup but not the sheet would silently
+		// drop the focus ring and the label's colour.
+		render();
+		const styles: string =
+			mounted.container.querySelector(STYLE_SELECTOR("light"))?.textContent ??
+			"";
+		expect(styles).toContain(`.${box().className}:focus-visible`);
+		expect(styles).toContain(`.${label().className} {`);
+	});
+
+	test("gives two checkboxes in one container their own stylesheets", () => {
+		// The sheets used to be shared by theme; now they describe different
+		// elements, so one being torn down must not strip the other's rules.
+		render();
+		const second: Component<CheckboxProps> = mountCheckbox(
+			mounted.container,
+			props(),
+		);
+		try {
+			expect(
+				mounted.container.querySelectorAll(STYLE_SELECTOR("light")),
+			).toHaveLength(2);
+		} finally {
+			second.destroy();
+		}
+	});
+
+	test("moves the box without changing what it occupies", () => {
+		// Fixed-coordinate clicking is the cheapest way to drive the widget. The
+		// margins still total 30px each way, so the 58px touch target and the
+		// page layout around it are untouched.
+		const offsets = new Set<string>();
+		for (let attempt = 0; attempt < 40; attempt += 1) {
+			const fresh: Mounted = mountFresh();
+			const style = inputIn(fresh).style;
+			const [top, right, bottom, left] = [
+				style.marginTop,
+				style.marginRight,
+				style.marginBottom,
+				style.marginLeft,
+			].map((margin: string) => Number.parseInt(margin, 10));
+			expect((top ?? 0) + (bottom ?? 0)).toBe(30);
+			expect((left ?? 0) + (right ?? 0)).toBe(30);
+			offsets.add(`${top}/${left}`);
+			fresh.unmount();
+		}
+		expect(offsets.size).toBeGreaterThan(1);
+	});
+
+	test("keeps the spinner on the same offset as the box", () => {
+		// The spinner stands in for the box, so a different offset would make the
+		// widget twitch every time a check started.
+		render();
+		const boxMargin: string = box().style.margin;
+		render({ loading: true });
+		const styles: string =
+			mounted.container.querySelector(STYLE_SELECTOR("light"))?.textContent ??
+			"";
+		const spinnerClass: string =
+			mounted.container.querySelector(SPINNER_SELECTOR)?.className ?? "";
+		expect(styles).toContain(`.${spinnerClass} {`);
+		expect(styles).toContain(`margin: ${boxMargin} !important`);
 	});
 });
 
@@ -373,16 +475,15 @@ describe("tearing down", () => {
 		checkbox?.destroy();
 		checkbox = undefined;
 		expect(
-			mounted.container.querySelector('style[data-prosopo-style="checkbox"]'),
+			mounted.container.querySelector('style[data-prosopo-style^="checkbox-"]'),
 		).toBeNull();
 	});
 });
 
 describe("handing focus across the loading swap", () => {
 	const spinner = (): HTMLElement => {
-		const element = mounted.container.querySelector<HTMLElement>(
-			`.${WIDGET_CHECKBOX_SPINNER_CSS_CLASS}`,
-		);
+		const element =
+			mounted.container.querySelector<HTMLElement>(SPINNER_SELECTOR);
 		if (!element) throw new Error("expected a spinner to be rendered");
 		return element;
 	};

@@ -14,102 +14,14 @@
 // @vitest-environment jsdom
 
 import { afterEach, describe, expect, test } from "vitest";
-import {
-	CHECKBOX_MARKUP,
-	createCheckboxElement,
-	getCheckboxInteractiveArea,
-} from "../elements/checkbox.js";
+import { CHECKBOX_HOST_CSS_CLASS } from "../elements/checkbox.js";
 import { createLogoElement } from "../elements/logo.js";
 import { createWidgetSkeletonElement } from "../elements/skeleton.js";
-import { WIDGET_CHECKBOX_SPINNER_CSS_CLASS, WIDGET_URL } from "../index.js";
-import { darkTheme, lightTheme } from "../theme.js";
+import { WIDGET_URL } from "../index.js";
+import { type Theme, darkTheme, lightTheme } from "../theme.js";
 
-const shadowOf = (element: HTMLElement): ShadowRoot => {
-	const root = element.shadowRoot;
-	if (!root) throw new Error("expected an open shadow root");
-	return root;
-};
-
-describe("the checkbox element", () => {
-	test("hides its internals behind an open shadow root", () => {
-		// Closed would stop the widget itself from reaching the interactive
-		// area; no shadow root at all would let host page CSS restyle it.
-		const checkbox = createCheckboxElement(lightTheme);
-		expect(checkbox.shadowRoot).not.toBeNull();
-		expect(checkbox.className).toBe("prosopo-checkbox");
-	});
-
-	test("keeps its markup out of the light DOM", () => {
-		const checkbox = createCheckboxElement(lightTheme);
-		expect(checkbox.innerHTML).toBe("");
-		expect(shadowOf(checkbox).innerHTML).toContain("prosopo-checkbox__content");
-	});
-
-	test("renders a labelled loading spinner", () => {
-		const checkbox = createCheckboxElement(lightTheme);
-		const spinner = shadowOf(checkbox).querySelector(
-			`.${WIDGET_CHECKBOX_SPINNER_CSS_CLASS}`,
-		);
-		expect(spinner?.getAttribute("aria-label")).toBe("Loading spinner");
-	});
-
-	test("colours the spinner from the theme", () => {
-		const light = shadowOf(createCheckboxElement(lightTheme)).innerHTML;
-		const dark = shadowOf(createCheckboxElement(darkTheme)).innerHTML;
-		// The spinner is an outline-toned ring with a primary-coloured leading
-		// edge, so both roles have to come through from the theme.
-		expect(light).toContain(lightTheme.palette.border);
-		expect(light).toContain(lightTheme.palette.primary.main);
-		expect(dark).toContain(darkTheme.palette.border);
-		expect(dark).toContain(darkTheme.palette.primary.main);
-		expect(light).not.toBe(dark);
-	});
-
-	test("publishes the same markup it renders", () => {
-		const checkbox = createCheckboxElement(lightTheme);
-		expect(shadowOf(checkbox).innerHTML).toContain(CHECKBOX_MARKUP.trim());
-	});
-});
-
-describe("finding the interactive area", () => {
-	test("reaches through both shadow roots of a real widget", () => {
-		const host = document.createElement("div");
-		host.appendChild(createWidgetSkeletonElement(lightTheme));
-		const area = getCheckboxInteractiveArea(host);
-		expect(area?.className).toBe("prosopo-checkbox__content");
-	});
-
-	test("returns null when there is no checkbox to find", () => {
-		expect(
-			getCheckboxInteractiveArea(document.createElement("div")),
-		).toBeNull();
-	});
-
-	test("prefers the host's shadow root over its light DOM", () => {
-		const host = document.createElement("div");
-		host.attachShadow({ mode: "open" });
-		// The light-DOM copy must be ignored, otherwise a host page could plant
-		// a decoy checkbox and steal the clicks.
-		host.appendChild(createCheckboxElement(lightTheme));
-		expect(getCheckboxInteractiveArea(host)).toBeNull();
-	});
-
-	test("falls back to a plain element without a shadow root", () => {
-		const host = document.createElement("div");
-		host.appendChild(createCheckboxElement(lightTheme));
-		expect(getCheckboxInteractiveArea(host)?.className).toBe(
-			"prosopo-checkbox__content",
-		);
-	});
-
-	test("returns null when the checkbox has no content node", () => {
-		const host = document.createElement("div");
-		const decoy = document.createElement("div");
-		decoy.className = "prosopo-checkbox";
-		host.appendChild(decoy);
-		expect(getCheckboxInteractiveArea(host)).toBeNull();
-	});
-});
+const skeletonOf = (theme: Theme): HTMLElement =>
+	createWidgetSkeletonElement(theme).element;
 
 describe("the logo", () => {
 	test("links out to the product page in a new, unprivileged tab", () => {
@@ -152,28 +64,35 @@ describe("the widget skeleton", () => {
 	});
 
 	test("swaps the placeholders for the real checkbox and logo", () => {
-		const widget = createWidgetSkeletonElement(lightTheme);
+		const widget = skeletonOf(lightTheme);
 		expect(widget.querySelector(".prosopo-widget__checkbox")).toBeNull();
 		expect(widget.querySelector(".prosopo-widget__logo")).toBeNull();
-		expect(widget.querySelector(".prosopo-checkbox")).not.toBeNull();
+		expect(widget.querySelector(`.${CHECKBOX_HOST_CSS_CLASS}`)).not.toBeNull();
 		expect(widget.querySelector(".prosopo-logo-container")).not.toBeNull();
 	});
 
 	test("puts the checkbox before the logo", () => {
-		const content = createWidgetSkeletonElement(lightTheme).querySelector(
+		const content = skeletonOf(lightTheme).querySelector(
 			".prosopo-widget__content",
 		);
 		const children = Array.from(content?.children ?? []);
-		expect(children[0]?.className).toBe("prosopo-checkbox");
+		expect(children[0]?.className).toBe(CHECKBOX_HOST_CSS_CLASS);
 		expect(children[1]?.className).toBe("prosopo-logo-container");
+	});
+
+	test("hands back the interactive area from inside the checkbox", () => {
+		// The caller mounts the captcha into this node, and the returned
+		// reference is the only route to it — nothing outside can name it.
+		const { element, interactiveArea } =
+			createWidgetSkeletonElement(lightTheme);
+		const checkbox = element.querySelector(`.${CHECKBOX_HOST_CSS_CLASS}`);
+		expect(checkbox?.shadowRoot?.contains(interactiveArea)).toBe(true);
 	});
 
 	test("adds the end-to-end hook outside production", () => {
 		process.env.NODE_ENV = "development";
 		expect(
-			createWidgetSkeletonElement(lightTheme).querySelector(
-				'[data-cy="captcha-checkbox"]',
-			),
+			skeletonOf(lightTheme).querySelector('[data-cy="captcha-checkbox"]'),
 		).not.toBeNull();
 	});
 
@@ -181,28 +100,24 @@ describe("the widget skeleton", () => {
 		// It is a stable selector for the one control a solver wants to click.
 		process.env.NODE_ENV = "production";
 		expect(
-			createWidgetSkeletonElement(lightTheme).querySelector(
-				'[data-cy="captcha-checkbox"]',
-			),
+			skeletonOf(lightTheme).querySelector('[data-cy="captcha-checkbox"]'),
 		).toBeNull();
 	});
 
 	test("treats an unset NODE_ENV as development", () => {
 		Reflect.deleteProperty(process.env, "NODE_ENV");
 		expect(
-			createWidgetSkeletonElement(lightTheme).querySelector(
-				'[data-cy="captcha-checkbox"]',
-			),
+			skeletonOf(lightTheme).querySelector('[data-cy="captcha-checkbox"]'),
 		).not.toBeNull();
 	});
 
 	test("takes its surface colours from the theme", () => {
 		// The on-page widget rests on the flat `surface` role — the dialog is the
 		// one that sits on surfaceContainerHigh.
-		expect(createWidgetSkeletonElement(darkTheme).innerHTML).toContain(
+		expect(skeletonOf(darkTheme).innerHTML).toContain(
 			darkTheme.palette.surface,
 		);
-		expect(createWidgetSkeletonElement(lightTheme).innerHTML).toContain(
+		expect(skeletonOf(lightTheme).innerHTML).toContain(
 			lightTheme.palette.surface,
 		);
 	});
@@ -210,7 +125,7 @@ describe("the widget skeleton", () => {
 	test("neutralises pseudo-element content a host page might inject", () => {
 		// Consumers' resets frequently add ::after content to every element,
 		// which would otherwise push the checkbox off its row.
-		expect(createWidgetSkeletonElement(lightTheme).innerHTML).toContain(
+		expect(skeletonOf(lightTheme).innerHTML).toContain(
 			"content: none !important",
 		);
 	});

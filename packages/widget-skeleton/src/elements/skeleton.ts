@@ -25,30 +25,33 @@ import { type Theme, withAlpha } from "../theme.js";
 import { createCheckboxElement } from "./checkbox.js";
 import { createLogoElement } from "./logo.js";
 
+/** The widget, and the node inside it that the captcha is mounted into. */
+export interface WidgetSkeletonElement {
+	readonly element: HTMLElement;
+	readonly interactiveArea: HTMLElement;
+}
+
 /**
  * Creates a widget skeleton element with theme styling
  *
  * @param theme - The theme to apply to the widget
- * @returns HTMLElement for the widget skeleton
  */
-export function createWidgetSkeletonElement(theme: Theme): HTMLElement {
+export function createWidgetSkeletonElement(
+	theme: Theme,
+): WidgetSkeletonElement {
 	const widgetElement = document.createElement("div");
 	widgetElement.className = "prosopo-widget";
 
-	const checkboxElement = createCheckboxElement(theme);
+	const checkbox = createCheckboxElement(theme);
 	const logoElement = createLogoElement(theme);
 
 	widgetElement.innerHTML =
 		getWidgetStyles(theme) + getWidgetMarkup(isDevMode());
 
-	replacePlaceholder(
-		widgetElement,
-		".prosopo-widget__checkbox",
-		checkboxElement,
-	);
+	replacePlaceholder(widgetElement, ".prosopo-widget__checkbox", checkbox.host);
 	replacePlaceholder(widgetElement, ".prosopo-widget__logo", logoElement);
 
-	return widgetElement;
+	return { element: widgetElement, interactiveArea: checkbox.interactiveArea };
 }
 
 /**
