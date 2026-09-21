@@ -12,15 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import {
+	darkTheme,
+	isDevMode,
+	lightTheme,
+	randomToken,
+} from "@prosopo/widget-skeleton";
 import type { Component } from "../dom/component.js";
 import { Teardown } from "../dom/component.js";
 import {
 	type StyleMap,
 	applyStyles,
-	createElement,
 	createSvgElement,
 } from "../dom/element.js";
+import { createControl } from "../dom/obfuscation.js";
 
 export interface ReloadButtonProps {
 	themeColor: "light" | "dark";
@@ -75,10 +80,17 @@ export const mountReloadButton = (
 		children: [title, path],
 	});
 
-	const button = createElement("button", {
-		className: "reload-button",
-		attributes: { "aria-label": "Reload", type: "button" },
+	const button = createControl(teardown, {
+		className: randomToken(),
+		attributes: {
+			"aria-label": "Reload",
+			"data-cy": isDevMode() ? "reload-button" : undefined,
+		},
 		children: [svg],
+		onActivate: (event: MouseEvent | KeyboardEvent) => {
+			event.preventDefault();
+			props.onReload();
+		},
 	});
 
 	const render = () => {
@@ -121,11 +133,6 @@ export const mountReloadButton = (
 		focusVisible = false;
 		render();
 	});
-	teardown.addEventListener(button, "click", (event: Event) => {
-		event.preventDefault();
-		props.onReload();
-	});
-
 	render();
 	container.appendChild(button);
 

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { PlacementEnum, type PlacementType } from "@prosopo/types";
+import { isDevMode, randomToken } from "@prosopo/widget-skeleton";
 import type { Component } from "../dom/component.js";
 import { Teardown } from "../dom/component.js";
 import { type StyleMap, applyStyles, createElement } from "../dom/element.js";
@@ -202,11 +203,25 @@ export const mountChallengeSurface = (
 	let opener: HTMLElement | null = null;
 	let dialogOpen = false;
 
+	// Drawn per mount: a name scraped from one page load names nothing on the
+	// next. The placement pair is drawn up front so switching placement at
+	// runtime swaps between two names rather than minting a third.
+	const names = {
+		layer: randomToken(),
+		float: randomToken(),
+		popup: randomToken(),
+		content: randomToken(),
+	};
+
 	const content = createElement("div", {
-		className: "prosopo-challenge-content",
+		className: names.content,
+		attributes: { "data-cy": isDevMode() ? "challenge-content" : undefined },
 	});
 
-	const layer = createElement("div", { children: [content] });
+	const layer = createElement("div", {
+		children: [content],
+		attributes: { "data-cy": isDevMode() ? "challenge-surface" : undefined },
+	});
 
 	const isFloating = (): boolean =>
 		PlacementEnum.float === props.placement && !!props.anchor;
@@ -358,8 +373,8 @@ export const mountChallengeSurface = (
 		const floating = isFloating();
 
 		layer.className = [
-			"prosopo-challenge-surface",
-			`prosopo-challenge-surface--${floating ? "float" : "popup"}`,
+			names.layer,
+			floating ? names.float : names.popup,
 			props.className,
 		]
 			.filter(Boolean)

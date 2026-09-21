@@ -117,11 +117,16 @@ const checkbox = (): HTMLInputElement => {
 	return element;
 };
 
+// The modal's own class names are drawn per mount, so the suite finds it by the
+// development-only hooks the components carry.
+const SURFACE_SELECTOR = '[data-cy="challenge-surface"]';
+const PANEL_SELECTOR = '[data-cy="captcha-panel"]';
+
 const spinner = (): Element | null =>
 	mounted.container.querySelector('[role="status"]');
 
 const modalText = (): string =>
-	document.querySelector(".prosopo-modalOuter")?.textContent ?? "";
+	document.querySelector(SURFACE_SELECTOR)?.textContent ?? "";
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -153,7 +158,7 @@ describe("what the user sees at rest", () => {
 
 	test("keeps the modal closed until there is something to show", () => {
 		render();
-		const outer = document.querySelector<HTMLElement>(".prosopo-modalOuter");
+		const outer = document.querySelector<HTMLElement>(SURFACE_SELECTOR);
 		expect(outer?.style.display).toBe("none");
 	});
 
@@ -378,7 +383,7 @@ describe("the challenge", () => {
 
 	test("wires the grid to the manager's select", async () => {
 		await withChallenge();
-		const image = document.querySelector(".prosopo-modalOuter img");
+		const image = document.querySelector(`${SURFACE_SELECTOR} img`);
 		if (!image) throw new Error("expected a captcha image");
 		fire(image, "click", { clientX: 3, clientY: 4 });
 		expect(select).toHaveBeenCalledWith("hash-1", 3, 4);
@@ -387,7 +392,7 @@ describe("the challenge", () => {
 	test("wires cancel to the manager", async () => {
 		await withChallenge();
 		const cancelButton = document.querySelector(
-			'.prosopo-modalOuter button[aria-label="WIDGET.CANCEL"]',
+			`${SURFACE_SELECTOR} [aria-label="WIDGET.CANCEL"]`,
 		);
 		if (!cancelButton) throw new Error("expected a cancel button");
 		fire(cancelButton, "click");
@@ -397,7 +402,7 @@ describe("the challenge", () => {
 	test("wires submit to the manager on the last round", async () => {
 		await withChallenge();
 		const submitButton = document.querySelector(
-			'.prosopo-modalOuter button[aria-label="WIDGET.SUBMIT"]',
+			`${SURFACE_SELECTOR} [aria-label="WIDGET.SUBMIT"]`,
 		);
 		if (!submitButton) throw new Error("expected a submit button");
 		fire(submitButton, "click");
@@ -408,7 +413,7 @@ describe("the challenge", () => {
 		render();
 		widget?.destroy();
 		widget = undefined;
-		expect(document.querySelector(".prosopo-modalOuter")).toBeNull();
+		expect(document.querySelector(SURFACE_SELECTOR)).toBeNull();
 	});
 });
 
@@ -526,7 +531,7 @@ describe("the execute event", () => {
 		execute();
 		await settle();
 		expect(
-			document.querySelector<HTMLElement>(".prosopo-modalOuter")?.style.display,
+			document.querySelector<HTMLElement>(SURFACE_SELECTOR)?.style.display,
 		).toBe("flex");
 	});
 
@@ -603,9 +608,7 @@ describe("theming", () => {
 	test("defaults an unthemed widget to the light palette", async () => {
 		render();
 		await setState({ showModal: true, ...openChallenge() });
-		const panel = document.querySelector<HTMLElement>(
-			".prosopo-modalInner > div",
-		);
+		const panel = document.querySelector<HTMLElement>(PANEL_SELECTOR);
 		// The challenge panel is the M3 dialog container, so it takes
 		// surfaceContainerHigh rather than the flat surface behind the widget.
 		expect(panel?.style.backgroundColor).toBe(

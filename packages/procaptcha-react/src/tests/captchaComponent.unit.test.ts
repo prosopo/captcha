@@ -66,11 +66,13 @@ const render = (overrides: Parameters<typeof props>[0] = {}): void => {
 	}
 };
 
-const buttonLabelled = (label: string): HTMLButtonElement => {
-	const button = mounted.container.querySelector<HTMLButtonElement>(
-		`button[aria-label="${label}"]`,
+// Which element each control is made of is drawn per mount, so the controls are
+// found by the name they carry rather than by tag.
+const buttonLabelled = (label: string): HTMLElement => {
+	const button = mounted.container.querySelector<HTMLElement>(
+		`[aria-label="${label}"]`,
 	);
-	if (!button) throw new Error(`expected a button labelled ${label}`);
+	if (!button) throw new Error(`expected a control labelled ${label}`);
 	return button;
 };
 
@@ -146,10 +148,11 @@ describe("the grid", () => {
 describe("the controls", () => {
 	test("offers cancel, reload and a forward action", () => {
 		render();
-		// The image tiles are buttons too, and carry the pressed state that
-		// tells a screen reader whether they are picked; the controls do not.
+		// The tiles are buttons too, but they take their name from the image they
+		// hold and carry the pressed state that says whether they are picked; the
+		// three controls name themselves and have no pressed state.
 		expect(
-			mounted.container.querySelectorAll("button:not([aria-pressed])"),
+			mounted.container.querySelectorAll("[aria-label]:not([aria-pressed])"),
 		).toHaveLength(3);
 	});
 
@@ -161,7 +164,7 @@ describe("the controls", () => {
 
 	test("reloading asks for a fresh challenge", () => {
 		render();
-		const reload = mounted.container.querySelector(".reload-button");
+		const reload = mounted.container.querySelector('[data-cy="reload-button"]');
 		if (!reload) throw new Error("expected a reload button");
 		fire(reload, "click");
 		expect(onReload).toHaveBeenCalledTimes(1);

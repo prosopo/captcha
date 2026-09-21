@@ -17,9 +17,11 @@ import {
 	applyStyles,
 	createElement,
 	mountChallengeSurface,
+	wrapRandomly,
 } from "@prosopo/procaptcha-common";
 import type { Component } from "@prosopo/procaptcha-common";
 import type { PlacementType } from "@prosopo/types";
+import { randomToken } from "@prosopo/widget-skeleton";
 
 export interface ModalProps {
 	show: boolean;
@@ -34,11 +36,14 @@ export interface ModalComponent extends Component<ModalProps> {
 	readonly content: HTMLElement;
 }
 
+const MIN_WRAPPER_DEPTH = 1;
+const MAX_WRAPPER_DEPTH = 3;
+
 /**
  * The image captcha's dialog frame; positioning lives in `ChallengeSurface`.
  */
 export const mountModal = (initialProps: ModalProps): ModalComponent => {
-	const inner = createElement("div", { className: "prosopo-modalInner" });
+	const inner = createElement("div", { className: randomToken() });
 
 	applyStyles(inner, {
 		maxWidth: "500px",
@@ -50,20 +55,24 @@ export const mountModal = (initialProps: ModalProps): ModalComponent => {
 		boxSizing: "border-box",
 	});
 
+	const outerClassName = randomToken();
+
 	const surfaceProps = (props: ModalProps) => ({
 		show: props.show,
 		placement: props.placement,
 		anchor: props.anchor,
 		onDismiss: props.onDismiss,
 		scrim: "none" as const,
-		className: "prosopo-modalOuter",
+		className: outerClassName,
 		dialogLabel: props.dialogLabel,
 	});
 
 	const surface: ChallengeSurfaceComponent = mountChallengeSurface(
 		surfaceProps(initialProps),
 	);
-	surface.content.appendChild(inner);
+	surface.content.appendChild(
+		wrapRandomly(inner, MIN_WRAPPER_DEPTH, MAX_WRAPPER_DEPTH),
+	);
 
 	return {
 		content: inner,

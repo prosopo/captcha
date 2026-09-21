@@ -25,11 +25,17 @@ import { createElement } from "../dom/element.js";
 let surface: ChallengeSurfaceComponent | undefined;
 let anchor: HTMLDivElement;
 
+// Both elements are named per mount, so the tests find them by the
+// development-only hook and read the placement off the layout it produces
+// rather than off a class that says what the layout is meant to be.
+const LAYER_SELECTOR = '[data-cy="challenge-surface"]';
+const CONTENT_SELECTOR = '[data-cy="challenge-content"]';
+
 const layer = (): HTMLElement | null =>
-	document.querySelector<HTMLElement>(".prosopo-challenge-surface");
+	document.querySelector<HTMLElement>(LAYER_SELECTOR);
 
 const content = (): HTMLElement | null =>
-	document.querySelector<HTMLElement>(".prosopo-challenge-content");
+	document.querySelector<HTMLElement>(CONTENT_SELECTOR);
 
 interface RenderArgs {
 	placement?: PlacementType;
@@ -109,10 +115,38 @@ describe("where the surface renders", () => {
 
 		render({});
 
-		expect(container.querySelector(".prosopo-challenge-surface")).toBeNull();
+		expect(container.querySelector(LAYER_SELECTOR)).toBeNull();
 		expect(layer()?.parentElement).toBe(document.body);
 
 		container.remove();
+	});
+
+	it("goes by different names on every mount", () => {
+		// A selector scraped from one page load matches nothing on the next.
+		const names = new Set<string>();
+		for (let attempt = 0; attempt < 10; attempt += 1) {
+			render({});
+			names.add(`${layer()?.className}|${content()?.className}`);
+			surface?.destroy();
+			surface = undefined;
+		}
+		expect(names.size).toBe(10);
+	});
+
+	it("keeps its names to itself in a production build", () => {
+		const originalNodeEnv = process.env.NODE_ENV;
+		process.env.NODE_ENV = "production";
+		try {
+			render({});
+			expect(document.querySelector(LAYER_SELECTOR)).toBeNull();
+			expect(document.querySelector(CONTENT_SELECTOR)).toBeNull();
+		} finally {
+			if (undefined === originalNodeEnv) {
+				Reflect.deleteProperty(process.env, "NODE_ENV");
+			} else {
+				process.env.NODE_ENV = originalNodeEnv;
+			}
+		}
 	});
 
 	it("hides rather than unmounts when not shown", () => {
@@ -129,7 +163,7 @@ describe("popup", () => {
 	it("is the default placement", () => {
 		render({});
 
-		expect(layer()?.className).toContain("prosopo-challenge-surface--popup");
+		expect(layer()?.style.position).toBe("fixed");
 	});
 
 	it("covers the page, so nothing behind it is reachable", () => {
@@ -182,7 +216,7 @@ describe("float", () => {
 	it("leaves the page usable behind it", () => {
 		render({ placement: PlacementEnum.float });
 
-		expect(layer()?.className).toContain("prosopo-challenge-surface--float");
+		expect(layer()?.style.position).toBe("absolute");
 		expect(layer()?.style.pointerEvents).toBe("none");
 		expect(content()?.style.pointerEvents).toBe("auto");
 	});
@@ -236,7 +270,7 @@ describe("float", () => {
 	it("falls back to popup with no anchor to attach to", () => {
 		render({ placement: PlacementEnum.float, withAnchor: false });
 
-		expect(layer()?.className).toContain("prosopo-challenge-surface--popup");
+		expect(layer()?.style.position).toBe("fixed");
 		expect(layer()?.style.pointerEvents).toBe("");
 	});
 
