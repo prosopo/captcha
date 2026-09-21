@@ -14,7 +14,9 @@
 
 import {
 	type Theme,
-	WIDGET_CHECKBOX_SPINNER_CSS_CLASS,
+	isDevMode,
+	randomInt,
+	randomToken,
 	withAlpha,
 } from "@prosopo/widget-skeleton";
 import type { Component } from "../dom/component.js";
@@ -52,10 +54,27 @@ export interface CheckboxProps {
 const DEFAULT_LOADING_TEXT = "Checking that you are human";
 
 const CHECKBOX_STYLE_ID = "checkbox";
-const LABEL_CLASS = "prosopo-checkbox__label";
-const BOX_CLASS = "prosopo-checkbox__box";
 
-const ID_LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+/**
+ * Class names and the exact offset of the box, drawn once per mounted widget.
+ * A solver script cannot hardcode a selector or a click coordinate that holds
+ * from one page load to the next.
+ */
+interface CheckboxNames {
+	readonly box: string;
+	readonly label: string;
+	readonly spinner: string;
+	readonly spin: string;
+	readonly instance: string;
+}
+
+const generateNames = (): CheckboxNames => ({
+	box: randomToken(),
+	label: randomToken(),
+	spinner: randomToken(),
+	spin: randomToken(),
+	instance: randomToken(),
+});
 
 const FAQ_LINK = process.env.PROSOPO_DOCS_URL
 	? `${new URL(`${process.env.PROSOPO_DOCS_URL}/en/basics/faq/`).href}/`
@@ -70,18 +89,32 @@ const focusIsStranded = (element: HTMLElement): boolean => {
 	return null === activeElement || activeElement === body;
 };
 
-const generateRandomId = (): string =>
-	Array.from(
-		{ length: 8 },
-		() => ID_LETTERS[Math.floor(Math.random() * ID_LETTERS.length)],
-	).join("");
-
 // 28px container with a 2dp stroke, centred in a 58px touch target. Larger
 // than the 18dp M3 checkbox spec — kept at the original size deliberately, as
 // the widget needs a more prominent target than a form checkbox.
 const CHECKBOX_SIZE = "28px";
 
-const baseStyle: StyleMap = {
+// 15px each side around a 28px box gives a 58px touch target. The 30px is then
+// split unevenly, which moves the box without changing what it occupies: the
+// margin box stays 58px square, so nothing on the page reflows.
+const MARGIN_TOTAL = 30;
+const HORIZONTAL_JITTER = 10;
+const VERTICAL_JITTER = 8;
+
+interface BoxOffset {
+	readonly left: number;
+	readonly top: number;
+}
+
+const generateOffset = (): BoxOffset => ({
+	left: MARGIN_TOTAL / 2 + randomInt(-HORIZONTAL_JITTER, HORIZONTAL_JITTER),
+	top: MARGIN_TOTAL / 2 + randomInt(-VERTICAL_JITTER, VERTICAL_JITTER),
+});
+
+const marginFor = (offset: BoxOffset): string =>
+	`${offset.top}px ${MARGIN_TOTAL - offset.left}px ${MARGIN_TOTAL - offset.top}px ${offset.left}px`;
+
+const baseStyleFor = (offset: BoxOffset): StyleMap => ({
 	width: CHECKBOX_SIZE,
 	height: CHECKBOX_SIZE,
 	minWidth: CHECKBOX_SIZE,
@@ -91,11 +124,10 @@ const baseStyle: StyleMap = {
 	opacity: "1",
 	appearance: "none",
 	cursor: "pointer",
-	// 15px each side around a 28px box gives a 58px touch target.
-	margin: "15px",
+	margin: marginFor(offset),
 	borderStyle: "solid",
 	borderWidth: "2px",
-};
+});
 
 // The label sizes itself against the `prosopo-widget` container declared on
 // `.prosopo-widget__wrapper` out in the light DOM. Container queries resolve
@@ -108,12 +140,19 @@ const baseStyle: StyleMap = {
 // Porting it faithfully made it valid for the first time and painted a literal
 // pair of quote marks inside the box, so it is gone rather than reproduced: an
 // absolutely positioned, empty pseudo-element on the checkbox did nothing.
-const checkboxCss = (theme: Theme): string => `
+// The container name is declared on `.prosopo-widget__wrapper` out in the light
+// DOM, where a consumer's own CSS may also rely on it, so it is one of the few
+// names that stays fixed.
+const checkboxCss = (
+	theme: Theme,
+	names: CheckboxNames,
+	offset: BoxOffset,
+): string => `
 /* In forced-colors mode (Windows High Contrast) backgrounds are overridden, so
    the custom-painted tick can disappear — fall back to the native control,
    which the OS draws in system colors. !important beats the inline styles. */
 @media (forced-colors: active) {
-	.${BOX_CLASS} {
+	.${names.box} {
 		appearance: auto !important;
 		background-image: none !important;
 	}
@@ -121,12 +160,37 @@ const checkboxCss = (theme: Theme): string => `
 
 /* M3 focus indicator: a 3dp outline offset by 2dp, drawn only for keyboard
    focus. The control previously had no focus affordance at all. */
-.${BOX_CLASS}:focus-visible {
+.${names.box}:focus-visible {
 	outline: 3px solid ${theme.palette.primary.main};
 	outline-offset: 2px;
 }
 
-.${LABEL_CLASS} {
+/* The spinner stands in for the box, so it takes the same offset — otherwise
+   the widget would twitch every time a check started. These rules used to live
+   in widget-skeleton's sheet, which this component happened to render inside. */
+.${names.spinner} {
+	margin: ${marginFor(offset)} !important;
+	width: 28px !important;
+	height: 28px !important;
+	border: 4px solid ${theme.palette.border};
+	border-bottom-color: ${theme.palette.primary.main};
+	border-radius: 50%;
+	display: inherit;
+	box-sizing: border-box;
+	animation: ${names.spin} 1s linear infinite;
+	will-change: transform;
+}
+
+@keyframes ${names.spin} {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+.${names.label} {
 	/* The label sits on the widget surface, so it takes onSurface — not the
 	   dialog container's on-colour. */
 	color: ${theme.palette.onSurface};
@@ -139,31 +203,31 @@ const checkboxCss = (theme: Theme): string => `
 }
 
 @container prosopo-widget (max-width: 169px) {
-	.${LABEL_CLASS} {
+	.${names.label} {
 		display: none;
 	}
 }
 
 @container prosopo-widget (min-width: 170px) {
-	.${LABEL_CLASS} {
+	.${names.label} {
 		font-size: 10px;
 	}
 }
 
 @container prosopo-widget (min-width: 220px) {
-	.${LABEL_CLASS} {
+	.${names.label} {
 		font-size: 12px;
 	}
 }
 
 @container prosopo-widget (min-width: 250px) {
-	.${LABEL_CLASS} {
+	.${names.label} {
 		font-size: 14px;
 	}
 }
 
 @container prosopo-widget (min-width: 270px) {
-	.${LABEL_CLASS} {
+	.${names.label} {
 		font-size: 16px;
 	}
 }
@@ -178,17 +242,21 @@ export const mountCheckbox = (
 	let hover = false;
 	let hadFocus = false;
 
+	const names = generateNames();
+	const offset = generateOffset();
+
 	// The sheet bakes in theme tokens, so light and dark are separate documents
-	// rather than one that gets rewritten — that keeps the id stable per theme
-	// and lets two differently-themed checkboxes share a container safely.
+	// rather than one that gets rewritten. It also bakes in this instance's
+	// class names, so the id carries them too — two checkboxes in one container
+	// no longer describe the same elements and must not share a tag.
 	const styleIdFor = (theme: Theme): string =>
-		`${CHECKBOX_STYLE_ID}-${theme.palette.mode}`;
+		`${CHECKBOX_STYLE_ID}-${names.instance}-${theme.palette.mode}`;
 
 	let styleMode = props.theme.palette.mode;
 	let disposeStyle = injectStyle(
 		container,
 		styleIdFor(props.theme),
-		checkboxCss(props.theme),
+		checkboxCss(props.theme, names, offset),
 	);
 	teardown.add(() => disposeStyle());
 
@@ -201,7 +269,7 @@ export const mountCheckbox = (
 	});
 
 	const spinner = createElement("div", {
-		className: WIDGET_CHECKBOX_SPINNER_CSS_CLASS,
+		className: names.spinner,
 		attributes: {
 			role: "status",
 			// Focusable only programmatically: it stands in for the input it
@@ -212,14 +280,16 @@ export const mountCheckbox = (
 	});
 
 	const input = createElement("input", {
-		className: BOX_CLASS,
+		className: names.box,
 		attributes: {
 			type: "checkbox",
-			"data-cy": "captcha-checkbox",
+			// A stable selector for the one control a solver wants to click, so
+			// it is a test hook only — the skeleton withholds it the same way.
+			"data-cy": isDevMode() ? "captcha-checkbox" : undefined,
 		},
 	});
 
-	const label = createElement("label", { className: LABEL_CLASS });
+	const label = createElement("label", { className: names.label });
 
 	const applyBoxStyle = () => {
 		const { theme, checked } = props;
@@ -233,7 +303,7 @@ export const mountCheckbox = (
 			? theme.palette.checkbox.fill
 			: theme.palette.onSurface;
 		applyStyles(input, {
-			...baseStyle,
+			...baseStyleFor(offset),
 			borderRadius: theme.shape.checkbox,
 			borderColor: checked
 				? theme.palette.checkbox.fill
@@ -354,7 +424,7 @@ export const mountCheckbox = (
 		} else {
 			// Regenerated per render, as the React component did — the id is only
 			// ever a per-instance handle, never referenced across renders.
-			const id = generateRandomId();
+			const id = randomToken();
 			input.id = id;
 			input.name = id;
 			input.setAttribute("aria-label", props.labelText);
@@ -385,7 +455,7 @@ export const mountCheckbox = (
 				disposeStyle = injectStyle(
 					container,
 					styleIdFor(props.theme),
-					checkboxCss(props.theme),
+					checkboxCss(props.theme, names, offset),
 				);
 			}
 			render();

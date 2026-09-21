@@ -15,6 +15,7 @@
 
 import { describe, expect, test } from "vitest";
 import { WIDGET_MAX_WIDTH } from "../constants.js";
+import { CHECKBOX_HOST_CSS_CLASS } from "../elements/checkbox.js";
 import { type Theme, darkTheme, lightTheme } from "../theme.js";
 import { createWidgetSkeleton } from "../webComponent/createWidget.js";
 
@@ -38,11 +39,28 @@ describe("createWidgetSkeleton", () => {
 			lightTheme,
 			TAG,
 		);
-		expect(widgetInteractiveArea.className).toBe("prosopo-checkbox__content");
-		expect(widgetInteractiveArea).toBe(
-			webComponent
-				.querySelector(".prosopo-checkbox")
-				?.shadowRoot?.querySelector(".prosopo-checkbox__content"),
+		const shadowRoot = webComponent.querySelector(
+			`.${CHECKBOX_HOST_CSS_CLASS}`,
+		)?.shadowRoot;
+		expect(shadowRoot?.contains(widgetInteractiveArea)).toBe(true);
+		expect(widgetInteractiveArea.children).toHaveLength(1);
+	});
+
+	test("names the interactive area differently on every widget", () => {
+		// Two widgets on one page must not share a class, or a selector scraped
+		// from either would find both.
+		const first = createWidgetSkeleton(
+			document.createElement("div"),
+			lightTheme,
+			TAG,
+		);
+		const second = createWidgetSkeleton(
+			document.createElement("div"),
+			lightTheme,
+			TAG,
+		);
+		expect(first.widgetInteractiveArea.className).not.toBe(
+			second.widgetInteractiveArea.className,
 		);
 	});
 
@@ -78,8 +96,8 @@ describe("createWidgetSkeleton", () => {
 	});
 
 	test("leaves the host in the light DOM, not a shadow root", () => {
-		// getCheckboxInteractiveArea prefers a shadow root if one exists; the
-		// widget is appended as a child instead, so there must not be one.
+		// The widget is appended as a plain child, so a shadow root on the host
+		// would hide it: an unslotted light-DOM child renders nowhere.
 		const { webComponent } = createWidgetSkeleton(
 			document.createElement("div"),
 			lightTheme,
