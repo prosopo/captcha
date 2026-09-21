@@ -1,5 +1,19 @@
 # @prosopo/database
 
+## 4.0.39
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+  - @prosopo/types-database@5.6.3
+  - @prosopo/util@3.3.11
+  - @prosopo/user-access-policy@3.14.9
+  - @prosopo/redis-client@1.0.37
+
 ## 4.0.38
 ### Patch Changes
 

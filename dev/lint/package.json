@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/lint",
-	"version": "2.8.44",
+	"version": "2.8.45",
 	"description": "",
 	"private": true,
 	"type": "module",
@@ -43,7 +43,7 @@
 		"npm": "^11"
 	},
 	"dependencies": {
-		"@prosopo/util": "3.3.10",
+		"@prosopo/util": "3.3.11",
 		"@prosopo/workspace": "3.2.1",
 		"fast-glob": "3.3.3",
 		"yargs": "18.1.0",
