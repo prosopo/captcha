@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { Server } from "node:net";
-import { sha256 } from "@noble/hashes/sha256";
+import { sha256 } from "@noble/hashes/sha2.js";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";

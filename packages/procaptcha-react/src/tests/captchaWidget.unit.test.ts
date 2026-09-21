@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import type { Component } from "@prosopo/procaptcha-common";
+import { type Component, threeColumnBasis } from "@prosopo/procaptcha-common";
 import { CaptchaItemTypes, type HashedItem } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -206,14 +206,23 @@ describe("the geometry a solver would write down", () => {
 	});
 
 	test("gives each cell room for the gap it was drawn with", () => {
-		// Three columns fit only if each cell gives up two thirds of a gap. A
-		// basis written independently of the gap wraps the row at the wide end of
-		// the range, which is four rows of images instead of three.
+		// Three columns fit only if three cells plus the two gaps between them
+		// come to exactly the row. A basis written independently of the gap, or
+		// one that rounds a third to a decimal, misses by enough to wrap the
+		// third tile onto its own line — five rows of images instead of three.
+		// What the arithmetic has to add up to is covered where the basis is
+		// worked out; this checks the cell is given the basis for the gap the
+		// grid actually drew.
 		render();
 		const gap = pixels(grid().style.gap);
 		const cell = tiles()[0]?.parentElement?.parentElement;
-		const deducted = Math.round((200 * gap) / 3) / 100;
-		expect(cell?.style.flexBasis).toBe(`calc(33.333% - ${deducted}px)`);
+
+		// Compared through a scratch element so the assertion survives however
+		// the engine chooses to serialise a calc().
+		const expected = document.createElement("div");
+		expected.style.flexBasis = threeColumnBasis(gap);
+
+		expect(cell?.style.flexBasis).toBe(expected.style.flexBasis);
 	});
 });
 
@@ -400,7 +409,7 @@ describe("images that fail to load", () => {
 		image.dispatchEvent(new Event("error", { bubbles: true }));
 	};
 
-	test("retries with a cache-busting url", () => {
+	test("cache-busts an unsigned url, as it always did", () => {
 		render();
 		const image = tiles()[0];
 		if (!image) throw new Error("expected an image");
@@ -408,6 +417,22 @@ describe("images that fail to load", () => {
 		expect(image.getAttribute("src")).toMatch(
 			/^https:\/\/provider\.one\/img\/1\.png\?retry=\d+$/,
 		);
+		expect(image.dataset.retryCount).toBe("1");
+	});
+
+	test("leaves a signed url's query string alone", () => {
+		// The token is a signature over the query string, so a cache-busting
+		// parameter would make every retry 403 — a transient failure turned
+		// permanent.
+		const signed =
+			"https://provider.one/img/1.png?token=abc123&expires=1790003327";
+		render({ items: [item("hash-1", signed)] });
+		const image = tiles()[0];
+		if (!image) throw new Error("expected an image");
+
+		failLoad(image);
+
+		expect(image.getAttribute("src")).toBe(signed);
 	});
 
 	test("gives up after three retries rather than looping forever", () => {
@@ -429,6 +454,7 @@ describe("images that fail to load", () => {
 		if (!first || !second) throw new Error("expected two images");
 		for (let attempt = 0; attempt < 4; attempt++) failLoad(first);
 		failLoad(second);
-		expect(second.getAttribute("src")).toMatch(/\?retry=\d+$/);
+		expect(first.dataset.retryCount).toBe("4");
+		expect(second.dataset.retryCount).toBe("1");
 	});
 });

@@ -1,5 +1,22 @@
 # @prosopo/cli
 
+## 3.8.18
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/locale@3.6.0
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+  - @prosopo/util@3.3.11
+  - @prosopo/keyring@2.9.95
+  - @prosopo/provider@5.12.2
+  - @prosopo/env@3.6.62
+  - @prosopo/api@4.3.3
+  - @prosopo/dotenv@3.0.57
+
 ## 3.8.17
 ### Patch Changes
 

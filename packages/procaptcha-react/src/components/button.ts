@@ -19,7 +19,12 @@ import {
 	applyStyles,
 	createControl,
 } from "@prosopo/procaptcha-common";
-import { darkTheme, lightTheme, withAlpha } from "@prosopo/widget-skeleton";
+import {
+	canHover,
+	darkTheme,
+	lightTheme,
+	withAlpha,
+} from "@prosopo/widget-skeleton";
 import addDataAttr from "../util/index.js";
 
 export interface ButtonProps {
@@ -127,14 +132,20 @@ export const mountButton = (
 		button.textContent = props.text;
 	};
 
-	teardown.addEventListener(button, "mouseenter", () => {
-		hover = true;
-		render();
-	});
-	teardown.addEventListener(button, "mouseleave", () => {
-		hover = false;
-		render();
-	});
+	// Only where a pointer can rest on the control. On a touch screen the
+	// state layer costs the visitor their first tap: iOS reads a tap that
+	// changes what is under the finger as "show me the hover state" and
+	// withholds the click, so the control has to be tapped twice.
+	if (canHover()) {
+		teardown.addEventListener(button, "mouseenter", () => {
+			hover = true;
+			render();
+		});
+		teardown.addEventListener(button, "mouseleave", () => {
+			hover = false;
+			render();
+		});
+	}
 	teardown.addEventListener(button, "focus", () => {
 		focusVisible = button.matches(":focus-visible");
 		render();

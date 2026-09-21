@@ -40,7 +40,7 @@ import type { Server as HttpServer } from "node:http";
 import type { Server } from "node:net";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ed25519 } from "@noble/curves/ed25519";
+import { ed25519 } from "@noble/curves/ed25519.js";
 import { stringToU8a, u8aToHex } from "@polkadot/util";
 import { ProviderEnvironment } from "@prosopo/env";
 import { generateMnemonic, getPair } from "@prosopo/keyring";
@@ -132,7 +132,7 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 		baseUrl = `${protocol}://localhost:${testPort}`;
 		authority = `localhost:${testPort}`;
 
-		privateKey = ed25519.utils.randomPrivateKey();
+		privateKey = ed25519.utils.randomSecretKey();
 		publicKey = ed25519.getPublicKey(privateKey);
 
 		// Throwaway origin publishing the signer's JWKS at the well-known

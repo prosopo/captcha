@@ -14,6 +14,7 @@
 
 import {
 	type Theme,
+	canHover,
 	isDevMode,
 	randomToken,
 	withAlpha,
@@ -312,14 +313,20 @@ export const mountCheckbox = (
 		hadFocus = false;
 	});
 
-	teardown.addEventListener(input, "mouseenter", () => {
-		hover = true;
-		applyBoxStyle();
-	});
-	teardown.addEventListener(input, "mouseleave", () => {
-		hover = false;
-		applyBoxStyle();
-	});
+	// Only where a pointer can rest on the control. On a touch screen the
+	// state layer costs the visitor their first tap: iOS reads a tap that
+	// changes what is under the finger as "show me the hover state" and
+	// withholds the click, so the control has to be tapped twice.
+	if (canHover()) {
+		teardown.addEventListener(input, "mouseenter", () => {
+			hover = true;
+			applyBoxStyle();
+		});
+		teardown.addEventListener(input, "mouseleave", () => {
+			hover = false;
+			applyBoxStyle();
+		});
+	}
 
 	const activate = (event: MouseEvent | KeyboardEvent) => {
 		if (!isEventTrusted(event)) {
