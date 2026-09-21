@@ -133,7 +133,7 @@ describe("Routing machine at the frictionless phase picks the captcha type", () 
 
 		// The image modal is the user-visible proof. If the routing DM had
 		// silently fallen through to baseline PoW, no modal would appear.
-		getWidgetElement(".prosopo-modalInner p", { timeout: 15000 }).should(
+		getWidgetElement('[data-cy="captcha-prompt"]', { timeout: 15000 }).should(
 			"be.visible",
 		);
 	});

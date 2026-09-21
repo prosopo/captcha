@@ -42,17 +42,38 @@ const props = (
 	onClick,
 });
 
-const render = (
-	overrides: Parameters<typeof props>[0] = {},
-): HTMLButtonElement => {
+/**
+ * The action is not looked up by tag: which element it is made of is drawn per
+ * mount, so a solver cannot find every control in the dialog with `button`. It
+ * is the only thing the component appends, which is how the tests reach it
+ * without naming it.
+ */
+const render = (overrides: Parameters<typeof props>[0] = {}): HTMLElement => {
 	if (button) {
 		button.update(props(overrides));
 	} else {
 		button = mountButton(mounted.container, props(overrides));
 	}
-	const element = mounted.container.querySelector("button");
-	if (!element) throw new Error("expected a button to be rendered");
+	const element = mounted.container.firstElementChild;
+	if (!(element instanceof HTMLElement)) {
+		throw new Error("expected an action to be rendered");
+	}
 	return element;
+};
+
+/** Pins the draw that picks the element, so both variants are exercised. */
+const renderAs = (
+	kind: "button" | "generic",
+	overrides: Parameters<typeof props>[0] = {},
+): HTMLElement => {
+	const draws = vi
+		.spyOn(Math, "random")
+		.mockReturnValue("button" === kind ? 0 : 0.99);
+	try {
+		return render(overrides);
+	} finally {
+		draws.mockRestore();
+	}
 };
 
 beforeEach(() => {
@@ -90,6 +111,20 @@ describe("what the button renders", () => {
 		process.env.NODE_ENV = "production";
 		const element = render({ buttonType: "cancel" });
 		expect(element.getAttribute("data-cy")).toBeNull();
+	});
+
+	test("is a plain button when it is a button", () => {
+		// The widget is usually rendered inside the consumer's own form.
+		const element = renderAs("button");
+		expect(element.tagName).toBe("BUTTON");
+		expect(element.getAttribute("type")).toBe("button");
+	});
+
+	test("is a tabbable button by role when it is not a button", () => {
+		const element = renderAs("generic");
+		expect(element.tagName).toBe("DIV");
+		expect(element.getAttribute("role")).toBe("button");
+		expect(element.getAttribute("tabindex")).toBe("0");
 	});
 });
 
@@ -210,6 +245,13 @@ describe("clicking", () => {
 		const element = render();
 		fire(element, "click");
 		fire(element, "click");
+		expect(onClick).toHaveBeenCalledTimes(2);
+	});
+
+	test("Enter and Space call the handler when it is not a button", () => {
+		const element = renderAs("generic");
+		fire(element, "keydown", { key: "Enter" });
+		fire(element, "keydown", { key: " " });
 		expect(onClick).toHaveBeenCalledTimes(2);
 	});
 

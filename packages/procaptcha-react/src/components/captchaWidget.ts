@@ -18,12 +18,19 @@ import {
 	Teardown,
 	applyStyles,
 	clearElement,
+	createControl,
 	createElement,
 	createSvgElement,
-	isEventTrusted,
+	threeColumnBasis,
+	wrapRandomly,
 } from "@prosopo/procaptcha-common";
 import type { Captcha, HashedItem } from "@prosopo/types";
-import { type Theme, darkTheme, lightTheme } from "@prosopo/widget-skeleton";
+import {
+	type Theme,
+	darkTheme,
+	lightTheme,
+	randomInt,
+} from "@prosopo/widget-skeleton";
 
 export interface CaptchaWidgetProps {
 	challenge: Captcha;
@@ -44,21 +51,47 @@ const getHash = (item: HashedItem): string => {
 	return item.hash;
 };
 
-const imageStyle: StyleMap = {
+const cellStyle = (gap: number): StyleMap => ({
 	// enable the items in the grid to grow in width to use up excess space
 	flexGrow: 1,
 	// make the width of each item 1/3rd of the width overall, i.e. 3 columns
-	flexBasis: "calc(33.333% - 10px)",
+	flexBasis: threeColumnBasis(gap),
 	// include the padding / margin / border in the width
 	boxSizing: "border-box",
-};
+});
+
+const MIN_GRID_GAP = 8;
+const MAX_GRID_GAP = 15;
+const GRID_PADDING_JITTER = 4;
+
+const MIN_WRAPPER_DEPTH = 0;
+const MAX_WRAPPER_DEPTH = 2;
 
 const CHECK_ICON_PATH = "M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z";
 
 const themeOf = (themeColor: "light" | "dark"): Theme =>
 	"light" === themeColor ? lightTheme : darkTheme;
 
-const gridStyle = (theme: Theme): StyleMap => ({
+interface GridMetrics {
+	readonly gap: number;
+	readonly paddingTop: number;
+	readonly paddingBottom: number;
+}
+
+/** Drawn once per mounted grid, so tile centres move between page loads. */
+const generateMetrics = (theme: Theme): GridMetrics => ({
+	gap: randomInt(MIN_GRID_GAP, MAX_GRID_GAP),
+	paddingTop: Math.max(
+		0,
+		theme.spacing.unit + randomInt(-GRID_PADDING_JITTER, GRID_PADDING_JITTER),
+	),
+	paddingBottom: Math.max(
+		0,
+		theme.spacing.unit + randomInt(-GRID_PADDING_JITTER, GRID_PADDING_JITTER),
+	),
+});
+
+const gridStyle = (metrics: GridMetrics): StyleMap => ({
 	// expand to full height / width of parent
 	width: "100%",
 	height: "100%",
@@ -69,9 +102,9 @@ const gridStyle = (theme: Theme): StyleMap => ({
 	justifyContent: "space-between",
 	// separates the grid from the instruction header above and the button row
 	// below, neither of which pads against it
-	paddingTop: `${theme.spacing.unit}px`,
-	paddingBottom: `${theme.spacing.unit}px`,
-	gap: "10px",
+	paddingTop: `${metrics.paddingTop}px`,
+	paddingBottom: `${metrics.paddingBottom}px`,
+	gap: `${metrics.gap}px`,
 });
 
 // A selected tile shrinks slightly and rounds up a step, so the overlay and
@@ -85,7 +118,7 @@ interface Tile {
 	readonly hash: string;
 	readonly image: HTMLImageElement;
 	readonly overlay: HTMLElement;
-	readonly clickable: HTMLButtonElement;
+	readonly clickable: HTMLElement;
 }
 
 /**
@@ -107,9 +140,9 @@ export const mountCaptchaWidget = (
 	let tiles: Tile[] = [];
 	let focusedHash: string | null = null;
 
-	const grid = createElement("div", {
-		style: gridStyle(themeOf(initialProps.themeColor)),
-	});
+	const metrics = generateMetrics(themeOf(initialProps.themeColor));
+
+	const grid = createElement("div", { style: gridStyle(metrics) });
 
 	const buildTile = (item: HashedItem, index: number): Tile => {
 		const hash = getHash(item);
@@ -164,11 +197,8 @@ export const mountCaptchaWidget = (
 			},
 			attributes: {
 				focusable: "false",
-				color: "#fff",
 				"aria-hidden": "true",
 				viewBox: "0 0 24 24",
-				"data-testid": "CheckIcon",
-				"aria-label": "Check icon",
 			},
 			children: [
 				createSvgElement("path", { attributes: { d: CHECK_ICON_PATH } }),
@@ -196,11 +226,16 @@ export const mountCaptchaWidget = (
 			children: [icon],
 		});
 
-		// A button rather than a clickable div: the tiles are the whole
-		// challenge, and a div cannot be tabbed to, cannot be activated by Enter
-		// or Space, and tells a screen reader nothing about being selectable or
-		// already picked.
-		const clickable = createElement("button", {
+		// Whichever element the tile is made of, it carries the button role, is
+		// in the tab order and is activated by Enter or Space: the tiles are the
+		// whole challenge, and one that only a mouse can reach is no challenge at
+		// all for a keyboard user.
+		//
+		// A tap delivers a click too, and the click event carries only
+		// clientX/clientY — never `touches` — so there is one set of coordinates
+		// to read, not three. Keyboard activation has none, which is what a real
+		// button reports for an Enter press as well.
+		const clickable = createControl(teardown, {
 			style: {
 				position: "relative",
 				cursor: "pointer",
@@ -213,19 +248,15 @@ export const mountCaptchaWidget = (
 				appearance: "none",
 				display: "block",
 			},
-			attributes: { type: "button" },
 			children: [image, overlay],
-		});
-
-		// A tap delivers a click too, and the click event carries only
-		// clientX/clientY — never `touches` — so there is one set of coordinates
-		// to read, not three.
-		teardown.addEventListener(clickable, "click", (event: Event) => {
-			if (!isEventTrusted(event)) {
-				return;
-			}
-			const mouseEvent = event as MouseEvent;
-			props.onClick(hash, mouseEvent.clientX, mouseEvent.clientY);
+			onActivate: (event: MouseEvent | KeyboardEvent) => {
+				const fromPointer = "clientX" in event;
+				props.onClick(
+					hash,
+					fromPointer ? event.clientX : 0,
+					fromPointer ? event.clientY : 0,
+				);
+			},
 		});
 
 		// Matched imperatively so the ring is keyboard-only, as the reload
@@ -240,10 +271,10 @@ export const mountCaptchaWidget = (
 		});
 
 		const cell = createElement("div", {
-			style: imageStyle,
+			style: cellStyle(metrics.gap),
 			children: [clickable],
 		});
-		grid.appendChild(cell);
+		grid.appendChild(wrapRandomly(cell, MIN_WRAPPER_DEPTH, MAX_WRAPPER_DEPTH));
 
 		return { hash, image, overlay, clickable };
 	};
@@ -267,9 +298,11 @@ export const mountCaptchaWidget = (
 		teardown.run();
 		teardown = new Teardown();
 		clearElement(grid);
-		// Re-applied here rather than only at mount: `update` rebuilds on a theme
-		// change, and the padding is a theme token.
-		applyStyles(grid, gridStyle(themeOf(props.themeColor)));
+		// Re-applied here rather than only at mount: clearing the grid does not
+		// touch its own styles, but a rebuild is also where a theme change lands
+		// and the metrics must survive it — redrawing them would shift every tile
+		// under the user's cursor.
+		applyStyles(grid, gridStyle(metrics));
 		tiles = props.challenge.items.map(buildTile);
 		renderedChallenge = props.challenge;
 	};
