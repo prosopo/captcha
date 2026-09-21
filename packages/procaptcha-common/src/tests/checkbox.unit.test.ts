@@ -223,10 +223,7 @@ describe("what a scripted solver can hold on to", () => {
 		}
 	});
 
-	test("moves the box without changing what it occupies", () => {
-		// Fixed-coordinate clicking is the cheapest way to drive the widget. The
-		// margins still total 30px each way, so the 58px touch target and the
-		// page layout around it are untouched.
+	test("puts the box in the same place on every mount", () => {
 		const offsets = new Set<string>();
 		for (let attempt = 0; attempt < 40; attempt += 1) {
 			const fresh: Mounted = mountFresh();
@@ -242,7 +239,7 @@ describe("what a scripted solver can hold on to", () => {
 			offsets.add(`${top}/${left}`);
 			fresh.unmount();
 		}
-		expect(offsets.size).toBeGreaterThan(1);
+		expect(offsets).toEqual(new Set(["15/15"]));
 	});
 
 	test("keeps the spinner on the same offset as the box", () => {
@@ -371,6 +368,20 @@ describe("activating it", () => {
 		render();
 		fire(box(), "click");
 		expect(onChange).toHaveBeenCalledTimes(1);
+	});
+
+	test("the label names the box, so pressing the words activates it", () => {
+		render();
+		expect(label().htmlFor).toBe(box().id);
+		expect(label().htmlFor).not.toBe("");
+	});
+
+	test("the label follows the box when the id is regenerated", () => {
+		render();
+		const first = box().id;
+		render({ labelText: "still human" });
+		expect(box().id).not.toBe(first);
+		expect(label().htmlFor).toBe(box().id);
 	});
 
 	test("a synthetic click is ignored", async () => {

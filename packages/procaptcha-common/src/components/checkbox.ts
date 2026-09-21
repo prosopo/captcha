@@ -15,7 +15,6 @@
 import {
 	type Theme,
 	isDevMode,
-	randomInt,
 	randomToken,
 	withAlpha,
 } from "@prosopo/widget-skeleton";
@@ -56,9 +55,8 @@ const DEFAULT_LOADING_TEXT = "Checking that you are human";
 const CHECKBOX_STYLE_ID = "checkbox";
 
 /**
- * Class names and the exact offset of the box, drawn once per mounted widget.
- * A solver script cannot hardcode a selector or a click coordinate that holds
- * from one page load to the next.
+ * Class names, drawn once per mounted widget, so a selector scraped from one
+ * page load does not hold on the next.
  */
 interface CheckboxNames {
 	readonly box: string;
@@ -94,27 +92,12 @@ const focusIsStranded = (element: HTMLElement): boolean => {
 // the widget needs a more prominent target than a form checkbox.
 const CHECKBOX_SIZE = "28px";
 
-// 15px each side around a 28px box gives a 58px touch target. The 30px is then
-// split unevenly, which moves the box without changing what it occupies: the
-// margin box stays 58px square, so nothing on the page reflows.
+// 15px each side around a 28px box gives a 58px margin box, so nothing on the
+// page reflows.
 const MARGIN_TOTAL = 30;
-const HORIZONTAL_JITTER = 10;
-const VERTICAL_JITTER = 8;
+const MARGIN_EACH_SIDE = MARGIN_TOTAL / 2;
 
-interface BoxOffset {
-	readonly left: number;
-	readonly top: number;
-}
-
-const generateOffset = (): BoxOffset => ({
-	left: MARGIN_TOTAL / 2 + randomInt(-HORIZONTAL_JITTER, HORIZONTAL_JITTER),
-	top: MARGIN_TOTAL / 2 + randomInt(-VERTICAL_JITTER, VERTICAL_JITTER),
-});
-
-const marginFor = (offset: BoxOffset): string =>
-	`${offset.top}px ${MARGIN_TOTAL - offset.left}px ${MARGIN_TOTAL - offset.top}px ${offset.left}px`;
-
-const baseStyleFor = (offset: BoxOffset): StyleMap => ({
+const baseStyle = (): StyleMap => ({
 	width: CHECKBOX_SIZE,
 	height: CHECKBOX_SIZE,
 	minWidth: CHECKBOX_SIZE,
@@ -124,7 +107,7 @@ const baseStyleFor = (offset: BoxOffset): StyleMap => ({
 	opacity: "1",
 	appearance: "none",
 	cursor: "pointer",
-	margin: marginFor(offset),
+	margin: `${MARGIN_EACH_SIDE}px`,
 	borderStyle: "solid",
 	borderWidth: "2px",
 });
@@ -143,11 +126,7 @@ const baseStyleFor = (offset: BoxOffset): StyleMap => ({
 // The container name is declared on `.prosopo-widget__wrapper` out in the light
 // DOM, where a consumer's own CSS may also rely on it, so it is one of the few
 // names that stays fixed.
-const checkboxCss = (
-	theme: Theme,
-	names: CheckboxNames,
-	offset: BoxOffset,
-): string => `
+const checkboxCss = (theme: Theme, names: CheckboxNames): string => `
 /* In forced-colors mode (Windows High Contrast) backgrounds are overridden, so
    the custom-painted tick can disappear — fall back to the native control,
    which the OS draws in system colors. !important beats the inline styles. */
@@ -165,11 +144,11 @@ const checkboxCss = (
 	outline-offset: 2px;
 }
 
-/* The spinner stands in for the box, so it takes the same offset — otherwise
+/* The spinner stands in for the box, so it takes the same margin — otherwise
    the widget would twitch every time a check started. These rules used to live
    in widget-skeleton's sheet, which this component happened to render inside. */
 .${names.spinner} {
-	margin: ${marginFor(offset)} !important;
+	margin: ${MARGIN_EACH_SIDE}px !important;
 	width: 28px !important;
 	height: 28px !important;
 	border: 4px solid ${theme.palette.border};
@@ -243,7 +222,6 @@ export const mountCheckbox = (
 	let hadFocus = false;
 
 	const names = generateNames();
-	const offset = generateOffset();
 
 	// The sheet bakes in theme tokens, so light and dark are separate documents
 	// rather than one that gets rewritten. It also bakes in this instance's
@@ -256,7 +234,7 @@ export const mountCheckbox = (
 	let disposeStyle = injectStyle(
 		container,
 		styleIdFor(props.theme),
-		checkboxCss(props.theme, names, offset),
+		checkboxCss(props.theme, names),
 	);
 	teardown.add(() => disposeStyle());
 
@@ -303,7 +281,7 @@ export const mountCheckbox = (
 			? theme.palette.checkbox.fill
 			: theme.palette.onSurface;
 		applyStyles(input, {
-			...baseStyleFor(offset),
+			...baseStyle(),
 			borderRadius: theme.shape.checkbox,
 			borderColor: checked
 				? theme.palette.checkbox.fill
@@ -427,6 +405,7 @@ export const mountCheckbox = (
 			const id = randomToken();
 			input.id = id;
 			input.name = id;
+			label.htmlFor = id;
 			input.setAttribute("aria-label", props.labelText);
 			input.checked = props.checked;
 			input.disabled = undefined !== props.error;
@@ -455,7 +434,7 @@ export const mountCheckbox = (
 				disposeStyle = injectStyle(
 					container,
 					styleIdFor(props.theme),
-					checkboxCss(props.theme, names, offset),
+					checkboxCss(props.theme, names),
 				);
 			}
 			render();
