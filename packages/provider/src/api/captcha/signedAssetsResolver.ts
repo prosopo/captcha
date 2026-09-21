@@ -33,9 +33,14 @@
 // different image.
 
 import { createHash } from "node:crypto";
+import {
+	DEFAULT_ASSET_TOKEN_TTL_SECONDS,
+	assetTokenBase,
+	encodeAssetToken,
+} from "@prosopo/datasets";
 import type { Asset, AssetsResolver } from "@prosopo/types";
 
-export const DEFAULT_ASSET_TOKEN_TTL_SECONDS = 300;
+export { DEFAULT_ASSET_TOKEN_TTL_SECONDS };
 
 export interface SignedAssetsResolverOptions {
 	securityKey: string;
@@ -61,13 +66,15 @@ export class SignedAssetsResolver implements AssetsResolver {
 	}
 
 	private sign(path: string, expires: number): string {
-		const base = `${this.securityKey}${path}${expires}${this.clientIp ?? ""}`;
-		return createHash("sha256")
-			.update(base)
-			.digest("base64")
-			.replace(/\+/g, "-")
-			.replace(/\//g, "_")
-			.replace(/=/g, "");
+		return encodeAssetToken(
+			new Uint8Array(
+				createHash("sha256")
+					.update(
+						assetTokenBase(this.securityKey, path, expires, this.clientIp),
+					)
+					.digest(),
+			),
+		);
 	}
 
 	resolveAsset(assetURI: string): Asset {
