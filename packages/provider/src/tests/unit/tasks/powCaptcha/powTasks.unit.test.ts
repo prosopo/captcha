@@ -39,7 +39,7 @@ import {
 	AccessPolicyType,
 	type AccessRulesStorage,
 } from "@prosopo/user-access-policy";
-import { getIPAddress, verifyRecency } from "@prosopo/util";
+import { embedData, getIPAddress, verifyRecency } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getVerdictCache } from "../../../../api/blacklistRequestInspector.js";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
@@ -519,6 +519,175 @@ describe("PowCaptchaManager", () => {
 
 			expect(result.verified).toBe(true);
 			expect(result.routingOutput).toBeUndefined();
+		});
+
+		/**
+		 * The IP that asked for the challenge against the IP that solved it.
+		 * A challenge carries no binding to where it came from, so a solved
+		 * one can be handed to any host that wants a free pass; escalating
+		 * rather than denying keeps a mid-solve mobile handoff working.
+		 */
+		describe("solve from a different address", () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const difficulty = 4;
+			const providerSignature = "testSignature";
+			const userSignature = "testTimestampSignature";
+			const nonce = 12345;
+			const timeout = 1000;
+			const headers: RequestHeaders = { a: "1", b: "2", c: "3" };
+			// Real widget salts carry the checkbox click position; without one
+			// the missing-coords rule would escalate on its own and these
+			// tests would prove nothing.
+			const saltWithCoords = embedData(
+				"0x0101010101010101010101010101010101010101010101010101010101010101",
+				[120, 45],
+			);
+
+			const solveFrom = async (
+				issuedIp: string,
+				solvedIp: string,
+				// null, not undefined: an explicit undefined would fall back to
+				// the default and quietly link a session anyway.
+				sessionId: string | null = "linked-session-id",
+			) => {
+				const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+				const challengeRecord: PoWCaptchaStored = {
+					challenge,
+					difficulty,
+					dappAccount: pair.address,
+					userAccount,
+					requestedAtTimestamp: new Date(requestedAtTimestamp),
+					submittedAtTimestamp: new Date(),
+					result: { status: CaptchaStatus.pending },
+					userSubmitted: false,
+					serverChecked: false,
+					ipAddress: getCompositeIpAddress(getIPAddress(issuedIp)),
+					headers,
+					ja4: "ja4",
+					providerSignature,
+					lastUpdatedTimestamp: new Date(),
+					...(sessionId ? { sessionId } : {}),
+				};
+				vi.mocked(verifyRecency).mockReturnValue(true);
+				vi.mocked(checkPowSignature).mockImplementation(() => undefined);
+				vi.mocked(validateSolution).mockReturnValue(true);
+				vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+					challengeRecord as unknown as PoWCaptchaRecord,
+				);
+				vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
+				vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(undefined);
+
+				// A salt carrying coords, so the missing-coords rule cannot be
+				// what produces the escalation under test.
+				return powCaptchaManager.verifyPowCaptchaSolution(
+					challenge,
+					providerSignature,
+					nonce,
+					timeout,
+					userSignature,
+					getIPAddress(solvedIp),
+					headers,
+					undefined,
+					saltWithCoords,
+				);
+			};
+
+			it("escalates to an image captcha when the address changed", async () => {
+				const result = await solveFrom("1.1.1.1", "2.2.2.2");
+
+				expect(result.verified).toBe(true);
+				expect(result.routingOutput).toEqual({
+					captchaType: CaptchaType.image,
+					reason: FrictionlessReason.IP_CHANGED,
+				});
+			});
+
+			it("passes a solve from the address that was issued the challenge", async () => {
+				const result = await solveFrom("1.1.1.1", "1.1.1.1");
+
+				expect(result.verified).toBe(true);
+				expect(result.routingOutput).toBeUndefined();
+			});
+
+			it("passes an IPv6 client whose interface identifier rotated", async () => {
+				// RFC 8981 privacy extensions change the low 64 bits on an
+				// otherwise unchanged connection; only the /64 is compared.
+				const result = await solveFrom(
+					"2001:db8:abcd:1234::1",
+					"2001:db8:abcd:1234:9f3a:2b01:cc:77",
+				);
+
+				expect(result.verified).toBe(true);
+				expect(result.routingOutput).toBeUndefined();
+			});
+
+			it("escalates an IPv6 client that moved to a different /64", async () => {
+				const result = await solveFrom(
+					"2001:db8:abcd:1234::1",
+					"2001:db8:abcd:5678::1",
+				);
+
+				expect(result.routingOutput).toEqual({
+					captchaType: CaptchaType.image,
+					reason: FrictionlessReason.IP_CHANGED,
+				});
+			});
+
+			it("does not escalate when no session is linked", async () => {
+				// Escalation carries the originating session forward; without
+				// one there is nothing to escalate into.
+				const result = await solveFrom("1.1.1.1", "2.2.2.2", null);
+
+				expect(result.verified).toBe(true);
+				expect(result.routingOutput).toBeUndefined();
+			});
+
+			it("reports missing coords ahead of a changed address when both fire", async () => {
+				const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+				const challengeRecord: PoWCaptchaStored = {
+					challenge,
+					difficulty,
+					dappAccount: pair.address,
+					userAccount,
+					requestedAtTimestamp: new Date(requestedAtTimestamp),
+					submittedAtTimestamp: new Date(),
+					result: { status: CaptchaStatus.pending },
+					userSubmitted: false,
+					serverChecked: false,
+					ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+					headers,
+					ja4: "ja4",
+					providerSignature,
+					lastUpdatedTimestamp: new Date(),
+					sessionId: "linked-session-id",
+				};
+				vi.mocked(verifyRecency).mockReturnValue(true);
+				vi.mocked(checkPowSignature).mockImplementation(() => undefined);
+				vi.mocked(validateSolution).mockReturnValue(true);
+				vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+					challengeRecord as unknown as PoWCaptchaRecord,
+				);
+				vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
+				vi.mocked(db.getSessionRecordBySessionId).mockResolvedValue(undefined);
+
+				const result = await powCaptchaManager.verifyPowCaptchaSolution(
+					challenge,
+					providerSignature,
+					nonce,
+					timeout,
+					userSignature,
+					getIPAddress("2.2.2.2"),
+					headers,
+					undefined,
+					undefined, // no salt, so no coords either
+				);
+
+				expect(result.routingOutput).toEqual({
+					captchaType: CaptchaType.image,
+					reason: FrictionlessReason.MISSING_COORDINATES,
+				});
+			});
 		});
 	});
 

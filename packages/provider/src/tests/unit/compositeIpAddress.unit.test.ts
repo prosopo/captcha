@@ -17,6 +17,7 @@ import { describe, expect, it } from "vitest";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
+	isSameIpOrigin,
 } from "../../compositeIpAddress.js";
 
 describe("compositeIpAddress", () => {
@@ -210,6 +211,102 @@ describe("compositeIpAddress", () => {
 				upper: 18446744073709551615n, // 2^64 - 1
 				type: IpAddressType.v6,
 			});
+		});
+	});
+
+	describe("isSameIpOrigin", () => {
+		it("matches an unchanged IPv4 address", () => {
+			expect(
+				isSameIpOrigin(
+					getCompositeIpAddress("203.0.113.7"),
+					getCompositeIpAddress("203.0.113.7"),
+				),
+			).toBe(true);
+		});
+
+		it("separates two IPv4 addresses, however close", () => {
+			// v4 is compared exactly: neighbouring addresses are different
+			// customers, so there is no prefix to be lenient about.
+			expect(
+				isSameIpOrigin(
+					getCompositeIpAddress("203.0.113.7"),
+					getCompositeIpAddress("203.0.113.8"),
+				),
+			).toBe(false);
+		});
+
+		it("treats a rotated IPv6 interface identifier as the same network", () => {
+			// RFC 8981 privacy extensions rotate the low 64 bits several times a
+			// day on one unchanged connection. Comparing them would call an
+			// ordinary phone a different host.
+			expect(
+				isSameIpOrigin(
+					getCompositeIpAddress("2001:db8:abcd:1234::1"),
+					getCompositeIpAddress("2001:db8:abcd:1234:9f3a:2b01:cc:77"),
+				),
+			).toBe(true);
+		});
+
+		it("separates two different IPv6 /64s", () => {
+			expect(
+				isSameIpOrigin(
+					getCompositeIpAddress("2001:db8:abcd:1234::1"),
+					getCompositeIpAddress("2001:db8:abcd:5678::1"),
+				),
+			).toBe(false);
+		});
+
+		it("separates a v4 address from a v6 one", () => {
+			expect(
+				isSameIpOrigin(
+					getCompositeIpAddress("203.0.113.7"),
+					getCompositeIpAddress("2001:db8::1"),
+				),
+			).toBe(false);
+		});
+
+		it("calls an unreadable value the same, rather than escalating on it", () => {
+			// Mongo returns these as Decimal128, and the answer gates friction for
+			// a real user — a value we could not parse is not evidence against them.
+			const unreadable = {
+				lower: { toString: () => "not a number" } as unknown as bigint,
+				type: IpAddressType.v4,
+			};
+
+			expect(
+				isSameIpOrigin(unreadable, getCompositeIpAddress("203.0.113.7")),
+			).toBe(true);
+		});
+
+		it("calls an unread address the same, rather than escalating on it", () => {
+			// getCompositeIpAddress returns all-zero v4 when it cannot read an
+			// address; that is a gap in what we recorded, not a changed host.
+			expect(
+				isSameIpOrigin(
+					getCompositeIpAddress("not an address"),
+					getCompositeIpAddress("203.0.113.7"),
+				),
+			).toBe(true);
+			expect(
+				isSameIpOrigin(
+					getCompositeIpAddress("203.0.113.7"),
+					getCompositeIpAddress("not an address"),
+				),
+			).toBe(true);
+		});
+
+		it("reads a Decimal128-style value rather than throwing on it", () => {
+			const asDecimal128 = {
+				lower: { toString: () => "3405803783" } as unknown as bigint,
+				type: IpAddressType.v4,
+			};
+
+			expect(
+				isSameIpOrigin(asDecimal128, getCompositeIpAddress("203.0.113.7")),
+			).toBe(true);
+			expect(
+				isSameIpOrigin(asDecimal128, getCompositeIpAddress("203.0.113.8")),
+			).toBe(false);
 		});
 	});
 });
