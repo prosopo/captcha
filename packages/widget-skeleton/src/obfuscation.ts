@@ -25,39 +25,53 @@
 const LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const ALPHANUMERICS = `${LETTERS}0123456789`;
 
+const POOL = 0x1_0000_0000;
+
 /**
  * `crypto` is absent under a few older embedded webviews, and a widget that
  * failed to render there would be a worse outcome than a weaker shuffle.
  */
-const randomValues = (count: number): Uint8Array => {
-	const values = new Uint8Array(count);
+const randomUint32 = (): number => {
 	const source = globalThis.crypto;
 	if (undefined === source || undefined === source.getRandomValues) {
-		for (let index = 0; index < count; index += 1) {
-			values[index] = Math.floor(Math.random() * 256);
-		}
-		return values;
+		return Math.floor(Math.random() * POOL);
 	}
-	return source.getRandomValues(values);
+	return source.getRandomValues(new Uint32Array(1))[0] ?? 0;
 };
 
-const at = (alphabet: string, value: number): string =>
-	alphabet[value % alphabet.length] ?? "a";
+/**
+ * A uniform integer in [0, bound).
+ *
+ * The pool divides into `bound` equal buckets with a remainder; a draw landing
+ * in that remainder is taken again rather than folded back in, which is what
+ * mapping the whole pool onto the range would do — making the low end of it
+ * likelier than the high end.
+ */
+const randomBelow = (bound: number): number => {
+	const bucket = Math.floor(POOL / bound);
+	const limit = bucket * bound;
+	let value = randomUint32();
+	while (value >= limit) {
+		value = randomUint32();
+	}
+	return Math.floor(value / bucket);
+};
+
+const at = (alphabet: string): string =>
+	alphabet[randomBelow(alphabet.length)] ?? "a";
 
 /**
  * A token usable both as a CSS class and as an HTML id, so it never starts with
  * a digit.
  */
 export const randomToken = (length = 8): string =>
-	Array.from(randomValues(length), (value: number, index: number) =>
-		0 === index ? at(LETTERS, value) : at(ALPHANUMERICS, value),
+	Array.from({ length }, (_unused: unknown, index: number) =>
+		0 === index ? at(LETTERS) : at(ALPHANUMERICS),
 	).join("");
 
-/** An integer in [min, max]. The modulo bias is immaterial at these ranges. */
-export const randomInt = (min: number, max: number): number => {
-	const span = max - min + 1;
-	return min + ((randomValues(1)[0] ?? 0) % span);
-};
+/** An integer in [min, max]. */
+export const randomInt = (min: number, max: number): number =>
+	min + randomBelow(max - min + 1);
 
 /**
  * Only elements that map to no accessible role, so varying the tag cannot

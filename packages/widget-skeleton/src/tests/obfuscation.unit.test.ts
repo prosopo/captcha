@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import {
 	type WrapperTag,
 	randomInt,
@@ -56,6 +56,46 @@ describe("randomTokens", () => {
 
 	test("returns nothing for a count of zero", () => {
 		expect(randomTokens(0)).toEqual([]);
+	});
+});
+
+describe("mapping the random pool onto a range", () => {
+	test("redraws the remainder instead of folding it back in", () => {
+		// 2^32 does not divide by 52, so the last few draws belong to no bucket.
+		// Reusing them — which is what a modulo does — would make the early
+		// letters of the alphabet likelier than the late ones.
+		const draws: number[] = [0xffffffff, 0];
+		let call = 0;
+		const spy = vi
+			.spyOn(globalThis.crypto, "getRandomValues")
+			.mockImplementation(<T extends ArrayBufferView | null>(array: T): T => {
+				if (array instanceof Uint32Array) {
+					array[0] = draws[call] ?? 0;
+				}
+				call += 1;
+				return array;
+			});
+		try {
+			expect(randomToken(1)).toBe("a");
+			expect(spy).toHaveBeenCalledTimes(2);
+		} finally {
+			spy.mockRestore();
+		}
+	});
+
+	test("is uniform enough that no value dominates", () => {
+		// A modulo over a byte would have given 0..3 roughly a 25% edge over the
+		// rest of a 100-wide range; this is what that regression would look like.
+		const counts = new Map<number, number>();
+		for (let attempt = 0; attempt < 20_000; attempt += 1) {
+			const value: number = randomInt(0, 99);
+			counts.set(value, (counts.get(value) ?? 0) + 1);
+		}
+		expect(counts.size).toBe(100);
+		for (const count of counts.values()) {
+			expect(count).toBeGreaterThan(120);
+			expect(count).toBeLessThan(280);
+		}
 	});
 });
 
