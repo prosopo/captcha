@@ -162,6 +162,12 @@ describe("popup", () => {
 		expect(layer()?.style.minHeight).toBe("100dvh");
 	});
 
+	it("pins itself to all four edges of the viewport", () => {
+		render({ placement: PlacementEnum.popup });
+
+		expect(layer()?.style.getPropertyValue("inset")).toBe("0");
+	});
+
 	it("ignores an outside click", () => {
 		const onDismiss = vi.fn();
 		render({ placement: PlacementEnum.popup, onDismiss });
@@ -219,11 +225,66 @@ describe("float", () => {
 		expect(onDismiss).not.toHaveBeenCalled();
 	});
 
+	it("sits at the document origin so its child's coordinates are document ones", () => {
+		render({ placement: PlacementEnum.float });
+
+		expect(layer()?.style.top).toBe("0px");
+		expect(layer()?.style.left).toBe("0px");
+		expect(layer()?.style.getPropertyValue("inset")).toBe("");
+	});
+
 	it("falls back to popup with no anchor to attach to", () => {
 		render({ placement: PlacementEnum.float, withAnchor: false });
 
 		expect(layer()?.className).toContain("prosopo-challenge-surface--popup");
 		expect(layer()?.style.pointerEvents).toBe("");
+	});
+
+	// One element carries both layouts over its life, so each placement has to
+	// clear the other's declarations rather than merely write over them.
+	it("drops the popup's full-viewport box when switching to float", () => {
+		render({ placement: PlacementEnum.popup, withAnchor: true });
+		surface?.update({
+			show: true,
+			placement: PlacementEnum.float,
+			anchor,
+		});
+
+		expect(layer()?.style.position).toBe("absolute");
+		expect(layer()?.style.width).toBe("0px");
+		expect(layer()?.style.getPropertyValue("inset")).toBe("");
+		expect(layer()?.style.minHeight).toBe("");
+		expect(layer()?.style.backgroundColor).toBe("");
+	});
+
+	it("restores the full-viewport box when switching back to popup", () => {
+		render({ placement: PlacementEnum.float });
+		surface?.update({
+			show: true,
+			placement: PlacementEnum.popup,
+			anchor,
+		});
+
+		expect(layer()?.style.position).toBe("fixed");
+		expect(layer()?.style.getPropertyValue("inset")).toBe("0");
+		expect(layer()?.style.top).toBe("");
+		expect(layer()?.style.width).toBe("");
+		expect(layer()?.style.pointerEvents).toBe("");
+	});
+
+	it("swaps the panel between anchored and centred as the placement changes", () => {
+		render({ placement: PlacementEnum.float });
+		expect(content()?.style.position).toBe("absolute");
+
+		surface?.update({ show: true, placement: PlacementEnum.popup, anchor });
+		expect(content()?.style.position).toBe("relative");
+		expect(content()?.style.visibility).toBe("");
+		expect(content()?.style.maxHeight).toBe("100%");
+
+		surface?.update({ show: true, placement: PlacementEnum.float, anchor });
+		expect(content()?.style.position).toBe("absolute");
+		expect(content()?.style.maxHeight).toBe("");
+		expect(content()?.style.overflowY).toBe("");
 	});
 });
 

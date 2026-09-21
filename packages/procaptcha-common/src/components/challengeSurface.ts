@@ -95,7 +95,23 @@ export const computeFloatPosition = (
 	left: anchorRect.left + scrollX,
 });
 
+/**
+ * Each branch below clears the other's declarations before writing its own, so
+ * switching placement at runtime leaves nothing stale behind.
+ *
+ * The clears come first because `applyStyles` writes in key order and `inset`
+ * is a shorthand: removing it after setting `top`/`left` takes those with it,
+ * and setting it before clearing them undoes the sides it had just written.
+ */
 const floatLayerStyle = (show: boolean): StyleMap => ({
+	inset: undefined,
+	alignItems: undefined,
+	justifyContent: undefined,
+	minHeight: undefined,
+	padding: undefined,
+	boxSizing: undefined,
+	backgroundColor: undefined,
+	transition: undefined,
 	// A zero-sized box at the document origin: it must not cover the page, and
 	// only its content takes pointer events. Absolute with no positioned
 	// ancestor resolves against the initial containing block, which is what
@@ -108,26 +124,16 @@ const floatLayerStyle = (show: boolean): StyleMap => ({
 	zIndex: SURFACE_Z_INDEX,
 	display: show ? "block" : "none",
 	pointerEvents: "none",
-	// Cleared so re-applying the map after a placement switch leaves nothing
-	// behind from the popup branch.
-	inset: undefined,
-	alignItems: undefined,
-	justifyContent: undefined,
-	minHeight: undefined,
-	padding: undefined,
-	boxSizing: undefined,
-	backgroundColor: undefined,
-	transition: undefined,
 });
 
 const popupLayerStyle = (show: boolean, scrim: SurfaceScrim): StyleMap => ({
-	position: "fixed",
-	inset: 0,
 	width: undefined,
 	height: undefined,
 	top: undefined,
 	left: undefined,
 	pointerEvents: undefined,
+	position: "fixed",
+	inset: 0,
 	zIndex: SURFACE_Z_INDEX,
 	display: show ? "flex" : "none",
 	alignItems: "center",
@@ -144,6 +150,11 @@ const popupLayerStyle = (show: boolean, scrim: SurfaceScrim): StyleMap => ({
 });
 
 const floatContentStyle = (position: FloatPosition | null): StyleMap => ({
+	maxWidth: undefined,
+	maxHeight: undefined,
+	overflowY: undefined,
+	overscrollBehavior: undefined,
+	boxSizing: undefined,
 	position: "absolute",
 	zIndex: CONTENT_Z_INDEX,
 	pointerEvents: "auto",
@@ -151,14 +162,13 @@ const floatContentStyle = (position: FloatPosition | null): StyleMap => ({
 	left: `${position?.left ?? 0}px`,
 	// Hidden until the first measurement so it does not flash at 0,0.
 	visibility: position ? "visible" : "hidden",
-	maxWidth: undefined,
-	maxHeight: undefined,
-	overflowY: undefined,
-	overscrollBehavior: undefined,
-	boxSizing: undefined,
 });
 
 const popupContentStyle = (): StyleMap => ({
+	top: undefined,
+	left: undefined,
+	pointerEvents: undefined,
+	visibility: undefined,
 	// Centred as a flex item by the layer rather than by `top/left: 50%` and a
 	// translate. An out-of-flow panel taller than the viewport overflows off
 	// both edges and its top is unreachable; in flow it is bounded by
@@ -170,10 +180,6 @@ const popupContentStyle = (): StyleMap => ({
 	maxHeight: "100%",
 	overflowY: "auto",
 	overscrollBehavior: "contain",
-	top: undefined,
-	left: undefined,
-	pointerEvents: undefined,
-	visibility: undefined,
 });
 
 /**

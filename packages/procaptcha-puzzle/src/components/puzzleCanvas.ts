@@ -588,24 +588,26 @@ export const mountPuzzleCanvas = (
 		}
 	});
 
-	const announceStatus = () => {
-		if (props.submitting) {
-			announce(
-				t("WIDGET.PUZZLE.CHECKING", { defaultValue: "Checking your answer" }),
-			);
-			return;
-		}
-		if (props.showRetry) {
-			announce(
-				t("WIDGET.PUZZLE.RETRY_ANNOUNCEMENT", {
-					defaultValue:
-						"Not quite. A new puzzle has loaded and the piece is back at the start.",
-				}),
-			);
-		}
+	const announceSubmitting = () => {
+		announce(
+			t("WIDGET.PUZZLE.CHECKING", { defaultValue: "Checking your answer" }),
+		);
 	};
 
-	announceStatus();
+	const announceRetry = () => {
+		announce(
+			t("WIDGET.PUZZLE.RETRY_ANNOUNCEMENT", {
+				defaultValue:
+					"Not quite. A new puzzle has loaded and the piece is back at the start.",
+			}),
+		);
+	};
+
+	if (props.submitting) {
+		announceSubmitting();
+	} else if (props.showRetry) {
+		announceRetry();
+	}
 
 	if (props.showRetry) {
 		startShake();
@@ -626,10 +628,14 @@ export const mountPuzzleCanvas = (
 				keyboardDragging = false;
 			}
 
-			if (nextProps.submitting !== previous.submitting) {
-				announceStatus();
-			} else if (nextProps.showRetry && !previous.showRetry) {
-				announceStatus();
+			// Announced on the way into each state, not on every render: a live
+			// region re-reads whatever is written to it, so repeating the same
+			// sentence would talk over the position updates.
+			if (nextProps.submitting && !previous.submitting) {
+				announceSubmitting();
+			}
+			if (nextProps.showRetry && !previous.showRetry) {
+				announceRetry();
 			}
 
 			if (nextProps.showRetry && !previous.showRetry) {
