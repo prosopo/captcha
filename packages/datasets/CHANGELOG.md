@@ -1,5 +1,11 @@
 # @prosopo/datasets
 
+## 3.1.87
+### Patch Changes
+
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+
 ## 3.1.86
 ### Patch Changes
 

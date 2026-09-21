@@ -1,5 +1,24 @@
 # @prosopo/provider
 
+## 5.12.1
+### Patch Changes
+
+- Updated dependencies [59c02da]
+  - @prosopo/locale@3.5.0
+  - @prosopo/api-express-router@3.1.92
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+  - @prosopo/types-database@5.6.2
+  - @prosopo/database@4.0.38
+  - @prosopo/datasets@3.1.87
+  - @prosopo/env@3.6.61
+  - @prosopo/keyring@2.9.94
+  - @prosopo/load-balancer@2.10.49
+  - @prosopo/user-access-policy@3.14.8
+  - @prosopo/api@4.3.2
+  - @prosopo/ipinfo@0.4.7
+  - @prosopo/types-env@2.11.7
+
 ## 5.12.0
 ### Minor Changes
 

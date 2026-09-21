@@ -1,5 +1,11 @@
 # @prosopo/types
 
+## 5.9.2
+### Patch Changes
+
+- Updated dependencies [59c02da]
+  - @prosopo/locale@3.5.0
+
 ## 5.9.1
 ### Patch Changes
 

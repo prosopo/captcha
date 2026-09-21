@@ -1,5 +1,10 @@
 # @prosopo/cypress-shared
 
+## 2.8.143
+### Patch Changes
+
+  - @prosopo/types@5.9.2
+
 ## 2.8.142
 ### Patch Changes
 
