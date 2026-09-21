@@ -70,9 +70,7 @@ const i18nStub = {
 	off: () => undefined,
 } as unknown as Ti18n;
 
-const props = (
-	overrides: Partial<ProcaptchaProps> = {},
-): ProcaptchaProps =>
+const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps =>
 	({
 		config: config({ mode: ModeEnum.visible }),
 		callbacks: {},
