@@ -340,11 +340,14 @@ describe("dragging with a mouse", () => {
 		]);
 	});
 
-	test("a grab released without moving reports the origin and no trail", () => {
+	// Reporting the origin here spent the challenge on a position that cannot be
+	// correct, and the provider rejects the replacement fetch — so a single
+	// click that never moved ended the attempt outright.
+	test("a grab released without moving reports nothing", () => {
 		render(props());
 		mouseDown(20, 100);
 		mouseUp();
-		expect(onComplete).toHaveBeenCalledWith(20, 100, []);
+		expect(onComplete).not.toHaveBeenCalled();
 	});
 
 	test("letting go without having grabbed anything reports nothing", () => {
@@ -433,6 +436,19 @@ describe("dragging with a finger", () => {
 		touchEnd();
 		expect(piecePosition()).toEqual({ x: 20, y: 100 });
 		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	// The panel opens centred, under the finger that just pressed the checkbox,
+	// so tapping the piece instead of dragging it is the easy mistake to make on
+	// a phone. It used to submit the untouched origin, which fails, and the
+	// widget then reset — indistinguishable to the user from the challenge
+	// never having worked.
+	test("tapping the piece without dragging reports nothing", () => {
+		render(props());
+		touchStart([{ clientX: 20, clientY: 100 }]);
+		touchEnd();
+		expect(onComplete).not.toHaveBeenCalled();
+		expect(piecePosition()).toEqual({ x: 20, y: 100 });
 	});
 
 	test("a touchmove carrying no touches is ignored mid-drag", () => {
