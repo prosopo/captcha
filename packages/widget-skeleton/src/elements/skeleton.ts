@@ -178,12 +178,19 @@ function getWidgetStyles(theme: Theme): string {
 }
 
 /* Shadowless hover: an M3 state layer (onSurface at 8%) laid over the surface
-   as a gradient overlay, so the background-color token stays untouched. */
-.prosopo-widget__content:hover {
-    background-image: linear-gradient(
-        ${withAlpha(theme.palette.onSurface, theme.stateLayer.hover)},
-        ${withAlpha(theme.palette.onSurface, theme.stateLayer.hover)}
-    );
+   as a gradient overlay, so the background-color token stays untouched.
+
+   Behind a hover media query because this box contains the checkbox: on a
+   touch screen iOS reads a first tap that repaints what is under the finger
+   as a request to show the hover state, and withholds the click, so the
+   visitor has to tap twice to tick the box. */
+@media (hover: hover) {
+    .prosopo-widget__content:hover {
+        background-image: linear-gradient(
+            ${withAlpha(theme.palette.onSurface, theme.stateLayer.hover)},
+            ${withAlpha(theme.palette.onSurface, theme.stateLayer.hover)}
+        );
+    }
 }
 </style>
 `;
