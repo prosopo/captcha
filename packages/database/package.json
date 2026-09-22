@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/database",
-	"version": "4.0.39",
+	"version": "4.0.40",
 	"description": "Prosopo database plugins for provider",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -41,9 +41,9 @@
 		"@prosopo/common": "3.1.59",
 		"@prosopo/logger": "2.1.0",
 		"@prosopo/redis-client": "1.0.37",
-		"@prosopo/types": "5.10.0",
-		"@prosopo/types-database": "5.6.3",
-		"@prosopo/user-access-policy": "3.14.9",
+		"@prosopo/types": "5.10.1",
+		"@prosopo/types-database": "5.6.4",
+		"@prosopo/user-access-policy": "3.14.10",
 		"@prosopo/util": "3.3.11",
 		"bson": "7.3.2",
 		"make-dir": "5.1.0",
@@ -52,7 +52,7 @@
 		"mongoose": "9.10.0"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.0",
+		"@prosopo/config": "3.4.1",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",

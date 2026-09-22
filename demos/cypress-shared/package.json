@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/cypress-shared",
-	"version": "2.8.144",
+	"version": "2.8.145",
 	"private": true,
 	"type": "module",
 	"main": "dist/index.js",
@@ -17,18 +17,18 @@
 		"npm": "^11"
 	},
 	"dependencies": {
-		"@prosopo/types": "5.10.0",
+		"@prosopo/types": "5.10.1",
 		"@prosopo/util": "3.3.11"
 	},
 	"devDependencies": {
 		"@cypress/xpath": "2.0.3",
 		"@polkadot/util": "14.0.3",
 		"@prosopo/common": "3.1.59",
-		"@prosopo/config": "3.4.0",
-		"@prosopo/datasets": "3.1.89",
+		"@prosopo/config": "3.4.1",
+		"@prosopo/datasets": "3.1.90",
 		"@prosopo/dotenv": "3.0.57",
-		"@prosopo/keyring": "2.9.95",
-		"@prosopo/types-database": "5.6.3",
+		"@prosopo/keyring": "2.9.96",
+		"@prosopo/types-database": "5.6.4",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",

@@ -37,9 +37,9 @@
 		"@prosopo/logger": "2.1.0"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.0",
+		"@prosopo/config": "3.4.1",
 		"@types/node": "22.10.2",
-		"@prosopo/types": "5.10.0",
+		"@prosopo/types": "5.10.1",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
