@@ -61,7 +61,13 @@ services:
         max-size: '100m'
         max-file: '1'
     healthcheck:
-      test: ['CMD', 'curl', '--fail', 'localhost:9229/healthz']
+      # The provider image is distroless: no curl, no shell. node is the only
+      # binary in it, so the check runs in node.
+      test:
+        - CMD
+        - /nodejs/bin/node
+        - -e
+        - fetch('http://localhost:9229/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
       interval: 5m
       retries: 3
       start_period: 30s

@@ -72,7 +72,7 @@ Pin different versions with `PROSOPO_PROVIDER_IMAGE_VERSION` and `CADDY_IMAGE_VE
 ## 3. Register a site key
 
 ```bash
-docker compose exec provider npx provider site_key_register \
+docker compose exec provider /nodejs/bin/node /usr/src/app/provider.cli.bundle.js site_key_register \
   "$(grep '^PROSOPO_SITE_KEY=' .env | cut -d= -f2)" enterprise \
   --captcha_type puzzle \
   --domains example.com \
@@ -144,10 +144,10 @@ node dist/cli.js generate-v2 --out ./captchas.json \
 
 ```bash
 docker compose cp ./captchas.json provider:/usr/src/app/captchas.json
-docker compose exec provider npx provider provider_set_data_set --file /usr/src/app/captchas.json
+docker compose exec provider /nodejs/bin/node /usr/src/app/provider.cli.bundle.js provider_set_data_set --file /usr/src/app/captchas.json
 docker compose restart provider
 
-docker compose exec provider npx provider site_key_register "$(grep '^PROSOPO_SITE_KEY=' .env | cut -d= -f2)" enterprise \
+docker compose exec provider /nodejs/bin/node /usr/src/app/provider.cli.bundle.js site_key_register "$(grep '^PROSOPO_SITE_KEY=' .env | cut -d= -f2)" enterprise \
   --captcha_type image --domains example.com \
   --pow_difficulty 4 --frictionless_threshold 0.5 --image_threshold 0.8
 ```
