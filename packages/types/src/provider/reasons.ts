@@ -39,6 +39,14 @@ export enum FrictionlessReason {
 	// solves are escalated to an image captcha rather than approved outright
 	// (see verifyPowCaptchaSolution in @prosopo/provider).
 	MISSING_COORDINATES = "MISSING_COORDINATES",
+	// The address that asked for a PoW challenge is not the address that
+	// solved it. A challenge is short-lived and bound to one session, so the
+	// honest explanations are narrow — a mobile handoff mid-solve — while
+	// handing the challenge to a second host is the cheap way to farm the work
+	// out. Escalated to an image captcha rather than denied: a real network
+	// change should cost a picture, not a rejection. v6 is judged on the /64,
+	// since the low bits rotate by design (see isSameIpOrigin).
+	IP_CHANGED = "IP_CHANGED",
 	// The detector payload could not be decrypted: no bundle resolved for the
 	// session (expired/missing Redis binding, bundle no longer in the pool), or
 	// the ciphertext did not open with the bundle's keys. Distinct from a high

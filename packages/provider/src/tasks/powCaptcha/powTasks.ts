@@ -64,6 +64,7 @@ import {
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
+	isSameIpOrigin,
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
 import {
@@ -478,6 +479,29 @@ export class PowCaptchaManager extends CaptchaManager {
 		const escalateForMissingCoords =
 			!coords && Boolean(challengeRecord.sessionId);
 
+		// A PoW challenge is bound to the account and the site key, and to
+		// nothing about where the request came from — so a solved challenge can
+		// be carried to any host that wants a free pass. The issuing address is
+		// already on the record, so binding to it costs nothing: compare it
+		// against the address submitting the solve, and escalate when they
+		// differ. Not a denial — a phone handing off between towers mid-solve is
+		// a real user, and should pay a picture rather than be turned away.
+		const solveIp = getCompositeIpAddress(ipAddress);
+		const escalateForIpChange =
+			Boolean(challengeRecord.sessionId) &&
+			!isSameIpOrigin(challengeRecord.ipAddress, solveIp);
+
+		if (escalateForIpChange) {
+			this.logger.info(() => ({
+				msg: "PoW solve arrived from a different address than the challenge",
+				data: {
+					challenge,
+					issuedType: challengeRecord.ipAddress.type,
+					solvedType: solveIp.type,
+				},
+			}));
+		}
+
 		// Post-pow routing: only meaningful on a verified solution. The routing
 		// machine re-examines the (now richer) signals — score from the original
 		// session, decrypted behavioural data, counters — and may escalate the
@@ -490,17 +514,21 @@ export class PowCaptchaManager extends CaptchaManager {
 				})
 			: undefined;
 
-		// Missing coords forces at least an image escalation, unless the routing
+		// Either signal forces at least an image escalation, unless the routing
 		// machine already escalated to a visual challenge (image/puzzle) that we
-		// would keep anyway.
+		// would keep anyway. Missing coords is reported in preference to a
+		// changed address when both fire: it is the stronger statement, since
+		// no legitimate widget omits them.
 		if (
-			escalateForMissingCoords &&
+			(escalateForMissingCoords || escalateForIpChange) &&
 			routingOutput?.captchaType !== CaptchaType.image &&
 			routingOutput?.captchaType !== CaptchaType.puzzle
 		) {
 			routingOutput = {
 				captchaType: CaptchaType.image,
-				reason: FrictionlessReason.MISSING_COORDINATES,
+				reason: escalateForMissingCoords
+					? FrictionlessReason.MISSING_COORDINATES
+					: FrictionlessReason.IP_CHANGED,
 			};
 		}
 
