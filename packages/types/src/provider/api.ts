@@ -657,7 +657,10 @@ export interface AssignDetectorBundleResponse extends ApiResponse {
 }
 
 export const ReplaceDetectorPoolBody = object({
-	// Map of bundleId -> { js, privateKey, innerConfig, release, payloadLayout }.
+	// Map of bundleId -> the bundle's js plus the server-side fields written
+	// alongside it by `bundle:pool`. A field missing here is stripped by this
+	// schema and the bundle can then no longer be decoded, so a field added to
+	// the build output has to be added here too.
 	bundles: record(
 		string(),
 		object({
@@ -672,6 +675,9 @@ export const ReplaceDetectorPoolBody = object({
 			// Opaque per-bundle decode parameter, paired with this bundle's js.
 			// Optional for pools built before it existed.
 			payloadLayout: string().optional(),
+			// Second opaque per-bundle decode parameter, same contract as
+			// `payloadLayout`. Optional for pools built before it existed.
+			keyMap: string().optional(),
 		}),
 	),
 });
