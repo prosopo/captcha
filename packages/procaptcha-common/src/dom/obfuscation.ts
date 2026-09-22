@@ -54,15 +54,22 @@ export const wrapRandomly = (
 };
 
 /**
- * The flex basis an item needs to sit three-to-a-row with `gap` between them:
- * each gives up two thirds of a gap.
+ * The flex basis an item needs to sit three-to-a-row with `gap` between them.
  *
  * A function of the gap rather than a constant beside it, because the gap is
  * drawn per mount and a basis that does not track it wraps the row — four rows
  * of images where there should be three.
+ *
+ * The subtraction and the division are both left to the browser. Computing
+ * either here means rounding a third to a decimal, and three items plus two
+ * gaps then miss the container by a fraction of a pixel — which is enough to
+ * wrap the row. `calc(33.333% - 5.33px)` at an 8px gap overflowed a 345.578px
+ * grid by 0.0065px on a Samsung A52s, so the image challenge laid out two
+ * columns and five rows instead of three and three, and the last row fell
+ * below the phone's viewport.
  */
 export const threeColumnBasis = (gap: number): string =>
-	`calc(33.333% - ${Math.round((200 * gap) / 3) / 100}px)`;
+	`calc((100% - ${2 * gap}px) / 3)`;
 
 /**
  * Which element an activatable control is made of. A challenge draws this per

@@ -80,6 +80,7 @@ beforeEach(() => {
 afterEach(() => {
 	checkbox?.destroy();
 	mounted.unmount();
+	vi.unstubAllGlobals();
 });
 
 describe("what the checkbox renders", () => {
@@ -353,6 +354,21 @@ describe("theming", () => {
 		expect(box().style.boxShadow).toContain(
 			withAlpha(lightTheme.palette.checkbox.fill, lightTheme.stateLayer.hover),
 		);
+	});
+
+	test("lays no state layer on a touch screen", () => {
+		// The layer would cost the visitor their first tap: iOS reads a tap that
+		// repaints the control as a request to show hover, and withholds the
+		// click, so the box has to be tapped twice to tick.
+		vi.stubGlobal("matchMedia", (query: string) => ({
+			matches: "(hover: hover)" !== query,
+			media: query,
+		}));
+		render();
+
+		fire(box(), "mouseenter");
+
+		expect(box().style.boxShadow).toBe("none");
 	});
 
 	test("leaving drops the state layer", () => {

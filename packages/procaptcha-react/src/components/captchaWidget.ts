@@ -69,6 +69,17 @@ const MAX_WRAPPER_DEPTH = 2;
 
 const CHECK_ICON_PATH = "M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z";
 
+/**
+ * Asset signing is optional, so both shapes of URL arrive here. An unsigned one
+ * gets the cache-buster it always got; a signed one cannot, because its token
+ * is a signature over the query string and any addition invalidates it —
+ * turning a transient failure into a permanent 403.
+ */
+const retrySrc = (url: string): string =>
+	url.includes("token=")
+		? url
+		: `${url}${url.includes("?") ? "&" : "?"}retry=${Date.now()}`;
+
 const themeOf = (themeColor: "light" | "dark"): Theme =>
 	"light" === themeColor ? lightTheme : darkTheme;
 
@@ -168,14 +179,14 @@ export const mountCaptchaWidget = (
 			},
 		});
 
-		// A provider that drops a single image request should not cost the user
-		// the round: retry a few times with a cache-busting query, then give up.
-		// The count lives on the element so it survives re-renders.
 		teardown.addEventListener(image, "error", () => {
 			const retryCount = Number(image.dataset.retryCount ?? "0") + 1;
 			image.dataset.retryCount = String(retryCount);
 			if (retryCount <= 3) {
-				image.src = `${item.data}?retry=${Date.now()}`;
+				// Clearing it first is what makes the browser re-request a URL
+				// it has already seen, which is all a signed URL allows.
+				image.removeAttribute("src");
+				image.src = retrySrc(item.data);
 			}
 		});
 

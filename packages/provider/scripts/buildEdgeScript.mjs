@@ -11,8 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export * from "./assetToken.js";
-export * from "./captcha.js";
-export * from "./merkle.js";
-export * from "./util.js";
-export * from "./dataset.js";
+
+import { build } from "esbuild";
+
+const OUTPUT = "dist/edge/bunny-asset-seal.js";
+
+await build({
+	entryPoints: ["edge/entry.ts"],
+	outfile: OUTPUT,
+	bundle: true,
+	format: "esm",
+	platform: "neutral",
+	target: "es2022",
+	external: ["https://*"],
+	legalComments: "inline",
+	logLevel: "info",
+});
+
+console.log(`edge script written to ${OUTPUT}`);

@@ -19,6 +19,7 @@ import {
 	type ControlKind,
 	createControl,
 	randomControlKind,
+	threeColumnBasis,
 	wrapRandomly,
 } from "../dom/obfuscation.js";
 import { type Mounted, fire, fireAndReturn, mount } from "./domHarness.js";
@@ -254,5 +255,57 @@ describe("whichever element it is made of", () => {
 	test("picks its element per control, not once per page", () => {
 		const tags = new Set(Array.from({ length: 200 }, () => render().tagName));
 		expect(Array.from(tags).sort()).toEqual(["BUTTON", "DIV"]);
+	});
+});
+
+describe("threeColumnBasis", () => {
+	/**
+	 * What a browser does with the declaration, for either shape it could take:
+	 * the exact `calc((100% - Npx) / 3)`, or a basis whose third has already
+	 * been rounded to a percentage here.
+	 */
+	const resolve = (basis: string, containerWidth: number): number => {
+		const exact = /^calc\(\(100% - ([\d.]+)px\) \/ 3\)$/.exec(basis);
+		if (exact?.[1]) {
+			return (containerWidth - Number(exact[1])) / 3;
+		}
+		const preRounded = /^calc\(([\d.]+)% - ([\d.]+)px\)$/.exec(basis);
+		if (preRounded?.[1] && preRounded[2]) {
+			return (
+				(Number(preRounded[1]) / 100) * containerWidth - Number(preRounded[2])
+			);
+		}
+		throw new Error(`unrecognised basis: ${basis}`);
+	};
+
+	// The gaps the image grid and the action row draw between them, and widths
+	// the panel actually takes. 345.5777893066406 is a Samsung A52s in Chrome:
+	// the sub-pixel width is the point, since that is where a rounded third
+	// stops adding up.
+	const GAPS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+	const WIDTHS = [345.5777893066406, 280, 300, 384, 412, 468, 500];
+
+	test("three of them plus their gaps never overflow the row", () => {
+		// A fraction of a pixel over is enough to wrap the third tile onto its
+		// own line, which on a phone turns three rows of images into five and
+		// pushes the last row below the viewport.
+		for (const gap of GAPS) {
+			for (const width of WIDTHS) {
+				const used = resolve(threeColumnBasis(gap), width) * 3 + gap * 2;
+				expect(
+					used,
+					`gap ${gap} at width ${width} used ${used}`,
+				).toBeLessThanOrEqual(width);
+			}
+		}
+	});
+
+	test("and they fill it, so the row is three columns rather than two", () => {
+		for (const gap of GAPS) {
+			for (const width of WIDTHS) {
+				const used = resolve(threeColumnBasis(gap), width) * 3 + gap * 2;
+				expect(used).toBeCloseTo(width, 6);
+			}
+		}
 	});
 });

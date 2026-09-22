@@ -1,5 +1,13 @@
 # @prosopo/scripts
 
+## 3.1.189
+### Patch Changes
+
+- Updated dependencies [aed164d]
+  - @prosopo/datasets@3.1.89
+  - @prosopo/provider@5.12.3
+  - @prosopo/cli@3.8.19
+
 ## 3.1.188
 ### Patch Changes
 

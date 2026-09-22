@@ -86,6 +86,7 @@ beforeEach(() => {
 afterEach(() => {
 	button?.destroy();
 	mounted.unmount();
+	vi.unstubAllGlobals();
 });
 
 describe("what the button renders", () => {
@@ -167,6 +168,22 @@ describe("theming", () => {
 		expect(element.style.backgroundColor).toBe(
 			withAlpha(lightTheme.palette.primary.main, lightTheme.stateLayer.hover),
 		);
+	});
+
+	test("a touch screen gets no state layer", () => {
+		// The layer would cost the visitor their first tap: iOS reads a tap that
+		// repaints the control as a request to show hover and withholds the
+		// click, so the button would have to be tapped twice.
+		vi.stubGlobal("matchMedia", (query: string) => ({
+			matches: "(hover: hover)" !== query,
+			media: query,
+		}));
+		const element = render({ buttonType: "cancel" });
+
+		fire(element, "mouseenter");
+
+		// Still the cancel button's resting fill, not the primary state layer.
+		expect(element.style.backgroundColor).toBe("transparent");
 	});
 
 	test("hovering a next button composites a state layer over its fill", () => {
