@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/api-express-router",
-	"version": "3.1.93",
+	"version": "3.1.94",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"type": "module",
@@ -29,9 +29,9 @@
 		"@prosopo/api-route": "2.6.60",
 		"@prosopo/common": "3.1.59",
 		"@prosopo/logger": "2.1.0",
-		"@prosopo/env": "3.6.62",
+		"@prosopo/env": "3.6.63",
 		"@prosopo/locale": "3.6.0",
-		"@prosopo/types": "5.10.0",
+		"@prosopo/types": "5.10.1",
 		"@prosopo/util": "3.3.11",
 		"@prosopo/util-crypto": "13.5.33",
 		"dotenv": "16.4.5",
@@ -41,7 +41,7 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.0",
+		"@prosopo/config": "3.4.1",
 		"@types/node": "22.10.2",
 		"vitest": "4.1.11"
 	},

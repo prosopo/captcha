@@ -1,5 +1,59 @@
 # @prosopo/provider
 
+## 5.13.0
+### Minor Changes
+
+- 85a1bb9: Seal captcha image paths into opaque URLs, opened by a CDN edge script.
+  
+  An image URL used to say which image it was: `https://cdn.example.net/dataset/images/abc.webp`. Signed URLs already stop a harvested URL being refetched forever, but the path stays in plain sight, and the path is a stable identifier for the image behind it — which makes it a usable key for caching answers between sessions.
+  
+  The path is now AES-256-GCM sealed, with an expiry, into an opaque blob drawn fresh every time:
+  
+  ```
+  https://cdn.example.net/s/AgHk1n...Qx9.webp
+  ```
+  
+  The edge script opens it, puts the canonical path back on the request, and the CDN serves the one object that path names. The same image therefore has a different URL in every session, with nothing in the URL to group those together, and there is still only one cached copy and one stored object.
+  
+  Sealing happens strictly below `item.data`. The item hash, the captchaId and the datasetId are untouched, so nothing about the dataset or how a solution is verified changes.
+  
+  The provider seals with `node:crypto`, because `AssetsResolver.resolveAsset` is synchronous and every WebCrypto call returns a promise; the edge opens with WebCrypto, because that is what its runtime has. The wire format, the validation and the base64url alphabet live in one module both ends import, and a test seals with one end and opens with the other so the two cannot drift.
+  
+  Inert unless its key is configured, since a sealed URL is unservable until the matching edge script is live. Configured, it takes precedence over the signed resolver; leaving the signing key in place keeps that as the fallback for any zone not yet moved over. More than one key opens at a time, so keys can be rotated without a flag day. `npm run -w @prosopo/provider build:edge` emits the edge script as a single file. Rollout order, environment variables and rotation are documented for operators outside this repository.
+  
+  Test coverage: 51 unit tests over the wire format, the sealer, the resolver and the edge handler — round trip, tamper, truncation, expiry at the boundary, swapped key id, rotation across two live keys, path traversal and prefix confinement, URL shape and per-call uniqueness, passthrough of requests that are not sealed, idempotency when the handler runs at both hooks, and the provider-seals/edge-opens interop.
+
+### Patch Changes
+
+- 4c9b84b: Escalate a PoW solve to an image captcha when it arrives from a different address than the challenge.
+  
+  A PoW challenge is bound to the user account and the site key and to nothing about where the request came from, so a solved challenge can be carried to any host that wants a free pass. The issuing address is already on the record, so binding to it costs nothing: `verifyPowCaptchaSolution` now compares it against the address submitting the solve and escalates when they differ, under a new `IP_CHANGED` reason.
+  
+  Escalation, not denial. A phone handing off between towers mid-solve is a real user and should pay a picture rather than be turned away. For the same reason IPv6 is judged on the /64 alone — the interface identifier in the low 64 bits rotates by design under RFC 8981, several times a day on one unchanged connection — and an address we could not read counts as unchanged.
+  
+  Only applies where a session is linked, since escalation carries the originating session's risk profile forward. Missing coordinates still takes precedence as the reported reason when both fire.
+- 2cca36e: Report a bot score of zero to Pro and Enterprise instead of dropping the field.
+  
+  `canClientSeeScore` tested `score && tier && tier !== Tier.Free`. A session with nothing wrong with it scores 0, which is falsy, so `score` was omitted from the siteverify response for exactly those users: a paying customer got a score for every suspicious visitor and no score at all for their cleanest ones, which reads as "no score available" rather than "no risk".
+  
+  Invisible in production today because `Math.random() * 0.3` is added to every score, making an exact 0 all but impossible. Removing that noise — captcha-private#4433, where this was found — is what would have exposed it.
+  
+  The function also returned `number | boolean | undefined` from its `&&` chain; it now returns `boolean`.
+- Updated dependencies [4c9b84b]
+- Updated dependencies [f13bea8]
+  - @prosopo/types@5.10.1
+  - @prosopo/load-balancer@2.11.0
+  - @prosopo/api@4.3.4
+  - @prosopo/api-express-router@3.1.94
+  - @prosopo/database@4.0.40
+  - @prosopo/datasets@3.1.90
+  - @prosopo/env@3.6.63
+  - @prosopo/ipinfo@0.4.9
+  - @prosopo/keyring@2.9.96
+  - @prosopo/types-database@5.6.4
+  - @prosopo/types-env@2.11.9
+  - @prosopo/user-access-policy@3.14.10
+
 ## 5.12.3
 ### Patch Changes
 
