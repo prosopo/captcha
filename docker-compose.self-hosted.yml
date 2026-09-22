@@ -1,0 +1,96 @@
+# Self-hosted Procaptcha provider.
+#
+# Generate the .env this reads with:
+#   npx tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
+#
+# Then, from the repository root (where the .env is):
+#   docker compose -f docker-compose.self-hosted.yml up -d
+#
+# Full guide: https://docs.prosopo.io/en/self-hosting/
+#
+# Unrelated to docker-compose.provider.yml, which is Prosopo's own production
+# stack and carries fleet-specific wiring (two provider versions, a DNS
+# sidecar, an eBPF TCP probe, per-host certificates) that a self-hosted node
+# neither has nor needs.
+
+services:
+  mongo:
+    image: mongo:6.0.28
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${PROSOPO_DATABASE_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${PROSOPO_DATABASE_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+
+  redis:
+    # Must be redis-stack, not plain Redis: the provider stores access rules in
+    # a RediSearch index, which stock Redis does not ship.
+    image: redis/redis-stack-server:latest
+    restart: unless-stopped
+    environment:
+      REDIS_ARGS: --requirepass ${REDIS_CONNECTION_PASSWORD}
+    volumes:
+      - redis_data:/data
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+
+  provider:
+    image: prosopo/provider:${PROSOPO_PROVIDER_IMAGE_VERSION:-3.8.19}
+    restart: unless-stopped
+    depends_on:
+      - mongo
+      - redis
+    env_file: .env
+    ports:
+      # Loopback only. Public traffic arrives through Caddy on 443; this is
+      # here so you can curl the provider directly while setting up, and can
+      # be removed once you are happy.
+      - '127.0.0.1:9229:9229'
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+    healthcheck:
+      test: ['CMD', 'curl', '--fail', 'localhost:9229/healthz']
+      interval: 5m
+      retries: 3
+      start_period: 30s
+      timeout: 10s
+
+  caddy:
+    # prosopo/caddy rather than upstream caddy: provider.Caddyfile uses four
+    # plugins compiled into this image (caddy-l4, chaddy, caddy-ratelimit,
+    # caddy-requestid) and will not start without them.
+    image: prosopo/caddy:${CADDY_IMAGE_VERSION:-2.5.9}
+    restart: unless-stopped
+    depends_on:
+      - provider
+    env_file: .env
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./docker/provider.Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'
+
+volumes:
+  mongo_data:
+  redis_data:
+  caddy_data:
+  caddy_config:
