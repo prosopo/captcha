@@ -126,7 +126,7 @@ counts instead of `--count`.
 
 ```bash
 docker compose cp ./captchas.json provider:/usr/src/app/captchas.json
-docker compose exec provider npx provider provider_set_data_set --file /usr/src/app/captchas.json
+docker compose exec provider /nodejs/bin/node /usr/src/app/provider.cli.bundle.js provider_set_data_set --file /usr/src/app/captchas.json
 docker compose restart provider
 ```
 
@@ -137,7 +137,7 @@ dataset uploaded into a running provider is stored but not served — image chal
 Then register your site key for image captchas:
 
 ```bash
-docker compose exec provider npx provider site_key_register <sitekey> enterprise \
+docker compose exec provider /nodejs/bin/node /usr/src/app/provider.cli.bundle.js site_key_register <sitekey> enterprise \
   --captcha_type image --domains example.com \
   --pow_difficulty 4 --frictionless_threshold 0.5 --image_threshold 0.8
 ```
