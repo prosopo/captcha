@@ -1,116 +1,154 @@
-# README
+# @prosopo/datasets-fs
 
-## How to produce captchas
+Tooling for building the image dataset that an `image` CAPTCHA serves from.
 
-You need 3 files:
+You need this only if you want image CAPTCHAs. `pow` needs no imagery, and `puzzle` generates its imagery
+procedurally at request time. See the [self-hosting guide](https://docs.prosopo.io/en/self-hosting/) for the wider
+context.
 
-1. a json file containing labelled data in the form:
-
-    ```json
-    [
-        {
-            "label": "dog",
-            "data": "http://example.com/a.png"
-        },
-        {
-            "label": "cat",
-            "data": "http://example.com/b.png"
-        },
-        ...
-    ]
-    ```
-
-1. a json file containing unlabelled data in the form:
-
-    ```json
-    [
-        {
-            "data": "http://example.com/c.png"
-        },
-        {
-            "data": "http://example.com/d.png"
-        },
-        ...
-    ]
-    ```
-
-1. (optional) a json file with an array of labels which unlabelled data can be categorised into. If not specified will default to the same labels as seen in the labelled data.
-
-Then build and run the cli, passing appropriate parameters:
-`npm run build && node ./dist/js/cli.js generate --labelled /path/to/my/labelled/data.json --unlabelled /path/to/my/unlabelled/data.json --seed 0 --labels /path/to/my/labels.json --output /path/to/the/output/captchas.json`
-
-Use `node ./dist/js/cli.ts --help` to inspect other parameters.
-
-Commands:
-
-1. `flatten` converts a hierarchical directory structure into a single directory with corresponding map file, e.g.
-
-    ```json
-    data/
-        dog/
-            a.png
-            ...
-        cat/
-            b.png
-            ...
-    ```
-
-    into
-
-    ```json
-    data/
-        a.png
-        b.png
-        ...
-    map.json
-    ```
-
-    where `map.json` looks like:
-
-    ```json
-    [
-        {
-            "label": "dog",
-            "data": "http://example.com/a.png"
-        },
-        {
-            "label": "cat",
-            "data": "http://example.com/b.png"
-        },
-        ...
-    ]
-    ```
-
-    e.g. `npm run -w @prosopo/datasets-fs build && node packages/datasets-fs/dist/cli.js flatten --in ~/bench/test/data --out ~/bench/test/flat --overwrite`
-1. `generateDistinct` takes the 3 files described above and produces captcha challenges comprising 2 rounds, one labelled and one unlabelled.
-   e.g. `npm run -w @prosopo/datasets-fs build && node packages/datasets-fs/dist/cli.js generate distinct --out ~/bench/test/captchas.json --labelled ~/bench/test/flat/data.json --unlabelled ~/bench/test/flat/data.json --seed 0 --size 9 --allow-duplicates --solved 1 --unsolved 1 --overwrite --labels ~/bench/test/flat/labels.json`
-1. `generateUnion` takes the 3 files described above and produces captcha challenges comprising one or more rounds, mixing labelled and unlabelled data into a single round.
-   e.g. `npm run -w @prosopo/datasets-fs build && node packages/datasets-fs/dist/cli.js generate union --out ~/bench/test/captchas-union.json --labelled ~/bench/test/flat/data.json --unlabelled ~/bench/test/flat/data.json --seed 0 --size 9 --allow-duplicates --count 2 --overwrite --labels ~/bench/test/flat/labels.json`
-1. 'labels' gets all labels from a data json.
-   e.g. `npm run -w @prosopo/datasets-fs build && node packages/datasets-fs/dist/cli.js labels --data ~/bench/test/flat/data2.json`
-1. 'get' fetches all images using a GET request, displaying errors for any images which hit 404 or not OK.
-   e.g. `npm run -w @prosopo/datasets-fs build && node packages/datasets-fs/dist/cli.js get --data ~/bench/test/flat/data2.json`
-1. 'relocate' rewrites the url of images in a json file.
-   e.g. `npm run -w @prosopo/datasets-fs build && node packages/datasets-fs/dist/cli.js relocate --from example.com --to web.site --data ~/bench/test/flat/data2.json`
-1. 'scale' rescales images in a flat directory structure to a given size.
-   e.g. `npm run -w @prosopo/datasets-fs build && node packages/datasets-fs/dist/cli.js scale --data ~/bench/test/flat/data.json --out ~/bench/test/flat/images2 --overwrite --size 128`
-
-## Generating test data
-
-The test data was generated using:
+Build the CLI once, then run it from this package directory:
 
 ```bash
-cli generate-v1 --min-correct 1 --max-correct 6 --labelled $PWD/src/tests/data/flat_resized/data.json --unlabelled $PWD/src/tests/data/flat_resized/data.json --out $PWD/src/tests/data/flat_resized/captchas_v1.json --solved 50 --unsolved 50 --seed 0 --allowDuplicates --seed 0
-
-cli generate-v2 --count 100 --min-correct 1 --min-incorrect 1 --min-labelled 2 --max-labelled 7 --labelled $PWD/src/tests/data/flat_resized/data.json --unlabelled $PWD/src/tests/data/flat_resized/data.json --out $PWD/src/tests/data/flat_resized/captchas_v2.json --seed 0 --allowDuplicates --seed 0
-
-cli relocate --from '${repo}' --to newwebsite.com --input $PWD/src/tests/data/flat_resized/data.json --output $PWD/src/tests/data/flat_resized/relocated_data.json --overwrite
-
-cli labels --input $PWD/src/tests/data/flat_resized/data.json --output $PWD/src/tests/data/flat_resized/labels.json --overwrite
-
-cli flatten --in $PWD/src/tests/data/hierarchical --out $PWD/src/tests/data/flat --overwrite
-
-cli resize --square --size 128 --in $PWD/src/tests/data/flat/data.json --out $PWD/src/tests/data/flat_resized --overwrite
+npm run -w @prosopo/datasets-fs build
+node dist/cli.js --help
 ```
 
-`cli` is an alias to `npm run build && npm run cli --`
+Commands: `flatten`, `labels`, `resize`, `relocate`, `get`, `generate-v1`, `generate-v2`. Every command takes
+`--input`/`--in`, `--output`/`--out` and `--overwrite`; run `node dist/cli.js <command> --help` for the rest.
+
+## The images must be publicly reachable
+
+A dataset does not embed images. Each entry holds a **URL**, and the browser fetches it while the user solves the
+challenge. So you host the images yourself — any static host or CDN — and the dataset points at them. `relocate`
+exists to rewrite local paths into those public URLs once you know them.
+
+## Building a dataset
+
+Start from a directory with one subdirectory per label:
+
+```
+data/
+    dog/
+        a.png
+        ...
+    cat/
+        b.png
+        ...
+```
+
+### 1. Flatten
+
+Collapses the tree into a single image directory plus a `data.json` mapping each image to its label. Images are
+renamed to their content hash.
+
+```bash
+node dist/cli.js flatten --in ./data --out ./flat --overwrite
+```
+
+`./flat/data.json` looks like this — note the `items` wrapper, and that `data` is still a local path at this stage:
+
+```json
+{
+    "items": [
+        {
+            "data": "/abs/path/flat/images/0x1640d689....png",
+            "type": "image",
+            "label": "bird",
+            "hash": "0x1640d689..."
+        }
+    ]
+}
+```
+
+### 2. Extract the labels
+
+```bash
+node dist/cli.js labels --in ./flat/data.json --out ./labels.json --overwrite
+```
+
+```json
+{ "labels": ["bird", "bus", "car", "cat", "deer", "dog", "horse", "plane", "train"] }
+```
+
+### 3. Resize (optional)
+
+```bash
+node dist/cli.js resize --in ./flat/data.json --out ./resized --size 128 --square --overwrite
+```
+
+### 4. Point the entries at your host
+
+Upload the images, then rewrite the local paths to the URLs they now live at:
+
+```bash
+node dist/cli.js relocate \
+  --in ./flat/data.json \
+  --out ./data-hosted.json \
+  --from /abs/path/flat/images \
+  --to https://img.example.com \
+  --overwrite
+```
+
+Check every URL actually resolves before going further — `get` reports anything that 404s:
+
+```bash
+node dist/cli.js get --in ./data-hosted.json
+```
+
+### 5. Generate the captchas
+
+`generate-v2` mixes labelled and unlabelled images into a single round:
+
+```bash
+node dist/cli.js generate-v2 \
+  --out ./captchas.json \
+  --labelled ./data-hosted.json \
+  --unlabelled ./data-hosted.json \
+  --labels ./labels.json \
+  --seed 0 \
+  --size 9 \
+  --count 100 \
+  --minCorrect 1 \
+  --minIncorrect 1 \
+  --minLabelled 2 \
+  --maxLabelled 7 \
+  --allowDuplicates \
+  --overwrite
+```
+
+**`--count` is not optional in practice.** It defaults to zero, and without it the command exits successfully having
+written a dataset containing no captchas at all. If your `captchas.json` has an empty `captchas` array, this is why.
+
+`generate-v1` is the older two-round format (one labelled round, one unlabelled). It takes `--solved` and `--unsolved`
+counts instead of `--count`.
+
+## Loading it into a provider
+
+```bash
+docker compose cp ./captchas.json provider:/usr/src/app/captchas.json
+docker compose exec provider npx provider provider_set_data_set --file /usr/src/app/captchas.json
+docker compose restart provider
+```
+
+**The restart is required.** The provider resolves its default dataset once, when the environment initialises, so a
+dataset uploaded into a running provider is stored but not served — image challenges keep failing with
+`No dataset available. Please upload a dataset first.` until the process restarts.
+
+Then register your site key for image captchas:
+
+```bash
+docker compose exec provider npx provider site_key_register <sitekey> enterprise \
+  --captcha_type image --domains example.com \
+  --pow_difficulty 4 --frictionless_threshold 0.5 --image_threshold 0.8
+```
+
+## Regenerating the test fixtures
+
+The fixtures under `src/tests/data` were produced with:
+
+```bash
+node dist/cli.js flatten --in ./src/tests/data/hierarchical --out ./src/tests/data/flat --overwrite
+node dist/cli.js resize --square --size 128 --in ./src/tests/data/flat/data.json --out ./src/tests/data/flat_resized --overwrite
+node dist/cli.js labels --in ./src/tests/data/flat_resized/data.json --out ./src/tests/data/flat_resized/labels.json --overwrite
+node dist/cli.js relocate --from '${repo}' --to newwebsite.com --in ./src/tests/data/flat_resized/data.json --out ./src/tests/data/flat_resized/relocated_data.json --overwrite
+```

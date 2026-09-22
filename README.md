@@ -16,6 +16,11 @@ with [Procaptcha](https://prosopo.io/products/gdpr-compliant-captcha/).
 
 See [for-devs.md](for-devs.md) for information on setting up your development environment.
 
-[You can run this software as a self-hosted bot protection solution](https://github.com/prosopo/captcha/discussions/1695#discussioncomment-14018903). All of the required software is open source with the
-exception of the client-side detection library, for obvious reasons. [Contact us](https://prosopo.io/contact/) if you
-need help.
+## Self-Hosting
+
+You can run this software as a self-hosted bot protection solution. See [SELF_HOSTING.md](SELF_HOSTING.md) for a
+step-by-step guide, or the [full version in our docs](https://docs.prosopo.io/en/self-hosting/).
+
+It takes four containers and the published `prosopo/provider` image — no fork, no source edits, and no image dataset.
+All of the required software is open source with the exception of the client-side detection library, which is only used
+by the `frictionless` CAPTCHA type. [Contact us](https://prosopo.io/contact/) if you need help.

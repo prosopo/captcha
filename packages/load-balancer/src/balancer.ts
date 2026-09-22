@@ -14,6 +14,7 @@
 import { ProsopoEnvError } from "@prosopo/common";
 import type { EnvironmentTypes } from "@prosopo/types";
 import { getDevelopmentProviderUrl } from "./developmentProviderUrl.js";
+import { readProviderListOverride } from "./providerUrlOverride.js";
 
 export interface HardcodedProvider {
 	address: string;
@@ -91,6 +92,68 @@ export const stripIpModeLabel = (hostname: string): string =>
 export const getProviderHostname = (provider: HardcodedProvider): string =>
 	stripIpModeLabel(new URL(provider.url).hostname);
 
+// Placeholders for the fields a bare-URL override cannot supply. `address`
+// surfaces as `RandomProvider.providerAccount`, which the DNS-routed
+// production path already fills with a constant rather than a real account;
+// `datasetId` is vestigial on this path because clients stopped sending one
+// and the provider falls back to its own most-recently-loaded dataset.
+const SELF_HOSTED_ADDRESS = "self-hosted";
+const SELF_HOSTED_DATASET_ID = "";
+
+const stripTrailingSlash = (url: string): string => url.replace(/\/$/, "");
+
+const providersFromUrlList = (raw: string): HardcodedProvider[] =>
+	raw
+		.split(",")
+		.map((url) => stripTrailingSlash(url.trim()))
+		.filter((url) => url.length > 0)
+		.map((url) => ({
+			address: SELF_HOSTED_ADDRESS,
+			url,
+			datasetId: SELF_HOSTED_DATASET_ID,
+			weight: 1,
+		}));
+
+/**
+ * Parses `PROSOPO_PROVIDER_LIST` into providers, or returns empty when unset.
+ *
+ * Two accepted forms:
+ *
+ *   - The same JSON the hosted provider list serves, so weights and the
+ *     `ipv4` / `ipv6` sub-lists behave identically. See the README.
+ *   - One or more bare URLs, comma-separated, for a deployment that has
+ *     nothing to say about weights or addresses.
+ *
+ * Trailing slashes are stripped throughout: a token embeds the provider URL
+ * it was minted against and `@prosopo/server` finds the issuer by exact
+ * string match, so `https://host/` and `https://host` must not disagree.
+ *
+ * A malformed override returns empty rather than throwing, falling back to
+ * normal discovery. Throwing would take every captcha on the page down over
+ * what is a deployment-time typo.
+ */
+export const getProviderListOverride = (
+	raw: string | undefined = readProviderListOverride(),
+	ipMode?: IpMode,
+): HardcodedProvider[] => {
+	const trimmed = raw?.trim();
+	if (!trimmed) return [];
+
+	// Anything not starting an object is the bare-URL shorthand.
+	if (!trimmed.startsWith("{")) return providersFromUrlList(trimmed);
+
+	try {
+		return convertHostedProvider(JSON.parse(trimmed), ipMode).map(
+			(provider) => ({
+				...provider,
+				url: stripTrailingSlash(provider.url),
+			}),
+		);
+	} catch {
+		return [];
+	}
+};
+
 export const getLoadBalancerUrl = (environment: EnvironmentTypes): string => {
 	if (environment === "production") {
 		return "https://provider-list.prosopo.io/";
@@ -107,6 +170,16 @@ export const loadBalancer = async (
 	environment: EnvironmentTypes,
 	ipMode?: IpMode,
 ): Promise<HardcodedProvider[]> => {
+	// An override supplies the whole list. Checked before the environment
+	// branches so a self-hosted deployment answers for `production` too, and
+	// ahead of the fetch so no request reaches Prosopo's hosted list at all.
+	// `ipMode` is honoured only for the JSON form, which can carry its own
+	// `ipv4` / `ipv6` sub-lists; the bare-URL form ignores it, because those
+	// labels are a property of our fleet's DNS and prefixing `ipv4.` onto
+	// someone else's hostname would resolve to nothing.
+	const override = getProviderListOverride(undefined, ipMode);
+	if (override.length > 0) return override;
+
 	if (environment === "development") {
 		return [
 			{
