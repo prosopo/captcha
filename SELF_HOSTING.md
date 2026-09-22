@@ -10,6 +10,8 @@ directly and skip bot detection, which is the only closed-source part of the sta
 - `puzzle` — slider puzzle. Imagery is generated procedurally at request time.
 - `image` — also works self-hosted, but needs a dataset you build and host. See [below](#image-captchas).
 
+Everything here is [Apache-2.0](LICENSE) — commercial use included, no seat or traffic limit on the code.
+
 Full guide, including server-side verification and the optional extras:
 **https://docs.prosopo.io/en/self-hosting/**
 
@@ -42,66 +44,21 @@ it up; regenerating gives your provider a new identity and new credentials for a
 
 Options: `--output <path>`, `--force` to overwrite.
 
-## 2. `docker-compose.yml`
+## 2. Start the stack
 
-Save this in the clone, next to the `.env`, so the Caddyfile is there to mount.
-
-```yaml
-services:
-  mongo:
-    image: mongo:6.0.28
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${PROSOPO_DATABASE_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${PROSOPO_DATABASE_PASSWORD}
-    volumes:
-      - mongo_data:/data/db
-
-  redis:
-    # Must be redis-stack, not plain Redis: the provider uses RediSearch.
-    image: redis/redis-stack-server:latest
-    restart: unless-stopped
-    environment:
-      REDIS_ARGS: --requirepass ${REDIS_CONNECTION_PASSWORD}
-    volumes:
-      - redis_data:/data
-
-  provider:
-    image: prosopo/provider:3.8.19
-    restart: unless-stopped
-    depends_on: [mongo, redis]
-    env_file: .env
-    ports:
-      - "127.0.0.1:9229:9229"
-
-  caddy:
-    image: prosopo/caddy:2.5.9
-    restart: unless-stopped
-    depends_on: [provider]
-    env_file: .env
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./docker/provider.Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-
-volumes:
-  mongo_data:
-  redis_data:
-  caddy_data:
-  caddy_config:
-```
+The compose file ships with the repo, so there is nothing to paste:
 
 ```bash
-docker compose up -d
+docker compose -f docker-compose.self-hosted.yml up -d
 curl localhost:9229/healthz     # {"ok":true,"host":"captcha.example.com"}
 ```
 
+Four containers: Mongo, Redis, the provider, and Caddy terminating TLS in front of it. Redis must be `redis-stack` —
+the provider stores access rules in a RediSearch index, which stock Redis does not ship.
+
 TLS is handled for you. The provider speaks plain HTTP on 9229; `docker/provider.Caddyfile` — the same config we run in
-production — sits in front of it and gets certificates over ACME, driven entirely by the `CADDY_*` vars above. Use the
-`prosopo/caddy` image, not upstream Caddy: the config needs `caddy-l4`, `chaddy`, `caddy-ratelimit` and
+production — sits in front of it and gets certificates over ACME, driven entirely by the `CADDY_*` vars in your `.env`.
+The image is `prosopo/caddy`, not upstream Caddy: that config needs `caddy-l4`, `chaddy`, `caddy-ratelimit` and
 `caddy-requestid` compiled in.
 
 Caddy asks for certificates for your domain plus `ipv4.` and `ipv6.` variants. They're separate certificates, so
@@ -109,6 +66,8 @@ missing those two DNS records doesn't break the main one — you'll just see ACM
 
 `bundle pool directory does not exist` and `No datasets found in database` are expected on a self-hosted node. They mean
 "no bot detector" and "no image dataset"; neither affects `pow` or `puzzle`.
+
+Pin different versions with `PROSOPO_PROVIDER_IMAGE_VERSION` and `CADDY_IMAGE_VERSION` in your `.env`.
 
 ## 3. Register a site key
 
