@@ -1082,7 +1082,21 @@ export class CaptchaManager {
 		);
 	}
 
-	static canClientSeeScore(tier: Tier, score?: number) {
-		return score && tier && tier !== Tier.Free;
+	/**
+	 * Does this client's tier entitle it to the bot score, and is there one?
+	 *
+	 * `score !== undefined`, not `score`: a session with nothing wrong with it
+	 * scores 0, and a truthiness test dropped the field for exactly those
+	 * users — a paying customer reading `score` got a present field for
+	 * every suspicious visitor and a missing one for their cleanest. It has
+	 * been invisible because `Math.random() * 0.3` makes an exact 0 all but
+	 * impossible; taking that noise out (see captcha-private#4433) is what
+	 * would expose it.
+	 *
+	 * Returning `boolean` rather than the old `number | boolean | undefined`,
+	 * which came from `&&`-chaining the score and the tier.
+	 */
+	static canClientSeeScore(tier: Tier, score?: number): boolean {
+		return score !== undefined && tier !== Tier.Free;
 	}
 }

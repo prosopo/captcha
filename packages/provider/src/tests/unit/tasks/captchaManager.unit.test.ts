@@ -1623,6 +1623,53 @@ describe("CaptchaManager", () => {
 				sessionId: "session-abc",
 			});
 		});
+		it("returns a score of zero rather than dropping the field", () => {
+			// A clean session scores 0, and the old truthiness check omitted
+			// the field for exactly those users — so a paying customer saw a
+			// score for every suspicious visitor and none for their best
+			// ones, which reads as "no score available" rather than "no risk".
+			const result = captchaManager.getVerificationResponse(
+				true,
+				{
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0,
+			);
+			expect(result).toEqual({
+				status: "translated",
+				verified: true,
+				score: 0,
+			});
+		});
+
+		it("omits the score when there is no score to report", () => {
+			const result = captchaManager.getVerificationResponse(
+				true,
+				{
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				() => "translated",
+				undefined,
+			);
+			expect(result).not.toHaveProperty("score");
+		});
+
+		it("still hides a zero score from the free tier", () => {
+			const result = captchaManager.getVerificationResponse(
+				true,
+				{
+					account: "account",
+					tier: Tier.Free,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0,
+			);
+			expect(result).not.toHaveProperty("score");
+		});
+
 		it("should omit the sessionId when there isn't one", () => {
 			const result = captchaManager.getVerificationResponse(
 				true,
@@ -1636,6 +1683,35 @@ describe("CaptchaManager", () => {
 				undefined,
 			);
 			expect(result).not.toHaveProperty("sessionId");
+		});
+	});
+
+	describe("canClientSeeScore", () => {
+		it("answers with a boolean, not the score or the tier", () => {
+			// `score && tier && tier !== Tier.Free` handed back 0 for a clean
+			// session and undefined for an absent score, so the name lied
+			// about what callers were getting.
+			expect(
+				typeof CaptchaManager.canClientSeeScore(Tier.Professional, 0),
+			).toBe("boolean");
+			expect(
+				typeof CaptchaManager.canClientSeeScore(Tier.Professional, undefined),
+			).toBe("boolean");
+		});
+
+		it("shows a zero score to a paying tier", () => {
+			expect(CaptchaManager.canClientSeeScore(Tier.Professional, 0)).toBe(true);
+		});
+
+		it("withholds the score from the free tier at any value", () => {
+			expect(CaptchaManager.canClientSeeScore(Tier.Free, 0)).toBe(false);
+			expect(CaptchaManager.canClientSeeScore(Tier.Free, 0.5)).toBe(false);
+		});
+
+		it("has nothing to show when no score was computed", () => {
+			expect(
+				CaptchaManager.canClientSeeScore(Tier.Professional, undefined),
+			).toBe(false);
 		});
 	});
 
