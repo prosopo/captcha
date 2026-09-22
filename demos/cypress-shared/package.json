@@ -25,7 +25,7 @@
 		"@polkadot/util": "14.0.3",
 		"@prosopo/common": "3.1.59",
 		"@prosopo/config": "3.4.0",
-		"@prosopo/datasets": "3.1.88",
+		"@prosopo/datasets": "3.1.89",
 		"@prosopo/dotenv": "3.0.57",
 		"@prosopo/keyring": "2.9.95",
 		"@prosopo/types-database": "5.6.3",

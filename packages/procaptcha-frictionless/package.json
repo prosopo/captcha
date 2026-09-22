@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-frictionless",
-	"version": "2.18.1",
+	"version": "2.18.2",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -33,12 +33,12 @@
 		"@prosopo/api": "4.3.3",
 		"@prosopo/common": "3.1.59",
 		"@prosopo/locale": "3.6.0",
-		"@prosopo/procaptcha-common": "2.17.0",
-		"@prosopo/procaptcha-pow": "2.13.1",
-		"@prosopo/procaptcha-puzzle": "2.14.1",
-		"@prosopo/procaptcha-react": "2.13.0",
+		"@prosopo/procaptcha-common": "2.17.1",
+		"@prosopo/procaptcha-pow": "2.13.2",
+		"@prosopo/procaptcha-puzzle": "2.14.2",
+		"@prosopo/procaptcha-react": "2.13.1",
 		"@prosopo/types": "5.10.0",
-		"@prosopo/widget-skeleton": "2.9.0",
+		"@prosopo/widget-skeleton": "2.10.0",
 		"dotenv": "16.4.5"
 	},
 	"devDependencies": {

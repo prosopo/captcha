@@ -60,7 +60,14 @@ const outerStyle = (theme: Theme): StyleMap => ({
 	borderRadius: theme.shape.card,
 	backgroundColor: theme.palette.background.default,
 	userSelect: "none",
-	touchAction: "none",
+	// `pan-y`, not `none`. This panel is `overflow-y: auto`, so on a phone it
+	// is the thing the finger has to drag when the images do not fit — and
+	// `touch-action: none` tells the browser not to pan it at all, which left
+	// the bottom row unreachable rather than merely off-screen. Stopping the
+	// page behind from scrolling is `overscroll-behavior`'s job, below, and it
+	// still does it; what `none` added on top of that was blocking the one
+	// gesture the panel needs. Pinch-zoom stays blocked either way.
+	touchAction: "pan-y",
 	overscrollBehavior: "none",
 });
 
