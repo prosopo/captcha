@@ -60,7 +60,7 @@
 		"cors": "2.8.6",
 		"express": "4.22.2",
 		"jsonwebtoken": "9.0.3",
-		"mongodb-memory-server": "10.3.0",
+		"mongodb-memory-server": "11.2.0",
 		"mongoose": "9.10.0",
 		"zod": "3.23.8"
 	},
