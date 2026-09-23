@@ -106,6 +106,19 @@ export const mountProcaptchaPowWidget = (
 		if ("CAPTCHA.NO_SESSION_FOUND" !== store.state.error.key) {
 			return;
 		}
+		// Suppressed only when something is actually going to re-mint: this is
+		// an internal recovery signal, not something the user should read, so
+		// hold the spinner rather than paint a support code that is about to
+		// stop being true. Clearing it re-enters this effect once, which returns
+		// at the `!error` guard. With no recovery route the error stands — a
+		// spinner that never resolves is worse than a message.
+		const willRecover =
+			(props.onSessionInvalidated && !sessionInvalidatedFired) ||
+			undefined !== frictionlessState;
+		if (willRecover) {
+			loading = true;
+			store.update({ error: undefined });
+		}
 		if (props.onSessionInvalidated && !sessionInvalidatedFired) {
 			// Preserve the checkbox coords across the retry so the resumed
 			// submit still carries the real entry-point telemetry. The

@@ -123,15 +123,26 @@ export interface ProcaptchaProps {
 	// `onSessionInvalidated` fires without asking the user to click the
 	// checkbox a second time.
 	startCoords?: { x: number; y: number };
-	// Called by the inner widget when the user presses the reload button on
-	// the challenge. The frictionless wrapper owns the response: the
-	// sessionId behind the current challenge has already been consumed by the
-	// provider, so a replacement challenge needs a replacement session. The
-	// wrapper re-runs the frictionless flow and re-mounts the widget with
-	// `autoStart`, so the user gets a new challenge rather than being dropped
-	// back to an unticked checkbox. Coords are the checkbox click position
-	// the user already made, preserved for the same reason as on
-	// `onSessionInvalidated`. When absent the widget falls back to the
-	// manager's own reload behaviour.
-	onReload?: (x?: number, y?: number) => void;
+	// Carries the puzzle's "Not quite — try again" state across a re-mount.
+	// A wrong answer consumes the session, so the replacement challenge
+	// arrives on a freshly mounted widget that has no memory of the miss;
+	// without this the user is told to "Drag the piece to the target" as if
+	// nothing had happened.
+	startShowRetry?: boolean;
+	// Called by the inner widget when it needs a replacement challenge: the
+	// user pressed reload, or the puzzle rejected their answer. The
+	// frictionless wrapper owns the response: the sessionId behind the
+	// current challenge has already been consumed by the provider, so a
+	// replacement challenge needs a replacement session. The wrapper re-runs
+	// the frictionless flow and re-mounts the widget with `autoStart`, so the
+	// user gets a new challenge rather than being dropped back to an unticked
+	// checkbox. Coords are the checkbox click position the user already made,
+	// preserved for the same reason as on `onSessionInvalidated`.
+	// `showRetry` asks the re-mounted widget to keep the retry prompt up.
+	// When absent the widget falls back to the manager's own reload behaviour.
+	onReload?: (
+		x?: number,
+		y?: number,
+		options?: { showRetry?: boolean },
+	) => void;
 }
