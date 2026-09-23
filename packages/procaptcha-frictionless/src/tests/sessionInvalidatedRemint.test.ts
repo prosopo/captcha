@@ -197,19 +197,43 @@ describe("NO_SESSION_FOUND recovery in the frictionless widget", () => {
 		expect(isCheckboxPlaceholder()).toBe(false);
 	});
 
-	it("falls over visibly once the retry budget is spent instead of stranding the user", async () => {
+	it("falls back to the placeholder once the retry budget is spent, without showing the error", async () => {
 		for (let i = 0; i <= MAX_SESSION_INVALIDATED_RETRIES; i++) {
 			await reportSessionInvalidated();
 		}
 
 		// The budget-exceeding failure must not silently do nothing: the error
-		// reaches the host page and the widget renders the error placeholder,
+		// still reaches the host page and the widget renders the placeholder,
 		// whose NO_SESSION_FOUND branch schedules the full restart.
 		expect(onError).toHaveBeenCalled();
 		expect(isCheckboxPlaceholder()).toBe(true);
 		expect(detectBot).toHaveBeenCalledTimes(
 			MAX_SESSION_INVALIDATED_RETRIES + 1,
 		);
+		// But the user is not told about it: a re-mint is already scheduled, so
+		// the checkbox waits in its loading state instead.
+		expect(container.textContent).not.toContain("No session found");
+	});
+
+	// The re-mint loop has no natural end, so the delay between restarts is the
+	// only thing bounding what one persistently broken client costs the fleet.
+	it("waits before the restart rather than re-minting straight away", async () => {
+		vi.useFakeTimers();
+		try {
+			for (let i = 0; i <= MAX_SESSION_INVALIDATED_RETRIES; i++) {
+				const { onSessionInvalidated } = lastMount().props;
+				onSessionInvalidated?.(120, 340);
+				await vi.advanceTimersByTimeAsync(0);
+			}
+			// getRestartDelayMs(0) is jittered across 5-10s, so nothing at 4s.
+			await vi.advanceTimersByTimeAsync(4000);
+			expect(restart).not.toHaveBeenCalled();
+
+			await vi.advanceTimersByTimeAsync(6000);
+			expect(restart).toHaveBeenCalledTimes(1);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 
 	// `resetState(0)` used to be `0 || state.attemptCount`, so the counter never

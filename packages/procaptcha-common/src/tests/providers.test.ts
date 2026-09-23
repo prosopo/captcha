@@ -15,6 +15,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	getProcaptchaRandomActiveProvider,
+	getRestartDelayMs,
 	getRetryDelayMs,
 	pickIpMode,
 	providerRetry,
@@ -135,6 +136,31 @@ describe("providers", () => {
 		it("clamps negative or fractional attempt counts", () => {
 			expect(getRetryDelayMs(-5, () => 1)).toBe(500);
 			expect(getRetryDelayMs(1.9, () => 1)).toBe(1000);
+		});
+	});
+
+	describe("getRestartDelayMs", () => {
+		it("doubles from ten seconds, capped at two minutes", () => {
+			expect(getRestartDelayMs(0, () => 1)).toBe(10000);
+			expect(getRestartDelayMs(1, () => 1)).toBe(20000);
+			expect(getRestartDelayMs(2, () => 1)).toBe(40000);
+			expect(getRestartDelayMs(3, () => 1)).toBe(80000);
+			// 10000 * 2^4 = 160000 → capped at 120000.
+			expect(getRestartDelayMs(4, () => 1)).toBe(120000);
+			expect(getRestartDelayMs(50, () => 1)).toBe(120000);
+		});
+
+		// A whole-widget re-mint on a ~0ms "backoff" is not a backoff, so the
+		// jitter window is the top half of the interval rather than all of it.
+		it("never returns less than half the ceiling", () => {
+			expect(getRestartDelayMs(0, () => 0)).toBe(5000);
+			expect(getRestartDelayMs(0, () => 0.5)).toBe(7500);
+			expect(getRestartDelayMs(4, () => 0)).toBe(60000);
+		});
+
+		it("clamps negative or fractional restart counts", () => {
+			expect(getRestartDelayMs(-3, () => 1)).toBe(10000);
+			expect(getRestartDelayMs(1.7, () => 1)).toBe(20000);
 		});
 	});
 

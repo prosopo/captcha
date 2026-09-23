@@ -63,7 +63,9 @@ export const mountProcaptchaPuzzleWidget = (
 	let loading = false;
 	let puzzlePhase: PuzzlePhase = "checkbox";
 	let challengeData: GetPuzzleCaptchaResponse | null = null;
-	let showRetry = false;
+	// A re-mint after a wrong answer builds a brand new widget, so the miss is
+	// only still on screen if the wrapper hands it back to us.
+	let showRetry = true === props.startShowRetry;
 	let lastError: ProcaptchaState["error"] = store.state.error;
 	// See procaptcha-pow's widget — same session-invalidation recovery contract
 	// with coords preservation across a re-mint.
@@ -123,6 +125,20 @@ export const mountProcaptchaPuzzleWidget = (
 		showRetry = true;
 		puzzlePhase = "dragging";
 		scheduler.schedule();
+
+		// A frictionless session is single-use: the provider consumed it when it
+		// issued the puzzle the user just got wrong, so asking `manager.start()`
+		// for a replacement on the same sessionId can only ever come back
+		// CAPTCHA.NO_SESSION_FOUND — a wasted round trip that surfaces an error
+		// on the checkbox before the wrapper recovers. Go straight to the
+		// re-mint instead; the wrapper mints a new session and re-mounts us with
+		// `autoStart`, so a fresh puzzle appears in place.
+		if (frictionlessState?.sessionId && props.onReload) {
+			puzzlePhase = "submitting";
+			scheduler.schedule();
+			props.onReload(lastCoords?.x, lastCoords?.y, { showRetry: true });
+			return;
+		}
 
 		try {
 			const newChallenge = await manager.start();
@@ -186,6 +202,19 @@ export const mountProcaptchaPuzzleWidget = (
 		showRetry = false;
 		if ("CAPTCHA.NO_SESSION_FOUND" !== store.state.error.key) {
 			return;
+		}
+		// Suppressed only when something is actually going to re-mint: this is
+		// an internal recovery signal, not something the user should read, so
+		// hold the spinner rather than paint a support code that is about to
+		// stop being true. Clearing it re-enters this effect once, which returns
+		// at the `!error` guard. With no recovery route the error stands — a
+		// spinner that never resolves is worse than a message.
+		const willRecover =
+			(props.onSessionInvalidated && !sessionInvalidatedFired) ||
+			undefined !== frictionlessState;
+		if (willRecover) {
+			loading = true;
+			store.update({ error: undefined });
 		}
 		if (props.onSessionInvalidated && !sessionInvalidatedFired) {
 			sessionInvalidatedFired = true;
@@ -356,7 +385,8 @@ export const mountProcaptchaPuzzleWidget = (
 
 	if (props.autoStart) {
 		loading = true;
-		showRetry = false;
+		// Deliberately not cleared: an autoStart mount is how a re-mint after a
+		// wrong answer arrives, and `startShowRetry` says whether it was one.
 		const coords = props.startCoords;
 		lastCoords = coords ?? null;
 		scheduler.schedule();
