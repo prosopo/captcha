@@ -41,7 +41,7 @@
 		"@babel/plugin-transform-class-properties": "7.27.1",
 		"@babel/plugin-transform-object-rest-spread": "8.0.1",
 		"@babel/plugin-transform-react-jsx": "8.0.1",
-		"@babel/plugin-transform-runtime": "7.28.5",
+		"@babel/plugin-transform-runtime": "8.0.6",
 		"@babel/preset-env": "8.0.5",
 		"@babel/preset-typescript": "7.28.5",
 		"@rollup/plugin-alias": "6.0.0",
