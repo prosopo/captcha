@@ -20,7 +20,7 @@
 	"dependencies": {
 		"@actions/core": "3.0.1",
 		"@actions/github": "9.1.1",
-		"undici": "6.28.0"
+		"undici": "8.10.2"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.4.1",
