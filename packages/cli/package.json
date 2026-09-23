@@ -47,7 +47,7 @@
 		"@prosopo/util": "3.3.11",
 		"@prosopo/workspace": "3.2.1",
 		"cron-parser": "5.10.0",
-		"dotenv": "16.4.5",
+		"dotenv": "18.0.1",
 		"yargs": "18.1.0",
 		"zod": "3.23.8"
 	},

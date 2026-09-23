@@ -46,7 +46,7 @@
 		"@prosopo/util": "3.3.11",
 		"@prosopo/util-crypto": "13.5.33",
 		"@prosopo/workspace": "3.2.1",
-		"dotenv": "16.4.5",
+		"dotenv": "18.0.1",
 		"fast-glob": "3.3.3",
 		"fs-extra": "11.4.0",
 		"yargs": "18.1.0"

@@ -26,7 +26,7 @@
 	"type": "module",
 	"dependencies": {
 		"@prosopo/types": "5.10.1",
-		"dotenv": "16.4.5"
+		"dotenv": "18.0.1"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.4.1",

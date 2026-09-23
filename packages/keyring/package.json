@@ -42,7 +42,7 @@
 		"@prosopo/types": "5.10.1",
 		"@prosopo/util": "3.3.11",
 		"@prosopo/util-crypto": "13.5.33",
-		"dotenv": "16.4.5"
+		"dotenv": "18.0.1"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.4.1",
