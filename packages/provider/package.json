@@ -51,7 +51,7 @@
 		"@prosopo/web-bot-auth": "0.1.2",
 		"cron": "3.1.7",
 		"express": "4.22.2",
-		"express-rate-limit": "7.4.0",
+		"express-rate-limit": "8.7.0",
 		"geolib": "3.3.14",
 		"i18next": "26.4.2",
 		"ip-address": "10.7.0",
