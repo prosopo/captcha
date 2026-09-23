@@ -28,6 +28,6 @@
 		"clean": "cargo clean && rm -f *.node"
 	},
 	"devDependencies": {
-		"@napi-rs/cli": "3.9.1"
+		"@napi-rs/cli": "3.10.4"
 	}
 }
