@@ -62,6 +62,10 @@ export const detectIpMode = (
 	return undefined;
 };
 
+// AbortSignal.timeout rejects fetch with a DOMException named TimeoutError.
+const isTimeoutError = (err: unknown): boolean =>
+	err instanceof Error && err.name === "TimeoutError";
+
 export class ProsopoServer {
 	config: ProsopoServerConfigOutput;
 	dappAccount: string | undefined;
@@ -85,7 +89,11 @@ export class ProsopoServer {
 	}
 
 	getProviderApi(providerUrl: string): ProviderApi {
-		return new ProviderApi(providerUrl, this.dappAccount || "");
+		return new ProviderApi(
+			providerUrl,
+			this.dappAccount || "",
+			this.config.providerRequestTimeoutMs,
+		);
 	}
 
 	/**
@@ -340,7 +348,8 @@ export class ProsopoServer {
 			return verificationResponse;
 		} catch (err) {
 			this.logger.error(() => ({ err, data: { token } }));
-			const code = err instanceof HttpError ? err.status : 500;
+			const code =
+				err instanceof HttpError ? err.status : isTimeoutError(err) ? 504 : 500;
 			throw new ProsopoApiError("API.BAD_REQUEST", {
 				context: { code, token },
 			});
