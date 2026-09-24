@@ -519,10 +519,12 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
 		// solution has already been checked by the server. Moving this code around could result in solutions being
 		// re-usable.
-		await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-			serverChecked: true,
-			lastUpdatedTimestamp: new Date(),
-		});
+		// The claim is conditional on the record not being checked yet, so of
+		// several concurrent verifies of one token only one gets past here.
+		const claimed = await this.db.markPuzzleCaptchaRecordChecked(
+			challengeRecord.challenge,
+		);
+		if (!claimed) return notVerifiedResponse;
 		// -- END WARNING --
 
 		const submittedAt = challengeRecord.submittedAtTimestamp;

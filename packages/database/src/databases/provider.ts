@@ -1388,6 +1388,41 @@ export class ProviderDatabase
 		);
 	}
 
+	async markPuzzleCaptchaRecordChecked(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		const tables = this.getTables();
+		const timestamp = new Date();
+		const result = await tables.puzzlecaptcha.updateOne(
+			{ challenge, serverChecked: { $ne: true } },
+			{
+				$set: {
+					serverChecked: true,
+					lastUpdatedTimestamp: timestamp,
+					verifiedAtTimestamp: timestamp,
+					pendingStage: true,
+				},
+			},
+		);
+		if (result.modifiedCount === 0) {
+			return false;
+		}
+		this.centralStreamer?.streamPuzzleUpdate(
+			() => this.getPuzzleCaptchaRecordByChallenge(challenge),
+			(ts) =>
+				this.tables.puzzlecaptcha
+					.updateOne(
+						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+						{
+							$set: { storedAtTimestamp: ts },
+							$unset: { pendingStage: 1 },
+						},
+					)
+					.then(() => {}),
+		);
+		return true;
+	}
+
 	/** @description Get serverChecked Dapp User image captcha commitments from the commitments table
 	 */
 	async getCheckedDappUserCommitments(): Promise<UserCommitmentRecord[]> {
@@ -1473,10 +1508,10 @@ export class ProviderDatabase
 
 	/** @description Mark a list of captcha commits as checked
 	 */
-	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
+	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<number> {
 		const timestamp = new Date();
-		await this.tables?.commitment.updateMany(
-			{ id: { $in: commitmentIds } },
+		const result = await this.getTables().commitment.updateMany(
+			{ id: { $in: commitmentIds }, serverChecked: { $ne: true } },
 			[
 				{
 					$set: {
@@ -1491,6 +1526,7 @@ export class ProviderDatabase
 			],
 			{ updatePipeline: true },
 		);
+		return result.modifiedCount;
 	}
 
 	/** @description Update an image captcha commitment
@@ -1619,10 +1655,12 @@ export class ProviderDatabase
 
 	/** @description Mark a list of PoW captcha commits as checked by the server
 	 */
-	async markDappUserPoWCommitmentsChecked(challenges: string[]): Promise<void> {
+	async markDappUserPoWCommitmentsChecked(
+		challenges: string[],
+	): Promise<number> {
 		const timestamp = new Date();
-		await this.tables?.powcaptcha.updateMany(
-			{ challenge: { $in: challenges } },
+		const result = await this.getTables().powcaptcha.updateMany(
+			{ challenge: { $in: challenges }, serverChecked: { $ne: true } },
 			[
 				{
 					$set: {
@@ -1637,6 +1675,7 @@ export class ProviderDatabase
 			],
 			{ upsert: false, updatePipeline: true },
 		);
+		return result.modifiedCount;
 	}
 
 	/**
@@ -2131,7 +2170,9 @@ export class ProviderDatabase
 	/**
 	 * @description Mark a pending request as used
 	 */
-	async updatePendingImageCommitmentStatus(requestHash: string): Promise<void> {
+	async updatePendingImageCommitmentStatus(
+		requestHash: string,
+	): Promise<boolean> {
 		if (!isHex(requestHash)) {
 			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
 				context: {
@@ -2141,14 +2182,15 @@ export class ProviderDatabase
 			});
 		}
 
-		await this.tables?.commitment.updateOne(
-			{ requestHash: requestHash },
+		const result = await this.getTables().commitment.updateOne(
+			{ requestHash: requestHash, pending: true },
 			{
 				$set: {
 					pending: false,
 				},
 			},
 		);
+		return result.modifiedCount > 0;
 	}
 
 	/**

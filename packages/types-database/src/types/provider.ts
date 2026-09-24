@@ -1201,7 +1201,12 @@ export interface IProviderDatabase extends IDatabase {
 		requestHash: string,
 	): Promise<PendingImageCaptchaRequest>;
 
-	updatePendingImageCommitmentStatus(requestHash: string): Promise<void>;
+	/**
+	 * Atomically flips a pending image request to not-pending. Resolves true
+	 * only for the one caller that performed the flip, so concurrent
+	 * submissions against the same request cannot all be evaluated.
+	 */
+	updatePendingImageCommitmentStatus(requestHash: string): Promise<boolean>;
 
 	getAllCaptchasByDatasetId(
 		datasetId: string,
@@ -1264,7 +1269,13 @@ export interface IProviderDatabase extends IDatabase {
 		asOfTimestamp?: Date,
 	): Promise<void>;
 
-	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
+	/**
+	 * Marks commitments server-checked, skipping ones already checked.
+	 * Resolves to the number this call newly claimed — a verify must only
+	 * proceed when it claimed its commitment, otherwise a concurrent verify
+	 * of the same token already did.
+	 */
+	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<number>;
 
 	updateDappUserCommitment(
 		commitmentId: UserCommitment["id"],
@@ -1291,7 +1302,11 @@ export interface IProviderDatabase extends IDatabase {
 		afterId?: unknown,
 	): Promise<PoWCaptchaRecord[]>;
 
-	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<void>;
+	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
+	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<number>;
+
+	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
+	markPuzzleCaptchaRecordChecked(challenge: PoWChallengeId): Promise<boolean>;
 
 	markDappUserPoWCommitmentsStored(
 		challengeIds: string[],

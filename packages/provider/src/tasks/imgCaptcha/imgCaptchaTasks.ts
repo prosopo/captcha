@@ -355,8 +355,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 
 			// Only do stuff if the request is in the local DB
-			// prevent this request hash from being used twice
-			await this.db.updatePendingImageCommitmentStatus(requestHash);
+			// prevent this request hash from being used twice. The flip is
+			// conditional on the request still being pending, so concurrent
+			// submissions (e.g. brute-forcing answers in parallel) get one try.
+			const claimedRequest =
+				await this.db.updatePendingImageCommitmentStatus(requestHash);
+			if (!claimedRequest) {
+				this.logger.info(() => ({
+					msg: "Request hash already consumed by a concurrent submission",
+				}));
+				return response;
+			}
 
 			// Process behavioral data if provided
 			let behavioralDataPacked: BehavioralDataPacked | undefined;
@@ -729,7 +738,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		await this.db.markDappUserCommitmentsChecked([solution.id]);
+		// The claim is conditional on the commitment not being checked yet, so
+		// of several concurrent verifies of one token only one gets past here.
+		const claimed = await this.db.markDappUserCommitmentsChecked([solution.id]);
+		if (claimed === 0) {
+			return {
+				status: "API.USER_ALREADY_VERIFIED",
+				verified: false,
+				...(solution.sessionId && { sessionId: solution.sessionId }),
+			};
+		}
 		// -- END WARNING --
 
 		// A solution exists but is disapproved
