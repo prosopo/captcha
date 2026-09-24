@@ -27,12 +27,15 @@ export function sr25519jwtIssue(
 	const now = Math.floor(Date.now() / 1000);
 	const nbf = options?.notBefore ? Math.floor(options.notBefore) : now;
 	const sub = u8aToHex(publicKey);
+	// Standard claims go last so extra message fields cannot replace them, e.g.
+	// a caller-supplied `exp` extending the token's lifetime or `nbf` disabling
+	// the not-before check.
 	const payload = {
+		...message,
 		sub: sub,
 		iat: now,
 		nbf: nbf,
 		exp: now + (options?.expiresIn ? Math.floor(options.expiresIn) : 300), // Passed in expiry or 5 min lifetime
-		...message,
 	};
 
 	const signingInput = `${base64URLEncode(JSON.stringify(header))}.${base64URLEncode(JSON.stringify(payload))}`;
