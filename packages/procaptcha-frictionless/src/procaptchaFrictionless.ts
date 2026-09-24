@@ -21,6 +21,7 @@ import {
 	clearElement,
 	createElement,
 	getDefaultEvents,
+	getRestartDelayMs,
 	isSecureBrowserContext,
 	mountCheckbox,
 	mountTestModeBanner,
@@ -130,6 +131,10 @@ export const mountProcaptchaFrictionless = (
 	// `providerRetry` re-invokes `start` with no arguments, which would
 	// otherwise drop the flag on the first provider retry.
 	let nextMountAutoStart = false;
+	// Set when the re-mint was triggered by a wrong puzzle answer rather than a
+	// reload press, so the replacement challenge still tells the user they
+	// missed. Held alongside `nextMountAutoStart` for the same reason.
+	let nextMountShowRetry = false;
 	const manualStart = StartModeEnum.manual === config.startMode;
 	let manualStarted = false;
 	// The inner widget only listens for `procaptcha:execute` once /frictionless
@@ -193,13 +198,19 @@ export const mountProcaptchaFrictionless = (
 		state = defaultLoadingState(attemptCount ?? state.attemptCount);
 	};
 
+	// How many silent restarts this widget has already run. Drives the backoff
+	// so a client whose session keeps going missing costs the fleet a request
+	// every two minutes rather than every ten seconds, forever.
+	let restartCount = 0;
+
 	const restartComponentTimeout = () => {
+		const delay = getRestartDelayMs(restartCount);
+		restartCount += 1;
 		const timer = setTimeout(() => {
 			resetState(0);
 			events.onReset();
-			// `restart` frictionless widget after 10 seconds
 			restart();
-		}, 10000);
+		}, delay);
 		teardown.add(() => clearTimeout(timer));
 	};
 
@@ -208,11 +219,16 @@ export const mountProcaptchaFrictionless = (
 		// never-ending requests to Providers when settings are incorrect, or the
 		// user is not human. We need to selectively re-render for events like
 		// `no session found` but not for other errors.
+		//
+		// NO_SESSION_FOUND is ours to fix and not the user's to read: the
+		// session behind the challenge is gone, the only way forward is a new
+		// one, and we are already minting it. Leave the checkbox in its loading
+		// state and re-mint behind it, rather than parking a support code on a
+		// widget that is about to start working again.
 		if ("CAPTCHA.NO_SESSION_FOUND" === errorKey) {
-			const timer = setTimeout(() => {
-				restartComponentTimeout();
-			}, 0);
-			teardown.add(() => clearTimeout(timer));
+			restartComponentTimeout();
+			renderPlaceholder(config.mode, undefined, true);
+			return;
 		}
 		renderPlaceholder(
 			config.mode,
@@ -302,15 +318,22 @@ export const mountProcaptchaFrictionless = (
 			fallOverWithStyle(message, NO_SESSION_FOUND_KEY);
 		};
 
-		// The user pressed reload on the challenge. The provider consumed this
-		// session when it issued the challenge, so there is no way to ask it
-		// for another one — mint a new session by re-running frictionless and
-		// re-mount the widget with `autoStart`, which is what makes a new
-		// challenge appear instead of the modal simply closing. Not one-shot:
-		// the user may keep asking for a different challenge.
-		const onReload = (x?: number, y?: number) => {
+		// The widget wants a replacement challenge — the user pressed reload, or
+		// the puzzle rejected their answer. The provider consumed this session
+		// when it issued the challenge, so there is no way to ask it for another
+		// one — mint a new session by re-running frictionless and re-mount the
+		// widget with `autoStart`, which is what makes a new challenge appear
+		// instead of the modal simply closing. Not one-shot: the user may keep
+		// asking for a different challenge, and at a low `puzzleTolerance` they
+		// may well miss several in a row.
+		const onReload = (
+			x?: number,
+			y?: number,
+			options?: { showRetry?: boolean },
+		) => {
 			pendingRetryCoords.current = normaliseRetryCoords(x, y);
 			nextMountAutoStart = true;
+			nextMountShowRetry = true === options?.showRetry;
 			// A reload mints a genuinely new session, so the invalidation
 			// budget for the *previous* one shouldn't count against it.
 			sessionInvalidatedAttempts.current = 0;
@@ -327,6 +350,8 @@ export const mountProcaptchaFrictionless = (
 		// widget instance that never got to consume them.
 		const forcedAutoStart = nextMountAutoStart;
 		nextMountAutoStart = false;
+		const startShowRetry = nextMountShowRetry;
+		nextMountShowRetry = false;
 		const { autoStart: resumedAutoStart, startCoords: retryStartCoords } =
 			consumeRetryMountProps(pendingRetryCoords, autoStart || forcedAutoStart);
 		const startCoords = escalationCoords ?? retryStartCoords;
@@ -338,6 +363,7 @@ export const mountProcaptchaFrictionless = (
 			i18n,
 			autoStart: resumedAutoStart,
 			startCoords,
+			startShowRetry,
 			onSessionInvalidated,
 			container: widgetContainer,
 		};
@@ -381,7 +407,7 @@ export const mountProcaptchaFrictionless = (
 			const mount = await ProcaptchaPuzzleLoader();
 			if (destroyed) return;
 			clearSlot();
-			solver = mount(slot, widgetProps);
+			solver = mount(slot, { ...widgetProps, onReload });
 			replayPendingExecute();
 			return;
 		}

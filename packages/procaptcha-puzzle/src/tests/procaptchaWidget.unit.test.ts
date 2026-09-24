@@ -498,6 +498,45 @@ describe("finishing the drag", () => {
 		});
 	});
 
+	// The provider consumes a frictionless session when it issues the puzzle,
+	// so re-requesting on the same sessionId can only return
+	// CAPTCHA.NO_SESSION_FOUND. The widget must hand back to the wrapper for a
+	// re-mint instead of making that request.
+	test("a rejected solution on a frictionless session re-mints rather than re-requesting", async () => {
+		mocks.submitSolution.mockResolvedValue(false);
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
+		await openPuzzle(
+			props({
+				frictionlessState: frictionless({ sessionId: "session-one" }),
+				onReload,
+			}),
+		);
+		await complete();
+		expect(onReload).toHaveBeenCalledTimes(1);
+		expect(onReload).toHaveBeenCalledWith(
+			expect.any(Number),
+			expect.any(Number),
+			{ showRetry: true },
+		);
+		// One call to open the puzzle, and none to replace it.
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+	});
+
+	test("a rejected solution still re-requests when there is no session to re-mint", async () => {
+		mocks.submitSolution.mockResolvedValue(false);
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
+		await openPuzzle(props({ frictionlessState: frictionless(), onReload }));
+		await complete();
+		expect(onReload).not.toHaveBeenCalled();
+		expect(mocks.start).toHaveBeenCalledTimes(2);
+	});
+
+	test("a re-minted widget keeps the retry prompt on the replacement puzzle", async () => {
+		render(props({ autoStart: true, startShowRetry: true }));
+		await settle();
+		expect(mocks.canvasProps.current).toMatchObject({ showRetry: true });
+	});
+
 	test("a rejected solution with no replacement challenge closes the puzzle", async () => {
 		mocks.submitSolution.mockResolvedValue(false);
 		mocks.start
@@ -690,6 +729,25 @@ describe("an invalidated session", () => {
 		destroy();
 		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 200));
 		expect(restart).not.toHaveBeenCalled();
+	});
+
+	// A re-mint is already under way, so the error describes a state the widget
+	// is about to leave. Spinner, not support code.
+	test("a lost session that will be re-minted shows no error", async () => {
+		render(props({ frictionlessState: frictionless({ restart: () => {} }) }));
+		await click();
+		await invalidate();
+		expect(mounted.container.textContent).not.toContain("session gone");
+		expect(spinner()).not.toBeNull();
+	});
+
+	test("a lost session handed to the wrapper shows no error either", async () => {
+		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
+		render(props({ onSessionInvalidated }));
+		await click();
+		await invalidate();
+		expect(onSessionInvalidated).toHaveBeenCalledTimes(1);
+		expect(mounted.container.textContent).not.toContain("session gone");
 	});
 
 	test("a lost session with nothing to recover it is simply surfaced", async () => {
