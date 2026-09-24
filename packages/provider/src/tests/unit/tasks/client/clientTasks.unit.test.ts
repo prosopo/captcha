@@ -33,7 +33,10 @@ import {
 } from "@prosopo/types-database";
 import { Types } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";
+import {
+	ClientTaskManager,
+	matchesGlob,
+} from "../../../../tasks/client/clientTasks.js";
 
 const loggerOuter = getLogger("info", "test:client-tasks");
 
@@ -555,6 +558,35 @@ describe("ClientTaskManager", () => {
 			).toBe(false);
 		});
 
+		it("should match glob patterns", () => {
+			expect(
+				clientTaskManager.domainPatternMatcher("shop.example.com", "shop*.com"),
+			).toBe(true);
+			expect(
+				clientTaskManager.domainPatternMatcher("a.b.example.com", "*example*"),
+			).toBe(true);
+			expect(
+				clientTaskManager.domainPatternMatcher("example.org", "*example*.com"),
+			).toBe(false);
+			// "." in a pattern is literal, not any character.
+			expect(
+				clientTaskManager.domainPatternMatcher(
+					"shopxexample.com",
+					"shop.*.com",
+				),
+			).toBe(false);
+		});
+
+		it("should match a many-star glob pattern in linear time", () => {
+			// A customer-controlled pattern like this backtracks exponentially
+			// when compiled to `.*a.*a...` and blocks the event loop.
+			const pattern = `${"*a".repeat(10)}*b`;
+			const host = "a".repeat(32);
+			const started = performance.now();
+			expect(clientTaskManager.domainPatternMatcher(host, pattern)).toBe(false);
+			expect(performance.now() - started).toBeLessThan(500);
+		});
+
 		it("should handle edge cases", () => {
 			expect(clientTaskManager.domainPatternMatcher("", "example.com")).toBe(
 				false,
@@ -744,5 +776,25 @@ describe("ClientTaskManager", () => {
 				),
 			).rejects.toThrow();
 		});
+	});
+});
+
+describe("matchesGlob", () => {
+	it.each<[string, string, boolean]>([
+		["*", "", true],
+		["*", "anything", true],
+		["", "", true],
+		["", "a", false],
+		["a*", "abc", true],
+		["*c", "abc", true],
+		["a*c", "abc", true],
+		["a*c", "abd", false],
+		["a**c", "ac", true],
+		["*a*b*", "xxaxxbxx", true],
+		["*a*b*", "xxbxxaxx", false],
+		["abc", "abc", true],
+		["abc", "abcd", false],
+	])("matchesGlob(%s, %s) is %s", (pattern, text, expected) => {
+		expect(matchesGlob(pattern, text)).toBe(expected);
 	});
 });
