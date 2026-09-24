@@ -40,13 +40,31 @@ const DOCS_URL = "https://docs.prosopo.io/";
 const ariaCurrent = (isCurrent: boolean): string =>
 	isCurrent ? ' aria-current="page"' : "";
 
+export const DEMO_HOSTNAME = "demo.prosopo.io";
+const PLAUSIBLE_SCRIPT_URL =
+	"https://prosopo.io/js/script.kairee5buy1chae8eit0so8ahphae9Oo.js";
+
+// Only the public demo reports to Plausible: local runs and the Cypress suite
+// serve these same pages.
+const analyticsTag = `
+    <script>
+      (function () {
+        if (location.hostname !== "${DEMO_HOSTNAME}") return;
+        var tracker = document.createElement("script");
+        tracker.defer = true;
+        tracker.setAttribute("data-domain", "${DEMO_HOSTNAME}");
+        tracker.src = "${PLAUSIBLE_SCRIPT_URL}";
+        document.head.appendChild(tracker);
+      })();
+    </script>`;
+
 const headTags = (prefix: string): string => `
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="${prefix}styles/demo.css">`;
+    <link rel="stylesheet" href="${prefix}styles/demo.css">${analyticsTag}`;
 
 const header = `
 <header class="demo-header">
