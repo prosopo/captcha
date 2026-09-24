@@ -299,6 +299,16 @@ services:
     container_name: ipinfo
     image: prosopo/ipinfo:${IPINFO_VERSION:-0.1.0}
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          # Loading the RAM database settles at 7.4-8.4 GB resident. Without a
+          # ceiling an overshoot is a *global* OOM, and the kernel is free to
+          # pick mongod or a provider as the victim instead, which is how a
+          # node too small for the sidecar lost the page cache the rest of its
+          # stack depended on. This confines the kill to the sidecar, whose
+          # absence the providers already handle by falling back to MaxMind.
+          memory: 10G
     # Pass the config path explicitly. The image bakes a default config.json
     # at /usr/src/app/config.json which getConfigPath() finds before the
     # mounted /usr/src/app/config/config.json — silently ignoring our
