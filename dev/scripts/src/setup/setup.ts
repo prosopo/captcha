@@ -26,7 +26,7 @@ import { LogLevel, getLogger } from "@prosopo/logger";
 import type { IProviderAccount } from "@prosopo/types";
 import { get } from "@prosopo/util";
 import fse from "fs-extra";
-import { updateDemoHTMLFiles, updateEnvFiles } from "../util/index.js";
+import { updateEnvFiles } from "../util/index.js";
 import { setupProvider } from "./provider.js";
 import { registerSiteKey } from "./site.js";
 
@@ -161,14 +161,12 @@ export async function setup(provider: boolean, sites: boolean) {
 
 				await registerSiteKey(env, siteKey.pair.address, siteKey.settings);
 
+				// Demo HTML is deliberately left alone: it takes its keys from env at
+				// build time, and rewriting every `data-sitekey` once per type left
+				// all pages carrying whichever key was registered last.
 				env.logger.debug(() => ({
 					msg: "Updating env files with PROSOPO_SITE_KEY",
 				}));
-				await updateDemoHTMLFiles(
-					[/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
-					siteKey.pair.address,
-					env.logger,
-				);
 
 				const envVarNames =
 					siteKey.settings.captchaType === "image"
