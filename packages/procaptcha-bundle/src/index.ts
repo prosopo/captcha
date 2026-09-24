@@ -431,32 +431,30 @@ const boot = () => {
 	// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 	// onRenderExplicit takes values of either explicit or implicit
 	const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAMES);
-	let readyCalled = false;
+	if (renderExplicit === "explicit" && !onloadUrlCallback) return;
 
-	// Render the Procaptcha component implicitly if renderExplicit is not set to explicit
-	if (renderExplicit !== "explicit") {
-		getProcaptchaScript(BUNDLE_NAMES)?.addEventListener("load", () => {
-			ready(implicitRender);
-			readyCalled = true;
-		});
-		// or if the document has already loaded, call the implicit render function
-		if (document.readyState === "complete" && !readyCalled) {
+	// A script injected after the page loaded runs with readyState already
+	// "complete" and then receives its own `load` event, so both triggers
+	// below fire. Without the guard every implicit widget was mounted twice
+	// (the first copy orphaned but still running) and the onload callback ran
+	// twice.
+	let booted = false;
+	const run = () => {
+		if (booted) return;
+		booted = true;
+		if (renderExplicit !== "explicit") {
 			ready(implicitRender);
 		}
-	}
-
-	if (onloadUrlCallback) {
-		// Add event listener to the script tag to call the callback function when the script is loaded
-		getProcaptchaScript(BUNDLE_NAMES)?.addEventListener("load", () => {
-			const onloadCallback = getWindowCallback(onloadUrlCallback);
-			ready(onloadCallback);
-		});
-
-		// or if the document has already loaded, call the callback function
-		if (document.readyState === "complete" && !readyCalled) {
-			const onloadCallback = getWindowCallback(onloadUrlCallback);
-			ready(onloadCallback);
+		if (onloadUrlCallback) {
+			ready(getWindowCallback(onloadUrlCallback));
 		}
+	};
+
+	getProcaptchaScript(BUNDLE_NAMES)?.addEventListener("load", run, {
+		once: true,
+	});
+	if (document.readyState === "complete") {
+		run();
 	}
 };
 
