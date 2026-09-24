@@ -500,6 +500,66 @@ describe("CaptchaManager", () => {
 			});
 		});
 
+		it("rejects a session that was issued for a different site key", async () => {
+			// A session minted on a lenient site (pow) must not stand in for a
+			// site whose own settings would demand more.
+			const session: Pick<Session, "sessionId" | "captchaType" | "siteKey"> = {
+				sessionId: "sessionId",
+				captchaType: CaptchaType.pow,
+				siteKey: "attackerSiteKey",
+			};
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(session as Session);
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "victimSiteKey",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				mockEnv,
+				"sessionId",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: ResultReason.CAPTCHA_NO_SESSION_FOUND,
+				type: CaptchaType.pow,
+			});
+		});
+
+		it("accepts a session that was issued for the requesting site key", async () => {
+			const session: Pick<Session, "sessionId" | "captchaType" | "siteKey"> = {
+				sessionId: "sessionId",
+				captchaType: CaptchaType.pow,
+				siteKey: "account",
+			};
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(session as Session);
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.frictionless,
+					},
+				},
+				CaptchaType.pow,
+				mockEnv,
+				"sessionId",
+				undefined,
+				"127.0.0.1",
+			);
+
+			expect(result.valid).toBe(true);
+		});
+
 		it("returns the session's stored ipInfo so callers can avoid a second DB read", async () => {
 			// Sessions now persist the full IPInfoResponse rather than a
 			// flat countryCode. isValidRequest surfaces it on the return
