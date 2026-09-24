@@ -17,12 +17,12 @@
  *
  * Since the detector moved into the provider-served pool, the frictionless flow
  * cannot start until `/detector/assign` has returned. That request is issued by
- * `customDetectBot`, which only runs once React has mounted the widget — and
+ * `customDetectBot`, which only runs once the widget has mounted — and
  * that mount sits behind the bundle's dynamic-import chain. Measured on a
  * staging demo page the assign request did not leave the browser until 1513 ms,
  * of which ~700 ms was purely waiting for chunks to arrive in sequence.
  *
- * Nothing in the request depends on React, i18n or the widget config: it needs
+ * Nothing in the request depends on the widget, i18n or its config: it needs
  * the site key (a DOM attribute, readable immediately), the environment (a
  * build-time constant) and the IP-mode flags (DOM attributes). So the entry
  * point kicks it off as soon as it has read those, and `customDetectBot` picks

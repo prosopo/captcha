@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Translator } from "@prosopo/locale";
+import type { Component } from "@prosopo/procaptcha-common";
 import type { PuzzleEvent } from "@prosopo/types";
-import { type Theme, lightTheme } from "@prosopo/widget-skeleton";
-import { type ReactElement, act, createElement } from "react";
-import { type Root, createRoot } from "react-dom/client";
+import { lightTheme } from "@prosopo/widget-skeleton";
 import {
 	type Mock,
 	afterEach,
@@ -25,7 +25,10 @@ import {
 	test,
 	vi,
 } from "vitest";
-import { PuzzleCanvas } from "../components/PuzzleCanvas.js";
+import {
+	type PuzzleCanvasProps,
+	mountPuzzleCanvas,
+} from "../components/puzzleCanvas.js";
 
 /**
  * The canvas is the only piece of the puzzle flow the user actually touches:
@@ -34,73 +37,68 @@ import { PuzzleCanvas } from "../components/PuzzleCanvas.js";
  * against a real render rather than calling the handlers directly.
  */
 
-/**
- * The real locale package reaches for an http backend the moment a component
- * asks it for a string, which jsdom refuses. The English defaults the canvas
- * ships stand in instead, interpolated the way i18next would, so the
- * assertions below read as the copy a user is actually given.
- */
-vi.mock("@prosopo/locale", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("@prosopo/locale")>();
-	const t = (
-		key: string,
-		options?: { defaultValue?: string } & Record<string, unknown>,
-	): string =>
-		(options?.defaultValue ?? key).replace(
-			/{{(\w+)}}/g,
-			(placeholder: string, name: string) =>
-				options && name in options ? String(options[name]) : placeholder,
-		);
-	return { ...actual, useTranslation: () => ({ t, ready: true }) };
-});
-
 const CONTAINER_WIDTH = 300;
 const CONTAINER_HEIGHT = 200;
 const PIECE_SIZE = 44;
 
-interface CanvasProps {
-	originX: number;
-	originY: number;
-	background: string;
-	piece: string;
-	pieceSize: number;
-	onComplete: Mock<
-		(finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => void
-	>;
-	showRetry: boolean;
-	submitting: boolean;
-	theme: Theme;
-}
+/**
+ * The real translator reaches for an http backend the moment it is asked for a
+ * string, which jsdom refuses. The English defaults the canvas ships stand in
+ * instead, interpolated the way i18next would, so the assertions below read as
+ * the copy a user is actually given.
+ */
+const translator = (): Translator => ({
+	t: (key: string, options?: Record<string, unknown>): string => {
+		const template = (options?.defaultValue as string | undefined) ?? key;
+		return template.replace(
+			/{{(\w+)}}/g,
+			(placeholder: string, name: string) =>
+				options && name in options ? String(options[name]) : placeholder,
+		);
+	},
+	isReady: () => true,
+	subscribe: () => () => undefined,
+	i18n: {} as Translator["i18n"],
+});
 
-let container: HTMLDivElement;
-let root: Root;
+let canvas: Component<PuzzleCanvasProps> | undefined;
 let onComplete: Mock<
 	(finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => void
 >;
 
-const props = (overrides: Partial<CanvasProps> = {}): CanvasProps => ({
+const props = (
+	overrides: Partial<PuzzleCanvasProps> = {},
+): PuzzleCanvasProps => ({
 	originX: 20,
 	originY: 100,
 	background: "data:image/webp;base64,UklGRg==",
 	piece: "data:image/webp;base64,UklGRg==",
-	pieceSize: 44,
+	pieceSize: PIECE_SIZE,
 	onComplete,
 	showRetry: false,
 	submitting: false,
 	theme: lightTheme,
+	translator: translator(),
 	...overrides,
 });
 
-const render = (canvasProps: CanvasProps): void => {
-	act(() => {
-		root.render(createElement(PuzzleCanvas, canvasProps) as ReactElement);
-	});
+const render = (canvasProps: PuzzleCanvasProps): void => {
+	if (canvas) {
+		canvas.update(canvasProps);
+	} else {
+		canvas = mountPuzzleCanvas(canvasProps);
+	}
+};
+
+const destroy = (): void => {
+	canvas?.destroy();
+	canvas = undefined;
 };
 
 /**
- * The canvas portals itself onto the body — it has to escape the query
- * container the widget skeleton wraps it in — so it is never inside the render
- * container, and everything that reads the rendered output reads the body.
+ * The canvas puts itself on the body — it has to escape the query container
+ * the widget skeleton wraps it in — so everything that reads the rendered
+ * output reads the body.
  */
 const overlay = (): HTMLElement => document.body;
 
@@ -119,25 +117,19 @@ const piecePosition = (): { x: number; y: number } => ({
 });
 
 const mouseDown = (clientX: number, clientY: number): void => {
-	act(() => {
-		piece().dispatchEvent(
-			new MouseEvent("mousedown", { bubbles: true, clientX, clientY }),
-		);
-	});
+	piece().dispatchEvent(
+		new MouseEvent("mousedown", { bubbles: true, clientX, clientY }),
+	);
 };
 
 const mouseMove = (clientX: number, clientY: number): void => {
-	act(() => {
-		document.dispatchEvent(
-			new MouseEvent("mousemove", { bubbles: true, clientX, clientY }),
-		);
-	});
+	document.dispatchEvent(
+		new MouseEvent("mousemove", { bubbles: true, clientX, clientY }),
+	);
 };
 
 const mouseUp = (): void => {
-	act(() => {
-		document.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
-	});
+	document.dispatchEvent(new MouseEvent("mouseup", { bubbles: true }));
 };
 
 /**
@@ -154,34 +146,26 @@ const touchEvent = (
 };
 
 const touchStart = (touches: { clientX: number; clientY: number }[]): void => {
-	act(() => {
-		piece().dispatchEvent(touchEvent("touchstart", touches));
-	});
+	piece().dispatchEvent(touchEvent("touchstart", touches));
 };
 
 const touchMove = (touches: { clientX: number; clientY: number }[]): void => {
-	act(() => {
-		document.dispatchEvent(touchEvent("touchmove", touches));
-	});
+	document.dispatchEvent(touchEvent("touchmove", touches));
 };
 
 const touchEnd = (): void => {
-	act(() => {
-		document.dispatchEvent(touchEvent("touchend", []));
-	});
+	document.dispatchEvent(touchEvent("touchend", []));
 };
 
 const keyDown = (key: string, options: { shiftKey?: boolean } = {}): void => {
-	act(() => {
-		piece().dispatchEvent(
-			new KeyboardEvent("keydown", {
-				key,
-				bubbles: true,
-				cancelable: true,
-				shiftKey: options.shiftKey ?? false,
-			}),
-		);
-	});
+	piece().dispatchEvent(
+		new KeyboardEvent("keydown", {
+			key,
+			bubbles: true,
+			cancelable: true,
+			shiftKey: options.shiftKey ?? false,
+		}),
+	);
 };
 
 /**
@@ -222,18 +206,11 @@ beforeEach(() => {
 		vi.fn<
 			(finalX: number, finalY: number, puzzleEvents: PuzzleEvent[]) => void
 		>();
-	container = document.createElement("div");
-	document.body.appendChild(container);
-	act(() => {
-		root = createRoot(container);
-	});
+	canvas = undefined;
 });
 
 afterEach(() => {
-	act(() => {
-		root.unmount();
-	});
-	container.remove();
+	destroy();
 	vi.useRealTimers();
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
@@ -291,9 +268,7 @@ describe("what it puts on screen", () => {
 	test("the shake on a retry stops on its own", () => {
 		vi.useFakeTimers();
 		render(props({ showRetry: true }));
-		act(() => {
-			vi.advanceTimersByTime(600);
-		});
+		vi.advanceTimersByTime(600);
 		// Nothing to assert beyond survival: the timer fires into a live
 		// component rather than leaking past the shake.
 		expect(piecePosition()).toEqual({ x: 20, y: 100 });
@@ -302,15 +277,8 @@ describe("what it puts on screen", () => {
 	test("unmounting mid-shake cancels the timer", () => {
 		vi.useFakeTimers();
 		render(props({ showRetry: true }));
-		act(() => {
-			root.unmount();
-		});
-		act(() => {
-			vi.advanceTimersByTime(600);
-		});
-		act(() => {
-			root = createRoot(container);
-		});
+		destroy();
+		vi.advanceTimersByTime(600);
 		expect(
 			overlay().querySelector('[data-cy="prosopo-puzzle-piece"]'),
 		).toBeNull();
@@ -366,17 +334,20 @@ describe("dragging with a mouse", () => {
 		const [finalX, finalY, events] = onComplete.mock.calls[0] ?? [];
 		expect(finalX).toBe(200);
 		expect(finalY).toBe(80);
-		expect(events?.map((event) => [event.x, event.y])).toEqual([
+		expect(events?.map((event: PuzzleEvent) => [event.x, event.y])).toEqual([
 			[100, 95],
 			[200, 80],
 		]);
 	});
 
-	test("a grab released without moving reports the origin and no trail", () => {
+	// Reporting the origin here spent the challenge on a position that cannot be
+	// correct, and the provider rejects the replacement fetch — so a single
+	// click that never moved ended the attempt outright.
+	test("a grab released without moving reports nothing", () => {
 		render(props());
 		mouseDown(20, 100);
 		mouseUp();
-		expect(onComplete).toHaveBeenCalledWith(20, 100, []);
+		expect(onComplete).not.toHaveBeenCalled();
 	});
 
 	test("letting go without having grabbed anything reports nothing", () => {
@@ -412,7 +383,9 @@ describe("dragging with a mouse", () => {
 		mouseMove(200, 80);
 		mouseUp();
 		const events = onComplete.mock.calls[1]?.[2];
-		expect(events?.map((event) => [event.x, event.y])).toEqual([[200, 80]]);
+		expect(events?.map((event: PuzzleEvent) => [event.x, event.y])).toEqual([
+			[200, 80],
+		]);
 	});
 
 	test("the trail is timestamped in order", () => {
@@ -463,6 +436,19 @@ describe("dragging with a finger", () => {
 		touchEnd();
 		expect(piecePosition()).toEqual({ x: 20, y: 100 });
 		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	// The panel opens centred, under the finger that just pressed the checkbox,
+	// so tapping the piece instead of dragging it is the easy mistake to make on
+	// a phone. It used to submit the untouched origin, which fails, and the
+	// widget then reset — indistinguishable to the user from the challenge
+	// never having worked.
+	test("tapping the piece without dragging reports nothing", () => {
+		render(props());
+		touchStart([{ clientX: 20, clientY: 100 }]);
+		touchEnd();
+		expect(onComplete).not.toHaveBeenCalled();
+		expect(piecePosition()).toEqual({ x: 20, y: 100 });
 	});
 
 	test("a touchmove carrying no touches is ignored mid-drag", () => {
@@ -586,11 +572,9 @@ describe("driving it from the keyboard", () => {
 
 	test("tab cannot leave the dialog for the page behind it", () => {
 		render(props());
-		act(() => {
-			document.dispatchEvent(
-				new KeyboardEvent("keydown", { key: "Tab", bubbles: true }),
-			);
-		});
+		document.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "Tab", bubbles: true }),
+		);
 		expect(document.activeElement).toBe(piece());
 	});
 
@@ -602,15 +586,10 @@ describe("driving it from the keyboard", () => {
 		render(props());
 		expect(document.activeElement).toBe(piece());
 
-		act(() => {
-			root.unmount();
-		});
+		destroy();
 		expect(document.activeElement).toBe(opener);
 
 		opener.remove();
-		act(() => {
-			root = createRoot(container);
-		});
 	});
 });
 
@@ -647,9 +626,7 @@ describe("what it says to a screen reader", () => {
 		keyDown("ArrowRight");
 		keyDown("ArrowRight");
 		expect(liveRegion().textContent).toBe("7 percent across, 50 percent down");
-		act(() => {
-			vi.advanceTimersByTime(500);
-		});
+		vi.advanceTimersByTime(500);
 		expect(liveRegion().textContent).toBe("13 percent across, 50 percent down");
 	});
 
@@ -677,14 +654,9 @@ describe("after it goes away", () => {
 	test("its document listeners go with it", () => {
 		render(props());
 		mouseDown(20, 100);
-		act(() => {
-			root.unmount();
-		});
+		destroy();
 		mouseMove(150, 90);
 		mouseUp();
 		expect(onComplete).not.toHaveBeenCalled();
-		act(() => {
-			root = createRoot(container);
-		});
 	});
 });

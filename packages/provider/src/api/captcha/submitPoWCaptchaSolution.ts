@@ -435,6 +435,9 @@ export const buildEscalation = async (
 		tcpWindow: perConnectionSignals?.tcpWindow,
 		puzzleTolerance: escalationPuzzleOverrides?.puzzleTolerance,
 		puzzle: escalationPuzzleOverrides?.puzzle,
+		// The escalated session is the same render as the origin, so it answers
+		// to the same session id the verify call will correlate against.
+		clientMetaData: originSession.clientMetaData,
 	});
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*

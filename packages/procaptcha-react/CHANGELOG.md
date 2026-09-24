@@ -1,5 +1,149 @@
 # @prosopo/procaptcha-react
 
+## 2.13.2
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+  - @prosopo/types@5.10.1
+  - @prosopo/procaptcha@2.11.20
+  - @prosopo/procaptcha-common@2.17.2
+
+## 2.13.1
+### Patch Changes
+
+- aed164d: Make asset signing survive contact with a CDN that actually enforces it.
+  
+  Signing image URLs is optional and has been off in practice, so two paths that only break when a zone starts checking tokens have never been exercised. Both are fixed here, so enabling enforcement is a config change rather than a config change plus an incident.
+  
+  **A dataset could not be imported.** Hashing an item downloads the image from the URL stored in the dataset, and that URL is the canonical, unsigned one. Against an enforcing zone every one of those downloads is rejected, so a dataset becomes impossible to import on exactly the configuration it is meant to be served from. `downloadImage` now signs the URL when a signing key is configured, and leaves it alone when one is not.
+  
+  **A failed image never recovered.** The widget retried a broken image by appending a cache-busting query parameter. A token is a signature over the query string, so on a signed URL that parameter invalidates it and every retry is rejected — a transient failure turned permanent. The retry now re-requests the signed URL unchanged, and keeps the cache-buster for unsigned URLs, where it is still worth having and costs nothing.
+  
+  The token scheme itself now lives in one place, `@prosopo/datasets`, rather than being written out twice. The provider keeps its synchronous implementation, because `resolveAsset` cannot await, but both ends build the string to hash and encode the result through the same helpers.
+- 3d45c37: Stop the widget's hover highlights costing a phone user their first tap.
+  
+  Tapping the checkbox on an iPhone did nothing the first time. The second tap worked. The cause is a rule iOS applies to every page: if the first tap on a control changes what is under the finger, Safari treats it as "show me the hover state" rather than "activate this", and withholds the click. Every control in the widget that lights up on hover was therefore asking to be tapped twice.
+  
+  Hover feedback is now drawn only where a pointer can actually rest on something. On a desktop nothing changes. On a touch screen the highlight never appears and the first tap activates the control, which is what a visitor expects.
+  
+  Four places had it, and only one of them was the checkbox:
+  
+  - the **checkbox** — a state layer around the box
+  - the **reload button** in the challenge dialog — a fill change
+  - the dialog's **action buttons**, Cancel, Next and Submit — a state layer
+  - the **widget container** itself, via a CSS `:hover` rule. This one is easy to miss and matters most: the box that lights up is the one the checkbox sits inside, so it repaints under the finger even when the tap never touches a control with its own hover.
+  
+  The first three ask `matchMedia("(hover: hover)")` before listening for the pointer at all; the fourth is wrapped in the matching media query. The image tiles never had hover feedback and are unchanged.
+  
+  None of this came from the recent randomisation work — the React components these replaced carried the same handlers, so it has been there as long as the widget has.
+  
+  Covered by a test per control asserting no state layer is drawn when the device reports it cannot hover, plus tests for the check itself, including that it assumes a pointer when the environment cannot answer — which is what keeps the existing desktop behaviour, and every existing hover test, intact.
+- 4cc28db: Fix the image challenge laying out two columns instead of three on a phone, which pushed the last images below the screen where they could not be reached.
+  
+  On a Samsung A52s the image grid is 345.578px wide. Each tile asked for `calc(33.333% - 5.33px)` at an 8px gap, so three tiles and the two gaps between them came to 345.584px — **six thousandths of a pixel too wide**. That is enough for the browser to wrap, so the challenge drew two columns and five rows rather than three and three. The panel went from about 370px tall to about 1080px, and three of the nine images ended up below a 718px viewport.
+  
+  The tile width is now written as `calc((100% - 16px) / 3)`, leaving both the subtraction and the division to the browser. There is nothing left to round, so three tiles and their gaps come to exactly the width of the row at every gap the grid draws.
+  
+  This arrived with the dialog randomisation, which replaced a fixed `calc(33.333% - 10px)` with a width derived from the randomised gap. The old value subtracted a whole gap per tile where only two thirds was needed, so it happened to leave about 10px of slack and always fitted. Deriving the width exactly removed the slack, and the rounding then tipped it over. Which gaps break depends on the arithmetic — 8, 11 and 14 round down and overflow, the rest do not — so it looked intermittent.
+  
+  The panel that holds the images is also `touch-action: pan-y` rather than `touch-action: none` now. It is an `overflow-y: auto` box, so on a phone it is the thing a finger has to drag when the images do not fit, and `none` told the browser not to pan it at all — which is what turned "some images are off-screen" into "some images cannot be reached". Stopping the page behind from scrolling is `overscroll-behavior`'s job and it still does it. That one is older than the randomisation; it came in with the React to vanilla rewrite, and the React component before it had the same thing.
+  
+  Covered by a test that works out where three tiles and two gaps land for every gap the challenge draws, against a set of panel widths including the A52s' 345.578px. It fails on the old expression with exactly the numbers measured on the device.
+- Updated dependencies [3d45c37]
+- Updated dependencies [4cc28db]
+- Updated dependencies [d3b3286]
+  - @prosopo/widget-skeleton@2.10.0
+  - @prosopo/procaptcha-common@2.17.1
+  - @prosopo/procaptcha@2.11.19
+
+## 2.13.0
+### Minor Changes
+
+- 5e5fb9e: Give the image challenge dialog different class names, a different DOM shape, different element types for its controls and slightly different spacing on every page load, so a solver script cannot hardcode a way to find or click anything inside it.
+  
+  This is the same treatment the checkbox got. Until now the dialog was identical for every user, forever: the panel was always `.prosopo-modalInner` inside `.prosopo-modalOuter` inside `.prosopo-challenge-content`, every tile and every action was a `<button>`, the grid gap was always 10px, and the whole thing sat at the same offsets. The end-to-end suite was itself finding the images by climbing four parents and stepping sideways from the instruction line — which is the clearest possible evidence that the markup was a reliable handle.
+  
+  Four things now change, all drawn fresh each time a challenge mounts:
+  
+  - **The names.** Every class the dialog renders — the two modal layers, the challenge surface and its panel, the reload control — is an 8-character token drawn at mount. Selectors scraped from one page load are dead on the next. The challenge surface is shared with the puzzle, so the puzzle gets this too. Nothing in the widget's own CSS referenced these names, but a site that had written its own rules against `.prosopo-modalOuter`, `.prosopo-modalInner`, `.prosopo-challenge-content` or `.reload-button` will find they no longer match. `image-captcha` on the widget root stays fixed, as `prosopo-checkbox` did, because that one sits in the embedding page's light DOM.
+  - **The shape.** The panel, the header, the grid, the action row, each action and each tile sit inside a random number of randomly named `div` or `span` wrappers. The wrappers are `display: contents`, so they generate no boxes and cannot move anything: depth varies, layout does not. Only elements with no accessible role are used, so nothing new is announced to a screen reader.
+  - **The element each control is made of.** Every tile and every action is now randomly either a real `<button>` or a `<div role="button" tabindex="0">`, so `button` no longer finds them all. The generic variant is given by hand what the button gave for free: it is in the tab order, it activates on Enter and on Space, Space does not scroll the dialog, and it carries the same `aria-pressed` state. The surface's focus trap already matched `[tabindex]:not([tabindex="-1"])`, so both variants are trapped and tabbable alike.
+  - **The spacing.** The grid gap, the grid's and the header's padding, the action row's padding and the panel's own margins are each nudged a few pixels, so tile centres are not where they were last time. Each of these changes the panel's size rather than moving the panel, so the surface still centres it and a panel taller than the viewport still scrolls to its own edges. The tile and action widths are now derived from the gap they were drawn with — three columns fit only if each cell gives up two thirds of a gap, and the old hardcoded basis would have wrapped the row at the wide end of the range.
+  
+  Three related fixes come with it:
+  
+  - The tick badge on a selected tile was shipping `data-testid="CheckIcon"` to production, plus an `aria-label` on an `aria-hidden` element that nothing could ever read and a stray `color="#fff"` attribute. All three are gone.
+  - The reload button acted on any click, including one a script dispatched. It now takes the same trusted-event gate every other control in the widget has.
+  - The end-to-end suite no longer depends on the markup at all. It uses `data-cy` hooks — the instruction line, the challenge panel, the round, the reload control — that are withheld from production builds, exactly as the checkbox withholds `captcha-checkbox`.
+  
+  Note what this does not do. The dialog still says it is a dialog, the tiles still expose the button role and their pressed state, and the images still carry alt text. A script that looks for what these things mean rather than what they are called will still find them. That is the price of the challenge being usable with a screen reader, and it is the right price; the point here is to kill the cheap selector, not to claim the dialog is unfindable.
+
+### Patch Changes
+
+- Updated dependencies [94929c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [e180281]
+- Updated dependencies [5e5fb9e]
+  - @prosopo/procaptcha-common@2.17.0
+  - @prosopo/locale@3.6.0
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/util@3.3.11
+  - @prosopo/widget-skeleton@2.9.0
+  - @prosopo/procaptcha@2.11.18
+
+## 2.12.0
+### Minor Changes
+
+- 59c02da: Replace React with vanilla TS/DOM in the widget.
+  
+  The widget packages no longer depend on react, react-dom, @emotion or
+  react-i18next: every component is now a `mount*` function returning a handle
+  with `update`/`destroy`. `useTranslation` is replaced by `createTranslator`,
+  which exposes i18next's `t` plus the events that used to trigger a re-render.
+  The rendered markup, styling and behaviour are unchanged — only the
+  implementation is.
+  
+  Everything the widget has gained since this rewrite started is carried over,
+  so nothing is lost by dropping React: the shared challenge surface (popup and
+  float placement, escape/outside-click dismissal and the dialog focus trap),
+  the image-tile and puzzle-piece keyboard paths, the checkbox's focus handover
+  across the loading swap, the server-rendered puzzle imagery, `startMode:
+  "manual"` with `window.procaptcha.start()`, `data-bind` / targeted
+  `execute(widgetId)`, the Web Bot Auth "authenticated" badge, the client
+  session id, and the bounded session re-mint and reload handling in the
+  frictionless wrapper.
+
+### Patch Changes
+
+- Updated dependencies [59c02da]
+  - @prosopo/procaptcha-common@2.16.0
+  - @prosopo/locale@3.5.0
+  - @prosopo/procaptcha@2.11.17
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+
+## 2.11.4
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+  - @prosopo/locale@3.4.4
+  - @prosopo/common@3.1.57
+  - @prosopo/procaptcha@2.11.16
+  - @prosopo/procaptcha-common@2.15.1
+
+## 2.11.3
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/procaptcha-common@2.15.0
+  - @prosopo/procaptcha@2.11.15
+
 ## 2.11.2
 ### Patch Changes
 

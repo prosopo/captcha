@@ -72,7 +72,7 @@ export default defineConfig({
 			});
 		},
 		// escalationPuzzle.cy.ts is deliberately NOT included here — the
-		// puzzle modal it waits on (`.prosopo-modalInner p`) is the
+		// puzzle modal it waits on (`[data-cy="captcha-prompt"]`) is the
 		// image widget's selector, not the puzzle widget's. It needs a
 		// follow-up fix (either target the puzzle-widget DOM or reuse
 		// puzzle.cy.ts's assertions). Excluded from image.config.js's

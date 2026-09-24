@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { TranslateFn } from "@prosopo/locale";
 import {
 	type LogObject,
 	type LogRecord,
@@ -19,17 +20,17 @@ import {
 	type Logger,
 	NativeLogger,
 } from "@prosopo/logger";
-import type { TFunction } from "i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProsopoApiError, ProsopoEnvError, unwrapError } from "../error.js";
 
-// Tiny stand-in for the i18next translator. Keys present in the map are
-// translated, anything else falls through unchanged (mirrors i18next behavior
-// for unknown keys).
-const makeI18n = (translations: Record<string, string>): { t: TFunction } => {
-	const t = ((key: string) => translations[key] ?? key) as unknown as TFunction;
-	return { t };
-};
+// Tiny stand-in for the translator. Keys present in the map are translated,
+// anything else falls through unchanged (mirrors the real one's behaviour for
+// unknown keys).
+const makeI18n = (
+	translations: Record<string, string>,
+): { t: TranslateFn } => ({
+	t: (key: string): string => translations[key] ?? key,
+});
 
 const englishI18n = makeI18n({
 	"CAPTCHA.NO_SESSION_FOUND": "No session found",

@@ -1,0 +1,33 @@
+{
+	"name": "@prosopo/native-puzzle",
+	"version": "0.1.0",
+	"description": "Rust puzzle background synthesis for the Prosopo captcha provider (napi-rs).",
+	"license": "Apache-2.0",
+	"author": "Prosopo Limited",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/native-puzzle"
+	},
+	"main": "index.js",
+	"types": "index.d.ts",
+	"files": ["index.js", "index.d.ts", "*.node"],
+	"engines": {
+		"node": "^24",
+		"npm": "^11"
+	},
+	"napi": {
+		"binaryName": "index",
+		"targets": ["x86_64-unknown-linux-gnu"]
+	},
+	"scripts": {
+		"build": "napi build --platform --release",
+		"build:debug": "napi build --platform",
+		"bench": "node bench.mjs",
+		"test:cargo": "cargo test --release",
+		"clean": "cargo clean && rm -f *.node"
+	},
+	"devDependencies": {
+		"@napi-rs/cli": "3.9.1"
+	}
+}

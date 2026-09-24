@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { z } from "zod";
 import translationEn from "./locales/en/translation.json" with { type: "json" };
 
 export type TranslationNode =
@@ -38,10 +37,10 @@ export function getLeafFieldPath(obj: TranslationNode): string[] {
 		// A string value IS the leaf, so the path ends here. Recursing into it
 		// returns [] and the `children.map` below then contributes nothing,
 		// which is how this function used to return an empty array for every
-		// input — leaving TranslationKeysSchema an empty z.enum. That enum is
-		// spread into three mongoose `reason` fields (types-database
-		// provider.ts), and mongoose registers its enum validator even for an
-		// empty list, so every non-null reason failed validation.
+		// input — leaving `translationKeys` empty. That list is spread into
+		// three mongoose `reason` fields (types-database provider.ts), and
+		// mongoose registers its enum validator even for an empty list, so
+		// every non-null reason failed validation.
 		if (typeof value === "string") {
 			return arr.concat(key);
 		}
@@ -56,8 +55,10 @@ export function getLeafFieldPath(obj: TranslationNode): string[] {
 	}, [] as string[]);
 }
 
-export const TranslationKeysSchema = z.enum(
-	getLeafFieldPath(translationEn) as [string, ...string[]],
-);
+export const translationKeys: string[] = getLeafFieldPath(translationEn);
 
-export type TranslationKey = z.infer<typeof TranslationKeysSchema>;
+/**
+ * Any leaf path in the English catalogue. Not narrowed to those paths: they are
+ * read from JSON at runtime, so the compiler only ever knew them as `string`.
+ */
+export type TranslationKey = string;

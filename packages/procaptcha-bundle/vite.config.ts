@@ -122,9 +122,7 @@ export default defineConfig(async ({ command, mode }) => {
 					...frontendConfig.build?.rollupOptions?.output,
 					manualChunks(id: string) {
 						if (
-							id.includes(
-								"packages/procaptcha-common/dist/reactComponents/Honeypot",
-							)
+							id.includes("packages/procaptcha-common/dist/components/honeypot")
 						) {
 							return honeypotChunkName;
 						}
@@ -155,6 +153,25 @@ export default defineConfig(async ({ command, mode }) => {
 						if (
 							id.includes("packages/common/dist") ||
 							id.includes("packages/logger/dist")
+						) {
+							return "commonChunk";
+						}
+						// @prosopo/util holds leaf helpers with no dependencies of
+						// their own, but Rolldown assigns a module to the chunk of
+						// whoever imports it — and `at()` (250 bytes, used by the
+						// bundle entry) landed in web2Chunk. That made the entry
+						// statically import web2Chunk, and through it the shared
+						// crypto/fingerprint chunk: 100KB gzipped on the critical
+						// path for an array accessor. Routing these to the chunk the
+						// entry already loads breaks that edge and lets the crypto
+						// chunks load when a widget actually renders.
+						//
+						// solverService is the exception: it pulls @noble/hashes for
+						// the PoW flow, which is exactly the weight that must not
+						// become eager.
+						if (
+							id.includes("packages/util/dist") &&
+							!id.includes("solverService")
 						) {
 							return "commonChunk";
 						}

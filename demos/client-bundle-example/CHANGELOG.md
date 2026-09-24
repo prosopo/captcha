@@ -1,5 +1,21 @@
 # @prosopo/client-bundle-example
 
+## 2.11.0
+### Minor Changes
+
+- 2256f94: Redesign the demo site as a Prosopo-branded playground. Every demo page now has the prosopo.io header, a sidebar to switch captcha type, mode, rendering and challenge placement, the event log and the code for the current setup side by side, and sign-up links. The home page is now the frictionless captcha instead of the image captcha, which moves to `/image-implicit.html`; the cypress configs that opened the home page for the image captcha now open that page. The MUI stylesheet and the float-label script are gone.
+
+### Patch Changes
+
+- 7291d30: Fix the demo pages' status log dropping the captcha token. Its `onActionHandler` wrapper took no arguments, so invisible implicit pages (image and frictionless) called the real handler without a token, showed "Must complete captcha" and never submitted the form.
+- 2fc615d: Restore the `frictionless-implicit.html` demo page.
+  
+  The playground redesign renamed it to `image-implicit.html` and switched it to
+  an image site key, which left nothing serving that path. Suites outside this
+  repo navigate to it directly and were being answered by the dev server's
+  fallback to the index page — which happens to render a frictionless widget, so
+  they passed by luck rather than because the page they asked for existed.
+
 ## 2.10.24
 ### Patch Changes
 

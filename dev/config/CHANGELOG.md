@@ -1,5 +1,68 @@
 # @prosopo/config
 
+## 3.4.1
+### Patch Changes
+
+- f13bea8: Let a deployment supply its own provider list with `PROSOPO_PROVIDER_LIST`.
+  
+  There was no supported way to point the widget at providers you run. The only lever was
+  `PROSOPO_PROVIDER_URL_DEVELOPMENT`, which is read solely when the environment is `development`, and the widget takes
+  that environment from `NODE_ENV` at build time. So redirecting a bundle meant building it as a development bundle:
+  unminified, ~1.9 MB across chunks instead of ~1.4 MB, with rate limiting implications if anyone copied the same setting
+  onto their provider. Building with `NODE_ENV=production` silently ignored the variable and sent the widget back to
+  Prosopo's fleet, with nothing in the output to say so.
+  
+  `PROSOPO_PROVIDER_LIST` is environment-independent, so `production` stays correct everywhere. It short-circuits both
+  halves of discovery — the `/healthz` call that picks a node, and the list `@prosopo/server` matches a token against —
+  so a self-hosted deployment makes no request to Prosopo at all.
+  
+  Two forms, because one node and several have different needs:
+  
+  ```bash
+  PROSOPO_PROVIDER_LIST=https://captcha1.example.com,https://captcha2.example.com
+  PROSOPO_PROVIDER_LIST='{"one":{"address":"5Abc...","url":"https://captcha1.example.com","datasetId":"","weight":3}}'
+  ```
+  
+  The JSON form is the exact shape `provider-list.prosopo.io` serves, parsed by the same `convertHostedProvider`, so
+  weights and the `ipv4` / `ipv6` sub-lists behave identically. The bare-URL form fills in placeholder `address` and
+  `datasetId`, neither of which is load-bearing on this path — the DNS-routed production path already passes a constant
+  for `address`, and clients stopped sending `datasetId`.
+  
+  Because it returns a list rather than one URL, a multi-provider override gets weighted selection and real failover:
+  `getRandomProviderFromList` can now exclude a node that just errored and pick a different one, which with a single
+  development URL degraded to retrying the same node.
+  
+  Details worth knowing:
+  
+  - Trailing slashes are stripped. A token embeds the provider URL it was minted against and the verifier matches by
+    exact string, so `https://host/` and `https://host` must not disagree.
+  - A malformed value is ignored and normal discovery resumes rather than throwing, so a deployment-time typo cannot
+    take every captcha on a page down with it.
+  - The env read lives in its own module holding nothing else. Parsing needs `convertHostedProvider` from `balancer.ts`,
+    and `balancer.ts` needs the read — putting both in one file would create an import cycle, which this package has
+    already lost a release to when a cycle between chunks broke the widget at load.
+  - `PROSOPO_PROVIDER_URL_DEVELOPMENT` is untouched and still works for local development.
+  
+  Verified by building a production bundle with the override set: `defaultEnvironment` stays `production`, the bundle is
+  minified, and the override is baked in.
+
+## 3.4.0
+### Minor Changes
+
+- c151f8a: Decode detector payloads on worker threads instead of on the request path, and fix the CPU metric that was measuring the wrong thing.
+  
+  **The measurement was wrong.** `prosopo_sync_span_cpu_seconds_total` claimed to report the CPU a block of synchronous work costs, on the reasoning that nothing else can run while it holds the event loop. That is true of the main thread but not of the process: `process.cpuUsage()` counts every thread, so V8's background garbage collector and compiler and the image encoder's thread pool were all billed to whichever block happened to be open. In production it reported *more* CPU than wall-clock time, which is impossible for work on one thread, and that is what gave it away. Node offers no per-thread CPU clock, so the counter is removed rather than corrected — process-wide CPU is already reported as `prosopo_process_cpu_seconds_total`. The wall-time counter was never affected and is the one to rank by: for a synchronous block it is exactly the delay imposed on everything else waiting.
+  
+  **What that measurement found.** The three detector decoders held the event loop for 15–47 ms every time they ran, and together accounted for about 84% of all the blocking we measured. That cost does not stay with the request doing the decoding — it delays every other request being served at that moment, health checks included. It is the same shape of problem as the decoder that shipped nine times slower in 3.8.14.
+  
+  **The fix.** The decoders now run on a small pool of worker threads. The decoders themselves are untouched: the same file, the same input, the same output, including the same failures — the tests check that decoding through the pool is indistinguishable from decoding inline. A round trip to a worker costs between 0.01 and 0.2 ms against the 15–47 ms it takes off the request path.
+  
+  Set `PROSOPO_DECODER_WORKERS=0` to go back to decoding inline; it takes a restart but not a rollback. `PROSOPO_DECODER_WORKERS` sets the pool size (default: up to four, leaving a core spare) and `PROSOPO_DECODER_TIMEOUT_MS` caps how long one decode may take before the worker is replaced. If workers cannot be started at all the provider decodes inline and says so in the log, because serving slowly is better than not serving.
+  
+  Two new metrics replace the decoder spans: `prosopo_decoder_duration_seconds` and `prosopo_decoder_calls_total`. Watch them next to `prosopo_nodejs_eventloop_lag_p99_seconds` — that pair is how you confirm the work moved rather than disappeared.
+  
+  The decoders are now copied next to the bundle under fixed names and loaded by path, because a worker cannot ask the bundler what it called a chunk. `copyAssetsPlugin` does the copying.
+
 ## 3.3.17
 ### Patch Changes
 

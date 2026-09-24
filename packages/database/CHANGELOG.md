@@ -1,5 +1,54 @@
 # @prosopo/database
 
+## 4.0.40
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+  - @prosopo/types@5.10.1
+  - @prosopo/types-database@5.6.4
+  - @prosopo/user-access-policy@3.14.10
+
+## 4.0.39
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+  - @prosopo/types-database@5.6.3
+  - @prosopo/util@3.3.11
+  - @prosopo/user-access-policy@3.14.9
+  - @prosopo/redis-client@1.0.37
+
+## 4.0.38
+### Patch Changes
+
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+  - @prosopo/types-database@5.6.2
+  - @prosopo/user-access-policy@3.14.8
+
+## 4.0.37
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/user-access-policy@3.14.7
+  - @prosopo/types@5.9.1
+  - @prosopo/types-database@5.6.1
+  - @prosopo/common@3.1.57
+
+## 4.0.36
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [ce2500b]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/types-database@5.6.0
+  - @prosopo/user-access-policy@3.14.6
+
 ## 4.0.35
 ### Patch Changes
 

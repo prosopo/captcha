@@ -17,7 +17,7 @@
 // hand the whole thing to `verifyWebBotAuth`. If any of the parser, base
 // construction, or verification stages drift out of step this test breaks.
 
-import { ed25519 } from "@noble/curves/ed25519";
+import { ed25519 } from "@noble/curves/ed25519.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { type JwksFetch, clearJwksCache } from "../jwksResolver.js";
 import { buildSignatureBase } from "../signatureBase.js";
@@ -95,7 +95,7 @@ describe("verifyWebBotAuth", () => {
 	afterEach(() => clearJwksCache());
 
 	it("verifies a fresh, correctly-signed request", async () => {
-		const priv = ed25519.utils.randomPrivateKey();
+		const priv = ed25519.utils.randomSecretKey();
 		const pub = ed25519.getPublicKey(priv);
 		const { request, fetch } = buildSignedRequest(
 			priv,
@@ -112,7 +112,7 @@ describe("verifyWebBotAuth", () => {
 	});
 
 	it("rejects when signature bytes are flipped", async () => {
-		const priv = ed25519.utils.randomPrivateKey();
+		const priv = ed25519.utils.randomSecretKey();
 		const pub = ed25519.getPublicKey(priv);
 		const { request, fetch } = buildSignedRequest(
 			priv,
@@ -136,7 +136,7 @@ describe("verifyWebBotAuth", () => {
 	});
 
 	it("rejects an expired signature before touching JWKS", async () => {
-		const priv = ed25519.utils.randomPrivateKey();
+		const priv = ed25519.utils.randomSecretKey();
 		const pub = ed25519.getPublicKey(priv);
 		const past = Math.floor(Date.now() / 1000) - 60;
 		const { request } = buildSignedRequest(priv, pub, past);
@@ -153,7 +153,7 @@ describe("verifyWebBotAuth", () => {
 	});
 
 	it("rejects when the JWKS has no matching kid", async () => {
-		const priv = ed25519.utils.randomPrivateKey();
+		const priv = ed25519.utils.randomSecretKey();
 		const pub = ed25519.getPublicKey(priv);
 		const { request } = buildSignedRequest(
 			priv,

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { describe, expect, it } from "vitest";
-import { computeFloatPosition } from "../reactComponents/ChallengeSurface.js";
+import { computeFloatPosition } from "../components/challengeSurface.js";
 
 const VIEWPORT_WIDTH = 1000;
 const VIEWPORT_HEIGHT = 800;

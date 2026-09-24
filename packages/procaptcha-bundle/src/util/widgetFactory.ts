@@ -24,14 +24,14 @@ import {
 	darkTheme,
 	lightTheme,
 } from "@prosopo/widget-skeleton";
-import type { Root } from "react-dom/client";
 import type { CaptchaRenderer } from "./captcha/captchaRenderer.js";
+import type { BundleCaptchaHandle } from "./captcha/components/bundleCaptcha.js";
 import { resolveLanguage } from "./language.js";
 import type { WidgetThemeResolver } from "./widgetThemeResolver.js";
 
 /** A mounted widget and the element it listens on for `procaptcha:execute`. */
 interface CreatedWidget {
-	root: Root;
+	handle: BundleCaptchaHandle;
 	container: HTMLElement;
 }
 
@@ -113,16 +113,12 @@ class WidgetFactory {
 		// language flashes visible to end users).
 		const language = resolveLanguage(renderOptions, container);
 
-		// all the captcha-rendering logic is lazy-loaded, to avoid react & zod delay the initial widget creation.
+		// all the captcha-rendering logic is lazy-loaded, so zod and the provider
+		// API don't delay the initial widget creation.
 
 		const captchaRenderer = await this.getCaptchaRenderer(language);
 
 		const captchaRoot = captchaRenderer.renderCaptcha(
-			{
-				identifierPrefix: "procaptcha-",
-				emotionCacheKey: "procaptcha",
-				webComponentTag: "prosopo-procaptcha",
-			},
 			widgetInteractiveArea,
 			renderOptions,
 			callbacks,
@@ -133,7 +129,7 @@ class WidgetFactory {
 			container,
 		);
 
-		return { root: captchaRoot, container: widgetContainer };
+		return { handle: captchaRoot, container: widgetContainer };
 	}
 
 	protected async getCaptchaRenderer(

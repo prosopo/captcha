@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { AllKeys } from "@prosopo/common";
-import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
+import { type TranslationKey, translationKeys } from "@prosopo/locale";
 import {
 	CaptchaLabel,
 	CaptchaType,
@@ -226,7 +226,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		status: { type: String, enum: CaptchaStatus, required: true },
 		reason: {
 			type: String,
-			enum: TranslationKeysSchema.options,
+			enum: translationKeys,
 			required: false,
 		},
 		error: { type: String, required: false },
@@ -368,7 +368,7 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 		status: { type: String, enum: CaptchaStatus, required: true },
 		reason: {
 			type: String,
-			enum: TranslationKeysSchema.options,
+			enum: translationKeys,
 			required: false,
 		},
 		error: { type: String, required: false },
@@ -495,7 +495,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		status: { type: String, enum: CaptchaStatus, required: true },
 		reason: {
 			type: String,
-			enum: TranslationKeysSchema.options,
+			enum: translationKeys,
 			required: false,
 		},
 		error: { type: String, required: false },
@@ -861,9 +861,10 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		required: false,
 	},
 	// Site-owner metadata the widget was rendered with — see
-	// `Session.clientMetaData`. Mirrored up from the captcha record so the
-	// session row carries the same `clientSessionId` the verify call
-	// correlates against.
+	// `Session.clientMetaData`. Written at issuance when the widget reported a
+	// session id, and mirrored up from the captcha record at solve time, so the
+	// session row carries the same `clientSessionId` the verify call correlates
+	// against either way.
 	clientMetaData: {
 		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
 		required: false,

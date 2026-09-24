@@ -32,13 +32,9 @@ import {
 	type z,
 	type infer as zInfer,
 } from "zod";
+import { INPUT_LIMITS } from "../api/inputLimits.js";
 import { ApiParams } from "../api/params.js";
-import {
-	INPUT_LIMITS,
-	boundedString,
-	safeLine,
-	safeText,
-} from "../api/sanitise.js";
+import { boundedString, safeLine, safeText } from "../api/sanitise.js";
 import {
 	type CaptchaType,
 	DecisionMachineCaptchaTypeSchema,
@@ -626,11 +622,12 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// Same wire semantics as VerifySolutionBody.clientSessionId — a per-render
 	// session id the client (Bumblebee's JTI, a customer widget's `sessionId`,
 	// anything else the site owner supplies) uses to bind a captcha token to
-	// the render it was earned in. On the authenticated fast-path the value is
-	// persisted onto the session's clientMetaData; /authenticated/verify
-	// rejects with API.CLIENT_SESSION_MISMATCH when the forwarded value
-	// doesn't match, so a token exfiltrated to a different render is dead on
-	// arrival even if it clears the IP-binding check.
+	// the render it was earned in. Persisted onto the session's clientMetaData
+	// on every issuance path, so a session that is allowed frictionlessly or
+	// abandoned before a solve still carries it; /authenticated/verify rejects
+	// with API.CLIENT_SESSION_MISMATCH when the forwarded value doesn't match,
+	// so a token exfiltrated to a different render is dead on arrival even if
+	// it clears the IP-binding check.
 	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
@@ -660,7 +657,10 @@ export interface AssignDetectorBundleResponse extends ApiResponse {
 }
 
 export const ReplaceDetectorPoolBody = object({
-	// Map of bundleId -> { js, privateKey, innerConfig, release, payloadLayout }.
+	// Map of bundleId -> the bundle's js plus the server-side fields written
+	// alongside it by `bundle:pool`. A field missing here is stripped by this
+	// schema and the bundle can then no longer be decoded, so a field added to
+	// the build output has to be added here too.
 	bundles: record(
 		string(),
 		object({
@@ -675,6 +675,9 @@ export const ReplaceDetectorPoolBody = object({
 			// Opaque per-bundle decode parameter, paired with this bundle's js.
 			// Optional for pools built before it existed.
 			payloadLayout: string().optional(),
+			// Second opaque per-bundle decode parameter, same contract as
+			// `payloadLayout`. Optional for pools built before it existed.
+			keyMap: string().optional(),
 		}),
 	),
 });

@@ -19,6 +19,7 @@ import {
 	createTestRedisConnection,
 	setupRedisIndex,
 } from "@prosopo/redis-client";
+import { ResultReason } from "@prosopo/types";
 import { randomAsHex } from "@prosopo/util-crypto";
 import type { RedisClientType } from "redis";
 import {
@@ -1213,6 +1214,32 @@ describe("redisAccessRulesStorage", () => {
 			expect(found.length).toBe(1501);
 			expect(found).toContainEqual(targetBlockRule);
 		}, 60_000);
+
+		test("keeps a Block rule's messageKey through the request-time block lookup", async () => {
+			const clientId = getUniqueString();
+			const userId = getUniqueString();
+			const accessRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				clientId,
+				userId,
+				messageKey: ResultReason.TOO_MANY_LOCALHOST,
+			};
+
+			await insertRules([accessRule]);
+
+			const foundAccessRules = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId },
+					policyScopeMatch: FilterScopeMatch.Exact,
+					userScope: { userId },
+					userScopeMatch: FilterScopeMatch.Exact,
+					blockOnly: true,
+				},
+				true,
+			);
+
+			expect(foundAccessRules).toEqual([accessRule]);
+		});
 
 		test("finds rules with matchingFieldsOnly when only userId is set and all IP fields are missing", async () => {
 			// This is the exact scenario from the production error where the query

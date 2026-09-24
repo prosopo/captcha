@@ -1,5 +1,79 @@
 # @prosopo/locale
 
+## 3.6.0
+### Minor Changes
+
+- a9141c3: Stop shipping i18next to the browser. Saves about 22KB gzipped off the widget.
+  
+  The widget was pulling in i18next and four of its plugins — a language detector, an HTTP backend, a chained backend and a resources-to-backend adapter, which between them also dragged in the `cross-fetch` polyfill — to look up 444 short strings with no plurals, no nesting and two interpolated values. That machinery is about 23KB gzipped; the replacement is 1.25KB.
+  
+  `i18nFrontend.ts` now does the job directly: pick a language, fetch the matching `locales/<lang>/translation.json` next to the bundle, and look keys up in it. Behaviour is unchanged in the ways a visitor can see:
+  
+  - language is chosen from the widget's own setting first, then a cookie, then localStorage, then the browser — the same order as before, and the choice is still remembered in both cookie and localStorage
+  - a regional tag like `de-AT` still resolves to `de`
+  - English is still fetched alongside the chosen language, so a key a translation is missing still renders English rather than its key
+  - `{{name}}` placeholders are still filled in, including in a caller's `defaultValue`
+  - if the catalogue cannot be fetched the widget still renders, in English, rather than waiting
+  
+  i18next stays for the server, where `i18next-http-middleware` needs the real instance to read the `Accept-Language` header. `Ti18n` is now a small interface describing the handful of methods this repository actually calls, which both implementations satisfy, so `@prosopo/common` no longer needs i18next for a type either.
+  
+  Covered by 189 tests in `@prosopo/locale`, and the built bundle was checked in a real browser: French picked up from the browser, a switch to German, interpolation, and both fallbacks.
+- a9141c3: Stop loading zod before the widget can draw itself. Takes another 13KB gzipped off the critical path.
+  
+  zod is 14KB gzipped and it was being downloaded and parsed before the checkbox appeared, because six small things on the startup path happened to use it:
+  
+  - two lists of strings in `@prosopo/logger` (log levels, output format)
+  - two lists of strings in `@prosopo/locale` (language codes, translation keys)
+  - two lists of two strings in `@prosopo/types` (start mode, challenge placement)
+  - one four-field object in `@prosopo/load-balancer` (a provider entry)
+  - an `instanceof ZodError` check in `@prosopo/common`
+  - `INPUT_LIMITS`, a plain table of numbers, that happened to live in the same file as zod-based string builders
+  
+  None of these need a validation library. They are now plain TypeScript: a list, a type, and where input is untrusted, a one-line guard. `INPUT_LIMITS` moved to its own file so reading it no longer drags the builders along.
+  
+  zod has not gone anywhere — the real request and response schemas in `@prosopo/types` still use it, and still validate exactly as before. It now arrives with the code that needs it, after the widget is on screen, rather than in front of it.
+  
+  Two API changes for anyone importing these directly:
+  
+  - `LanguageSchema`, `TranslationKeysSchema`, `StartModeSchema` and `Placement` are no longer exported as zod schemas. Use `isLanguage()`, `isStartMode()`, `isPlacement()` to check a value, and `LanguageCodes`, `translationKeys`, `StartModes`, `Placements` for the lists.
+  - `isZodError()` now recognises a zod error by its name rather than `instanceof`. That is strictly more tolerant: the name still matches when an error crosses a realm boundary or comes from a second copy of zod, which `instanceof` misses — it was already the fallback arm of the same check.
+  
+  Two behaviour notes: a malformed entry in the fetched provider list now throws a plain `Error` naming the entry, where it used to throw an untranslated zod error; and the language codes accepted are unchanged.
+  
+  Covered by the existing suites for every package touched (types, types-database, locale, logger, common, load-balancer, all five procaptcha packages, api, cli, api-express-router, server, and the provider's 1322 unit tests), all passing. The built bundle was also loaded in a real browser: the widget renders from the first eight chunks, zod arrives in the second wave, and the provider's error came back translated into German.
+
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+  - @prosopo/util@3.3.11
+
+## 3.5.0
+### Minor Changes
+
+- 59c02da: Replace React with vanilla TS/DOM in the widget.
+  
+  The widget packages no longer depend on react, react-dom, @emotion or
+  react-i18next: every component is now a `mount*` function returning a handle
+  with `update`/`destroy`. `useTranslation` is replaced by `createTranslator`,
+  which exposes i18next's `t` plus the events that used to trigger a re-render.
+  The rendered markup, styling and behaviour are unchanged — only the
+  implementation is.
+  
+  Everything the widget has gained since this rewrite started is carried over,
+  so nothing is lost by dropping React: the shared challenge surface (popup and
+  float placement, escape/outside-click dismissal and the dialog focus trap),
+  the image-tile and puzzle-piece keyboard paths, the checkbox's focus handover
+  across the loading swap, the server-rendered puzzle imagery, `startMode:
+  "manual"` with `window.procaptcha.start()`, `data-bind` / targeted
+  `execute(widgetId)`, the Web Bot Auth "authenticated" badge, the client
+  session id, and the bounded session re-mint and reload handling in the
+  frictionless wrapper.
+
+## 3.4.4
+### Patch Changes
+
+- a22069d: Let a Block access rule name the reason it fired, so the 403 says why instead of "Forbidden"
+
 ## 3.4.3
 ### Patch Changes
 

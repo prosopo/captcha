@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LanguageSchema, type Languages } from "@prosopo/locale";
+import { type Languages, isLanguage } from "@prosopo/locale";
 import type {
 	ProcaptchaClientConfigInput,
 	ProcaptchaRenderOptions,
@@ -61,10 +61,9 @@ export const resolveLanguage = (
 };
 
 const validateLanguage = (languageAttribute: string | typeof Languages) => {
-	try {
-		return LanguageSchema.parse(languageAttribute);
-	} catch (error) {
-		console.error(`Invalid language attribute: ${languageAttribute}`);
-		return LanguageSchema.parse("en");
+	if (typeof languageAttribute === "string" && isLanguage(languageAttribute)) {
+		return languageAttribute;
 	}
+	console.error(`Invalid language attribute: ${languageAttribute}`);
+	return "en";
 };

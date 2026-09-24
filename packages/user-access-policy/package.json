@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/user-access-policy",
-	"version": "3.14.5",
+	"version": "3.14.10",
 	"type": "module",
 	"engines": {
 		"node": "^24",
@@ -43,13 +43,13 @@
 		"test": "npm run test:unit && npm run test:integration"
 	},
 	"dependencies": {
-		"@prosopo/api": "4.2.5",
-		"@prosopo/api-route": "2.6.59",
-		"@prosopo/common": "3.1.56",
-		"@prosopo/logger": "2.0.10",
-		"@prosopo/redis-client": "1.0.36",
-		"@prosopo/types": "5.8.5",
-		"@prosopo/util": "3.3.10",
+		"@prosopo/api": "4.3.4",
+		"@prosopo/api-route": "2.6.60",
+		"@prosopo/common": "3.1.59",
+		"@prosopo/logger": "2.1.0",
+		"@prosopo/redis-client": "1.0.37",
+		"@prosopo/types": "5.10.1",
+		"@prosopo/util": "3.3.11",
 		"@redis/search": "6.2.1",
 		"cidr-calc": "1.0.4",
 		"dotenv": "16.4.5",
@@ -58,8 +58,8 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.17",
-		"@prosopo/util-crypto": "13.5.32",
+		"@prosopo/config": "3.4.1",
+		"@prosopo/util-crypto": "13.5.33",
 		"@types/node": "22.10.2",
 		"fast-glob": "3.3.3",
 		"mongoose": "9.10.0",

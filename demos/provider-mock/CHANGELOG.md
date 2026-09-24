@@ -1,5 +1,85 @@
 # @prosopo/provider-mock
 
+## 2.8.186
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+- Updated dependencies [85a1bb9]
+- Updated dependencies [2cca36e]
+  - @prosopo/provider@5.13.0
+  - @prosopo/types@5.10.1
+  - @prosopo/api-express-router@3.1.94
+  - @prosopo/database@4.0.40
+  - @prosopo/types-database@5.6.4
+
+## 2.8.185
+### Patch Changes
+
+- Updated dependencies [aed164d]
+  - @prosopo/provider@5.12.3
+
+## 2.8.184
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/locale@3.6.0
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+  - @prosopo/types-database@5.6.3
+  - @prosopo/provider@5.12.2
+  - @prosopo/api-express-router@3.1.93
+  - @prosopo/database@4.0.39
+  - @prosopo/dotenv@3.0.57
+
+## 2.8.183
+### Patch Changes
+
+- Updated dependencies [59c02da]
+  - @prosopo/locale@3.5.0
+  - @prosopo/api-express-router@3.1.92
+  - @prosopo/common@3.1.58
+  - @prosopo/provider@5.12.1
+  - @prosopo/types@5.9.2
+  - @prosopo/types-database@5.6.2
+  - @prosopo/database@4.0.38
+
+## 2.8.182
+### Patch Changes
+
+- Updated dependencies [a22069d]
+- Updated dependencies [6d9711f]
+- Updated dependencies [c151f8a]
+- Updated dependencies [de1dc32]
+  - @prosopo/provider@5.12.0
+  - @prosopo/types@5.9.1
+  - @prosopo/locale@3.4.4
+  - @prosopo/database@4.0.37
+  - @prosopo/types-database@5.6.1
+  - @prosopo/api-express-router@3.1.91
+  - @prosopo/common@3.1.57
+
+## 2.8.181
+### Patch Changes
+
+- Updated dependencies [6c00bca]
+  - @prosopo/provider@5.11.1
+
+## 2.8.180
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [ce2500b]
+- Updated dependencies [0f23010]
+- Updated dependencies [a4a71be]
+  - @prosopo/types@5.9.0
+  - @prosopo/types-database@5.6.0
+  - @prosopo/provider@5.11.0
+  - @prosopo/api-express-router@3.1.90
+  - @prosopo/database@4.0.36
+
 ## 2.8.179
 ### Patch Changes
 

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-react",
-	"version": "2.11.2",
+	"version": "2.13.2",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
@@ -32,22 +32,17 @@
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
-		"@prosopo/common": "3.1.56",
-		"@prosopo/locale": "3.4.3",
-		"@prosopo/procaptcha": "2.11.14",
-		"@prosopo/procaptcha-common": "2.14.2",
-		"@prosopo/types": "5.8.5",
-		"@prosopo/util": "3.3.10",
-		"@prosopo/widget-skeleton": "2.8.7",
-		"csstype": "3.2.3",
-		"react": "19.3.0",
-		"react-dom": "19.3.0"
+		"@prosopo/common": "3.1.59",
+		"@prosopo/locale": "3.6.0",
+		"@prosopo/procaptcha": "2.11.20",
+		"@prosopo/procaptcha-common": "2.17.2",
+		"@prosopo/types": "5.10.1",
+		"@prosopo/util": "3.3.11",
+		"@prosopo/widget-skeleton": "2.10.0"
 	},
 	"devDependencies": {
-		"@emotion/react": "11.14.0",
-		"@prosopo/config": "3.3.17",
+		"@prosopo/config": "3.4.1",
 		"@types/node": "22.10.2",
-		"@types/react-dom": "19.3.0",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

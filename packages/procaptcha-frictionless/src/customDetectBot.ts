@@ -18,6 +18,7 @@ import {
 	ExtensionLoader,
 	getProcaptchaRandomActiveProvider,
 	pickIpMode,
+	resolveClientSessionId,
 } from "@prosopo/procaptcha-common";
 import type {
 	BotDetectionFunction,
@@ -175,8 +176,8 @@ const customDetectBot: BotDetectionFunction = async (
 	// same stack. Resolved up front — before detection rather than alongside it —
 	// because the detector bundle is served BY this provider.
 	// The bundle entry starts provider resolution + assign as soon as it has read
-	// the site key off the DOM, which is well before React has mounted this
-	// widget. Claim that in-flight work if it exists rather than repeating it.
+	// the site key off the DOM, which is well before this widget has mounted.
+	// Claim that in-flight work if it exists rather than repeating it.
 	// Only valid on a first attempt: a retry is retrying *because* the pinned
 	// pronode failed, so it must re-resolve.
 	const isFirstAttempt = !retryContext || retryContext.attempt <= 1;
@@ -261,6 +262,12 @@ const customDetectBot: BotDetectionFunction = async (
 	const ExtClass = await extClassPromise;
 	const ext = new ExtClass();
 
+	// Sent on this hop as well as on solution submit, so a session that is
+	// allowed frictionlessly — or abandoned before a solve — still correlates
+	// back to the site's (or Protect's) session. Undefined when Protect has not
+	// finished initialising yet; the solve-time read then supplies it.
+	const clientSessionId = resolveClientSessionId(config.clientSessionId);
+
 	// No provider detector ⇒ no detection is possible, so there is nothing to
 	// send. The request goes out with an empty token and the provider decides
 	// what to serve; the client gets no say in that.
@@ -279,6 +286,7 @@ const customDetectBot: BotDetectionFunction = async (
 				undefined,
 				fallbackUrl,
 				fallbackIframeUrl,
+				clientSessionId,
 			),
 			10000,
 		);
@@ -335,6 +343,7 @@ const customDetectBot: BotDetectionFunction = async (
 		detectorSessionId,
 		currentUrl,
 		iframeUrl,
+		clientSessionId,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

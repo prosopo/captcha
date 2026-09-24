@@ -17,7 +17,7 @@ import type {
 	DetectorDataValue,
 	DetectorResult,
 } from "@prosopo/types";
-import getBotScoreFromPayload from "./decodePayload.js";
+import { decode } from "./decoderPool.js";
 
 // Mongo rejects field names containing "." or starting with "$", and the bag
 // is unbounded client-controlled data that is persisted on the session record
@@ -165,14 +165,14 @@ export const getBotScore = async (
 	payloadLayoutEncoded?: string,
 	keyMapEncoded?: string,
 ): Promise<DecodedDetectorPayload> => {
-	const result = (await getBotScoreFromPayload(
+	const result = await decode<DetectorResult>("payload", [
 		payload,
 		headHash,
 		privateKeyString,
 		innerConfigEncoded,
 		payloadLayoutEncoded,
 		keyMapEncoded,
-	)) as DetectorResult;
+	]);
 
 	const baseBotScore: number = result.score;
 

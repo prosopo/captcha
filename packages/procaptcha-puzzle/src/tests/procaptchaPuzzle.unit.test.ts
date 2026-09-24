@@ -14,34 +14,43 @@
 
 import type { Ti18n } from "@prosopo/locale";
 import type { ProcaptchaProps } from "@prosopo/types";
-import { type ReactElement, act, createElement } from "react";
-import { type Root, createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import type { ProcaptchaPuzzleHandle } from "../components/procaptchaWidget.js";
 import * as entrypoint from "../index.js";
+import { type Mounted, mount, settle } from "./domHarness.js";
 import { config } from "./managerHarness.js";
 
 /**
- * The outer component exists only to lazy-load the widget and hand it the props
- * it was given, so what is worth pinning down is that nothing is dropped on the
- * way through — a wrapper that names props one at a time silently loses the
- * ones added later.
+ * The outer entry point exists only to lazy-load the widget and hand it the
+ * props it was given, so what is worth pinning down is that nothing is dropped
+ * on the way through — a wrapper that names props one at a time silently loses
+ * the ones added later.
  */
 const mocks = vi.hoisted(() => ({
 	received: [] as ProcaptchaProps[],
+	destroyed: { count: 0 },
 }));
 
-vi.mock("../components/ProcaptchaWidget.js", async () => {
-	const { createElement: create } = await import("react");
-	return {
-		default: (props: ProcaptchaProps) => {
-			mocks.received.push(props);
-			return create("div", { "data-testid": "widget" });
-		},
-	};
-});
+vi.mock("../components/procaptchaWidget.js", () => ({
+	mountProcaptchaPuzzleWidget: (
+		container: HTMLElement,
+		props: ProcaptchaProps,
+	): ProcaptchaPuzzleHandle => {
+		mocks.received.push(props);
+		const element = document.createElement("div");
+		element.setAttribute("data-testid", "widget");
+		container.appendChild(element);
+		return {
+			destroy: () => {
+				element.remove();
+				mocks.destroyed.count += 1;
+			},
+		};
+	},
+}));
 
-let container: HTMLDivElement;
-let root: Root;
+let mounted: Mounted;
+let widget: ProcaptchaPuzzleHandle | undefined;
 
 const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps => ({
 	config: config(),
@@ -51,33 +60,29 @@ const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps => ({
 });
 
 const render = async (widgetProps: ProcaptchaProps): Promise<void> => {
-	await act(async () => {
-		root.render(
-			createElement(entrypoint.ProcaptchaPuzzle, widgetProps) as ReactElement,
-		);
-	});
+	widget = entrypoint.mountProcaptchaPuzzle(mounted.container, widgetProps);
+	await settle();
 };
 
 beforeEach(() => {
 	mocks.received.length = 0;
-	container = document.createElement("div");
-	document.body.appendChild(container);
-	act(() => {
-		root = createRoot(container);
-	});
+	mocks.destroyed.count = 0;
+	widget = undefined;
+	mounted = mount();
 });
 
 afterEach(() => {
-	act(() => {
-		root.unmount();
-	});
-	container.remove();
+	widget?.destroy();
+	widget = undefined;
+	mounted.unmount();
 });
 
-describe("ProcaptchaPuzzle", () => {
+describe("mountProcaptchaPuzzle", () => {
 	test("renders the widget once it has loaded", async () => {
 		await render(props());
-		expect(container.querySelector('[data-testid="widget"]')).not.toBeNull();
+		expect(
+			mounted.container.querySelector('[data-testid="widget"]'),
+		).not.toBeNull();
 	});
 
 	test("passes on the props the widget needs but never names", async () => {
@@ -103,21 +108,31 @@ describe("ProcaptchaPuzzle", () => {
 		expect(mocks.received[0]?.config).toEqual(config());
 	});
 
-	test("mounts one widget per render, not one per prop change", async () => {
+	test("tears the loaded widget down", async () => {
 		await render(props());
-		await render(props({ autoStart: true }));
-		expect(container.querySelectorAll('[data-testid="widget"]')).toHaveLength(
-			1,
-		);
+		widget?.destroy();
+		widget = undefined;
+		expect(mocks.destroyed.count).toBe(1);
+		expect(
+			mounted.container.querySelector('[data-testid="widget"]'),
+		).toBeNull();
+	});
+
+	test("cancels a mount that is still loading", async () => {
+		// Otherwise a widget torn down mid-load reappears as an orphan that
+		// nothing holds a handle to.
+		widget = entrypoint.mountProcaptchaPuzzle(mounted.container, props());
+		widget.destroy();
+		widget = undefined;
+		await settle();
+		expect(mocks.received).toHaveLength(0);
 	});
 });
 
 describe("the package entrypoint", () => {
-	test("exports the wrapper a consumer mounts", () => {
-		// The inner ProcaptchaWidget is a default export, which `export *` does
-		// not re-export: consumers get the lazy-loading wrapper only, which is
-		// the one that works outside a bundler that can code-split.
-		expect(typeof entrypoint.ProcaptchaPuzzle).toBe("function");
-		expect(Object.keys(entrypoint)).toEqual(["ProcaptchaPuzzle"]);
+	test("exports the mount functions a consumer needs", () => {
+		expect(typeof entrypoint.mountProcaptchaPuzzle).toBe("function");
+		expect(typeof entrypoint.loadProcaptchaPuzzle).toBe("function");
+		expect(typeof entrypoint.mountProcaptchaPuzzleWidget).toBe("function");
 	});
 });

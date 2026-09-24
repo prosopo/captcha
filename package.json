@@ -1,7 +1,7 @@
 {
 	"name": "@prosopo/captcha",
 	"packageManager": "npm@11.0.0",
-	"version": "3.8.13",
+	"version": "3.8.20",
 	"author": "Prosopo",
 	"type": "module",
 	"repository": {
@@ -50,7 +50,7 @@
 		"lint-changed:js": "npm run --silent lint:js -- --changed",
 		"lint-changed-fix:js": "npm run --silent lint-fix:js -- --changed",
 		"lint:engines": "npm run -w @prosopo/lint start -- engines --pkg $(pwd)/package.json",
-		"lint:refs": "npm run -w @prosopo/lint start -- refs --pkg $(pwd)/package.json --ignore @redis/client @angular/common @prosopo/fingerprintjs @prosopo/fingerprint @prosopo/native-ja4 @prosopo/native-merkle undici",
+		"lint:refs": "npm run -w @prosopo/lint start -- refs --pkg $(pwd)/package.json --ignore @redis/client @angular/common @prosopo/fingerprintjs @prosopo/fingerprint @prosopo/native-ja4 @prosopo/native-merkle @prosopo/native-puzzle undici",
 		"lint:testCheck": "npm run -w @prosopo/lint start -- testCheck --pkg $(pwd)/package.json",
 		"lint:workflowNames": "npm run -w @prosopo/lint start -- workflowNames --root $(pwd)",
 		"lint:tsconfigIncludes": "npm run -w @prosopo/lint start -- tsconfigIncludes --pkg $(pwd)/package.json",
@@ -78,6 +78,10 @@
 	"devDependencies": {
 		"@biomejs/biome": "1.9.1",
 		"@changesets/cli": "2.29.7",
+		"@noble/curves": "2.4.0",
+		"@noble/hashes": "2.4.0",
+		"@scure/base": "2.4.0",
+		"@scure/sr25519": "2.4.0",
 		"@types/node": "22.5.5",
 		"@vitest/spy": "4.1.11",
 		"concurrently": "9.0.1",

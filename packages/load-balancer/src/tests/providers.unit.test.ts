@@ -28,8 +28,14 @@ import {
 // can be exercised without real network calls. getRandomActiveProvider tests
 // don't use loadBalancer, so this mock leaves them unaffected.
 const loadBalancer = vi.fn();
+// Defaults to "no override" so these cases exercise the normal healthz
+// discovery path; the override's own behaviour is covered in
+// providerUrlOverride.unit.test.ts.
+const getProviderListOverride = vi.fn<() => HardcodedProvider[]>(() => []);
 vi.mock("../balancer.js", () => ({
 	loadBalancer: (...args: unknown[]) => loadBalancer(...args),
+	getProviderListOverride: (...args: unknown[]) =>
+		getProviderListOverride(...(args as [])),
 }));
 
 const originalFetch = globalThis.fetch;

@@ -113,7 +113,10 @@ jobs:
           set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
           # Run container and capture exit code
-          CONTAINER="$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')"
+          # The runtime image is distroless: no shell, no npx. ENTRYPOINT is
+          # node, so the bundle path and its args are passed as argv, and
+          # NODE_ENV comes in as a real env var rather than a shell prefix.
+          CONTAINER="$(docker run -d -e NODE_ENV=production -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /usr/src/app/provider.cli.bundle.js version)"
           
           # Wait for container to complete
           sleep 20s

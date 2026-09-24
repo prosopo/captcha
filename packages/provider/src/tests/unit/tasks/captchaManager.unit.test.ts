@@ -34,8 +34,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CaptchaManager } from "../../../tasks/captchaManager.js";
 import type { BehavioralDataResult } from "../../../tasks/detection/decodeBehavior.js";
 
-vi.mock("../../../tasks/detection/decodeBehavior.js", () => ({
-	default: vi.fn(),
+vi.mock("../../../tasks/detection/decoderPool.js", () => ({
+	decode: vi.fn(),
 }));
 
 const loggerOuter = getLogger("info", "test:captcha-manager");
@@ -1623,6 +1623,53 @@ describe("CaptchaManager", () => {
 				sessionId: "session-abc",
 			});
 		});
+		it("returns a score of zero rather than dropping the field", () => {
+			// A clean session scores 0, and the old truthiness check omitted
+			// the field for exactly those users — so a paying customer saw a
+			// score for every suspicious visitor and none for their best
+			// ones, which reads as "no score available" rather than "no risk".
+			const result = captchaManager.getVerificationResponse(
+				true,
+				{
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0,
+			);
+			expect(result).toEqual({
+				status: "translated",
+				verified: true,
+				score: 0,
+			});
+		});
+
+		it("omits the score when there is no score to report", () => {
+			const result = captchaManager.getVerificationResponse(
+				true,
+				{
+					account: "account",
+					tier: Tier.Professional,
+				} as unknown as ClientRecord,
+				() => "translated",
+				undefined,
+			);
+			expect(result).not.toHaveProperty("score");
+		});
+
+		it("still hides a zero score from the free tier", () => {
+			const result = captchaManager.getVerificationResponse(
+				true,
+				{
+					account: "account",
+					tier: Tier.Free,
+				} as unknown as ClientRecord,
+				() => "translated",
+				0,
+			);
+			expect(result).not.toHaveProperty("score");
+		});
+
 		it("should omit the sessionId when there isn't one", () => {
 			const result = captchaManager.getVerificationResponse(
 				true,
@@ -1639,14 +1686,160 @@ describe("CaptchaManager", () => {
 		});
 	});
 
+	describe("canClientSeeScore", () => {
+		it("answers with a boolean, not the score or the tier", () => {
+			// `score && tier && tier !== Tier.Free` handed back 0 for a clean
+			// session and undefined for an absent score, so the name lied
+			// about what callers were getting.
+			expect(
+				typeof CaptchaManager.canClientSeeScore(Tier.Professional, 0),
+			).toBe("boolean");
+			expect(
+				typeof CaptchaManager.canClientSeeScore(Tier.Professional, undefined),
+			).toBe("boolean");
+		});
+
+		it("shows a zero score to a paying tier", () => {
+			expect(CaptchaManager.canClientSeeScore(Tier.Professional, 0)).toBe(true);
+		});
+
+		it("withholds the score from the free tier at any value", () => {
+			expect(CaptchaManager.canClientSeeScore(Tier.Free, 0)).toBe(false);
+			expect(CaptchaManager.canClientSeeScore(Tier.Free, 0.5)).toBe(false);
+		});
+
+		it("has nothing to show when no score was computed", () => {
+			expect(
+				CaptchaManager.canClientSeeScore(Tier.Professional, undefined),
+			).toBe(false);
+		});
+	});
+
+	describe("decodeSubmissionPayloads", () => {
+		const bundle = { key: "pk", innerConfig: "cfg" };
+
+		beforeEach(() => {
+			vi.spyOn(captchaManager, "resolveBundleBySessionId").mockResolvedValue(
+				bundle,
+			);
+		});
+
+		it("resolves the session bundle once for both payloads", async () => {
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockResolvedValue(null);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockResolvedValue(undefined);
+
+			await captchaManager.decodeSubmissionPayloads("session-1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(captchaManager.resolveBundleBySessionId).toHaveBeenCalledTimes(1);
+		});
+
+		// The regression this exists to prevent: decoding moved to worker
+		// threads, so two serialised decodes cost two round trips on the submit
+		// path. Both must be in flight at once.
+		it("runs the two decodes concurrently", async () => {
+			let behaviouralStarted = false;
+			let simdStartedWhileBehaviouralInFlight = false;
+			let releaseBehavioural: () => void = () => undefined;
+			const behaviouralGate = new Promise<void>((resolve) => {
+				releaseBehavioural = resolve;
+			});
+
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockImplementation(
+				async () => {
+					behaviouralStarted = true;
+					await behaviouralGate;
+					return null;
+				},
+			);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockImplementation(async () => {
+				simdStartedWhileBehaviouralInFlight = behaviouralStarted;
+				releaseBehavioural();
+				return undefined;
+			});
+
+			await captchaManager.decodeSubmissionPayloads("session-1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(simdStartedWhileBehaviouralInFlight).toBe(true);
+		});
+
+		it("returns both decoded payloads", async () => {
+			const behaviouralResult = {
+				collector1: [{ event: "click" }],
+				collector2: [],
+				collector3: [],
+				deviceCapability: "desktop",
+				timestamp: 1000,
+			} as BehavioralDataResult;
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockResolvedValue(
+				behaviouralResult,
+			);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockResolvedValue({ ops: [1, 2] } as never);
+
+			const decoded = await captchaManager.decodeSubmissionPayloads("s1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(decoded.behavioural).toEqual(behaviouralResult);
+			expect(decoded.simd).toEqual({ ops: [1, 2] });
+		});
+
+		it("keeps one payload when the other decode throws", async () => {
+			vi.spyOn(captchaManager, "decryptBehavioralData").mockRejectedValue(
+				new Error("decoder blew up"),
+			);
+			vi.spyOn(
+				captchaManager,
+				"decryptSimdReadingsForAttach",
+			).mockResolvedValue({ ops: [1] } as never);
+
+			const decoded = await captchaManager.decodeSubmissionPayloads("s1", {
+				behavioural: "b",
+				simd: "s",
+			});
+
+			expect(decoded.behavioural).toBeUndefined();
+			expect(decoded.simd).toEqual({ ops: [1] });
+		});
+
+		it("does not resolve a bundle when there is nothing to decode", async () => {
+			const decoded = await captchaManager.decodeSubmissionPayloads("s1", {});
+			expect(decoded).toEqual({});
+			expect(captchaManager.resolveBundleBySessionId).not.toHaveBeenCalled();
+		});
+
+		it("yields nothing when the bundle lookup throws", async () => {
+			vi.spyOn(captchaManager, "resolveBundleBySessionId").mockRejectedValue(
+				new Error("redis down"),
+			);
+			await expect(
+				captchaManager.decodeSubmissionPayloads("s1", { behavioural: "b" }),
+			).resolves.toEqual({});
+		});
+	});
+
 	describe("decryptBehavioralData", () => {
 		// biome-ignore lint/suspicious/noExplicitAny: tests
 		let decryptFn: any;
 
 		beforeEach(async () => {
-			// Get the mocked default export
-			const mod = await import("../../../tasks/detection/decodeBehavior.js");
-			decryptFn = mod.default;
+			const mod = await import("../../../tasks/detection/decoderPool.js");
+			decryptFn = mod.decode;
 			vi.mocked(decryptFn).mockReset();
 		});
 
@@ -1678,7 +1871,11 @@ describe("CaptchaManager", () => {
 			);
 			expect(result).toEqual(mockResult);
 			expect(decryptFn).toHaveBeenCalledTimes(1);
-			expect(decryptFn).toHaveBeenCalledWith("encryptedData", "pk", "cfg");
+			expect(decryptFn).toHaveBeenCalledWith("behaviour", [
+				"encryptedData",
+				"pk",
+				"cfg",
+			]);
 		});
 
 		it("should return null when the bundle fails to decrypt", async () => {

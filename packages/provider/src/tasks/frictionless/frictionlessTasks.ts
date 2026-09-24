@@ -162,6 +162,7 @@ export class FrictionlessManager extends CaptchaManager {
 			headers: params.headers,
 			mode: params.mode,
 			simdReadings: params.simdReadings,
+			clientMetaData: params.clientMetaData,
 			d: params.d,
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
@@ -241,6 +242,7 @@ export class FrictionlessManager extends CaptchaManager {
 			originSessionId,
 			isProtect,
 			matchedRule,
+			clientMetaData,
 			webView = false,
 			iFrame = false,
 			decryptedHeadHash = "",
@@ -295,6 +297,9 @@ export class FrictionlessManager extends CaptchaManager {
 			tcpOptsOrder,
 			tcpWindow,
 			...(matchedRule && { matchedRule }),
+			// Stamped at issuance, not only mirrored up at solve time, so a
+			// session that is never solved still correlates back to the render.
+			...(clientMetaData && { clientMetaData }),
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);

@@ -18,22 +18,24 @@
 
 import { assertType, describe, expectTypeOf, it } from "vitest";
 import {
-	LanguageSchema,
+	type Language,
+	LanguageCodes,
 	Languages,
 	type Ti18n,
 	type TranslationKey,
-	TranslationKeysSchema,
+	createTranslator,
 	i18nMiddleware,
 	isClientSide,
+	isLanguage,
 	loadI18next,
-	useTranslation,
+	translationKeys,
 } from "../index.js";
 
 describe("Languages", () => {
 	it("is a frozen const map of name to code, not a widened record", () => {
-		// `as const` is what lets LanguageSchema derive its enum. Widening this
-		// to Record<string, string> would silently turn the schema into a
-		// runtime-only constraint.
+		// `as const` is what lets `Language` be the union of the codes.
+		// Widening this to Record<string, string> would silently reduce it to
+		// `string`.
 		expectTypeOf(Languages.english).toEqualTypeOf<"en">();
 		expectTypeOf(Languages.chinese).toEqualTypeOf<"zh-CN">();
 	});
@@ -49,28 +51,24 @@ describe("Languages", () => {
 	});
 });
 
-describe("LanguageSchema", () => {
-	it("parses to a string", () => {
-		// The enum is built from a runtime `Object.values` cast, so the parsed
-		// type is string rather than the union of codes. Pinned deliberately:
-		// a consumer must not assume narrowing it does not get.
-		expectTypeOf(LanguageSchema.parse("en")).toEqualTypeOf<string>();
+describe("isLanguage", () => {
+	it("narrows an arbitrary string to a declared code", () => {
+		expectTypeOf(isLanguage).guards.toEqualTypeOf<Language>();
 	});
 
-	it("exposes .enum as a lookup of codes", () => {
-		expectTypeOf(LanguageSchema.enum).toExtend<Record<string, string>>();
+	it("accepts any string at the boundary — input is untrusted markup", () => {
+		expectTypeOf(isLanguage).toBeCallableWith("anything");
 	});
 
-	it("accepts unknown input at the parse boundary", () => {
-		expectTypeOf(LanguageSchema.parse).toBeCallableWith("anything");
+	it("is the union of the declared codes, not a widened string", () => {
+		expectTypeOf<Language>().toExtend<string>();
+		assertType<Language>("en");
 	});
 });
 
 describe("TranslationKey", () => {
-	it("is inferred from the schema", () => {
-		expectTypeOf<TranslationKey>().toEqualTypeOf<
-			ReturnType<typeof TranslationKeysSchema.parse>
-		>();
+	it("is a plain string — keys are read from JSON, never narrowed", () => {
+		expectTypeOf<TranslationKey>().toEqualTypeOf<string>();
 	});
 
 	it("accepts a key literal, so error call sites need no cast", () => {
@@ -79,10 +77,13 @@ describe("TranslationKey", () => {
 		assertType<TranslationKey>("API.UNKNOWN");
 	});
 
-	it("exposes the derived keys as an array of options", () => {
-		// A non-empty tuple, which is what z.enum requires and what the mongoose
-		// schemas in types-database spread into their `enum` fields.
-		expectTypeOf(TranslationKeysSchema.options).toExtend<readonly string[]>();
+	it("exposes the derived keys as an array", () => {
+		// What the mongoose schemas in types-database put in their `enum` fields.
+		expectTypeOf(translationKeys).toExtend<readonly string[]>();
+	});
+
+	it("exposes the declared language codes as an array", () => {
+		expectTypeOf(LanguageCodes).toExtend<readonly string[]>();
 	});
 });
 
@@ -140,17 +141,20 @@ describe("i18nMiddleware", () => {
 	});
 });
 
-describe("useTranslation", () => {
-	it("is callable with no options", () => {
-		expectTypeOf(useTranslation).toBeCallableWith();
+describe("createTranslator", () => {
+	it("is callable with no instance, so a standalone widget can boot one", () => {
+		expectTypeOf(createTranslator).toBeCallableWith();
 	});
 
-	it("returns a t function", () => {
-		expectTypeOf(useTranslation).returns.toHaveProperty("t");
+	it("returns the translator surface the widgets render against", () => {
+		expectTypeOf(createTranslator).returns.toHaveProperty("t");
+		expectTypeOf(createTranslator).returns.toHaveProperty("isReady");
+		expectTypeOf(createTranslator).returns.toHaveProperty("subscribe");
+		expectTypeOf(createTranslator).returns.toHaveProperty("i18n");
 	});
 
-	it("rejects an unknown option", () => {
-		// @ts-expect-error notAnOption is not a UseTranslationOptions field
-		useTranslation({ notAnOption: 1 });
+	it("rejects anything that is not an i18next instance", () => {
+		// @ts-expect-error the only parameter is an existing i18next instance
+		createTranslator({ notAnInstance: 1 });
 	});
 });

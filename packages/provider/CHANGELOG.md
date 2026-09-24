@@ -1,5 +1,265 @@
 # @prosopo/provider
 
+## 5.13.0
+### Minor Changes
+
+- 85a1bb9: Seal captcha image paths into opaque URLs, opened by a CDN edge script.
+  
+  An image URL used to say which image it was: `https://cdn.example.net/dataset/images/abc.webp`. Signed URLs already stop a harvested URL being refetched forever, but the path stays in plain sight, and the path is a stable identifier for the image behind it — which makes it a usable key for caching answers between sessions.
+  
+  The path is now AES-256-GCM sealed, with an expiry, into an opaque blob drawn fresh every time:
+  
+  ```
+  https://cdn.example.net/s/AgHk1n...Qx9.webp
+  ```
+  
+  The edge script opens it, puts the canonical path back on the request, and the CDN serves the one object that path names. The same image therefore has a different URL in every session, with nothing in the URL to group those together, and there is still only one cached copy and one stored object.
+  
+  Sealing happens strictly below `item.data`. The item hash, the captchaId and the datasetId are untouched, so nothing about the dataset or how a solution is verified changes.
+  
+  The provider seals with `node:crypto`, because `AssetsResolver.resolveAsset` is synchronous and every WebCrypto call returns a promise; the edge opens with WebCrypto, because that is what its runtime has. The wire format, the validation and the base64url alphabet live in one module both ends import, and a test seals with one end and opens with the other so the two cannot drift.
+  
+  Inert unless its key is configured, since a sealed URL is unservable until the matching edge script is live. Configured, it takes precedence over the signed resolver; leaving the signing key in place keeps that as the fallback for any zone not yet moved over. More than one key opens at a time, so keys can be rotated without a flag day. `npm run -w @prosopo/provider build:edge` emits the edge script as a single file. Rollout order, environment variables and rotation are documented for operators outside this repository.
+  
+  Test coverage: 51 unit tests over the wire format, the sealer, the resolver and the edge handler — round trip, tamper, truncation, expiry at the boundary, swapped key id, rotation across two live keys, path traversal and prefix confinement, URL shape and per-call uniqueness, passthrough of requests that are not sealed, idempotency when the handler runs at both hooks, and the provider-seals/edge-opens interop.
+
+### Patch Changes
+
+- 4c9b84b: Escalate a PoW solve to an image captcha when it arrives from a different address than the challenge.
+  
+  A PoW challenge is bound to the user account and the site key and to nothing about where the request came from, so a solved challenge can be carried to any host that wants a free pass. The issuing address is already on the record, so binding to it costs nothing: `verifyPowCaptchaSolution` now compares it against the address submitting the solve and escalates when they differ, under a new `IP_CHANGED` reason.
+  
+  Escalation, not denial. A phone handing off between towers mid-solve is a real user and should pay a picture rather than be turned away. For the same reason IPv6 is judged on the /64 alone — the interface identifier in the low 64 bits rotates by design under RFC 8981, several times a day on one unchanged connection — and an address we could not read counts as unchanged.
+  
+  Only applies where a session is linked, since escalation carries the originating session's risk profile forward. Missing coordinates still takes precedence as the reported reason when both fire.
+- 2cca36e: Report a bot score of zero to Pro and Enterprise instead of dropping the field.
+  
+  `canClientSeeScore` tested `score && tier && tier !== Tier.Free`. A session with nothing wrong with it scores 0, which is falsy, so `score` was omitted from the siteverify response for exactly those users: a paying customer got a score for every suspicious visitor and no score at all for their cleanest ones, which reads as "no score available" rather than "no risk".
+  
+  Invisible in production today because `Math.random() * 0.3` is added to every score, making an exact 0 all but impossible. Removing that noise — captcha-private#4433, where this was found — is what would have exposed it.
+  
+  The function also returned `number | boolean | undefined` from its `&&` chain; it now returns `boolean`.
+- Updated dependencies [4c9b84b]
+- Updated dependencies [f13bea8]
+  - @prosopo/types@5.10.1
+  - @prosopo/load-balancer@2.11.0
+  - @prosopo/api@4.3.4
+  - @prosopo/api-express-router@3.1.94
+  - @prosopo/database@4.0.40
+  - @prosopo/datasets@3.1.90
+  - @prosopo/env@3.6.63
+  - @prosopo/ipinfo@0.4.9
+  - @prosopo/keyring@2.9.96
+  - @prosopo/types-database@5.6.4
+  - @prosopo/types-env@2.11.9
+  - @prosopo/user-access-policy@3.14.10
+
+## 5.12.3
+### Patch Changes
+
+- aed164d: Make asset signing survive contact with a CDN that actually enforces it.
+  
+  Signing image URLs is optional and has been off in practice, so two paths that only break when a zone starts checking tokens have never been exercised. Both are fixed here, so enabling enforcement is a config change rather than a config change plus an incident.
+  
+  **A dataset could not be imported.** Hashing an item downloads the image from the URL stored in the dataset, and that URL is the canonical, unsigned one. Against an enforcing zone every one of those downloads is rejected, so a dataset becomes impossible to import on exactly the configuration it is meant to be served from. `downloadImage` now signs the URL when a signing key is configured, and leaves it alone when one is not.
+  
+  **A failed image never recovered.** The widget retried a broken image by appending a cache-busting query parameter. A token is a signature over the query string, so on a signed URL that parameter invalidates it and every retry is rejected — a transient failure turned permanent. The retry now re-requests the signed URL unchanged, and keeps the cache-buster for unsigned URLs, where it is still worth having and costs nothing.
+  
+  The token scheme itself now lives in one place, `@prosopo/datasets`, rather than being written out twice. The provider keeps its synchronous implementation, because `resolveAsset` cannot await, but both ends build the string to hash and encode the result through the same helpers.
+- Updated dependencies [aed164d]
+  - @prosopo/datasets@3.1.89
+
+## 5.12.2
+### Patch Changes
+
+- a9141c3: Ship one copy of each crypto library in the widget instead of two or three.
+  
+  The bundle contained three separate copies of `@noble/hashes` and two of `@polkadot/util`, because different packages asked for different major versions and npm installed each one in its own folder. Same code, bundled repeatedly. The widget's eager payload drops by about 6KB gzipped.
+  
+  Two stale version pins caused it:
+  
+  - `@prosopo/util-crypto` asked for `@noble/hashes` 1.8.0 while its own dependencies `@noble/curves` and `@scure/sr25519` asked for 2.4.0, so npm installed both majors. Everything is now on 2.4.0. The v2 import paths changed (`@noble/hashes/sha256` is now `@noble/hashes/sha2.js`, `blake2b` is `blake2.js`); the functions themselves are unchanged.
+  - `@prosopo/util-crypto` asked for `@polkadot/x-randomvalues` 13.5.7, which in turn demands exactly `@polkadot/util` 13.5.7. Every other package in the repo asks for 14.0.3, so npm put the old one in the shared folder and gave each package its own private copy of the new one. Bumping that single pin to 14.0.3 leaves one shared copy. As a side effect `@prosopo/util-crypto` now gets the `@scure/base` 2.4.0 it always asked for, rather than the 1.2.6 it was silently given.
+  
+  `@prosopo/keyring` no longer depends on `@polkadot/util-crypto`. It was used for one type, which `@prosopo/util-crypto` already exports.
+  
+  The repo root now names the versions the workspace standardises on (`@noble/hashes`, `@noble/curves`, `@scure/base`, `@scure/sr25519`), which is what keeps npm putting them in the shared folder. Older majors are still installed for the Polkadot web3 packages that require them; those load only in web3 mode and are unaffected.
+  
+  Covered by the existing test suites for each package, all passing unchanged.
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/locale@3.6.0
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+  - @prosopo/load-balancer@2.10.50
+  - @prosopo/types-database@5.6.3
+  - @prosopo/util-crypto@13.5.33
+  - @prosopo/util@3.3.11
+  - @prosopo/keyring@2.9.95
+  - @prosopo/web-bot-auth@0.1.2
+  - @prosopo/api-express-router@3.1.93
+  - @prosopo/database@4.0.39
+  - @prosopo/datasets@3.1.88
+  - @prosopo/env@3.6.62
+  - @prosopo/user-access-policy@3.14.9
+  - @prosopo/api@4.3.3
+  - @prosopo/ipinfo@0.4.8
+  - @prosopo/types-env@2.11.8
+  - @prosopo/api-route@2.6.60
+  - @prosopo/redis-client@1.0.37
+
+## 5.12.1
+### Patch Changes
+
+- Updated dependencies [59c02da]
+  - @prosopo/locale@3.5.0
+  - @prosopo/api-express-router@3.1.92
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+  - @prosopo/types-database@5.6.2
+  - @prosopo/database@4.0.38
+  - @prosopo/datasets@3.1.87
+  - @prosopo/env@3.6.61
+  - @prosopo/keyring@2.9.94
+  - @prosopo/load-balancer@2.10.49
+  - @prosopo/user-access-policy@3.14.8
+  - @prosopo/api@4.3.2
+  - @prosopo/ipinfo@0.4.7
+  - @prosopo/types-env@2.11.7
+
+## 5.12.0
+### Minor Changes
+
+- 6d9711f: Measure where the provider's CPU actually goes, and move puzzle background generation to Rust.
+  
+  **Measuring first.** We have been choosing what to optimise by reading the code and guessing, and the guesses have been wrong in both directions — a decoder shipped nine times slower than its predecessor without anyone noticing, and a background generator we assumed would be ten to twenty times faster in Rust turned out to be three. Two things now answer the question with numbers instead.
+  
+  `measureSync` wraps a named block of synchronous work and records the CPU it burns, so `prosopo_sync_span_cpu_seconds_total` gives a per-day ranking of which blocks cost the most. Seven blocks are instrumented: the three payload decoders, puzzle background generation and rendering, the merkle build, and decision machine execution. The measurement is only honest for work that holds the event loop, which is why the helper takes a plain function and not an async one — billing a function for the requests served during its awaits would produce a confident wrong answer.
+  
+  A periodic CPU profiler covers what nobody thought to instrument. It samples the isolate for a few seconds, logs the busiest call frames by self time, and sleeps. It is off unless `PROSOPO_CPU_PROFILE_ENABLED=true`, samples a short window every fifteen minutes by default, and cannot take the provider down with it if it fails.
+  
+  Event loop lag and process CPU were already being collected by the default Prometheus metrics; nothing was added there.
+  
+  **Puzzle backgrounds in Rust.** The new `@prosopo/native-puzzle` package generates the mesh-gradient background the slider puzzle sits on. It produces byte-identical output to the JavaScript for the same seed — verified against the existing implementation, which stays in place as the reference — and takes about a third of the time, so a buffer refill now stalls the event loop for around eleven milliseconds instead of thirty-two. The JavaScript remains the browser-side implementation and the thing the differential test compares against.
+- c151f8a: Decode detector payloads on worker threads instead of on the request path, and fix the CPU metric that was measuring the wrong thing.
+  
+  **The measurement was wrong.** `prosopo_sync_span_cpu_seconds_total` claimed to report the CPU a block of synchronous work costs, on the reasoning that nothing else can run while it holds the event loop. That is true of the main thread but not of the process: `process.cpuUsage()` counts every thread, so V8's background garbage collector and compiler and the image encoder's thread pool were all billed to whichever block happened to be open. In production it reported *more* CPU than wall-clock time, which is impossible for work on one thread, and that is what gave it away. Node offers no per-thread CPU clock, so the counter is removed rather than corrected — process-wide CPU is already reported as `prosopo_process_cpu_seconds_total`. The wall-time counter was never affected and is the one to rank by: for a synchronous block it is exactly the delay imposed on everything else waiting.
+  
+  **What that measurement found.** The three detector decoders held the event loop for 15–47 ms every time they ran, and together accounted for about 84% of all the blocking we measured. That cost does not stay with the request doing the decoding — it delays every other request being served at that moment, health checks included. It is the same shape of problem as the decoder that shipped nine times slower in 3.8.14.
+  
+  **The fix.** The decoders now run on a small pool of worker threads. The decoders themselves are untouched: the same file, the same input, the same output, including the same failures — the tests check that decoding through the pool is indistinguishable from decoding inline. A round trip to a worker costs between 0.01 and 0.2 ms against the 15–47 ms it takes off the request path.
+  
+  Set `PROSOPO_DECODER_WORKERS=0` to go back to decoding inline; it takes a restart but not a rollback. `PROSOPO_DECODER_WORKERS` sets the pool size (default: up to four, leaving a core spare) and `PROSOPO_DECODER_TIMEOUT_MS` caps how long one decode may take before the worker is replaced. If workers cannot be started at all the provider decodes inline and says so in the log, because serving slowly is better than not serving.
+  
+  Two new metrics replace the decoder spans: `prosopo_decoder_duration_seconds` and `prosopo_decoder_calls_total`. Watch them next to `prosopo_nodejs_eventloop_lag_p99_seconds` — that pair is how you confirm the work moved rather than disappeared.
+  
+  The decoders are now copied next to the bundle under fixed names and loaded by path, because a worker cannot ask the bundler what it called a chunk. `copyAssetsPlugin` does the copying.
+
+### Patch Changes
+
+- a22069d: Let a Block access rule name the reason it fired, so the 403 says why instead of "Forbidden"
+- de1dc32: Decode a submission's two payloads together instead of one after the other.
+  
+  A solution submission can carry both behavioural data and SIMD readings. Both are encrypted with the same detector bundle and neither depends on the other, but the pow and puzzle paths were looking that bundle up twice and then decoding one payload after the other.
+  
+  That cost little when decoding happened inline. Once decoding moved to worker threads it became two serialised round trips on the submit path, and measured as a 22% latency increase on `pow/solution` and 25% on `puzzle/solution` against an identical node running the previous release — while every other route got faster and the event loop's p99 delay halved. This recovers that.
+  
+  The bundle is now resolved once and both payloads decode concurrently, which is what the image path already did. A payload that cannot be read still comes back empty rather than failing the submission, and a decoder that throws no longer discards the other payload's perfectly good result along with it.
+- Updated dependencies [a22069d]
+- Updated dependencies [6d9711f]
+  - @prosopo/user-access-policy@3.14.7
+  - @prosopo/types@5.9.1
+  - @prosopo/locale@3.4.4
+  - @prosopo/native-puzzle@0.1.0
+  - @prosopo/database@4.0.37
+  - @prosopo/types-database@5.6.1
+  - @prosopo/api@4.3.1
+  - @prosopo/api-express-router@3.1.91
+  - @prosopo/common@3.1.57
+  - @prosopo/datasets@3.1.86
+  - @prosopo/env@3.6.60
+  - @prosopo/ipinfo@0.4.6
+  - @prosopo/keyring@2.9.93
+  - @prosopo/load-balancer@2.10.48
+  - @prosopo/types-env@2.11.6
+
+## 5.11.1
+### Patch Changes
+
+- 6c00bca: Regenerate the payload decoder, which was running about nine times slower than the one it replaced.
+  
+  The decoder ships as a pre-built obfuscated file. The obfuscator reshapes it with a fresh random seed on every build, and how fast the result runs varies a lot between seeds — measured across eight builds of identical source, the spread was more than 3x, and the build that shipped in 3.8.14 was at the slow end of it.
+  
+  It decodes a payload on the request path and does so synchronously, so the cost did not stay on the requests doing the decoding: it held the event loop long enough to push up the response time of everything else being served at the same time, health checks included.
+  
+  The replacement measures about nine times faster than the one it replaces and slightly faster than the 3.8.13 build, on the same input on the same machine. It was picked by benchmarking several builds and keeping the fastest, and checked against a payload round trip first so the speed is not bought with a decoder that reads the format wrongly.
+
+## 5.11.0
+### Minor Changes
+
+- a606f54: Detector signals now travel in a single open field, `d`, instead of one named
+  field each.
+  
+  Previously every signal the detector reported needed adding by hand in about a
+  dozen places — the decoder, two type files, the Mongoose schema, the read
+  projection, the session write path, the escalation copy, and each machine's
+  input — and missing any one of them dropped the signal with no error. Signals
+  were in fact being dropped that way: one was persisted but never reached a
+  decision machine at all, and three more were lost whenever a user was escalated
+  from PoW to another challenge.
+  
+  Now the provider carries whatever the detector reported without knowing what it
+  is, and hands it to decision and routing machines as `input.d`. A rule can read
+  a signal that no release of `@prosopo/types` or `@prosopo/provider` has ever
+  heard of, so adding one no longer requires a release of either. Values keep
+  their types: a boolean arrives as a boolean and a number as a number.
+  
+  The bag is client-controlled data that gets persisted, so it is sanitised and
+  capped on ingress — key names Mongo cannot store are dropped, values that are
+  not JSON are dropped, and there are limits on key count, string length, array
+  length, nesting depth and total size.
+  
+  Two things to note when deploying. Sessions written before this change carry
+  the old named fields and no `d`, so queries and dashboards that read those
+  fields need a `d.` prefix; the sessions collection expires after a day, so the
+  overlap is short. And the sparse session index moves to a dotted path inside
+  the bag.
+- 0f23010: Correlate captcha sessions with Prosopo Protect sessions on sites that run both.
+  
+  Protect's challenge page already renders the widget with `data-sessionid=<its session id>`, so captchas served from the interstitial can be matched back to the Protect session. A widget the site embeds itself — on its own pages — had no way to know that id, so those sessions could not be matched to anything.
+  
+  The widget now falls back to reading Protect's session id from the page (`window.prosopo_protect.jti`, or the `prosopo_session` cookie Protect sets on the site's domain) when the site has not supplied a session id of its own. A session id the site does supply always wins, so nothing changes for sites that use the field themselves, and sites without Protect are unaffected. Only the id is read — the session token that shares the cookie never leaves the page.
+  
+  Two gaps in the existing field are closed alongside it: the widget now sends the session id when it first asks for a captcha rather than only when submitting a solution, and the provider records it on the session at that point. Previously a session that was allowed without a challenge, or abandoned before the user solved one, carried no session id at all. An escalated session now inherits the id from the session it escalated from.
+
+### Patch Changes
+
+- a4a71be: Regenerate the obfuscated payload decoder so it matches the payload the
+  detector now produces.
+  
+  The decoder ships as a pre-built file rather than being compiled from source
+  here, so it did not pick up the payload format change that landed alongside the
+  detector data bag. It still expected the old fixed field count, and rejected
+  every payload written in the new format — the provider then treated a perfectly
+  good detection result as an unreadable one and fell back to a challenge.
+- Updated dependencies [a606f54]
+- Updated dependencies [ce2500b]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/types-database@5.6.0
+  - @prosopo/api@4.3.0
+  - @prosopo/api-express-router@3.1.90
+  - @prosopo/database@4.0.36
+  - @prosopo/datasets@3.1.85
+  - @prosopo/env@3.6.59
+  - @prosopo/ipinfo@0.4.5
+  - @prosopo/keyring@2.9.92
+  - @prosopo/load-balancer@2.10.47
+  - @prosopo/types-env@2.11.5
+  - @prosopo/user-access-policy@3.14.6
+
 ## 5.10.4
 ### Patch Changes
 

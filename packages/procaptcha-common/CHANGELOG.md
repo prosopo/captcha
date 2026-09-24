@@ -1,5 +1,168 @@
 # @prosopo/procaptcha-common
 
+## 2.17.2
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+- Updated dependencies [f13bea8]
+  - @prosopo/types@5.10.1
+  - @prosopo/load-balancer@2.11.0
+  - @prosopo/account@2.8.99
+
+## 2.17.1
+### Patch Changes
+
+- 3d45c37: Stop the widget's hover highlights costing a phone user their first tap.
+  
+  Tapping the checkbox on an iPhone did nothing the first time. The second tap worked. The cause is a rule iOS applies to every page: if the first tap on a control changes what is under the finger, Safari treats it as "show me the hover state" rather than "activate this", and withholds the click. Every control in the widget that lights up on hover was therefore asking to be tapped twice.
+  
+  Hover feedback is now drawn only where a pointer can actually rest on something. On a desktop nothing changes. On a touch screen the highlight never appears and the first tap activates the control, which is what a visitor expects.
+  
+  Four places had it, and only one of them was the checkbox:
+  
+  - the **checkbox** — a state layer around the box
+  - the **reload button** in the challenge dialog — a fill change
+  - the dialog's **action buttons**, Cancel, Next and Submit — a state layer
+  - the **widget container** itself, via a CSS `:hover` rule. This one is easy to miss and matters most: the box that lights up is the one the checkbox sits inside, so it repaints under the finger even when the tap never touches a control with its own hover.
+  
+  The first three ask `matchMedia("(hover: hover)")` before listening for the pointer at all; the fourth is wrapped in the matching media query. The image tiles never had hover feedback and are unchanged.
+  
+  None of this came from the recent randomisation work — the React components these replaced carried the same handlers, so it has been there as long as the widget has.
+  
+  Covered by a test per control asserting no state layer is drawn when the device reports it cannot hover, plus tests for the check itself, including that it assumes a pointer when the environment cannot answer — which is what keeps the existing desktop behaviour, and every existing hover test, intact.
+- 4cc28db: Fix the image challenge laying out two columns instead of three on a phone, which pushed the last images below the screen where they could not be reached.
+  
+  On a Samsung A52s the image grid is 345.578px wide. Each tile asked for `calc(33.333% - 5.33px)` at an 8px gap, so three tiles and the two gaps between them came to 345.584px — **six thousandths of a pixel too wide**. That is enough for the browser to wrap, so the challenge drew two columns and five rows rather than three and three. The panel went from about 370px tall to about 1080px, and three of the nine images ended up below a 718px viewport.
+  
+  The tile width is now written as `calc((100% - 16px) / 3)`, leaving both the subtraction and the division to the browser. There is nothing left to round, so three tiles and their gaps come to exactly the width of the row at every gap the grid draws.
+  
+  This arrived with the dialog randomisation, which replaced a fixed `calc(33.333% - 10px)` with a width derived from the randomised gap. The old value subtracted a whole gap per tile where only two thirds was needed, so it happened to leave about 10px of slack and always fitted. Deriving the width exactly removed the slack, and the rounding then tipped it over. Which gaps break depends on the arithmetic — 8, 11 and 14 round down and overflow, the rest do not — so it looked intermittent.
+  
+  The panel that holds the images is also `touch-action: pan-y` rather than `touch-action: none` now. It is an `overflow-y: auto` box, so on a phone it is the thing a finger has to drag when the images do not fit, and `none` told the browser not to pan it at all — which is what turned "some images are off-screen" into "some images cannot be reached". Stopping the page behind from scrolling is `overscroll-behavior`'s job and it still does it. That one is older than the randomisation; it came in with the React to vanilla rewrite, and the React component before it had the same thing.
+  
+  Covered by a test that works out where three tiles and two gaps land for every gap the challenge draws, against a set of panel widths including the A52s' 345.578px. It fails on the old expression with exactly the numbers measured on the device.
+- d3b3286: Stop the widget failing to render when it loads before the page's callbacks are defined.
+  
+  A site names its callbacks by string, either as `data-callback="onCaptchaVerified"` or in the render options. The widget looked those names up on `window` the moment it mounted, and threw if one was not there yet — which took the whole widget down, so the visitor got no captcha at all.
+  
+  Whether that happened was a race. The documented way to embed the widget is `<script ... async defer>`, and `async` means the bundle runs as soon as it has arrived, which can be before the rest of the page has executed. A page that defines its callback in a module script — as every one of our own demo pages does — is therefore relying on the network to lose that race. It usually does. When it does not, the widget dies, and nothing about the error points at load order.
+  
+  The name is now looked up when the callback actually fires. By then the page has long since finished loading, so the race is gone. A name that is never defined anywhere still throws the same error, just at the point where it would have been called: the site's own handler breaks instead of the captcha.
+  
+  This is also what was making the end-to-end suite fail intermittently — the failing spec moved around between runs, because which one lost the race depended on how the bundle happened to be chunked.
+- Updated dependencies [3d45c37]
+  - @prosopo/widget-skeleton@2.10.0
+
+## 2.17.0
+### Minor Changes
+
+- e180281: Give the checkbox a different set of class names and a different DOM shape on every page load, so a solver script cannot hardcode a way to find it.
+  
+  Until now the widget rendered the same markup for every user, forever. The control was always `input.prosopo-checkbox__box`, the label was always `.prosopo-checkbox__label`, and the box always sat inside the same four nested divs at the same pixel offset. Anyone writing a script to click it only had to work that out once. The element `id` was already randomised per render, which bought nothing while everything around it stayed fixed.
+  
+  Two things change, both generated fresh each time a widget mounts:
+  
+  - **The names.** Every class inside the checkbox's shadow root is now an 8-character token drawn at mount, in both the loading skeleton and the live control. Selectors scraped from one page load are dead on the next.
+  - **The shape.** The fixed four-div nest is now between two and five wrappers, each randomly a `div` or a `span`, so structural and `nth-child` selectors do not hold either. Only elements with no accessible role are used, so no landmark is introduced for a screen reader.
+  
+  Two related fixes come with it:
+  
+  - `procaptcha-common`'s checkbox set `data-cy="captcha-checkbox"` on the real input unconditionally, shipping an end-to-end test hook to production. The widget skeleton has always withheld that attribute outside development; the component now does the same.
+  - Finding the checkbox's interactive area was itself done by class lookup across two shadow boundaries. `createCheckboxElement` and `createWidgetSkeletonElement` now return the node directly, which is what allows the names to change at all, and removes a lookup that could silently return `null`.
+  
+  The spinner rules that `procaptcha-common` renders used to live in `widget-skeleton`'s stylesheet — an undeclared dependency that only worked because the component happened to render inside that shadow root. Each package now carries its own, so the two can name things independently.
+  
+  Breaking for direct API consumers: `WIDGET_CHECKBOX_SPINNER_CSS_CLASS` is gone, since no such class exists any more, and `createWidgetSkeletonElement` returns `{ element, interactiveArea }` rather than a bare element. `createWidgetSkeleton` — what the bundle actually calls — is unchanged.
+  
+  The one class still fixed is `prosopo-checkbox` on the host element, which sits in the embedding page's light DOM where a site's own CSS may target it. Note also what this does not do: the control is still a real `<input type="checkbox">` in an open shadow root, so a script that looks for it by role or type rather than by name will still find it. Closing the shadow root, or making the real input harder to tell from decoys, is a separate decision with accessibility and testability costs to weigh.
+- 5e5fb9e: Give the image challenge dialog different class names, a different DOM shape, different element types for its controls and slightly different spacing on every page load, so a solver script cannot hardcode a way to find or click anything inside it.
+  
+  This is the same treatment the checkbox got. Until now the dialog was identical for every user, forever: the panel was always `.prosopo-modalInner` inside `.prosopo-modalOuter` inside `.prosopo-challenge-content`, every tile and every action was a `<button>`, the grid gap was always 10px, and the whole thing sat at the same offsets. The end-to-end suite was itself finding the images by climbing four parents and stepping sideways from the instruction line — which is the clearest possible evidence that the markup was a reliable handle.
+  
+  Four things now change, all drawn fresh each time a challenge mounts:
+  
+  - **The names.** Every class the dialog renders — the two modal layers, the challenge surface and its panel, the reload control — is an 8-character token drawn at mount. Selectors scraped from one page load are dead on the next. The challenge surface is shared with the puzzle, so the puzzle gets this too. Nothing in the widget's own CSS referenced these names, but a site that had written its own rules against `.prosopo-modalOuter`, `.prosopo-modalInner`, `.prosopo-challenge-content` or `.reload-button` will find they no longer match. `image-captcha` on the widget root stays fixed, as `prosopo-checkbox` did, because that one sits in the embedding page's light DOM.
+  - **The shape.** The panel, the header, the grid, the action row, each action and each tile sit inside a random number of randomly named `div` or `span` wrappers. The wrappers are `display: contents`, so they generate no boxes and cannot move anything: depth varies, layout does not. Only elements with no accessible role are used, so nothing new is announced to a screen reader.
+  - **The element each control is made of.** Every tile and every action is now randomly either a real `<button>` or a `<div role="button" tabindex="0">`, so `button` no longer finds them all. The generic variant is given by hand what the button gave for free: it is in the tab order, it activates on Enter and on Space, Space does not scroll the dialog, and it carries the same `aria-pressed` state. The surface's focus trap already matched `[tabindex]:not([tabindex="-1"])`, so both variants are trapped and tabbable alike.
+  - **The spacing.** The grid gap, the grid's and the header's padding, the action row's padding and the panel's own margins are each nudged a few pixels, so tile centres are not where they were last time. Each of these changes the panel's size rather than moving the panel, so the surface still centres it and a panel taller than the viewport still scrolls to its own edges. The tile and action widths are now derived from the gap they were drawn with — three columns fit only if each cell gives up two thirds of a gap, and the old hardcoded basis would have wrapped the row at the wide end of the range.
+  
+  Three related fixes come with it:
+  
+  - The tick badge on a selected tile was shipping `data-testid="CheckIcon"` to production, plus an `aria-label` on an `aria-hidden` element that nothing could ever read and a stray `color="#fff"` attribute. All three are gone.
+  - The reload button acted on any click, including one a script dispatched. It now takes the same trusted-event gate every other control in the widget has.
+  - The end-to-end suite no longer depends on the markup at all. It uses `data-cy` hooks — the instruction line, the challenge panel, the round, the reload control — that are withheld from production builds, exactly as the checkbox withholds `captcha-checkbox`.
+  
+  Note what this does not do. The dialog still says it is a dialog, the tiles still expose the button role and their pressed state, and the images still carry alt text. A script that looks for what these things mean rather than what they are called will still find them. That is the price of the challenge being usable with a screen reader, and it is the right price; the point here is to kill the cheap selector, not to claim the dialog is unfindable.
+
+### Patch Changes
+
+- 94929c3: Make the checkbox's label part of the target, so pressing the words activates it.
+  
+  Only the 28px box itself responded to a press. The 15px of space around it is margin, which belongs to no element, and the "I am human" text beside it was a plain `<label>` with nothing tying it to the control — so a press that landed anywhere but the box was silently dropped. On a phone that is most presses, and it reads as the widget ignoring the first tap and working on the second.
+  
+  The label now names the input, which is what makes the words activate it. The association is refreshed whenever the input's id is regenerated.
+- Updated dependencies [a9141c3]
+- Updated dependencies [e180281]
+  - @prosopo/types@5.10.0
+  - @prosopo/load-balancer@2.10.50
+  - @prosopo/widget-skeleton@2.9.0
+  - @prosopo/account@2.8.98
+
+## 2.16.0
+### Minor Changes
+
+- 59c02da: Replace React with vanilla TS/DOM in the widget.
+  
+  The widget packages no longer depend on react, react-dom, @emotion or
+  react-i18next: every component is now a `mount*` function returning a handle
+  with `update`/`destroy`. `useTranslation` is replaced by `createTranslator`,
+  which exposes i18next's `t` plus the events that used to trigger a re-render.
+  The rendered markup, styling and behaviour are unchanged — only the
+  implementation is.
+  
+  Everything the widget has gained since this rewrite started is carried over,
+  so nothing is lost by dropping React: the shared challenge surface (popup and
+  float placement, escape/outside-click dismissal and the dialog focus trap),
+  the image-tile and puzzle-piece keyboard paths, the checkbox's focus handover
+  across the loading swap, the server-rendered puzzle imagery, `startMode:
+  "manual"` with `window.procaptcha.start()`, `data-bind` / targeted
+  `execute(widgetId)`, the Web Bot Auth "authenticated" badge, the client
+  session id, and the bounded session re-mint and reload handling in the
+  frictionless wrapper.
+
+### Patch Changes
+
+  - @prosopo/types@5.9.2
+  - @prosopo/account@2.8.97
+  - @prosopo/load-balancer@2.10.49
+
+## 2.15.1
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+  - @prosopo/account@2.8.96
+  - @prosopo/load-balancer@2.10.48
+
+## 2.15.0
+### Minor Changes
+
+- 0f23010: Correlate captcha sessions with Prosopo Protect sessions on sites that run both.
+  
+  Protect's challenge page already renders the widget with `data-sessionid=<its session id>`, so captchas served from the interstitial can be matched back to the Protect session. A widget the site embeds itself — on its own pages — had no way to know that id, so those sessions could not be matched to anything.
+  
+  The widget now falls back to reading Protect's session id from the page (`window.prosopo_protect.jti`, or the `prosopo_session` cookie Protect sets on the site's domain) when the site has not supplied a session id of its own. A session id the site does supply always wins, so nothing changes for sites that use the field themselves, and sites without Protect are unaffected. Only the id is read — the session token that shares the cookie never leaves the page.
+  
+  Two gaps in the existing field are closed alongside it: the widget now sends the session id when it first asks for a captcha rather than only when submitting a solution, and the provider records it on the session at that point. Previously a session that was allowed without a challenge, or abandoned before the user solved one, carried no session id at all. An escalated session now inherits the id from the session it escalated from.
+
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/account@2.8.95
+  - @prosopo/load-balancer@2.10.47
+
 ## 2.14.2
 ### Patch Changes
 

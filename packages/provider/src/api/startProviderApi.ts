@@ -48,6 +48,7 @@ import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvid
 import { getVerdictCache } from "./blacklistRequestInspector.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
+import { startCpuProfiler } from "./cpuProfiler.js";
 import { domainMiddleware } from "./domainMiddleware.js";
 import { handshakeTimingMiddleware } from "./handshakeTimingMiddleware.js";
 import { headerCheckMiddleware } from "./headerCheckMiddleware.js";
@@ -296,6 +297,9 @@ export async function startProviderApi(
 	// Time and count every request below this point (route/method/status).
 	// Mounted after the public router so the /metrics scrape isn't self-counted.
 	apiApp.use(metricsMiddleware());
+
+	// No-op unless PROSOPO_CPU_PROFILE_ENABLED=true.
+	startCpuProfiler(env.logger);
 
 	// Rate limiting
 	// In test environments, disable rate limiting to allow parallel tests

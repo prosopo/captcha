@@ -57,6 +57,7 @@ import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import { getDetectorBundlePool } from "./detection/bundlePool.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
+import { decode } from "./detection/decoderPool.js";
 import { extraIpInfosFromEnrichedDnsEvent } from "./dnsEvent/enrichDnsEvent.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
 import {
@@ -242,6 +243,84 @@ export class CaptchaManager {
 				origin.simdReadings && { simdReadings: origin.simdReadings }),
 			...(needsDns && origin.dnsEvent && { dnsEvent: origin.dnsEvent }),
 			...(mergedData !== undefined && { d: mergedData }),
+		};
+	}
+
+	/**
+	 * Decode the payloads a solution submission can carry, in one pass.
+	 *
+	 * Both decodes want the same session bundle and neither depends on the
+	 * other, so the bundle is resolved once and the two decodes run together.
+	 * Done separately they cost two bundle lookups and two serialised decoder
+	 * round trips on the submit path, which measured as a ~22-25% latency
+	 * regression on `pow/solution` and `puzzle/solution` once decoding moved
+	 * to worker threads.
+	 *
+	 * Absent or undecodable payloads come back undefined rather than throwing,
+	 * matching what the individual decoders already do: a submission is not
+	 * worth failing over a signal we could not read.
+	 */
+	public async decodeSubmissionPayloads(
+		sessionId: string | undefined,
+		payloads: { behavioural?: string; simd?: string },
+	): Promise<{
+		behavioural?: BehavioralDataResult;
+		simd?: NonNullable<Session["simdReadings"]>;
+	}> {
+		const { behavioural, simd } = payloads;
+		if (!behavioural && !simd) return {};
+
+		let bundle: PoolBundleDecrypt | undefined;
+		try {
+			bundle = await this.resolveBundleBySessionId(sessionId);
+		} catch (err) {
+			this.logger?.warn(() => ({
+				msg: "Could not resolve the detector bundle for a submission",
+				data: { sessionId },
+				err,
+			}));
+			return {};
+		}
+
+		// Caught per decode, not around the pair. Both decoders already return
+		// null for a payload they cannot read, but anything they throw for some
+		// other reason used to be contained by the caller's try/catch; running
+		// them together moved them outside it, so the tolerance has to live here.
+		// Per decode rather than around both, or one failure would discard the
+		// other's perfectly good result.
+		const tolerate = async <T>(
+			decoding: Promise<T | null | undefined> | undefined,
+			which: string,
+		): Promise<T | undefined> => {
+			if (!decoding) return undefined;
+			try {
+				return (await decoding) ?? undefined;
+			} catch (err) {
+				this.logger?.warn(() => ({
+					msg: "Failed to decode a submission payload",
+					data: { decoder: which, sessionId },
+					err,
+				}));
+				return undefined;
+			}
+		};
+
+		const [decodedBehavioural, decodedSimd] = await Promise.all([
+			tolerate(
+				behavioural
+					? this.decryptBehavioralData(behavioural, bundle)
+					: undefined,
+				"behaviour",
+			),
+			tolerate(
+				simd ? this.decryptSimdReadingsForAttach(simd, bundle) : undefined,
+				"simd",
+			),
+		]);
+
+		return {
+			...(decodedBehavioural && { behavioural: decodedBehavioural }),
+			...(decodedSimd && { simd: decodedSimd }),
 		};
 	}
 
@@ -814,14 +893,12 @@ export class CaptchaManager {
 			}));
 			return null;
 		}
-		const decryptSimdReadings = (await import("./detection/decodeSimd.js"))
-			.default;
 		try {
-			return await decryptSimdReadings(
+			return await decode<SimdReadingsResult>("simd", [
 				encryptedData,
 				bundle.key,
 				bundle.innerConfig,
-			);
+			]);
 		} catch (err) {
 			this.logger?.warn(() => ({
 				msg: "Failed to decrypt SIMD readings with the session's bundle",
@@ -841,15 +918,12 @@ export class CaptchaManager {
 			}));
 			return null;
 		}
-		const decryptBehavioralData = (
-			await import("./detection/decodeBehavior.js")
-		).default;
 		try {
-			const result = await decryptBehavioralData(
+			const result = await decode<BehavioralDataResult>("behaviour", [
 				encryptedData,
 				bundle.key,
 				bundle.innerConfig,
-			);
+			]);
 			this.logger?.info(() => ({
 				msg: "Behavioral data decrypted successfully",
 				data: {
@@ -1008,7 +1082,21 @@ export class CaptchaManager {
 		);
 	}
 
-	static canClientSeeScore(tier: Tier, score?: number) {
-		return score && tier && tier !== Tier.Free;
+	/**
+	 * Does this client's tier entitle it to the bot score, and is there one?
+	 *
+	 * `score !== undefined`, not `score`: a session with nothing wrong with it
+	 * scores 0, and a truthiness test dropped the field for exactly those
+	 * users — a paying customer reading `score` got a present field for
+	 * every suspicious visitor and a missing one for their cleanest. It has
+	 * been invisible because `Math.random() * 0.3` makes an exact 0 all but
+	 * impossible; taking that noise out (see captcha-private#4433) is what
+	 * would expose it.
+	 *
+	 * Returning `boolean` rather than the old `number | boolean | undefined`,
+	 * which came from `&&`-chaining the score and the tier.
+	 */
+	static canClientSeeScore(tier: Tier, score?: number): boolean {
+		return score !== undefined && tier !== Tier.Free;
 	}
 }
