@@ -42,6 +42,7 @@ import { config, frictionless } from "./managerHarness.js";
 const mocks = vi.hoisted(() => {
 	const start = vi.fn<(x?: number, y?: number) => Promise<void>>();
 	const resetState = vi.fn<() => void>();
+	const dispose = vi.fn<() => void>();
 	const constructions: {
 		updateState: (next: Partial<ProcaptchaState>) => void;
 		getHoneypotValue?: () => string | undefined;
@@ -52,6 +53,7 @@ const mocks = vi.hoisted(() => {
 		translationsReady,
 		start,
 		resetState,
+		dispose,
 		constructions,
 		loadI18next,
 	};
@@ -68,7 +70,11 @@ vi.mock("../services/Manager.js", () => ({
 		getHoneypotValue?: () => string | undefined,
 	) => {
 		mocks.constructions.push({ updateState, getHoneypotValue });
-		return { start: mocks.start, resetState: mocks.resetState };
+		return {
+			start: mocks.start,
+			resetState: mocks.resetState,
+			dispose: mocks.dispose,
+		};
 	},
 }));
 
@@ -527,5 +533,15 @@ describe("language", () => {
 		render(props({ i18n: i18nStub("en", changeLanguage) }));
 		expect(changeLanguage).not.toHaveBeenCalled();
 		expect(mocks.loadI18next).not.toHaveBeenCalled();
+	});
+});
+
+describe("destroy", () => {
+	test("disposes the manager so its expiry timers cannot outlive the widget", () => {
+		render(props());
+		expect(mocks.dispose).not.toHaveBeenCalled();
+		widget?.destroy();
+		widget = undefined;
+		expect(mocks.dispose).toHaveBeenCalledTimes(1);
 	});
 });

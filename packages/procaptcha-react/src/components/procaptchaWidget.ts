@@ -317,6 +317,7 @@ export const mountProcaptchaImageWidget = (
 
 	return {
 		destroy: () => {
+			manager.dispose();
 			teardown.run();
 			captcha?.destroy();
 			modal.destroy();

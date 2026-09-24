@@ -593,6 +593,18 @@ describe("start", () => {
 		expect(lastUpdate(harness, "showModal")).toBe(false);
 	});
 
+	test("a disposed manager never expires the open challenge", async () => {
+		vi.useFakeTimers();
+		const harness = build();
+		mocks.getCaptchaChallenge.mockResolvedValue(
+			challengeResponse({ captchas: [captcha({ timeLimitMs: 1000 })] }),
+		);
+		await harness.manager.start();
+		harness.manager.dispose();
+		vi.advanceTimersByTime(1000);
+		expect(harness.events.onChallengeExpired).not.toHaveBeenCalled();
+	});
+
 	test("falls back to the configured challenge timeout per captcha", async () => {
 		vi.useFakeTimers();
 		const configured = config();
@@ -828,6 +840,16 @@ describe("submit", () => {
 		vi.advanceTimersByTime(configured.captchas.image.solutionTimeout);
 		expect(harness.events.onExpired).toHaveBeenCalledTimes(1);
 		expect(lastUpdate(harness, "isHuman")).toBe(false);
+	});
+
+	test("a disposed manager never expires the human verdict", async () => {
+		vi.useFakeTimers();
+		const configured = config();
+		const harness = await started({ configInput: configured });
+		await harness.manager.submit();
+		harness.manager.dispose();
+		vi.advanceTimersByTime(configured.captchas.image.solutionTimeout);
+		expect(harness.events.onExpired).not.toHaveBeenCalled();
 	});
 
 	test("fails and restarts frictionless when the solution is rejected", async () => {

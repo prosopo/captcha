@@ -283,6 +283,7 @@ export const mountProcaptchaPowWidget = (
 
 	return {
 		destroy: () => {
+			manager.dispose();
 			teardown.run();
 			checkbox?.destroy();
 			honeypot?.destroy();
