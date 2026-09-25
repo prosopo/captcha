@@ -44,6 +44,22 @@ describe("rankCaptchaType", () => {
 		expect(rankCaptchaType("not-a-captcha-type")).toBe(0);
 	});
 
+	it.each(["constructor", "toString", "__proto__", "hasOwnProperty"])(
+		"ranks the Object.prototype key %s at 0",
+		(key) => {
+			expect(rankCaptchaType(key)).toBe(0);
+			expect(captchaPolicySeverity({ captchaType: key })).toBe(0);
+			expect(
+				isStricterCaptchaPolicy(
+					{ captchaType: "frictionless" },
+					{
+						captchaType: key,
+					},
+				),
+			).toBe(true);
+		},
+	);
+
 	// frictionless used to tie with unset at 0 in the access-rule table.
 	it("ranks frictionless above unset", () => {
 		expect(rankCaptchaType("frictionless")).toBeGreaterThan(
