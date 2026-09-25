@@ -302,6 +302,50 @@ describe("PowCaptchaManager", () => {
 			);
 		});
 
+		it("refuses a resubmission so a server-checked token cannot be re-armed", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1" };
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				submittedAtTimestamp: new Date(),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: true,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				lastUpdatedTimestamp: new Date(),
+			};
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(checkPowSignature).mockImplementation(() => undefined);
+			vi.mocked(validateSolution).mockImplementation(() => true);
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as PoWCaptchaRecord,
+			);
+
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				"testSignature",
+				12345,
+				1000,
+				"testTimestampSignature",
+				ipAddress,
+				headers,
+			);
+
+			expect(result.verified).toBe(false);
+			expect(db.updatePowCaptchaRecordResult).not.toHaveBeenCalled();
+			expect(db.updatePowCaptchaRecord).not.toHaveBeenCalled();
+		});
+
 		it("should throw an error if PoW captcha solution is invalid", async () => {
 			const challenge: PoWChallengeId = `${12345}${POW_SEPARATOR}userAccount${POW_SEPARATOR}dappAccount`;
 			const difficulty = 4;
