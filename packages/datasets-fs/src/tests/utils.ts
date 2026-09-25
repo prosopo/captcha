@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -79,8 +80,7 @@ export const fsEq = (pth1: string, pth2: string) => {
 
 export const readDataJson = (pth: string) => {
 	let content = fs.readFileSync(pth).toString();
-	// TODO use getPaths() here to find the repo dir
-	content = content.replaceAll("${repo}", `${__dirname}/../../../..`);
+	content = content.replaceAll(REPO_PLACEHOLDER, REPO_DIR);
 	const dataJson = JSON.parse(content.toString());
 	const data = DataSchema.parse(dataJson);
 	return data;
@@ -123,30 +123,23 @@ export const captchasEq = (
 	return true;
 };
 
-export const substituteRepoDir = () => {
-	// read all json files in the test data dir
-	for (const pth of fsWalk(`${__dirname}/data`)) {
-		if (!pth.endsWith(".json")) {
-			continue;
-		}
-		// make a backup of each file
-		fs.copyFileSync(pth, `${pth}.bak`);
-		// replace ${repo} with the path to the repo
-		let content = fs.readFileSync(pth).toString();
-		// TODO use getPaths() here to find the repo dir
-		content = content.replaceAll("${repo}", `${__dirname}/../../../..`);
-		// rewrite the file
-		fs.writeFileSync(pth, content);
-	}
+export const REPO_PLACEHOLDER = "${repo}";
+// TODO use getPaths() here to find the repo dir
+export const REPO_DIR = path.resolve(__dirname, "../../../..");
+
+// Fixture JSON refers to images as `${repo}/...`. Writes a copy of the fixture
+// with the placeholder resolved, leaving the checked-in file untouched.
+export const substituteRepoDir = (fixture: string, dest: string): string => {
+	const content = fs.readFileSync(fixture).toString();
+	fs.mkdirSync(path.dirname(dest), { recursive: true });
+	fs.writeFileSync(dest, content.replaceAll(REPO_PLACEHOLDER, REPO_DIR));
+	return dest;
 };
 
-export const restoreRepoDir = () => {
-	// read all json files in the test data dir
-	for (const pth of fsWalk(`${__dirname}/data`)) {
-		if (!pth.endsWith(".json")) {
-			continue;
-		}
-		// restore the backup of each file
-		fs.renameSync(`${pth}.bak`, pth);
+export const readJson = (pth: string, replace?: [string, string]): unknown => {
+	let content = fs.readFileSync(pth).toString();
+	if (replace) {
+		content = content.replaceAll(replace[0], replace[1]);
 	}
+	return JSON.parse(content);
 };
