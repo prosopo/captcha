@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, it } from "vitest";
-import { type ProviderDetails, providerDetailsSchema } from "./api.js";
+import { ApiParams } from "../api/params.js";
+import { InputMethod } from "../datasets/captcha.js";
+import {
+	CaptchaSolutionBody,
+	type ProviderDetails,
+	providerDetailsSchema,
+} from "./api.js";
 
 describe("providerDetailsSchema", () => {
 	const redis: ProviderDetails["redis"] = [
@@ -49,5 +55,53 @@ describe("providerDetailsSchema", () => {
 		});
 
 		expect(result.success).toBe(false);
+	});
+});
+
+describe("CaptchaSolutionBody input methods", () => {
+	const body = (inputMethods?: string[]) => ({
+		[ApiParams.user]: "user",
+		[ApiParams.dapp]: "dapp",
+		[ApiParams.captchas]: [
+			{
+				captchaId: "id",
+				captchaContentId: "cid",
+				solution: ["0xa"],
+				salt: "0x00",
+				...(inputMethods && { inputMethods }),
+			},
+		],
+		[ApiParams.requestHash]: "hash",
+		[ApiParams.timestamp]: "1",
+		[ApiParams.signature]: {
+			[ApiParams.user]: { [ApiParams.timestamp]: "sig" },
+			[ApiParams.provider]: { [ApiParams.requestHash]: "sig" },
+		},
+	});
+
+	it("accepts a submission from a widget that does not send input methods", () => {
+		expect(CaptchaSolutionBody.safeParse(body()).success).toBe(true);
+	});
+
+	it("keeps the input methods the widget sends", () => {
+		const parsed = CaptchaSolutionBody.parse(
+			body([InputMethod.pointer, InputMethod.keyboard]),
+		);
+		expect(parsed[ApiParams.captchas][0]?.inputMethods).toEqual([
+			InputMethod.pointer,
+			InputMethod.keyboard,
+		]);
+	});
+
+	it("rejects an unknown input method", () => {
+		expect(CaptchaSolutionBody.safeParse(body(["stylus"])).success).toBe(false);
+	});
+
+	it("bounds how many input methods one captcha may carry", () => {
+		const tooMany: string[] = Array.from(
+			{ length: 10_000 },
+			() => InputMethod.pointer,
+		);
+		expect(CaptchaSolutionBody.safeParse(body(tooMany)).success).toBe(false);
 	});
 });

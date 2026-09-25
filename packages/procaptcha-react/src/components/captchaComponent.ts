@@ -22,7 +22,11 @@ import {
 	threeColumnBasis,
 	wrapRandomly,
 } from "@prosopo/procaptcha-common";
-import type { CaptchaResponseBody } from "@prosopo/types";
+import type {
+	CaptchaResponseBody,
+	ImageSelection,
+	InputMethod,
+} from "@prosopo/types";
 import { at } from "@prosopo/util";
 import {
 	type Theme,
@@ -37,10 +41,15 @@ import { mountCaptchaWidget } from "./captchaWidget.js";
 export interface CaptchaComponentProps {
 	challenge: CaptchaResponseBody;
 	index: number;
-	solutions: [string, number, number][][];
+	solutions: ImageSelection[][];
 	onSubmit: () => void;
 	onCancel: () => void;
-	onClick: (hash: string, x?: number, y?: number) => void;
+	onClick: (
+		hash: string,
+		x?: number,
+		y?: number,
+		inputMethod?: InputMethod,
+	) => void;
 	onNext: () => void;
 	onReload: () => void;
 	themeColor: "light" | "dark";

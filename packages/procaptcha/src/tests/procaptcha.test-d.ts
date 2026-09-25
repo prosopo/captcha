@@ -16,6 +16,7 @@ import type { ProviderApi } from "@prosopo/api";
 import type {
 	CaptchaResponseBody,
 	FrictionlessState,
+	InputMethod,
 	ProcaptchaApiInterface,
 	ProcaptchaCallbacks,
 	ProcaptchaClientConfigOutput,
@@ -83,13 +84,13 @@ describe("Manager", () => {
 		expectTypeOf<ReturnType<Api["nextRound"]>>().toEqualTypeOf<void>();
 	});
 
-	test("defaults the checkbox coordinates and the select coordinates", () => {
+	test("defaults the checkbox and select coordinates and input methods", () => {
 		type Api = ReturnType<typeof Manager>;
 		expectTypeOf<Parameters<Api["start"]>>().toEqualTypeOf<
-			[checkboxX?: number, checkboxY?: number]
+			[checkboxX?: number, checkboxY?: number, inputMethod?: InputMethod]
 		>();
 		expectTypeOf<Parameters<Api["select"]>>().toEqualTypeOf<
-			[hash: string, x?: number, y?: number]
+			[hash: string, x?: number, y?: number, inputMethod?: InputMethod]
 		>();
 	});
 

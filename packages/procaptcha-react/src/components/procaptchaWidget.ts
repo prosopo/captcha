@@ -20,6 +20,7 @@ import {
 	type HoneypotComponent,
 	type ProcaptchaStateHandle,
 	Teardown,
+	activationOf,
 	createElement,
 	createProcaptchaState,
 	createRenderScheduler,
@@ -224,19 +225,11 @@ export const mountProcaptchaImageWidget = (
 			loading = true;
 			scheduler.schedule();
 
-			let x = 0;
-			let y = 0;
-			// The checkbox only calls this from a click or from Enter — a tap
-			// arrives as a click and carries clientX/clientY like any other.
-			// Only the keyboard path has no coordinates.
-			if ("clientX" in event && "clientY" in event) {
-				x = event.clientX;
-				y = event.clientY;
-			}
+			const { x, y, inputMethod } = activationOf(event);
 
 			lastCoords = { x, y };
 			try {
-				await manager.start(x, y);
+				await manager.start(x, y, inputMethod);
 			} catch (error) {
 				// The manager reports failures to the user through state.error;
 				// rethrowing here only produces an unhandled rejection, since

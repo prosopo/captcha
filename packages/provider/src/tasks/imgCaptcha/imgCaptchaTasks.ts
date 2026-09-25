@@ -64,8 +64,10 @@ import {
 } from "../../compositeIpAddress.js";
 import {
 	constructPairList,
-	containsIdenticalPairs,
+	peelCheckboxInputMethod,
 	peelCheckboxPrefix,
+	resolveInputMethods,
+	selectionsLookScripted,
 } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
@@ -342,6 +344,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const pairs: [number, number][][] = checkboxCoordPair
 				? [[checkboxCoordPair], ...shapePairs]
 				: shapePairs;
+			const rawInputMethods = resolveInputMethods(
+				rawFlat,
+				receivedCaptchas.map((c) => c.inputMethods),
+			);
+			const inputMethods =
+				rawInputMethods && checkboxCoordPair
+					? peelCheckboxInputMethod(rawInputMethods)
+					: rawInputMethods;
+			const inputMethodsDeclared = receivedCaptchas.some(
+				(c) => c.inputMethods !== undefined,
+			);
 
 			const { tree, commitmentId } =
 				buildTreeAndGetCommitmentId(receivedCaptchas);
@@ -426,6 +439,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				...(storedClientMetaData && {
 					clientMetaData: storedClientMetaData,
 				}),
+				...(inputMethodsDeclared && inputMethods && { inputMethods }),
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
 
@@ -445,7 +459,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			const totalImages = storedCaptchas[0]?.items.length || 0;
 
-			if (containsIdenticalPairs(pairs) && process.env.NODE_ENV !== "test") {
+			if (
+				selectionsLookScripted(pairs, inputMethods) &&
+				process.env.NODE_ENV !== "test"
+			) {
 				// Write commitment disapproval and session update in parallel
 				const writePromises: Promise<void>[] = [
 					this.db.disapproveDappUserCommitment(

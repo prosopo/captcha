@@ -28,6 +28,7 @@ import {
 	CaptchaType,
 	type ClientMetaData,
 	FrictionlessReason,
+	InputMethod,
 	IpAddressType,
 	type PendingImageCaptchaRequest,
 	type RequestHeaders,
@@ -37,7 +38,7 @@ import {
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import { getIPAddress } from "@prosopo/util";
+import { embedData, getIPAddress } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ImgCaptchaManager } from "../../../../tasks/imgCaptcha/imgCaptchaTasks.js";
@@ -567,6 +568,182 @@ describe("ImgCaptchaManager", () => {
 				"CAPTCHA.INVALID_SOLUTION",
 				expect.anything(),
 			);
+			expect(db.approveDappUserCommitment).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("dappUserSolution — how selections were made", () => {
+		const saltWith = (coords: number[]): string =>
+			embedData(`0x${"a".repeat(128)}`, coords);
+
+		// Two rounds, one tile each, plus the checkbox on the first round.
+		const submit = async (
+			first: { coords: number[]; inputMethods?: InputMethod[] },
+			second: { coords: number[]; inputMethods?: InputMethod[] },
+		) => {
+			const captchas: CaptchaSolution[] = [
+				{
+					captchaId: "captcha1",
+					captchaContentId: "content1",
+					solution: ["a"],
+					salt: saltWith(first.coords),
+					...(first.inputMethods && { inputMethods: first.inputMethods }),
+				},
+				{
+					captchaId: "captcha2",
+					captchaContentId: "content2",
+					solution: ["b"],
+					salt: saltWith(second.coords),
+					...(second.inputMethods && { inputMethods: second.inputMethods }),
+				},
+			];
+			vi.mocked(signatureVerify).mockReturnValue({
+				crypto: "sr25519",
+				isValid: true,
+				isWrapped: false,
+				publicKey: new Uint8Array(),
+			});
+			vi.mocked(db.getPendingImageCommitment).mockResolvedValue({
+				requestHash: "requestHash",
+				salt: "0x00",
+				threshold: 0.8,
+				deadlineTimestamp: new Date(Date.now() + 10_000),
+			} as unknown as PendingImageCaptchaRequest);
+			vi.spyOn(
+				imgCaptchaManager,
+				"validateDappUserSolutionRequestIsPending",
+			).mockResolvedValue(true);
+			vi.spyOn(
+				imgCaptchaManager,
+				"validateReceivedCaptchasAgainstStoredCaptchas",
+			).mockResolvedValue({
+				storedCaptchas: [
+					{ captchaId: "captcha1", datasetId: "datasetId", items: [{}, {}] },
+					{ captchaId: "captcha2", datasetId: "datasetId", items: [{}, {}] },
+				] as unknown as Captcha[],
+				receivedCaptchas: captchas,
+				captchaIds: ["captcha1", "captcha2"],
+			});
+			vi.mocked(buildTreeAndGetCommitmentId).mockReturnValue({
+				tree: { proof: vi.fn() },
+				commitmentId: "commitmentId",
+			} as unknown as ReturnType<typeof buildTreeAndGetCommitmentId>);
+			vi.mocked(db.getSolutionByCaptchaId).mockResolvedValue({
+				captchaId: "captcha1",
+				solution: ["a"],
+			} as unknown as Awaited<ReturnType<typeof db.getSolutionByCaptchaId>>);
+			vi.mocked(compareCaptchaSolutions).mockReturnValue(true);
+
+			return imgCaptchaManager.dappUserSolution(
+				"userAccount",
+				"dappAccount",
+				"requestHash",
+				captchas,
+				"userTimestampSignature",
+				Date.now(),
+				"providerRequestHashSignature",
+				getIPAddress("1.1.1.1"),
+				{},
+				"ja4",
+			);
+		};
+
+		const storedCommitment = (): UserCommitment | undefined =>
+			vi.mocked(db.storeUserImageCaptchaSolution).mock.calls[0]?.[1];
+
+		beforeEach(() => {
+			// The check is skipped under NODE_ENV=test, which vitest sets.
+			vi.stubEnv("NODE_ENV", "production");
+			return () => {
+				vi.unstubAllEnvs();
+			};
+		});
+
+		it("accepts a keyboard-only solve, whose every position is (0, 0)", async () => {
+			const result = await submit(
+				{
+					coords: [0, 0, 0, 0],
+					inputMethods: [InputMethod.keyboard, InputMethod.keyboard],
+				},
+				{ coords: [0, 0], inputMethods: [InputMethod.keyboard] },
+			);
+
+			expect(result.verified).toBe(true);
+			expect(db.approveDappUserCommitment).toHaveBeenCalled();
+		});
+
+		it("stores how each selection was made, in the shape of the coordinates", async () => {
+			await submit(
+				{
+					coords: [0, 0, 15, 25],
+					inputMethods: [InputMethod.keyboard, InputMethod.pointer],
+				},
+				{ coords: [0, 0], inputMethods: [InputMethod.keyboard] },
+			);
+
+			expect(storedCommitment()?.inputMethods).toEqual([
+				[InputMethod.keyboard],
+				[InputMethod.pointer],
+				[InputMethod.keyboard],
+			]);
+			expect(db.approveDappUserCommitment).toHaveBeenCalledWith(
+				"commitmentId",
+				[[[0, 0]], [[15, 25]], [[0, 0]]],
+			);
+		});
+
+		it("stores no input methods for a widget that does not declare them", async () => {
+			await submit({ coords: [3, 4, 15, 25] }, { coords: [16, 26] });
+
+			expect(storedCommitment()).toBeDefined();
+			expect(storedCommitment()?.inputMethods).toBeUndefined();
+		});
+
+		it("still rejects repeated (0, 0) from a widget that does not declare input methods", async () => {
+			const result = await submit({ coords: [0, 0, 0, 0] }, { coords: [0, 0] });
+
+			expect(result.verified).toBe(false);
+			expect(db.disapproveDappUserCommitment).toHaveBeenCalledWith(
+				"commitmentId",
+				"CAPTCHA.INVALID_SOLUTION",
+				expect.anything(),
+			);
+			expect(compareCaptchaSolutions).not.toHaveBeenCalled();
+		});
+
+		it("rejects a repeated pointer position", async () => {
+			const result = await submit(
+				{
+					coords: [0, 0, 15, 25],
+					inputMethods: [InputMethod.keyboard, InputMethod.pointer],
+				},
+				{ coords: [15, 25], inputMethods: [InputMethod.pointer] },
+			);
+
+			expect(result.verified).toBe(false);
+			expect(db.approveDappUserCommitment).not.toHaveBeenCalled();
+		});
+
+		it("rejects a keyboard selection that carries a pointer position", async () => {
+			const result = await submit(
+				{
+					coords: [3, 4, 15, 25],
+					inputMethods: [InputMethod.pointer, InputMethod.keyboard],
+				},
+				{ coords: [0, 0], inputMethods: [InputMethod.keyboard] },
+			);
+
+			expect(result.verified).toBe(false);
+			expect(db.approveDappUserCommitment).not.toHaveBeenCalled();
+		});
+
+		it("rejects input methods that do not line up with the coordinates", async () => {
+			const result = await submit(
+				{ coords: [0, 0, 0, 0], inputMethods: [InputMethod.keyboard] },
+				{ coords: [0, 0], inputMethods: [InputMethod.keyboard] },
+			);
+
+			expect(result.verified).toBe(false);
 			expect(db.approveDappUserCommitment).not.toHaveBeenCalled();
 		});
 	});

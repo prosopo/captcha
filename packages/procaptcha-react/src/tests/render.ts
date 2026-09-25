@@ -40,6 +40,11 @@ interface FireOptions {
 	clientY?: number;
 	touches?: { clientX: number; clientY: number }[];
 	key?: string;
+	/**
+	 * The pointer press count. Defaults to 1, a pointer click; 0 is the click a
+	 * browser fires when Enter or Space activates a button.
+	 */
+	detail?: number;
 }
 
 /**
@@ -79,6 +84,7 @@ const build = (type: string, options: FireOptions): Event => {
 		cancelable: true,
 		clientX: options.clientX ?? 0,
 		clientY: options.clientY ?? 0,
+		detail: options.detail ?? 1,
 	});
 };
 

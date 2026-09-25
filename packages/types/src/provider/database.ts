@@ -40,6 +40,8 @@ import {
 	type CaptchaSolution,
 	CaptchaSolutionSchema,
 	CaptchaStatus,
+	type InputMethod,
+	InputMethodSchema,
 	type PoWCaptchaUser,
 	type PoWChallengeId,
 	PowChallengeIdSchema,
@@ -258,6 +260,9 @@ export interface UserCommitment extends StoredCaptcha {
 	requestHash: string;
 	threshold: number;
 	deadlineTimestamp: Date;
+	// Same shape as `coords`: how each of those selections was made. Absent on
+	// commitments from widgets that do not report it.
+	inputMethods?: InputMethod[][];
 }
 
 // Runtime parsing stays permissive (`string().optional()`) because decision
@@ -324,6 +329,7 @@ export const UserCommitmentSchema = object({
 	pendingStage: boolean().optional(),
 	sessionId: string().optional(),
 	coords: array(array(tuple([number(), number()]))).optional(),
+	inputMethods: array(array(InputMethodSchema)).optional(),
 	// Pending request fields for image captcha workflow
 	pending: boolean(),
 	salt: string(),
