@@ -58,6 +58,7 @@ import { ja4Middleware } from "./ja4Middleware.js";
 import { metricsMiddleware } from "./metrics.js";
 import { publicRouter } from "./public.js";
 import { rawTlsSignalsMiddleware } from "./rawTlsSignalsMiddleware.js";
+import { providerRouteDeadlineMs, requestDeadline } from "./requestDeadline.js";
 import { robotsMiddleware } from "./robotsMiddleware.js";
 import { prosopoVerifyRouter } from "./verify.js";
 
@@ -290,6 +291,19 @@ export async function startProviderApi(
 	// batches) but bounds oversized-payload abuse before parsing; the
 	// per-field caps in @prosopo/types (`INPUT_LIMITS`) are the finer control.
 	apiApp.use(express.json({ limit: "1mb" }));
+
+	// After the body parsers, so an upload's transfer time is not charged to
+	// the handler; Node's own requestTimeout bounds that part.
+	apiApp.use(
+		requestDeadline(
+			(req) => providerRouteDeadlineMs(req.path),
+			(req, deadlineMs) =>
+				env.logger.warn(() => ({
+					msg: "Request deadline exceeded",
+					data: { method: req.method, path: req.path, deadlineMs },
+				})),
+		),
+	);
 
 	// Put this first so that no middleware runs on it
 	apiApp.use(publicRouter(env));
