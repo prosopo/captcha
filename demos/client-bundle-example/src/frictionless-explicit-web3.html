@@ -219,7 +219,7 @@
             const captchaContainer = document.getElementById('procaptcha-container');
 
             // Render the CAPTCHA
-            const widgetId = render(captchaContainer, {
+            const widgetId = await render(captchaContainer, {
                 siteKey: import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS,
                 callback: onCaptchaVerified,
                 "failed-callback": function () {
@@ -229,6 +229,7 @@
                 web3: true,
                 userAccountAddress: account
             });
+            window.updateCaptchaStatus('CAPTCHA render function called with widget ID: ' + widgetId, 'info');
         })
 
 </script>
