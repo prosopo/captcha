@@ -383,6 +383,7 @@
 		"IMAGE_DIALOG_LABEL": "图片验证",
 		"CANNOT_LOAD": "无法加载验证码",
 		"RELOAD": "重新加载",
+		"LOADING": "加载中",
 		"PUZZLE": {
 			"DIALOG_LABEL": "拼图验证",
 			"DRAG": "将拼块拖到目标位置",

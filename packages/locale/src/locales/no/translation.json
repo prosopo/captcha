@@ -383,6 +383,7 @@
 		"IMAGE_DIALOG_LABEL": "Bildeoppgave",
 		"CANNOT_LOAD": "Kan ikke laste inn CAPTCHA",
 		"RELOAD": "Last inn på nytt",
+		"LOADING": "Laster inn",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Puslespilloppgave",
 			"DRAG": "Dra brikken til målet",

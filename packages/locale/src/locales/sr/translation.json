@@ -383,6 +383,7 @@
 		"IMAGE_DIALOG_LABEL": "Провера сликама",
 		"CANNOT_LOAD": "Није могуће учитати CAPTCHA",
 		"RELOAD": "Поново учитај",
+		"LOADING": "Учитавање",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Провера слагалицом",
 			"DRAG": "Превуците део до циља",

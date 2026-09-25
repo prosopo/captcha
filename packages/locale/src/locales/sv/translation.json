@@ -383,6 +383,7 @@
 		"IMAGE_DIALOG_LABEL": "Bilduppgift",
 		"CANNOT_LOAD": "Det går inte att läsa in CAPTCHA",
 		"RELOAD": "Läs in igen",
+		"LOADING": "Läser in",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Pusseluppgift",
 			"DRAG": "Dra biten till målet",

@@ -35,6 +35,8 @@ export interface ReloadButtonProps {
 	label?: string;
 }
 
+const labelOf = (props: ReloadButtonProps): string => props.label || "Reload";
+
 const RELOAD_PATH =
 	"M234.666667,149.333333 L234.666667,106.666667 L314.564847,106.664112 C287.579138,67.9778918 242.745446,42.6666667 192,42.6666667 C109.525477,42.6666667 42.6666667,109.525477 42.6666667,192 C42.6666667,274.474523 109.525477,341.333333 192,341.333333 C268.201293,341.333333 331.072074,284.258623 340.195444,210.526102 L382.537159,215.817985 C370.807686,310.617565 289.973536,384 192,384 C85.961328,384 1.42108547e-14,298.038672 1.42108547e-14,192 C1.42108547e-14,85.961328 85.961328,1.42108547e-14 192,1.42108547e-14 C252.316171,1.42108547e-14 306.136355,27.8126321 341.335366,71.3127128 L341.333333,1.42108547e-14 L384,1.42108547e-14 L384,149.333333 L234.666667,149.333333 Z";
 
@@ -70,7 +72,7 @@ export const mountReloadButton = (
 	});
 
 	const title = createSvgElement("title");
-	title.textContent = "reload";
+	title.textContent = labelOf(initialProps);
 
 	const svg = createSvgElement("svg", {
 		attributes: {
@@ -86,7 +88,7 @@ export const mountReloadButton = (
 	const button = createControl(teardown, {
 		className: randomToken(),
 		attributes: {
-			"aria-label": initialProps.label || "Reload",
+			"aria-label": labelOf(initialProps),
 			"data-cy": isDevMode() ? "reload-button" : undefined,
 		},
 		children: [svg],
@@ -98,6 +100,8 @@ export const mountReloadButton = (
 
 	const render = () => {
 		const theme = themeFor(props.themeColor);
+		button.setAttribute("aria-label", labelOf(props));
+		title.textContent = labelOf(props);
 		applyStyles(button, {
 			...buttonStyleBase,
 			// M3 focus indicator: 3dp outline, 2dp offset. Matched imperatively so

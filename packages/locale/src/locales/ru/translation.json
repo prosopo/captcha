@@ -383,6 +383,7 @@
 		"IMAGE_DIALOG_LABEL": "Задание с картинками",
 		"CANNOT_LOAD": "Не удалось загрузить CAPTCHA",
 		"RELOAD": "Перезагрузить",
+		"LOADING": "Загрузка",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Задание с пазлом",
 			"DRAG": "Перетащите фрагмент к цели",

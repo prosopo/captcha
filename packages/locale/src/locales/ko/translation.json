@@ -383,6 +383,7 @@
 		"IMAGE_DIALOG_LABEL": "이미지 인증",
 		"CANNOT_LOAD": "CAPTCHA를 불러올 수 없습니다",
 		"RELOAD": "새로고침",
+		"LOADING": "로드 중",
 		"PUZZLE": {
 			"DIALOG_LABEL": "퍼즐 인증",
 			"DRAG": "조각을 목표 위치로 끌어다 놓으세요",
