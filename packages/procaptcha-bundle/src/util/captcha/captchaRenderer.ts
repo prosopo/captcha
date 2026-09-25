@@ -74,9 +74,9 @@ class CaptchaRenderer {
 		);
 
 		// `createRoot(container).render(...)` used to empty the mount point on its
-		// first commit, which is what removed the widget skeleton's placeholder
-		// spinner. Mounting appends, so the clear has to be explicit — without it
-		// the skeleton's spinner sits alongside the real checkbox.
+		// first commit, which is what removed the widget skeleton's loading
+		// placeholder. Mounting appends, so the clear has to be explicit — without it
+		// the placeholder sits alongside the real checkbox.
 		clearElement(container);
 
 		return mountBundleCaptcha(container, {

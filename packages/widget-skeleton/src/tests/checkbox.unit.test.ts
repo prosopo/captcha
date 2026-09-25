@@ -81,14 +81,14 @@ describe("createCheckboxElement", () => {
 		);
 	});
 
-	test("the spinner is the interactive area's only child", () => {
+	test("the loading placeholder is the interactive area's only child", () => {
 		// The captcha replaces the contents of this node, so anything else left
 		// in it would survive the swap and stack up behind the checkbox.
 		const checkbox: CheckboxElement = createCheckboxElement(lightTheme);
 		expect(checkbox.interactiveArea.children.length).toBe(1);
 		expect(
 			checkbox.interactiveArea.firstElementChild?.getAttribute("aria-label"),
-		).toBe("Loading spinner");
+		).toBe("Loading");
 	});
 
 	test("names nothing the same way twice", () => {
@@ -122,24 +122,40 @@ describe("createCheckboxElement", () => {
 		}
 	});
 
-	test("animates the spinner with its own keyframes", () => {
+	test("pulses the placeholder with its own keyframes", () => {
 		const styles: string = styleTextOf(createCheckboxElement(lightTheme));
-		const animation = /animation: (\w+) 1s linear infinite/.exec(styles);
+		const animation = /animation: (\w+) 1\.5s ease-in-out infinite/.exec(
+			styles,
+		);
 		expect(animation).not.toBeNull();
 		expect(styles).toContain(`@keyframes ${animation?.[1]}`);
+	});
+
+	test("holds still for visitors who ask for reduced motion", () => {
+		const styles: string = styleTextOf(createCheckboxElement(lightTheme));
+		expect(styles).toMatch(
+			/@media \(prefers-reduced-motion: reduce\) \{\s*\.\w+ \{\s*animation: none;/,
+		);
+	});
+
+	test("draws no spinner while the widget loads", () => {
+		// Loading shows a skeleton; the spinner is kept for a check in progress.
+		const styles: string = styleTextOf(createCheckboxElement(lightTheme));
+		expect(styles).not.toContain("rotate(");
+		expect(styles).not.toContain("border-radius: 50%");
 	});
 
 	test.each([
 		["light", lightTheme],
 		["dark", darkTheme],
 	])(
-		"%s draws the spinner as an M3 track with a primary active arc",
+		"%s draws the placeholder the size and shape of the checkbox",
 		(_n: string, theme: Theme) => {
-			// M3 circular progress is a neutral track with one coloured arc, so the
-			// ring takes the border token and the leading edge takes the primary.
 			const styles: string = styleTextOf(createCheckboxElement(theme));
-			expect(styles).toContain(theme.palette.border);
-			expect(styles).toContain(theme.palette.primary.main);
+			expect(styles).toContain("width: 28px !important;");
+			expect(styles).toContain("height: 28px !important;");
+			expect(styles).toContain(`border-radius: ${theme.shape.checkbox};`);
+			expect(styles).toContain(`background-color: ${theme.palette.border};`);
 			expect(styles).not.toContain("undefined");
 		},
 	);

@@ -32,8 +32,8 @@ const MAX_WRAPPER_DEPTH = 5;
 
 interface CheckboxNames {
 	readonly content: string;
-	readonly spinner: string;
-	readonly spin: string;
+	readonly placeholder: string;
+	readonly pulse: string;
 	readonly wrappers: readonly string[];
 }
 
@@ -53,8 +53,8 @@ export interface CheckboxElement {
 export function createCheckboxElement(theme: Theme): CheckboxElement {
 	const names: CheckboxNames = {
 		content: randomToken(),
-		spinner: randomToken(),
-		spin: randomToken(),
+		placeholder: randomToken(),
+		pulse: randomToken(),
 		wrappers: randomTokens(randomInt(MIN_WRAPPER_DEPTH, MAX_WRAPPER_DEPTH)),
 	};
 
@@ -66,7 +66,7 @@ export function createCheckboxElement(theme: Theme): CheckboxElement {
 
 	const interactiveArea = document.createElement(randomWrapperTag());
 	interactiveArea.className = names.content;
-	interactiveArea.appendChild(createSpinner(names.spinner));
+	interactiveArea.appendChild(createPlaceholder(names.placeholder));
 
 	const shadowRoot = host.attachShadow({ mode: "open" });
 	shadowRoot.appendChild(style);
@@ -75,11 +75,15 @@ export function createCheckboxElement(theme: Theme): CheckboxElement {
 	return { host, interactiveArea };
 }
 
-const createSpinner = (className: string): HTMLElement => {
-	const spinner = document.createElement("div");
-	spinner.className = className;
-	spinner.setAttribute("aria-label", "Loading spinner");
-	return spinner;
+/**
+ * Stands in for the checkbox while the widget loads: the box's own size and
+ * corner, pulsing, so the real one lands in exactly the same place.
+ */
+const createPlaceholder = (className: string): HTMLElement => {
+	const placeholder = document.createElement("div");
+	placeholder.className = className;
+	placeholder.setAttribute("aria-label", "Loading");
+	return placeholder;
 };
 
 const wrap = (
@@ -119,27 +123,31 @@ ${names.wrappers
     display: inline-flex;
 }
 
-.${names.spinner} {
+.${names.placeholder} {
     margin-top: 0;
     margin-left: 15px !important;
     margin-right: 15px !important;
     width: 28px !important;
     height: 28px !important;
-    border: 4px solid ${theme.palette.border};
-    border-bottom-color: ${theme.palette.primary.main};
-    border-radius: 50%;
+    border-radius: ${theme.shape.checkbox};
+    background-color: ${theme.palette.border};
     display: inherit;
     box-sizing: border-box;
-    animation: ${names.spin} 1s linear infinite;
-    will-change: transform;
+    animation: ${names.pulse} 1.5s ease-in-out infinite;
 }
 
-@keyframes ${names.spin} {
-  0% {
-	transform: rotate(0deg);
+@keyframes ${names.pulse} {
+  0%, 100% {
+	opacity: 1;
   }
-  100% {
-	transform: rotate(360deg);
+  50% {
+	opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .${names.placeholder} {
+	animation: none;
   }
 }
 `;
