@@ -69,6 +69,9 @@ beforeEach(async () => {
 	// Drop any widgets registered by a previous test — module state persists
 	// across tests in the same file.
 	await remove();
+	// clearAllMocks keeps queued "once" results; a test that leaves one unused
+	// would hand it to whichever test the shuffled order runs next.
+	mocks.createWidgets.mockReset();
 	mocks.createWidgets.mockResolvedValue([makeWidget()]);
 });
 
@@ -169,6 +172,65 @@ describe("reset", () => {
 			true,
 			true,
 		);
+	});
+
+	it("coalesces overlapping resets so no replacement is left untracked", async () => {
+		const original = makeHandle();
+		const replacement = makeHandle();
+		const orphanCandidate = makeHandle();
+		queueHandles(original);
+		const element = document.createElement("div");
+		const id = await render(element, { siteKey: SITE_KEY });
+
+		let resolveFirst: (widgets: CreatedWidget[]) => void = () => undefined;
+		mocks.createWidgets.mockImplementationOnce(
+			() =>
+				new Promise<CreatedWidget[]>((resolve) => {
+					resolveFirst = resolve;
+				}),
+		);
+		queueHandles(orphanCandidate);
+
+		const first = reset(id);
+		const second = reset(id);
+		resolveFirst([makeWidget(replacement)]);
+		await Promise.all([first, second]);
+
+		// Only one replacement is built, and it is the one remove() reaches.
+		expect(mocks.createWidgets).toHaveBeenCalledTimes(2);
+		expect(original.destroy).toHaveBeenCalledTimes(1);
+		await remove(id);
+		expect(replacement.destroy).toHaveBeenCalledTimes(1);
+		expect(orphanCandidate.destroy).not.toHaveBeenCalled();
+	});
+
+	it("tears down a replacement that finishes building after remove()", async () => {
+		const original = makeHandle();
+		const late = makeHandle();
+		queueHandles(original);
+		const element = document.createElement("div");
+		const id = await render(element, { siteKey: SITE_KEY });
+
+		let resolveBuild: (widgets: CreatedWidget[]) => void = () => undefined;
+		mocks.createWidgets.mockImplementationOnce(
+			() =>
+				new Promise<CreatedWidget[]>((resolve) => {
+					resolveBuild = resolve;
+				}),
+		);
+
+		const pending = reset(id);
+		await remove(id);
+		const lateWidget = makeWidget(late);
+		element.appendChild(lateWidget.container);
+		resolveBuild([lateWidget]);
+		await pending;
+
+		expect(late.destroy).toHaveBeenCalledTimes(1);
+		expect(element.contains(lateWidget.container)).toBe(false);
+		// The removed id stays gone rather than being resurrected by the reset.
+		await reset(id);
+		expect(mocks.createWidgets).toHaveBeenCalledTimes(2);
 	});
 
 	it("does nothing for an unknown widget id", async () => {

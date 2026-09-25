@@ -52,6 +52,7 @@ interface WidgetEntry {
 }
 
 const procaptchaWidgets = new Map<string, WidgetEntry>();
+const resetsInFlight = new Map<string, Promise<void>>();
 
 let widgetIdCounter = 0;
 const nextWidgetId = (): string => `procaptcha-widget-${widgetIdCounter++}`;
@@ -482,27 +483,45 @@ export const reset = async (widgetId?: string): Promise<void> => {
 		undefined === widgetId ? Array.from(procaptchaWidgets.keys()) : [widgetId];
 
 	for (const id of ids) {
-		const current = procaptchaWidgets.get(id);
-		if (!current) continue;
-
-		current.handle.destroy();
-
-		const [widget] = await widgetFactory.createWidgets(
-			[current.element],
-			current.renderOptions,
-			current.isWeb2,
-			current.invisible,
-		);
-
-		if (widget) {
-			procaptchaWidgets.set(id, {
-				...current,
-				handle: widget.handle,
-				target: widget.container,
-			});
-		} else {
-			procaptchaWidgets.delete(id);
+		// A second reset while one is still building joins it: running both would
+		// leave the first replacement live but no longer tracked by the map.
+		let pending = resetsInFlight.get(id);
+		if (!pending) {
+			pending = remount(id).finally(() => resetsInFlight.delete(id));
+			resetsInFlight.set(id, pending);
 		}
+		await pending;
+	}
+};
+
+const remount = async (id: string): Promise<void> => {
+	const current = procaptchaWidgets.get(id);
+	if (!current) return;
+
+	current.handle.destroy();
+
+	const [widget] = await widgetFactory.createWidgets(
+		[current.element],
+		current.renderOptions,
+		current.isWeb2,
+		current.invisible,
+	);
+
+	if (procaptchaWidgets.get(id) !== current) {
+		// remove() ran while the replacement was being built.
+		widget?.handle.destroy();
+		widget?.container.remove();
+		return;
+	}
+
+	if (widget) {
+		procaptchaWidgets.set(id, {
+			...current,
+			handle: widget.handle,
+			target: widget.container,
+		});
+	} else {
+		procaptchaWidgets.delete(id);
 	}
 };
 
