@@ -15,12 +15,52 @@
 import { hexToU8a } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { KeyringPair } from "@prosopo/types";
-import type { JWT } from "@prosopo/util-crypto";
+import type {
+	JWT,
+	JWTVerifyOptions,
+	JWTVerifyResult,
+} from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
+import type { JwtReplayGuard } from "./jwtReplayGuard.js";
+
+export type AuthMiddlewareOptions = {
+	/** Claim checks (audience, maximum lifetime) applied to every token. */
+	verify?: JWTVerifyOptions;
+	/**
+	 * Makes a token that carries a `jti` single-use. Tokens without `jti` are
+	 * unaffected, so existing issuers keep working until they add one.
+	 */
+	replayGuard?: JwtReplayGuard;
+};
+
+const verifyWith = (
+	key: KeyringPair | undefined,
+	jwt: JWT,
+	options: AuthMiddlewareOptions,
+): JWTVerifyResult | undefined => {
+	if (!key) return undefined;
+	const result = key.jwtVerify(jwt, options.verify);
+	return result.isValid ? result : undefined;
+};
+
+const isReplay = (
+	result: JWTVerifyResult,
+	options: AuthMiddlewareOptions,
+): boolean => {
+	const payload = result.payload;
+	if (!options.replayGuard || !payload || typeof payload.jti !== "string") {
+		return false;
+	}
+	return !options.replayGuard.claim(
+		`${payload.sub}:${payload.jti}`,
+		payload.exp,
+	);
+};
 
 export const authMiddleware = (
 	pair: KeyringPair | undefined,
 	authAccount?: KeyringPair | undefined,
+	options: AuthMiddlewareOptions = {},
 ) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
@@ -28,12 +68,10 @@ export const authMiddleware = (
 
 			let error: ProsopoApiError | undefined;
 
-			if (authAccount?.jwtVerify(jwt).isValid) {
-				next();
-				return;
-			}
+			const verified =
+				verifyWith(authAccount, jwt, options) ?? verifyWith(pair, jwt, options);
 
-			if (pair?.jwtVerify(jwt).isValid) {
+			if (verified && !isReplay(verified, options)) {
 				next();
 				return;
 			}

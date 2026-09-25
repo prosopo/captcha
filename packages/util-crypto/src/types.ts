@@ -59,4 +59,17 @@ export type JWTPayload = {
 	[key: string]: any;
 };
 
+export type JWTVerifyOptions = {
+	/**
+	 * Accepted `aud` values. A token that carries `aud` must name one of them.
+	 * A token without `aud` is still accepted unless `requireAudience` is set,
+	 * so issuers can start adding the claim before verifiers insist on it.
+	 */
+	audience?: string[];
+	/** Reject tokens that have no `aud` claim. Only applies with `audience`. */
+	requireAudience?: boolean;
+	/** Reject tokens whose `exp - iat` is longer than this, in seconds. */
+	maxLifetimeSeconds?: number;
+};
+
 export type JWT = string;
