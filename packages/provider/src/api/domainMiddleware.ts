@@ -111,7 +111,12 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			) {
 				handleErrors(err, req, res, next);
 			} else {
-				res.status(401).json({ error: "Unauthorized", message: err });
+				// Anything else (a database or driver error, say) can carry
+				// connection details, so it is logged rather than returned.
+				req.logger.error(() => ({ err, msg: "Domain middleware error" }));
+				res
+					.status(401)
+					.json({ error: "Unauthorized", message: "Unauthorized" });
 				return;
 			}
 		}

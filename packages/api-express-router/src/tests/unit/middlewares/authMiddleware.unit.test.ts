@@ -15,7 +15,7 @@
 import type { IncomingHttpHeaders } from "node:http";
 import { ProsopoApiError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
-import type { KeyringPair } from "@prosopo/types";
+import type { ApiJsonError, KeyringPair } from "@prosopo/types";
 import type { JWT } from "@prosopo/util-crypto";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, test, vi } from "vitest";
@@ -61,7 +61,10 @@ interface Harness {
 	logged: ReturnType<typeof vi.fn<(entry: () => unknown) => void>>;
 }
 
-const build = (headers: IncomingHttpHeaders = {}): Harness => {
+const build = (
+	headers: IncomingHttpHeaders = {},
+	i18n?: { t: (key: string) => string },
+): Harness => {
 	const json = vi.fn<(body: unknown) => Response>();
 	const status = vi.fn<(code: number) => Response>();
 	const res = { status, json } as unknown as Response;
@@ -70,6 +73,7 @@ const build = (headers: IncomingHttpHeaders = {}): Harness => {
 	const logged = vi.fn<(entry: () => unknown) => void>();
 	const req = {
 		headers,
+		i18n,
 		logger: { error: logged } as unknown as Logger,
 	} as unknown as Request;
 
@@ -145,8 +149,59 @@ describe("a token neither key accepts", () => {
 	});
 
 	test("is answered with an error body carrying the 401 code", () => {
-		const body = harness.json.mock.calls[0]?.[0] as { error: ProsopoApiError };
-		expect(body.error.context?.code).toBe(401);
+		const body = harness.json.mock.calls[0]?.[0] as { error: ApiJsonError };
+		expect(body.error).toEqual({
+			code: 401,
+			key: "API.UNAUTHORIZED",
+			message: "API.UNAUTHORIZED",
+		});
+	});
+
+	test("does not serialise the request's i18n instance or error context", () => {
+		harness = build(bearer("token-1"), { t: (key: string) => `t:${key}` });
+		return run(rejects(), rejects()).then(() => {
+			const body = harness.json.mock.calls[0]?.[0];
+			expect(JSON.stringify(body)).not.toContain("context");
+			expect(body).toEqual({
+				error: {
+					code: 401,
+					key: "API.UNAUTHORIZED",
+					message: "t:API.UNAUTHORIZED",
+				},
+			});
+		});
+	});
+});
+
+describe("the 401 body for a thrown error", () => {
+	test("does not echo what a verifier threw", async () => {
+		const leaky = pairThat(() => {
+			throw new Error("mongodb://admin:hunter2@10.0.0.5/provider");
+		});
+		await run(leaky, undefined);
+		const body = harness.json.mock.calls[0]?.[0];
+		expect(JSON.stringify(body)).not.toContain("hunter2");
+		expect(body).toEqual({
+			error: {
+				code: 401,
+				key: "API.UNAUTHORIZED",
+				message: "API.UNAUTHORIZED",
+			},
+		});
+	});
+
+	test("reports only the translation key of a Prosopo error", async () => {
+		harness = build({});
+		await run(accepts(), undefined);
+		const body = harness.json.mock.calls[0]?.[0];
+		expect(JSON.stringify(body)).not.toContain("Missing Authorization header");
+		expect(body).toEqual({
+			error: {
+				code: 401,
+				key: "GENERAL.MISSING_AUTH_HEADER",
+				message: "GENERAL.MISSING_AUTH_HEADER",
+			},
+		});
 	});
 });
 
