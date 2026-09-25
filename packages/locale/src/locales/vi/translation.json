@@ -383,6 +383,7 @@
 		"IMAGE_DIALOG_LABEL": "Thử thách hình ảnh",
 		"CANNOT_LOAD": "Không thể tải CAPTCHA",
 		"RELOAD": "Tải lại",
+		"LOADING": "Đang tải",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Thử thách ghép hình",
 			"DRAG": "Kéo mảnh ghép đến vị trí đích",

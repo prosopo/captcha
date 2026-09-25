@@ -84,6 +84,7 @@
 		"IMAGE_DIALOG_LABEL": "Défi d'images",
 		"CANNOT_LOAD": "Impossible de charger le CAPTCHA",
 		"RELOAD": "Recharger",
+		"LOADING": "Chargement",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Défi de puzzle",
 			"DRAG": "Faites glisser la pièce jusqu'à la cible",

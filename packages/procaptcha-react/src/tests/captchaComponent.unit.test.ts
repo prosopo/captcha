@@ -170,6 +170,14 @@ describe("the controls", () => {
 		expect(onReload).toHaveBeenCalledTimes(1);
 	});
 
+	test("the reload control keeps its translated name across rounds", () => {
+		render({ challenge: twoRoundChallenge(), solutions: [[], []] });
+		render({ challenge: twoRoundChallenge(), index: 1, solutions: [[], []] });
+		const reload = mounted.container.querySelector('[data-cy="reload-button"]');
+		expect(reload?.getAttribute("aria-label")).toBe("WIDGET.RELOAD");
+		expect(reload?.querySelector("title")?.textContent).toBe("WIDGET.RELOAD");
+	});
+
 	test("the last round submits rather than advancing", () => {
 		render();
 		expect(buttonLabelled("WIDGET.SUBMIT")).toBeDefined();

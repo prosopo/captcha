@@ -147,7 +147,7 @@ describe("what the button renders", () => {
 	test("renders the reload glyph as inline svg", () => {
 		const svg = render().querySelector("svg");
 		expect(svg?.namespaceURI).toBe("http://www.w3.org/2000/svg");
-		expect(svg?.querySelector("title")?.textContent).toBe("reload");
+		expect(svg?.querySelector("title")?.textContent).toBe("Reload");
 	});
 
 	test("sizes the icon to the M3 24dp glyph", () => {

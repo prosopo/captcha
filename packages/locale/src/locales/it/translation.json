@@ -84,6 +84,7 @@
 		"IMAGE_DIALOG_LABEL": "Verifica con immagini",
 		"CANNOT_LOAD": "Impossibile caricare il CAPTCHA",
 		"RELOAD": "Ricarica",
+		"LOADING": "Caricamento",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Verifica con puzzle",
 			"DRAG": "Trascina il pezzo fino al bersaglio",

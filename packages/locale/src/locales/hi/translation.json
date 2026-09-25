@@ -383,6 +383,7 @@
 		"IMAGE_DIALOG_LABEL": "छवि चुनौती",
 		"CANNOT_LOAD": "CAPTCHA लोड नहीं हो सका",
 		"RELOAD": "फिर से लोड करें",
+		"LOADING": "लोड हो रहा है",
 		"PUZZLE": {
 			"DIALOG_LABEL": "पहेली चुनौती",
 			"DRAG": "टुकड़े को लक्ष्य तक खींचें",

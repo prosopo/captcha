@@ -17,9 +17,11 @@ import { describe, expect, test } from "vitest";
 import {
 	CHECKBOX_HOST_CSS_CLASS,
 	type CheckboxElement,
+	DEFAULT_LOADING_LABEL,
 	createCheckboxElement,
 } from "../elements/checkbox.js";
 import { type Theme, darkTheme, lightTheme } from "../theme.js";
+import { createWidgetSkeleton } from "../webComponent/createWidget.js";
 
 const shadowOf = (element: HTMLElement): ShadowRoot => {
 	const root = element.shadowRoot;
@@ -88,7 +90,30 @@ describe("createCheckboxElement", () => {
 		expect(checkbox.interactiveArea.children.length).toBe(1);
 		expect(
 			checkbox.interactiveArea.firstElementChild?.getAttribute("aria-label"),
-		).toBe("Loading spinner");
+		).toBe(DEFAULT_LOADING_LABEL);
+	});
+
+	test("the spinner is announced as progress, in the label it is given", () => {
+		const checkbox: CheckboxElement = createCheckboxElement(
+			lightTheme,
+			"Wird geladen",
+		);
+		const spinner: Element | null = checkbox.interactiveArea.firstElementChild;
+		expect(spinner?.getAttribute("role")).toBe("progressbar");
+		expect(spinner?.getAttribute("aria-label")).toBe("Wird geladen");
+	});
+
+	test("the skeleton passes the loading label down to the spinner", () => {
+		const container: HTMLElement = document.createElement("div");
+		const { widgetInteractiveArea } = createWidgetSkeleton(
+			container,
+			lightTheme,
+			"prosopo-procaptcha",
+			"جارٍ التحميل",
+		);
+		expect(
+			widgetInteractiveArea.firstElementChild?.getAttribute("aria-label"),
+		).toBe("جارٍ التحميل");
 	});
 
 	test("names nothing the same way twice", () => {

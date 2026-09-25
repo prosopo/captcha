@@ -383,6 +383,7 @@
 		"IMAGE_DIALOG_LABEL": "画像による認証",
 		"CANNOT_LOAD": "CAPTCHAを読み込めません",
 		"RELOAD": "再読み込み",
+		"LOADING": "読み込み中",
 		"PUZZLE": {
 			"DIALOG_LABEL": "パズルによる認証",
 			"DRAG": "ピースを目標の位置までドラッグしてください",

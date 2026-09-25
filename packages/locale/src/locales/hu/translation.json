@@ -383,6 +383,7 @@
 		"IMAGE_DIALOG_LABEL": "Képes feladat",
 		"CANNOT_LOAD": "A CAPTCHA nem tölthető be",
 		"RELOAD": "Újratöltés",
+		"LOADING": "Betöltés",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Kirakós feladat",
 			"DRAG": "Húzd a darabot a célhelyre",

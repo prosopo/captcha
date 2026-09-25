@@ -35,14 +35,16 @@ export interface WidgetSkeletonElement {
  * Creates a widget skeleton element with theme styling
  *
  * @param theme - The theme to apply to the widget
+ * @param loadingLabel - What the spinner is announced as, in the widget's language
  */
 export function createWidgetSkeletonElement(
 	theme: Theme,
+	loadingLabel?: string,
 ): WidgetSkeletonElement {
 	const widgetElement = document.createElement("div");
 	widgetElement.className = "prosopo-widget";
 
-	const checkbox = createCheckboxElement(theme);
+	const checkbox = createCheckboxElement(theme, loadingLabel);
 	const logoElement = createLogoElement(theme);
 
 	widgetElement.innerHTML =

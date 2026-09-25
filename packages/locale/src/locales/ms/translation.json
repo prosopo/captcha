@@ -383,6 +383,7 @@
 		"IMAGE_DIALOG_LABEL": "Cabaran imej",
 		"CANNOT_LOAD": "Tidak dapat memuatkan CAPTCHA",
 		"RELOAD": "Muat semula",
+		"LOADING": "Memuatkan",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Cabaran teka-teki",
 			"DRAG": "Seret kepingan ke sasaran",
