@@ -134,7 +134,8 @@ export const mountProcaptchaFrictionless = (
 	// Set when the re-mint was triggered by a wrong puzzle answer rather than a
 	// reload press, so the replacement challenge still tells the user they
 	// missed. Held alongside `nextMountAutoStart` for the same reason.
-	let nextMountShowRetry = false;
+	// Also seeded by a full restart after a rejected image answer.
+	let nextMountShowRetry = true === props.startShowRetry;
 	const manualStart = StartModeEnum.manual === config.startMode;
 	let manualStarted = false;
 	// The inner widget only listens for `procaptcha:execute` once /frictionless

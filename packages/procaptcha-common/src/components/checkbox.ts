@@ -46,6 +46,11 @@ export interface CheckboxProps {
 	onChange: CheckboxChangeHandler;
 	labelText: string;
 	error?: string;
+	/**
+	 * Shown in place of the label like `error`, but the box stays enabled:
+	 * it reports something the user can fix by trying again.
+	 */
+	notice?: string;
 	loading: boolean;
 	/** Name for the spinner that stands in for the box while it is working. */
 	loadingText?: string;
@@ -372,6 +377,16 @@ export const mountCheckbox = (
 			return;
 		}
 		applyStyles(label, { userSelect: undefined, cursor: undefined });
+		if (undefined !== props.notice) {
+			label.appendChild(
+				createElement("span", {
+					attributes: { role: "alert" },
+					style: { color: props.theme.palette.error.main },
+					text: props.notice,
+				}),
+			);
+			return;
+		}
 		label.textContent = props.labelText;
 	};
 

@@ -23,6 +23,7 @@ import {
 	type ClickEventPoint,
 	type ClientMetaData,
 	type EnvironmentTypes,
+	type FrictionlessRestart,
 	type FrictionlessState,
 	type MouseMovementPoint,
 	type PackedBehavioralData,
@@ -212,7 +213,7 @@ interface Harness {
 		onChallengeExpired: Mock<() => void>;
 		onReload: Mock<() => void>;
 	};
-	restart: Mock<() => void>;
+	restart: Mock<FrictionlessRestart>;
 	onReloadRequest: Mock<(x?: number, y?: number) => void>;
 }
 
@@ -241,7 +242,7 @@ const build = (options: HarnessOptions = {}): Harness => {
 		onChallengeExpired: vi.fn<() => void>(),
 		onReload: vi.fn<() => void>(),
 	};
-	const restart = vi.fn<() => void>();
+	const restart = vi.fn<FrictionlessRestart>();
 	const onReloadRequest = vi.fn<(x?: number, y?: number) => void>();
 	const callbackInput: ProcaptchaCallbacks = callbacks(events);
 	const frictionlessState =
@@ -840,6 +841,39 @@ describe("submit", () => {
 		expect(harness.events.onFailed).toHaveBeenCalledTimes(1);
 		expect(harness.events.onReset).toHaveBeenCalled();
 		expect(harness.restart).toHaveBeenCalledTimes(1);
+	});
+
+	test("asks the restarted frictionless widget to say the answer was wrong", async () => {
+		const harness = await started();
+		mocks.submitCaptchaSolution.mockResolvedValue([
+			solutionResponse({ verified: false }),
+			"0xcommitment",
+		]);
+		await harness.manager.submit();
+		expect(harness.restart).toHaveBeenCalledWith({ showRetry: true });
+	});
+
+	test("marks a rejected answer in state, whatever onFailed does", async () => {
+		const harness = await started({ withFrictionless: false });
+		mocks.submitCaptchaSolution.mockResolvedValue([
+			solutionResponse({ verified: false }),
+			"0xcommitment",
+		]);
+		await harness.manager.submit();
+		expect(harness.state.answeredIncorrectly).toBe(true);
+		expect(harness.state.showModal).toBe(false);
+	});
+
+	test("does not mark an accepted answer as wrong", async () => {
+		const harness = await started();
+		await harness.manager.submit();
+		expect(harness.state.answeredIncorrectly).not.toBe(true);
+	});
+
+	test("clears the wrong-answer mark when the user tries again", async () => {
+		const harness = build({ initialState: { answeredIncorrectly: true } });
+		await harness.manager.start();
+		expect(harness.state.answeredIncorrectly).toBe(false);
 	});
 
 	test("does not submit when no captcha api was ever built", async () => {

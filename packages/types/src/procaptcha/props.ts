@@ -43,11 +43,21 @@ export type ProcaptchaEscalationHandler = (
 	coords?: { x: number; y: number },
 ) => void;
 
+/**
+ * `showRetry` asks the re-mounted widget to tell the user their last answer
+ * was wrong, because the restart itself leaves no trace of it.
+ */
+export type FrictionlessRestartOptions = { showRetry?: boolean };
+
+export type FrictionlessRestart = (
+	options?: FrictionlessRestartOptions,
+) => void;
+
 // Generic behavioral data collectors for analytics
 export type FrictionlessState = {
 	provider: RandomProvider;
 	userAccount: Account;
-	restart: () => void;
+	restart: FrictionlessRestart;
 	sessionId?: string;
 	behaviorCollector1?: {
 		start: () => void;
