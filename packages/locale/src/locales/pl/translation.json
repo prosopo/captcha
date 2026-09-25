@@ -383,6 +383,8 @@
 		"IMAGE_DIALOG_LABEL": "Zadanie z obrazkami",
 		"CANNOT_LOAD": "Nie można załadować CAPTCHA",
 		"RELOAD": "Załaduj ponownie",
+		"VERIFIED_AGENT": "Zweryfikowany agent",
+		"TRUSTED_REQUEST": "Zaufane żądanie",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Zadanie z układanką",
 			"DRAG": "Przeciągnij element na miejsce docelowe",

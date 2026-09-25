@@ -389,6 +389,13 @@ export const mountProcaptchaFrictionless = (
 				userAccount: frictionlessState.userAccount,
 				provider: frictionlessState.provider,
 				callbacks,
+				theme: "light" === config.theme ? lightTheme : darkTheme,
+				labels: i18n.isInitialized
+					? {
+							verifiedAgent: i18n.t("WIDGET.VERIFIED_AGENT"),
+							trustedRequest: i18n.t("WIDGET.TRUSTED_REQUEST"),
+						}
+					: undefined,
 			});
 			return;
 		}

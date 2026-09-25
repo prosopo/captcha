@@ -272,6 +272,20 @@ export const mountCheckbox = (
 
 	const label = createElement("label", { className: names.label });
 
+	// The error replaces the label in place, which a screen reader does not
+	// notice; a live region that exists from mount gets it announced.
+	const announcer = createElement("span", {
+		attributes: { "aria-live": "polite", "aria-atomic": "true" },
+		style: {
+			position: "absolute",
+			width: "1px",
+			height: "1px",
+			overflow: "hidden",
+			clip: "rect(0 0 0 0)",
+			whiteSpace: "nowrap",
+		},
+	});
+
 	const applyBoxStyle = () => {
 		const { theme, checked } = props;
 		// White (token) tick painted directly onto the box so the checked state is
@@ -358,6 +372,10 @@ export const mountCheckbox = (
 
 	const renderLabel = () => {
 		clearElement(label);
+		const announcement = props.error ?? "";
+		if (announcer.textContent !== announcement) {
+			announcer.textContent = announcement;
+		}
 		if (undefined !== props.error) {
 			// The error text carries a support code, so it has to be selectable —
 			// the label's `user-select: none` is overridden for this state only.
@@ -430,6 +448,7 @@ export const mountCheckbox = (
 
 	render();
 	container.appendChild(root);
+	container.appendChild(announcer);
 
 	return {
 		update: (nextProps: CheckboxProps) => {
@@ -451,6 +470,7 @@ export const mountCheckbox = (
 		destroy: () => {
 			teardown.run();
 			root.parentNode?.removeChild(root);
+			announcer.remove();
 		},
 	};
 };

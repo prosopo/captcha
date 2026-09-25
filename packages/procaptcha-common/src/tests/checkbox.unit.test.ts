@@ -292,6 +292,26 @@ describe("the error state", () => {
 		expect(label().textContent).toBe("I am human");
 		expect(box().disabled).toBe(false);
 	});
+
+	test("announces the error through a live region that was there from mount", () => {
+		render();
+		const region = mounted.container.querySelector('[aria-live="polite"]');
+		expect(region?.textContent).toBe("");
+		render({ error: "Cannot load CAPTCHA" });
+		expect(mounted.container.querySelector('[aria-live="polite"]')).toBe(
+			region,
+		);
+		expect(region?.textContent).toBe("Cannot load CAPTCHA");
+		render({ error: undefined });
+		expect(region?.textContent).toBe("");
+	});
+
+	test("takes its live region with it on destroy", () => {
+		render({ error: "Cannot load CAPTCHA" });
+		checkbox?.destroy();
+		checkbox = undefined;
+		expect(mounted.container.querySelector("[aria-live]")).toBeNull();
+	});
 });
 
 describe("theming", () => {

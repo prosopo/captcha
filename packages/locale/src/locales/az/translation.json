@@ -383,6 +383,8 @@
 		"IMAGE_DIALOG_LABEL": "Şəkil yoxlaması",
 		"CANNOT_LOAD": "CAPTCHA yüklənə bilmir",
 		"RELOAD": "Yenidən yüklə",
+		"VERIFIED_AGENT": "Təsdiqlənmiş agent",
+		"TRUSTED_REQUEST": "Etibarlı sorğu",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Tapmaca yoxlaması",
 			"DRAG": "Hissəni hədəfə sürüşdürün",

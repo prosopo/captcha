@@ -383,6 +383,8 @@
 		"IMAGE_DIALOG_LABEL": "แบบทดสอบรูปภาพ",
 		"CANNOT_LOAD": "ไม่สามารถโหลด CAPTCHA ได้",
 		"RELOAD": "โหลดใหม่",
+		"VERIFIED_AGENT": "เอเจนต์ที่ยืนยันแล้ว",
+		"TRUSTED_REQUEST": "คำขอที่เชื่อถือได้",
 		"PUZZLE": {
 			"DIALOG_LABEL": "แบบทดสอบจิ๊กซอว์",
 			"DRAG": "ลากชิ้นส่วนไปยังเป้าหมาย",

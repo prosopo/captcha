@@ -17,6 +17,8 @@
 		"IMAGE_DIALOG_LABEL": "Image challenge",
 		"CANNOT_LOAD": "Cannot load CAPTCHA",
 		"RELOAD": "Reload",
+		"VERIFIED_AGENT": "Verified agent",
+		"TRUSTED_REQUEST": "Trusted request",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Puzzle challenge",
 			"DRAG": "Drag the piece to the target",
