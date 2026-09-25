@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+export { getLanguageDirection } from "./direction.js";
+export type { TextDirection } from "./direction.js";
 export { default as i18nMiddleware } from "./i18nMiddleware.js";
 export { default as loadI18next } from "./loadI18next.js";
 export { isLanguage, LanguageCodes, Languages } from "./translations.js";
