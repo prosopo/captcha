@@ -19,6 +19,9 @@ blake2 = "0.10"
 # inner loop of hex_hash was measurably eating into the merkle speedup.
 hex = "0.4"
 
+[dev-dependencies]
+proptest = "1"
+
 [build-dependencies]
 napi-build = "2.1"
 

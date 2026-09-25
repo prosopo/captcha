@@ -15,6 +15,9 @@ napi-derive = "2.16"
 # module and the protect edge stack (bumblebee) share one implementation.
 prosopo-ja4 = "0.1"
 
+[dev-dependencies]
+proptest = "1"
+
 [build-dependencies]
 napi-build = "2.1"
 

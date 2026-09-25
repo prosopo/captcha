@@ -111,7 +111,10 @@ pub fn compute_captcha_solution_hash(
     salt: &str,
 ) -> String {
     let mut sorted: Vec<&str> = solution.iter().map(|s| s.as_str()).collect();
-    sorted.sort(); // lexicographic — matches JS Array.sort() default on strings
+    // JS Array.sort() compares UTF-16 code units, not the UTF-8 bytes Rust's
+    // str ordering uses; the two disagree once astral characters meet
+    // U+E000..U+FFFF.
+    sorted.sort_by(|a, b| a.encode_utf16().cmp(b.encode_utf16()));
     let solution_joined = sorted.join(",");
     hex_hash_array(&[captcha_id, captcha_content_id, &solution_joined, salt])
 }
@@ -215,18 +218,10 @@ mod tests {
         let id = test_id(1);
         let cid = test_cid(1);
         let salt = test_salt(1);
-        let out_unsorted = compute_captcha_solution_hash(
-            &id,
-            &cid,
-            &["b".to_string(), "a".to_string()],
-            &salt,
-        );
-        let out_presorted = compute_captcha_solution_hash(
-            &id,
-            &cid,
-            &["a".to_string(), "b".to_string()],
-            &salt,
-        );
+        let out_unsorted =
+            compute_captcha_solution_hash(&id, &cid, &["b".to_string(), "a".to_string()], &salt);
+        let out_presorted =
+            compute_captcha_solution_hash(&id, &cid, &["a".to_string(), "b".to_string()], &salt);
         assert_eq!(out_unsorted, out_presorted);
         assert!(out_unsorted.starts_with("0x"));
         assert_eq!(out_unsorted.len(), 66);
@@ -240,12 +235,8 @@ mod tests {
         let cid = test_cid(1);
         let salt = test_salt(1);
         let expected = hex_hash(&format!("{id}{cid}a,b{salt}"));
-        let got = compute_captcha_solution_hash(
-            &id,
-            &cid,
-            &["b".to_string(), "a".to_string()],
-            &salt,
-        );
+        let got =
+            compute_captcha_solution_hash(&id, &cid, &["b".to_string(), "a".to_string()], &salt);
         assert_eq!(got, expected);
     }
 
@@ -257,12 +248,98 @@ mod tests {
         let cid = test_cid(2);
         let salt = test_salt(2);
         let expected = hex_hash(&format!("{id}{cid}a0,b0{salt}"));
-        let got = compute_captcha_solution_hash(
-            &id,
-            &cid,
-            &["b0".to_string(), "a0".to_string()],
-            &salt,
-        );
+        let got =
+            compute_captcha_solution_hash(&id, &cid, &["b0".to_string(), "a0".to_string()], &salt);
         assert_eq!(got, expected);
+    }
+
+    #[test]
+    fn solution_is_sorted_like_js_not_by_utf8_bytes() {
+        // Node: ["\uFFFF", "\u{10000}"].sort() puts the astral character first.
+        let solution = vec!["\u{FFFF}".to_string(), "\u{10000}".to_string()];
+        assert_eq!(
+            compute_captcha_solution_hash("id", "content", &solution, "salt"),
+            hex_hash("idcontent\u{10000},\u{FFFF}salt")
+        );
+    }
+}
+
+#[cfg(test)]
+mod properties {
+    use super::*;
+    use proptest::prelude::*;
+
+    fn leaves() -> impl Strategy<Value = Vec<String>> {
+        prop::collection::vec(any::<String>(), 1..40)
+    }
+
+    proptest! {
+        #[test]
+        fn hashes_are_prefixed_lowercase_hex(input in any::<String>()) {
+            let hash = hex_hash(&input);
+            prop_assert_eq!(hash.len(), 66);
+            prop_assert!(hash.starts_with("0x"));
+            prop_assert!(hash[2..].chars().all(|c| matches!(c, '0'..='9' | 'a'..='f')));
+        }
+
+        #[test]
+        fn hashing_parts_is_hashing_their_concatenation(parts in prop::collection::vec(any::<String>(), 0..8)) {
+            let refs: Vec<&str> = parts.iter().map(String::as_str).collect();
+            prop_assert_eq!(hex_hash_array(&refs), hex_hash(&parts.concat()));
+        }
+
+        #[test]
+        fn each_layer_halves_rounding_up_until_the_root(leaves in leaves()) {
+            let layers = build_layers(&leaves);
+            prop_assert_eq!(&layers[0], &leaves);
+            for pair in layers.windows(2) {
+                prop_assert_eq!(pair[1].len(), pair[0].len().div_ceil(2));
+            }
+            prop_assert_eq!(layers.last().map(Vec::len), Some(1));
+        }
+
+        #[test]
+        fn every_parent_hashes_its_two_children(leaves in leaves()) {
+            let layers = build_layers(&leaves);
+            for pair in layers.windows(2) {
+                for (i, parent) in pair[1].iter().enumerate() {
+                    let left = &pair[0][2 * i];
+                    let right = pair[0].get(2 * i + 1).unwrap_or(left);
+                    prop_assert_eq!(parent, &hex_hash_array(&[left, right]));
+                }
+            }
+        }
+
+        #[test]
+        fn solution_order_does_not_change_the_hash(
+            solution in prop::collection::vec(any::<String>(), 0..8),
+            seed in any::<u64>(),
+        ) {
+            let mut shuffled = solution.clone();
+            let len = shuffled.len();
+            if len > 1 {
+                shuffled.rotate_left(usize::try_from(seed % len as u64).unwrap());
+                shuffled.reverse();
+            }
+            prop_assert_eq!(
+                compute_captcha_solution_hash("id", "content", &solution, "salt"),
+                compute_captcha_solution_hash("id", "content", &shuffled, "salt")
+            );
+        }
+
+        #[test]
+        fn solution_order_follows_utf16_code_units(solution in prop::collection::vec(any::<String>(), 0..8)) {
+            let mut expected: Vec<Vec<u16>> = solution.iter().map(|s| s.encode_utf16().collect()).collect();
+            expected.sort();
+            let joined = expected
+                .iter()
+                .map(|units| String::from_utf16(units).unwrap())
+                .collect::<Vec<_>>()
+                .join(",");
+            prop_assert_eq!(
+                compute_captcha_solution_hash("id", "content", &solution, "salt"),
+                hex_hash(&format!("idcontent{joined}salt"))
+            );
+        }
     }
 }

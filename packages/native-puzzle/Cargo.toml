@@ -12,6 +12,9 @@ crate-type = ["cdylib"]
 napi = { version = "2.16", default-features = false, features = ["napi9"] }
 napi-derive = "2.16"
 
+[dev-dependencies]
+proptest = "1"
+
 [build-dependencies]
 napi-build = "2.1"
 

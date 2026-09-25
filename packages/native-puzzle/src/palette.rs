@@ -33,17 +33,47 @@ struct PaletteSpec {
 
 const PALETTES: [PaletteSpec; 6] = [
     // dusk violet
-    PaletteSpec { hue: 268.0, spread: 46.0, saturation: (0.55, 0.78), lightness: (0.4, 0.7) },
+    PaletteSpec {
+        hue: 268.0,
+        spread: 46.0,
+        saturation: (0.55, 0.78),
+        lightness: (0.4, 0.7),
+    },
     // prosopo blue
-    PaletteSpec { hue: 212.0, spread: 42.0, saturation: (0.58, 0.8), lightness: (0.4, 0.7) },
+    PaletteSpec {
+        hue: 212.0,
+        spread: 42.0,
+        saturation: (0.58, 0.8),
+        lightness: (0.4, 0.7),
+    },
     // teal drift
-    PaletteSpec { hue: 178.0, spread: 44.0, saturation: (0.5, 0.72), lightness: (0.38, 0.68) },
+    PaletteSpec {
+        hue: 178.0,
+        spread: 44.0,
+        saturation: (0.5, 0.72),
+        lightness: (0.38, 0.68),
+    },
     // warm sand
-    PaletteSpec { hue: 32.0, spread: 38.0, saturation: (0.58, 0.8), lightness: (0.45, 0.72) },
+    PaletteSpec {
+        hue: 32.0,
+        spread: 38.0,
+        saturation: (0.58, 0.8),
+        lightness: (0.45, 0.72),
+    },
     // rose quartz
-    PaletteSpec { hue: 338.0, spread: 40.0, saturation: (0.52, 0.74), lightness: (0.45, 0.72) },
+    PaletteSpec {
+        hue: 338.0,
+        spread: 40.0,
+        saturation: (0.52, 0.74),
+        lightness: (0.45, 0.72),
+    },
     // moss
-    PaletteSpec { hue: 138.0, spread: 42.0, saturation: (0.46, 0.66), lightness: (0.38, 0.66) },
+    PaletteSpec {
+        hue: 138.0,
+        spread: 42.0,
+        saturation: (0.46, 0.66),
+        lightness: (0.38, 0.66),
+    },
 ];
 
 fn hue_to_channel(p: f64, q: f64, t_raw: f64) -> f64 {
@@ -73,7 +103,11 @@ fn hsl_to_rgb(h: f64, s: f64, l: f64) -> Rgb {
         let v = js_round(l * 255.0);
         return Rgb { r: v, g: v, b: v };
     }
-    let q = if l < 0.5 { l * (1.0 + s) } else { l + s - l * s };
+    let q = if l < 0.5 {
+        l * (1.0 + s)
+    } else {
+        l + s - l * s
+    };
     let p = 2.0 * l - q;
     Rgb {
         r: js_round(hue_to_channel(p, q, h_norm + 1.0 / 3.0) * 255.0),
@@ -86,8 +120,16 @@ fn hsl_to_rgb(h: f64, s: f64, l: f64) -> Rgb {
 /// away from zero. The two disagree only on exact negative halves, which the
 /// channel maths here cannot produce — but the rest of the port reuses this,
 /// and there a negative tie is reachable.
+///
+/// `(v + 0.5).floor()` is not enough: the addition itself rounds, so
+/// 0.49999999999999994 and odd integers above 2^52 came out one too high.
 pub fn js_round(v: f64) -> f64 {
-    (v + 0.5).floor()
+    let floor = v.floor();
+    if v - floor >= 0.5 {
+        floor + 1.0
+    } else {
+        floor
+    }
 }
 
 /// Port of `drawPalette`. Consumes, per colour: hue jitter, saturation,
