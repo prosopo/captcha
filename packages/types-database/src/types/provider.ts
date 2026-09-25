@@ -1264,7 +1264,12 @@ export interface IProviderDatabase extends IDatabase {
 		asOfTimestamp?: Date,
 	): Promise<void>;
 
-	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
+	/**
+	 * Marks the commitments server-checked, skipping any already checked.
+	 * Returns how many this call marked, so concurrent verifies of one
+	 * commitment can tell which of them won.
+	 */
+	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<number>;
 
 	updateDappUserCommitment(
 		commitmentId: UserCommitment["id"],
@@ -1291,7 +1296,8 @@ export interface IProviderDatabase extends IDatabase {
 		afterId?: unknown,
 	): Promise<PoWCaptchaRecord[]>;
 
-	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<void>;
+	/** See {@link markDappUserCommitmentsChecked}. */
+	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<number>;
 
 	markDappUserPoWCommitmentsStored(
 		challengeIds: string[],
@@ -1391,6 +1397,12 @@ export interface IProviderDatabase extends IDatabase {
 		updates: Partial<PuzzleCaptchaRecord>,
 	): Promise<void>;
 
+	/**
+	 * Marks the puzzle server-checked unless it already is. Returns false when
+	 * another verify got there first.
+	 */
+	markPuzzleCaptchaChecked(challenge: PoWChallengeId): Promise<boolean>;
+
 	// Accepts plain records: the client-list poll builds these from the
 	// portal's account documents and they are never mongoose Documents.
 	updateClientRecords(clientRecords: IUserDataSlim[]): Promise<void>;
@@ -1418,6 +1430,12 @@ export interface IProviderDatabase extends IDatabase {
 		updates: Partial<Session>,
 		streamToCentral?: boolean,
 	): Promise<void>;
+
+	/**
+	 * Marks the session server-checked unless it already is. Returns false
+	 * when another verify got there first.
+	 */
+	markSessionChecked(sessionId: string): Promise<boolean>;
 
 	/**
 	 * Record SIMD CPU fingerprint readings on the session — first hop wins.

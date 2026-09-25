@@ -519,10 +519,8 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
 		// solution has already been checked by the server. Moving this code around could result in solutions being
 		// re-usable.
-		await this.db.updatePuzzleCaptchaRecord(challengeRecord.challenge, {
-			serverChecked: true,
-			lastUpdatedTimestamp: new Date(),
-		});
+		if (!(await this.db.markPuzzleCaptchaChecked(challengeRecord.challenge)))
+			return notVerifiedResponse;
 		// -- END WARNING --
 
 		const submittedAt = challengeRecord.submittedAtTimestamp;

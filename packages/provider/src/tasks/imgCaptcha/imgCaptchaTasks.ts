@@ -721,15 +721,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
 		// solution has already been checked by the server. Moving this code around could result in solutions being
 		// re-usable.
-		if (solution.serverChecked) {
-			return {
-				status: "API.USER_ALREADY_VERIFIED",
-				verified: false,
-				...(solution.sessionId && { sessionId: solution.sessionId }),
-			};
-		}
-
-		await this.db.markDappUserCommitmentsChecked([solution.id]);
+		const alreadyVerified = {
+			status: "API.USER_ALREADY_VERIFIED",
+			verified: false,
+			...(solution.sessionId && { sessionId: solution.sessionId }),
+		};
+		if (solution.serverChecked) return alreadyVerified;
+		if ((await this.db.markDappUserCommitmentsChecked([solution.id])) === 0)
+			return alreadyVerified;
 		// -- END WARNING --
 
 		// A solution exists but is disapproved

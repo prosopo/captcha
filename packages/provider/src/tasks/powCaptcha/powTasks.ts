@@ -723,9 +723,14 @@ export class PowCaptchaManager extends CaptchaManager {
 		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
 		// solution has already been checked by the server. Moving this code around could result in solutions being
 		// re-usable.
-		await this.db.markDappUserPoWCommitmentsChecked([
+		const marked = await this.db.markDappUserPoWCommitmentsChecked([
 			challengeRecord.challenge,
 		]);
+		if (marked === 0)
+			return notVerified(
+				"API.USER_ALREADY_VERIFIED",
+				challengeRecord.sessionId,
+			);
 		// -- END WARNING --
 
 		// Accumulate all pow captcha record updates in memory.

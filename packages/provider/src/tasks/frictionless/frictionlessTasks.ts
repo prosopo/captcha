@@ -447,7 +447,12 @@ export class FrictionlessManager extends CaptchaManager {
 				status: "API.CLIENT_SESSION_MISMATCH",
 			};
 		}
-		await this.db.updateSessionRecord(sessionId, { serverChecked: true });
+		if (!(await this.db.markSessionChecked(sessionId))) {
+			return {
+				verified: false,
+				status: "API.USER_ALREADY_VERIFIED",
+			};
+		}
 		return { verified: true, status: "API.USER_VERIFIED" };
 	}
 

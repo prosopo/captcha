@@ -117,6 +117,7 @@ describe("PuzzleCaptchaManager", () => {
 			storePuzzleCaptchaRecord: vi.fn(),
 			getPuzzleCaptchaRecordByChallenge: vi.fn(),
 			updatePuzzleCaptchaRecord: vi.fn(),
+			markPuzzleCaptchaChecked: vi.fn().mockResolvedValue(true),
 			updatePuzzleCaptchaRecordResult: vi.fn(),
 			getClientRecord: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
@@ -889,11 +890,31 @@ describe("PuzzleCaptchaManager", () => {
 				);
 
 			expect(result.verified).toBe(true);
-			// Records that the solution has been server-checked, gating reuse.
-			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
-				challenge,
-				expect.objectContaining({ serverChecked: true }),
+			expect(db.markPuzzleCaptchaChecked).toHaveBeenCalledWith(challenge);
+		});
+
+		it("returns verified:false when a concurrent verify marked the puzzle first", async () => {
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+				}),
 			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(db.markPuzzleCaptchaChecked).mockResolvedValue(false);
+
+			const result =
+				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+					dappAccount,
+					challenge,
+					1000,
+					mockEnv,
+				);
+
+			expect(result.verified).toBe(false);
 		});
 
 		it("returns verified:false when the decision machine denies", async () => {

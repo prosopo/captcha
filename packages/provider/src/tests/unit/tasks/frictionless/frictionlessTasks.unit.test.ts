@@ -22,7 +22,10 @@ import {
 	SessionSchema,
 	imageMaxRoundsDefault,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type {
+	IProviderDatabase,
+	ProjectedSession,
+} from "@prosopo/types-database";
 import {
 	type AccessPolicy,
 	AccessPolicyType,
@@ -611,6 +614,69 @@ describe("Frictionless Task Manager", () => {
 
 			expect(response).toHaveProperty("captchaType", CaptchaType.pow);
 			expect(db.storeSessionRecord).toHaveBeenCalledOnce();
+		});
+	});
+
+	describe("verifyAuthenticatedSession", () => {
+		const ip = "1.2.3.4";
+		const session: Partial<ProjectedSession> = {
+			sessionId: "session",
+			captchaType: CaptchaType.authenticated,
+			serverChecked: false,
+			ipAddress: getCompositeIpAddress(ip),
+		};
+
+		beforeEach(() => {
+			db.getSessionRecordBySessionId = vi
+				.fn<IProviderDatabase["getSessionRecordBySessionId"]>()
+				.mockResolvedValue(session as ProjectedSession);
+		});
+
+		it("verifies once and marks the session checked", async () => {
+			db.markSessionChecked = vi
+				.fn<IProviderDatabase["markSessionChecked"]>()
+				.mockResolvedValue(true);
+
+			const result = await frictionlessTaskManager.verifyAuthenticatedSession(
+				"session",
+				ip,
+				undefined,
+			);
+
+			expect(result).toEqual({ verified: true, status: "API.USER_VERIFIED" });
+			expect(db.markSessionChecked).toHaveBeenCalledWith("session");
+		});
+
+		it("does not verify when a concurrent verify marked the session first", async () => {
+			db.markSessionChecked = vi
+				.fn<IProviderDatabase["markSessionChecked"]>()
+				.mockResolvedValue(false);
+
+			const result = await frictionlessTaskManager.verifyAuthenticatedSession(
+				"session",
+				ip,
+				undefined,
+			);
+
+			expect(result).toEqual({
+				verified: false,
+				status: "API.USER_ALREADY_VERIFIED",
+			});
+		});
+
+		it("does not use up the session when the IP does not match", async () => {
+			db.markSessionChecked = vi
+				.fn<IProviderDatabase["markSessionChecked"]>()
+				.mockResolvedValue(true);
+
+			const result = await frictionlessTaskManager.verifyAuthenticatedSession(
+				"session",
+				"5.6.7.8",
+				undefined,
+			);
+
+			expect(result.verified).toBe(false);
+			expect(db.markSessionChecked).not.toHaveBeenCalled();
 		});
 	});
 });

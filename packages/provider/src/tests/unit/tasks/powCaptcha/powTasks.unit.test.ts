@@ -231,9 +231,7 @@ describe("PowCaptchaManager", () => {
 				challengeRecord as PoWCaptchaRecord,
 			);
 			vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
-			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(
-				undefined,
-			);
+			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(1);
 
 			const verifyPowCaptchaSolutionArgs: Parameters<
 				typeof powCaptchaManager.verifyPowCaptchaSolution
@@ -777,6 +775,35 @@ describe("PowCaptchaManager", () => {
 			);
 			expect(replayed.verified).toBe(false);
 			expect(replayed.sessionId).toBe("session-abc");
+		});
+
+		it("does not verify when a concurrent verify marked the challenge first", async () => {
+			const dappAccount = "dappAccount";
+			const challenge: PoWChallengeId = `123456789${POW_SEPARATOR}user${POW_SEPARATOR}${dappAccount}`;
+			const challengeRecord: Partial<PoWCaptchaStored> = {
+				challenge,
+				dappAccount,
+				userAccount: "user",
+				serverChecked: false,
+				result: { status: CaptchaStatus.approved },
+				sessionId: "session",
+			};
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as PoWCaptchaRecord,
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(0);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+			);
+
+			expect(result.verified).toBe(false);
+			expect(result.reason).toBe("API.USER_ALREADY_VERIFIED");
+			expect(db.updatePowCaptchaRecord).not.toHaveBeenCalled();
 		});
 
 		it("should return verified:false if a challenge cannot be found", async () => {
@@ -3327,9 +3354,7 @@ module.exports = (input) => {
 				// the mocks above).
 				record as unknown as PoWCaptchaRecord,
 			);
-			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(
-				undefined,
-			);
+			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(1);
 			vi.mocked(db.updatePowCaptchaRecord).mockResolvedValue(undefined);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 			return record;

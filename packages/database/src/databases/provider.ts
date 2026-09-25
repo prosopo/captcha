@@ -1373,6 +1373,28 @@ export class ProviderDatabase
 			}),
 		};
 		await tables.puzzlecaptcha.updateOne({ challenge }, { $set: baseSet });
+		this.streamPuzzleUpdate(challenge);
+	}
+
+	async markPuzzleCaptchaChecked(challenge: PoWChallengeId): Promise<boolean> {
+		const timestamp = new Date();
+		const result = await this.getTables().puzzlecaptcha.updateOne(
+			{ challenge, serverChecked: { $ne: true } },
+			{
+				$set: {
+					serverChecked: true,
+					lastUpdatedTimestamp: timestamp,
+					verifiedAtTimestamp: timestamp,
+					pendingStage: true,
+				},
+			},
+		);
+		if (result.modifiedCount === 0) return false;
+		this.streamPuzzleUpdate(challenge);
+		return true;
+	}
+
+	private streamPuzzleUpdate(challenge: PoWChallengeId): void {
 		this.centralStreamer?.streamPuzzleUpdate(
 			() => this.getPuzzleCaptchaRecordByChallenge(challenge),
 			(ts) =>
@@ -1473,10 +1495,10 @@ export class ProviderDatabase
 
 	/** @description Mark a list of captcha commits as checked
 	 */
-	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void> {
+	async markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<number> {
 		const timestamp = new Date();
-		await this.tables?.commitment.updateMany(
-			{ id: { $in: commitmentIds } },
+		const result = await this.tables.commitment.updateMany(
+			{ id: { $in: commitmentIds }, serverChecked: { $ne: true } },
 			[
 				{
 					$set: {
@@ -1491,6 +1513,7 @@ export class ProviderDatabase
 			],
 			{ updatePipeline: true },
 		);
+		return result.modifiedCount;
 	}
 
 	/** @description Update an image captcha commitment
@@ -1619,10 +1642,12 @@ export class ProviderDatabase
 
 	/** @description Mark a list of PoW captcha commits as checked by the server
 	 */
-	async markDappUserPoWCommitmentsChecked(challenges: string[]): Promise<void> {
+	async markDappUserPoWCommitmentsChecked(
+		challenges: string[],
+	): Promise<number> {
 		const timestamp = new Date();
-		await this.tables?.powcaptcha.updateMany(
-			{ challenge: { $in: challenges } },
+		const result = await this.tables.powcaptcha.updateMany(
+			{ challenge: { $in: challenges }, serverChecked: { $ne: true } },
 			[
 				{
 					$set: {
@@ -1637,6 +1662,7 @@ export class ProviderDatabase
 			],
 			{ upsert: false, updatePipeline: true },
 		);
+		return result.modifiedCount;
 	}
 
 	/**
@@ -1802,6 +1828,20 @@ export class ProviderDatabase
 	 * via `RedisWriteQueue.patchCachedSession`, matching the existing
 	 * caller-side caching pattern (see `frictionlessTasks.createSession`).
 	 */
+	async markSessionChecked(sessionId: string): Promise<boolean> {
+		const result = await this.tables.session.updateOne(
+			{ sessionId, serverChecked: { $ne: true } },
+			{
+				$set: {
+					serverChecked: true,
+					lastUpdatedTimestamp: new Date(),
+					pendingStage: true,
+				},
+			},
+		);
+		return result.modifiedCount === 1;
+	}
+
 	async updateSessionRecord(
 		sessionId: string,
 		updates: Partial<Session>,

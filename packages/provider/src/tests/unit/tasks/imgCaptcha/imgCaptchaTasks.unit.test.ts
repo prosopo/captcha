@@ -35,7 +35,10 @@ import {
 	type Session,
 	type UserCommitment,
 } from "@prosopo/types";
-import type { IProviderDatabase } from "@prosopo/types-database";
+import type {
+	IProviderDatabase,
+	UserCommitmentRecord,
+} from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { getIPAddress } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
@@ -1034,6 +1037,35 @@ describe("ImgCaptchaManager", () => {
 
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(imgCaptchaManager as any).decisionMachineRunner.decide = originalDecide;
+		});
+
+		it("does not verify when a concurrent verify marked the commitment first", async () => {
+			const commitment: Partial<UserCommitment> = {
+				id: "commitmentId",
+				userAccount: "userAccount",
+				dappAccount: "dappAccount",
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: false,
+				sessionId,
+			};
+			vi.mocked(db.getDappUserCommitmentById).mockResolvedValue(
+				commitment as UserCommitmentRecord,
+			);
+			vi.mocked(db.markDappUserCommitmentsChecked).mockResolvedValue(0);
+
+			const result = await imgCaptchaManager.verifyImageCaptchaSolution(
+				"userAccount",
+				"dappAccount",
+				"commitmentId",
+				mockEnv,
+			);
+
+			expect(result).toEqual({
+				status: "API.USER_ALREADY_VERIFIED",
+				verified: false,
+				sessionId,
+			});
 		});
 
 		it("should update session as serverChecked and disapproved when decision machine denies", async () => {
