@@ -17,10 +17,24 @@ import {
 	type ProcaptchaRenderOptions,
 	type ProcaptchaToken,
 } from "@prosopo/types";
+import {
+	clearFailureNotice,
+	showFailureNotice,
+} from "../elements/failureNotice.js";
 import { getParentForm, removeProcaptchaResponse } from "../elements/form.js";
 import { getWindowCallback } from "../elements/window.js";
 
-export const getDefaultCallbacks = (element?: Element): Callbacks => ({
+export const FAILED_NOTICE_FALLBACK =
+	"You answered one or more captchas incorrectly. Please try again";
+
+/**
+ * @param getFailedMessage returns the localized failure text; read when the
+ * failure happens, as translations load after the callbacks are built.
+ */
+export const getDefaultCallbacks = (
+	element?: Element,
+	getFailedMessage?: () => string | undefined,
+): Callbacks => ({
 	onHuman: (token: ProcaptchaToken) => handleOnHuman(token, element),
 	onChallengeExpired: () => {
 		removeProcaptchaResponse();
@@ -43,7 +57,14 @@ export const getDefaultCallbacks = (element?: Element): Callbacks => ({
 		console.log("Challenge opened");
 	},
 	onFailed: () => {
-		alert("Captcha challenge failed. Please try again");
+		// Never alert(): it blocks the page, cannot be translated and takes
+		// focus away from assistive technology mid-flow.
+		if (element) {
+			showFailureNotice(
+				element,
+				getFailedMessage?.() || FAILED_NOTICE_FALLBACK,
+			);
+		}
 		console.log("Challenge failed");
 	},
 	onReset: () => {
@@ -179,6 +200,7 @@ export function setUserCallbacks(
 const handleOnHuman = (token: ProcaptchaToken, element?: Element) => {
 	removeProcaptchaResponse();
 	if (element) {
+		clearFailureNotice(element);
 		const form = getParentForm(element);
 
 		if (!form) {

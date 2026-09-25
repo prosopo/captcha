@@ -58,7 +58,9 @@ class WidgetFactory {
 	): Promise<CreatedWidget[]> {
 		return Promise.all(
 			containers.map((container) => {
-				const callbacks = getDefaultCallbacks(container);
+				const callbacks = getDefaultCallbacks(container, () =>
+					this._i18n?.t("CAPTCHA.CAPTCHA_FAILED"),
+				);
 				setUserCallbacks(renderOptions, callbacks, container);
 				return this.createWidget(
 					container,
