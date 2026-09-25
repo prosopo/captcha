@@ -154,3 +154,26 @@ jobs:
             --success "first" --kill-others
 
       - run: docker compose --file ./docker/docker-compose.test.yml down
+
+  # The napi crates carry Rust unit tests that `npm run test:all` never runs:
+  # turbo only drives the JS suites. Kept out of `check` so a Rust failure is
+  # reported on its own and does not wait for the full JS build.
+  cargo-test:
+    name: cargo test (${{ matrix.crate }})
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    strategy:
+      fail-fast: false
+      matrix:
+        # Independent crates, each with its own lockfile. A new
+        # packages/native-* crate is not tested until it is listed here.
+        crate:
+          [packages/native-ja4, packages/native-merkle, packages/native-puzzle]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+
+      - name: cargo test
+        working-directory: ${{ matrix.crate }}
+        run: cargo test --release --locked
