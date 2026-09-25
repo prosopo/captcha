@@ -64,13 +64,18 @@ describe("PowChallengeIdSchema", () => {
 		expect(PowChallengeIdSchema.safeParse("1700000000000").success).toBe(false);
 	});
 
+	it.each([undefined, null, 1700000000000, [], {}, ["a", "b", "c", "d"]])(
+		"rejects %j without throwing",
+		(value: unknown) => {
+			expect(PowChallengeIdSchema.safeParse(value).success).toBe(false);
+		},
+	);
+
 	it("rejects an empty challenge", () => {
 		expect(PowChallengeIdSchema.safeParse("").success).toBe(false);
 	});
 
 	it("does not check that the timestamp is numeric", () => {
-		// the parseInt result is discarded and parseInt never throws, so the
-		// validator only counts segments
 		expect(
 			PowChallengeIdSchema.safeParse(challenge(["notanumber", "u", "d", "0"]))
 				.success,

@@ -141,15 +141,10 @@ export const POW_SEPARATOR = "___";
 export type PoWChallengeId =
 	`${Timestamp}${typeof POW_SEPARATOR}${UserAccount}${typeof POW_SEPARATOR}${DappAccount}`;
 
-export const PowChallengeIdSchema = custom<PoWChallengeId>((val: string) => {
-	const valSplit = val.split(POW_SEPARATOR);
-	try {
-		Number.parseInt(valSplit[0] ?? "");
-		return valSplit.length === 4;
-	} catch (e) {
-		return false;
-	}
-});
+export const PowChallengeIdSchema = custom<PoWChallengeId>(
+	(val: unknown) =>
+		typeof val === "string" && val.split(POW_SEPARATOR).length === 4,
+);
 
 export interface CaptchaSolution {
 	captchaId: string;
