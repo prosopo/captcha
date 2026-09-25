@@ -764,6 +764,15 @@ describe("submitSolution: the verdict", () => {
 		expect(harness.events.onExpired).not.toHaveBeenCalled();
 	});
 
+	test("a solve that lands after dispose never reaches the site", async () => {
+		const harness = build();
+		await harness.manager.start(11, 22);
+		harness.manager.dispose();
+		await harness.manager.submitSolution(200, 80, puzzleEvents());
+		expect(harness.events.onHuman).not.toHaveBeenCalled();
+		expect(harness.events.onFailed).not.toHaveBeenCalled();
+	});
+
 	test("a rejected solution fails the widget and restarts frictionless", async () => {
 		mocks.submitPuzzleCaptchaSolution.mockResolvedValue(
 			solutionResponse({ verified: false }),

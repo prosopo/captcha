@@ -465,6 +465,7 @@ export const Manager = (
 				simdReadings,
 				clientMetaData,
 			);
+			if (disposed) return false;
 
 			if (verifiedSolution[ApiParams.verified]) {
 				updateState({
