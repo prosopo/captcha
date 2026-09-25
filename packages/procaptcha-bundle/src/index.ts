@@ -461,6 +461,20 @@ const boot = () => {
 };
 
 /**
+ * The skeleton is plain DOM the handle doesn't own, so destroying the widget
+ * alone would leave it behind. A skeleton owns its whole host element, but an
+ * invisible widget only appends its own node to the site's element (usually
+ * the submit button), whose label must survive.
+ */
+const clearHost = (entry: WidgetEntry): void => {
+	if (entry.invisible) {
+		entry.target.remove();
+	} else {
+		entry.element.innerHTML = "";
+	}
+};
+
+/**
  * Returns a widget to its unsolved state, ready to be solved again. Pass a
  * widget id to reset one widget, or omit it to reset every widget on the page.
  *
@@ -486,6 +500,7 @@ export const reset = async (widgetId?: string): Promise<void> => {
 		if (!current) continue;
 
 		current.handle.destroy();
+		clearHost(current);
 
 		const [widget] = await widgetFactory.createWidgets(
 			[current.element],
@@ -521,9 +536,7 @@ export const remove = (widgetId?: string): void => {
 		if (!entry) continue;
 		entry.unbindTrigger?.();
 		entry.handle.destroy();
-		// The skeleton is plain DOM the handle doesn't own, so tearing the widget
-		// down alone would leave it behind.
-		entry.element.innerHTML = "";
+		clearHost(entry);
 		procaptchaWidgets.delete(id);
 	}
 };
