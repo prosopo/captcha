@@ -3,6 +3,10 @@ title: Prosopo Procaptcha System Architecture
 ---
 
 graph TB
+    %% Synced with the code 2026-09-25. Route list: packages/types/src/provider/api.ts:77-163.
+    %% Middleware order: packages/provider/src/api/startProviderApi.ts:257-449. Verify checks, in order:
+    %% packages/provider/src/api/verify.ts (maintenance, test site key :176-184, forward :189-202,
+    %% client record, dappSignature :230). Auth labels on the edges say what proves who the caller is.
     %% ===== ACTORS =====
     Developer["Website Developer<br/>(integrates Procaptcha)"]
     EndUser["End User<br/>(website visitor)"]
@@ -34,9 +38,12 @@ graph TB
         subgraph PublicAPI["Public API"]
             Healthz["GET /healthz"]
             Details["GET .../public/details"]
+            MetricsEP["GET /metrics<br/>(no auth; on unless<br/>PROSOPO_METRICS_ENABLED=false)"]
         end
 
-        subgraph ClientAPI["Client API (requires Site Key header)"]
+        Middleware["Middleware chain, in order:<br/>cors, body parsers (json 1mb),<br/>public router, rate limits (keyed on<br/>IP, unverified JWT user or site-key header),<br/>request logger, ja4, ipInfo,<br/>headerCheck (Prosopo-User / Site-Key<br/>present and well formed: NOT auth),<br/>verify router (before block),<br/>admin + UAP JWT auth, blockMiddleware,<br/>domainMiddleware (client routes)"]
+
+        subgraph ClientAPI["Client API (unauthenticated: Site Key header is an identifier, not a credential)"]
             direction TB
             FrictionlessEP["POST .../client/captcha/frictionless"]
             ImageChallengeEP["POST .../client/captcha/image"]
@@ -48,15 +55,18 @@ graph TB
             ImageVerifyEP["POST .../client/image/dapp/verify"]
             PowVerifyEP["POST .../client/pow/verify"]
             PuzzleVerifyEP["POST .../client/puzzle/verify"]
+            AuthVerifyEP["POST .../client/authenticated/verify<br/>(authenticated frictionless session)"]
+            UnroutedEP["declared, no handler:<br/>.../client/status, .../client/events"]
             SpamEmailEP["POST .../client/spam/email"]
             DetectorAssignEP["POST .../client/detector/assign<br/>(assigns this session a pool bundle)"]
         end
 
         subgraph AdminAPI["Admin API (requires JWT)"]
-            SiteKeyMgmt["Site Key Management<br/>register / remove"]
-            DetectorMgmt["Detector Key Management<br/>update / remove"]
+            SiteKeyMgmt["Site Key Management<br/>sitekey + sitekeys (batch)<br/>register / remove"]
+            SessionGetEP["POST .../admin/session/get"]
+            CountersClearEP["POST .../admin/counters/clear-all"]
             DetectorPoolMgmt["Detector Pool Replace<br/>(hot-swaps the in-memory pool)"]
-            DecisionMachineMgmt["Decision Machine Management<br/>create / get / remove"]
+            DecisionMachineMgmt["Decision Machine Management<br/>update / get / get-all /<br/>remove / remove-all"]
             MaintenanceToggle["Maintenance Mode Toggle"]
             DnsEventEP["POST .../admin/dns/event<br/>(receives DNS event batches from the dns sidecar)"]
         end
@@ -76,6 +86,7 @@ graph TB
             AccessPolicies["Access Policies<br/>(UAP: per-IP/ja4/headHash<br/>rules; can set captchaType +<br/>params; deferToVerify;<br/>Block messageKey → 403 reason)"]
             TrafficFilter["Traffic Filter<br/>(site-wide: per-category<br/>vpn / proxy / tor / abuser /<br/>datacenter / mobile /<br/>satellite / crawler)<br/>action = block | challenge"]
             SpamFilter["Spam Filter<br/>(email rules)"]
+            WebBotAuth["Web Bot Auth<br/>(signed-agent check in frictionless;<br/>fetches the agent's JWKS URL)"]
         end
 
         subgraph Storage["Storage"]
@@ -123,6 +134,9 @@ graph TB
     Frictionless -->|request session| FrictionlessEP
 
     FrictionlessEP --> FrictionlessTasks
+    FrictionlessTasks -->|"session dedup,<br/>honeypot"| Redis
+    FrictionlessTasks -->|"verifyWebBotAuth"| WebBotAuth
+    WebBotAuth -.->|"fetch JWKS<br/>(no timeout)"| AgentJwks["Agent JWKS host<br/>(external, caller-named)"]
     FrictionlessTasks --> Redis
     FrictionlessTasks -->|"1. handleAccessPolicy<br/>(captchaType override)"| AccessPolicies
     FrictionlessTasks -->|"2. handleFrictionlessTrafficFilter<br/>(block → 401, challenge →<br/>dispatch send{Image,Pow,Puzzle})"| TrafficFilter
@@ -200,6 +214,12 @@ graph TB
     ServerPkg -->|"verify image token<br/>(+ optional clientSessionId)"| ImageVerifyEP
     ServerPkg -->|"verify pow token<br/>(+ optional clientSessionId)"| PowVerifyEP
     ServerPkg -->|"verify puzzle token<br/>(+ optional clientSessionId)"| PuzzleVerifyEP
+    ServerPkg -->|"verify authenticated session"| AuthVerifyEP
+    VerifyChecks["Verify handler checks, in order:<br/>1. maintenance mode: verified true (fail open)<br/>2. test site key: fixed verdict<br/>3. token issued by another provider:<br/>forward to it (allowlisted provider list),<br/>BEFORE the signature check<br/>4. client record exists<br/>5. dappSignature over the token<br/>timestamp, by the site key"]
+    ImageVerifyEP --- VerifyChecks
+    PowVerifyEP --- VerifyChecks
+    PuzzleVerifyEP --- VerifyChecks
+    VerifyChecks -.->|"forward verify"| OtherProvider["Issuing provider<br/>(from provider list)"]
     ImageVerifyEP -->|decode token, check commitment| MongoDB
     PowVerifyEP -->|decode token, check proof| MongoDB
     PuzzleVerifyEP -->|decode token, check placement| MongoDB
@@ -209,7 +229,9 @@ graph TB
     ServerPkg -->|grant or deny access| DappBackend
 
     %% ===== ADMIN =====
-    Developer -.->|"manage via portal<br/>or admin API"| AdminAPI
+    Developer -.->|"manage via portal<br/>or admin API<br/>(sr25519 JWT, authMiddleware)"| AdminAPI
+    Developer -.->|"sr25519 JWT"| UapAPI
+    Scraper["Metrics scraper / anyone"] -->|"no auth"| MetricsEP
     AdminAPI --> MongoDB
 
     %% ===== STORAGE CONNECTIONS =====
@@ -217,10 +239,13 @@ graph TB
     PowTasks --> MongoDB
     FrictionlessTasks --> MongoDB
     AccessPolicies --> Redis
+    AuthVerifyEP --> MongoDB
     TrafficFilter -.->|"loaded from<br/>clientRecord.settings"| MongoDB
     SpamFilter -.->|"loaded from<br/>clientRecord.settings"| MongoDB
     DecisionMachine --> MongoDB
     ImgTasks --> Redis
+    Middleware -.->|"gates"| ClientAPI
+    Middleware -.->|"gates"| AdminAPI
     PowTasks --> Redis
 
     %% ===== STYLES =====
@@ -233,8 +258,8 @@ graph TB
 
     class Developer,EndUser actor
     class Widget,Manager,LB,Detector,Fingerprint,Behavioral,Frictionless,ImageCaptcha,PoW,PuzzleCaptcha browser
-    class Healthz,Details,FrictionlessEP,ImageChallengeEP,ImageSolutionEP,PowChallengeEP,PowSolutionEP,PuzzleChallengeEP,PuzzleSolutionEP,ImageVerifyEP,PowVerifyEP,PuzzleVerifyEP,SpamEmailEP,DetectorAssignEP,SiteKeyMgmt,DetectorMgmt,DetectorPoolMgmt,DecisionMachineMgmt,MaintenanceToggle,RulesCRUD provider
-    class ImgTasks,PowTasks,PuzzleTasks,FrictionlessTasks,SolutionVerifier,DecisionMachine,DetectorPool,AccessPolicies,TrafficFilter,SpamFilter provider
+    class Healthz,Details,FrictionlessEP,ImageChallengeEP,ImageSolutionEP,PowChallengeEP,PowSolutionEP,PuzzleChallengeEP,PuzzleSolutionEP,ImageVerifyEP,PowVerifyEP,PuzzleVerifyEP,SpamEmailEP,DetectorAssignEP,AuthVerifyEP,UnroutedEP,MetricsEP,Middleware,VerifyChecks,SessionGetEP,CountersClearEP,SiteKeyMgmt,DetectorPoolMgmt,DecisionMachineMgmt,MaintenanceToggle,RulesCRUD provider
+    class ImgTasks,PowTasks,PuzzleTasks,FrictionlessTasks,SolutionVerifier,DecisionMachine,DetectorPool,AccessPolicies,TrafficFilter,SpamFilter,WebBotAuth provider
     class MongoDB,Redis,Dataset storage
     class ServerPkg,DappBackend backend
-    class ProviderList external
+    class ProviderList,AgentJwks,OtherProvider,Scraper external
