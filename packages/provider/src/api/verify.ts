@@ -20,6 +20,7 @@ import {
 	CaptchaType,
 	ClientApiPaths,
 	type ImageVerificationResponse,
+	type KeyringPair,
 	ServerPowCaptchaVerifyRequestBody,
 	type ServerPowCaptchaVerifyRequestBodyOutput,
 	ServerPuzzleCaptchaVerifyRequestBody,
@@ -32,7 +33,7 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { validateAddress } from "@prosopo/util-crypto";
-import express, { type Router } from "express";
+import express, { type Request, type Router } from "express";
 import { Tasks } from "../tasks/tasks.js";
 import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
 import { buildMaintenanceVerificationResponse } from "./captcha/maintenanceModeResponses.js";
@@ -67,6 +68,27 @@ const VERIFY_PATH_TYPE: Partial<Record<ClientApiPaths, CaptchaType>> = {
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: CaptchaType.image,
 	[ClientApiPaths.VerifyPowCaptchaSolution]: CaptchaType.pow,
 	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: CaptchaType.puzzle,
+};
+
+// verifySignature throws on a non-hex, wrong-length or non-matching signature.
+// All of those are bad client input, so they map to a 400 instead of falling
+// into the handlers' catch-all 500.
+const dappSignatureError = (
+	signature: string,
+	message: string,
+	pair: KeyringPair,
+	req: Request,
+): ProsopoApiError | undefined => {
+	try {
+		verifySignature(signature, message, pair);
+		return undefined;
+	} catch {
+		return new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
+			context: { code: 400, siteKey: pair.address },
+			i18n: req.i18n,
+			logger: req.logger,
+		});
+	}
 };
 
 /**
@@ -226,8 +248,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Verify using the appropriate pair based on isDapp flag
 				const keyPair = env.keyring.addFromAddress(dapp);
 
-				// Will throw an error if the signature is invalid
-				verifySignature(dappSignature, timestamp.toString(), keyPair);
+				const signatureError = dappSignatureError(
+					dappSignature,
+					timestamp.toString(),
+					keyPair,
+					req,
+				);
+				if (signatureError) return next(signatureError);
 
 				const response =
 					await tasks.imgCaptchaManager.verifyImageCaptchaSolution(
@@ -383,8 +410,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Verify using the dapp pair passed in the request
 				const dappPair = env.keyring.addFromAddress(dapp);
 
-				// Will throw an error if the signature is invalid
-				verifySignature(dappSignature, timestamp.toString(), dappPair);
+				const signatureError = dappSignatureError(
+					dappSignature,
+					timestamp.toString(),
+					dappPair,
+					req,
+				);
+				if (signatureError) return next(signatureError);
 
 				const { verified, score, reason, sessionId } =
 					await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
@@ -537,8 +569,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Verify using the dapp pair passed in the request
 				const dappPair = env.keyring.addFromAddress(dapp);
 
-				// Will throw an error if the signature is invalid
-				verifySignature(dappSignature, timestamp.toString(), dappPair);
+				const signatureError = dappSignatureError(
+					dappSignature,
+					timestamp.toString(),
+					dappPair,
+					req,
+				);
+				if (signatureError) return next(signatureError);
 
 				const { verified, score, sessionId } =
 					await tasks.puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
@@ -661,7 +698,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				}
 
 				const keyPair = env.keyring.addFromAddress(dapp);
-				verifySignature(dappSignature, timestamp.toString(), keyPair);
+				const signatureError = dappSignatureError(
+					dappSignature,
+					timestamp.toString(),
+					keyPair,
+					req,
+				);
+				if (signatureError) return next(signatureError);
 
 				if (!sessionId) {
 					return res.json({
