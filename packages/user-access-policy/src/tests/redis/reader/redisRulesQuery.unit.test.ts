@@ -343,7 +343,7 @@ describe("getRulesRedisQuery", () => {
 		const query = getRulesRedisQuery(filter, false);
 
 		expect(query).toContain("@type:{block}");
-		expect(query).toContain("@clientId:{site-A}");
+		expect(query).toContain("@clientId:{site\\-A}");
 		expect(query).toContain("@ja4Hash:{ja4Hash}");
 	});
 });
