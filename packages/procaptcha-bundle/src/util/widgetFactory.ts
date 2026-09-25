@@ -26,6 +26,7 @@ import {
 } from "@prosopo/widget-skeleton";
 import type { CaptchaRenderer } from "./captcha/captchaRenderer.js";
 import type { BundleCaptchaHandle } from "./captcha/components/bundleCaptcha.js";
+import { FAILED_NOTICE_KEY } from "./failedNoticeKey.js";
 import { resolveLanguage } from "./language.js";
 import type { WidgetThemeResolver } from "./widgetThemeResolver.js";
 
@@ -59,7 +60,7 @@ class WidgetFactory {
 		return Promise.all(
 			containers.map((container) => {
 				const callbacks = getDefaultCallbacks(container, () =>
-					this._i18n?.t("CAPTCHA.CAPTCHA_FAILED"),
+					this._i18n?.t(FAILED_NOTICE_KEY),
 				);
 				setUserCallbacks(renderOptions, callbacks, container);
 				return this.createWidget(
