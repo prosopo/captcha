@@ -20,7 +20,10 @@ import type {
 	TouchEventPoint,
 } from "../procaptcha/behavioral.js";
 import type { Account } from "../procaptcha/manager.js";
-import type { ProcaptchaProps } from "../procaptcha/props.js";
+import type {
+	FrictionlessRestart,
+	ProcaptchaProps,
+} from "../procaptcha/props.js";
 import type {
 	GetFrictionlessCaptchaResponse,
 	ProviderSelectRetryContext,
@@ -69,7 +72,7 @@ export type BotDetectionFunction = (
  * The props for the Procaptcha Frictionless component.
  */
 export interface ProcaptchaFrictionlessProps extends ProcaptchaProps {
-	restart: () => void;
+	restart: FrictionlessRestart;
 	detectBot?: BotDetectionFunction;
 	detectBotConfig?: ProcaptchaClientConfigOutput;
 }

@@ -484,6 +484,34 @@ describe("recovering from an error", () => {
 	});
 });
 
+describe("after a wrong answer", () => {
+	const notice = (): Element | null =>
+		mounted.container.querySelector('[role="alert"]');
+
+	test("tells the user and leaves the checkbox usable", async () => {
+		render();
+		await setState({ answeredIncorrectly: true });
+		expect(notice()?.textContent).toBe("WIDGET.PUZZLE.RETRY");
+		expect(checkbox().disabled).toBe(false);
+	});
+
+	test("carries the notice across a frictionless restart", () => {
+		render({ startShowRetry: true });
+		expect(notice()?.textContent).toBe("WIDGET.PUZZLE.RETRY");
+	});
+
+	test("shows nothing on an ordinary mount", () => {
+		render();
+		expect(notice()).toBeNull();
+	});
+
+	test("drops the notice once the manager clears it", async () => {
+		render({ startShowRetry: true });
+		await setState({ answeredIncorrectly: false });
+		expect(notice()).toBeNull();
+	});
+});
+
 describe("starting without a click", () => {
 	test("does nothing on mount by default", () => {
 		render();

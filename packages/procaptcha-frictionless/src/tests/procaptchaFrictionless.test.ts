@@ -175,6 +175,26 @@ describe("choosing a solver", () => {
 		expect(solvers()).toEqual(["pow"]);
 	});
 
+	test("passes a restart's wrong-answer notice on to the first solver", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.image)), {
+				startShowRetry: true,
+			}),
+		);
+		await settle();
+		expect(mocks.mounted[0]?.props.startShowRetry).toBe(true);
+	});
+
+	test("mounts an ordinary solver without the notice", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.image))),
+		);
+		await settle();
+		expect(mocks.mounted[0]?.props.startShowRetry).toBe(false);
+	});
+
 	test("hands the solver the session the frictionless call minted", async () => {
 		widget = mountProcaptchaFrictionless(
 			container,
