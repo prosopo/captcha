@@ -403,6 +403,8 @@ export function Manager(
 						simdReadings,
 						clientMetaData,
 					);
+				// A solve that lands after destroy must not reach the site.
+				if (disposed) return;
 
 				// mark as is human if solution has been approved
 				const isHuman = submission[0].verified;
@@ -569,6 +571,8 @@ export function Manager(
 	const resetState = (frictionlessRestart?: () => void) => {
 		// clear timeout just in case a timer is still active (shouldn't be)
 		clearTimeout();
+		// an earlier solve's expiry must not fire against the fresh session
+		window.clearTimeout(Number(state.successfullChallengeTimeout));
 		updateState(defaultState());
 		events.onReset();
 		// reset the frictionless state if it exists

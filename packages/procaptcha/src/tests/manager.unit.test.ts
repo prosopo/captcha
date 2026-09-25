@@ -225,6 +225,8 @@ interface HarnessOptions {
 	/** Mirrors the widget only handing the manager a delegate when its
 	 * wrapper actually supplied one. */
 	delegateReload?: boolean;
+	/** Applies each update to the state object, as the widget's store does. */
+	liveState?: boolean;
 }
 
 const build = (options: HarnessOptions = {}): Harness => {
@@ -254,6 +256,7 @@ const build = (options: HarnessOptions = {}): Harness => {
 		currentState,
 		(next: Partial<ProcaptchaState>) => {
 			updates.push({ ...next });
+			if (options.liveState) Object.assign(currentState, next);
 		},
 		callbackInput,
 		frictionlessState,
@@ -850,6 +853,24 @@ describe("submit", () => {
 		harness.manager.dispose();
 		vi.advanceTimersByTime(configured.captchas.image.solutionTimeout);
 		expect(harness.events.onExpired).not.toHaveBeenCalled();
+	});
+
+	test("a reset drops the earlier solve's expiry", async () => {
+		vi.useFakeTimers();
+		const configured = config();
+		const harness = await started({ configInput: configured, liveState: true });
+		await harness.manager.submit();
+		await harness.manager.cancel();
+		vi.advanceTimersByTime(configured.captchas.image.solutionTimeout);
+		expect(harness.events.onExpired).not.toHaveBeenCalled();
+	});
+
+	test("a solve that lands after dispose never reaches the site", async () => {
+		const harness = await started();
+		harness.manager.dispose();
+		await harness.manager.submit();
+		expect(harness.events.onHuman).not.toHaveBeenCalled();
+		expect(harness.events.onFailed).not.toHaveBeenCalled();
 	});
 
 	test("fails and restarts frictionless when the solution is rejected", async () => {
