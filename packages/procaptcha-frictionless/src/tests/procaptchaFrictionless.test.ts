@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import type { Ti18n, TranslateOptions } from "@prosopo/locale";
 import {
 	type BotDetectionFunction,
 	type BotDetectionFunctionResult,
@@ -82,10 +82,11 @@ const config = (): ProcaptchaClientConfigOutput =>
 		theme: "light",
 	}) as unknown as ProcaptchaClientConfigOutput;
 
-const i18n = (): Ti18n =>
+const i18n = (catalogue: Record<string, string> = {}): Ti18n =>
 	({
 		isInitialized: true,
-		t: (key: string) => key,
+		t: (key: string, options?: TranslateOptions) =>
+			catalogue[key] ?? options?.defaultValue ?? key,
 		language: "en",
 		changeLanguage: () => Promise.resolve(),
 	}) as unknown as Ti18n;
@@ -238,6 +239,31 @@ describe("the loading placeholder", () => {
 		expect(solvers()).toEqual([]);
 		expect(container.textContent).toContain("site key not registered");
 		expect(onError).toHaveBeenCalledWith(expect.any(Error));
+	});
+
+	test("shows a provider error in the widget's language, not the one the provider answered in", async () => {
+		// The provider translates for the browser's Accept-Language, so a German
+		// widget in an English browser used to show English errors.
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(
+				() =>
+					Promise.resolve(
+						detection(CaptchaType.image, {
+							error: {
+								message: "Invalid site key",
+								key: "API.INVALID_SITE_KEY",
+							},
+						} as Partial<BotDetectionFunctionResult>),
+					),
+				{
+					i18n: i18n({ "API.INVALID_SITE_KEY": "Ungültiger Site-Schlüssel" }),
+				},
+			),
+		);
+		await settle();
+		expect(container.textContent).toContain("Ungültiger Site-Schlüssel");
+		expect(container.textContent).not.toContain("Invalid site key");
 	});
 
 	test("re-rolls onto another provider for a failure that is not the caller's fault", async () => {
