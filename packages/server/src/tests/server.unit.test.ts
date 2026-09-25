@@ -356,6 +356,82 @@ describe("ProsopoServer.verifyProvider — recency checks", () => {
 	});
 });
 
+describe("ProsopoServer.verifyProvider — authenticated (Web Bot Auth) tokens", () => {
+	let spies: ProviderApiSpies;
+	let authenticated: MockInstance;
+
+	beforeEach(() => {
+		spies = installProviderApiSpies();
+		authenticated = vi
+			.spyOn(ProviderApi.prototype, "submitAuthenticatedCaptchaVerify")
+			.mockResolvedValue({ status: "ok", verified: true });
+		installLoadBalancer();
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	const authenticatedToken = (timestamp: number): string =>
+		buildToken(timestamp, {
+			[ApiParams.captchaType]: CaptchaType.authenticated,
+		});
+
+	it("routes to submitAuthenticatedCaptchaVerify only, passing ip through", async () => {
+		const token = authenticatedToken(Date.now());
+		const server = new ProsopoServer(
+			buildConfig(60_000, 60_000, 60_000),
+			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+			stubPair() as any,
+		);
+		const result = await server.isVerified(
+			token,
+			"203.0.113.7",
+			"a@example.com",
+			"session-1",
+		);
+		expect(result.verified).toBe(true);
+		expect(authenticated).toHaveBeenCalledTimes(1);
+		expect(authenticated.mock.calls[0]).toEqual([
+			token,
+			expect.any(String),
+			USER,
+			"203.0.113.7",
+			"a@example.com",
+			"session-1",
+		]);
+		expect(spies.pow).not.toHaveBeenCalled();
+		expect(spies.puzzle).not.toHaveBeenCalled();
+		expect(spies.image).not.toHaveBeenCalled();
+	});
+
+	it("rejects a token older than the pow cachedTimeout without calling the provider", async () => {
+		const powCached = 1_000;
+		const token = authenticatedToken(Date.now() - (powCached + 100));
+		const server = new ProsopoServer(
+			// image and puzzle windows are wide open: only pow's may apply
+			buildConfig(powCached, 60_000, 60_000),
+			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+			stubPair() as any,
+		);
+		const result = await server.isVerified(token);
+		expect(result.verified).toBe(false);
+		expect(authenticated).not.toHaveBeenCalled();
+	});
+
+	it("accepts a token inside the pow window even when other windows are shorter", async () => {
+		const token = authenticatedToken(Date.now() - 5_000);
+		const server = new ProsopoServer(
+			buildConfig(60_000, 1_000, 1_000),
+			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+			stubPair() as any,
+		);
+		const result = await server.isVerified(token);
+		expect(result.verified).toBe(true);
+		expect(authenticated).toHaveBeenCalledTimes(1);
+	});
+});
+
 describe("ProsopoServer.isVerified — short-circuits", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
