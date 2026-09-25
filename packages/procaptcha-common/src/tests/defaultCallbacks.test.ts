@@ -16,6 +16,7 @@ import { ApiParams } from "@prosopo/types";
 import type { ProcaptchaRenderOptions, ProcaptchaToken } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	FAILED_NOTICE_FALLBACK,
 	getDefaultCallbacks,
 	setUserCallbacks,
 } from "../callbacks/defaultCallbacks.js";
@@ -133,17 +134,63 @@ describe("callbacks/defaultCallbacks", () => {
 			consoleErrorSpy.mockRestore();
 		});
 
-		it("onFailed should show alert", () => {
+		it("onFailed does not block the page with alert()", () => {
 			const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
-			const callbacks = getDefaultCallbacks();
+			const callbacks = getDefaultCallbacks(document.createElement("div"));
 
 			callbacks.onFailed();
 
-			expect(alertSpy).toHaveBeenCalledWith(
-				"Captcha challenge failed. Please try again",
-			);
-
+			expect(alertSpy).not.toHaveBeenCalled();
 			alertSpy.mockRestore();
+		});
+
+		it("onFailed shows a translated notice in the widget that screen readers announce", () => {
+			const widget = document.createElement("div");
+			const translate = vi.fn((): string => "Vous avez échoué");
+			const callbacks = getDefaultCallbacks(widget, translate);
+
+			callbacks.onFailed();
+
+			const notice = widget.querySelector('[role="alert"]');
+			expect(notice?.textContent).toBe("Vous avez échoué");
+		});
+
+		it("onFailed falls back to English when no translation is available", () => {
+			const widget = document.createElement("div");
+			const callbacks = getDefaultCallbacks(widget, () => undefined);
+
+			callbacks.onFailed();
+
+			expect(widget.querySelector('[role="alert"]')?.textContent).toBe(
+				FAILED_NOTICE_FALLBACK,
+			);
+		});
+
+		it("onFailed replaces rather than stacks notices, and a solve clears it", () => {
+			const form = document.createElement("form");
+			const widget = document.createElement("div");
+			form.appendChild(widget);
+			const callbacks = getDefaultCallbacks(widget);
+
+			callbacks.onFailed();
+			callbacks.onFailed();
+			expect(widget.querySelectorAll('[role="alert"]')).toHaveLength(1);
+
+			callbacks.onHuman("token");
+			expect(widget.querySelector('[role="alert"]')).toBeNull();
+		});
+
+		it("onFailed puts the notice beside an invisible-mode button, not in its label", () => {
+			const parent = document.createElement("div");
+			const button = document.createElement("button");
+			button.textContent = "Sign up";
+			parent.appendChild(button);
+			const callbacks = getDefaultCallbacks(button);
+
+			callbacks.onFailed();
+
+			expect(button.textContent).toBe("Sign up");
+			expect(button.nextElementSibling?.getAttribute("role")).toBe("alert");
 		});
 
 		it("onReset should remove procaptcha response", () => {
