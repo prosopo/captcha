@@ -14,7 +14,11 @@
 
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import { loadI18next } from "@prosopo/locale";
-import type { NextFunction, Request, Response } from "express";
+import express, {
+	type NextFunction,
+	type Request,
+	type Response,
+} from "express";
 import { describe, expect, it, vi } from "vitest";
 import { ZodError } from "zod";
 import { handleErrors } from "../../errorHandler.js";
@@ -186,5 +190,40 @@ describe("handleErrors", async () => {
 			},
 		});
 		expect(mockResponse.end).toHaveBeenCalled();
+	});
+
+	it("hands the original error on when the response has already started", async () => {
+		const original = new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
+			context: { code: 400 },
+			i18n,
+		});
+		let forwarded: unknown;
+		const app = express();
+		app.get("/", (_req: Request, res: Response, next: NextFunction) => {
+			res.write("partial");
+			next(original);
+		});
+		app.use(handleErrors);
+		app.use(
+			(err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+				forwarded = err;
+				res.end();
+			},
+		);
+
+		const server = app.listen(0, "127.0.0.1");
+		await new Promise<void>((resolve) => server.once("listening", resolve));
+		try {
+			const address = server.address();
+			if (address === null || typeof address === "string") {
+				throw new Error("expected a TCP address");
+			}
+			const response = await fetch(`http://127.0.0.1:${address.port}/`);
+			expect(await response.text()).toBe("partial");
+		} finally {
+			await new Promise<void>((resolve) => server.close(() => resolve()));
+		}
+
+		expect(forwarded).toBe(original);
 	});
 });

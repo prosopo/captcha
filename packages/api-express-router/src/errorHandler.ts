@@ -24,6 +24,10 @@ export const handleErrors = (
 	response: Response,
 	next: NextFunction,
 ) => {
+	if (response.headersSent) {
+		next(err);
+		return;
+	}
 	const { code, statusMessage, jsonError } = unwrapError(err, request.i18n);
 	response.statusMessage = statusMessage;
 	response.set("content-type", "application/json");
