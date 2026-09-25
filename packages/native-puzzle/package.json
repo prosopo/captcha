@@ -25,6 +25,7 @@
 		"build:debug": "napi build --platform",
 		"bench": "node bench.mjs",
 		"test:cargo": "cargo test --release",
+		"test": "node --test tests/dimensions.test.mjs",
 		"clean": "cargo clean && rm -f *.node"
 	},
 	"devDependencies": {
