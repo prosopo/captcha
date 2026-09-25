@@ -99,3 +99,73 @@ describe("widget direction", () => {
 		expect((await render({ language: "ar" }, "en", true)).dir).toBe("rtl");
 	});
 });
+
+// One instance shared by every widget, as on a real page, that tells its
+// listeners when a widget switches the language.
+const sharedI18n = (initial: string): Ti18n => {
+	const listeners = new Set<() => void>();
+	const i18n = {
+		language: initial,
+		isInitialized: true,
+		t: (key: string): string => key,
+		changeLanguage: async (next: string): Promise<void> => {
+			i18n.language = next;
+			for (const listener of listeners) listener();
+		},
+		hasLoadedNamespace: (): boolean => true,
+		on: (_event: string, listener: () => void): void => {
+			listeners.add(listener);
+		},
+		off: (_event: string, listener: () => void): void => {
+			listeners.delete(listener);
+		},
+	};
+	return i18n;
+};
+
+class SharedI18nWidgetFactory extends TestWidgetFactory {
+	public constructor(private readonly shared: Ti18n) {
+		super(shared.language);
+	}
+
+	override get i18n(): Ti18n {
+		return this.shared;
+	}
+}
+
+describe("widget direction after a later widget changes the language", () => {
+	const renderShared = async (
+		factory: WidgetFactory,
+		options: Partial<ProcaptchaRenderOptions>,
+	) => {
+		const container: HTMLElement = document.createElement("div");
+		document.body.appendChild(container);
+		return factory.createWidget(
+			container,
+			{ siteKey: "site-key", ...options },
+			getDefaultCallbacks(container),
+		);
+	};
+
+	test("follows the language its text is now shown in", async () => {
+		const i18n = sharedI18n("ar");
+		const factory = new SharedI18nWidgetFactory(i18n);
+		const first = await renderShared(factory, { language: "ar" });
+		expect(first.container.dir).toBe("rtl");
+
+		await i18n.changeLanguage("en");
+
+		expect(first.container.dir).toBe("ltr");
+	});
+
+	test("stops following once the widget is removed", async () => {
+		const i18n = sharedI18n("en");
+		const factory = new SharedI18nWidgetFactory(i18n);
+		const first = await renderShared(factory, { language: "en" });
+		first.handle.destroy();
+
+		await i18n.changeLanguage("ar");
+
+		expect(first.container.dir).toBe("ltr");
+	});
+});
