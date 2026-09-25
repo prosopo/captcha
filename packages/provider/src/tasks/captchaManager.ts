@@ -633,6 +633,28 @@ export class CaptchaManager {
 				]);
 			}
 
+			// A session is minted for one site's settings (captcha type, PoW
+			// difficulty). Honouring it for another site would let a session
+			// from a lenient site stand in for a strict one.
+			if (
+				sessionRecord.siteKey !== undefined &&
+				sessionRecord.siteKey !== clientSettings.account
+			) {
+				this.logger.warn(() => ({
+					msg: "Session was issued for a different site key",
+					data: {
+						account: clientSettings.account,
+						sessionId,
+						sessionSiteKey: sessionRecord.siteKey,
+					},
+				}));
+				return {
+					valid: false,
+					reason: ResultReason.CAPTCHA_NO_SESSION_FOUND,
+					type: requestedCaptchaType,
+				};
+			}
+
 			// Validate IP address if currentIP is provided
 			if (currentIP) {
 				const ipValidation = await this.validateSessionIP(
