@@ -118,7 +118,16 @@ class WidgetFactory {
 
 		const captchaRenderer = await this.getCaptchaRenderer(language);
 
-		widgetContainer.dir = getLanguageDirection(language ?? this.i18n.language);
+		const i18n = this.i18n;
+		const host = widgetContainer;
+		host.dir = getLanguageDirection(language ?? i18n.language);
+		// Every widget's text follows the page-wide i18n instance, so a later
+		// widget switching its language re-labels this one too; keep the
+		// direction in step with the text.
+		const followLanguage = () => {
+			host.dir = getLanguageDirection(i18n.language);
+		};
+		i18n.on("languageChanged", followLanguage);
 
 		const captchaRoot = captchaRenderer.renderCaptcha(
 			widgetInteractiveArea,
@@ -131,7 +140,13 @@ class WidgetFactory {
 			container,
 		);
 
-		return { handle: captchaRoot, container: widgetContainer };
+		const handle: BundleCaptchaHandle = {
+			destroy: () => {
+				i18n.off("languageChanged", followLanguage);
+				captchaRoot.destroy();
+			},
+		};
+		return { handle, container: widgetContainer };
 	}
 
 	protected async getCaptchaRenderer(
