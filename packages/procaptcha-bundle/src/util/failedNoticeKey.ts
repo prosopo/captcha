@@ -14,3 +14,6 @@
 
 /** The locale key of the message shown in the widget when a challenge fails. */
 export const FAILED_NOTICE_KEY = "API.CAPTCHA_FAILED";
+
+/** The locale key of the message shown when a challenge times out while open. */
+export const EXPIRED_NOTICE_KEY = "API.USER_NOT_VERIFIED_TIME_EXPIRED";
