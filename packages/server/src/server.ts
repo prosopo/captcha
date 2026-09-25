@@ -63,6 +63,10 @@ export const detectIpMode = (
 };
 
 export class ProsopoServer {
+	// Tolerance for honest clock drift between the issuing provider and this
+	// verifier when checking a token timestamp against "now".
+	private static readonly MAX_CLOCK_SKEW_MS = 30_000;
+
 	config: ProsopoServerConfigOutput;
 	dappAccount: string | undefined;
 	defaultEnvironment: string;
@@ -252,7 +256,20 @@ export class ProsopoServer {
 		label: string,
 	): boolean {
 		if (!timestamp) return false;
-		const recent = Date.now() - timestamp < timeoutMs;
+		const age = Date.now() - timestamp;
+		// A token stamped in the future is not fresh, it is forged or the clock
+		// is skewed: `age < timeoutMs` alone treated any future timestamp as
+		// recent, so a token dated hours ahead sailed through this local
+		// pre-check. Allow a small skew for honest clock drift between the
+		// issuing provider and this verifier, and reject anything beyond it.
+		if (age < -ProsopoServer.MAX_CLOCK_SKEW_MS) {
+			this.logger.error(() => ({
+				data: { timestamp, timeoutMs },
+				msg: `${label} captcha timestamp is in the future`,
+			}));
+			return false;
+		}
+		const recent = age < timeoutMs;
 		if (!recent) {
 			this.logger.error(() => ({
 				data: { timestamp, timeoutMs },
