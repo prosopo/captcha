@@ -17,12 +17,12 @@ import HttpClientBase from "./HttpClientBase.js";
 export class ApiClient extends HttpClientBase {
 	protected account: string;
 
-	constructor(baseUrl: string, account: string) {
+	constructor(baseUrl: string, account: string, timeoutMs?: number) {
 		const baseUrlWithProtocol = !baseUrl.startsWith("http")
 			? `https://${baseUrl}`
 			: baseUrl;
 
-		super(baseUrlWithProtocol);
+		super(baseUrlWithProtocol, "", timeoutMs);
 
 		this.account = account;
 	}

@@ -49,3 +49,5 @@ export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = ONE_MINUTE * 15;
 // rather than set independently. A binding shorter than this makes the provider
 // accept payloads it has already thrown away the means to decrypt.
 export const DEFAULT_MAX_TIMESTAMP_AGE = ONE_MINUTE * 10;
+// How long @prosopo/server waits for a provider to answer a verify call (10 seconds)
+export const DEFAULT_PROVIDER_REQUEST_TIMEOUT_MS = 10 * 1000;

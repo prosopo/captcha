@@ -52,9 +52,9 @@ describe("the package entrypoint", () => {
 });
 
 describe("HttpClientBase's types", () => {
-	test("takes a base URL and an optional prefix", () => {
+	test("takes a base URL, an optional prefix and an optional timeout", () => {
 		expectTypeOf<ConstructorParameters<typeof HttpClientBase>>().toEqualTypeOf<
-			[baseURL: string, prefix?: string]
+			[baseURL: string, prefix?: string, timeoutMs?: number]
 		>();
 	});
 
@@ -80,7 +80,7 @@ describe("HttpError's types", () => {
 describe("ApiClient's types", () => {
 	test("needs both a URL and the account it speaks for", () => {
 		expectTypeOf<ConstructorParameters<typeof ApiClient>>().toEqualTypeOf<
-			[baseUrl: string, account: string]
+			[baseUrl: string, account: string, timeoutMs?: number]
 		>();
 		// @ts-expect-error - a client with no account cannot set the site key
 		// header, so every request would be unattributable.
