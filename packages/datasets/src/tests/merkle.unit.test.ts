@@ -16,6 +16,7 @@ import {
 	CaptchaItemTypes,
 	CaptchaTypes,
 	type Dataset,
+	type MerkleProof,
 	type RawSolution,
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
@@ -26,6 +27,7 @@ import {
 	computeCaptchaHash,
 	computeItemHash,
 	matchItemsToSolutions,
+	verifyProof,
 } from "../index.js";
 
 async function getDataset(): Promise<Dataset> {
@@ -240,5 +242,49 @@ describe("DATASETS MERKLE TREE", async () => {
 		const proof = tree.proof("1");
 
 		expect(proof).to.deep.equal([["1"]]);
+	});
+
+	test("Every leaf of trees of every size up to 33 verifies against the root", () => {
+		for (let size = 1; size <= 33; size++) {
+			const leaves = Array.from(
+				{ length: size },
+				(_, i) => `leaf-${size}-${i}`,
+			);
+			const tree = new CaptchaMerkleTree();
+			tree.build(leaves);
+			const root = tree.getRoot().hash;
+			for (const leaf of leaves) {
+				expect(verifyProof(leaf, tree.proof(leaf), root)).toBe(true);
+				expect(verifyProof(leaf, tree.proof(leaf), `${root}0`)).toBe(false);
+			}
+		}
+	});
+
+	test("Rejects a self-consistent proof that does not end at the trusted root", () => {
+		const tree = new CaptchaMerkleTree();
+		tree.build(["1", "2", "3"]);
+		const forgedLayer: [string, string] = ["forged", "sibling"];
+		const forged: MerkleProof = [forgedLayer, [hexHashArray(forgedLayer)]];
+
+		expect(verifyProof("forged", forged, tree.getRoot().hash)).toBe(false);
+	});
+
+	test("Rejects a proof whose root layer is not the trusted root", () => {
+		const tree = new CaptchaMerkleTree();
+		tree.build(["1", "2", "3", "4"]);
+		const proof = tree.proof("1");
+		const [first, second] = [at(proof, 0), at(proof, 1)];
+		const tampered = [first, second, ["other-root"]] as MerkleProof;
+
+		expect(verifyProof("1", tampered, tree.getRoot().hash)).toBe(false);
+	});
+
+	test("Rejects a proof layer that does not contain the running hash", () => {
+		const tree = new CaptchaMerkleTree();
+		tree.build(["1", "2", "3", "4"]);
+		const root = tree.getRoot().hash;
+		const proof = tree.proof("1");
+
+		expect(verifyProof("5", proof, root)).toBe(false);
 	});
 });

@@ -177,23 +177,26 @@ export class CaptchaMerkleTree {
 	}
 }
 
-export function verifyProof(leaf: MerkleLeaf, proof: MerkleProof): boolean {
-	try {
-		if (at(proof, 0).indexOf(leaf) === -1) {
-			return false;
-		}
-		for (const [layerIndex, layer] of proof.entries()) {
-			leaf = hexHashArray(layer);
-			if (at(proof, layerIndex + 1).indexOf(leaf) === -1) {
-				return false;
-			}
-			const last = at(proof, proof.length - 1);
-			if (leaf === at(last, 0)) {
-				return true;
-			}
-		}
-		return false;
-	} catch (err) {
+/**
+ * True when `proof` links `leaf` to `root`. The root must come from a trusted
+ * source: a proof carries its own root layer, so checking it only for internal
+ * consistency would accept a proof built over any leaf at all.
+ */
+export function verifyProof(
+	leaf: MerkleLeaf,
+	proof: MerkleProof,
+	root: MerkleLeaf,
+): boolean {
+	const rootLayer = proof[proof.length - 1];
+	if (rootLayer === undefined || rootLayer.length !== 1) {
 		return false;
 	}
+	let hash = leaf;
+	for (const layer of proof.slice(0, -1)) {
+		if (layer.length !== 2 || !layer.includes(hash)) {
+			return false;
+		}
+		hash = hexHashArray(layer);
+	}
+	return hash === root && rootLayer[0] === root;
 }
