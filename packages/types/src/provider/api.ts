@@ -34,7 +34,12 @@ import {
 } from "zod";
 import { INPUT_LIMITS } from "../api/inputLimits.js";
 import { ApiParams } from "../api/params.js";
-import { boundedString, safeLine, safeText } from "../api/sanitise.js";
+import {
+	boundedArray,
+	boundedString,
+	safeLine,
+	safeText,
+} from "../api/sanitise.js";
 import {
 	type CaptchaType,
 	DecisionMachineCaptchaTypeSchema,
@@ -297,12 +302,30 @@ export interface CaptchaIdAndProof {
 	proof: string[][];
 }
 
+/**
+ * Caps on client-supplied arrays, well above what the widget sends, so a body
+ * cannot hold ~150k elements that zod then validates one by one.
+ * - datasetId: a 32-byte dataset hash as a byte array.
+ * - captchas: one per image round; sites configure a few dozen at most
+ *   (default ceiling 32).
+ * - solution: the selected tiles of one captcha grid (9 tiles in the stock
+ *   datasets).
+ * - puzzleEvents: one per pointer move during a single drag, sampled at the
+ *   display refresh rate, so a few hundred to a few thousand.
+ */
+export const REQUEST_ARRAY_LIMITS = {
+	datasetId: 64,
+	captchas: 256,
+	solution: 64,
+	puzzleEvents: 10_000,
+} as const;
+
 export const CaptchaRequestBody = object({
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.datasetId]: union([
 		boundedString(INPUT_LIMITS.ID),
-		array(number()),
+		boundedArray(number(), REQUEST_ARRAY_LIMITS.datasetId),
 	]).optional(),
 	[ApiParams.sessionId]: boundedString(INPUT_LIMITS.ID).optional(),
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
@@ -343,14 +366,20 @@ const BoundedProcaptchaTokenSpec = boundedString(INPUT_LIMITS.TOKEN).startsWith(
 const BoundedCaptchaSolutionSchema = object({
 	captchaId: boundedString(INPUT_LIMITS.ID),
 	captchaContentId: boundedString(INPUT_LIMITS.ID),
-	solution: boundedString(INPUT_LIMITS.ID).array(),
+	solution: boundedArray(
+		boundedString(INPUT_LIMITS.ID),
+		REQUEST_ARRAY_LIMITS.solution,
+	),
 	salt: boundedString(INPUT_LIMITS.ID),
 });
 
 export const CaptchaSolutionBody = object({
 	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.captchas]: array(BoundedCaptchaSolutionSchema),
+	[ApiParams.captchas]: boundedArray(
+		BoundedCaptchaSolutionSchema,
+		REQUEST_ARRAY_LIMITS.captchas,
+	),
 	[ApiParams.requestHash]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
 	[ApiParams.signature]: object({
@@ -729,7 +758,10 @@ export const SubmitPuzzleCaptchaSolutionBody = object({
 	[ApiParams.challenge]: PowChallengeIdSchema,
 	[ApiParams.finalX]: number(),
 	[ApiParams.finalY]: number(),
-	[ApiParams.puzzleEvents]: array(PuzzleEventSchema),
+	[ApiParams.puzzleEvents]: boundedArray(
+		PuzzleEventSchema,
+		REQUEST_ARRAY_LIMITS.puzzleEvents,
+	),
 	[ApiParams.signature]: object({
 		[ApiParams.user]: object({
 			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
