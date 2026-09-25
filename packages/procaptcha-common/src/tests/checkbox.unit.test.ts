@@ -380,6 +380,47 @@ describe("theming", () => {
 });
 
 describe("activating it", () => {
+	const row = (): HTMLElement => {
+		const element = box().parentElement;
+		if (!element) throw new Error("expected the box to sit in a row");
+		return element;
+	};
+
+	test("a tap on the row around the box reports the change with its coordinates", () => {
+		render();
+		fire(row(), "click", { clientX: 12, clientY: 40 });
+		expect(onChange).toHaveBeenCalledTimes(1);
+		const event = onChange.mock.calls[0]?.[0] as MouseEvent;
+		expect(event.clientX).toBe(12);
+		expect(event.clientY).toBe(40);
+	});
+
+	test("the row is at least 44px tall, so the tap area is too", () => {
+		render();
+		expect(Number.parseFloat(row().style.minHeight)).toBeGreaterThanOrEqual(44);
+	});
+
+	test("a synthetic click on the row is ignored", () => {
+		render();
+		fire(row(), "click", { trusted: false });
+		expect(onChange).not.toHaveBeenCalled();
+	});
+
+	test("a tap on the row does nothing while the box is disabled by an error", () => {
+		render({ error: "Something went wrong" });
+		fire(row(), "click");
+		expect(onChange).not.toHaveBeenCalled();
+	});
+
+	test("a tap on the row does nothing while loading", () => {
+		render({ loading: true });
+		const spinner = mounted.container.querySelector(SPINNER_SELECTOR);
+		const loadingRow = spinner?.parentElement;
+		if (!loadingRow) throw new Error("expected the spinner to sit in a row");
+		fire(loadingRow, "click");
+		expect(onChange).not.toHaveBeenCalled();
+	});
+
 	test("a real click reports the change", async () => {
 		render();
 		fire(box(), "click");

@@ -346,6 +346,15 @@ export const mountCheckbox = (
 	teardown.addEventListener(input, "click", (event: Event) => {
 		activate(event as MouseEvent);
 	});
+	// The box is 28px, under the 44px a fingertip needs. A tap on the row
+	// around it (the box's margin, which belongs to the row) counts as a tap
+	// on the box.
+	teardown.addEventListener(root, "click", (event: Event) => {
+		if (event.target !== root || props.loading || input.disabled) {
+			return;
+		}
+		activate(event as MouseEvent);
+	});
 	teardown.addEventListener(input, "keydown", (event: Event) => {
 		const keyboardEvent = event as KeyboardEvent;
 		if ("Enter" !== keyboardEvent.key) {

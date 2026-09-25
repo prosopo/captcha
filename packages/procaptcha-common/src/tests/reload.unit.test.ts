@@ -156,10 +156,10 @@ describe("what the button renders", () => {
 		expect(svg?.getAttribute("height")).toBe("24px");
 	});
 
-	test("is a 40dp circular container", () => {
+	test("is a circular container big enough to tap, 44px", () => {
 		const element = render();
-		expect(element.style.height).toBe("40px");
-		expect(element.style.width).toBe("40px");
+		expect(element.style.height).toBe("44px");
+		expect(element.style.width).toBe("44px");
 		expect(element.style.borderRadius).toBe("50%");
 	});
 });
