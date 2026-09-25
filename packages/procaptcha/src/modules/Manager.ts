@@ -255,6 +255,7 @@ export function Manager(
 						)
 						.reduce((a: number, b: number) => a + b);
 					const timeout = setTimeout(() => {
+						if (disposed) return;
 						events.onChallengeExpired();
 						// expired, disallow user's claim to be human
 						updateState({ isHuman: false, showModal: false, loading: false });
@@ -555,6 +556,7 @@ export function Manager(
 	const setValidChallengeTimeout = () => {
 		const timeMillis: number = configOptional.captchas.image.solutionTimeout;
 		const successfullChallengeTimeout = setTimeout(() => {
+			if (disposed) return;
 			// Human state expired, disallow user's claim to be human
 			updateState({ isHuman: false });
 
@@ -634,6 +636,23 @@ export function Manager(
 		return account.extension;
 	};
 
+	// Set once the widget that owns this manager is torn down. A solve still in
+	// flight can land afterwards, so the timer callbacks check it as well as
+	// being cleared here.
+	let disposed = false;
+
+	/**
+	 * Stops this manager's challenge and solution-expiry timers without firing
+	 * any event. Left running after the widget is destroyed (reset(), a
+	 * restart, an SPA route change) they fired onExpired/onReset later on,
+	 * which also cleared the replacement widget's token from the form.
+	 */
+	const dispose = () => {
+		disposed = true;
+		window.clearTimeout(Number(state.timeout));
+		window.clearTimeout(Number(state.successfullChallengeTimeout));
+	};
+
 	return {
 		start,
 		cancel,
@@ -641,5 +660,6 @@ export function Manager(
 		select,
 		nextRound,
 		reload,
+		dispose,
 	};
 }

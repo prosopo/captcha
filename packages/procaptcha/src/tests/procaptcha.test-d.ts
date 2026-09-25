@@ -62,10 +62,16 @@ describe("Manager", () => {
 		>();
 	});
 
-	test("returns only the six controls the widgets drive", () => {
+	test("returns only the controls the widgets drive", () => {
 		type Controls = keyof ReturnType<typeof Manager>;
 		expectTypeOf<Controls>().toEqualTypeOf<
-			"start" | "cancel" | "submit" | "select" | "nextRound" | "reload"
+			| "start"
+			| "cancel"
+			| "submit"
+			| "select"
+			| "nextRound"
+			| "reload"
+			| "dispose"
 		>();
 	});
 

@@ -410,6 +410,7 @@ export const mountProcaptchaPuzzleWidget = (
 
 	return {
 		destroy: () => {
+			manager.dispose();
 			teardown.run();
 			puzzle?.destroy();
 			checkbox?.destroy();

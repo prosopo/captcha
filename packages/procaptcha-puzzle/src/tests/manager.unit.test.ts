@@ -755,6 +755,15 @@ describe("submitSolution: the verdict", () => {
 		expect(lastUpdate(harness, "isHuman")).toBe(false);
 	});
 
+	test("a disposed manager never expires the solve", async () => {
+		vi.useFakeTimers();
+		const harness = build();
+		await solve(harness);
+		harness.manager.dispose();
+		await vi.runOnlyPendingTimersAsync();
+		expect(harness.events.onExpired).not.toHaveBeenCalled();
+	});
+
 	test("a rejected solution fails the widget and restarts frictionless", async () => {
 		mocks.submitPuzzleCaptchaSolution.mockResolvedValue(
 			solutionResponse({ verified: false }),

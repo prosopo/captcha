@@ -40,6 +40,7 @@ const submit = vi.fn<ManagerApi["submit"]>(() => Promise.resolve());
 const select = vi.fn<ManagerApi["select"]>();
 const nextRound = vi.fn<ManagerApi["nextRound"]>();
 const reload = vi.fn<ManagerApi["reload"]>(() => Promise.resolve());
+const dispose = vi.fn<ManagerApi["dispose"]>();
 
 let update: ProcaptchaStateUpdateFn | undefined;
 let readHoneypot: (() => string | undefined) | undefined;
@@ -50,7 +51,7 @@ vi.mock("@prosopo/procaptcha", () => ({
 		managerArgs.push(args);
 		update = args[2];
 		readHoneypot = args[5];
-		return { start, cancel, submit, select, nextRound, reload };
+		return { start, cancel, submit, select, nextRound, reload, dispose };
 	},
 }));
 
@@ -660,5 +661,15 @@ describe("the manager itself", () => {
 		// to re-mint the challenge with — the modal would just close.
 		render();
 		expect(managerArgs[0]?.[6]).toBeUndefined();
+	});
+});
+
+describe("destroy", () => {
+	test("disposes the manager so its expiry timers cannot outlive the widget", () => {
+		render();
+		expect(dispose).not.toHaveBeenCalled();
+		widget?.destroy();
+		widget = undefined;
+		expect(dispose).toHaveBeenCalledTimes(1);
 	});
 });
