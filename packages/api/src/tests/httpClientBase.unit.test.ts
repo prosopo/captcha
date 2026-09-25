@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { ResponseTooLargeError } from "@prosopo/util";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import HttpClientBase from "../api/HttpClientBase.js";
 import { HttpError } from "../api/HttpError.js";
@@ -352,5 +353,40 @@ describe("ApiClient", () => {
 		}
 		await new Probe("", "account").go();
 		expect(fetchStub.last().url).toBe("https:///status");
+	});
+});
+
+describe("response size cap", () => {
+	class SmallCapClient extends TestClient {
+		protected override readonly maxResponseBytes = 32;
+	}
+
+	test("reads a response under the cap", async () => {
+		fetchStub.respond({ ok: true });
+		await expect(new SmallCapClient(BASE_URL).get("/status")).resolves.toEqual({
+			ok: true,
+		});
+	});
+
+	test("refuses a response over the cap from fetch, post and postWithHeaders", async () => {
+		fetchStub.respond({ padding: "x".repeat(64) });
+		const small = new SmallCapClient(BASE_URL);
+
+		await expect(small.get("/status")).rejects.toBeInstanceOf(
+			ResponseTooLargeError,
+		);
+		await expect(small.send("/submit", {})).rejects.toBeInstanceOf(
+			ResponseTooLargeError,
+		);
+		await expect(small.sendWithHeaders("/submit", {})).rejects.toBeInstanceOf(
+			ResponseTooLargeError,
+		);
+	});
+
+	test("refuses a response past the default 8 MiB cap", async () => {
+		fetchStub.respond(`"${"x".repeat(8 * 1024 * 1024)}"`);
+		await expect(client().get("/status")).rejects.toBeInstanceOf(
+			ResponseTooLargeError,
+		);
 	});
 });

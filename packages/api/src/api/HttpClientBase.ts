@@ -11,10 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { readCappedJson } from "@prosopo/util";
 import { HttpError } from "./HttpError.js";
 
 export class HttpClientBase {
 	protected readonly baseURL: string;
+	protected readonly maxResponseBytes: number = 8 * 1024 * 1024;
 
 	constructor(baseURL: string, prefix = "") {
 		this.baseURL = baseURL + prefix;
@@ -102,7 +104,7 @@ export class HttpClientBase {
 
 	protected async responseHandler<T>(response: Response): Promise<T> {
 		try {
-			return await response.json();
+			return (await readCappedJson(response, this.maxResponseBytes)) as T;
 		} catch (error) {
 			console.error("Error parsing JSON:", error);
 			throw error;

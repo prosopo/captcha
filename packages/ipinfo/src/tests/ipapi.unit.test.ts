@@ -507,3 +507,60 @@ describe("IpapiBackend default fetch", () => {
 		expect(result.isValid).toBe(false);
 	});
 });
+
+describe("IpapiBackend.lookup response size", () => {
+	const streamingFetch =
+		(chunk: string, chunks: number): FetchFn =>
+		async (): Promise<globalThis.Response> => {
+			let sent = 0;
+			const encoder = new TextEncoder();
+			return new Response(
+				new ReadableStream<Uint8Array>({
+					pull(controller) {
+						if (sent === chunks) {
+							controller.close();
+							return;
+						}
+						sent++;
+						controller.enqueue(encoder.encode(chunk));
+					},
+				}),
+				{ status: 200, headers: { "Content-Type": "application/json" } },
+			);
+		};
+
+	it("refuses an answer larger than any real lookup", async () => {
+		const result = await backend(
+			streamingFetch("x".repeat(4096), 1_000),
+		).lookup(IP);
+
+		expect(result.isValid).toBe(false);
+		if (!result.isValid) {
+			expect(result.error).toContain("exceeds");
+		}
+	});
+
+	it("times out a body that stops arriving after the headers", async () => {
+		const stalledBody: FetchFn = async (_url: string, init: RequestInit) =>
+			new Response(
+				new ReadableStream<Uint8Array>({
+					start(controller) {
+						controller.enqueue(new TextEncoder().encode("{"));
+						init.signal?.addEventListener("abort", () => {
+							const error = new Error("The operation was aborted");
+							error.name = "AbortError";
+							controller.error(error);
+						});
+					},
+				}),
+				{ status: 200, headers: { "Content-Type": "application/json" } },
+			);
+
+		const result = await backend(stalledBody, { timeoutMs: 20 }).lookup(IP);
+
+		expect(result.isValid).toBe(false);
+		if (!result.isValid) {
+			expect(result.error).toContain("timed out");
+		}
+	});
+});

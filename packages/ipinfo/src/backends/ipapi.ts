@@ -18,6 +18,10 @@ import type {
 	IPInfoResponse,
 	IPInfoResult,
 } from "@prosopo/types";
+import { readCappedJson } from "@prosopo/util";
+
+// A lookup answer is a couple of KB of flat JSON.
+const IPAPI_MAX_RESPONSE_BYTES = 64 * 1024;
 
 /**
  * Default per-lookup budget. Short on purpose: an IP lookup sits in the request
@@ -118,9 +122,8 @@ export class IpapiBackend {
 					signal: controller.signal,
 				});
 
-				clearTimeout(timeoutId);
-
 				if (!response.ok) {
+					clearTimeout(timeoutId);
 					return {
 						isValid: false,
 						error: `API request failed with status ${response.status}: ${response.statusText}`,
@@ -128,7 +131,11 @@ export class IpapiBackend {
 					};
 				}
 
-				const data: IPApiResponse = (await response.json()) as IPApiResponse;
+				const data = (await readCappedJson(
+					response,
+					IPAPI_MAX_RESPONSE_BYTES,
+				)) as IPApiResponse;
+				clearTimeout(timeoutId);
 
 				if (data.is_bogon) {
 					return {
