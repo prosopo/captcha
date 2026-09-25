@@ -100,6 +100,12 @@
 			}
 			client_hello
 			tls
+			# Records each request's header names in the order they
+			# arrived, before Go's HTTP server parses them into a map, and
+			# forwards them upstream as `X-Header-Order`. Must sit after
+			# `tls` so it reads plaintext. Needs chaddy with header_order
+			# and Caddy v2.11+ (prosopo/caddy >= 2.6.0).
+			header_order
 		}
 		timeouts {
 			read_body 15s
