@@ -71,6 +71,10 @@ export const mountProcaptchaPuzzleWidget = (
 	// with coords preservation across a re-mint.
 	let lastCoords: { x: number; y: number } | null = null;
 	let sessionInvalidatedFired = false;
+	// Dismissing the puzzle doesn't cancel the request behind it, so each user
+	// action takes a fresh attempt and a result that lands after a newer one
+	// began is dropped rather than reopening or overwriting the puzzle.
+	let attempt = 0;
 
 	let honeypot: HoneypotComponent | undefined;
 	let checkbox: Component<CheckboxProps> | undefined;
@@ -100,6 +104,7 @@ export const mountProcaptchaPuzzleWidget = (
 		finalY: number,
 		puzzleEvents: PuzzleEvent[],
 	): Promise<void> => {
+		const mine = ++attempt;
 		puzzlePhase = "submitting";
 		scheduler.schedule();
 
@@ -110,6 +115,9 @@ export const mountProcaptchaPuzzleWidget = (
 			callbacks.onError?.(
 				error instanceof Error ? error : new Error(String(error)),
 			);
+		}
+		if (mine !== attempt) {
+			return;
 		}
 
 		if (verified) {
@@ -142,6 +150,9 @@ export const mountProcaptchaPuzzleWidget = (
 
 		try {
 			const newChallenge = await manager.start();
+			if (mine !== attempt) {
+				return;
+			}
 			if (newChallenge) {
 				challengeData = newChallenge;
 			} else {
@@ -151,6 +162,9 @@ export const mountProcaptchaPuzzleWidget = (
 				showRetry = false;
 			}
 		} catch {
+			if (mine !== attempt) {
+				return;
+			}
 			puzzlePhase = "checkbox";
 			challengeData = null;
 			showRetry = false;
@@ -161,6 +175,7 @@ export const mountProcaptchaPuzzleWidget = (
 
 	// Dismissing returns to the checkbox; clicking away is not a wrong answer.
 	const handleDismiss = () => {
+		attempt++;
 		puzzlePhase = "checkbox";
 		challengeData = null;
 		showRetry = false;
@@ -291,9 +306,12 @@ export const mountProcaptchaPuzzleWidget = (
 			}
 
 			lastCoords = { x, y };
+			const mine = ++attempt;
 			try {
 				const challenge = await manager.start(x, y);
-
+				if (mine !== attempt) {
+					return;
+				}
 				if (challenge) {
 					challengeData = challenge;
 					puzzlePhase = "dragging";
@@ -308,8 +326,10 @@ export const mountProcaptchaPuzzleWidget = (
 			} finally {
 				// A rejected start would otherwise leave the spinner up for good,
 				// with no way back to the checkbox for the user.
-				loading = false;
-				scheduler.schedule();
+				if (mine === attempt) {
+					loading = false;
+					scheduler.schedule();
+				}
 			}
 		},
 	});
@@ -337,8 +357,12 @@ export const mountProcaptchaPuzzleWidget = (
 			loading = true;
 			showRetry = false;
 			scheduler.schedule();
+			const mine = ++attempt;
 			try {
 				const challenge = await manager.start();
+				if (mine !== attempt) {
+					return;
+				}
 				if (challenge) {
 					challengeData = challenge;
 					puzzlePhase = "dragging";
@@ -348,8 +372,10 @@ export const mountProcaptchaPuzzleWidget = (
 					error instanceof Error ? error : new Error(String(error)),
 				);
 			} finally {
-				loading = false;
-				scheduler.schedule();
+				if (mine === attempt) {
+					loading = false;
+					scheduler.schedule();
+				}
 			}
 		})();
 	};
