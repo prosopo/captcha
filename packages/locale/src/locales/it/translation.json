@@ -82,6 +82,8 @@
 		"INSECURE_CONTEXT": "Procaptcha richiede una connessione sicura (HTTPS)",
 		"CHECKING": "Verifica che tu sia umano in corso",
 		"IMAGE_DIALOG_LABEL": "Verifica con immagini",
+		"CANNOT_LOAD": "Impossibile caricare il CAPTCHA",
+		"RELOAD": "Ricarica",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Verifica con puzzle",
 			"DRAG": "Trascina il pezzo fino al bersaglio",

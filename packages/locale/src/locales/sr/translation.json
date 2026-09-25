@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha захтева безбедну (HTTPS) везу",
 		"CHECKING": "Проверавамо да ли сте човек",
 		"IMAGE_DIALOG_LABEL": "Провера сликама",
+		"CANNOT_LOAD": "Није могуће учитати CAPTCHA",
+		"RELOAD": "Поново учитај",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Провера слагалицом",
 			"DRAG": "Превуците део до циља",

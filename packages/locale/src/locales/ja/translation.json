@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha には安全な (HTTPS) 接続が必要です",
 		"CHECKING": "人間であることを確認しています",
 		"IMAGE_DIALOG_LABEL": "画像による認証",
+		"CANNOT_LOAD": "CAPTCHAを読み込めません",
+		"RELOAD": "再読み込み",
 		"PUZZLE": {
 			"DIALOG_LABEL": "パズルによる認証",
 			"DRAG": "ピースを目標の位置までドラッグしてください",

@@ -31,6 +31,8 @@ import { createControl } from "../dom/obfuscation.js";
 export interface ReloadButtonProps {
 	themeColor: "light" | "dark";
 	onReload: () => void;
+	/** Accessible name; the button is icon-only, so this is all a screen reader hears. */
+	label?: string;
 }
 
 const RELOAD_PATH =
@@ -84,7 +86,7 @@ export const mountReloadButton = (
 	const button = createControl(teardown, {
 		className: randomToken(),
 		attributes: {
-			"aria-label": "Reload",
+			"aria-label": initialProps.label || "Reload",
 			"data-cy": isDevMode() ? "reload-button" : undefined,
 		},
 		children: [svg],

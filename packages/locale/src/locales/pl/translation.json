@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha wymaga bezpiecznego połączenia (HTTPS)",
 		"CHECKING": "Sprawdzanie, czy jesteś człowiekiem",
 		"IMAGE_DIALOG_LABEL": "Zadanie z obrazkami",
+		"CANNOT_LOAD": "Nie można załadować CAPTCHA",
+		"RELOAD": "Załaduj ponownie",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Zadanie z układanką",
 			"DRAG": "Przeciągnij element na miejsce docelowe",

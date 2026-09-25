@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha memerlukan sambungan selamat (HTTPS)",
 		"CHECKING": "Mengesahkan bahawa anda manusia",
 		"IMAGE_DIALOG_LABEL": "Cabaran imej",
+		"CANNOT_LOAD": "Tidak dapat memuatkan CAPTCHA",
+		"RELOAD": "Muat semula",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Cabaran teka-teki",
 			"DRAG": "Seret kepingan ke sasaran",

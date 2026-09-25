@@ -82,6 +82,8 @@
 		"INSECURE_CONTEXT": "O Procaptcha requer uma conexão segura (HTTPS)",
 		"CHECKING": "Verificando se você é humano",
 		"IMAGE_DIALOG_LABEL": "Desafio de imagens",
+		"CANNOT_LOAD": "Não foi possível carregar o CAPTCHA",
+		"RELOAD": "Recarregar",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Desafio de quebra-cabeça",
 			"DRAG": "Arraste a peça até o alvo",

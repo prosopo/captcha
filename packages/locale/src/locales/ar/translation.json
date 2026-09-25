@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "يتطلب Procaptcha اتصالاً آمنًا (HTTPS)",
 		"CHECKING": "جارٍ التحقق من أنك إنسان",
 		"IMAGE_DIALOG_LABEL": "اختبار الصور",
+		"CANNOT_LOAD": "تعذّر تحميل اختبار CAPTCHA",
+		"RELOAD": "إعادة تحميل",
 		"PUZZLE": {
 			"DIALOG_LABEL": "اختبار الأحجية",
 			"DRAG": "اسحب القطعة إلى الهدف",

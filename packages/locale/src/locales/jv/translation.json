@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha mbutuhake sambungan sing aman (HTTPS)",
 		"CHECKING": "Mriksa manawa panjenengan manungsa",
 		"IMAGE_DIALOG_LABEL": "Tantangan gambar",
+		"CANNOT_LOAD": "Ora bisa ngemot CAPTCHA",
+		"RELOAD": "Muat maneh",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Tantangan bedhekan",
 			"DRAG": "Seret potongan menyang sasaran",

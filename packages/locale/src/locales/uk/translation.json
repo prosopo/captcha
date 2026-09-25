@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha потребує безпечного з'єднання (HTTPS)",
 		"CHECKING": "Перевіряємо, що ви людина",
 		"IMAGE_DIALOG_LABEL": "Завдання із зображеннями",
+		"CANNOT_LOAD": "Не вдалося завантажити CAPTCHA",
+		"RELOAD": "Перезавантажити",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Завдання з пазлом",
 			"DRAG": "Перетягніть фрагмент до цілі",

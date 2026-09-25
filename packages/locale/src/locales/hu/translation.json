@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "A Procaptcha biztonságos (HTTPS) kapcsolatot igényel",
 		"CHECKING": "Ellenőrizzük, hogy ember vagy-e",
 		"IMAGE_DIALOG_LABEL": "Képes feladat",
+		"CANNOT_LOAD": "A CAPTCHA nem tölthető be",
+		"RELOAD": "Újratöltés",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Kirakós feladat",
 			"DRAG": "Húzd a darabot a célhelyre",

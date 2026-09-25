@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha krever en sikker (HTTPS) tilkobling",
 		"CHECKING": "Kontrollerer at du er et menneske",
 		"IMAGE_DIALOG_LABEL": "Bildeoppgave",
+		"CANNOT_LOAD": "Kan ikke laste inn CAPTCHA",
+		"RELOAD": "Last inn på nytt",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Puslespilloppgave",
 			"DRAG": "Dra brikken til målet",

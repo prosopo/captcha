@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha vereist een beveiligde (HTTPS-)verbinding",
 		"CHECKING": "Controleren of je een mens bent",
 		"IMAGE_DIALOG_LABEL": "Afbeeldingsopgave",
+		"CANNOT_LOAD": "CAPTCHA kan niet worden geladen",
+		"RELOAD": "Opnieuw laden",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Puzzelopgave",
 			"DRAG": "Sleep het stukje naar het doel",

@@ -416,6 +416,8 @@
 		"INSECURE_CONTEXT": "Procaptcha vaatii suojatun (HTTPS) yhteyden",
 		"CHECKING": "Tarkistetaan, että olet ihminen",
 		"IMAGE_DIALOG_LABEL": "Kuvatehtävä",
+		"CANNOT_LOAD": "CAPTCHAa ei voi ladata",
+		"RELOAD": "Lataa uudelleen",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Palapelitehtävä",
 			"DRAG": "Vedä pala kohteeseen",

@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha ต้องใช้การเชื่อมต่อที่ปลอดภัย (HTTPS)",
 		"CHECKING": "กำลังตรวจสอบว่าคุณเป็นมนุษย์",
 		"IMAGE_DIALOG_LABEL": "แบบทดสอบรูปภาพ",
+		"CANNOT_LOAD": "ไม่สามารถโหลด CAPTCHA ได้",
+		"RELOAD": "โหลดใหม่",
 		"PUZZLE": {
 			"DIALOG_LABEL": "แบบทดสอบจิ๊กซอว์",
 			"DRAG": "ลากชิ้นส่วนไปยังเป้าหมาย",

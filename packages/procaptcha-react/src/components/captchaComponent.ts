@@ -244,6 +244,7 @@ export const mountCaptchaComponent = (
 
 	const reloadButton = mountReloadButton(reloadHost, {
 		themeColor: props.themeColor,
+		label: props.translator.t("WIDGET.RELOAD"),
 		onReload: () => props.onReload(),
 	});
 

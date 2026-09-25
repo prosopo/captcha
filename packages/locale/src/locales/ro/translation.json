@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha necesită o conexiune securizată (HTTPS)",
 		"CHECKING": "Verificăm că ești om",
 		"IMAGE_DIALOG_LABEL": "Test cu imagini",
+		"CANNOT_LOAD": "CAPTCHA nu poate fi încărcat",
+		"RELOAD": "Reîncarcă",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Test cu puzzle",
 			"DRAG": "Trage piesa până la țintă",

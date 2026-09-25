@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha kräver en säker (HTTPS) anslutning",
 		"CHECKING": "Kontrollerar att du är en människa",
 		"IMAGE_DIALOG_LABEL": "Bilduppgift",
+		"CANNOT_LOAD": "Det går inte att läsa in CAPTCHA",
+		"RELOAD": "Läs in igen",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Pusseluppgift",
 			"DRAG": "Dra biten till målet",

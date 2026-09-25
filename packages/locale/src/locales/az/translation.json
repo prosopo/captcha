@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha təhlükəsiz (HTTPS) bağlantı tələb edir",
 		"CHECKING": "İnsan olduğunuz yoxlanılır",
 		"IMAGE_DIALOG_LABEL": "Şəkil yoxlaması",
+		"CANNOT_LOAD": "CAPTCHA yüklənə bilmir",
+		"RELOAD": "Yenidən yüklə",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Tapmaca yoxlaması",
 			"DRAG": "Hissəni hədəfə sürüşdürün",
