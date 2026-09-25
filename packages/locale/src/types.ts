@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { TranslationKey } from "./translationKey.js";
+
 /**
  * Interpolation values, plus the `defaultValue` a caller falls back to when its
  * key is not in the catalogue. Values are substituted into `{{name}}`
@@ -22,7 +24,10 @@ export interface TranslateOptions {
 	[value: string]: unknown;
 }
 
-export type TranslateFn = (key: string, options?: TranslateOptions) => string;
+export type TranslateFn = (
+	key: TranslationKey,
+	options?: TranslateOptions,
+) => string;
 
 export type I18nEvent = "initialized" | "loaded" | "languageChanged";
 

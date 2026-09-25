@@ -450,7 +450,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				const writePromises: Promise<void>[] = [
 					this.db.disapproveDappUserCommitment(
 						commitmentId,
-						"CAPTCHA.INVALID_SOLUTION",
+						ResultReason.CAPTCHA_INVALID_SOLUTION,
 						pairs,
 					),
 				];
@@ -517,7 +517,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				const writePromises: Promise<void>[] = [
 					this.db.disapproveDappUserCommitment(
 						commitmentId,
-						"CAPTCHA.INVALID_SOLUTION",
+						ResultReason.CAPTCHA_INVALID_SOLUTION,
 						pairs,
 					),
 				];

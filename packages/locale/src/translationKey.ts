@@ -57,8 +57,17 @@ export function getLeafFieldPath(obj: TranslationNode): string[] {
 
 export const translationKeys: string[] = getLeafFieldPath(translationEn);
 
-/**
- * Any leaf path in the English catalogue. Not narrowed to those paths: they are
- * read from JSON at runtime, so the compiler only ever knew them as `string`.
- */
-export type TranslationKey = string;
+type LeafPath<Node> = {
+	[Key in keyof Node & string]: Node[Key] extends string
+		? Key
+		: `${Key}.${LeafPath<Node[Key]>}`;
+}[keyof Node & string];
+
+/** A leaf path in the English catalogue, so a mistyped key fails to compile. */
+export type TranslationKey = LeafPath<typeof translationEn>;
+
+const translationKeySet: ReadonlySet<string> = new Set(translationKeys);
+
+/** For keys that only exist at runtime, e.g. an error message. */
+export const isTranslationKey = (value: string): value is TranslationKey =>
+	translationKeySet.has(value);
