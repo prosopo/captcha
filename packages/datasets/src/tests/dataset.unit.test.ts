@@ -156,7 +156,7 @@ describe("DATASET FUNCTIONS", async () => {
 
 	test("Validates a captcha dataset correctly", async () => {
 		// duplicate the CAPTCHAS in DATASET.captchas by 1000 times
-		DATASET.captchas = new Array(10000)
+		DATASET.captchas = new Array(1000)
 			.fill(0)
 			.map(() => at(DATASET.captchas, 0));
 		const validated = await validateDatasetContent(DATASET);
