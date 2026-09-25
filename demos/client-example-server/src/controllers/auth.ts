@@ -129,7 +129,7 @@ const getResponse = async (
 
 	logger.info(() => ({
 		data: {
-			body,
+			body: { ...body, [ApiParams.secret]: "[redacted]" },
 		},
 	}));
 
