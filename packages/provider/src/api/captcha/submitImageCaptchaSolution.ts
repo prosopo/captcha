@@ -25,6 +25,7 @@ import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
 import { Tasks } from "../../tasks/index.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
+import { summariseRequestBody } from "../requestBodySummary.js";
 import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -57,7 +58,7 @@ export default (env: ProviderEnvironment) =>
 		} catch (err) {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: req.body },
+					context: { code: 400, error: err, body: summariseRequestBody(req) },
 					i18n: req.i18n,
 					logger: req.logger,
 				}),
@@ -125,7 +126,7 @@ export default (env: ProviderEnvironment) =>
 		} catch (err) {
 			req.logger.error(() => ({
 				err,
-				body: req.body,
+				body: summariseRequestBody(req),
 				msg: "Error in image captcha solution submission",
 			}));
 			return next(

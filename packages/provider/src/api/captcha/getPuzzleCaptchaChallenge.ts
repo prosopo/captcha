@@ -39,6 +39,7 @@ import {
 	normalizeHeadersForMatching,
 } from "../blacklistRequestInspector.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
+import { summariseRequestBody } from "../requestBodySummary.js";
 import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildPuzzleMaintenanceResponse } from "./maintenanceModeResponses.js";
@@ -338,7 +339,7 @@ export default (
 			recordCaptchaIssueError(CaptchaType.puzzle);
 			req.logger.error(() => ({
 				err,
-				body: req.body,
+				body: summariseRequestBody(req),
 				msg: "Error in puzzle captcha challenge request",
 			}));
 			return next(
