@@ -528,17 +528,40 @@ export const remove = (widgetId?: string): void => {
 	}
 };
 
-// set the procaptcha attribute on the window
-window.procaptcha = { ready, render, reset, remove, execute, start };
+const isProcaptchaApi = (value: unknown): boolean =>
+	typeof value === "object" &&
+	value !== null &&
+	typeof Reflect.get(value, "render") === "function" &&
+	typeof Reflect.get(value, "ready") === "function";
 
-// Dispatch a custom event to notify that window.procaptcha is ready
-const procaptchaReadyEvent = new CustomEvent(PROCAPTCHA_READY_EVENT, {
-	detail: {
-		timestamp: Date.now(),
-	},
-	bubbles: true,
-	cancelable: false,
-});
-document.dispatchEvent(procaptchaReadyEvent);
+const announceReady = () => {
+	document.dispatchEvent(
+		new CustomEvent(PROCAPTCHA_READY_EVENT, {
+			detail: {
+				timestamp: Date.now(),
+			},
+			bubbles: true,
+			cancelable: false,
+		}),
+	);
+};
 
-boot();
+// A page can end up with the bundle twice (a CMS plugin plus a hand-added tag,
+// or an SPA re-injecting it). The first copy already owns the widgets on the
+// page, so a second one rendering them again would mount a duplicate checkbox
+// in every container.
+const existingGlobal: unknown = window.procaptcha;
+if (isProcaptchaApi(existingGlobal)) {
+	console.warn(
+		"Procaptcha bundle loaded more than once; keeping the copy that loaded first.",
+	);
+} else if (undefined !== existingGlobal) {
+	console.warn(
+		"window.procaptcha is already defined by the page, so the Procaptcha JS API is not installed. Widgets with class 'procaptcha' still render.",
+	);
+	boot();
+} else {
+	window.procaptcha = { ready, render, reset, remove, execute, start };
+	announceReady();
+	boot();
+}
