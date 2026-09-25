@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Yanlış imza",
 		"SITE_KEY_MISSING": "SITE KEY çatışmır",
 		"ACCOUNT_NOT_FOUND": "Hesab tapılmadı",
-		"INVALID_TIMESTAMP": "Yanlış vaxt damğı"
+		"INVALID_TIMESTAMP": "Yanlış vaxt damğı",
+		"MISSING_AUTH_HEADER": "Avtorizasiya başlığı yoxdur",
+		"INVALID_JWT": "Etibarsız JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Bu əməliyyatı yerinə yetirmək üçün kifayət qədər icazə yoxdur",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Bu sayt üçün mobil şəbəkə bağlantılarından sorğulara icazə verilmir",
 		"SATELLITE_BLOCKED": "Bu sayt üçün peyk bağlantılarından sorğulara icazə verilmir",
 		"CRAWLER_BLOCKED": "Bu sayt üçün tanınmış tarayıcılardan sorğulara icazə verilmir",
-		"DISALLOWED_WEBVIEW": "Bu sayt üçün tətbiqdaxili brauzerlərdən (WebView) sorğulara icazə verilmir"
+		"DISALLOWED_WEBVIEW": "Bu sayt üçün tətbiqdaxili brauzerlərdən (WebView) sorğulara icazə verilmir",
+		"INTERNAL_SERVER_ERROR": "Daxili server xətası"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Sahib istifadəçini dəyişmək olmaz",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "Cədvəllər müəyyən edilməyib",
 		"CONNECTION_UNDEFINED": "Qoşulma müəyyənləndirilməyib",
 		"COMMITMENT_FLAG_FAILED": "Müvafiq olaraq işarələmək alınmadı",
-		"UNKNOWN": "Naməlum verilənlər bazası səhvi"
+		"UNKNOWN": "Naməlum verilənlər bazası səhvi",
+		"QUERY_ERROR": "Verilənlər bazası sorğusu uğursuz oldu",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis giriş qaydaları bağlantısı təyin edilməyib",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "İstifadəçi giriş qaydaları yaddaşı təyin edilməyib",
+		"SESSION_STORE_FAILED": "Sessiyanı saxlamaq alınmadı",
+		"SESSION_CHECK_REMOVE_FAILED": "Sessiyanı yoxlamaq və silmək alınmadı",
+		"SESSION_GET_FAILED": "Sessiyanı almaq alınmadı"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Captcha analiz edərkən səhv",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "Yanlış duz",
 		"INVALID_TOKEN": "Yanlış token",
 		"INVALID_SOLUTION": "Yanlış həll",
-		"DECRYPTION_ERROR": "Şifrəni çözərkən səhv"
+		"DECRYPTION_ERROR": "Şifrəni çözərkən səhv",
+		"SOLUTION_NOT_FOUND": "Həll tapılmadı",
+		"DECISION_MACHINE_DENIED": "Qərar maşını tərəfindən rədd edildi",
+		"INVALID_TIMESTAMP": "Yanlış vaxt damğı"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Yanlış parametr"

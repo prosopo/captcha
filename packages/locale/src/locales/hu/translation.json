@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Érvénytelen aláírás",
 		"SITE_KEY_MISSING": "Az oldal kulcs hiányzik",
 		"ACCOUNT_NOT_FOUND": "Felhasználó nem található",
-		"INVALID_TIMESTAMP": "Érvénytelen időbélyeg"
+		"INVALID_TIMESTAMP": "Érvénytelen időbélyeg",
+		"MISSING_AUTH_HEADER": "Hiányzik az engedélyezési fejléc",
+		"INVALID_JWT": "Érvénytelen JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Nincs elegendő engedély a művelet végrehajtásához",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Mobilhálózati kapcsolatokról érkező kérések nem engedélyezettek ezen az oldalon",
 		"SATELLITE_BLOCKED": "Műholdas kapcsolatokról érkező kérések nem engedélyezettek ezen az oldalon",
 		"CRAWLER_BLOCKED": "Ismert webrobotoktól érkező kérések nem engedélyezettek ezen az oldalon",
-		"DISALLOWED_WEBVIEW": "Az alkalmazáson belüli böngészőkből (WebView) érkező kérések nem engedélyezettek ezen az oldalon"
+		"DISALLOWED_WEBVIEW": "Az alkalmazáson belüli böngészőkből (WebView) érkező kérések nem engedélyezettek ezen az oldalon",
+		"INTERNAL_SERVER_ERROR": "Belső szerverhiba"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nem lehet módosítani a tulajdonos felhasználót",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "Táblák nincsenek meghatározva",
 		"CONNECTION_UNDEFINED": "Kapcsolat meghatározatlan",
 		"COMMITMENT_FLAG_FAILED": "Az elkötelezettség jelzése feldolgozottként sikertelen",
-		"UNKNOWN": "Ismeretlen adatbázis hiba"
+		"UNKNOWN": "Ismeretlen adatbázis hiba",
+		"QUERY_ERROR": "Az adatbázis-lekérdezés sikertelen",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "A hozzáférési szabályok Redis-kapcsolata nincs megadva",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "A felhasználói hozzáférési szabályok tárolója nincs megadva",
+		"SESSION_STORE_FAILED": "A munkamenet mentése sikertelen",
+		"SESSION_CHECK_REMOVE_FAILED": "A munkamenet ellenőrzése és törlése sikertelen",
+		"SESSION_GET_FAILED": "A munkamenet lekérése sikertelen"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Hiba a captcha elemzésekor",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "Érvénytelen só",
 		"INVALID_TOKEN": "Érvénytelen token",
 		"INVALID_SOLUTION": "Érvénytelen megoldás",
-		"DECRYPTION_ERROR": "Hiba a titkosítás közben"
+		"DECRYPTION_ERROR": "Hiba a titkosítás közben",
+		"SOLUTION_NOT_FOUND": "A megoldás nem található",
+		"DECISION_MACHINE_DENIED": "A döntési gép elutasította",
+		"INVALID_TIMESTAMP": "Érvénytelen időbélyeg"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Érvénytelen paraméter"
