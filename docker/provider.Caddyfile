@@ -123,6 +123,15 @@ http://:9090 {
 # to one IP per pronodeN), global uses a PEM provisioned by certbot on
 # the cert getter (see ansible playbooks/providerCertbotProvision.yml).
 (provider_site) {
+	# Every path, including responses Caddy writes itself (robots.txt,
+	# rate-limit 429s, upstream errors). No X-Frame-Options here: the
+	# provider serves pages that customers frame (src/api/assetDocument.ts).
+	header {
+		Strict-Transport-Security "max-age=31536000;"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
 	handle /robots.txt {
 		# Serve /srv/static/robots.txt. Do NOT strip the leading slash:
 		# file_server prepends `root` to the request path, so `/robots.txt`
@@ -142,8 +151,6 @@ http://:9090 {
 		header X-Request-ID "{http.request_id}"
 
 		header / {
-			# Enable HTTP Strict Transport Security (HSTS)
-			Strict-Transport-Security "max-age=31536000;"
 			# Enable cross-site filter (XSS) and tell browser to block detected attacks
 			X-XSS-Protection "1; mode=block"
 			# Disallow the site to be rendered within a frame (clickjacking protection)
