@@ -63,6 +63,11 @@ export const retryWithBackoff = async <T>(
 		random = Math.random,
 		sleep = defaultSleep,
 	} = opts;
+	if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
+		throw new RangeError(
+			`maxAttempts must be a positive integer, got ${maxAttempts}`,
+		);
+	}
 	let lastErr: unknown;
 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
 		try {
