@@ -82,63 +82,48 @@ export const hashToHex = (hash: Hash) => {
 	return hash.toString();
 };
 
+const MAX_BYTE = 0xff;
+
+const toByteHex = (n: number): string => n.toString(16).padStart(2, "0");
+
+/**
+ * Writes `data` into `hexString`: a one-byte count, then a one-byte position
+ * and one-byte length per value at the start, and the values' hex digits
+ * packed backwards from the end. Positions are a single byte, so on a string
+ * longer than 256 chars the values are packed backwards from index 255.
+ */
 export const embedData = (hexString: string, data: number[]): `0x${string}` => {
 	const hex = hexString.replace(/^0x/, "").split("");
 
-	let cursorStart = 0;
-	let cursorEnd = hex.length - 1;
-
-	const countHex = data.length.toString(16).padStart(2, "0");
-	hex[cursorStart++] = at(countHex, 0);
-	hex[cursorStart++] = at(countHex, 1);
-
-	const positions: number[] = [];
-	const lengths: number[] = [];
-	let totalLength = 0;
-
-	for (const d of data) {
-		const hexData = d.toString(16); // original hex string
-
-		const len = hexData.length;
-		totalLength += len;
-		const startPos = cursorEnd - len + 1;
-
-		positions.push(startPos);
-		lengths.push(len);
-
-		for (let i = 0; i < len; i++) {
-			hex[startPos + i] = at(hexData, i);
-		}
-
-		cursorEnd -= len;
-	}
-
-	if (totalLength > hexString.length) {
+	if (data.length > MAX_BYTE) {
 		throw new Error(
-			`Hex data length ${totalLength} exceeds length of hex string ${hex.length}`,
+			`embedData: count ${data.length} exceeds the maximum of ${MAX_BYTE}`,
+		);
+	}
+	const values = data.map((d) => {
+		if (!Number.isSafeInteger(d) || d < 0) {
+			throw new Error(`embedData: ${String(d)} is not a non-negative integer`);
+		}
+		return d.toString(16);
+	});
+
+	const usableLength = Math.min(hex.length, MAX_BYTE + 1);
+	const totalLength =
+		2 + 4 * values.length + values.reduce((acc, v) => acc + v.length, 0);
+	if (totalLength > usableLength) {
+		throw new Error(
+			`Hex data length ${totalLength} exceeds length of hex string ${usableLength}`,
 		);
 	}
 
-	for (let i = 0; i < data.length; i++) {
-		const posHex = at(positions, i).toString(16).padStart(2, "0");
-
-		totalLength += posHex.length;
-
-		const lenHex = at(lengths, i).toString(16).padStart(2, "0");
-
-		totalLength += lenHex.length;
-
-		if (totalLength > hexString.length) {
-			throw new Error(
-				`Hex data length ${totalLength} exceeds length of hex string ${hex.length}`,
-			);
-		}
-
-		hex[cursorStart++] = at(posHex, 0);
-		hex[cursorStart++] = at(posHex, 1);
-		hex[cursorStart++] = at(lenHex, 0);
-		hex[cursorStart++] = at(lenHex, 1);
+	let header = toByteHex(values.length);
+	let cursorEnd = usableLength;
+	for (const value of values) {
+		cursorEnd -= value.length;
+		hex.splice(cursorEnd, value.length, ...value);
+		header += toByteHex(cursorEnd) + toByteHex(value.length);
 	}
+	hex.splice(0, header.length, ...header);
 
 	return `0x${hex.join("")}`;
 };
