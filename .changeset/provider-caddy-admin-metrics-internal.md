@@ -15,4 +15,6 @@ the internal `:9090` listener that vector scrapes is unchanged.
 
 The same admin binding fix is applied to the openobserve (`oo1`, `oo2`),
 `client-example-server` and `provider-mock` Caddyfiles, and the last two also
-stop serving `/metrics` publicly.
+stop serving `/metrics` publicly. The staging and test env files set
+`CADDY_ADMIN_API=:2020` explicitly, which would override the new default, so
+they now use `localhost:2020` as well.
