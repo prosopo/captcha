@@ -87,9 +87,26 @@ describe("providerValidateDataset", () => {
 		);
 	});
 
+	it("should throw an error if every captcha is solved but unsolved captchas are required", async () => {
+		const datasetRaw = {
+			captchas: [
+				{ solution: "sol1" },
+				{ solution: "sol2" },
+				{ solution: "sol3" },
+			],
+		} as unknown as DatasetRaw;
+
+		await expect(providerValidateDataset(datasetRaw, 1, 1)).rejects.toThrow(
+			new ProsopoEnvError("DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED", {
+				context: { failedFuncName: "providerValidateDataset" },
+			}),
+		);
+		expect(buildDataset).not.toHaveBeenCalled();
+	});
+
 	it("should throw an error if datasetId or datasetContentId is undefined", async () => {
 		const datasetRaw = {
-			captchas: [{ solution: "sol1" }, { solution: "sol2" }],
+			captchas: [{ solution: "sol1" }, {}],
 		} as unknown as DatasetRaw;
 		const minSolvedCaptchas = 1;
 		const minUnsolvedCaptchas = 1;
