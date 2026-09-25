@@ -38,6 +38,7 @@ import {
 } from "../../utils/devicePlatform.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { rawTlsSignalsForSession } from "../rawTlsSignalsMiddleware.js";
+import { summariseRequestBody } from "../requestBodySummary.js";
 import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -69,7 +70,7 @@ export default (env: ProviderEnvironment) =>
 		} catch (err) {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: req.body },
+					context: { code: 400, error: err, body: summariseRequestBody(req) },
 					i18n: req.i18n,
 					logger: req.logger,
 				}),
@@ -238,7 +239,7 @@ export default (env: ProviderEnvironment) =>
 		} catch (err) {
 			req.logger.error(() => ({
 				err,
-				body: req.body,
+				body: summariseRequestBody(req),
 				msg: "Error in PoW captcha solution submission",
 			}));
 			return next(
