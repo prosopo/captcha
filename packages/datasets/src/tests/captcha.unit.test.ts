@@ -422,7 +422,11 @@ describe("CAPTCHA FUNCTIONS", async () => {
 		];
 		const leaf =
 			"0xb2b33ccc7d240ab8ed24b8f77a32fd2825e78972c8a8cea359f11edc9ac26734";
-		const verification = verifyProof(leaf, proof as MerkleProof);
+		const verification = verifyProof(
+			leaf,
+			proof as MerkleProof,
+			"0xeee6c87e8ad5cd1fc05ea0d8874067d87918f1b141fdabd12352ad59b779cc80",
+		);
 		expect(verification).to.be.true;
 	});
 	test("Fails to verify an invalid merkle proof", () => {
@@ -451,14 +455,14 @@ describe("CAPTCHA FUNCTIONS", async () => {
 		];
 		const leaf =
 			"0x41a5470f491204aefc954d5aeec744d30b0a1112c4a86397afe336807f115c16";
-		const verification = verifyProof(leaf, proof as MerkleProof);
+		const verification = verifyProof(leaf, proof as MerkleProof, "INVALID");
 		expect(verification).to.be.false;
 	});
 	test("Fails to verify junk data", () => {
 		const proof = "junk";
 		const leaf =
 			"0x41a5470f491204aefc954d5aeec744d30b0a1112c4a86397afe336807f115c16";
-		const verification = verifyProof(leaf, [[proof]]);
+		const verification = verifyProof(leaf, [[proof]], proof);
 		expect(verification).to.be.false;
 	});
 	test("Returns sorted solutions", () => {
