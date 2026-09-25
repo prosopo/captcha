@@ -11,7 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoApiError } from "@prosopo/common";
+import { isHex } from "@polkadot/util/is";
+import { ProsopoApiError, ProsopoBaseError } from "@prosopo/common";
 import { parseCaptchaAssets } from "@prosopo/datasets";
 import {
 	ApiParams,
@@ -43,6 +44,30 @@ import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
 import { getSealedAssetsResolver } from "./sealedAssetsResolver.js";
 import { getSignedAssetsResolver } from "./signedAssetsResolver.js";
 import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
+
+// A client-supplied datasetId that is not a stored dataset is bad input, not a
+// server fault. Any other lookup failure (e.g. the database being down) is
+// rethrown so it still surfaces as a 500.
+const clientDatasetExists = async (
+	tasks: Tasks,
+	datasetId: string | number[],
+): Promise<boolean> => {
+	if (typeof datasetId !== "string" || !isHex(datasetId)) {
+		return false;
+	}
+	try {
+		await tasks.db.getDatasetDetails(datasetId);
+		return true;
+	} catch (err) {
+		if (
+			err instanceof ProsopoBaseError &&
+			err.translationKey === "DATABASE.DATASET_GET_FAILED"
+		) {
+			return false;
+		}
+		throw err;
+	}
+};
 
 export default (
 	env: ProviderEnvironment,
@@ -141,6 +166,19 @@ export default (
 			if (!clientRecord) {
 				return next(
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+						context: { code: 400, siteKey: dapp },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			if (
+				clientDatasetId !== undefined &&
+				!(await clientDatasetExists(tasks, clientDatasetId))
+			) {
+				return next(
+					new ProsopoApiError("DATABASE.DATASET_GET_FAILED", {
 						context: { code: 400, siteKey: dapp },
 						i18n: req.i18n,
 						logger: req.logger,
