@@ -17,7 +17,7 @@ export { default as loadI18next } from "./loadI18next.js";
 export { isLanguage, LanguageCodes, Languages } from "./translations.js";
 export type { Language } from "./translations.js";
 export { isClientSide } from "./util.js";
-export { translationKeys } from "./translationKey.js";
+export { isTranslationKey, translationKeys } from "./translationKey.js";
 export type { TranslationKey } from "./translationKey.js";
 export { createTranslator } from "./translator.js";
 export type { Translator } from "./translator.js";

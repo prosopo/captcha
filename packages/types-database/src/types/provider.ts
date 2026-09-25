@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { AllKeys } from "@prosopo/common";
-import { type TranslationKey, translationKeys } from "@prosopo/locale";
+import { translationKeys } from "@prosopo/locale";
 import {
 	CaptchaLabel,
 	CaptchaType,
@@ -30,6 +30,7 @@ import {
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
 	type PuzzleCaptchaStored,
+	type ResultReason,
 	type Session,
 	type SimdReadingsStage,
 	type SolutionRecord,
@@ -1241,7 +1242,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	disapproveDappUserCommitment(
 		commitmentId: string,
-		reason?: TranslationKey,
+		reason?: ResultReason,
 		coords?: [number, number][][],
 	): Promise<void>;
 
