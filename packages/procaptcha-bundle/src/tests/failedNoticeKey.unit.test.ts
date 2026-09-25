@@ -14,12 +14,19 @@
 
 import { translationKeys } from "@prosopo/locale";
 import { describe, expect, test } from "vitest";
-import { FAILED_NOTICE_KEY } from "../util/failedNoticeKey.js";
+import {
+	EXPIRED_NOTICE_KEY,
+	FAILED_NOTICE_KEY,
+} from "../util/failedNoticeKey.js";
 
 describe("failed challenge notice", () => {
 	// i18next returns an unknown key as-is, so a typo here would put the raw
 	// key in front of the user instead of the message.
 	test("is a key the locales actually define", () => {
 		expect(translationKeys).toContain(FAILED_NOTICE_KEY);
+	});
+
+	test("for an expired challenge is a key the locales actually define", () => {
+		expect(translationKeys).toContain(EXPIRED_NOTICE_KEY);
 	});
 });

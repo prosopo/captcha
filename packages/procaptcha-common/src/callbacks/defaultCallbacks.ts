@@ -27,17 +27,28 @@ import { getWindowCallback } from "../elements/window.js";
 export const FAILED_NOTICE_FALLBACK =
 	"You answered one or more captchas incorrectly. Please try again";
 
+export const EXPIRED_NOTICE_FALLBACK =
+	"User not verified. Captcha solution has expired.";
+
 /**
  * @param getFailedMessage returns the localized failure text; read when the
  * failure happens, as translations load after the callbacks are built.
+ * @param getExpiredMessage likewise, for a challenge left open until it timed out.
  */
 export const getDefaultCallbacks = (
 	element?: Element,
 	getFailedMessage?: () => string | undefined,
+	getExpiredMessage?: () => string | undefined,
 ): Callbacks => ({
 	onHuman: (token: ProcaptchaToken) => handleOnHuman(token, element),
 	onChallengeExpired: () => {
 		removeProcaptchaResponse();
+		if (element) {
+			showFailureNotice(
+				element,
+				getExpiredMessage?.() || EXPIRED_NOTICE_FALLBACK,
+			);
+		}
 		console.log("Challenge expired");
 	},
 	onExtensionNotFound: () => {
