@@ -79,6 +79,40 @@ const registerWidgets = (
 const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
 
 /**
+ * Bumped by every `remove()` that clears the page. Widget creation awaits lazy
+ * chunks, so a mount that started before the clear finishes after it; one that
+ * sees a different generation when it lands is discarded instead of mounting a
+ * widget the page already asked to be rid of.
+ */
+let removeAllGeneration = 0;
+
+const discardWidgets = (
+	widgets: CreatedWidget[],
+	elements: Element[],
+): void => {
+	for (const { handle } of widgets) handle.destroy();
+	for (const element of elements) element.innerHTML = "";
+};
+
+const mountWidgets = async (
+	elements: Element[],
+	renderOptions: ProcaptchaRenderOptions,
+	isWeb2: boolean,
+	invisible?: boolean,
+): Promise<CreatedWidget[]> => {
+	const generation = removeAllGeneration;
+	const widgets = await widgetFactory.createWidgets(
+		elements,
+		renderOptions,
+		isWeb2,
+		invisible,
+	);
+	if (generation === removeAllGeneration) return widgets;
+	discardWidgets(widgets, elements);
+	return [];
+};
+
+/**
  * Kick off provider resolution + detector assignment without blocking render.
  *
  * Loaded via dynamic import on purpose: it pulls in the provider selector and
@@ -149,7 +183,7 @@ const implicitRender = async () => {
 			startMode,
 		};
 
-		const widgets = await widgetFactory.createWidgets(
+		const widgets = await mountWidgets(
 			elements,
 			implicitRenderOptions,
 			!(web3 === "true"),
@@ -194,7 +228,7 @@ const implicitRender = async () => {
 				startMode,
 			};
 
-			const widgets = await widgetFactory.createWidgets(
+			const widgets = await mountWidgets(
 				[button],
 				buttonRenderOptions,
 				true,
@@ -245,7 +279,7 @@ export const render = async (
 	const invisible =
 		hasInvisibleSize || element.tagName.toLowerCase() === "button";
 
-	const widgets = await widgetFactory.createWidgets(
+	const widgets = await mountWidgets(
 		[element],
 		renderOptions,
 		isWeb2,
@@ -494,7 +528,9 @@ export const reset = async (widgetId?: string): Promise<void> => {
 			current.invisible,
 		);
 
-		if (widget) {
+		if (widget && !procaptchaWidgets.has(id)) {
+			discardWidgets([widget], [current.element]);
+		} else if (widget) {
 			procaptchaWidgets.set(id, {
 				...current,
 				handle: widget.handle,
@@ -513,6 +549,7 @@ export const reset = async (widgetId?: string): Promise<void> => {
  * an SPA route change).
  */
 export const remove = (widgetId?: string): void => {
+	if (undefined === widgetId) removeAllGeneration++;
 	const ids =
 		undefined === widgetId ? Array.from(procaptchaWidgets.keys()) : [widgetId];
 
