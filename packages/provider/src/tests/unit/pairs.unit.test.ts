@@ -12,14 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { InputMethod } from "@prosopo/types";
 import { embedData, extractData } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { describe, expect, it } from "vitest";
 import {
 	constructPairList,
 	containsIdenticalPairs,
+	keyboardSelectionHasPosition,
+	peelCheckboxInputMethod,
 	peelCheckboxPrefix,
+	resolveInputMethods,
+	selectionsLookScripted,
 } from "../../pairs.js";
+
+const { keyboard, pointer } = InputMethod;
 
 describe("constructPairList", () => {
 	it("should construct pairs from even-length array", () => {
@@ -380,5 +387,197 @@ describe("peelCheckboxPrefix", () => {
 
 	it("handles empty inputs without throwing", () => {
 		expect(peelCheckboxPrefix([], [])).toEqual({ flat: [] });
+	});
+});
+
+describe("containsIdenticalPairs with input methods", () => {
+	// The coordinates the env recorded for a keyboard-only solve: the checkbox
+	// and every tile at (0, 0).
+	const keyboardOnly: [number, number][][] = [
+		[[0, 0]],
+		[
+			[0, 0],
+			[0, 0],
+			[0, 0],
+		],
+		[
+			[0, 0],
+			[0, 0],
+		],
+	];
+
+	it("leaves keyboard selections out of the repeated-position check", () => {
+		const methods = [
+			[keyboard],
+			[keyboard, keyboard, keyboard],
+			[keyboard, keyboard],
+		];
+		expect(containsIdenticalPairs(keyboardOnly, methods)).toBe(false);
+	});
+
+	it("still counts repeated (0, 0) when nothing declares keyboard", () => {
+		expect(containsIdenticalPairs(keyboardOnly)).toBe(true);
+	});
+
+	it("still flags (0, 0) declared as pointer twice", () => {
+		const methods = [
+			[pointer],
+			[pointer, keyboard, keyboard],
+			[keyboard, keyboard],
+		];
+		expect(containsIdenticalPairs(keyboardOnly, methods)).toBe(true);
+	});
+
+	it("allows a single pointer (0, 0) among keyboard selections", () => {
+		const methods = [
+			[pointer],
+			[keyboard, keyboard, keyboard],
+			[keyboard, keyboard],
+		];
+		expect(containsIdenticalPairs(keyboardOnly, methods)).toBe(false);
+	});
+
+	it("flags a repeated pointer position alongside keyboard selections", () => {
+		const pairs: [number, number][][] = [
+			[[0, 0]],
+			[
+				[0, 0],
+				[120, 340],
+			],
+			[[120, 340]],
+		];
+		const methods = [[keyboard], [keyboard, pointer], [pointer]];
+		expect(containsIdenticalPairs(pairs, methods)).toBe(true);
+	});
+});
+
+describe("resolveInputMethods", () => {
+	it("treats every pair of a captcha that declares nothing as pointer", () => {
+		expect(
+			resolveInputMethods(
+				[
+					[1, 2, 3, 4],
+					[5, 6],
+				],
+				[undefined, undefined],
+			),
+		).toEqual([[pointer, pointer], [pointer]]);
+	});
+
+	it("keeps the declared methods when they line up with the pairs", () => {
+		expect(
+			resolveInputMethods(
+				[
+					[0, 0, 5, 6],
+					[0, 0],
+				],
+				[[keyboard, pointer], [keyboard]],
+			),
+		).toEqual([[keyboard, pointer], [keyboard]]);
+	});
+
+	it("resolves each captcha on its own", () => {
+		expect(
+			resolveInputMethods(
+				[
+					[1, 2],
+					[0, 0],
+				],
+				[undefined, [keyboard]],
+			),
+		).toEqual([[pointer], [keyboard]]);
+	});
+
+	it("rejects more methods than pairs", () => {
+		expect(
+			resolveInputMethods([[1, 2]], [[pointer, keyboard]]),
+		).toBeUndefined();
+	});
+
+	it("rejects fewer methods than pairs", () => {
+		expect(resolveInputMethods([[0, 0, 0, 0]], [[keyboard]])).toBeUndefined();
+	});
+});
+
+describe("peelCheckboxInputMethod", () => {
+	it("gives the checkbox its own list, as its coordinates get", () => {
+		expect(
+			peelCheckboxInputMethod([[keyboard, pointer, pointer], [keyboard]]),
+		).toEqual([[keyboard], [pointer, pointer], [keyboard]]);
+	});
+
+	it("leaves an empty first list alone", () => {
+		expect(peelCheckboxInputMethod([[], [pointer]])).toEqual([[], [pointer]]);
+		expect(peelCheckboxInputMethod([])).toEqual([]);
+	});
+});
+
+describe("keyboardSelectionHasPosition", () => {
+	it("accepts keyboard selections at (0, 0)", () => {
+		expect(
+			keyboardSelectionHasPosition(
+				[[[0, 0]], [[0, 0]]],
+				[[keyboard], [keyboard]],
+			),
+		).toBe(false);
+	});
+
+	it("flags a keyboard selection carrying a position", () => {
+		expect(
+			keyboardSelectionHasPosition(
+				[[[0, 0]], [[12, 0]]],
+				[[keyboard], [keyboard]],
+			),
+		).toBe(true);
+	});
+
+	it("does not care where pointer selections are", () => {
+		expect(keyboardSelectionHasPosition([[[12, 34]]], [[pointer]])).toBe(false);
+	});
+});
+
+describe("selectionsLookScripted", () => {
+	it("passes a keyboard-only solve", () => {
+		expect(
+			selectionsLookScripted(
+				[
+					[[0, 0]],
+					[
+						[0, 0],
+						[0, 0],
+					],
+					[[0, 0]],
+				],
+				[[keyboard], [keyboard, keyboard], [keyboard]],
+			),
+		).toBe(false);
+	});
+
+	it("passes pointer selections at distinct positions", () => {
+		expect(
+			selectionsLookScripted(
+				[[[3, 4]], [[10, 20]], [[11, 20]]],
+				[[pointer], [pointer], [pointer]],
+			),
+		).toBe(false);
+	});
+
+	it("rejects methods that did not line up with the coordinates", () => {
+		expect(selectionsLookScripted([[[3, 4]]], undefined)).toBe(true);
+	});
+
+	it("rejects a keyboard selection carrying a position", () => {
+		expect(
+			selectionsLookScripted([[[3, 4]], [[50, 60]]], [[pointer], [keyboard]]),
+		).toBe(true);
+	});
+
+	it("rejects a repeated pointer position", () => {
+		expect(
+			selectionsLookScripted(
+				[[[3, 4]], [[50, 60]], [[50, 60]]],
+				[[pointer], [pointer], [pointer]],
+			),
+		).toBe(true);
 	});
 });

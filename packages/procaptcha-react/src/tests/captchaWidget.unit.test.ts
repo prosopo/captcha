@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { type Component, threeColumnBasis } from "@prosopo/procaptcha-common";
-import { CaptchaItemTypes, type HashedItem } from "@prosopo/types";
+import {
+	CaptchaItemTypes,
+	type HashedItem,
+	type ImageSelection,
+	InputMethod,
+} from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
@@ -24,7 +29,10 @@ import { type Mounted, asRgb, fire, mount } from "./render.js";
 
 let mounted: Mounted;
 let widget: Component<CaptchaWidgetProps> | undefined;
-const onClick = vi.fn<(hash: string, x: number, y: number) => void>();
+const onClick =
+	vi.fn<
+		(hash: string, x: number, y: number, inputMethod: InputMethod) => void
+	>();
 
 const item = (hash: string, data = `https://provider.one/${hash}.png`) => ({
 	hash,
@@ -35,7 +43,7 @@ const item = (hash: string, data = `https://provider.one/${hash}.png`) => ({
 const props = (
 	overrides: {
 		items?: HashedItem[];
-		solution?: [string, number, number][];
+		solution?: ImageSelection[];
 		themeColor?: "light" | "dark";
 	} = {},
 ): CaptchaWidgetProps => ({
@@ -233,7 +241,7 @@ describe("selection", () => {
 	});
 
 	test("shows the tick on the image the user picked", () => {
-		render({ solution: [["hash-2", 1, 2]] });
+		render({ solution: [["hash-2", 1, 2, InputMethod.pointer]] });
 		expect(overlays()[0]?.style.visibility).toBe("hidden");
 		expect(overlays()[1]?.style.visibility).toBe("visible");
 	});
@@ -241,8 +249,8 @@ describe("selection", () => {
 	test("shows every selected image at once", () => {
 		render({
 			solution: [
-				["hash-1", 0, 0],
-				["hash-2", 0, 0],
+				["hash-1", 0, 0, InputMethod.pointer],
+				["hash-2", 0, 0, InputMethod.pointer],
 			],
 		});
 		expect(overlays().map((o: HTMLElement) => o.style.visibility)).toEqual([
@@ -252,7 +260,7 @@ describe("selection", () => {
 	});
 
 	test("ignores a selection naming an image that is not on screen", () => {
-		render({ solution: [["hash-missing", 0, 0]] });
+		render({ solution: [["hash-missing", 0, 0, InputMethod.pointer]] });
 		expect(overlays().map((o: HTMLElement) => o.style.visibility)).toEqual([
 			"hidden",
 			"hidden",
@@ -267,7 +275,10 @@ describe("selection", () => {
 		widget = mountCaptchaWidget(mounted.container, first);
 		const before = tiles();
 
-		widget.update({ ...first, solution: [["hash-1", 0, 0]] });
+		widget.update({
+			...first,
+			solution: [["hash-1", 0, 0, InputMethod.pointer]],
+		});
 
 		expect(tiles()[0]).toBe(before[0]);
 		expect(tiles()[1]).toBe(before[1]);
@@ -330,8 +341,32 @@ describe("reaching the tiles without a mouse", () => {
 		fire(clickable(0), "keydown", { key: "Enter" });
 		fire(clickable(1), "keydown", { key: " " });
 
-		expect(onClick).toHaveBeenNthCalledWith(1, "hash-1", 0, 0);
-		expect(onClick).toHaveBeenNthCalledWith(2, "hash-2", 0, 0);
+		expect(onClick).toHaveBeenNthCalledWith(
+			1,
+			"hash-1",
+			0,
+			0,
+			InputMethod.keyboard,
+		);
+		expect(onClick).toHaveBeenNthCalledWith(
+			2,
+			"hash-2",
+			0,
+			0,
+			InputMethod.keyboard,
+		);
+	});
+
+	test("reports the click a button fires for Enter as keyboard, at (0, 0)", () => {
+		render();
+		fire(clickable(0), "click", { detail: 0 });
+		expect(onClick).toHaveBeenCalledWith("hash-1", 0, 0, InputMethod.keyboard);
+	});
+
+	test("drops any position a keyboard-activated click carries", () => {
+		render();
+		fire(clickable(0), "click", { detail: 0, clientX: 40, clientY: 50 });
+		expect(onClick).toHaveBeenCalledWith("hash-1", 0, 0, InputMethod.keyboard);
 	});
 
 	test("an unpicked tile says so", () => {
@@ -340,7 +375,7 @@ describe("reaching the tiles without a mouse", () => {
 	});
 
 	test("a picked tile says so, rather than only looking picked", () => {
-		render({ solution: [["hash-2", 1, 2]] });
+		render({ solution: [["hash-2", 1, 2, InputMethod.pointer]] });
 		expect(clickable(0).getAttribute("aria-pressed")).toBe("false");
 		expect(clickable(1).getAttribute("aria-pressed")).toBe("true");
 	});
@@ -356,13 +391,13 @@ describe("clicking an image", () => {
 	test("reports the hash and where the user clicked", () => {
 		render();
 		fire(clickable(0), "click", { clientX: 12, clientY: 34 });
-		expect(onClick).toHaveBeenCalledWith("hash-1", 12, 34);
+		expect(onClick).toHaveBeenCalledWith("hash-1", 12, 34, InputMethod.pointer);
 	});
 
 	test("reports the second image by its own hash", () => {
 		render();
 		fire(clickable(1), "click", { clientX: 1, clientY: 2 });
-		expect(onClick).toHaveBeenCalledWith("hash-2", 1, 2);
+		expect(onClick).toHaveBeenCalledWith("hash-2", 1, 2, InputMethod.pointer);
 	});
 
 	test("ignores a synthetic click", () => {
@@ -372,10 +407,10 @@ describe("clicking an image", () => {
 		expect(onClick).not.toHaveBeenCalled();
 	});
 
-	test("reports a click at the origin as (0, 0)", () => {
+	test("reports a pointer click at the origin as a pointer click", () => {
 		render();
 		fire(clickable(0), "click");
-		expect(onClick).toHaveBeenCalledWith("hash-1", 0, 0);
+		expect(onClick).toHaveBeenCalledWith("hash-1", 0, 0, InputMethod.pointer);
 	});
 
 	test("reports every click, so a second one can deselect", () => {
@@ -391,7 +426,7 @@ describe("clicking an image", () => {
 		const image = tiles()[0];
 		if (!image) throw new Error("expected an image");
 		fire(image, "click", { clientX: 3, clientY: 4 });
-		expect(onClick).toHaveBeenCalledWith("hash-1", 3, 4);
+		expect(onClick).toHaveBeenCalledWith("hash-1", 3, 4, InputMethod.pointer);
 	});
 
 	test("a destroyed grid stops reporting clicks", () => {

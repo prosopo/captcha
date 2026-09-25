@@ -36,6 +36,7 @@ import {
 	type CaptchaSolution,
 	CaptchaType,
 	type FrictionlessState,
+	InputMethod,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	type ProcaptchaClientConfigOutput,
@@ -91,6 +92,7 @@ export function Manager(
 
 	let checkboxClickX = 0;
 	let checkboxClickY = 0;
+	let checkboxInputMethod = InputMethod.pointer;
 	// URL of the provider used on the previous attempt. On a retry we exclude it
 	// from the candidate pool so the fallback lands on a different provider.
 	let previousProviderUrl: string | undefined;
@@ -127,9 +129,14 @@ export function Manager(
 	/**
 	 * Called on start of user verification. This is when the user ticks the box to claim they are human.
 	 */
-	const start = async (checkboxX = 0, checkboxY = 0) => {
+	const start = async (
+		checkboxX = 0,
+		checkboxY = 0,
+		inputMethod: InputMethod = InputMethod.pointer,
+	) => {
 		checkboxClickX = checkboxX;
 		checkboxClickY = checkboxY;
+		checkboxInputMethod = inputMethod;
 		events.onOpen();
 		await providerRetry(
 			async () => {
@@ -300,10 +307,17 @@ export function Manager(
 					(captcha, index) => {
 						const solution = at(state.solutions, index);
 						const shapeCoords = solution.flatMap(([_, x, y]) => [x, y]);
+						const shapeInputMethods = solution.map(
+							([, , , inputMethod]) => inputMethod,
+						);
 						const coords =
 							index === 0
 								? [checkboxClickX, checkboxClickY, ...shapeCoords]
 								: shapeCoords;
+						const inputMethods =
+							index === 0
+								? [checkboxInputMethod, ...shapeInputMethods]
+								: shapeInputMethods;
 						const salt = randomAsHex(
 							coords
 								.map((x) => x.toString(16).length + 4)
@@ -316,6 +330,7 @@ export function Manager(
 							captchaContentId: captcha.captchaContentId,
 							salt: saltCoord,
 							solution: solution.flatMap((s) => s[0]),
+							inputMethods,
 						};
 					},
 				);
@@ -476,7 +491,7 @@ export function Manager(
 			// start the captcha process again unless we need a new session,
 			// keeping the checkbox click position so the replacement solution
 			// still carries the real entry point rather than (0, 0)
-			await start(checkboxClickX, checkboxClickY);
+			await start(checkboxClickX, checkboxClickY, checkboxInputMethod);
 		}
 	};
 
@@ -485,8 +500,14 @@ export function Manager(
 	 * @param hash the hash of the image
 	 * @param x
 	 * @param y
+	 * @param inputMethod how the image was selected; pointer when not given
 	 */
-	const select = (hash: string, x?: number, y?: number) => {
+	const select = (
+		hash: string,
+		x?: number,
+		y?: number,
+		inputMethod: InputMethod = InputMethod.pointer,
+	) => {
 		if (!state.challenge) {
 			throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
 				context: { error: "Cannot select, no Captcha found in state" },
@@ -508,7 +529,7 @@ export function Manager(
 			solutions[index] = newSolution;
 		} else {
 			// add the hash to the solution
-			solutions[index] = [...solution, [hash, x || 0, y || 0]];
+			solutions[index] = [...solution, [hash, x || 0, y || 0, inputMethod]];
 		}
 		updateState({ solutions });
 	};

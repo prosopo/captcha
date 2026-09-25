@@ -20,6 +20,7 @@ import {
 	CaptchaStates,
 	CaptchasSchema,
 	DataSchema,
+	InputMethod,
 	LabelledDataSchema,
 	POW_SEPARATOR,
 	PowChallengeIdSchema,
@@ -226,6 +227,28 @@ describe("CaptchaSolutionSchema", () => {
 		expect(
 			CaptchaSolutionSchema.safeParse({ ...solution, salt: "" }).success,
 		).toBe(true);
+	});
+
+	it("accepts how each selection was made", () => {
+		const declared = {
+			...solution,
+			inputMethods: [InputMethod.keyboard, InputMethod.pointer],
+		};
+		expect(CaptchaSolutionSchema.parse(declared).inputMethods).toEqual([
+			InputMethod.keyboard,
+			InputMethod.pointer,
+		]);
+	});
+
+	it("rejects an input method it does not know", () => {
+		expect(
+			CaptchaSolutionSchema.safeParse({ ...solution, inputMethods: ["voice"] })
+				.success,
+		).toBe(false);
+	});
+
+	it("leaves the input methods out when the widget does not send them", () => {
+		expect(CaptchaSolutionSchema.parse(solution).inputMethods).toBeUndefined();
 	});
 
 	it("validates an array of solutions, including an empty one", () => {

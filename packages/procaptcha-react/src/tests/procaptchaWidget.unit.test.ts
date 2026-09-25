@@ -15,6 +15,7 @@
 import type { Ti18n } from "@prosopo/locale";
 import type { Manager as ManagerType } from "@prosopo/procaptcha";
 import {
+	InputMethod,
 	ModeEnum,
 	type ProcaptchaProps,
 	type ProcaptchaState,
@@ -256,7 +257,20 @@ describe("clicking the checkbox", () => {
 	test("starts the challenge where the user clicked", () => {
 		render();
 		fire(checkbox(), "click", { clientX: 11, clientY: 22 });
-		expect(start).toHaveBeenCalledWith(11, 22);
+		expect(start).toHaveBeenCalledWith(11, 22, InputMethod.pointer);
+	});
+
+	test("starts from Enter as a keyboard activation at (0, 0)", () => {
+		render();
+		fire(checkbox(), "keydown", { key: "Enter" });
+		expect(start).toHaveBeenCalledWith(0, 0, InputMethod.keyboard);
+	});
+
+	test("starts from Space as a keyboard activation at (0, 0)", () => {
+		// Space toggles a checkbox through a click whose press count is 0.
+		render();
+		fire(checkbox(), "click", { detail: 0 });
+		expect(start).toHaveBeenCalledWith(0, 0, InputMethod.keyboard);
 	});
 
 	test("ignores a synthetic click", () => {
@@ -386,7 +400,7 @@ describe("the challenge", () => {
 		const image = document.querySelector(`${SURFACE_SELECTOR} img`);
 		if (!image) throw new Error("expected a captcha image");
 		fire(image, "click", { clientX: 3, clientY: 4 });
-		expect(select).toHaveBeenCalledWith("hash-1", 3, 4);
+		expect(select).toHaveBeenCalledWith("hash-1", 3, 4, InputMethod.pointer);
 	});
 
 	test("wires cancel to the manager", async () => {
@@ -625,7 +639,7 @@ describe("the manager itself", () => {
 		await setState({ isHuman: true });
 		expect(managerArgs).toHaveLength(1);
 		fire(checkbox(), "click", { clientX: 9, clientY: 9 });
-		expect(start).toHaveBeenCalledWith(9, 9);
+		expect(start).toHaveBeenCalledWith(9, 9, InputMethod.pointer);
 	});
 
 	test("is given the frictionless state so it can reuse the session", () => {

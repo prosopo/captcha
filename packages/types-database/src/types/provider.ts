@@ -49,6 +49,7 @@ import {
 	type Hash,
 	type IPInfoResponse,
 	type IUserData,
+	InputMethod,
 	type Item,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
@@ -544,6 +545,11 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		required: false,
 	},
 	coords: { type: [[[Number]]], required: false },
+	inputMethods: {
+		type: [[{ type: String, enum: Object.values(InputMethod) }]],
+		required: false,
+		default: undefined,
+	},
 	// Pending request fields for image captcha workflow
 	pending: { type: Boolean, required: true },
 	salt: { type: String, required: true },
