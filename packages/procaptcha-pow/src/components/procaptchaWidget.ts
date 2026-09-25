@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createTranslator, loadI18next } from "@prosopo/locale";
+import {
+	createTranslator,
+	loadI18next,
+	localiseErrorMessage,
+} from "@prosopo/locale";
 import {
 	type CheckboxProps,
 	type Component,
@@ -149,7 +153,9 @@ export const mountProcaptchaPowWidget = (
 		checked: store.state.isHuman,
 		theme: "light" === config.theme ? lightTheme : darkTheme,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",
-		error: store.state.error?.message,
+		error: store.state.error
+			? localiseErrorMessage(translator.i18n, store.state.error)
+			: undefined,
 		loadingText: translator.t("WIDGET.CHECKING", {
 			defaultValue: "Checking that you are human",
 		}),
