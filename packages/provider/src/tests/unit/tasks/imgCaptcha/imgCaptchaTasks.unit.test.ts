@@ -571,6 +571,79 @@ describe("ImgCaptchaManager", () => {
 		});
 	});
 
+	describe("dappUserSolution — passed challenge", () => {
+		it("builds each captcha's proof from its solution leaf, not its captcha id", async () => {
+			const captchas = [
+				{ captchaId: "captcha1", solution: ["a"], salt: "0x00" },
+				{ captchaId: "captcha2", solution: ["b"], salt: "0x00" },
+			] as unknown as CaptchaSolution[];
+			const timestamp = Date.now();
+
+			vi.mocked(signatureVerify).mockReturnValue({
+				crypto: "sr25519",
+				isValid: true,
+				isWrapped: false,
+				publicKey: new Uint8Array(),
+			});
+			const pendingRecord = {
+				requestHash: "requestHash",
+				salt: "0x00",
+				threshold: 0.8,
+				deadlineTimestamp: new Date(timestamp + 10_000),
+			} as unknown as PendingImageCaptchaRequest;
+			vi.mocked(db.getPendingImageCommitment).mockResolvedValue(pendingRecord);
+			vi.spyOn(
+				imgCaptchaManager,
+				"validateDappUserSolutionRequestIsPending",
+			).mockResolvedValue(true);
+			vi.spyOn(
+				imgCaptchaManager,
+				"validateReceivedCaptchasAgainstStoredCaptchas",
+			).mockResolvedValue({
+				storedCaptchas: [
+					{ captchaId: "captcha1", datasetId: "datasetId", items: [{}, {}] },
+					{ captchaId: "captcha2", datasetId: "datasetId", items: [{}, {}] },
+				] as unknown as Captcha[],
+				receivedCaptchas: captchas,
+				captchaIds: ["captcha1", "captcha2"],
+			});
+
+			const proof = vi.fn((leaf: string): string[][] => [[leaf], ["root"]]);
+			vi.mocked(buildTreeAndGetCommitmentId).mockReturnValue({
+				tree: {
+					leaves: [{ hash: "leaf1" }, { hash: "leaf2" }],
+					proof,
+				},
+				commitmentId: "commitmentId",
+			} as unknown as ReturnType<typeof buildTreeAndGetCommitmentId>);
+			vi.mocked(db.getSolutionByCaptchaId).mockResolvedValue({
+				captchaId: "captcha1",
+				solution: ["a"],
+			} as unknown as Awaited<ReturnType<typeof db.getSolutionByCaptchaId>>);
+			vi.mocked(compareCaptchaSolutions).mockReturnValue(true);
+
+			const result = await imgCaptchaManager.dappUserSolution(
+				"userAccount",
+				"dappAccount",
+				"requestHash",
+				captchas,
+				"userTimestampSignature",
+				timestamp,
+				"providerRequestHashSignature",
+				getIPAddress("1.1.1.1"),
+				{ a: "1" },
+				"ja4",
+			);
+
+			expect(result.verified).toBe(true);
+			expect(proof.mock.calls).toEqual([["leaf1"], ["leaf2"]]);
+			expect(result.captchas).toEqual([
+				{ captchaId: "captcha1", proof: [["leaf1"], ["root"]] },
+				{ captchaId: "captcha2", proof: [["leaf2"], ["root"]] },
+			]);
+		});
+	});
+
 	it("should get dapp user commitment by ID", async () => {
 		const commitmentId = "commitmentId";
 		const dappUserCommitment: Partial<UserCommitment> = {
