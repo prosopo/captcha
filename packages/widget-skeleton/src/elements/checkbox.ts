@@ -121,8 +121,7 @@ ${names.wrappers
 
 .${names.spinner} {
     margin-top: 0;
-    margin-left: 15px !important;
-    margin-right: 15px !important;
+    margin-inline: 15px !important;
     width: 28px !important;
     height: 28px !important;
     border: 4px solid ${theme.palette.border};

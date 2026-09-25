@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { loadI18next } from "@prosopo/locale";
+import { getLanguageDirection, loadI18next } from "@prosopo/locale";
 import type { Ti18n } from "@prosopo/locale";
 import {
 	getDefaultCallbacks,
@@ -117,6 +117,8 @@ class WidgetFactory {
 		// API don't delay the initial widget creation.
 
 		const captchaRenderer = await this.getCaptchaRenderer(language);
+
+		widgetContainer.dir = getLanguageDirection(language ?? this.i18n.language);
 
 		const captchaRoot = captchaRenderer.renderCaptcha(
 			widgetInteractiveArea,

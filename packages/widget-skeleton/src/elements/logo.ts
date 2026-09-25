@@ -31,7 +31,6 @@ const LOGO_STYLES = `
 <style>
 .prosopo-logo-container {
     display: flex !important;
-    margin-left: auto !important;
     width: auto !important;
     flex-shrink: 0 !important;
     align-items: center !important;
