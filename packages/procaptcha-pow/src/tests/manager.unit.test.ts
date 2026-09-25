@@ -20,6 +20,7 @@ import {
 	CaptchaType,
 	type ClickEventPoint,
 	type ClientMetaData,
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	type EnvironmentTypes,
 	type FrictionlessState,
 	type GetPowCaptchaResponse,
@@ -201,6 +202,7 @@ interface Harness {
 		onHuman: Mock<(token: string) => void>;
 		onFailed: Mock<() => void>;
 		onExpired: Mock<() => void>;
+		onChallengeExpired: Mock<() => void>;
 		onReset: Mock<() => void>;
 	};
 	onEscalate: Mock<ProcaptchaEscalationHandler>;
@@ -229,6 +231,7 @@ const build = (options: HarnessOptions = {}): Harness => {
 		onHuman: vi.fn<(token: string) => void>(),
 		onFailed: vi.fn<() => void>(),
 		onExpired: vi.fn<() => void>(),
+		onChallengeExpired: vi.fn<() => void>(),
 		onReset: vi.fn<() => void>(),
 	};
 	const restart = vi.fn<() => void>();
@@ -275,6 +278,16 @@ const submitArgs = (
 	const call = mocks.submitPowCaptchaSolution.mock.calls[callIndex];
 	if (!call) throw new Error("expected a solution to have been submitted");
 	return call;
+};
+
+/** Makes the proof-of-work solve take `solveTime` ms on a stubbed clock. */
+const slowSolve = (solveTime: number) => {
+	let clock = 1_700_000_000_000;
+	mocks.solvePoW.mockImplementation(async (): Promise<number> => {
+		clock += solveTime;
+		return 42;
+	});
+	return vi.spyOn(Date, "now").mockImplementation((): number => clock);
 };
 
 const signRaw = signRawMock;
@@ -915,6 +928,36 @@ describe("start: what the provider decides", () => {
 		expect(lastUpdate(harness, "loading")).toBe(false);
 		expect(harness.restart).toHaveBeenCalledTimes(1);
 		expect(harness.events.onHuman).not.toHaveBeenCalled();
+	});
+
+	test("a solution rejected after a solve slower than the solution window reports an expired challenge", async () => {
+		const harness = build();
+		const solveTime = DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT;
+		const now = slowSolve(solveTime);
+		mocks.submitPowCaptchaSolution.mockResolvedValue(
+			solutionResponse({ verified: false }),
+		);
+		await harness.manager.start();
+		now.mockRestore();
+		expect(harness.events.onChallengeExpired).toHaveBeenCalledTimes(1);
+		expect(harness.events.onFailed).not.toHaveBeenCalled();
+		expect(lastUpdate(harness, "isHuman")).toBe(false);
+		expect(lastUpdate(harness, "loading")).toBe(false);
+		expect(lastUpdate(harness, "error")).toBeUndefined();
+		expect(harness.restart).toHaveBeenCalledTimes(1);
+	});
+
+	test("a solution rejected within the solution window still fails the user", async () => {
+		const harness = build();
+		const solveTime = DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT - 1;
+		const now = slowSolve(solveTime);
+		mocks.submitPowCaptchaSolution.mockResolvedValue(
+			solutionResponse({ verified: false }),
+		);
+		await harness.manager.start();
+		now.mockRestore();
+		expect(harness.events.onFailed).toHaveBeenCalledTimes(1);
+		expect(harness.events.onChallengeExpired).not.toHaveBeenCalled();
 	});
 
 	test("an escalation hands over without declaring success or failure", async () => {
