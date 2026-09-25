@@ -34,6 +34,7 @@ import {
 	type Account,
 	ApiParams,
 	CaptchaType,
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
@@ -93,6 +94,19 @@ export const Manager = (
 			loading: false,
 		});
 		events.onFailed();
+		resetState(frictionlessState?.restart);
+	};
+
+	// The provider rejects a solution submitted after its solution window
+	// without saying why, and a slow phone can take longer than that to solve.
+	// Report it as an expired challenge rather than a failed one, and reset so
+	// the user can tick the box again for a fresh challenge.
+	const onSolutionExpired = () => {
+		updateState({
+			isHuman: false,
+			loading: false,
+		});
+		events.onChallengeExpired();
 		resetState(frictionlessState?.restart);
 	};
 
@@ -254,6 +268,7 @@ export const Manager = (
 				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
 					? await frictionlessState.getSimdReadings(0)
 					: undefined;
+				const challengeRequestedAt = Date.now();
 				const challenge = await providerApi.getPowCaptchaChallenge(
 					userAccount,
 					getDappAccount(),
@@ -435,6 +450,11 @@ export const Manager = (
 							}),
 						);
 						setValidChallengeTimeout();
+					} else if (
+						Date.now() - challengeRequestedAt >=
+						DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT
+					) {
+						onSolutionExpired();
 					} else {
 						onFailed();
 					}
