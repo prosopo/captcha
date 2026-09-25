@@ -49,6 +49,7 @@ import { getVerdictCache } from "./blacklistRequestInspector.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
 import { startCpuProfiler } from "./cpuProfiler.js";
+import { detectorPoolBodyParser } from "./detectorPoolBodyParser.js";
 import { domainMiddleware } from "./domainMiddleware.js";
 import { handshakeTimingMiddleware } from "./handshakeTimingMiddleware.js";
 import { headerCheckMiddleware } from "./headerCheckMiddleware.js";
@@ -281,9 +282,12 @@ export async function startProviderApi(
 	// express.json buffers the body into a single string before JSON.parse, and
 	// V8 caps strings at 512 MiB (~620 bundles), with the parse itself needing
 	// roughly the same again in heap on top of the raw body.
+	//
+	// Only requests with a valid admin JWT get the large limit: this runs ahead
+	// of the auth middleware and rate limits.
 	apiApp.use(
 		AdminApiPaths.ReplaceDetectorPool,
-		express.json({ limit: DETECTOR_POOL_BODY_LIMIT }),
+		detectorPoolBodyParser(DETECTOR_POOL_BODY_LIMIT, env.pair, env.authAccount),
 	);
 	// Coarse request body-size backstop. Generous enough for legitimate
 	// payloads (captcha solutions, behavioural/simd readings, DNS event
