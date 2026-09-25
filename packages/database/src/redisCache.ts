@@ -31,6 +31,15 @@ const bigIntReviver = (_key: string, value: unknown): unknown =>
 		? BigInt(value.slice(BIGINT_TAG.length))
 		: value;
 
+const SESSION_PATCH_MAX_ATTEMPTS = 5;
+
+/** SET KEYS[1] to ARGV[2] with EX ARGV[3] only if it still holds ARGV[1]. */
+const COMPARE_AND_SET_SCRIPT = `
+if redis.call("GET", KEYS[1]) ~= ARGV[1] then return 0 end
+redis.call("SET", KEYS[1], ARGV[2], "EX", ARGV[3])
+return 1
+`;
+
 const SESSION_KEY_PATTERNS = [
 	"cache:session:*",
 	"cache:detector:*",
@@ -161,21 +170,21 @@ export class RedisWriteQueue {
 		updates: Record<string, unknown>,
 		ttlSeconds = 86400,
 	): Promise<boolean> {
-		const existing = await this.getCachedSession(sessionId);
-		if (!existing) return false;
-		return this.cacheSession(
+		return this.compareAndSetCachedSession(
 			sessionId,
-			{ ...existing, ...updates, lastUpdatedTimestamp: new Date() },
 			ttlSeconds,
+			(existing) => ({
+				...existing,
+				...updates,
+				lastUpdatedTimestamp: new Date(),
+			}),
 		);
 	}
 
 	/**
 	 * First-hop-wins SIMD attach on the cache — mirrors the atomic Mongo
 	 * `$ifNull` pipeline update in `db.recordSessionSimdReadingsIfAbsent`.
-	 * Reads the cache; if it doesn't already carry `simdReadings`, merges
-	 * the new readings + stage. No-op on cache miss or when readings are
-	 * already present.
+	 * No-op on cache miss or when readings are already present.
 	 */
 	async patchCachedSimdReadingsIfAbsent(
 		sessionId: string,
@@ -183,19 +192,69 @@ export class RedisWriteQueue {
 		stage: string,
 		ttlSeconds = 86400,
 	): Promise<boolean> {
-		const existing = await this.getCachedSession(sessionId);
-		if (!existing) return false;
-		if (existing.simdReadings) return false;
-		return this.cacheSession(
-			sessionId,
-			{
-				...existing,
-				simdReadings: readings,
-				simdReadingsStage: stage,
-				lastUpdatedTimestamp: new Date(),
-			},
-			ttlSeconds,
+		return this.compareAndSetCachedSession(sessionId, ttlSeconds, (existing) =>
+			existing.simdReadings
+				? null
+				: {
+						...existing,
+						simdReadings: readings,
+						simdReadingsStage: stage,
+						lastUpdatedTimestamp: new Date(),
+					},
 		);
+	}
+
+	/**
+	 * Read-modify-write of a cached session that only lands if the entry is
+	 * unchanged since it was read. A plain GET then SET would recreate a
+	 * session invalidated in between (with a fresh TTL) and drop fields written
+	 * by a concurrent patch. On a conflict the patch is recomputed from the
+	 * new value; a vanished entry ends the patch.
+	 */
+	private async compareAndSetCachedSession(
+		sessionId: string,
+		ttlSeconds: number,
+		patch: (
+			existing: Record<string, unknown>,
+		) => Record<string, unknown> | null,
+	): Promise<boolean> {
+		const client = await this.getClient();
+		if (!client) {
+			return false;
+		}
+
+		const key = `cache:session:${sessionId}`;
+		try {
+			for (let attempt = 0; attempt < SESSION_PATCH_MAX_ATTEMPTS; attempt++) {
+				const current = await client.get(key);
+				if (!current) return false;
+				const next = patch(
+					JSON.parse(current, bigIntReviver) as Record<string, unknown>,
+				);
+				if (!next) return false;
+				const written = await client.eval(COMPARE_AND_SET_SCRIPT, {
+					keys: [key],
+					arguments: [
+						current,
+						JSON.stringify(next, bigIntReplacer),
+						String(ttlSeconds),
+					],
+				});
+				if (written === 1) return true;
+			}
+			this.logger.warn(() => ({
+				msg: "Gave up patching cached session after repeated conflicts",
+				sessionId,
+			}));
+			return false;
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to patch cached session in Redis",
+				err: error,
+				sessionId,
+			}));
+			return false;
+		}
 	}
 
 	/**
