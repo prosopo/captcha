@@ -1796,6 +1796,27 @@ export class ProviderDatabase
 		}
 	}
 
+	async claimSessionServerCheck(sessionId: string): Promise<boolean> {
+		try {
+			const result = await this.tables.session.updateOne(
+				{ sessionId, serverChecked: { $ne: true } },
+				{
+					$set: {
+						serverChecked: true,
+						lastUpdatedTimestamp: new Date(),
+						pendingStage: true,
+					},
+				},
+			);
+			return result.modifiedCount > 0;
+		} catch (err) {
+			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
+				context: { error: err, sessionId },
+				logger: this.logger,
+			});
+		}
+	}
+
 	/**
 	 * Update a session record by sessionId. Pure Mongo write — callers in
 	 * the provider package are responsible for refreshing the Redis cache

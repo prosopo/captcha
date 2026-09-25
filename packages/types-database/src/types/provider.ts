@@ -1420,6 +1420,13 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<void>;
 
 	/**
+	 * Marks a session server-checked only if it is not already. Resolves true
+	 * for the single caller that performed the flip, so concurrent verifies of
+	 * one token cannot all succeed.
+	 */
+	claimSessionServerCheck(sessionId: string): Promise<boolean>;
+
+	/**
 	 * Record SIMD CPU fingerprint readings on the session — first hop wins.
 	 * Atomically sets both `simdReadings` and `simdReadingsStage` only when
 	 * the session does not already carry readings, so re-attaches on later
