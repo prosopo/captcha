@@ -27,6 +27,7 @@ import type { ZodType } from "zod";
 import type * as barrel from "../index.js";
 import {
 	type ApiExpressEndpointAdapter,
+	type AuthMiddlewareOptions,
 	apiExpressRouterFactory,
 	authMiddleware,
 	createApiExpressDefaultEndpointAdapter,
@@ -48,6 +49,7 @@ describe("the barrel's shape", () => {
 			| "createApiExpressDefaultEndpointAdapter"
 			| "handleErrors"
 			| "authMiddleware"
+			| "createMemoryJwtReplayGuard"
 			| "verifySignature"
 			| "requestLoggerMiddleware"
 		>();
@@ -123,9 +125,13 @@ describe("the endpoint adapter interface", () => {
 });
 
 describe("the middleware", () => {
-	test("authMiddleware takes an optional pair and an optional auth account", () => {
+	test("authMiddleware takes an optional pair, auth account and options", () => {
 		expectTypeOf(authMiddleware).parameters.toEqualTypeOf<
-			[pair: KeyringPair | undefined, authAccount?: KeyringPair | undefined]
+			[
+				pair: KeyringPair | undefined,
+				authAccount?: KeyringPair | undefined,
+				options?: AuthMiddlewareOptions,
+			]
 		>();
 	});
 
