@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Invalid nga lagda",
 		"SITE_KEY_MISSING": "Nanginahanglan og SITE KEY",
 		"ACCOUNT_NOT_FOUND": "Account dili makita",
-		"INVALID_TIMESTAMP": "Invalid nga timestamp"
+		"INVALID_TIMESTAMP": "Invalid nga timestamp",
+		"MISSING_AUTH_HEADER": "ഓതറൈസേഷൻ ഹെഡർ ഇല്ല",
+		"INVALID_JWT": "അസാധുവായ JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Insufficientway ermissionspay otay erformpay histay actionway",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "ഈ സൈറ്റിന് മൊബൈൽ നെറ്റ്വർക്ക് കണക്ഷനുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
 		"SATELLITE_BLOCKED": "ഈ സൈറ്റിന് ഉപഗ്രഹ കണക്ഷനുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
 		"CRAWLER_BLOCKED": "ഈ സൈറ്റിന് അറിയപ്പെടുന്ന ക്രോളറുകളിൽ നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
-		"DISALLOWED_WEBVIEW": "ഈ സൈറ്റിന് ഇൻ-ആപ്പ് ബ്രൗസറുകളിൽ (WebView) നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല"
+		"DISALLOWED_WEBVIEW": "ഈ സൈറ്റിന് ഇൻ-ആപ്പ് ബ്രൗസറുകളിൽ (WebView) നിന്നുള്ള അഭ്യർത്ഥനകൾ അനുവദനീയമല്ല",
+		"INTERNAL_SERVER_ERROR": "ആന്തരിക സെർവർ പിശക്"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Annotcay odifymay ownerway seruy",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "Mga lamesa way butang",
 		"CONNECTION_UNDEFINED": "Koneksiyon wala pa nahimutang",
 		"COMMITMENT_FLAG_FAILED": "Nahimong pakyas ang pag-flag sa commitment nga giproseso",
-		"UNKNOWN": "Sayop sa dili masayod na database"
+		"UNKNOWN": "Sayop sa dili masayod na database",
+		"QUERY_ERROR": "ഡാറ്റാബേസ് ക്വറി പരാജയപ്പെട്ടു",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "ആക്സസ് നിയമങ്ങളുടെ Redis കണക്ഷൻ നിർവചിച്ചിട്ടില്ല",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "ഉപയോക്തൃ ആക്സസ് നിയമങ്ങളുടെ സംഭരണം നിർവചിച്ചിട്ടില്ല",
+		"SESSION_STORE_FAILED": "സെഷൻ സംഭരിക്കാൻ കഴിഞ്ഞില്ല",
+		"SESSION_CHECK_REMOVE_FAILED": "സെഷൻ പരിശോധിച്ച് നീക്കം ചെയ്യാൻ കഴിഞ്ഞില്ല",
+		"SESSION_GET_FAILED": "സെഷൻ ലഭിക്കുന്നതിൽ പരാജയപ്പെട്ടു"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Sayop sa pag-parse sa captcha",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "അസാധുവായ സാൾട്ട്",
 		"INVALID_TOKEN": "Hindi wastong token",
 		"INVALID_SOLUTION": "Hindi wastong solusyon",
-		"DECRYPTION_ERROR": "Error sa pagdedecrypt"
+		"DECRYPTION_ERROR": "Error sa pagdedecrypt",
+		"SOLUTION_NOT_FOUND": "പരിഹാരം കണ്ടെത്തിയില്ല",
+		"DECISION_MACHINE_DENIED": "തീരുമാന യന്ത്രം നിരസിച്ചു",
+		"INVALID_TIMESTAMP": "Invalid nga timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Hindi wastong parameter"

@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Tanda tangan tidak valid",
 		"SITE_KEY_MISSING": "SITE KEY hilang",
 		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
-		"INVALID_TIMESTAMP": "Timestamp tidak valid"
+		"INVALID_TIMESTAMP": "Timestamp tidak valid",
+		"MISSING_AUTH_HEADER": "Header otorisasi tidak ada",
+		"INVALID_JWT": "JWT tidak valid"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Insufficient permissions to perform this action",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Permintaan dari koneksi jaringan seluler tidak diizinkan untuk situs ini",
 		"SATELLITE_BLOCKED": "Permintaan dari koneksi satelit tidak diizinkan untuk situs ini",
 		"CRAWLER_BLOCKED": "Permintaan dari crawler yang dikenal tidak diizinkan untuk situs ini",
-		"DISALLOWED_WEBVIEW": "Permintaan dari peramban dalam aplikasi (WebView) tidak diizinkan untuk situs ini"
+		"DISALLOWED_WEBVIEW": "Permintaan dari peramban dalam aplikasi (WebView) tidak diizinkan untuk situs ini",
+		"INTERNAL_SERVER_ERROR": "Kesalahan server internal"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "Tabel tidak ditentukan",
 		"CONNECTION_UNDEFINED": "Koneksi tidak ditentukan",
 		"COMMITMENT_FLAG_FAILED": "Gagal menandai komitmen sebagai diproses",
-		"UNKNOWN": "Kesalahan database tidak dikenal"
+		"UNKNOWN": "Kesalahan database tidak dikenal",
+		"QUERY_ERROR": "Kueri basis data gagal",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Koneksi Redis aturan akses tidak ditentukan",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Penyimpanan aturan akses pengguna tidak ditentukan",
+		"SESSION_STORE_FAILED": "Gagal menyimpan sesi",
+		"SESSION_CHECK_REMOVE_FAILED": "Gagal memeriksa dan menghapus sesi",
+		"SESSION_GET_FAILED": "Gagal mengambil sesi"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Kesalahan parsing captcha",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "Salt tidak valid",
 		"INVALID_TOKEN": "Invalid token",
 		"INVALID_SOLUTION": "Invalid solution",
-		"DECRYPTION_ERROR": "Error decrypting"
+		"DECRYPTION_ERROR": "Error decrypting",
+		"SOLUTION_NOT_FOUND": "Solusi tidak ditemukan",
+		"DECISION_MACHINE_DENIED": "Ditolak oleh mesin keputusan",
+		"INVALID_TIMESTAMP": "Timestamp tidak valid"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Invalid parameter"

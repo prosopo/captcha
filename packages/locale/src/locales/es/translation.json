@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Firma inválida",
 		"SITE_KEY_MISSING": "Falta la CLAVE DEL SITIO",
 		"ACCOUNT_NOT_FOUND": "Cuenta no encontrada",
-		"INVALID_TIMESTAMP": "Marca de tiempo inválida"
+		"INVALID_TIMESTAMP": "Marca de tiempo inválida",
+		"MISSING_AUTH_HEADER": "Falta el encabezado de autorización",
+		"INVALID_JWT": "JWT no válido"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Permisos insuficientes para realizar esta acción",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Las solicitudes desde redes móviles no están permitidas para este sitio",
 		"SATELLITE_BLOCKED": "Las solicitudes desde conexiones satelitales no están permitidas para este sitio",
 		"CRAWLER_BLOCKED": "Las solicitudes desde rastreadores conocidos no están permitidas para este sitio",
-		"DISALLOWED_WEBVIEW": "No se permiten solicitudes desde navegadores integrados en aplicaciones (WebView) para este sitio"
+		"DISALLOWED_WEBVIEW": "No se permiten solicitudes desde navegadores integrados en aplicaciones (WebView) para este sitio",
+		"INTERNAL_SERVER_ERROR": "Error interno del servidor"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "No se puede modificar el usuario propietario",
@@ -137,7 +140,13 @@
 		"TABLES_UNDEFINED": "Tablas indefinidas",
 		"CONNECTION_UNDEFINED": "Conexión indefinida",
 		"COMMITMENT_FLAG_FAILED": "Error al marcar el compromiso como procesado",
-		"UNKNOWN": "Error desconocido de base de datos"
+		"UNKNOWN": "Error desconocido de base de datos",
+		"QUERY_ERROR": "La consulta a la base de datos falló",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Conexión de Redis para reglas de acceso no definida",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Almacenamiento de reglas de acceso de usuarios no definido",
+		"SESSION_STORE_FAILED": "No se pudo guardar la sesión",
+		"SESSION_CHECK_REMOVE_FAILED": "No se pudo comprobar y eliminar la sesión",
+		"SESSION_GET_FAILED": "No se pudo obtener la sesión"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Error al analizar el captcha",
@@ -156,7 +165,10 @@
 		"INVALID_SALT": "Salt no válido",
 		"INVALID_TOKEN": "Token inválido",
 		"INVALID_SOLUTION": "Solución inválida",
-		"DECRYPTION_ERROR": "Error de descifrado"
+		"DECRYPTION_ERROR": "Error de descifrado",
+		"SOLUTION_NOT_FOUND": "Solución no encontrada",
+		"DECISION_MACHINE_DENIED": "Denegado por la máquina de decisiones",
+		"INVALID_TIMESTAMP": "Marca de tiempo inválida"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parámetro inválido"

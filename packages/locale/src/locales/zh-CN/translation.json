@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "无效的签名",
 		"SITE_KEY_MISSING": "缺少SITE KEY",
 		"ACCOUNT_NOT_FOUND": "找不到帐户",
-		"INVALID_TIMESTAMP": "无效的时间戳"
+		"INVALID_TIMESTAMP": "无效的时间戳",
+		"MISSING_AUTH_HEADER": "缺少授权标头",
+		"INVALID_JWT": "无效的 JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "权限不足，无法执行此操作",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "此网站不允许来自移动网络连接的请求",
 		"SATELLITE_BLOCKED": "此网站不允许来自卫星连接的请求",
 		"CRAWLER_BLOCKED": "此网站不允许来自已知爬虫的请求",
-		"DISALLOWED_WEBVIEW": "此站点不允许来自应用内浏览器 (WebView) 的请求"
+		"DISALLOWED_WEBVIEW": "此站点不允许来自应用内浏览器 (WebView) 的请求",
+		"INTERNAL_SERVER_ERROR": "服务器内部错误"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "无法修改所有者用户",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "未定义表",
 		"CONNECTION_UNDEFINED": "连接未定义",
 		"COMMITMENT_FLAG_FAILED": "标记承诺为已处理失败",
-		"UNKNOWN": "未知数据库错误"
+		"UNKNOWN": "未知数据库错误",
+		"QUERY_ERROR": "数据库查询失败",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "访问规则的 Redis 连接未定义",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "用户访问规则存储未定义",
+		"SESSION_STORE_FAILED": "存储会话失败",
+		"SESSION_CHECK_REMOVE_FAILED": "检查并移除会话失败",
+		"SESSION_GET_FAILED": "获取会话失败"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "解析验证码时出错",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "盐值无效",
 		"INVALID_TOKEN": "无效的令牌",
 		"INVALID_SOLUTION": "无效的解决方案",
-		"DECRYPTION_ERROR": "解密错误"
+		"DECRYPTION_ERROR": "解密错误",
+		"SOLUTION_NOT_FOUND": "未找到解答",
+		"DECISION_MACHINE_DENIED": "被决策机拒绝",
+		"INVALID_TIMESTAMP": "无效的时间戳"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "无效的参数"

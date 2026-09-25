@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Nieprawidłowe podpisanie",
 		"SITE_KEY_MISSING": "BRAK KLUCZA WITRY",
 		"ACCOUNT_NOT_FOUND": "Nie znaleziono konta",
-		"INVALID_TIMESTAMP": "Nieprawidłowy znacznik czasu"
+		"INVALID_TIMESTAMP": "Nieprawidłowy znacznik czasu",
+		"MISSING_AUTH_HEADER": "Brak nagłówka autoryzacji",
+		"INVALID_JWT": "Nieprawidłowy JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Niewystarczające uprawnienia do wykonania tej akcji",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Żądania z połączeń sieci komórkowych nie są dozwolone dla tej strony",
 		"SATELLITE_BLOCKED": "Żądania z połączeń satelitarnych nie są dozwolone dla tej strony",
 		"CRAWLER_BLOCKED": "Żądania od znanych robotów nie są dozwolone dla tej strony",
-		"DISALLOWED_WEBVIEW": "Żądania z przeglądarek wbudowanych w aplikacje (WebView) nie są dozwolone dla tej strony"
+		"DISALLOWED_WEBVIEW": "Żądania z przeglądarek wbudowanych w aplikacje (WebView) nie są dozwolone dla tej strony",
+		"INTERNAL_SERVER_ERROR": "Wewnętrzny błąd serwera"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nie można zmodyfikować właściciela użytkownika",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "Tabele niezdefiniowane",
 		"CONNECTION_UNDEFINED": "Połączenie niezdefiniowane",
 		"COMMITMENT_FLAG_FAILED": "Nie udało się oznaczyć zobowiązania jako przetworzone",
-		"UNKNOWN": "Nieznany błąd bazy danych"
+		"UNKNOWN": "Nieznany błąd bazy danych",
+		"QUERY_ERROR": "Zapytanie do bazy danych nie powiodło się",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Połączenie Redis dla reguł dostępu nie jest zdefiniowane",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Magazyn reguł dostępu użytkowników nie jest zdefiniowany",
+		"SESSION_STORE_FAILED": "Nie udało się zapisać sesji",
+		"SESSION_CHECK_REMOVE_FAILED": "Nie udało się sprawdzić i usunąć sesji",
+		"SESSION_GET_FAILED": "Nie udało się pobrać sesji"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Błąd parsowania captchy",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "Nieprawidłowa sól",
 		"INVALID_TOKEN": "Nieprawidłowy token",
 		"INVALID_SOLUTION": "Nieprawidłowe rozwiązanie",
-		"DECRYPTION_ERROR": "Błąd deszyfrowania"
+		"DECRYPTION_ERROR": "Błąd deszyfrowania",
+		"SOLUTION_NOT_FOUND": "Nie znaleziono rozwiązania",
+		"DECISION_MACHINE_DENIED": "Odrzucone przez maszynę decyzyjną",
+		"INVALID_TIMESTAMP": "Nieprawidłowy znacznik czasu"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Nieprawidłowy parametr"

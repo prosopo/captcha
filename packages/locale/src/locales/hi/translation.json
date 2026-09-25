@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "अवध हसतकषर",
 		"SITE_KEY_MISSING": "सइट कज गयब ह",
 		"ACCOUNT_NOT_FOUND": "खत नह मल",
-		"INVALID_TIMESTAMP": "अवध समय चहन"
+		"INVALID_TIMESTAMP": "अवध समय चहन",
+		"MISSING_AUTH_HEADER": "प्राधिकरण हेडर अनुपलब्ध है",
+		"INVALID_JWT": "अमान्य JWT"
 	},
 	"TARGET": {
 		"pelecaniformes": "पलकनफरमस",
@@ -353,7 +355,8 @@
 		"MOBILE_BLOCKED": "इस साइट के लिए मोबाइल नेटवर्क कनेक्शन से अनुरोध की अनुमति नहीं है",
 		"SATELLITE_BLOCKED": "इस साइट के लिए सैटेलाइट कनेक्शन से अनुरोध की अनुमति नहीं है",
 		"CRAWLER_BLOCKED": "इस साइट के लिए ज्ञात क्रॉलर से अनुरोध की अनुमति नहीं है",
-		"DISALLOWED_WEBVIEW": "इस साइट के लिए इन-ऐप ब्राउज़र (WebView) से अनुरोध की अनुमति नहीं है"
+		"DISALLOWED_WEBVIEW": "इस साइट के लिए इन-ऐप ब्राउज़र (WebView) से अनुरोध की अनुमति नहीं है",
+		"INTERNAL_SERVER_ERROR": "आंतरिक सर्वर त्रुटि"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "मलक उपयगकरत क सशधत नह कय ज सकत",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "टबल अनरदषट",
 		"CONNECTION_UNDEFINED": "कनकशन अनरदषट",
 		"COMMITMENT_FLAG_FAILED": "परतबदधत क परससकरण क रप म झड चढन म वफल",
-		"UNKNOWN": "अजञत डटबस तरट"
+		"UNKNOWN": "अजञत डटबस तरट",
+		"QUERY_ERROR": "डेटाबेस क्वेरी विफल रही",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "एक्सेस नियमों का Redis कनेक्शन परिभाषित नहीं है",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "उपयोगकर्ता एक्सेस नियमों का स्टोरेज परिभाषित नहीं है",
+		"SESSION_STORE_FAILED": "सत्र संग्रहीत करने में विफल",
+		"SESSION_CHECK_REMOVE_FAILED": "सत्र की जाँच करने और हटाने में विफल",
+		"SESSION_GET_FAILED": "सत्र प्राप्त करने में विफल"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "कपच क परस करन म तरट",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "अमान्य सॉल्ट",
 		"INVALID_TOKEN": "अमनय टकन",
 		"INVALID_SOLUTION": "अमनय समधन",
-		"DECRYPTION_ERROR": "डकरपशन तरट"
+		"DECRYPTION_ERROR": "डकरपशन तरट",
+		"SOLUTION_NOT_FOUND": "समाधान नहीं मिला",
+		"DECISION_MACHINE_DENIED": "निर्णय मशीन द्वारा अस्वीकृत",
+		"INVALID_TIMESTAMP": "अवध समय चहन"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "अमनय परमटर"

@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Неважећи потпис",
 		"SITE_KEY_MISSING": "Недостаје кључ сајта",
 		"ACCOUNT_NOT_FOUND": "Налог није пронађен",
-		"INVALID_TIMESTAMP": "Неважећа временска ознака"
+		"INVALID_TIMESTAMP": "Неважећа временска ознака",
+		"MISSING_AUTH_HEADER": "Недостаје заглавље за ауторизацију",
+		"INVALID_JWT": "Неважећи JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Недовољне дозволе за обављање ове радње",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Захтеви са мобилних мрежних конекција нису дозвољени за овај сајт",
 		"SATELLITE_BLOCKED": "З��хтеви са сателитских конекција нису дозвољени за овај сајт",
 		"CRAWLER_BLOCKED": "Захтеви од познатих ботова нису дозвољени за овај сајт",
-		"DISALLOWED_WEBVIEW": "Захтеви из уграђених прегледача (WebView) нису дозвољени за овај сајт"
+		"DISALLOWED_WEBVIEW": "Захтеви из уграђених прегледача (WebView) нису дозвољени за овај сајт",
+		"INTERNAL_SERVER_ERROR": "Интерна грешка сервера"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Није могуће изменити власника корисника",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "Табеле нису дефинисане",
 		"CONNECTION_UNDEFINED": "Веза није дефинисана",
 		"COMMITMENT_FLAG_FAILED": "Означавање обавезе као обрађене није успело",
-		"UNKNOWN": "Непозната грешка базе података"
+		"UNKNOWN": "Непозната грешка базе података",
+		"QUERY_ERROR": "Упит бази података није успео",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis веза за правила приступа није дефинисана",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Складиште правила приступа корисника није дефинисано",
+		"SESSION_STORE_FAILED": "Чување сесије није успело",
+		"SESSION_CHECK_REMOVE_FAILED": "Провера и уклањање сесије нису успели",
+		"SESSION_GET_FAILED": "Преузимање сесије није успело"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Грешка при рашчлањивању капче",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "Неважећа со",
 		"INVALID_TOKEN": "Неважећи токен",
 		"INVALID_SOLUTION": "Неважеће решење",
-		"DECRYPTION_ERROR": "Грешка при дешифровању"
+		"DECRYPTION_ERROR": "Грешка при дешифровању",
+		"SOLUTION_NOT_FOUND": "Решење није пронађено",
+		"DECISION_MACHINE_DENIED": "Одбијено од стране машине за одлучивање",
+		"INVALID_TIMESTAMP": "Неважећа временска ознака"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Неважећи параметар"
