@@ -383,6 +383,8 @@
 		"IMAGE_DIALOG_LABEL": "Afbeeldingsopgave",
 		"CANNOT_LOAD": "CAPTCHA kan niet worden geladen",
 		"RELOAD": "Opnieuw laden",
+		"VERIFIED_AGENT": "Geverifieerde agent",
+		"TRUSTED_REQUEST": "Vertrouwd verzoek",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Puzzelopgave",
 			"DRAG": "Sleep het stukje naar het doel",

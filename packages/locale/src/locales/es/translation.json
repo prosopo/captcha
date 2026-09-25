@@ -84,6 +84,8 @@
 		"IMAGE_DIALOG_LABEL": "Desafío de imágenes",
 		"CANNOT_LOAD": "No se puede cargar el CAPTCHA",
 		"RELOAD": "Recargar",
+		"VERIFIED_AGENT": "Agente verificado",
+		"TRUSTED_REQUEST": "Solicitud de confianza",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Desafío de rompecabezas",
 			"DRAG": "Arrastra la pieza hasta el objetivo",

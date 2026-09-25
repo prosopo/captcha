@@ -383,6 +383,8 @@
 		"IMAGE_DIALOG_LABEL": "Δοκιμασία με εικόνες",
 		"CANNOT_LOAD": "Δεν είναι δυνατή η φόρτωση του CAPTCHA",
 		"RELOAD": "Επαναφόρτωση",
+		"VERIFIED_AGENT": "Επαληθευμένος πράκτορας",
+		"TRUSTED_REQUEST": "Αξιόπιστο αίτημα",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Δοκιμασία παζλ",
 			"DRAG": "Σύρετε το κομμάτι στον στόχο",

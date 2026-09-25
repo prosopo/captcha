@@ -383,6 +383,8 @@
 		"IMAGE_DIALOG_LABEL": "اختبار الصور",
 		"CANNOT_LOAD": "تعذّر تحميل اختبار CAPTCHA",
 		"RELOAD": "إعادة تحميل",
+		"VERIFIED_AGENT": "وكيل موثَّق",
+		"TRUSTED_REQUEST": "طلب موثوق",
 		"PUZZLE": {
 			"DIALOG_LABEL": "اختبار الأحجية",
 			"DRAG": "اسحب القطعة إلى الهدف",

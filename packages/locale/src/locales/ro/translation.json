@@ -383,6 +383,8 @@
 		"IMAGE_DIALOG_LABEL": "Test cu imagini",
 		"CANNOT_LOAD": "CAPTCHA nu poate fi încărcat",
 		"RELOAD": "Reîncarcă",
+		"VERIFIED_AGENT": "Agent verificat",
+		"TRUSTED_REQUEST": "Solicitare de încredere",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Test cu puzzle",
 			"DRAG": "Trage piesa până la țintă",

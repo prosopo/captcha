@@ -418,6 +418,8 @@
 		"IMAGE_DIALOG_LABEL": "Kuvatehtävä",
 		"CANNOT_LOAD": "CAPTCHAa ei voi ladata",
 		"RELOAD": "Lataa uudelleen",
+		"VERIFIED_AGENT": "Vahvistettu agentti",
+		"TRUSTED_REQUEST": "Luotettu pyyntö",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Palapelitehtävä",
 			"DRAG": "Vedä pala kohteeseen",

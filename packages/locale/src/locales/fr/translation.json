@@ -84,6 +84,8 @@
 		"IMAGE_DIALOG_LABEL": "Défi d'images",
 		"CANNOT_LOAD": "Impossible de charger le CAPTCHA",
 		"RELOAD": "Recharger",
+		"VERIFIED_AGENT": "Agent vérifié",
+		"TRUSTED_REQUEST": "Requête de confiance",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Défi de puzzle",
 			"DRAG": "Faites glisser la pièce jusqu'à la cible",

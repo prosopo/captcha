@@ -383,6 +383,8 @@
 		"IMAGE_DIALOG_LABEL": "Görsel doğrulama",
 		"CANNOT_LOAD": "CAPTCHA yüklenemiyor",
 		"RELOAD": "Yeniden yükle",
+		"VERIFIED_AGENT": "Doğrulanmış aracı",
+		"TRUSTED_REQUEST": "Güvenilir istek",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Yapboz doğrulaması",
 			"DRAG": "Parçayı hedefe sürükleyin",

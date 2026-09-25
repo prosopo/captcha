@@ -383,6 +383,8 @@
 		"IMAGE_DIALOG_LABEL": "Tantangan gambar",
 		"CANNOT_LOAD": "Tidak dapat memuat CAPTCHA",
 		"RELOAD": "Muat ulang",
+		"VERIFIED_AGENT": "Agen terverifikasi",
+		"TRUSTED_REQUEST": "Permintaan tepercaya",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Tantangan teka-teki",
 			"DRAG": "Seret kepingan ke sasaran",
