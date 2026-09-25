@@ -84,7 +84,7 @@
 		"JSON_LOAD_FAILED": "JSON-tiedoston lataaminen epäonnistui",
 		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Aseta mnemonic ympäristömuuttujiin",
 		"NO_MNEMONIC_OR_SEED": "Ei annettu mnemonicia tai siemenavainta",
-		"CANT_FIND_KEYRINGPAIR": "Avainta ei löydy {{osoite}}",
+		"CANT_FIND_KEYRINGPAIR": "Avainta ei löydy {{address}}",
 		"ENVIRONMENT_NOT_READY": "Ympäristö ei ole valmis",
 		"INVALID_SIGNATURE": "Virheellinen allekirjoitus",
 		"SITE_KEY_MISSING": "Sivuston avain puuttuu",
