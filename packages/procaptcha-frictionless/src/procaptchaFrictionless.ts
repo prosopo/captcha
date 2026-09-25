@@ -204,6 +204,7 @@ export const mountProcaptchaFrictionless = (
 	let restartCount = 0;
 
 	const restartComponentTimeout = () => {
+		if (destroyed) return;
 		const delay = getRestartDelayMs(restartCount);
 		restartCount += 1;
 		const timer = setTimeout(() => {
@@ -260,6 +261,7 @@ export const mountProcaptchaFrictionless = (
 		autoStart = false,
 		escalationCoords?: RetryCoords,
 	): Promise<void> => {
+		if (destroyed) return;
 		const onEscalate = (
 			next: CaptchaType.image | CaptchaType.puzzle,
 			newSessionId: string,
@@ -420,6 +422,7 @@ export const mountProcaptchaFrictionless = (
 	};
 
 	const start = async (): Promise<void> => {
+		if (destroyed) return;
 		// Procaptcha cannot run over plain HTTP (no SubtleCrypto etc.), which
 		// would otherwise fail later with a cryptic provider-selection error.
 		// Surface a clear, non-retrying message instead.
@@ -443,6 +446,7 @@ export const mountProcaptchaFrictionless = (
 				const result = await detectBot(configOutput, widgetContainer, restart, {
 					attempt: state.attemptCount,
 				});
+				if (destroyed) return;
 
 				const guard = evaluateFrictionlessResult(result);
 				if ("error" === guard.kind) {
@@ -491,6 +495,7 @@ export const mountProcaptchaFrictionless = (
 			state.attemptCount,
 			5,
 		).finally(() => {
+			if (destroyed) return;
 			if (state.attemptCount >= 5) {
 				// Retries swallow the underlying error, so without this a site's
 				// error callback never fires for a failure that retried — it would

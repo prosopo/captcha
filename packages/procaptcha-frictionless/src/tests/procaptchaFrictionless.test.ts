@@ -406,3 +406,77 @@ describe("tearing down", () => {
 		expect(mocks.mounted).toHaveLength(0);
 	});
 });
+
+describe("a detection that lands after destroy", () => {
+	const deferred = (): {
+		detectBot: BotDetectionFunction;
+		release: (result: BotDetectionFunctionResult) => void;
+		fail: (error: Error) => void;
+		calls: () => number;
+	} => {
+		let release: (result: BotDetectionFunctionResult) => void = () => undefined;
+		let fail: (error: Error) => void = () => undefined;
+		const detectBot = vi.fn<BotDetectionFunction>(
+			() =>
+				new Promise<BotDetectionFunctionResult>(
+					(
+						resolve: (result: BotDetectionFunctionResult) => void,
+						reject: (error: Error) => void,
+					) => {
+						release = resolve;
+						fail = reject;
+					},
+				),
+		);
+		return {
+			detectBot,
+			release: (result: BotDetectionFunctionResult) => release(result),
+			fail: (error: Error) => fail(error),
+			calls: () => detectBot.mock.calls.length,
+		};
+	};
+
+	test("does not pass a dead widget as human", async () => {
+		const onHuman = vi.fn<(token: string) => void>();
+		const detection$ = deferred();
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(detection$.detectBot, { callbacks: { onHuman } }),
+		);
+		widget.destroy();
+		widget = undefined;
+		detection$.release(detection(CaptchaType.authenticated));
+		await settle();
+		expect(onHuman).not.toHaveBeenCalled();
+		expect(container.textContent).toBe("");
+	});
+
+	test("does not report an error for a dead widget", async () => {
+		const onError = vi.fn<(error: Error) => void>();
+		const detection$ = deferred();
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(detection$.detectBot, { callbacks: { onError } }),
+		);
+		widget.destroy();
+		widget = undefined;
+		detection$.release({
+			sessionId: "session-1",
+		} as unknown as BotDetectionFunctionResult);
+		await settle();
+		expect(onError).not.toHaveBeenCalled();
+	});
+
+	test("does not retry detection for a dead widget", async () => {
+		const detection$ = deferred();
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(detection$.detectBot),
+		);
+		widget.destroy();
+		widget = undefined;
+		detection$.fail(new Error("provider down"));
+		await waitFor(() => detection$.calls() > 1);
+		expect(detection$.calls()).toBe(1);
+	});
+});
