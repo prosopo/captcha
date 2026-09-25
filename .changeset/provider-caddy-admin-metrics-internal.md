@@ -12,3 +12,7 @@ proxy config, or stop Caddy, with a plain HTTP request. It now listens on
 Caddy's Prometheus metrics were also served on the public provider site at
 `/metrics` (and `/METRICS`, `/Metrics`). They are removed from the public site;
 the internal `:9090` listener that vector scrapes is unchanged.
+
+The same admin binding fix is applied to the openobserve (`oo1`, `oo2`),
+`client-example-server` and `provider-mock` Caddyfiles, and the last two also
+stop serving `/metrics` publicly.
