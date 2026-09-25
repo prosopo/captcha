@@ -19,6 +19,7 @@ import {
 	FrictionlessPenalties,
 	type KeyringPair,
 	type ProsopoConfigOutput,
+	type Session,
 	SessionSchema,
 	imageMaxRoundsDefault,
 } from "@prosopo/types";
@@ -27,7 +28,7 @@ import {
 	type AccessPolicy,
 	AccessPolicyType,
 } from "@prosopo/user-access-policy";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
 import { FrictionlessManager } from "../../../../tasks/frictionless/frictionlessTasks.js";
 
@@ -611,6 +612,148 @@ describe("Frictionless Task Manager", () => {
 
 			expect(response).toHaveProperty("captchaType", CaptchaType.pow);
 			expect(db.storeSessionRecord).toHaveBeenCalledOnce();
+		});
+	});
+
+	describe("verifyAuthenticatedSession", () => {
+		const SESSION_ID = "authenticated-session";
+		const SESSION_IP = "203.0.113.7";
+
+		const authenticatedSession = (overrides: Partial<Session> = {}): Session =>
+			SessionSchema.parse({
+				sessionId: SESSION_ID,
+				createdAt: new Date(),
+				token: "token",
+				score: 0,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0 },
+				ipAddress: getCompositeIpAddress(SESSION_IP),
+				captchaType: CaptchaType.authenticated,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				headers: {},
+				...overrides,
+			});
+
+		let getSession: Mock<IProviderDatabase["getSessionRecordBySessionId"]>;
+		let updateSession: Mock<IProviderDatabase["updateSessionRecord"]>;
+
+		const withSession = (session: Session | undefined): void => {
+			getSession.mockResolvedValue(session);
+		};
+
+		beforeEach(() => {
+			getSession = vi.fn<IProviderDatabase["getSessionRecordBySessionId"]>();
+			updateSession = vi
+				.fn<IProviderDatabase["updateSessionRecord"]>()
+				.mockResolvedValue(undefined);
+			db.getSessionRecordBySessionId = getSession;
+			db.updateSessionRecord = updateSession;
+		});
+
+		it("verifies once and marks the session server-checked", async () => {
+			withSession(authenticatedSession());
+			const result = await frictionlessTaskManager.verifyAuthenticatedSession(
+				SESSION_ID,
+				SESSION_IP,
+				undefined,
+			);
+			expect(result).toEqual({ verified: true, status: "API.USER_VERIFIED" });
+			expect(updateSession).toHaveBeenCalledWith(SESSION_ID, {
+				serverChecked: true,
+			});
+		});
+
+		it("requires the operator to forward the user's IP", async () => {
+			withSession(authenticatedSession());
+			const result = await frictionlessTaskManager.verifyAuthenticatedSession(
+				SESSION_ID,
+				undefined,
+				undefined,
+			);
+			expect(result).toEqual({
+				verified: false,
+				status: "API.AUTHENTICATED_IP_REQUIRED",
+			});
+			expect(getSession).not.toHaveBeenCalled();
+		});
+
+		it.each<[string, Session | undefined, string, string | undefined, string]>([
+			[
+				"an unknown session",
+				undefined,
+				SESSION_IP,
+				undefined,
+				"API.USER_NOT_VERIFIED_NO_SOLUTION",
+			],
+			[
+				"a session minted for another captcha type",
+				authenticatedSession({ captchaType: CaptchaType.pow }),
+				SESSION_IP,
+				undefined,
+				"API.INCORRECT_CAPTCHA_TYPE",
+			],
+			[
+				"a replayed token",
+				authenticatedSession({ serverChecked: true }),
+				SESSION_IP,
+				undefined,
+				"API.USER_ALREADY_VERIFIED",
+			],
+			[
+				"a token presented from another IP",
+				authenticatedSession(),
+				"198.51.100.1",
+				undefined,
+				"API.AUTHENTICATED_IP_MISMATCH",
+			],
+			[
+				"a token from another client session",
+				authenticatedSession({
+					clientMetaData: { clientSessionId: "recorded" },
+				}),
+				SESSION_IP,
+				"expected",
+				"API.CLIENT_SESSION_MISMATCH",
+			],
+			[
+				"a site expecting correlation when none was recorded",
+				authenticatedSession(),
+				SESSION_IP,
+				"expected",
+				"API.CLIENT_SESSION_MISMATCH",
+			],
+		])(
+			"rejects %s without marking it checked",
+			async (
+				_name: string,
+				session: Session | undefined,
+				ip: string,
+				clientSessionId: string | undefined,
+				status: string,
+			) => {
+				withSession(session);
+				const result = await frictionlessTaskManager.verifyAuthenticatedSession(
+					SESSION_ID,
+					ip,
+					clientSessionId,
+				);
+				expect(result).toEqual({ verified: false, status });
+				expect(updateSession).not.toHaveBeenCalled();
+			},
+		);
+
+		it("accepts a matching client session", async () => {
+			withSession(
+				authenticatedSession({ clientMetaData: { clientSessionId: "abc" } }),
+			);
+			const result = await frictionlessTaskManager.verifyAuthenticatedSession(
+				SESSION_ID,
+				SESSION_IP,
+				"abc",
+			);
+			expect(result.verified).toBe(true);
 		});
 	});
 });
