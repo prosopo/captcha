@@ -29,7 +29,8 @@ export const getProcaptchaScript = (
 export const extractParams = (names: string[]) => {
 	const script = getProcaptchaScript(names);
 	if (script) {
-		const params = new URLSearchParams(script.src.split("?")[1]);
+		const [withoutFragment = ""] = script.src.split("#");
+		const params = new URLSearchParams(withoutFragment.split("?")[1]);
 		return {
 			onloadUrlCallback: params.get("onload") || undefined,
 			renderExplicit: params.get("render") || undefined,

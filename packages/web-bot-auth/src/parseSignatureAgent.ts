@@ -40,11 +40,19 @@ export const normaliseSignatureAgentUrl = (raw: string): string => {
 	return url.toString().replace(/\/$/, "");
 };
 
+const normaliseOrNull = (raw: string): string | null => {
+	try {
+		return normaliseSignatureAgentUrl(raw);
+	} catch {
+		return null;
+	}
+};
+
 export const parseSignatureAgentHeader = (raw: string): string | null => {
 	const trimmed = raw.trim();
 	const bare = BARE_QUOTED.exec(trimmed);
-	if (bare?.[1]) return normaliseSignatureAgentUrl(bare[1]);
+	if (bare?.[1]) return normaliseOrNull(bare[1]);
 	const dict = DICT_ENTRY.exec(trimmed);
-	if (dict?.[1]) return normaliseSignatureAgentUrl(dict[1]);
+	if (dict?.[1]) return normaliseOrNull(dict[1]);
 	return null;
 };

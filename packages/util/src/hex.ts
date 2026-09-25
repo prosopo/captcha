@@ -94,7 +94,7 @@ export const embedData = (hexString: string, data: number[]): `0x${string}` => {
 
 	const positions: number[] = [];
 	const lengths: number[] = [];
-	let totalLength = 0;
+	let totalLength = countHex.length;
 
 	for (const d of data) {
 		const hexData = d.toString(16); // original hex string
@@ -113,7 +113,7 @@ export const embedData = (hexString: string, data: number[]): `0x${string}` => {
 		cursorEnd -= len;
 	}
 
-	if (totalLength > hexString.length) {
+	if (totalLength > hex.length) {
 		throw new Error(
 			`Hex data length ${totalLength} exceeds length of hex string ${hex.length}`,
 		);
@@ -128,7 +128,7 @@ export const embedData = (hexString: string, data: number[]): `0x${string}` => {
 
 		totalLength += lenHex.length;
 
-		if (totalLength > hexString.length) {
+		if (totalLength > hex.length) {
 			throw new Error(
 				`Hex data length ${totalLength} exceeds length of hex string ${hex.length}`,
 			);
