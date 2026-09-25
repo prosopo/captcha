@@ -10,7 +10,9 @@
 		"ENVIRONMENT_NOT_READY": "Çevre hazır değil",
 		"INVALID_SIGNATURE": "Geçersiz imza",
 		"SITE_KEY_MISSING": "SITE KEY eksik",
-		"INVALID_TIMESTAMP": "Geçersiz zaman damgası"
+		"INVALID_TIMESTAMP": "Geçersiz zaman damgası",
+		"MISSING_AUTH_HEADER": "Yetkilendirme başlığı eksik",
+		"INVALID_JWT": "Geçersiz JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Insufficient permissions to perform this action",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Bu site için mobil ağ bağlantılarından gelen isteklere izin verilmiyor",
 		"SATELLITE_BLOCKED": "Bu site için uydu bağlantılarından gelen isteklere izin verilmiyor",
 		"CRAWLER_BLOCKED": "Bu site için bilinen tarayıcılardan gelen isteklere izin verilmiyor",
-		"DISALLOWED_WEBVIEW": "Bu site için uygulama içi tarayıcılardan (WebView) gelen isteklere izin verilmiyor"
+		"DISALLOWED_WEBVIEW": "Bu site için uygulama içi tarayıcılardan (WebView) gelen isteklere izin verilmiyor",
+		"INTERNAL_SERVER_ERROR": "Dahili sunucu hatası"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "Tablolar tanımsız",
 		"CONNECTION_UNDEFINED": "Bağlantı tanımsız",
 		"COMMITMENT_FLAG_FAILED": "Taahhütü işlenmiş olarak işaretleme başarısız oldu",
-		"UNKNOWN": "Bilinmeyen veritabanı hatası"
+		"UNKNOWN": "Bilinmeyen veritabanı hatası",
+		"QUERY_ERROR": "Veritabanı sorgusu başarısız oldu",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Erişim kuralları Redis bağlantısı tanımlı değil",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Kullanıcı erişim kuralları depolaması tanımlı değil",
+		"SESSION_STORE_FAILED": "Oturum kaydedilemedi",
+		"SESSION_CHECK_REMOVE_FAILED": "Oturum kontrol edilip kaldırılamadı",
+		"SESSION_GET_FAILED": "Oturum alınamadı"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Captcha ayrıştırma hatası",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "Geçersiz salt",
 		"INVALID_TOKEN": "Geçersiz belirteç",
 		"INVALID_SOLUTION": "Geçersiz çözüm",
-		"DECRYPTION_ERROR": "Şifreleme hatası"
+		"DECRYPTION_ERROR": "Şifreleme hatası",
+		"SOLUTION_NOT_FOUND": "Çözüm bulunamadı",
+		"DECISION_MACHINE_DENIED": "Karar makinesi tarafından reddedildi",
+		"INVALID_TIMESTAMP": "Geçersiz zaman damgası"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Geçersiz parametre"

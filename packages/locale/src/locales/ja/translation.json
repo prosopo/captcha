@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "無効な署名",
 		"SITE_KEY_MISSING": "SITE KEYが見つかりません",
 		"ACCOUNT_NOT_FOUND": "アカウントが見つかりません",
-		"INVALID_TIMESTAMP": "無効なタイムスタンプ"
+		"INVALID_TIMESTAMP": "無効なタイムスタンプ",
+		"MISSING_AUTH_HEADER": "認証ヘッダーがありません",
+		"INVALID_JWT": "無効な JWT です"
 	},
 	"TARGET": {
 		"homer-simpson": "homer-simpson",
@@ -353,7 +355,8 @@
 		"MOBILE_BLOCKED": "このサイトではモバイルネットワーク接続からのリクエストは許可されていません",
 		"SATELLITE_BLOCKED": "このサイトでは衛星接続からのリクエストは許可されていません",
 		"CRAWLER_BLOCKED": "このサイトでは既知のクローラーからのリクエストは許可されていません",
-		"DISALLOWED_WEBVIEW": "このサイトではアプリ内ブラウザ (WebView) からのリクエストは許可されていません"
+		"DISALLOWED_WEBVIEW": "このサイトではアプリ内ブラウザ (WebView) からのリクエストは許可されていません",
+		"INTERNAL_SERVER_ERROR": "内部サーバーエラー"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "所有者ユーザーを変更できません",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "テーブルが未定義です",
 		"CONNECTION_UNDEFINED": "接続が未定義です",
 		"COMMITMENT_FLAG_FAILED": "コミットメントを処理済みとフラグ付けするのに失敗しました",
-		"UNKNOWN": "不明なデータベースエラー"
+		"UNKNOWN": "不明なデータベースエラー",
+		"QUERY_ERROR": "データベースクエリに失敗しました",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "アクセスルールの Redis 接続が未定義です",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "ユーザーアクセスルールのストレージが未定義です",
+		"SESSION_STORE_FAILED": "セッションの保存に失敗しました",
+		"SESSION_CHECK_REMOVE_FAILED": "セッションの確認と削除に失敗しました",
+		"SESSION_GET_FAILED": "セッションの取得に失敗しました"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "キャプチャの解析エラー",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "無効なソルト",
 		"INVALID_TOKEN": "無効なトークン",
 		"INVALID_SOLUTION": "無効なソリューション",
-		"DECRYPTION_ERROR": "復号エラー"
+		"DECRYPTION_ERROR": "復号エラー",
+		"SOLUTION_NOT_FOUND": "解答が見つかりません",
+		"DECISION_MACHINE_DENIED": "判定マシンにより拒否されました",
+		"INVALID_TIMESTAMP": "無効なタイムスタンプ"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "無効なパラメーター"

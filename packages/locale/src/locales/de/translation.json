@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Ungültige Signatur",
 		"SITE_KEY_MISSING": "SITE-KEY fehlt",
 		"ACCOUNT_NOT_FOUND": "Konto nicht gefunden",
-		"INVALID_TIMESTAMP": "Ungültiger Zeitstempel"
+		"INVALID_TIMESTAMP": "Ungültiger Zeitstempel",
+		"MISSING_AUTH_HEADER": "Autorisierungs-Header fehlt",
+		"INVALID_JWT": "Ungültiges JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Unzureichende Berechtigungen zur Ausführung dieser Aktion",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Anfragen von Mobilfunkverbindungen sind für diese Website nicht erlaubt",
 		"SATELLITE_BLOCKED": "Anfragen von Satellitenverbindungen sind für diese Website nicht erlaubt",
 		"CRAWLER_BLOCKED": "Anfragen von bekannten Crawlern sind für diese Website nicht erlaubt",
-		"DISALLOWED_WEBVIEW": "Anfragen aus In-App-Browsern (WebView) sind für diese Website nicht erlaubt"
+		"DISALLOWED_WEBVIEW": "Anfragen aus In-App-Browsern (WebView) sind für diese Website nicht erlaubt",
+		"INTERNAL_SERVER_ERROR": "Interner Serverfehler"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kann den Besitzerbenutzer nicht ändern",
@@ -137,7 +140,13 @@
 		"TABLES_UNDEFINED": "Tabellen undefiniert",
 		"CONNECTION_UNDEFINED": "Verbindung undefiniert",
 		"COMMITMENT_FLAG_FAILED": "Verpflichtung konnte nicht als verarbeitet markiert werden",
-		"UNKNOWN": "Unbekannter Datenbankfehler"
+		"UNKNOWN": "Unbekannter Datenbankfehler",
+		"QUERY_ERROR": "Datenbankabfrage fehlgeschlagen",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis-Verbindung für Zugriffsregeln undefiniert",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Speicher für Benutzerzugriffsregeln undefiniert",
+		"SESSION_STORE_FAILED": "Sitzung konnte nicht gespeichert werden",
+		"SESSION_CHECK_REMOVE_FAILED": "Sitzung konnte nicht geprüft und entfernt werden",
+		"SESSION_GET_FAILED": "Sitzung konnte nicht abgerufen werden"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Fehler beim Parsen des Captchas",
@@ -156,7 +165,10 @@
 		"INVALID_SALT": "Ungültiges Salt",
 		"INVALID_TOKEN": "Ungültiges Token",
 		"INVALID_SOLUTION": "Ungültige Lösung",
-		"DECRYPTION_ERROR": "Fehler beim Entschlüsseln"
+		"DECRYPTION_ERROR": "Fehler beim Entschlüsseln",
+		"SOLUTION_NOT_FOUND": "Lösung nicht gefunden",
+		"DECISION_MACHINE_DENIED": "Von der Entscheidungsmaschine abgelehnt",
+		"INVALID_TIMESTAMP": "Ungültiger Zeitstempel"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ungültiger Parameter"

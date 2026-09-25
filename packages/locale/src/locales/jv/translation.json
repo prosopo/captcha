@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Tanda tangan tidak valid",
 		"SITE_KEY_MISSING": "Kunci SITUS hilang",
 		"ACCOUNT_NOT_FOUND": "Akun tidak ditemukan",
-		"INVALID_TIMESTAMP": "Cap waktu tidak valid"
+		"INVALID_TIMESTAMP": "Cap waktu tidak valid",
+		"MISSING_AUTH_HEADER": "Header otorisasi ora ana",
+		"INVALID_JWT": "JWT ora valid"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Insufficient permissions to perform this action",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Panjaluk saka sambungan jaringan seluler ora diidini kanggo situs iki",
 		"SATELLITE_BLOCKED": "Panjaluk saka sambungan satelit ora diidini kanggo situs iki",
 		"CRAWLER_BLOCKED": "Panjaluk saka crawler sing dikenal ora diidini kanggo situs iki",
-		"DISALLOWED_WEBVIEW": "Panjaluk saka browser ing aplikasi (WebView) ora diidini kanggo situs iki"
+		"DISALLOWED_WEBVIEW": "Panjaluk saka browser ing aplikasi (WebView) ora diidini kanggo situs iki",
+		"INTERNAL_SERVER_ERROR": "Kesalahan server internal"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "Tabel-tabel tidak ditentukan",
 		"CONNECTION_UNDEFINED": "Koneksi tidak ditentukan",
 		"COMMITMENT_FLAG_FAILED": "Gagal menandai komitmen sebagai diproses",
-		"UNKNOWN": "Kesalahan database yang tidak diketahui"
+		"UNKNOWN": "Kesalahan database yang tidak diketahui",
+		"QUERY_ERROR": "Pitakon basis data gagal",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Sambungan Redis aturan akses ora ditemtokake",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Panyimpenan aturan akses pangguna ora ditemtokake",
+		"SESSION_STORE_FAILED": "Gagal nyimpen sesi",
+		"SESSION_CHECK_REMOVE_FAILED": "Gagal mriksa lan mbusak sesi",
+		"SESSION_GET_FAILED": "Gagal njupuk sesi"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Kesalahan memparsing captcha",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "Salt ora bener",
 		"INVALID_TOKEN": "Token tidak valid",
 		"INVALID_SOLUTION": "Solusi tidak valid",
-		"DECRYPTION_ERROR": "Kesalahan dekripsi"
+		"DECRYPTION_ERROR": "Kesalahan dekripsi",
+		"SOLUTION_NOT_FOUND": "Solusi ora ditemokake",
+		"DECISION_MACHINE_DENIED": "Ditolak dening mesin keputusan",
+		"INVALID_TIMESTAMP": "Cap waktu tidak valid"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parameter tidak valid"

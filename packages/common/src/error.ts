@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type TranslateFn, isTranslationKey } from "@prosopo/locale";
+import {
+	type TranslateFn,
+	type TranslationKey,
+	isTranslationKey,
+} from "@prosopo/locale";
 import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { ApiJsonError } from "@prosopo/types";
 
@@ -66,9 +70,7 @@ type ApiContextParams = BaseContextParams & {
 	code?: number;
 };
 
-// if i18n is not loaded then we use this
-// Not TranslationKey: a dozen call sites still name keys the catalogue lacks.
-type ErrorKey = string;
+type ErrorKey = TranslationKey;
 
 const backupTranslationObj = { t: (key: string) => key };
 

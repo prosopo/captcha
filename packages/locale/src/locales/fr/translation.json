@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Signature invalide",
 		"SITE_KEY_MISSING": "CLÉ DU SITE manquante",
 		"ACCOUNT_NOT_FOUND": "Compte non trouvé",
-		"INVALID_TIMESTAMP": "Horodatage invalide"
+		"INVALID_TIMESTAMP": "Horodatage invalide",
+		"MISSING_AUTH_HEADER": "En-tête d'autorisation manquant",
+		"INVALID_JWT": "JWT invalide"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Permissions insuffisantes pour effectuer cette action",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Les requêtes provenant de réseaux mobiles ne sont pas autorisées pour ce site",
 		"SATELLITE_BLOCKED": "Les requêtes provenant de connexions satellite ne sont pas autorisées pour ce site",
 		"CRAWLER_BLOCKED": "Les requêtes provenant de robots d'exploration connus ne sont pas autorisées pour ce site",
-		"DISALLOWED_WEBVIEW": "Les requêtes provenant de navigateurs intégrés aux applications (WebView) ne sont pas autorisées pour ce site"
+		"DISALLOWED_WEBVIEW": "Les requêtes provenant de navigateurs intégrés aux applications (WebView) ne sont pas autorisées pour ce site",
+		"INTERNAL_SERVER_ERROR": "Erreur interne du serveur"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Impossible de modifier le propriétaire de l'utilisateur",
@@ -137,7 +140,13 @@
 		"TABLES_UNDEFINED": "Tables non définies",
 		"CONNECTION_UNDEFINED": "Connexion non définie",
 		"COMMITMENT_FLAG_FAILED": "Échec du marquage de l'engagement comme traité",
-		"UNKNOWN": "Erreur de base de données inconnue"
+		"UNKNOWN": "Erreur de base de données inconnue",
+		"QUERY_ERROR": "La requête à la base de données a échoué",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Connexion Redis des règles d'accès non définie",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Stockage des règles d'accès utilisateur non défini",
+		"SESSION_STORE_FAILED": "Échec de l'enregistrement de la session",
+		"SESSION_CHECK_REMOVE_FAILED": "Échec de la vérification et de la suppression de la session",
+		"SESSION_GET_FAILED": "Échec de la récupération de la session"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Erreur d'analyse du captcha",
@@ -156,7 +165,10 @@
 		"INVALID_SALT": "Sel invalide",
 		"INVALID_TOKEN": "Jeton invalide",
 		"INVALID_SOLUTION": "Solution invalide",
-		"DECRYPTION_ERROR": "Erreur de décryptage"
+		"DECRYPTION_ERROR": "Erreur de décryptage",
+		"SOLUTION_NOT_FOUND": "Solution introuvable",
+		"DECISION_MACHINE_DENIED": "Refusé par la machine de décision",
+		"INVALID_TIMESTAMP": "Horodatage invalide"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Paramètre invalide"
