@@ -57,6 +57,11 @@ import { ipInfoMiddleware } from "./ipInfoMiddleware.js";
 import { ja4Middleware } from "./ja4Middleware.js";
 import { metricsMiddleware } from "./metrics.js";
 import { publicRouter } from "./public.js";
+import {
+	DEFAULT_VERIFY_IP_LIMIT_MULTIPLIER,
+	adminRateLimitKey,
+	verifyRateLimiters,
+} from "./rateLimitKeys.js";
 import { rawTlsSignalsMiddleware } from "./rawTlsSignalsMiddleware.js";
 import { robotsMiddleware } from "./robotsMiddleware.js";
 import { prosopoVerifyRouter } from "./verify.js";
@@ -102,9 +107,9 @@ export const getClientApiPathsExpectingProsopoHeaders =
 	};
 
 /**
- * Extract authenticated user address from JWT for rate limiting
- * @param req Express request object
- * @returns User address from JWT or undefined
+ * Extract the `sub` claim from the bearer JWT without verifying it.
+ * @deprecated The value is attacker-controlled; the provider keys admin rate
+ * limits on `adminRateLimitKey` instead.
  */
 export const getUserFromJWT = (req: Request): string | undefined => {
 	try {
@@ -328,39 +333,38 @@ export async function startProviderApi(
 				}));
 				res.status(options.statusCode).send(options.message);
 			};
+		const adminKey = adminRateLimitKey([env.authAccount, env.pair]);
+		const verifyPaths: string[] = [
+			ClientApiPaths.VerifyImageCaptchaSolutionDapp,
+			ClientApiPaths.VerifyPowCaptchaSolution,
+			ClientApiPaths.VerifyPuzzleCaptchaSolution,
+		];
+		const configuredMultiplier = Number(
+			process.env.PROSOPO_VERIFY_IP_RATE_LIMIT_MULTIPLIER,
+		);
+		const verifyIpMultiplier =
+			Number.isFinite(configuredMultiplier) && configuredMultiplier > 0
+				? configuredMultiplier
+				: DEFAULT_VERIFY_IP_LIMIT_MULTIPLIER;
 		for (const [path, limit] of Object.entries(rateLimits)) {
 			const enumPath = path as CombinedApiPaths;
-			// For admin paths, key by authenticated user instead of IP
-			// This prevents tests (and legitimate users) from interfering with each other
 			if (adminPaths.includes(enumPath as AdminApiPaths)) {
 				apiApp.use(
 					enumPath,
 					rateLimit({
 						...limit,
 						handler: rateLimitHandler(enumPath),
-						keyGenerator: (req) => {
-							const user = getUserFromJWT(req);
-							// Fall back to IP if no user found (shouldn't happen for admin routes with auth)
-							return user || req.ip || "unknown";
-						},
+						keyGenerator: adminKey,
 					}),
 				);
-			} else if (
-				path === ClientApiPaths.VerifyImageCaptchaSolutionDapp ||
-				path === ClientApiPaths.VerifyPowCaptchaSolution
-			) {
-				// For verify, key on site key to prevent rate limiting API calls from lambdas
+			} else if (verifyPaths.includes(enumPath)) {
 				apiApp.use(
 					enumPath,
-					rateLimit({
-						...limit,
-						handler: rateLimitHandler(enumPath),
-						keyGenerator: (req) => {
-							const siteKey = req.headers["prosopo-site-key"] as string;
-							// Fall back to IP if no site key found (shouldn't happen for verify routes with headerCheckMiddleware)
-							return siteKey || req.ip || "unknown";
-						},
-					}),
+					verifyRateLimiters(
+						limit,
+						rateLimitHandler(enumPath),
+						verifyIpMultiplier,
+					),
 				);
 			} else {
 				apiApp.use(
