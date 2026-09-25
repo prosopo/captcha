@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Το Procaptcha απαιτεί ασφαλή σύνδεση (HTTPS)",
 		"CHECKING": "Ελέγχουμε ότι είστε άνθρωπος",
 		"IMAGE_DIALOG_LABEL": "Δοκιμασία με εικόνες",
+		"CANNOT_LOAD": "Δεν είναι δυνατή η φόρτωση του CAPTCHA",
+		"RELOAD": "Επαναφόρτωση",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Δοκιμασία παζλ",
 			"DRAG": "Σύρετε το κομμάτι στον στόχο",

@@ -260,6 +260,20 @@ describe("the loading placeholder", () => {
 		expect(solvers()).toEqual(["image"]);
 	});
 
+	test("shows the cannot-load message in the widget's language", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() =>
+				Promise.resolve(
+					detection(CaptchaType.authenticated, { sessionId: undefined }),
+				),
+			),
+		);
+		await settle();
+		expect(container.textContent).toContain("WIDGET.CANNOT_LOAD");
+		expect(container.textContent).not.toContain("Cannot load CAPTCHA");
+	});
+
 	test("refuses to mount anything when the response names no captcha type", async () => {
 		// A hard block short-circuits the request and answers with a bare
 		// `{ error: "..." }`; mounting the PoW default against it only earns an

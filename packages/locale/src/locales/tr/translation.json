@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha güvenli bir (HTTPS) bağlantı gerektirir",
 		"CHECKING": "İnsan olduğunuz doğrulanıyor",
 		"IMAGE_DIALOG_LABEL": "Görsel doğrulama",
+		"CANNOT_LOAD": "CAPTCHA yüklenemiyor",
+		"RELOAD": "Yeniden yükle",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Yapboz doğrulaması",
 			"DRAG": "Parçayı hedefe sürükleyin",

@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha vyžaduje zabezpečené připojení (HTTPS)",
 		"CHECKING": "Ověřujeme, že jste člověk",
 		"IMAGE_DIALOG_LABEL": "Obrázkový úkol",
+		"CANNOT_LOAD": "CAPTCHA nelze načíst",
+		"RELOAD": "Načíst znovu",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Skládačkový úkol",
 			"DRAG": "Přetáhněte dílek na cíl",

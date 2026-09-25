@@ -381,6 +381,8 @@
 		"INSECURE_CONTEXT": "Procaptcha yêu cầu kết nối an toàn (HTTPS)",
 		"CHECKING": "Đang xác minh bạn là người thật",
 		"IMAGE_DIALOG_LABEL": "Thử thách hình ảnh",
+		"CANNOT_LOAD": "Không thể tải CAPTCHA",
+		"RELOAD": "Tải lại",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Thử thách ghép hình",
 			"DRAG": "Kéo mảnh ghép đến vị trí đích",

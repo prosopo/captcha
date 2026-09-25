@@ -76,7 +76,9 @@ const generateNames = (): CheckboxNames => ({
 });
 
 const FAQ_LINK = process.env.PROSOPO_DOCS_URL
-	? `${new URL(`${process.env.PROSOPO_DOCS_URL}/en/basics/faq/`).href}/`
+	? new URL(
+			`${process.env.PROSOPO_DOCS_URL.replace(/\/+$/, "")}/en/basics/faq/`,
+		).href
 	: "https://docs.prosopo.io/en/basics/faq/";
 
 /**
