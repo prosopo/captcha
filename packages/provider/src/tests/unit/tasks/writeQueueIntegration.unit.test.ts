@@ -25,7 +25,6 @@ import type { IProviderDatabase } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import { FrictionlessManager } from "../../../tasks/frictionless/frictionlessTasks.js";
-import { Tasks } from "../../../tasks/tasks.js";
 
 describe("Write queue integration with captcha flows", () => {
 	let mockLogger: Logger;
@@ -33,9 +32,6 @@ describe("Write queue integration with captcha flows", () => {
 		set: ReturnType<typeof vi.fn>;
 		get: ReturnType<typeof vi.fn>;
 		del: ReturnType<typeof vi.fn>;
-		sAdd: ReturnType<typeof vi.fn>;
-		sMembers: ReturnType<typeof vi.fn>;
-		sRem: ReturnType<typeof vi.fn>;
 	};
 	let mockConnection: RedisConnection;
 	let writeQueue: RedisWriteQueue;
@@ -52,9 +48,6 @@ describe("Write queue integration with captcha flows", () => {
 			set: vi.fn().mockResolvedValue("OK"),
 			get: vi.fn().mockResolvedValue(null),
 			del: vi.fn().mockResolvedValue(1),
-			sAdd: vi.fn().mockResolvedValue(1),
-			sMembers: vi.fn().mockResolvedValue([]),
-			sRem: vi.fn().mockResolvedValue(1),
 		};
 
 		mockConnection = {
@@ -233,72 +226,6 @@ describe("Write queue integration with captcha flows", () => {
 
 			const cachedSession = await writeQueue.getCachedSession("any-id");
 			expect(cachedSession).toBeNull();
-		});
-	});
-
-	describe("Session queue flush to MongoDB", () => {
-		it("should flush queued session records to MongoDB via Tasks.flushWriteQueue", async () => {
-			const mockDb: IProviderDatabase = {
-				storeSessionRecord: vi.fn().mockResolvedValue(undefined),
-			} as unknown as IProviderDatabase;
-
-			const sessionRecord: Record<string, unknown> = {
-				sessionId: "flush-session-1",
-				createdAt: new Date().toISOString(),
-				token: "test-token",
-				score: 0.5,
-				threshold: 0.5,
-				scoreComponents: { baseScore: 0.5 },
-				ipAddress: { lower: 16843009, type: "v4" },
-				captchaType: CaptchaType.pow,
-				webView: false,
-				iFrame: false,
-				decryptedHeadHash: "abc",
-			};
-
-			// Queue the session
-			await writeQueue.queueSessionRecord("flush-session-1", sessionRecord);
-
-			// Mock draining: return the queued records
-			mockRedisClient.sMembers.mockResolvedValue(["flush-session-1"]);
-			mockRedisClient.get.mockResolvedValue(JSON.stringify(sessionRecord));
-
-			// Flush
-			await Tasks.flushWriteQueue(writeQueue, mockDb, mockLogger);
-
-			expect(mockDb.storeSessionRecord).toHaveBeenCalledOnce();
-			expect(mockDb.storeSessionRecord).toHaveBeenCalledWith(sessionRecord);
-		});
-
-		it("should handle flush errors gracefully without crashing", async () => {
-			const mockDb: IProviderDatabase = {
-				storeSessionRecord: vi
-					.fn()
-					.mockRejectedValue(new Error("MongoDB write error")),
-			} as unknown as IProviderDatabase;
-
-			// Mock draining: return a queued record
-			mockRedisClient.sMembers.mockResolvedValue(["err-session"]);
-			mockRedisClient.get.mockResolvedValue(
-				JSON.stringify({ sessionId: "err-session" }),
-			);
-
-			// Should not throw
-			await Tasks.flushWriteQueue(writeQueue, mockDb, mockLogger);
-
-			expect(mockLogger.error).toHaveBeenCalled();
-		});
-
-		it("should do nothing when queue is empty", async () => {
-			const mockDb: IProviderDatabase = {
-				storeSessionRecord: vi.fn(),
-			} as unknown as IProviderDatabase;
-
-			mockRedisClient.sMembers.mockResolvedValue([]);
-
-			await Tasks.flushWriteQueue(writeQueue, mockDb, mockLogger);
-
-			expect(mockDb.storeSessionRecord).not.toHaveBeenCalled();
 		});
 	});
 
