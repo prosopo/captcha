@@ -247,6 +247,30 @@ describe("manual start mode", () => {
 		expect(detectBot).toHaveBeenCalledTimes(1);
 	});
 
+	describe("once destroyed", () => {
+		it("stops listening for procaptcha:start and procaptcha:execute", async () => {
+			const detectBot = await mountWrapper();
+			widget?.destroy();
+			widget = undefined;
+
+			await dispatchStart();
+			await dispatchExecute();
+
+			expect(detectBot).not.toHaveBeenCalled();
+			expect(mocks.mounts).toHaveLength(0);
+			expect(host.childNodes).toHaveLength(0);
+		});
+
+		it("removes the started widget from the host", async () => {
+			await mountWrapper();
+			await dispatchStart();
+			widget?.destroy();
+			widget = undefined;
+
+			expect(host.childNodes).toHaveLength(0);
+		});
+	});
+
 	describe("started by the site", () => {
 		it("runs detection on procaptcha:start and leaves the widget waiting for a click", async () => {
 			const detectBot = await mountWrapper();
