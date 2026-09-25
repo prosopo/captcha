@@ -73,7 +73,7 @@ export function publicRouter(env: ProviderEnvironment): Router {
 
 	// Prometheus metrics endpoint. Lives in the public router so it runs before
 	// rate-limiting, auth and blocking middleware — scrapes are never throttled
-	// or blocked. Vector scrapes this over the internal docker network.
+	// or blocked. `metricsAccess` limits it to internal callers or token holders.
 	if (metricsEnabled()) {
 		router.get(PublicApiPaths.Metrics, metricsHandler(env));
 	}
