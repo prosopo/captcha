@@ -354,6 +354,38 @@ describe("ProsopoServer.verifyProvider — recency checks", () => {
 		expect(result.verified).toBe(false);
 		expect(spies.image).not.toHaveBeenCalled();
 	});
+
+	it("a future-dated token beyond the clock-skew allowance short-circuits", async () => {
+		const powCached = 60_000;
+		const futureTimestamp = Date.now() + 60 * 60_000;
+		const token = buildToken(futureTimestamp, {
+			[ApiParams.captchaType]: CaptchaType.pow,
+		});
+		const server = new ProsopoServer(
+			buildConfig(powCached, 60_000, 60_000),
+			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+			stubPair() as any,
+		);
+		const result = await server.isVerified(token);
+		expect(result.verified).toBe(false);
+		expect(spies.pow).not.toHaveBeenCalled();
+	});
+
+	it("a token within the clock-skew allowance still verifies", async () => {
+		const powCached = 60_000;
+		const slightlyFutureTimestamp = Date.now() + 5_000;
+		const token = buildToken(slightlyFutureTimestamp, {
+			[ApiParams.captchaType]: CaptchaType.pow,
+		});
+		const server = new ProsopoServer(
+			buildConfig(powCached, 60_000, 60_000),
+			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+			stubPair() as any,
+		);
+		const result = await server.isVerified(token);
+		expect(result.verified).toBe(true);
+		expect(spies.pow).toHaveBeenCalledTimes(1);
+	});
 });
 
 describe("ProsopoServer.isVerified — short-circuits", () => {
