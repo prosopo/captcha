@@ -150,3 +150,100 @@ describe("jwtVerify algorithm pinning", (): void => {
 		});
 	});
 });
+
+const claimsPair: Keypair = sr25519FromSeed(new Uint8Array(32).fill(3));
+
+const signRawPayload = (payloadJson: string): JWT => {
+	const signingInput = `${base64URLEncode(JSON.stringify({ alg: "sr25519", typ: "JWT" }))}.${base64URLEncode(payloadJson)}`;
+	return `${signingInput}.${base64URLEncode(sr25519Sign(signingInput, claimsPair))}`;
+};
+
+const claimsJson = (overrides: Record<string, string>): string => {
+	const now = Math.floor(Date.now() / 1000);
+	const claims: Record<string, string> = {
+		sub: JSON.stringify(u8aToHex(claimsPair.publicKey)),
+		iat: String(now),
+		nbf: String(now),
+		exp: String(now + 300),
+		...overrides,
+	};
+	return `{${Object.entries(claims)
+		.map(([key, value]) => `${JSON.stringify(key)}:${value}`)
+		.join(",")}}`;
+};
+
+describe("jwtVerify time and payload claims", (): void => {
+	it("accepts a correctly signed token with integer claims", (): void => {
+		const token = signRawPayload(claimsJson({}));
+		expect(jwtVerify(token, claimsPair.publicKey).isValid).toBe(true);
+	});
+
+	it("accepts a token without nbf", (): void => {
+		const now = Math.floor(Date.now() / 1000);
+		const token = signRawPayload(
+			JSON.stringify({
+				sub: u8aToHex(claimsPair.publicKey),
+				iat: now,
+				exp: now + 300,
+			}),
+		);
+		expect(jwtVerify(token, claimsPair.publicKey).isValid).toBe(true);
+	});
+
+	it.each<[string, Record<string, string>]>([
+		["a non-numeric string nbf", { nbf: '"later"' }],
+		["a numeric string nbf", { nbf: '"0"' }],
+		["a boolean nbf", { nbf: "true" }],
+		["a null nbf", { nbf: "null" }],
+		["an object nbf", { nbf: "{}" }],
+		["an array nbf", { nbf: "[]" }],
+		["an exp that overflows to Infinity", { exp: "1e400" }],
+		["an iat that overflows to Infinity", { iat: "1e400" }],
+		["an nbf that overflows to -Infinity", { nbf: "-1e400" }],
+	])("rejects %s", (_, overrides): void => {
+		const result = jwtVerify(
+			signRawPayload(claimsJson(overrides)),
+			claimsPair.publicKey,
+		);
+		expect(result.isValid).toBe(false);
+	});
+
+	it.each<[string, string]>([
+		["null", "null"],
+		["an array", "[]"],
+		["a string", '"payload"'],
+		["a number", "1"],
+	])(
+		"returns invalid instead of throwing for a %s payload",
+		(_, payloadJson): void => {
+			const result = jwtVerify(
+				signRawPayload(payloadJson),
+				claimsPair.publicKey,
+			);
+			expect(result.isValid).toBe(false);
+		},
+	);
+
+	it("returns invalid instead of throwing for a non-string sub", (): void => {
+		const result = jwtVerify(
+			signRawPayload(claimsJson({ sub: "123" })),
+			claimsPair.publicKey,
+		);
+		expect(result).toMatchObject({
+			isValid: false,
+			error: "Invalid payload: 'sub' is not a string",
+		});
+	});
+
+	it("still rejects a future nbf", (): void => {
+		const future = Math.floor(Date.now() / 1000) + 600;
+		const result = jwtVerify(
+			sr25519jwtIssue(claimsPair, { notBefore: future }),
+			claimsPair.publicKey,
+		);
+		expect(result).toMatchObject({
+			isValid: false,
+			error: "JWT not valid yet",
+		});
+	});
+});
