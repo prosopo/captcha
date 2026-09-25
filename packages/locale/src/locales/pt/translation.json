@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Assinatura inválida",
 		"SITE_KEY_MISSING": "CHAVE DO SITE ausente",
 		"ACCOUNT_NOT_FOUND": "Conta não encontrada",
-		"INVALID_TIMESTAMP": "Carimbo de data/hora inválido"
+		"INVALID_TIMESTAMP": "Carimbo de data/hora inválido",
+		"MISSING_AUTH_HEADER": "Cabeçalho de autorização em falta",
+		"INVALID_JWT": "JWT inválido"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Permissões insuficientes para realizar esta ação",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Pedidos de ligações de rede móvel não são permitidos para este site",
 		"SATELLITE_BLOCKED": "Pedidos de ligações por satélite não são permitidos para este site",
 		"CRAWLER_BLOCKED": "Pedidos de rastreadores conhecidos não são permitidos para este site",
-		"DISALLOWED_WEBVIEW": "Pedidos a partir de navegadores incorporados em aplicações (WebView) não são permitidos para este site"
+		"DISALLOWED_WEBVIEW": "Pedidos a partir de navegadores incorporados em aplicações (WebView) não são permitidos para este site",
+		"INTERNAL_SERVER_ERROR": "Erro interno do servidor"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Não é possível modificar o utilizador proprietário",
@@ -137,7 +140,13 @@
 		"TABLES_UNDEFINED": "Tabelas indefinidas",
 		"CONNECTION_UNDEFINED": "Conexão indefinida",
 		"COMMITMENT_FLAG_FAILED": "Falha ao marcar o compromisso como processado",
-		"UNKNOWN": "Erro de banco de dados desconhecido"
+		"UNKNOWN": "Erro de banco de dados desconhecido",
+		"QUERY_ERROR": "A consulta à base de dados falhou",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Ligação Redis das regras de acesso não definida",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Armazenamento das regras de acesso de utilizadores não definido",
+		"SESSION_STORE_FAILED": "Falha ao guardar a sessão",
+		"SESSION_CHECK_REMOVE_FAILED": "Falha ao verificar e remover a sessão",
+		"SESSION_GET_FAILED": "Falha ao obter a sessão"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Erro ao analisar o captcha",
@@ -156,7 +165,10 @@
 		"INVALID_SALT": "Salt inválido",
 		"INVALID_TOKEN": "Token inválido",
 		"INVALID_SOLUTION": "Solução inválida",
-		"DECRYPTION_ERROR": "Erro de desencriptação"
+		"DECRYPTION_ERROR": "Erro de desencriptação",
+		"SOLUTION_NOT_FOUND": "Solução não encontrada",
+		"DECISION_MACHINE_DENIED": "Recusado pela máquina de decisão",
+		"INVALID_TIMESTAMP": "Carimbo de data/hora inválido"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parâmetro inválido"

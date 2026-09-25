@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "توقيع غير صالح",
 		"SITE_KEY_MISSING": "مفتاح الموقع مفقود",
 		"ACCOUNT_NOT_FOUND": "الحساب غير موجود",
-		"INVALID_TIMESTAMP": "الطابع الزمني غير صالح"
+		"INVALID_TIMESTAMP": "الطابع الزمني غير صالح",
+		"MISSING_AUTH_HEADER": "ترويسة التفويض مفقودة",
+		"INVALID_JWT": "رمز JWT غير صالح"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "صلاحيات غير كافية لأداء هذا الإجراء",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "لا يُسمح بالطلبات من شبكات الهاتف المحمول لهذا الموقع",
 		"SATELLITE_BLOCKED": "لا يُسمح بالطلبات من الاتصالات الفضائية لهذا الموقع",
 		"CRAWLER_BLOCKED": "لا يُسمح بالطلبات من برامج الزحف المعروفة لهذا الموقع",
-		"DISALLOWED_WEBVIEW": "الطلبات من المتصفحات داخل التطبيقات (WebView) غير مسموح بها لهذا الموقع"
+		"DISALLOWED_WEBVIEW": "الطلبات من المتصفحات داخل التطبيقات (WebView) غير مسموح بها لهذا الموقع",
+		"INTERNAL_SERVER_ERROR": "خطأ داخلي في الخادم"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "لا يمكن تعديل مالك المستخدم",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "جداول غير معرفة",
 		"CONNECTION_UNDEFINED": "الاتصال غير معرف",
 		"COMMITMENT_FLAG_FAILED": "فشل في تحديد التعهد كمعالج",
-		"UNKNOWN": "خطأ غير معروف في قاعدة البيانات"
+		"UNKNOWN": "خطأ غير معروف في قاعدة البيانات",
+		"QUERY_ERROR": "فشل استعلام قاعدة البيانات",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "اتصال Redis لقواعد الوصول غير معرف",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "تخزين قواعد وصول المستخدم غير معرف",
+		"SESSION_STORE_FAILED": "فشل تخزين الجلسة",
+		"SESSION_CHECK_REMOVE_FAILED": "فشل التحقق من الجلسة وإزالتها",
+		"SESSION_GET_FAILED": "فشل الحصول على الجلسة"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "خطأ في تحليل كلمة التحقق",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "ملح غير صالح",
 		"INVALID_TOKEN": "الرمز غير صالح",
 		"INVALID_SOLUTION": "الحل غير صالح",
-		"DECRYPTION_ERROR": "خطأ في فك التشفير"
+		"DECRYPTION_ERROR": "خطأ في فك التشفير",
+		"SOLUTION_NOT_FOUND": "الحل غير موجود",
+		"DECISION_MACHINE_DENIED": "رُفض بواسطة آلة القرار",
+		"INVALID_TIMESTAMP": "الطابع الزمني غير صالح"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "معلمة غير صالحة"
