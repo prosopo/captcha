@@ -23,6 +23,7 @@
 	"scripts": {
 		"build": "napi build --platform --release",
 		"build:debug": "napi build --platform",
+		"test": "node --test \"tests/**/*.test.mjs\"",
 		"test:cargo": "cargo test --release",
 		"clean": "cargo clean && rm -f *.node index.js index.d.ts"
 	},
