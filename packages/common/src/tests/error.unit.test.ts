@@ -21,7 +21,12 @@ import {
 	NativeLogger,
 } from "@prosopo/logger";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ProsopoApiError, ProsopoEnvError, unwrapError } from "../error.js";
+import {
+	MAX_REPORTED_ISSUES,
+	ProsopoApiError,
+	ProsopoEnvError,
+	unwrapError,
+} from "../error.js";
 
 // Tiny stand-in for the translator. Keys present in the map are translated,
 // anything else falls through unchanged (mirrors the real one's behaviour for
@@ -349,5 +354,54 @@ describe("unwrapError still produces a translated HTTP response", () => {
 		const { code, statusMessage } = unwrapError(err, englishI18n);
 		expect(code).toBe(599);
 		expect(statusMessage).toBe("Internal Server Error");
+	});
+});
+
+// Structural stand-in for a zod v3 ZodError: `name` identifies it and
+// `message` is the JSON-serialised issue list, as zod builds it.
+class FakeZodError extends Error {
+	issues: { path: (string | number)[]; message: string }[];
+	constructor(issueCount: number) {
+		const issues = Array.from({ length: issueCount }, (_, i) => ({
+			path: ["items", i],
+			message: "Expected object, received null",
+		}));
+		super(JSON.stringify(issues, null, 2));
+		this.name = "ZodError";
+		this.issues = issues;
+	}
+}
+
+describe("validation errors with many issues stay bounded", () => {
+	const ISSUES = 5000;
+
+	it("returns at most MAX_REPORTED_ISSUES issues in the response body", () => {
+		const err = new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+			context: { code: 400, error: new FakeZodError(ISSUES) },
+			silent: true,
+		});
+
+		const { code, jsonError } = unwrapError(err, englishI18n);
+		expect(code).toBe(400);
+		expect(Array.isArray(jsonError.message)).toBe(true);
+		expect(jsonError.message).toHaveLength(MAX_REPORTED_ISSUES);
+		expect(JSON.stringify(jsonError).length).toBeLessThan(5000);
+	});
+
+	it("keeps every issue when there are only a few", () => {
+		const { jsonError } = unwrapError(new FakeZodError(2), englishI18n);
+		expect(jsonError.message).toHaveLength(2);
+	});
+
+	it("logs a bounded summary of the issues, not all of them", () => {
+		const { logger, logs } = makeCapturingLogger();
+		new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+			context: { code: 400, error: new FakeZodError(ISSUES) },
+			logger,
+		});
+
+		const logged = JSON.stringify(logs[0]?.record);
+		expect(logged.length).toBeLessThan(5000);
+		expect(logged).toContain(`"issueCount":${ISSUES}`);
 	});
 });
