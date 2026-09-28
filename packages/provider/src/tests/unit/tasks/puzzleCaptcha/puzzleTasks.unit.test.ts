@@ -1098,6 +1098,8 @@ describe("PuzzleCaptchaManager", () => {
 				captchaType: CaptchaType.puzzle,
 				webView: false,
 				iFrame: true,
+				currentUrl: "https://example.com/checkout",
+				iframeUrl: "https://embed.example.org/captcha/abc",
 				decryptedHeadHash: "h".repeat(16),
 				userSitekeyIpHash: "ush",
 				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
@@ -1139,6 +1141,8 @@ describe("PuzzleCaptchaManager", () => {
 			expect(input.ruleType).toEqual(sessionRecord.ruleType);
 			expect(input.webView).toBe(sessionRecord.webView);
 			expect(input.iFrame).toBe(sessionRecord.iFrame);
+			expect(input.currentUrl).toBe(sessionRecord.currentUrl);
+			expect(input.iframeUrl).toBe(sessionRecord.iframeUrl);
 			expect(typeof input.score).toBe("number");
 		});
 	});
