@@ -1110,6 +1110,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 				ruleType: sessionRecord?.ruleType,
 				webView: sessionRecord?.webView,
 				iFrame: sessionRecord?.iFrame,
+				currentUrl: sessionRecord?.currentUrl,
+				iframeUrl: sessionRecord?.iframeUrl,
 				coords: solution.coords,
 				// tcp-probe fields — see powTasks.ts for the reasoning.
 				synNs: sessionRecord?.synNs,

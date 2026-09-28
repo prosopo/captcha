@@ -902,6 +902,8 @@ export class PuzzleCaptchaManager extends CaptchaManager {
 				ruleType: sessionRecord?.ruleType,
 				webView: sessionRecord?.webView,
 				iFrame: sessionRecord?.iFrame,
+				currentUrl: sessionRecord?.currentUrl,
+				iframeUrl: sessionRecord?.iframeUrl,
 				coords: challengeRecord.coords,
 				puzzleEvents: challengeRecord.puzzleEvents,
 				// tcp-probe fields — see powTasks.ts for the reasoning.

@@ -1058,6 +1058,8 @@ export class PowCaptchaManager extends CaptchaManager {
 					ruleType: sessionRecord?.ruleType,
 					webView: sessionRecord?.webView,
 					iFrame: sessionRecord?.iFrame,
+					currentUrl: sessionRecord?.currentUrl,
+					iframeUrl: sessionRecord?.iframeUrl,
 					coords: challengeRecord.coords,
 					// tcp-probe fields from the frictionless Session — the
 					// middleware persists them at entry, verify surfaces them
