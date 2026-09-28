@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { HttpError, ProviderApi } from "@prosopo/api";
-import { ProsopoApiError, ProsopoContractError } from "@prosopo/common";
+import { ProsopoContractError } from "@prosopo/common";
 import { Keyring } from "@prosopo/keyring";
 import { loadBalancer } from "@prosopo/load-balancer";
 import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
@@ -339,11 +339,16 @@ export class ProsopoServer {
 
 			return verificationResponse;
 		} catch (err) {
-			this.logger.error(() => ({ err, data: { token } }));
+			// Any failure (malformed token, provider list or provider
+			// unreachable, signer error) answers "not verified" rather than
+			// throwing: callers that don't catch would otherwise turn a bad
+			// token or a provider outage into a 500 from their own endpoint.
 			const code = err instanceof HttpError ? err.status : 500;
-			throw new ProsopoApiError("API.BAD_REQUEST", {
-				context: { code, token },
-			});
+			this.logger.error(() => ({ err, data: { token, code } }));
+			return {
+				verified: false,
+				status: i18n.t("API.USER_NOT_VERIFIED"),
+			};
 		}
 	}
 }
