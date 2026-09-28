@@ -454,6 +454,7 @@ describe("PuzzleCaptchaManager", () => {
 					collector1: [{ x: 10, y: 20, timestamp: 100 }],
 					collector2: [],
 					collector3: [{ x: 15, y: 25, timestamp: 200 }],
+					collector4: [{ x: 0, y: 900, timestamp: 300 }],
 					deviceCapability: "desktop",
 				} as unknown as Awaited<
 					ReturnType<typeof puzzleCaptchaManager.decryptBehavioralData>
@@ -504,6 +505,7 @@ describe("PuzzleCaptchaManager", () => {
 						patch.behavioralDataPacked.c1.length === 1 &&
 						patch.behavioralDataPacked.c2.length === 0 &&
 						patch.behavioralDataPacked.c3.length === 1 &&
+						patch.behavioralDataPacked.c4?.length === 1 &&
 						patch.behavioralDataPacked.d === "desktop" &&
 						patch.deviceCapability === "desktop",
 				),

@@ -77,6 +77,7 @@ export type DecisionMachineBehavioralDataPacked = {
 	c1: unknown[];
 	c2: unknown[];
 	c3: unknown[];
+	c4?: unknown[];
 	d: string;
 };
 
