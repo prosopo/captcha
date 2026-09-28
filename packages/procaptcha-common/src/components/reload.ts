@@ -23,6 +23,7 @@ import type { Component } from "../dom/component.js";
 import { Teardown } from "../dom/component.js";
 import {
 	type StyleMap,
+	applyAttributes,
 	applyStyles,
 	createSvgElement,
 } from "../dom/element.js";
@@ -31,6 +32,10 @@ import { createControl } from "../dom/obfuscation.js";
 export interface ReloadButtonProps {
 	themeColor: "light" | "dark";
 	onReload: () => void;
+	label?: string;
+	// Same icon on a tighter 32px container, for a header row that cannot
+	// fit the full-size control.
+	compact?: boolean;
 }
 
 const RELOAD_PATH =
@@ -96,8 +101,13 @@ export const mountReloadButton = (
 
 	const render = () => {
 		const theme = themeFor(props.themeColor);
+		if (props.label) {
+			applyAttributes(button, { "aria-label": props.label });
+			title.textContent = props.label;
+		}
 		applyStyles(button, {
 			...buttonStyleBase,
+			...(props.compact && { padding: "4px", height: "24px", width: "24px" }),
 			// M3 focus indicator: 3dp outline, 2dp offset. Matched imperatively so
 			// the ring stays keyboard-only.
 			outline: focusVisible

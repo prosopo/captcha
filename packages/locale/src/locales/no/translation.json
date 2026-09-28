@@ -390,7 +390,8 @@
 			"KEYBOARD_HINT": "Bruk piltastene til å flytte brikken, hold inne skift for mindre steg. Trykk Enter for å sende den inn, Home for å sette den tilbake til start, eller Escape for å avbryte.",
 			"POSITION": "{{x}} prosent fra venstre, {{y}} prosent ovenfra",
 			"CHECKING": "Kontrollerer svaret ditt",
-			"RETRY_ANNOUNCEMENT": "Nesten. Et nytt puslespill er lastet inn, og brikken er tilbake ved start."
+			"RETRY_ANNOUNCEMENT": "Nesten. Et nytt puslespill er lastet inn, og brikken er tilbake ved start.",
+			"REFRESH": "Et annet puslespill"
 		}
 	},
 	"CONTRACT": {

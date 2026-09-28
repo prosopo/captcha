@@ -390,7 +390,8 @@
 			"KEYBOARD_HINT": "Parçayı ok tuşlarıyla taşıyın, daha küçük adımlar için Shift tuşunu basılı tutun. Göndermek için Enter'a, başa döndürmek için Home'a, iptal etmek için Escape'e basın.",
 			"POSITION": "soldan yüzde {{x}}, yukarıdan yüzde {{y}}",
 			"CHECKING": "Cevabınız kontrol ediliyor",
-			"RETRY_ANNOUNCEMENT": "Az kaldı. Yeni bir yapboz yüklendi ve parça yeniden başlangıçta."
+			"RETRY_ANNOUNCEMENT": "Az kaldı. Yeni bir yapboz yüklendi ve parça yeniden başlangıçta.",
+			"REFRESH": "Başka bir yapboz"
 		}
 	},
 	"CONTRACT": {

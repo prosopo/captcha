@@ -390,7 +390,8 @@
 			"KEYBOARD_HINT": "Dílek posouvejte šipkami, s podrženým Shiftem se posouvá po menších krocích. Stisknutím Enter jej odešlete, klávesou Home jej vrátíte na začátek, klávesou Escape akci zrušíte.",
 			"POSITION": "{{x}} procent zleva, {{y}} procent shora",
 			"CHECKING": "Ověřujeme vaši odpověď",
-			"RETRY_ANNOUNCEMENT": "Skoro. Načetla se nová skládačka a dílek je zpět na začátku."
+			"RETRY_ANNOUNCEMENT": "Skoro. Načetla se nová skládačka a dílek je zpět na začátku.",
+			"REFRESH": "Jiná skládačka"
 		}
 	},
 	"CONTRACT": {

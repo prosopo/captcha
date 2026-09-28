@@ -144,6 +144,7 @@ const customDetectBot: BotDetectionFunction = async (
 	container: HTMLElement | undefined,
 	restartFn: () => void,
 	retryContext?: ProviderSelectRetryContext,
+	refreshOf?: string,
 ): Promise<BotDetectionFunctionResult> => {
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
@@ -287,6 +288,7 @@ const customDetectBot: BotDetectionFunction = async (
 				fallbackUrl,
 				fallbackIframeUrl,
 				clientSessionId,
+				refreshOf,
 			),
 			10000,
 		);
@@ -344,6 +346,7 @@ const customDetectBot: BotDetectionFunction = async (
 		currentUrl,
 		iframeUrl,
 		clientSessionId,
+		refreshOf,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

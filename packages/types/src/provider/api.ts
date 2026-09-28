@@ -629,6 +629,11 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// so a token exfiltrated to a different render is dead on arrival even if
 	// it clears the IP-binding check.
 	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
+	// The sessionId whose challenge the user asked to replace with the
+	// refresh control. Client-reported, so it can only ever make the next
+	// challenge harder (see `switchTypeAfterRefreshes`): a client that omits
+	// it is treated as a fresh visit, exactly as a page reload already is.
+	[ApiParams.refreshOf]: boundedString(INPUT_LIMITS.ID).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<

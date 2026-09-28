@@ -88,7 +88,7 @@ export const mountProcaptchaImageWidget = (
 		frictionlessState,
 		() => honeypot?.getValue(),
 		delegatesReload
-			? (x?: number, y?: number) => props.onReload?.(x, y)
+			? (x?: number, y?: number) => props.onReload?.(x, y, { refresh: true })
 			: undefined,
 	);
 

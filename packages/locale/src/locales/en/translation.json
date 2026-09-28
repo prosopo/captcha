@@ -24,7 +24,8 @@
 			"KEYBOARD_HINT": "Use the arrow keys to move the piece, holding shift for smaller steps. Press Enter to submit it, Home to put it back at the start, or Escape to cancel.",
 			"POSITION": "{{x}} percent across, {{y}} percent down",
 			"CHECKING": "Checking your answer",
-			"RETRY_ANNOUNCEMENT": "Not quite. A new puzzle has loaded and the piece is back at the start."
+			"RETRY_ANNOUNCEMENT": "Not quite. A new puzzle has loaded and the piece is back at the start.",
+			"REFRESH": "Show a different puzzle"
 		}
 	},
 	"GENERAL": {

@@ -425,7 +425,8 @@
 			"KEYBOARD_HINT": "Siirrä palaa nuolinäppäimillä; pidä vaihtonäppäintä pohjassa, niin askel on pienempi. Lähetä painamalla Enter, palauta alkuun Home-näppäimellä tai peruuta Esc-näppäimellä.",
 			"POSITION": "{{x}} prosenttia vasemmalta, {{y}} prosenttia ylhäältä",
 			"CHECKING": "Tarkistetaan vastaustasi",
-			"RETRY_ANNOUNCEMENT": "Melkein. Uusi palapeli ladattiin ja pala on taas alussa."
+			"RETRY_ANNOUNCEMENT": "Melkein. Uusi palapeli ladattiin ja pala on taas alussa.",
+			"REFRESH": "Toinen palapeli"
 		}
 	},
 	"CONTRACT": {

@@ -91,7 +91,8 @@
 			"KEYBOARD_HINT": "Bewege das Teil mit den Pfeiltasten, mit gedrückter Umschalttaste in kleineren Schritten. Drücke die Eingabetaste zum Absenden, Pos1, um das Teil zurückzusetzen, oder Escape zum Abbrechen.",
 			"POSITION": "{{x}} Prozent von links, {{y}} Prozent von oben",
 			"CHECKING": "Deine Antwort wird geprüft",
-			"RETRY_ANNOUNCEMENT": "Knapp daneben. Ein neues Puzzle wurde geladen und das Teil steht wieder am Anfang."
+			"RETRY_ANNOUNCEMENT": "Knapp daneben. Ein neues Puzzle wurde geladen und das Teil steht wieder am Anfang.",
+			"REFRESH": "Anderes Puzzle"
 		}
 	},
 	"CONTRACT": {

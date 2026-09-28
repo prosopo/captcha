@@ -37,6 +37,7 @@ import {
 	type ProcaptchaFrictionlessProps,
 	type ProcaptchaProps,
 	type ProcaptchaStartEventDetail,
+	type ReloadOptions,
 	StartModeEnum,
 } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
@@ -135,6 +136,11 @@ export const mountProcaptchaFrictionless = (
 	// reload press, so the replacement challenge still tells the user they
 	// missed. Held alongside `nextMountAutoStart` for the same reason.
 	let nextMountShowRetry = false;
+	// The session the user refreshed away from, sent with the next
+	// /frictionless request so the provider can count refreshes in a row.
+	// Survives provider retries for the same reason as `nextMountAutoStart`,
+	// and is cleared once a replacement session has been minted.
+	let nextRefreshOf: string | undefined;
 	const manualStart = StartModeEnum.manual === config.startMode;
 	let manualStarted = false;
 	// The inner widget only listens for `procaptcha:execute` once /frictionless
@@ -326,14 +332,12 @@ export const mountProcaptchaFrictionless = (
 		// instead of the modal simply closing. Not one-shot: the user may keep
 		// asking for a different challenge, and at a low `puzzleTolerance` they
 		// may well miss several in a row.
-		const onReload = (
-			x?: number,
-			y?: number,
-			options?: { showRetry?: boolean },
-		) => {
+		const onReload = (x?: number, y?: number, options?: ReloadOptions) => {
 			pendingRetryCoords.current = normaliseRetryCoords(x, y);
 			nextMountAutoStart = true;
 			nextMountShowRetry = true === options?.showRetry;
+			nextRefreshOf =
+				true === options?.refresh ? frictionlessState.sessionId : undefined;
 			// A reload mints a genuinely new session, so the invalidation
 			// budget for the *previous* one shouldn't count against it.
 			sessionInvalidatedAttempts.current = 0;
@@ -440,9 +444,13 @@ export const mountProcaptchaFrictionless = (
 				// After the first attempt, tell detection this is a retry so it
 				// re-selects a random provider from the list rather than re-using
 				// the DNS-routed pronode that just failed.
-				const result = await detectBot(configOutput, widgetContainer, restart, {
-					attempt: state.attemptCount,
-				});
+				const result = await detectBot(
+					configOutput,
+					widgetContainer,
+					restart,
+					{ attempt: state.attemptCount },
+					nextRefreshOf,
+				);
 
 				const guard = evaluateFrictionlessResult(result);
 				if ("error" === guard.kind) {
@@ -463,6 +471,8 @@ export const mountProcaptchaFrictionless = (
 					fallOverWithStyle(guard.message, guard.key);
 					return;
 				}
+
+				nextRefreshOf = undefined;
 
 				const frictionlessState: FrictionlessState = {
 					provider: result.provider,

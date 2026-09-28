@@ -91,7 +91,8 @@
 			"KEYBOARD_HINT": "Utilisez les touches fléchées pour déplacer la pièce, en maintenant Maj pour des pas plus petits. Appuyez sur Entrée pour valider, Origine pour la remettre au départ, ou Échap pour annuler.",
 			"POSITION": "{{x}} pour cent depuis la gauche, {{y}} pour cent depuis le haut",
 			"CHECKING": "Vérification de votre réponse",
-			"RETRY_ANNOUNCEMENT": "Presque. Un nouveau puzzle a été chargé et la pièce est revenue au départ."
+			"RETRY_ANNOUNCEMENT": "Presque. Un nouveau puzzle a été chargé et la pièce est revenue au départ.",
+			"REFRESH": "Autre puzzle"
 		}
 	},
 	"CONTRACT": {

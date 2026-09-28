@@ -93,6 +93,11 @@ export type ProcaptchaCallbacks = Partial<Callbacks>;
 /**
  * The props for the Procaptcha component.
  */
+export interface ReloadOptions {
+	showRetry?: boolean;
+	refresh?: boolean;
+}
+
 export interface ProcaptchaProps {
 	// the configuration for procaptcha
 	config: ProcaptchaClientConfigInput;
@@ -139,10 +144,8 @@ export interface ProcaptchaProps {
 	// checkbox. Coords are the checkbox click position the user already made,
 	// preserved for the same reason as on `onSessionInvalidated`.
 	// `showRetry` asks the re-mounted widget to keep the retry prompt up.
+	// `refresh` marks the user asking for a different challenge rather than
+	// getting one wrong, so the provider can count the refreshes.
 	// When absent the widget falls back to the manager's own reload behaviour.
-	onReload?: (
-		x?: number,
-		y?: number,
-		options?: { showRetry?: boolean },
-	) => void;
+	onReload?: (x?: number, y?: number, options?: ReloadOptions) => void;
 }

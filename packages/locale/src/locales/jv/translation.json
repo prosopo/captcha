@@ -390,7 +390,8 @@
 			"KEYBOARD_HINT": "Gunakake tombol panah kanggo mindhah potongan, tahan Shift supaya obahe luwih cilik. Pencet Enter kanggo ngirim, Home kanggo mbalekake menyang wiwitan, utawa Escape kanggo mbatalake.",
 			"POSITION": "{{x}} persen saka kiwa, {{y}} persen saka ndhuwur",
 			"CHECKING": "Mriksa wangsulan panjenengan",
-			"RETRY_ANNOUNCEMENT": "Meh wae. Bedhekan anyar wis dimuat lan potongane bali menyang wiwitan."
+			"RETRY_ANNOUNCEMENT": "Meh wae. Bedhekan anyar wis dimuat lan potongane bali menyang wiwitan.",
+			"REFRESH": "Bedhekan liyane"
 		}
 	},
 	"CONTRACT": {

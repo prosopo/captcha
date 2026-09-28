@@ -390,7 +390,8 @@
 			"KEYBOARD_HINT": "화살표 키로 조각을 옮기고, Shift 키를 누른 채로 옮기면 더 작게 움직입니다. Enter 키로 제출하고, Home 키로 처음 위치로 되돌리며, Escape 키로 취소합니다.",
 			"POSITION": "왼쪽에서 {{x}} 퍼센트, 위에서 {{y}} 퍼센트",
 			"CHECKING": "답을 확인하는 중입니다",
-			"RETRY_ANNOUNCEMENT": "아깝습니다. 새 퍼즐이 불러와졌고 조각은 처음 위치로 돌아갔습니다."
+			"RETRY_ANNOUNCEMENT": "아깝습니다. 새 퍼즐이 불러와졌고 조각은 처음 위치로 돌아갔습니다.",
+			"REFRESH": "다른 퍼즐"
 		}
 	},
 	"CONTRACT": {

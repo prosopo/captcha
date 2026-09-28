@@ -91,7 +91,8 @@
 			"KEYBOARD_HINT": "Usa las teclas de flecha para mover la pieza, manteniendo Mayús para pasos más pequeños. Pulsa Intro para enviarla, Inicio para devolverla al principio o Escape para cancelar.",
 			"POSITION": "{{x}} por ciento desde la izquierda, {{y}} por ciento desde arriba",
 			"CHECKING": "Comprobando tu respuesta",
-			"RETRY_ANNOUNCEMENT": "Casi. Se ha cargado un rompecabezas nuevo y la pieza vuelve a estar al principio."
+			"RETRY_ANNOUNCEMENT": "Casi. Se ha cargado un rompecabezas nuevo y la pieza vuelve a estar al principio.",
+			"REFRESH": "Otro rompecabezas"
 		}
 	},
 	"CONTRACT": {
