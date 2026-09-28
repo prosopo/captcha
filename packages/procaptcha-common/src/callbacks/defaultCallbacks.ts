@@ -58,17 +58,14 @@ export const getDefaultCallbacks = (element?: Element): Callbacks => ({
 /**
  * Set the a user callback function for an element. Data tags take precedence over renderOptions.
  */
-const getUserCallback = (
+const getUserCallback = <Args extends unknown[]>(
 	callback: string,
 	element: Element,
-	callbackFnOrName: string | ((token: string) => void) | undefined,
-) => {
+	callbackFnOrName: string | ((...args: Args) => void) | undefined,
+): ((...args: Args) => unknown) | undefined => {
 	const callbackFnName = element.getAttribute(`data-${callback}`);
 	if (callbackFnName) {
-		const callbackFn = getWindowCallback(callbackFnName);
-		if (callbackFn) {
-			return callbackFn;
-		}
+		return getWindowCallback(callbackFnName);
 	}
 	if (typeof callbackFnOrName === "function") {
 		return callbackFnOrName;
@@ -76,6 +73,7 @@ const getUserCallback = (
 	if (typeof callbackFnOrName === "string") {
 		return getWindowCallback(callbackFnOrName);
 	}
+	return undefined;
 };
 
 export function setUserCallbacks(

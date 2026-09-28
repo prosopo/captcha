@@ -11,12 +11,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-function renameKeysForDataAttr(data: { [key: string]: string } = {}) {
-	return Object.keys(data).reduce(
-		// biome-ignore lint/performance/noAccumulatingSpread: TODO fix
-		(prev, curr) => ({ ...prev, [`data-${curr}`]: data[curr] }),
-		{},
-	);
+import type { AttributeMap } from "@prosopo/procaptcha-common";
+
+type DataValues = { [key: string]: string };
+
+function renameKeysForDataAttr(data: DataValues = {}): AttributeMap {
+	const renamed: DataValues = {};
+	for (const key of Object.keys(data)) {
+		const value = data[key];
+		if (undefined !== value) {
+			renamed[`data-${key}`] = value;
+		}
+	}
+	return renamed;
 }
 
 /**
@@ -28,9 +35,9 @@ export default function addDataAttr({
 	general,
 	dev,
 }: {
-	general?: { [key: string]: string };
-	dev?: { [key: string]: string };
-}) {
+	general?: DataValues;
+	dev?: DataValues;
+}): AttributeMap {
 	return {
 		...renameKeysForDataAttr(general),
 		...(process.env.NODE_ENV !== "production"

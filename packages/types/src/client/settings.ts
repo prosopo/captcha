@@ -713,6 +713,10 @@ export const ClientSettingsSchema = object({
 	// cost, and the site operator should make that trust decision
 	// explicitly rather than get it as a default.
 	allowAgents: boolean().optional(),
+	assetOrigin: string().url().optional(),
+	clientUrl: string()
+		.regex(/^\/(?!\/)/, "clientUrl must be a root-relative path")
+		.optional(),
 }).refine((v) => v.imageMinRounds <= v.imageMaxRounds, {
 	message: "imageMinRounds must be <= imageMaxRounds",
 	path: ["imageMinRounds"],

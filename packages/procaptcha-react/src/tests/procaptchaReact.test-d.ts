@@ -13,23 +13,26 @@
 // limitations under the License.
 
 import type { Captcha, ProcaptchaProps } from "@prosopo/types";
-import type { ReactElement } from "react";
 import { assertType, describe, expectTypeOf, test } from "vitest";
-import type CaptchaComponent from "../components/CaptchaComponent.js";
-import type {
-	CaptchaWidget,
-	CaptchaWidgetProps,
-} from "../components/CaptchaWidget.js";
-import Procaptcha from "../components/Procaptcha.js";
+import type { CaptchaComponentProps } from "../components/captchaComponent.js";
+import type { CaptchaWidgetProps } from "../components/captchaWidget.js";
+import { mountProcaptcha } from "../components/procaptcha.js";
+import type { ProcaptchaWidgetHandle } from "../components/procaptchaWidget.js";
 import addDataAttr from "../util/index.js";
 
 describe("the package's public surface", () => {
-	test("Procaptcha takes exactly the shared props type", () => {
-		expectTypeOf(Procaptcha).parameter(0).toEqualTypeOf<ProcaptchaProps>();
+	test("mountProcaptcha takes a host element and the shared props type", () => {
+		expectTypeOf(mountProcaptcha).parameter(0).toEqualTypeOf<HTMLElement>();
+		expectTypeOf(mountProcaptcha).parameter(1).toEqualTypeOf<ProcaptchaProps>();
 	});
 
-	test("Procaptcha renders an element rather than a fragment or void", () => {
-		expectTypeOf(Procaptcha).returns.toMatchTypeOf<ReactElement>();
+	test("mounting hands back a handle that can tear the widget down", () => {
+		expectTypeOf(
+			mountProcaptcha,
+		).returns.toEqualTypeOf<ProcaptchaWidgetHandle>();
+		expectTypeOf<ProcaptchaWidgetHandle["destroy"]>().toEqualTypeOf<
+			() => void
+		>();
 	});
 });
 
@@ -61,15 +64,15 @@ describe("CaptchaWidget's props", () => {
 		>();
 	});
 
-	test("cannot be rendered without a solution to display", () => {
-		assertType<Parameters<typeof CaptchaWidget>[0]>({
+	test("cannot be mounted without a solution to display", () => {
+		assertType<CaptchaWidgetProps>({
 			challenge: {} as Captcha,
 			solution: [],
 			onClick: () => undefined,
 			themeColor: "light",
 		});
 		// @ts-expect-error solution is required, not defaulted
-		assertType<Parameters<typeof CaptchaWidget>[0]>({
+		assertType<CaptchaWidgetProps>({
 			challenge: {} as Captcha,
 			onClick: () => undefined,
 			themeColor: "light",
@@ -78,14 +81,12 @@ describe("CaptchaWidget's props", () => {
 });
 
 describe("CaptchaComponent's props", () => {
-	type Props = Parameters<typeof CaptchaComponent>[0];
-
 	test("takes the round to render as a number", () => {
-		expectTypeOf<Props["index"]>().toEqualTypeOf<number>();
+		expectTypeOf<CaptchaComponentProps["index"]>().toEqualTypeOf<number>();
 	});
 
 	test("takes one solution list per round", () => {
-		expectTypeOf<Props["solutions"]>().toEqualTypeOf<
+		expectTypeOf<CaptchaComponentProps["solutions"]>().toEqualTypeOf<
 			[string, number, number][][]
 		>();
 	});
@@ -93,16 +94,22 @@ describe("CaptchaComponent's props", () => {
 	test("lets a click be reported without coordinates", () => {
 		// The manager's `select` takes them as optional, so the component's
 		// handler has to be assignable from it.
-		expectTypeOf<Props["onClick"]>().toEqualTypeOf<
+		expectTypeOf<CaptchaComponentProps["onClick"]>().toEqualTypeOf<
 			(hash: string, x?: number, y?: number) => void
 		>();
 	});
 
 	test("takes callbacks that report nothing back", () => {
-		expectTypeOf<Props["onSubmit"]>().toEqualTypeOf<() => void>();
-		expectTypeOf<Props["onCancel"]>().toEqualTypeOf<() => void>();
-		expectTypeOf<Props["onNext"]>().toEqualTypeOf<() => void>();
-		expectTypeOf<Props["onReload"]>().toEqualTypeOf<() => void>();
+		expectTypeOf<CaptchaComponentProps["onSubmit"]>().toEqualTypeOf<
+			() => void
+		>();
+		expectTypeOf<CaptchaComponentProps["onCancel"]>().toEqualTypeOf<
+			() => void
+		>();
+		expectTypeOf<CaptchaComponentProps["onNext"]>().toEqualTypeOf<() => void>();
+		expectTypeOf<CaptchaComponentProps["onReload"]>().toEqualTypeOf<
+			() => void
+		>();
 	});
 });
 

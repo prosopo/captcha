@@ -1,5 +1,76 @@
 # @prosopo/account
 
+## 2.8.99
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+  - @prosopo/types@5.10.1
+  - @prosopo/fingerprint@2.7.53
+  - @prosopo/keyring@2.9.96
+
+## 2.8.98
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/util-crypto@13.5.33
+  - @prosopo/util@3.3.11
+  - @prosopo/keyring@2.9.95
+  - @prosopo/fingerprint@2.7.52
+
+## 2.8.97
+### Patch Changes
+
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+  - @prosopo/keyring@2.9.94
+  - @prosopo/fingerprint@2.7.51
+
+## 2.8.96
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+  - @prosopo/common@3.1.57
+  - @prosopo/fingerprint@2.7.50
+  - @prosopo/keyring@2.9.93
+
+## 2.8.95
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/fingerprint@2.7.49
+  - @prosopo/keyring@2.9.92
+
+## 2.8.94
+### Patch Changes
+
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/fingerprint@2.7.48
+  - @prosopo/keyring@2.9.91
+
+## 2.8.93
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/common@3.1.56
+  - @prosopo/keyring@2.9.90
+  - @prosopo/types@5.8.4
+  - @prosopo/util-crypto@13.5.32
+  - @prosopo/util@3.3.10
+  - @prosopo/fingerprint@2.7.47
+
 ## 2.8.92
 ### Patch Changes
 

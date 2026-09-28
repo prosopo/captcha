@@ -1,5 +1,144 @@
 # @prosopo/cli
 
+## 3.8.20
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+- Updated dependencies [85a1bb9]
+- Updated dependencies [2cca36e]
+  - @prosopo/provider@5.13.0
+  - @prosopo/types@5.10.1
+  - @prosopo/api@4.3.4
+  - @prosopo/env@3.6.63
+  - @prosopo/keyring@2.9.96
+
+## 3.8.19
+### Patch Changes
+
+- Updated dependencies [aed164d]
+  - @prosopo/provider@5.12.3
+
+## 3.8.18
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/locale@3.6.0
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+  - @prosopo/util@3.3.11
+  - @prosopo/keyring@2.9.95
+  - @prosopo/provider@5.12.2
+  - @prosopo/env@3.6.62
+  - @prosopo/api@4.3.3
+  - @prosopo/dotenv@3.0.57
+
+## 3.8.17
+### Patch Changes
+
+- Updated dependencies [59c02da]
+  - @prosopo/locale@3.5.0
+  - @prosopo/common@3.1.58
+  - @prosopo/provider@5.12.1
+  - @prosopo/types@5.9.2
+  - @prosopo/env@3.6.61
+  - @prosopo/keyring@2.9.94
+  - @prosopo/api@4.3.2
+
+## 3.8.16
+### Patch Changes
+
+- 6d9711f: Measure where the provider's CPU actually goes, and move puzzle background generation to Rust.
+  
+  **Measuring first.** We have been choosing what to optimise by reading the code and guessing, and the guesses have been wrong in both directions — a decoder shipped nine times slower than its predecessor without anyone noticing, and a background generator we assumed would be ten to twenty times faster in Rust turned out to be three. Two things now answer the question with numbers instead.
+  
+  `measureSync` wraps a named block of synchronous work and records the CPU it burns, so `prosopo_sync_span_cpu_seconds_total` gives a per-day ranking of which blocks cost the most. Seven blocks are instrumented: the three payload decoders, puzzle background generation and rendering, the merkle build, and decision machine execution. The measurement is only honest for work that holds the event loop, which is why the helper takes a plain function and not an async one — billing a function for the requests served during its awaits would produce a confident wrong answer.
+  
+  A periodic CPU profiler covers what nobody thought to instrument. It samples the isolate for a few seconds, logs the busiest call frames by self time, and sleeps. It is off unless `PROSOPO_CPU_PROFILE_ENABLED=true`, samples a short window every fifteen minutes by default, and cannot take the provider down with it if it fails.
+  
+  Event loop lag and process CPU were already being collected by the default Prometheus metrics; nothing was added there.
+  
+  **Puzzle backgrounds in Rust.** The new `@prosopo/native-puzzle` package generates the mesh-gradient background the slider puzzle sits on. It produces byte-identical output to the JavaScript for the same seed — verified against the existing implementation, which stays in place as the reference — and takes about a third of the time, so a buffer refill now stalls the event loop for around eleven milliseconds instead of thirty-two. The JavaScript remains the browser-side implementation and the thing the differential test compares against.
+- c151f8a: Decode detector payloads on worker threads instead of on the request path, and fix the CPU metric that was measuring the wrong thing.
+  
+  **The measurement was wrong.** `prosopo_sync_span_cpu_seconds_total` claimed to report the CPU a block of synchronous work costs, on the reasoning that nothing else can run while it holds the event loop. That is true of the main thread but not of the process: `process.cpuUsage()` counts every thread, so V8's background garbage collector and compiler and the image encoder's thread pool were all billed to whichever block happened to be open. In production it reported *more* CPU than wall-clock time, which is impossible for work on one thread, and that is what gave it away. Node offers no per-thread CPU clock, so the counter is removed rather than corrected — process-wide CPU is already reported as `prosopo_process_cpu_seconds_total`. The wall-time counter was never affected and is the one to rank by: for a synchronous block it is exactly the delay imposed on everything else waiting.
+  
+  **What that measurement found.** The three detector decoders held the event loop for 15–47 ms every time they ran, and together accounted for about 84% of all the blocking we measured. That cost does not stay with the request doing the decoding — it delays every other request being served at that moment, health checks included. It is the same shape of problem as the decoder that shipped nine times slower in 3.8.14.
+  
+  **The fix.** The decoders now run on a small pool of worker threads. The decoders themselves are untouched: the same file, the same input, the same output, including the same failures — the tests check that decoding through the pool is indistinguishable from decoding inline. A round trip to a worker costs between 0.01 and 0.2 ms against the 15–47 ms it takes off the request path.
+  
+  Set `PROSOPO_DECODER_WORKERS=0` to go back to decoding inline; it takes a restart but not a rollback. `PROSOPO_DECODER_WORKERS` sets the pool size (default: up to four, leaving a core spare) and `PROSOPO_DECODER_TIMEOUT_MS` caps how long one decode may take before the worker is replaced. If workers cannot be started at all the provider decodes inline and says so in the log, because serving slowly is better than not serving.
+  
+  Two new metrics replace the decoder spans: `prosopo_decoder_duration_seconds` and `prosopo_decoder_calls_total`. Watch them next to `prosopo_nodejs_eventloop_lag_p99_seconds` — that pair is how you confirm the work moved rather than disappeared.
+  
+  The decoders are now copied next to the bundle under fixed names and loaded by path, because a worker cannot ask the bundler what it called a chunk. `copyAssetsPlugin` does the copying.
+- Updated dependencies [a22069d]
+- Updated dependencies [6d9711f]
+- Updated dependencies [c151f8a]
+- Updated dependencies [de1dc32]
+  - @prosopo/provider@5.12.0
+  - @prosopo/types@5.9.1
+  - @prosopo/locale@3.4.4
+  - @prosopo/api@4.3.1
+  - @prosopo/common@3.1.57
+  - @prosopo/env@3.6.60
+  - @prosopo/keyring@2.9.93
+
+## 3.8.15
+### Patch Changes
+
+- Updated dependencies [6c00bca]
+  - @prosopo/provider@5.11.1
+
+## 3.8.14
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+- Updated dependencies [a4a71be]
+  - @prosopo/types@5.9.0
+  - @prosopo/provider@5.11.0
+  - @prosopo/api@4.3.0
+  - @prosopo/env@3.6.59
+  - @prosopo/keyring@2.9.92
+
+## 3.8.13
+### Patch Changes
+
+- Updated dependencies [be25974]
+- Updated dependencies [8d158a1]
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/provider@5.10.4
+  - @prosopo/api@4.2.5
+  - @prosopo/env@3.6.58
+  - @prosopo/keyring@2.9.91
+
+## 3.8.12
+### Patch Changes
+
+- 3334ef2: Replace loose `any` types in the CLI's JSON file writer and env file reloader with real types. No behaviour change.
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [4d45e3d]
+- Updated dependencies [d710b7f]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/common@3.1.56
+  - @prosopo/keyring@2.9.90
+  - @prosopo/locale@3.4.3
+  - @prosopo/provider@5.10.3
+  - @prosopo/types@5.8.4
+  - @prosopo/util@3.3.10
+  - @prosopo/api@4.2.4
+  - @prosopo/dotenv@3.0.56
+  - @prosopo/env@3.6.57
+  - @prosopo/logger@2.0.10
+
 ## 3.8.11
 ### Patch Changes
 

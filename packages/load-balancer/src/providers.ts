@@ -16,6 +16,7 @@ import type { EnvironmentTypes, RandomProvider } from "@prosopo/types";
 import {
 	type HardcodedProvider,
 	type IpMode,
+	getProviderListOverride,
 	loadBalancer,
 } from "./balancer.js";
 import { getDevelopmentProviderUrl } from "./developmentProviderUrl.js";
@@ -105,6 +106,18 @@ const resolvePinnedUrl = async (
 	env: EnvironmentTypes,
 	ipMode?: IpMode,
 ): Promise<string> => {
+	// An overridden list needs no discovery: healthz exists to report which
+	// pronode the DNS layer picked, and an override already names the nodes.
+	// Returning early also keeps the widget off Prosopo's hostnames entirely.
+	// The pick is weighted and per-call rather than cached, so traffic spreads
+	// across a multi-provider override instead of every page in a browser
+	// session pinning to whichever node was drawn first.
+	const override = getProviderListOverride(undefined, ipMode);
+	if (override.length > 0) {
+		const chosen = pickWeightedProvider(override, Math.random);
+		if (chosen) return chosen.url;
+	}
+
 	// The base for /healthz already carries the ipv4./ipv6. label when one is
 	// requested, so DNS keeps the discovery request on the same single-stack
 	// path as the captcha calls that follow.

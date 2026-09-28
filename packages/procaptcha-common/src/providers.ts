@@ -85,6 +85,36 @@ export const getRetryDelayMs = (
 	return Math.round(random() * cappedDelay);
 };
 
+// Backoff bounds for the frictionless wrapper's silent re-mint loop. A widget
+// whose session keeps going missing never shows the user an error — it just
+// re-mints behind the checkbox — so the loop has no natural end and the rate is
+// the only thing standing between one broken client and a self-inflicted DDoS.
+// The first restart keeps the historic ten seconds; each one after that doubles
+// to a two-minute ceiling.
+const RESTART_BASE_DELAY_MS = 10_000;
+const RESTART_MAX_DELAY_MS = 120_000;
+
+/**
+ * Delay before the nth silent widget restart, counting from zero.
+ *
+ * Jittered over the top half of the interval rather than all of it: full jitter
+ * (as `getRetryDelayMs` uses) can return ~0, which for a whole-widget re-mint
+ * would mean a restart that isn't a backoff at all. Half the cap as a floor
+ * keeps every wait a real one while still desynchronising a fleet of widgets
+ * that all failed at the same moment.
+ */
+export const getRestartDelayMs = (
+	restartCount: number,
+	random: () => number = Math.random,
+): number => {
+	const safeCount = Math.max(0, Math.floor(restartCount));
+	const cap = Math.min(
+		RESTART_MAX_DELAY_MS,
+		RESTART_BASE_DELAY_MS * 2 ** safeCount,
+	);
+	return Math.round(cap / 2 + random() * (cap / 2));
+};
+
 export const providerRetry = async (
 	currentFn: () => Promise<void>,
 	retryFn: () => Promise<void>,

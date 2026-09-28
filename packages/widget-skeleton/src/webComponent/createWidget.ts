@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { getCheckboxInteractiveArea } from "../elements/checkbox.js";
 import { createWidgetSkeletonElement } from "../elements/skeleton.js";
 import type { Theme } from "../theme.js";
 import { applyDefaultStyles } from "./createWebComponent.js";
@@ -33,17 +32,11 @@ export function createWidgetSkeleton(
 	const host = document.createElement(webComponentTag);
 	applyDefaultStyles(host);
 
-	const widget = createWidgetSkeletonElement(theme);
-	host.appendChild(widget);
+	const { element, interactiveArea } = createWidgetSkeletonElement(theme);
+	host.appendChild(element);
 
 	container.innerHTML = "";
 	container.appendChild(host);
 
-	const widgetInteractiveArea = getCheckboxInteractiveArea(host);
-
-	if (!(widgetInteractiveArea instanceof HTMLElement)) {
-		throw new Error("Fail to initialize widget: interactive area is not found");
-	}
-
-	return { widgetInteractiveArea, webComponent: host };
+	return { widgetInteractiveArea: interactiveArea, webComponent: host };
 }

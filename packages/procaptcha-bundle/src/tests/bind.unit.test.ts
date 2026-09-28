@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Root } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { BundleCaptchaHandle } from "../util/captcha/components/bundleCaptcha.js";
 import type { CreatedWidget } from "../util/widgetFactory.js";
 
 const mocks = vi.hoisted(() => ({
@@ -41,8 +41,7 @@ const { render, remove, execute } = await import("../index.js");
 const SITE_KEY = "5CcNvLUdiXFpzKDMjThGLSK9rhWHA1H4EF3zrgkpkjAdqmuP";
 const EXECUTE_EVENT = "procaptcha:execute";
 
-const makeRoot = (): Root =>
-	({ unmount: vi.fn(), render: vi.fn() }) as unknown as Root;
+const makeHandle = (): BundleCaptchaHandle => ({ destroy: vi.fn() });
 
 // Like the real factory, the widget lives in a child of the host element and
 // listens there, so a targeted event must be dispatched on that child.
@@ -52,7 +51,7 @@ const createWidgetsLikeTheFactory = async (
 	hosts.map((host) => {
 		const container = document.createElement("div");
 		host.appendChild(container);
-		return { root: makeRoot(), container };
+		return { handle: makeHandle(), container };
 	});
 
 const listenLikeAWidget = (

@@ -57,6 +57,7 @@ import { getIpAddressFromComposite } from "../compositeIpAddress.js";
 import { getDetectorBundlePool } from "./detection/bundlePool.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
+import { decode } from "./detection/decoderPool.js";
 import { extraIpInfosFromEnrichedDnsEvent } from "./dnsEvent/enrichDnsEvent.js";
 import { checkSpamEmail as checkSpamEmailFn } from "./spam/checkSpamEmail.js";
 import {
@@ -80,6 +81,8 @@ export interface PoolBundleDecrypt {
 	 * with. Absent for bundles from a pool built before it existed.
 	 */
 	payloadLayout?: string;
+	/** Second opaque decode parameter, same contract as `payloadLayout`. */
+	keyMap?: string;
 }
 
 /**
@@ -186,7 +189,7 @@ export class CaptchaManager {
 	 * Read a session and, if it's an escalation missing one of the
 	 * inherently-origin-populated fields, walk to `originSessionId` and fill
 	 * the gap. Intended for the decision-machine input read path only —
-	 * `simdReadings`, `dnsEvent`, `entropyMathRandomFingerprint` etc. are
+	 * `simdReadings`, `dnsEvent` and the detector bag are
 	 * populated on the origin session (SIMD via pow-submit's fire-and-forget
 	 * attach; DNS via the sidecar's origin-TLS-scoped patch) and don't
 	 * automatically end up on the escalation record because
@@ -215,31 +218,14 @@ export class CaptchaManager {
 			session.simdReadings === undefined || session.simdReadings === null;
 		const needsDns =
 			session.dnsEvent === undefined || session.dnsEvent === null;
-		const needsEntropyMath = session.entropyMathRandomFingerprint === undefined;
-		const needsEntropyCrypto = session.entropyCryptoFingerprint === undefined;
-		const needsEntropyWall = session.entropyWallClockOffsetMs === undefined;
-		const needsEntropyFirst = session.entropyMathRandomFirst === undefined;
-		const needsG = session.g === undefined;
-		const needsI = session.i === undefined;
-		const needsSw = session.sw === undefined;
-		const needsMd = session.md === undefined;
-		const needsBn = session.bn === undefined;
-		const needsFs = session.fs === undefined;
+		// An absent bag is reason enough to walk to the origin. A present one
+		// is not — but if the walk happens anyway for simd or dns, the bags
+		// are merged key by key, since the origin can have gained keys after
+		// the escalation copied it. The escalation's own keys always win.
+		const escalationData = session.d ?? {};
+		const needsData = session.d === undefined;
 
-		if (
-			!needsSimd &&
-			!needsDns &&
-			!needsEntropyMath &&
-			!needsEntropyCrypto &&
-			!needsEntropyWall &&
-			!needsEntropyFirst &&
-			!needsG &&
-			!needsI &&
-			!needsSw &&
-			!needsMd &&
-			!needsBn &&
-			!needsFs
-		) {
+		if (!needsSimd && !needsDns && !needsData) {
 			return session;
 		}
 
@@ -248,33 +234,93 @@ export class CaptchaManager {
 		);
 		if (!origin) return session;
 
+		const mergedData =
+			origin.d === undefined ? session.d : { ...origin.d, ...escalationData };
+
 		return {
 			...session,
 			...(needsSimd &&
 				origin.simdReadings && { simdReadings: origin.simdReadings }),
 			...(needsDns && origin.dnsEvent && { dnsEvent: origin.dnsEvent }),
-			...(needsEntropyMath &&
-				origin.entropyMathRandomFingerprint !== undefined && {
-					entropyMathRandomFingerprint: origin.entropyMathRandomFingerprint,
-				}),
-			...(needsEntropyCrypto &&
-				origin.entropyCryptoFingerprint !== undefined && {
-					entropyCryptoFingerprint: origin.entropyCryptoFingerprint,
-				}),
-			...(needsEntropyWall &&
-				origin.entropyWallClockOffsetMs !== undefined && {
-					entropyWallClockOffsetMs: origin.entropyWallClockOffsetMs,
-				}),
-			...(needsEntropyFirst &&
-				origin.entropyMathRandomFirst !== undefined && {
-					entropyMathRandomFirst: origin.entropyMathRandomFirst,
-				}),
-			...(needsG && origin.g !== undefined && { g: origin.g }),
-			...(needsI && origin.i !== undefined && { i: origin.i }),
-			...(needsSw && origin.sw !== undefined && { sw: origin.sw }),
-			...(needsMd && origin.md !== undefined && { md: origin.md }),
-			...(needsBn && origin.bn !== undefined && { bn: origin.bn }),
-			...(needsFs && origin.fs !== undefined && { fs: origin.fs }),
+			...(mergedData !== undefined && { d: mergedData }),
+		};
+	}
+
+	/**
+	 * Decode the payloads a solution submission can carry, in one pass.
+	 *
+	 * Both decodes want the same session bundle and neither depends on the
+	 * other, so the bundle is resolved once and the two decodes run together.
+	 * Done separately they cost two bundle lookups and two serialised decoder
+	 * round trips on the submit path, which measured as a ~22-25% latency
+	 * regression on `pow/solution` and `puzzle/solution` once decoding moved
+	 * to worker threads.
+	 *
+	 * Absent or undecodable payloads come back undefined rather than throwing,
+	 * matching what the individual decoders already do: a submission is not
+	 * worth failing over a signal we could not read.
+	 */
+	public async decodeSubmissionPayloads(
+		sessionId: string | undefined,
+		payloads: { behavioural?: string; simd?: string },
+	): Promise<{
+		behavioural?: BehavioralDataResult;
+		simd?: NonNullable<Session["simdReadings"]>;
+	}> {
+		const { behavioural, simd } = payloads;
+		if (!behavioural && !simd) return {};
+
+		let bundle: PoolBundleDecrypt | undefined;
+		try {
+			bundle = await this.resolveBundleBySessionId(sessionId);
+		} catch (err) {
+			this.logger?.warn(() => ({
+				msg: "Could not resolve the detector bundle for a submission",
+				data: { sessionId },
+				err,
+			}));
+			return {};
+		}
+
+		// Caught per decode, not around the pair. Both decoders already return
+		// null for a payload they cannot read, but anything they throw for some
+		// other reason used to be contained by the caller's try/catch; running
+		// them together moved them outside it, so the tolerance has to live here.
+		// Per decode rather than around both, or one failure would discard the
+		// other's perfectly good result.
+		const tolerate = async <T>(
+			decoding: Promise<T | null | undefined> | undefined,
+			which: string,
+		): Promise<T | undefined> => {
+			if (!decoding) return undefined;
+			try {
+				return (await decoding) ?? undefined;
+			} catch (err) {
+				this.logger?.warn(() => ({
+					msg: "Failed to decode a submission payload",
+					data: { decoder: which, sessionId },
+					err,
+				}));
+				return undefined;
+			}
+		};
+
+		const [decodedBehavioural, decodedSimd] = await Promise.all([
+			tolerate(
+				behavioural
+					? this.decryptBehavioralData(behavioural, bundle)
+					: undefined,
+				"behaviour",
+			),
+			tolerate(
+				simd ? this.decryptSimdReadingsForAttach(simd, bundle) : undefined,
+				"simd",
+			),
+		]);
+
+		return {
+			...(decodedBehavioural && { behavioural: decodedBehavioural }),
+			...(decodedSimd && { simd: decodedSimd }),
 		};
 	}
 
@@ -755,6 +801,7 @@ export class CaptchaManager {
 					...(bundle.payloadLayout && {
 						payloadLayout: bundle.payloadLayout,
 					}),
+					...(bundle.keyMap && { keyMap: bundle.keyMap }),
 				}
 			: undefined;
 	}
@@ -846,14 +893,12 @@ export class CaptchaManager {
 			}));
 			return null;
 		}
-		const decryptSimdReadings = (await import("./detection/decodeSimd.js"))
-			.default;
 		try {
-			return await decryptSimdReadings(
+			return await decode<SimdReadingsResult>("simd", [
 				encryptedData,
 				bundle.key,
 				bundle.innerConfig,
-			);
+			]);
 		} catch (err) {
 			this.logger?.warn(() => ({
 				msg: "Failed to decrypt SIMD readings with the session's bundle",
@@ -873,15 +918,12 @@ export class CaptchaManager {
 			}));
 			return null;
 		}
-		const decryptBehavioralData = (
-			await import("./detection/decodeBehavior.js")
-		).default;
 		try {
-			const result = await decryptBehavioralData(
+			const result = await decode<BehavioralDataResult>("behaviour", [
 				encryptedData,
 				bundle.key,
 				bundle.innerConfig,
-			);
+			]);
 			this.logger?.info(() => ({
 				msg: "Behavioral data decrypted successfully",
 				data: {
@@ -1041,7 +1083,21 @@ export class CaptchaManager {
 		);
 	}
 
-	static canClientSeeScore(tier: Tier, score?: number) {
-		return score && tier && tier !== Tier.Free;
+	/**
+	 * Does this client's tier entitle it to the bot score, and is there one?
+	 *
+	 * `score !== undefined`, not `score`: a session with nothing wrong with it
+	 * scores 0, and a truthiness test dropped the field for exactly those
+	 * users — a paying customer reading `score` got a present field for
+	 * every suspicious visitor and a missing one for their cleanest. It has
+	 * been invisible because `Math.random() * 0.3` makes an exact 0 all but
+	 * impossible; taking that noise out (see captcha-private#4433) is what
+	 * would expose it.
+	 *
+	 * Returning `boolean` rather than the old `number | boolean | undefined`,
+	 * which came from `&&`-chaining the score and the tier.
+	 */
+	static canClientSeeScore(tier: Tier, score?: number): boolean {
+		return score !== undefined && tier !== Tier.Free;
 	}
 }

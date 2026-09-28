@@ -346,6 +346,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Te veel inzendingen vanaf dit e-mailadres",
 		"VPN_BLOCKED": "Verzoeken via VPN-verbindingen zijn niet toegestaan voor deze site",
 		"PROXY_BLOCKED": "Verzoeken via proxyservers zijn niet toegestaan voor deze site",
+		"TOO_MANY_LOCALHOST": "Te veel CAPTCHA-verzoeken vanaf localhost voor deze sitesleutel",
 		"TOR_BLOCKED": "Verzoeken via Tor-exitnodes zijn niet toegestaan voor deze site",
 		"ABUSER_BLOCKED": "Verzoeken van netwerken die zijn gemarkeerd voor misbruik zijn niet toegestaan voor deze site",
 		"DATACENTER_BLOCKED": "Verzoeken van datacenter-IP-adressen zijn niet toegestaan voor deze site",

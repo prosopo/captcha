@@ -29,6 +29,9 @@ import {
 } from "../elements/skeleton.js";
 import { type Theme, darkTheme, lightTheme } from "../theme.js";
 
+const skeletonOf = (theme: Theme): HTMLElement =>
+	createWidgetSkeletonElement(theme).element;
+
 const originalNodeEnv: string | undefined = process.env.NODE_ENV;
 
 afterEach(() => {
@@ -44,7 +47,7 @@ describe("createWidgetSkeletonElement", () => {
 		// Each level exists for a specific declaration — the container query, the
 		// overflow clip, the padded content box — so a missing one silently
 		// changes the layout rather than failing.
-		const widget: HTMLElement = createWidgetSkeletonElement(lightTheme);
+		const widget: HTMLElement = skeletonOf(lightTheme);
 		expect(widget.className).toBe("prosopo-widget");
 		for (const selector of [
 			".prosopo-widget__outer",
@@ -58,7 +61,7 @@ describe("createWidgetSkeletonElement", () => {
 	});
 
 	test("substitutes real elements for both placeholders", () => {
-		const widget: HTMLElement = createWidgetSkeletonElement(lightTheme);
+		const widget: HTMLElement = skeletonOf(lightTheme);
 		// The placeholders are gone, not merely filled: replaceWith swaps the node.
 		expect(widget.querySelector(".prosopo-widget__checkbox")).toBeNull();
 		expect(widget.querySelector(".prosopo-widget__logo")).toBeNull();
@@ -71,7 +74,7 @@ describe("createWidgetSkeletonElement", () => {
 	test("keeps the checkbox before the logo", () => {
 		// The content row is a space-between flex row; swapping the order would
 		// put the brand mark where the click target is expected.
-		const content = createWidgetSkeletonElement(lightTheme).querySelector(
+		const content = skeletonOf(lightTheme).querySelector(
 			".prosopo-widget__content",
 		);
 		expect(content?.children[0]?.className).toBe("prosopo-checkbox");
@@ -85,8 +88,7 @@ describe("createWidgetSkeletonElement", () => {
 		"%s interpolates its own palette into the styles",
 		(_n: string, theme: Theme) => {
 			const styles: string =
-				createWidgetSkeletonElement(theme).querySelector("style")
-					?.textContent ?? "";
+				skeletonOf(theme).querySelector("style")?.textContent ?? "";
 			// The on-page widget sits on `surface`. `background.default` is the
 			// dialog container's role (surfaceContainerHigh), which is how M3
 			// separates a resting affordance from a modal container.
@@ -101,8 +103,7 @@ describe("createWidgetSkeletonElement", () => {
 
 	test("pins the widget to the shared dimensions", () => {
 		const styles: string =
-			createWidgetSkeletonElement(lightTheme).querySelector("style")
-				?.textContent ?? "";
+			skeletonOf(lightTheme).querySelector("style")?.textContent ?? "";
 		expect(styles).toContain(WIDGET_MAX_WIDTH);
 		expect(styles).toContain(WIDGET_MIN_HEIGHT);
 		expect(styles).toContain(`height: ${WIDGET_OUTER_HEIGHT}px`);
@@ -112,24 +113,20 @@ describe("createWidgetSkeletonElement", () => {
 		// Host stylesheets frequently add ::after content to links and divs; the
 		// widget is not in a shadow root at this level, so it has to opt out.
 		const styles: string =
-			createWidgetSkeletonElement(lightTheme).querySelector("style")
-				?.textContent ?? "";
+			skeletonOf(lightTheme).querySelector("style")?.textContent ?? "";
 		expect(styles).toContain("content: none !important");
 	});
 
 	test("forces ltr regardless of the embedding page's direction", () => {
 		const styles: string =
-			createWidgetSkeletonElement(lightTheme).querySelector("style")
-				?.textContent ?? "";
+			skeletonOf(lightTheme).querySelector("style")?.textContent ?? "";
 		expect(styles).toContain("direction: ltr !important");
 	});
 
 	test("adds the test hook outside production", () => {
 		process.env.NODE_ENV = "development";
 		expect(
-			createWidgetSkeletonElement(lightTheme).querySelector(
-				'[data-cy="captcha-checkbox"]',
-			),
+			skeletonOf(lightTheme).querySelector('[data-cy="captcha-checkbox"]'),
 		).not.toBeNull();
 	});
 
@@ -137,7 +134,7 @@ describe("createWidgetSkeletonElement", () => {
 		// It is read by the e2e suite; shipping it would expose an automation
 		// selector to the bots the widget exists to stop.
 		process.env.NODE_ENV = "production";
-		const widget: HTMLElement = createWidgetSkeletonElement(lightTheme);
+		const widget: HTMLElement = skeletonOf(lightTheme);
 		expect(widget.querySelector("[data-cy]")).toBeNull();
 		expect(widget.querySelector(".prosopo-widget__dimensions")).not.toBeNull();
 	});
@@ -146,19 +143,15 @@ describe("createWidgetSkeletonElement", () => {
 		// The mode is not captured at import time, so a bundler that sets it
 		// late still takes effect.
 		process.env.NODE_ENV = "production";
-		expect(
-			createWidgetSkeletonElement(lightTheme).querySelector("[data-cy]"),
-		).toBeNull();
+		expect(skeletonOf(lightTheme).querySelector("[data-cy]")).toBeNull();
 		process.env.NODE_ENV = "development";
-		expect(
-			createWidgetSkeletonElement(lightTheme).querySelector("[data-cy]"),
-		).not.toBeNull();
+		expect(skeletonOf(lightTheme).querySelector("[data-cy]")).not.toBeNull();
 	});
 
 	test("returns a detached element on each call", () => {
-		const widget: HTMLElement = createWidgetSkeletonElement(lightTheme);
+		const widget: HTMLElement = skeletonOf(lightTheme);
 		expect(widget.isConnected).toBe(false);
-		expect(widget).not.toBe(createWidgetSkeletonElement(lightTheme));
+		expect(widget).not.toBe(skeletonOf(lightTheme));
 	});
 });
 

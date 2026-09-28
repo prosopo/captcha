@@ -47,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Příliš mnoho odeslání z této e-mailové adresy",
 		"VPN_BLOCKED": "Požadavky z VPN připojení nejsou pro tento web povoleny",
 		"PROXY_BLOCKED": "Požadavky z proxy serverů nejsou pro tento web povoleny",
+		"TOO_MANY_LOCALHOST": "Příliš mnoho požadavků CAPTCHA z localhost pro tento klíč webu",
 		"TOR_BLOCKED": "Požadavky z výstupních uzlů Tor nejsou pro tento web povoleny",
 		"ABUSER_BLOCKED": "Požadavky ze sítí označených za zneužívající nejsou pro tento web povoleny",
 		"DATACENTER_BLOCKED": "Požadavky z IP adres datových center nejsou pro tento web povoleny",

@@ -82,6 +82,15 @@ export const Manager = (
 	// resetState-cleared closure state so a retry can exclude it from the
 	// candidate pool and land on a different provider.
 	let previousProviderUrl: string | undefined;
+	// The sessionId this manager has already exchanged for a challenge. The
+	// provider consumes a session the moment it issues a challenge against it
+	// (`checkAndRemoveSession`), so asking for a second challenge with the same
+	// id is a guaranteed 400 CAPTCHA.NO_SESSION_FOUND. Mirrors the image
+	// manager's guard: the id lives on `frictionlessState`, which `resetState()`
+	// does not own, so every path that re-enters `start()` — a wrong answer, a
+	// providerRetry after a late failure, a `procaptcha:execute` event — would
+	// otherwise re-send it.
+	let spentSessionId: string | undefined;
 
 	const defaultState = (): Partial<ProcaptchaState> => {
 		return {
@@ -272,6 +281,23 @@ export const Manager = (
 
 				const providerApi = new ProviderApi(providerUrl, getDappAccount());
 
+				// Short-circuit a challenge fetch we already know the provider
+				// will reject, and route straight to the recovery path the
+				// wrapper listens for — re-minting a session is the only way
+				// forward, and the doomed round trip only delays it.
+				const challengeSessionId = frictionlessState?.sessionId;
+				if (challengeSessionId && challengeSessionId === spentSessionId) {
+					updateState({
+						loading: false,
+						error: {
+							message: "No session found",
+							key: "CAPTCHA.NO_SESSION_FOUND",
+						},
+					});
+					events.onError(new Error("No session found"));
+					return;
+				}
+
 				// Non-blocking check — attach SIMD readings only if the
 				// prefetched benchmark has already resolved.
 				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
@@ -280,9 +306,17 @@ export const Manager = (
 				const challenge = await providerApi.getPuzzleCaptchaChallenge(
 					userAccount,
 					getDappAccount(),
-					frictionlessState?.sessionId,
+					challengeSessionId,
 					simdReadingsOnChallenge,
 				);
+				// The provider answered, so it has seen the id and consumed it —
+				// a challenge and a 4xx mean the same thing here. Marked after
+				// the await rather than before it on purpose: a throw is the one
+				// case where the request may never have landed, and that is
+				// exactly when `providerRetry` re-enters `start()` to fail over
+				// onto a different provider. Marking it spent up front would
+				// turn every transport blip into "No session found".
+				if (challengeSessionId) spentSessionId = challengeSessionId;
 
 				if (challenge.error) {
 					updateState({

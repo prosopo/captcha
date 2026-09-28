@@ -1,5 +1,79 @@
 # @prosopo/database
 
+## 4.0.40
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+  - @prosopo/types@5.10.1
+  - @prosopo/types-database@5.6.4
+  - @prosopo/user-access-policy@3.14.10
+
+## 4.0.39
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+  - @prosopo/types-database@5.6.3
+  - @prosopo/util@3.3.11
+  - @prosopo/user-access-policy@3.14.9
+  - @prosopo/redis-client@1.0.37
+
+## 4.0.38
+### Patch Changes
+
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+  - @prosopo/types-database@5.6.2
+  - @prosopo/user-access-policy@3.14.8
+
+## 4.0.37
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/user-access-policy@3.14.7
+  - @prosopo/types@5.9.1
+  - @prosopo/types-database@5.6.1
+  - @prosopo/common@3.1.57
+
+## 4.0.36
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [ce2500b]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/types-database@5.6.0
+  - @prosopo/user-access-policy@3.14.6
+
+## 4.0.35
+### Patch Changes
+
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/types-database@5.5.5
+  - @prosopo/user-access-policy@3.14.5
+
+## 4.0.34
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/common@3.1.56
+  - @prosopo/redis-client@1.0.36
+  - @prosopo/types-database@5.5.4
+  - @prosopo/types@5.8.4
+  - @prosopo/user-access-policy@3.14.4
+  - @prosopo/util@3.3.10
+  - @prosopo/logger@2.0.10
+
 ## 4.0.33
 ### Patch Changes
 

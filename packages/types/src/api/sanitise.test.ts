@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, it } from "vitest";
-import { INPUT_LIMITS, boundedString, safeLine, safeText } from "./sanitise.js";
+import { INPUT_LIMITS } from "./inputLimits.js";
+import { boundedString, safeLine, safeText } from "./sanitise.js";
 
 describe("INPUT_LIMITS", () => {
 	it("orders the limits from identifier sized up to token sized", () => {

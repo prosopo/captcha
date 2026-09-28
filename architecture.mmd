@@ -73,7 +73,7 @@ graph TB
             DetectorPool["Detector Bundle Pool<br/>(precomputed bundles loaded<br/>from disk; empty pool ⇒ no<br/>detection ⇒ PoW fallback)"]
             SolutionVerifier["Solution Verifier<br/>Merkle tree + salt embedding"]
             DecisionMachine["Decision Machine<br/>pluggable scoring +<br/>post-pow escalation"]
-            AccessPolicies["Access Policies<br/>(UAP: per-IP/ja4/headHash<br/>rules; can set captchaType +<br/>params; deferToVerify)"]
+            AccessPolicies["Access Policies<br/>(UAP: per-IP/ja4/headHash<br/>rules; can set captchaType +<br/>params; deferToVerify;<br/>Block messageKey → 403 reason)"]
             TrafficFilter["Traffic Filter<br/>(site-wide: per-category<br/>vpn / proxy / tor / abuser /<br/>datacenter / mobile /<br/>satellite / crawler)<br/>action = block | challenge"]
             SpamFilter["Spam Filter<br/>(email rules)"]
         end

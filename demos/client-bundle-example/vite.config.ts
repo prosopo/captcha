@@ -17,9 +17,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
-import explanationInjector from "./src/plugins/explanation-injector.js";
+import codeSnippetInjector from "./src/plugins/code-snippet-injector.js";
 import formFillerInjector from "./src/plugins/form-filler-injector.js";
-import navigationInjector from "./src/plugins/navigation-injector.js";
+import layoutInjector from "./src/plugins/layout-injector.js";
 import placementInjector from "./src/plugins/placement-injector.js";
 import statusLogInjector from "./src/plugins/status-log-injector.js";
 
@@ -166,7 +166,7 @@ export default defineConfig(({ command, mode }) => {
 					"pow-explicit": path.resolve(__dirname, "src/pow-explicit.html"),
 					"image-explicit": path.resolve(__dirname, "src/image-explicit.html"),
 					"pow-implicit": path.resolve(__dirname, "src/pow-implicit.html"),
-					"image-implicit": path.resolve(__dirname, "src/index.html"),
+					"image-implicit": path.resolve(__dirname, "src/image-implicit.html"),
 					"frictionless-implicit": path.resolve(
 						__dirname,
 						"src/frictionless-implicit.html",
@@ -227,9 +227,9 @@ export default defineConfig(({ command, mode }) => {
 			},
 		},
 		plugins: [
-			navigationInjector(),
+			layoutInjector(),
 			formFillerInjector(),
-			explanationInjector(),
+			codeSnippetInjector(),
 			statusLogInjector(),
 			placementInjector(),
 			{

@@ -16,7 +16,6 @@ import { describe, expect, test } from "vitest";
 import {
 	WIDGET_BORDER,
 	WIDGET_BORDER_RADIUS,
-	WIDGET_CHECKBOX_SPINNER_CSS_CLASS,
 	WIDGET_DIMENSIONS,
 	WIDGET_INNER_HEIGHT,
 	WIDGET_MAX_WIDTH,
@@ -26,7 +25,7 @@ import {
 	WIDGET_URL,
 	WIDGET_URL_TEXT,
 } from "../constants.js";
-import { CHECKBOX_MARKUP } from "../elements/checkbox.js";
+import { CHECKBOX_HOST_CSS_CLASS } from "../elements/checkbox.js";
 
 describe("constants", () => {
 	test("the widget link is an absolute https url", () => {
@@ -73,10 +72,9 @@ describe("constants", () => {
 		expect(WIDGET_BORDER).toBe("1px solid");
 	});
 
-	test("the spinner class is a legal css identifier and is used", () => {
-		expect(WIDGET_CHECKBOX_SPINNER_CSS_CLASS).toMatch(/^[a-zA-Z_-][\w-]*$/);
-		// The class is public API: procaptcha-common's React checkbox renders it
-		// while the styles that animate it live here.
-		expect(CHECKBOX_MARKUP).toContain(WIDGET_CHECKBOX_SPINNER_CSS_CLASS);
+	test("the checkbox host class is a legal css identifier", () => {
+		// The one name inside the checkbox that stays fixed, because it is in the
+		// embedding page's light DOM where a site's own CSS may target it.
+		expect(CHECKBOX_HOST_CSS_CLASS).toMatch(/^[a-zA-Z_-][\w-]*$/);
 	});
 });

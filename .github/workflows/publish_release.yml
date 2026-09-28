@@ -145,8 +145,26 @@ jobs:
         env:
           NPM_CONFIG_PROVENANCE: 'true'
         run: |
+          # A version npm is still running its automated review over is
+          # "staged": uploaded, not yet servable, and impossible to publish
+          # over -- every retry gets `409 Cannot publish over previously staged
+          # version`. That is a queue we wait out, not a failure to act on, and
+          # failing the job here strands everything after it: the docker image,
+          # the GitHub release and the private release PR never happen, so a
+          # release that npm will finish on its own stays undelivered.
+          #
+          # So a staged-version conflict warns and continues. Any other publish
+          # error still fails the job.
+          set -o pipefail
           echo "Publishing changed packages via @changesets/cli"
-          npx @changesets/cli publish
+          if npx @changesets/cli publish 2>&1 | tee /tmp/changeset-publish.log; then
+            exit 0
+          fi
+          if grep -q "Cannot publish over previously staged version" /tmp/changeset-publish.log; then
+            echo "::warning::npm is still validating a version uploaded by an earlier run; it goes live when that review finishes. Continuing so the rest of the release ships."
+            exit 0
+          fi
+          exit 1
 
       - name: Publish production image to Docker Hub
         run: |

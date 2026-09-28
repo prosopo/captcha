@@ -14,6 +14,7 @@
 
 export * from "./providers.js";
 export * from "./clientMetaData.js";
+export * from "./protectSession.js";
 export * from "./events/trust.js";
 export * from "./state/builder.js";
 export * from "./callbacks/defaultCallbacks.js";
@@ -21,8 +22,13 @@ export * from "./callbacks/defaultEvents.js";
 export * from "./extensionLoader.js";
 export * from "./simdReadings.js";
 export * from "./elements/window.js";
-export * from "./reactComponents/Reload.js";
-export * from "./reactComponents/Checkbox.js";
-export * from "./reactComponents/ChallengeSurface.js";
-export * from "./reactComponents/Honeypot.js";
-export * from "./reactComponents/TestModeBanner.js";
+export * from "./dom/component.js";
+export * from "./dom/element.js";
+export * from "./dom/obfuscation.js";
+export * from "./dom/styleSheet.js";
+export * from "./state/store.js";
+export * from "./components/reload.js";
+export * from "./components/checkbox.js";
+export * from "./components/challengeSurface.js";
+export * from "./components/honeypot.js";
+export * from "./components/testModeBanner.js";

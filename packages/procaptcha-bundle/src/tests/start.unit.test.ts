@@ -17,8 +17,8 @@ import {
 	type ProcaptchaStartEventDetail,
 	StartModeEnum,
 } from "@prosopo/types";
-import type { Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { BundleCaptchaHandle } from "../util/captcha/components/bundleCaptcha.js";
 import type { CreatedWidget } from "../util/widgetFactory.js";
 
 const mocks = vi.hoisted(() => ({
@@ -46,7 +46,7 @@ const { render, remove, start } = await import("../index.js");
 const SITE_KEY = "5CcNvLUdiXFpzKDMjThGLSK9rhWHA1H4EF3zrgkpkjAdqmuP";
 
 const makeWidget = (): CreatedWidget => ({
-	root: { unmount: vi.fn(), render: vi.fn() } as unknown as Root,
+	handle: { destroy: vi.fn() } as BundleCaptchaHandle,
 	container: document.createElement("div"),
 });
 

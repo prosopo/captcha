@@ -47,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Quá nhiều lượt gửi từ địa chỉ email này",
 		"VPN_BLOCKED": "Các yêu cầu từ kết nối VPN không được phép cho trang web này",
 		"PROXY_BLOCKED": "Các yêu cầu từ máy chủ proxy không được phép cho trang web này",
+		"TOO_MANY_LOCALHOST": "Quá nhiều yêu cầu CAPTCHA từ localhost cho khóa trang web này",
 		"TOR_BLOCKED": "Các yêu cầu từ nút thoát Tor không được phép cho trang web này",
 		"ABUSER_BLOCKED": "Các yêu cầu từ mạng bị gắn cờ lạm dụng không được phép cho trang web này",
 		"DATACENTER_BLOCKED": "Các yêu cầu từ địa chỉ IP trung tâm dữ liệu không được phép cho trang web này",

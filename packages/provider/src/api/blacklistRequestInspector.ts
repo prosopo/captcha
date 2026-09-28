@@ -49,6 +49,10 @@ import {
 } from "./hardBlockVerdictCache.js";
 import { recordBlockedRequest } from "./metrics.js";
 
+export type BlockOutcome = {
+	messageKey?: ResultReason;
+};
+
 export const getRequestUserScope = (
 	requestHeaders: Record<string, unknown>,
 	ja4?: string,
@@ -520,6 +524,8 @@ export class BlacklistRequestInspector {
 			data: { ja4: request.ja4 },
 		}));
 
+		const blockOutcome: BlockOutcome = {};
+
 		const shouldAbortRequest = await this.shouldAbortRequest(
 			request.url,
 			rawIp,
@@ -532,6 +538,7 @@ export class BlacklistRequestInspector {
 			// hitting checkForHardBlock in the same request reuses this
 			// lookup rather than re-querying Redis.
 			request,
+			blockOutcome,
 		);
 
 		if (shouldAbortRequest) {
@@ -544,10 +551,13 @@ export class BlacklistRequestInspector {
 			// extractor picks it up — a plain string falls through to the
 			// generic "Cannot load CAPTCHA" fallback. Surfacing the
 			// requestId lets support quote it back on tickets.
+			const { messageKey } = blockOutcome;
+			const reason = messageKey ? request.i18n.t(messageKey) : "Forbidden";
 			res.status(403).json({
 				error: {
-					message: `Forbidden: ${request.requestId ?? "unknown"}`,
+					message: `${reason}: ${request.requestId ?? "unknown"}`,
 					code: 403,
+					...(messageKey && { key: messageKey }),
 				},
 			});
 			return;
@@ -565,6 +575,7 @@ export class BlacklistRequestInspector {
 		logger: Logger,
 		ipInfo?: IPInfoResponse,
 		requestMemoHost?: object,
+		blockOutcome?: BlockOutcome,
 	): Promise<boolean> {
 		// Skip this middleware for non-api routes like /json /favicon.ico etc
 		if (this.isApiUnrelatedRoute(requestedRoute)) {
@@ -638,6 +649,9 @@ export class BlacklistRequestInspector {
 
 			const isBlock = AccessPolicyType.Block === accessPolicy.type;
 			if (isBlock) {
+				if (blockOutcome) {
+					blockOutcome.messageKey = accessPolicy.messageKey;
+				}
 				recordBlockedRequest("access_policy");
 				// `Restrict` policies aren't logged or persisted here — those
 				// don't 403, they let the request through with modified

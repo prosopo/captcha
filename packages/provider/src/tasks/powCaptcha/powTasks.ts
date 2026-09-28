@@ -64,6 +64,7 @@ import {
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
+	isSameIpOrigin,
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
 import {
@@ -357,21 +358,17 @@ export class PowCaptchaManager extends CaptchaManager {
 		let decryptedBehavioralDataPacked:
 			| DecisionMachineBehavioralDataPacked
 			| undefined;
+		// Both payloads were encrypted by this session's detector pool bundle, so
+		// they share one bundle lookup and decode together — see
+		// decodeSubmissionPayloads.
+		const decodedPayloads = await this.decodeSubmissionPayloads(
+			challengeRecord.sessionId,
+			{ behavioural: behavioralData, simd: simdReadings },
+		);
+
 		if (behavioralData) {
 			try {
-				// The behavioural payload was encrypted by this session's detector
-				// pool bundle; resolve it from the bundleId promoted onto the
-				// session record (no key pool — the detector lives only on
-				// providers).
-				const bundle = await this.resolveBundleBySessionId(
-					challengeRecord.sessionId,
-				);
-
-				// Decrypt the behavioral data (returns unpacked format)
-				const decryptedData = await this.decryptBehavioralData(
-					behavioralData,
-					bundle,
-				);
+				const decryptedData = decodedPayloads.behavioural;
 
 				if (decryptedData) {
 					const dappAccount = at(challengeSplit, 2);
@@ -456,11 +453,11 @@ export class PowCaptchaManager extends CaptchaManager {
 					}),
 				}),
 			);
-			if (simdReadings) {
+			if (decodedPayloads.simd) {
 				writePromises.push(
-					this.decryptAndAttachSimdReadingsIfAbsent(
+					this.recordSessionSimdReadingsIfAbsentWithCache(
 						linkedSessionId,
-						simdReadings,
+						decodedPayloads.simd,
 						SimdReadingsStage.submit,
 					),
 				);
@@ -484,6 +481,29 @@ export class PowCaptchaManager extends CaptchaManager {
 		const escalateForMissingCoords =
 			!coords && Boolean(challengeRecord.sessionId);
 
+		// A PoW challenge is bound to the account and the site key, and to
+		// nothing about where the request came from — so a solved challenge can
+		// be carried to any host that wants a free pass. The issuing address is
+		// already on the record, so binding to it costs nothing: compare it
+		// against the address submitting the solve, and escalate when they
+		// differ. Not a denial — a phone handing off between towers mid-solve is
+		// a real user, and should pay a picture rather than be turned away.
+		const solveIp = getCompositeIpAddress(ipAddress);
+		const escalateForIpChange =
+			Boolean(challengeRecord.sessionId) &&
+			!isSameIpOrigin(challengeRecord.ipAddress, solveIp);
+
+		if (escalateForIpChange) {
+			this.logger.info(() => ({
+				msg: "PoW solve arrived from a different address than the challenge",
+				data: {
+					challenge,
+					issuedType: challengeRecord.ipAddress.type,
+					solvedType: solveIp.type,
+				},
+			}));
+		}
+
 		// Post-pow routing: only meaningful on a verified solution. The routing
 		// machine re-examines the (now richer) signals — score from the original
 		// session, decrypted behavioural data, counters — and may escalate the
@@ -496,17 +516,21 @@ export class PowCaptchaManager extends CaptchaManager {
 				})
 			: undefined;
 
-		// Missing coords forces at least an image escalation, unless the routing
+		// Either signal forces at least an image escalation, unless the routing
 		// machine already escalated to a visual challenge (image/puzzle) that we
-		// would keep anyway.
+		// would keep anyway. Missing coords is reported in preference to a
+		// changed address when both fire: it is the stronger statement, since
+		// no legitimate widget omits them.
 		if (
-			escalateForMissingCoords &&
+			(escalateForMissingCoords || escalateForIpChange) &&
 			routingOutput?.captchaType !== CaptchaType.image &&
 			routingOutput?.captchaType !== CaptchaType.puzzle
 		) {
 			routingOutput = {
 				captchaType: CaptchaType.image,
-				reason: FrictionlessReason.MISSING_COORDINATES,
+				reason: escalateForMissingCoords
+					? FrictionlessReason.MISSING_COORDINATES
+					: FrictionlessReason.IP_CHANGED,
 			};
 		}
 
@@ -565,6 +589,9 @@ export class PowCaptchaManager extends CaptchaManager {
 			countryCode: this.postPowContext.countryCode,
 			score,
 			platform,
+			// Off the originating session — the PoW submit carries no detector
+			// payload of its own.
+			...(sessionRecord.d !== undefined && { d: sessionRecord.d }),
 			raw: {
 				...this.postPowContext.raw,
 				...(behavioralDataPacked && { behavioralDataPacked }),
@@ -1025,6 +1052,8 @@ export class PowCaptchaManager extends CaptchaManager {
 					decryptedHeadHash: sessionRecord?.decryptedHeadHash,
 					userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
 					simdReadings: sessionRecord?.simdReadings,
+					// Everything the detector reported for this session.
+					d: sessionRecord?.d,
 					frictionlessReason: sessionRecord?.reason,
 					ruleType: sessionRecord?.ruleType,
 					webView: sessionRecord?.webView,

@@ -15,6 +15,7 @@ import { createRequire } from "node:module";
 import { ProsopoEnvError } from "@prosopo/common";
 import { CaptchaMerkleTree } from "@prosopo/datasets";
 import type { CaptchaSolution } from "@prosopo/types";
+import { measureSync } from "../../api/metrics.js";
 
 // Load the Rust napi module. In dev the workspace symlink resolves the
 // package; in the cli bundle vite copies the .node file next to the bundle
@@ -65,15 +66,17 @@ export const buildTreeAndGetCommitmentId = (
 		);
 	}
 
-	const solutionsHashed = captchaSolutions.map((captcha) =>
-		nativeMerkle.computeCaptchaSolutionHash(
-			captcha.captchaId,
-			captcha.captchaContentId,
-			captcha.solution,
-			captcha.salt,
-		),
-	);
-	const layers = nativeMerkle.buildMerkleLayers(solutionsHashed);
+	const layers = measureSync("merkle_build", () => {
+		const solutionsHashed = captchaSolutions.map((captcha) =>
+			nativeMerkle.computeCaptchaSolutionHash(
+				captcha.captchaId,
+				captcha.captchaContentId,
+				captcha.solution,
+				captcha.salt,
+			),
+		);
+		return nativeMerkle.buildMerkleLayers(solutionsHashed);
+	});
 
 	const tree = new CaptchaMerkleTree();
 	tree.hydrateFromLayers(layers);

@@ -15,12 +15,18 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import type { Rollup } from "vite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { nodejsPolarsDirnamePlugin } from "./NodejsPolarsDirnamePlugin.js";
 import ViteTestConfig from "./vite.test.config.js";
 import ViteThreadsTestConfig from "./vite.threads.test.config.js";
 
 const NATIVE_POLARS = "/repo/node_modules/nodejs-polars/bin/native-polars.js";
+
+const resolveOptions: Rollup.ResolveIdExtraOptions = {
+	isEntry: false,
+	kind: "import-statement",
+};
 
 let root: string;
 let cwd: string;
@@ -179,10 +185,12 @@ describe("nodejsPolarsDirnamePlugin", () => {
 	const plugin = nodejsPolarsDirnamePlugin();
 
 	it("claims only the native polars entry point", () => {
-		expect(plugin.resolveId(NATIVE_POLARS, undefined, {})).toBe(NATIVE_POLARS);
-		expect(plugin.resolveId("zod", undefined, {})).toBeNull();
+		expect(plugin.resolveId(NATIVE_POLARS, undefined, resolveOptions)).toBe(
+			NATIVE_POLARS,
+		);
+		expect(plugin.resolveId("zod", undefined, resolveOptions)).toBeNull();
 		expect(
-			plugin.resolveId("nodejs-polars/bin/other.js", undefined, {}),
+			plugin.resolveId("nodejs-polars/bin/other.js", undefined, resolveOptions),
 		).toBeNull();
 	});
 

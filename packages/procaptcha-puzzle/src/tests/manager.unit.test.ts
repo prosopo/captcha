@@ -405,6 +405,65 @@ describe("start: getting to a challenge", () => {
 	});
 });
 
+// The provider consumes a frictionless session the moment it issues a
+// challenge against it, so a second challenge fetch on the same id can only
+// come back CAPTCHA.NO_SESSION_FOUND. The manager has to recognise its own
+// spent id rather than spend a round trip discovering it again.
+describe("start: a session that has already bought a challenge", () => {
+	test("short-circuits instead of re-requesting on the spent id", async () => {
+		const harness = build({
+			frictionlessState: frictionless({ sessionId: "session-1" }),
+		});
+		await harness.manager.start();
+		await harness.manager.start();
+		expect(mocks.getPuzzleCaptchaChallenge).toHaveBeenCalledTimes(1);
+		expect(lastUpdate(harness, "error")).toEqual({
+			message: "No session found",
+			key: "CAPTCHA.NO_SESSION_FOUND",
+		});
+		expect(lastUpdate(harness, "loading")).toBe(false);
+	});
+
+	// A throw is the one case where the request may never have reached the
+	// provider, so the id may still be live — and it is exactly when
+	// providerRetry fails over onto a second provider. Short-circuiting there
+	// would turn every transport blip into "No session found".
+	test("still fails over to another provider when the request throws", async () => {
+		mocks.getPuzzleCaptchaChallenge
+			.mockRejectedValueOnce(new Error("transport"))
+			.mockResolvedValue(challengeResponse());
+		const harness = build({
+			frictionlessState: frictionless({ sessionId: "session-1" }),
+		});
+		await harness.manager.start();
+		expect(mocks.getPuzzleCaptchaChallenge).toHaveBeenCalledTimes(2);
+		expect(lastUpdate(harness, "error")).toBeUndefined();
+	});
+
+	// A 4xx means the provider saw the id, so it is gone even though no
+	// challenge came back.
+	test("counts the id as spent when the provider answers with an error", async () => {
+		mocks.getPuzzleCaptchaChallenge.mockResolvedValue({
+			...challengeResponse(),
+			error: { message: "nope", key: "API.BAD_REQUEST", code: 400 },
+		});
+		const harness = build({
+			frictionlessState: frictionless({ sessionId: "session-1" }),
+		});
+		await harness.manager.start();
+		mocks.getPuzzleCaptchaChallenge.mockClear();
+		await harness.manager.start();
+		expect(mocks.getPuzzleCaptchaChallenge).not.toHaveBeenCalled();
+	});
+
+	test("leaves a sessionless manager free to ask again", async () => {
+		const harness = build({ withFrictionless: false });
+		await harness.manager.start();
+		await harness.manager.start();
+		expect(mocks.getPuzzleCaptchaChallenge).toHaveBeenCalledTimes(2);
+	});
+});
+
 describe("start: when the provider will not issue a challenge", () => {
 	test("surfaces the provider's error to the widget", async () => {
 		mocks.getPuzzleCaptchaChallenge.mockResolvedValue(
