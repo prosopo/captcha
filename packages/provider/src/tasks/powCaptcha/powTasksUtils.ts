@@ -13,10 +13,9 @@
 // limitations under the License.
 
 import { sha256 } from "@noble/hashes/sha2.js";
-import { stringToHex } from "@polkadot/util";
 import { ProsopoApiError } from "@prosopo/common";
 import { hashMeetsDifficulty } from "@prosopo/util";
-import { signatureVerify } from "@prosopo/util-crypto";
+import { isSignatureValid } from "../signatureCheck.js";
 
 export const validateSolution = (
 	nonce: number,
@@ -34,14 +33,10 @@ export const checkPowSignature = (
 	address: string,
 	signatureType?: string,
 ): void => {
-	const signatureVerification = signatureVerify(
-		stringToHex(message),
-		signature,
-		address,
-	);
-	if (!signatureVerification.isValid) {
+	if (!isSignatureValid(message, signature, address)) {
 		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
 			context: {
+				code: 400,
 				ERROR: `Signature is invalid for this message: ${signatureType}`,
 				failedFuncName: checkPowSignature.name,
 				address,
