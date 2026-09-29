@@ -517,9 +517,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 				)
 			) {
 				response = {
-					captchas: captchaIds.map((id) => ({
+					captchas: captchaIds.map((id, index) => ({
 						captchaId: id,
-						proof: tree.proof(id),
+						proof: tree.proof(at(tree.leaves, index).hash),
 					})),
 					verified: true,
 				};
