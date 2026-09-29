@@ -903,6 +903,13 @@ export default (
 				clientRecord.settings?.trafficFilter,
 				req.logger,
 			);
+			// Set before either branch responds, so the tarpit applies to the
+			// challenge the traffic filter dispatches below AND to whatever the
+			// decision machine issues when no category matched a challenge.
+			// Frictionless is the entry point nearly every site uses; padding
+			// only the three direct endpoints left the feature inert in
+			// production.
+			res.locals.padBytes = trafficFilterVerdict.padBytes;
 			const trafficFilterOutcome = await handleFrictionlessTrafficFilter(
 				{
 					verdict: trafficFilterVerdict,
