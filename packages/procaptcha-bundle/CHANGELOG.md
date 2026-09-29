@@ -1,5 +1,25 @@
 # @prosopo/procaptcha-bundle
 
+## 4.5.5
+### Patch Changes
+
+- ba4a43c: `procaptcha.remove()` on an invisible-mode widget cleared the whole host element. That element is usually the site's own submit button, so the button lost its label. In invisible mode, `remove()` now removes only the node the widget added. `reset()` also removes that node before it rebuilds, so the button no longer collects an extra widget node on every reset.
+- 4b4cdbf: Calling `procaptcha.reset()` again while a reset was still rebuilding the widget (for example from an error callback and a user click at the same time) left one replacement widget running but untracked, so `remove()` could never reach it. Overlapping resets of the same widget now share one rebuild, and a replacement that finishes after `remove()` is torn down instead of coming back.
+- 55480f3: `render(el, { language })` with a language Procaptcha doesn't support, such as `"he"`, now falls back to English. Before, the value failed config validation, `render()` rejected, and the widget's loading spinner never went away.
+- Updated dependencies [59b7e87]
+- Updated dependencies [294b480]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [caabd39]
+- Updated dependencies [dab0338]
+- Updated dependencies [0d29dde]
+  - @prosopo/types@5.11.0
+  - @prosopo/locale@3.6.1
+  - @prosopo/procaptcha-common@2.18.0
+  - @prosopo/util@3.3.12
+  - @prosopo/procaptcha-frictionless@2.18.5
+  - @prosopo/dotenv@3.0.58
+
 ## 4.5.4
 ### Patch Changes
 
