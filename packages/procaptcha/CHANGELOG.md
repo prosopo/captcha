@@ -1,5 +1,48 @@
 # @prosopo/procaptcha
 
+## 2.11.22
+### Patch Changes
+
+- b77c5f4: The image captcha widget now tells the provider whether each tile, and the checkbox, was picked with a mouse or finger or with the keyboard. Keyboard presses have no screen position, so they all arrive as (0, 0). The provider used to see those repeats as a script clicking the same pixel and reject people who solve with the keyboard. It now looks for repeated positions among pointer selections only. It rejects a keyboard selection that claims a position. Requests from older widgets, which send no input method, are checked as strictly as before. The input method is stored on the commitment next to the coordinates.
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [e5aefc6]
+- Updated dependencies [8933ad5]
+- Updated dependencies [5375d10]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [caabd39]
+- Updated dependencies [dab0338]
+- Updated dependencies [0d29dde]
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/load-balancer@2.11.2
+  - @prosopo/datasets@3.1.92
+  - @prosopo/procaptcha-common@2.18.0
+  - @prosopo/api@4.3.6
+  - @prosopo/util@3.3.12
+
+## 2.11.21
+### Patch Changes
+
+- 20542d8: Send page scroll events with the captcha's behavioural data.
+  
+  The widget now passes a fourth collector, the page's scroll position and the
+  time of each scroll, alongside mouse, touch and click data, and the provider
+  stores it as `c4` on the captcha record. People scroll in uneven bursts while
+  bots tend to scroll at a steady rate, so this gives detection something to
+  work with. Detector bundles that predate the scroll tracker simply send no
+  `c4`.
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/procaptcha-common@2.17.3
+  - @prosopo/api@4.3.5
+  - @prosopo/datasets@3.1.91
+  - @prosopo/load-balancer@2.11.1
+
 ## 2.11.20
 ### Patch Changes
 

@@ -1,5 +1,42 @@
 # @prosopo/client-example-server
 
+## 2.7.168
+### Patch Changes
+
+- a663bec: Stop the example server from logging the site secret. The demo's API-verify path built the siteverify request body — which includes the site's private secret — and logged the whole object at info level, teaching integrators to copy a pattern that leaks their secret into their logs. The secret is now redacted in the log line; it is still sent to the verify endpoint unchanged.
+- Updated dependencies [f650c66]
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [e5aefc6]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [7065689]
+- Updated dependencies [dab0338]
+- Updated dependencies [2cd89a9]
+- Updated dependencies [dffecf0]
+- Updated dependencies [0d29dde]
+- Updated dependencies [fa316d6]
+  - @prosopo/database@4.1.0
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/server@2.12.12
+  - @prosopo/util@3.3.12
+  - @prosopo/keyring@2.9.98
+  - @prosopo/dotenv@3.0.58
+  - @prosopo/logger@2.1.1
+
+## 2.7.167
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/database@4.0.41
+  - @prosopo/keyring@2.9.97
+  - @prosopo/server@2.12.11
+
 ## 2.7.166
 ### Patch Changes
 

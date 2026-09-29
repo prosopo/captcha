@@ -1,5 +1,44 @@
 # @prosopo/types-database
 
+## 5.7.0
+### Minor Changes
+
+- b77c5f4: The image captcha widget now tells the provider whether each tile, and the checkbox, was picked with a mouse or finger or with the keyboard. Keyboard presses have no screen position, so they all arrive as (0, 0). The provider used to see those repeats as a script clicking the same pixel and reject people who solve with the keyboard. It now looks for repeated positions among pointer selections only. It rejects a keyboard selection that claims a position. Requests from older widgets, which send no input method, are checked as strictly as before. The input method is stored on the commitment next to the coordinates.
+
+### Patch Changes
+
+- f650c66: A Web Bot Auth (authenticated) token can now only be verified once, even when several verify requests for it arrive at the same time. Before, the provider checked whether the session was already used and then marked it used in a separate step, so parallel verifies could all return `verified: true`. Marking the session used is now a single conditional database write, and only the request that wins it is verified; the rest get `API.USER_ALREADY_VERIFIED`.
+- fa316d6: A captcha token now verifies at most once even when a site's server sends several verify requests for it at the same moment. Before, each request read the record, saw it had not been checked yet, and then marked it checked, so every request that arrived before the first write finished was accepted. Marking a PoW, puzzle or image result as checked is now a single conditional write, and only the request that wins it is verified. The same applies to image captcha submissions: a request hash can now only be spent by one submission, so answers can no longer be tried in parallel against one challenge.
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [294b480]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/locale@3.6.1
+  - @prosopo/user-access-policy@3.14.12
+  - @prosopo/logger@2.1.1
+
+## 5.6.5
+### Patch Changes
+
+- 20542d8: Send page scroll events with the captcha's behavioural data.
+  
+  The widget now passes a fourth collector, the page's scroll position and the
+  time of each scroll, alongside mouse, touch and click data, and the provider
+  stores it as `c4` on the captcha record. People scroll in uneven bursts while
+  bots tend to scroll at a steady rate, so this gives detection something to
+  work with. Detector bundles that predate the scroll tracker simply send no
+  `c4`.
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/user-access-policy@3.14.11
+
 ## 5.6.4
 ### Patch Changes
 
