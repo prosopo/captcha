@@ -16,9 +16,11 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { describe, it } from "node:test";
 
-const { calculateJa4 } = createRequire(import.meta.url)("../index.js");
+const { calculateJa4 }: typeof import("../index.js") = createRequire(
+	import.meta.url,
+)("../index.js");
 
-const buildClientHello = (extensionsBlock) => {
+const buildClientHello = (extensionsBlock: Buffer): Buffer => {
 	const body = Buffer.concat([
 		Buffer.from([0x03, 0x03]), // client_version
 		Buffer.alloc(32, 0xaa), // random
@@ -53,7 +55,7 @@ describe("calculateJa4 on malformed ClientHellos", () => {
 	});
 
 	// Each of these panicked inside prosopo-ja4 and aborted the process.
-	const cases = {
+	const cases: Record<string, Buffer> = {
 		"extension length past the end of the block": Buffer.from([
 			0x00, 0x0a, 0xff, 0xff, 0x00, 0x1d,
 		]),
