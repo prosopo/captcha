@@ -391,6 +391,15 @@
 			"POSITION": "soldan {{x}} faiz, yuxarıdan {{y}} faiz",
 			"CHECKING": "Cavabınız yoxlanılır",
 			"RETRY_ANNOUNCEMENT": "Az qaldı. Yeni tapmaca yükləndi və hissə yenidən başlanğıcdadır."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "İkon sırası tapşırığı",
+			"SELECT": "Bu ardıcıllıqla seçin",
+			"RETRY": "Az qaldı — yenidən cəhd edin",
+			"LEGEND_ALT": "Seçiləcək ikonlar, ardıcıllıqla",
+			"RESET": "Sıfırla",
+			"CHECKING": "Yoxlanılır…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

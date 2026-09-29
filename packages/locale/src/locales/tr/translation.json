@@ -391,6 +391,15 @@
 			"POSITION": "soldan yüzde {{x}}, yukarıdan yüzde {{y}}",
 			"CHECKING": "Cevabınız kontrol ediliyor",
 			"RETRY_ANNOUNCEMENT": "Az kaldı. Yeni bir yapboz yüklendi ve parça yeniden başlangıçta."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Simge sırası görevi",
+			"SELECT": "Bu sırayla seçin",
+			"RETRY": "Az kaldı — tekrar deneyin",
+			"LEGEND_ALT": "Seçilecek simgeler, sırayla",
+			"RESET": "Sıfırla",
+			"CHECKING": "Kontrol ediliyor…",
+			"SUBMIT": "Tamam"
 		}
 	},
 	"CONTRACT": {

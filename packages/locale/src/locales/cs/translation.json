@@ -391,6 +391,15 @@
 			"POSITION": "{{x}} procent zleva, {{y}} procent shora",
 			"CHECKING": "Ověřujeme vaši odpověď",
 			"RETRY_ANNOUNCEMENT": "Skoro. Načetla se nová skládačka a dílek je zpět na začátku."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Úloha s pořadím ikon",
+			"SELECT": "Vyberte v tomto pořadí",
+			"RETRY": "Skoro — zkuste to znovu",
+			"LEGEND_ALT": "Ikony k výběru, v daném pořadí",
+			"RESET": "Obnovit",
+			"CHECKING": "Ověřujeme…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

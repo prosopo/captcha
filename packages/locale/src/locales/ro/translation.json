@@ -391,6 +391,15 @@
 			"POSITION": "{{x}} la sută din stânga, {{y}} la sută de sus",
 			"CHECKING": "Îți verificăm răspunsul",
 			"RETRY_ANNOUNCEMENT": "Aproape. S-a încărcat un puzzle nou, iar piesa este din nou la început."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Provocare cu ordinea pictogramelor",
+			"SELECT": "Selectați în această ordine",
+			"RETRY": "Aproape — mai încearcă",
+			"LEGEND_ALT": "Pictograme de selectat, în ordine",
+			"RESET": "Resetează",
+			"CHECKING": "Se verifică…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

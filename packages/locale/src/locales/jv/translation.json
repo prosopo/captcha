@@ -391,6 +391,15 @@
 			"POSITION": "{{x}} persen saka kiwa, {{y}} persen saka ndhuwur",
 			"CHECKING": "Mriksa wangsulan panjenengan",
 			"RETRY_ANNOUNCEMENT": "Meh wae. Bedhekan anyar wis dimuat lan potongane bali menyang wiwitan."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Tantangan urutan ikon",
+			"SELECT": "Pilih miturut urutan iki",
+			"RETRY": "Meh wae — coba maneh",
+			"LEGEND_ALT": "Ikon sing kudu dipilih, urut",
+			"RESET": "Balèni",
+			"CHECKING": "Lagi mriksa…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

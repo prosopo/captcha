@@ -391,6 +391,15 @@
 			"POSITION": "{{x}} procent från vänster, {{y}} procent uppifrån",
 			"CHECKING": "Kontrollerar ditt svar",
 			"RETRY_ANNOUNCEMENT": "Nästan. Ett nytt pussel har laddats och biten är tillbaka vid starten."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Utmaning med ikonordning",
+			"SELECT": "Välj i den här ordningen",
+			"RETRY": "Nästan — försök igen",
+			"LEGEND_ALT": "Ikoner att välja, i ordning",
+			"RESET": "Återställ",
+			"CHECKING": "Kontrollerar…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

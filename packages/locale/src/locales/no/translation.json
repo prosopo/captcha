@@ -391,6 +391,15 @@
 			"POSITION": "{{x}} prosent fra venstre, {{y}} prosent ovenfra",
 			"CHECKING": "Kontrollerer svaret ditt",
 			"RETRY_ANNOUNCEMENT": "Nesten. Et nytt puslespill er lastet inn, og brikken er tilbake ved start."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Oppgave med ikonrekkefølge",
+			"SELECT": "Velg i denne rekkefølgen",
+			"RETRY": "Nesten — prøv igjen",
+			"LEGEND_ALT": "Ikoner som skal velges, i rekkefølge",
+			"RESET": "Tilbakestill",
+			"CHECKING": "Kontrollerer…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

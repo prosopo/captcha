@@ -60,10 +60,13 @@ const ProcaptchaLoader = async () =>
 	(await import("@prosopo/procaptcha-react")).mountProcaptchaImageWidget;
 const ProcaptchaPuzzleLoader = async () =>
 	(await import("@prosopo/procaptcha-puzzle")).mountProcaptchaPuzzleWidget;
+const ProcaptchaIconOrderLoader = async () =>
+	(await import("@prosopo/procaptcha-icon-order"))
+		.mountProcaptchaIconOrderWidget;
 const ProcaptchaPowLoader = async () =>
 	(await import("@prosopo/procaptcha-pow")).mountProcaptchaPowWidget;
 
-/** A mounted solver widget. All three solvers expose the same teardown. */
+/** A mounted solver widget. Every solver exposes the same teardown. */
 interface SolverHandle {
 	destroy(): void;
 }
@@ -261,7 +264,7 @@ export const mountProcaptchaFrictionless = (
 		escalationCoords?: RetryCoords,
 	): Promise<void> => {
 		const onEscalate = (
-			next: CaptchaType.image | CaptchaType.puzzle,
+			next: CaptchaType.image | CaptchaType.puzzle | CaptchaType.iconOrder,
 			newSessionId: string,
 			coords?: RetryCoords,
 		) => {
@@ -405,6 +408,15 @@ export const mountProcaptchaFrictionless = (
 
 		if (CaptchaType.puzzle === captchaType) {
 			const mount = await ProcaptchaPuzzleLoader();
+			if (destroyed) return;
+			clearSlot();
+			solver = mount(slot, { ...widgetProps, onReload });
+			replayPendingExecute();
+			return;
+		}
+
+		if (CaptchaType.iconOrder === captchaType) {
+			const mount = await ProcaptchaIconOrderLoader();
 			if (destroyed) return;
 			clearSlot();
 			solver = mount(slot, { ...widgetProps, onReload });

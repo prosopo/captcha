@@ -25,6 +25,15 @@
 			"POSITION": "{{x}} percent across, {{y}} percent down",
 			"CHECKING": "Checking your answer",
 			"RETRY_ANNOUNCEMENT": "Not quite. A new puzzle has loaded and the piece is back at the start."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Icon order challenge",
+			"SELECT": "Select in this order",
+			"RETRY": "Not quite — try again",
+			"LEGEND_ALT": "Icons to select, in order",
+			"RESET": "Reset",
+			"CHECKING": "Checking…",
+			"SUBMIT": "OK"
 		}
 	},
 	"GENERAL": {

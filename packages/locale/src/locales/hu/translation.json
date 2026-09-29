@@ -391,6 +391,15 @@
 			"POSITION": "{{x}} százalék balról, {{y}} százalék fentről",
 			"CHECKING": "Ellenőrizzük a válaszodat",
 			"RETRY_ANNOUNCEMENT": "Majdnem. Új kirakós töltődött be, a darab pedig visszakerült a kiindulóhelyre."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Ikonsorrend-feladat",
+			"SELECT": "Válasszon ebben a sorrendben",
+			"RETRY": "Majdnem — próbáld újra",
+			"LEGEND_ALT": "Kiválasztandó ikonok, sorrendben",
+			"RESET": "Visszaállítás",
+			"CHECKING": "Ellenőrzés…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

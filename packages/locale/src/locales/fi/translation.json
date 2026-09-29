@@ -426,6 +426,15 @@
 			"POSITION": "{{x}} prosenttia vasemmalta, {{y}} prosenttia ylhäältä",
 			"CHECKING": "Tarkistetaan vastaustasi",
 			"RETRY_ANNOUNCEMENT": "Melkein. Uusi palapeli ladattiin ja pala on taas alussa."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Kuvakkeiden järjestystehtävä",
+			"SELECT": "Valitse tässä järjestyksessä",
+			"RETRY": "Melkein — yritä uudelleen",
+			"LEGEND_ALT": "Valittavat kuvakkeet järjestyksessä",
+			"RESET": "Tyhjennä",
+			"CHECKING": "Tarkistetaan…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

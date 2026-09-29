@@ -391,6 +391,15 @@
 			"POSITION": "{{x}} procent vanaf links, {{y}} procent vanaf boven",
 			"CHECKING": "Je antwoord wordt gecontroleerd",
 			"RETRY_ANNOUNCEMENT": "Net niet. Er is een nieuwe puzzel geladen en het stukje staat weer aan het begin."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Uitdaging met pictogramvolgorde",
+			"SELECT": "Selecteer in deze volgorde",
+			"RETRY": "Net niet — probeer het opnieuw",
+			"LEGEND_ALT": "Te selecteren pictogrammen, op volgorde",
+			"RESET": "Opnieuw",
+			"CHECKING": "Controleren…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

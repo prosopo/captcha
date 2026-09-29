@@ -391,6 +391,15 @@
 			"POSITION": "{{x}} phần trăm từ bên trái, {{y}} phần trăm từ trên xuống",
 			"CHECKING": "Đang kiểm tra câu trả lời của bạn",
 			"RETRY_ANNOUNCEMENT": "Suýt nữa. Một hình ghép mới đã được tải và mảnh ghép trở lại vị trí ban đầu."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Thử thách thứ tự biểu tượng",
+			"SELECT": "Chọn theo thứ tự này",
+			"RETRY": "Suýt nữa — hãy thử lại",
+			"LEGEND_ALT": "Các biểu tượng cần chọn, theo thứ tự",
+			"RESET": "Đặt lại",
+			"CHECKING": "Đang kiểm tra…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

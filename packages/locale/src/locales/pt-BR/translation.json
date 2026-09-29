@@ -92,6 +92,15 @@
 			"POSITION": "{{x}} por cento a partir da esquerda, {{y}} por cento a partir do topo",
 			"CHECKING": "Verificando sua resposta",
 			"RETRY_ANNOUNCEMENT": "Quase. Um novo quebra-cabeça foi carregado e a peça voltou ao início."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Desafio de ordem dos ícones",
+			"SELECT": "Selecione nesta ordem",
+			"RETRY": "Quase — tente de novo",
+			"LEGEND_ALT": "Ícones para selecionar, em ordem",
+			"RESET": "Redefinir",
+			"CHECKING": "Verificando…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

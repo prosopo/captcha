@@ -391,6 +391,15 @@
 			"POSITION": "距左边 {{x}} %，距顶部 {{y}} %",
 			"CHECKING": "正在检查您的答案",
 			"RETRY_ANNOUNCEMENT": "差一点。已加载新的拼图，拼块回到了起点。"
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "图标顺序验证",
+			"SELECT": "请按此顺序选择",
+			"RETRY": "差一点 — 请再试一次",
+			"LEGEND_ALT": "按顺序需选择的图标",
+			"RESET": "重置",
+			"CHECKING": "正在检查…",
+			"SUBMIT": "确定"
 		}
 	},
 	"CONTRACT": {
