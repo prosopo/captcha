@@ -17,6 +17,7 @@ import type {
 	ClickEventPoint,
 	MouseMovementPoint,
 	PackedBehavioralData,
+	ScrollEventPoint,
 	TouchEventPoint,
 } from "../procaptcha/behavioral.js";
 import type { Account } from "../procaptcha/manager.js";
@@ -47,6 +48,12 @@ export type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
 		start: () => void;
 		stop: () => void;
 		getData: () => ClickEventPoint[];
+		clear: () => void;
+	};
+	behaviorCollector4?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => ScrollEventPoint[];
 		clear: () => void;
 	};
 	deviceCapability?: string;
