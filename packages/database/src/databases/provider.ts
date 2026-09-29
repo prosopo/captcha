@@ -2079,6 +2079,41 @@ export class ProviderDatabase
 		return true;
 	}
 
+	async markAudioCaptchaRecordChecked(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		const tables = this.getTables();
+		const timestamp = new Date();
+		const result = await tables.audiocaptcha.updateOne(
+			{ challenge, serverChecked: { $ne: true } },
+			{
+				$set: {
+					serverChecked: true,
+					lastUpdatedTimestamp: timestamp,
+					verifiedAtTimestamp: timestamp,
+					pendingStage: true,
+				},
+			},
+		);
+		if (result.modifiedCount === 0) {
+			return false;
+		}
+		this.centralStreamer?.streamAudioUpdate(
+			() => this.getAudioCaptchaRecordByChallenge(challenge),
+			(ts) =>
+				this.tables.audiocaptcha
+					.updateOne(
+						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+						{
+							$set: { storedAtTimestamp: ts },
+							$unset: { pendingStage: 1 },
+						},
+					)
+					.then(() => {}),
+		);
+		return true;
+	}
+
 	async markPuzzleCaptchaRecordChecked(
 		challenge: PoWChallengeId,
 	): Promise<boolean> {

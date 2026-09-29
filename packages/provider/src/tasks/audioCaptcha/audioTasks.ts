@@ -94,6 +94,10 @@ export class AudioCaptchaManager extends InteractiveCaptchaManager {
 		return this.db.updateAudioCaptchaRecord(challenge, updates);
 	}
 
+	protected markRecordChecked(challenge: PoWChallengeId): Promise<boolean> {
+		return this.db.markAudioCaptchaRecordChecked(challenge);
+	}
+
 	protected decisionMachineEventFields(
 		record: AudioCaptchaRecord,
 	): Partial<DecisionMachineInput> {
@@ -339,22 +343,18 @@ export class AudioCaptchaManager extends InteractiveCaptchaManager {
 			submittedAnswer: normaliseAudioAnswer(submittedAnswer),
 		});
 
+		// Both payloads were encrypted by this session's detector pool bundle, so
+		// they share one bundle lookup and decode together — see
+		// decodeSubmissionPayloads.
+		const decodedPayloads = await this.decodeSubmissionPayloads(
+			challengeRecord.sessionId,
+			{ behavioural: behavioralData, simd: simdReadings },
+		);
+
 		// Process behavioral data if provided
 		if (behavioralData) {
 			try {
-				// The behavioural payload was encrypted by this session's detector
-				// pool bundle; resolve it from the bundleId promoted onto the
-				// session record (no key pool — the detector lives only on
-				// providers).
-				const bundle = await this.resolveBundleBySessionId(
-					challengeRecord.sessionId,
-				);
-
-				// Decrypt the behavioral data (returns unpacked format)
-				const decryptedData = await this.decryptBehavioralData(
-					behavioralData,
-					bundle,
-				);
+				const decryptedData = decodedPayloads.behavioural;
 
 				if (decryptedData) {
 					const dappAccount = at(challengeSplit, 2);
@@ -368,6 +368,7 @@ export class AudioCaptchaManager extends InteractiveCaptchaManager {
 							mouseEventsCount: decryptedData.collector1?.length || 0,
 							touchEventsCount: decryptedData.collector2?.length || 0,
 							clickEventsCount: decryptedData.collector3?.length || 0,
+							scrollEventsCount: decryptedData.collector4?.length || 0,
 							deviceCapability: decryptedData.deviceCapability,
 							captchaResult: correct ? "passed" : "failed",
 						},
@@ -378,6 +379,7 @@ export class AudioCaptchaManager extends InteractiveCaptchaManager {
 						c1: decryptedData.collector1 || [],
 						c2: decryptedData.collector2 || [],
 						c3: decryptedData.collector3 || [],
+						c4: decryptedData.collector4 || [],
 						d: decryptedData.deviceCapability,
 					};
 
@@ -427,10 +429,10 @@ export class AudioCaptchaManager extends InteractiveCaptchaManager {
 					clientMetaData: storedClientMetaData,
 				}),
 			});
-			if (simdReadings) {
-				await this.decryptAndAttachSimdReadingsIfAbsent(
+			if (decodedPayloads.simd) {
+				await this.recordSessionSimdReadingsIfAbsentWithCache(
 					linkedSessionId,
-					simdReadings,
+					decodedPayloads.simd,
 					SimdReadingsStage.submit,
 				);
 			}

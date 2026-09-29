@@ -35,6 +35,7 @@ import {
 	normalizeHeadersForMatching,
 } from "../blacklistRequestInspector.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
+import { summariseRequestBody } from "../requestBodySummary.js";
 import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildAudioMaintenanceResponse } from "./maintenanceModeResponses.js";
@@ -305,7 +306,7 @@ export default (
 			recordCaptchaIssueError(CaptchaType.audio);
 			req.logger.error(() => ({
 				err,
-				body: req.body,
+				body: summariseRequestBody(req),
 				msg: "Error in audio captcha challenge request",
 			}));
 			return next(

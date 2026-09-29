@@ -1513,6 +1513,9 @@ export interface IProviderDatabase extends IDatabase {
 		challenge: PoWChallengeId,
 	): Promise<boolean>;
 
+	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
+	markAudioCaptchaRecordChecked(challenge: PoWChallengeId): Promise<boolean>;
+
 	markDappUserPoWCommitmentsStored(
 		challengeIds: string[],
 		asOfTimestamp?: Date,

@@ -119,6 +119,7 @@ describe("AudioCaptchaManager", () => {
 			// ones is the first and only submitter for its challenge.
 			claimAudioCaptchaSubmission: vi.fn().mockResolvedValue(true),
 			updateAudioCaptchaRecord: vi.fn(),
+			markAudioCaptchaRecordChecked: vi.fn().mockResolvedValue(true),
 			updateAudioCaptchaRecordResult: vi.fn(),
 			getClientRecord: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
@@ -570,6 +571,28 @@ describe("AudioCaptchaManager", () => {
 
 			expect(result.verified).toBe(false);
 			expect(db.updateAudioCaptchaRecord).not.toHaveBeenCalled();
+		});
+
+		it("returns verified:false when a concurrent verify claimed the record first", async () => {
+			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
+				asAudioRecord({
+					challenge,
+					dappAccount,
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+				}),
+			);
+			vi.mocked(db.markAudioCaptchaRecordChecked).mockResolvedValue(false);
+
+			const result = await audioCaptchaManager.serverVerifyAudioCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+			);
+
+			expect(result.verified).toBe(false);
+			expect(db.markAudioCaptchaRecordChecked).toHaveBeenCalledWith(challenge);
 		});
 
 		it("throws when the dappAccount on the record does not match", async () => {

@@ -621,7 +621,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			} catch (err) {
 				return next(
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-						context: { code: 400, error: err, body: req.body },
+						context: { code: 400, error: err, body: summariseRequestBody(req) },
 						i18n: req.i18n,
 						logger: req.logger,
 					}),
@@ -732,7 +732,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				req.logger.error(() => ({
 					msg: "Error in verifyAudioCaptchaSolution",
 					err,
-					data: { body: req.body },
+					data: { body: summariseRequestBody(req) },
 				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
