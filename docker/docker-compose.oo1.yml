@@ -29,7 +29,8 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
+            # the image has no curl; the admin api listens on 2020 (see the Caddyfile)
+            test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2020/metrics" ]
             interval: 5m
             retries: 3
             start_period: 30s
