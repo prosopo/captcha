@@ -114,6 +114,26 @@ describe("server-check claims are single-use under concurrency", () => {
 		expect(record?.serverChecked).toBe(true);
 	});
 
+	it("claims an icon-order challenge for exactly one of N concurrent verifies", async () => {
+		const challenge = "1___user___dapp___icon-order-claim" as PoWChallengeId;
+		await db.getTables().iconordercaptcha.create({
+			...baseChallenge,
+			challenge,
+			targets: [{ x: 10, y: 10, size: 24, kind: "star" }],
+			tolerance: 1,
+		});
+
+		const claims: boolean[] = await Promise.all(
+			Array.from({ length: CONCURRENCY }, () =>
+				db.markIconOrderCaptchaRecordChecked(challenge),
+			),
+		);
+
+		expect(claims.filter(Boolean)).toHaveLength(1);
+		const record = await db.getIconOrderCaptchaRecordByChallenge(challenge);
+		expect(record?.serverChecked).toBe(true);
+	});
+
 	it("claims an image commitment for exactly one of N concurrent verifies", async () => {
 		const id = "0xcommitmentclaim";
 		await db.getTables().commitment.create({
