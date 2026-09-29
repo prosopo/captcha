@@ -318,10 +318,11 @@ export function Manager(
 							index === 0
 								? [checkboxInputMethod, ...shapeInputMethods]
 								: shapeInputMethods;
+						const countByte = 1;
 						const salt = randomAsHex(
 							coords
 								.map((x) => x.toString(16).length + 4)
-								.reduce((acc, curr) => acc + curr, 0),
+								.reduce((acc, curr) => acc + curr, countByte),
 						);
 
 						const saltCoord = embedData(salt, coords);
