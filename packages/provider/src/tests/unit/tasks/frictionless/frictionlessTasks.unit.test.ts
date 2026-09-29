@@ -512,10 +512,6 @@ describe("Frictionless Task Manager", () => {
 				getCachedSession: vi.fn().mockResolvedValue(null),
 				getCachedSessionByHash: vi.fn().mockResolvedValue(null),
 				invalidateCachedSession: vi.fn().mockResolvedValue(undefined),
-				queueSessionRecord: vi.fn().mockResolvedValue(true),
-				drainSessionRecords: vi.fn().mockResolvedValue([]),
-				startPeriodicFlush: vi.fn(),
-				stopPeriodicFlush: vi.fn(),
 				isReady: vi.fn().mockReturnValue(true),
 			};
 
@@ -555,10 +551,6 @@ describe("Frictionless Task Manager", () => {
 				getCachedSession: vi.fn().mockResolvedValue(null),
 				getCachedSessionByHash: vi.fn().mockResolvedValue(null),
 				invalidateCachedSession: vi.fn().mockResolvedValue(undefined),
-				queueSessionRecord: vi.fn().mockResolvedValue(true),
-				drainSessionRecords: vi.fn().mockResolvedValue([]),
-				startPeriodicFlush: vi.fn(),
-				stopPeriodicFlush: vi.fn(),
 				isReady: vi.fn().mockReturnValue(true),
 			};
 
