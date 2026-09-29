@@ -22,13 +22,19 @@ const clampPadBytes = (padBytes: number | undefined): number =>
 
 const streamWithPad = (res: Response, body: object, n: number): Response => {
 	const offset = Math.floor(Math.random() * (POOL.length - n + 1));
-	const rest = JSON.stringify(body);
+	// Fields of the real body without its braces, so the pad can be written
+	// as the first member of a fresh object. `""` for `{}`, which would
+	// otherwise splice a trailing comma in and emit invalid JSON.
+	const fields = JSON.stringify(body).slice(1, -1);
 	res.setHeader("content-type", "application/json; charset=utf-8");
 	res.write('{"pad":"');
 	res.write(POOL.slice(offset, offset + n));
-	res.write(`",${rest.slice(1)}`);
+	res.write(fields ? `",${fields}}` : '"}');
 	return res.end();
 };
+
+const isPlainObject = (body: unknown): body is object =>
+	typeof body === "object" && body !== null && !Array.isArray(body);
 
 export const padResponseMiddleware = (
 	_req: Request,
@@ -38,7 +44,12 @@ export const padResponseMiddleware = (
 	const originalJson = res.json.bind(res);
 	res.json = (body: object): Response => {
 		const n = clampPadBytes(res.locals.padBytes);
-		return n === 0 ? originalJson(body) : streamWithPad(res, body, n);
+		// A non-object body has no member list to splice the pad into. Every
+		// challenge issuance response is an object, so this is a guard against
+		// corrupting some future response rather than a live case.
+		return n === 0 || !isPlainObject(body)
+			? originalJson(body)
+			: streamWithPad(res, body, n);
 	};
 	next();
 };
