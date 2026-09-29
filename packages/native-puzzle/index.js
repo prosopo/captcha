@@ -21,7 +21,7 @@ if (platform !== 'linux' || arch !== 'x64') {
 const local = join(__dirname, 'index.linux-x64-gnu.node')
 if (!existsSync(local)) {
   throw new Error(
-    '@prosopo/native-puzzle: index.linux-x64-gnu.node missing — run `npm run -w @prosopo/native-puzzle build`',
+    '@prosopo/native-puzzle: index.linux-x64-gnu.node missing — run `pnpm --filter @prosopo/native-puzzle run build`',
   )
 }
 

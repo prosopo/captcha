@@ -1,7 +1,7 @@
 # Makes Dependabot PRs pass the `changesets` check (and keeps the lockfile in sync).
 #
 # On every Dependabot PR this:
-#   1. refreshes package-lock.json with `npm i` (safety; Dependabot usually does this itself),
+#   1. refreshes pnpm-lock.yaml with `pnpm install` (safety; Dependabot usually does this itself),
 #   2. derives which *versioned* workspace packages had their package.json changed,
 #   3. writes a patch changeset for them describing the bump,
 #   4. commits the lockfile + changeset back onto the PR branch.
@@ -13,7 +13,7 @@
 # dependabot[bot]), the resulting `synchronize` event is skipped by the actor guard
 # below, so there is no re-trigger loop.
 #
-# `npm run changesets:add` is intentionally NOT used: it is interactive (prompts for
+# `pnpm run changesets:add` is intentionally NOT used: it is interactive (prompts for
 # packages + bump type) and cannot run unattended, so the changeset file is written directly.
 
 name: dependabot-changeset
@@ -63,18 +63,20 @@ jobs:
           submodules: "recursive"
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
       - uses: actions/setup-node@v7
         with:
-          # Match `engines` (node ^24 / npm ^11) and the tests.yml jobs so the
+          # Match `engines` (node ^24 / pnpm ^11) and the tests.yml jobs so the
           # regenerated lockfile is identical to what the rest of CI produces.
           node-version: "24"
 
       # Refresh the lockfile against the bumped package.json files.
-      # --ignore-scripts: --package-lock-only does not install node_modules, so the
+      # --ignore-scripts: --lockfile-only does not install node_modules, so the
       # root `prepare` hook (husky) would otherwise fail with "husky: not found"
       # (exit 127) and abort before the lockfile is refreshed.
       - name: Update lockfile
-        run: npm install --package-lock-only --workspaces --include-workspace-root --ignore-scripts --no-audit --no-fund --prefer-offline
+        run: pnpm install --lockfile-only --ignore-scripts --prefer-offline
 
       - name: Generate changeset
         env:

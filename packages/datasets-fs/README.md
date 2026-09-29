@@ -9,7 +9,7 @@ context.
 Build the CLI once, then run it from this package directory:
 
 ```bash
-npm run -w @prosopo/datasets-fs build
+pnpm --filter @prosopo/datasets-fs run build
 node dist/cli.js --help
 ```
 

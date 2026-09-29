@@ -6,8 +6,7 @@
 	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"exports": {
 		".": {
@@ -18,25 +17,25 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts --mode $NODE_ENV",
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json"
 	},
 	"dependencies": {
-		"@prosopo/ipinfo": "0.4.13",
-		"@prosopo/common": "3.1.61",
-		"@prosopo/logger": "2.1.2",
-		"@prosopo/database": "4.1.3",
-		"@prosopo/keyring": "2.10.0",
-		"@prosopo/types": "5.12.0",
-		"@prosopo/types-env": "2.11.14",
-		"@prosopo/util-crypto": "13.6.0"
+		"@prosopo/ipinfo": "workspace:*",
+		"@prosopo/common": "workspace:*",
+		"@prosopo/logger": "workspace:*",
+		"@prosopo/database": "workspace:*",
+		"@prosopo/keyring": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/types-env": "workspace:*",
+		"@prosopo/util-crypto": "workspace:*"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.2",
+		"@prosopo/config": "workspace:*",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
