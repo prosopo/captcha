@@ -1,5 +1,10 @@
 # @prosopo/client-bundle-example
 
+## 2.11.1
+### Patch Changes
+
+- 495c016: The public demo at demo.prosopo.io now reports page views to Plausible under the `demo.prosopo.io` site, so we can see who uses it. The tracker only loads on that exact host, so local runs, staging and the Cypress suite send nothing.
+
 ## 2.11.0
 ### Minor Changes
 
