@@ -31,6 +31,11 @@ services:
         image: public.ecr.aws/zinclabs/openobserve:latest
         env_file:
             - ../.env.${NODE_ENV}
+        environment:
+            # Dashboard panels query with no row limit, so OpenObserve caps them at this and
+            # silently drops time ranges past it (default 1000). Kept finite because it is also
+            # the only cap on raw-row queries with no LIMIT.
+            ZO_QUERY_DEFAULT_LIMIT: 20000
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - ./oo_data:/data
