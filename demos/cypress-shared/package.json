@@ -28,7 +28,7 @@
 		"@prosopo/datasets": "3.1.93",
 		"@prosopo/dotenv": "3.0.58",
 		"@prosopo/keyring": "2.9.99",
-		"@prosopo/types-database": "5.7.1",
+		"@prosopo/types-database": "5.7.2",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
