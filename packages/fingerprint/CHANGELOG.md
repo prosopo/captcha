@@ -1,5 +1,20 @@
 # @prosopo/fingerprint
 
+## 2.7.56
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+
+## 2.7.55
+### Patch Changes
+
+- Updated dependencies [59b7e87]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+  - @prosopo/types@5.11.0
+
 ## 2.7.54
 ### Patch Changes
 
