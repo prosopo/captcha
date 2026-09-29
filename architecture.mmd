@@ -71,7 +71,7 @@ graph TB
             PuzzleTasks["Puzzle Captcha Manager"]
             FrictionlessTasks["Frictionless Manager"]
             DetectorPool["Detector Bundle Pool<br/>(precomputed bundles loaded<br/>from disk; empty pool ⇒ no<br/>detection ⇒ PoW fallback)"]
-            SolutionVerifier["Solution Verifier<br/>Merkle tree + salt embedding"]
+            SolutionVerifier["Solution Verifier<br/>Merkle tree + salt embedding<br/>repeated pointer positions / keyboard with a position → reject"]
             DecisionMachine["Decision Machine<br/>pluggable scoring +<br/>post-pow escalation"]
             AccessPolicies["Access Policies<br/>(UAP: per-IP/ja4/headHash<br/>rules; can set captchaType +<br/>params; deferToVerify;<br/>Block messageKey → 403 reason)"]
             TrafficFilter["Traffic Filter<br/>(site-wide: per-category<br/>vpn / proxy / tor / abuser /<br/>datacenter / mobile /<br/>satellite / crawler)<br/>action = block | challenge"]
@@ -150,10 +150,10 @@ graph TB
     ImageChallengeEP --> ImgTasks
     ImgTasks -->|"random captchas + salt<br/>solvedImagesCount cascade:<br/>trafficFilter → session →<br/>AccessPolicy → siteSettings"| Dataset
     ImgTasks -->|signed challenge| ImageCaptcha
-    ImageCaptcha -->|user selects images| ImageSolutionEP
+    ImageCaptcha -->|"user selects images<br/>(positions in salt + inputMethods pointer/keyboard)"| ImageSolutionEP
     ImageSolutionEP --> SolutionVerifier
     SolutionVerifier -->|compare solutions| Dataset
-    SolutionVerifier -->|build commitment| MongoDB
+    SolutionVerifier -->|"build commitment<br/>(coords + inputMethods)"| MongoDB
     SolutionVerifier -->|optional scoring| DecisionMachine
     SolutionVerifier -->|"resolveTrafficFilterCheck<br/>(block matches → disapprove)"| TrafficFilter
     SolutionVerifier -->|"checkForHardBlock +<br/>deferToVerify block →<br/>ACCESS_POLICY_BLOCK"| AccessPolicies
