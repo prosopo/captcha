@@ -15,7 +15,7 @@
 import { HttpError, ProviderApi } from "@prosopo/api";
 import { ProsopoApiError, ProsopoContractError } from "@prosopo/common";
 import { Keyring } from "@prosopo/keyring";
-import { loadBalancer } from "@prosopo/load-balancer";
+import { findProvider } from "@prosopo/load-balancer";
 import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import {
@@ -294,13 +294,11 @@ export class ProsopoServer {
 			// `find` against the dual-stack default would miss and the
 			// lambda would emit `Provider not found`. See `detectIpMode`.
 			const ipMode = detectIpMode(providerUrl);
-			const providers = await loadBalancer(
+			const provider = await findProvider(
 				this.config.defaultEnvironment,
+				providerUrl,
 				ipMode,
 			);
-
-			// find the provider by URL in providers
-			const provider = providers.find((p) => p.url === providerUrl);
 
 			// if the provider is not found, return an error
 			if (!provider) {
