@@ -1,5 +1,11 @@
 # @prosopo/database
 
+## 4.1.2
+### Patch Changes
+
+- Updated dependencies [bcf59f1]
+  - @prosopo/types-database@5.7.2
+
 ## 4.1.1
 ### Patch Changes
 
