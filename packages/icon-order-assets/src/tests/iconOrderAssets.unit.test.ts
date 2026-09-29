@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createPrng } from "@prosopo/puzzle-assets";
+import { type RgbaImage, createPrng } from "@prosopo/puzzle-assets";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
+import { compositeIcons } from "../compose.js";
 import { GLYPH_KINDS, GlyphKind, glyphPath } from "../glyphs.js";
 import {
 	DEFAULT_GEOMETRY,
@@ -242,16 +243,15 @@ describe("gradeClicks", () => {
 
 describe("the collage background", () => {
 	/** Mean absolute difference between neighbouring pixels, per channel. */
-	const edgeEnergy = async (webp: Buffer): Promise<number> => {
-		const { data, info } = await sharp(webp)
-			.raw()
-			.toBuffer({ resolveWithObject: true });
+	const edgeEnergy = (image: RgbaImage): number => {
+		const { data, width, height } = image;
+		const channels = 4;
 		let total = 0;
 		let count = 0;
-		for (let y = 0; y < info.height; y++) {
-			for (let x = 1; x < info.width; x++) {
-				const i = (y * info.width + x) * info.channels;
-				const prev = i - info.channels;
+		for (let y = 0; y < height; y++) {
+			for (let x = 1; x < width; x++) {
+				const i = (y * width + x) * channels;
+				const prev = i - channels;
 				for (let c = 0; c < 3; c++) {
 					total += Math.abs((data[i + c] ?? 0) - (data[prev + c] ?? 0));
 					count++;
@@ -264,19 +264,15 @@ describe("the collage background", () => {
 	it("puts more edges on the frame as clutter rises", async () => {
 		// The whole point of the collage: a frame with its own strokes and
 		// corners, so an icon stroke is not the only strong local signal.
-		const [plain, busy] = await Promise.all([
-			createIconOrderChallenge(DEFAULT_GEOMETRY, {
+		// Same seed on both sides and no icons, so the only difference between
+		// the two frames is the clutter.
+		const frameAt = (backgroundClutter: number): Promise<RgbaImage> =>
+			compositeIcons(createPrng(seed(7)), [], DEFAULT_GEOMETRY, {
 				...DEFAULT_RENDER_SETTINGS,
-				backgroundClutter: 0,
-			}),
-			createIconOrderChallenge(DEFAULT_GEOMETRY, {
-				...DEFAULT_RENDER_SETTINGS,
-				backgroundClutter: 20,
-			}),
-		]);
-		expect(await edgeEnergy(busy.background)).toBeGreaterThan(
-			await edgeEnergy(plain.background),
-		);
+				backgroundClutter,
+			});
+		const [plain, busy] = await Promise.all([frameAt(0), frameAt(20)]);
+		expect(edgeEnergy(busy)).toBeGreaterThan(edgeEnergy(plain));
 	});
 
 	it("still renders at zero clutter, as the operator escape hatch", async () => {
