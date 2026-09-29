@@ -376,6 +376,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 								mouseEventsCount: decryptedData.collector1?.length || 0,
 								touchEventsCount: decryptedData.collector2?.length || 0,
 								clickEventsCount: decryptedData.collector3?.length || 0,
+								scrollEventsCount: decryptedData.collector4?.length || 0,
 								deviceCapability: decryptedData.deviceCapability,
 							},
 						}));
@@ -385,6 +386,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 							c1: decryptedData.collector1 || [],
 							c2: decryptedData.collector2 || [],
 							c3: decryptedData.collector3 || [],
+							c4: decryptedData.collector4 || [],
 							d: decryptedData.deviceCapability,
 						};
 
@@ -1108,6 +1110,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 				ruleType: sessionRecord?.ruleType,
 				webView: sessionRecord?.webView,
 				iFrame: sessionRecord?.iFrame,
+				currentUrl: sessionRecord?.currentUrl,
+				iframeUrl: sessionRecord?.iframeUrl,
 				coords: solution.coords,
 				// tcp-probe fields — see powTasks.ts for the reasoning.
 				synNs: sessionRecord?.synNs,
