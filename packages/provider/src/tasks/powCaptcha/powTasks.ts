@@ -230,6 +230,17 @@ export class PowCaptchaManager extends CaptchaManager {
 			return { verified: false };
 		}
 
+		// Single-use challenge. Every submission rewrites the record with
+		// serverChecked=false, so accepting a resubmission after the site's
+		// server has verified the token would re-arm that token for another
+		// verify.
+		if (challengeRecord.userSubmitted) {
+			this.logger.debug(() => ({
+				msg: `Challenge already submitted: ${challenge}`,
+			}));
+			return { verified: false };
+		}
+
 		const difficulty = challengeRecord.difficulty;
 
 		// Extract coordinates from salt if provided. Invalid salt input
@@ -382,6 +393,7 @@ export class PowCaptchaManager extends CaptchaManager {
 							mouseEventsCount: decryptedData.collector1?.length || 0,
 							touchEventsCount: decryptedData.collector2?.length || 0,
 							clickEventsCount: decryptedData.collector3?.length || 0,
+							scrollEventsCount: decryptedData.collector4?.length || 0,
 							deviceCapability: decryptedData.deviceCapability,
 							captchaResult: correct ? "passed" : "failed",
 						},
@@ -392,6 +404,7 @@ export class PowCaptchaManager extends CaptchaManager {
 						c1: decryptedData.collector1 || [],
 						c2: decryptedData.collector2 || [],
 						c3: decryptedData.collector3 || [],
+						c4: decryptedData.collector4 || [],
 						d: decryptedData.deviceCapability,
 					};
 
@@ -1064,6 +1077,8 @@ export class PowCaptchaManager extends CaptchaManager {
 					ruleType: sessionRecord?.ruleType,
 					webView: sessionRecord?.webView,
 					iFrame: sessionRecord?.iFrame,
+					currentUrl: sessionRecord?.currentUrl,
+					iframeUrl: sessionRecord?.iframeUrl,
 					coords: challengeRecord.coords,
 					// tcp-probe fields from the frictionless Session — the
 					// middleware persists them at entry, verify surfaces them

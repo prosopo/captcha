@@ -281,6 +281,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 			c1: { type: [Schema.Types.Mixed], required: true },
 			c2: { type: [Schema.Types.Mixed], required: true },
 			c3: { type: [Schema.Types.Mixed], required: true },
+			c4: { type: [Schema.Types.Mixed], required: false },
 			d: { type: String, required: true },
 		},
 		required: false,
@@ -437,6 +438,7 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 			c1: { type: [Schema.Types.Mixed], required: true },
 			c2: { type: [Schema.Types.Mixed], required: true },
 			c3: { type: [Schema.Types.Mixed], required: true },
+			c4: { type: [Schema.Types.Mixed], required: false },
 			d: { type: String, required: true },
 		},
 		required: false,
@@ -557,6 +559,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 			c1: { type: [Schema.Types.Mixed], required: true },
 			c2: { type: [Schema.Types.Mixed], required: true },
 			c3: { type: [Schema.Types.Mixed], required: true },
+			c4: { type: [Schema.Types.Mixed], required: false },
 			d: { type: String, required: true },
 		},
 		required: false,
@@ -1433,6 +1436,13 @@ export interface IProviderDatabase extends IDatabase {
 		updates: Partial<Session>,
 		streamToCentral?: boolean,
 	): Promise<void>;
+
+	/**
+	 * Marks a session server-checked only if it is not already. Resolves true
+	 * for the single caller that performed the flip, so concurrent verifies of
+	 * one token cannot all succeed.
+	 */
+	claimSessionServerCheck(sessionId: string): Promise<boolean>;
 
 	/**
 	 * Record SIMD CPU fingerprint readings on the session — first hop wins.
