@@ -12,17 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// React only flushes work synchronously inside act() when it believes it is
-// under test; without this flag every render lands after the assertion and the
-// container reads as empty.
-// React reads this off the global object rather than an import, so it has to
-// be declared before it can be set without widening globalThis to any.
-declare global {
-	var IS_REACT_ACT_ENVIRONMENT: boolean;
-}
-
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-
 // jsdom implements no media pipeline: HTMLMediaElement.play throws
 // "Not implemented" and the element never advances currentTime. The player
 // treats a rejected play() as "the browser blocked us", which is a real code

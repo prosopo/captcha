@@ -126,13 +126,14 @@ describe("Audio CAPTCHA — signup", () => {
 			.realClick();
 
 		// The image challenge offers the alternative because the site turned
-		// it on. Pressing it is the only route to audio.
+		// it on. Pressing it is the only route to audio. A real click: the
+		// control ignores untrusted events, as every widget control does.
 		getWidgetElement('[data-cy="prosopo-audio-alternative"]', {
 			timeout: 15000,
 		})
 			.first()
 			.should("be.visible")
-			.click();
+			.realClick();
 
 		cy.wait("@audioChallenge", { timeout: 15000 })
 			.its("response")
@@ -257,6 +258,15 @@ describe("Audio CAPTCHA — signup", () => {
 		);
 
 		getWidgetElement(checkboxClass, { timeout: 15000 })
+			.first()
+			.should("be.visible")
+			.realClick();
+
+		// The checkbox opens the image challenge; audio is only reached
+		// through the alternative on it.
+		getWidgetElement('[data-cy="prosopo-audio-alternative"]', {
+			timeout: 15000,
+		})
 			.first()
 			.should("be.visible")
 			.realClick();

@@ -29,6 +29,7 @@ export * from "./dom/obfuscation.js";
 export * from "./dom/styleSheet.js";
 export * from "./state/store.js";
 export * from "./components/reload.js";
+export * from "./components/audioAlternative.js";
 export * from "./components/checkbox.js";
 export * from "./components/challengeSurface.js";
 export * from "./components/honeypot.js";

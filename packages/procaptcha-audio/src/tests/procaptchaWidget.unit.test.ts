@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Ti18n } from "@prosopo/locale";
+import type { Component } from "@prosopo/procaptcha-common";
 import {
 	type AudioEvent,
 	type GetAudioCaptchaResponse,
@@ -20,8 +21,6 @@ import {
 	type ProcaptchaProps,
 	type ProcaptchaState,
 } from "@prosopo/types";
-import { type ReactElement, act, createElement } from "react";
-import { type Root, createRoot } from "react-dom/client";
 import {
 	type Mock,
 	afterEach,
@@ -31,7 +30,12 @@ import {
 	test,
 	vi,
 } from "vitest";
-import Procaptcha from "../components/ProcaptchaWidget.js";
+import type { AudioPlayerProps } from "../components/audioPlayer.js";
+import {
+	type ProcaptchaAudioHandle,
+	mountProcaptchaAudioWidget,
+} from "../components/procaptchaWidget.js";
+import { type Mounted, fire, mount, settle } from "./domHarness.js";
 import {
 	audioEvents,
 	challengeResponse,
@@ -64,33 +68,9 @@ const mocks = vi.hoisted(() => {
 		onReloadRequest?: (x?: number, y?: number) => void;
 	}[] = [];
 	const loadI18next = vi.fn<(a?: boolean, b?: string) => Promise<unknown>>();
-	const checkboxProps: {
-		current:
-			| {
-					checked: boolean;
-					loading: boolean;
-					labelText: string;
-					error?: string;
-					onChange: (event: { nativeEvent: unknown }) => Promise<void>;
-			  }
-			| undefined;
-	} = { current: undefined };
-	const playerProps: {
-		current:
-			| {
-					clip: string;
-					characterCount: number;
-					showRetry: boolean;
-					submitting: boolean;
-					onComplete: (
-						answer: string,
-						replays: number,
-						events: AudioEvent[],
-					) => Promise<void> | void;
-			  }
-			| undefined;
-	} = { current: undefined };
-	const honeypotQuestions: string[] = [];
+	const playerProps: { current: AudioPlayerProps | undefined } = {
+		current: undefined,
+	};
 	const translationsReady = { current: true };
 	return {
 		translationsReady,
@@ -99,9 +79,7 @@ const mocks = vi.hoisted(() => {
 		resetState,
 		constructions,
 		loadI18next,
-		checkboxProps,
 		playerProps,
-		honeypotQuestions,
 	};
 });
 
@@ -131,76 +109,42 @@ vi.mock("../services/Manager.js", () => ({
 // The player has its own suite; here it is reduced to a probe so a test can
 // read the props the widget hands it and fire the completion callback without
 // driving playback.
-vi.mock("../components/AudioPlayer.js", async () => {
-	const { createElement: create } = await import("react");
-	interface PlayerStubProps {
-		clip: string;
-		characterCount: number;
-		showRetry: boolean;
-		submitting: boolean;
-		onComplete: (
-			answer: string,
-			replays: number,
-			events: AudioEvent[],
-		) => Promise<void> | void;
-	}
-	const AudioPlayer = (stubProps: PlayerStubProps) => {
-		mocks.playerProps.current = stubProps;
-		return create("div", { "data-cy": "player-stub" });
-	};
-	return { AudioPlayer };
-});
-
-// The checkbox and the honeypot are procaptcha-common's, and tested there. The
-// stubs keep their contract — a change callback and a forwarded input ref —
-// while letting a test drive the exact browser event the widget branches on,
-// which jsdom cannot produce (it marks every dispatched event untrusted, and
-// the real checkbox drops those before the widget ever sees them).
-vi.mock("@prosopo/procaptcha-common", async (importOriginal) => {
-	const actual =
-		await importOriginal<typeof import("@prosopo/procaptcha-common")>();
-	const { createElement: create, forwardRef } = await import("react");
-	interface CheckboxStubProps {
-		checked: boolean;
-		loading: boolean;
-		labelText: string;
-		error?: string;
-		onChange: (event: { nativeEvent: unknown }) => Promise<void>;
-	}
-	const Checkbox = (checkboxProps: CheckboxStubProps) => {
-		mocks.checkboxProps.current = checkboxProps;
-		return create("input", {
-			type: "checkbox",
-			readOnly: true,
-			checked: checkboxProps.checked,
-			"aria-label": checkboxProps.labelText,
-			"data-error": checkboxProps.error,
-			"data-loading": String(checkboxProps.loading),
-		});
-	};
-	const Honeypot = forwardRef<HTMLInputElement, { encodedQuestion: string }>(
-		({ encodedQuestion }, ref) => {
-			mocks.honeypotQuestions.push(encodedQuestion);
-			return create("input", { type: "text", ref, name: "honeypot" });
-		},
-	);
-	return { ...actual, Checkbox, Honeypot };
-});
+vi.mock("../components/audioPlayer.js", () => ({
+	mountAudioPlayer: (
+		playerProps: AudioPlayerProps,
+	): Component<AudioPlayerProps> => {
+		mocks.playerProps.current = playerProps;
+		const element = document.createElement("div");
+		element.setAttribute("data-cy", "player-stub");
+		document.body.appendChild(element);
+		return {
+			update: (next: AudioPlayerProps) => {
+				mocks.playerProps.current = next;
+			},
+			destroy: () => {
+				element.remove();
+				mocks.playerProps.current = undefined;
+			},
+		};
+	},
+}));
 
 vi.mock("@prosopo/locale", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("@prosopo/locale")>();
 	return {
 		...actual,
 		loadI18next: mocks.loadI18next,
-		useTranslation: () => ({
+		createTranslator: () => ({
 			t: (key: string) => key,
-			ready: mocks.translationsReady.current,
+			isReady: () => mocks.translationsReady.current,
+			subscribe: () => () => undefined,
+			i18n: undefined,
 		}),
 	};
 });
 
-let container: HTMLDivElement;
-let root: Root;
+let mounted: Mounted;
+let widget: ProcaptchaAudioHandle | undefined;
 
 const i18nStub = (
 	language: string,
@@ -215,53 +159,52 @@ const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps => ({
 });
 
 const render = (widgetProps: ProcaptchaProps): void => {
-	act(() => {
-		root.render(createElement(Procaptcha, widgetProps) as ReactElement);
-	});
+	widget = mountProcaptchaAudioWidget(mounted.container, widgetProps);
+};
+
+const destroy = (): void => {
+	widget?.destroy();
+	widget = undefined;
 };
 
 beforeEach(() => {
 	vi.clearAllMocks();
 	mocks.constructions.length = 0;
-	mocks.honeypotQuestions.length = 0;
 	mocks.translationsReady.current = true;
-	mocks.checkboxProps.current = undefined;
 	mocks.playerProps.current = undefined;
 	mocks.start.mockResolvedValue(challengeResponse());
 	mocks.submitSolution.mockResolvedValue(true);
 	mocks.loadI18next.mockResolvedValue(undefined);
-	container = document.createElement("div");
-	document.body.appendChild(container);
-	act(() => {
-		root = createRoot(container);
-	});
+	widget = undefined;
+	mounted = mount();
 });
 
 afterEach(() => {
-	act(() => {
-		root.unmount();
-	});
-	container.remove();
-	// React schedules through timers, so a suite that leaves them faked makes
-	// every later render land after its assertions.
+	destroy();
+	mounted.unmount();
 	vi.useRealTimers();
 	vi.restoreAllMocks();
 });
 
 const checkbox = (): HTMLInputElement => {
-	const element = container.querySelector<HTMLInputElement>(
+	const element = mounted.container.querySelector<HTMLInputElement>(
 		'input[type="checkbox"]',
 	);
 	if (!element) throw new Error("expected a checkbox to be rendered");
 	return element;
 };
 
+// The player puts itself on the body rather than inside the widget, so it can
+// escape the skeleton's query container.
 const player = (): Element | null =>
-	container.querySelector('[data-cy="player-stub"]');
+	document.body.querySelector('[data-cy="player-stub"]');
+
+const spinner = (): Element | null =>
+	mounted.container.querySelector('[role="status"]');
 
 const honeypotInput = (): HTMLInputElement => {
-	const element = container.querySelector<HTMLInputElement>(
-		'input[name="honeypot"]',
+	const element = document.querySelector<HTMLInputElement>(
+		'input[name="email_confirm"]',
 	);
 	if (!element) throw new Error("expected a honeypot to be rendered");
 	return element;
@@ -274,17 +217,10 @@ interface ClickOptions {
 	touches?: { clientX: number; clientY: number }[];
 }
 
-/** Hand the widget the browser event a click on the checkbox would produce. */
+/** Click the real checkbox with the browser event a user would produce. */
 const click = async (options: ClickOptions = {}): Promise<void> => {
-	const nativeEvent = {
-		isTrusted: options.trusted ?? true,
-		clientX: options.clientX ?? 0,
-		clientY: options.clientY ?? 0,
-		...(options.touches ? { touches: options.touches } : {}),
-	};
-	await act(async () => {
-		await mocks.checkboxProps.current?.onChange({ nativeEvent });
-	});
+	fire(checkbox(), "click", options);
+	await settle();
 };
 
 /**
@@ -292,11 +228,7 @@ const click = async (options: ClickOptions = {}): Promise<void> => {
  * manager's promise open.
  */
 const clickWithoutWaiting = (): void => {
-	act(() => {
-		void mocks.checkboxProps.current?.onChange({
-			nativeEvent: { isTrusted: true, clientX: 0, clientY: 0 },
-		});
-	});
+	fire(checkbox(), "click");
 };
 
 /** Fire the player's completion callback the way a typed answer would. */
@@ -305,9 +237,8 @@ const complete = async (
 	replays = 1,
 	events: AudioEvent[] = audioEvents(),
 ): Promise<void> => {
-	await act(async () => {
-		await mocks.playerProps.current?.onComplete(answer, replays, events);
-	});
+	mocks.playerProps.current?.onComplete(answer, replays, events);
+	await settle();
 };
 
 describe("what the widget renders", () => {
@@ -318,7 +249,9 @@ describe("what the widget renders", () => {
 
 	test("an invisible widget shows no checkbox at all", () => {
 		render(props({ config: config({ mode: ModeEnum.invisible }) }));
-		expect(container.querySelector('input[type="checkbox"]')).toBeNull();
+		expect(
+			mounted.container.querySelector('input[type="checkbox"]'),
+		).toBeNull();
 	});
 
 	test("no player is shown until a challenge has been fetched", () => {
@@ -327,18 +260,22 @@ describe("what the widget renders", () => {
 	});
 
 	test("a session with a honeypot question renders the honeypot", () => {
-		render(props({ frictionlessState: frictionless({ hp: "question" }) }));
+		render(
+			props({ frictionlessState: frictionless({ hp: btoa("question") }) }),
+		);
 		expect(honeypotInput()).toBeDefined();
-		expect(mocks.honeypotQuestions.at(-1)).toBe("question");
+		expect(document.body.textContent).toContain("question");
 	});
 
 	test("a session without one renders no bait at all", () => {
 		render(props({ frictionlessState: frictionless() }));
-		expect(container.querySelector('input[name="honeypot"]')).toBeNull();
+		expect(document.querySelector('input[name="email_confirm"]')).toBeNull();
 	});
 
 	test("the manager can read the honeypot input the widget rendered", () => {
-		render(props({ frictionlessState: frictionless({ hp: "question" }) }));
+		render(
+			props({ frictionlessState: frictionless({ hp: btoa("question") }) }),
+		);
 		honeypotInput().value = "bot@example.com";
 		expect(mocks.constructions[0]?.getHoneypotValue?.()).toBe(
 			"bot@example.com",
@@ -352,32 +289,22 @@ describe("what the widget renders", () => {
 
 	test("the checkbox is labelled once the translations are ready", () => {
 		render(props());
-		expect(mocks.checkboxProps.current?.labelText).toBe("WIDGET.I_AM_HUMAN");
+		expect(checkbox().getAttribute("aria-label")).toBe("WIDGET.I_AM_HUMAN");
 	});
 
 	test("the label is left empty while the translations load", () => {
 		mocks.translationsReady.current = false;
 		render(props());
-		expect(mocks.checkboxProps.current?.labelText).toBe("");
+		expect(checkbox().getAttribute("aria-label")).toBe("");
 	});
 
-	test("the widget keeps the manager it started with across re-renders", () => {
-		// `useRef(Manager(...))` re-evaluates the argument on every render, so
-		// extra managers are constructed and thrown away; what matters is that
-		// the widget still listens to the first one.
+	test("the widget builds exactly one manager", async () => {
+		// The React version rebuilt the manager on every render and kept the
+		// first through a ref, which is what lost the checkbox click coordinates
+		// before the ref was introduced. There is one manager per mount now.
 		render(props());
-		render(props());
-		act(() => {
-			mocks.constructions[0]?.updateState({
-				error: {
-					message: "from the original manager",
-					key: "API.UNKNOWN_ERROR",
-				},
-			});
-		});
-		expect(mocks.checkboxProps.current?.error).toBe(
-			"from the original manager",
-		);
+		await click();
+		expect(mocks.constructions).toHaveLength(1);
 	});
 });
 
@@ -430,10 +357,12 @@ describe("starting from the checkbox", () => {
 		});
 	});
 
-	test("an untrusted click starts a solve but carries no coordinates", async () => {
+	test("a synthetic click never reaches the manager", async () => {
+		// The checkbox drops untrusted events before the widget sees them, so an
+		// automated solver cannot open a challenge at all.
 		render(props());
 		await click({ trusted: false, clientX: 12, clientY: 34 });
-		expect(mocks.start).toHaveBeenCalledWith(0, 0);
+		expect(mocks.start).not.toHaveBeenCalled();
 	});
 
 	test("a tap reports the coordinates of the first touch", async () => {
@@ -442,7 +371,7 @@ describe("starting from the checkbox", () => {
 		expect(mocks.start).toHaveBeenCalledWith(7, 9);
 	});
 
-	test("a touch event with no touches falls back to the origin", async () => {
+	test("a touch event with no touches falls back to the pointer", async () => {
 		render(props());
 		await click({ touches: [] });
 		expect(mocks.start).toHaveBeenCalledWith(0, 0);
@@ -453,9 +382,11 @@ describe("starting from the checkbox", () => {
 			// replaced synchronously by the promise executor below
 		};
 		mocks.start.mockReturnValue(
-			new Promise<GetAudioCaptchaResponse>((resolve) => {
-				release = resolve;
-			}),
+			new Promise<GetAudioCaptchaResponse>(
+				(resolve: (challenge: GetAudioCaptchaResponse) => void) => {
+					release = resolve;
+				},
+			),
 		);
 		render(props());
 		// Not awaited: the handler cannot settle until the challenge is
@@ -463,9 +394,8 @@ describe("starting from the checkbox", () => {
 		clickWithoutWaiting();
 		clickWithoutWaiting();
 		expect(mocks.start).toHaveBeenCalledTimes(1);
-		await act(async () => {
-			release(challengeResponse());
-		});
+		release(challengeResponse());
+		await settle();
 	});
 
 	test("the checkbox shows a spinner while the solve is loading", async () => {
@@ -473,17 +403,19 @@ describe("starting from the checkbox", () => {
 			// replaced synchronously by the promise executor below
 		};
 		mocks.start.mockReturnValue(
-			new Promise<GetAudioCaptchaResponse>((resolve) => {
-				release = resolve;
-			}),
+			new Promise<GetAudioCaptchaResponse>(
+				(resolve: (challenge: GetAudioCaptchaResponse) => void) => {
+					release = resolve;
+				},
+			),
 		);
 		render(props());
 		clickWithoutWaiting();
-		expect(mocks.checkboxProps.current?.loading).toBe(true);
-		await act(async () => {
-			release(challengeResponse());
-		});
-		expect(mocks.checkboxProps.current?.loading).toBe(false);
+		await settle();
+		expect(spinner()).not.toBeNull();
+		release(challengeResponse());
+		await settle();
+		expect(spinner()).toBeNull();
 	});
 
 	test("a start that yields no challenge leaves the checkbox in place", async () => {
@@ -491,7 +423,7 @@ describe("starting from the checkbox", () => {
 		render(props());
 		await click();
 		expect(player()).toBeNull();
-		expect(mocks.checkboxProps.current?.loading).toBe(false);
+		expect(spinner()).toBeNull();
 	});
 
 	test("a start that throws returns the user to a usable checkbox", async () => {
@@ -501,7 +433,7 @@ describe("starting from the checkbox", () => {
 		await click();
 		// Without the guard the spinner would stay up for good: nothing awaits
 		// the checkbox handler, so the rejection escapes as an unhandled one.
-		expect(mocks.checkboxProps.current?.loading).toBe(false);
+		expect(spinner()).toBeNull();
 		expect(onError).toHaveBeenCalledWith(expect.any(Error));
 	});
 
@@ -509,42 +441,30 @@ describe("starting from the checkbox", () => {
 		mocks.start.mockRejectedValue(new Error("provider down"));
 		render(props());
 		await click();
-		expect(mocks.checkboxProps.current?.loading).toBe(false);
+		expect(spinner()).toBeNull();
 	});
 });
 
 describe("autoStart", () => {
 	test("fetches a challenge and opens the player without a click", async () => {
-		await act(async () => {
-			root.render(
-				createElement(
-					Procaptcha,
-					props({ autoStart: true, startCoords: { x: 5, y: 6 } }),
-				) as ReactElement,
-			);
-		});
+		render(props({ autoStart: true, startCoords: { x: 5, y: 6 } }));
+		await settle();
 		expect(mocks.start).toHaveBeenCalledWith(5, 6);
 		expect(player()).not.toBeNull();
 	});
 
 	test("starts at the origin when no coordinates were handed over", async () => {
-		await act(async () => {
-			root.render(
-				createElement(Procaptcha, props({ autoStart: true })) as ReactElement,
-			);
-		});
+		render(props({ autoStart: true }));
+		await settle();
 		expect(mocks.start).toHaveBeenCalledWith(0, 0);
 	});
 
 	test("a failed autoStart leaves the checkbox usable", async () => {
 		mocks.start.mockRejectedValue(new Error("nope"));
-		await act(async () => {
-			root.render(
-				createElement(Procaptcha, props({ autoStart: true })) as ReactElement,
-			);
-		});
+		render(props({ autoStart: true }));
+		await settle();
 		expect(player()).toBeNull();
-		expect(mocks.checkboxProps.current?.loading).toBe(false);
+		expect(spinner()).toBeNull();
 	});
 
 	test("no autoStart means no solve until the user acts", () => {
@@ -572,7 +492,7 @@ describe("answering the challenge", () => {
 		await openPlayer();
 		await complete();
 		expect(player()).toBeNull();
-		expect(mocks.checkboxProps.current?.loading).toBe(false);
+		expect(spinner()).toBeNull();
 	});
 
 	test("a wrong answer gets a fresh clip rather than the one just spent", async () => {
@@ -598,7 +518,7 @@ describe("answering the challenge", () => {
 	});
 
 	test("delegates the retry to the wrapper when it offered one", async () => {
-		const onReload = vi.fn<(x?: number, y?: number) => void>();
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
 		mocks.submitSolution.mockResolvedValue(false);
 		await openPlayer(props({ onReload }));
 		await complete();
@@ -609,16 +529,33 @@ describe("answering the challenge", () => {
 		expect(mocks.constructions[0]?.onReloadRequest).toBeTypeOf("function");
 	});
 
+	test("keeps the spent clip frozen while the wrapper re-mints", async () => {
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
+		mocks.submitSolution.mockResolvedValue(false);
+		await openPlayer(props({ onReload }));
+		await complete();
+		expect(mocks.playerProps.current).toMatchObject({
+			showRetry: true,
+			submitting: true,
+		});
+	});
+
 	test("does not offer the manager a retry hook the wrapper never supplied", async () => {
 		await openPlayer();
 		expect(mocks.constructions[0]?.onReloadRequest).toBeUndefined();
 	});
 
-	test("the wrapper's retry handler is reached through the manager", async () => {
-		const onReload = vi.fn<(x?: number, y?: number) => void>();
+	test("the wrapper's retry handler is reached through the manager, asking to keep the retry prompt", async () => {
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
 		await openPlayer(props({ onReload }));
 		mocks.constructions[0]?.onReloadRequest?.(3, 4);
-		expect(onReload).toHaveBeenCalledWith(3, 4);
+		expect(onReload).toHaveBeenCalledWith(3, 4, { showRetry: true });
+	});
+
+	test("a re-minted widget keeps the retry prompt on the replacement clip", async () => {
+		render(props({ autoStart: true, startShowRetry: true }));
+		await settle();
+		expect(mocks.playerProps.current).toMatchObject({ showRetry: true });
 	});
 
 	test("a wrong answer with no replacement challenge closes the player", async () => {
@@ -665,29 +602,33 @@ describe("answering the challenge", () => {
 			// replaced synchronously by the promise executor below
 		};
 		mocks.submitSolution.mockReturnValue(
-			new Promise<boolean>((resolve) => {
+			new Promise<boolean>((resolve: (verified: boolean) => void) => {
 				release = resolve;
 			}),
 		);
 		await openPlayer();
 		// Not awaited: the handler cannot settle until the verdict is released.
-		act(() => {
-			void mocks.playerProps.current?.onComplete("96475", 0, []);
-		});
+		void mocks.playerProps.current?.onComplete("96475", 0, []);
+		await settle();
 		expect(mocks.playerProps.current?.submitting).toBe(true);
-		expect(mocks.checkboxProps.current?.loading).toBe(true);
-		await act(async () => {
-			release(true);
-		});
+		expect(spinner()).not.toBeNull();
+		release(true);
+		await settle();
+	});
+
+	test("dismissing the player returns to the checkbox without answering", async () => {
+		await openPlayer();
+		mocks.playerProps.current?.onDismiss?.();
+		await settle();
+		expect(player()).toBeNull();
+		expect(mocks.submitSolution).not.toHaveBeenCalled();
 	});
 });
 
 describe("invisible mode", () => {
 	const execute = async (): Promise<void> => {
-		await act(async () => {
-			document.dispatchEvent(new Event("procaptcha:execute"));
-			await Promise.resolve();
-		});
+		document.dispatchEvent(new Event("procaptcha:execute"));
+		await settle();
 	};
 
 	test("an execute event fetches a challenge and opens the player", async () => {
@@ -697,7 +638,7 @@ describe("invisible mode", () => {
 		expect(player()).not.toBeNull();
 	});
 
-	test("a visible widget ignores the bare execute event entirely", async () => {
+	test("a visible widget ignores the execute event entirely", async () => {
 		render(props());
 		await execute();
 		expect(mocks.start).not.toHaveBeenCalled();
@@ -706,10 +647,8 @@ describe("invisible mode", () => {
 	test("a targeted execute on the container runs a visible widget", async () => {
 		const target = document.createElement("div");
 		render(props({ container: target }));
-		await act(async () => {
-			target.dispatchEvent(new Event("procaptcha:execute"));
-			await Promise.resolve();
-		});
+		target.dispatchEvent(new Event("procaptcha:execute"));
+		await settle();
 		expect(mocks.start).toHaveBeenCalledTimes(1);
 		expect(player()).not.toBeNull();
 	});
@@ -722,10 +661,8 @@ describe("invisible mode", () => {
 				container: target,
 			}),
 		);
-		await act(async () => {
-			target.dispatchEvent(new Event("procaptcha:execute"));
-			await Promise.resolve();
-		});
+		target.dispatchEvent(new Event("procaptcha:execute"));
+		await settle();
 		expect(mocks.start).toHaveBeenCalledTimes(1);
 	});
 
@@ -762,43 +699,37 @@ describe("invisible mode", () => {
 		expect(onError).toHaveBeenCalledWith(expect.any(Error));
 	});
 
-	test("the listener is dropped when the widget unmounts", async () => {
+	test("the listener is dropped when the widget is destroyed", async () => {
 		render(props({ config: config({ mode: ModeEnum.invisible }) }));
-		act(() => {
-			root.unmount();
-		});
-		act(() => {
-			root = createRoot(container);
-		});
+		destroy();
 		await execute();
 		expect(mocks.start).not.toHaveBeenCalled();
 	});
 });
 
 describe("an invalidated session", () => {
-	const invalidate = (
+	const invalidate = async (
 		key = "CAPTCHA.NO_SESSION_FOUND",
 		message = "session gone",
-	): void => {
-		act(() => {
-			mocks.constructions[0]?.updateState({ error: { message, key } });
-		});
+	): Promise<void> => {
+		mocks.constructions[0]?.updateState({ error: { message, key } });
+		await settle();
 	};
 
 	test("the error is shown on the checkbox and the player is torn down", async () => {
 		render(props());
 		await click();
-		invalidate("API.UNKNOWN_ERROR", "something broke");
-		expect(mocks.checkboxProps.current?.error).toBe("something broke");
+		await invalidate("API.UNKNOWN_ERROR", "something broke");
+		expect(mounted.container.textContent).toContain("something broke");
 		expect(player()).toBeNull();
-		expect(mocks.checkboxProps.current?.loading).toBe(false);
+		expect(spinner()).toBeNull();
 	});
 
 	test("the host is told to re-mint, with the coordinates of the original click", async () => {
 		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
 		render(props({ onSessionInvalidated }));
 		await click({ clientX: 12, clientY: 34 });
-		invalidate();
+		await invalidate();
 		expect(onSessionInvalidated).toHaveBeenCalledWith(12, 34);
 	});
 
@@ -806,52 +737,58 @@ describe("an invalidated session", () => {
 		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
 		render(props({ onSessionInvalidated }));
 		await click();
-		invalidate("CAPTCHA.NO_SESSION_FOUND", "gone");
-		invalidate("CAPTCHA.NO_SESSION_FOUND", "gone again");
+		await invalidate("CAPTCHA.NO_SESSION_FOUND", "gone");
+		await invalidate("CAPTCHA.NO_SESSION_FOUND", "gone again");
 		expect(onSessionInvalidated).toHaveBeenCalledTimes(1);
 	});
 
 	test("with no host handler the frictionless session restarts instead", async () => {
-		vi.useFakeTimers();
 		const restart = vi.fn<() => void>();
 		render(props({ frictionlessState: frictionless({ restart }) }));
-		invalidate();
+		await invalidate();
 		expect(restart).not.toHaveBeenCalled();
-		await act(async () => {
-			await vi.advanceTimersByTimeAsync(100);
-		});
+		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 150));
 		expect(restart).toHaveBeenCalledTimes(1);
-		vi.useRealTimers();
 	});
 
-	test("a restart pending at unmount is cancelled", async () => {
-		vi.useFakeTimers();
+	test("a restart pending at destroy is cancelled", async () => {
 		const restart = vi.fn<() => void>();
 		render(props({ frictionlessState: frictionless({ restart }) }));
-		invalidate();
-		act(() => {
-			root.unmount();
-		});
-		await act(async () => {
-			await vi.advanceTimersByTimeAsync(200);
-		});
+		await invalidate();
+		destroy();
+		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 200));
 		expect(restart).not.toHaveBeenCalled();
-		act(() => {
-			root = createRoot(container);
-		});
-		vi.useRealTimers();
 	});
 
-	test("a lost session with nothing to recover it is simply surfaced", () => {
-		render(props());
-		invalidate();
-		expect(mocks.checkboxProps.current?.error).toBe("session gone");
+	// A re-mint is already under way, so the error describes a state the widget
+	// is about to leave. Spinner, not support code.
+	test("a lost session that will be re-minted shows no error", async () => {
+		render(props({ frictionlessState: frictionless({ restart: () => {} }) }));
+		await click();
+		await invalidate();
+		expect(mounted.container.textContent).not.toContain("session gone");
+		expect(spinner()).not.toBeNull();
 	});
 
-	test("no coordinates are reported when the session was never clicked into", () => {
+	test("a lost session handed to the wrapper shows no error either", async () => {
 		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
 		render(props({ onSessionInvalidated }));
-		invalidate();
+		await click();
+		await invalidate();
+		expect(onSessionInvalidated).toHaveBeenCalledTimes(1);
+		expect(mounted.container.textContent).not.toContain("session gone");
+	});
+
+	test("a lost session with nothing to recover it is simply surfaced", async () => {
+		render(props());
+		await invalidate();
+		expect(mounted.container.textContent).toContain("session gone");
+	});
+
+	test("no coordinates are reported when the session was never clicked into", async () => {
+		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
+		render(props({ onSessionInvalidated }));
+		await invalidate();
 		expect(onSessionInvalidated).toHaveBeenCalledWith(undefined, undefined);
 	});
 });

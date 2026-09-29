@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import type { Ti18n, Translator } from "@prosopo/locale";
 import type {
 	AudioEvent,
 	FrictionlessState,
@@ -23,10 +23,14 @@ import type {
 	ProcaptchaState,
 	ProcaptchaStateUpdateFn,
 } from "@prosopo/types";
-import type { ReactElement } from "react";
+import { lightTheme } from "@prosopo/widget-skeleton";
 import { assertType, describe, expectTypeOf, test } from "vitest";
+import {
+	type AudioPlayerProps,
+	mountAudioPlayer,
+} from "../components/audioPlayer.js";
 import type * as entrypoint from "../index.js";
-import { ProcaptchaAudio } from "../index.js";
+import { mountProcaptchaAudio } from "../index.js";
 import { Manager } from "../services/Manager.js";
 import {
 	audioEvents,
@@ -40,15 +44,25 @@ import {
 const i18n = (): Ti18n => undefined as unknown as Ti18n;
 
 describe("the package entrypoint's types", () => {
-	test("ProcaptchaAudio takes the shared widget props and renders an element", () => {
-		expectTypeOf(ProcaptchaAudio).parameters.toEqualTypeOf<[ProcaptchaProps]>();
-		expectTypeOf(ProcaptchaAudio).returns.toExtend<ReactElement>();
+	test("mountProcaptchaAudio takes a host element and the shared widget props", () => {
+		expectTypeOf(mountProcaptchaAudio).parameters.toEqualTypeOf<
+			[HTMLElement, ProcaptchaProps]
+		>();
+		expectTypeOf(mountProcaptchaAudio).returns.toExtend<{
+			destroy: () => void;
+		}>();
 	});
 
-	test("the inner widget's default export is not re-exported", () => {
-		// `export *` skips default exports, so consumers can only reach the lazy
-		// wrapper — the one that works without a code-splitting bundler.
-		expectTypeOf<keyof typeof entrypoint>().toEqualTypeOf<"ProcaptchaAudio">();
+	test("the entrypoint exposes the lazy wrapper and the widget itself", () => {
+		// The lazy wrapper is what works without a code-splitting bundler; the
+		// direct mount is what the frictionless wrapper imports once it has
+		// already paid for the dynamic import of this package.
+		expectTypeOf<keyof typeof entrypoint>().toEqualTypeOf<
+			| "mountProcaptchaAudio"
+			| "loadProcaptchaAudio"
+			| "mountProcaptchaAudioWidget"
+			| "mountAudioPlayer"
+		>();
 	});
 
 	test("config, callbacks and i18n are all required", () => {
@@ -136,6 +150,50 @@ describe("Manager's types", () => {
 		manager.submitSolution(1234, 0, audioEvents());
 		// @ts-expect-error - the trail is required; a silent solve still sends [].
 		manager.submitSolution("01234", 0);
+	});
+});
+
+describe("AudioPlayer's types", () => {
+	const translator = (): Translator => undefined as unknown as Translator;
+	const onComplete = (
+		_answer: string,
+		_replays: number,
+		_events: AudioEvent[],
+	): void => undefined;
+
+	test("every prop without a sensible default is required", () => {
+		// @ts-expect-error - a player with no clip has nothing to play.
+		mountAudioPlayer({ showRetry: false, submitting: false });
+		// @ts-expect-error - `submitting` gates the answer; omitting it unlocks it.
+		mountAudioPlayer({
+			clip: "data:audio/wav;base64,UklGRiQAAABXQVZF",
+			characterCount: 5,
+			onComplete,
+			showRetry: false,
+			theme: lightTheme,
+			translator: translator(),
+		});
+	});
+
+	test("the full prop set mounts a component that can be updated and torn down", () => {
+		expectTypeOf(
+			mountAudioPlayer({
+				clip: "data:audio/wav;base64,UklGRiQAAABXQVZF",
+				characterCount: 5,
+				onComplete,
+				showRetry: false,
+				submitting: false,
+				theme: lightTheme,
+				translator: translator(),
+			}),
+		).toExtend<{
+			update: (props: AudioPlayerProps) => void;
+			destroy: () => void;
+		}>();
+	});
+
+	test("the answer is reported synchronously, not as a promise", () => {
+		expectTypeOf(onComplete).returns.toEqualTypeOf<void>();
 	});
 });
 

@@ -1,16 +1,118 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <link href="https://cdn.muicss.com/mui-0.10.3/css/mui.min.css" rel="stylesheet" type="text/css"/>
-    <link href="styles/field.css" rel="stylesheet" type="text/css"/>
 
-    <script src="index.js"></script>
-    <title>Procaptcha demo: Invisible Audio Accessibility Alternative - Implicit Rendering</title>
-<link href="styles/captcha.css" rel="stylesheet" type="text/css"/>
+    <title>Procaptcha demo: Image with audio alternative, invisible, implicit rendering</title>
     <script type="module">
-        // Function to update CAPTCHA status display is now provided by status-log-injector
 
-        document.addEventListener('DOMContentLoaded', function() {
+        // Define callbacks directly on window object so they're globally accessible
+        window.onCaptchaFailed = function () {
+            updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
+        }
+
+        window.onCaptchaVerified = function(output) {
+            updateCaptchaStatus('Challenge passed successfully!', 'success');
+            updateCaptchaStatus(`Token generated: ${output.substring(0, 15)}...`, 'success');
+        }
+
+        window.onActionHandler = function(token) {
+            updateCaptchaStatus('CAPTCHA callback executed with token', 'success');
+
+            if (!token) {
+                updateCaptchaStatus('Error: No token received from CAPTCHA', 'error');
+                alert("Must complete captcha");
+                return;
+            }
+
+            updateCaptchaStatus('Form submission initiated with valid CAPTCHA token', 'info');
+            const payload = {
+                email: document.getElementById('email').value,
+                name: document.getElementById('name').value,
+                password: document.getElementById('password').value,
+                siteKey: import.meta.env.PROSOPO_SITE_KEY_AUDIO,
+                "procaptcha-response": token,
+            };
+            const url = new URL('signup', import.meta.env.PROSOPO_SERVER_URL).href;
+            console.log("Posting to", url, "with payload", payload);
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+                contentType: "application/json",
+            }).then((response) => {
+                return new Promise((resolve) => response.json()
+                    .then((json) => resolve({
+                        status: response.status,
+                        ok: response.ok,
+                        json,
+                    })))
+            })
+                .then(async ({status, json, ok}) => {
+                    console.log("Response status:", status, "message:", json.message, "ok:", ok);
+                    console.log("Full response:", json);
+                    try {
+                        if (status !== 200) {
+                            window.setIsError(true);
+                            window.setMessage(json.message);
+                            updateCaptchaStatus(`API Error: ${json.message}`, 'error');
+                        } else {
+                            window.setIsError(false);
+                            window.setMessage(json.message);
+                            updateCaptchaStatus(`API Success: ${json.message}`, 'success');
+                        }
+                    } catch (err) {
+                        console.log("Error processing response:", err);
+                        updateCaptchaStatus(`Error processing response: ${err}`, 'error');
+                    }
+                })
+                .catch((err) => {
+                    console.log("Fetch error:", err);
+                    window.setIsError(true);
+                    window.setMessage("Error: " + err);
+                    updateCaptchaStatus(`Fetch error: ${err}`, 'error');
+                });
+        };
+
+        window.addEventListener('load', () => {
+
+            window.setIsError = (isError) => {
+                const messageContainer = document.getElementById('messageContainer');
+                messageContainer.style.color = isError ? 'red' : 'black';
+                messageContainer.style.display = 'block';
+            };
+
+            window.setMessage = (message) => {
+                document.getElementById('message').innerText = message;
+            };
+
+            window.onLoggedIn = (token) => {
+                const url = new URL("/private", config.serverUrl).href;
+                console.log("getting private resource with token ", token, "at", url);
+                fetch(url, {
+                    method: "GET",
+                    headers: {
+                        Origin: "http://localhost:9232", // TODO: change this to env var
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                })
+                    .then(async (res) => {
+                        try {
+                            const jsonRes = await res.json();
+                            if (res.status === 200) {
+                                setMessage(jsonRes.message);
+                            }
+                        } catch (err) {
+                            console.log(err);
+                        }
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
+            };
+
             updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
 
             // Monitor DOM for CAPTCHA initialization
@@ -35,84 +137,52 @@
 
         // Create a method to show CAPTCHA execution events
         document.addEventListener('procaptcha:execute', function(e) {
-            updateCaptchaStatus(`CAPTCHA execution started: type=puzzle, mode=invisible`, 'info');
+            updateCaptchaStatus(`CAPTCHA execution started: type=image, mode=invisible`, 'info');
             updateCaptchaStatus(`Container: ${e.detail.containerId}, timestamp: ${new Date(e.detail.timestamp).toLocaleTimeString()}`, 'info');
         });
 
-        window.onSubmit = function(token) {
-            console.log('Procaptcha verified, token: ' + token);
-            updateCaptchaStatus('Challenge passed successfully!', 'success');
-            updateCaptchaStatus(`Token generated: ${token.substring(0, 15)}...`, 'success');
-
-            // Get form values
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-
-            const resultElement = document.getElementById('result');
-            if (resultElement) {
-                // textContent (not innerHTML) — user-typed values must not be
-                // interpreted as HTML; whitespace preserved via CSS below.
-                resultElement.replaceChildren();
-                const heading = document.createElement('strong');
-                heading.textContent = 'Form submitted with:';
-                resultElement.append(heading, document.createElement('br'));
-                for (const line of [
-                    `- Name: ${name}`,
-                    `- Email: ${email}`,
-                    '- Procaptcha verified: Yes',
-                ]) {
-                    resultElement.append(
-                        document.createTextNode(line),
-                        document.createElement('br'),
-                    );
-                }
-                resultElement.style.display = 'block';
-            }
-
-            updateCaptchaStatus('Form submission completed', 'success');
-
-            // Prevent actual form submission
-            return false;
-        }
+        // Add custom event listener for CAPTCHA verification stages
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                updateCaptchaStatus('CAPTCHA script loaded and initialized', 'info');
+                updateCaptchaStatus('Waiting for user interaction...', 'info');
+            }, 500);
+        });
     </script>
-    <!-- Load the Procaptcha script -->
-    <script type="module" src="%VITE_BUNDLE_URL%" async defer></script>
+    <script id="procaptchaScript" type="module" src="%VITE_BUNDLE_URL%" async defer></script>
 </head>
 <body>
-    <div class="mui-container">
-        <h1>Invisible Audio Accessibility Alternative - Implicit Rendering</h1>
-        <p>This site serves an image challenge with the audio accessibility alternative turned on. Open the challenge and press &ldquo;Use audio instead&rdquo; to switch to a spoken-digits challenge.</p>
 
-        <!-- CAPTCHA Status Display will be injected by the status-log-injector plugin -->
+<div class="demo-card">
 
-        <form id="demo-form" action="javascript:void(0);" method="POST" class="mui-form">
-            <h2>Example Form</h2>
-            <div class="mui-textfield mui-textfield--float-label">
-                <label for="name">Name</label>
-                <input type="text" id="name" name="name" required />
-            </div>
+    <form action="%PROSOPO_SERVER_URL%/signup" method="POST" class="demo-form">
+        <h2>Create an account</h2>
+        <p class="demo-note">This site key serves an image challenge with the audio alternative turned on. Open the challenge and press <strong>Use audio instead</strong> for a spoken-digits challenge.</p>
+        <div class="demo-field">
+            <label for="name">Name</label>
+            <input id="name" type="text" name="name" required/>
+        </div>
+        <div class="demo-field">
+            <label for="email">Email Address</label>
+            <input id="email" type="email" name="email" required/>
+        </div>
+        <div class="demo-field">
+            <label for="password">Password</label>
+            <input id="password" type="password" name="password" required/>
+        </div>
+        <div id="messageContainer" style="display: none; color: black;"><span id="message"></span></div>
+        <button
+            type="button"
+            class="demo-button procaptcha"
+            data-sitekey="%PROSOPO_SITE_KEY_AUDIO%"
+            data-callback="onActionHandler"
+            data-failed-callback="onCaptchaFailed"
+            data-size="invisible"
+            data-cy="submit-button">
+            Submit
+        </button>
+    </form>
 
-            <div class="mui-textfield mui-textfield--float-label">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required />
-            </div>
-
-            <!-- Submit button with Procaptcha attributes -->
-            <button
-                class="mui-btn mui-btn--raised procaptcha"
-                data-sitekey="%PROSOPO_SITE_KEY_AUDIO%"
-                data-callback="onSubmit"
-                data-size="invisible">
-                Submit
-            </button>
-        </form>
-
-        <div id="result" class="info-box" style="display: none;"></div>
-
-        <!-- Console output display area -->
-        <div id="console-output" class="console-output" style="display: none;"></div>
-
-        <!-- Explanation will be injected by the explanation-injector plugin -->
-    </div>
+</div>
 </body>
 </html>

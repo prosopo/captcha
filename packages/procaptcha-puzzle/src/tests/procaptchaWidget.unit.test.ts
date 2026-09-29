@@ -763,3 +763,42 @@ describe("an invalidated session", () => {
 		expect(onSessionInvalidated).toHaveBeenCalledWith(undefined, undefined);
 	});
 });
+
+describe("the audio alternative", () => {
+	const onRequestAudioAlternative = vi.fn<() => void>();
+
+	const openPuzzle = async (overrides: Partial<ProcaptchaProps>) => {
+		render(props(overrides));
+		await click();
+	};
+
+	test("is not offered unless the site turned it on", async () => {
+		await openPuzzle({ onRequestAudioAlternative });
+		expect(mocks.canvasProps.current?.audioAlternative).toBeUndefined();
+	});
+
+	test("is not offered when nothing would handle the request", async () => {
+		await openPuzzle({ audioAlternativeAvailable: true });
+		expect(mocks.canvasProps.current?.audioAlternative).toBeUndefined();
+	});
+
+	test("hands the canvas the translated offer and the wrapper's handler", async () => {
+		await openPuzzle({
+			audioAlternativeAvailable: true,
+			onRequestAudioAlternative,
+		});
+		const offer = mocks.canvasProps.current?.audioAlternative;
+		expect(offer?.label).toBe("WIDGET.AUDIO_ALTERNATIVE");
+		offer?.onRequestAudio();
+		expect(onRequestAudioAlternative).toHaveBeenCalledTimes(1);
+	});
+
+	test("leaves the label empty while the translations load", async () => {
+		mocks.translationsReady.current = false;
+		await openPuzzle({
+			audioAlternativeAvailable: true,
+			onRequestAudioAlternative,
+		});
+		expect(mocks.canvasProps.current?.audioAlternative?.label).toBe("");
+	});
+});

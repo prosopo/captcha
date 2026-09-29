@@ -14,6 +14,8 @@
 
 import type { Translator } from "@prosopo/locale";
 import {
+	type AudioAlternativeFooterProps,
+	type AudioAlternativeOffer,
 	type ChallengeSurfaceComponent,
 	type Component,
 	type StyleMap,
@@ -22,6 +24,7 @@ import {
 	applyStyles,
 	createElement,
 	isEventTrusted,
+	mountAudioAlternativeFooter,
 	mountChallengeSurface,
 } from "@prosopo/procaptcha-common";
 import type { PlacementType, PuzzleEvent } from "@prosopo/types";
@@ -48,6 +51,8 @@ export interface PuzzleCanvasProps {
 	placement?: PlacementType;
 	anchor?: HTMLElement | null;
 	onDismiss?: () => void;
+	/** Renders "use audio instead" below the puzzle. Absent hides it. */
+	audioAlternative?: AudioAlternativeOffer;
 }
 
 const CONTAINER_WIDTH = 300;
@@ -288,6 +293,16 @@ export const mountPuzzleCanvas = (
 	);
 	surface.content.append(style, announcer, keyboardHint, panel);
 
+	const audioAlternativeFooterProps = (): AudioAlternativeFooterProps => ({
+		offer: props.audioAlternative,
+		theme: props.theme,
+		width: CONTAINER_WIDTH,
+	});
+	const audioAlternativeFooter = mountAudioAlternativeFooter(
+		panel,
+		audioAlternativeFooterProps(),
+	);
+
 	const announce = (message: string, delayMs = 0) => {
 		if (undefined !== announceTimer) {
 			clearTimeout(announceTimer);
@@ -401,7 +416,9 @@ export const mountPuzzleCanvas = (
 			background: `linear-gradient(135deg, ${theme.palette.surface} 0%, ${theme.palette.primaryContainer.main} 50%, ${theme.palette.surface} 100%)`,
 			opacity: props.submitting ? 0.6 : 1,
 			pointerEvents: props.submitting ? "none" : "auto",
+			borderRadius: props.audioAlternative ? "0" : "0 0 20px 20px",
 		});
+		audioAlternativeFooter.update(audioAlternativeFooterProps());
 		for (const tile of backgroundTiles) {
 			tile.src = props.background;
 		}
@@ -652,6 +669,7 @@ export const mountPuzzleCanvas = (
 		},
 		destroy: () => {
 			teardown.run();
+			audioAlternativeFooter.destroy();
 			surface.destroy();
 		},
 	};

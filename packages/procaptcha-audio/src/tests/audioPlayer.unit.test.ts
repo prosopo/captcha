@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import type { Translator } from "@prosopo/locale";
+import type { Component } from "@prosopo/procaptcha-common";
 import type { AudioEvent } from "@prosopo/types";
-import { type Theme, lightTheme } from "@prosopo/widget-skeleton";
-import { type ReactElement, act, createElement } from "react";
-import { type Root, createRoot } from "react-dom/client";
+import { lightTheme } from "@prosopo/widget-skeleton";
 import {
 	type Mock,
 	afterEach,
@@ -26,7 +25,11 @@ import {
 	test,
 	vi,
 } from "vitest";
-import { AudioPlayer } from "../components/AudioPlayer.js";
+import {
+	type AudioPlayerProps,
+	mountAudioPlayer,
+} from "../components/audioPlayer.js";
+import { settle } from "./domHarness.js";
 import { CLIP_URI } from "./managerHarness.js";
 
 /**
@@ -43,46 +46,48 @@ import { CLIP_URI } from "./managerHarness.js";
 
 const OTHER_CLIP_URI = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10";
 
-interface PlayerProps {
-	clip: string;
-	characterCount: number;
-	onComplete: Mock<
-		(answer: string, replays: number, audioEvents: AudioEvent[]) => void
-	>;
-	showRetry: boolean;
-	submitting: boolean;
-	theme: Theme;
-	t: Ti18n["t"];
-}
-
-let container: HTMLDivElement;
-let root: Root;
+let player: Component<AudioPlayerProps> | undefined;
 let onComplete: Mock<
 	(answer: string, replays: number, audioEvents: AudioEvent[]) => void
 >;
 
 /** Echoes the key back so assertions name the string the user would hear read out. */
-const translate = ((key: string) => key) as unknown as Ti18n["t"];
+const translator = (): Translator => ({
+	t: (key: string): string => key,
+	isReady: () => true,
+	subscribe: () => () => undefined,
+	i18n: {} as Translator["i18n"],
+});
 
-const props = (overrides: Partial<PlayerProps> = {}): PlayerProps => ({
+const props = (
+	overrides: Partial<AudioPlayerProps> = {},
+): AudioPlayerProps => ({
 	clip: CLIP_URI,
 	characterCount: 5,
 	onComplete,
 	showRetry: false,
 	submitting: false,
 	theme: lightTheme,
-	t: translate,
+	translator: translator(),
 	...overrides,
 });
 
-const render = (playerProps: PlayerProps): void => {
-	act(() => {
-		root.render(createElement(AudioPlayer, playerProps) as ReactElement);
-	});
+const render = (playerProps: AudioPlayerProps): void => {
+	if (player) {
+		player.update(playerProps);
+	} else {
+		player = mountAudioPlayer(playerProps);
+	}
 };
 
+/**
+ * The player puts itself on the body — it has to escape the query container
+ * the widget skeleton wraps it in — so everything reads the body.
+ */
+const overlay = (): HTMLElement => document.body;
+
 const find = <T extends HTMLElement>(selector: string): T => {
-	const element = container.querySelector<T>(selector);
+	const element = overlay().querySelector<T>(selector);
 	if (!element) throw new Error(`expected ${selector} to be rendered`);
 	return element;
 };
@@ -98,47 +103,29 @@ const answerInput = (): HTMLInputElement =>
 const liveRegion = (): HTMLElement => find('[aria-live="polite"]');
 
 const click = (element: HTMLElement): void => {
-	act(() => {
-		element.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-	});
+	element.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 };
 
-/**
- * Types into the controlled input the way React expects: setting `value`
- * directly bypasses React's value tracker and the change event is ignored.
- */
 const type = (value: string): void => {
 	const input = answerInput();
-	const setter = Object.getOwnPropertyDescriptor(
-		HTMLInputElement.prototype,
-		"value",
-	)?.set;
-	act(() => {
-		setter?.call(input, value);
-		input.dispatchEvent(new Event("input", { bubbles: true }));
-	});
+	input.value = value;
+	input.dispatchEvent(new Event("input", { bubbles: true }));
 };
 
 const pressEnter = (): void => {
-	act(() => {
-		answerInput().dispatchEvent(
-			new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
-		);
-	});
-};
-
-/** Resolves the play() promise the component chained onto. */
-const settle = async (): Promise<void> => {
-	await act(async () => {
-		await Promise.resolve();
-	});
+	answerInput().dispatchEvent(
+		new KeyboardEvent("keydown", { key: "Enter", bubbles: true }),
+	);
 };
 
 let play: Mock<() => Promise<void>>;
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	onComplete = vi.fn();
+	onComplete =
+		vi.fn<
+			(answer: string, replays: number, audioEvents: AudioEvent[]) => void
+		>();
 	play = vi.fn<() => Promise<void>>();
 	play.mockResolvedValue(undefined);
 	Object.defineProperty(HTMLMediaElement.prototype, "play", {
@@ -148,29 +135,26 @@ beforeEach(() => {
 	});
 	// The component reveals itself on the next frame; without a synchronous
 	// rAF every test would assert against the pre-transition render.
-	vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
-		cb(0);
-		return 0;
-	});
-	container = document.createElement("div");
-	document.body.appendChild(container);
-	act(() => {
-		root = createRoot(container);
-	});
+	vi.spyOn(window, "requestAnimationFrame").mockImplementation(
+		(callback: FrameRequestCallback): number => {
+			callback(0);
+			return 0;
+		},
+	);
+	player = undefined;
 });
 
 afterEach(() => {
-	act(() => {
-		root.unmount();
-	});
-	container.remove();
+	player?.destroy();
+	player = undefined;
+	vi.useRealTimers();
 	vi.restoreAllMocks();
 });
 
 describe("what it renders", () => {
 	test("asks for the number of characters the challenge carries", () => {
 		render(props({ characterCount: 6 }));
-		expect(container.textContent).toContain("WIDGET.AUDIO_INSTRUCTIONS");
+		expect(overlay().textContent).toContain("WIDGET.AUDIO_INSTRUCTIONS");
 	});
 
 	test("loads the clip it was handed", () => {
@@ -195,7 +179,9 @@ describe("what it renders", () => {
 	test("names the dialog region so it is announced as its own thing", () => {
 		render(props());
 		expect(
-			container.querySelector('[aria-label="WIDGET.AUDIO_CHALLENGE_LABEL"]'),
+			overlay().querySelector(
+				'[role="dialog"][aria-label="WIDGET.AUDIO_CHALLENGE_LABEL"]',
+			),
 		).not.toBeNull();
 	});
 
@@ -268,9 +254,7 @@ describe("playback", () => {
 		render(props());
 		click(playButton());
 		await settle();
-		act(() => {
-			clip().dispatchEvent(new Event("ended"));
-		});
+		clip().dispatchEvent(new Event("ended"));
 		expect(liveRegion().textContent).toBe("WIDGET.AUDIO_FINISHED");
 	});
 });
@@ -327,8 +311,12 @@ describe("answering", () => {
 		click(submitButton());
 		const events = onComplete.mock.calls[0]?.[2];
 		if (!events) throw new Error("expected an event trail");
-		expect(events.map((event) => event.kind)).toEqual(["play", "key", "key"]);
-		expect(events.every((event) => event.t >= 0)).toBe(true);
+		expect(events.map((event: AudioEvent) => event.kind)).toEqual([
+			"play",
+			"key",
+			"key",
+		]);
+		expect(events.every((event: AudioEvent) => event.t >= 0)).toBe(true);
 	});
 
 	test("does not resubmit while a submission is in flight", () => {
@@ -383,5 +371,100 @@ describe("a wrong answer", () => {
 		render(props());
 		render(props({ clip: OTHER_CLIP_URI, showRetry: true }));
 		expect(pause).toHaveBeenCalled();
+	});
+});
+
+describe("the play button's label", () => {
+	test("offers to play before anything has been heard", () => {
+		render(props());
+		expect(playButton().textContent).toBe("WIDGET.AUDIO_PLAY");
+	});
+
+	test("says the clip is playing once the browser has started it", async () => {
+		render(props());
+		click(playButton());
+		await settle();
+		expect(playButton().textContent).toBe("WIDGET.AUDIO_PLAYING");
+	});
+
+	test("offers a replay once the clip has finished", async () => {
+		render(props());
+		click(playButton());
+		await settle();
+		clip().dispatchEvent(new Event("ended"));
+		expect(playButton().textContent).toBe("WIDGET.AUDIO_REPLAY");
+	});
+});
+
+describe("arriving as a retry", () => {
+	test("announces the miss on a player mounted straight into a retry", () => {
+		// A wrong answer re-mints the session and so remounts the player, which
+		// is how the replacement clip usually arrives.
+		render(props({ showRetry: true }));
+		expect(liveRegion().textContent).toBe("WIDGET.AUDIO_INCORRECT");
+		expect(overlay().textContent).toContain("WIDGET.AUDIO_INCORRECT");
+	});
+
+	test("the shake stops on its own and leaves the player usable", () => {
+		vi.useFakeTimers();
+		render(props({ showRetry: true }));
+		vi.advanceTimersByTime(600);
+		type("96475");
+		click(submitButton());
+		expect(onComplete).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe("closing it", () => {
+	test("Escape asks the widget to dismiss the challenge", () => {
+		const onDismiss = vi.fn<() => void>();
+		render(props({ onDismiss }));
+		document.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+		);
+		expect(onDismiss).toHaveBeenCalledTimes(1);
+	});
+
+	test("tearing it down removes the dialog and silences the clip", () => {
+		const pause = vi.fn<() => void>();
+		Object.defineProperty(HTMLMediaElement.prototype, "pause", {
+			configurable: true,
+			writable: true,
+			value: pause,
+		});
+		render(props());
+		player?.destroy();
+		player = undefined;
+		expect(pause).toHaveBeenCalled();
+		expect(
+			overlay().querySelector('[data-cy="prosopo-audio-clip"]'),
+		).toBeNull();
+	});
+
+	test("a torn-down player no longer submits", () => {
+		render(props());
+		type("96475");
+		const submit = submitButton();
+		player?.destroy();
+		player = undefined;
+		click(submit);
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+});
+
+describe("test hooks", () => {
+	test("are withheld from a production build", () => {
+		const originalNodeEnv = process.env.NODE_ENV;
+		process.env.NODE_ENV = "production";
+		try {
+			render(props());
+			expect(overlay().querySelector('[data-cy^="prosopo-audio"]')).toBeNull();
+		} finally {
+			if (undefined === originalNodeEnv) {
+				Reflect.deleteProperty(process.env, "NODE_ENV");
+			} else {
+				process.env.NODE_ENV = originalNodeEnv;
+			}
+		}
 	});
 });

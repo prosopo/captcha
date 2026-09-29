@@ -13,11 +13,14 @@
 // limitations under the License.
 import type { Translator } from "@prosopo/locale";
 import {
+	type AudioAlternativeButtonProps,
+	type AudioAlternativeOffer,
 	type Component,
 	type StyleMap,
 	applyAttributes,
 	applyStyles,
 	createElement,
+	mountAudioAlternativeButton,
 	mountReloadButton,
 	threeColumnBasis,
 	wrapRandomly,
@@ -54,6 +57,8 @@ export interface CaptchaComponentProps {
 	onReload: () => void;
 	themeColor: "light" | "dark";
 	translator: Translator;
+	/** Renders "use audio instead" under the action row. Absent hides it. */
+	audioAlternative?: AudioAlternativeOffer;
 }
 
 const outerStyle = (theme: Theme): StyleMap => ({
@@ -218,6 +223,15 @@ export const mountCaptchaComponent = (
 		children: [decoy(controls)],
 	});
 
+	// Below the action row so it reads as an alternative to the whole
+	// challenge, not as a fourth action on it.
+	const audioAlternativeRow = createElement("div", {
+		style: {
+			textAlign: "center",
+			paddingBottom: `${theme.spacing.unit * 2}px`,
+		},
+	});
+
 	const inner = createElement("div", {
 		style: {
 			backgroundColor: theme.palette.background.default,
@@ -228,7 +242,12 @@ export const mountCaptchaComponent = (
 			marginRight: `${jittered(theme.spacing.unit)}px`,
 			justifyContent: "center",
 		},
-		children: [decoy(headerRow), decoy(gridHost), decoy(controlsRow)],
+		children: [
+			decoy(headerRow),
+			decoy(gridHost),
+			decoy(controlsRow),
+			audioAlternativeRow,
+		],
 	});
 
 	const root = createElement("div", {
@@ -262,6 +281,33 @@ export const mountCaptchaComponent = (
 		onClick: () => (isLastRound() ? props.onSubmit() : props.onNext()),
 		text: props.translator.t("WIDGET.SUBMIT"),
 	});
+
+	let audioAlternativeButton:
+		| Component<AudioAlternativeButtonProps>
+		| undefined;
+
+	const renderAudioAlternative = () => {
+		const offer = props.audioAlternative;
+		if (undefined === offer) {
+			audioAlternativeButton?.destroy();
+			audioAlternativeButton = undefined;
+			audioAlternativeRow.style.display = "none";
+			return;
+		}
+		audioAlternativeRow.style.display = "";
+		const buttonProps: AudioAlternativeButtonProps = {
+			...offer,
+			themeColor: props.themeColor,
+		};
+		if (undefined === audioAlternativeButton) {
+			audioAlternativeButton = mountAudioAlternativeButton(
+				audioAlternativeRow,
+				buttonProps,
+			);
+		} else {
+			audioAlternativeButton.update(buttonProps);
+		}
+	};
 
 	const render = () => {
 		const activeTheme = themeOf(props.themeColor);
@@ -316,6 +362,8 @@ export const mountCaptchaComponent = (
 			onClick: () => (isLastRound() ? props.onSubmit() : props.onNext()),
 			text: isLastRound() ? t("WIDGET.SUBMIT") : t("WIDGET.NEXT"),
 		});
+
+		renderAudioAlternative();
 	};
 
 	render();
@@ -331,6 +379,7 @@ export const mountCaptchaComponent = (
 			cancelButton.destroy();
 			reloadButton.destroy();
 			nextButton.destroy();
+			audioAlternativeButton?.destroy();
 			root.parentNode?.removeChild(root);
 		},
 	};

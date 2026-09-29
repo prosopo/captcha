@@ -19,7 +19,6 @@ import {
 	type HoneypotComponent,
 	type ProcaptchaStateHandle,
 	Teardown,
-	audioAlternativeOffer,
 	buildUpdateState,
 	createElement,
 	createProcaptchaState,
@@ -29,33 +28,29 @@ import {
 	mountHoneypot,
 } from "@prosopo/procaptcha-common";
 import {
-	type GetIconOrderCaptchaResponse,
-	type IconClick,
-	type IconOrderEvent,
+	type AudioEvent,
+	type GetAudioCaptchaResponse,
 	ModeEnum,
 	type ProcaptchaProps,
 	type ProcaptchaState,
 } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { Manager } from "../services/Manager.js";
-import {
-	type IconOrderCanvasProps,
-	mountIconOrderCanvas,
-} from "./iconOrderCanvas.js";
+import { type AudioPlayerProps, mountAudioPlayer } from "./audioPlayer.js";
 
 // Define the same event name as in the bundle for consistency
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
-type IconOrderPhase = "checkbox" | "selecting" | "submitting";
+type AudioPhase = "checkbox" | "answering" | "submitting";
 
-export interface ProcaptchaIconOrderHandle {
+export interface ProcaptchaAudioHandle {
 	destroy(): void;
 }
 
-export const mountProcaptchaIconOrderWidget = (
+export const mountProcaptchaAudioWidget = (
 	container: HTMLElement,
 	props: ProcaptchaProps,
-): ProcaptchaIconOrderHandle => {
+): ProcaptchaAudioHandle => {
 	const teardown = new Teardown();
 	const config = props.config;
 	const i18n = props.i18n;
@@ -66,10 +61,10 @@ export const mountProcaptchaIconOrderWidget = (
 
 	const store: ProcaptchaStateHandle = createProcaptchaState();
 	let loading = false;
-	let iconOrderPhase: IconOrderPhase = "checkbox";
-	let challengeData: GetIconOrderCaptchaResponse | null = null;
-	// A re-mint after a wrong answer builds a brand new widget, so the miss is
-	// only still on screen if the wrapper hands it back to us.
+	let audioPhase: AudioPhase = "checkbox";
+	let challengeData: GetAudioCaptchaResponse | null = null;
+	// A wrong answer re-mints and re-mounts us, so the miss is only still
+	// announced if the wrapper hands it back.
 	let showRetry = true === props.startShowRetry;
 	let lastError: ProcaptchaState["error"] = store.state.error;
 	// See procaptcha-pow's widget — same session-invalidation recovery contract
@@ -79,7 +74,12 @@ export const mountProcaptchaIconOrderWidget = (
 
 	let honeypot: HoneypotComponent | undefined;
 	let checkbox: Component<CheckboxProps> | undefined;
-	let canvas: Component<IconOrderCanvasProps> | undefined;
+	let player: Component<AudioPlayerProps> | undefined;
+
+	// Whether the retry is delegated is decided at mount: handing the manager a
+	// handler the wrapper never supplied would leave a wrong answer with
+	// nothing to re-mint the challenge with.
+	const delegatesReload = Boolean(props.onReload);
 
 	// get the state update mechanism
 	const updateState = buildUpdateState(store.state, store.update);
@@ -91,6 +91,9 @@ export const mountProcaptchaIconOrderWidget = (
 		callbacks,
 		frictionlessState,
 		() => honeypot?.getValue(),
+		delegatesReload
+			? (x?: number, y?: number) => props.onReload?.(x, y, { showRetry: true })
+			: undefined,
 	);
 
 	const root = createElement("div");
@@ -100,16 +103,17 @@ export const mountProcaptchaIconOrderWidget = (
 		honeypot = mountHoneypot(root, { encodedQuestion: frictionlessState.hp });
 	}
 
-	const handleIconOrderComplete = async (
-		clicks: IconClick[],
-		iconOrderEvents: IconOrderEvent[],
+	const handleAudioComplete = async (
+		answer: string,
+		replays: number,
+		audioEvents: AudioEvent[],
 	): Promise<void> => {
-		iconOrderPhase = "submitting";
+		audioPhase = "submitting";
 		scheduler.schedule();
 
 		let verified = false;
 		try {
-			verified = await manager.submitSolution(clicks, iconOrderEvents);
+			verified = await manager.submitSolution(answer, replays, audioEvents);
 		} catch (error) {
 			callbacks.onError?.(
 				error instanceof Error ? error : new Error(String(error)),
@@ -117,7 +121,7 @@ export const mountProcaptchaIconOrderWidget = (
 		}
 
 		if (verified) {
-			iconOrderPhase = "checkbox";
+			audioPhase = "checkbox";
 			challengeData = null;
 			showRetry = false;
 			loading = false;
@@ -125,24 +129,19 @@ export const mountProcaptchaIconOrderWidget = (
 			return;
 		}
 
-		// Failed — show retry message and fetch a new challenge
 		showRetry = true;
-		iconOrderPhase = "selecting";
-		scheduler.schedule();
 
-		// A frictionless session is single-use: the provider consumed it when it
-		// issued the challenge the user just got wrong, so asking `manager.start()`
-		// for a replacement on the same sessionId can only ever come back
-		// CAPTCHA.NO_SESSION_FOUND — a wasted round trip that surfaces an error
-		// on the checkbox before the wrapper recovers. Go straight to the
-		// re-mint instead; the wrapper mints a new session and re-mounts us with
-		// `autoStart`, so a fresh challenge appears in place.
-		if (frictionlessState?.sessionId && props.onReload) {
-			iconOrderPhase = "submitting";
+		// The manager has already asked the wrapper to mint a fresh session and
+		// re-mount us. This instance is on its way out, and the clip on screen
+		// was spent by the answer just rejected, so it stays frozen rather than
+		// inviting a second answer the provider would refuse.
+		if (delegatesReload) {
 			scheduler.schedule();
-			props.onReload(lastCoords?.x, lastCoords?.y, { showRetry: true });
 			return;
 		}
+
+		audioPhase = "answering";
+		scheduler.schedule();
 
 		try {
 			const newChallenge = await manager.start();
@@ -150,12 +149,12 @@ export const mountProcaptchaIconOrderWidget = (
 				challengeData = newChallenge;
 			} else {
 				// Couldn't get new challenge, fall back to checkbox
-				iconOrderPhase = "checkbox";
+				audioPhase = "checkbox";
 				challengeData = null;
 				showRetry = false;
 			}
 		} catch {
-			iconOrderPhase = "checkbox";
+			audioPhase = "checkbox";
 			challengeData = null;
 			showRetry = false;
 		}
@@ -163,35 +162,30 @@ export const mountProcaptchaIconOrderWidget = (
 		scheduler.schedule();
 	};
 
-	// Dismissing returns to the checkbox; clicking away is not a wrong answer.
+	// Dismissing returns to the checkbox; closing the dialog is not a wrong answer.
 	const handleDismiss = () => {
-		iconOrderPhase = "checkbox";
+		audioPhase = "checkbox";
 		challengeData = null;
 		showRetry = false;
 		loading = false;
 		scheduler.schedule();
 	};
 
-	const canvasProps = (
-		challenge: GetIconOrderCaptchaResponse,
-	): IconOrderCanvasProps => ({
-		background: challenge.background,
-		legend: challenge.legend,
-		legendIconSize: challenge.legendIconSize,
-		onComplete: (clicks: IconClick[], events: IconOrderEvent[]) => {
-			void handleIconOrderComplete(clicks, events);
+	const playerProps = (
+		challenge: GetAudioCaptchaResponse,
+	): AudioPlayerProps => ({
+		clip: challenge.clip,
+		characterCount: challenge.characterCount,
+		onComplete: (answer: string, replays: number, events: AudioEvent[]) => {
+			void handleAudioComplete(answer, replays, events);
 		},
 		showRetry,
-		submitting: "submitting" === iconOrderPhase,
+		submitting: "submitting" === audioPhase,
 		theme: "light" === config.theme ? lightTheme : darkTheme,
 		translator,
 		placement: config.placement,
 		anchor: props.container,
 		onDismiss: handleDismiss,
-		audioAlternative: audioAlternativeOffer(
-			props,
-			translator.isReady() ? translator.t("WIDGET.AUDIO_ALTERNATIVE") : "",
-		),
 	});
 
 	const runErrorEffect = () => {
@@ -203,7 +197,7 @@ export const mountProcaptchaIconOrderWidget = (
 			return;
 		}
 		loading = false;
-		iconOrderPhase = "checkbox";
+		audioPhase = "checkbox";
 		challengeData = null;
 		showRetry = false;
 		if ("CAPTCHA.NO_SESSION_FOUND" !== store.state.error.key) {
@@ -238,22 +232,21 @@ export const mountProcaptchaIconOrderWidget = (
 	const render = () => {
 		runErrorEffect();
 
-		// Icon-order overlay — shown in both visible and invisible modes once a
-		// challenge has been fetched; selecting icons in order is inherently
-		// interactive.
-		const showOverlay =
-			("selecting" === iconOrderPhase || "submitting" === iconOrderPhase) &&
+		// Shown in both visible and invisible modes once a challenge has been
+		// fetched; audio is inherently interactive.
+		const showPlayer =
+			("answering" === audioPhase || "submitting" === audioPhase) &&
 			null !== challengeData;
 
-		if (showOverlay && null !== challengeData) {
-			if (undefined === canvas) {
-				canvas = mountIconOrderCanvas(canvasProps(challengeData));
+		if (showPlayer && null !== challengeData) {
+			if (undefined === player) {
+				player = mountAudioPlayer(playerProps(challengeData));
 			} else {
-				canvas.update(canvasProps(challengeData));
+				player.update(playerProps(challengeData));
 			}
 		} else {
-			canvas?.destroy();
-			canvas = undefined;
+			player?.destroy();
+			player = undefined;
 		}
 
 		checkbox?.update(checkboxProps());
@@ -269,7 +262,7 @@ export const mountProcaptchaIconOrderWidget = (
 		loadingText: translator.t("WIDGET.CHECKING", {
 			defaultValue: "Checking that you are human",
 		}),
-		loading: loading || "submitting" === iconOrderPhase,
+		loading: loading || "submitting" === audioPhase,
 		onChange: async (
 			event: MouseEvent | KeyboardEvent | TouchEvent,
 		): Promise<void> => {
@@ -280,8 +273,8 @@ export const mountProcaptchaIconOrderWidget = (
 			showRetry = false;
 			scheduler.schedule();
 
-			// Capture click coordinates (mirrors the PoW widget) so the
-			// icon-order solution salt records the entry-point telemetry.
+			// Capture click coordinates (mirrors the PoW widget) so the audio
+			// solution salt records the entry-point telemetry.
 			let x = 0;
 			let y = 0;
 			if (!isEventTrusted(event)) {
@@ -303,7 +296,7 @@ export const mountProcaptchaIconOrderWidget = (
 
 				if (challenge) {
 					challengeData = challenge;
-					iconOrderPhase = "selecting";
+					audioPhase = "answering";
 				}
 			} catch (error) {
 				// The manager reports failures through state.error; rethrowing here
@@ -334,7 +327,7 @@ export const mountProcaptchaIconOrderWidget = (
 	// A bare execute() reaches every invisible widget via document. A targeted
 	// execute() is dispatched on this widget's container and works in either
 	// mode, which is what lets a bound button drive a visible widget. Either
-	// way it fetches a challenge and drives the icon-order UI through the same
+	// way it fetches a challenge and drives the audio UI through the same
 	// phase transitions as the visible checkbox flow.
 	const handleExecute = () => {
 		void (async () => {
@@ -348,7 +341,7 @@ export const mountProcaptchaIconOrderWidget = (
 				const challenge = await manager.start();
 				if (challenge) {
 					challengeData = challenge;
-					iconOrderPhase = "selecting";
+					audioPhase = "answering";
 				}
 			} catch (error) {
 				callbacks.onError?.(
@@ -398,10 +391,10 @@ export const mountProcaptchaIconOrderWidget = (
 		lastCoords = coords ?? null;
 		scheduler.schedule();
 		manager.start(coords?.x ?? 0, coords?.y ?? 0).then(
-			(challenge: GetIconOrderCaptchaResponse | undefined) => {
+			(challenge: GetAudioCaptchaResponse | undefined) => {
 				if (challenge) {
 					challengeData = challenge;
-					iconOrderPhase = "selecting";
+					audioPhase = "answering";
 				}
 				loading = false;
 				scheduler.schedule();
@@ -418,7 +411,7 @@ export const mountProcaptchaIconOrderWidget = (
 	return {
 		destroy: () => {
 			teardown.run();
-			canvas?.destroy();
+			player?.destroy();
 			checkbox?.destroy();
 			honeypot?.destroy();
 			root.parentNode?.removeChild(root);
@@ -426,4 +419,4 @@ export const mountProcaptchaIconOrderWidget = (
 	};
 };
 
-export default mountProcaptchaIconOrderWidget;
+export default mountProcaptchaAudioWidget;
