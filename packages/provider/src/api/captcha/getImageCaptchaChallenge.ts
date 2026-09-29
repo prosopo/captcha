@@ -301,10 +301,7 @@ export default (
 				getSignedAssetsResolver(ipAddress.toString()) ??
 				env.assetsResolver;
 
-			const padBytes =
-				trafficVerdict.kind === "challenge"
-					? trafficVerdict.padBytes
-					: undefined;
+			const padBytes = trafficVerdict.padBytes;
 
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",

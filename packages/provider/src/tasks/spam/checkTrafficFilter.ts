@@ -311,7 +311,6 @@ export type ResolvedChallengePolicy = {
 	powDifficulty?: number;
 	solvedImagesCount?: number;
 	puzzleTolerance?: number;
-	padBytes?: number;
 	// Merged puzzle render overrides across all matched challenge
 	// categories: later categories overwrite earlier ones on a per-field
 	// basis, so partial overrides on separate categories compose. Empty
@@ -347,7 +346,6 @@ export const resolveChallengePolicy = (
 	let powDifficulty: number | undefined;
 	let solvedImagesCount: number | undefined;
 	let puzzleTolerance: number | undefined;
-	let padBytes: number | undefined;
 	let puzzleSettings: IPuzzleSettings | undefined;
 	for (const m of challenges) {
 		if (m.policy.powDifficulty !== undefined) {
@@ -355,12 +353,6 @@ export const resolveChallengePolicy = (
 				powDifficulty === undefined
 					? m.policy.powDifficulty
 					: Math.max(powDifficulty, m.policy.powDifficulty);
-		}
-		if (m.policy.padBytes !== undefined) {
-			padBytes =
-				padBytes === undefined
-					? m.policy.padBytes
-					: Math.max(padBytes, m.policy.padBytes);
 		}
 		if (m.policy.solvedImagesCount !== undefined) {
 			solvedImagesCount =
@@ -388,8 +380,27 @@ export const resolveChallengePolicy = (
 		powDifficulty,
 		solvedImagesCount,
 		puzzleTolerance,
-		padBytes,
 		puzzleSettings,
 		sourceCategories: challenges.map((m) => m.category),
 	};
+};
+
+/**
+ * Largest `padBytes` across all matched categories, block or challenge. A
+ * blocked category still resolves to a deferred challenge at request time, so
+ * padding it burns the caller's bandwidth on the way to being blocked.
+ */
+export const resolvePadBytes = (
+	matches: TrafficFilterMatch[],
+): number | undefined => {
+	let padBytes: number | undefined;
+	for (const m of matches) {
+		if (m.policy.padBytes !== undefined) {
+			padBytes =
+				padBytes === undefined
+					? m.policy.padBytes
+					: Math.max(padBytes, m.policy.padBytes);
+		}
+	}
+	return padBytes;
 };

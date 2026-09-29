@@ -305,10 +305,7 @@ export default (
 				effectivePieceSize,
 			);
 
-			const padBytes =
-				trafficVerdict.kind === "challenge"
-					? trafficVerdict.padBytes
-					: undefined;
+			const padBytes = trafficVerdict.padBytes;
 
 			const getPuzzleCaptchaResponse: GetPuzzleCaptchaResponse = {
 				[ApiParams.status]: "ok",

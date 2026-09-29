@@ -274,10 +274,7 @@ export default (
 				req.ipInfo,
 			);
 
-			const padBytes =
-				trafficVerdict.kind === "challenge"
-					? trafficVerdict.padBytes
-					: undefined;
+			const padBytes = trafficVerdict.padBytes;
 
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {
 				[ApiParams.status]: "ok",
