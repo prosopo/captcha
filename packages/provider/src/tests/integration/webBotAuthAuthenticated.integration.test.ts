@@ -117,9 +117,9 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 	let baseUrl: string;
 	let testPort: number;
 	let authority: string;
-	// The signer origin the Signature-Agent header names. http:// rather than
-	// https:// so the JWKS can be served without a cert; the verifier accepts
-	// either scheme and the provider fetches the directory with global fetch.
+	// The signer origin the Signature-Agent header names. http:// on localhost
+	// so the JWKS can be served without a cert; the provider only accepts a
+	// local signer like this because NODE_ENV is "test".
 	let signerUrl: string;
 	let privateKey: Uint8Array;
 	let publicKey: Uint8Array;

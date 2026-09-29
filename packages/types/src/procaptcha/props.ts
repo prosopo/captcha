@@ -21,6 +21,7 @@ import type {
 	ClickEventPoint,
 	MouseMovementPoint,
 	PackedBehavioralData,
+	ScrollEventPoint,
 	TouchEventPoint,
 } from "./behavioral.js";
 import type { Account, Callbacks } from "./manager.js";
@@ -65,6 +66,12 @@ export type FrictionlessState = {
 		start: () => void;
 		stop: () => void;
 		getData: () => ClickEventPoint[];
+		clear: () => void;
+	};
+	behaviorCollector4?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => ScrollEventPoint[];
 		clear: () => void;
 	};
 	deviceCapability?: string;
