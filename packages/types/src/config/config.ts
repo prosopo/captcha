@@ -51,6 +51,7 @@ import {
 	DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+	DEFAULT_PROVIDER_REQUEST_TIMEOUT_MS,
 	DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT,
 	DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT,
@@ -252,6 +253,13 @@ export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
 	object({
 		serverUrl: string().url().optional(),
 		timeouts: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
+		// How long a verify call to the provider may take before it fails, so a
+		// stalled provider cannot hold the site owner's request open.
+		providerRequestTimeoutMs: number()
+			.int()
+			.positive()
+			.optional()
+			.default(DEFAULT_PROVIDER_REQUEST_TIMEOUT_MS),
 	}),
 );
 

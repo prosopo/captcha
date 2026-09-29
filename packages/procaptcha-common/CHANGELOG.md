@@ -1,5 +1,23 @@
 # @prosopo/procaptcha-common
 
+## 2.18.0
+### Minor Changes
+
+- b77c5f4: The image captcha widget now tells the provider whether each tile, and the checkbox, was picked with a mouse or finger or with the keyboard. Keyboard presses have no screen position, so they all arrive as (0, 0). The provider used to see those repeats as a script clicking the same pixel and reject people who solve with the keyboard. It now looks for repeated positions among pointer selections only. It rejects a keyboard selection that claims a position. Requests from older widgets, which send no input method, are checked as strictly as before. The input method is stored on the commitment next to the coordinates.
+
+### Patch Changes
+
+- caabd39: On a page with more than one captcha (a login form and a sign-up form, say), solving, expiring, resetting or erroring one widget no longer deletes the token another widget already put into its own form. Each widget now only clears the `procaptcha-response` field in its own form, so submitting the first form after completing the second no longer fails verification.
+- Updated dependencies [59b7e87]
+- Updated dependencies [e5aefc6]
+- Updated dependencies [5375d10]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+  - @prosopo/types@5.11.0
+  - @prosopo/load-balancer@2.11.2
+  - @prosopo/account@2.8.101
+
 ## 2.17.3
 ### Patch Changes
 

@@ -1,5 +1,23 @@
 # @prosopo/types
 
+## 5.11.0
+### Minor Changes
+
+- b77c5f4: The image captcha widget now tells the provider whether each tile, and the checkbox, was picked with a mouse or finger or with the keyboard. Keyboard presses have no screen position, so they all arrive as (0, 0). The provider used to see those repeats as a script clicking the same pixel and reject people who solve with the keyboard. It now looks for repeated positions among pointer selections only. It rejects a keyboard selection that claims a position. Requests from older widgets, which send no input method, are checked as strictly as before. The input method is stored on the commitment next to the coordinates.
+
+### Patch Changes
+
+- 59b7e87: The request schemas now cap the arrays that callers can send: at most 10,000 `puzzleEvents` on a puzzle solution, 256 `captchas` on an image solution, 64 `solution` entries per captcha, and 64 entries in a byte-array `datasetId`. A request over a cap fails validation straight away, without checking each element first. Before, the arrays had no limit, so one 1 MB request could hold about 150,000 items for the provider to validate, store and echo back. The caps are well above what the widget sends: it records one puzzle event per pointer move during a drag, an image challenge has at most 32 rounds by default, and each captcha has 9 images.
+- 0c8678e: The DNS event ingest endpoint now checks each event on its own. One malformed event used to make
+  the whole batch fail validation, so every good event sent alongside it was lost. Bad events are now
+  dropped and counted, the rest are stored, and the response reports how many were dropped. A single
+  warning names up to five of the dropped events and why they failed.
+- dab0338: A site owner's `isVerified` call no longer hangs when the provider stops answering. Requests from `@prosopo/api` clients can now carry a timeout, and `@prosopo/server` sets one of 10 seconds for its verify calls. You can change it with the new `providerRequestTimeoutMs` config option. When the timeout fires, `isVerified` throws `API.BAD_REQUEST` with code 504 and the user is not verified. Before, the call waited for the platform default of about 300 seconds. Browser clients keep their current behaviour.
+- Updated dependencies [294b480]
+- Updated dependencies [0d29dde]
+  - @prosopo/locale@3.6.1
+  - @prosopo/util@3.3.12
+
 ## 5.10.2
 ### Patch Changes
 

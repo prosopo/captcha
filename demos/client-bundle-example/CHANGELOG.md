@@ -1,5 +1,10 @@
 # @prosopo/client-bundle-example
 
+## 2.11.2
+### Patch Changes
+
+- d4c1fa2: Make the explicit-render demo pages show a widget again. The status-log helper was defined in a module script that Vite placed after the page's own entry module, so `window.updateCaptchaStatus(...)` threw at the top of frictionless-, image-, puzzle- and puzzle-bind-explicit before `render()` was called. The helper is now defined by a classic script at the start of `<head>`, and only the callback wrapping stays in a module after the entry.
+
 ## 2.11.1
 ### Patch Changes
 

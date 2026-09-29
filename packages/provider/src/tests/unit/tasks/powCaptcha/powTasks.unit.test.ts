@@ -122,7 +122,7 @@ describe("PowCaptchaManager", () => {
 			getPowCaptchaRecordByChallenge: vi.fn(),
 			updatePowCaptchaRecordResult: vi.fn(),
 			updatePowCaptchaRecord: vi.fn(),
-			markDappUserPoWCommitmentsChecked: vi.fn(),
+			markDappUserPoWCommitmentsChecked: vi.fn().mockResolvedValue(1),
 			getClientRecord: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
 			updateSessionRecord: vi.fn(),
@@ -231,9 +231,7 @@ describe("PowCaptchaManager", () => {
 				challengeRecord as PoWCaptchaRecord,
 			);
 			vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
-			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(
-				undefined,
-			);
+			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(1);
 
 			const verifyPowCaptchaSolutionArgs: Parameters<
 				typeof powCaptchaManager.verifyPowCaptchaSolution
@@ -300,6 +298,50 @@ describe("PowCaptchaManager", () => {
 			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith(
 				...updatePowCaptchaRecordArgs,
 			);
+		});
+
+		it("refuses a resubmission so a server-checked token cannot be re-armed", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1" };
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				submittedAtTimestamp: new Date(),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: true,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				lastUpdatedTimestamp: new Date(),
+			};
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(checkPowSignature).mockImplementation(() => undefined);
+			vi.mocked(validateSolution).mockImplementation(() => true);
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as PoWCaptchaRecord,
+			);
+
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				"testSignature",
+				12345,
+				1000,
+				"testTimestampSignature",
+				ipAddress,
+				headers,
+			);
+
+			expect(result.verified).toBe(false);
+			expect(db.updatePowCaptchaRecordResult).not.toHaveBeenCalled();
+			expect(db.updatePowCaptchaRecord).not.toHaveBeenCalled();
 		});
 
 		it("should throw an error if PoW captcha solution is invalid", async () => {
@@ -777,6 +819,38 @@ describe("PowCaptchaManager", () => {
 			);
 			expect(replayed.verified).toBe(false);
 			expect(replayed.sessionId).toBe("session-abc");
+		});
+
+		it("refuses a verify that lost the server-check claim to a concurrent verify", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			// Both verifies read the record before either marked it checked.
+			const challengeRecord: Partial<PoWCaptchaStored> = {
+				challenge,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
+				serverChecked: false,
+				result: { status: CaptchaStatus.approved },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+			};
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as PoWCaptchaRecord,
+			);
+			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(0);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+			);
+
+			expect(result.verified).toBe(false);
+			expect(result.reason).toBe("API.USER_ALREADY_VERIFIED");
 		});
 
 		it("should return verified:false if a challenge cannot be found", async () => {
@@ -2064,9 +2138,7 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(verifyRecency as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-				undefined,
-			);
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 			// Mock spam email domain found
@@ -2132,9 +2204,7 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(verifyRecency as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-				undefined,
-			);
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 			// Mock spam email domain not found (legitimate)
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(db.getSpamEmailDomain as any).mockResolvedValue(null);
@@ -2205,9 +2275,7 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(verifyRecency as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-				undefined,
-			);
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 
 			// Mock decision machine to allow
 			mockDecisionMachine(async () => ({
@@ -2267,9 +2335,7 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(verifyRecency as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-				undefined,
-			);
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 			// Mock spam email domain found
@@ -2335,9 +2401,7 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(verifyRecency as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-				undefined,
-			);
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 			// Mock spam email domain found
@@ -2393,9 +2457,7 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(verifyRecency as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-				undefined,
-			);
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 			// Mock database error when checking spam
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(db.getSpamEmailDomain as any).mockRejectedValue(
@@ -2900,9 +2962,7 @@ module.exports = (input) => {
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(verifyRecency as any).mockReturnValue(true);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
-				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-					undefined,
-				);
+				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
@@ -2966,9 +3026,7 @@ module.exports = (input) => {
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(verifyRecency as any).mockReturnValue(true);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
-				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-					undefined,
-				);
+				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(db.getClientRecord as any).mockResolvedValue(undefined);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
@@ -3025,9 +3083,7 @@ module.exports = (input) => {
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(verifyRecency as any).mockReturnValue(false);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
-				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-					undefined,
-				);
+				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 
@@ -3078,9 +3134,7 @@ module.exports = (input) => {
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(verifyRecency as any).mockReturnValue(false);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
-				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-					undefined,
-				);
+				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 
@@ -3168,9 +3222,7 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(record);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-				undefined,
-			);
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
@@ -3331,9 +3383,7 @@ module.exports = (input) => {
 				// the mocks above).
 				record as unknown as PoWCaptchaRecord,
 			);
-			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(
-				undefined,
-			);
+			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(1);
 			vi.mocked(db.updatePowCaptchaRecord).mockResolvedValue(undefined);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 			return record;

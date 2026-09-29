@@ -1,5 +1,70 @@
 # @prosopo/provider
 
+## 5.13.2
+### Patch Changes
+
+- f650c66: A Web Bot Auth (authenticated) token can now only be verified once, even when several verify requests for it arrive at the same time. Before, the provider checked whether the session was already used and then marked it used in a separate step, so parallel verifies could all return `verified: true`. Marking the session used is now a single conditional database write, and only the request that wins it is verified; the rest get `API.USER_ALREADY_VERIFIED`.
+- e482b25: When a captcha challenge, solution or verify request fails to parse, the provider now logs a short summary of the body (its type, size, top-level keys and a preview of at most 512 characters) instead of the whole body. Signature, token, secret, proof, salt, email, password and IP fields are replaced with `[redacted]` in the preview, however deeply they are nested. Before, a caller could post a body close to the 1 MB limit and have all of it copied into the logs, including any tokens and signatures it carried.
+- 8933ad5: Build the proofs returned after a passed image captcha from the right leaves, and refuse to build a proof for a hash that is not a leaf.
+  
+  The provider asked the commitment tree for a proof of each captcha ID, but the tree's leaves are solution hashes, so no captcha ID is ever a leaf. `proof()` did not check, and returned a proof that linked nothing to the root. The provider now asks for a proof of each leaf, and `proof()` throws `DATASET.MERKLE_ERROR` when the hash is not a leaf. Several merkle tests that could never fail (`expect(x > -1)`) now assert properly.
+- 026b126: A PoW captcha challenge can now only be submitted once. Before, submitting the same solved challenge again after the site's server had verified the token reset the record to "not yet checked", so the same token could pass server verification a second time for as long as the verify window lasted. Puzzle captchas already refused a second submission, and PoW now does the same.
+- 0c8678e: The DNS event ingest endpoint now checks each event on its own. One malformed event used to make
+  the whole batch fail validation, so every good event sent alongside it was lost. Bad events are now
+  dropped and counted, the rest are stored, and the response reports how many were dropped. A single
+  warning names up to five of the dropped events and why they failed.
+- b77c5f4: The image captcha widget now tells the provider whether each tile, and the checkbox, was picked with a mouse or finger or with the keyboard. Keyboard presses have no screen position, so they all arrive as (0, 0). The provider used to see those repeats as a script clicking the same pixel and reject people who solve with the keyboard. It now looks for repeated positions among pointer selections only. It rejects a keyboard selection that claims a position. Requests from older widgets, which send no input method, are checked as strictly as before. The input method is stored on the commitment next to the coordinates.
+- 7065689: Removed the Redis session write queue. Nothing ever put a session on it, yet every provider polled Redis for it every 10 seconds, and its drain step could duplicate, drop or delete records if it had ever been used. `RedisWriteQueue` loses `queueSessionRecord`, `drainSessionRecords`, `startPeriodicFlush` and `stopPeriodicFlush`, and `Tasks.flushWriteQueue` is gone. The session read cache is unchanged.
+- 9318584: A frictionless session can now only be used by the site it was issued for. Before, a session created on one site, for example one set up for easy PoW, could be passed with a request for a different site and the provider would issue the captcha type and difficulty chosen for the first site. The provider now refuses the session when its site key does not match the site asking for a captcha, with the same "no session found" answer it gives for an unknown session.
+- 084da7e: Changing an access rule now reliably clears the provider's cached block verdicts. A verdict lookup that was already running when the rules changed used to finish afterwards and write the old answer back into the cache, so a just-deleted block rule could keep blocking (or a just-added one keep allowing) for up to ten more seconds. Lookups that started before the change no longer write their result, and new requests no longer wait on them.
+- fa316d6: A captcha token now verifies at most once even when a site's server sends several verify requests for it at the same moment. Before, each request read the record, saw it had not been checked yet, and then marked it checked, so every request that arrived before the first write finished was accepted. Marking a PoW, puzzle or image result as checked is now a single conditional write, and only the request that wins it is verified. The same applies to image captcha submissions: a request hash can now only be spent by one submission, so answers can no longer be tried in parallel against one challenge.
+- 9ed0ac5: Web Bot Auth signatures are now held to the replay window the spec requires. A signature must carry `created`, `expires` and `tag="web-bot-auth"`. It is rejected if it was created in the future (allowing 5s of clock skew) or if it stays valid for more than 24 hours. Before this, a signature with no `expires` could be replayed forever.
+  
+  The signer key directory is fetched more carefully, since its URL comes from a request header:
+  - The URL must be https and a public hostname. IP literals, localhost and dotless hosts are refused, except in test and development.
+  - The fetch times out after 3s and does not follow redirects.
+  - The body is capped at 64KiB.
+  - The cache holds at most 1000 entries, each for at most 24 hours.
+- Updated dependencies [f650c66]
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [e5aefc6]
+- Updated dependencies [d528f41]
+- Updated dependencies [8933ad5]
+- Updated dependencies [5375d10]
+- Updated dependencies [294b480]
+- Updated dependencies [0a4ae2f]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [4109641]
+- Updated dependencies [7065689]
+- Updated dependencies [dab0338]
+- Updated dependencies [dffecf0]
+- Updated dependencies [0d29dde]
+- Updated dependencies [fa316d6]
+- Updated dependencies [9ed0ac5]
+  - @prosopo/database@4.1.0
+  - @prosopo/types-database@5.7.0
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/load-balancer@2.11.2
+  - @prosopo/captcha-severity@1.1.2
+  - @prosopo/datasets@3.1.92
+  - @prosopo/locale@3.6.1
+  - @prosopo/native-ja4@0.0.7
+  - @prosopo/redis-client@1.0.38
+  - @prosopo/api@4.3.6
+  - @prosopo/util@3.3.12
+  - @prosopo/web-bot-auth@0.1.3
+  - @prosopo/env@3.6.65
+  - @prosopo/types-env@2.11.11
+  - @prosopo/api-express-router@3.1.96
+  - @prosopo/ipinfo@0.4.11
+  - @prosopo/keyring@2.9.98
+  - @prosopo/user-access-policy@3.14.12
+  - @prosopo/api-route@2.6.61
+  - @prosopo/logger@2.1.1
+
 ## 5.13.1
 ### Patch Changes
 

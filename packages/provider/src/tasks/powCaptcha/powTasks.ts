@@ -230,6 +230,17 @@ export class PowCaptchaManager extends CaptchaManager {
 			return { verified: false };
 		}
 
+		// Single-use challenge. Every submission rewrites the record with
+		// serverChecked=false, so accepting a resubmission after the site's
+		// server has verified the token would re-arm that token for another
+		// verify.
+		if (challengeRecord.userSubmitted) {
+			this.logger.debug(() => ({
+				msg: `Challenge already submitted: ${challenge}`,
+			}));
+			return { verified: false };
+		}
+
 		const difficulty = challengeRecord.difficulty;
 
 		// Extract coordinates from salt if provided. Invalid salt input
@@ -725,9 +736,17 @@ export class PowCaptchaManager extends CaptchaManager {
 		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
 		// solution has already been checked by the server. Moving this code around could result in solutions being
 		// re-usable.
-		await this.db.markDappUserPoWCommitmentsChecked([
+		// The claim is conditional on the record not being checked yet, so of
+		// several concurrent verifies of one token only one gets past here.
+		const claimed = await this.db.markDappUserPoWCommitmentsChecked([
 			challengeRecord.challenge,
 		]);
+		if (claimed === 0) {
+			return notVerified(
+				"API.USER_ALREADY_VERIFIED",
+				challengeRecord.sessionId,
+			);
+		}
 		// -- END WARNING --
 
 		// Accumulate all pow captcha record updates in memory.
