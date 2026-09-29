@@ -230,6 +230,17 @@ export class PowCaptchaManager extends CaptchaManager {
 			return { verified: false };
 		}
 
+		// Single-use challenge. Every submission rewrites the record with
+		// serverChecked=false, so accepting a resubmission after the site's
+		// server has verified the token would re-arm that token for another
+		// verify.
+		if (challengeRecord.userSubmitted) {
+			this.logger.debug(() => ({
+				msg: `Challenge already submitted: ${challenge}`,
+			}));
+			return { verified: false };
+		}
+
 		const difficulty = challengeRecord.difficulty;
 
 		// Extract coordinates from salt if provided. Invalid salt input
