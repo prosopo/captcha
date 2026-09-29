@@ -80,7 +80,7 @@ graph TB
 
         subgraph Storage["Storage"]
             MongoDB[(MongoDB<br/>captchas, commitments,<br/>clients, sessions)]
-            Redis[(Redis<br/>session cache,<br/>write queue)]
+            Redis[(Redis<br/>session cache)]
             Dataset[(Dataset<br/>labelled + unlabelled<br/>captcha images)]
         end
     end
