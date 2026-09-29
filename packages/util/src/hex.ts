@@ -89,7 +89,8 @@ const toByteHex = (n: number): string => n.toString(16).padStart(2, "0");
 /**
  * Writes `data` into `hexString`: a one-byte count, then a one-byte position
  * and one-byte length per value at the start, and the values' hex digits
- * packed backwards from the end. Positions are a single byte, so on a string
+ * packed backwards from the end. Values are rounded to the nearest integer,
+ * since click coordinates can be fractional. Positions are a single byte, so on a string
  * longer than 256 chars the values are packed backwards from index 255.
  */
 export const embedData = (hexString: string, data: number[]): `0x${string}` => {
@@ -101,10 +102,11 @@ export const embedData = (hexString: string, data: number[]): `0x${string}` => {
 		);
 	}
 	const values = data.map((d) => {
-		if (!Number.isSafeInteger(d) || d < 0) {
-			throw new Error(`embedData: ${String(d)} is not a non-negative integer`);
+		const rounded = Math.round(d);
+		if (!Number.isSafeInteger(rounded) || rounded < 0) {
+			throw new Error(`embedData: ${String(d)} is not a non-negative number`);
 		}
-		return d.toString(16);
+		return rounded.toString(16);
 	});
 
 	const usableLength = Math.min(hex.length, MAX_BYTE + 1);

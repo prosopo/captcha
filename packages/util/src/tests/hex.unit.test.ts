@@ -117,9 +117,18 @@ describe("embedData round trip", () => {
 		expect(() => embedData("0x01010101", [0xfff])).to.throw(/exceeds/);
 	});
 
-	test("throws on values that are not non-negative integers", () => {
-		expect(() => embedData(hex, [-5])).to.throw(/non-negative integer/);
-		expect(() => embedData(hex, [1.5])).to.throw(/non-negative integer/);
+	test("throws on values that are negative or not finite", () => {
+		expect(() => embedData(hex, [-5])).to.throw(/non-negative number/);
+		expect(() => embedData(hex, [Number.NaN])).to.throw(/non-negative number/);
+		expect(() => embedData(hex, [Number.POSITIVE_INFINITY])).to.throw(
+			/non-negative number/,
+		);
+	});
+
+	test("rounds fractional values such as sub-pixel click coordinates", () => {
+		expect(extractData(embedData(hex, [150.5, 30.4, -0.2]))).to.deep.equal([
+			151, 30, 0,
+		]);
 	});
 });
 
