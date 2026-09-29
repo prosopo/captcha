@@ -15,7 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
-import { LanguageSchema, Languages } from "../translations.js";
+import { LanguageCodes, Languages, isLanguage } from "../translations.js";
 
 const codes: string[] = Object.values(Languages);
 
@@ -34,9 +34,8 @@ describe("Languages", () => {
 		expect(codes).toContain("en");
 	});
 
-	// A duplicated code would silently shrink LanguageSchema's enum and make
-	// one of the language names unreachable, while the locales-folder count
-	// test would still pass.
+	// A duplicated code would silently make one of the language names
+	// unreachable, while the locales-folder count test would still pass.
 	test("has no duplicate codes", () => {
 		expect(new Set(codes).size).toBe(codes.length);
 	});
@@ -62,49 +61,37 @@ describe("Languages", () => {
 	});
 });
 
-describe("LanguageSchema", () => {
+describe("isLanguage", () => {
 	test("accepts every declared code", () => {
 		for (const code of codes) {
-			expect(LanguageSchema.parse(code)).toBe(code);
+			expect(isLanguage(code)).toBe(true);
 		}
 	});
 
-	test("exposes each code on .enum for use as a constant", () => {
-		expect(LanguageSchema.enum.en).toBe("en");
+	test("every declared code is in LanguageCodes", () => {
+		expect(new Set(LanguageCodes)).toEqual(new Set(codes));
+	});
+
+	test("exposes each code as a constant for use in code", () => {
+		expect(Languages.english).toBe("en");
 	});
 
 	test("rejects an undeclared language code", () => {
-		expect(() => LanguageSchema.parse("xx")).toThrow();
+		expect(isLanguage("xx")).toBe(false);
 	});
 
 	test("rejects the empty string", () => {
-		expect(() => LanguageSchema.parse("")).toThrow();
+		expect(isLanguage("")).toBe(false);
 	});
 
-	// i18next treats `en-GB` as a region of `en`, but the schema is a plain
-	// enum with `nonExplicitSupportedLngs: false` alongside it, so a regional
-	// variant of a supported language is *not* itself valid input.
+	// i18next treated `en-GB` as a region of `en`, and the browser i18n resolves
+	// a regional tag to its base language before asking — so a regional variant
+	// is deliberately not itself a declared code.
 	test("rejects a regional variant of a supported language", () => {
-		expect(() => LanguageSchema.parse("en-GB")).toThrow();
+		expect(isLanguage("en-GB")).toBe(false);
 	});
 
 	test("is case sensitive — `EN` is not `en`", () => {
-		expect(() => LanguageSchema.parse("EN")).toThrow();
-	});
-
-	test("rejects non-string input", () => {
-		expect(() => LanguageSchema.parse(1)).toThrow();
-		expect(() => LanguageSchema.parse(null)).toThrow();
-		expect(() => LanguageSchema.parse(undefined)).toThrow();
-		expect(() => LanguageSchema.parse(["en"])).toThrow();
-	});
-
-	test("safeParse reports failure without throwing", () => {
-		expect(LanguageSchema.safeParse("xx").success).toBe(false);
-		expect(LanguageSchema.safeParse("en").success).toBe(true);
-	});
-
-	test("its options are exactly the declared codes", () => {
-		expect(new Set(LanguageSchema.options)).toEqual(new Set(codes));
+		expect(isLanguage("EN")).toBe(false);
 	});
 });

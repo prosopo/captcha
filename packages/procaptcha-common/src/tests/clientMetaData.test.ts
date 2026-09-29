@@ -12,8 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { buildClientMetaData } from "../clientMetaData.js";
+
+const PROTECT_JTI = "bumblebee-0f1e2d3c-4b5a-6978-8796-a5b4c3d2e1f0";
+
+const runProtect = (): void => {
+	Reflect.set(window, "prosopo_protect", { jti: PROTECT_JTI, ready: true });
+};
+
+afterEach(() => {
+	Reflect.deleteProperty(window, "prosopo_protect");
+});
 
 describe("buildClientMetaData", () => {
 	it("returns undefined when the widget has nothing to report", () => {
@@ -40,6 +50,22 @@ describe("buildClientMetaData", () => {
 		expect(buildClientMetaData("trap", "jti-1")).toEqual({
 			hp: "trap",
 			clientSessionId: "jti-1",
+		});
+	});
+
+	it("falls back to Protect's session id when the site rendered none", () => {
+		runProtect();
+
+		expect(buildClientMetaData(undefined, undefined)).toEqual({
+			clientSessionId: PROTECT_JTI,
+		});
+	});
+
+	it("leaves the site's own session id alone when Protect is also present", () => {
+		runProtect();
+
+		expect(buildClientMetaData(undefined, "site-session-1")).toEqual({
+			clientSessionId: "site-session-1",
 		});
 	});
 });

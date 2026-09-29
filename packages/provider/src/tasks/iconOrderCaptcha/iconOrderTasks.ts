@@ -90,6 +90,10 @@ export class IconOrderCaptchaManager extends InteractiveCaptchaManager {
 		return this.db.updateIconOrderCaptchaRecord(challenge, updates);
 	}
 
+	protected markRecordChecked(challenge: PoWChallengeId): Promise<boolean> {
+		return this.db.markIconOrderCaptchaRecordChecked(challenge);
+	}
+
 	protected decisionMachineEventFields(
 		record: IconOrderCaptchaRecord,
 	): Partial<DecisionMachineInput> {

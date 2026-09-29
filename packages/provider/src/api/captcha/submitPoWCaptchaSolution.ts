@@ -38,6 +38,7 @@ import {
 } from "../../utils/devicePlatform.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { rawTlsSignalsForSession } from "../rawTlsSignalsMiddleware.js";
+import { summariseRequestBody } from "../requestBodySummary.js";
 import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -69,7 +70,7 @@ export default (env: ProviderEnvironment) =>
 		} catch (err) {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: req.body },
+					context: { code: 400, error: err, body: summariseRequestBody(req) },
 					i18n: req.i18n,
 					logger: req.logger,
 				}),
@@ -238,7 +239,7 @@ export default (env: ProviderEnvironment) =>
 		} catch (err) {
 			req.logger.error(() => ({
 				err,
-				body: req.body,
+				body: summariseRequestBody(req),
 				msg: "Error in PoW captcha solution submission",
 			}));
 			return next(
@@ -402,10 +403,11 @@ export const buildEscalation = async (
 		headers: originSession.headers,
 		mode: originSession.mode,
 		simdReadings: originSession.simdReadings,
-		entropyMathRandomFingerprint: originSession.entropyMathRandomFingerprint,
-		entropyCryptoFingerprint: originSession.entropyCryptoFingerprint,
-		entropyWallClockOffsetMs: originSession.entropyWallClockOffsetMs,
-		entropyMathRandomFirst: originSession.entropyMathRandomFirst,
+		// The whole detector bag, so the escalated session answers the same
+		// rules the origin would have. Previously each signal was named here
+		// individually and several were never added, so they stopped existing
+		// the moment a user was escalated.
+		d: originSession.d,
 		// Carry the detector pool bundle forward so the escalated image/puzzle
 		// solve can decrypt the (same-origin) behavioural payload.
 		bundleId: originSession.bundleId,
@@ -419,15 +421,6 @@ export const buildEscalation = async (
 		// fire-and-forget, races the escalation read), dnsEvent (set by the DNS
 		// sidecar on the origin's TLS connection only).
 		originSessionId: originSession.sessionId,
-		g: originSession.g,
-		i: originSession.i,
-		cv: originSession.cv,
-		sq: originSession.sq,
-		b: originSession.b,
-		sw: originSession.sw,
-		md: originSession.md,
-		bn: originSession.bn,
-		fs: originSession.fs,
 		// Raw signals for the current PoW-submit TCP connection — not the
 		// origin's. The escalation session belongs on this hop's fingerprint.
 		tcpToChelloUs: perConnectionSignals?.tcpToChelloUs,
@@ -443,6 +436,9 @@ export const buildEscalation = async (
 		tcpWindow: perConnectionSignals?.tcpWindow,
 		puzzleTolerance: escalationPuzzleOverrides?.puzzleTolerance,
 		puzzle: escalationPuzzleOverrides?.puzzle,
+		// The escalated session is the same render as the origin, so it answers
+		// to the same session id the verify call will correlate against.
+		clientMetaData: originSession.clientMetaData,
 	});
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*

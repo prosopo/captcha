@@ -77,6 +77,63 @@ export const getIpAddressFromComposite = (
 
 const getBigInt = (number: bigint | number | undefined) => BigInt(number || 0n);
 
+/**
+ * Mongo hands these back as Decimal128 rather than the `number | bigint` the
+ * type promises, and `BigInt(Decimal128)` throws. Route through the string
+ * form, and report a value we cannot read as absent rather than throwing.
+ */
+const readPart = (value: bigint | number | undefined): bigint | undefined => {
+	if (value === undefined || value === null) return undefined;
+	try {
+		return BigInt(value.toString());
+	} catch {
+		return undefined;
+	}
+};
+
+/**
+ * The value `getCompositeIpAddress` returns when it could not read an
+ * address at all. 0.0.0.0 is not a client address, so nothing legitimate is
+ * being swallowed by treating it as "we don't know".
+ */
+const isUnknownIp = (ip: CompositeIpAddress): boolean =>
+	ip.type === IpAddressType.v4 && readPart(ip.lower) === 0n;
+
+/**
+ * Do two observations of a client come from the same place on the network?
+ *
+ * v4 is compared exactly. v6 is compared on the /64 prefix alone — the
+ * interface identifier in the low 64 bits is designed to rotate (RFC 8981
+ * privacy extensions), often several times a day on one unchanged connection,
+ * so comparing it would call an ordinary phone a different host.
+ *
+ * A value we do not actually have counts as the same — one that will not
+ * parse, or the all-zero v4 `getCompositeIpAddress` returns when handed an
+ * address it could not read. This answer gates extra friction for a real
+ * user, and a gap in what we recorded is not evidence against them.
+ */
+export const isSameIpOrigin = (
+	a: CompositeIpAddress,
+	b: CompositeIpAddress,
+): boolean => {
+	if (isUnknownIp(a) || isUnknownIp(b)) return true;
+	if (a.type !== b.type) return false;
+
+	const compare = (
+		left: bigint | number | undefined,
+		right: bigint | number | undefined,
+	): boolean => {
+		const leftPart = readPart(left);
+		const rightPart = readPart(right);
+		if (leftPart === undefined || rightPart === undefined) return true;
+		return leftPart === rightPart;
+	};
+
+	return a.type === IpAddressType.v6
+		? compare(a.upper, b.upper)
+		: compare(a.lower, b.lower);
+};
+
 const never = (): never => {
 	throw new Error("Unhandled type");
 };

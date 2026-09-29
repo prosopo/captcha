@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import z from "zod";
-
 export const Languages = {
 	arabic: "ar",
 	azerbaijani: "az",
@@ -49,6 +47,9 @@ export const Languages = {
 	chinese: "zh-CN",
 } as const;
 
-export const LanguageSchema = z.enum(
-	Object.values(Languages) as [string, ...string[]],
-);
+export type Language = (typeof Languages)[keyof typeof Languages];
+
+export const LanguageCodes: readonly string[] = Object.values(Languages);
+
+export const isLanguage = (value: string): value is Language =>
+	LanguageCodes.includes(value);

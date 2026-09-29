@@ -29,6 +29,5 @@ export enum ScheduledTaskStatus {
 
 export interface ScheduledTaskResult {
 	error?: string;
-	// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-	data?: Record<string, any>;
+	data?: Record<string, unknown>;
 }

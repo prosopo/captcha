@@ -12,90 +12,114 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { WIDGET_CHECKBOX_SPINNER_CSS_CLASS } from "../constants.js";
+import {
+	randomInt,
+	randomToken,
+	randomTokens,
+	randomWrapperTag,
+} from "../obfuscation.js";
 import type { Theme } from "../theme.js";
 
 /**
- * Creates a checkbox element with appropriate styling
- * @param theme - The theme to apply to the checkbox
- * @returns An HTMLElement representing the checkbox
+ * The class on the element the widget markup swaps its placeholder for. It is
+ * in the embedding page's light DOM, where a site's own CSS may target it, so
+ * it stays fixed while everything behind the shadow boundary does not.
  */
-export function createCheckboxElement(theme: Theme): HTMLElement {
-	const checkbox = document.createElement("div");
-	checkbox.className = "prosopo-checkbox";
+export const CHECKBOX_HOST_CSS_CLASS = "prosopo-checkbox";
 
-	const shadowRoot = checkbox.attachShadow({ mode: "open" });
-	shadowRoot.innerHTML = getCheckboxStyles(theme) + CHECKBOX_MARKUP;
+const MIN_WRAPPER_DEPTH = 2;
+const MAX_WRAPPER_DEPTH = 5;
 
-	return checkbox;
+interface CheckboxNames {
+	readonly content: string;
+	readonly spinner: string;
+	readonly spin: string;
+	readonly wrappers: readonly string[];
 }
 
 /**
- * Finds the interactive area within a widget element
- * @param widget - The widget element to search within
- * @returns The interactive area element or null if not found
+ * The checkbox host, and the node inside its shadow root that the captcha is
+ * mounted into.
+ *
+ * The interactive area is handed back directly rather than looked up again by
+ * class, which is what lets the classes be per-render: a selector written here
+ * would be a selector an attacker could write too.
  */
-export const getCheckboxInteractiveArea = (
-	widget: HTMLElement,
-): HTMLElement | null => {
-	const widgetRoot = widget.shadowRoot || widget;
-	const checkbox = widgetRoot.querySelector(
-		".prosopo-checkbox",
-	) as HTMLElement | null;
-	if (!checkbox) {
-		return null;
-	}
-	const checkboxRoot = (checkbox as HTMLElement).shadowRoot || checkbox;
-	return checkboxRoot.querySelector(".prosopo-checkbox__content");
+export interface CheckboxElement {
+	readonly host: HTMLElement;
+	readonly interactiveArea: HTMLElement;
+}
+
+export function createCheckboxElement(theme: Theme): CheckboxElement {
+	const names: CheckboxNames = {
+		content: randomToken(),
+		spinner: randomToken(),
+		spin: randomToken(),
+		wrappers: randomTokens(randomInt(MIN_WRAPPER_DEPTH, MAX_WRAPPER_DEPTH)),
+	};
+
+	const host = document.createElement("div");
+	host.className = CHECKBOX_HOST_CSS_CLASS;
+
+	const style = document.createElement("style");
+	style.textContent = getCheckboxStyles(theme, names);
+
+	const interactiveArea = document.createElement(randomWrapperTag());
+	interactiveArea.className = names.content;
+	interactiveArea.appendChild(createSpinner(names.spinner));
+
+	const shadowRoot = host.attachShadow({ mode: "open" });
+	shadowRoot.appendChild(style);
+	shadowRoot.appendChild(wrap(interactiveArea, names.wrappers));
+
+	return { host, interactiveArea };
+}
+
+const createSpinner = (className: string): HTMLElement => {
+	const spinner = document.createElement("div");
+	spinner.className = className;
+	spinner.setAttribute("aria-label", "Loading spinner");
+	return spinner;
 };
 
-export const CHECKBOX_MARKUP = `
-    <div class="prosopo-checkbox__outer">
-        <div class="prosopo-checkbox__wrapper">
-            <div class="prosopo-checkbox__inner">
-                <div class="prosopo-checkbox__content">
-                    <div class="${WIDGET_CHECKBOX_SPINNER_CSS_CLASS}" aria-label="Loading spinner"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-`;
+const wrap = (
+	innermost: HTMLElement,
+	classNames: readonly string[],
+): HTMLElement =>
+	classNames.reduce((child: HTMLElement, className: string) => {
+		const wrapper = document.createElement(randomWrapperTag());
+		wrapper.className = className;
+		wrapper.appendChild(child);
+		return wrapper;
+	}, innermost);
 
 /**
- * Generates the CSS styles for the checkbox
- * @param theme - The theme to apply to the styles
+ * Every wrapper gets the same centring rules under a different name, so the
+ * layout no longer depends on how many of them the current render produced.
  */
-const getCheckboxStyles = (theme: Theme): string => `
-<style>
-:host(.prosopo-checkbox) {
+const getCheckboxStyles = (theme: Theme, names: CheckboxNames): string => `
+:host {
     display: flex;
     flex-direction: column;
 }
 
-.prosopo-checkbox__outer {
+${names.wrappers
+	.map(
+		(className: string) => `.${className} {
     align-items: center;
+    justify-content: center;
     flex: 0 1 auto !important;
     width: auto !important;
     display: flex !important;
-}
+}`,
+	)
+	.join("\n\n")}
 
-.prosopo-checkbox__wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    vertical-align: middle;
-}
-
-.prosopo-checkbox__inner {
-    display: flex;
-}
-
-.prosopo-checkbox__content {
+.${names.content} {
     display: inline-flex;
 }
 
-.${WIDGET_CHECKBOX_SPINNER_CSS_CLASS} {
+.${names.spinner} {
     margin-top: 0;
     margin-left: 15px !important;
     margin-right: 15px !important;
@@ -106,11 +130,11 @@ const getCheckboxStyles = (theme: Theme): string => `
     border-radius: 50%;
     display: inherit;
     box-sizing: border-box;
-    animation: ${WIDGET_CHECKBOX_SPINNER_CSS_CLASS}-rotation 1s linear infinite;
+    animation: ${names.spin} 1s linear infinite;
     will-change: transform;
 }
 
-@keyframes ${WIDGET_CHECKBOX_SPINNER_CSS_CLASS}-rotation {
+@keyframes ${names.spin} {
   0% {
 	transform: rotate(0deg);
   }
@@ -118,5 +142,4 @@ const getCheckboxStyles = (theme: Theme): string => `
 	transform: rotate(360deg);
   }
 }
-</style>
 `;

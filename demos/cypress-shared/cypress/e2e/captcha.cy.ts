@@ -129,11 +129,13 @@ describe("Captchas", () => {
 			cy.wait(2000);
 			cy.captchaImages().then(() => {
 				cy.get("@captchaImages").first().realClick();
+				// The tile reports its own selected state, which is what a screen
+				// reader reads and the one thing about a tile that does not change
+				// from one page load to the next.
 				cy.get("@captchaImages")
 					.first()
-					.siblings()
-					.first()
-					.should("have.css", "opacity", "1");
+					.parent()
+					.should("have.attr", "aria-pressed", "true");
 			});
 		});
 	});

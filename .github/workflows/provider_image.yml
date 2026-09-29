@@ -35,6 +35,7 @@ defaults:
 
 jobs:
   check:
+    name: provider-image
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR would run on the
     # self-hosted fleet -- executing arbitrary contributor code on hardware we
@@ -81,14 +82,14 @@ jobs:
       - run: NODE_ENV="production" npx turbo run @prosopo/cli#bundle
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
 
       # We cannot create the images in a single step because the output of buildx is not compatible with
       # `docker load`. https://stackoverflow.com/a/72952846/1178971
 
       # create the provider image for AMD64
       - name: Build the Provider Container
-        uses: docker/build-push-action@v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
           context: ${{github.workspace}}
           file: ${{github.workspace}}/packages/cli/Dockerfile
@@ -112,7 +113,10 @@ jobs:
           set -euxo pipefail # stop on errors, print commands, fail on pipe fails
 
           # Run container and capture exit code
-          CONTAINER="$(docker run -d -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /bin/sh -c 'NODE_ENV=production npx provider version')"
+          # The runtime image is distroless: no shell, no npx. ENTRYPOINT is
+          # node, so the bundle path and its args are passed as argv, and
+          # NODE_ENV comes in as a real env var rather than a shell prefix.
+          CONTAINER="$(docker run -d -e NODE_ENV=production -v "./.env.production:/usr/src/app/.env.production" prosopo/provider:dev /usr/src/app/provider.cli.bundle.js version)"
           
           # Wait for container to complete
           sleep 20s

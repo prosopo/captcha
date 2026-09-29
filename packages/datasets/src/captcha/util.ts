@@ -12,10 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
+import { assetTokenOptionsFromEnv, signAssetUrl } from "./assetToken.js";
 
 export async function downloadImage(url: string): Promise<Uint8Array> {
 	try {
-		const response = await fetch(url);
+		const options = assetTokenOptionsFromEnv();
+		const response = await fetch(
+			options ? await signAssetUrl(url, options) : url,
+		);
 		if (!response.ok) {
 			throw new ProsopoDatasetError("API.BAD_REQUEST", {
 				context: {

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { ClientMetaData } from "@prosopo/types";
+import { resolveClientSessionId } from "./protectSession.js";
 
 /**
  * Assembles the widget-controlled metadata attached to a captcha solution.
@@ -22,6 +23,12 @@ import type { ClientMetaData } from "@prosopo/types";
  * Returns `undefined` when nothing is set, so the submission body omits the
  * key entirely rather than carrying an empty object.
  *
+ * A site that renders no session id of its own but runs Prosopo Protect falls
+ * back to Protect's session id, which is the same value Protect's own
+ * challenge page renders the widget with. Read here rather than at render time
+ * because Protect initialises asynchronously and may not have a session yet
+ * when the widget mounts.
+ *
  * @param hp - live honeypot input value, if the honeypot was filled in
  * @param clientSessionId - the site's session id, if the widget was rendered
  *   with `data-sessionid` / `renderOptions.sessionId`
@@ -30,9 +37,10 @@ export const buildClientMetaData = (
 	hp?: string,
 	clientSessionId?: string,
 ): ClientMetaData | undefined => {
+	const sessionId = resolveClientSessionId(clientSessionId);
 	const clientMetaData: ClientMetaData = {
 		...(hp && { hp }),
-		...(clientSessionId && { clientSessionId }),
+		...(sessionId && { clientSessionId: sessionId }),
 	};
 
 	return Object.keys(clientMetaData).length > 0 ? clientMetaData : undefined;

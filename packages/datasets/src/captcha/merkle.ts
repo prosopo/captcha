@@ -138,6 +138,14 @@ export class CaptchaMerkleTree {
 	}
 
 	proof(leafHash: MerkleLeaf): MerkleProof {
+		if (!at(this.layers, 0).includes(leafHash)) {
+			throw new ProsopoError("DATASET.MERKLE_ERROR", {
+				context: {
+					error: "leaf not in tree",
+					failedFuncName: this.proof.name,
+				},
+			});
+		}
 		const proofTree: MerkleProofLayer[] = [];
 		let layerNum = 0;
 		while (layerNum < this.layers.length - 1) {

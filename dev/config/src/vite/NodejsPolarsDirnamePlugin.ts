@@ -12,12 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Rollup } from "vite";
+
 export const nodejsPolarsDirnamePlugin = () => {
 	const name = "nodejs-polars-dirname-plugin";
 	return {
 		name,
-		// biome-ignore lint/suspicious/noExplicitAny: TODO not sure of options type
-		resolveId(source: string, importer: string | undefined, options: any) {
+		resolveId(
+			source: string,
+			importer: string | undefined,
+			options: Rollup.ResolveIdExtraOptions,
+		) {
 			// aim for the node_modules/nodejs-polars/bin/native-polars.js file
 			if (source.endsWith("nodejs-polars/bin/native-polars.js")) {
 				console.debug(name, "resolves", source, "imported by", importer);

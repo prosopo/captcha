@@ -346,6 +346,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "このメールアドレスからの送信が多すぎます",
 		"VPN_BLOCKED": "このサイトではVPN接続からのリクエストは許可されていません",
 		"PROXY_BLOCKED": "このサイトではプロキシサーバーからのリクエストは許可されていません",
+		"TOO_MANY_LOCALHOST": "このサイトキーに対する localhost からの CAPTCHA リクエストが多すぎます",
 		"TOR_BLOCKED": "このサイトではTor出口ノードからのリクエストは許可されていません",
 		"ABUSER_BLOCKED": "このサイトでは不正行為としてフラグが付けられたネットワークからのリクエストは許可されていません",
 		"DATACENTER_BLOCKED": "このサイトではデータセンターのIPアドレスからのリクエストは許可されていません",

@@ -15,12 +15,18 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import type { Rollup } from "vite";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { nodejsPolarsDirnamePlugin } from "./NodejsPolarsDirnamePlugin.js";
 import ViteTestConfig from "./vite.test.config.js";
 import ViteThreadsTestConfig from "./vite.threads.test.config.js";
 
 const NATIVE_POLARS = "/repo/node_modules/nodejs-polars/bin/native-polars.js";
+
+const resolveOptions: Rollup.ResolveIdExtraOptions = {
+	isEntry: false,
+	kind: "import-statement",
+};
 
 let root: string;
 let cwd: string;
@@ -75,35 +81,23 @@ describe("ViteTestConfig", () => {
 		expect(config.test?.isolate).toBe(true);
 	});
 
-	it("includes tests with no declared type when no filter is set", () => {
+	it("includes every test file when no filter is set", () => {
 		asPackage();
-		expect(config_include(ViteTestConfig())).toBe(
-			"src/**/*@(|).@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)",
+		const config = ViteTestConfig();
+		expect(config_include(config)).toBe(
+			"src/**/*.@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)",
 		);
+		expect(config.test?.exclude).toEqual(["**/node_modules/**", "**/dist/**"]);
 	});
 
-	it("filters on a single declared test type", () => {
+	it("filters by excluding the other known test types", () => {
+		// Which files that actually selects is proven against vitest's own
+		// collection in testFileGlobs.test.ts.
 		asPackage();
 		process.env.TEST_TYPE = "unit";
-		expect(config_include(ViteTestConfig())).toContain("@(.unit)");
-	});
-
-	it("filters on several test types", () => {
-		asPackage();
-		process.env.TEST_TYPE = "unit,integration";
-		expect(config_include(ViteTestConfig())).toContain("@(.unit|.integration)");
-	});
-
-	it("trims whitespace around the test type list", () => {
-		asPackage();
-		process.env.TEST_TYPE = "  unit  ";
-		expect(config_include(ViteTestConfig())).toContain("@(.unit)");
-	});
-
-	it("ignores an empty test type, keeping the default glob", () => {
-		asPackage();
-		process.env.TEST_TYPE = "";
-		expect(config_include(ViteTestConfig())).toContain("@(|)");
+		expect(ViteTestConfig().test?.exclude).toContain(
+			"src/**/*.@(integration).@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)",
+		);
 	});
 
 	it("scopes coverage to the local src when run from a package", () => {
@@ -179,10 +173,12 @@ describe("nodejsPolarsDirnamePlugin", () => {
 	const plugin = nodejsPolarsDirnamePlugin();
 
 	it("claims only the native polars entry point", () => {
-		expect(plugin.resolveId(NATIVE_POLARS, undefined, {})).toBe(NATIVE_POLARS);
-		expect(plugin.resolveId("zod", undefined, {})).toBeNull();
+		expect(plugin.resolveId(NATIVE_POLARS, undefined, resolveOptions)).toBe(
+			NATIVE_POLARS,
+		);
+		expect(plugin.resolveId("zod", undefined, resolveOptions)).toBeNull();
 		expect(
-			plugin.resolveId("nodejs-polars/bin/other.js", undefined, {}),
+			plugin.resolveId("nodejs-polars/bin/other.js", undefined, resolveOptions),
 		).toBeNull();
 	});
 

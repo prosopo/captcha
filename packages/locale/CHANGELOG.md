@@ -1,5 +1,92 @@
 # @prosopo/locale
 
+## 3.6.1
+### Patch Changes
+
+- 294b480: Hindi text is readable again. A bulk edit in July 2025 had stripped every vowel sign from 410 of the 444 Hindi strings, so the widget said "म मनषय ह" instead of "मैं मनुष्य हूँ". The originals are restored, and the 14 strings added since then are translated properly. The Finnish, Hindi and Dutch "can't find keyring pair" messages had also translated their `{{address}}` placeholder, so the address was never filled in; that is fixed too. New tests check that every locale keeps all of the English placeholders, and that Hindi strings keep their vowel signs.
+- Updated dependencies [0d29dde]
+  - @prosopo/util@3.3.12
+
+## 3.6.0
+### Minor Changes
+
+- a9141c3: Stop shipping i18next to the browser. Saves about 22KB gzipped off the widget.
+  
+  The widget was pulling in i18next and four of its plugins — a language detector, an HTTP backend, a chained backend and a resources-to-backend adapter, which between them also dragged in the `cross-fetch` polyfill — to look up 444 short strings with no plurals, no nesting and two interpolated values. That machinery is about 23KB gzipped; the replacement is 1.25KB.
+  
+  `i18nFrontend.ts` now does the job directly: pick a language, fetch the matching `locales/<lang>/translation.json` next to the bundle, and look keys up in it. Behaviour is unchanged in the ways a visitor can see:
+  
+  - language is chosen from the widget's own setting first, then a cookie, then localStorage, then the browser — the same order as before, and the choice is still remembered in both cookie and localStorage
+  - a regional tag like `de-AT` still resolves to `de`
+  - English is still fetched alongside the chosen language, so a key a translation is missing still renders English rather than its key
+  - `{{name}}` placeholders are still filled in, including in a caller's `defaultValue`
+  - if the catalogue cannot be fetched the widget still renders, in English, rather than waiting
+  
+  i18next stays for the server, where `i18next-http-middleware` needs the real instance to read the `Accept-Language` header. `Ti18n` is now a small interface describing the handful of methods this repository actually calls, which both implementations satisfy, so `@prosopo/common` no longer needs i18next for a type either.
+  
+  Covered by 189 tests in `@prosopo/locale`, and the built bundle was checked in a real browser: French picked up from the browser, a switch to German, interpolation, and both fallbacks.
+- a9141c3: Stop loading zod before the widget can draw itself. Takes another 13KB gzipped off the critical path.
+  
+  zod is 14KB gzipped and it was being downloaded and parsed before the checkbox appeared, because six small things on the startup path happened to use it:
+  
+  - two lists of strings in `@prosopo/logger` (log levels, output format)
+  - two lists of strings in `@prosopo/locale` (language codes, translation keys)
+  - two lists of two strings in `@prosopo/types` (start mode, challenge placement)
+  - one four-field object in `@prosopo/load-balancer` (a provider entry)
+  - an `instanceof ZodError` check in `@prosopo/common`
+  - `INPUT_LIMITS`, a plain table of numbers, that happened to live in the same file as zod-based string builders
+  
+  None of these need a validation library. They are now plain TypeScript: a list, a type, and where input is untrusted, a one-line guard. `INPUT_LIMITS` moved to its own file so reading it no longer drags the builders along.
+  
+  zod has not gone anywhere — the real request and response schemas in `@prosopo/types` still use it, and still validate exactly as before. It now arrives with the code that needs it, after the widget is on screen, rather than in front of it.
+  
+  Two API changes for anyone importing these directly:
+  
+  - `LanguageSchema`, `TranslationKeysSchema`, `StartModeSchema` and `Placement` are no longer exported as zod schemas. Use `isLanguage()`, `isStartMode()`, `isPlacement()` to check a value, and `LanguageCodes`, `translationKeys`, `StartModes`, `Placements` for the lists.
+  - `isZodError()` now recognises a zod error by its name rather than `instanceof`. That is strictly more tolerant: the name still matches when an error crosses a realm boundary or comes from a second copy of zod, which `instanceof` misses — it was already the fallback arm of the same check.
+  
+  Two behaviour notes: a malformed entry in the fetched provider list now throws a plain `Error` naming the entry, where it used to throw an untranslated zod error; and the language codes accepted are unchanged.
+  
+  Covered by the existing suites for every package touched (types, types-database, locale, logger, common, load-balancer, all five procaptcha packages, api, cli, api-express-router, server, and the provider's 1322 unit tests), all passing. The built bundle was also loaded in a real browser: the widget renders from the first eight chunks, zod arrives in the second wave, and the provider's error came back translated into German.
+
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+  - @prosopo/util@3.3.11
+
+## 3.5.0
+### Minor Changes
+
+- 59c02da: Replace React with vanilla TS/DOM in the widget.
+  
+  The widget packages no longer depend on react, react-dom, @emotion or
+  react-i18next: every component is now a `mount*` function returning a handle
+  with `update`/`destroy`. `useTranslation` is replaced by `createTranslator`,
+  which exposes i18next's `t` plus the events that used to trigger a re-render.
+  The rendered markup, styling and behaviour are unchanged — only the
+  implementation is.
+  
+  Everything the widget has gained since this rewrite started is carried over,
+  so nothing is lost by dropping React: the shared challenge surface (popup and
+  float placement, escape/outside-click dismissal and the dialog focus trap),
+  the image-tile and puzzle-piece keyboard paths, the checkbox's focus handover
+  across the loading swap, the server-rendered puzzle imagery, `startMode:
+  "manual"` with `window.procaptcha.start()`, `data-bind` / targeted
+  `execute(widgetId)`, the Web Bot Auth "authenticated" badge, the client
+  session id, and the bounded session re-mint and reload handling in the
+  frictionless wrapper.
+
+## 3.4.4
+### Patch Changes
+
+- a22069d: Let a Block access rule name the reason it fired, so the 403 says why instead of "Forbidden"
+
+## 3.4.3
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- d710b7f: Give the `useTranslation` hook a proper return type instead of `any`. Nothing changes at runtime.
+
 ## 3.4.2
 ### Patch Changes
 

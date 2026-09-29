@@ -335,6 +335,11 @@ export default (
 										}),
 									},
 								),
+								// Session-derived, like `score` and `webView` above:
+								// the replay never re-decrypts a payload.
+								...(dedup.session.d !== undefined && {
+									d: dedup.session.d,
+								}),
 								raw: {
 									headers: dedupFlatHeaders,
 									userAgent: dedupUserAgent,
@@ -562,11 +567,18 @@ export default (
 			// match on the verified identity. Unsigned traffic falls through
 			// with webBotAuthAgent=undefined and hits the normal detector
 			// stack.
-			const verified = await verifyWebBotAuth({
-				method: req.method,
-				url: `https://${req.headers.host ?? ""}${req.originalUrl ?? req.url}`,
-				headers: flatten(req.headers),
-			});
+			const verified = await verifyWebBotAuth(
+				{
+					method: req.method,
+					url: `https://${req.headers.host ?? ""}${req.originalUrl ?? req.url}`,
+					headers: flatten(req.headers),
+				},
+				{
+					allowLocalSigners:
+						process.env.NODE_ENV === "test" ||
+						process.env.NODE_ENV === "development",
+				},
+			);
 			const verifiedSignerUrl = verified.verified
 				? verified.signerUrl
 				: undefined;
@@ -686,21 +698,7 @@ export default (
 				decryptionFailed: rawDecryptionFailed,
 				triggeredDetectors,
 				shadowDomPenalty,
-				entropyMathRandomFingerprint,
-				entropyCryptoFingerprint,
-				entropyWallClockOffsetMs,
-				entropyMathRandomFirst,
-				g,
-				i,
-				cv,
-				sq,
-				cg,
-				sm,
-				b,
-				sw,
-				md,
-				bn,
-				fs,
+				d,
 				bundleId,
 			} = decryptedPayload;
 
@@ -795,29 +793,8 @@ export default (
 				// same keypair + inner cipher to decrypt their payloads.
 				...(bundleId && { bundleId }),
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
-				...(entropyMathRandomFingerprint !== undefined && {
-					entropyMathRandomFingerprint,
-				}),
-				...(entropyCryptoFingerprint !== undefined && {
-					entropyCryptoFingerprint,
-				}),
-				...(entropyWallClockOffsetMs !== undefined && {
-					entropyWallClockOffsetMs,
-				}),
-				...(entropyMathRandomFirst !== undefined && {
-					entropyMathRandomFirst,
-				}),
-				...(g !== undefined && { g }),
-				...(i !== undefined && { i }),
-				...(cv !== undefined && { cv }),
-				...(sq !== undefined && { sq }),
-				...(cg !== undefined && { cg }),
-				...(sm !== undefined && { sm }),
-				...(b !== undefined && { b }),
-				...(sw !== undefined && { sw }),
-				...(md !== undefined && { md }),
-				...(bn !== undefined && { bn }),
-				...(fs !== undefined && { fs }),
+				...(d !== undefined && { d }),
+				...(clientSessionId && { clientMetaData: { clientSessionId } }),
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),
@@ -855,6 +832,9 @@ export default (
 				platform: derivePlatform(requestUserAgent, webView, {
 					...(typeof ipInfoMobile === "boolean" && { isMobile: ipInfoMobile }),
 				}),
+				// Straight from the payload this request arrived with — the
+				// session record is written from the same value.
+				...(d !== undefined && { d }),
 				raw: {
 					headers: flatHeaders,
 					userAgent: requestUserAgent,

@@ -30,15 +30,14 @@ for (let i = 0; i < 256; i++) {
 }
 
 /** @internal */
-// biome-ignore lint/suspicious/noExplicitAny: TODO replace any
-function hex(value: any, result: string) {
+function hex(value: Uint8Array, result: string): string {
 	const mod = (value.length % 2) | 0;
 	const length = (value.length - mod) | 0;
 	for (let i = 0; i < length; i += 2) {
-		result += U16[(value[i] << 8) | value[i + 1]];
+		result += U16[((value[i] ?? 0) << 8) | (value[i + 1] ?? 0)];
 	}
 	if (mod) {
-		result += U8[value[length] | 0];
+		result += U8[value[length] ?? 0];
 	}
 	return result;
 }

@@ -142,6 +142,14 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 	): Promise<void>;
 
 	/**
+	 * Mark the record server-checked only if it isn't already, returning
+	 * whether this caller made that transition.
+	 */
+	protected abstract markRecordChecked(
+		challenge: PoWChallengeId,
+	): Promise<boolean>;
+
+	/**
 	 * The per-type interaction trail handed to the decision machine — the
 	 * drag for a puzzle, the click sequence for icon-order. Returned as a
 	 * partial `DecisionMachineInput` so each type names its own field.
@@ -244,10 +252,10 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
 		// solution has already been checked by the server. Moving this code around could result in solutions being
 		// re-usable.
-		await this.updateRecord(challengeRecord.challenge, {
-			serverChecked: true,
-			lastUpdatedTimestamp: new Date(),
-		});
+		// The claim is conditional on the record not being checked yet, so of
+		// several concurrent verifies of one token only one gets past here.
+		const claimed = await this.markRecordChecked(challengeRecord.challenge);
+		if (!claimed) return notVerifiedResponse;
 		// -- END WARNING --
 
 		const submittedAt = challengeRecord.submittedAtTimestamp;
@@ -619,10 +627,14 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 				decryptedHeadHash: sessionRecord?.decryptedHeadHash,
 				userSitekeyIpHash: sessionRecord?.userSitekeyIpHash,
 				simdReadings: sessionRecord?.simdReadings,
+				// Everything the detector reported for this session.
+				d: sessionRecord?.d,
 				frictionlessReason: sessionRecord?.reason,
 				ruleType: sessionRecord?.ruleType,
 				webView: sessionRecord?.webView,
 				iFrame: sessionRecord?.iFrame,
+				currentUrl: sessionRecord?.currentUrl,
+				iframeUrl: sessionRecord?.iframeUrl,
 				coords: challengeRecord.coords,
 				...this.decisionMachineEventFields(challengeRecord),
 				// tcp-probe fields — see powTasks.ts for the reasoning.

@@ -12,27 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { i18n } from "i18next";
 import { afterEach, describe, expect, test, vi } from "vitest";
+import type { Ti18n } from "../types.js";
 
 // loadI18next keeps a module-level singleton, so every test re-imports it
-// under a fresh registry. The two i18n implementations are mocked out: they
-// pull in i18next, its plugins and the filesystem, none of which this module's
-// own logic depends on.
+// under a fresh registry. The two i18n implementations are mocked out: one
+// fetches catalogues over the network, the other pulls in i18next and the
+// filesystem, and neither is what this module's own logic does.
 
-/** The slice of the i18next instance loadI18next actually touches. */
+/** The slice of an i18n instance loadI18next actually touches. */
 interface FakeI18n {
 	language: string;
 	changeLanguage: (lng: string) => Promise<unknown>;
 }
 
 /** One cast, confined here, so the mocked module keeps the real signature. */
-const asI18n = (fake: FakeI18n): i18n => fake as unknown as i18n;
+const asI18n = (fake: FakeI18n): Ti18n => fake as unknown as Ti18n;
 
 type InitializeI18n = (
-	callback?: (instance: i18n) => void,
+	callback?: (instance: Ti18n) => void,
 	lng?: string,
-) => i18n;
+) => Ti18n;
 
 interface Harness {
 	instance: FakeI18n;
@@ -79,7 +79,7 @@ const install = (
 };
 
 const loadModule = async (): Promise<
-	(backend: boolean, lng?: string) => Promise<i18n>
+	(backend: boolean, lng?: string) => Promise<Ti18n>
 > => {
 	const imported = await import("../loadI18next.js");
 	return imported.default;
@@ -352,7 +352,7 @@ describe("loadI18next, timeout", () => {
 		// Without the one-shot latch a later emission would call resolve again
 		// and leave the timer armed.
 		vi.useFakeTimers();
-		let fire: ((instance: i18n) => void) | undefined;
+		let fire: ((instance: Ti18n) => void) | undefined;
 		const instance: FakeI18n = {
 			language: "en",
 			changeLanguage: async (): Promise<unknown> => undefined,
@@ -382,7 +382,7 @@ describe("loadI18next, timeout", () => {
 		// the degraded instance. Calling reject then would produce an unhandled
 		// rejection on an already-settled promise.
 		vi.useFakeTimers();
-		let fire: ((instance: i18n) => void) | undefined;
+		let fire: ((instance: Ti18n) => void) | undefined;
 		const instance: FakeI18n = {
 			language: "en",
 			changeLanguage: async (): Promise<unknown> => {

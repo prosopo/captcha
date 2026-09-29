@@ -32,7 +32,7 @@ export default defineConfig({
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	expose: {
 		...process.env,
-		default_page: "/",
+		default_page: "/image-implicit.html",
 		visualRegressionType: "regression",
 		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
 		visualRegressionDiffDirectory: "cypress/snapshots/diff",

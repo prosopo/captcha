@@ -81,6 +81,12 @@ export default async function (
 		"process.env.PROSOPO_PROVIDER_URL_DEVELOPMENT": JSON.stringify(
 			process.env.PROSOPO_PROVIDER_URL_DEVELOPMENT,
 		),
+		// Points a self-hosted build at its own providers regardless of
+		// environment, so a production bundle no longer has to masquerade as a
+		// development build to be redirected.
+		"process.env.PROSOPO_PROVIDER_LIST": JSON.stringify(
+			process.env.PROSOPO_PROVIDER_LIST,
+		),
 		"process.env._DEV_ONLY_WATCH_EVENTS": JSON.stringify(
 			process.env._DEV_ONLY_WATCH_EVENTS,
 		),

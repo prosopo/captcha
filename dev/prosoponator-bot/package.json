@@ -20,10 +20,10 @@
 	"dependencies": {
 		"@actions/core": "3.0.1",
 		"@actions/github": "9.1.1",
-		"undici": "6.28.0"
+		"undici": "6.29.0"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.3.16",
+		"@prosopo/config": "3.4.2",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { AllKeys } from "@prosopo/common";
-import { CaptchaTypeSchema } from "@prosopo/types";
+import { CaptchaTypeSchema, ResultReason } from "@prosopo/types";
 import { z } from "zod";
 import {
 	type AccessPolicy,
@@ -64,6 +64,7 @@ export const accessPolicyInputShape = z.object({
 	deferToVerify: z
 		.preprocess((v) => (typeof v === "string" ? v === "true" : v), z.boolean())
 		.optional(),
+	messageKey: z.nativeEnum(ResultReason).optional(),
 } satisfies AllKeys<AccessPolicy>);
 
 export const accessPolicyInput = accessPolicyInputShape.superRefine(

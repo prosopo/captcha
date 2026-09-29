@@ -16,12 +16,11 @@ import { defineConfig, mergeConfig } from "vitest/config";
 
 process.env.NODE_ENV = "test";
 
-// The widgets render into the DOM and the manager clears its timeouts through
-// `window`, so jsdom is required; the setup file tells React it is under test
-// so act() flushes renders synchronously.
+// The widgets build real DOM and the manager clears its timeouts through
+// `window`, so jsdom is required.
 export default mergeConfig(
 	ViteTestConfig(),
 	defineConfig({
-		test: { environment: "jsdom", setupFiles: ["./src/tests/setup.ts"] },
+		test: { environment: "jsdom" },
 	}),
 );

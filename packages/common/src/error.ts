@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { TranslationKey } from "@prosopo/locale";
+import type { TranslateFn, TranslationKey } from "@prosopo/locale";
 import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { ApiJsonError } from "@prosopo/types";
-import type { TFunction } from "i18next";
-import { ZodError } from "zod";
 
 // HTTP reason phrases keyed by status code. Defined locally rather than
 // imported from `node:http`'s `STATUS_CODES`, because this module is also
@@ -49,7 +47,7 @@ type BaseErrorOptions<ContextType> = {
 	logLevel?: LogLevel;
 	context?: ContextType;
 	silent?: boolean;
-	i18n?: { t: TFunction };
+	i18n?: { t: TranslateFn };
 };
 
 interface BaseContextParams {
@@ -109,7 +107,7 @@ export abstract class ProsopoBaseError<
 		const msg = err;
 		const data = {
 			errorType: errorName || this.name,
-			...(this.context ? { context: this.context } : {}),
+			...(this.context ? { context: boundContextForLog(this.context) } : {}),
 		};
 		if (logLevel === "debug") {
 			logger.debug(() => ({
@@ -227,8 +225,8 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 }
 
 export const unwrapError = (
-	err: ProsopoBaseError | SyntaxError | ZodError,
-	i18nInstance?: { t: TFunction },
+	err: ProsopoBaseError | SyntaxError | ZodLikeError,
+	i18nInstance?: { t: TranslateFn },
 ) => {
 	const i18n = i18nInstance || backupTranslationObj;
 	let code = "code" in err ? (err.code as number) : 400;
@@ -269,7 +267,9 @@ export const unwrapError = (
 		if (typeof err.message === "object") {
 			jsonError = err.message;
 		} else {
-			jsonError.message = JSON.parse(err.message);
+			// ApiJsonError types `message` as a string, but for a validation
+			// error the response has always carried the parsed issue list.
+			jsonError.message = JSON.parse(JSON.stringify(boundedIssues(err).issues));
 			jsonError.key =
 				jsonError.key !== "API.UNKNOWN" ? jsonError.key : "API.INVALID_BODY";
 			code = 400;
@@ -288,8 +288,55 @@ export const unwrapError = (
 	return { code, statusMessage, jsonError };
 };
 
-export const isZodError = (err: unknown): err is ZodError => {
-	return Boolean(
-		err && (err instanceof ZodError || (err as ZodError).name === "ZodError"),
-	);
+/**
+ * The part of a zod error this module reads. Declared structurally so that
+ * @prosopo/common, which is on the widget's critical path, does not import zod
+ * — 14KB gzipped — for a type and an `instanceof`.
+ */
+export interface ZodLikeError {
+	name: string;
+	message: string;
+	issues?: unknown[];
+}
+
+/**
+ * A request body of up to 1MB can fail validation with one zod issue per array
+ * element, i.e. tens of thousands of issues. Echoing or logging all of them
+ * turned a 1MB request into a ~20MB response plus a multi-MB log line, built
+ * synchronously on the event loop. Only the first few are reported.
+ */
+export const MAX_REPORTED_ISSUES = 10;
+
+const boundedIssues = (
+	err: ZodLikeError,
+): { issueCount: number; issues: unknown[] } => {
+	// Prefer `issues`: zod builds `message` by serialising every issue.
+	const all: unknown = Array.isArray(err.issues)
+		? err.issues
+		: JSON.parse(err.message);
+	if (!Array.isArray(all)) return { issueCount: 1, issues: [all] };
+	return {
+		issueCount: all.length,
+		issues: all.slice(0, MAX_REPORTED_ISSUES),
+	};
+};
+
+const boundContextForLog = <ContextType extends BaseContextParams>(
+	context: ContextType,
+): ContextType | (Omit<ContextType, "error"> & { error: object }) => {
+	if (!isZodError(context.error)) return context;
+	return {
+		...context,
+		error: { name: context.error.name, ...boundedIssues(context.error) },
+	};
+};
+
+/**
+ * Recognised by `name` rather than `instanceof`. The name is the only signal
+ * that survives an error crossing a realm boundary or arriving from a second
+ * copy of zod, both of which `instanceof` misses — it was already the fallback
+ * arm of this check.
+ */
+export const isZodError = (err: unknown): err is ZodLikeError => {
+	return Boolean(err && (err as ZodLikeError).name === "ZodError");
 };

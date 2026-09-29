@@ -40,6 +40,7 @@ import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js"
 import { buildMaintenanceVerificationResponse } from "./captcha/maintenanceModeResponses.js";
 import { forwardVerifyIfNotIssuer } from "./forwardVerify.js";
 import { metricsEnabled, recordCaptchaVerify } from "./metrics.js";
+import { summariseRequestBody } from "./requestBodySummary.js";
 import {
 	isReservedTestSiteKey,
 	resolveTestSiteKeyVerdict,
@@ -154,7 +155,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			} catch (err) {
 				return next(
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-						context: { code: 400, error: err, body: req.body },
+						context: { code: 400, error: err, body: summariseRequestBody(req) },
 						i18n: req.i18n,
 						logger: req.logger,
 					}),
@@ -266,7 +267,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				req.logger.error(() => ({
 					err,
 					msg: "Error in verifyImageCaptchaSolution",
-					data: { body: req.body },
+					data: { body: summariseRequestBody(req) },
 				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
@@ -309,7 +310,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			} catch (err) {
 				return next(
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-						context: { code: 400, error: err, body: req.body },
+						context: { code: 400, error: err, body: summariseRequestBody(req) },
 						i18n: req.i18n,
 						logger: req.logger,
 					}),
@@ -420,7 +421,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				req.logger.error(() => ({
 					msg: "Error in verifyPowCaptchaSolution",
 					err,
-					data: { body: req.body },
+					data: { body: summariseRequestBody(req) },
 				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
@@ -463,7 +464,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			} catch (err) {
 				return next(
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-						context: { code: 400, error: err, body: req.body },
+						context: { code: 400, error: err, body: summariseRequestBody(req) },
 						i18n: req.i18n,
 						logger: req.logger,
 					}),
@@ -574,7 +575,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				req.logger.error(() => ({
 					msg: "Error in verifyPuzzleCaptchaSolution",
 					err,
-					data: { body: req.body },
+					data: { body: summariseRequestBody(req) },
 				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
@@ -764,7 +765,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			} catch (err) {
 				return next(
 					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-						context: { code: 400, error: err, body: req.body },
+						context: { code: 400, error: err, body: summariseRequestBody(req) },
 						i18n: req.i18n,
 						logger: req.logger,
 					}),
@@ -838,7 +839,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				req.logger.error(() => ({
 					err,
 					msg: "Error in verifyAuthenticatedSession",
-					data: { body: req.body },
+					data: { body: summariseRequestBody(req) },
 				}));
 				return next(
 					new ProsopoApiError("API.BAD_REQUEST", {
