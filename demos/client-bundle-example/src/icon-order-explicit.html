@@ -98,10 +98,17 @@
 
             // Display result
             const resultElement = document.getElementById('result');
-            resultElement.innerHTML = `<strong>Form submitted with:</strong><br>
-- Name: ${name}<br>
-- Email: ${email}<br>
-- Procaptcha verified: Yes`;
+            const summary = document.createElement('strong');
+            summary.textContent = 'Form submitted with:';
+            resultElement.replaceChildren(
+                summary,
+                document.createElement('br'),
+                `- Name: ${name}`,
+                document.createElement('br'),
+                `- Email: ${email}`,
+                document.createElement('br'),
+                '- Procaptcha verified: Yes',
+            );
             resultElement.style.display = 'block';
 
             window.updateCaptchaStatus('Form submission completed', 'success');

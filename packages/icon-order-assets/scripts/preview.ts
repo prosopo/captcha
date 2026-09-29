@@ -63,10 +63,11 @@ const main = async (): Promise<void> => {
 		);
 		// eslint-disable-next-line no-console
 		console.log(
-			`frame-${i}: targets`,
-			challenge.targets.map(
-				(t) => `${t.kind}@${Math.round(t.x)},${Math.round(t.y)}`,
-			),
+			"frame-%d: targets %s",
+			i,
+			challenge.targets
+				.map((t) => `${t.kind}@${Math.round(t.x)},${Math.round(t.y)}`)
+				.join(" "),
 		);
 	}
 };
