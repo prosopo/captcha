@@ -15,7 +15,12 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CaptchaType } from "@prosopo/types";
+import {
+	CaptchaType,
+	type IPInfoResult,
+	type ITrafficFilter,
+	TrafficFilterAction,
+} from "@prosopo/types";
 import { AccessPolicyType } from "@prosopo/user-access-policy";
 import {
 	type Mock,
@@ -81,6 +86,7 @@ type MockReq = {
 	requestId?: string;
 	path?: string;
 	method?: string;
+	ipInfo?: IPInfoResult;
 };
 
 type MockRes = {
@@ -88,6 +94,9 @@ type MockRes = {
 	status: (code: number) => MockRes;
 	on: (event: string, handler: () => void) => MockRes;
 	statusCode?: number;
+	// Express always provides this; the handler leaves the tarpit pad size
+	// here for `padResponseMiddleware` to pick up.
+	locals: Record<string, unknown>;
 };
 
 // Helper to build req/res/next
@@ -119,6 +128,7 @@ const buildReqRes = (body: unknown, ip = "127.0.0.1") => {
 		status: vi.fn().mockReturnThis(),
 		on: vi.fn().mockReturnThis(),
 		statusCode: 200,
+		locals: {},
 	} as unknown as MockRes;
 	const next = vi.fn();
 	return { req, res, next };
@@ -1075,6 +1085,96 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			expect(
 				tasksInstance.frictionlessManager.sendPuzzleCaptcha,
 			).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("tarpit padding", () => {
+		const proxyIpInfo: IPInfoResult = {
+			ip: "1.2.3.4",
+			isValid: true,
+			isVPN: false,
+			isTor: false,
+			isProxy: true,
+			isDatacenter: false,
+			isAbuser: false,
+			isMobile: false,
+			isSatellite: false,
+			isCrawler: false,
+		};
+
+		const runWithTrafficFilter = async (
+			trafficFilter: Partial<ITrafficFilter> | undefined,
+			ipInfo: IPInfoResult | undefined = proxyIpInfo,
+		): Promise<MockRes> => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "siteTarpit",
+				settings: {
+					captchaType: CaptchaType.frictionless,
+					imageMaxRounds: 5,
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					trafficFilter,
+				},
+			});
+			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
+				baseBotScore: 0,
+				timestamp: Date.now(),
+				userId: "u",
+				userAgent: "844bc172f032bdd2d0baae3536c1d66c",
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "abc",
+				decryptionFailed: false,
+			});
+
+			const { req, res, next } = buildReqRes({
+				token: "tTarpit",
+				headHash: "hh",
+				dapp: "siteTarpit",
+				user: "u",
+			});
+			req.ipInfo = ipInfo;
+
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+			expect(next).not.toHaveBeenCalled();
+			return res;
+		};
+
+		it("leaves the pad size unset when the site configures no traffic filter", async () => {
+			const res = await runWithTrafficFilter(undefined);
+			expect(res.locals.padBytes).toBeUndefined();
+		});
+
+		it("attaches the pad size for a blocked category, whose challenge is still issued here", async () => {
+			// The tarpit's headline case, and the one the three direct
+			// endpoints cannot cover: nearly every site enters through
+			// frictionless, so a pad resolved here is the only pad most
+			// traffic ever sees.
+			const res = await runWithTrafficFilter({
+				proxy: { action: TrafficFilterAction.Block, padBytes: 1_048_576 },
+			});
+			expect(res.locals.padBytes).toBe(1_048_576);
+		});
+
+		it("attaches the pad size for a challenge category", async () => {
+			const res = await runWithTrafficFilter({
+				proxy: {
+					action: TrafficFilterAction.Challenge,
+					captchaType: CaptchaType.pow,
+					powDifficulty: 10,
+					padBytes: 4096,
+				},
+			});
+			expect(res.locals.padBytes).toBe(4096);
+		});
+
+		it("leaves the pad size unset when the visitor matches no configured category", async () => {
+			const res = await runWithTrafficFilter(
+				{ proxy: { action: TrafficFilterAction.Block, padBytes: 4096 } },
+				{ ...proxyIpInfo, isProxy: false },
+			);
+			expect(res.locals.padBytes).toBeUndefined();
 		});
 	});
 });
