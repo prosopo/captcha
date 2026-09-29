@@ -49,7 +49,7 @@ jobs:
           java-version: "17"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
         with:
           # Drop the action's default `tools platform-tools`. `tools` is an
           # obsolete SDK package that Google has removed from the repository,
