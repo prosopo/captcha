@@ -828,6 +828,19 @@ describe("submit", () => {
 		expect(extractData(solutions?.[1]?.salt ?? "")).toEqual([3, 4]);
 	});
 
+	test("submits a later captcha with no selections", async () => {
+		mocks.getCaptchaChallenge.mockResolvedValue(
+			challengeResponse({ captchas: [captcha(), captcha()] }),
+		);
+		const harness = await started({
+			afterStart: { solutions: [[["hash-1", 1, 2, InputMethod.pointer]], []] },
+		});
+		await harness.manager.submit();
+		const solutions = mocks.submitCaptchaSolution.mock.calls[0]?.[2];
+		expect(solutions?.[1]?.solution).toEqual([]);
+		expect(extractData(solutions?.[1]?.salt ?? "")).toEqual([]);
+	});
+
 	test("handles a captcha with no selections at all", async () => {
 		const harness = await started({ afterStart: { solutions: [[]] } });
 		await harness.manager.submit();
