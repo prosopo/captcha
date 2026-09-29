@@ -32,6 +32,7 @@
 		"@prosopo/database": "4.1.0",
 		"@prosopo/datasets": "3.1.92",
 		"@prosopo/env": "3.6.65",
+		"@prosopo/fingerprint": "2.7.55",
 		"@prosopo/ipinfo": "0.4.11",
 		"@prosopo/keyring": "2.9.98",
 		"@prosopo/load-balancer": "2.11.2",

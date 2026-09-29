@@ -103,3 +103,5 @@ export {
 	merkleRootFromLayers,
 	verifyMerkleProof,
 } from "./merkle.js";
+export type { FingerprintSummary } from "./summary.js";
+export { summariseFingerprintProof } from "./summary.js";
