@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { loadI18next } from "@prosopo/locale";
+import { loadI18next, localiseErrorMessage } from "@prosopo/locale";
 import {
 	type CheckboxProps,
 	type Component,
@@ -232,7 +232,9 @@ export const mountProcaptchaFrictionless = (
 		}
 		renderPlaceholder(
 			config.mode,
-			errorMessage || "Cannot load CAPTCHA",
+			errorMessage
+				? localiseErrorMessage(i18n, { message: errorMessage, key: errorKey })
+				: "Cannot load CAPTCHA",
 			false,
 		);
 	};
