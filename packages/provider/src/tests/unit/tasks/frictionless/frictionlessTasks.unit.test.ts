@@ -41,6 +41,7 @@ describe("Frictionless Task Manager", () => {
 	beforeEach(() => {
 		db = {
 			storeSessionRecord: vi.fn(),
+			claimSessionServerCheck: vi.fn().mockResolvedValue(true),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -652,9 +653,7 @@ describe("Frictionless Task Manager", () => {
 				undefined,
 			);
 			expect(result).toEqual({ verified: true, status: "API.USER_VERIFIED" });
-			expect(updateSession).toHaveBeenCalledWith(SESSION_ID, {
-				serverChecked: true,
-			});
+			expect(db.claimSessionServerCheck).toHaveBeenCalledWith(SESSION_ID);
 		});
 
 		it("requires the operator to forward the user's IP", async () => {
