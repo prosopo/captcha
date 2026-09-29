@@ -64,6 +64,14 @@ const queueHandles = (...handles: BundleCaptchaHandle[]): void => {
 	}
 };
 
+/** Appends the widget node to its host, as the real factory does in invisible mode. */
+const mountInto = async (containers: Element[]): Promise<CreatedWidget[]> =>
+	containers.map((host: Element) => {
+		const widget = makeWidget();
+		host.appendChild(widget.container);
+		return widget;
+	});
+
 beforeEach(async () => {
 	vi.clearAllMocks();
 	// Drop any widgets registered by a previous test — module state persists
@@ -197,6 +205,32 @@ describe("remove", () => {
 		// The skeleton is plain DOM the handle doesn't own, so destroying the
 		// widget alone would leave it behind — remove() clears the container too.
 		expect(element.innerHTML).toBe("");
+	});
+
+	it("keeps an invisible-mode button's own label", async () => {
+		mocks.createWidgets.mockImplementation(mountInto);
+		const button = document.createElement("button");
+		button.textContent = "Sign up";
+		await render(button, { siteKey: SITE_KEY });
+		expect(button.childElementCount).toBe(1);
+
+		await remove();
+
+		expect(button.textContent).toBe("Sign up");
+		expect(button.childElementCount).toBe(0);
+	});
+
+	it("does not stack widget nodes in an invisible-mode button on reset", async () => {
+		mocks.createWidgets.mockImplementation(mountInto);
+		const button = document.createElement("button");
+		button.textContent = "Sign up";
+		await render(button, { siteKey: SITE_KEY });
+
+		await reset();
+		await reset();
+
+		expect(button.childElementCount).toBe(1);
+		expect(button.textContent).toBe("Sign up");
 	});
 
 	it("makes a subsequent reset a no-op", async () => {
