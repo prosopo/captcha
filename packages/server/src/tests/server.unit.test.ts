@@ -402,7 +402,7 @@ describe("ProsopoServer.verifyProvider — authenticated (Web Bot Auth) tokens",
 		authenticated = vi
 			.spyOn(ProviderApi.prototype, "submitAuthenticatedCaptchaVerify")
 			.mockResolvedValue({ status: "ok", verified: true });
-		installLoadBalancer();
+		installProviderLookup();
 	});
 
 	afterEach(() => {
