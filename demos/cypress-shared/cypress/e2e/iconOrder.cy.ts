@@ -126,19 +126,15 @@ describe("Icon Order CAPTCHA — signup", () => {
 			.should("be.visible")
 			.realClick();
 
+		// The challenge response is imagery only — it carries no icon
+		// positions — so the spec cannot aim at a target and does not need to:
+		// the lax tolerance above makes any point inside the frame count.
 		cy.wait("@iconOrderChallenge", { timeout: 15000 })
 			.its("response")
 			.then((response) => {
 				expect(response).to.not.be.undefined;
 				expect(response?.statusCode).to.equal(200);
-			});
-
-		// The challenge response is imagery only — it carries no icon
-		// positions — so the spec cannot aim at a target and does not need to:
-		// the lax tolerance above makes any point inside the frame count.
-		cy.wait("@iconOrderChallenge")
-			.its("response.body")
-			.then((body) => {
+				const body = response?.body;
 				expect(body, "challenge body should exist").to.exist;
 				expect(body.background, "frame imagery").to.be.a("string");
 				expect(body.legend, "legend imagery").to.be.a("string");
@@ -161,7 +157,9 @@ describe("Icon Order CAPTCHA — signup", () => {
 				for (let i = 0; i < TARGET_COUNT; i++) {
 					const clientX = rect.left + rect.width * (0.2 + i * 0.25);
 					const clientY = rect.top + rect.height * (0.3 + i * 0.15);
-					cy.wrap(frame).trigger("click", {
+					cy.wrap(frame).trigger("pointerup", {
+						eventConstructor: "PointerEvent",
+						pointerType: "mouse",
 						clientX,
 						clientY,
 						force: true,
