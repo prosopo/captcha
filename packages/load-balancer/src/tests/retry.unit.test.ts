@@ -148,4 +148,20 @@ describe("retryWithBackoff", () => {
 		expect(fn).toHaveBeenCalledTimes(1);
 		expect(sleep).not.toHaveBeenCalled();
 	});
+
+	it.each([0, -1, 1.5, Number.NaN])(
+		"rejects maxAttempts %s without calling fn",
+		async (maxAttempts) => {
+			const fn = vi.fn(async () => "ok");
+			await expect(
+				retryWithBackoff(fn, {
+					maxAttempts,
+					baseDelayMs: 100,
+					maxDelayMs: 1_000,
+					sleep: noopSleep,
+				}),
+			).rejects.toThrow(/maxAttempts must be a positive integer/);
+			expect(fn).not.toHaveBeenCalled();
+		},
+	);
 });
