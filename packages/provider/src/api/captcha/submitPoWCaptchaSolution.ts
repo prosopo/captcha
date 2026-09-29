@@ -214,6 +214,7 @@ export default (env: ProviderEnvironment) =>
 				salt,
 				simdReadings,
 				clientMetaData,
+				fingerprintProof,
 			);
 
 			// Surface the routing machine's post-PoW decision (escalation +

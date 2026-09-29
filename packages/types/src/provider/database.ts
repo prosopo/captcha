@@ -789,6 +789,48 @@ export type Session = {
 // PoWCaptchaStored = PoWCaptchaUser (minus requestedAtTimestamp) + StoredCaptcha
 // Note: challenge uses PowChallengeIdSchema for runtime validation
 // The PoWCaptchaStored interface enforces the PoWChallengeId template literal type at compile time
+/**
+ * What is kept from a verified proof of fingerprint. The proof itself is not
+ * stored — its Merkle paths are large and spent once verified. See
+ * `summariseFingerprintProof` in @prosopo/fingerprint for what each field is
+ * for; in short, `root` is 1:1 with the account address by construction, and a
+ * `groupHash` carrying several `(colorDepth, hardwareConcurrency)` pairs is a
+ * client redrawing an identity a real device cannot change.
+ */
+export interface FingerprintDisclosedValuesStored {
+	timezone?: string;
+	languages?: string;
+	architecture?: number;
+	cookiesEnabled?: boolean;
+	sessionStorage?: boolean;
+	localStorage?: boolean;
+}
+
+export interface FingerprintSummaryStored {
+	root: string;
+	groupHash: string;
+	colorDepth?: number;
+	hardwareConcurrency?: number;
+	disclosed?: FingerprintDisclosedValuesStored;
+}
+
+export const FingerprintDisclosedValuesSchema = object({
+	timezone: string().optional(),
+	languages: string().optional(),
+	architecture: number().optional(),
+	cookiesEnabled: boolean().optional(),
+	sessionStorage: boolean().optional(),
+	localStorage: boolean().optional(),
+});
+
+export const FingerprintSummarySchema = object({
+	root: string(),
+	groupHash: string(),
+	colorDepth: number().optional(),
+	hardwareConcurrency: number().optional(),
+	disclosed: FingerprintDisclosedValuesSchema.optional(),
+});
+
 export const PoWCaptchaStoredSchema = object({
 	// From PoWCaptchaUser (extends PoWCaptcha)
 	challenge: PowChallengeIdSchema,
@@ -826,6 +868,7 @@ export const PoWCaptchaStoredSchema = object({
 	clickEvents: array(object({}).catchall(any())).optional(),
 	deviceCapability: string().optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
+	fingerprintSummary: FingerprintSummarySchema.optional(),
 	// Internal ML labelling (see StoredCaptcha.label)
 	label: CaptchaLabelSchema.optional(),
 	labelReason: string().optional(),
@@ -847,7 +890,10 @@ export type PendingImageCaptchaRequest = {
 
 export interface PoWCaptchaStored
 	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
-		StoredCaptcha {}
+		StoredCaptcha {
+	// Only ever present on PoW: the proof arrives with the solution submit.
+	fingerprintSummary?: FingerprintSummaryStored;
+}
 
 /**
  * Everything needed to reproduce a served puzzle exactly, for the portal's

@@ -15,6 +15,7 @@
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoError } from "@prosopo/common";
 import type { RedisWriteQueue } from "@prosopo/database";
+import { summariseFingerprintProof } from "@prosopo/fingerprint/summary";
 import type { Logger } from "@prosopo/logger";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
@@ -208,6 +209,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		salt?: string,
 		simdReadings?: string,
 		clientMetaData?: ClientMetaData,
+		fingerprintProof?: string,
 	): Promise<VerifyPowCaptchaSolutionResult> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -436,6 +438,19 @@ export class PowCaptchaManager extends CaptchaManager {
 		// updatePowCaptchaRecordResult triggers centralStreamer.streamPowUpdate(),
 		// which reads back the full record.
 		const recordUpdates: Partial<PoWCaptchaRecord> = { ...behavioralUpdates };
+		// Reduce the proof to the part a sightings aggregation can use. The
+		// routing machine validates the proof's *values* independently
+		// (postPowFingerprintProofGateRule); this only keeps what survives
+		// structural verification, and stores nothing when it does not.
+		const fingerprintSummary = summariseFingerprintProof(fingerprintProof);
+		if (fingerprintSummary) {
+			recordUpdates.fingerprintSummary = fingerprintSummary;
+		} else if (fingerprintProof) {
+			this.logger.info(() => ({
+				msg: "fingerprintProof present but not summarisable",
+				data: { challenge, bytes: fingerprintProof.length },
+			}));
+		}
 		const storedClientMetaData = toStoredClientMetaData(clientMetaData);
 		if (storedClientMetaData) {
 			recordUpdates.clientMetaData = storedClientMetaData;
