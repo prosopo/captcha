@@ -198,7 +198,7 @@ describe("Post-PoW route() escalation surfaces the image captcha", () => {
 
 		// And the image modal should be visible to the user — same DOM
 		// surface the image-flow tests reach via cy.captchaImages().
-		getWidgetElement(".prosopo-modalInner p", { timeout: 15000 }).should(
+		getWidgetElement('[data-cy="captcha-prompt"]', { timeout: 15000 }).should(
 			"be.visible",
 		);
 	});

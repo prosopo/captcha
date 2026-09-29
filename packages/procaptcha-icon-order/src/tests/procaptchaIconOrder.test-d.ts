@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import type { Ti18n, Translator } from "@prosopo/locale";
 import type {
 	FrictionlessState,
 	GetIconOrderCaptchaResponse,
@@ -25,11 +25,13 @@ import type {
 	ProcaptchaStateUpdateFn,
 } from "@prosopo/types";
 import { lightTheme } from "@prosopo/widget-skeleton";
-import type { ReactElement } from "react";
 import { assertType, describe, expectTypeOf, test } from "vitest";
-import { IconOrderCanvas } from "../components/IconOrderCanvas.js";
+import {
+	type IconOrderCanvasProps,
+	mountIconOrderCanvas,
+} from "../components/iconOrderCanvas.js";
 import type * as entrypoint from "../index.js";
-import { ProcaptchaIconOrder } from "../index.js";
+import { mountProcaptchaIconOrder } from "../index.js";
 import { Manager } from "../services/Manager.js";
 import {
 	challengeResponse,
@@ -44,19 +46,25 @@ import {
 const i18n = (): Ti18n => undefined as unknown as Ti18n;
 
 describe("the package entrypoint's types", () => {
-	test("ProcaptchaIconOrder takes the shared widget props and renders an element", () => {
-		expectTypeOf(ProcaptchaIconOrder).parameters.toEqualTypeOf<
-			[ProcaptchaProps]
+	test("mountProcaptchaIconOrder takes a host element and the shared widget props", () => {
+		expectTypeOf(mountProcaptchaIconOrder).parameters.toEqualTypeOf<
+			[HTMLElement, ProcaptchaProps]
 		>();
-		expectTypeOf(ProcaptchaIconOrder).returns.toExtend<ReactElement>();
+		expectTypeOf(mountProcaptchaIconOrder).returns.toExtend<{
+			destroy: () => void;
+		}>();
 	});
 
-	test("the inner widget's default export is not re-exported", () => {
-		// `export *` skips default exports, so consumers can only reach the lazy
-		// wrapper — the one that works without a code-splitting bundler.
-		expectTypeOf<
-			keyof typeof entrypoint
-		>().toEqualTypeOf<"ProcaptchaIconOrder">();
+	test("the entrypoint exposes the lazy wrapper and the widget itself", () => {
+		// The lazy wrapper is what works without a code-splitting bundler; the
+		// direct mount is what ProcaptchaFrictionless imports once it has already
+		// paid for the dynamic import of this package.
+		expectTypeOf<keyof typeof entrypoint>().toEqualTypeOf<
+			| "mountProcaptchaIconOrder"
+			| "loadProcaptchaIconOrder"
+			| "mountProcaptchaIconOrderWidget"
+			| "mountIconOrderCanvas"
+		>();
 	});
 
 	test("config, callbacks and i18n are all required", () => {
@@ -101,8 +109,8 @@ describe("Manager's types", () => {
 
 	test("start hands back the challenge the canvas needs to draw", () => {
 		// Unlike the POW manager, which reports only through state, the icon-order
-		// manager returns the challenge — the widget cannot render a board
-		// without the origin/target coordinates.
+		// manager returns the challenge — the widget cannot render a frame
+		// without the imagery it carries.
 		expectTypeOf<ReturnType<typeof Manager>["start"]>().toEqualTypeOf<
 			(
 				x?: number,
@@ -111,7 +119,7 @@ describe("Manager's types", () => {
 		>();
 	});
 
-	test("submitSolution takes the drop point and the full event trail", () => {
+	test("submitSolution takes the ordered clicks and the full event trail", () => {
 		expectTypeOf<
 			Parameters<ReturnType<typeof Manager>["submitSolution"]>
 		>().toEqualTypeOf<
@@ -147,26 +155,28 @@ describe("Manager's types", () => {
 });
 
 describe("IconOrderCanvas' types", () => {
+	const translator = (): Translator => undefined as unknown as Translator;
 	const onComplete = (_clicks: IconClick[], _events: IconOrderEvent[]): void =>
 		undefined;
 
 	test("every prop is required, since none has a sensible default", () => {
 		// @ts-expect-error - a frame with no imagery cannot be rendered.
-		IconOrderCanvas({ showRetry: false, submitting: false });
+		mountIconOrderCanvas({ showRetry: false, submitting: false });
 		// @ts-expect-error - `submitting` gates clicking; omitting it unlocks it.
-		IconOrderCanvas({
+		mountIconOrderCanvas({
 			background: "data:image/webp;base64,UklGRg==",
 			legend: "data:image/webp;base64,TEdORA==",
 			legendIconSize: 26,
 			onComplete,
 			showRetry: false,
 			theme: lightTheme,
+			translator: translator(),
 		});
 	});
 
-	test("the full prop set renders an element", () => {
+	test("the full prop set mounts a component that can be updated and torn down", () => {
 		expectTypeOf(
-			IconOrderCanvas({
+			mountIconOrderCanvas({
 				background: "data:image/webp;base64,UklGRg==",
 				legend: "data:image/webp;base64,TEdORA==",
 				legendIconSize: 26,
@@ -174,8 +184,12 @@ describe("IconOrderCanvas' types", () => {
 				showRetry: false,
 				submitting: false,
 				theme: lightTheme,
+				translator: translator(),
 			}),
-		).toExtend<ReactElement>();
+		).toExtend<{
+			update: (props: IconOrderCanvasProps) => void;
+			destroy: () => void;
+		}>();
 	});
 
 	test("the answer is reported synchronously, not as a promise", () => {

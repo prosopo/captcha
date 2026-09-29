@@ -16,13 +16,12 @@ import { defineConfig, mergeConfig } from "vitest/config";
 
 process.env.NODE_ENV = "test";
 
-// Everything here is a React component, so the suite renders into a real DOM.
+// Every component here builds real DOM, so the suite runs against jsdom.
 export default mergeConfig(
 	ViteTestConfig(),
 	defineConfig({
 		test: {
 			environment: "jsdom",
-			setupFiles: ["./src/tests/setup.ts"],
 		},
 	}),
 );

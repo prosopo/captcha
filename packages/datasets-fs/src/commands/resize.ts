@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { blake2b } from "@noble/hashes/blake2b";
+import { blake2b } from "@noble/hashes/blake2.js";
 import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
 import { type Data, DataSchema, type Item } from "@prosopo/types";
 import { u8aToHex } from "@prosopo/util";

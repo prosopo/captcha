@@ -40,6 +40,7 @@ const writeBundle = (
 				innerConfig?: string;
 				release?: string;
 				payloadLayout?: string;
+				keyMap?: string;
 		  }
 		| string,
 ): void => {
@@ -260,6 +261,42 @@ describe("DetectorBundlePool", () => {
 			const reloaded = new DetectorBundlePool();
 			reloaded.loadFromDir(persistDir);
 			expect(reloaded.get("laid-out")?.payloadLayout).toBe("TFY=");
+		} finally {
+			rmSync(persistDir, { recursive: true, force: true });
+		}
+	});
+
+	it("carries a bundle's second decode parameter through load and persist", () => {
+		// Same contract as payloadLayout: the bundle still loads and serves
+		// without it, so losing it anywhere on this path fails silently.
+		writeBundle(dir, "mapped", "JS", {
+			privateKey: "PK",
+			innerConfig: "C",
+			keyMap: "S00=",
+		});
+		const pool = new DetectorBundlePool();
+		pool.loadFromDir(dir);
+		expect(pool.get("mapped")?.keyMap).toBe("S00=");
+
+		const persistDir = mkdtempSync(join(tmpdir(), "pool-persist-"));
+		try {
+			persistDetectorBundlePool(
+				new Map([
+					[
+						"mapped",
+						{
+							js: "JS",
+							privateKey: "PK",
+							innerConfig: "C",
+							keyMap: "S00=",
+						},
+					],
+				]),
+				persistDir,
+			);
+			const reloaded = new DetectorBundlePool();
+			reloaded.loadFromDir(persistDir);
+			expect(reloaded.get("mapped")?.keyMap).toBe("S00=");
 		} finally {
 			rmSync(persistDir, { recursive: true, force: true });
 		}

@@ -17,9 +17,9 @@ import translationEn from "../locales/en/translation.json" with {
 	type: "json",
 };
 import {
-	TranslationKeysSchema,
 	type TranslationNode,
 	getLeafFieldPath,
+	translationKeys,
 } from "../translationKey.js";
 
 describe("getLeafFieldPath", () => {
@@ -34,7 +34,7 @@ describe("getLeafFieldPath", () => {
 	// The string is the leaf, so the path ends at its key. This used to yield
 	// [] — the recursion returned nothing for a string and the parent mapped
 	// over that empty list — which made the whole function return [] for every
-	// input and left TranslationKeysSchema an empty enum.
+	// input and left `translationKeys` empty.
 	test("emits a top-level string value under its own key", () => {
 		expect(getLeafFieldPath({ topLevel: "value" })).toEqual(["topLevel"]);
 	});
@@ -112,55 +112,29 @@ describe("getLeafFieldPath", () => {
 	});
 });
 
-describe("TranslationKeysSchema", () => {
+describe("translationKeys", () => {
 	const keys = getLeafFieldPath(translationEn as TranslationNode);
 
-	test("is non-empty — an empty z.enum would throw at module load", () => {
+	test("is non-empty — mongoose validates against an empty enum too", () => {
 		expect(keys.length).toBeGreaterThan(0);
 	});
 
-	test("accepts every key derived from the English translation", () => {
-		for (const key of keys) {
-			expect(TranslationKeysSchema.parse(key)).toBe(key);
-		}
+	test("is exactly the set of keys derived from the English translation", () => {
+		expect(new Set(translationKeys)).toEqual(new Set(keys));
 	});
 
-	test("rejects a key that is not in the English translation", () => {
-		expect(() => TranslationKeysSchema.parse("no.such.key")).toThrow();
-	});
-
-	test("rejects the empty string", () => {
-		expect(() => TranslationKeysSchema.parse("")).toThrow();
-	});
-
-	test("rejects a section name on its own — only leaves are valid keys", () => {
+	test("holds leaves, not section names", () => {
 		const [firstKey] = keys;
 		expect(firstKey).toBeDefined();
 		const section = String(firstKey).split(".")[0];
-		expect(() => TranslationKeysSchema.parse(section)).toThrow();
+		expect(translationKeys).not.toContain(section);
 	});
 
-	test("rejects non-string input", () => {
-		expect(() => TranslationKeysSchema.parse(42)).toThrow();
-		expect(() => TranslationKeysSchema.parse(null)).toThrow();
-		expect(() => TranslationKeysSchema.parse(undefined)).toThrow();
+	test("does not contain a key absent from the English translation", () => {
+		expect(translationKeys).not.toContain("no.such.key");
 	});
 
-	test("safeParse reports failure without throwing", () => {
-		const result = TranslationKeysSchema.safeParse("no.such.key");
-		expect(result.success).toBe(false);
-	});
-
-	test("is case sensitive", () => {
-		const [firstKey] = keys;
-		expect(firstKey).toBeDefined();
-		const upper = String(firstKey).toUpperCase();
-		if (upper !== firstKey) {
-			expect(() => TranslationKeysSchema.parse(upper)).toThrow();
-		}
-	});
-
-	test("exposes exactly the derived keys as enum options", () => {
-		expect(new Set(TranslationKeysSchema.options)).toEqual(new Set(keys));
+	test("does not contain the empty string", () => {
+		expect(translationKeys).not.toContain("");
 	});
 });

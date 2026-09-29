@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LanguageSchema } from "@prosopo/locale";
+import { LanguageCodes } from "@prosopo/locale";
 import type { input } from "zod";
 import { array, literal } from "zod";
 import { number } from "zod";
@@ -23,7 +23,7 @@ import { union } from "zod";
 import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
 import { Mode, ModeEnum } from "./mode.js";
-import { StartModeEnum, StartModeSchema } from "./startMode.js";
+import { type StartMode, StartModeEnum, StartModes } from "./startMode.js";
 export { Mode, ModeEnum };
 export type { ModeType } from "./mode.js";
 import {
@@ -41,7 +41,7 @@ import {
 	PENALTY_WEBVIEW_DEFAULT,
 } from "./frictionless.js";
 // Re-exported to consumers by ./index.js, not from here.
-import { Placement, PlacementEnum } from "./placement.js";
+import { PlacementEnum, type PlacementType, Placements } from "./placement.js";
 import {
 	DEFAULT_AUDIO_CAPTCHA_CACHED_TIMEOUT,
 	DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT,
@@ -57,6 +57,7 @@ import {
 	DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+	DEFAULT_PROVIDER_REQUEST_TIMEOUT_MS,
 	DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT,
 	DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT,
@@ -300,6 +301,13 @@ export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
 	object({
 		serverUrl: string().url().optional(),
 		timeouts: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
+		// How long a verify call to the provider may take before it fails, so a
+		// stalled provider cannot hold the site owner's request open.
+		providerRequestTimeoutMs: number()
+			.int()
+			.positive()
+			.optional()
+			.default(DEFAULT_PROVIDER_REQUEST_TIMEOUT_MS),
 	}),
 );
 
@@ -325,6 +333,15 @@ export type ProsopoClientConfigInput = input<typeof ProsopoClientConfigSchema>;
 export type ProsopoClientConfigOutput = output<
 	typeof ProsopoClientConfigSchema
 >;
+
+// Built here rather than exported from @prosopo/locale: that package is on the
+// widget's critical path, and a zod enum of language codes would put the whole
+// of zod there for a list of strings.
+const LanguageSchema = zEnum(LanguageCodes as [string, ...string[]]);
+
+const StartModeSchema = zEnum(StartModes as [StartMode, ...StartMode[]]);
+
+const Placement = zEnum(Placements as [PlacementType, ...PlacementType[]]);
 
 const ThemeType = union([literal("light"), literal("dark")]);
 

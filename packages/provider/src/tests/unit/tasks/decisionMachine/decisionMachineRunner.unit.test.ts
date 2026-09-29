@@ -715,5 +715,66 @@ describe("DecisionMachineRunner", () => {
 			expect(second.reason).toBe("new");
 			expect(db.getDecisionMachineArtifact).toHaveBeenCalledTimes(4);
 		});
+
+		it("flushes a runner built before the invalidation but used after it", async () => {
+			// The registry this replaced could only reach runners it already held.
+			// The generation counter has to reach them by the value they carry, so
+			// pin the case that distinguishes the two.
+			const artifactOld = buildArtifact(
+				'module.exports.decide = () => ({ decision: "allow", reason: "old" });',
+				DecisionMachineScope.Global,
+			);
+			const artifactNew = buildArtifact(
+				'module.exports.decide = () => ({ decision: "allow", reason: "new" });',
+				DecisionMachineScope.Global,
+			);
+			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(artifactOld)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(artifactNew);
+
+			const input = {
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed" as const,
+				headers: {},
+			};
+			await runner.decide(input);
+			invalidateAllDecisionMachineArtifactCaches();
+
+			expect((await runner.decide(input)).reason).toBe("new");
+		});
+
+		it("does not retain runners, so construction is not bounded by a registry", async () => {
+			// Runners are built per request. The previous implementation enrolled
+			// each one in a module-level Set that nothing pruned, so it grew
+			// without bound and construction eventually began to fail.
+			expect(() => {
+				for (let i = 0; i < 100_000; i++) {
+					new DecisionMachineRunner(db);
+				}
+			}).not.toThrow();
+
+			// Still functional, and still reachable by an invalidation.
+			const artifact = buildArtifact(
+				'module.exports.decide = () => ({ decision: "allow", reason: "fresh" });',
+				DecisionMachineScope.Global,
+			);
+			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(artifact);
+
+			invalidateAllDecisionMachineArtifactCaches();
+			const fresh = new DecisionMachineRunner(db);
+			const result = await fresh.decide({
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed",
+				headers: {},
+			});
+
+			expect(result.reason).toBe("fresh");
+		});
 	});
 });

@@ -346,6 +346,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "このメールアドレスからの送信が多すぎます",
 		"VPN_BLOCKED": "このサイトではVPN接続からのリクエストは許可されていません",
 		"PROXY_BLOCKED": "このサイトではプロキシサーバーからのリクエストは許可されていません",
+		"TOO_MANY_LOCALHOST": "このサイトキーに対する localhost からの CAPTCHA リクエストが多すぎます",
 		"TOR_BLOCKED": "このサイトではTor出口ノードからのリクエストは許可されていません",
 		"ABUSER_BLOCKED": "このサイトでは不正行為としてフラグが付けられたネットワークからのリクエストは許可されていません",
 		"DATACENTER_BLOCKED": "このサイトではデータセンターのIPアドレスからのリクエストは許可されていません",
@@ -390,6 +391,15 @@
 			"POSITION": "左から {{x}} パーセント、上から {{y}} パーセント",
 			"CHECKING": "回答を確認しています",
 			"RETRY_ANNOUNCEMENT": "惜しい。新しいパズルが読み込まれ、ピースは開始位置に戻りました。"
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "アイコン順序チャレンジ",
+			"SELECT": "この順番で選択してください",
+			"RETRY": "惜しい — もう一度お試しください",
+			"LEGEND_ALT": "選択するアイコン（順番どおり）",
+			"RESET": "リセット",
+			"CHECKING": "確認中…",
+			"SUBMIT": "OK"
 		},
 		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
 		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",

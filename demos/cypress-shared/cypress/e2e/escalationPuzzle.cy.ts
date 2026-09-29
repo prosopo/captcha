@@ -209,7 +209,7 @@ describe("Post-PoW route() escalation surfaces the puzzle captcha", () => {
 
 		// And the puzzle modal should be visible to the user — same DOM
 		// surface the puzzle-flow tests reach.
-		getWidgetElement(".prosopo-modalInner p", { timeout: 15000 }).should(
+		getWidgetElement('[data-cy="captcha-prompt"]', { timeout: 15000 }).should(
 			"be.visible",
 		);
 	});

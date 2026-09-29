@@ -53,6 +53,8 @@ export enum ApiParams {
 	bundleId = "bundleId",
 	detectorScript = "detectorScript",
 	useProviderBundle = "useProviderBundle",
+	clientUrl = "clientUrl",
+	assetOrigin = "assetOrigin",
 	ip = "ip",
 	expirationInSeconds = "expirationInSeconds",
 	enabled = "enabled",

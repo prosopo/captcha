@@ -15,6 +15,7 @@
 import type { Logger } from "@prosopo/logger";
 import type {
 	CounterSpec,
+	DetectorData,
 	IFrictionlessTypes,
 	RoutingMachineBaseline,
 	RoutingMachineInput,
@@ -38,6 +39,9 @@ export interface RoutingContext {
 	score: number;
 	platform: RoutingMachinePlatform;
 	raw: RoutingMachineRawSignals;
+	// Everything the detector reported, forwarded to the machine as
+	// `input.d`. See RoutingMachineInputBase.d.
+	d?: DetectorData;
 	// The sitekey's image-round bounds, so a router-supplied
 	// `solvedImagesCount` can be held to the same floor and ceiling every
 	// other path respects. Optional because the dedup replay only asks the
@@ -89,6 +93,7 @@ export const applyRouter = async (
 			score: ctx.score,
 			platform: ctx.platform,
 			raw: ctx.raw,
+			...(ctx.d !== undefined && { d: ctx.d }),
 		};
 
 		const specs = await runner.getRequiredCounters(partial, logger);

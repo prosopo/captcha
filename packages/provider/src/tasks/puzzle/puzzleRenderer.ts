@@ -26,6 +26,7 @@ import {
 	puzzlePieceScaleMaxDefault,
 	puzzlePieceScaleMinDefault,
 } from "@prosopo/types";
+import { measureSync } from "../../api/metrics.js";
 import {
 	getPuzzleBackgroundBuffer,
 	initPuzzleBackgroundBuffer,
@@ -148,13 +149,17 @@ export const renderPuzzleImages = async (
 		throw new Error("puzzle renderer: no background available");
 	}
 
-	const rendered = await renderPuzzle(
-		background,
-		placement,
-		pieceSize !== undefined
-			? { ...DEFAULT_GEOMETRY, pieceSize }
-			: DEFAULT_GEOMETRY,
-		settings,
+	// Only the decoy paint and notch cut are billed to the span; renderPuzzle
+	// hands the encode to sharp, which runs off the event loop.
+	const rendered = await measureSync("puzzle_render", () =>
+		renderPuzzle(
+			background,
+			placement,
+			pieceSize !== undefined
+				? { ...DEFAULT_GEOMETRY, pieceSize }
+				: DEFAULT_GEOMETRY,
+			settings,
+		),
 	);
 
 	return {

@@ -1,8 +1,8 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { pbkdf2 as pbkdf2Js } from "@noble/hashes/pbkdf2";
-import { sha512 } from "@noble/hashes/sha512";
+import { pbkdf2 as pbkdf2Js } from "@noble/hashes/pbkdf2.js";
+import { sha512 } from "@noble/hashes/sha2.js";
 
 import { u8aToU8a } from "@polkadot/util";
 

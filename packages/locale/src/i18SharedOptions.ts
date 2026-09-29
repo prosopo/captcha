@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { getProcess } from "./process.js";
-import { LanguageSchema, Languages } from "./translations.js";
+import { LanguageCodes, Languages } from "./translations.js";
 
 // Read through getProcess() so the module stays loadable in a plain browser
 // runtime where `process` is undefined. Without that guard, any side-effectful
@@ -22,8 +22,8 @@ const logLevel = getProcess()?.env?.PROSOPO_LOG_LEVEL;
 
 export const i18nSharedOptions = {
 	debug: logLevel === "debug",
-	fallbackLng: LanguageSchema.enum.en,
+	fallbackLng: Languages.english,
 	namespace: "translation",
-	supportedLngs: Object.values(Languages),
+	supportedLngs: LanguageCodes,
 	nonExplicitSupportedLngs: false,
 };

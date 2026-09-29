@@ -26,6 +26,15 @@
 			"CHECKING": "Checking your answer",
 			"RETRY_ANNOUNCEMENT": "Not quite. A new puzzle has loaded and the piece is back at the start."
 		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Icon order challenge",
+			"SELECT": "Select in this order",
+			"RETRY": "Not quite — try again",
+			"LEGEND_ALT": "Icons to select, in order",
+			"RESET": "Reset",
+			"CHECKING": "Checking…",
+			"SUBMIT": "OK"
+		},
 		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
 		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
 		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
@@ -151,6 +160,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Too many submissions from this email address",
 		"VPN_BLOCKED": "Requests from VPN connections are not allowed for this site",
 		"PROXY_BLOCKED": "Requests from proxy servers are not allowed for this site",
+		"TOO_MANY_LOCALHOST": "Too many CAPTCHA requests from localhost for this site key",
 		"TOR_BLOCKED": "Requests from Tor exit nodes are not allowed for this site",
 		"ABUSER_BLOCKED": "Requests from networks flagged for abuse are not allowed for this site",
 		"DATACENTER_BLOCKED": "Requests from datacenter IP addresses are not allowed for this site",

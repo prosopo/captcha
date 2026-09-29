@@ -10,9 +10,14 @@ on:
     # CI. Only paths that cannot possibly affect this workflow belong below.
     #
     # Safe against the "required check never reports" trap: the one required
-    # context on main is `check`, and changesets.yml publishes a job named
-    # `check` with no path filter at all, so a PR touching only ignored paths
-    # still gets a `check` and does not sit pending forever.
+    # context on main is `check`, and required-check.yml publishes it with no
+    # path filter at all, so a PR touching only ignored paths still gets a
+    # `check` and does not sit pending forever.
+    #
+    # That role used to be filled by changesets.yml, which published a job also
+    # *named* `check` -- which is precisely why the required context resolved
+    # from whichever of seven same-named jobs reported first, and why this
+    # paragraph used to describe the defect as the safeguard.
     paths-ignore:
       - '.changeset/**' # release metadata; nothing here reads it
       - '.github/ISSUE_TEMPLATE/**'
@@ -50,6 +55,7 @@ defaults:
 
 jobs:
   check:
+    name: tests
     # Hosted, deliberately, and not routed through `vars.GH_RUNNER` like the
     # other repos: this repository is public, so a fork PR would run on the
     # self-hosted fleet -- executing arbitrary contributor code on hardware we
@@ -148,3 +154,26 @@ jobs:
             --success "first" --kill-others
 
       - run: docker compose --file ./docker/docker-compose.test.yml down
+
+  # The napi crates carry Rust unit tests that `npm run test:all` never runs:
+  # turbo only drives the JS suites. Kept out of `check` so a Rust failure is
+  # reported on its own and does not wait for the full JS build.
+  cargo-test:
+    name: cargo test (${{ matrix.crate }})
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    strategy:
+      fail-fast: false
+      matrix:
+        # Independent crates, each with its own lockfile. A new
+        # packages/native-* crate is not tested until it is listed here.
+        crate:
+          [packages/native-ja4, packages/native-merkle, packages/native-puzzle]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+
+      - name: cargo test
+        working-directory: ${{ matrix.crate }}
+        run: cargo test --release --locked

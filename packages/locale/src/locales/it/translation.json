@@ -47,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Troppi invii da questo indirizzo email",
 		"VPN_BLOCKED": "Le richieste da connessioni VPN non sono consentite per questo sito",
 		"PROXY_BLOCKED": "Le richieste da server proxy non sono consentite per questo sito",
+		"TOO_MANY_LOCALHOST": "Troppe richieste CAPTCHA da localhost per questa chiave del sito",
 		"TOR_BLOCKED": "Le richieste da nodi di uscita Tor non sono consentite per questo sito",
 		"ABUSER_BLOCKED": "Le richieste da reti segnalate per abuso non sono consentite per questo sito",
 		"DATACENTER_BLOCKED": "Le richieste da indirizzi IP di data center non sono consentite per questo sito",
@@ -91,6 +92,15 @@
 			"POSITION": "{{x}} percento da sinistra, {{y}} percento dall'alto",
 			"CHECKING": "Verifica della tua risposta in corso",
 			"RETRY_ANNOUNCEMENT": "Quasi. È stato caricato un nuovo puzzle e il pezzo è tornato all'inizio."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Sfida sull’ordine delle icone",
+			"SELECT": "Seleziona in questo ordine",
+			"RETRY": "Quasi — riprova",
+			"LEGEND_ALT": "Icone da selezionare, in ordine",
+			"RESET": "Reimposta",
+			"CHECKING": "Verifica in corso…",
+			"SUBMIT": "OK"
 		},
 		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
 		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",

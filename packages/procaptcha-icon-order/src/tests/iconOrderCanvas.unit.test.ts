@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Translator } from "@prosopo/locale";
+import type { Component } from "@prosopo/procaptcha-common";
 import type { IconClick, IconOrderEvent } from "@prosopo/types";
-import { type Theme, lightTheme } from "@prosopo/widget-skeleton";
-import { type ReactElement, act, createElement } from "react";
-import { type Root, createRoot } from "react-dom/client";
+import { lightTheme } from "@prosopo/widget-skeleton";
 import {
 	type Mock,
 	afterEach,
@@ -25,7 +25,10 @@ import {
 	test,
 	vi,
 } from "vitest";
-import { IconOrderCanvas } from "../components/IconOrderCanvas.js";
+import {
+	type IconOrderCanvasProps,
+	mountIconOrderCanvas,
+} from "../components/iconOrderCanvas.js";
 
 /**
  * The canvas is the only part of the icon-order flow the user touches: it owns
@@ -36,25 +39,25 @@ import { IconOrderCanvas } from "../components/IconOrderCanvas.js";
 const CONTAINER_WIDTH = 300;
 const CONTAINER_HEIGHT = 200;
 
-interface CanvasProps {
-	background: string;
-	legend: string;
-	legendIconSize: number;
-	onComplete: Mock<(clicks: IconClick[], events: IconOrderEvent[]) => void>;
-	showRetry: boolean;
-	submitting: boolean;
-	theme: Theme;
-	audioAlternative?: {
-		onRequestAudio: () => void;
-		label: string;
-	};
-}
+/**
+ * The real translator reaches for an http backend the moment it is asked for a
+ * string, which jsdom refuses. The English defaults the canvas ships stand in
+ * instead, so the assertions below read as the copy a user is actually given.
+ */
+const translator = (): Translator => ({
+	t: (key: string, options?: Record<string, unknown>): string =>
+		(options?.defaultValue as string | undefined) ?? key,
+	isReady: () => true,
+	subscribe: () => () => undefined,
+	i18n: {} as Translator["i18n"],
+});
 
-let container: HTMLDivElement;
-let root: Root;
+let canvas: Component<IconOrderCanvasProps> | undefined;
 let onComplete: Mock<(clicks: IconClick[], events: IconOrderEvent[]) => void>;
 
-const props = (overrides: Partial<CanvasProps> = {}): CanvasProps => ({
+const props = (
+	overrides: Partial<IconOrderCanvasProps> = {},
+): IconOrderCanvasProps => ({
 	background: "data:image/webp;base64,UklGRg==",
 	legend: "data:image/webp;base64,TEdORA==",
 	legendIconSize: 26,
@@ -62,26 +65,41 @@ const props = (overrides: Partial<CanvasProps> = {}): CanvasProps => ({
 	showRetry: false,
 	submitting: false,
 	theme: lightTheme,
+	translator: translator(),
 	...overrides,
 });
 
-const render = (canvasProps: CanvasProps): void => {
-	act(() => {
-		root.render(createElement(IconOrderCanvas, canvasProps) as ReactElement);
-	});
+const render = (canvasProps: IconOrderCanvasProps): void => {
+	if (canvas) {
+		canvas.update(canvasProps);
+	} else {
+		canvas = mountIconOrderCanvas(canvasProps);
+	}
 };
 
-const query = (selector: string): HTMLElement => {
-	const element = container.querySelector<HTMLElement>(selector);
+const destroy = (): void => {
+	canvas?.destroy();
+	canvas = undefined;
+};
+
+/**
+ * The canvas puts itself on the body — it has to escape the query container
+ * the widget skeleton wraps it in — so everything that reads the rendered
+ * output reads the body.
+ */
+const overlay = (): HTMLElement => document.body;
+
+const query = <E extends HTMLElement>(selector: string): E => {
+	const element = overlay().querySelector<E>(selector);
 	if (!element) throw new Error(`expected ${selector} to be rendered`);
 	return element;
 };
 
 const frame = (): HTMLElement => query('[data-cy="prosopo-icon-order-frame"]');
 const submitButton = (): HTMLButtonElement =>
-	query('[data-cy="prosopo-icon-order-submit"]') as HTMLButtonElement;
+	query<HTMLButtonElement>('[data-cy="prosopo-icon-order-submit"]');
 const resetButton = (): HTMLButtonElement =>
-	query('[data-cy="prosopo-icon-order-reset"]') as HTMLButtonElement;
+	query<HTMLButtonElement>('[data-cy="prosopo-icon-order-reset"]');
 
 /**
  * jsdom gives every element a zero-sized box, which the component treats as
@@ -94,39 +112,34 @@ const stubFrameRect = (
 	left = 0,
 	top = 0,
 ): void => {
-	frame().getBoundingClientRect = () =>
-		({
-			width,
-			height,
-			left,
-			top,
-			right: left + width,
-			bottom: top + height,
-			x: left,
-			y: top,
-			toJSON: () => ({}),
-		}) as DOMRect;
+	frame().getBoundingClientRect = (): DOMRect => ({
+		width,
+		height,
+		left,
+		top,
+		right: left + width,
+		bottom: top + height,
+		x: left,
+		y: top,
+		toJSON: () => ({}),
+	});
 };
 
 /**
  * The frame listens for `pointerup` only, so that is what these dispatch.
  * jsdom has no `PointerEvent` constructor; `MouseEvent` carries the
- * `clientX`/`clientY` React reads and dispatch matches on `type` alone.
+ * `clientX`/`clientY` the component reads and dispatch matches on `type` alone.
  */
 const clickFrame = (clientX: number, clientY: number): void => {
-	act(() => {
-		frame().dispatchEvent(
-			new MouseEvent("pointerup", { bubbles: true, clientX, clientY }),
-		);
-	});
+	frame().dispatchEvent(
+		new MouseEvent("pointerup", { bubbles: true, clientX, clientY }),
+	);
 };
 
 const moveOverFrame = (clientX: number, clientY: number): void => {
-	act(() => {
-		frame().dispatchEvent(
-			new MouseEvent("pointermove", { bubbles: true, clientX, clientY }),
-		);
-	});
+	frame().dispatchEvent(
+		new MouseEvent("pointermove", { bubbles: true, clientX, clientY }),
+	);
 };
 
 /**
@@ -140,48 +153,37 @@ const tapFrame = (clientX: number, clientY: number): void => {
 	Object.defineProperty(touchEnd, "changedTouches", {
 		value: [{ clientX, clientY }],
 	});
-	act(() => {
-		frame().dispatchEvent(
-			new MouseEvent("pointerup", { bubbles: true, clientX, clientY }),
-		);
-		frame().dispatchEvent(touchEnd);
-		frame().dispatchEvent(
-			new MouseEvent("click", { bubbles: true, clientX, clientY }),
-		);
-	});
+	frame().dispatchEvent(
+		new MouseEvent("pointerup", { bubbles: true, clientX, clientY }),
+	);
+	frame().dispatchEvent(touchEnd);
+	frame().dispatchEvent(
+		new MouseEvent("click", { bubbles: true, clientX, clientY }),
+	);
 };
 
 const markers = (): string[] =>
 	Array.from(frame().querySelectorAll("div"))
-		.map((el) => el.textContent ?? "")
-		.filter((text) => /^\d+$/.test(text));
+		.map((element: HTMLDivElement) => element.textContent ?? "")
+		.filter((text: string) => /^\d+$/.test(text));
 
-const click = (): void => {
-	act(() => {
-		submitButton().dispatchEvent(new MouseEvent("click", { bubbles: true }));
-	});
+const submit = (): void => {
+	submitButton().dispatchEvent(new MouseEvent("click", { bubbles: true }));
 };
 
 const reset = (): void => {
-	act(() => {
-		resetButton().dispatchEvent(new MouseEvent("click", { bubbles: true }));
-	});
+	resetButton().dispatchEvent(new MouseEvent("click", { bubbles: true }));
 };
+
+const dialog = (): HTMLElement => query('[role="dialog"]');
 
 beforeEach(() => {
 	onComplete = vi.fn<(clicks: IconClick[], events: IconOrderEvent[]) => void>();
-	container = document.createElement("div");
-	document.body.appendChild(container);
-	act(() => {
-		root = createRoot(container);
-	});
+	canvas = undefined;
 });
 
 afterEach(() => {
-	act(() => {
-		root.unmount();
-	});
-	container.remove();
+	destroy();
 	vi.useRealTimers();
 	vi.restoreAllMocks();
 });
@@ -189,7 +191,7 @@ afterEach(() => {
 describe("what it puts on screen", () => {
 	test("shows the legend so the user knows which icons to click", () => {
 		render(props());
-		const legend = container.querySelector<HTMLImageElement>(
+		const legend = overlay().querySelector<HTMLImageElement>(
 			'img[alt="Icons to select, in order"]',
 		);
 		expect(legend?.src).toContain("TEdORA==");
@@ -198,12 +200,18 @@ describe("what it puts on screen", () => {
 
 	test("asks the user to select in order on the first go", () => {
 		render(props());
-		expect(container.textContent).toContain("Select in this order");
+		expect(overlay().textContent).toContain("Select in this order");
 	});
 
 	test("says try again after a failed attempt", () => {
 		render(props({ showRetry: true }));
-		expect(container.textContent).toContain("Not quite");
+		expect(overlay().textContent).toContain("Not quite");
+	});
+
+	test("switches to the retry prompt when a failure arrives as an update", () => {
+		render(props());
+		render(props({ showRetry: true }));
+		expect(overlay().textContent).toContain("Not quite");
 	});
 
 	test("starts with no markers and both buttons disabled", () => {
@@ -217,41 +225,31 @@ describe("what it puts on screen", () => {
 		// The component only receives imagery. If this ever fails, something
 		// has started passing target geometry to the client.
 		render(props());
-		expect(container.innerHTML).not.toContain("targets");
-	});
-});
-
-describe("the audio accessibility alternative", () => {
-	const audioButton = (): HTMLButtonElement | null =>
-		container.querySelector<HTMLButtonElement>(
-			'[data-cy="prosopo-audio-alternative"]',
-		);
-
-	test("is not offered unless the site turned it on", () => {
-		render(props());
-		expect(audioButton()).toBeNull();
+		expect(overlay().innerHTML).not.toContain("targets");
 	});
 
-	test("is offered, labelled, when the site turned it on", () => {
-		render(
-			props({
-				audioAlternative: {
-					onRequestAudio: vi.fn(),
-					label: "Use audio instead",
-				},
-			}),
-		);
-		expect(audioButton()?.textContent).toBe("Use audio instead");
+	test("says it is checking while a solution is in flight", () => {
+		render(props({ submitting: true }));
+		expect(submitButton().textContent).toBe("Checking…");
 	});
 
-	test("asks for audio when pressed, without submitting an answer", () => {
-		const onRequestAudio = vi.fn<() => void>();
-		render(props({ audioAlternative: { onRequestAudio, label: "Audio" } }));
-		act(() => {
-			audioButton()?.click();
-		});
-		expect(onRequestAudio).toHaveBeenCalledTimes(1);
-		expect(onComplete).not.toHaveBeenCalled();
+	test("the shake on a retry stops on its own", () => {
+		vi.useFakeTimers();
+		render(props({ showRetry: true }));
+		vi.advanceTimersByTime(600);
+		// Nothing to assert beyond survival: the timer fires into a live
+		// component rather than leaking past the shake.
+		expect(frame()).toBeDefined();
+	});
+
+	test("unmounting mid-shake cancels the timer", () => {
+		vi.useFakeTimers();
+		render(props({ showRetry: true }));
+		destroy();
+		vi.advanceTimersByTime(600);
+		expect(
+			overlay().querySelector('[data-cy="prosopo-icon-order-frame"]'),
+		).toBeNull();
 	});
 });
 
@@ -265,12 +263,20 @@ describe("capturing an ordered answer", () => {
 		expect(markers()).toEqual(["1", "2", "3"]);
 	});
 
+	test("enables both buttons once there is something to submit", () => {
+		render(props());
+		stubFrameRect();
+		clickFrame(60, 50);
+		expect(submitButton().disabled).toBe(false);
+		expect(resetButton().disabled).toBe(false);
+	});
+
 	test("submits the clicks in the order they were made", () => {
 		render(props());
 		stubFrameRect();
 		clickFrame(60, 50);
 		clickFrame(180, 90);
-		click();
+		submit();
 
 		expect(onComplete).toHaveBeenCalledOnce();
 		const [clicks] = onComplete.mock.calls[0] ?? [];
@@ -287,7 +293,7 @@ describe("capturing an ordered answer", () => {
 		stubFrameRect();
 		clickFrame(60, 50);
 		clickFrame(60, 50);
-		click();
+		submit();
 		const [clicks] = onComplete.mock.calls[0] ?? [];
 		expect(clicks).toHaveLength(2);
 	});
@@ -316,7 +322,7 @@ describe("capturing an ordered answer", () => {
 
 		tapFrame(60, 50);
 		tapFrame(180, 90);
-		click();
+		submit();
 
 		const [clicks] = onComplete.mock.calls[0] ?? [];
 		expect(clicks).toEqual([
@@ -328,7 +334,7 @@ describe("capturing an ordered answer", () => {
 
 	test("does not submit an empty answer", () => {
 		render(props());
-		click();
+		submit();
 		expect(onComplete).not.toHaveBeenCalled();
 	});
 
@@ -338,6 +344,26 @@ describe("capturing an ordered answer", () => {
 		clickFrame(60, 50);
 		expect(markers()).toEqual([]);
 	});
+
+	test("does not submit again while a submission is in flight", () => {
+		render(props());
+		stubFrameRect();
+		clickFrame(60, 50);
+		render(props({ submitting: true }));
+		submit();
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	test("the answer handed over is a copy, safe from later clicks", () => {
+		render(props());
+		stubFrameRect();
+		clickFrame(60, 50);
+		submit();
+		clickFrame(180, 90);
+		const [clicks, events] = onComplete.mock.calls[0] ?? [];
+		expect(clicks).toHaveLength(1);
+		expect(events).toHaveLength(1);
+	});
 });
 
 describe("translating pointer positions", () => {
@@ -345,7 +371,7 @@ describe("translating pointer positions", () => {
 		render(props());
 		stubFrameRect(CONTAINER_WIDTH, CONTAINER_HEIGHT, 40, 25);
 		clickFrame(100, 75);
-		click();
+		submit();
 		const [clicks] = onComplete.mock.calls[0] ?? [];
 		expect(clicks).toEqual([{ x: 60, y: 50 }]);
 	});
@@ -356,7 +382,7 @@ describe("translating pointer positions", () => {
 		render(props());
 		stubFrameRect(CONTAINER_WIDTH / 2, CONTAINER_HEIGHT / 2);
 		clickFrame(75, 50);
-		click();
+		submit();
 		const [clicks] = onComplete.mock.calls[0] ?? [];
 		expect(clicks).toEqual([{ x: 150, y: 100 }]);
 	});
@@ -377,7 +403,7 @@ describe("the pointer trail", () => {
 		moveOverFrame(10, 10);
 		moveOverFrame(30, 20);
 		clickFrame(60, 50);
-		click();
+		submit();
 		const [, events] = onComplete.mock.calls[0] ?? [];
 		expect(events?.length).toBeGreaterThanOrEqual(3);
 		expect(events?.at(-1)).toMatchObject({ x: 60, y: 50 });
@@ -387,12 +413,23 @@ describe("the pointer trail", () => {
 		render(props());
 		stubFrameRect();
 		clickFrame(60, 50);
-		click();
+		submit();
 		const [, events] = onComplete.mock.calls[0] ?? [];
 		for (const event of events ?? []) {
 			expect(event.t).toBeLessThan(60_000);
 			expect(event.t).toBeGreaterThanOrEqual(0);
 		}
+	});
+
+	test("movement is not recorded while a submission is in flight", () => {
+		render(props({ submitting: true }));
+		stubFrameRect();
+		moveOverFrame(10, 10);
+		render(props());
+		clickFrame(60, 50);
+		submit();
+		const [, events] = onComplete.mock.calls[0] ?? [];
+		expect(events).toHaveLength(1);
 	});
 });
 
@@ -408,11 +445,72 @@ describe("a fresh challenge", () => {
 		expect(markers()).toEqual([]);
 	});
 
+	test("a new legend on its own clears the answer too", () => {
+		render(props());
+		stubFrameRect();
+		clickFrame(60, 50);
+		render(props({ legend: "data:image/webp;base64,TkVXTEc=" }));
+		expect(markers()).toEqual([]);
+	});
+
 	test("leaves the answer alone on a re-render with the same imagery", () => {
 		render(props());
 		stubFrameRect();
 		clickFrame(60, 50);
 		render(props({ showRetry: true }));
 		expect(markers()).toEqual(["1"]);
+	});
+});
+
+describe("the surface it is presented on", () => {
+	test("the panel announces itself as a named dialog", () => {
+		render(props());
+		expect(dialog().getAttribute("aria-label")).toBe("Icon order challenge");
+		expect(dialog().getAttribute("aria-modal")).toBe("true");
+	});
+
+	test("escape dismisses the challenge", () => {
+		const onDismiss = vi.fn<() => void>();
+		render(props({ onDismiss }));
+		document.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+		);
+		expect(onDismiss).toHaveBeenCalledTimes(1);
+	});
+
+	test("the background image is left out of the reading order", () => {
+		render(props());
+		const background = frame().querySelector("img");
+		expect(background?.getAttribute("alt")).toBe("");
+	});
+});
+
+describe("after it goes away", () => {
+	test("it takes its overlay with it", () => {
+		render(props());
+		destroy();
+		expect(
+			overlay().querySelector('[data-cy="prosopo-icon-order-frame"]'),
+		).toBeNull();
+	});
+
+	test("its listeners go with it", () => {
+		const onDismiss = vi.fn<() => void>();
+		render(props({ onDismiss }));
+		stubFrameRect();
+		const detached = frame();
+		destroy();
+		detached.dispatchEvent(
+			new MouseEvent("pointerup", { bubbles: true, clientX: 60, clientY: 50 }),
+		);
+		document.dispatchEvent(
+			new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+		);
+		expect(
+			Array.from(detached.querySelectorAll("div")).filter(
+				(element: HTMLDivElement) => /^\d+$/.test(element.textContent ?? ""),
+			),
+		).toHaveLength(0);
+		expect(onDismiss).not.toHaveBeenCalled();
 	});
 });

@@ -47,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Забагато надсилань з цієї адреси електронної пошти",
 		"VPN_BLOCKED": "Запити з VPN-з'єднань не дозволені для цього сайту",
 		"PROXY_BLOCKED": "Запити з проксі-серверів не дозволені для цього сайту",
+		"TOO_MANY_LOCALHOST": "Забагато запитів CAPTCHA з localhost для цього ключа сайту",
 		"TOR_BLOCKED": "Запити з вихідних вузлів Tor не дозволені для цього сайту",
 		"ABUSER_BLOCKED": "Запити з мереж, позначених за зловживання, не дозволені для цього сайту",
 		"DATACENTER_BLOCKED": "Запити з IP-адрес дата-центрів не дозволені для цього сайту",
@@ -390,6 +391,15 @@
 			"POSITION": "{{x}} відсотків зліва, {{y}} відсотків згори",
 			"CHECKING": "Перевіряємо вашу відповідь",
 			"RETRY_ANNOUNCEMENT": "Майже. Завантажено новий пазл, і фрагмент знову на початку."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Завдання на порядок значків",
+			"SELECT": "Виберіть у цьому порядку",
+			"RETRY": "Майже — спробуйте ще раз",
+			"LEGEND_ALT": "Значки для вибору, по порядку",
+			"RESET": "Скинути",
+			"CHECKING": "Перевірка…",
+			"SUBMIT": "OK"
 		},
 		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
 		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",

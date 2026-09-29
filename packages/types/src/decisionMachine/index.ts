@@ -34,7 +34,7 @@ import type {
 	RequestHeaders,
 } from "../provider/api.js";
 import type { ScoreComponents } from "../provider/database.js";
-import type { SimdReadings } from "../provider/detection.js";
+import type { DetectorData, SimdReadings } from "../provider/detection.js";
 import type { FrictionlessReason } from "../provider/reasons.js";
 
 export type EnrichedDnsEvent = {
@@ -85,6 +85,7 @@ export type DecisionMachineBehavioralDataPacked = {
 	c1: unknown[];
 	c2: unknown[];
 	c3: unknown[];
+	c4?: unknown[];
 	d: string;
 };
 
@@ -161,6 +162,17 @@ export type DecisionMachineInput = {
 	ruleType?: string[];
 	webView?: boolean;
 	iFrame?: boolean;
+	// Page URLs the widget was rendered on, read back from the Session
+	// record (origin + path only; query string, fragment and any embedded
+	// credentials stripped — see sanitisePageUrl). `currentUrl` is the
+	// top-frame URL; `iframeUrl` is the widget's own frame URL and is
+	// undefined when the widget IS the top frame. Undefined when the client
+	// omitted the field or the session pre-dates it.
+	//
+	// Both are client-reported and are NOT cross-checked against the request
+	// Origin / Referer, so a rule must not grant an exemption on them alone.
+	currentUrl?: string;
+	iframeUrl?: string;
 	// Checkbox click + shape clicks embedded in the solution salt. For pow
 	// and puzzle this is `[[[checkboxX, checkboxY]]]` (single click); for
 	// image the outer array has one entry per tile with the first tile's
@@ -204,6 +216,13 @@ export type DecisionMachineInput = {
 	// egress-sensitive TCP-stack rules and supplies the action they inherit —
 	// see TrafficCategoryPolicies.
 	trafficPolicies?: TrafficCategoryPolicies;
+	// Everything the detector reported for the session this verify belongs
+	// to, as persisted on the Session record. Keys are whatever the detector
+	// chose to emit: nothing in this repo declares them, and a rule may read
+	// a key that no release of `types` or `provider` has ever heard of.
+	// Undefined when no frictionless session preceded, or when the detector
+	// reported nothing.
+	d?: DetectorData;
 };
 
 export type DecisionMachineOutput = {
@@ -410,6 +429,15 @@ export interface RoutingMachineInputBase {
 	score: number;
 	platform: RoutingMachinePlatform;
 	raw: RoutingMachineRawSignals;
+	// Everything the detector reported. Same bag, same key names and the same
+	// "nothing here declares them" contract as `DecisionMachineInput.d`, so a
+	// rule reads `input.d.<key>` identically in either machine kind.
+	//
+	// On the `route` phase this is the bag freshly decoded from the payload
+	// that arrived with this request; on `postPow` it is the bag persisted on
+	// the originating Session. Undefined when the detector reported nothing,
+	// or when the payload could not be read.
+	d?: DetectorData;
 }
 
 export interface RoutingMachineInput extends RoutingMachineInputBase {

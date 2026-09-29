@@ -26,10 +26,12 @@ import {
 } from "@prosopo/types";
 import {
 	type IProviderDatabase,
+	type PoWCaptchaRecord,
 	type ScheduledTaskRecord,
 	ScheduledTaskSchema,
+	type UserCommitmentRecord,
 } from "@prosopo/types-database";
-import type { Types } from "mongoose";
+import { Types } from "mongoose";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ClientTaskManager } from "../../../../tasks/client/clientTasks.js";
 
@@ -265,21 +267,21 @@ describe("ClientTaskManager", () => {
 			},
 		];
 
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
-			mockCommitments,
+		vi.mocked(providerDB.getUnstoredDappUserCommitments).mockResolvedValueOnce(
+			mockCommitments as UserCommitmentRecord[],
 		);
 
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.createScheduledTaskStatus as any).mockResolvedValueOnce({});
-
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.updateScheduledTaskStatus as any).mockResolvedValueOnce({});
-
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
-			mockPoWCommitments,
+		vi.mocked(providerDB.createScheduledTaskStatus).mockResolvedValueOnce(
+			new Types.ObjectId(),
 		);
+
+		vi.mocked(providerDB.updateScheduledTaskStatus).mockResolvedValueOnce(
+			undefined,
+		);
+
+		vi.mocked(
+			providerDB.getUnstoredDappUserPoWCommitments,
+		).mockResolvedValueOnce(mockPoWCommitments as PoWCaptchaRecord[]);
 
 		await clientTaskManager.storeCommitmentsExternal();
 
@@ -347,14 +349,12 @@ describe("ClientTaskManager", () => {
 			msg: "Test: Collections state updated",
 		}));
 
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
-			mockCommitments,
+		vi.mocked(providerDB.getUnstoredDappUserCommitments).mockResolvedValueOnce(
+			mockCommitments as UserCommitmentRecord[],
 		);
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
-			mockPoWCommitments,
-		);
+		vi.mocked(
+			providerDB.getUnstoredDappUserPoWCommitments,
+		).mockResolvedValueOnce(mockPoWCommitments as PoWCaptchaRecord[]);
 		logger.info(() => ({ msg: "Test: Mock DB responses configured" }));
 
 		await clientTaskManager.storeCommitmentsExternal();
@@ -392,8 +392,7 @@ describe("ClientTaskManager", () => {
 		}));
 
 		expect(providerDB.updateScheduledTaskStatus).toHaveBeenCalledWith(
-			// biome-ignore lint/suspicious/noExplicitAny: TODO fi
-			Number.parseInt(mockLastScheduledTask._id as any) + 1,
+			Number.parseInt(String(mockLastScheduledTask._id)) + 1,
 			ScheduledTaskStatus.Completed,
 			{
 				data: {
@@ -425,15 +424,13 @@ describe("ClientTaskManager", () => {
 		collections.schedulers.nextID += 1;
 		collections.schedulers.time = 2;
 
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserCommitments as any).mockResolvedValueOnce(
+		vi.mocked(providerDB.getUnstoredDappUserCommitments).mockResolvedValueOnce(
 			[],
 		);
 
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix
-		(providerDB.getUnstoredDappUserPoWCommitments as any).mockResolvedValueOnce(
-			[],
-		);
+		vi.mocked(
+			providerDB.getUnstoredDappUserPoWCommitments,
+		).mockResolvedValueOnce([]);
 
 		await clientTaskManager.storeCommitmentsExternal();
 

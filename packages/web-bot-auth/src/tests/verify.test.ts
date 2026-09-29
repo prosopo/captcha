@@ -17,7 +17,7 @@
 // hand the whole thing to `verifyWebBotAuth`. If any of the parser, base
 // construction, or verification stages drift out of step this test breaks.
 
-import { ed25519 } from "@noble/curves/ed25519";
+import { ed25519 } from "@noble/curves/ed25519.js";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { type JwksFetch, clearJwksCache } from "../jwksResolver.js";
 import { buildSignatureBase } from "../signatureBase.js";
@@ -44,6 +44,7 @@ const buildSignedRequest = (
 	privateKey: Uint8Array,
 	publicKey: Uint8Array,
 	expiresSeconds: number,
+	paramsOverride?: string,
 ): {
 	fetch: JwksFetch;
 	request: {
@@ -53,7 +54,9 @@ const buildSignedRequest = (
 	};
 } => {
 	const created = Math.floor(Date.now() / 1000);
-	const params = `("@authority" "signature-agent");created=${created};expires=${expiresSeconds};keyid="${KEY_ID}";alg="ed25519";tag="web-bot-auth"`;
+	const params =
+		paramsOverride ??
+		`("@authority" "signature-agent");created=${created};expires=${expiresSeconds};keyid="${KEY_ID}";alg="ed25519";tag="web-bot-auth"`;
 	const base = buildSignatureBase(
 		["@authority", "signature-agent"],
 		{ authority: AUTHORITY, signatureAgent: SIGNATURE_AGENT_HEADER },
@@ -95,7 +98,7 @@ describe("verifyWebBotAuth", () => {
 	afterEach(() => clearJwksCache());
 
 	it("verifies a fresh, correctly-signed request", async () => {
-		const priv = ed25519.utils.randomPrivateKey();
+		const priv = ed25519.utils.randomSecretKey();
 		const pub = ed25519.getPublicKey(priv);
 		const { request, fetch } = buildSignedRequest(
 			priv,
@@ -112,7 +115,7 @@ describe("verifyWebBotAuth", () => {
 	});
 
 	it("rejects when signature bytes are flipped", async () => {
-		const priv = ed25519.utils.randomPrivateKey();
+		const priv = ed25519.utils.randomSecretKey();
 		const pub = ed25519.getPublicKey(priv);
 		const { request, fetch } = buildSignedRequest(
 			priv,
@@ -136,7 +139,7 @@ describe("verifyWebBotAuth", () => {
 	});
 
 	it("rejects an expired signature before touching JWKS", async () => {
-		const priv = ed25519.utils.randomPrivateKey();
+		const priv = ed25519.utils.randomSecretKey();
 		const pub = ed25519.getPublicKey(priv);
 		const past = Math.floor(Date.now() / 1000) - 60;
 		const { request } = buildSignedRequest(priv, pub, past);
@@ -152,8 +155,89 @@ describe("verifyWebBotAuth", () => {
 		expect(fetched).toBe(false);
 	});
 
+	describe("replay window", () => {
+		const nowSeconds = (): number => Math.floor(Date.now() / 1000);
+		const COVERED = '("@authority" "signature-agent")';
+		const TAIL = `keyid="${KEY_ID}";alg="ed25519"`;
+		const cases: Array<{ name: string; params: () => string; reason: string }> =
+			[
+				{
+					name: "no expires, so it would verify forever",
+					params: () =>
+						`${COVERED};created=${nowSeconds()};${TAIL};tag="web-bot-auth"`,
+					reason: "missing-created-or-expires",
+				},
+				{
+					name: "no created",
+					params: () =>
+						`${COVERED};expires=${nowSeconds() + 60};${TAIL};tag="web-bot-auth"`,
+					reason: "missing-created-or-expires",
+				},
+				{
+					name: "created in the future",
+					params: () =>
+						`${COVERED};created=${nowSeconds() + 3600};expires=${nowSeconds() + 3660};${TAIL};tag="web-bot-auth"`,
+					reason: "not-yet-valid",
+				},
+				{
+					name: "created just beyond the clock skew allowance",
+					params: () =>
+						`${COVERED};created=${nowSeconds() + 10};expires=${nowSeconds() + 70};${TAIL};tag="web-bot-auth"`,
+					reason: "not-yet-valid",
+				},
+				{
+					name: "a validity window longer than 24 hours",
+					params: () =>
+						`${COVERED};created=${nowSeconds()};expires=${nowSeconds() + 400 * 24 * 3600};${TAIL};tag="web-bot-auth"`,
+					reason: "validity-too-long",
+				},
+				{
+					name: "no web-bot-auth tag",
+					params: () =>
+						`${COVERED};created=${nowSeconds()};expires=${nowSeconds() + 60};${TAIL}`,
+					reason: "wrong-tag",
+				},
+				{
+					name: "a different tag",
+					params: () =>
+						`${COVERED};created=${nowSeconds()};expires=${nowSeconds() + 60};${TAIL};tag="something-else"`,
+					reason: "wrong-tag",
+				},
+			];
+
+		for (const { name, params, reason } of cases) {
+			it(`rejects a correctly-signed request with ${name}`, async () => {
+				const priv = ed25519.utils.randomSecretKey();
+				const pub = ed25519.getPublicKey(priv);
+				const { request, fetch } = buildSignedRequest(priv, pub, 0, params());
+				let fetched = false;
+				const result = await verifyWebBotAuth(request, {
+					fetch: async (url: string, init?: RequestInit) => {
+						fetched = true;
+						return fetch(url, init);
+					},
+				});
+				expect(result).toEqual({ verified: false, reason });
+				expect(fetched).toBe(false);
+			});
+		}
+
+		it("accepts created a few seconds ahead, for clock skew", async () => {
+			const priv = ed25519.utils.randomSecretKey();
+			const pub = ed25519.getPublicKey(priv);
+			const { request, fetch } = buildSignedRequest(
+				priv,
+				pub,
+				0,
+				`${COVERED};created=${nowSeconds() + 3};expires=${nowSeconds() + 63};${TAIL};tag="web-bot-auth"`,
+			);
+			const result = await verifyWebBotAuth(request, { fetch });
+			expect(result.verified).toBe(true);
+		});
+	});
+
 	it("rejects when the JWKS has no matching kid", async () => {
-		const priv = ed25519.utils.randomPrivateKey();
+		const priv = ed25519.utils.randomSecretKey();
 		const pub = ed25519.getPublicKey(priv);
 		const { request } = buildSignedRequest(
 			priv,

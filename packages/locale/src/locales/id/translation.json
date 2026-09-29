@@ -47,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Terlalu banyak pengiriman dari alamat email ini",
 		"VPN_BLOCKED": "Permintaan dari koneksi VPN tidak diizinkan untuk situs ini",
 		"PROXY_BLOCKED": "Permintaan dari server proxy tidak diizinkan untuk situs ini",
+		"TOO_MANY_LOCALHOST": "Terlalu banyak permintaan CAPTCHA dari localhost untuk kunci situs ini",
 		"TOR_BLOCKED": "Permintaan dari node keluar Tor tidak diizinkan untuk situs ini",
 		"ABUSER_BLOCKED": "Permintaan dari jaringan yang ditandai karena penyalahgunaan tidak diizinkan untuk situs ini",
 		"DATACENTER_BLOCKED": "Permintaan dari alamat IP pusat data tidak diizinkan untuk situs ini",
@@ -390,6 +391,15 @@
 			"POSITION": "{{x}} persen dari kiri, {{y}} persen dari atas",
 			"CHECKING": "Memeriksa jawaban Anda",
 			"RETRY_ANNOUNCEMENT": "Nyaris. Teka-teki baru telah dimuat dan kepingan kembali ke awal."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Tantangan urutan ikon",
+			"SELECT": "Pilih dalam urutan ini",
+			"RETRY": "Nyaris — coba lagi",
+			"LEGEND_ALT": "Ikon yang harus dipilih, berurutan",
+			"RESET": "Atur ulang",
+			"CHECKING": "Memeriksa…",
+			"SUBMIT": "OK"
 		},
 		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
 		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",

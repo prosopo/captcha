@@ -47,6 +47,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Muitos envios deste endereço de e-mail",
 		"VPN_BLOCKED": "Solicitações de conexões VPN não são permitidas para este site",
 		"PROXY_BLOCKED": "Solicitações de servidores proxy não são permitidas para este site",
+		"TOO_MANY_LOCALHOST": "Muitas solicitações de CAPTCHA do localhost para esta chave de site",
 		"TOR_BLOCKED": "Solicitações de nós de saída Tor não são permitidas para este site",
 		"ABUSER_BLOCKED": "Solicitações de redes sinalizadas por abuso não são permitidas para este site",
 		"DATACENTER_BLOCKED": "Solicitações de endereços IP de datacenters não são permitidas para este site",
@@ -91,6 +92,15 @@
 			"POSITION": "{{x}} por cento a partir da esquerda, {{y}} por cento a partir do topo",
 			"CHECKING": "Verificando sua resposta",
 			"RETRY_ANNOUNCEMENT": "Quase. Um novo quebra-cabeça foi carregado e a peça voltou ao início."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Desafio de ordem dos ícones",
+			"SELECT": "Selecione nesta ordem",
+			"RETRY": "Quase — tente de novo",
+			"LEGEND_ALT": "Ícones para selecionar, em ordem",
+			"RESET": "Redefinir",
+			"CHECKING": "Verificando…",
+			"SUBMIT": "OK"
 		},
 		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
 		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",

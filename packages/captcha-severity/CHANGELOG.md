@@ -1,5 +1,17 @@
 # @prosopo/captcha-severity
 
+## 1.1.2
+### Patch Changes
+
+- d528f41: Rank a captcha type named after a built-in object property, such as `constructor` or `__proto__`, at 0 like any other unknown type.
+  
+  The tier table was a plain object, so those names read a function or object off Object.prototype instead of missing. `rankCaptchaType("constructor")` returned a function and `captchaPolicySeverity` returned a string, which broke every strictness comparison it took part in. The table is now a Map.
+
+## 1.1.1
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+
 ## 1.1.0
 ### Minor Changes
 

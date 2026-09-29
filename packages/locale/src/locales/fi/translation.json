@@ -53,6 +53,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Liian monta lähetystä tästä sähköpostiosoitteesta",
 		"VPN_BLOCKED": "VPN-yhteyksien pyynnöt eivät ole sallittuja tälle sivustolle",
 		"PROXY_BLOCKED": "Välityspalvelimien pyynnöt eivät ole sallittuja tälle sivustolle",
+		"TOO_MANY_LOCALHOST": "Liian monta CAPTCHA-pyyntöä localhostista tälle sivustoavaimelle",
 		"TOR_BLOCKED": "Tor-poistumissolmujen pyynnöt eivät ole sallittuja tälle sivustolle",
 		"ABUSER_BLOCKED": "Väärinkäytöstä merkittyjen verkkojen pyynnöt eivät ole sallittuja tälle sivustolle",
 		"DATACENTER_BLOCKED": "Datakeskusten IP-osoitteiden pyynnöt eivät ole sallittuja tälle sivustolle",
@@ -83,7 +84,7 @@
 		"JSON_LOAD_FAILED": "JSON-tiedoston lataaminen epäonnistui",
 		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Aseta mnemonic ympäristömuuttujiin",
 		"NO_MNEMONIC_OR_SEED": "Ei annettu mnemonicia tai siemenavainta",
-		"CANT_FIND_KEYRINGPAIR": "Avainta ei löydy {{osoite}}",
+		"CANT_FIND_KEYRINGPAIR": "Avainta ei löydy {{address}}",
 		"ENVIRONMENT_NOT_READY": "Ympäristö ei ole valmis",
 		"INVALID_SIGNATURE": "Virheellinen allekirjoitus",
 		"SITE_KEY_MISSING": "Sivuston avain puuttuu",
@@ -425,6 +426,15 @@
 			"POSITION": "{{x}} prosenttia vasemmalta, {{y}} prosenttia ylhäältä",
 			"CHECKING": "Tarkistetaan vastaustasi",
 			"RETRY_ANNOUNCEMENT": "Melkein. Uusi palapeli ladattiin ja pala on taas alussa."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Kuvakkeiden järjestystehtävä",
+			"SELECT": "Valitse tässä järjestyksessä",
+			"RETRY": "Melkein — yritä uudelleen",
+			"LEGEND_ALT": "Valittavat kuvakkeet järjestyksessä",
+			"RESET": "Tyhjennä",
+			"CHECKING": "Tarkistetaan…",
+			"SUBMIT": "OK"
 		},
 		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
 		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",

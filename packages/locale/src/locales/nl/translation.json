@@ -5,7 +5,7 @@
 		"JSON_LOAD_FAILED": "Laden van JSON-bestand mislukt",
 		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Stel de mnemonic in omgevingsvariabelen in",
 		"NO_MNEMONIC_OR_SEED": "Geen mnemonic of seed opgegeven",
-		"CANT_FIND_KEYRINGPAIR": "Kan het sleutelhangerpaar niet vinden voor {{adres}}",
+		"CANT_FIND_KEYRINGPAIR": "Kan het sleutelhangerpaar niet vinden voor {{address}}",
 		"ENVIRONMENT_NOT_READY": "Omgeving is niet gereed",
 		"INVALID_SIGNATURE": "Ongeldige handtekening",
 		"SITE_KEY_MISSING": "SITE KEY ontbreekt",
@@ -346,6 +346,7 @@
 		"SPAM_EMAIL_COUNT_EXCEEDED": "Te veel inzendingen vanaf dit e-mailadres",
 		"VPN_BLOCKED": "Verzoeken via VPN-verbindingen zijn niet toegestaan voor deze site",
 		"PROXY_BLOCKED": "Verzoeken via proxyservers zijn niet toegestaan voor deze site",
+		"TOO_MANY_LOCALHOST": "Te veel CAPTCHA-verzoeken vanaf localhost voor deze sitesleutel",
 		"TOR_BLOCKED": "Verzoeken via Tor-exitnodes zijn niet toegestaan voor deze site",
 		"ABUSER_BLOCKED": "Verzoeken van netwerken die zijn gemarkeerd voor misbruik zijn niet toegestaan voor deze site",
 		"DATACENTER_BLOCKED": "Verzoeken van datacenter-IP-adressen zijn niet toegestaan voor deze site",
@@ -390,6 +391,15 @@
 			"POSITION": "{{x}} procent vanaf links, {{y}} procent vanaf boven",
 			"CHECKING": "Je antwoord wordt gecontroleerd",
 			"RETRY_ANNOUNCEMENT": "Net niet. Er is een nieuwe puzzel geladen en het stukje staat weer aan het begin."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Uitdaging met pictogramvolgorde",
+			"SELECT": "Selecteer in deze volgorde",
+			"RETRY": "Net niet — probeer het opnieuw",
+			"LEGEND_ALT": "Te selecteren pictogrammen, op volgorde",
+			"RESET": "Opnieuw",
+			"CHECKING": "Controleren…",
+			"SUBMIT": "OK"
 		},
 		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
 		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
