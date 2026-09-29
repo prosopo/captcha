@@ -1,5 +1,53 @@
 # @prosopo/provider
 
+## 5.13.1
+### Patch Changes
+
+- fda0eba: Decision machines can now see which page the captcha was rendered on. `currentUrl` (the top-frame page) and `iframeUrl` (the widget's own frame, when embedded) were already stored on the session and already read back from the database, but the verify-time path never passed them to the decision machine, so rules always saw them as undefined.
+  
+  They are now forwarded on all three verify paths (image, PoW and puzzle). No behaviour changes on its own — it just makes the fields available to rules that need to treat an embedded widget differently from a first-party one.
+  
+  Both values are reported by the client and are not checked against the request's Origin or Referer header, so a rule must not hand out an exemption on the strength of these fields alone.
+- 1728cd0: Carry the detector bundle's `keyMap` through the pool push.
+  
+  `keyMap` is an opaque per-bundle decode parameter, written alongside each
+  bundle by the pool build and meaningless without it — the same contract as
+  `payloadLayout`. The admin pool-replace body schema never declared it, so zod
+  stripped it from every push, and the endpoint's persist step then wrote the
+  bundle back to disk without it.
+  
+  The result was a pool the provider served but could not decode: the push
+  returned success with `persisted: true`, the bundles loaded and sessions were
+  assigned them, but what they produced could not be read. Pools copied onto the
+  volume were unaffected, because that path never goes through the schema.
+  
+  Adds `keyMap` to `ReplaceDetectorPoolBody` and writes it in
+  `persistDetectorBundlePool`.
+- 20542d8: Send page scroll events with the captcha's behavioural data.
+  
+  The widget now passes a fourth collector, the page's scroll position and the
+  time of each scroll, alongside mouse, touch and click data, and the provider
+  stores it as `c4` on the captcha record. People scroll in uneven bursts while
+  bots tend to scroll at a steady rate, so this gives detection something to
+  work with. Detector bundles that predate the scroll tracker simply send no
+  `c4`.
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/types-database@5.6.5
+  - @prosopo/api@4.3.5
+  - @prosopo/api-express-router@3.1.95
+  - @prosopo/database@4.0.41
+  - @prosopo/datasets@3.1.91
+  - @prosopo/env@3.6.64
+  - @prosopo/ipinfo@0.4.10
+  - @prosopo/keyring@2.9.97
+  - @prosopo/load-balancer@2.11.1
+  - @prosopo/types-env@2.11.10
+  - @prosopo/user-access-policy@3.14.11
+
 ## 5.13.0
 ### Minor Changes
 

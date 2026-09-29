@@ -29,6 +29,7 @@ import {
 	record,
 	string,
 	union,
+	unknown,
 	type z,
 	type infer as zInfer,
 } from "zod";
@@ -51,6 +52,7 @@ import {
 	type Captcha,
 	type DappAccount,
 	type DatasetID,
+	InputMethodSchema,
 	type PoWChallengeId,
 	PowChallengeIdSchema,
 	type UserAccount,
@@ -371,6 +373,9 @@ const BoundedCaptchaSolutionSchema = object({
 		REQUEST_ARRAY_LIMITS.solution,
 	),
 	salt: boundedString(INPUT_LIMITS.ID),
+	// Each entry pairs with a coordinate pair in the salt, which is itself
+	// bounded to INPUT_LIMITS.ID characters.
+	inputMethods: array(InputMethodSchema).max(INPUT_LIMITS.ID).optional(),
 });
 
 export const CaptchaSolutionBody = object({
@@ -571,9 +576,18 @@ export const DnsEventBatchSchema = object({
 });
 export type DnsEventBatch = output<typeof DnsEventBatchSchema>;
 
+// What the ingest endpoint accepts: events are validated one by one against
+// DnsEventSchema so a single malformed event is dropped rather than rejecting
+// the whole batch.
+export const DnsEventIngestBatchSchema = object({
+	events: array(unknown()),
+});
+export type DnsEventIngestBatch = output<typeof DnsEventIngestBatchSchema>;
+
 export interface DnsEventResponseBody extends ApiResponse {
 	stored: number;
 	errors: number;
+	dropped: number;
 }
 
 export const GetPowCaptchaChallengeRequestBody = object({
