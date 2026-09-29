@@ -166,9 +166,26 @@ export const getLoadBalancerUrl = (environment: EnvironmentTypes): string => {
 	});
 };
 
+/**
+ * Upper bound on the provider-list fetch. `@prosopo/server` calls
+ * `loadBalancer` on every `isVerified`, so a stalled list endpoint would
+ * otherwise hold the site owner's request open for the runtime's default
+ * (~300s in undici).
+ */
+export const PROVIDER_LIST_FETCH_TIMEOUT_MS = 10_000;
+
+const timeoutSignal = (timeoutMs: number): AbortSignal | undefined =>
+	// Older browsers running the widget lack AbortSignal.timeout; there the
+	// fetch keeps its previous unbounded behaviour rather than throwing.
+	typeof AbortSignal !== "undefined" &&
+	typeof AbortSignal.timeout === "function"
+		? AbortSignal.timeout(timeoutMs)
+		: undefined;
+
 export const loadBalancer = async (
 	environment: EnvironmentTypes,
 	ipMode?: IpMode,
+	timeoutMs: number = PROVIDER_LIST_FETCH_TIMEOUT_MS,
 ): Promise<HardcodedProvider[]> => {
 	// An override supplies the whole list. Checked before the environment
 	// branches so a self-hosted deployment answers for `production` too, and
@@ -197,6 +214,7 @@ export const loadBalancer = async (
 		{
 			method: "GET",
 			mode: "cors",
+			signal: timeoutSignal(timeoutMs),
 		},
 	).then((res) => res.json());
 	// `ipMode` steers `convertHostedProvider` at the fetched JSON's
