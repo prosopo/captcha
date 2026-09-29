@@ -61,6 +61,9 @@ vi.mock("@prosopo/procaptcha-react", () => ({
 vi.mock("@prosopo/procaptcha-puzzle", () => ({
 	mountProcaptchaPuzzleWidget: mocks.probe("puzzle"),
 }));
+vi.mock("@prosopo/procaptcha-icon-order", () => ({
+	mountProcaptchaIconOrderWidget: mocks.probe("iconOrder"),
+}));
 vi.mock("@prosopo/procaptcha-pow", () => ({
 	mountProcaptchaPowWidget: mocks.probe("pow"),
 }));
@@ -164,6 +167,15 @@ describe("choosing a solver", () => {
 		);
 		await settle();
 		expect(solvers()).toEqual(["puzzle"]);
+	});
+
+	test("mounts the icon-order widget when the provider asks for one", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.iconOrder))),
+		);
+		await settle();
+		expect(solvers()).toEqual(["iconOrder"]);
 	});
 
 	test("falls through to PoW for anything else", async () => {
