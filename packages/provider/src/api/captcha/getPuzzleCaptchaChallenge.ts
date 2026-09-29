@@ -306,6 +306,8 @@ export default (
 				effectivePieceSize,
 			);
 
+			const padBytes = trafficVerdict.padBytes;
+
 			const getPuzzleCaptchaResponse: GetPuzzleCaptchaResponse = {
 				[ApiParams.status]: "ok",
 				[ApiParams.challenge]: challenge.challenge,
@@ -333,6 +335,7 @@ export default (
 					session: sessionId,
 				},
 			}));
+			res.locals.padBytes = padBytes;
 			recordCaptchaIssued(CaptchaType.puzzle);
 			return res.json(getPuzzleCaptchaResponse);
 		} catch (err) {
