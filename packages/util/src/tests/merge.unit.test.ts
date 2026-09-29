@@ -11,10 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test } from "vitest";
 import { merge } from "../merge.js";
 
 describe("merge", () => {
+	afterEach(() => {
+		Reflect.deleteProperty(Object.prototype, "polluted");
+	});
 	// factors:
 	// - types
 	//     - primitive
@@ -125,5 +128,27 @@ describe("merge", () => {
 		expect(merge({ a: { b: 1 } }, { a: { c: 1 } })).to.deep.equal({
 			a: { b: 1, c: 1 },
 		});
+	});
+	test("__proto__ key in source does not pollute Object.prototype", () => {
+		const src: object = JSON.parse('{"__proto__": {"polluted": "yes"}}');
+		const result: object = merge({}, src);
+		expect(
+			Object.prototype.hasOwnProperty.call(Object.prototype, "polluted"),
+		).to.equal(false);
+		expect(Object.getPrototypeOf(result)).to.equal(Object.prototype);
+	});
+	test("constructor.prototype key in source does not pollute Object.prototype", () => {
+		const src: object = JSON.parse(
+			'{"constructor": {"prototype": {"polluted": "yes"}}}',
+		);
+		merge({}, src);
+		expect(
+			Object.prototype.hasOwnProperty.call(Object.prototype, "polluted"),
+		).to.equal(false);
+	});
+	test("own constructor key is still merged", () => {
+		expect(
+			merge({ constructor: { a: 1 } }, { constructor: { b: 2 } }),
+		).to.deep.equal({ constructor: { a: 1, b: 2 } });
 	});
 });

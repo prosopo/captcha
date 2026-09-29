@@ -101,9 +101,16 @@ const buildToken = (captchaType: CaptchaType): string => {
 };
 
 const newServer = (timeoutMs?: number): ProsopoServer => {
-	vi.spyOn(loadBalancerModule, "loadBalancer").mockResolvedValue([
+	// `isVerified` asks for the one provider that minted the token, so the seam
+	// is `findProvider`, not the whole list. Stubbing `loadBalancer` left the
+	// real `findProvider` running, which missed and returned "provider not
+	// found" before the request this test times out was ever made.
+	const providers = [
 		{ address: DAPP, url: providerUrl, datasetId: "0xdataset", weight: 1 },
-	]);
+	];
+	vi.spyOn(loadBalancerModule, "findProvider").mockImplementation(
+		async (_env, url) => providers.find((p) => p.url === url),
+	);
 	vi.spyOn(console, "error").mockImplementation(() => undefined);
 	const pair = new Keyring({ type: "sr25519" }).addFromUri("//Alice");
 	return new ProsopoServer(buildConfig(timeoutMs), pair);
