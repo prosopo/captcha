@@ -690,7 +690,13 @@ describe("ImgCaptchaManager", () => {
 				captchaIds: ["captcha1", "captcha2"],
 			});
 			vi.mocked(buildTreeAndGetCommitmentId).mockReturnValue({
-				tree: { proof: vi.fn() },
+				// Two captchaIds, so dappUserSolution indexes leaves 0 and 1 when
+				// building the Merkle proof. Without them `at(tree.leaves, i)`
+				// throws before these tests reach what they assert on.
+				tree: {
+					leaves: [{ hash: "leaf1" }, { hash: "leaf2" }],
+					proof: vi.fn(),
+				},
 				commitmentId: "commitmentId",
 			} as unknown as ReturnType<typeof buildTreeAndGetCommitmentId>);
 			vi.mocked(db.getSolutionByCaptchaId).mockResolvedValue({
