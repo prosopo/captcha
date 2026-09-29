@@ -21,7 +21,12 @@ import {
 	NativeLogger,
 } from "@prosopo/logger";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ProsopoApiError, ProsopoEnvError, unwrapError } from "../error.js";
+import {
+	ProsopoApiError,
+	ProsopoDBError,
+	ProsopoEnvError,
+	unwrapError,
+} from "../error.js";
 
 // Tiny stand-in for the translator. Keys present in the map are translated,
 // anything else falls through unchanged (mirrors the real one's behaviour for
@@ -363,5 +368,15 @@ describe("unwrapError still produces a translated HTTP response", () => {
 		const { code, statusMessage } = unwrapError(err, englishI18n);
 		expect(code).toBe(599);
 		expect(statusMessage).toBe("Internal Server Error");
+	});
+});
+
+describe("error keys", () => {
+	it("only accepts keys that exist in the English catalogue", () => {
+		const known = new ProsopoDBError("DATABASE.DATABASE_IMPORT_FAILED");
+		// @ts-expect-error the old misspelling is not a catalogue key
+		const misspelt = new ProsopoDBError("DATABASE.DATABASE_IMPORT_ERROR");
+		expect(known.translationKey).toBe("DATABASE.DATABASE_IMPORT_FAILED");
+		expect(misspelt.translationKey).toBe("DATABASE.DATABASE_IMPORT_ERROR");
 	});
 });

@@ -38,7 +38,9 @@
 		"ACCOUNT_NOT_FOUND": "Account not found",
 		"SITE_KEY_NOT_FOUND": "Site key not found",
 		"INVALID_TIMESTAMP": "Invalid timestamp",
-		"MISSING_SECRET_KEY": "Missing secret key"
+		"MISSING_SECRET_KEY": "Missing secret key",
+		"MISSING_AUTH_HEADER": "Missing authorization header",
+		"INVALID_JWT": "Invalid JWT"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Failed to encode invalid address",
@@ -83,7 +85,13 @@
 		"TABLES_UNDEFINED": "Tables undefined",
 		"CONNECTION_UNDEFINED": "Connection undefined",
 		"COMMITMENT_FLAG_FAILED": "Failed to flag commitment as processed",
-		"UNKNOWN": "Unknown database error"
+		"UNKNOWN": "Unknown database error",
+		"QUERY_ERROR": "Database query failed",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis access rules connection undefined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "User access rules storage undefined",
+		"SESSION_STORE_FAILED": "Failed to store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Failed to check and remove session",
+		"SESSION_GET_FAILED": "Failed to get session"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Error parsing captcha",
@@ -102,7 +110,10 @@
 		"INVALID_SALT": "Invalid salt",
 		"INVALID_TOKEN": "Invalid token",
 		"INVALID_SOLUTION": "Invalid solution",
-		"DECRYPTION_ERROR": "Error decrypting"
+		"DECRYPTION_ERROR": "Error decrypting",
+		"SOLUTION_NOT_FOUND": "Solution not found",
+		"DECISION_MACHINE_DENIED": "Denied by the decision machine",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"API": {
 		"CAPTCHA_FAILED": "You answered one or more captchas incorrectly. Please try again",
@@ -146,7 +157,8 @@
 		"MOBILE_BLOCKED": "Requests from mobile network connections are not allowed for this site",
 		"SATELLITE_BLOCKED": "Requests from satellite connections are not allowed for this site",
 		"CRAWLER_BLOCKED": "Requests from known crawlers are not allowed for this site",
-		"DISALLOWED_WEBVIEW": "Requests from in-app browsers (WebViews) are not allowed for this site"
+		"DISALLOWED_WEBVIEW": "Requests from in-app browsers (WebViews) are not allowed for this site",
+		"INTERNAL_SERVER_ERROR": "Internal server error"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
