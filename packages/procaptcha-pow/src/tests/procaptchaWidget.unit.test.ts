@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import type { Ti18n, TranslateOptions } from "@prosopo/locale";
 import {
 	ModeEnum,
 	type ProcaptchaProps,
@@ -81,7 +81,7 @@ vi.mock("@prosopo/locale", async (importOriginal) => {
 			t: (key: string) => key,
 			isReady: () => mocks.translationsReady.current,
 			subscribe: () => () => undefined,
-			i18n: undefined,
+			i18n: translatorI18n,
 		}),
 	};
 });
@@ -93,6 +93,25 @@ const i18nStub = (
 	language: string,
 	changeLanguage: Mock<(l: string) => void>,
 ) => ({ language, changeLanguage }) as unknown as Ti18n;
+
+// Stands in for the shared i18n instance after the widget's own language (de)
+// has loaded; lookups follow i18nFrontend.ts: catalogue, then defaultValue.
+let translatorI18n: Ti18n | undefined;
+const germanI18n = (): Ti18n => {
+	const catalogue: Record<string, string> = {
+		"API.INVALID_SITE_KEY": "Ungültiger Site-Schlüssel",
+	};
+	return {
+		language: "de",
+		isInitialized: true,
+		t: (key: string, options?: TranslateOptions): string =>
+			catalogue[key] ?? options?.defaultValue ?? key,
+		changeLanguage: async (): Promise<void> => undefined,
+		hasLoadedNamespace: (): boolean => true,
+		on: (): void => undefined,
+		off: (): void => undefined,
+	};
+};
 
 const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps => ({
 	config: config(),
@@ -106,6 +125,7 @@ const render = (widgetProps: ProcaptchaProps): void => {
 };
 
 beforeEach(() => {
+	translatorI18n = undefined;
 	vi.clearAllMocks();
 	mocks.constructions.length = 0;
 	mocks.translationsReady.current = true;
@@ -238,6 +258,18 @@ describe("what the widget renders", () => {
 			error: { message: "no session", key: "API.UNKNOWN_ERROR" },
 		});
 		expect(mounted.container.textContent).toContain("no session");
+	});
+
+	test("the error is shown in the widget's language, not the provider's", async () => {
+		translatorI18n = germanI18n();
+		render(props());
+		await setState({
+			error: { message: "Invalid site key", key: "API.INVALID_SITE_KEY" },
+		});
+		expect(mounted.container.textContent).toContain(
+			"Ungültiger Site-Schlüssel",
+		);
+		expect(mounted.container.textContent).not.toContain("Invalid site key");
 	});
 
 	test("an unfilled honeypot reads as nothing, not as an empty answer", () => {
