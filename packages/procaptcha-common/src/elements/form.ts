@@ -33,9 +33,23 @@ export function getParentForm(widgetElement: Element): ParentForm {
 	return null;
 }
 
-export const removeProcaptchaResponse = () => {
-	const element = Array.from(
-		document.getElementsByName(ApiParams.procaptchaResponse),
-	);
-	element.map((el) => el.remove());
+/**
+ * Removes the token input a widget added to its form. Given the widget's
+ * element, only that widget's form is touched: clearing the whole document let
+ * one widget solving, expiring or erroring delete the token another widget on
+ * the page had already put in a different form. Without an element (a caller
+ * that never added an input of its own) every response input is removed, as
+ * before.
+ */
+export const removeProcaptchaResponse = (widgetElement?: Element): void => {
+	const scope: ParentNode | null =
+		undefined === widgetElement ? document : getParentForm(widgetElement);
+	if (null === scope) {
+		return;
+	}
+	for (const input of Array.from(
+		scope.querySelectorAll(`[name="${ApiParams.procaptchaResponse}"]`),
+	)) {
+		input.remove();
+	}
 };
