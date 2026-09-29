@@ -11,13 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { randomBytes } from "node:crypto";
 import { MAX_PAD_BYTES } from "@prosopo/types";
-import { randomAsU8a } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
 
-const POOL = Buffer.from(
-	randomAsU8a(Math.ceil((MAX_PAD_BYTES * 3) / 4)),
-).toString("base64");
+const POOL = randomBytes(Math.ceil((MAX_PAD_BYTES * 3) / 4)).toString("base64");
 
 const clampPadBytes = (padBytes: number | undefined): number =>
 	padBytes && padBytes > 0 ? Math.min(Math.floor(padBytes), MAX_PAD_BYTES) : 0;
