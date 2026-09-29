@@ -29,6 +29,26 @@ export type RedisConnection = {
 	getAwaitingTimeMs: () => number;
 };
 
+// Credentials in the URL (`redis://user:password@host`) must never reach the
+// logs, and an unparseable URL is logged as a placeholder rather than echoed.
+export const redactRedisUrl = (url: string | undefined): string | undefined => {
+	if (url === undefined) {
+		return undefined;
+	}
+	try {
+		const parsed = new URL(url);
+		if (parsed.username) {
+			parsed.username = "redacted";
+		}
+		if (parsed.password) {
+			parsed.password = "redacted";
+		}
+		return parsed.toString();
+	} catch {
+		return "[unparseable redis url]";
+	}
+};
+
 // pluggable redis client
 export const connectToRedis = (options: RedisOptions): RedisConnection => {
 	const timestamps = {
@@ -58,7 +78,7 @@ export const connectToRedis = (options: RedisOptions): RedisConnection => {
 		}
 	});
 
-	const log = options.logger.with({ url: options.url });
+	const log = options.logger.with({ url: redactRedisUrl(options.url) });
 
 	log.info(() => ({
 		msg: "Connecting to Redis",
@@ -76,6 +96,13 @@ export const connectToRedis = (options: RedisOptions): RedisConnection => {
 		}));
 
 		return connectedClient as RedisClientType;
+	});
+	// Nobody may call getClient() before the first connect fails; without a
+	// handler that failure is an unhandled rejection, which kills the process
+	// under Node's default --unhandled-rejections=throw. Callers still get the
+	// rejection from getClient().
+	clientPromise.catch((err: unknown) => {
+		log.error(() => ({ err, msg: "Redis connection failed" }));
 	});
 
 	return {
@@ -122,6 +149,9 @@ export const setupRedisIndex = (
 		}));
 
 		return client;
+	});
+	clientPromise.catch((err: unknown) => {
+		log.error(() => ({ err, msg: "Redis index setup failed" }));
 	});
 
 	return {

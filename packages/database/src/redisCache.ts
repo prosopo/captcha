@@ -31,12 +31,16 @@ const bigIntReviver = (_key: string, value: unknown): unknown =>
 		? BigInt(value.slice(BIGINT_TAG.length))
 		: value;
 
-const SESSION_KEY_PATTERNS = [
-	"cache:session:*",
-	"cache:detector:*",
-	"writeq:session:*",
-	"writeq:session:pending",
-] as const;
+const SESSION_PATCH_MAX_ATTEMPTS = 5;
+
+/** SET KEYS[1] to ARGV[2] with EX ARGV[3] only if it still holds ARGV[1]. */
+const COMPARE_AND_SET_SCRIPT = `
+if redis.call("GET", KEYS[1]) ~= ARGV[1] then return 0 end
+redis.call("SET", KEYS[1], ARGV[2], "EX", ARGV[3])
+return 1
+`;
+
+const SESSION_KEY_PATTERNS = ["cache:session:*", "cache:detector:*"] as const;
 
 /**
  * TTL (seconds) for the ephemeral detector-session → bundle mapping. It bridges
@@ -56,12 +60,11 @@ const SESSION_KEY_PATTERNS = [
 export const DETECTOR_BUNDLE_TTL_SECONDS = DEFAULT_MAX_TIMESTAMP_AGE / 1000;
 
 /**
- * Redis-backed write queue and read cache for reducing MongoDB load.
+ * Redis-backed session read cache for reducing MongoDB load.
  *
  * Provides:
  * - Session record caching (reduces MongoDB reads)
  * - Session-by-hash caching for frictionless deduplication
- * - Session write queuing with periodic flush to MongoDB
  *
  * Uses an existing RedisConnection from @prosopo/redis-client rather than
  * creating its own connection.
@@ -69,10 +72,6 @@ export const DETECTOR_BUNDLE_TTL_SECONDS = DEFAULT_MAX_TIMESTAMP_AGE / 1000;
 export class RedisWriteQueue {
 	private readonly connection: RedisConnection;
 	private readonly logger: Logger;
-	private flushTimer: ReturnType<typeof setInterval> | null = null;
-	private flushCallback: ((queue: RedisWriteQueue) => Promise<void>) | null =
-		null;
-	private earlyFlushThreshold: number | undefined;
 
 	constructor(connection: RedisConnection, logger: Logger) {
 		this.connection = connection;
@@ -161,21 +160,21 @@ export class RedisWriteQueue {
 		updates: Record<string, unknown>,
 		ttlSeconds = 86400,
 	): Promise<boolean> {
-		const existing = await this.getCachedSession(sessionId);
-		if (!existing) return false;
-		return this.cacheSession(
+		return this.compareAndSetCachedSession(
 			sessionId,
-			{ ...existing, ...updates, lastUpdatedTimestamp: new Date() },
 			ttlSeconds,
+			(existing) => ({
+				...existing,
+				...updates,
+				lastUpdatedTimestamp: new Date(),
+			}),
 		);
 	}
 
 	/**
 	 * First-hop-wins SIMD attach on the cache — mirrors the atomic Mongo
 	 * `$ifNull` pipeline update in `db.recordSessionSimdReadingsIfAbsent`.
-	 * Reads the cache; if it doesn't already carry `simdReadings`, merges
-	 * the new readings + stage. No-op on cache miss or when readings are
-	 * already present.
+	 * No-op on cache miss or when readings are already present.
 	 */
 	async patchCachedSimdReadingsIfAbsent(
 		sessionId: string,
@@ -183,19 +182,69 @@ export class RedisWriteQueue {
 		stage: string,
 		ttlSeconds = 86400,
 	): Promise<boolean> {
-		const existing = await this.getCachedSession(sessionId);
-		if (!existing) return false;
-		if (existing.simdReadings) return false;
-		return this.cacheSession(
-			sessionId,
-			{
-				...existing,
-				simdReadings: readings,
-				simdReadingsStage: stage,
-				lastUpdatedTimestamp: new Date(),
-			},
-			ttlSeconds,
+		return this.compareAndSetCachedSession(sessionId, ttlSeconds, (existing) =>
+			existing.simdReadings
+				? null
+				: {
+						...existing,
+						simdReadings: readings,
+						simdReadingsStage: stage,
+						lastUpdatedTimestamp: new Date(),
+					},
 		);
+	}
+
+	/**
+	 * Read-modify-write of a cached session that only lands if the entry is
+	 * unchanged since it was read. A plain GET then SET would recreate a
+	 * session invalidated in between (with a fresh TTL) and drop fields written
+	 * by a concurrent patch. On a conflict the patch is recomputed from the
+	 * new value; a vanished entry ends the patch.
+	 */
+	private async compareAndSetCachedSession(
+		sessionId: string,
+		ttlSeconds: number,
+		patch: (
+			existing: Record<string, unknown>,
+		) => Record<string, unknown> | null,
+	): Promise<boolean> {
+		const client = await this.getClient();
+		if (!client) {
+			return false;
+		}
+
+		const key = `cache:session:${sessionId}`;
+		try {
+			for (let attempt = 0; attempt < SESSION_PATCH_MAX_ATTEMPTS; attempt++) {
+				const current = await client.get(key);
+				if (!current) return false;
+				const next = patch(
+					JSON.parse(current, bigIntReviver) as Record<string, unknown>,
+				);
+				if (!next) return false;
+				const written = await client.eval(COMPARE_AND_SET_SCRIPT, {
+					keys: [key],
+					arguments: [
+						current,
+						JSON.stringify(next, bigIntReplacer),
+						String(ttlSeconds),
+					],
+				});
+				if (written === 1) return true;
+			}
+			this.logger.warn(() => ({
+				msg: "Gave up patching cached session after repeated conflicts",
+				sessionId,
+			}));
+			return false;
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to patch cached session in Redis",
+				err: error,
+				sessionId,
+			}));
+			return false;
+		}
 	}
 
 	/**
@@ -453,166 +502,10 @@ export class RedisWriteQueue {
 		}
 	}
 
-	// ── Session write queue ─────────────────────────────────────────────
-
-	/**
-	 * Queue a session record for batched insertion into MongoDB.
-	 * The session data is also cached in Redis for immediate reads.
-	 */
-	async queueSessionRecord(
-		sessionId: string,
-		record: Record<string, unknown>,
-		ttlSeconds = 86400,
-	): Promise<boolean> {
-		const client = await this.getClient();
-		if (!client) {
-			return false;
-		}
-
-		try {
-			const key = `writeq:session:${sessionId}`;
-			const serialized = JSON.stringify(record, bigIntReplacer);
-			await client.set(key, serialized, { EX: ttlSeconds });
-			await client.sAdd("writeq:session:pending", sessionId);
-
-			// Also cache for immediate reads
-			await client.set(`cache:session:${sessionId}`, serialized, {
-				EX: ttlSeconds,
-			});
-
-			// Fire-and-forget: trigger an early flush if the queue is large
-			this.triggerEarlyFlushIfNeeded();
-
-			return true;
-		} catch (error) {
-			this.logger.warn(() => ({
-				msg: "Failed to queue session record in Redis",
-				err: error,
-				sessionId,
-			}));
-			return false;
-		}
-	}
-
-	/**
-	 * Get all pending session records ready for batch flush.
-	 */
-	async drainSessionRecords(
-		limit = 500,
-	): Promise<Array<{ sessionId: string; record: Record<string, unknown> }>> {
-		const client = await this.getClient();
-		if (!client) {
-			return [];
-		}
-
-		try {
-			const sessionIds = await client.sMembers("writeq:session:pending");
-			const batch = sessionIds.slice(0, limit);
-			const results: Array<{
-				sessionId: string;
-				record: Record<string, unknown>;
-			}> = [];
-
-			for (const sessionId of batch) {
-				const key = `writeq:session:${sessionId}`;
-				const data = await client.get(key);
-				if (data) {
-					results.push({
-						sessionId,
-						record: JSON.parse(data, bigIntReviver) as Record<string, unknown>,
-					});
-				}
-				await client.sRem("writeq:session:pending", sessionId);
-				await client.del(key);
-			}
-
-			return results;
-		} catch (error) {
-			this.logger.warn(() => ({
-				msg: "Failed to drain session records from Redis",
-				err: error,
-			}));
-			return [];
-		}
-	}
-
-	// ── Periodic flush ──────────────────────────────────────────────────
-
-	/**
-	 * Start periodic background flush of queued records.
-	 * The callback receives this queue instance and should drain + bulk-write records.
-	 *
-	 * When the queue depth exceeds `earlyFlushThreshold`, an early flush is
-	 * triggered on the next `queueSessionRecord` call without waiting for
-	 * the regular interval.
-	 */
-	startPeriodicFlush(
-		callback: (queue: RedisWriteQueue) => Promise<void>,
-		intervalMs = 10000,
-		earlyFlushThreshold = 50,
-	): void {
-		this.stopPeriodicFlush();
-		this.flushCallback = callback;
-		this.earlyFlushThreshold = earlyFlushThreshold;
-		this.flushTimer = setInterval(() => {
-			this.flushCallback?.(this).catch((error) => {
-				this.logger.error(() => ({
-					msg: "Periodic flush failed",
-					err: error,
-				}));
-			});
-		}, intervalMs);
-	}
-
-	/**
-	 * Trigger an early flush if the pending queue exceeds the threshold.
-	 * Called automatically after queueing a record. This avoids large
-	 * batch build-ups between regular interval flushes.
-	 */
-	private triggerEarlyFlushIfNeeded(): void {
-		if (!this.flushCallback || !this.earlyFlushThreshold) return;
-		this.getPendingCount()
-			.then((count): Promise<void> | void => {
-				if (count >= (this.earlyFlushThreshold ?? 50)) {
-					return this.flushCallback?.(this);
-				}
-			})
-			.catch((error) => {
-				this.logger.error(() => ({
-					msg: "Early flush failed",
-					err: error,
-				}));
-			});
-	}
-
-	/** Get the number of pending session records awaiting flush. */
-	private async getPendingCount(): Promise<number> {
-		const client = await this.getClient();
-		if (!client) return 0;
-		try {
-			return await client.sCard("writeq:session:pending");
-		} catch {
-			return 0;
-		}
-	}
-
-	/**
-	 * Stop the periodic flush timer.
-	 */
-	stopPeriodicFlush(): void {
-		if (this.flushTimer) {
-			clearInterval(this.flushTimer);
-			this.flushTimer = null;
-		}
-		this.flushCallback = null;
-		this.earlyFlushThreshold = undefined;
-	}
-
 	/**
 	 * Drop every session-related key from Redis. Intended for provider
-	 * startup so a fresh process can never inherit stale read-cache,
-	 * dedup-by-hash, or pending-write-queue entries written by an
-	 * earlier (possibly crashed) run.
+	 * startup so a fresh process can never inherit stale read-cache or
+	 * dedup-by-hash entries written by an earlier (possibly crashed) run.
 	 *
 	 * Uses SCAN — KEYS would block the Redis server on large keyspaces.
 	 *
