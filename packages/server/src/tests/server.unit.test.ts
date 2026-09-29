@@ -145,9 +145,14 @@ const installProviderApiSpies = (): ProviderApiSpies => {
 	return { puzzle, pow, image };
 };
 
-const installLoadBalancer = () => {
-	vi.spyOn(loadBalancerModule, "loadBalancer").mockResolvedValue(
-		stubProviderList(),
+// ProsopoServer asks the load balancer for the one provider that minted the
+// token, so the seam is `findProvider` rather than the whole list. Backed by
+// stubProviderList so the "url isn't a known provider" case stays honest.
+const installProviderLookup = (
+	providers: HardcodedProvider[] = stubProviderList(),
+) => {
+	vi.spyOn(loadBalancerModule, "findProvider").mockImplementation(
+		async (_env, providerUrl) => providers.find((p) => p.url === providerUrl),
 	);
 };
 
@@ -156,7 +161,7 @@ describe("ProsopoServer.verifyProvider — captchaType dispatch", () => {
 
 	beforeEach(() => {
 		spies = installProviderApiSpies();
-		installLoadBalancer();
+		installProviderLookup();
 	});
 
 	afterEach(() => {
@@ -226,7 +231,7 @@ describe("ProsopoServer.verifyProvider — legacy tokens (no captchaType)", () =
 
 	beforeEach(() => {
 		spies = installProviderApiSpies();
-		installLoadBalancer();
+		installProviderLookup();
 	});
 
 	afterEach(() => {
@@ -293,7 +298,7 @@ describe("ProsopoServer.verifyProvider — recency checks", () => {
 
 	beforeEach(() => {
 		spies = installProviderApiSpies();
-		installLoadBalancer();
+		installProviderLookup();
 	});
 
 	afterEach(() => {
@@ -354,6 +359,38 @@ describe("ProsopoServer.verifyProvider — recency checks", () => {
 		expect(result.verified).toBe(false);
 		expect(spies.image).not.toHaveBeenCalled();
 	});
+
+	it("a future-dated token beyond the clock-skew allowance short-circuits", async () => {
+		const powCached = 60_000;
+		const futureTimestamp = Date.now() + 60 * 60_000;
+		const token = buildToken(futureTimestamp, {
+			[ApiParams.captchaType]: CaptchaType.pow,
+		});
+		const server = new ProsopoServer(
+			buildConfig(powCached, 60_000, 60_000),
+			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+			stubPair() as any,
+		);
+		const result = await server.isVerified(token);
+		expect(result.verified).toBe(false);
+		expect(spies.pow).not.toHaveBeenCalled();
+	});
+
+	it("a token within the clock-skew allowance still verifies", async () => {
+		const powCached = 60_000;
+		const slightlyFutureTimestamp = Date.now() + 5_000;
+		const token = buildToken(slightlyFutureTimestamp, {
+			[ApiParams.captchaType]: CaptchaType.pow,
+		});
+		const server = new ProsopoServer(
+			buildConfig(powCached, 60_000, 60_000),
+			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+			stubPair() as any,
+		);
+		const result = await server.isVerified(token);
+		expect(result.verified).toBe(true);
+		expect(spies.pow).toHaveBeenCalledTimes(1);
+	});
 });
 
 describe("ProsopoServer.isVerified — short-circuits", () => {
@@ -361,9 +398,9 @@ describe("ProsopoServer.isVerified — short-circuits", () => {
 		vi.restoreAllMocks();
 	});
 
-	it("provider not in loadBalancer list returns USER_NOT_VERIFIED", async () => {
+	it("provider not in the provider list returns USER_NOT_VERIFIED", async () => {
 		installProviderApiSpies();
-		vi.spyOn(loadBalancerModule, "loadBalancer").mockResolvedValue([
+		installProviderLookup([
 			{
 				address: DAPP,
 				url: "https://a-different-provider.example",
@@ -385,7 +422,7 @@ describe("ProsopoServer.isVerified — short-circuits", () => {
 
 	it("throws BAD_REQUEST for an unparseable token", async () => {
 		installProviderApiSpies();
-		installLoadBalancer();
+		installProviderLookup();
 		const server = new ProsopoServer(
 			buildConfig(60_000, 60_000, 60_000),
 			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
