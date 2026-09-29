@@ -274,6 +274,11 @@ export default (
 				req.ipInfo,
 			);
 
+			const padBytes =
+				trafficVerdict.kind === "challenge"
+					? trafficVerdict.padBytes
+					: undefined;
+
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {
 				[ApiParams.status]: "ok",
 				[ApiParams.challenge]: challenge.challenge,
@@ -297,6 +302,7 @@ export default (
 					session: sessionId,
 				},
 			}));
+			res.locals.padBytes = padBytes;
 			recordCaptchaIssued(CaptchaType.pow);
 			return res.json(getPowCaptchaResponse);
 		} catch (err) {

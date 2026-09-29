@@ -301,6 +301,11 @@ export default (
 				getSignedAssetsResolver(ipAddress.toString()) ??
 				env.assetsResolver;
 
+			const padBytes =
+				trafficVerdict.kind === "challenge"
+					? trafficVerdict.padBytes
+					: undefined;
+
 			const captchaResponse: CaptchaResponseBody = {
 				[ApiParams.status]: "ok",
 				[ApiParams.captchas]: taskData.captchas.map((captcha: Captcha) => ({
@@ -329,6 +334,7 @@ export default (
 					sessionId,
 				},
 			}));
+			res.locals.padBytes = padBytes;
 			recordCaptchaIssued(CaptchaType.image);
 			return res.json(captchaResponse);
 		} catch (err) {

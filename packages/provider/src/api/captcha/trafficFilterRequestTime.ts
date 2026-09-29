@@ -41,6 +41,7 @@ export type RequestTimeTrafficVerdict =
 			powDifficulty?: number;
 			solvedImagesCount?: number;
 			puzzleTolerance?: number;
+			padBytes?: number;
 			// Merged puzzle render overrides across matched challenge
 			// categories; the getPuzzleCaptchaChallenge resolver treats this
 			// as the top of the override chain (asset default → client
@@ -96,6 +97,7 @@ export const applyTrafficFilterAtRequestTime = (
 		powDifficulty: resolved.powDifficulty,
 		solvedImagesCount: resolved.solvedImagesCount,
 		puzzleTolerance: resolved.puzzleTolerance,
+		padBytes: resolved.padBytes,
 		puzzleSettings: resolved.puzzleSettings,
 		sourceCategories: resolved.sourceCategories,
 	};

@@ -22,7 +22,6 @@ import {
 	type IPuzzleSettings,
 	type ITrafficCategoryPolicy,
 	PuzzleSettingsSchema,
-	padBytesFieldSchema,
 	puzzleToleranceFieldSchema,
 } from "../client/settings.js";
 import type { PuzzleEvent, RequestHeaders } from "../provider/api.js";
@@ -427,14 +426,6 @@ export interface RoutingMachineOutput {
 	// Ignored unless the resolved captchaType is `puzzle`.
 	puzzleTolerance?: number;
 	puzzle?: IPuzzleSettings;
-	// Tarpit: bytes of incompressible padding the provider appends to this
-	// challenge's issuance response. Generated provider-side into the response
-	// only — never persisted. A routing machine emits the byte COUNT, not the
-	// payload: the machine bundle is size-limited and its output is parsed and
-	// may be stored, so the bytes themselves must be minted at the provider.
-	// Bounded by padBytesFieldSchema (≤ 5 MiB). Applies to pow / image / puzzle
-	// alike, since it rides the issuance response rather than the challenge body.
-	padBytes?: number;
 }
 
 export const RoutingMachineOutputSchema = z.object({
@@ -451,5 +442,4 @@ export const RoutingMachineOutputSchema = z.object({
 	// reject.
 	puzzleTolerance: puzzleToleranceFieldSchema.optional(),
 	puzzle: PuzzleSettingsSchema.optional(),
-	padBytes: padBytesFieldSchema.optional(),
 });
