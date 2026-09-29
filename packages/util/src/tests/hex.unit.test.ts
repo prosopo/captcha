@@ -73,6 +73,65 @@ describe("embedData", () => {
 	});
 });
 
+// Mirrors how the procaptcha managers size the salt: one random byte (two hex
+// chars) per hex digit of each value, plus four bytes of header per value.
+const callerSizedSalt = (data: number[]): string =>
+	`0x${"ab".repeat(
+		data
+			.map((d) => d.toString(16).length + 4)
+			.reduce((acc, curr) => acc + curr, 0),
+	)}`;
+
+describe("embedData round trip", () => {
+	test("keeps every value when the salt is longer than 256 hex chars", () => {
+		const coords = Array.from({ length: 20 }, (_, i) => 300 + i * 37);
+		const salt = callerSizedSalt(coords);
+		expect(salt.length - 2).toBeGreaterThan(256);
+		expect(extractData(embedData(salt, coords))).to.deep.equal(coords);
+	});
+
+	test("keeps every value for every count that fits below index 256", () => {
+		// 3 hex digits each: 2 + 36 * (4 + 3) = 254 chars.
+		for (let count = 1; count <= 36; count++) {
+			const coords = Array.from({ length: count }, (_, i) => 4000 + i);
+			expect(
+				extractData(embedData(callerSizedSalt(coords), coords)),
+			).to.deep.equal(coords);
+		}
+	});
+
+	test("throws instead of truncating once the data needs positions past 255", () => {
+		const coords = Array.from({ length: 37 }, (_, i) => 4000 + i);
+		expect(() => embedData(callerSizedSalt(coords), coords)).to.throw(
+			/exceeds length of hex string/,
+		);
+	});
+
+	test("throws when there are more values than the count byte can hold", () => {
+		const coords = Array.from({ length: 256 }, () => 1);
+		expect(() => embedData(callerSizedSalt(coords), coords)).to.throw(/count/);
+	});
+
+	test("throws instead of overwriting the header when the salt is too short", () => {
+		// 8 chars: 2 count + 4 position/length + 3 value = 9 needed.
+		expect(() => embedData("0x01010101", [0xfff])).to.throw(/exceeds/);
+	});
+
+	test("throws on values that are negative or not finite", () => {
+		expect(() => embedData(hex, [-5])).to.throw(/non-negative number/);
+		expect(() => embedData(hex, [Number.NaN])).to.throw(/non-negative number/);
+		expect(() => embedData(hex, [Number.POSITIVE_INFINITY])).to.throw(
+			/non-negative number/,
+		);
+	});
+
+	test("rounds fractional values such as sub-pixel click coordinates", () => {
+		expect(extractData(embedData(hex, [150.5, 30.4, -0.2]))).to.deep.equal([
+			151, 30, 0,
+		]);
+	});
+});
+
 describe("extractData", () => {
 	test("it returns empty array if no data is embedded", () => {
 		const result = extractData(embedData(hex, []));
