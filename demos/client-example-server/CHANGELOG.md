@@ -1,5 +1,15 @@
 # @prosopo/client-example-server
 
+## 2.7.169
+### Patch Changes
+
+- 382cc2e: Warm up the app.js import once before the entrypoint tests, so the cold transform no longer times out whichever case runs first on a loaded machine.
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/database@4.1.1
+  - @prosopo/keyring@2.9.99
+  - @prosopo/server@2.12.13
+
 ## 2.7.168
 ### Patch Changes
 
