@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { isTranslationKey } from "./translationKey.js";
 import type { Ti18n } from "./types.js";
 
 export interface KeyedErrorMessage {
@@ -29,7 +30,7 @@ export const localiseErrorMessage = (
 	error: KeyedErrorMessage,
 ): string => {
 	const { key, message } = error;
-	if (!key || !i18n?.isInitialized) {
+	if (!key || !isTranslationKey(key) || !i18n?.isInitialized) {
 		return message;
 	}
 	return i18n.t(key, { defaultValue: message });
