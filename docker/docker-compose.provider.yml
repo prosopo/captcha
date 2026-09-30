@@ -12,6 +12,21 @@ services:
     pull_policy: always
     env_file:
       - ../.env.1.${NODE_ENV}
+    # Pins mongo1 to its tailnet address so both the seed host in
+    # PROSOPO_MONGO_*_URI and the name mongod advertises for itself
+    # (`mongo1.prosopo.io:27018`, because it runs --replSet) resolve inside the
+    # WireGuard tunnel. Overriding only the URI does not work: the driver
+    # discovers the replica set and re-dials the advertised name, which without
+    # this goes back out to the public load balancer. The URIs therefore carry
+    # ssl=false — mongod itself has TLS off, and WireGuard supplies the
+    # encryption, terminating on mongo1 rather than on a proxy.
+    #
+    # Literal, not a compose variable: 18 playbooks run `docker compose` against
+    # this file with their own environment blocks, and an unset variable here
+    # expands to "mongo1.prosopo.io:" and stops the container from starting.
+    # Inert where mongo1 is not used — staging points at a different host.
+    extra_hosts:
+      - "mongo1.prosopo.io:100.64.0.21"
     volumes:
       # Detector bundle pool, host-mounted so a pushed pool survives container
       # restarts. Never bake this into the image: prosopo/provider is a public
@@ -56,6 +71,9 @@ services:
     pull_policy: build
     env_file:
       - ../.env.2.${NODE_ENV}
+    # See provider1.
+    extra_hosts:
+      - "mongo1.prosopo.io:100.64.0.21"
     volumes:
       # See provider1 — separate pool because this container runs the previous
       # image version.

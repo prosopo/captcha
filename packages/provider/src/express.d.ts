@@ -74,5 +74,8 @@ declare global {
 			tcpOptsOrder?: number;
 			tcpWindow?: number;
 		}
+		interface Locals {
+			padBytes?: number;
+		}
 	}
 }
