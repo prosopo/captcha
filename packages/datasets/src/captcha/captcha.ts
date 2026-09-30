@@ -146,8 +146,9 @@ export function compareCaptchaSolutions(
 	received.sort(captchaSort);
 	solutions.sort(captchaSort);
 
-	// Check if lengths match
-	if (received.length !== solutions.length) {
+	// Check if lengths match. An empty submission solved nothing, and
+	// Array.every below would otherwise vacuously accept it.
+	if (received.length === 0 || received.length !== solutions.length) {
 		return false;
 	}
 

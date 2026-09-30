@@ -331,50 +331,25 @@ describe("CAPTCHA FUNCTIONS", async () => {
 	});
 
 	test("Captchas with mismatching solution lengths are marked as incorrect", () => {
-		const noSolutions = [
-			{
-				captchaId:
-					"0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af",
-				captchaContentId: "",
-				solution: [],
-				salt: "",
-			},
-			{
-				captchaId:
-					"0x908747ea61b5920c6bcfe22861adba42ba10dbfbf7daa916b1e94ed43791a43b",
-				captchaContentId: "",
-				solution: [],
-				salt: "",
-			},
-		];
-		const solutions = [
-			{
-				// created using [ 2, 5, 7 ] as solution
-				captchaId:
-					"0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af",
-				captchaContentId: "",
-				datasetId:
-					"0xa96deea330d68be31b27b53167842e4ad975b72a8555d607c9cfa16b416848af",
-				index: 13,
-				items: [],
-				salt: "0x010101010101010101010101010101",
-				target: "car",
-				solved: true,
-			},
-			{
-				captchaId:
-					"0x908747ea61b5920c6bcfe22861adba42ba10dbfbf7daa916b1e94ed43791a43b",
-				captchaContentId: "",
-				datasetId:
-					"0x908747ea61b5920c6bcfe22861adba42ba10dbfbf7daa916b1e94ed43791a43b",
-				index: 3,
-				items: [],
-				salt: "0x050505050505050505050505050505",
-				target: "plane",
-				solved: true,
-			},
-		];
-		// expect(compareCaptchaSolutions(noSolutions, solutions, 0.8)).to.be.false;
+		// Each stored captcha expects 3 of the 9 images; answering with none
+		// misses all 3, which is below the 0.8 threshold.
+		const noSolutions: CaptchaSolution[] = RECEIVED.map((captcha) => ({
+			...captcha,
+			solution: [],
+		}));
+		const stored = STORED.map((record) => ({
+			...record,
+			solution: [...record.solution],
+		}));
+		expect(
+			compareCaptchaSolutions(noSolutions, stored, MOCK_ITEMS.length, 0.8),
+		).toBe(false);
+	});
+
+	test("An empty submission is never marked as correct", () => {
+		// Array.every over nothing is true; with no captchas there is nothing
+		// that was solved, so the comparison has to fail closed.
+		expect(compareCaptchaSolutions([], [], MOCK_ITEMS.length, 0.8)).toBe(false);
 	});
 
 	test("Pending request hash is calculated properly", () => {
@@ -422,7 +397,11 @@ describe("CAPTCHA FUNCTIONS", async () => {
 		];
 		const leaf =
 			"0xb2b33ccc7d240ab8ed24b8f77a32fd2825e78972c8a8cea359f11edc9ac26734";
-		const verification = verifyProof(leaf, proof as MerkleProof);
+		const verification = verifyProof(
+			leaf,
+			proof as MerkleProof,
+			"0xeee6c87e8ad5cd1fc05ea0d8874067d87918f1b141fdabd12352ad59b779cc80",
+		);
 		expect(verification).to.be.true;
 	});
 	test("Fails to verify an invalid merkle proof", () => {
@@ -451,14 +430,14 @@ describe("CAPTCHA FUNCTIONS", async () => {
 		];
 		const leaf =
 			"0x41a5470f491204aefc954d5aeec744d30b0a1112c4a86397afe336807f115c16";
-		const verification = verifyProof(leaf, proof as MerkleProof);
+		const verification = verifyProof(leaf, proof as MerkleProof, "INVALID");
 		expect(verification).to.be.false;
 	});
 	test("Fails to verify junk data", () => {
 		const proof = "junk";
 		const leaf =
 			"0x41a5470f491204aefc954d5aeec744d30b0a1112c4a86397afe336807f115c16";
-		const verification = verifyProof(leaf, [[proof]]);
+		const verification = verifyProof(leaf, [[proof]], proof);
 		expect(verification).to.be.false;
 	});
 	test("Returns sorted solutions", () => {

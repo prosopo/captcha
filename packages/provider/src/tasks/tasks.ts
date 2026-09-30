@@ -32,12 +32,7 @@ import { ImgCaptchaManager } from "./imgCaptcha/imgCaptchaTasks.js";
 import { PowCaptchaManager } from "./powCaptcha/powTasks.js";
 import { PuzzleCaptchaManager } from "./puzzleCaptcha/puzzleTasks.js";
 
-/**
- * Singleton write queue manager.
- * Ensures only one flush timer exists across all Tasks instances.
- */
 let globalWriteQueue: RedisWriteQueue | null = null;
-let flushStarted = false;
 
 /**
  * @description Tasks that are shared by the API and CLI
@@ -160,55 +155,12 @@ export class Tasks {
 			const redisConnection = this.db.getRedisConnection();
 			globalWriteQueue = new RedisWriteQueue(redisConnection, this.logger);
 
-			if (!flushStarted) {
-				flushStarted = true;
-				const db = this.db;
-				const logger = this.logger;
-				globalWriteQueue.startPeriodicFlush(async (queue) => {
-					await Tasks.flushWriteQueue(queue, db, logger);
-				}, 10_000);
-			}
-
 			return globalWriteQueue;
 		} catch {
 			this.logger.debug(() => ({
 				msg: "Redis not available for write queue - falling back to direct writes",
 			}));
 			return null;
-		}
-	}
-
-	/**
-	 * Flush queued session records from Redis to MongoDB in bulk.
-	 * Called periodically by the write queue timer.
-	 *
-	 * Note: PoW challenge and pending image commitment records are written
-	 * directly to MongoDB (not queued) because verification endpoints need
-	 * to read them immediately after creation. Session records are safe to
-	 * queue because they are not read in the immediate request path.
-	 */
-	static async flushWriteQueue(
-		queue: RedisWriteQueue,
-		db: IProviderDatabase,
-		logger: Logger,
-	): Promise<void> {
-		const sessionRecords = await queue.drainSessionRecords();
-		if (sessionRecords.length > 0) {
-			logger.info(() => ({
-				msg: `Flushing ${sessionRecords.length} queued session records to MongoDB`,
-			}));
-			for (const { record } of sessionRecords) {
-				try {
-					await db.storeSessionRecord(
-						record as Parameters<typeof db.storeSessionRecord>[0],
-					);
-				} catch (error) {
-					logger.error(() => ({
-						msg: "Failed to flush queued session record",
-						err: error,
-					}));
-				}
-			}
 		}
 	}
 
