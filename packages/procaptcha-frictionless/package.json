@@ -39,7 +39,7 @@
 		"@prosopo/procaptcha-react": "2.13.6",
 		"@prosopo/types": "5.12.0",
 		"@prosopo/widget-skeleton": "2.10.1",
-		"dotenv": "16.4.5"
+		"dotenv": "18.0.4"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.4.2",
