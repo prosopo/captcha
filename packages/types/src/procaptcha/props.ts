@@ -21,6 +21,7 @@ import type {
 	ClickEventPoint,
 	MouseMovementPoint,
 	PackedBehavioralData,
+	ScrollEventPoint,
 	TouchEventPoint,
 } from "./behavioral.js";
 import type { Account, Callbacks } from "./manager.js";
@@ -43,11 +44,21 @@ export type ProcaptchaEscalationHandler = (
 	coords?: { x: number; y: number },
 ) => void;
 
+/**
+ * `showRetry` asks the re-mounted widget to tell the user their last answer
+ * was wrong, because the restart itself leaves no trace of it.
+ */
+export type FrictionlessRestartOptions = { showRetry?: boolean };
+
+export type FrictionlessRestart = (
+	options?: FrictionlessRestartOptions,
+) => void;
+
 // Generic behavioral data collectors for analytics
 export type FrictionlessState = {
 	provider: RandomProvider;
 	userAccount: Account;
-	restart: () => void;
+	restart: FrictionlessRestart;
 	sessionId?: string;
 	behaviorCollector1?: {
 		start: () => void;
@@ -65,6 +76,12 @@ export type FrictionlessState = {
 		start: () => void;
 		stop: () => void;
 		getData: () => ClickEventPoint[];
+		clear: () => void;
+	};
+	behaviorCollector4?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => ScrollEventPoint[];
 		clear: () => void;
 	};
 	deviceCapability?: string;
