@@ -18,10 +18,19 @@ import type {
 } from "@polkadot/extension-inject/types";
 import { object } from "zod";
 import { ApiParams } from "../api/index.js";
+import type { InputMethod } from "../datasets/index.js";
 import type { CaptchaResponseBody } from "../provider/index.js";
 import type { ProcaptchaApiInterface } from "./api.js";
 import type { TCaptchaSubmitResult } from "./client.js";
 import { type ProcaptchaToken, ProcaptchaTokenSpec } from "./token.js";
+
+/** A selected image: its hash, where it was selected and how. */
+export type ImageSelection = [
+	hash: string,
+	x: number,
+	y: number,
+	inputMethod: InputMethod,
+];
 
 /**
  * House the account and associated extension.
@@ -42,7 +51,7 @@ export const ProcaptchaResponse = object({
 export interface ProcaptchaState {
 	isHuman: boolean; // is the user human?
 	index: number; // the index of the captcha round currently being shown
-	solutions: [string, number, number][][]; // the solutions for each captcha round
+	solutions: ImageSelection[][]; // the solutions for each captcha round
 	captchaApi: ProcaptchaApiInterface | undefined; // the captcha api instance for managing captcha challenge. undefined if not set up
 	challenge: CaptchaResponseBody | undefined; // the captcha challenge from the provider. undefined if not set up
 	showModal: boolean; // whether to show the modal or not

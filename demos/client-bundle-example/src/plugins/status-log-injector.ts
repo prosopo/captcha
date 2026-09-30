@@ -17,9 +17,18 @@
 import type { IndexHtmlTransformContext, Plugin } from "vite";
 import { fillSlot } from "./slots.js";
 
+// Opening tag of <head>, attributes and all.
+const HEAD_OPEN = /<head(\s[^>]*)?>/i;
+
 export default function statusLogInjector(): Plugin {
-	const statusLogJs = `
-	<script type="module">
+	// A classic script at the very start of <head>, so it runs during parsing,
+	// before any module script. By the time this plugin runs ("post"), Vite has
+	// already hoisted the page's own entry module into <head>, and module
+	// scripts run in document order: defined in the module below, the helper
+	// did not exist yet when the explicit-render pages called it at top level,
+	// so they threw before render() and never showed a widget.
+	const updateStatusJs = `
+	<script>
 		function updateCaptchaStatus(message, type = 'info') {
 			const statusContainer = document.getElementById('captcha-status');
 			if (!statusContainer) return;
@@ -43,6 +52,14 @@ export default function statusLogInjector(): Plugin {
 		}
 
 		window.updateCaptchaStatus = updateCaptchaStatus;
+	</script>
+  `;
+
+	// A module, after the page's entry module, because it wraps the callbacks
+	// that module defines.
+	const statusLogJs = `
+	<script type="module">
+		const updateCaptchaStatus = window.updateCaptchaStatus;
 
 		// Wrap the page's own callbacks so every page logs the same events.
 		const originalOnCaptchaFailed = window.onCaptchaFailed;
@@ -104,7 +121,13 @@ export default function statusLogInjector(): Plugin {
 					return html;
 				}
 
-				const withJs = html.replace("</head>", () => `${statusLogJs}</head>`);
+				const withHelper = HEAD_OPEN.test(html)
+					? html.replace(HEAD_OPEN, (open) => `${open}${updateStatusJs}`)
+					: html;
+				const withJs = withHelper.replace(
+					"</head>",
+					() => `${statusLogJs}</head>`,
+				);
 
 				const inSlot = fillSlot(withJs, "events", statusLogHtml);
 				if (inSlot) {
