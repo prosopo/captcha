@@ -32,6 +32,11 @@ const verifySr25519Signature = (
 		return false;
 	}
 };
+const isNumericDate = (value: unknown): value is number =>
+	typeof value === "number" && Number.isFinite(value);
+
+const isClaimsObject = (value: unknown): value is Record<string, unknown> =>
+	typeof value === "object" && value !== null && !Array.isArray(value);
 
 const audienceMatches = (aud: unknown, accepted: string[]): boolean => {
 	const claimed = Array.isArray(aud) ? aud : [aud];
@@ -86,10 +91,19 @@ export const jwtVerify = (
 		};
 	}
 
+	if (!isClaimsObject(payload)) {
+		return {
+			isValid: false,
+			error: "Invalid payload: not a JSON object",
+			crypto: header.alg,
+			publicKey,
+			isWrapped: false,
+		};
+	}
 	const { exp, iat, nbf, sub } = payload;
 	const now = Date.now() / 1000;
 
-	if (typeof exp !== "number" || typeof iat !== "number") {
+	if (!isNumericDate(exp) || !isNumericDate(iat)) {
 		return {
 			isValid: false,
 			error: "Invalid payload: 'exp' or 'iat' is not a number",
@@ -107,7 +121,16 @@ export const jwtVerify = (
 			isWrapped: false,
 		};
 	}
-	if (nbf && nbf > now) {
+	if (nbf !== undefined && !isNumericDate(nbf)) {
+		return {
+			isValid: false,
+			error: "Invalid payload: 'nbf' is not a number",
+			crypto: header.alg,
+			publicKey,
+			isWrapped: false,
+		};
+	}
+	if (nbf !== undefined && nbf > now) {
 		return {
 			isValid: false,
 			error: "JWT not valid yet",
@@ -123,6 +146,15 @@ export const jwtVerify = (
 		return {
 			isValid: false,
 			error: "JWT lifetime exceeds the allowed maximum",
+			crypto: header.alg,
+			publicKey,
+			isWrapped: false,
+		};
+	}
+	if (typeof sub !== "string") {
+		return {
+			isValid: false,
+			error: "Invalid payload: 'sub' is not a string",
 			crypto: header.alg,
 			publicKey,
 			isWrapped: false,

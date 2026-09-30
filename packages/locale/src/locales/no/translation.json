@@ -388,6 +388,7 @@
 		"RELOAD": "Last inn på nytt",
 		"VERIFIED_AGENT": "Verifisert agent",
 		"TRUSTED_REQUEST": "Klarert forespørsel",
+		"LOADING": "Laster inn",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Puslespilloppgave",
 			"DRAG": "Dra brikken til målet",

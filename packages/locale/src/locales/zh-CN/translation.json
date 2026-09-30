@@ -388,6 +388,7 @@
 		"RELOAD": "重新加载",
 		"VERIFIED_AGENT": "已验证的代理",
 		"TRUSTED_REQUEST": "受信任的请求",
+		"LOADING": "加载中",
 		"PUZZLE": {
 			"DIALOG_LABEL": "拼图验证",
 			"DRAG": "将拼块拖到目标位置",

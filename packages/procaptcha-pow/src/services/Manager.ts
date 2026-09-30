@@ -386,6 +386,7 @@ export const Manager = (
 						clientMetaData,
 						fingerprintProof,
 					);
+					if (disposed) return;
 					const escalation = verifiedSolution[ApiParams.escalation];
 					if (
 						escalation &&

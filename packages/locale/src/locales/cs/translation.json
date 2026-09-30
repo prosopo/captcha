@@ -388,6 +388,7 @@
 		"RELOAD": "Načíst znovu",
 		"VERIFIED_AGENT": "Ověřený agent",
 		"TRUSTED_REQUEST": "Důvěryhodný požadavek",
+		"LOADING": "Načítání",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Skládačkový úkol",
 			"DRAG": "Přetáhněte dílek na cíl",

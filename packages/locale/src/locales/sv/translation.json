@@ -388,6 +388,7 @@
 		"RELOAD": "Läs in igen",
 		"VERIFIED_AGENT": "Verifierad agent",
 		"TRUSTED_REQUEST": "Betrodd begäran",
+		"LOADING": "Läser in",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Pusseluppgift",
 			"DRAG": "Dra biten till målet",

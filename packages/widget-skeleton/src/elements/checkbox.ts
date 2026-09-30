@@ -50,7 +50,12 @@ export interface CheckboxElement {
 	readonly interactiveArea: HTMLElement;
 }
 
-export function createCheckboxElement(theme: Theme): CheckboxElement {
+export const DEFAULT_LOADING_LABEL = "Loading";
+
+export function createCheckboxElement(
+	theme: Theme,
+	loadingLabel: string = DEFAULT_LOADING_LABEL,
+): CheckboxElement {
 	const names: CheckboxNames = {
 		content: randomToken(),
 		spinner: randomToken(),
@@ -66,7 +71,7 @@ export function createCheckboxElement(theme: Theme): CheckboxElement {
 
 	const interactiveArea = document.createElement(randomWrapperTag());
 	interactiveArea.className = names.content;
-	interactiveArea.appendChild(createSpinner(names.spinner));
+	interactiveArea.appendChild(createSpinner(names.spinner, loadingLabel));
 
 	const shadowRoot = host.attachShadow({ mode: "open" });
 	shadowRoot.appendChild(style);
@@ -75,10 +80,11 @@ export function createCheckboxElement(theme: Theme): CheckboxElement {
 	return { host, interactiveArea };
 }
 
-const createSpinner = (className: string): HTMLElement => {
+const createSpinner = (className: string, label: string): HTMLElement => {
 	const spinner = document.createElement("div");
 	spinner.className = className;
-	spinner.setAttribute("aria-label", "Loading spinner");
+	spinner.setAttribute("role", "progressbar");
+	spinner.setAttribute("aria-label", label);
 	return spinner;
 };
 

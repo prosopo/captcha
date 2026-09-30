@@ -388,6 +388,7 @@
 		"RELOAD": "Újratöltés",
 		"VERIFIED_AGENT": "Ellenőrzött ügynök",
 		"TRUSTED_REQUEST": "Megbízható kérés",
+		"LOADING": "Betöltés",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Kirakós feladat",
 			"DRAG": "Húzd a darabot a célhelyre",

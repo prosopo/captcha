@@ -388,6 +388,7 @@
 		"RELOAD": "Reîncarcă",
 		"VERIFIED_AGENT": "Agent verificat",
 		"TRUSTED_REQUEST": "Solicitare de încredere",
+		"LOADING": "Se încarcă",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Test cu puzzle",
 			"DRAG": "Trage piesa până la țintă",

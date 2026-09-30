@@ -388,6 +388,7 @@
 		"RELOAD": "Tải lại",
 		"VERIFIED_AGENT": "Tác nhân đã xác minh",
 		"TRUSTED_REQUEST": "Yêu cầu đáng tin cậy",
+		"LOADING": "Đang tải",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Thử thách ghép hình",
 			"DRAG": "Kéo mảnh ghép đến vị trí đích",

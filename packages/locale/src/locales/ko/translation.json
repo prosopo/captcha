@@ -388,6 +388,7 @@
 		"RELOAD": "새로고침",
 		"VERIFIED_AGENT": "인증된 에이전트",
 		"TRUSTED_REQUEST": "신뢰할 수 있는 요청",
+		"LOADING": "로드 중",
 		"PUZZLE": {
 			"DIALOG_LABEL": "퍼즐 인증",
 			"DRAG": "조각을 목표 위치로 끌어다 놓으세요",

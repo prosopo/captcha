@@ -388,6 +388,7 @@
 		"RELOAD": "Opnieuw laden",
 		"VERIFIED_AGENT": "Geverifieerde agent",
 		"TRUSTED_REQUEST": "Vertrouwd verzoek",
+		"LOADING": "Laden",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Puzzelopgave",
 			"DRAG": "Sleep het stukje naar het doel",

@@ -89,6 +89,7 @@
 		"RELOAD": "Recarregar",
 		"VERIFIED_AGENT": "Agente verificado",
 		"TRUSTED_REQUEST": "Solicitação confiável",
+		"LOADING": "Carregando",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Desafio de quebra-cabeça",
 			"DRAG": "Arraste a peça até o alvo",

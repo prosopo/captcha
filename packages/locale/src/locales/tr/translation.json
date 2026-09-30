@@ -388,6 +388,7 @@
 		"RELOAD": "Yeniden yükle",
 		"VERIFIED_AGENT": "Doğrulanmış aracı",
 		"TRUSTED_REQUEST": "Güvenilir istek",
+		"LOADING": "Yükleniyor",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Yapboz doğrulaması",
 			"DRAG": "Parçayı hedefe sürükleyin",
