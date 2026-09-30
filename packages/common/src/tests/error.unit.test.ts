@@ -24,6 +24,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	MAX_REPORTED_ISSUES,
 	ProsopoApiError,
+	ProsopoDBError,
 	ProsopoEnvError,
 	unwrapError,
 } from "../error.js";
@@ -295,6 +296,20 @@ describe("Logger.unpackError prefers translationKey over translated message", ()
 });
 
 describe("unwrapError still produces a translated HTTP response", () => {
+	it("passes only catalogue keys to the translator, never free text", () => {
+		const t = vi.fn<TranslateFn>((key) => key);
+		const err = new ProsopoApiError(new Error("upstream: timed out"), {
+			context: { code: 500 },
+			i18n: { t },
+			silent: true,
+		});
+
+		const { jsonError } = unwrapError(err, { t });
+		expect(err.message).toBe("upstream: timed out");
+		expect(jsonError.message).toBe("upstream: timed out");
+		expect(t).not.toHaveBeenCalledWith("upstream: timed out");
+	});
+
 	it("translates the message via i18n for the response body even though the log emits the key", () => {
 		// Build silently so we don't pollute test output.
 		const err = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
@@ -354,6 +369,16 @@ describe("unwrapError still produces a translated HTTP response", () => {
 		const { code, statusMessage } = unwrapError(err, englishI18n);
 		expect(code).toBe(599);
 		expect(statusMessage).toBe("Internal Server Error");
+	});
+});
+
+describe("error keys", () => {
+	it("only accepts keys that exist in the English catalogue", () => {
+		const known = new ProsopoDBError("DATABASE.DATABASE_IMPORT_FAILED");
+		// @ts-expect-error the old misspelling is not a catalogue key
+		const misspelt = new ProsopoDBError("DATABASE.DATABASE_IMPORT_ERROR");
+		expect(known.translationKey).toBe("DATABASE.DATABASE_IMPORT_FAILED");
+		expect(misspelt.translationKey).toBe("DATABASE.DATABASE_IMPORT_ERROR");
 	});
 });
 
