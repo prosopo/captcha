@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "ลายเซ็นต์ไม่ถูกต้อง",
 		"SITE_KEY_MISSING": "SITE KEY หายไป",
 		"ACCOUNT_NOT_FOUND": "ไม่พบบัญชี",
-		"INVALID_TIMESTAMP": "เครื่องหมายเวลาไม่ถูกต้อง"
+		"INVALID_TIMESTAMP": "เครื่องหมายเวลาไม่ถูกต้อง",
+		"MISSING_AUTH_HEADER": "ไม่มีส่วนหัวการอนุญาต",
+		"INVALID_JWT": "JWT ไม่ถูกต้อง"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "สิทธิ์ไม่เพียงพอในการทำการกระทำนี้",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "คำขอจากการเชื่อมต่อเครือข่ายมือถือไม่ได้รับอนุญาตสำหรับเว็บไซต์นี้",
 		"SATELLITE_BLOCKED": "คำขอจากการเชื่อมต่อดาวเทียมไม่ได้รับอนุญาตสำหรับเว็บไซต์นี้",
 		"CRAWLER_BLOCKED": "คำขอจากโปรแกรมรวบรวมข้อมูลที่รู้จักไม่ได้รับอนุญาตสำหรับเว็บไซต์นี้",
-		"DISALLOWED_WEBVIEW": "ไม่อนุญาตให้ส่งคำขอจากเบราว์เซอร์ในแอป (WebView) สำหรับเว็บไซต์นี้"
+		"DISALLOWED_WEBVIEW": "ไม่อนุญาตให้ส่งคำขอจากเบราว์เซอร์ในแอป (WebView) สำหรับเว็บไซต์นี้",
+		"INTERNAL_SERVER_ERROR": "ข้อผิดพลาดภายในเซิร์ฟเวอร์"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "ไม่สามารถแก้ไขผู้ใช้เจ้าของ",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "ตารางไม่ได้ถูกกำหนดไว้",
 		"CONNECTION_UNDEFINED": "การเชื่อมต่อไม่ได้ถูกกำหนด",
 		"COMMITMENT_FLAG_FAILED": "ล้มเหลวในการทำเครื่องหมายการสนับสนุนว่าดำเนินการแล้ว",
-		"UNKNOWN": "ข้อผิดพลาดในฐานข้อมูลที่ไม่ทราบสาเหตุ"
+		"UNKNOWN": "ข้อผิดพลาดในฐานข้อมูลที่ไม่ทราบสาเหตุ",
+		"QUERY_ERROR": "การสืบค้นฐานข้อมูลล้มเหลว",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "ไม่ได้กำหนดการเชื่อมต่อ Redis สำหรับกฎการเข้าถึง",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "ไม่ได้กำหนดที่จัดเก็บกฎการเข้าถึงของผู้ใช้",
+		"SESSION_STORE_FAILED": "จัดเก็บเซสชันไม่สำเร็จ",
+		"SESSION_CHECK_REMOVE_FAILED": "ตรวจสอบและลบเซสชันไม่สำเร็จ",
+		"SESSION_GET_FAILED": "ดึงเซสชันไม่สำเร็จ"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "ข้อผิดพลาดในการแยกวิเคราะห์ captcha",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "Salt ไม่ถูกต้อง",
 		"INVALID_TOKEN": "โทเคนไม่ถูกต้อง",
 		"INVALID_SOLUTION": "คำตอบไม่ถูกต้อง",
-		"DECRYPTION_ERROR": "เกิดข้อผิดพลาดในการถอดรหัส"
+		"DECRYPTION_ERROR": "เกิดข้อผิดพลาดในการถอดรหัส",
+		"SOLUTION_NOT_FOUND": "ไม่พบคำตอบ",
+		"DECISION_MACHINE_DENIED": "ถูกปฏิเสธโดยเครื่องตัดสินใจ",
+		"INVALID_TIMESTAMP": "เครื่องหมายเวลาไม่ถูกต้อง"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "พารามิเตอร์ไม่ถูกต้อง"
