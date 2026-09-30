@@ -23,6 +23,7 @@ import {
 	type TrafficFilterMatch,
 	checkTrafficFilter,
 	resolveChallengePolicy,
+	resolvePadBytes,
 } from "../../../../tasks/spam/checkTrafficFilter.js";
 
 const baseInfo = (overrides: Partial<IPInfoResult> = {}): IPInfoResult => ({
@@ -1210,5 +1211,70 @@ describe("resolveChallengePolicy", () => {
 		]);
 		expect(resolved?.captchaType).toBeUndefined();
 		expect(resolved?.powDifficulty).toBe(7);
+	});
+});
+
+describe("resolvePadBytes", () => {
+	const match = (
+		category: TrafficFilterMatch["category"],
+		policy: TrafficFilterMatch["policy"],
+	): TrafficFilterMatch => ({ category, policy });
+
+	it("is undefined when nothing matched, or when no matched policy sets it", () => {
+		expect(resolvePadBytes([])).toBeUndefined();
+		expect(
+			resolvePadBytes([
+				match("vpn", {
+					action: TrafficFilterAction.Challenge,
+					powDifficulty: 9,
+				}),
+			]),
+		).toBeUndefined();
+	});
+
+	it("reads padBytes off a challenge policy", () => {
+		expect(
+			resolvePadBytes([
+				match("proxy", {
+					action: TrafficFilterAction.Challenge,
+					padBytes: 4096,
+				}),
+			]),
+		).toBe(4096);
+	});
+
+	it("reads padBytes off a blocked policy too", () => {
+		// A blocked category is still handed a deferred challenge at request
+		// time, so padding it burns the caller's bandwidth on the way to the
+		// verify-time rejection. Ignoring block here would make the setting
+		// do nothing for the categories operators most want to tarpit.
+		expect(
+			resolvePadBytes([
+				match("proxy", { action: TrafficFilterAction.Block, padBytes: 65536 }),
+			]),
+		).toBe(65536);
+	});
+
+	it("takes the largest padBytes when several categories match", () => {
+		// Several matches only arise from the DNS extras, where the resolver
+		// and DNS peer are evaluated alongside the connection IP.
+		expect(
+			resolvePadBytes([
+				match("proxy", { action: TrafficFilterAction.Block, padBytes: 1024 }),
+				match("datacenter", {
+					action: TrafficFilterAction.Challenge,
+					padBytes: 8192,
+				}),
+				match("abuser", { action: TrafficFilterAction.Block }),
+			]),
+		).toBe(8192);
+	});
+
+	it("treats an explicit zero as configured, not absent", () => {
+		expect(
+			resolvePadBytes([
+				match("proxy", { action: TrafficFilterAction.Block, padBytes: 0 }),
+			]),
+		).toBe(0);
 	});
 });
