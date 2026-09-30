@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Chữ ký không hợp lệ",
 		"SITE_KEY_MISSING": "SITE KEY thiếu",
 		"ACCOUNT_NOT_FOUND": "Không tìm thấy tài khoản",
-		"INVALID_TIMESTAMP": "Thời điểm không hợp lệ"
+		"INVALID_TIMESTAMP": "Thời điểm không hợp lệ",
+		"MISSING_AUTH_HEADER": "Thiếu tiêu đề ủy quyền",
+		"INVALID_JWT": "JWT không hợp lệ"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Không đủ quyền để thực hiện hành động này",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Các yêu cầu từ kết nối mạng di động không được phép cho trang web này",
 		"SATELLITE_BLOCKED": "Các yêu cầu từ kết nối vệ tinh không được phép cho trang web này",
 		"CRAWLER_BLOCKED": "Các yêu cầu từ trình thu thập dữ liệu đã biết không được phép cho trang web này",
-		"DISALLOWED_WEBVIEW": "Yêu cầu từ trình duyệt trong ứng dụng (WebView) không được phép cho trang web này"
+		"DISALLOWED_WEBVIEW": "Yêu cầu từ trình duyệt trong ứng dụng (WebView) không được phép cho trang web này",
+		"INTERNAL_SERVER_ERROR": "Lỗi máy chủ nội bộ"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Không thể sửa đổi người dùng chủ sở hữu",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "Bảng chưa xác định",
 		"CONNECTION_UNDEFINED": "Kết nối không xác định",
 		"COMMITMENT_FLAG_FAILED": "Không thể đánh dấu cam kết là đã xử lý",
-		"UNKNOWN": "Lỗi cơ sở dữ liệu không xác định"
+		"UNKNOWN": "Lỗi cơ sở dữ liệu không xác định",
+		"QUERY_ERROR": "Truy vấn cơ sở dữ liệu thất bại",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Chưa xác định kết nối Redis cho quy tắc truy cập",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Chưa xác định bộ lưu trữ quy tắc truy cập người dùng",
+		"SESSION_STORE_FAILED": "Không thể lưu phiên",
+		"SESSION_CHECK_REMOVE_FAILED": "Không thể kiểm tra và xóa phiên",
+		"SESSION_GET_FAILED": "Không thể lấy phiên"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Lỗi phân tích captcha",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "Salt không hợp lệ",
 		"INVALID_TOKEN": "Token không hợp lệ",
 		"INVALID_SOLUTION": "Giải pháp không hợp lệ",
-		"DECRYPTION_ERROR": "Lỗi giải mã"
+		"DECRYPTION_ERROR": "Lỗi giải mã",
+		"SOLUTION_NOT_FOUND": "Không tìm thấy lời giải",
+		"DECISION_MACHINE_DENIED": "Bị máy quyết định từ chối",
+		"INVALID_TIMESTAMP": "Thời điểm không hợp lệ"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Tham số không hợp lệ"

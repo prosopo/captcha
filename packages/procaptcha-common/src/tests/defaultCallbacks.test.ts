@@ -16,6 +16,7 @@ import { ApiParams } from "@prosopo/types";
 import type { ProcaptchaRenderOptions, ProcaptchaToken } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	FAILED_NOTICE_FALLBACK,
 	getDefaultCallbacks,
 	setUserCallbacks,
 } from "../callbacks/defaultCallbacks.js";
@@ -133,17 +134,63 @@ describe("callbacks/defaultCallbacks", () => {
 			consoleErrorSpy.mockRestore();
 		});
 
-		it("onFailed should show alert", () => {
+		it("onFailed does not block the page with alert()", () => {
 			const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
-			const callbacks = getDefaultCallbacks();
+			const callbacks = getDefaultCallbacks(document.createElement("div"));
 
 			callbacks.onFailed();
 
-			expect(alertSpy).toHaveBeenCalledWith(
-				"Captcha challenge failed. Please try again",
-			);
-
+			expect(alertSpy).not.toHaveBeenCalled();
 			alertSpy.mockRestore();
+		});
+
+		it("onFailed shows a translated notice in the widget that screen readers announce", () => {
+			const widget = document.createElement("div");
+			const translate = vi.fn((): string => "Vous avez échoué");
+			const callbacks = getDefaultCallbacks(widget, translate);
+
+			callbacks.onFailed();
+
+			const notice = widget.querySelector('[role="alert"]');
+			expect(notice?.textContent).toBe("Vous avez échoué");
+		});
+
+		it("onFailed falls back to English when no translation is available", () => {
+			const widget = document.createElement("div");
+			const callbacks = getDefaultCallbacks(widget, () => undefined);
+
+			callbacks.onFailed();
+
+			expect(widget.querySelector('[role="alert"]')?.textContent).toBe(
+				FAILED_NOTICE_FALLBACK,
+			);
+		});
+
+		it("onFailed replaces rather than stacks notices, and a solve clears it", () => {
+			const form = document.createElement("form");
+			const widget = document.createElement("div");
+			form.appendChild(widget);
+			const callbacks = getDefaultCallbacks(widget);
+
+			callbacks.onFailed();
+			callbacks.onFailed();
+			expect(widget.querySelectorAll('[role="alert"]')).toHaveLength(1);
+
+			callbacks.onHuman("token");
+			expect(widget.querySelector('[role="alert"]')).toBeNull();
+		});
+
+		it("onFailed puts the notice beside an invisible-mode button, not in its label", () => {
+			const parent = document.createElement("div");
+			const button = document.createElement("button");
+			button.textContent = "Sign up";
+			parent.appendChild(button);
+			const callbacks = getDefaultCallbacks(button);
+
+			callbacks.onFailed();
+
+			expect(button.textContent).toBe("Sign up");
+			expect(button.nextElementSibling?.getAttribute("role")).toBe("alert");
 		});
 
 		it("onReset should remove procaptcha response", () => {
@@ -157,6 +204,92 @@ describe("callbacks/defaultCallbacks", () => {
 			expect(
 				document.getElementsByName(ApiParams.procaptchaResponse).length,
 			).toBe(0);
+		});
+	});
+
+	describe("widgets in separate forms", () => {
+		const widgetInForm = (): { form: HTMLFormElement; widget: HTMLElement } => {
+			const form = document.createElement("form");
+			const widget = document.createElement("div");
+			form.appendChild(widget);
+			document.body.appendChild(form);
+			return { form, widget };
+		};
+
+		const tokenIn = (form: HTMLFormElement): string | undefined =>
+			form.querySelector<HTMLInputElement>(
+				`input[name="${ApiParams.procaptchaResponse}"]`,
+			)?.value;
+
+		it("solving one widget keeps the other widget's token", () => {
+			const login = widgetInForm();
+			const signup = widgetInForm();
+
+			getDefaultCallbacks(login.widget).onHuman("login-token");
+			getDefaultCallbacks(signup.widget).onHuman("signup-token");
+
+			expect(tokenIn(login.form)).toBe("login-token");
+			expect(tokenIn(signup.form)).toBe("signup-token");
+		});
+
+		it.each(["onExpired", "onChallengeExpired", "onReset"] as const)(
+			"%s clears only its own widget's token",
+			(event) => {
+				const login = widgetInForm();
+				const signup = widgetInForm();
+				getDefaultCallbacks(login.widget).onHuman("login-token");
+				getDefaultCallbacks(signup.widget).onHuman("signup-token");
+
+				getDefaultCallbacks(signup.widget)[event]();
+
+				expect(tokenIn(login.form)).toBe("login-token");
+				expect(tokenIn(signup.form)).toBeUndefined();
+			},
+		);
+
+		it("onError clears only its own widget's token", () => {
+			const login = widgetInForm();
+			const signup = widgetInForm();
+			getDefaultCallbacks(login.widget).onHuman("login-token");
+			getDefaultCallbacks(signup.widget).onHuman("signup-token");
+			vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+			getDefaultCallbacks(signup.widget).onError(new Error("boom"));
+
+			expect(tokenIn(login.form)).toBe("login-token");
+			expect(tokenIn(signup.form)).toBeUndefined();
+		});
+
+		it("a user expired-callback clears only its own widget's token", () => {
+			const login = widgetInForm();
+			const signup = widgetInForm();
+			const expired = vi.fn<() => void>();
+			const signupCallbacks = getDefaultCallbacks(signup.widget);
+			setUserCallbacks(
+				{ siteKey: "key", "expired-callback": expired },
+				signupCallbacks,
+				signup.widget,
+			);
+			getDefaultCallbacks(login.widget).onHuman("login-token");
+			signupCallbacks.onHuman("signup-token");
+
+			signupCallbacks.onExpired();
+
+			expect(expired).toHaveBeenCalledTimes(1);
+			expect(tokenIn(login.form)).toBe("login-token");
+			expect(tokenIn(signup.form)).toBeUndefined();
+		});
+
+		it("leaves a same-named field outside any widget's form alone", () => {
+			const siteField = document.createElement("input");
+			siteField.name = ApiParams.procaptchaResponse;
+			siteField.value = "site-owned";
+			document.body.appendChild(siteField);
+			const signup = widgetInForm();
+
+			getDefaultCallbacks(signup.widget).onHuman("signup-token");
+
+			expect(siteField.isConnected).toBe(true);
 		});
 	});
 

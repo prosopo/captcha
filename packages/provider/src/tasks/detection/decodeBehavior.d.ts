@@ -16,6 +16,7 @@ export interface BehavioralDataResult {
 	collector1: Array<Record<string, unknown>>;
 	collector2: Array<Record<string, unknown>>;
 	collector3: Array<Record<string, unknown>>;
+	collector4?: Array<Record<string, unknown>>;
 	deviceCapability: string;
 	timestamp: number;
 }

@@ -51,6 +51,7 @@ const mocks = vi.hoisted(() => {
 	const submitSolution =
 		vi.fn<(x: number, y: number, events: PuzzleEvent[]) => Promise<boolean>>();
 	const resetState = vi.fn<() => void>();
+	const dispose = vi.fn<() => void>();
 	const constructions: {
 		updateState: (next: Partial<ProcaptchaState>) => void;
 		getHoneypotValue?: () => string | undefined;
@@ -65,6 +66,7 @@ const mocks = vi.hoisted(() => {
 		start,
 		submitSolution,
 		resetState,
+		dispose,
 		constructions,
 		loadI18next,
 		canvasProps,
@@ -85,6 +87,7 @@ vi.mock("../services/Manager.js", () => ({
 			start: mocks.start,
 			submitSolution: mocks.submitSolution,
 			resetState: mocks.resetState,
+			dispose: mocks.dispose,
 		};
 	},
 }));
@@ -761,5 +764,14 @@ describe("an invalidated session", () => {
 		render(props({ onSessionInvalidated }));
 		await invalidate();
 		expect(onSessionInvalidated).toHaveBeenCalledWith(undefined, undefined);
+	});
+});
+
+describe("destroy", () => {
+	test("disposes the manager so its expiry timers cannot outlive the widget", () => {
+		render(props());
+		expect(mocks.dispose).not.toHaveBeenCalled();
+		destroy();
+		expect(mocks.dispose).toHaveBeenCalledTimes(1);
 	});
 });
