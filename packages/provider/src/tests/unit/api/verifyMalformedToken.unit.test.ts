@@ -24,6 +24,16 @@ interface RouteOutcome {
 	body: { error?: { code?: number; key?: string } } | undefined;
 }
 
+interface MockResponse {
+	statusCode: number;
+	statusMessage: string;
+	set: () => MockResponse;
+	status: (code: number) => MockResponse;
+	json: (responseBody: RouteOutcome["body"]) => MockResponse;
+	send: (responseBody: RouteOutcome["body"]) => MockResponse;
+	end: () => MockResponse;
+}
+
 const { mockGetMaintenanceMode } = vi.hoisted(() => ({
 	mockGetMaintenanceMode: vi.fn(() => false),
 }));
@@ -64,24 +74,24 @@ const callRoute = async (
 ): Promise<RouteOutcome> => {
 	const router = prosopoVerifyRouter(buildEnv());
 	const outcome: RouteOutcome = { status: 200, body: undefined };
-	const res = {
+	const res: MockResponse = {
 		statusCode: 200,
 		statusMessage: "",
-		set: (): typeof res => res,
-		status: (code: number): typeof res => {
+		set: (): MockResponse => res,
+		status: (code: number): MockResponse => {
 			res.statusCode = code;
 			outcome.status = code;
 			return res;
 		},
-		json: (responseBody: RouteOutcome["body"]): typeof res => {
+		json: (responseBody: RouteOutcome["body"]): MockResponse => {
 			outcome.body = responseBody;
 			return res;
 		},
-		send: (responseBody: RouteOutcome["body"]): typeof res => {
+		send: (responseBody: RouteOutcome["body"]): MockResponse => {
 			outcome.body = responseBody;
 			return res;
 		},
-		end: (): typeof res => res,
+		end: (): MockResponse => res,
 	};
 	const req = {
 		method: "POST",
