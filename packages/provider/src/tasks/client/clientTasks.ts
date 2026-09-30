@@ -56,6 +56,34 @@ const isValidPrivateKey = (privateKeyString: string) => {
 	}
 };
 
+/**
+ * Matches `text` against a pattern where `*` matches any run of characters.
+ * Greedy two-pointer match, retrying from the last `*` on mismatch, so time
+ * is bounded by pattern length times text length.
+ */
+export const matchesGlob = (pattern: string, text: string): boolean => {
+	let p = 0;
+	let t = 0;
+	let starP = -1;
+	let starT = 0;
+	while (t < text.length) {
+		if (p < pattern.length && pattern[p] === "*") {
+			starP = p++;
+			starT = t;
+		} else if (p < pattern.length && pattern[p] === text[t]) {
+			p++;
+			t++;
+		} else if (starP !== -1) {
+			p = starP + 1;
+			t = ++starT;
+		} else {
+			return false;
+		}
+	}
+	while (p < pattern.length && pattern[p] === "*") p++;
+	return p === pattern.length;
+};
+
 export class ClientTaskManager {
 	config: ProsopoConfigOutput;
 	logger: Logger;
@@ -530,13 +558,10 @@ export class ClientTaskManager {
 				return referrerHost.endsWith(`.${allowed}`) || referrerHost === allowed;
 			}
 
-			// General glob pattern: convert * to .*
+			// General glob pattern. Matched without a regex: patterns are
+			// customer-controlled and `.*` runs backtrack exponentially.
 			if (pattern.includes("*")) {
-				const escaped = pattern
-					.replace(/[.+?^${}()|\[\]\\]/g, "\\$&")
-					.replace(/\*/g, ".*");
-				const regex = new RegExp(`^${escaped}$`, "i");
-				return regex.test(referrerHost);
+				return matchesGlob(pattern, referrerHost.toLowerCase());
 			}
 
 			// Exact or subdomain match for plain domains

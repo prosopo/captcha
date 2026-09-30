@@ -96,14 +96,15 @@ const MAX_INTRA_TIER = TIER_GAP - 1;
  *
  * Keyed by the enum's string values rather than the enum itself, so callers
  * carrying a captcha type as a bare `string` rank it without importing
- * `CaptchaType`.
+ * `CaptchaType`. A Map rather than an object literal, so a key such as
+ * `constructor` or `__proto__` misses instead of reading Object.prototype.
  */
-const CAPTCHA_TYPE_TIER: Record<string, number> = {
-	image: 4 * TIER_GAP,
-	puzzle: 3 * TIER_GAP,
-	pow: 2 * TIER_GAP,
-	frictionless: 1 * TIER_GAP,
-};
+const CAPTCHA_TYPE_TIER: ReadonlyMap<string, number> = new Map([
+	["image", 4 * TIER_GAP],
+	["puzzle", 3 * TIER_GAP],
+	["pow", 2 * TIER_GAP],
+	["frictionless", 1 * TIER_GAP],
+]);
 
 /**
  * The tunables that make one challenge of a given type harder than another.
@@ -157,7 +158,7 @@ const clampIntraTier = (value: number): number =>
  * tie; ranking it as a real type is the consistent reading.
  */
 export const rankCaptchaType = (captchaType: string | undefined): number =>
-	captchaType === undefined ? 0 : (CAPTCHA_TYPE_TIER[captchaType] ?? 0);
+	captchaType === undefined ? 0 : (CAPTCHA_TYPE_TIER.get(captchaType) ?? 0);
 
 /**
  * True when `candidate` is a stricter captcha *type* than `incumbent`,

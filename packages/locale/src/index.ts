@@ -27,3 +27,5 @@ export type {
 	TranslateFn,
 	TranslateOptions,
 } from "./types.js";
+export { localiseErrorMessage } from "./errorMessage.js";
+export type { KeyedErrorMessage } from "./errorMessage.js";

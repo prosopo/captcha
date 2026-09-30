@@ -45,6 +45,7 @@ import {
 	initDetectorBundlePool,
 } from "../tasks/detection/bundlePool.js";
 import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvider.js";
+import { adminAuthOptions } from "./adminAuthOptions.js";
 import { getVerdictCache } from "./blacklistRequestInspector.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
@@ -389,17 +390,16 @@ export async function startProviderApi(
 
 	//  Admin routes - do not put after block middleware as this can block admin requests
 	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
-	apiApp.use(
-		"/v1/prosopo/provider/admin",
-		authMiddleware(env.pair, env.authAccount),
+	const adminAuth = authMiddleware(
+		env.pair,
+		env.authAccount,
+		adminAuthOptions(process.env, env.config.host),
 	);
+	apiApp.use("/v1/prosopo/provider/admin", adminAuth);
 	if (apiRuleRoutesProvider) {
 		const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
 		for (const userAccessRuleRoute in userAccessRuleRoutes) {
-			apiApp.use(
-				userAccessRuleRoute,
-				authMiddleware(env.pair, env.authAccount),
-			);
+			apiApp.use(userAccessRuleRoute, adminAuth);
 		}
 		// Rule mutations must invalidate the process-wide verdict cache —
 		// otherwise a fresh Block rule takes up to DEFAULT_VERDICT_CACHE_TTL_MS
