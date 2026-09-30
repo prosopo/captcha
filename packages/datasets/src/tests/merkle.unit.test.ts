@@ -115,15 +115,13 @@ describe("DATASETS MERKLE TREE", async () => {
 		);
 
 		tree.build(captchaHashes);
-		const proof = tree.proof(
-			"0x0712abea4b4307c161ea64227ae1f9400f6844287ec4d574b9facfddbf5f542a",
-		);
+		const proof = tree.proof(at(captchaHashes, 0));
 		const layerZeroHash = hexHashArray(at(proof, 0));
 
-		expect(at(tree.layers, 1).indexOf(layerZeroHash) > -1);
+		expect(at(tree.layers, 1).indexOf(layerZeroHash)).toBeGreaterThan(-1);
 		const layerOneHash = hexHashArray(at(proof, 1));
 
-		expect(at(tree.layers, 2).indexOf(layerOneHash) > -1);
+		expect(at(tree.layers, 2).indexOf(layerOneHash)).toBeGreaterThan(-1);
 	});
 	test("Tree contains correct leaf hashes when not computing leaf hashes", () => {
 		const tree = new CaptchaMerkleTree();
@@ -148,10 +146,10 @@ describe("DATASETS MERKLE TREE", async () => {
 		const proof1 = tree.proof("1");
 		const layerZeroHash = hexHashArray(at(proof1, 0));
 
-		expect(at(tree.layers, 1).indexOf(layerZeroHash) > -1);
+		expect(at(tree.layers, 1).indexOf(layerZeroHash)).toBeGreaterThan(-1);
 		const layerOneHash = hexHashArray(at(proof1, 1));
 
-		expect(at(tree.layers, 2).indexOf(layerOneHash) > -1);
+		expect(at(tree.layers, 2).indexOf(layerOneHash)).toBeGreaterThan(-1);
 
 		expect(at(proof1, proof1.length - 1).length).to.equal(1);
 
@@ -188,14 +186,32 @@ describe("DATASETS MERKLE TREE", async () => {
 		const proof = tree.proof("16");
 		const layerZeroHash = hexHashArray(at(proof, 0));
 
-		expect(at(tree.layers, 1).indexOf(layerZeroHash) > -1);
+		expect(at(tree.layers, 1).indexOf(layerZeroHash)).toBeGreaterThan(-1);
 		const layerOneHash = hexHashArray(at(proof, 1));
 
-		expect(at(tree.layers, 2).indexOf(layerOneHash) > -1);
+		expect(at(tree.layers, 2).indexOf(layerOneHash)).toBeGreaterThan(-1);
 
-		expect(at(tree.layers, tree.layers.length - 1).length === 1);
+		expect(at(tree.layers, tree.layers.length - 1).length).toBe(1);
 
 		expect(at(proof, proof.length - 1).length).to.equal(1);
+	});
+
+	test("Refuses to build a proof for a hash that is not a leaf", () => {
+		const tree = new CaptchaMerkleTree();
+		tree.build(["1", "2", "3"]);
+		const innerNode = at(at(tree.layers, 1), 0);
+
+		expect(() => tree.proof("not-a-leaf")).toThrow();
+		expect(() => tree.proof(innerNode)).toThrow();
+		expect(() => tree.proof(tree.getRoot().hash)).toThrow();
+	});
+
+	test("Refuses to build a proof for a non-leaf on a single-leaf tree", () => {
+		const tree = new CaptchaMerkleTree();
+		tree.build(["only"]);
+
+		expect(tree.proof("only")).toEqual([["only"]]);
+		expect(() => tree.proof("not-a-leaf")).toThrow();
 	});
 
 	test("Larger odd tree proof works", () => {
@@ -223,12 +239,12 @@ describe("DATASETS MERKLE TREE", async () => {
 		const proof = tree.proof("17");
 		const layerZeroHash = hexHashArray(at(proof, 0));
 
-		expect(at(tree.layers, 1).indexOf(layerZeroHash) > -1);
+		expect(at(tree.layers, 1).indexOf(layerZeroHash)).toBeGreaterThan(-1);
 		const layerOneHash = hexHashArray(at(proof, 1));
 
-		expect(at(tree.layers, 2).indexOf(layerOneHash) > -1);
+		expect(at(tree.layers, 2).indexOf(layerOneHash)).toBeGreaterThan(-1);
 
-		expect(at(tree.layers, tree.layers.length - 1).length === 1);
+		expect(at(tree.layers, tree.layers.length - 1).length).toBe(1);
 
 		expect(at(proof, proof.length - 1).length).to.equal(1);
 	});

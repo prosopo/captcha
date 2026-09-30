@@ -77,6 +77,7 @@ export type DecisionMachineBehavioralDataPacked = {
 	c1: unknown[];
 	c2: unknown[];
 	c3: unknown[];
+	c4?: unknown[];
 	d: string;
 };
 
@@ -148,6 +149,17 @@ export type DecisionMachineInput = {
 	ruleType?: string[];
 	webView?: boolean;
 	iFrame?: boolean;
+	// Page URLs the widget was rendered on, read back from the Session
+	// record (origin + path only; query string, fragment and any embedded
+	// credentials stripped — see sanitisePageUrl). `currentUrl` is the
+	// top-frame URL; `iframeUrl` is the widget's own frame URL and is
+	// undefined when the widget IS the top frame. Undefined when the client
+	// omitted the field or the session pre-dates it.
+	//
+	// Both are client-reported and are NOT cross-checked against the request
+	// Origin / Referer, so a rule must not grant an exemption on them alone.
+	currentUrl?: string;
+	iframeUrl?: string;
 	// Checkbox click + shape clicks embedded in the solution salt. For pow
 	// and puzzle this is `[[[checkboxX, checkboxY]]]` (single click); for
 	// image the outer array has one entry per tile with the first tile's
