@@ -234,6 +234,13 @@ export default (
 				);
 			}
 
+			const trafficFilterVerdict = applyTrafficFilterAtRequestTime(
+				req.ipInfo,
+				clientRecord.settings?.trafficFilter,
+				req.logger,
+			);
+			res.locals.padBytes = trafficFilterVerdict.padBytes;
+
 			if (dedup) {
 				// A reused session must still honour an active user access policy
 				// AND the configured routing machine. This fast-path returns
@@ -898,18 +905,6 @@ export default (
 			// Access policies are more targeted than trafficFilter, so any
 			// matched access policy has already dispatched above. Only fall
 			// through here when access policies didn't fire.
-			const trafficFilterVerdict = applyTrafficFilterAtRequestTime(
-				req.ipInfo,
-				clientRecord.settings?.trafficFilter,
-				req.logger,
-			);
-			// Set before either branch responds, so the tarpit applies to the
-			// challenge the traffic filter dispatches below AND to whatever the
-			// decision machine issues when no category matched a challenge.
-			// Frictionless is the entry point nearly every site uses; padding
-			// only the three direct endpoints left the feature inert in
-			// production.
-			res.locals.padBytes = trafficFilterVerdict.padBytes;
 			const trafficFilterOutcome = await handleFrictionlessTrafficFilter(
 				{
 					verdict: trafficFilterVerdict,
