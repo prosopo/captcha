@@ -12,54 +12,91 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { EventEmitter } from "node:events";
 import { MAX_PAD_BYTES } from "@prosopo/types";
 import type { NextFunction, Request, Response } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { padResponseMiddleware } from "../../../utils/tarpitPadding.js";
 
+interface FakeOptions {
+	padBytes?: number;
+	/** Bytes accepted before `write` starts returning false. */
+	highWaterMark?: number;
+}
+
 interface FakeResponse {
 	res: Response;
+	emitter: EventEmitter;
 	/** Everything written through the streaming path, in order. */
 	body: () => string;
+	written: () => number;
 	jsonMock: ReturnType<typeof vi.fn>;
 	headers: Record<string, string>;
 	ended: () => boolean;
+	destroyed: () => boolean;
+	close: () => void;
 }
 
-const makeRes = (padBytes?: number): FakeResponse => {
+const makeRes = ({ padBytes, highWaterMark }: FakeOptions): FakeResponse => {
 	const chunks: string[] = [];
 	const headers: Record<string, string> = {};
+	const emitter = new EventEmitter();
+	let written = 0;
 	let ended = false;
+	let destroyed = false;
 	const jsonMock = vi.fn();
-	const res = {
+
+	const res = Object.assign(emitter, {
 		locals: { padBytes },
 		json: jsonMock,
-		setHeader: (name: string, value: string) => {
+		get writableEnded(): boolean {
+			return ended;
+		},
+		get destroyed(): boolean {
+			return destroyed;
+		},
+		setHeader: (name: string, value: string): void => {
 			headers[name.toLowerCase()] = value;
 		},
-		write: (chunk: string) => {
+		write: (chunk: string): boolean => {
 			chunks.push(chunk);
-			return true;
+			written += chunk.length;
+			return highWaterMark === undefined || written < highWaterMark;
 		},
-		end: () => {
+		end: (): unknown => {
 			ended = true;
 			return res;
 		},
-	} as unknown as Response;
+		destroy: (): void => {
+			destroyed = true;
+		},
+	}) as unknown as Response;
+
 	return {
 		res,
+		emitter,
 		body: () => chunks.join(""),
+		written: () => written,
 		jsonMock,
 		headers,
 		ended: () => ended,
+		destroyed: () => destroyed,
+		close: () => {
+			destroyed = true;
+			emitter.emit("close");
+		},
 	};
 };
 
-const send = (fake: FakeResponse, body: object): void => {
+const flush = (): Promise<void> =>
+	new Promise((resolve) => setImmediate(resolve));
+
+const send = async (fake: FakeResponse, body: object): Promise<void> => {
 	const next = vi.fn() as unknown as NextFunction;
 	padResponseMiddleware({} as Request, fake.res, next);
 	expect(next).toHaveBeenCalled();
 	fake.res.json(body);
+	await flush();
 };
 
 const CHALLENGE = {
@@ -69,74 +106,141 @@ const CHALLENGE = {
 	timestamp: "1764000000000",
 };
 
+const padOf = (parsed: Record<string, unknown>): string[] =>
+	Object.entries(parsed)
+		.filter(([key]) => !(key in CHALLENGE))
+		.map(([, value]) => String(value));
+
 describe("padResponseMiddleware", () => {
-	it("leaves the response untouched when no padding was resolved", () => {
-		const fake = makeRes(undefined);
-		send(fake, CHALLENGE);
-		// Straight through to the original res.json — not re-serialised, and
-		// no streaming writes, so an unconfigured site is byte-for-byte as
-		// it was before the tarpit existed.
+	it("leaves the response untouched when no padding was resolved", async () => {
+		const fake = makeRes({ padBytes: undefined });
+		await send(fake, CHALLENGE);
 		expect(fake.jsonMock).toHaveBeenCalledWith(CHALLENGE);
 		expect(fake.body()).toBe("");
 	});
 
-	it("leaves the response untouched for a zero or negative padBytes", () => {
+	it("leaves the response untouched for a zero or negative padBytes", async () => {
 		for (const padBytes of [0, -1]) {
-			const fake = makeRes(padBytes);
-			send(fake, CHALLENGE);
+			const fake = makeRes({ padBytes });
+			await send(fake, CHALLENGE);
 			expect(fake.jsonMock).toHaveBeenCalledWith(CHALLENGE);
 			expect(fake.body()).toBe("");
 		}
 	});
 
-	it("appends the requested padding and keeps every real field", () => {
-		const fake = makeRes(4096);
-		send(fake, CHALLENGE);
+	it("emits the requested total padding and keeps every real field", async () => {
+		const fake = makeRes({ padBytes: 4096 });
+		await send(fake, CHALLENGE);
 
 		expect(fake.jsonMock).not.toHaveBeenCalled();
-		const parsed = JSON.parse(fake.body());
-		expect(parsed.pad).toHaveLength(4096);
+		const parsed: Record<string, unknown> = JSON.parse(fake.body());
 		expect(parsed).toMatchObject(CHALLENGE);
+		expect(padOf(parsed).join("")).toHaveLength(4096);
 		expect(fake.headers["content-type"]).toBe(
 			"application/json; charset=utf-8",
 		);
 		expect(fake.ended()).toBe(true);
 	});
 
-	it("writes the padding before any real field, so a scraper cannot read a prefix and abort", () => {
-		const fake = makeRes(2048);
-		send(fake, CHALLENGE);
+	it("interleaves the padding so no real field arrives before some of it", async () => {
+		const fake = makeRes({ padBytes: 4096 });
+		await send(fake, CHALLENGE);
 		const body = fake.body();
-		expect(body.indexOf('"pad"')).toBe(1);
-		expect(body.indexOf('"challenge"')).toBeGreaterThan(2048);
+		const parsed: Record<string, unknown> = JSON.parse(fake.body());
+
+		const pads = padOf(parsed);
+		expect(pads).toHaveLength(Object.keys(CHALLENGE).length);
+		for (const field of Object.keys(CHALLENGE)) {
+			expect(body.indexOf(`"${field}"`)).toBeGreaterThan(0);
+		}
+		const lastPad = pads[pads.length - 1] ?? "";
+		expect(body.indexOf('"timestamp"')).toBeGreaterThan(4096 - lastPad.length);
 	});
 
-	it("pads with incompressible bytes", () => {
-		// The point of the padding is bandwidth: a run of one repeated
-		// character would gzip away to nothing in transit. Distinct
-		// characters across a base64 alphabet is the cheap proxy for that.
-		const fake = makeRes(8192);
-		send(fake, CHALLENGE);
-		const pad: string = JSON.parse(fake.body()).pad;
-		expect(new Set(pad).size).toBeGreaterThan(50);
+	it("uses unpredictable pad keys rather than a fixed marker", async () => {
+		const keysFor = async (): Promise<string[]> => {
+			const fake = makeRes({ padBytes: 512 });
+			await send(fake, CHALLENGE);
+			const parsed: Record<string, unknown> = JSON.parse(fake.body());
+			return Object.keys(parsed).filter((key) => !(key in CHALLENGE));
+		};
+		const first = await keysFor();
+		const second = await keysFor();
+
+		expect(first).not.toContain("pad");
+		expect(first).not.toEqual(second);
 	});
 
-	it("clamps padding to the 5 MiB ceiling so it cannot be used as an amplifier", () => {
-		const fake = makeRes(MAX_PAD_BYTES * 10);
-		send(fake, CHALLENGE);
-		expect(JSON.parse(fake.body()).pad).toHaveLength(MAX_PAD_BYTES);
+	it("pads with incompressible bytes", async () => {
+		const fake = makeRes({ padBytes: 8192 });
+		await send(fake, CHALLENGE);
+		const parsed: Record<string, unknown> = JSON.parse(fake.body());
+		expect(new Set(padOf(parsed).join("")).size).toBeGreaterThan(50);
 	});
 
-	it("emits valid JSON for a body with no fields", () => {
-		const fake = makeRes(64);
-		send(fake, {});
-		expect(JSON.parse(fake.body()).pad).toHaveLength(64);
+	it("clamps padding to the 5 MiB ceiling so it cannot be used as an amplifier", async () => {
+		const fake = makeRes({ padBytes: MAX_PAD_BYTES * 10 });
+		await send(fake, CHALLENGE);
+		const parsed: Record<string, unknown> = JSON.parse(fake.body());
+		expect(padOf(parsed).join("")).toHaveLength(MAX_PAD_BYTES);
 	});
 
-	it("does not pad a non-object body, which has no fields to splice into", () => {
-		const fake = makeRes(64);
-		send(fake, ["a", "b"]);
+	it("emits valid JSON for a body with no fields", async () => {
+		const fake = makeRes({ padBytes: 64 });
+		await send(fake, {});
+		const parsed: Record<string, unknown> = JSON.parse(fake.body());
+		expect(padOf(parsed).join("")).toHaveLength(64);
+	});
+
+	it("does not pad a non-object body, which has no fields to splice into", async () => {
+		const fake = makeRes({ padBytes: 64 });
+		await send(fake, ["a", "b"]);
 		expect(fake.jsonMock).toHaveBeenCalledWith(["a", "b"]);
 		expect(fake.body()).toBe("");
+	});
+
+	it("stops writing once the socket reports backpressure and resumes on drain", async () => {
+		const fake = makeRes({ padBytes: 512 * 1024, highWaterMark: 64 * 1024 });
+		await send(fake, CHALLENGE);
+
+		const paused = fake.written();
+		expect(paused).toBeLessThan(128 * 1024);
+		expect(fake.ended()).toBe(false);
+
+		fake.emitter.emit("drain");
+		await flush();
+		expect(fake.written()).toBeGreaterThan(paused);
+	});
+
+	it("abandons the pad when the peer stops reading, instead of buffering it", async () => {
+		const fake = makeRes({
+			padBytes: MAX_PAD_BYTES,
+			highWaterMark: 64 * 1024,
+		});
+		await send(fake, CHALLENGE);
+
+		const paused = fake.written();
+		fake.close();
+		await flush();
+
+		expect(fake.written()).toBe(paused);
+		expect(fake.written()).toBeLessThan(128 * 1024);
+		expect(fake.ended()).toBe(false);
+	});
+
+	it("does not resume writing after a drain that follows a close", async () => {
+		const fake = makeRes({
+			padBytes: MAX_PAD_BYTES,
+			highWaterMark: 64 * 1024,
+		});
+		await send(fake, CHALLENGE);
+
+		fake.close();
+		await flush();
+		const paused = fake.written();
+
+		fake.emitter.emit("drain");
+		await flush();
+		expect(fake.written()).toBe(paused);
 	});
 });
