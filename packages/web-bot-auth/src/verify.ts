@@ -45,10 +45,19 @@ export type VerifyFailReason =
 	| "unsupported-alg"
 	| "missing-keyid"
 	| "expired"
+	| "missing-created-or-expires"
+	| "not-yet-valid"
+	| "validity-too-long"
+	| "wrong-tag"
 	| "jwks-fetch-failed"
 	| "no-matching-key"
 	| "malformed-key"
 	| "bad-signature";
+
+const WEB_BOT_AUTH_TAG = "web-bot-auth";
+const CLOCK_SKEW_SECONDS = 5;
+// The draft recommends signers keep expiry within 24 hours.
+const MAX_VALIDITY_SECONDS = 24 * 60 * 60;
 
 const readHeader = (
 	headers: VerifiableRequest["headers"],
@@ -111,11 +120,27 @@ export const verifyWebBotAuth = async (
 		return { verified: false, reason: "unsupported-alg" };
 	}
 
-	// `expires` is seconds since epoch per RFC 9421. Treat any expired
-	// signature as invalid — this is the replay defence.
-	const expires = inputEntry.params.expires;
-	if (typeof expires === "number" && expires * 1000 < Date.now()) {
+	// Web Bot Auth requires `created`, `expires` and `tag="web-bot-auth"`
+	// (draft-meunier-web-bot-auth-architecture §4.2). The signature covers
+	// only the authority and the agent header, so the time window is the
+	// only replay defence: without `expires` a captured signature would
+	// verify forever.
+	const { created, expires, tag } = inputEntry.params;
+	if (tag !== WEB_BOT_AUTH_TAG) {
+		return { verified: false, reason: "wrong-tag" };
+	}
+	if (typeof created !== "number" || typeof expires !== "number") {
+		return { verified: false, reason: "missing-created-or-expires" };
+	}
+	const nowSeconds = Date.now() / 1000;
+	if (expires < nowSeconds) {
 		return { verified: false, reason: "expired" };
+	}
+	if (created > nowSeconds + CLOCK_SKEW_SECONDS) {
+		return { verified: false, reason: "not-yet-valid" };
+	}
+	if (expires - created > MAX_VALIDITY_SECONDS) {
+		return { verified: false, reason: "validity-too-long" };
 	}
 
 	const keyid = inputEntry.params.keyid;
