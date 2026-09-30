@@ -136,6 +136,9 @@ export function Manager(
 	) => {
 		checkboxClickX = checkboxX;
 		checkboxClickY = checkboxY;
+		if (state.answeredIncorrectly) {
+			updateState({ answeredIncorrectly: false });
+		}
 		checkboxInputMethod = inputMethod;
 		events.onOpen();
 		await providerRetry(
@@ -454,7 +457,14 @@ export function Manager(
 					setValidChallengeTimeout();
 				} else {
 					events.onFailed();
-					resetState(frictionlessState?.restart);
+					// Independent of onFailed, which sites routinely override: without
+					// this the modal just closes and the user never learns why.
+					updateState({ answeredIncorrectly: true });
+					resetState(
+						frictionlessState
+							? () => frictionlessState.restart({ showRetry: true })
+							: undefined,
+					);
 				}
 			},
 			start,

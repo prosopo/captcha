@@ -65,6 +65,9 @@ export const mountProcaptchaImageWidget = (
 	const isInvisible = "invisible" === config.mode;
 
 	const store: ProcaptchaStateHandle = createProcaptchaState();
+	if (props.startShowRetry) {
+		store.update({ answeredIncorrectly: true });
+	}
 	let loading = false;
 	// The error this widget has already reacted to, standing in for the effect
 	// dependency list that used to gate the recovery path.
@@ -214,6 +217,9 @@ export const mountProcaptchaImageWidget = (
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",
 		error: store.state.error
 			? localiseErrorMessage(translator.i18n, store.state.error)
+			: undefined,
+		notice: store.state.answeredIncorrectly
+			? translator.t("WIDGET.PUZZLE.RETRY")
 			: undefined,
 		loadingText: translator.t("WIDGET.CHECKING", {
 			defaultValue: "Checking that you are human",
