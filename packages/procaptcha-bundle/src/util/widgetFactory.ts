@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { loadI18next } from "@prosopo/locale";
+import { getLanguageDirection, loadI18next } from "@prosopo/locale";
 import type { Ti18n } from "@prosopo/locale";
 import {
 	getDefaultCallbacks,
@@ -26,6 +26,7 @@ import {
 } from "@prosopo/widget-skeleton";
 import type { CaptchaRenderer } from "./captcha/captchaRenderer.js";
 import type { BundleCaptchaHandle } from "./captcha/components/bundleCaptcha.js";
+import { FAILED_NOTICE_KEY } from "./failedNoticeKey.js";
 import { resolveLanguage } from "./language.js";
 import type { WidgetThemeResolver } from "./widgetThemeResolver.js";
 
@@ -58,7 +59,9 @@ class WidgetFactory {
 	): Promise<CreatedWidget[]> {
 		return Promise.all(
 			containers.map((container) => {
-				const callbacks = getDefaultCallbacks(container);
+				const callbacks = getDefaultCallbacks(container, () =>
+					this._i18n?.t(FAILED_NOTICE_KEY),
+				);
 				setUserCallbacks(renderOptions, callbacks, container);
 				return this.createWidget(
 					container,
@@ -118,6 +121,8 @@ class WidgetFactory {
 		// API don't delay the initial widget creation.
 
 		const captchaRenderer = await this.getCaptchaRenderer(language);
+
+		widgetContainer.dir = getLanguageDirection(language ?? this.i18n.language);
 
 		const captchaRoot = captchaRenderer.renderCaptcha(
 			widgetInteractiveArea,

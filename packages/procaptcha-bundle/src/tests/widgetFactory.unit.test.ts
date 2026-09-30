@@ -39,7 +39,10 @@ const i18nIn = (language: string): Ti18n => ({
 });
 
 class TestWidgetFactory extends WidgetFactory {
-	public constructor(private readonly loaded: Ti18n | null) {
+	public constructor(
+		private readonly browserLanguage: string,
+		private readonly loaded: Ti18n | null = null,
+	) {
 		super(new WidgetThemeResolver());
 	}
 
@@ -48,7 +51,7 @@ class TestWidgetFactory extends WidgetFactory {
 	}
 
 	override get i18n(): Ti18n {
-		return this.loaded ?? i18nIn("en");
+		return this.loaded ?? i18nIn(this.browserLanguage);
 	}
 
 	protected override async getCaptchaRenderer(): Promise<CaptchaRenderer> {
@@ -59,6 +62,25 @@ class TestWidgetFactory extends WidgetFactory {
 	}
 }
 
+const render = async (
+	options: Partial<ProcaptchaRenderOptions>,
+	browserLanguage = "en",
+	invisible = false,
+): Promise<HTMLElement> => {
+	const container: HTMLElement = document.createElement("div");
+	document.body.appendChild(container);
+	const { container: widget } = await new TestWidgetFactory(
+		browserLanguage,
+	).createWidget(
+		container,
+		{ siteKey: "site-key", ...options },
+		getDefaultCallbacks(container),
+		true,
+		invisible,
+	);
+	return widget;
+};
+
 const spinnerLabel = async (
 	loaded: Ti18n | null,
 	options: Partial<ProcaptchaRenderOptions>,
@@ -66,6 +88,7 @@ const spinnerLabel = async (
 	const container: HTMLElement = document.createElement("div");
 	document.body.appendChild(container);
 	const { container: widget } = await new TestWidgetFactory(
+		loaded?.language ?? "en",
 		loaded,
 	).createWidget(
 		container,
@@ -82,6 +105,33 @@ const spinnerLabel = async (
 
 afterEach(() => {
 	document.body.innerHTML = "";
+	document.documentElement.removeAttribute("dir");
+});
+
+describe("widget direction", () => {
+	test("is rtl for an Arabic widget", async () => {
+		expect((await render({ language: "ar" })).dir).toBe("rtl");
+	});
+
+	test("is ltr for an English widget on an rtl page", async () => {
+		document.documentElement.dir = "rtl";
+		expect((await render({ language: "en" })).dir).toBe("ltr");
+	});
+
+	test("follows the detected language when the site names none", async () => {
+		expect((await render({}, "ar")).dir).toBe("rtl");
+		expect((await render({}, "de")).dir).toBe("ltr");
+	});
+
+	test("is set on the host that holds the skeleton", async () => {
+		const widget: HTMLElement = await render({ language: "ar" });
+		expect(widget.tagName.toLowerCase()).toBe("prosopo-procaptcha");
+		expect(widget.querySelector(".prosopo-widget__content")).not.toBeNull();
+	});
+
+	test("is set in invisible mode too", async () => {
+		expect((await render({ language: "ar" }, "en", true)).dir).toBe("rtl");
+	});
 });
 
 describe("loading spinner label", () => {
