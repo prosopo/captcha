@@ -215,6 +215,9 @@ export const mountProcaptchaFrictionless = (
 		teardown.add(() => clearTimeout(timer));
 	};
 
+	const cannotLoadText = (): string =>
+		i18n.isInitialized ? i18n.t("WIDGET.CANNOT_LOAD") : "Cannot load CAPTCHA";
+
 	const fallOverWithStyle = (errorMessage?: string, errorKey?: string) => {
 		// We could always re-render here after a period but this will result in
 		// never-ending requests to Providers when settings are incorrect, or the
@@ -235,7 +238,7 @@ export const mountProcaptchaFrictionless = (
 			config.mode,
 			errorMessage
 				? localiseErrorMessage(i18n, { message: errorMessage, key: errorKey })
-				: "Cannot load CAPTCHA",
+				: cannotLoadText(),
 			false,
 		);
 	};
