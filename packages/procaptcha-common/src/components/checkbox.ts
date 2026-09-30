@@ -46,6 +46,11 @@ export interface CheckboxProps {
 	onChange: CheckboxChangeHandler;
 	labelText: string;
 	error?: string;
+	/**
+	 * Shown in place of the label like `error`, but the box stays enabled:
+	 * it reports something the user can fix by trying again.
+	 */
+	notice?: string;
 	loading: boolean;
 	/** Name for the spinner that stands in for the box while it is working. */
 	loadingText?: string;
@@ -76,7 +81,9 @@ const generateNames = (): CheckboxNames => ({
 });
 
 const FAQ_LINK = process.env.PROSOPO_DOCS_URL
-	? `${new URL(`${process.env.PROSOPO_DOCS_URL}/en/basics/faq/`).href}/`
+	? new URL(
+			`${process.env.PROSOPO_DOCS_URL.replace(/\/+$/, "")}/en/basics/faq/`,
+		).href
 	: "https://docs.prosopo.io/en/basics/faq/";
 
 /**
@@ -372,6 +379,16 @@ export const mountCheckbox = (
 			return;
 		}
 		applyStyles(label, { userSelect: undefined, cursor: undefined });
+		if (undefined !== props.notice) {
+			label.appendChild(
+				createElement("span", {
+					attributes: { role: "alert" },
+					style: { color: props.theme.palette.error.main },
+					text: props.notice,
+				}),
+			);
+			return;
+		}
 		label.textContent = props.labelText;
 	};
 

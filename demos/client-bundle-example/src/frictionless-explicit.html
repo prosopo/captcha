@@ -189,7 +189,7 @@
     window.updateCaptchaStatus('Challenge placement: ' + placement, 'info');
 
     // Render the CAPTCHA
-    const widgetId = render(captchaContainer, {
+    const widgetId = await render(captchaContainer, {
         siteKey: import.meta.env.PROSOPO_SITE_KEY_FRICTIONLESS,
         placement,
         callback: onCaptchaVerified,
@@ -198,6 +198,7 @@
             window.updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
         }
     });
+    window.updateCaptchaStatus('CAPTCHA render function called with widget ID: ' + widgetId, 'info');
 
 </script>
 </body>

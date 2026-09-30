@@ -15,6 +15,7 @@
 import type { Ti18n } from "@prosopo/locale";
 import type { Manager as ManagerType } from "@prosopo/procaptcha";
 import {
+	InputMethod,
 	ModeEnum,
 	type ProcaptchaProps,
 	type ProcaptchaState,
@@ -40,6 +41,7 @@ const submit = vi.fn<ManagerApi["submit"]>(() => Promise.resolve());
 const select = vi.fn<ManagerApi["select"]>();
 const nextRound = vi.fn<ManagerApi["nextRound"]>();
 const reload = vi.fn<ManagerApi["reload"]>(() => Promise.resolve());
+const dispose = vi.fn<ManagerApi["dispose"]>();
 
 let update: ProcaptchaStateUpdateFn | undefined;
 let readHoneypot: (() => string | undefined) | undefined;
@@ -50,7 +52,7 @@ vi.mock("@prosopo/procaptcha", () => ({
 		managerArgs.push(args);
 		update = args[2];
 		readHoneypot = args[5];
-		return { start, cancel, submit, select, nextRound, reload };
+		return { start, cancel, submit, select, nextRound, reload, dispose };
 	},
 }));
 
@@ -256,7 +258,20 @@ describe("clicking the checkbox", () => {
 	test("starts the challenge where the user clicked", () => {
 		render();
 		fire(checkbox(), "click", { clientX: 11, clientY: 22 });
-		expect(start).toHaveBeenCalledWith(11, 22);
+		expect(start).toHaveBeenCalledWith(11, 22, InputMethod.pointer);
+	});
+
+	test("starts from Enter as a keyboard activation at (0, 0)", () => {
+		render();
+		fire(checkbox(), "keydown", { key: "Enter" });
+		expect(start).toHaveBeenCalledWith(0, 0, InputMethod.keyboard);
+	});
+
+	test("starts from Space as a keyboard activation at (0, 0)", () => {
+		// Space toggles a checkbox through a click whose press count is 0.
+		render();
+		fire(checkbox(), "click", { detail: 0 });
+		expect(start).toHaveBeenCalledWith(0, 0, InputMethod.keyboard);
 	});
 
 	test("ignores a synthetic click", () => {
@@ -386,7 +401,7 @@ describe("the challenge", () => {
 		const image = document.querySelector(`${SURFACE_SELECTOR} img`);
 		if (!image) throw new Error("expected a captcha image");
 		fire(image, "click", { clientX: 3, clientY: 4 });
-		expect(select).toHaveBeenCalledWith("hash-1", 3, 4);
+		expect(select).toHaveBeenCalledWith("hash-1", 3, 4, InputMethod.pointer);
 	});
 
 	test("wires cancel to the manager", async () => {
@@ -481,6 +496,34 @@ describe("recovering from an error", () => {
 		await setState({ error: { message: "boom", key: "CAPTCHA.UNKNOWN" } });
 		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 150));
 		expect(restart).not.toHaveBeenCalled();
+	});
+});
+
+describe("after a wrong answer", () => {
+	const notice = (): Element | null =>
+		mounted.container.querySelector('[role="alert"]');
+
+	test("tells the user and leaves the checkbox usable", async () => {
+		render();
+		await setState({ answeredIncorrectly: true });
+		expect(notice()?.textContent).toBe("WIDGET.PUZZLE.RETRY");
+		expect(checkbox().disabled).toBe(false);
+	});
+
+	test("carries the notice across a frictionless restart", () => {
+		render({ startShowRetry: true });
+		expect(notice()?.textContent).toBe("WIDGET.PUZZLE.RETRY");
+	});
+
+	test("shows nothing on an ordinary mount", () => {
+		render();
+		expect(notice()).toBeNull();
+	});
+
+	test("drops the notice once the manager clears it", async () => {
+		render({ startShowRetry: true });
+		await setState({ answeredIncorrectly: false });
+		expect(notice()).toBeNull();
 	});
 });
 
@@ -625,7 +668,7 @@ describe("the manager itself", () => {
 		await setState({ isHuman: true });
 		expect(managerArgs).toHaveLength(1);
 		fire(checkbox(), "click", { clientX: 9, clientY: 9 });
-		expect(start).toHaveBeenCalledWith(9, 9);
+		expect(start).toHaveBeenCalledWith(9, 9, InputMethod.pointer);
 	});
 
 	test("is given the frictionless state so it can reuse the session", () => {
@@ -660,5 +703,15 @@ describe("the manager itself", () => {
 		// to re-mint the challenge with — the modal would just close.
 		render();
 		expect(managerArgs[0]?.[6]).toBeUndefined();
+	});
+});
+
+describe("destroy", () => {
+	test("disposes the manager so its expiry timers cannot outlive the widget", () => {
+		render();
+		expect(dispose).not.toHaveBeenCalled();
+		widget?.destroy();
+		widget = undefined;
+		expect(dispose).toHaveBeenCalledTimes(1);
 	});
 });

@@ -1,12 +1,50 @@
 // Copyright 2017-2025 @polkadot/util-crypto authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { hexToU8a, u8aEq, u8aToString, u8aToU8a } from "@polkadot/util";
+import { hexToU8a, u8aEq, u8aToString } from "@polkadot/util";
 import { base64URLDecode } from "../base64/bs64.js";
-import { signatureVerify } from "../signature/index.js";
-import type { JWT, JWTHeader, JWTPayload, JWTVerifyResult } from "../types.js";
+import { sr25519Verify } from "../sr25519/verify.js";
+import type {
+	JWT,
+	JWTHeader,
+	JWTPayload,
+	JWTVerifyOptions,
+	JWTVerifyResult,
+} from "../types.js";
 
-export const jwtVerify = (jwt: JWT, publicKey: Uint8Array): JWTVerifyResult => {
+// The only algorithm sr25519jwtIssue (and the Rust sr25519-jwt issuer) writes.
+const JWT_ALG = "sr25519";
+
+const isPinnedAlgHeader = (header: unknown): header is JWTHeader =>
+	typeof header === "object" &&
+	header !== null &&
+	"alg" in header &&
+	header.alg === JWT_ALG;
+
+const verifySr25519Signature = (
+	signingInput: string,
+	signature: Uint8Array,
+	publicKey: Uint8Array,
+): boolean => {
+	try {
+		return sr25519Verify(signingInput, signature, publicKey);
+	} catch {
+		return false;
+	}
+};
+
+const audienceMatches = (aud: unknown, accepted: string[]): boolean => {
+	const claimed = Array.isArray(aud) ? aud : [aud];
+	return claimed.some(
+		(value) => typeof value === "string" && accepted.includes(value),
+	);
+};
+
+export const jwtVerify = (
+	jwt: JWT,
+	publicKey: Uint8Array,
+	options?: JWTVerifyOptions,
+): JWTVerifyResult => {
 	const parts = jwt.split(".");
 	if (parts.length !== 3) {
 		throw new Error("Invalid JWT format (expected 3 parts)");
@@ -17,14 +55,25 @@ export const jwtVerify = (jwt: JWT, publicKey: Uint8Array): JWTVerifyResult => {
 		throw new Error("Invalid JWT format (empty part)");
 	}
 
-	let header: JWTHeader;
+	let parsedHeader: unknown;
 	let payload: JWTPayload;
 	try {
-		header = JSON.parse(u8aToString(base64URLDecode(headerPart)));
+		parsedHeader = JSON.parse(u8aToString(base64URLDecode(headerPart)));
 		payload = JSON.parse(u8aToString(base64URLDecode(payloadPart)));
 	} catch (e) {
 		throw new Error("Invalid JWT format (cannot parse header/payload JSON)");
 	}
+
+	if (!isPinnedAlgHeader(parsedHeader)) {
+		return {
+			isValid: false,
+			error: "Unsupported JWT algorithm",
+			crypto: "none",
+			publicKey,
+			isWrapped: false,
+		};
+	}
+	const header = parsedHeader;
 
 	const signature = base64URLDecode(sigPart);
 	if (!signature || signature.length === 0) {
@@ -67,6 +116,40 @@ export const jwtVerify = (jwt: JWT, publicKey: Uint8Array): JWTVerifyResult => {
 			isWrapped: false,
 		};
 	}
+	if (
+		options?.maxLifetimeSeconds !== undefined &&
+		exp - iat > options.maxLifetimeSeconds
+	) {
+		return {
+			isValid: false,
+			error: "JWT lifetime exceeds the allowed maximum",
+			crypto: header.alg,
+			publicKey,
+			isWrapped: false,
+		};
+	}
+	if (options?.audience !== undefined) {
+		const { aud } = payload;
+		if (aud === undefined) {
+			if (options.requireAudience) {
+				return {
+					isValid: false,
+					error: "JWT has no audience",
+					crypto: header.alg,
+					publicKey,
+					isWrapped: false,
+				};
+			}
+		} else if (!audienceMatches(aud, options.audience)) {
+			return {
+				isValid: false,
+				error: "JWT audience does not match",
+				crypto: header.alg,
+				publicKey,
+				isWrapped: false,
+			};
+		}
+	}
 	const subU8a = hexToU8a(sub);
 	if (!u8aEq(subU8a, publicKey)) {
 		return {
@@ -78,13 +161,15 @@ export const jwtVerify = (jwt: JWT, publicKey: Uint8Array): JWTVerifyResult => {
 		};
 	}
 
-	// signatureVerify itself already returns { isValid, isWrapped, crypto, publicKey, error? }
 	return {
-		...signatureVerify(
+		isValid: verifySr25519Signature(
 			`${headerPart}.${payloadPart}`,
 			signature,
-			u8aToU8a(publicKey),
+			publicKey,
 		),
-		payload: payload,
+		crypto: header.alg,
+		publicKey,
+		isWrapped: false,
+		payload,
 	};
 };
