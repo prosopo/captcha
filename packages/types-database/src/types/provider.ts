@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { AllKeys } from "@prosopo/common";
-import { type TranslationKey, translationKeys } from "@prosopo/locale";
+import { translationKeys } from "@prosopo/locale";
 import {
 	CaptchaLabel,
 	CaptchaType,
@@ -30,6 +30,7 @@ import {
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
 	type PuzzleCaptchaStored,
+	type ResultReason,
 	type Session,
 	type SimdReadingsStage,
 	type SolutionRecord,
@@ -49,6 +50,7 @@ import {
 	type Hash,
 	type IPInfoResponse,
 	type IUserData,
+	InputMethod,
 	type Item,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
@@ -281,6 +283,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 			c1: { type: [Schema.Types.Mixed], required: true },
 			c2: { type: [Schema.Types.Mixed], required: true },
 			c3: { type: [Schema.Types.Mixed], required: true },
+			c4: { type: [Schema.Types.Mixed], required: false },
 			d: { type: String, required: true },
 		},
 		required: false,
@@ -437,6 +440,7 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 			c1: { type: [Schema.Types.Mixed], required: true },
 			c2: { type: [Schema.Types.Mixed], required: true },
 			c3: { type: [Schema.Types.Mixed], required: true },
+			c4: { type: [Schema.Types.Mixed], required: false },
 			d: { type: String, required: true },
 		},
 		required: false,
@@ -544,6 +548,11 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		required: false,
 	},
 	coords: { type: [[[Number]]], required: false },
+	inputMethods: {
+		type: [[{ type: String, enum: Object.values(InputMethod) }]],
+		required: false,
+		default: undefined,
+	},
 	// Pending request fields for image captcha workflow
 	pending: { type: Boolean, required: true },
 	salt: { type: String, required: true },
@@ -557,6 +566,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 			c1: { type: [Schema.Types.Mixed], required: true },
 			c2: { type: [Schema.Types.Mixed], required: true },
 			c3: { type: [Schema.Types.Mixed], required: true },
+			c4: { type: [Schema.Types.Mixed], required: false },
 			d: { type: String, required: true },
 		},
 		required: false,
@@ -1201,7 +1211,12 @@ export interface IProviderDatabase extends IDatabase {
 		requestHash: string,
 	): Promise<PendingImageCaptchaRequest>;
 
-	updatePendingImageCommitmentStatus(requestHash: string): Promise<void>;
+	/**
+	 * Atomically flips a pending image request to not-pending. Resolves true
+	 * only for the one caller that performed the flip, so concurrent
+	 * submissions against the same request cannot all be evaluated.
+	 */
+	updatePendingImageCommitmentStatus(requestHash: string): Promise<boolean>;
 
 	getAllCaptchasByDatasetId(
 		datasetId: string,
@@ -1241,7 +1256,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	disapproveDappUserCommitment(
 		commitmentId: string,
-		reason?: TranslationKey,
+		reason?: ResultReason,
 		coords?: [number, number][][],
 	): Promise<void>;
 
@@ -1264,7 +1279,13 @@ export interface IProviderDatabase extends IDatabase {
 		asOfTimestamp?: Date,
 	): Promise<void>;
 
-	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
+	/**
+	 * Marks commitments server-checked, skipping ones already checked.
+	 * Resolves to the number this call newly claimed — a verify must only
+	 * proceed when it claimed its commitment, otherwise a concurrent verify
+	 * of the same token already did.
+	 */
+	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<number>;
 
 	updateDappUserCommitment(
 		commitmentId: UserCommitment["id"],
@@ -1291,7 +1312,11 @@ export interface IProviderDatabase extends IDatabase {
 		afterId?: unknown,
 	): Promise<PoWCaptchaRecord[]>;
 
-	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<void>;
+	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
+	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<number>;
+
+	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
+	markPuzzleCaptchaRecordChecked(challenge: PoWChallengeId): Promise<boolean>;
 
 	markDappUserPoWCommitmentsStored(
 		challengeIds: string[],
@@ -1418,6 +1443,13 @@ export interface IProviderDatabase extends IDatabase {
 		updates: Partial<Session>,
 		streamToCentral?: boolean,
 	): Promise<void>;
+
+	/**
+	 * Marks a session server-checked only if it is not already. Resolves true
+	 * for the single caller that performed the flip, so concurrent verifies of
+	 * one token cannot all succeed.
+	 */
+	claimSessionServerCheck(sessionId: string): Promise<boolean>;
 
 	/**
 	 * Record SIMD CPU fingerprint readings on the session — first hop wins.

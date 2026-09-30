@@ -161,7 +161,7 @@ describe("validateAddr", () => {
 
 	it("should validate with different translation keys", () => {
 		const invalidAddress = "invalid-address";
-		const customTranslationKey = "API.INVALID_USER";
+		const customTranslationKey = "API.INVALID_SITE_KEY";
 
 		vi.mocked(validateAddress).mockReturnValue(false);
 
