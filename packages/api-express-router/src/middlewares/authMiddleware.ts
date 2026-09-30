@@ -14,7 +14,7 @@
 
 import { hexToU8a } from "@polkadot/util";
 import { ProsopoApiError, ProsopoBaseError } from "@prosopo/common";
-import type { TranslationKey } from "@prosopo/locale";
+import { type TranslationKey, isTranslationKey } from "@prosopo/locale";
 import type { ApiJsonError, KeyringPair } from "@prosopo/types";
 import type {
 	JWT,
@@ -81,16 +81,18 @@ export const authMiddleware = (
 			req.logger.error(() => ({ err, msg: "Auth Middleware Error" }));
 			// The thrown value can carry request context, stack or config, so
 			// only its translation key goes back to the caller.
-			unauthorized(
-				req,
-				res,
-				(err instanceof ProsopoBaseError && err.translationKey) ||
-					"API.UNAUTHORIZED",
-			);
+			unauthorized(req, res, translationKeyOf(err));
 			return;
 		}
 	};
 };
+
+const translationKeyOf = (err: unknown): TranslationKey =>
+	err instanceof ProsopoBaseError &&
+	err.translationKey !== undefined &&
+	isTranslationKey(err.translationKey)
+		? err.translationKey
+		: "API.UNAUTHORIZED";
 
 const unauthorized = (
 	req: Request,
