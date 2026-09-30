@@ -1539,7 +1539,7 @@ export class ProviderDatabase
 		const timestamp = new Date();
 		const baseSet: Record<string, unknown> = {
 			...updates,
-			lastUpdatedAtTimestamp: timestamp,
+			lastUpdatedTimestamp: timestamp,
 			pendingStage: true,
 		};
 		const pipelineExprs: Record<string, unknown> = {};
