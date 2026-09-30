@@ -99,9 +99,9 @@ describe("Manager's types", () => {
 			.toEqualTypeOf<(() => string | undefined) | undefined>();
 	});
 
-	test("it exposes exactly start, submitSolution and resetState", () => {
+	test("it exposes exactly start, submitSolution, resetState and dispose", () => {
 		expectTypeOf<keyof ReturnType<typeof Manager>>().toEqualTypeOf<
-			"start" | "submitSolution" | "resetState"
+			"start" | "submitSolution" | "resetState" | "dispose"
 		>();
 	});
 

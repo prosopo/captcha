@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { TranslateFn, TranslationKey } from "@prosopo/locale";
+import {
+	type TranslateFn,
+	type TranslationKey,
+	isTranslationKey,
+} from "@prosopo/locale";
 import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { ApiJsonError } from "@prosopo/types";
 
@@ -42,7 +46,7 @@ const STATUS_MESSAGES: Record<number, string> = {
 
 type BaseErrorOptions<ContextType> = {
 	name?: string;
-	translationKey?: TranslationKey;
+	translationKey?: ErrorKey;
 	logger?: Logger;
 	logLevel?: LogLevel;
 	context?: ContextType;
@@ -66,8 +70,13 @@ type ApiContextParams = BaseContextParams & {
 	code?: number;
 };
 
-// if i18n is not loaded then we use this
+type ErrorKey = TranslationKey;
+
 const backupTranslationObj = { t: (key: string) => key };
+
+// An error's message is usually already text, not a key.
+const translateMessage = (i18n: { t: TranslateFn }, message: string): string =>
+	isTranslationKey(message) ? i18n.t(message) : message;
 
 export abstract class ProsopoBaseError<
 	ContextType extends BaseContextParams = BaseContextParams,
@@ -76,18 +85,18 @@ export abstract class ProsopoBaseError<
 	context: ContextType | undefined;
 
 	constructor(
-		error: Error | TranslationKey,
+		error: Error | ErrorKey,
 		options?: BaseErrorOptions<ContextType>,
 	) {
 		const logger = options?.logger || getLogger("info", "common:error");
 		const logLevel = options?.logLevel || "error";
 		const i18n = options?.i18n || backupTranslationObj;
 		if (error instanceof Error) {
-			super(i18n.t(error.message));
+			super(translateMessage(i18n, error.message));
 			this.translationKey = options?.translationKey;
 			this.context = options?.context;
 		} else {
-			super(i18n.t(error));
+			super(translateMessage(i18n, error));
 			this.translationKey = error;
 			this.context = options?.context;
 		}
@@ -107,7 +116,7 @@ export abstract class ProsopoBaseError<
 		const msg = err;
 		const data = {
 			errorType: errorName || this.name,
-			...(this.context ? { context: this.context } : {}),
+			...(this.context ? { context: boundContextForLog(this.context) } : {}),
 		};
 		if (logLevel === "debug") {
 			logger.debug(() => ({
@@ -124,7 +133,7 @@ export abstract class ProsopoBaseError<
 // Generic error class
 export class ProsopoError extends ProsopoBaseError<BaseContextParams> {
 	constructor(
-		error: Error | TranslationKey,
+		error: Error | ErrorKey,
 		options?: BaseErrorOptions<BaseContextParams>,
 	) {
 		const errorName = options?.name || "ProsopoError";
@@ -135,7 +144,7 @@ export class ProsopoError extends ProsopoBaseError<BaseContextParams> {
 
 export class ProsopoEnvError extends ProsopoBaseError<EnvContextParams> {
 	constructor(
-		error: Error | TranslationKey,
+		error: Error | ErrorKey,
 		options?: BaseErrorOptions<EnvContextParams>,
 	) {
 		const errorName = options?.name || "ProsopoEnvError";
@@ -146,7 +155,7 @@ export class ProsopoEnvError extends ProsopoBaseError<EnvContextParams> {
 
 export class ProsopoContractError extends ProsopoBaseError<ContractContextParams> {
 	constructor(
-		error: Error | TranslationKey,
+		error: Error | ErrorKey,
 		options?: BaseErrorOptions<ContractContextParams>,
 	) {
 		const errorName = options?.name || "ProsopoContractError";
@@ -157,7 +166,7 @@ export class ProsopoContractError extends ProsopoBaseError<ContractContextParams
 
 export class ProsopoTxQueueError extends ProsopoBaseError<ContractContextParams> {
 	constructor(
-		error: Error | TranslationKey,
+		error: Error | ErrorKey,
 		options?: BaseErrorOptions<ContractContextParams>,
 	) {
 		const errorName = options?.name || "ProsopoTxQueueError";
@@ -168,7 +177,7 @@ export class ProsopoTxQueueError extends ProsopoBaseError<ContractContextParams>
 
 export class ProsopoDBError extends ProsopoBaseError<DBContextParams> {
 	constructor(
-		error: Error | TranslationKey,
+		error: Error | ErrorKey,
 		options?: BaseErrorOptions<DBContextParams>,
 	) {
 		const errorName = options?.name || "ProsopoDBError";
@@ -179,7 +188,7 @@ export class ProsopoDBError extends ProsopoBaseError<DBContextParams> {
 
 export class ProsopoCliError extends ProsopoBaseError<CliContextParams> {
 	constructor(
-		error: Error | TranslationKey,
+		error: Error | ErrorKey,
 		options?: BaseErrorOptions<CliContextParams>,
 	) {
 		const errorName = options?.name || "ProsopoCliError";
@@ -190,7 +199,7 @@ export class ProsopoCliError extends ProsopoBaseError<CliContextParams> {
 
 export class ProsopoDatasetError extends ProsopoBaseError<DatasetContextParams> {
 	constructor(
-		error: Error | TranslationKey,
+		error: Error | ErrorKey,
 		options?: BaseErrorOptions<DatasetContextParams>,
 	) {
 		const errorName = options?.name || "ProsopoDatasetError";
@@ -203,7 +212,7 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 	code: number;
 
 	constructor(
-		error: Error | TranslationKey,
+		error: Error | ErrorKey,
 		options?: BaseErrorOptions<ApiContextParams>,
 	) {
 		const errorName = options?.name || "ProsopoApiError";
@@ -231,7 +240,7 @@ export const unwrapError = (
 	const i18n = i18nInstance || backupTranslationObj;
 	let code = "code" in err ? (err.code as number) : 400;
 
-	const message = i18n.t(err.message); // should be translated already
+	const message = translateMessage(i18n, err.message);
 	let jsonError: ApiJsonError = { code, message };
 	jsonError.message = message;
 	jsonError.key = "translationKey" in err ? err.translationKey : "API.UNKNOWN";
@@ -245,7 +254,7 @@ export const unwrapError = (
 				: undefined;
 		jsonError.key =
 			contextTranslationKey || err.translationKey || "API.UNKNOWN";
-		jsonError.message = i18n.t(err.message);
+		jsonError.message = translateMessage(i18n, err.message);
 		jsonError.data = err.context.data as Record<string, unknown> | undefined;
 
 		const contextCode =
@@ -267,7 +276,9 @@ export const unwrapError = (
 		if (typeof err.message === "object") {
 			jsonError = err.message;
 		} else {
-			jsonError.message = JSON.parse(err.message);
+			// ApiJsonError types `message` as a string, but for a validation
+			// error the response has always carried the parsed issue list.
+			jsonError.message = JSON.parse(JSON.stringify(boundedIssues(err).issues));
 			jsonError.key =
 				jsonError.key !== "API.UNKNOWN" ? jsonError.key : "API.INVALID_BODY";
 			code = 400;
@@ -294,7 +305,40 @@ export const unwrapError = (
 export interface ZodLikeError {
 	name: string;
 	message: string;
+	issues?: unknown[];
 }
+
+/**
+ * A request body of up to 1MB can fail validation with one zod issue per array
+ * element, i.e. tens of thousands of issues. Echoing or logging all of them
+ * turned a 1MB request into a ~20MB response plus a multi-MB log line, built
+ * synchronously on the event loop. Only the first few are reported.
+ */
+export const MAX_REPORTED_ISSUES = 10;
+
+const boundedIssues = (
+	err: ZodLikeError,
+): { issueCount: number; issues: unknown[] } => {
+	// Prefer `issues`: zod builds `message` by serialising every issue.
+	const all: unknown = Array.isArray(err.issues)
+		? err.issues
+		: JSON.parse(err.message);
+	if (!Array.isArray(all)) return { issueCount: 1, issues: [all] };
+	return {
+		issueCount: all.length,
+		issues: all.slice(0, MAX_REPORTED_ISSUES),
+	};
+};
+
+const boundContextForLog = <ContextType extends BaseContextParams>(
+	context: ContextType,
+): ContextType | (Omit<ContextType, "error"> & { error: object }) => {
+	if (!isZodError(context.error)) return context;
+	return {
+		...context,
+		error: { name: context.error.name, ...boundedIssues(context.error) },
+	};
+};
 
 /**
  * Recognised by `name` rather than `instanceof`. The name is the only signal

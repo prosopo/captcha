@@ -904,6 +904,37 @@ describe("start: what the provider decides", () => {
 		expect(harness.restart).toHaveBeenCalledTimes(1);
 	});
 
+	test("a disposed manager never expires the solve", async () => {
+		vi.useFakeTimers();
+		const harness = build();
+		await harness.manager.start();
+		harness.events.onReset.mockClear();
+		harness.manager.dispose();
+		vi.runOnlyPendingTimers();
+		expect(harness.events.onExpired).not.toHaveBeenCalled();
+		expect(harness.events.onReset).not.toHaveBeenCalled();
+		expect(harness.restart).not.toHaveBeenCalled();
+	});
+
+	test("a solve that lands after dispose schedules no expiry", async () => {
+		vi.useFakeTimers();
+		const harness = build();
+		harness.manager.dispose();
+		await harness.manager.start();
+		harness.events.onReset.mockClear();
+		vi.runOnlyPendingTimers();
+		expect(harness.events.onExpired).not.toHaveBeenCalled();
+		expect(harness.restart).not.toHaveBeenCalled();
+	});
+
+	test("a solve that lands after dispose never reaches the site", async () => {
+		const harness = build();
+		harness.manager.dispose();
+		await harness.manager.start();
+		expect(harness.events.onHuman).not.toHaveBeenCalled();
+		expect(harness.events.onFailed).not.toHaveBeenCalled();
+	});
+
 	test("an unverified solution fails the user and resets the session", async () => {
 		const harness = build();
 		mocks.submitPowCaptchaSolution.mockResolvedValue(

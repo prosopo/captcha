@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { Component } from "@prosopo/procaptcha-common";
+import { type ImageSelection, InputMethod } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
@@ -42,7 +43,7 @@ const props = (
 	overrides: {
 		challenge?: ReturnType<typeof challengeResponse>;
 		index?: number;
-		solutions?: [string, number, number][][];
+		solutions?: ImageSelection[][];
 		themeColor?: "light" | "dark";
 	} = {},
 ): CaptchaComponentProps => ({
@@ -118,11 +119,11 @@ describe("the grid", () => {
 		const image = mounted.container.querySelector("img");
 		if (!image) throw new Error("expected an image");
 		fire(image, "click", { clientX: 8, clientY: 9 });
-		expect(onClick).toHaveBeenCalledWith("hash-1", 8, 9);
+		expect(onClick).toHaveBeenCalledWith("hash-1", 8, 9, InputMethod.pointer);
 	});
 
 	test("marks the images already selected for this round", () => {
-		render({ solutions: [[["hash-1", 0, 0]]] });
+		render({ solutions: [[["hash-1", 0, 0, InputMethod.pointer]]] });
 		const overlay = mounted.container.querySelector("svg")?.parentElement;
 		expect(overlay?.style.visibility).toBe("visible");
 	});
@@ -168,6 +169,14 @@ describe("the controls", () => {
 		if (!reload) throw new Error("expected a reload button");
 		fire(reload, "click");
 		expect(onReload).toHaveBeenCalledTimes(1);
+	});
+
+	test("the reload control keeps its translated name across rounds", () => {
+		render({ challenge: twoRoundChallenge(), solutions: [[], []] });
+		render({ challenge: twoRoundChallenge(), index: 1, solutions: [[], []] });
+		const reload = mounted.container.querySelector('[data-cy="reload-button"]');
+		expect(reload?.getAttribute("aria-label")).toBe("WIDGET.RELOAD");
+		expect(reload?.querySelector("title")?.textContent).toBe("WIDGET.RELOAD");
 	});
 
 	test("the last round submits rather than advancing", () => {
