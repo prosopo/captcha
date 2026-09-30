@@ -16,7 +16,10 @@
 		"INVALID_CAPTCHA_ID": "Virheellinen captcha-tunnus",
 		"INVALID_ITEM_FORMAT": "Vain kuvan ja tekstin tyyppiset kohteet sallittu",
 		"INVALID_SOLUTION_TYPE": "Virheellinen ratkaisun tyyppi",
-		"INVALID_ITEM_HASH": "Virheellinen kohteen hajautusarvo"
+		"INVALID_ITEM_HASH": "Virheellinen kohteen hajautusarvo",
+		"SOLUTION_NOT_FOUND": "Ratkaisua ei löytynyt",
+		"DECISION_MACHINE_DENIED": "Päätöskone hylkäsi",
+		"INVALID_TIMESTAMP": "Virheellinen aikaleima"
 	},
 	"API": {
 		"CAPTCHA_FAILED": "Vastasit yhteen tai useampaan captchan kysymykseen väärin. Yritä uudelleen",
@@ -60,7 +63,8 @@
 		"MOBILE_BLOCKED": "Mobiiliverkkoyhteyksien pyynnöt eivät ole sallittuja tälle sivustolle",
 		"SATELLITE_BLOCKED": "Satelliittiyhteyksien pyynnöt eivät ole sallittuja tälle sivustolle",
 		"CRAWLER_BLOCKED": "Tunnettujen indeksoijien pyynnöt eivät ole sallittuja tälle sivustolle",
-		"DISALLOWED_WEBVIEW": "Sovelluksen sisäisistä selaimista (WebView) tulevia pyyntöjä ei sallita tällä sivustolla"
+		"DISALLOWED_WEBVIEW": "Sovelluksen sisäisistä selaimista (WebView) tulevia pyyntöjä ei sallita tällä sivustolla",
+		"INTERNAL_SERVER_ERROR": "Palvelimen sisäinen virhe"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Virheellinen parametri"
@@ -89,7 +93,9 @@
 		"INVALID_SIGNATURE": "Virheellinen allekirjoitus",
 		"SITE_KEY_MISSING": "Sivuston avain puuttuu",
 		"ACCOUNT_NOT_FOUND": "Tiliä ei löytynyt",
-		"INVALID_TIMESTAMP": "Virheellinen aikaleima"
+		"INVALID_TIMESTAMP": "Virheellinen aikaleima",
+		"MISSING_AUTH_HEADER": "Valtuutusotsake puuttuu",
+		"INVALID_JWT": "Virheellinen JWT"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Ei voida muokata omistajakäyttäjää",
@@ -471,6 +477,12 @@
 		"TABLES_UNDEFINED": "Tauluja ei määritelty",
 		"CONNECTION_UNDEFINED": "Yhteyttä ei määritelty",
 		"COMMITMENT_FLAG_FAILED": "Sitoumuksen merkitseminen käsitellyksi epäonnistui",
-		"UNKNOWN": "Tuntematon tietokantavirhe"
+		"UNKNOWN": "Tuntematon tietokantavirhe",
+		"QUERY_ERROR": "Tietokantakysely epäonnistui",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Pääsysääntöjen Redis-yhteyttä ei ole määritetty",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Käyttäjien pääsysääntöjen tallennustilaa ei ole määritetty",
+		"SESSION_STORE_FAILED": "Istunnon tallennus epäonnistui",
+		"SESSION_CHECK_REMOVE_FAILED": "Istunnon tarkistus ja poisto epäonnistui",
+		"SESSION_GET_FAILED": "Istunnon haku epäonnistui"
 	}
 }

@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Ugyldig signatur",
 		"SITE_KEY_MISSING": "SITE KEY mangler",
 		"ACCOUNT_NOT_FOUND": "Konto ikke funnet",
-		"INVALID_TIMESTAMP": "Ugyldig tidsstempel"
+		"INVALID_TIMESTAMP": "Ugyldig tidsstempel",
+		"MISSING_AUTH_HEADER": "Autorisasjonshode mangler",
+		"INVALID_JWT": "Ugyldig JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Utilstrekkelige tillatelser for å utføre denne handlingen",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Forespørsler fra mobilnettverkstilkoblinger er ikke tillatt for dette nettstedet",
 		"SATELLITE_BLOCKED": "Forespørsler fra satellittilkoblinger er ikke tillatt for dette nettstedet",
 		"CRAWLER_BLOCKED": "Forespørsler fra kjente roboter er ikke tillatt for dette nettstedet",
-		"DISALLOWED_WEBVIEW": "Forespørsler fra innebygde nettlesere (WebView) er ikke tillatt for dette nettstedet"
+		"DISALLOWED_WEBVIEW": "Forespørsler fra innebygde nettlesere (WebView) er ikke tillatt for dette nettstedet",
+		"INTERNAL_SERVER_ERROR": "Intern serverfeil"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kan ikke endre eierbruker",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "Tabeller er udefinert",
 		"CONNECTION_UNDEFINED": "Tilkobling udefinert",
 		"COMMITMENT_FLAG_FAILED": "Klarte ikke å flagge engasjement som behandlet",
-		"UNKNOWN": "Ukjent databasefeil"
+		"UNKNOWN": "Ukjent databasefeil",
+		"QUERY_ERROR": "Databasespørringen mislyktes",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis-tilkobling for tilgangsregler er ikke definert",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Lagring for brukertilgangsregler er ikke definert",
+		"SESSION_STORE_FAILED": "Kunne ikke lagre økten",
+		"SESSION_CHECK_REMOVE_FAILED": "Kunne ikke kontrollere og fjerne økten",
+		"SESSION_GET_FAILED": "Kunne ikke hente økten"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Feil parsing captcha",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "Ugyldig salt",
 		"INVALID_TOKEN": "Ugyldig token",
 		"INVALID_SOLUTION": "Ugyldig løsning",
-		"DECRYPTION_ERROR": "Feil ved dekryptering"
+		"DECRYPTION_ERROR": "Feil ved dekryptering",
+		"SOLUTION_NOT_FOUND": "Løsning ikke funnet",
+		"DECISION_MACHINE_DENIED": "Avvist av beslutningsmaskinen",
+		"INVALID_TIMESTAMP": "Ugyldig tidsstempel"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ugyldig parameter"
