@@ -15,9 +15,11 @@
 import { describe, expect, it } from "vitest";
 import {
 	MAX_AUTO_ESCALATION_LEVEL,
+	MAX_AUTO_ESCALATION_LEVEL_TOUCH,
 	PUZZLE_DIFFICULTY_LEVELS,
 	clampDifficultyLevel,
 	puzzleDifficultyToSeverity,
+	resolveMaxEscalationLevel,
 	severityToPuzzleDifficulty,
 } from "./puzzleDifficulty.js";
 
@@ -144,5 +146,82 @@ describe("puzzleDifficultyToSeverity", () => {
 		expect(
 			severityToPuzzleDifficulty(puzzleDifficultyToSeverity(0, 2), 2),
 		).toBe(0);
+	});
+});
+
+describe("resolveMaxEscalationLevel", () => {
+	it("stops touch one rung below pointer", () => {
+		expect(MAX_AUTO_ESCALATION_LEVEL_TOUCH).toBe(MAX_AUTO_ESCALATION_LEVEL - 1);
+	});
+
+	it("applies the device ceiling when the site has no cap of its own", () => {
+		expect(resolveMaxEscalationLevel(undefined, false)).toBe(
+			MAX_AUTO_ESCALATION_LEVEL,
+		);
+		expect(resolveMaxEscalationLevel(undefined, true)).toBe(
+			MAX_AUTO_ESCALATION_LEVEL_TOUCH,
+		);
+	});
+
+	it("does not let a permissive site cap out-vote the touch ceiling", () => {
+		// The case this function exists for: twickets.live is set to 4.
+		expect(resolveMaxEscalationLevel(4, true)).toBe(
+			MAX_AUTO_ESCALATION_LEVEL_TOUCH,
+		);
+		expect(resolveMaxEscalationLevel(3, true)).toBe(
+			MAX_AUTO_ESCALATION_LEVEL_TOUCH,
+		);
+	});
+
+	it("does not raise a site that deliberately sits below the ceiling", () => {
+		// 0 pins the site to its own puzzle settings and must survive both
+		// directions — being raised to the device ceiling would escalate a
+		// site that opted out of escalation entirely.
+		expect(resolveMaxEscalationLevel(0, true)).toBe(0);
+		expect(resolveMaxEscalationLevel(0, false)).toBe(0);
+		expect(resolveMaxEscalationLevel(1, true)).toBe(1);
+	});
+
+	it("never returns a level the ladder cannot serve", () => {
+		for (const isTouch of [true, false]) {
+			for (const siteMax of [-1, 0, 1, 2, 3, 4, 99, Number.NaN]) {
+				const resolved = resolveMaxEscalationLevel(siteMax, isTouch);
+				expect(resolved).toBeGreaterThanOrEqual(0);
+				expect(resolved).toBeLessThan(PUZZLE_DIFFICULTY_LEVELS.length);
+			}
+		}
+	});
+
+	it("caps the level actually served on touch at L2", () => {
+		// End to end through the mapping the provider uses: a session severe
+		// enough to ask for L4 lands on L2 when the pointer is a fingertip.
+		const touchMax = resolveMaxEscalationLevel(4, true);
+		expect(severityToPuzzleDifficulty(100, 2, touchMax)).toBe(
+			MAX_AUTO_ESCALATION_LEVEL_TOUCH,
+		);
+		expect(clampDifficultyLevel(99, touchMax)).toBe(
+			MAX_AUTO_ESCALATION_LEVEL_TOUCH,
+		);
+	});
+
+	it("leaves the pointer path on its existing ceiling", () => {
+		const pointerMax = resolveMaxEscalationLevel(undefined, false);
+		expect(severityToPuzzleDifficulty(100, 2, pointerMax)).toBe(
+			MAX_AUTO_ESCALATION_LEVEL,
+		);
+	});
+
+	it("keeps the touch ceiling strictly easier than the pointer ceiling", () => {
+		// The parity argument only holds if the band L2 can draw is genuinely
+		// easier than the band L3 can draw. Compare worst cases, since a level
+		// samples anywhere in its band.
+		const touch = PUZZLE_DIFFICULTY_LEVELS[MAX_AUTO_ESCALATION_LEVEL_TOUCH];
+		const pointer = PUZZLE_DIFFICULTY_LEVELS[MAX_AUTO_ESCALATION_LEVEL];
+		expect(touch).toBeDefined();
+		expect(pointer).toBeDefined();
+		if (!touch || !pointer) return;
+		expect(touch.tolerance.min).toBeGreaterThan(pointer.tolerance.min);
+		expect(touch.pieceScale.min).toBeGreaterThan(pointer.pieceScale.min);
+		expect(touch.decoyCount.max).toBeLessThan(pointer.decoyCount.max);
 	});
 });
