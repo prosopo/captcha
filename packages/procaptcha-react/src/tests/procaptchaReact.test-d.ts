@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Captcha, ProcaptchaProps } from "@prosopo/types";
+import type {
+	Captcha,
+	ImageSelection,
+	InputMethod,
+	ProcaptchaProps,
+} from "@prosopo/types";
 import { assertType, describe, expectTypeOf, test } from "vitest";
 import type { CaptchaComponentProps } from "../components/captchaComponent.js";
 import type { CaptchaWidgetProps } from "../components/captchaWidget.js";
@@ -41,9 +46,9 @@ describe("CaptchaWidget's props", () => {
 		expectTypeOf<CaptchaWidgetProps["challenge"]>().toEqualTypeOf<Captcha>();
 	});
 
-	test("reports a selection as a hash and a pair of coordinates", () => {
+	test("reports a selection as a hash, a pair of coordinates and how it was made", () => {
 		expectTypeOf<CaptchaWidgetProps["onClick"]>().toEqualTypeOf<
-			(hash: string, x: number, y: number) => void
+			(hash: string, x: number, y: number, inputMethod: InputMethod) => void
 		>();
 	});
 
@@ -58,9 +63,12 @@ describe("CaptchaWidget's props", () => {
 		assertType<CaptchaWidgetProps["themeColor"]>("blue");
 	});
 
-	test("holds the solution as hash-plus-coordinates triples", () => {
+	test("holds the solution as hash, coordinates and input method", () => {
 		expectTypeOf<CaptchaWidgetProps["solution"]>().toEqualTypeOf<
-			[string, number, number][]
+			ImageSelection[]
+		>();
+		expectTypeOf<ImageSelection>().toEqualTypeOf<
+			[hash: string, x: number, y: number, inputMethod: InputMethod]
 		>();
 	});
 
@@ -87,7 +95,7 @@ describe("CaptchaComponent's props", () => {
 
 	test("takes one solution list per round", () => {
 		expectTypeOf<CaptchaComponentProps["solutions"]>().toEqualTypeOf<
-			[string, number, number][][]
+			ImageSelection[][]
 		>();
 	});
 
@@ -95,7 +103,7 @@ describe("CaptchaComponent's props", () => {
 		// The manager's `select` takes them as optional, so the component's
 		// handler has to be assignable from it.
 		expectTypeOf<CaptchaComponentProps["onClick"]>().toEqualTypeOf<
-			(hash: string, x?: number, y?: number) => void
+			(hash: string, x?: number, y?: number, inputMethod?: InputMethod) => void
 		>();
 	});
 

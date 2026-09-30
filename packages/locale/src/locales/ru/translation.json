@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Неверная подпись",
 		"SITE_KEY_MISSING": "Отсутствует ключ сайта",
 		"ACCOUNT_NOT_FOUND": "Учетная запись не найдена",
-		"INVALID_TIMESTAMP": "Недопустимый временной штамп"
+		"INVALID_TIMESTAMP": "Недопустимый временной штамп",
+		"MISSING_AUTH_HEADER": "Отсутствует заголовок авторизации",
+		"INVALID_JWT": "Недействительный JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Недостаточно прав для выполнения этого действия",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Запросы с мобильных сетевых подключений не разрешены для этого сайта",
 		"SATELLITE_BLOCKED": "Запросы со спутниковых подключений не разрешены для этого сайта",
 		"CRAWLER_BLOCKED": "Запросы от известных поисковых роботов не разрешены для этого сайта",
-		"DISALLOWED_WEBVIEW": "Запросы из встроенных браузеров (WebView) не разрешены для этого сайта"
+		"DISALLOWED_WEBVIEW": "Запросы из встроенных браузеров (WebView) не разрешены для этого сайта",
+		"INTERNAL_SERVER_ERROR": "Внутренняя ошибка сервера"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Невозможно изменить владельца пользователя",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "Таблицы не определены",
 		"CONNECTION_UNDEFINED": "Подключение не определено",
 		"COMMITMENT_FLAG_FAILED": "Не удалось пометить коммитмент как обработанный",
-		"UNKNOWN": "Неизвестная ошибка базы данных"
+		"UNKNOWN": "Неизвестная ошибка базы данных",
+		"QUERY_ERROR": "Не удалось выполнить запрос к базе данных",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Подключение Redis для правил доступа не определено",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Хранилище правил доступа пользователей не определено",
+		"SESSION_STORE_FAILED": "Не удалось сохранить сессию",
+		"SESSION_CHECK_REMOVE_FAILED": "Не удалось проверить и удалить сессию",
+		"SESSION_GET_FAILED": "Не удалось получить сессию"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Ошибка парсинга капчи",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "Недействительная соль",
 		"INVALID_TOKEN": "Недействительный токен",
 		"INVALID_SOLUTION": "Недопустимое решение",
-		"DECRYPTION_ERROR": "Ошибка расшифровки"
+		"DECRYPTION_ERROR": "Ошибка расшифровки",
+		"SOLUTION_NOT_FOUND": "Решение не найдено",
+		"DECISION_MACHINE_DENIED": "Отклонено машиной принятия решений",
+		"INVALID_TIMESTAMP": "Недопустимый временной штамп"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Недопустимый параметр"

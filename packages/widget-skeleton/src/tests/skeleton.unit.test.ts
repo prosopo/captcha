@@ -117,10 +117,79 @@ describe("createWidgetSkeletonElement", () => {
 		expect(styles).toContain("content: none !important");
 	});
 
-	test("forces ltr regardless of the embedding page's direction", () => {
+	test("defaults to ltr regardless of the embedding page's direction", () => {
 		const styles: string =
 			skeletonOf(lightTheme).querySelector("style")?.textContent ?? "";
 		expect(styles).toContain("direction: ltr !important");
+	});
+
+	describe("direction", () => {
+		const rtlRule = (styles: string): string | undefined =>
+			styles
+				.split("}")
+				.find((rule: string) => rule.includes("direction: rtl !important"));
+
+		const contentMatchedByRtlRule = (parent: HTMLElement): Element | null => {
+			const skeleton: HTMLElement = skeletonOf(lightTheme);
+			parent.appendChild(skeleton);
+			document.body.appendChild(parent);
+			const styles: string = skeleton.querySelector("style")?.textContent ?? "";
+			const selector: string =
+				(rtlRule(styles) ?? "").split("{")[0]?.trim() ?? "";
+			return selector ? document.querySelector(selector) : null;
+		};
+
+		afterEach(() => {
+			document.body.innerHTML = "";
+			document.documentElement.removeAttribute("dir");
+		});
+
+		test("switches the content to rtl when its host is rtl", () => {
+			const host: HTMLElement = document.createElement("prosopo-procaptcha");
+			host.dir = "rtl";
+			expect(contentMatchedByRtlRule(host)?.className).toBe(
+				"prosopo-widget__content",
+			);
+		});
+
+		test("stays ltr when only the page is rtl", () => {
+			document.documentElement.dir = "rtl";
+			const host: HTMLElement = document.createElement("prosopo-procaptcha");
+			host.dir = "ltr";
+			expect(contentMatchedByRtlRule(host)).toBeNull();
+		});
+
+		test("stays ltr when an outer element is rtl but the host is not", () => {
+			const outer: HTMLElement = document.createElement("div");
+			outer.dir = "rtl";
+			const host: HTMLElement = document.createElement("prosopo-procaptcha");
+			outer.appendChild(host);
+			const skeleton: HTMLElement = skeletonOf(lightTheme);
+			host.appendChild(skeleton);
+			document.body.appendChild(outer);
+			const styles: string = skeleton.querySelector("style")?.textContent ?? "";
+			const selector: string =
+				(rtlRule(styles) ?? "").split("{")[0]?.trim() ?? "";
+			expect(selector).not.toBe("");
+			expect(document.querySelector(selector)).toBeNull();
+		});
+
+		test("uses no physical left/right margins", () => {
+			const skeleton: HTMLElement = skeletonOf(lightTheme);
+			const roots: ParentNode[] = [
+				skeleton,
+				...[...skeleton.querySelectorAll("*")].flatMap(
+					(element: Element): ParentNode[] =>
+						element.shadowRoot ? [element.shadowRoot] : [],
+				),
+			];
+			expect(roots.length).toBeGreaterThan(1);
+			const styles: string = roots
+				.flatMap((root: ParentNode) => [...root.querySelectorAll("style")])
+				.map((style: HTMLStyleElement) => style.textContent ?? "")
+				.join("\n");
+			expect(styles).not.toMatch(/margin-(left|right)\s*:/);
+		});
 	});
 
 	test("adds the test hook outside production", () => {
