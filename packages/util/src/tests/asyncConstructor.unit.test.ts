@@ -43,9 +43,19 @@ describe("asyncConstructor", () => {
 
 	test("constructs async with no args", async () => {
 		class Abc {
-			async ctor() {}
+			initialised = false;
+			ctorArgs: unknown[] | undefined;
+
+			async ctor(...args: unknown[]) {
+				await new Promise((resolve) => setTimeout(resolve, 0));
+				this.ctorArgs = args;
+				this.initialised = true;
+			}
 		}
 
-		const abc = await anew(Abc, true, 1, "abc", Promise.resolve("def"));
+		const abc = await anew(Abc);
+		expect(abc).toBeInstanceOf(Abc);
+		expect(abc.initialised).toBe(true);
+		expect(abc.ctorArgs).toEqual([]);
 	});
 });

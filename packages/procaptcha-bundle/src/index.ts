@@ -52,6 +52,7 @@ interface WidgetEntry {
 }
 
 const procaptchaWidgets = new Map<string, WidgetEntry>();
+const resetsInFlight = new Map<string, Promise<void>>();
 
 let widgetIdCounter = 0;
 const nextWidgetId = (): string => `procaptcha-widget-${widgetIdCounter++}`;
@@ -461,6 +462,20 @@ const boot = () => {
 };
 
 /**
+ * The skeleton is plain DOM the handle doesn't own, so destroying the widget
+ * alone would leave it behind. A skeleton owns its whole host element, but an
+ * invisible widget only appends its own node to the site's element (usually
+ * the submit button), whose label must survive.
+ */
+const clearHost = (entry: WidgetEntry): void => {
+	if (entry.invisible) {
+		entry.target.remove();
+	} else {
+		entry.element.innerHTML = "";
+	}
+};
+
+/**
  * Returns a widget to its unsolved state, ready to be solved again. Pass a
  * widget id to reset one widget, or omit it to reset every widget on the page.
  *
@@ -482,27 +497,46 @@ export const reset = async (widgetId?: string): Promise<void> => {
 		undefined === widgetId ? Array.from(procaptchaWidgets.keys()) : [widgetId];
 
 	for (const id of ids) {
-		const current = procaptchaWidgets.get(id);
-		if (!current) continue;
-
-		current.handle.destroy();
-
-		const [widget] = await widgetFactory.createWidgets(
-			[current.element],
-			current.renderOptions,
-			current.isWeb2,
-			current.invisible,
-		);
-
-		if (widget) {
-			procaptchaWidgets.set(id, {
-				...current,
-				handle: widget.handle,
-				target: widget.container,
-			});
-		} else {
-			procaptchaWidgets.delete(id);
+		// A second reset while one is still building joins it: running both would
+		// leave the first replacement live but no longer tracked by the map.
+		let pending = resetsInFlight.get(id);
+		if (!pending) {
+			pending = remount(id).finally(() => resetsInFlight.delete(id));
+			resetsInFlight.set(id, pending);
 		}
+		await pending;
+	}
+};
+
+const remount = async (id: string): Promise<void> => {
+	const current = procaptchaWidgets.get(id);
+	if (!current) return;
+
+	current.handle.destroy();
+	clearHost(current);
+
+	const [widget] = await widgetFactory.createWidgets(
+		[current.element],
+		current.renderOptions,
+		current.isWeb2,
+		current.invisible,
+	);
+
+	if (procaptchaWidgets.get(id) !== current) {
+		// remove() ran while the replacement was being built.
+		widget?.handle.destroy();
+		widget?.container.remove();
+		return;
+	}
+
+	if (widget) {
+		procaptchaWidgets.set(id, {
+			...current,
+			handle: widget.handle,
+			target: widget.container,
+		});
+	} else {
+		procaptchaWidgets.delete(id);
 	}
 };
 
@@ -521,9 +555,7 @@ export const remove = (widgetId?: string): void => {
 		if (!entry) continue;
 		entry.unbindTrigger?.();
 		entry.handle.destroy();
-		// The skeleton is plain DOM the handle doesn't own, so tearing the widget
-		// down alone would leave it behind.
-		entry.element.innerHTML = "";
+		clearHost(entry);
 		procaptchaWidgets.delete(id);
 	}
 };
