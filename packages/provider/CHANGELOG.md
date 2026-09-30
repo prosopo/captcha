@@ -1,5 +1,110 @@
 # @prosopo/provider
 
+## 5.14.0
+### Minor Changes
+
+- ede4352: Admin tokens can now be bound to one provider and used only once. `jwtVerify` takes optional checks for the `aud` claim and for the longest allowed lifetime, and the provider's admin check uses them. A token that names an audience must name this provider: its host, `https://` plus its host, or one of the values in `PROSOPO_ADMIN_JWT_AUDIENCE`. A token that carries a `jti` is accepted once per provider process. Tokens may live at most one hour (`PROSOPO_ADMIN_JWT_MAX_LIFETIME_SECONDS`).
+  
+  Migration: tokens without `aud` or `jti` are still accepted, so current callers keep working. Callers should add both, for example `pair.jwtIssue({ expiresIn }, { aud: provider.url, jti: randomUUID() })`, minting one token per provider and per request. Callers that reuse one token for several requests to the same provider must mint a new one per request before they add `jti`. Once every caller sends `aud`, set `PROSOPO_ADMIN_JWT_REQUIRE_AUDIENCE=true` to refuse tokens without it.
+- e62661c: `/metrics` is no longer open to everyone by default. Without `PROSOPO_METRICS_TOKEN`, only direct requests from loopback or private addresses are served, such as a scraper on the docker network. Requests relayed by a reverse proxy (they carry `X-Forwarded-For`, `Forwarded` or `X-Real-IP`) get 403. With `PROSOPO_METRICS_TOKEN` set, any caller with `Authorization: Bearer <token>` is served, as before. The token is now compared in constant time. Set `PROSOPO_METRICS_PUBLIC=true` to keep the old open endpoint. A scraper that reaches the provider through a proxy or from a public address needs either the token or that flag.
+
+### Patch Changes
+
+- fc79e06: The provider now only accepts a detector-pool upload of up to 128 MB from a caller with a valid admin token. Before, the large upload limit applied to anyone who sent a request to that path, because the body was read and parsed before the admin check and the rate limits ran, so unauthenticated requests could make the provider buffer and parse up to 128 MB each. Other requests to that path now get the normal 1 MB limit and are then refused by the admin check.
+- 382f96b: Allowed-domain patterns that contain `*` are now matched without a regular expression. A pattern such as `*a*a*a*a*a*a*a*a*a*b` used to take tens of seconds to check against a long hostname, blocking the provider for every other request while it ran. Matching now takes time proportional to the pattern and hostname lengths, with the same results as before.
+- 9ed0afd: 401 responses no longer include server internals. The admin auth check returned the whole error object, which included the request's i18n instance with its settings and file paths (about 16 KB per response), or whatever a failing check had thrown. It now returns `{ error: { code: 401, key, message } }`, the same shape as other API errors. The domain check returned unexpected errors, such as database errors, in the response body. It now returns a fixed message and logs the error.
+- 3fe7b19: Check the number of unsolved captchas in a dataset against the configured minimum, instead of checking the number of solved ones twice.
+  
+  The unsolved check compared the solved count with `unsolved.count`, so a dataset where every captcha was solved passed even when unsolved captchas were required. It now counts the captchas without a solution. Production sets `unsolved.count` to 0, so its behaviour does not change.
+- b1becee: Stop padding the `/frictionless` response. The tarpit pads the challenge, and that endpoint does not serve one.
+  
+  `GetFrictionlessCaptchaResponse` is `{captchaType, sessionId, dns_url}` — a session envelope. The widget then fetches the challenge from `/captcha/pow`, `/captcha/image` or `/captcha/puzzle`, and each of those resolves its own traffic-filter verdict and pads there, which is where the original feature put it.
+  
+  Padding the envelope as well charged a tarpitted session twice. Measured on one site over 6h: 418 of 868 padded responses (48%, 1.48 GB of 3.09 GB) were `/frictionless`, roughly one per padded challenge.
+  
+  This restores the frictionless handler to its pre-tarpit state, so it also reverts the hoist that extended envelope padding to reused sessions and pinned-captcha-type sites. Nothing is lost from the feature: each of those sessions still fetches a challenge from a typed endpoint, which pads it.
+  
+  Kept from the same work: `padBytes` on the Mongoose traffic-category schema, without which the setting could not persist at all, and the padding writer's handling of a fieldless or non-object body.
+- 3e1053b: Pad the challenge on the two frictionless paths that return early: a reused session, and a site pinned to a concrete captcha type.
+  
+  `applyTrafficFilterAtRequestTime` ran after both short-circuits, so neither resolved a verdict and neither response was padded. On a site whose traffic is mostly returning visitors that is most of the traffic — on Twickets, session reuse is 11–18% of decisions and rose to ~16% after their proxy pool consolidated onto fewer IPs.
+  
+  The verdict now resolves once, before both, and the pad is attached from it. No extra work: the call is synchronous and reads `req.ipInfo`, which `ipInfoMiddleware` already populates for every request.
+  
+  The pad is read live on every request rather than stored on the session, unlike `captchaType`, `powDifficulty` and `puzzleTolerance`. Those are frozen because they are part of the issued challenge — the PoW string was minted at that difficulty — so re-deriving them mid-session would invalidate work already handed out. Nothing verifies the pad, so it has no such constraint, and reading it live means a newly-configured pad applies on the next request instead of only after every live session has expired.
+  
+  A reused session keeps its cached captcha type, and a pinned site keeps serving the type it pinned. Making a category's `captchaType` override win over a site-level pin is a larger behaviour change and is left on prosopo/captcha#3463.
+  
+  Blocking was never affected by any of this: `resolveTrafficFilterCheck` runs at submit time from the site's current settings and a fresh IP lookup, so a blocked category was always rejected regardless of how the challenge was issued.
+  
+  Tests: the pad is attached on a reused session without evicting it or changing its cached type, and on a site pinned to each of pow / image / puzzle without changing which challenge is sent.
+- df06006: Stream the traffic-filter tarpit padding with backpressure, and spread it across the response body instead of a single leading field.
+  
+  The padding is written in 64 KiB chunks that wait for the socket to drain, and is abandoned if the connection goes away, so provider memory stays flat while a padded response is in flight however slowly it is read.
+  
+  It is also split into several members with generated keys, one before each real field, rather than one `pad` member at the front. The body is the same size and parses the same way; no consumer reads these fields.
+- 06784d0: Translation keys are now a typed union built from the English catalogue, so calling the translator with a key that does not exist fails to compile. Error classes only pass a message to the translator when it is a real catalogue key, and free-text messages are shown as they are.
+- 7e9cd1e: The verify endpoints (image, PoW, puzzle and authenticated session) now answer 400 `GENERAL.INVALID_SIGNATURE` when the `dappSignature` is not hex, is the wrong length, or does not match the site key. Before, the error from the signature check fell into each handler's catch-all and came back as a 500. Anyone could call these endpoints and push up the provider's 500 rate, which made it look unhealthy and skewed the error-rate metrics. Real server faults later in the handlers still return 500.
+- f7cfa1c: Return 400, not 500, when a verify request carries an undecodable token.
+  
+  Every verify endpoint (image, PoW, puzzle and authenticated-session) decodes
+  the hex `ProcaptchaToken` inside a `try` whose `catch` answers
+  `API.BAD_REQUEST` with HTTP 500. The body schema only checks that the token is
+  a bounded `0x`-prefixed string, so a value like `0x1234` passes validation and
+  then fails to decode into a `ProcaptchaToken` SCALE struct — a bad-input case,
+  not a server fault.
+  
+  The endpoints are unauthenticated, so any caller could make the provider
+  answer 500 at will. That mis-signals provider health and inflates the
+  error-rate metrics that alerting and the http_requests_total status label feed
+  from, without leaking anything (the response body is unchanged).
+  
+  Decoding now goes through a helper that maps a decode failure to a 400
+  `CAPTCHA.PARSE_ERROR`, matching the existing 400 the same endpoints already
+  return for a non-hex token. Genuine server errors later in each handler still
+  surface as 500.
+- Updated dependencies [ede4352]
+- Updated dependencies [f53ddb2]
+- Updated dependencies [97d65fa]
+- Updated dependencies [08daf16]
+- Updated dependencies [1144e04]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [b017dfb]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [9ed0afd]
+- Updated dependencies [70fcefd]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+- Updated dependencies [97a799e]
+- Updated dependencies [9fc1e8a]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/util-crypto@13.6.0
+  - @prosopo/keyring@2.10.0
+  - @prosopo/types@5.12.0
+  - @prosopo/api-express-router@3.2.0
+  - @prosopo/database@4.1.3
+  - @prosopo/datasets@3.2.0
+  - @prosopo/util@3.3.13
+  - @prosopo/locale@3.6.2
+  - @prosopo/load-balancer@2.11.4
+  - @prosopo/common@3.1.61
+  - @prosopo/types-database@5.7.3
+  - @prosopo/env@3.6.68
+  - @prosopo/user-access-policy@3.14.14
+  - @prosopo/types-env@2.11.14
+  - @prosopo/api@4.3.8
+  - @prosopo/ipinfo@0.4.13
+  - @prosopo/logger@2.1.2
+  - @prosopo/api-route@2.6.62
+  - @prosopo/redis-client@1.0.39
+
 ## 5.13.4
 ### Patch Changes
 

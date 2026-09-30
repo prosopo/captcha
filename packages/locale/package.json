@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/locale",
-	"version": "3.6.1",
+	"version": "3.6.2",
 	"description": "Prosopo locale library",
 	"type": "module",
 	"engines": {
@@ -32,7 +32,7 @@
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
 	"dependencies": {
-		"@prosopo/util": "3.3.12",
+		"@prosopo/util": "3.3.13",
 		"i18next": "26.4.2",
 		"i18next-fs-backend": "2.6.8",
 		"i18next-http-middleware": "3.9.9"

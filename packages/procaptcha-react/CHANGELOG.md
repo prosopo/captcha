@@ -1,5 +1,44 @@
 # @prosopo/procaptcha-react
 
+## 2.13.6
+### Patch Changes
+
+- 2145922: A wrong image answer no longer just closes the popup. The widget now says "Not quite — try again" beside the checkbox (the same translated line the puzzle uses), and the checkbox stays clickable so the user can have another go. This happens even when the site supplies its own failed callback, and it survives the frictionless widget restarting itself after the failure. The notice clears as soon as the user starts again.
+- 92edebd: The widget's loading spinner and the reload icon no longer announce hard-coded English. The spinner is a progress indicator labelled from the new `WIDGET.LOADING` string (in all 32 languages) once translations are loaded, and the reload icon's tooltip uses the same translated label as the button.
+- 54a07f3: Provider errors shown in the widget now use the widget's configured language. The provider translates errors into the browser's language, so a German widget in an English browser showed English errors. The widget now translates the error key itself and keeps the provider's text only for errors its catalogue does not know.
+- b75e9b7: Fix the error FAQ link and translate two widget strings.
+  
+  - The error FAQ link no longer ends in `//` when `PROSOPO_DOCS_URL` is set, and a trailing slash on that variable no longer breaks it.
+  - The "Cannot load CAPTCHA" fallback message now shows in the widget's language.
+  - The image challenge's reload button now has a translated accessible name instead of always being "Reload".
+  - Adds `WIDGET.CANNOT_LOAD` and `WIDGET.RELOAD` to every locale.
+- 082346b: Removing or resetting a widget now stops its expiry timers. Before, a widget torn down after a solve (by `procaptcha.reset()`, `procaptcha.remove()` or a frictionless escalation) still fired `onExpired` two minutes later. That removed the token the replacement widget had just put into the form and reset the page's own state. The image challenge's timeout could also fire `onChallengeExpired` after the widget was gone.
+- Updated dependencies [ede4352]
+- Updated dependencies [4ea2ca9]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [af4a7e7]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [7b65240]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b38d55f]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+- Updated dependencies [082346b]
+  - @prosopo/types@5.12.0
+  - @prosopo/procaptcha-common@2.18.2
+  - @prosopo/util@3.3.13
+  - @prosopo/procaptcha@2.11.24
+  - @prosopo/locale@3.6.2
+  - @prosopo/common@3.1.61
+  - @prosopo/widget-skeleton@2.10.1
+
 ## 2.13.5
 ### Patch Changes
 

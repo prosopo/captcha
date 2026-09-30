@@ -1,5 +1,25 @@
 # @prosopo/types-database
 
+## 5.7.3
+### Patch Changes
+
+- 06784d0: Translation keys are now a typed union built from the English catalogue, so calling the translator with a key that does not exist fails to compile. Error classes only pass a message to the translator when it is a real catalogue key, and free-text messages are shown as they are.
+- Updated dependencies [ede4352]
+- Updated dependencies [2145922]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/types@5.12.0
+  - @prosopo/locale@3.6.2
+  - @prosopo/common@3.1.61
+  - @prosopo/user-access-policy@3.14.14
+  - @prosopo/logger@2.1.2
+
 ## 5.7.2
 ### Patch Changes
 

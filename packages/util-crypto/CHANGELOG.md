@@ -1,5 +1,18 @@
 # @prosopo/util-crypto
 
+## 13.6.0
+### Minor Changes
+
+- ede4352: Admin tokens can now be bound to one provider and used only once. `jwtVerify` takes optional checks for the `aud` claim and for the longest allowed lifetime, and the provider's admin check uses them. A token that names an audience must name this provider: its host, `https://` plus its host, or one of the values in `PROSOPO_ADMIN_JWT_AUDIENCE`. A token that carries a `jti` is accepted once per provider process. Tokens may live at most one hour (`PROSOPO_ADMIN_JWT_MAX_LIFETIME_SECONDS`).
+  
+  Migration: tokens without `aud` or `jti` are still accepted, so current callers keep working. Callers should add both, for example `pair.jwtIssue({ expiresIn }, { aud: provider.url, jti: randomUUID() })`, minting one token per provider and per request. Callers that reuse one token for several requests to the same provider must mint a new one per request before they add `jti`. Once every caller sends `aud`, set `PROSOPO_ADMIN_JWT_REQUIRE_AUDIENCE=true` to refuse tokens without it.
+
+### Patch Changes
+
+- b017dfb: `sr25519jwtIssue` now writes the standard claims (`sub`, `iat`, `nbf`, `exp`) after any extra message fields, so a message can no longer replace them. Before, a message carrying `exp` or `nbf` could extend a token's lifetime or switch off its not-before check.
+- 97a799e: `jwtVerify` now only accepts tokens whose header says `"alg": "sr25519"`, which is what `sr25519jwtIssue` writes. Before, the header was never checked, so a signed token claiming `none`, `HS256` or anything else was still accepted. The signature is also now checked as a plain sr25519 signature over `header.payload`. Before, it also accepted a signature over the `<Bytes>`-wrapped text (the form a wallet produces when it signs a message) and a 65-byte signature with a crypto-type prefix byte. Tokens issued by `jwtIssue` are unaffected. A signature of the wrong length now returns an invalid result instead of throwing.
+- 9fc1e8a: `jwtVerify` is now strict about the time claims in a token. `nbf` (not before) must be a number if it is present; before, a string, `true`, `null` or an object was silently ignored, so a token could skip its not-before check. `exp`, `iat` and `nbf` must also be finite, so an `exp` of `1e400` (which JSON reads as Infinity) no longer makes a token that never expires. A payload that is not a JSON object, or a `sub` that is not a string, now returns an invalid result instead of throwing. Tokens issued by `jwtIssue` are unaffected.
+
 ## 13.5.33
 ### Patch Changes
 
