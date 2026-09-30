@@ -145,9 +145,14 @@ const installProviderApiSpies = (): ProviderApiSpies => {
 	return { puzzle, pow, image };
 };
 
-const installLoadBalancer = () => {
-	vi.spyOn(loadBalancerModule, "loadBalancer").mockResolvedValue(
-		stubProviderList(),
+// ProsopoServer asks the load balancer for the one provider that minted the
+// token, so the seam is `findProvider` rather than the whole list. Backed by
+// stubProviderList so the "url isn't a known provider" case stays honest.
+const installProviderLookup = (
+	providers: HardcodedProvider[] = stubProviderList(),
+) => {
+	vi.spyOn(loadBalancerModule, "findProvider").mockImplementation(
+		async (_env, providerUrl) => providers.find((p) => p.url === providerUrl),
 	);
 };
 
@@ -156,7 +161,7 @@ describe("ProsopoServer.verifyProvider — captchaType dispatch", () => {
 
 	beforeEach(() => {
 		spies = installProviderApiSpies();
-		installLoadBalancer();
+		installProviderLookup();
 	});
 
 	afterEach(() => {
@@ -226,7 +231,7 @@ describe("ProsopoServer.verifyProvider — legacy tokens (no captchaType)", () =
 
 	beforeEach(() => {
 		spies = installProviderApiSpies();
-		installLoadBalancer();
+		installProviderLookup();
 	});
 
 	afterEach(() => {
@@ -293,7 +298,7 @@ describe("ProsopoServer.verifyProvider — recency checks", () => {
 
 	beforeEach(() => {
 		spies = installProviderApiSpies();
-		installLoadBalancer();
+		installProviderLookup();
 	});
 
 	afterEach(() => {
@@ -354,6 +359,114 @@ describe("ProsopoServer.verifyProvider — recency checks", () => {
 		expect(result.verified).toBe(false);
 		expect(spies.image).not.toHaveBeenCalled();
 	});
+
+	it("a future-dated token beyond the clock-skew allowance short-circuits", async () => {
+		const powCached = 60_000;
+		const futureTimestamp = Date.now() + 60 * 60_000;
+		const token = buildToken(futureTimestamp, {
+			[ApiParams.captchaType]: CaptchaType.pow,
+		});
+		const server = new ProsopoServer(
+			buildConfig(powCached, 60_000, 60_000),
+			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+			stubPair() as any,
+		);
+		const result = await server.isVerified(token);
+		expect(result.verified).toBe(false);
+		expect(spies.pow).not.toHaveBeenCalled();
+	});
+
+	it("a token within the clock-skew allowance still verifies", async () => {
+		const powCached = 60_000;
+		const slightlyFutureTimestamp = Date.now() + 5_000;
+		const token = buildToken(slightlyFutureTimestamp, {
+			[ApiParams.captchaType]: CaptchaType.pow,
+		});
+		const server = new ProsopoServer(
+			buildConfig(powCached, 60_000, 60_000),
+			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+			stubPair() as any,
+		);
+		const result = await server.isVerified(token);
+		expect(result.verified).toBe(true);
+		expect(spies.pow).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe("ProsopoServer.verifyProvider — authenticated (Web Bot Auth) tokens", () => {
+	let spies: ProviderApiSpies;
+	let authenticated: MockInstance;
+
+	beforeEach(() => {
+		spies = installProviderApiSpies();
+		authenticated = vi
+			.spyOn(ProviderApi.prototype, "submitAuthenticatedCaptchaVerify")
+			.mockResolvedValue({ status: "ok", verified: true });
+		installProviderLookup();
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	const authenticatedToken = (timestamp: number): string =>
+		buildToken(timestamp, {
+			[ApiParams.captchaType]: CaptchaType.authenticated,
+		});
+
+	it("routes to submitAuthenticatedCaptchaVerify only, passing ip through", async () => {
+		const token = authenticatedToken(Date.now());
+		const server = new ProsopoServer(
+			buildConfig(60_000, 60_000, 60_000),
+			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+			stubPair() as any,
+		);
+		const result = await server.isVerified(
+			token,
+			"203.0.113.7",
+			"a@example.com",
+			"session-1",
+		);
+		expect(result.verified).toBe(true);
+		expect(authenticated).toHaveBeenCalledTimes(1);
+		expect(authenticated.mock.calls[0]).toEqual([
+			token,
+			expect.any(String),
+			USER,
+			"203.0.113.7",
+			"a@example.com",
+			"session-1",
+		]);
+		expect(spies.pow).not.toHaveBeenCalled();
+		expect(spies.puzzle).not.toHaveBeenCalled();
+		expect(spies.image).not.toHaveBeenCalled();
+	});
+
+	it("rejects a token older than the pow cachedTimeout without calling the provider", async () => {
+		const powCached = 1_000;
+		const token = authenticatedToken(Date.now() - (powCached + 100));
+		const server = new ProsopoServer(
+			// image and puzzle windows are wide open: only pow's may apply
+			buildConfig(powCached, 60_000, 60_000),
+			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+			stubPair() as any,
+		);
+		const result = await server.isVerified(token);
+		expect(result.verified).toBe(false);
+		expect(authenticated).not.toHaveBeenCalled();
+	});
+
+	it("accepts a token inside the pow window even when other windows are shorter", async () => {
+		const token = authenticatedToken(Date.now() - 5_000);
+		const server = new ProsopoServer(
+			buildConfig(60_000, 1_000, 1_000),
+			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+			stubPair() as any,
+		);
+		const result = await server.isVerified(token);
+		expect(result.verified).toBe(true);
+		expect(authenticated).toHaveBeenCalledTimes(1);
+	});
 });
 
 describe("ProsopoServer.isVerified — short-circuits", () => {
@@ -361,9 +474,9 @@ describe("ProsopoServer.isVerified — short-circuits", () => {
 		vi.restoreAllMocks();
 	});
 
-	it("provider not in loadBalancer list returns USER_NOT_VERIFIED", async () => {
+	it("provider not in the provider list returns USER_NOT_VERIFIED", async () => {
 		installProviderApiSpies();
-		vi.spyOn(loadBalancerModule, "loadBalancer").mockResolvedValue([
+		installProviderLookup([
 			{
 				address: DAPP,
 				url: "https://a-different-provider.example",
@@ -385,7 +498,7 @@ describe("ProsopoServer.isVerified — short-circuits", () => {
 
 	it("throws BAD_REQUEST for an unparseable token", async () => {
 		installProviderApiSpies();
-		installLoadBalancer();
+		installProviderLookup();
 		const server = new ProsopoServer(
 			buildConfig(60_000, 60_000, 60_000),
 			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
