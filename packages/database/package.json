@@ -45,11 +45,11 @@
 		"@prosopo/types-database": "5.7.3",
 		"@prosopo/user-access-policy": "3.14.14",
 		"@prosopo/util": "3.3.13",
-		"bson": "7.3.2",
+		"bson": "7.3.3",
 		"make-dir": "5.1.0",
 		"mongodb": "7.6.0",
 		"mongodb-memory-server": "10.3.0",
-		"mongoose": "9.10.0"
+		"mongoose": "9.10.2"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.4.2",

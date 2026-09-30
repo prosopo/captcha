@@ -48,8 +48,8 @@
 		"@prosopo/workspace": "3.2.1",
 		"dotenv": "16.4.5",
 		"fast-glob": "3.3.3",
-		"fs-extra": "11.4.0",
-		"yargs": "18.1.0"
+		"fs-extra": "11.4.1",
+		"yargs": "18.2.0"
 	},
 	"devDependencies": {
 		"@prosopo/config": "3.4.2",
