@@ -14,6 +14,7 @@
 
 import {
 	CaptchaType,
+	MAX_PAD_BYTES,
 	ScheduledTaskNames,
 	ScheduledTaskStatus,
 	Tier,
@@ -597,6 +598,56 @@ describe("UserSettingsSchema", () => {
 		expect(doc.trafficFilter.vpn.puzzleTolerance).toBe(8);
 		expect(doc.trafficFilter.vpn.puzzle.decoyCount).toBe(40);
 		expect(doc.trafficFilter.vpn.puzzle.pieceScale.max).toBe(0.2);
+	});
+
+	it("persists the tarpit padBytes on a challenge category", () => {
+		const doc = settings({
+			trafficFilter: {
+				proxy: {
+					action: TrafficFilterAction.Challenge,
+					captchaType: CaptchaType.pow,
+					powDifficulty: 9,
+					padBytes: 2048,
+				},
+			},
+		});
+		expect(doc.trafficFilter.proxy.padBytes).toBe(2048);
+	});
+
+	it("persists the tarpit padBytes on a blocked category", () => {
+		// A blocked category still hands out a deferred challenge at request
+		// time, so it carries padding too — and `policyToApi` in the portal
+		// sends `padBytes` alongside `action: block` with nothing else.
+		const doc = settings({
+			trafficFilter: {
+				proxy: { action: TrafficFilterAction.Block, padBytes: 1_048_576 },
+			},
+		});
+		expect(doc.trafficFilter.proxy.padBytes).toBe(1_048_576);
+	});
+
+	it("rejects a padBytes above the 5 MiB cap", () => {
+		expect(
+			errorPaths(
+				settings({
+					trafficFilter: {
+						proxy: {
+							action: TrafficFilterAction.Block,
+							padBytes: MAX_PAD_BYTES + 1,
+						},
+					},
+				}).validateSync(),
+			),
+		).toEqual(["trafficFilter.proxy.padBytes"]);
+		expect(
+			errorPaths(
+				settings({
+					trafficFilter: {
+						proxy: { action: TrafficFilterAction.Block, padBytes: -1 },
+					},
+				}).validateSync(),
+			),
+		).toEqual(["trafficFilter.proxy.padBytes"]);
 	});
 });
 

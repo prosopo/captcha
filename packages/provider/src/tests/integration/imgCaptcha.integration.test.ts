@@ -36,12 +36,14 @@ import {
 	ClientSettingsSchema,
 	DatabaseTypes,
 	type ImageVerificationResponse,
+	InputMethod,
 	type KeyringPair,
 	ProsopoConfigSchema,
 	Tier,
 	type VerifySolutionBodyTypeInput,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
+import type { UserCommitmentRecord } from "@prosopo/types-database";
 import { embedData } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
@@ -221,6 +223,13 @@ describe("Image Captcha Integration Tests", () => {
 
 		return (await response.json()) as CaptchaSolutionResponse;
 	};
+
+	const storedCommitment = (solution: CaptchaSolutionBodyType) =>
+		env
+			.getDb()
+			.getTables()
+			.commitment.findOne({ id: getCommitmentId(solution) })
+			.lean<UserCommitmentRecord>();
 
 	/**
 	 * The commitment ID the provider stored for a solution. The widget derives
@@ -657,6 +666,60 @@ describe("Image Captcha Integration Tests", () => {
 			);
 
 			expect(res.status).toBe("You correctly answered the captchas");
+		});
+
+		it("stores how each selection was made with the commitment", async () => {
+			const { pair, userAccount } = getUser();
+			const challenge = await requestChallenge(dappAccount, userAccount);
+			const built = buildSolution(
+				challenge,
+				dappAccount,
+				userAccount,
+				pair,
+				"correct",
+			);
+			// buildSolution embeds two positions in every captcha's salt.
+			const solution: CaptchaSolutionBodyType = {
+				...built,
+				[ApiParams.captchas]: built[ApiParams.captchas].map((captcha) => ({
+					...captcha,
+					inputMethods: [InputMethod.pointer, InputMethod.keyboard],
+				})),
+			};
+
+			const res = await submitSolution(solution, dappAccount, userAccount);
+			expect(res.verified).toBe(true);
+
+			const commitment = await storedCommitment(solution);
+			const stored = commitment?.inputMethods ?? [];
+			expect(stored.flat()).toEqual(
+				solution[ApiParams.captchas].flatMap(() => [
+					InputMethod.pointer,
+					InputMethod.keyboard,
+				]),
+			);
+			expect(stored.map((list) => list.length)).toEqual(
+				commitment?.coords?.map((list) => list.length),
+			);
+		});
+
+		it("stores no input methods for a widget that does not send them", async () => {
+			const { pair, userAccount } = getUser();
+			const challenge = await requestChallenge(dappAccount, userAccount);
+			const solution = buildSolution(
+				challenge,
+				dappAccount,
+				userAccount,
+				pair,
+				"correct",
+			);
+
+			const res = await submitSolution(solution, dappAccount, userAccount);
+			expect(res.verified).toBe(true);
+
+			const commitment = await storedCommitment(solution);
+			expect(commitment).not.toBeNull();
+			expect(commitment?.inputMethods).toBeUndefined();
 		});
 
 		it("should mark an incorrectly completed image captcha as disapproved, and the dapp should verify the challenge as disapproved", async () => {

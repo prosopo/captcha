@@ -567,11 +567,18 @@ export default (
 			// match on the verified identity. Unsigned traffic falls through
 			// with webBotAuthAgent=undefined and hits the normal detector
 			// stack.
-			const verified = await verifyWebBotAuth({
-				method: req.method,
-				url: `https://${req.headers.host ?? ""}${req.originalUrl ?? req.url}`,
-				headers: flatten(req.headers),
-			});
+			const verified = await verifyWebBotAuth(
+				{
+					method: req.method,
+					url: `https://${req.headers.host ?? ""}${req.originalUrl ?? req.url}`,
+					headers: flatten(req.headers),
+				},
+				{
+					allowLocalSigners:
+						process.env.NODE_ENV === "test" ||
+						process.env.NODE_ENV === "development",
+				},
+			);
 			const verifiedSignerUrl = verified.verified
 				? verified.signerUrl
 				: undefined;
@@ -896,6 +903,13 @@ export default (
 				clientRecord.settings?.trafficFilter,
 				req.logger,
 			);
+			// Set before either branch responds, so the tarpit applies to the
+			// challenge the traffic filter dispatches below AND to whatever the
+			// decision machine issues when no category matched a challenge.
+			// Frictionless is the entry point nearly every site uses; padding
+			// only the three direct endpoints left the feature inert in
+			// production.
+			res.locals.padBytes = trafficFilterVerdict.padBytes;
 			const trafficFilterOutcome = await handleFrictionlessTrafficFilter(
 				{
 					verdict: trafficFilterVerdict,

@@ -1,5 +1,37 @@
 # @prosopo/datasets
 
+## 3.1.93
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+
+## 3.1.92
+### Patch Changes
+
+- 8933ad5: Build the proofs returned after a passed image captcha from the right leaves, and refuse to build a proof for a hash that is not a leaf.
+  
+  The provider asked the commitment tree for a proof of each captcha ID, but the tree's leaves are solution hashes, so no captcha ID is ever a leaf. `proof()` did not check, and returned a proof that linked nothing to the root. The provider now asks for a proof of each leaf, and `proof()` throws `DATASET.MERKLE_ERROR` when the hash is not a leaf. Several merkle tests that could never fail (`expect(x > -1)`) now assert properly.
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+- Updated dependencies [0d29dde]
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/util@3.3.12
+  - @prosopo/logger@2.1.1
+
+## 3.1.91
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+
 ## 3.1.90
 ### Patch Changes
 
