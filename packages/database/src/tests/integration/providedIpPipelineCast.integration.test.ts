@@ -153,7 +153,7 @@ describe("updateDappUserCommitment pipeline cast on providedIp.lower", () => {
 						upper: IP_V6_LOWER_UNSAFE, // exercises both halves
 						type: IpAddressType.v6,
 					},
-					lastUpdatedAtTimestamp: timestamp,
+					lastUpdatedTimestamp: timestamp,
 					pendingStage: true,
 				},
 			},

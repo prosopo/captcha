@@ -5,7 +5,7 @@
 		"JSON_LOAD_FAILED": "Laden van JSON-bestand mislukt",
 		"MNEMONIC_UNDEFINED": "Mnemonic Undefined. Stel de mnemonic in omgevingsvariabelen in",
 		"NO_MNEMONIC_OR_SEED": "Geen mnemonic of seed opgegeven",
-		"CANT_FIND_KEYRINGPAIR": "Kan het sleutelhangerpaar niet vinden voor {{adres}}",
+		"CANT_FIND_KEYRINGPAIR": "Kan het sleutelhangerpaar niet vinden voor {{address}}",
 		"ENVIRONMENT_NOT_READY": "Omgeving is niet gereed",
 		"INVALID_SIGNATURE": "Ongeldige handtekening",
 		"SITE_KEY_MISSING": "SITE KEY ontbreekt",

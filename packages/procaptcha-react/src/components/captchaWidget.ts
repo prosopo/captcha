@@ -16,6 +16,7 @@ import {
 	type Component,
 	type StyleMap,
 	Teardown,
+	activationOf,
 	applyStyles,
 	clearElement,
 	createControl,
@@ -24,7 +25,12 @@ import {
 	threeColumnBasis,
 	wrapRandomly,
 } from "@prosopo/procaptcha-common";
-import type { Captcha, HashedItem } from "@prosopo/types";
+import type {
+	Captcha,
+	HashedItem,
+	ImageSelection,
+	InputMethod,
+} from "@prosopo/types";
 import {
 	type Theme,
 	darkTheme,
@@ -34,8 +40,13 @@ import {
 
 export interface CaptchaWidgetProps {
 	challenge: Captcha;
-	solution: [string, number, number][];
-	onClick: (hash: string, x: number, y: number) => void;
+	solution: ImageSelection[];
+	onClick: (
+		hash: string,
+		x: number,
+		y: number,
+		inputMethod: InputMethod,
+	) => void;
 	themeColor: "light" | "dark";
 }
 
@@ -244,8 +255,8 @@ export const mountCaptchaWidget = (
 		//
 		// A tap delivers a click too, and the click event carries only
 		// clientX/clientY — never `touches` — so there is one set of coordinates
-		// to read, not three. Keyboard activation has none, which is what a real
-		// button reports for an Enter press as well.
+		// to read, not three. Keyboard activation has none, and is reported as
+		// keyboard so the provider does not mistake repeated (0, 0) for a bot.
 		const clickable = createControl(teardown, {
 			style: {
 				position: "relative",
@@ -261,12 +272,8 @@ export const mountCaptchaWidget = (
 			},
 			children: [image, overlay],
 			onActivate: (event: MouseEvent | KeyboardEvent) => {
-				const fromPointer = "clientX" in event;
-				props.onClick(
-					hash,
-					fromPointer ? event.clientX : 0,
-					fromPointer ? event.clientY : 0,
-				);
+				const { x, y, inputMethod } = activationOf(event);
+				props.onClick(hash, x, y, inputMethod);
 			},
 		});
 
@@ -322,7 +329,7 @@ export const mountCaptchaWidget = (
 		const theme = themeOf(props.themeColor);
 		for (const tile of tiles) {
 			const selected = props.solution.some(
-				(entry: [string, number, number]) => entry[0] === tile.hash,
+				(entry: ImageSelection) => entry[0] === tile.hash,
 			);
 			applyStyles(tile.image, selectionStyle(theme, selected));
 			applyStyles(tile.overlay, {

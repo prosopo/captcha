@@ -64,8 +64,10 @@ import {
 } from "../../compositeIpAddress.js";
 import {
 	constructPairList,
-	containsIdenticalPairs,
+	peelCheckboxInputMethod,
 	peelCheckboxPrefix,
+	resolveInputMethods,
+	selectionsLookScripted,
 } from "../../pairs.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
@@ -342,6 +344,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 			const pairs: [number, number][][] = checkboxCoordPair
 				? [[checkboxCoordPair], ...shapePairs]
 				: shapePairs;
+			const rawInputMethods = resolveInputMethods(
+				rawFlat,
+				receivedCaptchas.map((c) => c.inputMethods),
+			);
+			const inputMethods =
+				rawInputMethods && checkboxCoordPair
+					? peelCheckboxInputMethod(rawInputMethods)
+					: rawInputMethods;
+			const inputMethodsDeclared = receivedCaptchas.some(
+				(c) => c.inputMethods !== undefined,
+			);
 
 			const { tree, commitmentId } =
 				buildTreeAndGetCommitmentId(receivedCaptchas);
@@ -355,8 +368,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 
 			// Only do stuff if the request is in the local DB
-			// prevent this request hash from being used twice
-			await this.db.updatePendingImageCommitmentStatus(requestHash);
+			// prevent this request hash from being used twice. The flip is
+			// conditional on the request still being pending, so concurrent
+			// submissions (e.g. brute-forcing answers in parallel) get one try.
+			const claimedRequest =
+				await this.db.updatePendingImageCommitmentStatus(requestHash);
+			if (!claimedRequest) {
+				this.logger.info(() => ({
+					msg: "Request hash already consumed by a concurrent submission",
+				}));
+				return response;
+			}
 
 			// Process behavioral data if provided
 			let behavioralDataPacked: BehavioralDataPacked | undefined;
@@ -376,6 +398,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 								mouseEventsCount: decryptedData.collector1?.length || 0,
 								touchEventsCount: decryptedData.collector2?.length || 0,
 								clickEventsCount: decryptedData.collector3?.length || 0,
+								scrollEventsCount: decryptedData.collector4?.length || 0,
 								deviceCapability: decryptedData.deviceCapability,
 							},
 						}));
@@ -385,6 +408,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 							c1: decryptedData.collector1 || [],
 							c2: decryptedData.collector2 || [],
 							c3: decryptedData.collector3 || [],
+							c4: decryptedData.collector4 || [],
 							d: decryptedData.deviceCapability,
 						};
 
@@ -426,6 +450,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				...(storedClientMetaData && {
 					clientMetaData: storedClientMetaData,
 				}),
+				...(inputMethodsDeclared && inputMethods && { inputMethods }),
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
 
@@ -445,7 +470,10 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 			const totalImages = storedCaptchas[0]?.items.length || 0;
 
-			if (containsIdenticalPairs(pairs) && process.env.NODE_ENV !== "test") {
+			if (
+				selectionsLookScripted(pairs, inputMethods) &&
+				process.env.NODE_ENV !== "test"
+			) {
 				// Write commitment disapproval and session update in parallel
 				const writePromises: Promise<void>[] = [
 					this.db.disapproveDappUserCommitment(
@@ -489,9 +517,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 				)
 			) {
 				response = {
-					captchas: captchaIds.map((id) => ({
+					captchas: captchaIds.map((id, index) => ({
 						captchaId: id,
-						proof: tree.proof(id),
+						proof: tree.proof(at(tree.leaves, index).hash),
 					})),
 					verified: true,
 				};
@@ -729,7 +757,16 @@ export class ImgCaptchaManager extends CaptchaManager {
 			};
 		}
 
-		await this.db.markDappUserCommitmentsChecked([solution.id]);
+		// The claim is conditional on the commitment not being checked yet, so
+		// of several concurrent verifies of one token only one gets past here.
+		const claimed = await this.db.markDappUserCommitmentsChecked([solution.id]);
+		if (claimed === 0) {
+			return {
+				status: "API.USER_ALREADY_VERIFIED",
+				verified: false,
+				...(solution.sessionId && { sessionId: solution.sessionId }),
+			};
+		}
 		// -- END WARNING --
 
 		// A solution exists but is disapproved
@@ -1108,6 +1145,8 @@ export class ImgCaptchaManager extends CaptchaManager {
 				ruleType: sessionRecord?.ruleType,
 				webView: sessionRecord?.webView,
 				iFrame: sessionRecord?.iFrame,
+				currentUrl: sessionRecord?.currentUrl,
+				iframeUrl: sessionRecord?.iframeUrl,
 				coords: solution.coords,
 				// tcp-probe fields — see powTasks.ts for the reasoning.
 				synNs: sessionRecord?.synNs,

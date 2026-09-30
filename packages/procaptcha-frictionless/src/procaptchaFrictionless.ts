@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { loadI18next } from "@prosopo/locale";
+import { loadI18next, localiseErrorMessage } from "@prosopo/locale";
 import {
 	type CheckboxProps,
 	type Component,
@@ -134,7 +134,8 @@ export const mountProcaptchaFrictionless = (
 	// Set when the re-mint was triggered by a wrong puzzle answer rather than a
 	// reload press, so the replacement challenge still tells the user they
 	// missed. Held alongside `nextMountAutoStart` for the same reason.
-	let nextMountShowRetry = false;
+	// Also seeded by a full restart after a rejected image answer.
+	let nextMountShowRetry = true === props.startShowRetry;
 	const manualStart = StartModeEnum.manual === config.startMode;
 	let manualStarted = false;
 	// The inner widget only listens for `procaptcha:execute` once /frictionless
@@ -232,7 +233,9 @@ export const mountProcaptchaFrictionless = (
 		}
 		renderPlaceholder(
 			config.mode,
-			errorMessage || "Cannot load CAPTCHA",
+			errorMessage
+				? localiseErrorMessage(i18n, { message: errorMessage, key: errorKey })
+				: "Cannot load CAPTCHA",
 			false,
 		);
 	};
@@ -472,6 +475,7 @@ export const mountProcaptchaFrictionless = (
 					behaviorCollector1: result.behaviorCollector1,
 					behaviorCollector2: result.behaviorCollector2,
 					behaviorCollector3: result.behaviorCollector3,
+					behaviorCollector4: result.behaviorCollector4,
 					deviceCapability: result.deviceCapability,
 					encryptBehavioralData: result.encryptBehavioralData,
 					getSimdReadings: result.getSimdReadings,

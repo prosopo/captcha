@@ -102,6 +102,15 @@ export const puzzlePieceScaleMaxDefault = 0.45;
 export const powDifficultyFieldSchema = number().positive().min(1).max(10);
 export const imageThresholdFieldSchema = number().min(0).max(1);
 
+// Tarpit: bytes of incompressible padding the provider appends to a challenge
+// issuance response for this traffic category. The bytes are generated
+// provider-side into the response only — never persisted, never client-set —
+// so a category can be made expensive to solve at scale without touching the
+// stored session. Capped at 5 MiB so a misconfiguration (or an attacker who
+// deliberately trips it) cannot be turned into an unbounded amplifier.
+export const MAX_PAD_BYTES = 5 * 1024 * 1024;
+export const padBytesFieldSchema = number().int().min(0).max(MAX_PAD_BYTES);
+
 /**
  * The frictionless score ladder. Two rungs cutting the score line into three
  * bands: PoW at or below the puzzle rung, puzzle between the two, image at or
@@ -539,6 +548,10 @@ export const TrafficCategoryPolicySchema = object({
 	powDifficulty: powDifficultyFieldSchema.optional(),
 	solvedImagesCount: imageMaxRoundsFieldSchema.optional(),
 	puzzleTolerance: puzzleToleranceFieldSchema.optional(),
+	// Tarpit padding for this category — see padBytesFieldSchema. Pairs with a
+	// high `powDifficulty` to make a challenge expensive in both bandwidth and
+	// CPU for traffic (e.g. `proxy`) an operator would otherwise hard-block.
+	padBytes: padBytesFieldSchema.optional(),
 	// Per-category overrides for puzzle rendering. Individual fields on
 	// the nested object are themselves optional, so a category can
 	// override, say, just `decoyCount` without restating the rest.
