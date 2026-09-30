@@ -16,6 +16,7 @@ import { ApiParams } from "@prosopo/types";
 import type { ProcaptchaRenderOptions, ProcaptchaToken } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+	EXPIRED_NOTICE_FALLBACK,
 	FAILED_NOTICE_FALLBACK,
 	getDefaultCallbacks,
 	setUserCallbacks,
@@ -191,6 +192,36 @@ describe("callbacks/defaultCallbacks", () => {
 
 			expect(button.textContent).toBe("Sign up");
 			expect(button.nextElementSibling?.getAttribute("role")).toBe("alert");
+		});
+
+		it("onChallengeExpired tells the user the open challenge timed out", () => {
+			const widget = document.createElement("div");
+			const callbacks = getDefaultCallbacks(
+				widget,
+				(): string => "failed",
+				(): string => "Temps écoulé",
+			);
+
+			callbacks.onChallengeExpired();
+
+			expect(widget.querySelector('[role="alert"]')?.textContent).toBe(
+				"Temps écoulé",
+			);
+		});
+
+		it("onChallengeExpired falls back to English and a solve clears it", () => {
+			const form = document.createElement("form");
+			const widget = document.createElement("div");
+			form.appendChild(widget);
+			const callbacks = getDefaultCallbacks(widget);
+
+			callbacks.onChallengeExpired();
+			expect(widget.querySelector('[role="alert"]')?.textContent).toBe(
+				EXPIRED_NOTICE_FALLBACK,
+			);
+
+			callbacks.onHuman("token");
+			expect(widget.querySelector('[role="alert"]')).toBeNull();
 		});
 
 		it("onReset should remove procaptcha response", () => {
