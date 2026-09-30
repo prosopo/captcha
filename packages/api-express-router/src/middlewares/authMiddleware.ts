@@ -13,8 +13,9 @@
 // limitations under the License.
 
 import { hexToU8a } from "@polkadot/util";
-import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
-import type { KeyringPair } from "@prosopo/types";
+import { ProsopoApiError, ProsopoBaseError } from "@prosopo/common";
+import { type TranslationKey, isTranslationKey } from "@prosopo/locale";
+import type { ApiJsonError, KeyringPair } from "@prosopo/types";
 import type {
 	JWT,
 	JWTVerifyOptions,
@@ -66,8 +67,6 @@ export const authMiddleware = (
 		try {
 			const jwt = extractJWT(req);
 
-			let error: ProsopoApiError | undefined;
-
 			const verified =
 				verifyWith(authAccount, jwt, options) ?? verifyWith(pair, jwt, options);
 
@@ -76,18 +75,38 @@ export const authMiddleware = (
 				return;
 			}
 
-			res.status(401).json({
-				error: new ProsopoEnvError(error || "API.UNAUTHORIZED", {
-					context: { i18n: req.i18n, code: 401 },
-				}),
-			});
+			unauthorized(req, res, "API.UNAUTHORIZED");
 			return;
 		} catch (err) {
 			req.logger.error(() => ({ err, msg: "Auth Middleware Error" }));
-			res.status(401).json({ error: "Unauthorized", message: err });
+			// The thrown value can carry request context, stack or config, so
+			// only its translation key goes back to the caller.
+			unauthorized(req, res, translationKeyOf(err));
 			return;
 		}
 	};
+};
+
+const translationKeyOf = (err: unknown): TranslationKey =>
+	err instanceof ProsopoBaseError &&
+	err.translationKey !== undefined &&
+	isTranslationKey(err.translationKey)
+		? err.translationKey
+		: "API.UNAUTHORIZED";
+
+const unauthorized = (
+	req: Request,
+	res: Response,
+	key: TranslationKey,
+): void => {
+	const body: { error: ApiJsonError } = {
+		error: {
+			code: 401,
+			key,
+			message: req.i18n ? req.i18n.t(key) : key,
+		},
+	};
+	res.status(401).json(body);
 };
 
 const extractJWT = (req: Request) => {
