@@ -82,6 +82,43 @@ export const MIN_DECOY_HOLE_DARKEN_MARGIN = 0.04;
 export const MAX_AUTO_ESCALATION_LEVEL = 3;
 
 /**
+ * Highest level reachable by automatic escalation on a TOUCH device.
+ *
+ * `tolerance` is an absolute CSS-pixel target and the widget renders into a
+ * fixed 300x200 container on every device, so a level asks the same placement
+ * accuracy of a fingertip as it does of a mouse. A mouse resolves 1-2px; a
+ * finger does not, and no amount of band tuning changes that.
+ *
+ * Measured over 7 days of production puzzles, restricted to residential IPs
+ * with no VPN / proxy / Tor / datacenter / crawler / abuser flag so the
+ * population is as close to real humans as the data allows. First-attempt
+ * pass rate, by the tolerance actually served (n >= 460 per cell):
+ *
+ *   tolerance | 15   14   13   12   11   10    9    8
+ *   desktop   | 86%  83%  78%  72%  53%  49%  36%  34%
+ *   touch     | 70%  72%  69%  63%  40%  33%  27%  21%
+ *
+ * Touch is 8-16pp behind at every tolerance. Since a level samples anywhere
+ * in its band, the honest measure of a level is its WORST case — the lowest
+ * tolerance it can draw:
+ *
+ *   level | min tolerance | touch pass rate
+ *   L1    | 12            | 63%
+ *   L2    | 10            | 33%
+ *   L3    | 8             | 21%
+ *
+ * Desktop's worst case at L3, the ordinary ceiling, is 34%. Touch reaches
+ * that same rate at tolerance 10 — L2's worst case. Capping touch one rung
+ * lower therefore gives a touch user the same worst-case chance a desktop
+ * user already gets at the ceiling; it is a parity argument, not a decision
+ * to be softer on mobile.
+ *
+ * See prosopo/captcha-private#5087 for the full measurement, and the note on
+ * PUZZLE_DIFFICULTY_LEVELS that asked for exactly this validation.
+ */
+export const MAX_AUTO_ESCALATION_LEVEL_TOUCH = 2;
+
+/**
  * Image rounds per difficulty step.
  *
  * `severityToPuzzleDifficulty` and `puzzleDifficultyToSeverity` are inverses
@@ -118,6 +155,15 @@ export const PUZZLE_ROUNDS_PER_DIFFICULTY_LEVEL = 2;
  * validating against observed human first-attempt solve rate per level,
  * segmented by device class — see the shadow-calibration note on
  * `severityToPuzzleDifficulty`.
+ *
+ * That validation has now been done for the CEILING but not for the bands
+ * themselves: see `MAX_AUTO_ESCALATION_LEVEL_TOUCH`, which measured pass rate
+ * by served tolerance and device and found touch 8-16pp behind pointer at
+ * every tolerance. The conclusion was to stop touch one rung lower, because
+ * the gap is a property of the input device rather than of the band values.
+ * Retuning the bands per device is still open, and would be the better fix:
+ * a tolerance expressed as a fraction of the notch size, or scaled by
+ * pointer type, would not need a separate ceiling at all.
  */
 export const PUZZLE_DIFFICULTY_LEVELS: readonly PuzzleDifficultyBand[] = [
 	{
@@ -169,6 +215,34 @@ export const clampDifficultyLevel = (
 	const ceiling = Math.min(maxLevel, PUZZLE_DIFFICULTY_LEVELS.length - 1);
 	if (!Number.isFinite(level)) return 0;
 	return Math.max(0, Math.min(Math.floor(level), ceiling));
+};
+
+/**
+ * The escalation ceiling for one session: the stricter of the site's own cap
+ * and the device's.
+ *
+ * `siteMaxLevel` is the operator's `puzzleMaxDifficulty`. Passing it through
+ * here rather than comparing against a bare constant at each call site is
+ * what stops the two caps drifting apart — a site set to 3 must not out-vote
+ * the touch ceiling, and a site set to 0 (pinned to its own puzzle settings)
+ * must not be raised by it. Taking the minimum is the only rule that holds
+ * both ways round.
+ *
+ * `isTouch` is the absence of a mouse, not the form factor. A tablet with a
+ * trackpad is pointer-accurate and a phone is not, so callers should pass
+ * whatever signal best answers "is this a fingertip".
+ */
+export const resolveMaxEscalationLevel = (
+	siteMaxLevel: number | undefined,
+	isTouch: boolean,
+): number => {
+	const deviceCeiling = isTouch
+		? MAX_AUTO_ESCALATION_LEVEL_TOUCH
+		: MAX_AUTO_ESCALATION_LEVEL;
+	if (siteMaxLevel === undefined || !Number.isFinite(siteMaxLevel)) {
+		return deviceCeiling;
+	}
+	return Math.min(Math.max(0, Math.floor(siteMaxLevel)), deviceCeiling);
 };
 
 /**

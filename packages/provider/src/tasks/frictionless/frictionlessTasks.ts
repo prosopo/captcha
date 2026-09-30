@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { severityToPuzzleDifficulty } from "@prosopo/captcha-severity";
+import {
+	resolveMaxEscalationLevel,
+	severityToPuzzleDifficulty,
+} from "@prosopo/captcha-severity";
 import type { Logger } from "@prosopo/logger";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
@@ -558,11 +561,16 @@ export class FrictionlessManager extends CaptchaManager {
 		const finalPuzzleOverrides: Pick<Session, "puzzleTolerance" | "puzzle"> =
 			finalCaptchaType === CaptchaType.puzzle
 				? (() => {
-						// The site's own ceiling on automatic escalation; 0 pins the
-						// level to 0 so its configured puzzle settings render every time.
-						const maxLevel =
+						// The ceiling on automatic escalation: the stricter of the
+						// site's own `puzzleMaxDifficulty` (0 pins the level to 0 so its
+						// configured puzzle settings render every time) and the
+						// device's, since a fingertip cannot hit the placement
+						// tolerance the upper bands ask for.
+						const maxLevel = resolveMaxEscalationLevel(
 							this.routingContext?.puzzleMaxDifficulty ??
-							puzzleMaxDifficultyDefault;
+								puzzleMaxDifficultyDefault,
+							this.routingContext?.platform.isMobile ?? false,
+						);
 						// Paths that measured nothing carry a fixed fallback round count,
 						// not a severity, so they must not read as an escalation.
 						const level =
