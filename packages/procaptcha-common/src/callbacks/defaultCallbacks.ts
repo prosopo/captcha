@@ -23,17 +23,17 @@ import { getWindowCallback } from "../elements/window.js";
 export const getDefaultCallbacks = (element?: Element): Callbacks => ({
 	onHuman: (token: ProcaptchaToken) => handleOnHuman(token, element),
 	onChallengeExpired: () => {
-		removeProcaptchaResponse();
+		removeProcaptchaResponse(element);
 		console.log("Challenge expired");
 	},
 	onExtensionNotFound: () => {
 		console.error("Extension not found");
 	},
 	onExpired: () => {
-		removeProcaptchaResponse();
+		removeProcaptchaResponse(element);
 	},
 	onError: (error: Error) => {
-		removeProcaptchaResponse();
+		removeProcaptchaResponse(element);
 		console.error(error);
 	},
 	onClose: () => {
@@ -47,7 +47,7 @@ export const getDefaultCallbacks = (element?: Element): Callbacks => ({
 		console.log("Challenge failed");
 	},
 	onReset: () => {
-		removeProcaptchaResponse();
+		removeProcaptchaResponse(element);
 		console.log("Captcha widget reset");
 	},
 	onReload: () => {
@@ -101,7 +101,7 @@ export function setUserCallbacks(
 	);
 	if (chalExpiredCallback) {
 		callbacks.onChallengeExpired = () => {
-			removeProcaptchaResponse();
+			removeProcaptchaResponse(element);
 			chalExpiredCallback();
 		};
 	}
@@ -113,7 +113,7 @@ export function setUserCallbacks(
 	);
 	if (expiredCallback) {
 		callbacks.onExpired = () => {
-			removeProcaptchaResponse();
+			removeProcaptchaResponse(element);
 			expiredCallback();
 		};
 	}
@@ -125,7 +125,7 @@ export function setUserCallbacks(
 	);
 	if (errorCallback) {
 		callbacks.onError = (error: Error) => {
-			removeProcaptchaResponse();
+			removeProcaptchaResponse(element);
 			errorCallback(error);
 		};
 	}
@@ -170,14 +170,14 @@ export function setUserCallbacks(
 	);
 	if (resetCallback) {
 		callbacks.onReset = () => {
-			removeProcaptchaResponse();
+			removeProcaptchaResponse(element);
 			resetCallback();
 		};
 	}
 }
 
 const handleOnHuman = (token: ProcaptchaToken, element?: Element) => {
-	removeProcaptchaResponse();
+	removeProcaptchaResponse(element);
 	if (element) {
 		const form = getParentForm(element);
 

@@ -160,6 +160,92 @@ describe("callbacks/defaultCallbacks", () => {
 		});
 	});
 
+	describe("widgets in separate forms", () => {
+		const widgetInForm = (): { form: HTMLFormElement; widget: HTMLElement } => {
+			const form = document.createElement("form");
+			const widget = document.createElement("div");
+			form.appendChild(widget);
+			document.body.appendChild(form);
+			return { form, widget };
+		};
+
+		const tokenIn = (form: HTMLFormElement): string | undefined =>
+			form.querySelector<HTMLInputElement>(
+				`input[name="${ApiParams.procaptchaResponse}"]`,
+			)?.value;
+
+		it("solving one widget keeps the other widget's token", () => {
+			const login = widgetInForm();
+			const signup = widgetInForm();
+
+			getDefaultCallbacks(login.widget).onHuman("login-token");
+			getDefaultCallbacks(signup.widget).onHuman("signup-token");
+
+			expect(tokenIn(login.form)).toBe("login-token");
+			expect(tokenIn(signup.form)).toBe("signup-token");
+		});
+
+		it.each(["onExpired", "onChallengeExpired", "onReset"] as const)(
+			"%s clears only its own widget's token",
+			(event) => {
+				const login = widgetInForm();
+				const signup = widgetInForm();
+				getDefaultCallbacks(login.widget).onHuman("login-token");
+				getDefaultCallbacks(signup.widget).onHuman("signup-token");
+
+				getDefaultCallbacks(signup.widget)[event]();
+
+				expect(tokenIn(login.form)).toBe("login-token");
+				expect(tokenIn(signup.form)).toBeUndefined();
+			},
+		);
+
+		it("onError clears only its own widget's token", () => {
+			const login = widgetInForm();
+			const signup = widgetInForm();
+			getDefaultCallbacks(login.widget).onHuman("login-token");
+			getDefaultCallbacks(signup.widget).onHuman("signup-token");
+			vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+			getDefaultCallbacks(signup.widget).onError(new Error("boom"));
+
+			expect(tokenIn(login.form)).toBe("login-token");
+			expect(tokenIn(signup.form)).toBeUndefined();
+		});
+
+		it("a user expired-callback clears only its own widget's token", () => {
+			const login = widgetInForm();
+			const signup = widgetInForm();
+			const expired = vi.fn<() => void>();
+			const signupCallbacks = getDefaultCallbacks(signup.widget);
+			setUserCallbacks(
+				{ siteKey: "key", "expired-callback": expired },
+				signupCallbacks,
+				signup.widget,
+			);
+			getDefaultCallbacks(login.widget).onHuman("login-token");
+			signupCallbacks.onHuman("signup-token");
+
+			signupCallbacks.onExpired();
+
+			expect(expired).toHaveBeenCalledTimes(1);
+			expect(tokenIn(login.form)).toBe("login-token");
+			expect(tokenIn(signup.form)).toBeUndefined();
+		});
+
+		it("leaves a same-named field outside any widget's form alone", () => {
+			const siteField = document.createElement("input");
+			siteField.name = ApiParams.procaptchaResponse;
+			siteField.value = "site-owned";
+			document.body.appendChild(siteField);
+			const signup = widgetInForm();
+
+			getDefaultCallbacks(signup.widget).onHuman("signup-token");
+
+			expect(siteField.isConnected).toBe(true);
+		});
+	});
+
 	describe("setUserCallbacks", () => {
 		it("should wrap user callback for onHuman", () => {
 			const form = document.createElement("form");
