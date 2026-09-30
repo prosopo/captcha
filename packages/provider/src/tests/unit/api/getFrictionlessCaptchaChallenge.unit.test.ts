@@ -18,7 +18,6 @@ import { join } from "node:path";
 import {
 	CaptchaType,
 	type IPInfoResult,
-	type ITrafficFilter,
 	TrafficFilterAction,
 } from "@prosopo/types";
 import { AccessPolicyType } from "@prosopo/user-access-policy";
@@ -1102,18 +1101,18 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			isCrawler: false,
 		};
 
-		const runWithTrafficFilter = async (
-			trafficFilter: Partial<ITrafficFilter> | undefined,
-			ipInfo: IPInfoResult | undefined = proxyIpInfo,
+		const runTarpitted = async (
+			settings: Record<string, unknown>,
 		): Promise<MockRes> => {
 			tasksInstance.db.getClientRecord.mockResolvedValue({
 				account: "siteTarpit",
 				settings: {
-					captchaType: CaptchaType.frictionless,
-					imageMaxRounds: 5,
 					frictionlessThreshold: 0.5,
 					disallowWebView: false,
-					trafficFilter,
+					trafficFilter: {
+						proxy: { action: TrafficFilterAction.Block, padBytes: 1_048_576 },
+					},
+					...settings,
 				},
 			});
 			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
@@ -1133,7 +1132,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 				dapp: "siteTarpit",
 				user: "u",
 			});
-			req.ipInfo = ipInfo;
+			req.ipInfo = proxyIpInfo;
 
 			// biome-ignore lint/suspicious/noExplicitAny: mock request
 			await handler(req as any, res as any, next);
@@ -1141,119 +1140,43 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			return res;
 		};
 
-		it("leaves the pad size unset when the site configures no traffic filter", async () => {
-			const res = await runWithTrafficFilter(undefined);
+		// The tarpit pads the challenge, and this endpoint does not serve one:
+		// GetFrictionlessCaptchaResponse carries a captchaType and a sessionId,
+		// and the widget fetches the challenge itself from /pow, /image or
+		// /puzzle — each of which resolves its own verdict and pads there.
+		// Padding here too would charge every tarpitted session twice.
+		it("does not pad the session envelope on the decision-machine path", async () => {
+			const res = await runTarpitted({
+				captchaType: CaptchaType.frictionless,
+				imageMaxRounds: 5,
+			});
 			expect(res.locals.padBytes).toBeUndefined();
 		});
 
-		it("attaches the pad size for a blocked category, whose challenge is still issued here", async () => {
-			// The tarpit's headline case, and the one the three direct
-			// endpoints cannot cover: nearly every site enters through
-			// frictionless, so a pad resolved here is the only pad most
-			// traffic ever sees.
-			const res = await runWithTrafficFilter({
-				proxy: { action: TrafficFilterAction.Block, padBytes: 1_048_576 },
-			});
-			expect(res.locals.padBytes).toBe(1_048_576);
-		});
-
-		it("attaches the pad size for a challenge category", async () => {
-			const res = await runWithTrafficFilter({
-				proxy: {
-					action: TrafficFilterAction.Challenge,
-					captchaType: CaptchaType.pow,
-					powDifficulty: 10,
-					padBytes: 4096,
-				},
-			});
-			expect(res.locals.padBytes).toBe(4096);
-		});
-
-		it("leaves the pad size unset when the visitor matches no configured category", async () => {
-			const res = await runWithTrafficFilter(
-				{ proxy: { action: TrafficFilterAction.Block, padBytes: 4096 } },
-				{ ...proxyIpInfo, isProxy: false },
-			);
-			expect(res.locals.padBytes).toBeUndefined();
-		});
-
-		it("pads a reused session without disturbing its cached challenge", async () => {
-			tasksInstance.db.getClientRecord.mockResolvedValue({
-				account: "siteTarpitReuse",
-				settings: {
-					captchaType: CaptchaType.frictionless,
-					frictionlessThreshold: 0.5,
-					disallowWebView: false,
-					trafficFilter: {
-						proxy: { action: TrafficFilterAction.Block, padBytes: 1_048_576 },
-					},
-				},
-			});
+		it("does not pad the session envelope for a reused session", async () => {
 			tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
 				sessionId: "live-pow-session",
 				captchaType: CaptchaType.pow,
 				score: 0,
 				webView: false,
 			});
-
-			const { req, res, next } = buildReqRes({
-				token: "tReuse",
-				headHash: "hh",
-				dapp: "siteTarpitReuse",
-				user: "u",
+			const res = await runTarpitted({
+				captchaType: CaptchaType.frictionless,
 			});
-			req.ipInfo = proxyIpInfo;
-
-			// biome-ignore lint/suspicious/noExplicitAny: mock request
-			await handler(req as any, res as any, next);
-
-			expect(next).not.toHaveBeenCalled();
-			expect(res.locals.padBytes).toBe(1_048_576);
+			expect(res.locals.padBytes).toBeUndefined();
 			expect(res.json).toHaveBeenCalledWith(
-				expect.objectContaining({
-					sessionId: "live-pow-session",
-					captchaType: CaptchaType.pow,
-				}),
+				expect.objectContaining({ sessionId: "live-pow-session" }),
 			);
-			expect(tasksInstance.db.checkAndRemoveSession).not.toHaveBeenCalled();
 		});
 
-		it.each([
-			[CaptchaType.pow, "sendPowCaptcha"],
-			[CaptchaType.image, "sendImageCaptcha"],
-			[CaptchaType.puzzle, "sendPuzzleCaptcha"],
-		] as const)(
-			"pads a site pinned to %s without changing the challenge it serves",
-			async (pinned, sender) => {
-				tasksInstance.db.getClientRecord.mockResolvedValue({
-					account: "siteTarpitPinned",
-					settings: {
-						captchaType: pinned,
-						imageMaxRounds: 4,
-						frictionlessThreshold: 0.5,
-						disallowWebView: false,
-						trafficFilter: {
-							proxy: { action: TrafficFilterAction.Block, padBytes: 65_536 },
-						},
-					},
+		it.each([CaptchaType.pow, CaptchaType.image, CaptchaType.puzzle] as const)(
+			"does not pad the session envelope for a site pinned to %s",
+			async (pinned) => {
+				const res = await runTarpitted({
+					captchaType: pinned,
+					imageMaxRounds: 4,
 				});
-
-				const { req, res, next } = buildReqRes({
-					token: "tPinned",
-					headHash: "hh",
-					dapp: "siteTarpitPinned",
-					user: "u",
-				});
-				req.ipInfo = proxyIpInfo;
-
-				// biome-ignore lint/suspicious/noExplicitAny: mock request
-				await handler(req as any, res as any, next);
-
-				expect(next).not.toHaveBeenCalled();
-				expect(res.locals.padBytes).toBe(65_536);
-				expect(tasksInstance.frictionlessManager[sender]).toHaveBeenCalledTimes(
-					1,
-				);
+				expect(res.locals.padBytes).toBeUndefined();
 			},
 		);
 	});

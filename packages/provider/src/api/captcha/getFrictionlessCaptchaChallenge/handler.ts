@@ -234,13 +234,6 @@ export default (
 				);
 			}
 
-			const trafficFilterVerdict = applyTrafficFilterAtRequestTime(
-				req.ipInfo,
-				clientRecord.settings?.trafficFilter,
-				req.logger,
-			);
-			res.locals.padBytes = trafficFilterVerdict.padBytes;
-
 			if (dedup) {
 				// A reused session must still honour an active user access policy
 				// AND the configured routing machine. This fast-path returns
@@ -905,6 +898,11 @@ export default (
 			// Access policies are more targeted than trafficFilter, so any
 			// matched access policy has already dispatched above. Only fall
 			// through here when access policies didn't fire.
+			const trafficFilterVerdict = applyTrafficFilterAtRequestTime(
+				req.ipInfo,
+				clientRecord.settings?.trafficFilter,
+				req.logger,
+			);
 			const trafficFilterOutcome = await handleFrictionlessTrafficFilter(
 				{
 					verdict: trafficFilterVerdict,
