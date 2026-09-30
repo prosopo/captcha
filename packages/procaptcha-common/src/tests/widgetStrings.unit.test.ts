@@ -77,4 +77,38 @@ describe("reload button", () => {
 		const control = mounted.container.querySelector("[aria-label]");
 		expect(control?.getAttribute("aria-label")).toBe("Neu laden");
 	});
+
+	test("names its icon with the same label, not a hard-coded English word", () => {
+		const reload = mountReloadButton(mounted.container, {
+			themeColor: "light",
+			onReload: () => undefined,
+			label: "Neu laden",
+		});
+		component = reload;
+		expect(mounted.container.querySelector("title")?.textContent).toBe(
+			"Neu laden",
+		);
+	});
+
+	test("follows a label changed after mounting", () => {
+		const reload = mountReloadButton(mounted.container, {
+			themeColor: "light",
+			onReload: () => undefined,
+			label: "Reload",
+		});
+		component = reload;
+		reload.update({
+			themeColor: "light",
+			onReload: () => undefined,
+			label: "إعادة تحميل",
+		});
+		expect(
+			mounted.container
+				.querySelector("[aria-label]")
+				?.getAttribute("aria-label"),
+		).toBe("إعادة تحميل");
+		expect(mounted.container.querySelector("title")?.textContent).toBe(
+			"إعادة تحميل",
+		);
+	});
 });
