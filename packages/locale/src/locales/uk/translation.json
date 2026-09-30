@@ -386,6 +386,8 @@
 		"IMAGE_DIALOG_LABEL": "Завдання із зображеннями",
 		"CANNOT_LOAD": "Не вдалося завантажити CAPTCHA",
 		"RELOAD": "Перезавантажити",
+		"VERIFIED_AGENT": "Перевірений агент",
+		"TRUSTED_REQUEST": "Довірений запит",
 		"LOADING": "Завантаження",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Завдання з пазлом",
