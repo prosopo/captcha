@@ -63,6 +63,24 @@ const FOCUSABLE_SELECTOR = [
 const focusableWithin = (root: HTMLElement): HTMLElement[] =>
 	Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
 
+/**
+ * The nearest `dir` above `element`, continuing past shadow roots to their
+ * hosts: the bundle sets `dir` on the widget's host, outside the shadow tree
+ * the anchor sits in.
+ */
+const inheritedDirection = (element: Element): string => {
+	let current: Element | null = element;
+	while (current) {
+		const withDir: Element | null = current.closest("[dir]");
+		if (withDir) {
+			return withDir.getAttribute("dir") ?? "";
+		}
+		const root: Node = current.getRootNode();
+		current = root instanceof ShadowRoot ? root.host : null;
+	}
+	return "";
+};
+
 const SURFACE_Z_INDEX = 2147483646;
 const CONTENT_Z_INDEX = 2147483647;
 
@@ -371,6 +389,15 @@ export const mountChallengeSurface = (
 
 	const render = () => {
 		const floating = isFloating();
+
+		// The layer lives under document.body, so without this it takes the
+		// page's direction rather than the widget's.
+		const direction = props.anchor ? inheritedDirection(props.anchor) : "";
+		if (direction) {
+			layer.dir = direction;
+		} else {
+			layer.removeAttribute("dir");
+		}
 
 		layer.className = [
 			names.layer,
