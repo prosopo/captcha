@@ -87,6 +87,8 @@
 		"IMAGE_DIALOG_LABEL": "Bild-Aufgabe",
 		"CANNOT_LOAD": "CAPTCHA kann nicht geladen werden",
 		"RELOAD": "Neu laden",
+		"VERIFIED_AGENT": "Verifizierter Agent",
+		"TRUSTED_REQUEST": "Vertrauenswürdige Anfrage",
 		"LOADING": "Wird geladen",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Puzzle-Aufgabe",
