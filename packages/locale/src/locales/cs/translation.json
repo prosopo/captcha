@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Neplatný podpis",
 		"SITE_KEY_MISSING": "Chybějící SITE KEY",
 		"ACCOUNT_NOT_FOUND": "Účet nenalezen",
-		"INVALID_TIMESTAMP": "Neplatný časový razítko"
+		"INVALID_TIMESTAMP": "Neplatný časový razítko",
+		"MISSING_AUTH_HEADER": "Chybí autorizační hlavička",
+		"INVALID_JWT": "Neplatný JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Nedostatečná oprávnění k provedení této akce",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Požadavky z mobilních sítí nejsou pro tento web povoleny",
 		"SATELLITE_BLOCKED": "Požadavky ze satelitních připojení nejsou pro tento web povoleny",
 		"CRAWLER_BLOCKED": "Požadavky ze známých crawlerů nejsou pro tento web povoleny",
-		"DISALLOWED_WEBVIEW": "Požadavky z prohlížečů v aplikacích (WebView) nejsou pro tento web povoleny"
+		"DISALLOWED_WEBVIEW": "Požadavky z prohlížečů v aplikacích (WebView) nejsou pro tento web povoleny",
+		"INTERNAL_SERVER_ERROR": "Interní chyba serveru"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nelze upravit vlastníka uživatele",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "Tabulky nedefinovány",
 		"CONNECTION_UNDEFINED": "Připojení není definováno",
 		"COMMITMENT_FLAG_FAILED": "Nepodařilo se označit závazek jako zpracovaný",
-		"UNKNOWN": "Neznámá chyba databáze"
+		"UNKNOWN": "Neznámá chyba databáze",
+		"QUERY_ERROR": "Dotaz do databáze selhal",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Připojení Redis pro pravidla přístupu není definováno",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Úložiště pravidel přístupu uživatelů není definováno",
+		"SESSION_STORE_FAILED": "Uložení relace se nezdařilo",
+		"SESSION_CHECK_REMOVE_FAILED": "Kontrola a odebrání relace se nezdařily",
+		"SESSION_GET_FAILED": "Načtení relace se nezdařilo"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Chyba při analýze captcha",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "Neplatný salt",
 		"INVALID_TOKEN": "Neplatný token",
 		"INVALID_SOLUTION": "Neplatné řešení",
-		"DECRYPTION_ERROR": "Chyba dešifrování"
+		"DECRYPTION_ERROR": "Chyba dešifrování",
+		"SOLUTION_NOT_FOUND": "Řešení nenalezeno",
+		"DECISION_MACHINE_DENIED": "Zamítnuto rozhodovacím strojem",
+		"INVALID_TIMESTAMP": "Neplatný časový razítko"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Neplatný parametr"

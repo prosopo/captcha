@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Ogiltig signatur",
 		"SITE_KEY_MISSING": "SITE KEY saknas",
 		"ACCOUNT_NOT_FOUND": "Konto hittades inte",
-		"INVALID_TIMESTAMP": "Ogiltig tidsstämpel"
+		"INVALID_TIMESTAMP": "Ogiltig tidsstämpel",
+		"MISSING_AUTH_HEADER": "Auktoriseringshuvud saknas",
+		"INVALID_JWT": "Ogiltig JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Otillräckliga behörigheter för att utföra denna åtgärd",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Förfrågningar från mobilnätverksanslutningar är inte tillåtna för denna webbplats",
 		"SATELLITE_BLOCKED": "Förfrågningar från satellitanslutningar är inte tillåtna för denna webbplats",
 		"CRAWLER_BLOCKED": "Förfrågningar från kända crawlers är inte tillåtna för denna webbplats",
-		"DISALLOWED_WEBVIEW": "Förfrågningar från inbäddade webbläsare (WebView) är inte tillåtna för denna webbplats"
+		"DISALLOWED_WEBVIEW": "Förfrågningar från inbäddade webbläsare (WebView) är inte tillåtna för denna webbplats",
+		"INTERNAL_SERVER_ERROR": "Internt serverfel"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kan inte ändra ägare användare",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "Tabeller ospecificerade",
 		"CONNECTION_UNDEFINED": "Anslutning ospecificerad",
 		"COMMITMENT_FLAG_FAILED": "Misslyckades att flagga åtagande som behandlad",
-		"UNKNOWN": "Okänt databasfel"
+		"UNKNOWN": "Okänt databasfel",
+		"QUERY_ERROR": "Databasfrågan misslyckades",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis-anslutning för åtkomstregler är inte definierad",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Lagring för användarnas åtkomstregler är inte definierad",
+		"SESSION_STORE_FAILED": "Det gick inte att spara sessionen",
+		"SESSION_CHECK_REMOVE_FAILED": "Det gick inte att kontrollera och ta bort sessionen",
+		"SESSION_GET_FAILED": "Det gick inte att hämta sessionen"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Fel vid tolkning av captcha",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "Ogiltigt salt",
 		"INVALID_TOKEN": "Ogiltig token",
 		"INVALID_SOLUTION": "Ogiltig lösning",
-		"DECRYPTION_ERROR": "Fel vid avkryptering"
+		"DECRYPTION_ERROR": "Fel vid avkryptering",
+		"SOLUTION_NOT_FOUND": "Lösningen hittades inte",
+		"DECISION_MACHINE_DENIED": "Nekad av beslutsmaskinen",
+		"INVALID_TIMESTAMP": "Ogiltig tidsstämpel"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ogiltig parameter"

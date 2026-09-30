@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Ongeldige handtekening",
 		"SITE_KEY_MISSING": "SITE KEY ontbreekt",
 		"ACCOUNT_NOT_FOUND": "Account niet gevonden",
-		"INVALID_TIMESTAMP": "Ongeldige tijdstempel"
+		"INVALID_TIMESTAMP": "Ongeldige tijdstempel",
+		"MISSING_AUTH_HEADER": "Autorisatieheader ontbreekt",
+		"INVALID_JWT": "Ongeldige JWT"
 	},
 	"TARGET": {
 		"yo-yo": "jojo",
@@ -353,7 +355,8 @@
 		"MOBILE_BLOCKED": "Verzoeken van mobiele netwerkverbindingen zijn niet toegestaan voor deze site",
 		"SATELLITE_BLOCKED": "Verzoeken van satellietverbindingen zijn niet toegestaan voor deze site",
 		"CRAWLER_BLOCKED": "Verzoeken van bekende crawlers zijn niet toegestaan voor deze site",
-		"DISALLOWED_WEBVIEW": "Verzoeken van in-app-browsers (WebView) zijn niet toegestaan voor deze site"
+		"DISALLOWED_WEBVIEW": "Verzoeken van in-app-browsers (WebView) zijn niet toegestaan voor deze site",
+		"INTERNAL_SERVER_ERROR": "Interne serverfout"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kan eigenaar gebruiker niet wijzigen",
@@ -436,7 +439,13 @@
 		"TABLES_UNDEFINED": "Tabellen niet gedefinieerd",
 		"CONNECTION_UNDEFINED": "Verbinding niet gedefinieerd",
 		"COMMITMENT_FLAG_FAILED": "Mislukt om toezegging te markeren als verwerkt",
-		"UNKNOWN": "Onbekende databasefout"
+		"UNKNOWN": "Onbekende databasefout",
+		"QUERY_ERROR": "Databasequery mislukt",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis-verbinding voor toegangsregels niet gedefinieerd",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Opslag voor gebruikerstoegangsregels niet gedefinieerd",
+		"SESSION_STORE_FAILED": "Sessie opslaan mislukt",
+		"SESSION_CHECK_REMOVE_FAILED": "Sessie controleren en verwijderen mislukt",
+		"SESSION_GET_FAILED": "Sessie ophalen mislukt"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Fout bij parseren captcha",
@@ -455,7 +464,10 @@
 		"INVALID_SALT": "Ongeldig salt",
 		"INVALID_TOKEN": "Ongeldige token",
 		"INVALID_SOLUTION": "Ongeldige oplossing",
-		"DECRYPTION_ERROR": "Fout bij decoderen"
+		"DECRYPTION_ERROR": "Fout bij decoderen",
+		"SOLUTION_NOT_FOUND": "Oplossing niet gevonden",
+		"DECISION_MACHINE_DENIED": "Geweigerd door de beslissingsmachine",
+		"INVALID_TIMESTAMP": "Ongeldige tijdstempel"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ongeldige parameter"
