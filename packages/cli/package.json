@@ -34,7 +34,7 @@
 		"start:dev": "node ./dist/cli.js --api --dev"
 	},
 	"dependencies": {
-		"@polkadot/types-codec": "16.5.6",
+		"@polkadot/types-codec": "17.0.1",
 		"@prosopo/api": "4.3.8",
 		"@prosopo/common": "3.1.61",
 		"@prosopo/logger": "2.1.2",
