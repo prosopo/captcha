@@ -4,7 +4,13 @@
 import { hexToU8a, u8aEq, u8aToString } from "@polkadot/util";
 import { base64URLDecode } from "../base64/bs64.js";
 import { sr25519Verify } from "../sr25519/verify.js";
-import type { JWT, JWTHeader, JWTPayload, JWTVerifyResult } from "../types.js";
+import type {
+	JWT,
+	JWTHeader,
+	JWTPayload,
+	JWTVerifyOptions,
+	JWTVerifyResult,
+} from "../types.js";
 
 // The only algorithm sr25519jwtIssue (and the Rust sr25519-jwt issuer) writes.
 const JWT_ALG = "sr25519";
@@ -32,7 +38,18 @@ const isNumericDate = (value: unknown): value is number =>
 const isClaimsObject = (value: unknown): value is Record<string, unknown> =>
 	typeof value === "object" && value !== null && !Array.isArray(value);
 
-export const jwtVerify = (jwt: JWT, publicKey: Uint8Array): JWTVerifyResult => {
+const audienceMatches = (aud: unknown, accepted: string[]): boolean => {
+	const claimed = Array.isArray(aud) ? aud : [aud];
+	return claimed.some(
+		(value) => typeof value === "string" && accepted.includes(value),
+	);
+};
+
+export const jwtVerify = (
+	jwt: JWT,
+	publicKey: Uint8Array,
+	options?: JWTVerifyOptions,
+): JWTVerifyResult => {
 	const parts = jwt.split(".");
 	if (parts.length !== 3) {
 		throw new Error("Invalid JWT format (expected 3 parts)");
@@ -122,6 +139,18 @@ export const jwtVerify = (jwt: JWT, publicKey: Uint8Array): JWTVerifyResult => {
 			isWrapped: false,
 		};
 	}
+	if (
+		options?.maxLifetimeSeconds !== undefined &&
+		exp - iat > options.maxLifetimeSeconds
+	) {
+		return {
+			isValid: false,
+			error: "JWT lifetime exceeds the allowed maximum",
+			crypto: header.alg,
+			publicKey,
+			isWrapped: false,
+		};
+	}
 	if (typeof sub !== "string") {
 		return {
 			isValid: false,
@@ -130,6 +159,28 @@ export const jwtVerify = (jwt: JWT, publicKey: Uint8Array): JWTVerifyResult => {
 			publicKey,
 			isWrapped: false,
 		};
+	}
+	if (options?.audience !== undefined) {
+		const { aud } = payload;
+		if (aud === undefined) {
+			if (options.requireAudience) {
+				return {
+					isValid: false,
+					error: "JWT has no audience",
+					crypto: header.alg,
+					publicKey,
+					isWrapped: false,
+				};
+			}
+		} else if (!audienceMatches(aud, options.audience)) {
+			return {
+				isValid: false,
+				error: "JWT audience does not match",
+				crypto: header.alg,
+				publicKey,
+				isWrapped: false,
+			};
+		}
 	}
 	const subU8a = hexToU8a(sub);
 	if (!u8aEq(subU8a, publicKey)) {

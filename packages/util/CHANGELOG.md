@@ -1,5 +1,10 @@
 # @prosopo/util
 
+## 3.3.12
+### Patch Changes
+
+- 0d29dde: `merge` no longer lets a source object write to `Object.prototype`. A source parsed from JSON with a `__proto__` or `constructor.prototype` key used to be merged into the shared prototype of every object; those keys are now skipped or copied as plain own properties, and merging only descends into values the destination owns.
+
 ## 3.3.11
 ### Patch Changes
 

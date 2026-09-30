@@ -21,7 +21,8 @@ services:
                 max-size: '100m'
                 max-file: '1'
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "localhost:2019/metrics" ] # ping the caddy admin api
+            # the image has no curl; the admin api listens on 2020 (see the Caddyfile)
+            test: [ "CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2020/metrics" ]
             interval: 5m
             retries: 3
             start_period: 30s
@@ -31,6 +32,11 @@ services:
         image: public.ecr.aws/zinclabs/openobserve:latest
         env_file:
             - ../.env.${NODE_ENV}
+        environment:
+            # Dashboard panels query with no row limit, so OpenObserve caps them at this and
+            # silently drops time ranges past it (default 1000). Kept finite because it is also
+            # the only cap on raw-row queries with no LIMIT.
+            ZO_QUERY_DEFAULT_LIMIT: 20000
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - ./oo_data:/data
@@ -47,7 +53,8 @@ services:
             - 1.1.1.1
             - 208.67.222.222
         healthcheck:
-            test: [ "CMD", "curl", "--fail", "http://localhost:5080/health" ]
+            # the image has no shell or curl; this cli command queries the running server's /node/status
+            test: [ "CMD", "/openobserve", "node", "status" ]
             interval: 1m
             timeout: 10s
             retries: 3
