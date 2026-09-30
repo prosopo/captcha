@@ -25,6 +25,11 @@ import { type Theme, withAlpha } from "../theme.js";
 import { createCheckboxElement } from "./checkbox.js";
 import { createLogoElement } from "./logo.js";
 
+// The widget ignores the page's direction and follows only a `dir` set on its
+// own host, which the bundle derives from the widget language.
+const RTL_CONTENT_SELECTOR =
+	'[dir="rtl"] > .prosopo-widget .prosopo-widget__content';
+
 /** The widget, and the node inside it that the captcha is mounted into. */
 export interface WidgetSkeletonElement {
 	readonly element: HTMLElement;
@@ -35,14 +40,16 @@ export interface WidgetSkeletonElement {
  * Creates a widget skeleton element with theme styling
  *
  * @param theme - The theme to apply to the widget
+ * @param loadingLabel - What the spinner is announced as, in the widget's language
  */
 export function createWidgetSkeletonElement(
 	theme: Theme,
+	loadingLabel?: string,
 ): WidgetSkeletonElement {
 	const widgetElement = document.createElement("div");
 	widgetElement.className = "prosopo-widget";
 
-	const checkbox = createCheckboxElement(theme);
+	const checkbox = createCheckboxElement(theme, loadingLabel);
 	const logoElement = createLogoElement(theme);
 
 	widgetElement.innerHTML =
@@ -175,6 +182,10 @@ function getWidgetStyles(theme: Theme): string {
     min-height: ${WIDGET_INNER_HEIGHT}px;
     height: 100%;
     direction: ltr !important;
+}
+
+${RTL_CONTENT_SELECTOR} {
+    direction: rtl !important;
 }
 
 /* Shadowless hover: an M3 state layer (onSurface at 8%) laid over the surface

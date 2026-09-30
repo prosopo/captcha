@@ -1539,7 +1539,7 @@ export class ProviderDatabase
 		const timestamp = new Date();
 		const baseSet: Record<string, unknown> = {
 			...updates,
-			lastUpdatedAtTimestamp: timestamp,
+			lastUpdatedTimestamp: timestamp,
 			pendingStage: true,
 		};
 		const pipelineExprs: Record<string, unknown> = {};
@@ -2883,7 +2883,7 @@ export class ProviderDatabase
 		domain: string,
 	): Promise<SpamEmailDomainRecord | null> {
 		if (!this.tables?.spamEmailDomain) {
-			throw new ProsopoDBError("DATABASE.DATABASE_IMPORT_ERROR", {
+			throw new ProsopoDBError("DATABASE.DATABASE_IMPORT_FAILED", {
 				context: { failedFuncName: this.getSpamEmailDomain.name },
 			});
 		}
@@ -2907,7 +2907,7 @@ export class ProviderDatabase
 		upsert: boolean,
 	): Promise<void> {
 		if (!this.tables?.spamEmailDomain) {
-			throw new ProsopoDBError("DATABASE.DATABASE_IMPORT_ERROR", {
+			throw new ProsopoDBError("DATABASE.DATABASE_IMPORT_FAILED", {
 				context: { failedFuncName: this.bulkUpdateSpamEmailDomains.name },
 			});
 		}
