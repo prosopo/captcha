@@ -1,5 +1,32 @@
 # @prosopo/datasets
 
+## 3.2.0
+### Minor Changes
+
+- 1144e04: `verifyProof` now takes the trusted root to check against: `verifyProof(leaf, proof, root)`.
+  
+  Before, it only checked that the proof agreed with itself. A proof carries its own root layer, so anyone could build a tree over any leaf they liked and it would pass. The proof must now hash up to the root the caller supplies, and each layer must be a pair. Valid proofs from single-leaf trees, which the old check rejected, now verify.
+
+### Patch Changes
+
+- 97d65fa: `compareCaptchaSolutions` rejects an empty submission instead of vacuously accepting it, and the solution-length test asserts again.
+- 08daf16: The dataset validation test built 10000 captchas while its comment says 1000. Validation checks every captcha against every other, so 10000 took over 16 seconds and hit the test timeout. It now builds the 1000 the test describes.
+- Updated dependencies [ede4352]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [b017dfb]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+- Updated dependencies [97a799e]
+- Updated dependencies [9fc1e8a]
+  - @prosopo/util-crypto@13.6.0
+  - @prosopo/types@5.12.0
+  - @prosopo/util@3.3.13
+  - @prosopo/common@3.1.61
+  - @prosopo/logger@2.1.2
+
 ## 3.1.93
 ### Patch Changes
 

@@ -1,5 +1,40 @@
 # @prosopo/api-express-router
 
+## 3.2.0
+### Minor Changes
+
+- ede4352: Admin tokens can now be bound to one provider and used only once. `jwtVerify` takes optional checks for the `aud` claim and for the longest allowed lifetime, and the provider's admin check uses them. A token that names an audience must name this provider: its host, `https://` plus its host, or one of the values in `PROSOPO_ADMIN_JWT_AUDIENCE`. A token that carries a `jti` is accepted once per provider process. Tokens may live at most one hour (`PROSOPO_ADMIN_JWT_MAX_LIFETIME_SECONDS`).
+  
+  Migration: tokens without `aud` or `jti` are still accepted, so current callers keep working. Callers should add both, for example `pair.jwtIssue({ expiresIn }, { aud: provider.url, jti: randomUUID() })`, minting one token per provider and per request. Callers that reuse one token for several requests to the same provider must mint a new one per request before they add `jti`. Once every caller sends `aud`, set `PROSOPO_ADMIN_JWT_REQUIRE_AUDIENCE=true` to refuse tokens without it.
+
+### Patch Changes
+
+- 9ed0afd: 401 responses no longer include server internals. The admin auth check returned the whole error object, which included the request's i18n instance with its settings and file paths (about 16 KB per response), or whatever a failing check had thrown. It now returns `{ error: { code: 401, key, message } }`, the same shape as other API errors. The domain check returned unexpected errors, such as database errors, in the response body. It now returns a fixed message and logs the error.
+- Updated dependencies [ede4352]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [b017dfb]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+- Updated dependencies [97a799e]
+- Updated dependencies [9fc1e8a]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/util-crypto@13.6.0
+  - @prosopo/types@5.12.0
+  - @prosopo/util@3.3.13
+  - @prosopo/locale@3.6.2
+  - @prosopo/common@3.1.61
+  - @prosopo/env@3.6.68
+  - @prosopo/logger@2.1.2
+  - @prosopo/api-route@2.6.62
+
 ## 3.1.98
 ### Patch Changes
 

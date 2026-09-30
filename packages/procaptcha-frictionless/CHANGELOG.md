@@ -1,5 +1,46 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.18.7
+### Patch Changes
+
+- 2145922: A wrong image answer no longer just closes the popup. The widget now says "Not quite — try again" beside the checkbox (the same translated line the puzzle uses), and the checkbox stays clickable so the user can have another go. This happens even when the site supplies its own failed callback, and it survives the frictionless widget restarting itself after the failure. The notice clears as soon as the user starts again.
+- 4461043: Widget accessibility fixes.
+  
+  - Screen readers now announce the checkbox's error message, through a polite live region that exists from the moment the widget mounts.
+  - The authenticated ("Verified agent" / "Trusted request") badge now follows `theme: "dark"` and the widget's language.
+  - The badge no longer carries a fixed `aria-label`, which hid its visible text and said "Verified agent" even for a trusted request.
+- 54a07f3: Provider errors shown in the widget now use the widget's configured language. The provider translates errors into the browser's language, so a German widget in an English browser showed English errors. The widget now translates the error key itself and keeps the provider's text only for errors its catalogue does not know.
+- b75e9b7: Fix the error FAQ link and translate two widget strings.
+  
+  - The error FAQ link no longer ends in `//` when `PROSOPO_DOCS_URL` is set, and a trailing slash on that variable no longer breaks it.
+  - The "Cannot load CAPTCHA" fallback message now shows in the widget's language.
+  - The image challenge's reload button now has a translated accessible name instead of always being "Reload".
+  - Adds `WIDGET.CANNOT_LOAD` and `WIDGET.RELOAD` to every locale.
+- Updated dependencies [ede4352]
+- Updated dependencies [4ea2ca9]
+- Updated dependencies [2145922]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [af4a7e7]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [7b65240]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b38d55f]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+- Updated dependencies [082346b]
+  - @prosopo/types@5.12.0
+  - @prosopo/procaptcha-common@2.18.2
+  - @prosopo/procaptcha-react@2.13.6
+  - @prosopo/locale@3.6.2
+  - @prosopo/procaptcha-pow@2.13.7
+  - @prosopo/procaptcha-puzzle@2.14.7
+  - @prosopo/common@3.1.61
+  - @prosopo/widget-skeleton@2.10.1
+  - @prosopo/api@4.3.8
+
 ## 2.18.6
 ### Patch Changes
 

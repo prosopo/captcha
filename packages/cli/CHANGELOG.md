@@ -1,5 +1,43 @@
 # @prosopo/cli
 
+## 3.8.25
+### Patch Changes
+
+- 478bc6f: The cli bundle test builds a full production bundle and takes over a minute, so it is now named as an integration test instead of a unit test. Running only unit tests (`TEST_TYPE=unit`) no longer includes it. CI runs every test type, so it still runs there.
+- Updated dependencies [ede4352]
+- Updated dependencies [fc79e06]
+- Updated dependencies [382f96b]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [e62661c]
+- Updated dependencies [9ed0afd]
+- Updated dependencies [3fe7b19]
+- Updated dependencies [b1becee]
+- Updated dependencies [3e1053b]
+- Updated dependencies [df06006]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+- Updated dependencies [7e9cd1e]
+- Updated dependencies [f7cfa1c]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/keyring@2.10.0
+  - @prosopo/types@5.12.0
+  - @prosopo/provider@5.14.0
+  - @prosopo/util@3.3.13
+  - @prosopo/locale@3.6.2
+  - @prosopo/common@3.1.61
+  - @prosopo/env@3.6.68
+  - @prosopo/api@4.3.8
+  - @prosopo/logger@2.1.2
+  - @prosopo/dotenv@3.0.59
+
 ## 3.8.24
 ### Patch Changes
 

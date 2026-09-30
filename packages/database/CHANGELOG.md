@@ -1,5 +1,25 @@
 # @prosopo/database
 
+## 4.1.3
+### Patch Changes
+
+- f53ddb2: Updating an image captcha commitment now moves its `lastUpdatedTimestamp` forward. The field name was misspelt, so the timestamp never changed. The central-store sweep uses that timestamp to decide whether a record changed after it read it. Because of the misspelling, a `providedIp` or email written while the sweep was running could be marked as stored without ever reaching the central store. Pipeline-form updates also stopped writing a stray `lastUpdatedAtTimestamp` field.
+- 8ed0eb8: Every error key the code throws now has a translation. Twelve keys were missing from the catalogue, so users and logs saw the raw key: ten thrown keys plus the `CAPTCHA.INVALID_TIMESTAMP` and `CAPTCHA.DECISION_MACHINE_DENIED` result reasons. They are added to all 32 locales. The database import error threw `DATABASE.DATABASE_IMPORT_ERROR`, a typo for the existing `DATABASE.DATABASE_IMPORT_FAILED`. A new test fails if an error is thrown with a key that is not in the catalogue.
+- Updated dependencies [ede4352]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+  - @prosopo/types@5.12.0
+  - @prosopo/util@3.3.13
+  - @prosopo/common@3.1.61
+  - @prosopo/types-database@5.7.3
+  - @prosopo/user-access-policy@3.14.14
+  - @prosopo/logger@2.1.2
+  - @prosopo/redis-client@1.0.39
+
 ## 4.1.2
 ### Patch Changes
 
