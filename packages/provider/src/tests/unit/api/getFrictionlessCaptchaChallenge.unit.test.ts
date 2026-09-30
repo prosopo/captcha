@@ -1176,5 +1176,85 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			);
 			expect(res.locals.padBytes).toBeUndefined();
 		});
+
+		it("pads a reused session without disturbing its cached challenge", async () => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "siteTarpitReuse",
+				settings: {
+					captchaType: CaptchaType.frictionless,
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					trafficFilter: {
+						proxy: { action: TrafficFilterAction.Block, padBytes: 1_048_576 },
+					},
+				},
+			});
+			tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+				sessionId: "live-pow-session",
+				captchaType: CaptchaType.pow,
+				score: 0,
+				webView: false,
+			});
+
+			const { req, res, next } = buildReqRes({
+				token: "tReuse",
+				headHash: "hh",
+				dapp: "siteTarpitReuse",
+				user: "u",
+			});
+			req.ipInfo = proxyIpInfo;
+
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+
+			expect(next).not.toHaveBeenCalled();
+			expect(res.locals.padBytes).toBe(1_048_576);
+			expect(res.json).toHaveBeenCalledWith(
+				expect.objectContaining({
+					sessionId: "live-pow-session",
+					captchaType: CaptchaType.pow,
+				}),
+			);
+			expect(tasksInstance.db.checkAndRemoveSession).not.toHaveBeenCalled();
+		});
+
+		it.each([
+			[CaptchaType.pow, "sendPowCaptcha"],
+			[CaptchaType.image, "sendImageCaptcha"],
+			[CaptchaType.puzzle, "sendPuzzleCaptcha"],
+		] as const)(
+			"pads a site pinned to %s without changing the challenge it serves",
+			async (pinned, sender) => {
+				tasksInstance.db.getClientRecord.mockResolvedValue({
+					account: "siteTarpitPinned",
+					settings: {
+						captchaType: pinned,
+						imageMaxRounds: 4,
+						frictionlessThreshold: 0.5,
+						disallowWebView: false,
+						trafficFilter: {
+							proxy: { action: TrafficFilterAction.Block, padBytes: 65_536 },
+						},
+					},
+				});
+
+				const { req, res, next } = buildReqRes({
+					token: "tPinned",
+					headHash: "hh",
+					dapp: "siteTarpitPinned",
+					user: "u",
+				});
+				req.ipInfo = proxyIpInfo;
+
+				// biome-ignore lint/suspicious/noExplicitAny: mock request
+				await handler(req as any, res as any, next);
+
+				expect(next).not.toHaveBeenCalled();
+				expect(res.locals.padBytes).toBe(65_536);
+				expect(tasksInstance.frictionlessManager[sender]).toHaveBeenCalledTimes(
+					1,
+				);
+			},
+		);
 	});
 });
