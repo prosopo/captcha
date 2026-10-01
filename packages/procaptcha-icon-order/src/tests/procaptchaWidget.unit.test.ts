@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import type { Ti18n, TranslateOptions } from "@prosopo/locale";
 import type { Component } from "@prosopo/procaptcha-common";
 import {
 	type GetIconOrderCaptchaResponse,
@@ -57,6 +57,7 @@ const mocks = vi.hoisted(() => {
 			(clicks: IconClick[], events: IconOrderEvent[]) => Promise<boolean>
 		>();
 	const resetState = vi.fn<() => void>();
+	const dispose = vi.fn<() => void>();
 	const constructions: {
 		updateState: (next: Partial<ProcaptchaState>) => void;
 		getHoneypotValue?: () => string | undefined;
@@ -66,11 +67,14 @@ const mocks = vi.hoisted(() => {
 		current: undefined,
 	};
 	const translationsReady = { current: true };
+	const translatorI18n: { current: Ti18n | undefined } = { current: undefined };
 	return {
 		translationsReady,
+		translatorI18n,
 		start,
 		submitSolution,
 		resetState,
+		dispose,
 		constructions,
 		loadI18next,
 		canvasProps,
@@ -91,6 +95,7 @@ vi.mock("../services/Manager.js", () => ({
 			start: mocks.start,
 			submitSolution: mocks.submitSolution,
 			resetState: mocks.resetState,
+			dispose: mocks.dispose,
 		};
 	},
 }));
@@ -127,7 +132,7 @@ vi.mock("@prosopo/locale", async (importOriginal) => {
 			t: (key: string) => key,
 			isReady: () => mocks.translationsReady.current,
 			subscribe: () => () => undefined,
-			i18n: undefined,
+			i18n: mocks.translatorI18n.current,
 		}),
 	};
 });
@@ -139,6 +144,24 @@ const i18nStub = (
 	language: string,
 	changeLanguage: Mock<(l: string) => void>,
 ) => ({ language, changeLanguage }) as unknown as Ti18n;
+
+// Stands in for the shared i18n instance after the widget's own language (de)
+// has loaded; lookups follow i18nFrontend.ts: catalogue, then defaultValue.
+const germanI18n = (): Ti18n => {
+	const catalogue: Record<string, string> = {
+		"API.INVALID_SITE_KEY": "Ungültiger Site-Schlüssel",
+	};
+	return {
+		language: "de",
+		isInitialized: true,
+		t: (key: string, options?: TranslateOptions): string =>
+			catalogue[key] ?? options?.defaultValue ?? key,
+		changeLanguage: async (): Promise<void> => undefined,
+		hasLoadedNamespace: (): boolean => true,
+		on: (): void => undefined,
+		off: (): void => undefined,
+	};
+};
 
 const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps => ({
 	config: config(),
@@ -160,6 +183,7 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	mocks.constructions.length = 0;
 	mocks.translationsReady.current = true;
+	mocks.translatorI18n.current = undefined;
 	mocks.canvasProps.current = undefined;
 	mocks.start.mockResolvedValue(challengeResponse());
 	mocks.submitSolution.mockResolvedValue(true);
@@ -755,6 +779,16 @@ describe("an invalidated session", () => {
 		expect(mounted.container.textContent).not.toContain("session gone");
 	});
 
+	test("the error is shown in the widget's language, not the provider's", async () => {
+		mocks.translatorI18n.current = germanI18n();
+		render(props());
+		await invalidate("API.INVALID_SITE_KEY", "Invalid site key");
+		expect(mounted.container.textContent).toContain(
+			"Ungültiger Site-Schlüssel",
+		);
+		expect(mounted.container.textContent).not.toContain("Invalid site key");
+	});
+
 	test("a lost session with nothing to recover it is simply surfaced", async () => {
 		render(props());
 		await invalidate();
@@ -766,5 +800,14 @@ describe("an invalidated session", () => {
 		render(props({ onSessionInvalidated }));
 		await invalidate();
 		expect(onSessionInvalidated).toHaveBeenCalledWith(undefined, undefined);
+	});
+});
+
+describe("destroy", () => {
+	test("disposes the manager so its expiry timers cannot outlive the widget", () => {
+		render(props());
+		expect(mocks.dispose).not.toHaveBeenCalled();
+		destroy();
+		expect(mocks.dispose).toHaveBeenCalledTimes(1);
 	});
 });
