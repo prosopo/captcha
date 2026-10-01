@@ -136,6 +136,9 @@ export function Manager(
 	) => {
 		checkboxClickX = checkboxX;
 		checkboxClickY = checkboxY;
+		if (state.answeredIncorrectly) {
+			updateState({ answeredIncorrectly: false });
+		}
 		checkboxInputMethod = inputMethod;
 		events.onOpen();
 		await providerRetry(
@@ -262,6 +265,7 @@ export function Manager(
 						)
 						.reduce((a: number, b: number) => a + b);
 					const timeout = setTimeout(() => {
+						if (disposed) return;
 						events.onChallengeExpired();
 						// expired, disallow user's claim to be human
 						updateState({ isHuman: false, showModal: false, loading: false });
@@ -318,10 +322,11 @@ export function Manager(
 							index === 0
 								? [checkboxInputMethod, ...shapeInputMethods]
 								: shapeInputMethods;
+						const countByte = 1;
 						const salt = randomAsHex(
 							coords
 								.map((x) => x.toString(16).length + 4)
-								.reduce((acc, curr) => acc + curr, 0),
+								.reduce((acc, curr) => acc + curr, countByte),
 						);
 
 						const saltCoord = embedData(salt, coords);
@@ -419,6 +424,8 @@ export function Manager(
 						simdReadings,
 						clientMetaData,
 					);
+				// A solve that lands after destroy must not reach the site.
+				if (disposed) return;
 
 				// mark as is human if solution has been approved
 				const isHuman = submission[0].verified;
@@ -453,7 +460,14 @@ export function Manager(
 					setValidChallengeTimeout();
 				} else {
 					events.onFailed();
-					resetState(frictionlessState?.restart);
+					// Independent of onFailed, which sites routinely override: without
+					// this the modal just closes and the user never learns why.
+					updateState({ answeredIncorrectly: true });
+					resetState(
+						frictionlessState
+							? () => frictionlessState.restart({ showRetry: true })
+							: undefined,
+					);
 				}
 			},
 			start,
@@ -578,6 +592,7 @@ export function Manager(
 	const setValidChallengeTimeout = () => {
 		const timeMillis: number = configOptional.captchas.image.solutionTimeout;
 		const successfullChallengeTimeout = setTimeout(() => {
+			if (disposed) return;
 			// Human state expired, disallow user's claim to be human
 			updateState({ isHuman: false });
 
@@ -590,6 +605,8 @@ export function Manager(
 	const resetState = (frictionlessRestart?: () => void) => {
 		// clear timeout just in case a timer is still active (shouldn't be)
 		clearTimeout();
+		// an earlier solve's expiry must not fire against the fresh session
+		window.clearTimeout(Number(state.successfullChallengeTimeout));
 		updateState(defaultState());
 		events.onReset();
 		// reset the frictionless state if it exists
@@ -657,6 +674,23 @@ export function Manager(
 		return account.extension;
 	};
 
+	// Set once the widget that owns this manager is torn down. A solve still in
+	// flight can land afterwards, so the timer callbacks check it as well as
+	// being cleared here.
+	let disposed = false;
+
+	/**
+	 * Stops this manager's challenge and solution-expiry timers without firing
+	 * any event. Left running after the widget is destroyed (reset(), a
+	 * restart, an SPA route change) they fired onExpired/onReset later on,
+	 * which also cleared the replacement widget's token from the form.
+	 */
+	const dispose = () => {
+		disposed = true;
+		window.clearTimeout(Number(state.timeout));
+		window.clearTimeout(Number(state.successfullChallengeTimeout));
+	};
+
 	return {
 		start,
 		cancel,
@@ -664,5 +698,6 @@ export function Manager(
 		select,
 		nextRound,
 		reload,
+		dispose,
 	};
 }

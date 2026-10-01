@@ -270,3 +270,39 @@ describe("NO_SESSION_FOUND recovery in the frictionless widget", () => {
 		expect(isCheckboxPlaceholder()).toBe(false);
 	});
 });
+
+describe("refreshing the challenge", () => {
+	const refreshOfOnCall = (call: number): string | undefined =>
+		detectBot.mock.calls[call]?.[4];
+
+	it("tells the next /frictionless run which session the user refreshed away from", async () => {
+		lastMount().props.onReload?.(10, 20, { refresh: true });
+		await settle();
+
+		expect(refreshOfOnCall(1)).toBe("provider-session-1");
+	});
+
+	it("chains each refresh onto the session it replaced", async () => {
+		lastMount().props.onReload?.(10, 20, { refresh: true });
+		await settle();
+		lastMount().props.onReload?.(10, 20, { refresh: true });
+		await settle();
+
+		expect(refreshOfOnCall(2)).toBe("provider-session-2");
+	});
+
+	it("does not mark a re-mint after a wrong answer as a refresh", async () => {
+		lastMount().props.onReload?.(10, 20, { showRetry: true });
+		await settle();
+
+		expect(refreshOfOnCall(1)).toBeUndefined();
+	});
+
+	it("does not carry the refresh onto a later, unrelated re-mint", async () => {
+		lastMount().props.onReload?.(10, 20, { refresh: true });
+		await settle();
+		await reportSessionInvalidated();
+
+		expect(refreshOfOnCall(2)).toBeUndefined();
+	});
+});

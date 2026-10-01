@@ -59,6 +59,10 @@ export enum FrictionlessReason {
 	MISSING_TOKEN = "MISSING_TOKEN",
 	// A token arrived without its accompanying head hash.
 	MISSING_HEAD_HASH = "MISSING_HEAD_HASH",
+	// The user kept refreshing the puzzle, so the replacement is an image
+	// challenge instead. Only ever this direction, and only where the site
+	// has image enabled (see switchTypeAfterRefreshes in @prosopo/provider).
+	PUZZLE_REFRESH_LIMIT = "PUZZLE_REFRESH_LIMIT",
 }
 
 /**

@@ -1,5 +1,45 @@
 # @prosopo/types-database
 
+## 5.7.3
+### Patch Changes
+
+- 06784d0: Translation keys are now a typed union built from the English catalogue, so calling the translator with a key that does not exist fails to compile. Error classes only pass a message to the translator when it is a real catalogue key, and free-text messages are shown as they are.
+- Updated dependencies [ede4352]
+- Updated dependencies [2145922]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/types@5.12.0
+  - @prosopo/locale@3.6.2
+  - @prosopo/common@3.1.61
+  - @prosopo/user-access-policy@3.14.14
+  - @prosopo/logger@2.1.2
+
+## 5.7.2
+### Patch Changes
+
+- bcf59f1: Make the traffic-filter tarpit actually reach a visitor. As shipped, `padBytes` could not survive being saved and never fired on the endpoint nearly every site uses, so no response was ever padded.
+  
+  `TrafficCategoryPolicySchema` in `types-database` never declared `padBytes`, and Mongoose drops undeclared fields on write. The setting round-tripped through zod at both ends — the portal's site save and the provider's client-list push — and was then thrown away by the database at each, so `checkTrafficFilter` only ever read `undefined`. Declared now, bounded to the same 0–5 MiB range zod enforces.
+  
+  The frictionless endpoint resolved a traffic-filter verdict but never passed its `padBytes` to the response middleware, so only the direct `/pow`, `/image` and `/puzzle` endpoints padded anything. It is now set as soon as the verdict is known, which covers both the challenge the traffic filter dispatches and the one the decision machine issues.
+  
+  Also stops the padding writer emitting invalid JSON for a body with no fields (it spliced in a trailing comma), and leaves a non-object body unpadded rather than corrupting it.
+  
+  Tests: the Mongoose round-trip for a challenge and a blocked category plus the cap, `resolvePadBytes` across block/challenge/multiple matches, the request-time verdict carrying the count, the frictionless handler attaching it, and the padding middleware itself — byte count, pad-first ordering, incompressibility, the 5 MiB clamp, and the untouched-by-default path.
+
+## 5.7.1
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/user-access-policy@3.14.13
+
 ## 5.7.0
 ### Minor Changes
 

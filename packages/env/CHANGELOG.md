@@ -1,5 +1,42 @@
 # @prosopo/env
 
+## 3.6.68
+### Patch Changes
+
+- Updated dependencies [ede4352]
+- Updated dependencies [f53ddb2]
+- Updated dependencies [2145922]
+- Updated dependencies [b017dfb]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [97a799e]
+- Updated dependencies [9fc1e8a]
+  - @prosopo/util-crypto@13.6.0
+  - @prosopo/keyring@2.10.0
+  - @prosopo/types@5.12.0
+  - @prosopo/database@4.1.3
+  - @prosopo/common@3.1.61
+  - @prosopo/types-env@2.11.14
+  - @prosopo/ipinfo@0.4.13
+  - @prosopo/logger@2.1.2
+
+## 3.6.67
+### Patch Changes
+
+  - @prosopo/database@4.1.2
+  - @prosopo/types-env@2.11.13
+
+## 3.6.66
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/database@4.1.1
+  - @prosopo/ipinfo@0.4.12
+  - @prosopo/keyring@2.9.99
+  - @prosopo/types-env@2.11.12
+
 ## 3.6.65
 ### Patch Changes
 

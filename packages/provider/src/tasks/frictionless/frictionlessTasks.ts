@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { severityToPuzzleDifficulty } from "@prosopo/captcha-severity";
+import {
+	resolveMaxEscalationLevel,
+	severityToPuzzleDifficulty,
+} from "@prosopo/captcha-severity";
 import type { Logger } from "@prosopo/logger";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
@@ -48,7 +51,10 @@ import {
 import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
 import { isAudioAlternativeSessionType } from "../audioAlternative.js";
 import { CaptchaManager } from "../captchaManager.js";
-import { coerceToEnabledCaptchaType } from "../captchaTypeSelection.js";
+import {
+	coerceToEnabledCaptchaType,
+	switchTypeAfterRefreshes,
+} from "../captchaTypeSelection.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
 	type DecodedDetectorPayload,
@@ -191,6 +197,9 @@ export class FrictionlessManager extends CaptchaManager {
 			tcpOptsFlags: params.tcpOptsFlags,
 			tcpOptsOrder: params.tcpOptsOrder,
 			tcpWindow: params.tcpWindow,
+			refreshOf: params.refreshOf,
+			refreshCount: params.refreshCount,
+			refreshedAfterMs: params.refreshedAfterMs,
 		};
 	}
 
@@ -256,6 +265,9 @@ export class FrictionlessManager extends CaptchaManager {
 			puzzle,
 			isEscalation,
 			originSessionId,
+			refreshOf,
+			refreshCount,
+			refreshedAfterMs,
 			isProtect,
 			matchedRule,
 			clientMetaData,
@@ -283,6 +295,9 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame,
 			...(isEscalation && { isEscalation: true }),
 			...(originSessionId && { originSessionId }),
+			...(refreshOf && { refreshOf }),
+			...(refreshCount !== undefined && { refreshCount }),
+			...(refreshedAfterMs !== undefined && { refreshedAfterMs }),
 			decryptedHeadHash,
 			bundleId,
 			reason,
@@ -546,11 +561,17 @@ export class FrictionlessManager extends CaptchaManager {
 		// the last word on captchaType. A session minted as a type we cannot
 		// fulfil strands the user on INCORRECT_CAPTCHA_TYPE, since the
 		// serve-time endpoints cannot substitute another type.
-		const finalCaptchaType = coerceToEnabledCaptchaType(
+		const enabledCaptchaType = coerceToEnabledCaptchaType(
 			routed.captchaType,
 			this.routingContext?.frictionlessTypes,
 			this.logger,
 		);
+		const finalCaptchaType = switchTypeAfterRefreshes(
+			enabledCaptchaType,
+			effectiveParams.refreshCount,
+			this.routingContext?.frictionlessTypes,
+		);
+		const switchedByRefreshes = finalCaptchaType !== enabledCaptchaType;
 		// The routing-machine output schema only bounds the count as a positive
 		// int, so clamp it to the sitekey's rounds here as every other sizing
 		// path does. `effectiveParams` is already clamped by its caller.
@@ -575,9 +596,10 @@ export class FrictionlessManager extends CaptchaManager {
 		// score ladder left on the session params. Resolved here rather than
 		// beside its use on the session record below, because the puzzle
 		// overrides need it to tell an escalation from a missing measurement.
-		const finalReason =
-			(routed.reason as FrictionlessReason | undefined) ??
-			(effectiveParams.reason as FrictionlessReason | undefined);
+		const finalReason = switchedByRefreshes
+			? FrictionlessReason.PUZZLE_REFRESH_LIMIT
+			: ((routed.reason as FrictionlessReason | undefined) ??
+				(effectiveParams.reason as FrictionlessReason | undefined));
 		// Puzzle tunables persisted on the session so getPuzzleCaptchaChallenge
 		// can layer them over the site defaults — that endpoint re-derives its
 		// overrides from a live trafficFilter verdict, and a router- or
@@ -589,9 +611,11 @@ export class FrictionlessManager extends CaptchaManager {
 				? (() => {
 						// The site's own ceiling on automatic escalation; 0 pins the
 						// level to 0 so its configured puzzle settings render every time.
-						const maxLevel =
+						const maxLevel = resolveMaxEscalationLevel(
 							this.routingContext?.puzzleMaxDifficulty ??
-							puzzleMaxDifficultyDefault;
+								puzzleMaxDifficultyDefault,
+							this.routingContext?.platform.isMobile ?? false,
+						);
 						// Paths that measured nothing carry a fixed fallback round count,
 						// not a severity, so they must not read as an escalation.
 						const level =

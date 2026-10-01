@@ -300,7 +300,7 @@ const login = async (
 				const siteKey = payload[ApiParams.siteKey];
 
 				if (!config.account.secret) {
-					throw new ProsopoEnvError("GENERAL.SECRET_MISSING", {
+					throw new ProsopoEnvError("GENERAL.MISSING_SECRET_KEY", {
 						context: { missingParams: ["PROSOPO_SITE_PRIVATE_KEY"] },
 					});
 				}

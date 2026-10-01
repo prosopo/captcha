@@ -21,6 +21,7 @@ import express, {
 	type Response,
 	type Router,
 } from "express";
+import { padResponseMiddleware } from "../utils/tarpitPadding.js";
 import assignDetectorBundle from "./captcha/assignDetectorBundle.js";
 import checkSpamEmail from "./captcha/checkSpamEmail.js";
 import getAudioCaptchaChallenge from "./captcha/getAudioCaptchaChallenge.js";
@@ -62,6 +63,8 @@ export const asyncHandler =
  */
 export function prosopoRouter(env: ProviderEnvironment): Router {
 	const router = express.Router();
+
+	router.use(padResponseMiddleware);
 
 	// Maintenance-mode / Redis-down startup: the storage isn't initialised.
 	// Pass `undefined` through; the captcha endpoints short-circuit before

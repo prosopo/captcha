@@ -1,5 +1,22 @@
 # @prosopo/fingerprint
 
+## 2.7.57
+### Patch Changes
+
+- Updated dependencies [ede4352]
+- Updated dependencies [2145922]
+- Updated dependencies [b017dfb]
+- Updated dependencies [97a799e]
+- Updated dependencies [9fc1e8a]
+  - @prosopo/util-crypto@13.6.0
+  - @prosopo/types@5.12.0
+
+## 2.7.56
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+
 ## 2.7.55
 ### Patch Changes
 

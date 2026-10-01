@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { AllKeys } from "@prosopo/common";
-import { type TranslationKey, translationKeys } from "@prosopo/locale";
+import { translationKeys } from "@prosopo/locale";
 import {
 	type AudioCaptchaStored,
 	CaptchaLabel,
@@ -32,6 +32,7 @@ import {
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
 	type PuzzleCaptchaStored,
+	type ResultReason,
 	type Session,
 	type SimdReadingsStage,
 	type SolutionRecord,
@@ -946,6 +947,9 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// gap only for fields that are inherently origin-populated; escalation-
 	// owned fields (captchaType, sessionId, score, etc.) are never overridden.
 	originSessionId: { type: String, required: false },
+	refreshOf: { type: String, required: false },
+	refreshCount: { type: Number, required: false },
+	refreshedAfterMs: { type: Number, required: false },
 	decryptedHeadHash: { type: String, required: false, default: "" },
 	bundleId: { type: String, required: false },
 	siteKey: { type: String, required: false },
@@ -1280,6 +1284,9 @@ export const SESSION_PROJECTION = {
 	bundleId: 1,
 	dnsEvent: 1,
 	originSessionId: 1,
+	// Read by the next refresh to extend the chain and time it.
+	refreshCount: 1,
+	createdAt: 1,
 	currentUrl: 1,
 	iframeUrl: 1,
 	// Mirrored up from the captcha record at solve time. Projected
@@ -1446,7 +1453,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	disapproveDappUserCommitment(
 		commitmentId: string,
-		reason?: TranslationKey,
+		reason?: ResultReason,
 		coords?: [number, number][][],
 	): Promise<void>;
 

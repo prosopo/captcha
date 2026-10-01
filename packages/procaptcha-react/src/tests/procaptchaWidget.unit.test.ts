@@ -41,6 +41,7 @@ const submit = vi.fn<ManagerApi["submit"]>(() => Promise.resolve());
 const select = vi.fn<ManagerApi["select"]>();
 const nextRound = vi.fn<ManagerApi["nextRound"]>();
 const reload = vi.fn<ManagerApi["reload"]>(() => Promise.resolve());
+const dispose = vi.fn<ManagerApi["dispose"]>();
 
 let update: ProcaptchaStateUpdateFn | undefined;
 let readHoneypot: (() => string | undefined) | undefined;
@@ -51,7 +52,7 @@ vi.mock("@prosopo/procaptcha", () => ({
 		managerArgs.push(args);
 		update = args[2];
 		readHoneypot = args[5];
-		return { start, cancel, submit, select, nextRound, reload };
+		return { start, cancel, submit, select, nextRound, reload, dispose };
 	},
 }));
 
@@ -545,6 +546,34 @@ describe("recovering from an error", () => {
 	});
 });
 
+describe("after a wrong answer", () => {
+	const notice = (): Element | null =>
+		mounted.container.querySelector('[role="alert"]');
+
+	test("tells the user and leaves the checkbox usable", async () => {
+		render();
+		await setState({ answeredIncorrectly: true });
+		expect(notice()?.textContent).toBe("WIDGET.PUZZLE.RETRY");
+		expect(checkbox().disabled).toBe(false);
+	});
+
+	test("carries the notice across a frictionless restart", () => {
+		render({ startShowRetry: true });
+		expect(notice()?.textContent).toBe("WIDGET.PUZZLE.RETRY");
+	});
+
+	test("shows nothing on an ordinary mount", () => {
+		render();
+		expect(notice()).toBeNull();
+	});
+
+	test("drops the notice once the manager clears it", async () => {
+		render({ startShowRetry: true });
+		await setState({ answeredIncorrectly: false });
+		expect(notice()).toBeNull();
+	});
+});
+
 describe("starting without a click", () => {
 	test("does nothing on mount by default", () => {
 		render();
@@ -710,10 +739,11 @@ describe("the manager itself", () => {
 		// Under frictionless the wrapper is the only thing that can mint the
 		// session a replacement challenge needs, so the manager must ask it
 		// rather than reloading itself.
-		const onReload = vi.fn<(x?: number, y?: number) => void>();
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
 		render({ onReload });
 		managerArgs[0]?.[6]?.(120, 340);
-		expect(onReload).toHaveBeenCalledWith(120, 340);
+		// Marked as a refresh so the provider can count it.
+		expect(onReload).toHaveBeenCalledWith(120, 340, { refresh: true });
 	});
 
 	test("keeps reload to itself when no wrapper offered to handle it", () => {
@@ -721,5 +751,15 @@ describe("the manager itself", () => {
 		// to re-mint the challenge with — the modal would just close.
 		render();
 		expect(managerArgs[0]?.[6]).toBeUndefined();
+	});
+});
+
+describe("destroy", () => {
+	test("disposes the manager so its expiry timers cannot outlive the widget", () => {
+		render();
+		expect(dispose).not.toHaveBeenCalled();
+		widget?.destroy();
+		widget = undefined;
+		expect(dispose).toHaveBeenCalledTimes(1);
 	});
 });

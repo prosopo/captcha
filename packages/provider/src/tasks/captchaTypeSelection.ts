@@ -108,3 +108,35 @@ export const coerceToEnabledCaptchaType = (
 
 	return resolved;
 };
+
+/**
+ * How many refreshes in a row a user gets on the puzzle before the
+ * replacement becomes an image challenge instead.
+ */
+export const PUZZLE_REFRESHES_BEFORE_IMAGE = 3;
+
+/**
+ * Swap a puzzle for an image challenge once the user has refreshed it
+ * `PUZZLE_REFRESHES_BEFORE_IMAGE` times in a row.
+ *
+ * A user who keeps refreshing either cannot solve this kind of puzzle or is a
+ * solver shopping for an easy instance. The image challenge answers both.
+ *
+ * The refresh count is client-reported, so this only moves one way: from
+ * puzzle to image, never back. Lying about it can only earn a harder
+ * challenge. Leaving it out looks like a fresh visit, which is what a page
+ * reload already gets.
+ *
+ * A site that has not enabled image keeps its puzzle. Serving a type the site
+ * turned off is exactly what `coerceToEnabledCaptchaType` exists to stop.
+ */
+export const switchTypeAfterRefreshes = (
+	resolved: ConcreteCaptchaType,
+	refreshCount: number | undefined,
+	frictionlessTypes: Partial<IFrictionlessTypes> | undefined,
+): ConcreteCaptchaType =>
+	CaptchaType.puzzle === resolved &&
+	(refreshCount ?? 0) >= PUZZLE_REFRESHES_BEFORE_IMAGE &&
+	resolveFrictionlessTypes(frictionlessTypes).image
+		? CaptchaType.image
+		: resolved;

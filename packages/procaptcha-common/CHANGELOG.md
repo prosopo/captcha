@@ -1,5 +1,42 @@
 # @prosopo/procaptcha-common
 
+## 2.18.2
+### Patch Changes
+
+- 4ea2ca9: Challenge popups now use the same text direction as the widget that opened them, so an Arabic or Hebrew widget gets a right-to-left popup. When a later widget on the page changes the shared language, earlier widgets now update their direction too instead of keeping the old one.
+- 2145922: A wrong image answer no longer just closes the popup. The widget now says "Not quite — try again" beside the checkbox (the same translated line the puzzle uses), and the checkbox stays clickable so the user can have another go. This happens even when the site supplies its own failed callback, and it survives the frictionless widget restarting itself after the failure. The notice clears as soon as the user starts again.
+- 4461043: Widget accessibility fixes.
+  
+  - Screen readers now announce the checkbox's error message, through a polite live region that exists from the moment the widget mounts.
+  - The authenticated ("Verified agent" / "Trusted request") badge now follows `theme: "dark"` and the widget's language.
+  - The badge no longer carries a fixed `aria-label`, which hid its visible text and said "Verified agent" even for a trusted request.
+- 92edebd: The widget's loading spinner and the reload icon no longer announce hard-coded English. The spinner is a progress indicator labelled from the new `WIDGET.LOADING` string (in all 32 languages) once translations are loaded, and the reload icon's tooltip uses the same translated label as the button.
+- 7b65240: If a challenge is left open until its time limit runs out, the widget used to close the challenge and untick itself without saying why. It now shows a "captcha solution has expired" message under the widget, in the widget's language, the same way a failed challenge does. The message is removed when the next challenge is solved. Sites that pass a `chalexpired-callback` are unaffected.
+- b38d55f: A failed challenge no longer opens a blocking, English-only `alert()`. By default the widget now shows the failure message under itself, in the widget's language and with `role="alert"` so screen readers announce it. For an invisible-mode button the message goes beside the button, so the button's label is left alone. The message is removed when the next challenge is solved. Sites that pass a `failed-callback` are unaffected.
+- b75e9b7: Fix the error FAQ link and translate two widget strings.
+  
+  - The error FAQ link no longer ends in `//` when `PROSOPO_DOCS_URL` is set, and a trailing slash on that variable no longer breaks it.
+  - The "Cannot load CAPTCHA" fallback message now shows in the widget's language.
+  - The image challenge's reload button now has a translated accessible name instead of always being "Reload".
+  - Adds `WIDGET.CANNOT_LOAD` and `WIDGET.RELOAD` to every locale.
+- Updated dependencies [ede4352]
+- Updated dependencies [2145922]
+- Updated dependencies [70fcefd]
+- Updated dependencies [92edebd]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/types@5.12.0
+  - @prosopo/load-balancer@2.11.4
+  - @prosopo/widget-skeleton@2.10.1
+  - @prosopo/account@2.8.103
+
+## 2.18.1
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/account@2.8.102
+  - @prosopo/load-balancer@2.11.3
+
 ## 2.18.0
 ### Minor Changes
 

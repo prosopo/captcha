@@ -15,6 +15,7 @@
 import { VERIFY_FORWARDED_HEADER } from "@prosopo/api";
 import { handleErrors, verifySignature } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
+import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
 	CaptchaType,
@@ -22,6 +23,7 @@ import {
 	type ImageVerificationResponse,
 	ServerAudioCaptchaVerifyRequestBody,
 	type ServerAudioCaptchaVerifyRequestBodyOutput,
+	type KeyringPair,
 	ServerIconOrderCaptchaVerifyRequestBody,
 	type ServerIconOrderCaptchaVerifyRequestBodyOutput,
 	ServerPowCaptchaVerifyRequestBody,
@@ -36,7 +38,8 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { validateAddress } from "@prosopo/util-crypto";
-import express, { type Router } from "express";
+import express, { type NextFunction, type Request, type Router } from "express";
+import type { TFunction } from "i18next";
 import { Tasks } from "../tasks/tasks.js";
 import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
 import { buildMaintenanceVerificationResponse } from "./captcha/maintenanceModeResponses.js";
@@ -74,6 +77,55 @@ const VERIFY_PATH_TYPE: Partial<Record<ClientApiPaths, CaptchaType>> = {
 	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: CaptchaType.puzzle,
 	[ClientApiPaths.VerifyAudioCaptchaSolution]: CaptchaType.audio,
 	[ClientApiPaths.VerifyIconOrderCaptchaSolution]: CaptchaType.iconOrder,
+};
+
+// Decodes a hex-encoded ProcaptchaToken, mapping an undecodable token to a
+// client 400 (CAPTCHA.PARSE_ERROR) instead of letting the failure fall through
+// to the endpoint's generic 500 handler. A token that is well-formed hex but
+// not a decodable ProcaptchaToken struct is bad client input, not a server
+// fault: the verify endpoints are unauthenticated, so any caller can trigger
+// the decode failure, and answering 500 mis-signals provider health and
+// pollutes the error-rate metrics. Returns the decoded output, or null after
+// forwarding a 400 error to `next` (callers must `return` when null).
+const decodeTokenOr400 = (
+	token: string,
+	i18n: { t: TFunction },
+	logger: Logger,
+	next: NextFunction,
+): ReturnType<typeof decodeProcaptchaOutput> | null => {
+	try {
+		return decodeProcaptchaOutput(token);
+	} catch (error) {
+		next(
+			new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+				context: { code: 400, error },
+				i18n,
+				logger,
+			}),
+		);
+		return null;
+	}
+};
+
+// verifySignature throws on a non-hex, wrong-length or non-matching signature.
+// All of those are bad client input, so they map to a 400 instead of falling
+// into the handlers' catch-all 500.
+const dappSignatureError = (
+	signature: string,
+	message: string,
+	pair: KeyringPair,
+	req: Request,
+): ProsopoApiError | undefined => {
+	try {
+		verifySignature(signature, message, pair);
+		return undefined;
+	} catch {
+		return new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
+			context: { code: 400, siteKey: pair.address },
+			i18n: req.i18n,
+			logger: req.logger,
+		});
+	}
 };
 
 /**
@@ -175,9 +227,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				clientSessionId,
 			} = parsed;
 			try {
-				// This can error if the token is invalid
-				const { user, dapp, timestamp, commitmentId, providerUrl } =
-					decodeProcaptchaOutput(token);
+				// A malformed token is a client error (400), handled inside the
+				// helper; the rest of this block may still legitimately 500.
+				const decoded = decodeTokenOr400(token, req.i18n, req.logger, next);
+				if (decoded === null) return;
+				const { user, dapp, timestamp, commitmentId, providerUrl } = decoded;
 
 				// Reserved CI test site keys force a deterministic verdict before
 				// the signature and registered-key checks, so the dapp server needs
@@ -233,8 +287,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Verify using the appropriate pair based on isDapp flag
 				const keyPair = env.keyring.addFromAddress(dapp);
 
-				// Will throw an error if the signature is invalid
-				verifySignature(dappSignature, timestamp.toString(), keyPair);
+				const signatureError = dappSignatureError(
+					dappSignature,
+					timestamp.toString(),
+					keyPair,
+					req,
+				);
+				if (signatureError) return next(signatureError);
 
 				const response =
 					await tasks.imgCaptchaManager.verifyImageCaptchaSolution(
@@ -324,9 +383,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			try {
 				const { token, dappSignature, ip, email, clientSessionId } = parsed;
 
-				// This can error if the token is invalid
-				const { dapp, user, timestamp, challenge, providerUrl } =
-					decodeProcaptchaOutput(token);
+				// A malformed token is a client error (400), handled inside the
+				// helper; the rest of this block may still legitimately 500.
+				const decoded = decodeTokenOr400(token, req.i18n, req.logger, next);
+				if (decoded === null) return;
+				const { dapp, user, timestamp, challenge, providerUrl } = decoded;
 
 				// Reserved CI test site keys force a deterministic verdict before
 				// the signature and registered-key checks, so the dapp server needs
@@ -390,8 +451,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Verify using the dapp pair passed in the request
 				const dappPair = env.keyring.addFromAddress(dapp);
 
-				// Will throw an error if the signature is invalid
-				verifySignature(dappSignature, timestamp.toString(), dappPair);
+				const signatureError = dappSignatureError(
+					dappSignature,
+					timestamp.toString(),
+					dappPair,
+					req,
+				);
+				if (signatureError) return next(signatureError);
 
 				const { verified, score, reason, sessionId } =
 					await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
@@ -478,9 +544,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			try {
 				const { token, dappSignature, ip, email, clientSessionId } = parsed;
 
-				// This can error if the token is invalid
-				const { dapp, user, timestamp, challenge, providerUrl } =
-					decodeProcaptchaOutput(token);
+				// A malformed token is a client error (400), handled inside the
+				// helper; the rest of this block may still legitimately 500.
+				const decoded = decodeTokenOr400(token, req.i18n, req.logger, next);
+				if (decoded === null) return;
+				const { dapp, user, timestamp, challenge, providerUrl } = decoded;
 
 				// Reserved CI test site keys force a deterministic verdict before
 				// the signature and registered-key checks, so the dapp server needs
@@ -544,8 +612,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Verify using the dapp pair passed in the request
 				const dappPair = env.keyring.addFromAddress(dapp);
 
-				// Will throw an error if the signature is invalid
-				verifySignature(dappSignature, timestamp.toString(), dappPair);
+				const signatureError = dappSignatureError(
+					dappSignature,
+					timestamp.toString(),
+					dappPair,
+					req,
+				);
+				if (signatureError) return next(signatureError);
 
 				const { verified, score, sessionId } =
 					await tasks.puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
@@ -786,9 +859,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			try {
 				const { token, dappSignature, ip, email, clientSessionId } = parsed;
 
-				// This can error if the token is invalid
-				const { dapp, user, timestamp, challenge, providerUrl } =
-					decodeProcaptchaOutput(token);
+				const decoded = decodeTokenOr400(token, req.i18n, req.logger, next);
+				if (decoded === null) return;
+				const { dapp, user, timestamp, challenge, providerUrl } = decoded;
 
 				// Reserved CI test site keys force a deterministic verdict before
 				// the signature and registered-key checks, so the dapp server needs
@@ -852,8 +925,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Verify using the dapp pair passed in the request
 				const dappPair = env.keyring.addFromAddress(dapp);
 
-				// Will throw an error if the signature is invalid
-				verifySignature(dappSignature, timestamp.toString(), dappPair);
+				const signatureError = dappSignatureError(
+					dappSignature,
+					timestamp.toString(),
+					dappPair,
+					req,
+				);
+				if (signatureError) return next(signatureError);
 
 				const { verified, score, sessionId } =
 					await tasks.iconOrderCaptchaManager.serverVerifyIconOrderCaptchaSolution(
@@ -931,6 +1009,10 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 
 			const { dappSignature, token, ip, clientSessionId } = parsed;
 			try {
+				// A malformed token is a client error (400), handled inside the
+				// helper; the rest of this block may still legitimately 500.
+				const decoded = decodeTokenOr400(token, req.i18n, req.logger, next);
+				if (decoded === null) return;
 				const {
 					user,
 					dapp,
@@ -941,7 +1023,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					// a token codec change to ship the authenticated flow.
 					commitmentId: sessionId,
 					providerUrl,
-				} = decodeProcaptchaOutput(token);
+				} = decoded;
 
 				const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
 				if (testVerdict !== null) {
@@ -976,7 +1058,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				}
 
 				const keyPair = env.keyring.addFromAddress(dapp);
-				verifySignature(dappSignature, timestamp.toString(), keyPair);
+				const signatureError = dappSignatureError(
+					dappSignature,
+					timestamp.toString(),
+					keyPair,
+					req,
+				);
+				if (signatureError) return next(signatureError);
 
 				if (!sessionId) {
 					return res.json({

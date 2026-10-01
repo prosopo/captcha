@@ -15,7 +15,11 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CaptchaType } from "@prosopo/types";
+import {
+	CaptchaType,
+	type IPInfoResult,
+	TrafficFilterAction,
+} from "@prosopo/types";
 import { AccessPolicyType } from "@prosopo/user-access-policy";
 import {
 	type Mock,
@@ -61,6 +65,7 @@ type MockTasks = {
 		getSessionByuserSitekeyIpHash: MockFn;
 		getClientRecord: MockFn;
 		checkAndRemoveSession: MockFn;
+		getSessionRecordBySessionId?: MockFn;
 	};
 	logger: Record<string, unknown>;
 };
@@ -82,6 +87,7 @@ type MockReq = {
 	requestId?: string;
 	path?: string;
 	method?: string;
+	ipInfo?: IPInfoResult;
 };
 
 type MockRes = {
@@ -89,6 +95,9 @@ type MockRes = {
 	status: (code: number) => MockRes;
 	on: (event: string, handler: () => void) => MockRes;
 	statusCode?: number;
+	// Express always provides this; the handler leaves the tarpit pad size
+	// here for `padResponseMiddleware` to pick up.
+	locals: Record<string, unknown>;
 };
 
 // Helper to build req/res/next
@@ -120,6 +129,7 @@ const buildReqRes = (body: unknown, ip = "127.0.0.1") => {
 		status: vi.fn().mockReturnThis(),
 		on: vi.fn().mockReturnThis(),
 		statusCode: 200,
+		locals: {},
 	} as unknown as MockRes;
 	const next = vi.fn();
 	return { req, res, next };
@@ -312,6 +322,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			getSessionByuserSitekeyIpHash: vi.fn().mockResolvedValue(null),
 			getClientRecord: vi.fn(),
 			checkAndRemoveSession: vi.fn().mockResolvedValue(undefined),
+			getSessionRecordBySessionId: vi.fn().mockResolvedValue(undefined),
 		},
 		logger: mockLogger as unknown as Record<string, unknown>,
 	});
@@ -460,6 +471,74 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		expect(
 			tasksInstance.frictionlessManager.sendImageCaptcha,
 		).toHaveBeenCalled();
+	});
+
+	it("carries a refresh chain from the session the user refreshed away from", async () => {
+		tasksInstance.db.getClientRecord.mockResolvedValue({
+			account: "siteRefresh",
+			settings: { frictionlessThreshold: 0.5, disallowWebView: false },
+		});
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+			payload(false),
+		);
+		tasksInstance.db.getSessionRecordBySessionId?.mockResolvedValue({
+			siteKey: "siteRefresh",
+			createdAt: new Date(Date.now() - 3000),
+			refreshCount: 1,
+		});
+
+		const { req, res, next } = buildReqRes({
+			token: "tRefresh",
+			headHash: "hhRefresh",
+			dapp: "siteRefresh",
+			user: "u",
+			refreshOf: "replaced-session",
+		});
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(tasksInstance.db.getSessionRecordBySessionId).toHaveBeenCalledWith(
+			"replaced-session",
+		);
+		expect(
+			tasksInstance.frictionlessManager.setSessionParams,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({
+				refreshOf: "replaced-session",
+				refreshCount: 2,
+				refreshedAfterMs: expect.any(Number),
+			}),
+		);
+	});
+
+	it("does not look anything up for an ordinary request", async () => {
+		tasksInstance.db.getClientRecord.mockResolvedValue({
+			account: "siteNoRefresh",
+			settings: { frictionlessThreshold: 0.5, disallowWebView: false },
+		});
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+			payload(false),
+		);
+
+		const { req, res, next } = buildReqRes({
+			token: "tNoRefresh",
+			headHash: "hhNoRefresh",
+			dapp: "siteNoRefresh",
+			user: "u",
+		});
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(tasksInstance.db.getSessionRecordBySessionId).not.toHaveBeenCalled();
+		expect(
+			tasksInstance.frictionlessManager.setSessionParams,
+		).toHaveBeenCalledWith(
+			expect.not.objectContaining({ refreshOf: expect.anything() }),
+		);
 	});
 
 	it("reuses the cached session when no access policy conflicts with its captchaType", async () => {
@@ -1079,5 +1158,99 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 				tasksInstance.frictionlessManager.sendPuzzleCaptcha,
 			).not.toHaveBeenCalled();
 		});
+	});
+
+	describe("tarpit padding", () => {
+		const proxyIpInfo: IPInfoResult = {
+			ip: "1.2.3.4",
+			isValid: true,
+			isVPN: false,
+			isTor: false,
+			isProxy: true,
+			isDatacenter: false,
+			isAbuser: false,
+			isMobile: false,
+			isSatellite: false,
+			isCrawler: false,
+		};
+
+		const runTarpitted = async (
+			settings: Record<string, unknown>,
+		): Promise<MockRes> => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "siteTarpit",
+				settings: {
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					trafficFilter: {
+						proxy: { action: TrafficFilterAction.Block, padBytes: 1_048_576 },
+					},
+					...settings,
+				},
+			});
+			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
+				baseBotScore: 0,
+				timestamp: Date.now(),
+				userId: "u",
+				userAgent: "844bc172f032bdd2d0baae3536c1d66c",
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "abc",
+				decryptionFailed: false,
+			});
+
+			const { req, res, next } = buildReqRes({
+				token: "tTarpit",
+				headHash: "hh",
+				dapp: "siteTarpit",
+				user: "u",
+			});
+			req.ipInfo = proxyIpInfo;
+
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+			expect(next).not.toHaveBeenCalled();
+			return res;
+		};
+
+		// The tarpit pads the challenge, and this endpoint does not serve one:
+		// GetFrictionlessCaptchaResponse carries a captchaType and a sessionId,
+		// and the widget fetches the challenge itself from /pow, /image or
+		// /puzzle — each of which resolves its own verdict and pads there.
+		// Padding here too would charge every tarpitted session twice.
+		it("does not pad the session envelope on the decision-machine path", async () => {
+			const res = await runTarpitted({
+				captchaType: CaptchaType.frictionless,
+				imageMaxRounds: 5,
+			});
+			expect(res.locals.padBytes).toBeUndefined();
+		});
+
+		it("does not pad the session envelope for a reused session", async () => {
+			tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+				sessionId: "live-pow-session",
+				captchaType: CaptchaType.pow,
+				score: 0,
+				webView: false,
+			});
+			const res = await runTarpitted({
+				captchaType: CaptchaType.frictionless,
+			});
+			expect(res.locals.padBytes).toBeUndefined();
+			expect(res.json).toHaveBeenCalledWith(
+				expect.objectContaining({ sessionId: "live-pow-session" }),
+			);
+		});
+
+		it.each([CaptchaType.pow, CaptchaType.image, CaptchaType.puzzle] as const)(
+			"does not pad the session envelope for a site pinned to %s",
+			async (pinned) => {
+				const res = await runTarpitted({
+					captchaType: pinned,
+					imageMaxRounds: 4,
+				});
+				expect(res.locals.padBytes).toBeUndefined();
+			},
+		);
 	});
 });

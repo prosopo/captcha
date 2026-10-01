@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Invalid signature",
 		"SITE_KEY_MISSING": "SITE KEY missing",
 		"ACCOUNT_NOT_FOUND": "Account not found",
-		"INVALID_TIMESTAMP": "Invalid timestamp"
+		"INVALID_TIMESTAMP": "Invalid timestamp",
+		"MISSING_AUTH_HEADER": "Pengepala kebenaran tiada",
+		"INVALID_JWT": "JWT tidak sah"
 	},
 	"TARGET": {
 		"horseshoe-crab": "ladam-ketam",
@@ -353,7 +355,8 @@
 		"MOBILE_BLOCKED": "Permintaan daripada sambungan rangkaian mudah alih tidak dibenarkan untuk laman ini",
 		"SATELLITE_BLOCKED": "Permintaan daripada sambungan satelit tidak dibenarkan untuk laman ini",
 		"CRAWLER_BLOCKED": "Permintaan daripada perangkak yang dikenali tidak dibenarkan untuk laman ini",
-		"DISALLOWED_WEBVIEW": "Permintaan daripada pelayar dalam aplikasi (WebView) tidak dibenarkan untuk laman ini"
+		"DISALLOWED_WEBVIEW": "Permintaan daripada pelayar dalam aplikasi (WebView) tidak dibenarkan untuk laman ini",
+		"INTERNAL_SERVER_ERROR": "Ralat pelayan dalaman"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
@@ -381,6 +384,11 @@
 		"INSECURE_CONTEXT": "Procaptcha memerlukan sambungan selamat (HTTPS)",
 		"CHECKING": "Mengesahkan bahawa anda manusia",
 		"IMAGE_DIALOG_LABEL": "Cabaran imej",
+		"CANNOT_LOAD": "Tidak dapat memuatkan CAPTCHA",
+		"RELOAD": "Muat semula",
+		"VERIFIED_AGENT": "Ejen disahkan",
+		"TRUSTED_REQUEST": "Permintaan dipercayai",
+		"LOADING": "Memuatkan",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Cabaran teka-teki",
 			"DRAG": "Seret kepingan ke sasaran",
@@ -390,7 +398,8 @@
 			"KEYBOARD_HINT": "Gunakan kekunci anak panah untuk menggerakkan kepingan, tekan dan tahan Shift untuk langkah yang lebih kecil. Tekan Enter untuk menghantarnya, Home untuk mengembalikannya ke permulaan, atau Escape untuk membatalkan.",
 			"POSITION": "{{x}} peratus dari kiri, {{y}} peratus dari atas",
 			"CHECKING": "Memeriksa jawapan anda",
-			"RETRY_ANNOUNCEMENT": "Hampir. Teka-teki baharu telah dimuatkan dan kepingan kembali ke permulaan."
+			"RETRY_ANNOUNCEMENT": "Hampir. Teka-teki baharu telah dimuatkan dan kepingan kembali ke permulaan.",
+			"REFRESH": "Teka-teki lain"
 		},
 		"ICON_ORDER": {
 			"DIALOG_LABEL": "Cabaran susunan ikon",
@@ -457,7 +466,13 @@
 		"TABLES_UNDEFINED": "Tables undefined",
 		"CONNECTION_UNDEFINED": "Connection undefined",
 		"COMMITMENT_FLAG_FAILED": "Failed to flag commitment as processed",
-		"UNKNOWN": "Unknown database error"
+		"UNKNOWN": "Unknown database error",
+		"QUERY_ERROR": "Pertanyaan pangkalan data gagal",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Sambungan Redis peraturan akses tidak ditakrifkan",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Storan peraturan akses pengguna tidak ditakrifkan",
+		"SESSION_STORE_FAILED": "Gagal menyimpan sesi",
+		"SESSION_CHECK_REMOVE_FAILED": "Gagal menyemak dan mengalih keluar sesi",
+		"SESSION_GET_FAILED": "Gagal mendapatkan sesi"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Error parsing captcha",
@@ -476,7 +491,10 @@
 		"INVALID_SALT": "Garam tidak sah",
 		"INVALID_TOKEN": "Invalid token",
 		"INVALID_SOLUTION": "Invalid solution",
-		"DECRYPTION_ERROR": "Error decrypting"
+		"DECRYPTION_ERROR": "Error decrypting",
+		"SOLUTION_NOT_FOUND": "Penyelesaian tidak ditemui",
+		"DECISION_MACHINE_DENIED": "Ditolak oleh mesin keputusan",
+		"INVALID_TIMESTAMP": "Invalid timestamp"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Invalid parameter"

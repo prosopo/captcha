@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { loadI18next } from "@prosopo/locale";
+import { loadI18next, localiseErrorMessage } from "@prosopo/locale";
 import {
 	type CheckboxProps,
 	type Component,
@@ -37,6 +37,7 @@ import {
 	type ProcaptchaFrictionlessProps,
 	type ProcaptchaProps,
 	type ProcaptchaStartEventDetail,
+	type ReloadOptions,
 	StartModeEnum,
 } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
@@ -148,7 +149,13 @@ export const mountProcaptchaFrictionless = (
 	// Set when the re-mint was triggered by a wrong puzzle answer rather than a
 	// reload press, so the replacement challenge still tells the user they
 	// missed. Held alongside `nextMountAutoStart` for the same reason.
-	let nextMountShowRetry = false;
+	// Also seeded by a full restart after a rejected image answer.
+	let nextMountShowRetry = true === props.startShowRetry;
+	// The session the user refreshed away from, sent with the next
+	// /frictionless request so the provider can count refreshes in a row.
+	// Survives provider retries for the same reason as `nextMountAutoStart`,
+	// and is cleared once a replacement session has been minted.
+	let nextRefreshOf: string | undefined;
 	// Set when the user has asked for the audio alternative. The next mount
 	// forces the audio widget whatever /frictionless returns for the fresh
 	// session: the server has no idea the user made this choice, and would
@@ -236,6 +243,9 @@ export const mountProcaptchaFrictionless = (
 		teardown.add(() => clearTimeout(timer));
 	};
 
+	const cannotLoadText = (): string =>
+		i18n.isInitialized ? i18n.t("WIDGET.CANNOT_LOAD") : "Cannot load CAPTCHA";
+
 	const fallOverWithStyle = (errorMessage?: string, errorKey?: string) => {
 		// We could always re-render here after a period but this will result in
 		// never-ending requests to Providers when settings are incorrect, or the
@@ -254,7 +264,9 @@ export const mountProcaptchaFrictionless = (
 		}
 		renderPlaceholder(
 			config.mode,
-			errorMessage || "Cannot load CAPTCHA",
+			errorMessage
+				? localiseErrorMessage(i18n, { message: errorMessage, key: errorKey })
+				: cannotLoadText(),
 			false,
 		);
 	};
@@ -360,14 +372,12 @@ export const mountProcaptchaFrictionless = (
 		// instead of the modal simply closing. Not one-shot: the user may keep
 		// asking for a different challenge, and at a low `puzzleTolerance` they
 		// may well miss several in a row.
-		const onReload = (
-			x?: number,
-			y?: number,
-			options?: { showRetry?: boolean },
-		) => {
+		const onReload = (x?: number, y?: number, options?: ReloadOptions) => {
 			pendingRetryCoords.current = normaliseRetryCoords(x, y);
 			nextMountAutoStart = true;
 			nextMountShowRetry = true === options?.showRetry;
+			nextRefreshOf =
+				true === options?.refresh ? frictionlessState.sessionId : undefined;
 			// A reload mints a genuinely new session, so the invalidation
 			// budget for the *previous* one shouldn't count against it.
 			sessionInvalidatedAttempts.current = 0;
@@ -452,6 +462,13 @@ export const mountProcaptchaFrictionless = (
 				userAccount: frictionlessState.userAccount,
 				provider: frictionlessState.provider,
 				callbacks,
+				theme: "light" === config.theme ? lightTheme : darkTheme,
+				labels: i18n.isInitialized
+					? {
+							verifiedAgent: i18n.t("WIDGET.VERIFIED_AGENT"),
+							trustedRequest: i18n.t("WIDGET.TRUSTED_REQUEST"),
+						}
+					: undefined,
 			});
 			return;
 		}
@@ -520,9 +537,13 @@ export const mountProcaptchaFrictionless = (
 				// After the first attempt, tell detection this is a retry so it
 				// re-selects a random provider from the list rather than re-using
 				// the DNS-routed pronode that just failed.
-				const result = await detectBot(configOutput, widgetContainer, restart, {
-					attempt: state.attemptCount,
-				});
+				const result = await detectBot(
+					configOutput,
+					widgetContainer,
+					restart,
+					{ attempt: state.attemptCount },
+					nextRefreshOf,
+				);
 
 				const guard = evaluateFrictionlessResult(result);
 				if ("error" === guard.kind) {
@@ -543,6 +564,8 @@ export const mountProcaptchaFrictionless = (
 					fallOverWithStyle(guard.message, guard.key);
 					return;
 				}
+
+				nextRefreshOf = undefined;
 
 				const frictionlessState: FrictionlessState = {
 					provider: result.provider,

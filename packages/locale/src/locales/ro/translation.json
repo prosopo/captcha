@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Semnatura invalida",
 		"SITE_KEY_MISSING": "Cheia SITE lipseste",
 		"ACCOUNT_NOT_FOUND": "Contul nu a fost gasit",
-		"INVALID_TIMESTAMP": "Timestamp invalid"
+		"INVALID_TIMESTAMP": "Timestamp invalid",
+		"MISSING_AUTH_HEADER": "Lipsește antetul de autorizare",
+		"INVALID_JWT": "JWT invalid"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Permisiuni insuficiente pentru a efectua aceasta actiune",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Solicitările de la conexiuni de rețea mobilă nu sunt permise pentru acest site",
 		"SATELLITE_BLOCKED": "Solicitările de la conexiuni prin satelit nu sunt permise pentru acest site",
 		"CRAWLER_BLOCKED": "Solicitările de la crawlere cunoscute nu sunt permise pentru acest site",
-		"DISALLOWED_WEBVIEW": "Solicitările din browsere încorporate în aplicații (WebView) nu sunt permise pentru acest site"
+		"DISALLOWED_WEBVIEW": "Solicitările din browsere încorporate în aplicații (WebView) nu sunt permise pentru acest site",
+		"INTERNAL_SERVER_ERROR": "Eroare internă a serverului"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Nu se poate modifica utilizatorul proprietar",
@@ -381,6 +384,11 @@
 		"INSECURE_CONTEXT": "Procaptcha necesită o conexiune securizată (HTTPS)",
 		"CHECKING": "Verificăm că ești om",
 		"IMAGE_DIALOG_LABEL": "Test cu imagini",
+		"CANNOT_LOAD": "CAPTCHA nu poate fi încărcat",
+		"RELOAD": "Reîncarcă",
+		"VERIFIED_AGENT": "Agent verificat",
+		"TRUSTED_REQUEST": "Solicitare de încredere",
+		"LOADING": "Se încarcă",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Test cu puzzle",
 			"DRAG": "Trage piesa până la țintă",
@@ -390,7 +398,8 @@
 			"KEYBOARD_HINT": "Folosește tastele săgeți pentru a muta piesa, ținând apăsat Shift pentru pași mai mici. Apasă Enter pentru a o trimite, Home pentru a o readuce la început sau Escape pentru a anula.",
 			"POSITION": "{{x}} la sută din stânga, {{y}} la sută de sus",
 			"CHECKING": "Îți verificăm răspunsul",
-			"RETRY_ANNOUNCEMENT": "Aproape. S-a încărcat un puzzle nou, iar piesa este din nou la început."
+			"RETRY_ANNOUNCEMENT": "Aproape. S-a încărcat un puzzle nou, iar piesa este din nou la început.",
+			"REFRESH": "Alt puzzle"
 		},
 		"ICON_ORDER": {
 			"DIALOG_LABEL": "Provocare cu ordinea pictogramelor",
@@ -457,7 +466,13 @@
 		"TABLES_UNDEFINED": "Tabelele sunt nedefinite",
 		"CONNECTION_UNDEFINED": "Conexiunea este nedefinita",
 		"COMMITMENT_FLAG_FAILED": "Esuata la marcarea angajamentului ca procesat",
-		"UNKNOWN": "Eroare necunoscuta la baza de date"
+		"UNKNOWN": "Eroare necunoscuta la baza de date",
+		"QUERY_ERROR": "Interogarea bazei de date a eșuat",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Conexiunea Redis pentru regulile de acces nu este definită",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Stocarea regulilor de acces ale utilizatorilor nu este definită",
+		"SESSION_STORE_FAILED": "Salvarea sesiunii a eșuat",
+		"SESSION_CHECK_REMOVE_FAILED": "Verificarea și eliminarea sesiunii au eșuat",
+		"SESSION_GET_FAILED": "Obținerea sesiunii a eșuat"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Eroare la parsarea captcha-ului",
@@ -476,7 +491,10 @@
 		"INVALID_SALT": "Salt invalid",
 		"INVALID_TOKEN": "Token invalid",
 		"INVALID_SOLUTION": "Solutie invalida",
-		"DECRYPTION_ERROR": "Eroare la decriptare"
+		"DECRYPTION_ERROR": "Eroare la decriptare",
+		"SOLUTION_NOT_FOUND": "Soluția nu a fost găsită",
+		"DECISION_MACHINE_DENIED": "Respins de mașina de decizie",
+		"INVALID_TIMESTAMP": "Timestamp invalid"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parametru invalid"

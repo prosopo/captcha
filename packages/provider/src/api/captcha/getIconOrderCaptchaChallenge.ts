@@ -19,6 +19,7 @@ import {
 	type GetIconOrderCaptchaChallengeRequestBodyTypeOutput,
 	type GetIconOrderCaptchaResponse,
 	SimdReadingsStage,
+	resolveFrictionlessTypes,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -103,6 +104,19 @@ export default (
 			if (!clientSettings) {
 				return next(
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+						context: { code: 400, siteKey: dapp },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			if (
+				!resolveFrictionlessTypes(clientSettings.settings?.frictionlessTypes)
+					.iconOrder
+			) {
+				return next(
+					new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
 						context: { code: 400, siteKey: dapp },
 						i18n: req.i18n,
 						logger: req.logger,
@@ -318,6 +332,7 @@ export default (
 					session: sessionId,
 				},
 			}));
+			res.locals.padBytes = trafficVerdict.padBytes;
 			recordCaptchaIssued(CaptchaType.iconOrder);
 			return res.json(getIconOrderCaptchaResponse);
 		} catch (err) {

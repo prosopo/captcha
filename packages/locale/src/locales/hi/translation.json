@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "अवैध हस्ताक्षर",
 		"SITE_KEY_MISSING": "साइट कुंजी गायब है",
 		"ACCOUNT_NOT_FOUND": "खाता नहीं मिला",
-		"INVALID_TIMESTAMP": "अवैध समय चिह्न"
+		"INVALID_TIMESTAMP": "अवैध समय चिह्न",
+		"MISSING_AUTH_HEADER": "प्राधिकरण हेडर अनुपलब्ध है",
+		"INVALID_JWT": "अमान्य JWT"
 	},
 	"TARGET": {
 		"pelecaniformes": "पेलिकैनिफ़ॉर्मीस",
@@ -353,7 +355,8 @@
 		"MOBILE_BLOCKED": "इस साइट के लिए मोबाइल नेटवर्क कनेक्शन से अनुरोध की अनुमति नहीं है",
 		"SATELLITE_BLOCKED": "इस साइट के लिए सैटेलाइट कनेक्शन से अनुरोध की अनुमति नहीं है",
 		"CRAWLER_BLOCKED": "इस साइट के लिए ज्ञात क्रॉलर से अनुरोध की अनुमति नहीं है",
-		"DISALLOWED_WEBVIEW": "इस साइट के लिए इन-ऐप ब्राउज़र (WebView) से अनुरोध की अनुमति नहीं है"
+		"DISALLOWED_WEBVIEW": "इस साइट के लिए इन-ऐप ब्राउज़र (WebView) से अनुरोध की अनुमति नहीं है",
+		"INTERNAL_SERVER_ERROR": "आंतरिक सर्वर त्रुटि"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "स्वामी उपयोगकर्ता को संशोधित नहीं किया जा सकता",
@@ -381,6 +384,11 @@
 		"INSECURE_CONTEXT": "Procaptcha के लिए सुरक्षित (HTTPS) कनेक्शन आवश्यक है",
 		"CHECKING": "जाँचा जा रहा है कि आप मनुष्य हैं",
 		"IMAGE_DIALOG_LABEL": "छवि चुनौती",
+		"CANNOT_LOAD": "CAPTCHA लोड नहीं हो सका",
+		"RELOAD": "फिर से लोड करें",
+		"VERIFIED_AGENT": "सत्यापित एजेंट",
+		"TRUSTED_REQUEST": "विश्वसनीय अनुरोध",
+		"LOADING": "लोड हो रहा है",
 		"PUZZLE": {
 			"DIALOG_LABEL": "पहेली चुनौती",
 			"DRAG": "टुकड़े को लक्ष्य तक खींचें",
@@ -390,7 +398,8 @@
 			"KEYBOARD_HINT": "टुकड़े को तीर कुंजियों से हिलाएँ; छोटे कदमों के लिए Shift दबाए रखें। भेजने के लिए Enter, शुरुआत में लौटाने के लिए Home, और रद्द करने के लिए Escape दबाएँ।",
 			"POSITION": "बाएँ से {{x}} प्रतिशत, ऊपर से {{y}} प्रतिशत",
 			"CHECKING": "आपका उत्तर जाँचा जा रहा है",
-			"RETRY_ANNOUNCEMENT": "लगभग सही। एक नई पहेली आ गई है और टुकड़ा फिर से शुरुआत में है।"
+			"RETRY_ANNOUNCEMENT": "लगभग सही। एक नई पहेली आ गई है और टुकड़ा फिर से शुरुआत में है।",
+			"REFRESH": "दूसरी पहेली"
 		},
 		"ICON_ORDER": {
 			"DIALOG_LABEL": "आइकन क्रम चुनौती",
@@ -457,7 +466,13 @@
 		"TABLES_UNDEFINED": "टेबल अनिर्दिष्ट",
 		"CONNECTION_UNDEFINED": "कनेक्शन अनिर्दिष्ट",
 		"COMMITMENT_FLAG_FAILED": "प्रतिबद्धता को प्रसंस्करण के रूप में झंडा चढ़ाने में विफल",
-		"UNKNOWN": "अज्ञात डेटाबेस त्रुटि"
+		"UNKNOWN": "अज्ञात डेटाबेस त्रुटि",
+		"QUERY_ERROR": "डेटाबेस क्वेरी विफल रही",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "एक्सेस नियमों का Redis कनेक्शन परिभाषित नहीं है",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "उपयोगकर्ता एक्सेस नियमों का स्टोरेज परिभाषित नहीं है",
+		"SESSION_STORE_FAILED": "सत्र संग्रहीत करने में विफल",
+		"SESSION_CHECK_REMOVE_FAILED": "सत्र की जाँच करने और हटाने में विफल",
+		"SESSION_GET_FAILED": "सत्र प्राप्त करने में विफल"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "कैप्चा को पार्स करने में त्रुटि",
@@ -476,7 +491,10 @@
 		"INVALID_SALT": "अमान्य सॉल्ट",
 		"INVALID_TOKEN": "अमान्य टोकन",
 		"INVALID_SOLUTION": "अमान्य समाधान",
-		"DECRYPTION_ERROR": "डिक्रिप्शन त्रुटि"
+		"DECRYPTION_ERROR": "डिक्रिप्शन त्रुटि",
+		"SOLUTION_NOT_FOUND": "समाधान नहीं मिला",
+		"DECISION_MACHINE_DENIED": "निर्णय मशीन द्वारा अस्वीकृत",
+		"INVALID_TIMESTAMP": "अवैध समय चिह्न"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "अमान्य पैरामीटर"

@@ -24,6 +24,7 @@ import {
 	type ClickEventPoint,
 	type ClientMetaData,
 	type EnvironmentTypes,
+	type FrictionlessRestart,
 	type FrictionlessState,
 	InputMethod,
 	type MouseMovementPoint,
@@ -214,7 +215,7 @@ interface Harness {
 		onChallengeExpired: Mock<() => void>;
 		onReload: Mock<() => void>;
 	};
-	restart: Mock<() => void>;
+	restart: Mock<FrictionlessRestart>;
 	onReloadRequest: Mock<(x?: number, y?: number) => void>;
 }
 
@@ -227,6 +228,8 @@ interface HarnessOptions {
 	/** Mirrors the widget only handing the manager a delegate when its
 	 * wrapper actually supplied one. */
 	delegateReload?: boolean;
+	/** Applies each update to the state object, as the widget's store does. */
+	liveState?: boolean;
 }
 
 const build = (options: HarnessOptions = {}): Harness => {
@@ -243,7 +246,7 @@ const build = (options: HarnessOptions = {}): Harness => {
 		onChallengeExpired: vi.fn<() => void>(),
 		onReload: vi.fn<() => void>(),
 	};
-	const restart = vi.fn<() => void>();
+	const restart = vi.fn<FrictionlessRestart>();
 	const onReloadRequest = vi.fn<(x?: number, y?: number) => void>();
 	const callbackInput: ProcaptchaCallbacks = callbacks(events);
 	const frictionlessState =
@@ -256,6 +259,7 @@ const build = (options: HarnessOptions = {}): Harness => {
 		currentState,
 		(next: Partial<ProcaptchaState>) => {
 			updates.push({ ...next });
+			if (options.liveState) Object.assign(currentState, next);
 		},
 		callbackInput,
 		frictionlessState,
@@ -595,6 +599,18 @@ describe("start", () => {
 		expect(lastUpdate(harness, "showModal")).toBe(false);
 	});
 
+	test("a disposed manager never expires the open challenge", async () => {
+		vi.useFakeTimers();
+		const harness = build();
+		mocks.getCaptchaChallenge.mockResolvedValue(
+			challengeResponse({ captchas: [captcha({ timeLimitMs: 1000 })] }),
+		);
+		await harness.manager.start();
+		harness.manager.dispose();
+		vi.advanceTimersByTime(1000);
+		expect(harness.events.onChallengeExpired).not.toHaveBeenCalled();
+	});
+
 	test("falls back to the configured challenge timeout per captcha", async () => {
 		vi.useFakeTimers();
 		const configured = config();
@@ -828,6 +844,19 @@ describe("submit", () => {
 		expect(extractData(solutions?.[1]?.salt ?? "")).toEqual([3, 4]);
 	});
 
+	test("submits a later captcha with no selections", async () => {
+		mocks.getCaptchaChallenge.mockResolvedValue(
+			challengeResponse({ captchas: [captcha(), captcha()] }),
+		);
+		const harness = await started({
+			afterStart: { solutions: [[["hash-1", 1, 2, InputMethod.pointer]], []] },
+		});
+		await harness.manager.submit();
+		const solutions = mocks.submitCaptchaSolution.mock.calls[0]?.[2];
+		expect(solutions?.[1]?.solution).toEqual([]);
+		expect(extractData(solutions?.[1]?.salt ?? "")).toEqual([]);
+	});
+
 	test("handles a captcha with no selections at all", async () => {
 		const harness = await started({ afterStart: { solutions: [[]] } });
 		await harness.manager.submit();
@@ -875,6 +904,34 @@ describe("submit", () => {
 		expect(lastUpdate(harness, "isHuman")).toBe(false);
 	});
 
+	test("a disposed manager never expires the human verdict", async () => {
+		vi.useFakeTimers();
+		const configured = config();
+		const harness = await started({ configInput: configured });
+		await harness.manager.submit();
+		harness.manager.dispose();
+		vi.advanceTimersByTime(configured.captchas.image.solutionTimeout);
+		expect(harness.events.onExpired).not.toHaveBeenCalled();
+	});
+
+	test("a reset drops the earlier solve's expiry", async () => {
+		vi.useFakeTimers();
+		const configured = config();
+		const harness = await started({ configInput: configured, liveState: true });
+		await harness.manager.submit();
+		await harness.manager.cancel();
+		vi.advanceTimersByTime(configured.captchas.image.solutionTimeout);
+		expect(harness.events.onExpired).not.toHaveBeenCalled();
+	});
+
+	test("a solve that lands after dispose never reaches the site", async () => {
+		const harness = await started();
+		harness.manager.dispose();
+		await harness.manager.submit();
+		expect(harness.events.onHuman).not.toHaveBeenCalled();
+		expect(harness.events.onFailed).not.toHaveBeenCalled();
+	});
+
 	test("fails and restarts frictionless when the solution is rejected", async () => {
 		const harness = await started();
 		mocks.submitCaptchaSolution.mockResolvedValue([
@@ -885,6 +942,39 @@ describe("submit", () => {
 		expect(harness.events.onFailed).toHaveBeenCalledTimes(1);
 		expect(harness.events.onReset).toHaveBeenCalled();
 		expect(harness.restart).toHaveBeenCalledTimes(1);
+	});
+
+	test("asks the restarted frictionless widget to say the answer was wrong", async () => {
+		const harness = await started();
+		mocks.submitCaptchaSolution.mockResolvedValue([
+			solutionResponse({ verified: false }),
+			"0xcommitment",
+		]);
+		await harness.manager.submit();
+		expect(harness.restart).toHaveBeenCalledWith({ showRetry: true });
+	});
+
+	test("marks a rejected answer in state, whatever onFailed does", async () => {
+		const harness = await started({ withFrictionless: false });
+		mocks.submitCaptchaSolution.mockResolvedValue([
+			solutionResponse({ verified: false }),
+			"0xcommitment",
+		]);
+		await harness.manager.submit();
+		expect(harness.state.answeredIncorrectly).toBe(true);
+		expect(harness.state.showModal).toBe(false);
+	});
+
+	test("does not mark an accepted answer as wrong", async () => {
+		const harness = await started();
+		await harness.manager.submit();
+		expect(harness.state.answeredIncorrectly).not.toBe(true);
+	});
+
+	test("clears the wrong-answer mark when the user tries again", async () => {
+		const harness = build({ initialState: { answeredIncorrectly: true } });
+		await harness.manager.start();
+		expect(harness.state.answeredIncorrectly).toBe(false);
 	});
 
 	test("does not submit when no captcha api was ever built", async () => {
