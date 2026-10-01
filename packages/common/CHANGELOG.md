@@ -1,5 +1,20 @@
 # @prosopo/common
 
+## 3.1.61
+### Patch Changes
+
+- 06784d0: Error classes now only accept error keys that exist in the English translation catalogue, so a misspelt key such as `DATABASE.DATABASE_IMPORT_ERROR` fails to compile instead of showing the raw key to users.
+- 06784d0: Translation keys are now a typed union built from the English catalogue, so calling the translator with a key that does not exist fails to compile. Error classes only pass a message to the translator when it is a real catalogue key, and free-text messages are shown as they are.
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [06784d0]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/locale@3.6.2
+  - @prosopo/logger@2.1.2
+
 ## 3.1.60
 ### Patch Changes
 

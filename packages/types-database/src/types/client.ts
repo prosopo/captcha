@@ -18,6 +18,7 @@ import {
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 	type IUserData,
 	type IUserSettings,
+	MAX_PAD_BYTES,
 	type Timestamp,
 	TrafficFilterAction,
 	abuseScoreThresholdDefault,
@@ -163,6 +164,13 @@ export const TrafficCategoryPolicySchema = new Schema(
 		powDifficulty: { type: Number, required: false },
 		solvedImagesCount: { type: Number, required: false },
 		puzzleTolerance: { type: Number, required: false },
+		// Bytes of tarpit padding the provider appends to this category's
+		// challenge issuance response. Declared here because mongoose is
+		// strict by default: the field round-tripped through zod on both the
+		// portal save and the provider's client-list push, and was then
+		// dropped on write at each end — so `checkTrafficFilter` only ever
+		// read `undefined` and no category was ever padded.
+		padBytes: { type: Number, min: 0, max: MAX_PAD_BYTES, required: false },
 		iconOrderTolerance: { type: Number, required: false },
 		// Mixed for the same reason as `frictionlessThreshold` below: zod owns
 		// the shape, and a typed sub-document would make mongoose cast-fail on

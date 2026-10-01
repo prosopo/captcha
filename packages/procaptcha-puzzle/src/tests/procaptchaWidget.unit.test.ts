@@ -51,6 +51,7 @@ const mocks = vi.hoisted(() => {
 	const submitSolution =
 		vi.fn<(x: number, y: number, events: PuzzleEvent[]) => Promise<boolean>>();
 	const resetState = vi.fn<() => void>();
+	const dispose = vi.fn<() => void>();
 	const constructions: {
 		updateState: (next: Partial<ProcaptchaState>) => void;
 		getHoneypotValue?: () => string | undefined;
@@ -65,6 +66,7 @@ const mocks = vi.hoisted(() => {
 		start,
 		submitSolution,
 		resetState,
+		dispose,
 		constructions,
 		loadI18next,
 		canvasProps,
@@ -85,6 +87,7 @@ vi.mock("../services/Manager.js", () => ({
 			start: mocks.start,
 			submitSolution: mocks.submitSolution,
 			resetState: mocks.resetState,
+			dispose: mocks.dispose,
 		};
 	},
 }));
@@ -596,6 +599,87 @@ describe("finishing the drag", () => {
 	});
 });
 
+describe("refreshing the puzzle", () => {
+	const openPuzzle = async (
+		widgetProps: ProcaptchaProps = props(),
+	): Promise<void> => {
+		render(widgetProps);
+		await click();
+	};
+
+	const refresh = async (): Promise<void> => {
+		mocks.canvasProps.current?.onRefresh?.();
+		await settle();
+	};
+
+	test("offers the canvas a refresh control", async () => {
+		await openPuzzle();
+		expect(mocks.canvasProps.current?.onRefresh).toBeTypeOf("function");
+	});
+
+	test("on a frictionless session, hands back to the wrapper marked as a refresh", async () => {
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
+		await openPuzzle(
+			props({
+				frictionlessState: frictionless({ sessionId: "session-one" }),
+				onReload,
+			}),
+		);
+		await refresh();
+		expect(onReload).toHaveBeenCalledWith(
+			expect.any(Number),
+			expect.any(Number),
+			{ refresh: true },
+		);
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+		expect(mocks.submitSolution).not.toHaveBeenCalled();
+	});
+
+	test("without a session to re-mint, fetches a new puzzle in place", async () => {
+		const replacement = challengeResponse({ originX: 40 });
+		mocks.start
+			.mockResolvedValueOnce(challengeResponse())
+			.mockResolvedValue(replacement);
+		await openPuzzle();
+		await refresh();
+		expect(mocks.start).toHaveBeenCalledTimes(2);
+		expect(mocks.canvasProps.current).toMatchObject({
+			originX: 40,
+			submitting: false,
+			showRetry: false,
+		});
+	});
+
+	test("clears a retry prompt, since a refresh is not a wrong answer", async () => {
+		mocks.submitSolution.mockResolvedValue(false);
+		await openPuzzle();
+		await complete();
+		expect(mocks.canvasProps.current?.showRetry).toBe(true);
+		await refresh();
+		expect(mocks.canvasProps.current?.showRetry).toBe(false);
+	});
+
+	test("tells the site the challenge was reloaded", async () => {
+		const onReload = vi.fn<() => void>();
+		await openPuzzle(props({ callbacks: { onReload } }));
+		await refresh();
+		expect(onReload).toHaveBeenCalledTimes(1);
+	});
+
+	test("is ignored while a solution is being checked", async () => {
+		mocks.submitSolution.mockReturnValue(
+			new Promise<boolean>(() => {
+				// never settles: the check stays in flight for the whole test
+			}),
+		);
+		await openPuzzle();
+		void mocks.canvasProps.current?.onComplete(200, 80, []);
+		await settle();
+		await refresh();
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+	});
+});
+
 describe("invisible mode", () => {
 	const execute = async (): Promise<void> => {
 		document.dispatchEvent(new Event("procaptcha:execute"));
@@ -761,5 +845,14 @@ describe("an invalidated session", () => {
 		render(props({ onSessionInvalidated }));
 		await invalidate();
 		expect(onSessionInvalidated).toHaveBeenCalledWith(undefined, undefined);
+	});
+});
+
+describe("destroy", () => {
+	test("disposes the manager so its expiry timers cannot outlive the widget", () => {
+		render(props());
+		expect(mocks.dispose).not.toHaveBeenCalled();
+		destroy();
+		expect(mocks.dispose).toHaveBeenCalledTimes(1);
 	});
 });

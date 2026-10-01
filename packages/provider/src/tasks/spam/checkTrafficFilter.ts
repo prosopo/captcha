@@ -406,3 +406,23 @@ export const resolveChallengePolicy = (
 		sourceCategories: challenges.map((m) => m.category),
 	};
 };
+
+/**
+ * Largest `padBytes` across all matched categories, block or challenge. A
+ * blocked category still resolves to a deferred challenge at request time, so
+ * padding it burns the caller's bandwidth on the way to being blocked.
+ */
+export const resolvePadBytes = (
+	matches: TrafficFilterMatch[],
+): number | undefined => {
+	let padBytes: number | undefined;
+	for (const m of matches) {
+		if (m.policy.padBytes !== undefined) {
+			padBytes =
+				padBytes === undefined
+					? m.policy.padBytes
+					: Math.max(padBytes, m.policy.padBytes);
+		}
+	}
+	return padBytes;
+};

@@ -15,14 +15,20 @@
 import type { IncomingHttpHeaders } from "node:http";
 import { ProsopoApiError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
-import type { KeyringPair } from "@prosopo/types";
-import type { JWT } from "@prosopo/util-crypto";
+import type { ApiJsonError, KeyringPair } from "@prosopo/types";
+import type {
+	JWT,
+	JWTVerifyOptions,
+	JWTVerifyResult,
+} from "@prosopo/util-crypto";
 import type { Request, Response } from "express";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
+	type AuthMiddlewareOptions,
 	authMiddleware,
 	verifySignature,
 } from "../../../middlewares/authMiddleware.js";
+import { createMemoryJwtReplayGuard } from "../../../middlewares/jwtReplayGuard.js";
 import { type NextCapture, captureNext } from "../testDoubles.js";
 
 /**
@@ -32,7 +38,10 @@ import { type NextCapture, captureNext } from "../testDoubles.js";
  * itself throws.
  */
 
-type Verify = (jwt: JWT) => { isValid: boolean };
+type Verify = (
+	jwt: JWT,
+	options?: JWTVerifyOptions,
+) => Pick<JWTVerifyResult, "isValid" | "payload">;
 
 /** A pair that only implements the parts the middleware actually calls. */
 const pairThat = (verify: Verify): KeyringPair =>
@@ -61,7 +70,10 @@ interface Harness {
 	logged: ReturnType<typeof vi.fn<(entry: () => unknown) => void>>;
 }
 
-const build = (headers: IncomingHttpHeaders = {}): Harness => {
+const build = (
+	headers: IncomingHttpHeaders = {},
+	i18n?: { t: (key: string) => string },
+): Harness => {
 	const json = vi.fn<(body: unknown) => Response>();
 	const status = vi.fn<(code: number) => Response>();
 	const res = { status, json } as unknown as Response;
@@ -70,6 +82,7 @@ const build = (headers: IncomingHttpHeaders = {}): Harness => {
 	const logged = vi.fn<(entry: () => unknown) => void>();
 	const req = {
 		headers,
+		i18n,
 		logger: { error: logged } as unknown as Logger,
 	} as unknown as Request;
 
@@ -89,8 +102,9 @@ beforeEach(() => {
 const run = async (
 	pair: KeyringPair | undefined,
 	authAccount?: KeyringPair | undefined,
+	options?: AuthMiddlewareOptions,
 ): Promise<void> => {
-	await authMiddleware(pair, authAccount)(
+	await authMiddleware(pair, authAccount, options)(
 		harness.req,
 		harness.res,
 		harness.next.fn,
@@ -130,7 +144,7 @@ describe("a token one of the keys accepts", () => {
 	test("hands the verifier the token without its Bearer prefix", async () => {
 		const pair = accepts();
 		await run(pair, undefined);
-		expect(pair.jwtVerify).toHaveBeenCalledWith("token-1");
+		expect(pair.jwtVerify).toHaveBeenCalledWith("token-1", undefined);
 	});
 });
 
@@ -145,8 +159,59 @@ describe("a token neither key accepts", () => {
 	});
 
 	test("is answered with an error body carrying the 401 code", () => {
-		const body = harness.json.mock.calls[0]?.[0] as { error: ProsopoApiError };
-		expect(body.error.context?.code).toBe(401);
+		const body = harness.json.mock.calls[0]?.[0] as { error: ApiJsonError };
+		expect(body.error).toEqual({
+			code: 401,
+			key: "API.UNAUTHORIZED",
+			message: "API.UNAUTHORIZED",
+		});
+	});
+
+	test("does not serialise the request's i18n instance or error context", () => {
+		harness = build(bearer("token-1"), { t: (key: string) => `t:${key}` });
+		return run(rejects(), rejects()).then(() => {
+			const body = harness.json.mock.calls[0]?.[0];
+			expect(JSON.stringify(body)).not.toContain("context");
+			expect(body).toEqual({
+				error: {
+					code: 401,
+					key: "API.UNAUTHORIZED",
+					message: "t:API.UNAUTHORIZED",
+				},
+			});
+		});
+	});
+});
+
+describe("the 401 body for a thrown error", () => {
+	test("does not echo what a verifier threw", async () => {
+		const leaky = pairThat(() => {
+			throw new Error("mongodb://admin:hunter2@10.0.0.5/provider");
+		});
+		await run(leaky, undefined);
+		const body = harness.json.mock.calls[0]?.[0];
+		expect(JSON.stringify(body)).not.toContain("hunter2");
+		expect(body).toEqual({
+			error: {
+				code: 401,
+				key: "API.UNAUTHORIZED",
+				message: "API.UNAUTHORIZED",
+			},
+		});
+	});
+
+	test("reports only the translation key of a Prosopo error", async () => {
+		harness = build({});
+		await run(accepts(), undefined);
+		const body = harness.json.mock.calls[0]?.[0];
+		expect(JSON.stringify(body)).not.toContain("Missing Authorization header");
+		expect(body).toEqual({
+			error: {
+				code: 401,
+				key: "GENERAL.MISSING_AUTH_HEADER",
+				message: "GENERAL.MISSING_AUTH_HEADER",
+			},
+		});
 	});
 });
 
@@ -209,7 +274,7 @@ describe("header handling quirks worth pinning down", () => {
 		harness = build({ authorization: "token-1" });
 		const pair = accepts();
 		await run(pair, undefined);
-		expect(pair.jwtVerify).toHaveBeenCalledWith("token-1");
+		expect(pair.jwtVerify).toHaveBeenCalledWith("token-1", undefined);
 		expect(harness.next.calls).toHaveLength(1);
 	});
 
@@ -220,7 +285,7 @@ describe("header handling quirks worth pinning down", () => {
 		harness = build({ Authorization: "Bearer token-1" } as IncomingHttpHeaders);
 		const pair = accepts();
 		await run(pair, undefined);
-		expect(pair.jwtVerify).toHaveBeenCalledWith("token-1");
+		expect(pair.jwtVerify).toHaveBeenCalledWith("token-1", undefined);
 		expect(harness.next.calls).toHaveLength(1);
 	});
 
@@ -230,7 +295,7 @@ describe("header handling quirks worth pinning down", () => {
 		harness = build({ authorization: "abcBearer xyz" });
 		const pair = accepts();
 		await run(pair, undefined);
-		expect(pair.jwtVerify).toHaveBeenCalledWith("abcxyz");
+		expect(pair.jwtVerify).toHaveBeenCalledWith("abcxyz", undefined);
 	});
 });
 
@@ -338,5 +403,47 @@ describe("verifySignature", () => {
 			new Uint8Array([1, 2]),
 			pair.publicKey,
 		);
+	});
+});
+
+describe("admin token claim options", () => {
+	const payload = (jti?: string): JWTVerifyResult["payload"] => ({
+		sub: "0x01",
+		iat: 1,
+		exp: Date.now() / 1000 + 300,
+		...(jti ? { jti } : {}),
+	});
+
+	test("passes the verify options to the key", async () => {
+		const pair = accepts();
+		const verify: JWTVerifyOptions = { audience: ["https://p1.example"] };
+		await run(pair, undefined, { verify });
+		expect(pair.jwtVerify).toHaveBeenCalledWith("token-1", verify);
+	});
+
+	test("a token with a jti is accepted once and refused on replay", async () => {
+		const pair = pairThat(() => ({ isValid: true, payload: payload("n-1") }));
+		const options: AuthMiddlewareOptions = {
+			replayGuard: createMemoryJwtReplayGuard(),
+		};
+		await run(pair, undefined, options);
+		expect(harness.next.calls).toHaveLength(1);
+
+		harness = build(bearer("token-1"));
+		await run(pair, undefined, options);
+		expect(harness.next.calls).toHaveLength(0);
+		expect(harness.status).toHaveBeenCalledWith(401);
+	});
+
+	test("a token without a jti can still be reused", async () => {
+		// Existing issuers reuse one token across a batch of requests.
+		const pair = pairThat(() => ({ isValid: true, payload: payload() }));
+		const options: AuthMiddlewareOptions = {
+			replayGuard: createMemoryJwtReplayGuard(),
+		};
+		await run(pair, undefined, options);
+		harness = build(bearer("token-1"));
+		await run(pair, undefined, options);
+		expect(harness.next.calls).toHaveLength(1);
 	});
 });

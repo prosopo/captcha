@@ -11,7 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { severityToPuzzleDifficulty } from "@prosopo/captcha-severity";
+import {
+	resolveMaxEscalationLevel,
+	severityToPuzzleDifficulty,
+} from "@prosopo/captcha-severity";
 import { ProsopoApiError } from "@prosopo/common";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
@@ -226,6 +229,7 @@ export default (env: ProviderEnvironment) =>
 				{
 					frictionlessTypes: clientRecord.settings?.frictionlessTypes,
 					imageMaxRounds: clientRecord.settings?.imageMaxRounds,
+					puzzleMaxDifficulty: clientRecord.settings?.puzzleMaxDifficulty,
 				},
 			);
 			const response: PowCaptchaSolutionResponse = {
@@ -294,6 +298,7 @@ export const buildEscalation = async (
 	siteConstraints?: {
 		frictionlessTypes?: IFrictionlessTypes;
 		imageMaxRounds?: number;
+		puzzleMaxDifficulty?: number;
 	},
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
@@ -345,9 +350,14 @@ export const buildEscalation = async (
 		| { puzzleTolerance: number; puzzle: IPuzzleSettings }
 		| undefined => {
 		if (escalatedType !== CaptchaType.puzzle) return undefined;
+		const { isMobile } = derivePlatform(
+			originSession.headers?.["user-agent"] ?? "",
+			originSession.webView,
+		);
 		const level = severityToPuzzleDifficulty(
 			routed.solvedImagesCount ?? originSession.solvedImagesCount,
 			tasks.config.captchas.solved.count,
+			resolveMaxEscalationLevel(siteConstraints?.puzzleMaxDifficulty, isMobile),
 		);
 		// As in sendCaptcha: level 0 leaves the site's configured puzzle
 		// settings in force rather than overriding them with band values.

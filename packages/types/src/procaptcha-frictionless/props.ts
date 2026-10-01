@@ -21,7 +21,10 @@ import type {
 	TouchEventPoint,
 } from "../procaptcha/behavioral.js";
 import type { Account } from "../procaptcha/manager.js";
-import type { ProcaptchaProps } from "../procaptcha/props.js";
+import type {
+	FrictionlessRestart,
+	ProcaptchaProps,
+} from "../procaptcha/props.js";
 import type {
 	GetFrictionlessCaptchaResponse,
 	ProviderSelectRetryContext,
@@ -70,13 +73,16 @@ export type BotDetectionFunction = (
 	// detection can re-select a random provider instead of re-using the
 	// DNS-routed one that just failed. Absent on the initial attempt.
 	retryContext?: ProviderSelectRetryContext,
+	// The sessionId the user refreshed away from, when this run replaces a
+	// challenge they asked to swap. Forwarded to the provider as `refreshOf`.
+	refreshOf?: string,
 ) => Promise<BotDetectionFunctionResult>;
 
 /**
  * The props for the Procaptcha Frictionless component.
  */
 export interface ProcaptchaFrictionlessProps extends ProcaptchaProps {
-	restart: () => void;
+	restart: FrictionlessRestart;
 	detectBot?: BotDetectionFunction;
 	detectBotConfig?: ProcaptchaClientConfigOutput;
 }

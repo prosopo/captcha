@@ -1,5 +1,22 @@
 # @prosopo/load-balancer
 
+## 2.11.4
+### Patch Changes
+
+- 70fcefd: `retryWithBackoff` now fails straight away with a clear "maxAttempts must be a positive integer" error when `maxAttempts` is 0, negative, fractional or NaN. Before, it never ran the function and threw a confusing `Error("undefined")`.
+- Updated dependencies [ede4352]
+- Updated dependencies [2145922]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+  - @prosopo/types@5.12.0
+  - @prosopo/common@3.1.61
+
+## 2.11.3
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+
 ## 2.11.2
 ### Patch Changes
 

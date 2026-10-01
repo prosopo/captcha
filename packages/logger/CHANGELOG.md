@@ -1,5 +1,13 @@
 # @prosopo/logger
 
+## 2.1.2
+### Patch Changes
+
+- Updated dependencies [de6bb08]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+  - @prosopo/util@3.3.13
+
 ## 2.1.1
 ### Patch Changes
 

@@ -34,13 +34,19 @@ describe("at", () => {
 		const a5: string = at("abc", 0);
 		const a10: string = at("abc", 0, { optional: false });
 		const a11: string | undefined = at("abc", 0, { optional: true });
-		const a12: never = at([undefined, undefined, undefined], 0);
+		expect(() => {
+			const a12: never = at([undefined, undefined, undefined], 0);
+			return a12;
+		}).to.throw(/undefined/);
 		const a13: undefined = at([undefined, undefined, undefined], 0, {
 			optional: true,
 		});
-		const a14: undefined = at([undefined, undefined, undefined], 0, {
-			optional: false,
-		});
+		expect(() => {
+			const a14: undefined = at([undefined, undefined, undefined], 0, {
+				optional: false,
+			});
+			return a14;
+		}).to.throw(/undefined/);
 
 		const a15: string = at(["a", "b", "c"] as readonly string[], 0);
 	});
@@ -113,5 +119,23 @@ describe("at", () => {
 		expect(
 			at([undefined, undefined, undefined], 2, { optional: true }),
 		).to.equal(undefined);
+	});
+
+	test("throw on undefined element unless optional", () => {
+		expect(() => at([1, undefined, 3], 1)).to.throw(/undefined/);
+		expect(() => at([1, undefined, 3], 4)).to.throw(/undefined/);
+		expect(at([1, undefined, 3], 1, { optional: true })).to.equal(undefined);
+	});
+
+	test("throw on sparse array hole unless optional", () => {
+		const sparse: number[] = [1];
+		sparse[2] = 3;
+		expect(() => at(sparse, 1)).to.throw(/undefined/);
+	});
+
+	test("throw on non-integer index", () => {
+		expect(() => at([1, 2, 3], 1.5)).to.throw(/integer/);
+		expect(() => at([1, 2, 3], -0.5)).to.throw(/integer/);
+		expect(() => at("abc", 0.5, { optional: true })).to.throw(/integer/);
 	});
 });

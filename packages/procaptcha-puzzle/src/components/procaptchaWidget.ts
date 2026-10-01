@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createTranslator, loadI18next } from "@prosopo/locale";
+import {
+	createTranslator,
+	loadI18next,
+	localiseErrorMessage,
+} from "@prosopo/locale";
 import {
 	type CheckboxProps,
 	type Component,
@@ -33,6 +37,7 @@ import {
 	type ProcaptchaProps,
 	type ProcaptchaState,
 	type PuzzleEvent,
+	type ReloadOptions,
 } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { Manager } from "../services/Manager.js";
@@ -126,9 +131,13 @@ export const mountProcaptchaPuzzleWidget = (
 		puzzlePhase = "dragging";
 		scheduler.schedule();
 
+		await replaceChallenge({ showRetry: true });
+	};
+
+	const replaceChallenge = async (options: ReloadOptions): Promise<void> => {
 		// A frictionless session is single-use: the provider consumed it when it
-		// issued the puzzle the user just got wrong, so asking `manager.start()`
-		// for a replacement on the same sessionId can only ever come back
+		// issued the current puzzle, so asking `manager.start()` for a
+		// replacement on the same sessionId can only ever come back
 		// CAPTCHA.NO_SESSION_FOUND — a wasted round trip that surfaces an error
 		// on the checkbox before the wrapper recovers. Go straight to the
 		// re-mint instead; the wrapper mints a new session and re-mounts us with
@@ -136,7 +145,7 @@ export const mountProcaptchaPuzzleWidget = (
 		if (frictionlessState?.sessionId && props.onReload) {
 			puzzlePhase = "submitting";
 			scheduler.schedule();
-			props.onReload(lastCoords?.x, lastCoords?.y, { showRetry: true });
+			props.onReload(lastCoords?.x, lastCoords?.y, options);
 			return;
 		}
 
@@ -144,6 +153,7 @@ export const mountProcaptchaPuzzleWidget = (
 			const newChallenge = await manager.start();
 			if (newChallenge) {
 				challengeData = newChallenge;
+				puzzlePhase = "dragging";
 			} else {
 				// Couldn't get new challenge, fall back to checkbox
 				puzzlePhase = "checkbox";
@@ -157,6 +167,19 @@ export const mountProcaptchaPuzzleWidget = (
 		}
 		loading = false;
 		scheduler.schedule();
+	};
+
+	// Refreshing is not a wrong answer, so it drops any retry prompt rather
+	// than carrying it onto the new puzzle.
+	const handleRefresh = () => {
+		if ("dragging" !== puzzlePhase) {
+			return;
+		}
+		callbacks.onReload?.();
+		showRetry = false;
+		puzzlePhase = "submitting";
+		scheduler.schedule();
+		void replaceChallenge({ refresh: true });
 	};
 
 	// Dismissing returns to the checkbox; clicking away is not a wrong answer.
@@ -186,6 +209,7 @@ export const mountProcaptchaPuzzleWidget = (
 		placement: config.placement,
 		anchor: props.container,
 		onDismiss: handleDismiss,
+		onRefresh: handleRefresh,
 	});
 
 	const runErrorEffect = () => {
@@ -258,7 +282,9 @@ export const mountProcaptchaPuzzleWidget = (
 		checked: store.state.isHuman,
 		theme: "light" === config.theme ? lightTheme : darkTheme,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",
-		error: store.state.error?.message,
+		error: store.state.error
+			? localiseErrorMessage(translator.i18n, store.state.error)
+			: undefined,
 		loadingText: translator.t("WIDGET.CHECKING", {
 			defaultValue: "Checking that you are human",
 		}),
@@ -410,6 +436,7 @@ export const mountProcaptchaPuzzleWidget = (
 
 	return {
 		destroy: () => {
+			manager.dispose();
 			teardown.run();
 			puzzle?.destroy();
 			checkbox?.destroy();

@@ -44,11 +44,21 @@ export type ProcaptchaEscalationHandler = (
 	coords?: { x: number; y: number },
 ) => void;
 
+/**
+ * `showRetry` asks the re-mounted widget to tell the user their last answer
+ * was wrong, because the restart itself leaves no trace of it.
+ */
+export type FrictionlessRestartOptions = { showRetry?: boolean };
+
+export type FrictionlessRestart = (
+	options?: FrictionlessRestartOptions,
+) => void;
+
 // Generic behavioral data collectors for analytics
 export type FrictionlessState = {
 	provider: RandomProvider;
 	userAccount: Account;
-	restart: () => void;
+	restart: FrictionlessRestart;
 	sessionId?: string;
 	behaviorCollector1?: {
 		start: () => void;
@@ -100,6 +110,11 @@ export type ProcaptchaCallbacks = Partial<Callbacks>;
 /**
  * The props for the Procaptcha component.
  */
+export interface ReloadOptions {
+	showRetry?: boolean;
+	refresh?: boolean;
+}
+
 export interface ProcaptchaProps {
 	// the configuration for procaptcha
 	config: ProcaptchaClientConfigInput;
@@ -146,10 +161,8 @@ export interface ProcaptchaProps {
 	// checkbox. Coords are the checkbox click position the user already made,
 	// preserved for the same reason as on `onSessionInvalidated`.
 	// `showRetry` asks the re-mounted widget to keep the retry prompt up.
+	// `refresh` marks the user asking for a different challenge rather than
+	// getting one wrong, so the provider can count the refreshes.
 	// When absent the widget falls back to the manager's own reload behaviour.
-	onReload?: (
-		x?: number,
-		y?: number,
-		options?: { showRetry?: boolean },
-	) => void;
+	onReload?: (x?: number, y?: number, options?: ReloadOptions) => void;
 }
