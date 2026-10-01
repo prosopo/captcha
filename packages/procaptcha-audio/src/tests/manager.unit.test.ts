@@ -800,6 +800,37 @@ describe("submitSolution: the verdict", () => {
 		expect(lastUpdate(harness, "isHuman")).toBe(false);
 	});
 
+	test("a disposed manager never expires the solve", async () => {
+		vi.useFakeTimers();
+		const harness = build();
+		await solve(harness);
+		harness.manager.dispose();
+		await vi.runOnlyPendingTimersAsync();
+		expect(harness.events.onExpired).not.toHaveBeenCalled();
+	});
+
+	test("a solve that lands after dispose never reaches the site", async () => {
+		const harness = build();
+		await harness.manager.start(11, 22);
+		harness.manager.dispose();
+		await harness.manager.submitSolution("96475", 2, audioEvents());
+		expect(harness.events.onHuman).not.toHaveBeenCalled();
+		expect(harness.events.onFailed).not.toHaveBeenCalled();
+	});
+
+	test("a rejection that lands after dispose asks for no fresh session", async () => {
+		mocks.submitAudioCaptchaSolution.mockResolvedValue(
+			solutionResponse({ verified: false }),
+		);
+		const onReloadRequest = vi.fn<(x?: number, y?: number) => void>();
+		const harness = build({ onReloadRequest });
+		await harness.manager.start(11, 22);
+		harness.manager.dispose();
+		await harness.manager.submitSolution("96475", 2, audioEvents());
+		expect(onReloadRequest).not.toHaveBeenCalled();
+		expect(harness.restart).not.toHaveBeenCalled();
+	});
+
 	test("a rejected answer fails the widget and restarts frictionless", async () => {
 		mocks.submitAudioCaptchaSolution.mockResolvedValue(
 			solutionResponse({ verified: false }),

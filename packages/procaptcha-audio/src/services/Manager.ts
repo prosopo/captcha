@@ -53,6 +53,7 @@ interface AudioManagerHandle {
 		audioEvents: AudioEvent[],
 	) => Promise<boolean>;
 	resetState: (frictionlessRestart?: () => void) => void;
+	dispose: () => void;
 }
 
 export const Manager = (
@@ -193,6 +194,7 @@ export const Manager = (
 	const setValidChallengeTimeout = () => {
 		const timeMillis: number = getConfig().captchas.audio.solutionTimeout;
 		const successfullChallengeTimeout = setTimeout(() => {
+			if (disposed) return;
 			// Human state expired, disallow user's claim to be human
 			updateState({ isHuman: false });
 
@@ -469,6 +471,7 @@ export const Manager = (
 				simdReadings,
 				clientMetaData,
 			);
+			if (disposed) return false;
 
 			if (verifiedSolution[ApiParams.verified]) {
 				updateState({
@@ -521,9 +524,27 @@ export const Manager = (
 		}
 	};
 
+	// Set once the widget that owns this manager is torn down. A solve still in
+	// flight can land afterwards, so the timer callbacks check it as well as
+	// being cleared here.
+	let disposed = false;
+
+	/**
+	 * Stops this manager's challenge and solution-expiry timers without firing
+	 * any event. Left running after the widget is destroyed (reset(), a
+	 * restart, an SPA route change) they fired onExpired/onReset later on,
+	 * which also cleared the replacement widget's token from the form.
+	 */
+	const dispose = () => {
+		disposed = true;
+		window.clearTimeout(Number(state.timeout));
+		window.clearTimeout(Number(state.successfullChallengeTimeout));
+	};
+
 	return {
 		start,
 		submitSolution,
 		resetState,
+		dispose,
 	};
 };
