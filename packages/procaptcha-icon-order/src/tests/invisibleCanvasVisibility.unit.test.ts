@@ -46,7 +46,8 @@ const mocks = vi.hoisted(() => {
 			(clicks: IconClick[], events: IconOrderEvent[]) => Promise<boolean>
 		>();
 	const resetState = vi.fn<() => void>();
-	return { start, submitSolution, resetState };
+	const dispose = vi.fn<() => void>();
+	return { start, submitSolution, resetState, dispose };
 });
 
 vi.mock("../services/Manager.js", () => ({
@@ -58,6 +59,7 @@ vi.mock("../services/Manager.js", () => ({
 		start: mocks.start,
 		submitSolution: mocks.submitSolution,
 		resetState: mocks.resetState,
+		dispose: mocks.dispose,
 	}),
 }));
 

@@ -59,6 +59,7 @@ describe("Icon Order CAPTCHA — signup", () => {
 			return cy
 				.registerSiteKey(baseCaptchaType, CaptchaType.iconOrder, {
 					iconOrderTolerance: LAX_ICON_ORDER_TOLERANCE,
+					frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
 				})
 				.then((response) => {
 					cy.task("log", `Response status: ${response.status}`);
