@@ -147,8 +147,8 @@ export default (
 						frictionlessImageThreshold:
 							frictionless_image_threshold ?? frictionlessImageThresholdDefault,
 					},
-					// Registering a sitekey leaves every challenge type
-					// available; narrowing is a portal-side decision.
+					// Registering a sitekey leaves image and puzzle on; anything
+					// further is a portal-side decision.
 					frictionlessTypes: frictionlessTypesDefault,
 					domains: domains || [],
 					powDifficulty: pow_difficulty as number,
