@@ -5,7 +5,7 @@
     <title>Procaptcha demo: Icon order, explicit rendering</title>
     <script type="module">
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
 
             // Monitor DOM for CAPTCHA initialization
@@ -123,7 +123,7 @@
         }
 
         // Wait for DOM content to be loaded
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             window.updateCaptchaStatus('Initializing CAPTCHA with explicit render call', 'info');
 
             // Render the CAPTCHA
@@ -134,7 +134,7 @@
                     : "popup";
             window.updateCaptchaStatus('Challenge placement: ' + placement, 'info');
 
-            const widgetId = render(document.getElementById('procaptcha-container'), {
+            const widgetId = await render(document.getElementById('procaptcha-container'), {
                 siteKey: import.meta.env.PROSOPO_SITE_KEY_ICONORDER,
                 placement,
                 callback: handleCaptchaResponse,
