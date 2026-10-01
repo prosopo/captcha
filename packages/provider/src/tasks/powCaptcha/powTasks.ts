@@ -66,6 +66,7 @@ import {
 	getIpAddressFromComposite,
 	isSameIpOrigin,
 } from "../../compositeIpAddress.js";
+import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import { deepValidateIpAddress } from "../../util.js";
 import {
 	type UsageCounters,
@@ -1083,15 +1084,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					// tcp-probe fields from the frictionless Session — the
 					// middleware persists them at entry, verify surfaces them
 					// so decide rules can gate on the raw TCP fingerprint.
-					synNs: sessionRecord?.synNs,
-					synackNs: sessionRecord?.synackNs,
-					ackNs: sessionRecord?.ackNs,
-					observedTtl: sessionRecord?.observedTtl,
-					tcpMss: sessionRecord?.tcpMss,
-					tcpWscale: sessionRecord?.tcpWscale,
-					tcpOptsFlags: sessionRecord?.tcpOptsFlags,
-					tcpOptsOrder: sessionRecord?.tcpOptsOrder,
-					tcpWindow: sessionRecord?.tcpWindow,
+					...rawTlsSignalsFromRecord(sessionRecord),
 					// Which egress categories this site blocks. Gates the
 					// egress-sensitive TCP-stack deny rules — a VPN
 					// concentrator legitimately terminates the handshake, so
