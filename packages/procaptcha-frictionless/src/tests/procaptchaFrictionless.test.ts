@@ -453,12 +453,8 @@ describe("the audio alternative", () => {
 		captchaType: CaptchaType,
 		sessionId = "session-1",
 	): BotDetectionFunctionResult =>
-		detection(captchaType, {
-			sessionId,
-			audioAlternativeAvailable: true,
-		} as Partial<BotDetectionFunctionResult>);
+		detection(captchaType, { sessionId, audioAlternativeAvailable: true });
 
-	/** Mounts on a visual challenge, then presses "use audio instead". */
 	const switchToAudio = async (
 		detectBot: BotDetectionFunction,
 	): Promise<void> => {

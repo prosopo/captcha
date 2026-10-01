@@ -48,6 +48,8 @@ export interface AudioPlayerProps {
 
 const CONTAINER_WIDTH = 320;
 
+const SHAKE_MS = 500;
+
 const SHAKE_KEYFRAMES = `
 @keyframes prosopo-audio-shake {
 	0%, 100% { transform: translateX(0); }
@@ -67,22 +69,14 @@ const VISUALLY_HIDDEN: StyleMap = {
 };
 
 /**
- * The audio challenge UI.
- *
- * Accessibility is the point of this widget, not a finishing touch, so a few
- * things here are load-bearing rather than cosmetic:
- *
- * - Every control is a real `<button>` or `<input>`, never a generic element
- *   given a role, so a screen reader and a keyboard get the native semantics.
- * - The `<audio>` element is hidden with its own controls suppressed and driven
- *   by our buttons. Native controls vary between browsers and several expose a
- *   download link, which would hand the clip over as a file.
- * - Status changes are announced through a polite live region. Without it a
- *   screen-reader user gets no feedback that a wrong answer was rejected and a
- *   new clip is waiting; the visual shake is invisible to them. Polite rather
- *   than assertive so it does not talk over a user who is typing.
- * - Autoplay is never attempted. Browsers block audio without a user gesture,
- *   and a blocked play() looks identical to a broken widget.
+ * The audio challenge. Accessibility is its purpose, so:
+ * - every control is a native `<button>` or `<input>`, not a role on a div;
+ * - the `<audio>` element is hidden and driven by our buttons, because several
+ *   browsers' native controls offer the clip as a download;
+ * - status changes go to a polite live region, since a screen-reader user
+ *   cannot see the shake that marks a wrong answer;
+ * - nothing autoplays: browsers block audio without a gesture, and a blocked
+ *   play() looks like a broken widget.
  */
 export const mountAudioPlayer = (
 	initialProps: AudioPlayerProps,
@@ -96,9 +90,6 @@ export const mountAudioPlayer = (
 	let shaking = false;
 	let shakeTimer: ReturnType<typeof setTimeout> | undefined;
 
-	// `replays` counts plays after the first, so 0 means "heard it once and
-	// typed the answer" — which is the value a solver that never renders the
-	// audio will always report.
 	let replays = 0;
 	let hasPlayed = false;
 	let events: AudioEvent[] = [];
@@ -117,9 +108,7 @@ export const mountAudioPlayer = (
 		style: { margin: 0, fontSize: "14px" },
 	});
 
-	// No `controls` attribute, for the download reason above. `preload="auto"`
-	// because the clip is already a data URI: there is nothing to fetch, and it
-	// means play() responds immediately.
+	// The clip is a data URI, so preloading costs nothing and play() is instant.
 	const audio = createElement("audio", {
 		attributes: { preload: "auto" },
 		style: { display: "none" },
@@ -134,10 +123,7 @@ export const mountAudioPlayer = (
 		children: [playButton],
 	});
 
-	// `inputmode="numeric"` brings up a number pad on mobile without the
-	// validation baggage of `type="number"`, which also strips leading zeros —
-	// fatal when the answer can start with one. `autocomplete="off"` keeps
-	// password managers and previous answers out of the field.
+	// Not type="number", which strips the leading zero an answer can start with.
 	const input = createElement("input", {
 		attributes: {
 			type: "text",
@@ -158,8 +144,8 @@ export const mountAudioPlayer = (
 		style: VISUALLY_HIDDEN,
 	});
 
-	// Test-only selectors: gated on NODE_ENV !== "production" so the bundler
-	// constant-folds them out of production builds.
+	// Kept out of production builds: a stable selector on the interactive
+	// surface is exactly what a scripted solver wants.
 	if ("production" !== process.env.NODE_ENV) {
 		applyAttributes(audio, { "data-cy": "prosopo-audio-clip" });
 		applyAttributes(playButton, { "data-cy": "prosopo-audio-play" });
@@ -233,7 +219,7 @@ export const mountAudioPlayer = (
 			fontFamily: theme.font.fontFamily,
 			opacity: visible ? 1 : 0,
 			transform: visible ? "scale(1)" : "scale(0.9)",
-			animation: shaking ? "prosopo-audio-shake 0.5s ease" : "none",
+			animation: shaking ? `prosopo-audio-shake ${SHAKE_MS}ms ease` : "none",
 		});
 
 		instruction.textContent = showRetry
@@ -274,9 +260,7 @@ export const mountAudioPlayer = (
 			? t("WIDGET.AUDIO_CHECKING")
 			: t("WIDGET.AUDIO_SUBMIT");
 		submitButton.disabled = blocked;
-		// Always the primary fill, even on retry: a red "Verify" reads as a
-		// destructive action rather than "your last answer was wrong", and the
-		// message, the shake and the input border already say that.
+		// Not red on retry: a red "Verify" reads as a destructive action.
 		applyStyles(submitButton, {
 			...buttonStyle,
 			backgroundColor: theme.palette.primary.main,
@@ -290,9 +274,6 @@ export const mountAudioPlayer = (
 	};
 
 	const play = () => {
-		// Every press after the first is a replay, whether or not the clip got
-		// far enough to advance `currentTime` — a user who presses play twice in
-		// quick succession has still asked to hear it twice.
 		const isReplay = hasPlayed;
 		audio.currentTime = 0;
 		record(isReplay ? "replay" : "play");
@@ -301,9 +282,7 @@ export const mountAudioPlayer = (
 		}
 		hasPlayed = true;
 		const clipAtPlay = props.clip;
-		// A rejection is the browser blocking playback or the device having no
-		// audio output. Saying so matters: this is the one widget where the
-		// user cannot fall back to looking at it.
+		// Rejected when the browser blocks playback or there is no audio output.
 		void audio.play().then(
 			() => {
 				if (clipAtPlay !== props.clip) {
@@ -337,7 +316,7 @@ export const mountAudioPlayer = (
 		render();
 	});
 	teardown.addEventListener(input, "keydown", (event: Event) => {
-		if ("Enter" !== (event as KeyboardEvent).key) {
+		if (!(event instanceof KeyboardEvent) || "Enter" !== event.key) {
 			return;
 		}
 		event.preventDefault();
@@ -353,13 +332,8 @@ export const mountAudioPlayer = (
 		render();
 	});
 
-	/**
-	 * The clip URI is the challenge's identity, so a new clip is a new attempt
-	 * and the telemetry starts over — otherwise a retry would report replays
-	 * from the challenge the user has already failed. The outgoing clip is
-	 * stopped too: swapping `src` resets the element, but not before the
-	 * browser may have played another frame of the old one over the new.
-	 */
+	// A new clip is a new attempt, so its telemetry starts over. The old clip
+	// is paused first: swapping `src` alone can let another frame of it play.
 	const resetForNewClip = () => {
 		audio.pause();
 		audio.currentTime = 0;
@@ -381,7 +355,7 @@ export const mountAudioPlayer = (
 			shakeTimer = undefined;
 			shaking = false;
 			render();
-		}, 500);
+		}, SHAKE_MS);
 	};
 
 	teardown.add(() => {
@@ -395,8 +369,7 @@ export const mountAudioPlayer = (
 	}
 
 	render();
-	// Lands a keyboard user where the work is rather than on the play button
-	// the dialog would otherwise hand focus to.
+	// Rather than the play button the dialog would otherwise focus.
 	input.focus();
 
 	const frameRequest = requestAnimationFrame(() => {

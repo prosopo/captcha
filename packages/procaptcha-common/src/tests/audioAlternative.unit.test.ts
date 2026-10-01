@@ -41,7 +41,7 @@ const render = (
 	overrides: Partial<AudioAlternativeButtonProps> = {},
 ): HTMLButtonElement => {
 	const props: AudioAlternativeButtonProps = {
-		themeColor: "light",
+		theme: lightTheme,
 		onRequestAudio,
 		label: LABEL,
 		...overrides,
@@ -90,7 +90,7 @@ describe("what the control renders", () => {
 		process.env.NODE_ENV = "production";
 		try {
 			control = mountAudioAlternativeButton(mounted.container, {
-				themeColor: "light",
+				theme: lightTheme,
 				onRequestAudio,
 				label: LABEL,
 			});
@@ -112,7 +112,7 @@ describe("theming", () => {
 	});
 
 	test("uses the dark theme's primary colour in dark mode", () => {
-		expect(render({ themeColor: "dark" }).style.color).toBe(
+		expect(render({ theme: darkTheme }).style.color).toBe(
 			asRgb(darkTheme.palette.primary.main),
 		);
 	});
@@ -260,7 +260,7 @@ describe("the footer a canvas challenge carries it in", () => {
 			footerProps({ offer: undefined }),
 		);
 		footer.update(footerProps());
-		expect(strip().style.display).toBe("block");
+		expect(strip().style.display).toBe("");
 		expect(mounted.container.querySelector(CONTROL_SELECTOR)).not.toBeNull();
 		footer.update(footerProps({ offer: undefined }));
 		expect(mounted.container.querySelector(CONTROL_SELECTOR)).toBeNull();

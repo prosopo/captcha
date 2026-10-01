@@ -83,8 +83,7 @@ const getPairAndSecretForSiteKey = (
 		CaptchaType.image,
 		CaptchaType.frictionless,
 		CaptchaType.puzzle,
-		// Not a site type: the seed name of the audio demos' image site (see
-		// getDefaultSiteKeys), whose key is still derived from `//audio`.
+		// Not a site type: the seed name of the audio demos' image site.
 		CaptchaType.audio,
 		CaptchaType.iconOrder,
 	]) {

@@ -32,18 +32,6 @@ import {
 import { settle } from "./domHarness.js";
 import { CLIP_URI } from "./managerHarness.js";
 
-/**
- * The player is the only piece of the audio flow the user touches: it owns
- * playback, the answer field, and the replay/keystroke telemetry the provider
- * scores. Every test drives real DOM events against a real render rather than
- * calling the handlers directly.
- *
- * Accessibility assertions are first-class here rather than nice-to-have. This
- * widget exists so a user who cannot complete a visual challenge has a route
- * that works; a regression that drops the live region or the input label costs
- * exactly those users and nobody else, so nothing else would catch it.
- */
-
 const OTHER_CLIP_URI = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10";
 
 let player: Component<AudioPlayerProps> | undefined;
@@ -51,7 +39,6 @@ let onComplete: Mock<
 	(answer: string, replays: number, audioEvents: AudioEvent[]) => void
 >;
 
-/** Echoes the key back so assertions name the string the user would hear read out. */
 const translator = (): Translator => ({
 	t: (key: string): string => key,
 	isReady: () => true,
@@ -80,10 +67,6 @@ const render = (playerProps: AudioPlayerProps): void => {
 	}
 };
 
-/**
- * The player puts itself on the body — it has to escape the query container
- * the widget skeleton wraps it in — so everything reads the body.
- */
 const overlay = (): HTMLElement => document.body;
 
 const find = <T extends HTMLElement>(selector: string): T => {
@@ -133,8 +116,7 @@ beforeEach(() => {
 		writable: true,
 		value: play,
 	});
-	// The component reveals itself on the next frame; without a synchronous
-	// rAF every test would assert against the pre-transition render.
+	// A synchronous rAF, so tests assert against the revealed render.
 	vi.spyOn(window, "requestAnimationFrame").mockImplementation(
 		(callback: FrameRequestCallback): number => {
 			callback(0);
@@ -164,8 +146,6 @@ describe("what it renders", () => {
 
 	test("suppresses the browser's own controls, which can offer a download", () => {
 		render(props());
-		// A native control bar offers a download in several browsers, which
-		// would hand the clip over as a file.
 		expect(clip().hasAttribute("controls")).toBe(false);
 	});
 
@@ -187,8 +167,6 @@ describe("what it renders", () => {
 
 	test("carries a polite live region rather than an interrupting one", () => {
 		render(props());
-		// Feedback, not an emergency: assertive would cut across the user
-		// mid-word while they are typing the answer.
 		expect(liveRegion().getAttribute("aria-live")).toBe("polite");
 	});
 
@@ -199,8 +177,6 @@ describe("what it renders", () => {
 
 	test("takes the numeric keypad without the number-input behaviour", () => {
 		render(props());
-		// `type="number"` strips leading zeros, and a spoken answer can start
-		// with one.
 		expect(answerInput().getAttribute("type")).toBe("text");
 		expect(answerInput().getAttribute("inputmode")).toBe("numeric");
 	});
@@ -245,8 +221,6 @@ describe("playback", () => {
 		render(props());
 		click(playButton());
 		await settle();
-		// The one widget where a user cannot fall back to looking at it, so a
-		// silent failure is indistinguishable from a broken challenge.
 		expect(liveRegion().textContent).toBe("WIDGET.AUDIO_PLAYBACK_FAILED");
 	});
 
@@ -298,7 +272,6 @@ describe("answering", () => {
 		await settle();
 		type("96475");
 		click(submitButton());
-		// Heard it three times: the first is the play, the other two replays.
 		expect(onComplete).toHaveBeenCalledWith("96475", 2, expect.any(Array));
 	});
 
@@ -333,8 +306,6 @@ describe("a wrong answer", () => {
 	test("says so, where a screen reader will hear it", () => {
 		render(props());
 		render(props({ showRetry: true }));
-		// The visual shake is invisible to a screen-reader user, so the live
-		// region is the only feedback they get that the answer was rejected.
 		expect(liveRegion().textContent).toBe("WIDGET.AUDIO_INCORRECT");
 	});
 
@@ -356,8 +327,6 @@ describe("a wrong answer", () => {
 		await settle();
 		type("96475");
 		click(submitButton());
-		// A retry that inherited the previous count would report telemetry
-		// from a challenge the user has already failed.
 		expect(onComplete).toHaveBeenCalledWith("96475", 0, expect.any(Array));
 	});
 
@@ -398,8 +367,6 @@ describe("the play button's label", () => {
 
 describe("arriving as a retry", () => {
 	test("announces the miss on a player mounted straight into a retry", () => {
-		// A wrong answer re-mints the session and so remounts the player, which
-		// is how the replacement clip usually arrives.
 		render(props({ showRetry: true }));
 		expect(liveRegion().textContent).toBe("WIDGET.AUDIO_INCORRECT");
 		expect(overlay().textContent).toContain("WIDGET.AUDIO_INCORRECT");

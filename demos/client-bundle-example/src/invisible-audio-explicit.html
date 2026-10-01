@@ -9,7 +9,6 @@
 
             updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
 
-            // Monitor DOM for CAPTCHA initialization
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     if (mutation.addedNodes.length) {
@@ -62,7 +61,6 @@
     <script type="module">
         import { render, execute } from "%VITE_BUNDLE_URL%"
 
-        // Form validation function
         function validateForm() {
             const nameInput = document.getElementById('name');
             const emailInput = document.getElementById('email');
@@ -75,7 +73,6 @@
                 return false;
             }
 
-            // Basic email validation
             const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailPattern.test(emailInput.value)) {
                 errorDisplay.textContent = 'Please enter a valid email address';
@@ -89,7 +86,6 @@
             return true;
         }
 
-        // Callback for successful CAPTCHA verification
         function handleCaptchaResponse(token) {
             console.log('Procaptcha verified, token:', token);
             window.updateCaptchaStatus('Challenge passed successfully!', 'success');
@@ -98,31 +94,23 @@
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
 
-            // Display result
             const resultElement = document.getElementById('result');
-            // Built as nodes rather than innerHTML: `name` and `email` come
-            // straight off the form, so interpolating them into markup would
-            // let anything typed into those fields run as HTML.
-            resultElement.replaceChildren();
-            const heading = document.createElement('strong');
-            heading.textContent = 'Form submitted with:';
-            resultElement.append(heading, document.createElement('br'));
-            for (const line of [
+            const summary = document.createElement('strong');
+            summary.textContent = 'Form submitted with:';
+            resultElement.replaceChildren(
+                summary,
+                document.createElement('br'),
                 `- Name: ${name}`,
+                document.createElement('br'),
                 `- Email: ${email}`,
+                document.createElement('br'),
                 '- Procaptcha verified: Yes',
-            ]) {
-                resultElement.append(
-                    document.createTextNode(line),
-                    document.createElement('br'),
-                );
-            }
+            );
             resultElement.style.display = 'block';
 
             window.updateCaptchaStatus('Form submission completed', 'success');
         }
 
-        // Callback for failed CAPTCHA verification
         function handleCaptchaFailed() {
             console.log('Captcha verification failed');
             window.updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
@@ -130,11 +118,9 @@
             document.getElementById('error').style.display = 'block';
         }
 
-        // Wait for DOM content to be loaded
         document.addEventListener('DOMContentLoaded', async function() {
             window.updateCaptchaStatus('Initializing CAPTCHA with explicit render call', 'info');
 
-            // Render the CAPTCHA
             const widgetId = await render(document.getElementById('procaptcha-container'), {
                 siteKey: import.meta.env.PROSOPO_SITE_KEY_AUDIO,
                 callback: handleCaptchaResponse,
@@ -144,12 +130,10 @@
 
             window.updateCaptchaStatus('CAPTCHA render function called with widget ID: ' + widgetId, 'info');
 
-            // Add form submit handler
             document.getElementById('demo-form').addEventListener('submit', function(e) {
                 e.preventDefault();
                 window.updateCaptchaStatus('Form submission attempted', 'info');
                 if (validateForm()) {
-                    // Form is valid, CAPTCHA verification will be handled by the callback
                     window.updateCaptchaStatus('Waiting for CAPTCHA verification', 'info');
                     execute();
                 }

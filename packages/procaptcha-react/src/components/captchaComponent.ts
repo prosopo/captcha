@@ -13,14 +13,13 @@
 // limitations under the License.
 import type { Translator } from "@prosopo/locale";
 import {
-	type AudioAlternativeButtonProps,
 	type AudioAlternativeOffer,
 	type Component,
 	type StyleMap,
 	applyAttributes,
 	applyStyles,
 	createElement,
-	mountAudioAlternativeButton,
+	mountAudioAlternativeSlot,
 	mountReloadButton,
 	threeColumnBasis,
 	wrapRandomly,
@@ -283,32 +282,10 @@ export const mountCaptchaComponent = (
 		text: props.translator.t("WIDGET.SUBMIT"),
 	});
 
-	let audioAlternativeButton:
-		| Component<AudioAlternativeButtonProps>
-		| undefined;
-
-	const renderAudioAlternative = () => {
-		const offer = props.audioAlternative;
-		if (undefined === offer) {
-			audioAlternativeButton?.destroy();
-			audioAlternativeButton = undefined;
-			audioAlternativeRow.style.display = "none";
-			return;
-		}
-		audioAlternativeRow.style.display = "";
-		const buttonProps: AudioAlternativeButtonProps = {
-			...offer,
-			themeColor: props.themeColor,
-		};
-		if (undefined === audioAlternativeButton) {
-			audioAlternativeButton = mountAudioAlternativeButton(
-				audioAlternativeRow,
-				buttonProps,
-			);
-		} else {
-			audioAlternativeButton.update(buttonProps);
-		}
-	};
+	const audioAlternative = mountAudioAlternativeSlot(audioAlternativeRow, {
+		offer: props.audioAlternative,
+		theme,
+	});
 
 	const render = () => {
 		const activeTheme = themeOf(props.themeColor);
@@ -365,7 +342,10 @@ export const mountCaptchaComponent = (
 			text: isLastRound() ? t("WIDGET.SUBMIT") : t("WIDGET.NEXT"),
 		});
 
-		renderAudioAlternative();
+		audioAlternative.update({
+			offer: props.audioAlternative,
+			theme: activeTheme,
+		});
 	};
 
 	render();
@@ -381,7 +361,7 @@ export const mountCaptchaComponent = (
 			cancelButton.destroy();
 			reloadButton.destroy();
 			nextButton.destroy();
-			audioAlternativeButton?.destroy();
+			audioAlternative.destroy();
 			root.parentNode?.removeChild(root);
 		},
 	};

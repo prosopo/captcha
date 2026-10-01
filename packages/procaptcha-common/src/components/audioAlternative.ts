@@ -16,9 +16,7 @@ import type { ProcaptchaProps } from "@prosopo/types";
 import {
 	type Theme,
 	canHover,
-	darkTheme,
 	isDevMode,
-	lightTheme,
 	randomToken,
 } from "@prosopo/widget-skeleton";
 import type { Component } from "../dom/component.js";
@@ -33,7 +31,7 @@ export interface AudioAlternativeOffer {
 }
 
 export interface AudioAlternativeButtonProps extends AudioAlternativeOffer {
-	themeColor: "light" | "dark";
+	theme: Theme;
 }
 
 /**
@@ -56,19 +54,9 @@ export const audioAlternativeOffer = (
 };
 
 /**
- * "Use audio instead" — the control that makes the visual challenges
- * escapable.
- *
- * Shared by the image, puzzle and icon-order widgets rather than duplicated
- * per widget, so the paths cannot drift into offering differently-worded or
- * differently-reachable escapes.
- *
- * Always a real `<button>` with visible text, unlike the reload control's
- * randomly drawn element and bare glyph. The people most likely to need this
- * control are the least likely to be able to inspect an unlabelled or
- * role-only control to find out what it does, and the visible text doubles as
- * the accessible name, so a screen reader and a sighted user are told the
- * same thing.
+ * "Use audio instead". Unlike the reload control's randomised element and bare
+ * glyph, always a real `<button>` whose visible text is its accessible name:
+ * the people who need it are the least able to work out an unlabelled control.
  */
 export const mountAudioAlternativeButton = (
 	container: HTMLElement,
@@ -88,7 +76,7 @@ export const mountAudioAlternativeButton = (
 	});
 
 	const render = () => {
-		const theme = "light" === props.themeColor ? lightTheme : darkTheme;
+		const { theme } = props;
 		button.textContent = props.label;
 		applyStyles(button, {
 			border: "none",
@@ -103,8 +91,6 @@ export const mountAudioAlternativeButton = (
 				? theme.palette.primaryContainer.hover
 				: "transparent",
 			transition: "background-color 0.25s",
-			// Keyboard users are a core audience for this control, so the M3
-			// focus ring is a requirement here rather than polish.
 			outline: focusVisible
 				? `3px solid ${theme.palette.primary.main}`
 				: "none",
@@ -119,8 +105,7 @@ export const mountAudioAlternativeButton = (
 		event.preventDefault();
 		props.onRequestAudio();
 	});
-	// See the reload control: a hover state layer costs a touch-screen
-	// visitor their first tap on iOS.
+	// A hover state layer costs an iOS visitor their first tap.
 	if (canHover()) {
 		teardown.addEventListener(button, "mouseenter", () => {
 			hover = true;
@@ -154,27 +139,58 @@ export const mountAudioAlternativeButton = (
 	};
 };
 
-export interface AudioAlternativeFooterProps {
+export interface AudioAlternativeSlotProps {
 	offer: AudioAlternativeOffer | undefined;
 	theme: Theme;
+}
+
+/** Holds the button in `host` while there is an offer, and hides `host` otherwise. */
+export const mountAudioAlternativeSlot = (
+	host: HTMLElement,
+	initialProps: AudioAlternativeSlotProps,
+): Component<AudioAlternativeSlotProps> => {
+	let button: Component<AudioAlternativeButtonProps> | undefined;
+
+	const render = ({ offer, theme }: AudioAlternativeSlotProps) => {
+		host.style.display = undefined === offer ? "none" : "";
+		if (undefined === offer) {
+			button?.destroy();
+			button = undefined;
+			return;
+		}
+		const buttonProps: AudioAlternativeButtonProps = { ...offer, theme };
+		if (undefined === button) {
+			button = mountAudioAlternativeButton(host, buttonProps);
+		} else {
+			button.update(buttonProps);
+		}
+	};
+
+	render(initialProps);
+
+	return {
+		update: render,
+		destroy: () => {
+			button?.destroy();
+			button = undefined;
+		},
+	};
+};
+
+export interface AudioAlternativeFooterProps extends AudioAlternativeSlotProps {
 	/** Matches the challenge panel above it, so the two read as one card. */
 	width: number;
 }
 
 /**
- * The strip under a canvas challenge (puzzle, icon order) that carries the
- * audio alternative: below the challenge so it reads as "or do this instead"
- * rather than as part of it. It takes over the card's rounded bottom corners,
- * so the panel above it has to square its own off while it is shown, or the
- * seam between two rounded edges shows.
+ * The strip under a canvas challenge that carries the audio alternative. It
+ * takes over the card's rounded bottom corners, so the panel above has to
+ * square its own off while the strip is shown.
  */
 export const mountAudioAlternativeFooter = (
 	container: HTMLElement,
 	initialProps: AudioAlternativeFooterProps,
 ): Component<AudioAlternativeFooterProps> => {
-	let props = initialProps;
-	let button: Component<AudioAlternativeButtonProps> | undefined;
-
 	const footer = createElement("div", {
 		style: {
 			borderRadius: "0 0 20px 20px",
@@ -183,41 +199,23 @@ export const mountAudioAlternativeFooter = (
 			textAlign: "center",
 		},
 	});
+	const slot = mountAudioAlternativeSlot(footer, initialProps);
 
-	const render = () => {
-		const { offer, theme, width } = props;
+	const render = (props: AudioAlternativeFooterProps) => {
 		applyStyles(footer, {
-			display: undefined === offer ? "none" : "block",
-			backgroundColor: theme.palette.surface,
-			width: `${width}px`,
+			backgroundColor: props.theme.palette.surface,
+			width: `${props.width}px`,
 		});
-		if (undefined === offer) {
-			button?.destroy();
-			button = undefined;
-			return;
-		}
-		const buttonProps: AudioAlternativeButtonProps = {
-			...offer,
-			themeColor: "dark" === theme.palette.mode ? "dark" : "light",
-		};
-		if (undefined === button) {
-			button = mountAudioAlternativeButton(footer, buttonProps);
-		} else {
-			button.update(buttonProps);
-		}
+		slot.update(props);
 	};
 
-	render();
+	render(initialProps);
 	container.appendChild(footer);
 
 	return {
-		update: (nextProps: AudioAlternativeFooterProps) => {
-			props = nextProps;
-			render();
-		},
+		update: render,
 		destroy: () => {
-			button?.destroy();
-			button = undefined;
+			slot.destroy();
 			footer.parentNode?.removeChild(footer);
 		},
 	};

@@ -43,11 +43,6 @@ import {
 	frictionless,
 } from "./managerHarness.js";
 
-/**
- * The widget owns the phase machine — checkbox, answering, submitting — and the
- * wiring between the manager and the player. Both of those collaborators are
- * stubbed so each test drives one transition at a time.
- */
 const mocks = vi.hoisted(() => {
 	const start =
 		vi.fn<
@@ -111,9 +106,7 @@ vi.mock("../services/Manager.js", () => ({
 	},
 }));
 
-// The player has its own suite; here it is reduced to a probe so a test can
-// read the props the widget hands it and fire the completion callback without
-// driving playback.
+// A probe, so a test can read the player props and fire its completion.
 vi.mock("../components/audioPlayer.js", () => ({
 	mountAudioPlayer: (
 		playerProps: AudioPlayerProps,
@@ -218,8 +211,6 @@ const checkbox = (): HTMLInputElement => {
 	return element;
 };
 
-// The player puts itself on the body rather than inside the widget, so it can
-// escape the skeleton's query container.
 const player = (): Element | null =>
 	document.body.querySelector('[data-cy="player-stub"]');
 
@@ -241,21 +232,28 @@ interface ClickOptions {
 	touches?: { clientX: number; clientY: number }[];
 }
 
-/** Click the real checkbox with the browser event a user would produce. */
 const click = async (options: ClickOptions = {}): Promise<void> => {
 	fire(checkbox(), "click", options);
 	await settle();
 };
 
-/**
- * Start a solve without waiting for it to settle, for the tests that hold the
- * manager's promise open.
- */
 const clickWithoutWaiting = (): void => {
 	fire(checkbox(), "click");
 };
 
-/** Fire the player's completion callback the way a typed answer would. */
+interface Deferred<T> {
+	promise: Promise<T>;
+	release: (value: T) => void;
+}
+
+const deferred = <T>(): Deferred<T> => {
+	let release!: (value: T) => void;
+	const promise = new Promise<T>((resolve: (value: T) => void) => {
+		release = resolve;
+	});
+	return { promise, release };
+};
+
 const complete = async (
 	answer = "96475",
 	replays = 1,
@@ -323,9 +321,6 @@ describe("what the widget renders", () => {
 	});
 
 	test("the widget builds exactly one manager", async () => {
-		// The React version rebuilt the manager on every render and kept the
-		// first through a ref, which is what lost the checkbox click coordinates
-		// before the ref was introduced. There is one manager per mount now.
 		render(props());
 		await click();
 		expect(mocks.constructions).toHaveLength(1);
@@ -402,19 +397,9 @@ describe("starting from the checkbox", () => {
 	});
 
 	test("a second click while the first is in flight is ignored", async () => {
-		let release: (challenge: GetAudioCaptchaResponse) => void = () => {
-			// replaced synchronously by the promise executor below
-		};
-		mocks.start.mockReturnValue(
-			new Promise<GetAudioCaptchaResponse>(
-				(resolve: (challenge: GetAudioCaptchaResponse) => void) => {
-					release = resolve;
-				},
-			),
-		);
+		const { promise, release } = deferred<GetAudioCaptchaResponse>();
+		mocks.start.mockReturnValue(promise);
 		render(props());
-		// Not awaited: the handler cannot settle until the challenge is
-		// released, and awaiting it here would deadlock the test.
 		clickWithoutWaiting();
 		clickWithoutWaiting();
 		expect(mocks.start).toHaveBeenCalledTimes(1);
@@ -423,16 +408,8 @@ describe("starting from the checkbox", () => {
 	});
 
 	test("the checkbox shows a spinner while the solve is loading", async () => {
-		let release: (challenge: GetAudioCaptchaResponse) => void = () => {
-			// replaced synchronously by the promise executor below
-		};
-		mocks.start.mockReturnValue(
-			new Promise<GetAudioCaptchaResponse>(
-				(resolve: (challenge: GetAudioCaptchaResponse) => void) => {
-					release = resolve;
-				},
-			),
-		);
+		const { promise, release } = deferred<GetAudioCaptchaResponse>();
+		mocks.start.mockReturnValue(promise);
 		render(props());
 		clickWithoutWaiting();
 		await settle();
@@ -455,8 +432,6 @@ describe("starting from the checkbox", () => {
 		mocks.start.mockRejectedValue(new Error("provider down"));
 		render(props({ callbacks: { onError } }));
 		await click();
-		// Without the guard the spinner would stay up for good: nothing awaits
-		// the checkbox handler, so the rejection escapes as an unhandled one.
 		expect(spinner()).toBeNull();
 		expect(onError).toHaveBeenCalledWith(expect.any(Error));
 	});
@@ -530,8 +505,6 @@ describe("answering the challenge", () => {
 			.mockResolvedValue(retryChallenge);
 		await openPlayer();
 		await complete();
-		// The provider has already consumed that challenge, so reoffering it
-		// would be a retry that cannot succeed.
 		expect(player()).not.toBeNull();
 		expect(mocks.playerProps.current).toMatchObject({
 			showRetry: true,
@@ -546,9 +519,6 @@ describe("answering the challenge", () => {
 		mocks.submitSolution.mockResolvedValue(false);
 		await openPlayer(props({ onReload }));
 		await complete();
-		// The manager drives the re-mint through the wrapper; fetching here
-		// as well would ask the provider for a clip against the session it
-		// consumed to issue the one just failed.
 		expect(mocks.start).toHaveBeenCalledTimes(1);
 		expect(mocks.constructions[0]?.onReloadRequest).toBeTypeOf("function");
 	});
@@ -608,8 +578,6 @@ describe("answering the challenge", () => {
 		await openPlayer(props({ callbacks: { onError } }));
 		await complete();
 		expect(onError).toHaveBeenCalledWith(expect.any(Error));
-		// Failure, so the widget asks for a new challenge rather than passing
-		// the user through on an error.
 		expect(mocks.start).toHaveBeenCalledTimes(2);
 	});
 
@@ -622,16 +590,9 @@ describe("answering the challenge", () => {
 	});
 
 	test("the player is frozen while the answer is in flight", async () => {
-		let release: (verified: boolean) => void = () => {
-			// replaced synchronously by the promise executor below
-		};
-		mocks.submitSolution.mockReturnValue(
-			new Promise<boolean>((resolve: (verified: boolean) => void) => {
-				release = resolve;
-			}),
-		);
+		const { promise, release } = deferred<boolean>();
+		mocks.submitSolution.mockReturnValue(promise);
 		await openPlayer();
-		// Not awaited: the handler cannot settle until the verdict is released.
 		void mocks.playerProps.current?.onComplete("96475", 0, []);
 		await settle();
 		expect(mocks.playerProps.current?.submitting).toBe(true);
@@ -784,8 +745,6 @@ describe("an invalidated session", () => {
 		expect(restart).not.toHaveBeenCalled();
 	});
 
-	// A re-mint is already under way, so the error describes a state the widget
-	// is about to leave. Spinner, not support code.
 	test("a lost session that will be re-minted shows no error", async () => {
 		render(props({ frictionlessState: frictionless({ restart: () => {} }) }));
 		await click();

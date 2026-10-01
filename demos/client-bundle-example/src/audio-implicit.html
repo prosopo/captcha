@@ -17,38 +17,6 @@
                 document.getElementById('message').innerText = message;
             };
 
-            window.onLoggedIn = (token) => {
-                updateCaptchaStatus('Logged in, fetching private resource', 'info');
-                const url = new URL("/private", config.serverUrl).href;
-                console.log("getting private resource with token ", token, "at", url);
-                fetch(url, {
-                    method: "GET",
-                    headers: {
-                        Origin: "http://localhost:9232", // TODO: change this to env var
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                })
-                    .then(async (res) => {
-                        try {
-                            const jsonRes = await res.json();
-                            if (res.status === 200) {
-                                updateCaptchaStatus(`Successfully accessed private resource`, 'success');
-                                setMessage(jsonRes.message);
-                            } else {
-                                updateCaptchaStatus(`Failed to access private resource: ${res.status}`, 'error');
-                            }
-                        } catch (err) {
-                            console.log(err);
-                            updateCaptchaStatus(`Error parsing response: ${err}`, 'error');
-                        }
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                        updateCaptchaStatus(`Fetch error: ${err}`, 'error');
-                    });
-            };
-
             window.onActionHandler = () => {
                 updateCaptchaStatus('Form submission initiated', 'info');
 
@@ -78,7 +46,6 @@
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify(payload),
-                    contentType: "application/json",
                 }).then((response) => {
                     return new Promise((resolve) => response.json()
                         .then((json) => resolve({
@@ -88,8 +55,7 @@
                         })))
                 })
                     .then(async ({status, json, ok}) => {
-                        console.log("status", status, "json", json.message, "ok", ok);
-                        console.log("json", json)
+                        console.log("status", status, "json", json, "ok", ok);
                         try {
                             if (status !== 200) {
                                 updateCaptchaStatus(`API Error: ${json.message}`, 'error');
@@ -115,7 +81,6 @@
 
             updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
 
-            // Monitor DOM for CAPTCHA initialization
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     if (mutation.addedNodes.length) {
@@ -146,7 +111,6 @@
             updateCaptchaStatus(`Token generated: ${output.substring(0, 15)}...`, 'success');
         }
 
-        // Add custom event listener for CAPTCHA verification stages
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 updateCaptchaStatus('CAPTCHA script loaded and initialized', 'info');

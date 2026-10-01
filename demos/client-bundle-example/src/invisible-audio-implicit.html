@@ -5,7 +5,6 @@
     <title>Procaptcha demo: Image with audio alternative, invisible, implicit rendering</title>
     <script type="module">
 
-        // Define callbacks directly on window object so they're globally accessible
         window.onCaptchaFailed = function () {
             updateCaptchaStatus('Challenge failed - CAPTCHA verification could not be completed', 'error');
         }
@@ -40,7 +39,6 @@
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(payload),
-                contentType: "application/json",
             }).then((response) => {
                 return new Promise((resolve) => response.json()
                     .then((json) => resolve({
@@ -50,8 +48,7 @@
                     })))
             })
                 .then(async ({status, json, ok}) => {
-                    console.log("Response status:", status, "message:", json.message, "ok:", ok);
-                    console.log("Full response:", json);
+                    console.log("Response status:", status, "json:", json, "ok:", ok);
                     try {
                         if (status !== 200) {
                             window.setIsError(true);
@@ -87,35 +84,8 @@
                 document.getElementById('message').innerText = message;
             };
 
-            window.onLoggedIn = (token) => {
-                const url = new URL("/private", config.serverUrl).href;
-                console.log("getting private resource with token ", token, "at", url);
-                fetch(url, {
-                    method: "GET",
-                    headers: {
-                        Origin: "http://localhost:9232", // TODO: change this to env var
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                })
-                    .then(async (res) => {
-                        try {
-                            const jsonRes = await res.json();
-                            if (res.status === 200) {
-                                setMessage(jsonRes.message);
-                            }
-                        } catch (err) {
-                            console.log(err);
-                        }
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                    });
-            };
-
             updateCaptchaStatus('Page loaded - Initializing CAPTCHA system', 'info');
 
-            // Monitor DOM for CAPTCHA initialization
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     if (mutation.addedNodes.length) {
@@ -135,13 +105,11 @@
             observer.observe(document.body, { childList: true, subtree: true });
         });
 
-        // Create a method to show CAPTCHA execution events
         document.addEventListener('procaptcha:execute', function(e) {
             updateCaptchaStatus(`CAPTCHA execution started: type=image, mode=invisible`, 'info');
             updateCaptchaStatus(`Container: ${e.detail.containerId}, timestamp: ${new Date(e.detail.timestamp).toLocaleTimeString()}`, 'info');
         });
 
-        // Add custom event listener for CAPTCHA verification stages
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 updateCaptchaStatus('CAPTCHA script loaded and initialized', 'info');

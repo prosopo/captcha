@@ -12,11 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// jsdom implements no media pipeline: HTMLMediaElement.play throws
-// "Not implemented" and the element never advances currentTime. The player
-// treats a rejected play() as "the browser blocked us", which is a real code
-// path, so leaving the default in place would make every test take that
-// branch. Tests that want the blocked path override these per-test.
+// jsdom's play() throws "Not implemented", which the player would treat as
+// blocked playback. Tests that want that path override these per-test.
 Object.defineProperty(HTMLMediaElement.prototype, "play", {
 	configurable: true,
 	writable: true,

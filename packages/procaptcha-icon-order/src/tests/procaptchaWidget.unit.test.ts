@@ -775,11 +775,6 @@ describe("the audio alternative", () => {
 		expect(mocks.canvasProps.current?.audioAlternative).toBeUndefined();
 	});
 
-	test("is not offered when nothing would handle the request", async () => {
-		await openChallenge({ audioAlternativeAvailable: true });
-		expect(mocks.canvasProps.current?.audioAlternative).toBeUndefined();
-	});
-
 	test("hands the canvas the translated offer and the wrapper's handler", async () => {
 		await openChallenge({
 			audioAlternativeAvailable: true,

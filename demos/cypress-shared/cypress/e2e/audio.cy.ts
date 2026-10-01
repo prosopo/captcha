@@ -13,32 +13,36 @@
 // limitations under the License.
 /// <reference types="cypress" />
 
-// End-to-end proof that the audio accessibility alternative works, all the
-// way from the visual challenge to the dapp server's verify call.
-//
-// Audio is not a type a site selects: the site key is an image site with
-// `audioAccessibilityEnabled` on, and the only way to audio is the "use audio
-// instead" control on the image challenge. So the flow is: click checkbox →
-// image challenge appears → press the audio control → widget re-runs
-// /frictionless and asks for an audio challenge against the fresh visual
-// session → read the answer out of Mongo (Cypress cannot
-// listen to synthesised speech; see the `audioAnswer` task in
-// cypress.audio.config.js for why this is the honest approach rather than
-// adding a "make anything pass" setting) → type it → widget mints token →
-// form POSTs token to the demo dapp's /signup → dapp calls
-// prosopoServer.isVerified(token) → the SDK must dispatch to the AUDIO
-// endpoint → provider verifies against the audiocaptcha collection →
-// /signup returns { message: "user created" }.
-//
-// If the server-side dispatch were missing an audio branch, isVerified
-// would hit the wrong endpoint and 404, /signup would return a rejection,
-// and the message assertion below would fail. That is the same class of
-// bug puzzle.cy.ts was written to catch for the puzzle path.
+// Reaches audio through "use audio instead" on an image site with
+// `audioAccessibilityEnabled`, solves it, then proves the token verifies
+// server-side: /signup only answers "user created" if the SDK dispatched the
+// token to the audio endpoint.
 
 import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "audio";
+
+/** Opens the image challenge, then switches to audio through its control. */
+const openAudioChallenge = (): void => {
+	cy.intercept("POST", "**/prosopo/provider/client/captcha/audio").as(
+		"audioChallenge",
+	);
+	cy.intercept("POST", "**/prosopo/provider/client/audio/solution").as(
+		"audioSolution",
+	);
+	getWidgetElement(checkboxClass, { timeout: 15000 })
+		.first()
+		.should("be.visible")
+		.realClick();
+	// A real click: the control ignores untrusted events.
+	getWidgetElement('[data-cy="prosopo-audio-alternative"]', {
+		timeout: 15000,
+	})
+		.first()
+		.should("be.visible")
+		.realClick();
+};
 
 describe("Audio CAPTCHA — signup", () => {
 	before(() => {
@@ -49,12 +53,8 @@ describe("Audio CAPTCHA — signup", () => {
 			return cy
 				.registerSiteKey(baseCaptchaType, CaptchaType.image, {
 					audioAccessibilityEnabled: true,
-					// Deliberately NOT made easier than production. The whole
-					// point of grading real synthesised speech against a real
-					// transcript is that the test exercises the same path a
-					// user does; loosening it here would leave the grader
-					// untested. The test knows the answer, so difficulty is
-					// irrelevant to whether it passes.
+					// Production difficulty: the spec reads the answer, so it
+					// gains nothing from an easier clip.
 					audio: {
 						digitCount: 5,
 					},
@@ -95,8 +95,6 @@ describe("Audio CAPTCHA — signup", () => {
 	});
 
 	after(() => {
-		// Restore the image site key to its baseline so sibling tests start
-		// from a known registration.
 		cy.registerSiteKey(CaptchaType.image).then((response) => {
 			if (response.status === 200) {
 				cy.task("log", "Site key successfully re-registered as image");
@@ -111,29 +109,7 @@ describe("Audio CAPTCHA — signup", () => {
 
 	it("audio chosen from the image challenge verifies via /signup — proves the SDK dispatched to the audio endpoint", () => {
 		cy.intercept("POST", "/signup").as("signup");
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/audio").as(
-			"audioChallenge",
-		);
-		cy.intercept("POST", "**/prosopo/provider/client/audio/solution").as(
-			"audioSolution",
-		);
-
-		// Widget renders implicitly. Wait for the "I am human" checkbox and
-		// click it to open the site's visual challenge.
-		getWidgetElement(checkboxClass, { timeout: 15000 })
-			.first()
-			.should("be.visible")
-			.realClick();
-
-		// The image challenge offers the alternative because the site turned
-		// it on. Pressing it is the only route to audio. A real click: the
-		// control ignores untrusted events, as every widget control does.
-		getWidgetElement('[data-cy="prosopo-audio-alternative"]', {
-			timeout: 15000,
-		})
-			.first()
-			.should("be.visible")
-			.realClick();
+		openAudioChallenge();
 
 		cy.wait("@audioChallenge", { timeout: 15000 })
 			.its("response")
@@ -142,10 +118,6 @@ describe("Audio CAPTCHA — signup", () => {
 				expect(response?.statusCode).to.equal(200);
 
 				const body = response?.body;
-				// The transcript must never appear in the response. This is
-				// the audio equivalent of the puzzle shipping its target
-				// coordinates to the client — any caller could then echo the
-				// answer back and pass without rendering anything.
 				expect(
 					JSON.stringify(body),
 					"challenge response must not contain the answer",
@@ -155,7 +127,6 @@ describe("Audio CAPTCHA — signup", () => {
 				);
 				expect(body.characterCount).to.equal(5);
 
-				// Ask the DB what was actually spoken, then type it.
 				cy.task<string | null>("audioAnswer", {
 					challenge: body.challenge,
 				}).then((answer) => {
@@ -165,9 +136,6 @@ describe("Audio CAPTCHA — signup", () => {
 					const typed = answer as string;
 					expect(typed).to.have.length(5);
 
-					// Press play first: a real user cannot answer without
-					// hearing the clip, and the replay/telemetry counters
-					// should see a play event.
 					getWidgetElement('[data-cy="prosopo-audio-play"]', {
 						timeout: 15000,
 					})
@@ -199,9 +167,6 @@ describe("Audio CAPTCHA — signup", () => {
 				expect(response?.body.verified).to.equal(true);
 			});
 
-		// Widget has minted the token into the hidden procaptcha-response
-		// input. Fill the form and submit — onActionHandler grabs the token
-		// and POSTs it to /signup.
 		const uniqueId = `audio-test-${Cypress._.random(0, 1e6)}`;
 		cy.get('input[id="name"]', { timeout: 10000 })
 			.should("be.visible")
@@ -222,9 +187,6 @@ describe("Audio CAPTCHA — signup", () => {
 			.should("not.be.disabled")
 			.realClick();
 
-		// The proof: /signup uses prosopoServer.isVerified, which must send
-		// the audio token to the audio endpoint. Routing it anywhere else
-		// returns verified:false and /signup responds with a rejection.
 		cy.wait("@signup", { timeout: 30000 }).then((interception) => {
 			cy.task(
 				"log",
@@ -246,30 +208,8 @@ describe("Audio CAPTCHA — signup", () => {
 		});
 	});
 
-	it("rejects a wrong answer and issues a fresh challenge", () => {
-		// The retry contract: a wrong answer is a user failure, not a block,
-		// and the spent challenge is replaced rather than re-offered (each
-		// clip is single-use, so re-submitting against it is refused).
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/audio").as(
-			"audioChallenge",
-		);
-		cy.intercept("POST", "**/prosopo/provider/client/audio/solution").as(
-			"audioSolution",
-		);
-
-		getWidgetElement(checkboxClass, { timeout: 15000 })
-			.first()
-			.should("be.visible")
-			.realClick();
-
-		// The checkbox opens the image challenge; audio is only reached
-		// through the alternative on it.
-		getWidgetElement('[data-cy="prosopo-audio-alternative"]', {
-			timeout: 15000,
-		})
-			.first()
-			.should("be.visible")
-			.realClick();
+	it("a wrong answer stays on audio with a fresh challenge", () => {
+		openAudioChallenge();
 
 		cy.wait("@audioChallenge", { timeout: 15000 })
 			.its("response")
@@ -280,7 +220,6 @@ describe("Audio CAPTCHA — signup", () => {
 					challenge: firstChallenge,
 				}).then((answer) => {
 					const correct = answer as string;
-					// Any five digits that are not the answer.
 					const wrong = correct
 						.split("")
 						.map((d) => String((Number(d) + 1) % 10))
@@ -307,7 +246,6 @@ describe("Audio CAPTCHA — signup", () => {
 							expect(solutionResponse?.body.verified).to.equal(false);
 						});
 
-					// A replacement challenge must arrive, with a different id.
 					cy.wait("@audioChallenge", { timeout: 15000 })
 						.its("response")
 						.then((second) => {

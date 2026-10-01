@@ -61,16 +61,11 @@ import {
 	timerHandle,
 } from "./managerHarness.js";
 
-// Taken from procaptcha-common rather than @prosopo/load-balancer directly, so
-// the test does not pull a dependency into this package that the source has no
-// use for.
 type IpMode = ReturnType<typeof pickIpMode>;
 
 /**
- * Everything the manager reaches out to is replaced here. The manager itself is
- * a closure over its collaborators rather than a class with injection points,
- * so the module boundary is the seam: each mock keeps the real export list
- * intact and swaps only the call the manager makes.
+ * The manager is a closure over its imports, so the module boundary is the
+ * seam: each mock keeps the real exports and swaps only what the manager calls.
  */
 const mocks = vi.hoisted(() => {
 	const providerApiConstructions: { url: string; siteKey: string }[] = [];
@@ -152,9 +147,7 @@ vi.mock("@prosopo/procaptcha-common", async (importOriginal) => {
 		ExtensionLoader: mocks.extensionLoader,
 		getProcaptchaRandomActiveProvider: mocks.getProcaptchaRandomActiveProvider,
 		getSimdReadingsForSubmit: mocks.getSimdReadingsForSubmit,
-		// The real retry, minus its exponential backoff: the delay is covered by
-		// the procaptcha-common suite and waiting for it here would add seconds
-		// per test for behaviour this suite isn't asserting.
+		// The real retry minus its backoff, which procaptcha-common covers.
 		providerRetry: (
 			currentFn: () => Promise<void>,
 			retryFn: () => Promise<void>,
@@ -230,7 +223,6 @@ const build = (options: HarnessOptions = {}): Harness => {
 	return { manager, state: currentState, updates, events, restart };
 };
 
-/** The last value the manager pushed for a given state field. */
 const lastUpdate = <K extends keyof ProcaptchaState>(
 	harness: Harness,
 	key: K,
@@ -247,7 +239,6 @@ const submitArgs = (
 	return call;
 };
 
-/** Drives a full solve: start, then type an answer. */
 const solve = async (harness: Harness): Promise<boolean> => {
 	await harness.manager.start(11, 22);
 	return harness.manager.submitSolution("96475", 2, audioEvents());
@@ -266,8 +257,7 @@ beforeEach(() => {
 	mocks.submitAudioCaptchaSolution.mockResolvedValue(solutionResponse());
 	mocks.getSimdReadingsForSubmit.mockResolvedValue("simd-readings");
 	mocks.sleep.mockResolvedValue(undefined);
-	// providerRetry reports every failure it swallows; the suite drives those
-	// paths deliberately and the output would bury the real failures.
+	// providerRetry logs every failure it swallows, which would bury real ones.
 	vi.spyOn(console, "error").mockImplementation(() => undefined);
 	vi.spyOn(console, "log").mockImplementation(() => undefined);
 });
@@ -282,9 +272,6 @@ describe("the challenge never carries its own answer", () => {
 		const harness = build();
 		const challenge = await harness.manager.start();
 		if (!challenge) throw new Error("expected a challenge");
-		// Structural, not incidental: a field named for the answer would have
-		// to be added to GetAudioCaptchaResponse for this to start passing
-		// something through, and this asserts nobody has.
 		expect(Object.keys(challenge)).not.toContain("answer");
 		expect(Object.keys(challenge)).not.toContain("solution");
 		expect(Object.keys(challenge)).not.toContain("transcript");
@@ -421,10 +408,6 @@ describe("start: getting to a challenge", () => {
 	});
 });
 
-// The provider consumes a frictionless session the moment it issues a
-// challenge against it, so a second challenge fetch on the same id can only
-// come back CAPTCHA.NO_SESSION_FOUND. The manager has to recognise its own
-// spent id rather than spend a round trip discovering it again.
 describe("start: a session that has already bought a challenge", () => {
 	test("short-circuits instead of re-requesting on the spent id", async () => {
 		const harness = build({
@@ -440,10 +423,7 @@ describe("start: a session that has already bought a challenge", () => {
 		expect(lastUpdate(harness, "loading")).toBe(false);
 	});
 
-	// A throw is the one case where the request may never have reached the
-	// provider, so the id may still be live — and it is exactly when
-	// providerRetry fails over onto a second provider. Short-circuiting there
-	// would turn every transport blip into "No session found".
+	// A throw may mean the request never landed, so the id may still be live.
 	test("still fails over to another provider when the request throws", async () => {
 		mocks.getAudioCaptchaChallenge
 			.mockRejectedValueOnce(new Error("transport"))
@@ -456,8 +436,6 @@ describe("start: a session that has already bought a challenge", () => {
 		expect(lastUpdate(harness, "error")).toBeUndefined();
 	});
 
-	// A 4xx means the provider saw the id, so it is gone even though no
-	// challenge came back.
 	test("counts the id as spent when the provider answers with an error", async () => {
 		mocks.getAudioCaptchaChallenge.mockResolvedValue({
 			...challengeResponse(),
@@ -617,8 +595,7 @@ describe("submitSolution: what it sends", () => {
 		await harness.manager.start();
 		await harness.manager.submitSolution("8 3 7 4 4", 3, events);
 		const args = submitArgs();
-		// Separators are the grader's problem, not the widget's: the manager
-		// sends what the user typed and the provider strips non-digits.
+		// The provider strips separators, so the manager sends the raw input.
 		expect(args[3]).toBe("8 3 7 4 4");
 		expect(args[4]).toBe(3);
 		expect(args[5]).toEqual(events);
@@ -784,8 +761,6 @@ describe("submitSolution: the verdict", () => {
 			[ApiParams.providerUrl]: PROVIDER_URL,
 			[ApiParams.user]: USER_ADDRESS,
 			[ApiParams.dapp]: SITE_KEY,
-			// The dapp server dispatches on this, so a token minted as the
-			// wrong type would be verified against the wrong endpoint.
 			[ApiParams.captchaType]: CaptchaType.audio,
 		});
 	});
@@ -850,11 +825,7 @@ describe("submitSolution: the verdict", () => {
 		const onReloadRequest = vi.fn<(x?: number, y?: number) => void>();
 		const harness = build({ onReloadRequest });
 		await expect(solve(harness)).resolves.toBe(false);
-		// The provider consumed the session when it issued the clip that was
-		// just failed, so there is nothing left to fetch another one against.
 		expect(onReloadRequest).toHaveBeenCalledWith(11, 22);
-		// Restarting frictionless from here would drop the user back to an
-		// unticked checkbox rather than handing them another clip.
 		expect(harness.restart).not.toHaveBeenCalled();
 		expect(harness.events.onFailed).toHaveBeenCalled();
 	});
@@ -871,8 +842,6 @@ describe("submitSolution: the verdict", () => {
 	test("a spent challenge cannot be answered twice", async () => {
 		const harness = build();
 		await solve(harness);
-		// The provider enforces single use; the manager's part of that is
-		// dropping the stored challenge on the reset that follows a solve.
 		harness.manager.resetState();
 		await expect(
 			harness.manager.submitSolution("96475", 2, audioEvents()),

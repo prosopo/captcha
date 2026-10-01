@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { defaultProcaptchaState } from "@prosopo/procaptcha-common";
 import type {
 	Account,
 	AudioCaptchaSolutionResponse,
@@ -27,9 +28,8 @@ import type {
 import { vi } from "vitest";
 
 /**
- * Shared fixtures for the audio suites. Kept out of the test files so the mock
- * factories, which vitest hoists above every import, can build their canned
- * responses from the same shapes the assertions use.
+ * Kept out of the test files so vitest's hoisted mock factories can build
+ * their canned responses from the same fixtures the assertions use.
  */
 
 export const PROVIDER_URL = "https://provider.one";
@@ -37,7 +37,6 @@ export const OTHER_PROVIDER_URL = "https://provider.two";
 export const USER_ADDRESS = "user-address";
 export const SITE_KEY = "site-key";
 
-/** A one-sample silent WAV. Short enough to read, valid enough to assign. */
 export const CLIP_URI = "data:audio/wav;base64,UklGRiQAAABXQVZF";
 
 export const config = (
@@ -50,34 +49,12 @@ export const config = (
 
 export const state = (
 	overrides: Partial<ProcaptchaState> = {},
-): ProcaptchaState => ({
-	isHuman: false,
-	index: 0,
-	solutions: [],
-	captchaApi: undefined,
-	challenge: undefined,
-	showModal: false,
-	loading: false,
-	account: undefined,
-	dappAccount: undefined,
-	submission: undefined,
-	timeout: undefined,
-	successfullChallengeTimeout: undefined,
-	sendData: false,
-	attemptCount: 0,
-	error: undefined,
-	sessionId: undefined,
-	...overrides,
-});
+): ProcaptchaState => ({ ...defaultProcaptchaState(), ...overrides });
 
 export type SignRaw = NonNullable<
 	NonNullable<Account["extension"]>["signer"]["signRaw"]
 >;
 
-/**
- * An account carrying just enough of an injected extension to sign: the rest of
- * the interface is never touched by the manager, but the type demands it.
- */
 export const account = (signRaw?: SignRaw): Account => ({
 	account: { address: USER_ADDRESS },
 	extension: {
@@ -130,11 +107,7 @@ export const callbacks = (
 	overrides: Partial<ProcaptchaCallbacks> = {},
 ): ProcaptchaCallbacks => ({ ...overrides });
 
-/**
- * The signer every fixture account uses, so a test can assert on what the
- * manager asked the extension to sign without rebuilding the frictionless
- * state it was handed.
- */
+/** Shared by every fixture account, so a test can assert on what was signed. */
 export const signRawMock = vi.fn<SignRaw>();
 
 export const frictionless = (
@@ -146,11 +119,6 @@ export const frictionless = (
 	...overrides,
 });
 
-/**
- * A behaviour collector holding a fixed set of points. The manager only ever
- * calls `getData`, but the type demands the whole lifecycle, so the rest are
- * stubs rather than omissions.
- */
 export const collector = (
 	points: MouseMovementPoint[],
 ): NonNullable<FrictionlessState["behaviorCollector1"]> => ({
@@ -160,10 +128,6 @@ export const collector = (
 	clear: () => undefined,
 });
 
-/**
- * jsdom's setTimeout hands back a plain number while the shared state types the
- * handle as Node's Timeout, so tests that seed a pending timer have to bridge
- * the two. The value the manager passes to clearTimeout is the number itself.
- */
+/** jsdom's setTimeout returns a number; state types the handle as Node's Timeout. */
 export const timerHandle = (id: number): ReturnType<typeof setTimeout> =>
 	id as unknown as ReturnType<typeof setTimeout>;

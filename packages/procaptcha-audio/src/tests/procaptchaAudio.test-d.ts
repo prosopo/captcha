@@ -54,9 +54,6 @@ describe("the package entrypoint's types", () => {
 	});
 
 	test("the entrypoint exposes the lazy wrapper and the widget itself", () => {
-		// The lazy wrapper is what works without a code-splitting bundler; the
-		// direct mount is what the frictionless wrapper imports once it has
-		// already paid for the dynamic import of this package.
 		expectTypeOf<keyof typeof entrypoint>().toEqualTypeOf<
 			| "mountProcaptchaAudio"
 			| "loadProcaptchaAudio"
@@ -97,8 +94,6 @@ describe("Manager's types", () => {
 		expectTypeOf(Manager)
 			.parameter(5)
 			.toEqualTypeOf<(() => string | undefined) | undefined>();
-		// The frictionless wrapper's re-mint hook. A wrong answer spends the
-		// challenge, so the retry has to come from a fresh session.
 		expectTypeOf(Manager)
 			.parameter(6)
 			.toEqualTypeOf<((x?: number, y?: number) => void) | undefined>();
@@ -114,7 +109,6 @@ describe("Manager's types", () => {
 		expectTypeOf<ReturnType<typeof Manager>["start"]>().toEqualTypeOf<
 			(x?: number, y?: number) => Promise<GetAudioCaptchaResponse | undefined>
 		>();
-		// The response has no field the answer could be assigned to.
 		expectTypeOf<GetAudioCaptchaResponse>().not.toHaveProperty("answer");
 	});
 

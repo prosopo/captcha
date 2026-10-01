@@ -12,42 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ProcaptchaProps } from "@prosopo/types";
+import { type WidgetMountFn, lazyMount } from "@prosopo/procaptcha-common";
 import type { ProcaptchaAudioHandle } from "./procaptchaWidget.js";
 
 export type { ProcaptchaAudioHandle };
 
-export type ProcaptchaAudioMountFn = (
-	container: HTMLElement,
-	props: ProcaptchaProps,
-) => ProcaptchaAudioHandle;
+export type ProcaptchaAudioMountFn = WidgetMountFn<ProcaptchaAudioHandle>;
 
-/**
- * Dynamic import so the audio widget lands in its own chunk, replacing the
- * `lazy()` + `<Suspense>` pair that used to provide the split.
- */
 export const loadProcaptchaAudio = async (): Promise<ProcaptchaAudioMountFn> =>
 	(await import("./procaptchaWidget.js")).mountProcaptchaAudioWidget;
 
-export const mountProcaptchaAudio = (
-	container: HTMLElement,
-	props: ProcaptchaProps,
-): ProcaptchaAudioHandle => {
-	let destroyed = false;
-	let inner: ProcaptchaAudioHandle | undefined;
-
-	void loadProcaptchaAudio().then((mount: ProcaptchaAudioMountFn) => {
-		if (destroyed) {
-			return;
-		}
-		inner = mount(container, props);
-	});
-
-	return {
-		destroy: () => {
-			destroyed = true;
-			inner?.destroy();
-			inner = undefined;
-		},
-	};
-};
+export const mountProcaptchaAudio: ProcaptchaAudioMountFn =
+	lazyMount(loadProcaptchaAudio);

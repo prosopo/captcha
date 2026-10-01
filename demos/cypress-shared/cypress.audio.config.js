@@ -32,10 +32,7 @@ export default defineConfig({
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	expose: {
 		...process.env,
-		// audio-implicit.html has a signup form wired to /signup on the
-		// demo dapp server, matching how puzzle.cy.ts drives the puzzle
-		// path. That /signup call is what exercises
-		// prosopoServer.isVerified() → audio endpoint.
+		// Its signup form posts to /signup, which runs prosopoServer.isVerified().
 		default_page: "/audio-implicit.html",
 		visualRegressionType: "regression",
 		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
@@ -72,18 +69,9 @@ export default defineConfig({
 					return null;
 				},
 
-				// Read the spoken transcript for a challenge straight out of
-				// Mongo.
-				//
-				// There is no way around this: the challenge is real
-				// synthesised speech and Cypress cannot listen to it. The
-				// alternative would be a "make any answer pass" setting,
-				// which is a backdoor in production code and would mean the
-				// grading path is never actually exercised. Reading the
-				// answer server-side makes the test an oracle — it knows
-				// what a human listener would know — while every other
-				// step (challenge issuance, single-use enforcement,
-				// signature checks, grading, server verify) runs for real.
+				// Cypress cannot listen to the clip, so it reads the answer from
+				// the provider's database rather than the provider growing a
+				// "make any answer pass" backdoor.
 				async audioAnswer({ challenge }) {
 					const { MongoClient } = await import("mongodb");
 					const uri = `mongodb://${process.env.PROSOPO_DATABASE_USERNAME}:${process.env.PROSOPO_DATABASE_PASSWORD}@${process.env.PROSOPO_DATABASE_HOST}:${process.env.PROSOPO_DATABASE_PORT}/?authSource=admin`;
@@ -92,9 +80,7 @@ export default defineConfig({
 						await client.connect();
 						const record = await client
 							.db(process.env.PROSOPO_DATABASE_NAME)
-							// Mongoose pluralises the model name, so the
-							// collection is "audiocaptchas", not the singular
-							// TableNames value the provider registers with.
+							// Mongoose's pluralised name, not the TableNames value.
 							.collection("audiocaptchas")
 							.findOne({ challenge });
 						return record?.answer ?? null;
