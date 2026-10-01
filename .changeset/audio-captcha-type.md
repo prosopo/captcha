@@ -1,37 +1,34 @@
 ---
-"@prosopo/audio-assets": minor
-"@prosopo/procaptcha-audio": minor
 "@prosopo/types": minor
 "@prosopo/types-database": minor
+"@prosopo/database": minor
 "@prosopo/provider": minor
 "@prosopo/api": minor
 "@prosopo/server": minor
-"@prosopo/database": minor
-"@prosopo/cli": patch
-"@prosopo/captcha-severity": minor
-"@prosopo/locale": minor
-"@prosopo/keyring": patch
+"@prosopo/audio-assets": minor
+"@prosopo/procaptcha-audio": minor
 "@prosopo/procaptcha-common": minor
 "@prosopo/procaptcha-frictionless": minor
-"@prosopo/procaptcha-puzzle": minor
 "@prosopo/procaptcha-react": minor
+"@prosopo/procaptcha-puzzle": minor
+"@prosopo/procaptcha-icon-order": minor
+"@prosopo/locale": minor
+"@prosopo/captcha-severity": patch
+"@prosopo/user-access-policy": patch
+"@prosopo/keyring": patch
+"@prosopo/cli": patch
 "@prosopo/scripts": patch
 "@prosopo/client-bundle-example": patch
+"@prosopo/client-example-server": patch
+"@prosopo/cypress-shared": patch
 ---
 
-Add an audio challenge as an accessibility alternative: the challenge speaks five digits and the user types them.
+An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
 
-A site turns it on with `audioAccessibilityEnabled`, which is off by default. Its image, puzzle and icon-order challenges then offer a "use audio instead" control, and a user who presses it is served the audio challenge in place of the visual one. Audio is not a captcha type a site selects or a rule routes to; see the accessibility-only changeset for how that is enforced. It has its own provider routes, widget and database record.
+It is off unless a site sets `audioAccessibilityEnabled`. When it is on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
 
-The speech is synthesised rather than recorded. `@prosopo/audio-assets` is a
-formant synthesiser, so there is no fixed set of clips to collect.
+Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site that has it on; a request without a session is refused.
 
-The answer is never sent to the browser, each challenge can only be answered
-once, and grading is exact-match after non-digits are stripped, so "1 2 3 4 5"
-and "12345" both pass.
+The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
 
-The render defaults are tuned so real users can hear the digits rather than for
-difficulty, and the surrounding signals do the gatekeeping.
-
-Covered by unit tests for the synthesiser, the widget, the provider tasks and
-the grading path, and by a cypress spec that drives a live provider end to end.
+The demo playground has audio pages, and there is an end-to-end test for it.
