@@ -12,43 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ProcaptchaProps } from "@prosopo/types";
+import { type WidgetMountFn, lazyMount } from "@prosopo/procaptcha-common";
 import type { ProcaptchaIconOrderHandle } from "./procaptchaWidget.js";
 
 export type { ProcaptchaIconOrderHandle };
 
-export type ProcaptchaIconOrderMountFn = (
-	container: HTMLElement,
-	props: ProcaptchaProps,
-) => ProcaptchaIconOrderHandle;
+export type ProcaptchaIconOrderMountFn =
+	WidgetMountFn<ProcaptchaIconOrderHandle>;
 
-/**
- * Dynamic import so the icon-order widget lands in its own chunk, replacing the
- * `lazy()` + `<Suspense>` pair that used to provide the split.
- */
 export const loadProcaptchaIconOrder =
 	async (): Promise<ProcaptchaIconOrderMountFn> =>
 		(await import("./procaptchaWidget.js")).mountProcaptchaIconOrderWidget;
 
-export const mountProcaptchaIconOrder = (
-	container: HTMLElement,
-	props: ProcaptchaProps,
-): ProcaptchaIconOrderHandle => {
-	let destroyed = false;
-	let inner: ProcaptchaIconOrderHandle | undefined;
-
-	void loadProcaptchaIconOrder().then((mount: ProcaptchaIconOrderMountFn) => {
-		if (destroyed) {
-			return;
-		}
-		inner = mount(container, props);
-	});
-
-	return {
-		destroy: () => {
-			destroyed = true;
-			inner?.destroy();
-			inner = undefined;
-		},
-	};
-};
+export const mountProcaptchaIconOrder: ProcaptchaIconOrderMountFn = lazyMount(
+	loadProcaptchaIconOrder,
+);

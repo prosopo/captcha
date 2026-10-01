@@ -63,16 +63,11 @@ import {
 	timerHandle,
 } from "./managerHarness.js";
 
-// Taken from procaptcha-common rather than @prosopo/load-balancer directly, so
-// the test does not pull a dependency into this package that the source has no
-// use for.
 type IpMode = ReturnType<typeof pickIpMode>;
 
 /**
- * Everything the manager reaches out to is replaced here. The manager itself is
- * a closure over its collaborators rather than a class with injection points,
- * so the module boundary is the seam: each mock keeps the real export list
- * intact and swaps only the call the manager makes.
+ * The manager is a closure over its imports, so the module boundary is the
+ * seam: each mock keeps the real exports and swaps only what the manager calls.
  */
 const mocks = vi.hoisted(() => {
 	const providerApiConstructions: { url: string; siteKey: string }[] = [];
@@ -153,9 +148,7 @@ vi.mock("@prosopo/procaptcha-common", async (importOriginal) => {
 		ExtensionLoader: mocks.extensionLoader,
 		getProcaptchaRandomActiveProvider: mocks.getProcaptchaRandomActiveProvider,
 		getSimdReadingsForSubmit: mocks.getSimdReadingsForSubmit,
-		// The real retry, minus its exponential backoff: the delay is covered by
-		// the procaptcha-common suite and waiting for it here would add seconds
-		// per test for behaviour this suite isn't asserting.
+		// The real retry minus its backoff, which procaptcha-common covers.
 		providerRetry: (
 			currentFn: () => Promise<void>,
 			retryFn: () => Promise<void>,
@@ -229,7 +222,6 @@ const build = (options: HarnessOptions = {}): Harness => {
 	return { manager, state: currentState, updates, events, restart };
 };
 
-/** The last value the manager pushed for a given state field. */
 const lastUpdate = <K extends keyof ProcaptchaState>(
 	harness: Harness,
 	key: K,
@@ -246,7 +238,6 @@ const submitArgs = (
 	return call;
 };
 
-/** Drives a full solve: start, then submit the ordered clicks. */
 const solve = async (harness: Harness): Promise<boolean> => {
 	await harness.manager.start(11, 22);
 	return harness.manager.submitSolution(clicks(), iconOrderEvents());
@@ -265,8 +256,7 @@ beforeEach(() => {
 	mocks.submitIconOrderCaptchaSolution.mockResolvedValue(solutionResponse());
 	mocks.getSimdReadingsForSubmit.mockResolvedValue("simd-readings");
 	mocks.sleep.mockResolvedValue(undefined);
-	// providerRetry reports every failure it swallows; the suite drives those
-	// paths deliberately and the output would bury the real failures.
+	// providerRetry logs every failure it swallows, which would bury real ones.
 	vi.spyOn(console, "error").mockImplementation(() => undefined);
 	vi.spyOn(console, "log").mockImplementation(() => undefined);
 });
@@ -406,10 +396,6 @@ describe("start: getting to a challenge", () => {
 	});
 });
 
-// The provider consumes a frictionless session the moment it issues a
-// challenge against it, so a second challenge fetch on the same id can only
-// come back CAPTCHA.NO_SESSION_FOUND. The manager has to recognise its own
-// spent id rather than spend a round trip discovering it again.
 describe("start: a session that has already bought a challenge", () => {
 	test("short-circuits instead of re-requesting on the spent id", async () => {
 		const harness = build({
@@ -425,10 +411,7 @@ describe("start: a session that has already bought a challenge", () => {
 		expect(lastUpdate(harness, "loading")).toBe(false);
 	});
 
-	// A throw is the one case where the request may never have reached the
-	// provider, so the id may still be live — and it is exactly when
-	// providerRetry fails over onto a second provider. Short-circuiting there
-	// would turn every transport blip into "No session found".
+	// A throw may mean the request never landed, so the id may still be live.
 	test("still fails over to another provider when the request throws", async () => {
 		mocks.getIconOrderCaptchaChallenge
 			.mockRejectedValueOnce(new Error("transport"))

@@ -30,19 +30,12 @@ import {
 	mountIconOrderCanvas,
 } from "../components/iconOrderCanvas.js";
 
-/**
- * The canvas is the only part of the icon-order flow the user touches: it owns
- * click capture, the order those clicks are recorded in, and the trail the
- * provider scores. Every test drives real DOM events against a real render.
- */
-
 const CONTAINER_WIDTH = 300;
 const CONTAINER_HEIGHT = 200;
 
 /**
- * The real translator reaches for an http backend the moment it is asked for a
- * string, which jsdom refuses. The English defaults the canvas ships stand in
- * instead, so the assertions below read as the copy a user is actually given.
+ * The real translator fetches over http, which jsdom refuses, so the canvas's
+ * English defaults stand in.
  */
 const translator = (): Translator => ({
 	t: (key: string, options?: Record<string, unknown>): string =>
@@ -82,11 +75,7 @@ const destroy = (): void => {
 	canvas = undefined;
 };
 
-/**
- * The canvas puts itself on the body — it has to escape the query container
- * the widget skeleton wraps it in — so everything that reads the rendered
- * output reads the body.
- */
+/** The canvas portals itself onto the body, out of the widget's container. */
 const overlay = (): HTMLElement => document.body;
 
 const query = <E extends HTMLElement>(selector: string): E => {
@@ -102,9 +91,8 @@ const resetButton = (): HTMLButtonElement =>
 	query<HTMLButtonElement>('[data-cy="prosopo-icon-order-reset"]');
 
 /**
- * jsdom gives every element a zero-sized box, which the component treats as
- * unmeasurable. Pin the frame's rect so click maths has something real to work
- * against — 1:1 with the coordinate space unless a test says otherwise.
+ * jsdom boxes are zero-sized, which the component treats as unmeasurable, so
+ * pin the frame's rect: 1:1 with the coordinate space unless a test says not.
  */
 const stubFrameRect = (
 	width = CONTAINER_WIDTH,
@@ -125,11 +113,7 @@ const stubFrameRect = (
 	});
 };
 
-/**
- * The frame listens for `pointerup` only, so that is what these dispatch.
- * jsdom has no `PointerEvent` constructor; `MouseEvent` carries the
- * `clientX`/`clientY` the component reads and dispatch matches on `type` alone.
- */
+/** jsdom has no PointerEvent constructor, so a MouseEvent stands in. */
 const clickFrame = (clientX: number, clientY: number): void => {
 	frame().dispatchEvent(
 		new MouseEvent("pointerup", { bubbles: true, clientX, clientY }),
@@ -142,12 +126,7 @@ const moveOverFrame = (clientX: number, clientY: number): void => {
 	);
 };
 
-/**
- * A touch device's full event sequence for one tap: `touchend`, then the
- * compatibility `click` the browser synthesises at the same coordinates.
- * Both are dispatched so the "one tap, one click" test below is checking the
- * real thing rather than a convenient subset of it.
- */
+/** A tap's full sequence: pointerup, touchend, then the synthesised click. */
 const tapFrame = (clientX: number, clientY: number): void => {
 	const touchEnd = new Event("touchend", { bubbles: true });
 	Object.defineProperty(touchEnd, "changedTouches", {
@@ -222,8 +201,6 @@ describe("what it puts on screen", () => {
 	});
 
 	test("never renders the icon positions it was not given", () => {
-		// The component only receives imagery. If this ever fails, something
-		// has started passing target geometry to the client.
 		render(props());
 		expect(overlay().innerHTML).not.toContain("targets");
 	});
@@ -236,10 +213,10 @@ describe("what it puts on screen", () => {
 	test("the shake on a retry stops on its own", () => {
 		vi.useFakeTimers();
 		render(props({ showRetry: true }));
+		const panel = frame().parentElement;
+		expect(panel?.style.animation).toContain("prosopo-icon-order-shake");
 		vi.advanceTimersByTime(600);
-		// Nothing to assert beyond survival: the timer fires into a live
-		// component rather than leaking past the shake.
-		expect(frame()).toBeDefined();
+		expect(panel?.style.animation).toBe("none");
 	});
 
 	test("unmounting mid-shake cancels the timer", () => {
@@ -261,6 +238,23 @@ describe("capturing an ordered answer", () => {
 		clickFrame(180, 90);
 		clickFrame(240, 150);
 		expect(markers()).toEqual(["1", "2", "3"]);
+	});
+
+	test("ignores a right or middle click", () => {
+		render(props());
+		stubFrameRect();
+		for (const button of [1, 2]) {
+			frame().dispatchEvent(
+				new MouseEvent("pointerup", {
+					bubbles: true,
+					button,
+					clientX: 60,
+					clientY: 50,
+				}),
+			);
+		}
+		expect(markers()).toEqual([]);
+		expect(submitButton().disabled).toBe(true);
 	});
 
 	test("enables both buttons once there is something to submit", () => {
@@ -308,12 +302,6 @@ describe("capturing an ordered answer", () => {
 		expect(submitButton().disabled).toBe(true);
 	});
 
-	/**
-	 * Regression: the frame used to listen for `click` *and* `touchend`, so a
-	 * phone recorded two clicks per tap. Three correct taps submitted six
-	 * clicks against three targets and the provider rejected the answer on
-	 * length alone — icon-order was unsolvable on every touch device.
-	 */
 	test("counts one click per tap, synthesised click included", () => {
 		render(props());
 		stubFrameRect();

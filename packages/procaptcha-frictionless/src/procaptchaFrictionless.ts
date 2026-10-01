@@ -18,6 +18,8 @@ import {
 	type Component,
 	type StaticComponent,
 	Teardown,
+	type WidgetHandle,
+	type WidgetMountFn,
 	clearElement,
 	createElement,
 	getDefaultEvents,
@@ -34,6 +36,7 @@ import {
 	type ModeType,
 	PROCAPTCHA_START_EVENT,
 	ProcaptchaConfigSchema,
+	type ProcaptchaEscalationHandler,
 	type ProcaptchaFrictionlessProps,
 	type ProcaptchaProps,
 	type ProcaptchaStartEventDetail,
@@ -67,10 +70,15 @@ const ProcaptchaIconOrderLoader = async () =>
 const ProcaptchaPowLoader = async () =>
 	(await import("@prosopo/procaptcha-pow")).mountProcaptchaPowWidget;
 
-/** A mounted solver widget. Every solver exposes the same teardown. */
-interface SolverHandle {
-	destroy(): void;
-}
+/** Solvers that ask for a fresh session through `onReload`. */
+const reloadableSolverLoaders: ReadonlyMap<
+	string,
+	() => Promise<WidgetMountFn>
+> = new Map<string, () => Promise<WidgetMountFn>>([
+	[CaptchaType.image, ProcaptchaLoader],
+	[CaptchaType.puzzle, ProcaptchaPuzzleLoader],
+	[CaptchaType.iconOrder, ProcaptchaIconOrderLoader],
+]);
 
 export interface ProcaptchaFrictionlessHandle {
 	destroy(): void;
@@ -162,7 +170,7 @@ export const mountProcaptchaFrictionless = (
 	const slot = createElement("div");
 	container.appendChild(slot);
 
-	let solver: SolverHandle | undefined;
+	let solver: WidgetHandle | undefined;
 	let placeholder: Component<CheckboxProps> | undefined;
 
 	const clearSlot = () => {
@@ -275,8 +283,8 @@ export const mountProcaptchaFrictionless = (
 		autoStart = false,
 		escalationCoords?: RetryCoords,
 	): Promise<void> => {
-		const onEscalate = (
-			next: CaptchaType.image | CaptchaType.puzzle | CaptchaType.iconOrder,
+		const onEscalate: ProcaptchaEscalationHandler = (
+			next: Parameters<ProcaptchaEscalationHandler>[0],
 			newSessionId: string,
 			coords?: RetryCoords,
 		) => {
@@ -414,26 +422,9 @@ export const mountProcaptchaFrictionless = (
 			return;
 		}
 
-		if (CaptchaType.image === captchaType) {
-			const mount = await ProcaptchaLoader();
-			if (destroyed) return;
-			clearSlot();
-			solver = mount(slot, { ...widgetProps, onReload });
-			replayPendingExecute();
-			return;
-		}
-
-		if (CaptchaType.puzzle === captchaType) {
-			const mount = await ProcaptchaPuzzleLoader();
-			if (destroyed) return;
-			clearSlot();
-			solver = mount(slot, { ...widgetProps, onReload });
-			replayPendingExecute();
-			return;
-		}
-
-		if (CaptchaType.iconOrder === captchaType) {
-			const mount = await ProcaptchaIconOrderLoader();
+		const loadReloadableSolver = reloadableSolverLoaders.get(captchaType);
+		if (loadReloadableSolver) {
+			const mount = await loadReloadableSolver();
 			if (destroyed) return;
 			clearSlot();
 			solver = mount(slot, { ...widgetProps, onReload });

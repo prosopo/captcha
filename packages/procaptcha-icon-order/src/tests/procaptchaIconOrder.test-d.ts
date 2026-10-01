@@ -56,9 +56,6 @@ describe("the package entrypoint's types", () => {
 	});
 
 	test("the entrypoint exposes the lazy wrapper and the widget itself", () => {
-		// The lazy wrapper is what works without a code-splitting bundler; the
-		// direct mount is what ProcaptchaFrictionless imports once it has already
-		// paid for the dynamic import of this package.
 		expectTypeOf<keyof typeof entrypoint>().toEqualTypeOf<
 			| "mountProcaptchaIconOrder"
 			| "loadProcaptchaIconOrder"
@@ -108,9 +105,7 @@ describe("Manager's types", () => {
 	});
 
 	test("start hands back the challenge the canvas needs to draw", () => {
-		// Unlike the POW manager, which reports only through state, the icon-order
-		// manager returns the challenge — the widget cannot render a frame
-		// without the imagery it carries.
+		// The widget renders the imagery from the returned challenge.
 		expectTypeOf<ReturnType<typeof Manager>["start"]>().toEqualTypeOf<
 			(
 				x?: number,
@@ -193,8 +188,7 @@ describe("IconOrderCanvas' types", () => {
 	});
 
 	test("the answer is reported synchronously, not as a promise", () => {
-		// The widget's own handler is async, but the canvas must not await it:
-		// a returned promise here would be dropped on the floor.
+		// Must not return the widget's promise: the canvas would drop it.
 		expectTypeOf(onComplete).returns.toEqualTypeOf<void>();
 	});
 });

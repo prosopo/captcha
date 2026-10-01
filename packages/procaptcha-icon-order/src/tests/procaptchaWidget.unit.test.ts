@@ -39,11 +39,6 @@ import {
 import { type Mounted, fire, mount, settle } from "./domHarness.js";
 import { challengeResponse, config, frictionless } from "./managerHarness.js";
 
-/**
- * The widget owns the phase machine — checkbox, selecting, submitting — and the
- * wiring between the manager and the canvas. Both of those collaborators are
- * stubbed so each test drives one transition at a time.
- */
 const mocks = vi.hoisted(() => {
 	const start =
 		vi.fn<
@@ -100,9 +95,7 @@ vi.mock("../services/Manager.js", () => ({
 	},
 }));
 
-// The canvas has its own suite; here it is reduced to a probe so a test can
-// read the props the widget hands it and fire the completion callback without
-// simulating a selection.
+// A probe, so a test can read the canvas props and fire its completion.
 vi.mock("../components/iconOrderCanvas.js", () => ({
 	mountIconOrderCanvas: (
 		canvasProps: IconOrderCanvasProps,
@@ -207,8 +200,6 @@ const checkbox = (): HTMLInputElement => {
 	return element;
 };
 
-// The canvas puts itself on the body rather than inside the widget, so it can
-// escape the skeleton's query container.
 const canvas = (): Element | null =>
 	document.body.querySelector('[data-cy="canvas-stub"]');
 
@@ -230,21 +221,28 @@ interface ClickOptions {
 	touches?: { clientX: number; clientY: number }[];
 }
 
-/** Click the real checkbox with the browser event a user would produce. */
 const click = async (options: ClickOptions = {}): Promise<void> => {
 	fire(checkbox(), "click", options);
 	await settle();
 };
 
-/**
- * Start a solve without waiting for it to settle, for the tests that hold the
- * manager's promise open.
- */
 const clickWithoutWaiting = (): void => {
 	fire(checkbox(), "click");
 };
 
-/** Fire the canvas completion callback the way a finished selection would. */
+interface Deferred<T> {
+	promise: Promise<T>;
+	release: (value: T) => void;
+}
+
+const deferred = <T>(): Deferred<T> => {
+	let release!: (value: T) => void;
+	const promise = new Promise<T>((resolve: (value: T) => void) => {
+		release = resolve;
+	});
+	return { promise, release };
+};
+
 const complete = async (
 	clicks: IconClick[] = [{ x: 60, y: 50 }],
 	events: IconOrderEvent[] = [{ x: 60, y: 50, t: 5 }],
@@ -311,9 +309,6 @@ describe("what the widget renders", () => {
 	});
 
 	test("the widget builds exactly one manager", async () => {
-		// The React version rebuilt the manager on every render and kept the
-		// first through a ref, which is what lost the checkbox click coordinates
-		// before the ref was introduced. There is one manager per mount now.
 		render(props());
 		await click();
 		expect(mocks.constructions).toHaveLength(1);
@@ -391,19 +386,9 @@ describe("starting from the checkbox", () => {
 	});
 
 	test("a second click while the first is in flight is ignored", async () => {
-		let release: (challenge: GetIconOrderCaptchaResponse) => void = () => {
-			// replaced synchronously by the promise executor below
-		};
-		mocks.start.mockReturnValue(
-			new Promise<GetIconOrderCaptchaResponse>(
-				(resolve: (challenge: GetIconOrderCaptchaResponse) => void) => {
-					release = resolve;
-				},
-			),
-		);
+		const { promise, release } = deferred<GetIconOrderCaptchaResponse>();
+		mocks.start.mockReturnValue(promise);
 		render(props());
-		// Not awaited: the handler cannot settle until the challenge is
-		// released, and awaiting it here would deadlock the test.
 		clickWithoutWaiting();
 		clickWithoutWaiting();
 		expect(mocks.start).toHaveBeenCalledTimes(1);
@@ -412,16 +397,8 @@ describe("starting from the checkbox", () => {
 	});
 
 	test("the checkbox shows a spinner while the solve is loading", async () => {
-		let release: (challenge: GetIconOrderCaptchaResponse) => void = () => {
-			// replaced synchronously by the promise executor below
-		};
-		mocks.start.mockReturnValue(
-			new Promise<GetIconOrderCaptchaResponse>(
-				(resolve: (challenge: GetIconOrderCaptchaResponse) => void) => {
-					release = resolve;
-				},
-			),
-		);
+		const { promise, release } = deferred<GetIconOrderCaptchaResponse>();
+		mocks.start.mockReturnValue(promise);
 		render(props());
 		clickWithoutWaiting();
 		await settle();
@@ -444,8 +421,6 @@ describe("starting from the checkbox", () => {
 		mocks.start.mockRejectedValue(new Error("provider down"));
 		render(props({ callbacks: { onError } }));
 		await click();
-		// Without the guard the spinner would stay up for good: nothing awaits
-		// the checkbox handler, so the rejection escapes as an unhandled one.
 		expect(spinner()).toBeNull();
 		expect(onError).toHaveBeenCalledWith(expect.any(Error));
 	});
@@ -527,10 +502,6 @@ describe("finishing the selection", () => {
 		});
 	});
 
-	// The provider consumes a frictionless session when it issues the challenge,
-	// so re-requesting on the same sessionId can only return
-	// CAPTCHA.NO_SESSION_FOUND. The widget must hand back to the wrapper for a
-	// re-mint instead of making that request.
 	test("a rejected solution on a frictionless session re-mints rather than re-requesting", async () => {
 		mocks.submitSolution.mockResolvedValue(false);
 		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
@@ -547,7 +518,6 @@ describe("finishing the selection", () => {
 			expect.any(Number),
 			{ showRetry: true },
 		);
-		// One call to open the challenge, and none to replace it.
 		expect(mocks.start).toHaveBeenCalledTimes(1);
 	});
 
@@ -592,8 +562,6 @@ describe("finishing the selection", () => {
 		await openIconOrder(props({ callbacks: { onError } }));
 		await complete();
 		expect(onError).toHaveBeenCalledWith(expect.any(Error));
-		// Failure, so the widget asks for a new challenge rather than passing
-		// the user through on an error.
 		expect(mocks.start).toHaveBeenCalledTimes(2);
 	});
 
@@ -606,16 +574,9 @@ describe("finishing the selection", () => {
 	});
 
 	test("the icon-order is frozen while the solution is in flight", async () => {
-		let release: (verified: boolean) => void = () => {
-			// replaced synchronously by the promise executor below
-		};
-		mocks.submitSolution.mockReturnValue(
-			new Promise<boolean>((resolve: (verified: boolean) => void) => {
-				release = resolve;
-			}),
-		);
+		const { promise, release } = deferred<boolean>();
+		mocks.submitSolution.mockReturnValue(promise);
 		await openIconOrder();
-		// Not awaited: the handler cannot settle until the verdict is released.
 		void mocks.canvasProps.current?.onComplete([{ x: 60, y: 50 }], []);
 		await settle();
 		expect(mocks.canvasProps.current?.submitting).toBe(true);
@@ -760,8 +721,6 @@ describe("an invalidated session", () => {
 		expect(restart).not.toHaveBeenCalled();
 	});
 
-	// A re-mint is already under way, so the error describes a state the widget
-	// is about to leave. Spinner, not support code.
 	test("a lost session that will be re-minted shows no error", async () => {
 		render(props({ frictionlessState: frictionless({ restart: () => {} }) }));
 		await click();

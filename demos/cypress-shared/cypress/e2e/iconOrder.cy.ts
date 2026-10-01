@@ -14,19 +14,9 @@
 
 /// <reference types="cypress" />
 
-// End-to-end proof that the icon-order type works from challenge to
-// server-verify.
-//
-// The flow: fill the signup form → click submit → the icon-order widget
-// appears → click three icons → confirm → the widget mints a token → the form
-// POSTs it to the demo dapp's /signup → the dapp calls
-// prosopoServer.isVerified(token) → the SDK dispatches to the icon-order
-// endpoint → the provider grades against the stored targets and verifies.
-//
-// If the SDK's dispatch lost its icon-order branch, /signup would return a
-// rejection message (verified:false from isVerified) rather than "user
-// created", and the message assertion at the end would fail. Mirrors
-// puzzle.cy.ts for the puzzle path.
+// Solves an icon-order challenge, then proves the token verifies server-side:
+// /signup only answers "user created" if the SDK dispatched the token to the
+// icon-order endpoint.
 
 import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
@@ -35,15 +25,9 @@ const baseCaptchaType: CaptchaType =
 	Cypress.expose("CAPTCHA_TYPE") || "iconOrder";
 
 /**
- * Hit radius as a multiple of each icon's own size, pinned to the ceiling
- * `iconOrderToleranceFieldSchema` allows. Icons render between 32.3 and 43.7 px
- * on a 300x200 frame, and edge margins keep every centre ~17.8 px off the
- * sides, so the furthest a click can land from a target is ~336 px — inside
- * the ~388 px radius this gives even the smallest icon. Every target therefore
- * covers the whole frame, and a scripted click anywhere inside it counts as
- * landing on the icon the legend asked for. That is what lets Cypress drive
- * the flow without reading the imagery: order and click count still have to be
- * right, which is what this spec is proving end to end.
+ * The ceiling `iconOrderToleranceFieldSchema` allows, in multiples of icon
+ * size. It makes even the smallest icon's hit radius (~388 px) cover the whole
+ * 300x200 frame, so any click counts and the spec never reads the imagery.
  */
 const LAX_ICON_ORDER_TOLERANCE = 12;
 
@@ -120,16 +104,11 @@ describe("Icon Order CAPTCHA — signup", () => {
 			"iconOrderSolution",
 		);
 
-		// Widget renders implicitly. Wait for the "I am human" checkbox and
-		// click it to open the icon-order frame.
 		getWidgetElement(checkboxClass, { timeout: 15000 })
 			.first()
 			.should("be.visible")
 			.realClick();
 
-		// The challenge response is imagery only — it carries no icon
-		// positions — so the spec cannot aim at a target and does not need to:
-		// the lax tolerance above makes any point inside the frame count.
 		cy.wait("@iconOrderChallenge", { timeout: 15000 })
 			.its("response")
 			.then((response) => {
@@ -139,14 +118,10 @@ describe("Icon Order CAPTCHA — signup", () => {
 				expect(body, "challenge body should exist").to.exist;
 				expect(body.background, "frame imagery").to.be.a("string");
 				expect(body.legend, "legend imagery").to.be.a("string");
-				// The answer must never be on the wire.
 				expect(body).to.not.have.property("targets");
 				expect(body).to.not.have.property("tolerance");
 			});
 
-		// Click three distinct points inside the frame. Distinct so each lands
-		// on its own marker; the provider grades count and order, and with the
-		// lax tolerance every one of them counts as the target it was asked for.
 		getWidgetElement('[data-cy="prosopo-icon-order-frame"]', {
 			timeout: 15000,
 		})
@@ -168,7 +143,6 @@ describe("Icon Order CAPTCHA — signup", () => {
 				}
 			});
 
-		// One marker per click, numbered in the order they were made.
 		getWidgetElement('[data-cy="prosopo-icon-order-frame"]')
 			.first()
 			.within(() => {
@@ -190,9 +164,6 @@ describe("Icon Order CAPTCHA — signup", () => {
 				expect(response?.body.verified).to.equal(true);
 			});
 
-		// Widget has minted the token into the hidden procaptcha-response
-		// input. Fill the form and submit — onActionHandler grabs the token
-		// and POSTs it to /signup.
 		const uniqueId = `icon-order-test-${Cypress._.random(0, 1e6)}`;
 		cy.get('input[id="name"]', { timeout: 10000 })
 			.should("be.visible")
@@ -213,10 +184,6 @@ describe("Icon Order CAPTCHA — signup", () => {
 			.should("not.be.disabled")
 			.realClick();
 
-		// The proof: /signup uses prosopoServer.isVerified, which must send an
-		// icon-order token to the icon-order endpoint. Without that dispatch
-		// isVerified returns verified:false and /signup responds with a
-		// rejection message instead of "user created".
 		cy.wait("@signup", { timeout: 30000 }).then((interception) => {
 			cy.task(
 				"log",

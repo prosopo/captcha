@@ -20,12 +20,6 @@ import * as entrypoint from "../index.js";
 import { type Mounted, mount, settle } from "./domHarness.js";
 import { config } from "./managerHarness.js";
 
-/**
- * The outer entry point exists only to lazy-load the widget and hand it the
- * props it was given, so what is worth pinning down is that nothing is dropped
- * on the way through — a wrapper that names props one at a time silently loses
- * the ones added later.
- */
 const mocks = vi.hoisted(() => ({
 	received: [] as ProcaptchaProps[],
 	destroyed: { count: 0 },
@@ -119,8 +113,6 @@ describe("mountProcaptchaIconOrder", () => {
 	});
 
 	test("cancels a mount that is still loading", async () => {
-		// Otherwise a widget torn down mid-load reappears as an orphan that
-		// nothing holds a handle to.
 		widget = entrypoint.mountProcaptchaIconOrder(mounted.container, props());
 		widget.destroy();
 		widget = undefined;

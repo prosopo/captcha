@@ -12,16 +12,5 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type WidgetMountFn, lazyMount } from "@prosopo/procaptcha-common";
-import type { ProcaptchaPuzzleHandle } from "./procaptchaWidget.js";
-
-export type { ProcaptchaPuzzleHandle };
-
-export type ProcaptchaPuzzleMountFn = WidgetMountFn<ProcaptchaPuzzleHandle>;
-
-export const loadProcaptchaPuzzle =
-	async (): Promise<ProcaptchaPuzzleMountFn> =>
-		(await import("./procaptchaWidget.js")).mountProcaptchaPuzzleWidget;
-
-export const mountProcaptchaPuzzle: ProcaptchaPuzzleMountFn =
-	lazyMount(loadProcaptchaPuzzle);
+/** Dispatched by the bundle's execute() to start a widget's challenge. */
+export const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";

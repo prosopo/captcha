@@ -27,11 +27,11 @@ import type { IconClick, IconOrderEvent, PlacementType } from "@prosopo/types";
 import type { Theme } from "@prosopo/widget-skeleton";
 
 export interface IconOrderCanvasProps {
-	/** Frame with every icon composited into it, as a data URI. */
+	/** Data URI of the frame, with every icon already composited in. */
 	background: string;
-	/** Ordered legend strip on transparency, as a data URI. */
+	/** Data URI of the legend strip, icons in the order to select them. */
 	legend: string;
-	/** Edge length of one legend chip, in px. */
+	/** Edge length of one legend icon, in px. */
 	legendIconSize: number;
 	onComplete: (clicks: IconClick[], events: IconOrderEvent[]) => void;
 	showRetry: boolean;
@@ -44,18 +44,16 @@ export interface IconOrderCanvasProps {
 }
 
 /**
- * Must match `DEFAULT_GEOMETRY` in @prosopo/icon-order-assets. Clicks are
- * reported in these coordinates, and the provider grades them against target
- * positions expressed in the same space, so the rendered frame is pinned to
- * its natural size rather than scaled to fit — a scaled frame would need the
- * factor applied to every click, and a mismatch would silently shift every
- * answer.
+ * Must match `DEFAULT_GEOMETRY` in @prosopo/icon-order-assets: the provider
+ * grades clicks in this coordinate space.
  */
 const CONTAINER_WIDTH = 300;
 const CONTAINER_HEIGHT = 200;
 
-/** Radius of the numbered marker dropped on each click. */
 const MARKER_RADIUS = 13;
+const SHAKE_MS = 500;
+/** `MouseEvent.button` for a primary click, a touch or a pen contact. */
+const MAIN_BUTTON = 0;
 
 const SHAKE_KEYFRAMES = `
 @keyframes prosopo-icon-order-shake {
@@ -91,8 +89,6 @@ export const mountIconOrderCanvas = (
 		attributes: { draggable: "false" },
 	});
 
-	// The legend IS the instruction, so the two sit on one row the way the
-	// reference designs do.
 	const header = createElement("div", {
 		style: {
 			borderRadius: "20px 20px 0 0",
@@ -122,9 +118,6 @@ export const mountIconOrderCanvas = (
 		attributes: { alt: "", draggable: "false" },
 	});
 
-	// Every icon is already composited into the background by the provider;
-	// the widget is never told where any of them are, so nothing here can leak
-	// the answer.
 	const frame = createElement("div", {
 		style: {
 			position: "relative",
@@ -161,9 +154,8 @@ export const mountIconOrderCanvas = (
 		},
 	});
 
-	// Test-only selectors: gated on NODE_ENV !== "production" so the bundler
-	// constant-folds them out of production builds. A stable selector on the
-	// interactive surface is exactly what a scripted solver wants.
+	// Kept out of production builds: a stable selector on the interactive
+	// surface is exactly what a scripted solver wants.
 	if ("production" !== process.env.NODE_ENV) {
 		applyAttributes(frame, { "data-cy": "prosopo-icon-order-frame" });
 		applyAttributes(resetButton, { "data-cy": "prosopo-icon-order-reset" });
@@ -228,8 +220,6 @@ export const mountIconOrderCanvas = (
 			},
 		});
 
-	// The number is the whole point of a marker: the user has to see the order
-	// they have committed to, since that order is what is graded.
 	const renderMarkers = () => {
 		while (markers.length > clicks.length) {
 			markers.pop()?.remove();
@@ -264,7 +254,9 @@ export const mountIconOrderCanvas = (
 		applyStyles(panel, {
 			opacity: visible ? 1 : 0,
 			transform: visible ? "scale(1)" : "scale(0.9)",
-			animation: shaking ? "prosopo-icon-order-shake 0.5s ease" : "none",
+			animation: shaking
+				? `prosopo-icon-order-shake ${SHAKE_MS}ms ease`
+				: "none",
 		});
 
 		instruction.textContent = showRetry
@@ -333,56 +325,43 @@ export const mountIconOrderCanvas = (
 	};
 
 	/**
-	 * Uses the frame's measured box rather than the constants above, so a host
-	 * page that has scaled the widget (a CSS transform on an ancestor, say)
-	 * still reports clicks in the provider's coordinate space instead of
-	 * silently offsetting every answer.
+	 * Scales by the frame's measured box rather than the constants, so a host
+	 * page that transforms the widget still reports clicks in the provider's
+	 * coordinate space.
 	 */
-	const toFrameCoords = (
-		clientX: number,
-		clientY: number,
-	): IconClick | null => {
+	const toFramePoint = (event: Event): IconClick | null => {
+		if (props.submitting || !(event instanceof MouseEvent)) {
+			return null;
+		}
 		const rect = frame.getBoundingClientRect();
 		if (0 === rect.width || 0 === rect.height) {
 			return null;
 		}
 		return {
-			x: ((clientX - rect.left) / rect.width) * CONTAINER_WIDTH,
-			y: ((clientY - rect.top) / rect.height) * CONTAINER_HEIGHT,
+			x: ((event.clientX - rect.left) / rect.width) * CONTAINER_WIDTH,
+			y: ((event.clientY - rect.top) / rect.height) * CONTAINER_HEIGHT,
 		};
 	};
 
 	const recordEvent = (point: IconClick) => {
-		// Relative to the challenge render, matching the puzzle type's trail so
-		// behavioural analysis treats both the same way.
 		events.push({ x: point.x, y: point.y, t: Date.now() - startedAt });
 	};
 
 	teardown.addEventListener(frame, "pointermove", (event: Event) => {
-		if (props.submitting) {
-			return;
-		}
-		const pointer = event as PointerEvent;
-		const point = toFrameCoords(pointer.clientX, pointer.clientY);
+		const point = toFramePoint(event);
 		if (point) {
 			recordEvent(point);
 		}
 	});
 
-	/*
-	 * One listener for mouse, touch and pen. Listening for `click` plus
-	 * `touchend` double-counted every tap on a touch device: `touchend` fires,
-	 * then the browser synthesises a compatibility `click` at the same spot, so
-	 * three taps arrived as six clicks and the grader rejected the answer on
-	 * length alone. `touch-action: none` on the frame does not suppress that
-	 * synthesised click; only listening for one event family does.
-	 */
+	// Only pointer events: a click or touchend listener as well would count
+	// each tap twice, since browsers synthesise a click after touchend even
+	// under `touch-action: none`.
 	teardown.addEventListener(frame, "pointerup", (event: Event) => {
-		if (props.submitting) {
+		if (event instanceof MouseEvent && MAIN_BUTTON !== event.button) {
 			return;
 		}
-		const pointer = event as PointerEvent;
-		const point = toFrameCoords(pointer.clientX, pointer.clientY);
+		const point = toFramePoint(event);
 		if (!point) {
 			return;
 		}
@@ -405,7 +384,7 @@ export const mountIconOrderCanvas = (
 
 	render();
 
-	// Entrance animation, fired after the first paint so the transition runs.
+	// After the first paint, so the entrance transition runs.
 	const frameRequest = requestAnimationFrame(() => {
 		visible = true;
 		render();
@@ -421,7 +400,7 @@ export const mountIconOrderCanvas = (
 		shakeTimer = setTimeout(() => {
 			shaking = false;
 			render();
-		}, 500);
+		}, SHAKE_MS);
 	};
 
 	teardown.add(() => {
@@ -439,9 +418,7 @@ export const mountIconOrderCanvas = (
 			const previous = props;
 			props = nextProps;
 
-			// A new challenge arrives as new imagery, so the answer in progress
-			// has to go — otherwise the previous frame's clicks would be
-			// submitted against it.
+			// New imagery is a new challenge, which the old clicks don't answer.
 			if (
 				nextProps.background !== previous.background ||
 				nextProps.legend !== previous.legend
