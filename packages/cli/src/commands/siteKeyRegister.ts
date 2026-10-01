@@ -158,7 +158,6 @@ export default (
 					puzzleTolerance: puzzleToleranceDefault,
 					iconOrderTolerance: iconOrderToleranceDefault,
 					puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
-					audioAccessibilityEnabled: false,
 					disallowWebView: false,
 					verifiedTimeout: 60000,
 					solutionTimeout: 60000,

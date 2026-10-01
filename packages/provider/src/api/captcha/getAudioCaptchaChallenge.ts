@@ -300,6 +300,7 @@ export default (
 					session: sessionId,
 				},
 			}));
+			res.locals.padBytes = trafficVerdict.padBytes;
 			recordCaptchaIssued(CaptchaType.audio);
 			return res.json(getAudioCaptchaResponse);
 		} catch (err) {

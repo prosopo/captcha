@@ -300,11 +300,7 @@ export const UserSettingsSchema = new Schema({
 		type: AudioRenderSettingsSchema,
 		required: false,
 	},
-	audioAccessibilityEnabled: {
-		type: Boolean,
-		default: false,
-		required: false,
-	},
+	audioAccessibilityEnabled: { type: Boolean, required: false },
 	ipValidationRules: IPValidationRulesSchema,
 	domains: {
 		type: [String],

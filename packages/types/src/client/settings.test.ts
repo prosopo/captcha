@@ -831,11 +831,9 @@ describe("AudioSettingsSchema", () => {
 });
 
 describe("ClientSettingsSchema audio fields", () => {
-	// The audio challenge is a paid accessibility alternative: a site that
-	// has not opted in must never offer it.
-	it("leaves the accessibility alternative off by default", () => {
+	it("leaves the accessibility alternative unset, which means off", () => {
 		const parsed = parse(minimal);
-		expect(parsed.audioAccessibilityEnabled).toBe(false);
+		expect(parsed.audioAccessibilityEnabled).toBeUndefined();
 		expect(parsed.audio).toBeUndefined();
 	});
 

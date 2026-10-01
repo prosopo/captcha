@@ -57,7 +57,7 @@ describe("isAudioAlternativeAllowed", () => {
 	});
 
 	it("refuses when the site has not opted in", () => {
-		for (const settings of [off, undefined]) {
+		for (const settings of [off, {}, undefined]) {
 			expect(
 				isAudioAlternativeAllowed(
 					CaptchaType.audio,

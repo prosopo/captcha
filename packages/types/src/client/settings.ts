@@ -861,7 +861,7 @@ export const ClientSettingsSchema = object({
 	// challenge should not have it silently exposed on their site, and
 	// the accessibility win is only real if the operator has checked that
 	// the audio path works for their audience (it is English-only today).
-	audioAccessibilityEnabled: boolean().optional().default(false),
+	audioAccessibilityEnabled: boolean().optional(),
 	// Hit radius for an icon-order click, as a multiple of the clicked
 	// icon's own size. See `iconOrderToleranceDefault` for why this is
 	// relative where `puzzleTolerance` is absolute.
