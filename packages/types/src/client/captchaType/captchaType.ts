@@ -44,15 +44,10 @@ const DecisionMachineCaptchaTypeSchema = z.union([
 	z.literal(CaptchaType.iconOrder),
 ]);
 
-// Every type a site, access rule or traffic category may select. Excludes
-// `audio`: the audio challenge is only ever served as the accessibility
-// alternative a user picks from a visual challenge, on a site that has
-// `audioAccessibilityEnabled` turned on. It is never a type anything else
-// can route a user to, so a record naming it is rejected on write rather
-// than stored and silently ignored.
+// What a site, access rule or traffic category may select. Audio is only the
+// accessibility alternative, so a record naming it is rejected on write.
 const SelectableCaptchaTypeSchema = CaptchaTypeSchema.refine(
-	// Annotated `boolean` so TypeScript does not infer a type predicate and
-	// narrow the output: settings and rules keep the full `CaptchaType`.
+	// `boolean`, not an inferred type predicate, so the output stays `CaptchaType`.
 	(captchaType): boolean => captchaType !== CaptchaType.audio,
 	{ message: "audio is only served as an accessibility alternative" },
 );

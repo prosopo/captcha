@@ -165,18 +165,9 @@ export interface ProcaptchaProps {
 	// getting one wrong, so the provider can count the refreshes.
 	// When absent the widget falls back to the manager's own reload behaviour.
 	onReload?: (x?: number, y?: number, options?: ReloadOptions) => void;
-	// True when the site has `audioAccessibilityEnabled` set, so the widget
-	// should offer the audio challenge as an alternative. Set by
-	// the frictionless wrapper from the frictionless response.
+	// Whether to offer "use audio instead"; set by the frictionless wrapper.
 	audioAlternativeAvailable?: boolean;
-	// Called when the user asks for the audio alternative. Handled by the
-	// frictionless wrapper, which mints a fresh session and mounts the audio
-	// widget in place.
-	//
-	// A fresh session is unavoidable rather than wasteful: the provider
-	// consumes the session when it issues a challenge, so the session
-	// behind the visual challenge the user is currently looking at cannot
-	// be reused to ask for an audio one. Same constraint `onReload`
-	// works under.
+	// The wrapper mints a fresh session and mounts the audio widget: the
+	// provider consumed the visual challenge's session when it issued it.
 	onRequestAudioAlternative?: () => void;
 }

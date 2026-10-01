@@ -13,38 +13,23 @@
 // limitations under the License.
 
 /**
- * Normalise a typed answer before comparison.
- *
- * Strips everything that is not a digit. People type "1 2 3 4 5",
- * "12345", "1-2-3-4-5" and "12 345" for the same heard sequence, and
- * failing any of those is a bug in the grader, not a wrong answer.
- * Assistive technology adds its own variations — some screen-reader
- * workflows insert separators the user never typed.
- *
- * This is deliberately narrower than a general trim: it cannot
- * accidentally admit a *different* digit sequence, because only the
- * digits survive and their order is preserved.
+ * Keeps only the digits, in order: "1 2 3", "1-2-3" and screen-reader inserted
+ * separators all grade the same, and no different digit sequence can pass.
  */
 export const normaliseAudioAnswer = (raw: string): string =>
 	raw.replace(/\D/g, "");
 
 /**
- * Grade a submitted answer against the stored transcript.
- *
- * Exact match after normalisation. No edit-distance tolerance: allowing
- * even one substitution widens the accepted set by far more than it
- * helps a genuine listener, and the failure path here is cheap — a wrong
- * answer issues a fresh challenge rather than costing the user their
- * session.
+ * Exact match after normalisation. No edit-distance slack: one substitution
+ * widens the accepted set far more than it helps a listener, and a wrong
+ * answer only costs a fresh challenge.
  */
 export const validateAudioSolution = (
 	submitted: string,
 	expected: string,
 ): boolean => {
 	const normalised = normaliseAudioAnswer(submitted);
-	// Guard the empty case explicitly: a challenge record with an empty
-	// `answer` should never exist, but if one did, "" === "" would pass
-	// every submission that normalises to nothing.
+	// Otherwise "" === "" would pass against a record with an empty answer.
 	if (normalised.length === 0 || expected.length === 0) return false;
 	return normalised === expected;
 };

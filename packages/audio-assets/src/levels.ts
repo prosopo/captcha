@@ -12,11 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { nativeEnum } from "zod";
-import { CaptchaType, SelectableCaptchaTypeSchema } from "./captchaType.js";
+export const rms = (samples: Float32Array): number => {
+	if (samples.length === 0) return 0;
+	let total = 0;
+	for (const value of samples) {
+		total += value * value;
+	}
+	return Math.sqrt(total / samples.length);
+};
 
-const CaptchaTypeSpec = nativeEnum(CaptchaType);
-
-const SelectableCaptchaTypeSpec = SelectableCaptchaTypeSchema;
-
-export { CaptchaTypeSpec, SelectableCaptchaTypeSpec };
+/** Scale in place so the loudest sample sits at `peak`. No-op on silence. */
+export const normalise = (samples: Float32Array, peak: number): void => {
+	let max = 0;
+	for (const value of samples) {
+		max = Math.max(max, Math.abs(value));
+	}
+	if (max === 0) return;
+	const gain = peak / max;
+	for (let n = 0; n < samples.length; n++) {
+		samples[n] = (samples[n] ?? 0) * gain;
+	}
+};

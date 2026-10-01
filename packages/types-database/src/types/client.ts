@@ -147,10 +147,7 @@ export const PuzzleRenderSettingsSchema = new Schema(
 	{ _id: false },
 );
 
-// Per-render audio tunables, mirroring `AudioSettingsSchema` in
-// @prosopo/types. Declared here for the same reason as the puzzle block
-// above: an undeclared path is dropped on write. Bounds mirror the zod
-// field schemas.
+// Mirrors `AudioSettingsSchema`, declared for the same reason as the puzzle block.
 export const AudioRenderSettingsSchema = new Schema(
 	{
 		digitCount: { type: Number, min: 3, max: 8, required: false },
@@ -163,8 +160,7 @@ export const AudioRenderSettingsSchema = new Schema(
 	{ _id: false },
 );
 
-// Mirrors `SelectableCaptchaTypeSchema`: audio is only ever the accessibility
-// alternative, never a type a site or traffic category is configured with.
+// Mirrors `SelectableCaptchaTypeSchema`.
 const SELECTABLE_CAPTCHA_TYPES: CaptchaType[] = Object.values(
 	CaptchaType,
 ).filter((captchaType) => captchaType !== CaptchaType.audio);

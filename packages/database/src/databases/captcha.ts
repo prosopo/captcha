@@ -217,8 +217,8 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 		puzzleCaptchaEvents: PuzzleCaptchaRecord[] = [],
-		audioCaptchaEvents: AudioCaptchaRecord[] = [],
 		iconOrderCaptchaEvents: IconOrderCaptchaRecord[] = [],
+		audioCaptchaEvents: AudioCaptchaRecord[] = [],
 	) {
 		await this.connect();
 		if (sessionEvents.length) {

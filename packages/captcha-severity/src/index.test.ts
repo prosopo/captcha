@@ -44,8 +44,6 @@ describe("rankCaptchaType", () => {
 		expect(new Set(ranks).size).toBe(ascending.length);
 	});
 
-	// Audio is only ever the accessibility alternative a user picks from a
-	// visual challenge, never a type a policy selects, so it has no tier.
 	it("does not rank audio above unset", () => {
 		expect(rankCaptchaType("audio")).toBe(0);
 		expect(isStricterCaptchaType("audio", undefined)).toBe(false);

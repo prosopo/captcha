@@ -336,14 +336,7 @@ describe("Client settings Mongo persistence", () => {
 			FULLY_POPULATED_SETTINGS.trafficFilter.crawler,
 		);
 
-		// Nested render settings. These are the fields most likely to be
-		// silently dropped: Mongoose discards any path its schema does not
-		// declare, so a settings key that exists in the zod schema but not
-		// in `UserSettingsSchema` round-trips as `undefined` while the
-		// write reports success. `puzzle` was in exactly that state — the
-		// provider read it and the portal offered a card to set it, but it
-		// had no mongoose path, so every operator override was thrown away
-		// on save. Assert per-field so a future drop fails loudly here.
+		// Mongoose silently drops nested paths its schema does not declare.
 		const puzzle = stored.puzzle;
 		expect(puzzle).toBeDefined();
 		if (!puzzle) return;

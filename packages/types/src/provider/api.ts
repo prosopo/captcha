@@ -200,11 +200,6 @@ export const ProviderDefaultRateLimits = {
 		windowMs: 60000,
 		limit: 15000,
 	},
-	// Audio challenges are generated on demand rather than served from a
-	// pre-rendered buffer, so the challenge endpoint is the one place a
-	// caller can force real DSP work per request. The limit matches the
-	// other challenge endpoints; the buffer in the provider is what keeps
-	// the cost off the request path.
 	[ClientApiPaths.GetAudioCaptchaChallenge]: { windowMs: 60000, limit: 300 },
 	[ClientApiPaths.SubmitAudioCaptchaSolution]: {
 		windowMs: 60000,
@@ -572,8 +567,6 @@ export type AudioCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
 export type IconOrderCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
 
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
-	// Never `audio`: the audio challenge is reached only through
-	// `audioAlternativeAvailable` below.
 	[ApiParams.captchaType]:
 		| CaptchaType.pow
 		| CaptchaType.image
@@ -593,9 +586,7 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	// Only present when captchaType === "authenticated". Rendered by the
 	// widget's badge so the operator can see WHICH agent verified.
 	agent?: string;
-	// Mirrors the site's `audioAccessibilityEnabled` setting. When true the
-	// image, puzzle and icon-order widgets render a control offering the audio
-	// challenge instead. Absent or false means no such control is shown.
+	// The site's `audioAccessibilityEnabled`, sent only with a visual challenge.
 	audioAlternativeAvailable?: boolean;
 }
 
@@ -906,15 +897,6 @@ export type ServerPuzzleCaptchaVerifyRequestBodyOutput = output<
 	typeof ServerPuzzleCaptchaVerifyRequestBody
 >;
 
-export const GetAudioCaptchaChallengeRequestBody =
-	GetPuzzleCaptchaChallengeRequestBody;
-
-export type GetAudioCaptchaChallengeRequestBodyType =
-	GetPuzzleCaptchaChallengeRequestBodyType;
-
-export type GetAudioCaptchaChallengeRequestBodyTypeOutput =
-	GetPuzzleCaptchaChallengeRequestBodyTypeOutput;
-
 /** `t` is milliseconds since the challenge was issued. */
 export const AudioEventSchema = object({
 	kind: union([
@@ -955,23 +937,6 @@ export const SubmitAudioCaptchaSolutionBody = object({
 	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
 });
-
-export type SubmitAudioCaptchaSolutionBodyType = input<
-	typeof SubmitAudioCaptchaSolutionBody
->;
-
-export type SubmitAudioCaptchaSolutionBodyTypeOutput = output<
-	typeof SubmitAudioCaptchaSolutionBody
->;
-
-export const ServerAudioCaptchaVerifyRequestBody =
-	ServerPuzzleCaptchaVerifyRequestBody;
-
-export type ServerAudioCaptchaVerifyRequestBodyType =
-	ServerPuzzleCaptchaVerifyRequestBodyType;
-
-export type ServerAudioCaptchaVerifyRequestBodyOutput =
-	ServerPuzzleCaptchaVerifyRequestBodyOutput;
 
 /**
  * Grading needs exactly one click per target, so this only has to clear the

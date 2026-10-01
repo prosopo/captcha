@@ -14,48 +14,37 @@
 
 import { CaptchaType, type IUserSettings } from "@prosopo/types";
 
-/**
- * The audio challenge is an accessibility alternative, the way reCAPTCHA's
- * audio option is: a user only reaches it by pressing "use audio instead" on a
- * visual challenge, and only on a site that has `audioAccessibilityEnabled`
- * turned on. Nothing routes a user to audio — no site setting, access rule,
- * traffic category, routing machine or PoW escalation can name it — so a
- * session is never minted as audio.
- *
- * Instead the audio challenge is served against the visual session the user
- * was already given. Pressing the control re-runs /frictionless in the widget
- * (the provider consumed the previous session when it issued the visual
- * challenge), which mints a fresh visual session, and the audio challenge
- * request is accepted against that session here.
- */
+// Nothing can select audio, so it is served against a visual session: "use
+// audio instead" re-runs /frictionless (issuing the visual challenge consumed
+// the old session) and the audio request is accepted against the new one.
 
-/** The session types that offer, and so may be exchanged for, audio. */
 const AUDIO_ALTERNATIVE_SESSION_TYPES: ReadonlySet<string> = new Set<string>([
 	CaptchaType.image,
 	CaptchaType.puzzle,
 	CaptchaType.iconOrder,
 ]);
 
-/**
- * Whether a session of this type is a visual challenge that can offer the
- * audio alternative. PoW has no challenge UI to hang the control off, and
- * `authenticated` / `frictionless` are not challenges at all.
- */
+/** Whether a session of this type is a visual challenge that can offer audio. */
 export const isAudioAlternativeSessionType = (
 	captchaType: string | undefined,
 ): boolean =>
 	captchaType !== undefined && AUDIO_ALTERNATIVE_SESSION_TYPES.has(captchaType);
 
-/**
- * Whether an audio challenge may be issued against a session minted as a
- * different type. True only when audio is what was asked for, the session is
- * a visual challenge, and the site has opted in to the alternative.
- */
+/** Whether a challenge of this type shows "use audio instead". */
+export const offersAudioAlternative = (
+	captchaType: string | undefined,
+	audioAccessibilityEnabled: boolean,
+): boolean =>
+	audioAccessibilityEnabled && isAudioAlternativeSessionType(captchaType);
+
+/** Whether an audio challenge may be issued against a session of another type. */
 export const isAudioAlternativeAllowed = (
 	requestedCaptchaType: CaptchaType,
 	sessionCaptchaType: CaptchaType,
 	settings: Pick<IUserSettings, "audioAccessibilityEnabled"> | undefined,
 ): boolean =>
 	requestedCaptchaType === CaptchaType.audio &&
-	settings?.audioAccessibilityEnabled === true &&
-	isAudioAlternativeSessionType(sessionCaptchaType);
+	offersAudioAlternative(
+		sessionCaptchaType,
+		settings?.audioAccessibilityEnabled === true,
+	);

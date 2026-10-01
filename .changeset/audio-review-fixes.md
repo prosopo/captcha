@@ -3,6 +3,7 @@
 "@prosopo/database": patch
 "@prosopo/types-database": patch
 "@prosopo/types": patch
+"@prosopo/api": patch
 "@prosopo/audio-assets": patch
 ---
 
@@ -21,3 +22,6 @@ Also:
 - reserved CI test site keys get the maintenance challenge instead of an unregistered-site error, as the other challenge routes do
 - `@prosopo/audio-assets` uses `@prosopo/puzzle-assets`' PRNG rather than a copy of it
 - `ProviderApiInterface.submitAudioCaptchaVerify` declares the `clientSessionId` its implementation already accepted
+- the audio challenge, solution and verify routes, the database record methods and the API client now use the same shared code as puzzle and icon-order
+- verified audio solves now count towards a site's per-email submission limit; before, they were left out of the count
+- `audioEvents` is capped before its items are checked, so a huge array is rejected with one error instead of one per item

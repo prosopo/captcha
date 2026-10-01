@@ -2006,6 +2006,7 @@ export class ProviderDatabase
 			tables.powcaptcha.countDocuments(filter),
 			tables.puzzlecaptcha.countDocuments(filter),
 			tables.iconordercaptcha.countDocuments(filter),
+			tables.audiocaptcha.countDocuments(filter),
 		]);
 		return counts.reduce((total, count) => total + count, 0);
 	}

@@ -40,9 +40,7 @@ const USER_FAILURE_REASONS: ReadonlySet<ResultReason> = new Set([
  * proof-of-work, so any Disapproved PoW counts as a block regardless of
  * reason. For every interactive type — image, puzzle, icon-order, audio — we
  * distinguish user failure (CAPTCHA_INVALID_SOLUTION) from server-side
- * rejections. Mishearing a digit is an ordinary thing for a human to do and
- * must not be counted as a block, or the portal's block chart turns into a
- * chart of how hard the audio challenge is.
+ * rejections.
  */
 export const isBlockingCaptchaResult = (
 	captchaType: CaptchaType,

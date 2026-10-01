@@ -123,32 +123,6 @@ export const buildImageMaintenanceResponse = (): CaptchaResponseBody => ({
 // all — there are no coordinates left to fake a challenge out of. Generation is
 // in-process and needs no database, so it works fine while Mongo is away, and
 // /submit/puzzle doesn't validate in maintenance mode so any drop resolves.
-/**
- * Maintenance-mode audio challenge.
- *
- * Renders a real clip so the widget has something playable and the user
- * sees the normal flow rather than a broken player. The answer is
- * discarded — during maintenance every submission is accepted anyway, so
- * there is nothing to grade against and nothing worth persisting.
- */
-export const buildAudioMaintenanceResponse = async (
-	user: string,
-	dapp: string,
-): Promise<GetAudioCaptchaResponse> => {
-	const timestamp = Date.now();
-	const rendered = renderAudioClip(resolveAudioRenderSettings());
-	return {
-		[ApiParams.status]: "ok",
-		[ApiParams.challenge]: buildChallenge(user, dapp),
-		[ApiParams.clip]: rendered.clip,
-		[ApiParams.characterCount]: rendered.characterCount,
-		[ApiParams.timestamp]: timestamp.toString(),
-		[ApiParams.signature]: {
-			[ApiParams.provider]: { [ApiParams.challenge]: "" },
-		},
-	};
-};
-
 export const buildPuzzleMaintenanceResponse = async (
 	user: string,
 	dapp: string,
@@ -163,6 +137,26 @@ export const buildPuzzleMaintenanceResponse = async (
 		[ApiParams.pieceSize]: images.pieceSize,
 		[ApiParams.originX]: 60,
 		[ApiParams.originY]: 100,
+		[ApiParams.timestamp]: timestamp.toString(),
+		[ApiParams.signature]: {
+			[ApiParams.provider]: { [ApiParams.challenge]: "" },
+		},
+	};
+};
+
+// A real clip so the widget plays normally; the answer is discarded because
+// maintenance mode accepts every submission.
+export const buildAudioMaintenanceResponse = async (
+	user: string,
+	dapp: string,
+): Promise<GetAudioCaptchaResponse> => {
+	const timestamp = Date.now();
+	const rendered = renderAudioClip(resolveAudioRenderSettings());
+	return {
+		[ApiParams.status]: "ok",
+		[ApiParams.challenge]: buildChallenge(user, dapp),
+		[ApiParams.clip]: rendered.clip,
+		[ApiParams.characterCount]: rendered.characterCount,
 		[ApiParams.timestamp]: timestamp.toString(),
 		[ApiParams.signature]: {
 			[ApiParams.provider]: { [ApiParams.challenge]: "" },

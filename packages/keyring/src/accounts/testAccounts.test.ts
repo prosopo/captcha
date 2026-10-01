@@ -23,7 +23,6 @@ import { getDefaultProviders, getDefaultSiteKeys } from "./testAccounts.js";
 const SLOW = { timeout: 60000 };
 
 describe("getDefaultSiteKeys", SLOW, () => {
-	// The suffix each key is derived from, in seed order.
 	const NAMES = [
 		"image",
 		"pow",
@@ -41,8 +40,6 @@ describe("getDefaultSiteKeys", SLOW, () => {
 			CaptchaType.pow,
 			CaptchaType.frictionless,
 			CaptchaType.iconOrder,
-			// The audio demos' site: audio is only an accessibility alternative,
-			// so it is an image site with that alternative on.
 			CaptchaType.image,
 			CaptchaType.puzzle,
 		]);

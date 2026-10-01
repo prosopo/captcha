@@ -197,8 +197,6 @@ describe("ClientSettingsSchema", () => {
 		}
 	});
 
-	// Audio is only served as the accessibility alternative a user picks from a
-	// visual challenge, so no site can be configured with it as its type.
 	it("rejects audio as a site's captcha type", () => {
 		expect(
 			ClientSettingsSchema.safeParse({
@@ -810,9 +808,6 @@ describe("AudioSettingsSchema", () => {
 		expect(parsed.noiseSnrDb).toBeUndefined();
 	});
 
-	// The ceiling is a working-memory limit for a spoken sequence and the
-	// noise floor is where speech stops being followable. Both exist for the
-	// listener, so neither should be loosened in passing.
 	it("bounds the render tunables", () => {
 		expect(() => AudioSettingsSchema.parse({ digitCount: 2 })).toThrow();
 		expect(() => AudioSettingsSchema.parse({ digitCount: 9 })).toThrow();

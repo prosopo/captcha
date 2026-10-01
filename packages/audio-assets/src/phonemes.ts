@@ -13,27 +13,21 @@
 // limitations under the License.
 
 /**
- * Phoneme inventory for spoken English digit names, and the digit words
- * built from it.
+ * English digit names. Formants are Peterson & Barney adult-male vowel
+ * measurements, rounded; the synthesiser scales them per speaker.
  *
- * Formant values are the classic Peterson & Barney adult-male vowel
- * measurements, rounded. They are deliberately *not* tuned to sound like
- * any particular person: the synthesiser applies a per-speaker frequency
- * scale on top, so one table serves every voice the generator produces.
- *
- * Scope is English digits only. Letters are excluded on purpose — the
- * English letter set contains the "E-set" (B, C, D, E, G, P, T, V, Z),
- * nine names distinguished only by a short consonant onset before an
- * identical vowel. Under the noise this generator adds they collapse into
- * each other, and the humans who need the audio path most are the ones who
- * would pay for it. Adding other languages means a second table plus a
- * per-locale input UI; see the issue for the plan.
+ * Letters are excluded: the E-set (B, C, D, E, G, P, T, V, Z) differs only
+ * by a short onset and collapses under noise.
  */
 
 import type { Phoneme, Utterance } from "./types.js";
 
-/** Defaults shared by most segments, so each entry states only what differs. */
-const base = {
+const STOP_BURST_MS = 18;
+const VOICED_FRICATIVE_VOICE_GAIN = 0.45;
+const NASAL_VOICE_GAIN = 0.5;
+const APPROXIMANT_VOICE_GAIN = 0.85;
+
+const segmentDefaults = {
 	bandwidths: [80, 110, 160] as const,
 	voiceGain: 1,
 	noiseGain: 0,
@@ -48,19 +42,13 @@ const vowel = (
 	f3: number,
 	durationMs: number,
 ): Phoneme => ({
-	...base,
+	...segmentDefaults,
 	id,
 	excitation: "voiced",
 	formants: [f1, f2, f3],
 	durationMs,
 });
 
-/**
- * Unvoiced fricative: noise only, shaped by a single band. The band centre
- * is the whole identity of the sound — /s/ sits high and narrow, /f/ and
- * /θ/ are broad and weak, which is exactly why they're the pair humans
- * confuse most.
- */
 const fricative = (
 	id: string,
 	centreHz: number,
@@ -68,7 +56,7 @@ const fricative = (
 	gain: number,
 	durationMs: number,
 ): Phoneme => ({
-	...base,
+	...segmentDefaults,
 	id,
 	excitation: "unvoiced",
 	formants: [0, 0, 0],
@@ -79,7 +67,6 @@ const fricative = (
 	noiseBandwidthHz: bandwidthHz,
 });
 
-/** Voiced fricative: buzz plus turbulence. */
 const voicedFricative = (
 	id: string,
 	f1: number,
@@ -90,21 +77,17 @@ const voicedFricative = (
 	gain: number,
 	durationMs: number,
 ): Phoneme => ({
-	...base,
+	...segmentDefaults,
 	id,
 	excitation: "mixed",
 	formants: [f1, f2, f3],
 	durationMs,
-	voiceGain: 0.45,
+	voiceGain: VOICED_FRICATIVE_VOICE_GAIN,
 	noiseGain: gain,
 	noiseCentreHz: centreHz,
 	noiseBandwidthHz: bandwidthHz,
 });
 
-/**
- * Nasal murmur. Low F1, heavily damped, quiet — the acoustic signature of
- * air leaving through the nose while the mouth is closed.
- */
 const nasal = (
 	id: string,
 	f1: number,
@@ -112,18 +95,17 @@ const nasal = (
 	f3: number,
 	durationMs: number,
 ): Phoneme => ({
-	...base,
+	...segmentDefaults,
 	id,
 	excitation: "voiced",
 	formants: [f1, f2, f3],
 	bandwidths: [180, 250, 320],
 	durationMs,
-	voiceGain: 0.5,
+	voiceGain: NASAL_VOICE_GAIN,
 });
 
-/** Silent closure preceding a stop burst. */
 const closure = (id: string, durationMs: number): Phoneme => ({
-	...base,
+	...segmentDefaults,
 	id,
 	excitation: "silence",
 	formants: [0, 0, 0],
@@ -131,18 +113,17 @@ const closure = (id: string, durationMs: number): Phoneme => ({
 	voiceGain: 0,
 });
 
-/** Stop burst: a very short, abrupt noise transient. */
 const burst = (
 	id: string,
 	centreHz: number,
 	bandwidthHz: number,
 	gain: number,
 ): Phoneme => ({
-	...base,
+	...segmentDefaults,
 	id,
 	excitation: "unvoiced",
 	formants: [0, 0, 0],
-	durationMs: 18,
+	durationMs: STOP_BURST_MS,
 	voiceGain: 0,
 	noiseGain: gain,
 	noiseCentreHz: centreHz,
@@ -150,7 +131,6 @@ const burst = (
 	abrupt: true,
 });
 
-// ── Vowels ────────────────────────────────────────────────────────────
 const IY = vowel("IY", 270, 2290, 3010, 150);
 const IH = vowel("IH", 390, 1990, 2550, 95);
 const EH = vowel("EH", 530, 1840, 2480, 110);
@@ -160,41 +140,33 @@ const AO = vowel("AO", 570, 840, 2410, 150);
 const UW = vowel("UW", 300, 870, 2240, 140);
 const OW_OFF = vowel("OW^", 330, 900, 2300, 90);
 
-// ── Approximants ──────────────────────────────────────────────────────
-// /r/ is identified almost entirely by its unusually low F3 — the single
-// most distinctive formant target in the inventory.
-const R = { ...vowel("R", 490, 1350, 1690, 85), voiceGain: 0.85 };
-const W = { ...vowel("W", 300, 610, 2200, 70), voiceGain: 0.85 };
+// /r/ is identified almost entirely by its low F3.
+const R: Phoneme = {
+	...vowel("R", 490, 1350, 1690, 85),
+	voiceGain: APPROXIMANT_VOICE_GAIN,
+};
+const W: Phoneme = {
+	...vowel("W", 300, 610, 2200, 70),
+	voiceGain: APPROXIMANT_VOICE_GAIN,
+};
 
-// ── Nasals ────────────────────────────────────────────────────────────
 const N = nasal("N", 250, 1750, 2600, 90);
 
-// ── Fricatives ────────────────────────────────────────────────────────
 const S = fricative("S", 5800, 3200, 0.5, 130);
 const F = fricative("F", 4200, 5000, 0.24, 120);
 const TH = fricative("TH", 5200, 5600, 0.2, 110);
 const Z = voicedFricative("Z", 300, 1600, 2500, 5200, 3000, 0.3, 110);
 const V = voicedFricative("V", 320, 1100, 2400, 4000, 4600, 0.16, 95);
 
-// ── Stops ─────────────────────────────────────────────────────────────
 const T = [closure("T-", 45), burst("T+", 3800, 3400, 0.55)] as const;
 const K = [closure("K-", 45), burst("K+", 2100, 2200, 0.5)] as const;
 
-/**
- * Diphthongs are written as two segments. The synthesiser's formant
- * interpolation turns the pair into the glide; there is no separate
- * diphthong machinery.
- */
+// Diphthongs are two segments; the synthesiser's formant glide joins them.
 const AY = [AA, { ...IY, durationMs: 110 }] as const;
 const EY = [EH, { ...IY, durationMs: 105 }] as const;
 const OW = [AO, OW_OFF] as const;
 
-/**
- * The digit names.
- *
- * "zero" rather than "oh" — "oh" is a single vowel with no consonant
- * anchor and is the first thing to disappear under noise.
- */
+/** "zero", not "oh": a lone vowel with no consonant anchor is the first thing lost to noise. */
 export const DIGITS: readonly Utterance[] = [
 	{ answer: "0", phonemes: [Z, IH, R, ...OW] },
 	{ answer: "1", phonemes: [W, AH, N] },
@@ -208,5 +180,4 @@ export const DIGITS: readonly Utterance[] = [
 	{ answer: "9", phonemes: [N, ...AY, N] },
 ];
 
-/** Every character the grader will ever have to accept. */
 export const ANSWER_ALPHABET: string = DIGITS.map((d) => d.answer).join("");

@@ -25,59 +25,35 @@ import {
 } from "./audioBuffer.js";
 
 export interface RenderedAudioClip {
-	/** WAV as a data URI, ready to hand to an `<audio>` element. */
+	/** WAV data URI. */
 	clip: string;
-	/** How many characters the user must type. */
 	characterCount: number;
-	/**
-	 * The spoken transcript. Caller must persist this on the challenge
-	 * record and must never place it in a response body.
-	 */
+	/** The transcript: persist it, never put it in a response. */
 	answer: string;
 	durationMs: number;
 }
 
-/**
- * Merge zero or more partial-override sources on top of the asset
- * package defaults. Later sources win, matching the cascade in
- * `getAudioCaptchaChallenge`: traffic-filter policy overrides the
- * client-record setting, which overrides the built-in default.
- */
+/** Layers partial overrides onto the asset defaults; later sources win. */
 export const resolveAudioRenderSettings = (
 	...overrides: (IAudioSettings | undefined)[]
 ): AudioRenderSettings => {
 	let resolved: AudioRenderSettings = { ...DEFAULT_RENDER_SETTINGS };
 	for (const override of overrides) {
-		if (!override) continue;
-		if (override.digitCount !== undefined) {
-			resolved = { ...resolved, digitCount: override.digitCount };
-		}
-		if (override.noiseSnrDb !== undefined) {
-			resolved = { ...resolved, noiseSnrDb: override.noiseSnrDb };
-		}
-		if (override.babbleGain !== undefined) {
-			resolved = { ...resolved, babbleGain: override.babbleGain };
-		}
-		if (override.babbleVoices !== undefined) {
-			resolved = { ...resolved, babbleVoices: override.babbleVoices };
-		}
-		if (override.reverbMix !== undefined) {
-			resolved = { ...resolved, reverbMix: override.reverbMix };
-		}
-		if (override.gapMs !== undefined) {
-			resolved = { ...resolved, gapMs: override.gapMs };
-		}
+		resolved = {
+			digitCount: override?.digitCount ?? resolved.digitCount,
+			noiseSnrDb: override?.noiseSnrDb ?? resolved.noiseSnrDb,
+			babbleGain: override?.babbleGain ?? resolved.babbleGain,
+			babbleVoices: override?.babbleVoices ?? resolved.babbleVoices,
+			reverbMix: override?.reverbMix ?? resolved.reverbMix,
+			gapMs: override?.gapMs ?? resolved.gapMs,
+		};
 	}
 	return resolved;
 };
 
 /**
- * Take one challenge from the process-wide buffer and encode it for the
- * wire.
- *
- * Lazily initialises the buffer on first use so a provider that never
- * serves audio pays nothing for it — unlike the puzzle background
- * buffer, which is primed at boot because the puzzle is on by default.
+ * Takes one challenge from the process-wide buffer, created on first use so a
+ * provider that never serves audio pays nothing for it.
  */
 export const renderAudioClip = (
 	settings: AudioRenderSettings,

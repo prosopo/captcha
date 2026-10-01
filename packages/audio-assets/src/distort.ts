@@ -13,46 +13,25 @@
 // limitations under the License.
 
 /**
- * Obfuscation applied on top of the clean speech.
- *
- * READ THIS BEFORE TURNING THE KNOBS UP.
- *
- * Additive noise does not buy what it looks like it buys. Past a fairly
- * low threshold, every extra decibel costs a real user far more than it
- * gains, and for this challenge the real users are disproportionately
- * people who chose the audio path because the visual one was not
- * available to them.
- *
- * The defaults are therefore set for intelligibility, not for maximum
- * difficulty, and the durable difficulty work is expected to come from
- * varying *what is asked* rather than from burying the answer in hiss.
- * See the tracking issue.
- *
- * Babble is the one exception worth keeping: overlapping speech is a
- * source-separation problem rather than a denoising one, which is a
- * materially harder class of task, and human listeners are unusually good
- * at it.
+ * Obfuscation on top of the clean speech. Past a low threshold each extra dB
+ * of noise costs a human far more than a bot, and audio users are mostly
+ * people the visual challenge failed, so defaults favour intelligibility.
+ * Babble is the exception worth keeping: overlapping speech is a
+ * source-separation problem, which humans are unusually good at.
  */
 
 import type { Prng } from "@prosopo/puzzle-assets";
-import { normalise } from "./synth.js";
+import { normalise, rms } from "./levels.js";
 import type { AudioBuffer } from "./types.js";
 
-/** Root-mean-square level. The perceptually useful measure of loudness. */
-export const rms = (samples: Float32Array): number => {
-	if (samples.length === 0) return 0;
-	let total = 0;
-	for (let n = 0; n < samples.length; n++) {
-		const value = samples[n] ?? 0;
-		total += value * value;
-	}
-	return Math.sqrt(total / samples.length);
-};
+const REVERB_COMB_DELAYS_MS = [29.7, 37.1, 41.1, 43.7];
+const REVERB_COMB_FEEDBACK = 0.72;
+const REVERB_ALLPASS_DELAYS_MS = [5.0, 1.7];
+const REVERB_ALLPASS_FEEDBACK = 0.5;
+const SOFT_CLIP_DRIVE = 1.2;
+const OUTPUT_PEAK = 0.92;
 
-/**
- * Mix `source` into `target` at `gain`, starting at sample `offset`.
- * Anything past the end of `target` is dropped.
- */
+/** Adds `source` into `target` from `offset`; anything past the end is dropped. */
 export const mixInto = (
 	target: Float32Array,
 	source: Float32Array,
@@ -62,18 +41,13 @@ export const mixInto = (
 	const start = Math.max(0, Math.floor(offset));
 	const count = Math.min(source.length, target.length - start);
 	for (let n = 0; n < count; n++) {
-		const existing = target[start + n] ?? 0;
-		target[start + n] = existing + (source[n] ?? 0) * gain;
+		target[start + n] = (target[start + n] ?? 0) + (source[n] ?? 0) * gain;
 	}
 };
 
 /**
- * Pink-ish noise bed at the requested SNR relative to the signal's RMS.
- *
- * Pink rather than white because white noise puts most of its energy in
- * the top octaves where speech has almost none — it sounds loud and
- * masks nothing. Pink noise sits over the formants, so it is far more
- * effective per unit of annoyance.
+ * Pink-ish noise at `snrDb` below the signal's RMS. Pink rather than white
+ * because white noise spends its energy above the formants and masks little.
  */
 export const addNoiseBed = (
 	buffer: AudioBuffer,
@@ -85,8 +59,7 @@ export const addNoiseBed = (
 
 	const targetRms = signalRms / 10 ** (snrDb / 20);
 
-	// Voss-McCartney-ish: sum a few one-pole-filtered white sources with
-	// different time constants. Cheap approximation of a 1/f slope.
+	// Paul Kellet's economy pink-noise filter (~1/f).
 	let b0 = 0;
 	let b1 = 0;
 	let b2 = 0;
@@ -101,57 +74,44 @@ export const addNoiseBed = (
 
 	const noiseRms = rms(noise);
 	if (noiseRms === 0) return;
-	const gain = targetRms / noiseRms;
-	for (let n = 0; n < buffer.samples.length; n++) {
-		buffer.samples[n] = (buffer.samples[n] ?? 0) + (noise[n] ?? 0) * gain;
-	}
+	mixInto(buffer.samples, noise, 0, targetRms / noiseRms);
 };
 
+const delaySamples = (delayMs: number, sampleRate: number): number =>
+	Math.max(1, Math.round((delayMs / 1000) * sampleRate));
+
 /**
- * Schroeder reverb: four parallel comb filters into two series allpasses.
- *
- * The point is not ambience. Reverb smears onsets, and sharp onsets are
- * what makes it easy to chop a clip into one-digit segments and classify
- * each in isolation. A little smearing forces an attacker to handle the
- * clip as continuous speech.
+ * Schroeder reverb: parallel combs into series allpasses. Its purpose is to
+ * smear onsets, which otherwise make it easy to chop the clip into
+ * one-digit segments and classify each in isolation.
  */
 export const addReverb = (buffer: AudioBuffer, mix: number): void => {
 	if (mix <= 0) return;
 
 	const { samples, sampleRate } = buffer;
-	const combDelaysMs = [29.7, 37.1, 41.1, 43.7];
-	const combFeedback = 0.72;
-	const allpassDelaysMs = [5.0, 1.7];
-	const allpassFeedback = 0.5;
+	const wet = new Float32Array(samples.length);
 
-	let wet = Float32Array.from(samples);
-
-	// Parallel combs, summed.
-	const combOut = new Float32Array(samples.length);
-	for (const delayMs of combDelaysMs) {
-		const delay = Math.max(1, Math.round((delayMs / 1000) * sampleRate));
+	for (const delayMs of REVERB_COMB_DELAYS_MS) {
+		const delay = delaySamples(delayMs, sampleRate);
 		const line = new Float32Array(delay);
 		let index = 0;
-		for (let n = 0; n < wet.length; n++) {
+		for (let n = 0; n < samples.length; n++) {
 			const delayed = line[index] ?? 0;
-			combOut[n] = (combOut[n] ?? 0) + delayed / combDelaysMs.length;
-			line[index] = (wet[n] ?? 0) + delayed * combFeedback;
+			wet[n] = (wet[n] ?? 0) + delayed / REVERB_COMB_DELAYS_MS.length;
+			line[index] = (samples[n] ?? 0) + delayed * REVERB_COMB_FEEDBACK;
 			index = (index + 1) % delay;
 		}
 	}
-	wet = combOut;
 
-	// Series allpasses, to break up the comb resonances.
-	for (const delayMs of allpassDelaysMs) {
-		const delay = Math.max(1, Math.round((delayMs / 1000) * sampleRate));
+	for (const delayMs of REVERB_ALLPASS_DELAYS_MS) {
+		const delay = delaySamples(delayMs, sampleRate);
 		const line = new Float32Array(delay);
 		let index = 0;
 		for (let n = 0; n < wet.length; n++) {
 			const input = wet[n] ?? 0;
 			const delayed = line[index] ?? 0;
-			const output = -input * allpassFeedback + delayed;
-			line[index] = input + delayed * allpassFeedback;
-			wet[n] = output;
+			line[index] = input + delayed * REVERB_ALLPASS_FEEDBACK;
+			wet[n] = -input * REVERB_ALLPASS_FEEDBACK + delayed;
 			index = (index + 1) % delay;
 		}
 	}
@@ -162,52 +122,13 @@ export const addReverb = (buffer: AudioBuffer, mix: number): void => {
 };
 
 /**
- * Telephone-style band-limiting, 300 Hz to 3.4 kHz.
- *
- * Deliberately NOT applied by default: it removes the high-frequency
- * energy a listener needs to tell several of the digit names apart. Kept
- * available because it is occasionally the right choice for a
- * bandwidth-constrained deployment.
+ * tanh soft clip, then normalise: hard clipping at 16-bit conversion is
+ * audibly nasty and a distinctive artefact.
  */
-export const bandLimit = (
-	buffer: AudioBuffer,
-	lowHz = 300,
-	highHz = 3400,
-): void => {
-	const { samples, sampleRate } = buffer;
-	const dt = 1 / sampleRate;
-
-	const lowRc = 1 / (2 * Math.PI * highHz);
-	const lowAlpha = dt / (lowRc + dt);
-	let lowState = 0;
-	for (let n = 0; n < samples.length; n++) {
-		lowState += lowAlpha * ((samples[n] ?? 0) - lowState);
-		samples[n] = lowState;
-	}
-
-	const highRc = 1 / (2 * Math.PI * lowHz);
-	const highAlpha = highRc / (highRc + dt);
-	let prevIn = 0;
-	let prevOut = 0;
-	for (let n = 0; n < samples.length; n++) {
-		const input = samples[n] ?? 0;
-		prevOut = highAlpha * (prevOut + input - prevIn);
-		prevIn = input;
-		samples[n] = prevOut;
-	}
-};
-
-/**
- * Soft clip, then normalise.
- *
- * After noise and reverb the sum can exceed ±1, and hard clipping at the
- * 16-bit conversion is both audibly nasty and a distinctive artefact.
- * tanh saturates smoothly instead.
- */
-export const finalise = (buffer: AudioBuffer, peak = 0.92): void => {
+export const finalise = (buffer: AudioBuffer): void => {
 	const { samples } = buffer;
 	for (let n = 0; n < samples.length; n++) {
-		samples[n] = Math.tanh((samples[n] ?? 0) * 1.2);
+		samples[n] = Math.tanh((samples[n] ?? 0) * SOFT_CLIP_DRIVE);
 	}
-	normalise(samples, peak);
+	normalise(samples, OUTPUT_PEAK);
 };

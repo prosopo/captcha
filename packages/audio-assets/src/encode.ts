@@ -15,65 +15,47 @@
 import type { AudioBuffer } from "./types.js";
 
 const RIFF_HEADER_BYTES = 44;
+const RIFF_PREAMBLE_BYTES = 8;
+const FMT_CHUNK_BYTES = 16;
 const BITS_PER_SAMPLE = 16;
+const BYTES_PER_SAMPLE = BITS_PER_SAMPLE / 8;
 const CHANNELS = 1;
 const PCM_FORMAT_TAG = 1;
+// Symmetric for both signs so decoding is the exact inverse of encoding.
+const INT16_SCALE = 0x7fff;
 
 /**
- * Encode to RIFF/WAVE, 16-bit signed PCM, mono.
- *
- * WAV is uncompressed, so this is the largest the payload will ever be:
- * at 16 kHz a five-second clip is ~160 KB, ~213 KB once base64'd into the
- * JSON response. That is a real cost and the obvious lever is a
- * compressed codec, which would cut it by an order of magnitude — but it
- * would also mean an encoder dependency in the provider and a codec
- * support matrix in the browser. WAV needs neither: every browser that
- * can play audio at all can play 16-bit PCM, with no decode ambiguity
- * and no chance of a codec artefact being mistaken for part of the
- * challenge.
- *
- * 16 kHz rather than the 8 kHz that would halve the size: /s/, /f/ and
- * /θ/ live between 4 and 8 kHz, and an 8 kHz clip (4 kHz Nyquist)
- * discards them entirely. That is precisely the information that
- * separates "six" from "five" from "three", so the extra bytes are
- * buying intelligibility on the three digits humans confuse most.
+ * Uncompressed WAV because every browser plays 16-bit PCM with no codec
+ * dependency or artefacts that could be mistaken for the challenge.
  */
 export const encodeWav = (buffer: AudioBuffer): Buffer => {
 	const { samples, sampleRate } = buffer;
-	const dataBytes = samples.length * (BITS_PER_SAMPLE / 8);
+	const dataBytes = samples.length * BYTES_PER_SAMPLE;
 	const out = Buffer.alloc(RIFF_HEADER_BYTES + dataBytes);
 
-	const byteRate = (sampleRate * CHANNELS * BITS_PER_SAMPLE) / 8;
-	const blockAlign = (CHANNELS * BITS_PER_SAMPLE) / 8;
-
 	out.write("RIFF", 0, "ascii");
-	out.writeUInt32LE(36 + dataBytes, 4);
+	out.writeUInt32LE(RIFF_HEADER_BYTES - RIFF_PREAMBLE_BYTES + dataBytes, 4);
 	out.write("WAVE", 8, "ascii");
 
 	out.write("fmt ", 12, "ascii");
-	out.writeUInt32LE(16, 16); // PCM fmt chunk size
+	out.writeUInt32LE(FMT_CHUNK_BYTES, 16);
 	out.writeUInt16LE(PCM_FORMAT_TAG, 20);
 	out.writeUInt16LE(CHANNELS, 22);
 	out.writeUInt32LE(sampleRate, 24);
-	out.writeUInt32LE(byteRate, 28);
-	out.writeUInt16LE(blockAlign, 32);
+	out.writeUInt32LE(sampleRate * CHANNELS * BYTES_PER_SAMPLE, 28);
+	out.writeUInt16LE(CHANNELS * BYTES_PER_SAMPLE, 32);
 	out.writeUInt16LE(BITS_PER_SAMPLE, 34);
 
 	out.write("data", 36, "ascii");
 	out.writeUInt32LE(dataBytes, 40);
 
 	for (let n = 0; n < samples.length; n++) {
-		// Clamp before scaling: a sample fractionally over ±1 would wrap
-		// to the opposite rail as a loud click rather than saturating.
+		// Clamp first: an overshoot would otherwise wrap to the opposite rail.
 		const clamped = Math.max(-1, Math.min(1, samples[n] ?? 0));
-		// Symmetric scale by 0x7fff for both signs. Two's complement has
-		// one more negative code than positive, so scaling negatives by
-		// 0x8000 would use the full range — but then decoding is no
-		// longer the exact inverse of encoding, and every round trip
-		// accumulates a small asymmetric error. Giving up the single
-		// most-negative code buys exact invertibility, which is what the
-		// tests and any downstream analysis actually want.
-		out.writeInt16LE(Math.round(clamped * 0x7fff), RIFF_HEADER_BYTES + n * 2);
+		out.writeInt16LE(
+			Math.round(clamped * INT16_SCALE),
+			RIFF_HEADER_BYTES + n * BYTES_PER_SAMPLE,
+		);
 	}
 
 	return out;

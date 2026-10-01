@@ -50,8 +50,6 @@ describe("createAudioChallengeBuffer", () => {
 	});
 
 	test("never hands out the same challenge twice", () => {
-		// This is the security property, not an optimisation: a clip that
-		// came round again would be a clip whose answer is already known.
 		buffer = createAudioChallengeBuffer({
 			capacity: 6,
 			primeSettings: fastSettings,
@@ -86,8 +84,6 @@ describe("createAudioChallengeBuffer", () => {
 	});
 
 	test("takes honour the requested settings, not the primed ones", () => {
-		// A site that customised digitCount must not be served a clip
-		// rendered with someone else's value.
 		buffer = createAudioChallengeBuffer({
 			capacity: 1,
 			refillIntervalMs: 1_000_000,
@@ -105,9 +101,6 @@ describe("createAudioChallengeBuffer", () => {
 			maxVariants: 2,
 			primeSettings: fastSettings,
 		});
-		// Three distinct variants against a cap of two: the buffer must
-		// evict rather than grow, or a hostile spread of settings values
-		// becomes an unbounded memory sink.
 		for (const digitCount of [3, 4, 5, 6, 7, 8]) {
 			buffer.take({ ...fastSettings, digitCount });
 		}
@@ -141,9 +134,6 @@ describe("resolveAudioRenderSettings", () => {
 	});
 
 	test("later sources win, field by field", () => {
-		// The cascade the provider relies on: asset defaults <- client
-		// settings <- traffic-filter category override. A partial override
-		// must not wipe the fields it does not mention.
 		const resolved = resolveAudioRenderSettings(
 			{ digitCount: 6, noiseSnrDb: 20 },
 			{ noiseSnrDb: 9 },

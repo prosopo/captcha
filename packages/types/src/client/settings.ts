@@ -267,30 +267,16 @@ export const puzzleDecoyHoleDarkenFieldSchema = number().min(0).max(1);
 // fixed size (min == max) or explore the full frame. Cross-field
 // `min <= max` is enforced on the containing object schema.
 export const puzzlePieceScaleFieldSchema = number().min(0.05).max(0.95);
-// Field-level schemas, hoisted for the same reason as the puzzle ones:
-// `TrafficFilterSchema` per-category policies must validate with exactly
-// these bounds. Do not restate them elsewhere.
-//
-// The ceiling on digitCount is 8. Beyond that the answer outruns most
-// people's working memory for a spoken sequence, and the failure mode is
-// not "attacker blocked", it is "user replays the clip five times and
-// gives up".
+// Past 8 digits a spoken sequence outruns most listeners' working memory.
 export const audioDigitCountFieldSchema = number().int().min(3).max(8);
-// Floor of 3 dB rather than 0: below roughly that the noise is louder
-// than the speech and a listener can no longer follow it. This knob is
-// here to be turned *down* for accessibility, not up for difficulty.
+// Below about 3 dB the noise drowns the speech.
 export const audioNoiseSnrDbFieldSchema = number().min(3).max(60);
 export const audioBabbleGainFieldSchema = number().min(0).max(0.6);
 export const audioBabbleVoicesFieldSchema = number().int().min(0).max(4);
 export const audioReverbMixFieldSchema = number().min(0).max(0.6);
 export const audioGapMsFieldSchema = number().int().min(0).max(1500);
 
-/**
- * Per-render tunables for the audio captcha. Every field is optional so
- * operators can override a subset from the portal without restating the
- * defaults. The provider merges these on top of the asset package's
- * `DEFAULT_RENDER_SETTINGS` before calling the renderer.
- */
+/** Partial overrides of the audio-assets `DEFAULT_RENDER_SETTINGS`. */
 export const AudioSettingsSchema = object({
 	digitCount: audioDigitCountFieldSchema.optional(),
 	noiseSnrDb: audioNoiseSnrDbFieldSchema.optional(),
@@ -657,7 +643,6 @@ export const TrafficCategoryPolicySchema = object({
 	// the nested object are themselves optional, so a category can
 	// override, say, just `decoyCount` without restating the rest.
 	puzzle: PuzzleSettingsSchema.optional(),
-	// Same, for audio rendering.
 	audio: AudioSettingsSchema.optional(),
 	iconOrderTolerance: iconOrderToleranceFieldSchema.optional(),
 	iconOrder: IconOrderSettingsSchema.optional(),

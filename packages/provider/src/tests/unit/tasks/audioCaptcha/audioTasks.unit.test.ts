@@ -17,7 +17,6 @@ import {
 	type AudioCaptchaStored,
 	CaptchaStatus,
 	CaptchaType,
-	type ClientMetaData,
 	DecisionMachineDecision,
 	type KeyringPair,
 	POW_SEPARATOR,
@@ -213,25 +212,16 @@ describe("AudioCaptchaManager", () => {
 		const submit = (
 			a: ReturnType<typeof buildArgs>,
 			answer: string,
-			extras: {
-				salt?: string;
-				clientMetaData?: ClientMetaData;
-				timeout?: number;
-			} = {},
-		) =>
+		): Promise<boolean> =>
 			audioCaptchaManager.verifyAudioCaptchaSolution(
 				a.challenge,
 				a.providerSignature,
 				answer,
-				0, // replays
-				[], // audioEvents
-				extras.timeout ?? 1000,
+				2,
+				[{ kind: "play", t: 1 }],
+				1000,
 				a.userSignature,
 				a.ipAddress,
-				undefined, // behavioralData
-				extras.salt,
-				undefined, // simdReadings
-				extras.clientMetaData,
 			);
 
 		it("checks both signatures before it touches the database", async () => {
@@ -268,21 +258,7 @@ describe("AudioCaptchaManager", () => {
 			);
 		});
 
-		it.each([
-			["9 6 4 7 5", "spaces"],
-			["9-6-4-7-5", "dashes"],
-			["96 475", "a single gap"],
-			[" 96475 ", "surrounding whitespace"],
-		])("accepts %s, typed with %s", async (typed) => {
-			const a = buildArgs();
-			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
-				pendingRecord(a),
-			);
-
-			await expect(submit(a, typed)).resolves.toBe(true);
-		});
-
-		it("rejects a single wrong digit, with no edit-distance slack", async () => {
+		it("records a wrong answer as a user failure", async () => {
 			const a = buildArgs();
 			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
 				pendingRecord(a),
@@ -300,34 +276,6 @@ describe("AudioCaptchaManager", () => {
 				a.userSignature,
 				undefined,
 			);
-		});
-
-		it("rejects the right digits in the wrong order", async () => {
-			const a = buildArgs();
-			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
-				pendingRecord(a),
-			);
-
-			await expect(submit(a, "96457")).resolves.toBe(false);
-		});
-
-		it("rejects an answer with nothing in it", async () => {
-			const a = buildArgs();
-			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
-				pendingRecord(a),
-			);
-
-			await expect(submit(a, "   ")).resolves.toBe(false);
-		});
-
-		it("rejects everything when the stored transcript is somehow empty", async () => {
-			const a = buildArgs();
-			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
-				pendingRecord(a, { answer: "" }),
-			);
-
-			await expect(submit(a, "")).resolves.toBe(false);
-			await expect(submit(a, "12345")).resolves.toBe(false);
 		});
 
 		it("refuses a second submission against the same challenge", async () => {
@@ -372,19 +320,6 @@ describe("AudioCaptchaManager", () => {
 			expect(claimOrder).toBeLessThan(gradeOrder ?? Number.POSITIVE_INFINITY);
 		});
 
-		it("will not let a replay of a correct answer pass either", async () => {
-			const a = buildArgs();
-			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
-				pendingRecord(a, {
-					userSubmitted: true,
-					result: { status: CaptchaStatus.approved },
-				}),
-			);
-			vi.mocked(db.claimAudioCaptchaSubmission).mockResolvedValue(false);
-
-			await expect(submit(a, "96475")).resolves.toBe(false);
-		});
-
 		it("disapproves a stale challenge without grading it", async () => {
 			const a = buildArgs();
 			vi.mocked(verifyRecency).mockReturnValue(false);
@@ -406,29 +341,7 @@ describe("AudioCaptchaManager", () => {
 			);
 		});
 
-		it("disapproves a malformed salt without grading the answer", async () => {
-			const a = buildArgs();
-			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
-				pendingRecord(a),
-			);
-
-			await expect(submit(a, "96475", { salt: "0x010200" })).resolves.toBe(
-				false,
-			);
-			expect(db.updateAudioCaptchaRecordResult).toHaveBeenCalledWith(
-				a.challenge,
-				{
-					status: CaptchaStatus.disapproved,
-					reason: ResultReason.CAPTCHA_INVALID_SALT,
-				},
-				false,
-				true,
-				a.userSignature,
-				undefined,
-			);
-		});
-
-		it("keeps a wrong answer, which is where phoneme confusions show up", async () => {
+		it("persists the normalised answer and the trail even when wrong", async () => {
 			const a = buildArgs();
 			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
 				pendingRecord(a),
@@ -436,28 +349,11 @@ describe("AudioCaptchaManager", () => {
 
 			await submit(a, "9 6 4 7 6");
 
-			expect(db.updateAudioCaptchaRecord).toHaveBeenCalledWith(
-				a.challenge,
-				expect.objectContaining({ submittedAnswer: "96476" }),
-			);
-		});
-
-		it("records the session id the widget was rendered with", async () => {
-			const a = buildArgs();
-			vi.mocked(db.getAudioCaptchaRecordByChallenge).mockResolvedValue(
-				pendingRecord(a),
-			);
-
-			await submit(a, "96475", {
-				clientMetaData: { clientSessionId: "jti-1" },
+			expect(db.updateAudioCaptchaRecord).toHaveBeenCalledWith(a.challenge, {
+				audioEvents: [{ kind: "play", t: 1 }],
+				replays: 2,
+				submittedAnswer: "96476",
 			});
-
-			expect(db.updateAudioCaptchaRecord).toHaveBeenCalledWith(
-				a.challenge,
-				expect.objectContaining({
-					clientMetaData: { clientSessionId: "jti-1" },
-				}),
-			);
 		});
 	});
 

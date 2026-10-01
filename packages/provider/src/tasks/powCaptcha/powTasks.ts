@@ -528,11 +528,10 @@ export class PowCaptchaManager extends CaptchaManager {
 			: undefined;
 
 		// Either signal forces at least an image escalation, unless the routing
-		// machine already escalated to a challenge that collects its own
-		// interaction telemetry (image/puzzle) which we would keep anyway.
-		// Missing coords is reported in preference to a changed address when
-		// both fire: it is the stronger statement, since no legitimate widget
-		// omits them.
+		// machine already escalated to a visual challenge (image/puzzle) that we
+		// would keep anyway. Missing coords is reported in preference to a
+		// changed address when both fire: it is the stronger statement, since
+		// no legitimate widget omits them.
 		if (
 			(escalateForMissingCoords || escalateForIpChange) &&
 			routingOutput?.captchaType !== CaptchaType.image &&

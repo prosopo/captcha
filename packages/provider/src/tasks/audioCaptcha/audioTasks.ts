@@ -23,7 +23,10 @@ import {
 	type PoWChallengeId,
 } from "@prosopo/types";
 import type { AudioCaptchaRecord } from "@prosopo/types-database";
-import { renderAudioClip } from "../audio/audioRenderer.js";
+import {
+	type RenderedAudioClip,
+	renderAudioClip,
+} from "../audio/audioRenderer.js";
 import {
 	InteractiveCaptchaManager,
 	type InteractiveCaptchaRecordUpdate,
@@ -34,14 +37,7 @@ import {
 	validateAudioSolution,
 } from "./audioTasksUtils.js";
 
-/** `answer` is the transcript: persist it, never put it in a response. */
-export interface AudioCaptchaChallenge extends MintedChallenge {
-	/** WAV data URI. */
-	clip: string;
-	characterCount: number;
-	answer: string;
-	durationMs: number;
-}
+export type AudioCaptchaChallenge = MintedChallenge & RenderedAudioClip;
 
 export class AudioCaptchaManager extends InteractiveCaptchaManager<AudioCaptchaRecord> {
 	protected readonly captchaType = CaptchaType.audio;
@@ -76,11 +72,7 @@ export class AudioCaptchaManager extends InteractiveCaptchaManager<AudioCaptchaR
 		);
 	}
 
-	/**
-	 * An atomic claim rather than a read of `userSubmitted`: concurrent
-	 * submissions would all read it unset and each get a verdict, enough to
-	 * enumerate a short digit sequence.
-	 */
+	/** Atomic, so concurrent submissions cannot each be graded. */
 	protected claimSubmission(record: AudioCaptchaRecord): Promise<boolean> {
 		return this.db.claimAudioCaptchaSubmission(record.challenge);
 	}
@@ -104,10 +96,10 @@ export class AudioCaptchaManager extends InteractiveCaptchaManager<AudioCaptchaR
 		dappAccount: string,
 		settings: AudioRenderSettings,
 	): AudioCaptchaChallenge {
-		const minted = this.mintChallenge(userAccount, dappAccount);
-		const { clip, characterCount, answer, durationMs } =
-			renderAudioClip(settings);
-		return { ...minted, clip, characterCount, answer, durationMs };
+		return {
+			...this.mintChallenge(userAccount, dappAccount),
+			...renderAudioClip(settings),
+		};
 	}
 
 	async verifyAudioCaptchaSolution(

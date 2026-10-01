@@ -20,29 +20,18 @@ import {
 } from "@prosopo/audio-assets";
 
 /**
- * Pre-generated audio challenges, handed out exactly once each.
+ * Pre-generated audio challenges, keeping synthesis off the request path.
  *
- * SINGLE USE IS A SECURITY PROPERTY, NOT AN OPTIMISATION. Serving the
- * same clip twice hands an attacker a labelled pair: solve it once by
- * hand, recognise the bytes on the second serving, and pass for free.
- * More damagingly, a repeated clip is training data — the cheapest way
- * to build a solver for a synthetic voice is to collect (audio, answer)
- * pairs from the target itself. `take()` therefore removes what it
- * returns and the buffer never hands the same challenge out twice.
+ * SINGLE USE IS A SECURITY PROPERTY: a clip served twice is a labelled
+ * (audio, answer) pair an attacker can recognise or train a solver on, so
+ * `take()` removes what it returns.
  *
- * Unlike the puzzle's background buffer, entries here are keyed by their
- * render settings: a site that has customised `digitCount` or
- * `noiseSnrDb` must not be served a clip rendered with someone else's
- * values. Buffers are held per distinct settings signature, and the
- * total number of buffers is capped so a hostile spread of settings
- * cannot grow this without bound.
- *
- * The buffer exists to keep synthesis off the request path — a clip
- * costs tens of milliseconds of DSP and a few hundred KB of PCM while
- * it waits.
+ * Ready clips are held per render-settings variant, so a site never gets a
+ * clip rendered with another site's settings; the variant count is capped so
+ * a spread of settings cannot grow this without bound.
  */
 export interface AudioChallengeBuffer {
-	/** Consume one challenge. Never returns null — see `take`. */
+	/** Consume one challenge, rendering inline when none is ready. */
 	take(settings: AudioRenderSettings): RenderedAudioChallenge;
 	/** How many are ready right now, across all settings variants. */
 	depth(): number;
@@ -59,10 +48,7 @@ export interface AudioBufferOptions {
 	refillIntervalMs?: number;
 	/** Most challenges to generate in one refill tick, per variant. */
 	refillBatch?: number;
-	/**
-	 * Most distinct settings variants to keep buffers for. Beyond this,
-	 * the least recently used variant is evicted.
-	 */
+	/** Most settings variants to keep; the least recently used is evicted. */
 	maxVariants?: number;
 	/** Settings to prime the buffer with at boot. */
 	primeSettings?: AudioRenderSettings;
@@ -73,11 +59,7 @@ export const DEFAULT_REFILL_INTERVAL_MS = 500;
 export const DEFAULT_REFILL_BATCH = 2;
 export const DEFAULT_MAX_VARIANTS = 8;
 
-/**
- * Stable key for a settings object. Field order is fixed here rather
- * than taken from `Object.keys`, so two equivalent settings objects
- * built in different orders share a buffer instead of each getting one.
- */
+// Fixed field order, so equivalent settings built in any order share a key.
 const settingsKey = (settings: AudioRenderSettings): string =>
 	[
 		settings.digitCount,
@@ -97,8 +79,7 @@ export const createAudioChallengeBuffer = (
 	const refillBatch = options.refillBatch ?? DEFAULT_REFILL_BATCH;
 	const maxVariants = options.maxVariants ?? DEFAULT_MAX_VARIANTS;
 
-	// Insertion-ordered, so the first key is the least recently used
-	// once `touch` re-inserts on access.
+	// `touch` re-inserts on access, so the first key is the least recently used.
 	const variants = new Map<
 		string,
 		{ settings: AudioRenderSettings; ready: RenderedAudioChallenge[] }
@@ -130,8 +111,6 @@ export const createAudioChallengeBuffer = (
 		}
 	};
 
-	// Prime the default variant synchronously so the first request after
-	// boot does not pay for synthesis.
 	const prime = options.primeSettings ?? DEFAULT_RENDER_SETTINGS;
 	touch(settingsKey(prime), prime);
 	topUp(capacity);
@@ -146,8 +125,6 @@ export const createAudioChallengeBuffer = (
 			const challenge = variant.ready.pop();
 			if (!challenge) {
 				starved++;
-				// Generate inline rather than failing the request. Slower,
-				// but a challenge is still served and single-use holds.
 				return renderAudioChallenge(settings);
 			}
 			return challenge;

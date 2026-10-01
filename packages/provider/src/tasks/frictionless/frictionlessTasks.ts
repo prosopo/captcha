@@ -49,7 +49,7 @@ import {
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
 import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
-import { isAudioAlternativeSessionType } from "../audioAlternative.js";
+import { offersAudioAlternative } from "../audioAlternative.js";
 import { CaptchaManager } from "../captchaManager.js";
 import {
 	coerceToEnabledCaptchaType,
@@ -102,7 +102,7 @@ export class FrictionlessManager extends CaptchaManager {
 		"sessionId" | "createdAt" | "captchaType"
 	>;
 	private routingContext?: RoutingContext;
-	private audioAlternativeAvailable = false;
+	private audioAccessibilityEnabled = false;
 	private readonly decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
 
@@ -131,18 +131,9 @@ export class FrictionlessManager extends CaptchaManager {
 		this.routingContext = ctx;
 	}
 
-	/**
-	 * Whether this site offers the audio challenge as an accessibility
-	 * alternative from the image and puzzle widgets.
-	 *
-	 * Set once per request from the client record, before either the
-	 * short-circuit or the decision-machine dispatch path runs, so every
-	 * `send*Captcha` return carries it. Kept separate from
-	 * `setSessionParams` because the short-circuit path builds its own
-	 * params object and would otherwise miss it.
-	 */
-	setAudioAlternativeAvailable(available: boolean): void {
-		this.audioAlternativeAvailable = available;
+	/** Separate from `setSessionParams`, which the short-circuit path bypasses. */
+	setAudioAccessibilityEnabled(enabled: boolean): void {
+		this.audioAccessibilityEnabled = enabled;
 	}
 
 	/**
@@ -712,12 +703,10 @@ export class FrictionlessManager extends CaptchaManager {
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
 			dns_url: buildDnsEventUrl(sessionRecord.sessionId),
-			// Only advertised when the challenge actually has something to
-			// switch away from: PoW has no UI to hang the control off.
-			...(isAudioAlternativeSessionType(finalCaptchaType) &&
-				this.audioAlternativeAvailable && {
-					audioAlternativeAvailable: true,
-				}),
+			...(offersAudioAlternative(
+				finalCaptchaType,
+				this.audioAccessibilityEnabled,
+			) && { audioAlternativeAvailable: true }),
 		};
 	}
 

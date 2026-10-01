@@ -54,6 +54,7 @@ export const StoredAudioCaptchaRecordSchema: Schema = new Schema({
 	...AudioCaptchaRecordSchema.obj,
 });
 StoredAudioCaptchaRecordSchema.index({ sessionId: 1 });
+
 export const StoredIconOrderCaptchaRecordSchema: Schema = new Schema({
 	...IconOrderCaptchaRecordSchema.obj,
 });
@@ -65,8 +66,8 @@ export interface ICaptchaDatabase extends IDatabase {
 		imageCaptchaEvents: UserCommitmentRecord[],
 		powCaptchaEvents: PoWCaptchaRecord[],
 		puzzleCaptchaEvents?: PuzzleCaptchaRecord[],
-		audioCaptchaEvents?: AudioCaptchaRecord[],
 		iconOrderCaptchaEvents?: IconOrderCaptchaRecord[],
+		audioCaptchaEvents?: AudioCaptchaRecord[],
 	): Promise<void>;
 	getCaptchas(
 		filter: QueryFilter<CaptchaProperties>,

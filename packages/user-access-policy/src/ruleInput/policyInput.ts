@@ -46,7 +46,6 @@ import {
 // `ZodEffects`, which loses `.shape`.
 export const accessPolicyInputShape = z.object({
 	type: z.nativeEnum(AccessPolicyType),
-	// A Restrict rule cannot pin audio — see `SelectableCaptchaTypeSchema`.
 	captchaType: SelectableCaptchaTypeSchema.optional(),
 	description: z.coerce.string().optional(),
 	// Redis stores values as strings, so coerce is needed to parse properly

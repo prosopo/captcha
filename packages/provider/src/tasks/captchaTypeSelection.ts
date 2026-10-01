@@ -20,11 +20,7 @@ import {
 } from "@prosopo/types";
 import { isPuzzleRenderAvailable } from "./puzzle/puzzleRenderer.js";
 
-/**
- * The concrete types a session can actually be minted as. `audio` is not one:
- * the audio challenge is served against a visual session, as the
- * accessibility alternative (see `isAudioAlternativeAllowed`).
- */
+/** The concrete types a session can actually be minted as. */
 export type ConcreteCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image

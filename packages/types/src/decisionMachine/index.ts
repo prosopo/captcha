@@ -465,8 +465,7 @@ export interface RoutingMachineOutput {
 }
 
 export const RoutingMachineOutputSchema = z.object({
-	// No `audio`: a routing machine cannot send a user to the audio
-	// challenge. It is only reachable as the accessibility alternative.
+	// No `audio`: it is only reachable as the accessibility alternative.
 	captchaType: z.union([
 		z.literal(CaptchaType.pow),
 		z.literal(CaptchaType.image),

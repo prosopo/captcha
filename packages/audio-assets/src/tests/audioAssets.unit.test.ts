@@ -15,6 +15,7 @@
 import { describe, expect, test } from "vitest";
 import {
 	ANSWER_ALPHABET,
+	type AudioBuffer,
 	type AudioRenderSettings,
 	DEFAULT_RENDER_SETTINGS,
 	DIGITS,
@@ -41,7 +42,6 @@ const cleanSettings = (
 	...overrides,
 });
 
-/** Decode the samples back out of a WAV so assertions can look at audio. */
 const decodeWav = (wav: Buffer): Float32Array => {
 	const dataBytes = wav.readUInt32LE(40);
 	const out = new Float32Array(dataBytes / 2);
@@ -97,8 +97,6 @@ describe("synthesiseUtterance", () => {
 				expect(Number.isFinite(sample)).toBe(true);
 				expect(Math.abs(sample)).toBeLessThanOrEqual(1.0001);
 			}
-			// Not silence. A phoneme table typo that produced an unfilterable
-			// excitation would otherwise pass every other assertion here.
 			expect(rms(buffer.samples)).toBeGreaterThan(0.01);
 		}
 	});
@@ -127,7 +125,6 @@ describe("synthesiseUtterance", () => {
 	});
 
 	test("different seeds produce different audio", () => {
-		// The whole security argument rests on challenges not repeating.
 		const render = (): Float32Array => {
 			const prng = createPrng(createSeed());
 			const voice = randomVoice(prng);
@@ -173,8 +170,6 @@ describe("renderAudioChallenge", () => {
 		expect(wav.readUInt16LE(34)).toBe(16); // bit depth
 		expect(wav.subarray(36, 40).toString("ascii")).toBe("data");
 
-		// Header's declared sizes must agree with the actual buffer, or
-		// browsers reject or truncate the clip.
 		const dataBytes = wav.readUInt32LE(40);
 		expect(wav.length).toBe(44 + dataBytes);
 		expect(wav.readUInt32LE(4)).toBe(36 + dataBytes);
@@ -190,8 +185,6 @@ describe("renderAudioChallenge", () => {
 	});
 
 	test("consecutive challenges differ in both answer and audio", () => {
-		// A clip that came round again would be a clip whose answer is
-		// already known, so this is a security property, not a quality one.
 		const answers = new Set<string>();
 		const digests = new Set<string>();
 		for (let i = 0; i < 12; i++) {
@@ -210,8 +203,6 @@ describe("renderAudioChallenge", () => {
 		for (const sample of samples) {
 			if (Math.abs(sample) >= 0.999) pinned++;
 		}
-		// A handful of samples at the peak is normal after normalisation;
-		// a run of them means the mix overflowed.
 		expect(pinned).toBeLessThan(samples.length * 0.001);
 	});
 
@@ -222,8 +213,7 @@ describe("renderAudioChallenge", () => {
 		const withBabble = renderAudioChallenge(
 			cleanSettings({ digitCount: 4, babbleGain: 0.2, babbleVoices: 2 }),
 		);
-		// Both are peak-normalised so RMS is the meaningful comparison: a
-		// babble track raises the average level without raising the peak.
+		// Both are peak-normalised, so compare RMS.
 		expect(rms(decodeWav(withBabble.wav))).toBeGreaterThan(
 			rms(decodeWav(withoutBabble.wav)) * 0.5,
 		);
@@ -241,16 +231,11 @@ describe("addNoiseBed", () => {
 			const clean = Float32Array.from(signal);
 			const before = rms(clean);
 
-			const buffer = { samples: signal, sampleRate: SAMPLE_RATE };
+			const buffer: AudioBuffer = { samples: signal, sampleRate: SAMPLE_RATE };
 			addNoiseBed(buffer, prng, snrDb);
 
-			// Recover the noise by differencing rather than by subtracting
-			// powers. `after^2 - before^2` only gives the noise power when
-			// signal and noise are exactly uncorrelated; over a finite
-			// window pink noise has real correlation with a 440 Hz sine
-			// (most of its energy is low-frequency), so that estimate
-			// carries a cross-term and the test goes flaky. addNoiseBed
-			// adds in place, so the difference IS the noise, exactly.
+			// Difference, not power subtraction: over a finite window pink
+			// noise correlates with the sine, which made that estimate flaky.
 			const noise = new Float32Array(clean.length);
 			for (let n = 0; n < noise.length; n++) {
 				noise[n] = (buffer.samples[n] ?? 0) - (clean[n] ?? 0);
@@ -263,7 +248,7 @@ describe("addNoiseBed", () => {
 
 	test("leaves silence alone rather than dividing by zero", () => {
 		const prng = createPrng(createSeed());
-		const buffer = {
+		const buffer: AudioBuffer = {
 			samples: new Float32Array(1000),
 			sampleRate: SAMPLE_RATE,
 		};
@@ -284,8 +269,6 @@ describe("encodeWav", () => {
 	});
 
 	test("saturates out-of-range samples instead of wrapping", () => {
-		// Wrapping would turn an overshoot into a full-scale click of the
-		// opposite sign — the loudest possible artefact.
 		const samples = new Float32Array([2, -2]);
 		const decoded = decodeWav(encodeWav({ samples, sampleRate: SAMPLE_RATE }));
 		expect(decoded[0]).toBeGreaterThan(0.99);

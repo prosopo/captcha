@@ -86,9 +86,8 @@ const issueAudioChallenge = async ({
 	};
 };
 
-// Audio is only the accessibility alternative to a visual challenge:
-// `isValidRequest` further requires a visual session to exchange (see
-// `isAudioAlternativeAllowed`), so sessionless requests are refused.
+// `isValidRequest` also requires a visual session to exchange; see
+// `isAudioAlternativeAllowed`.
 export default (
 	env: ProviderEnvironment,
 	userAccessRulesStorage: AccessRulesStorage,

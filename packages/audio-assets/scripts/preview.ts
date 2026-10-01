@@ -13,13 +13,9 @@
 // limitations under the License.
 
 /**
- * Listen to the generator.
- *
- * There is no unit test for "is this intelligible" — that judgement needs
- * ears. This writes N challenges plus a per-digit reference set and a
- * contact-sheet HTML page with the answers hidden behind a toggle, so the
- * output can be judged the way a user would meet it: listen first, reveal
- * afterwards.
+ * Intelligibility needs ears, not a unit test. Writes challenges, per-digit
+ * references and an HTML page with the answers behind a reveal button.
+ * `--clean` turns off noise, babble and reverb to judge the synthesiser alone.
  *
  *   npm -w @prosopo/audio-assets run preview -- --count 12 --out ./preview
  */
@@ -27,6 +23,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
+	type AudioRenderSettings,
 	DEFAULT_RENDER_SETTINGS,
 	DIGITS,
 	SAMPLE_RATE,
@@ -44,7 +41,7 @@ interface Args {
 	clean: boolean;
 }
 
-const parseArgs = (argv: string[]): Args => {
+const parseArgs = (argv: readonly string[]): Args => {
 	const args: Args = { count: 12, out: "./preview", clean: false };
 	for (let i = 0; i < argv.length; i++) {
 		const flag = argv[i];
@@ -55,8 +52,6 @@ const parseArgs = (argv: string[]): Args => {
 			const value = argv[++i];
 			if (value) args.out = value;
 		} else if (flag === "--clean") {
-			// Renders with every distortion off, to judge the synthesiser
-			// on its own before the obfuscation is blamed for anything.
 			args.clean = true;
 		}
 	}
@@ -68,7 +63,7 @@ const main = async (): Promise<void> => {
 	const outDir = resolve(args.out);
 	mkdirSync(outDir, { recursive: true });
 
-	const settings = args.clean
+	const settings: AudioRenderSettings = args.clean
 		? {
 				...DEFAULT_RENDER_SETTINGS,
 				noiseSnrDb: 60,
@@ -78,9 +73,6 @@ const main = async (): Promise<void> => {
 			}
 		: DEFAULT_RENDER_SETTINGS;
 
-	// Per-digit references, one clean rendering each. Invaluable when a
-	// digit is being misheard and you need to know whether the phoneme
-	// table or the noise is at fault.
 	const prng = createPrng(createSeed());
 	const referenceVoice = randomVoice(prng);
 	const references: string[] = [];

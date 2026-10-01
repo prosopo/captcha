@@ -28,8 +28,6 @@ describe("normaliseAudioAnswer", () => {
 	});
 
 	test("cannot turn one digit sequence into a different one", () => {
-		// The whole safety argument for normalising: only non-digits are
-		// removed, so order and identity are preserved.
 		expect(normaliseAudioAnswer("54321")).toBe("54321");
 		expect(normaliseAudioAnswer("1a2b3")).toBe("123");
 	});
@@ -58,15 +56,12 @@ describe("validateAudioSolution", () => {
 	});
 
 	test("rejects a prefix, a suffix and an extra digit", () => {
-		// No partial credit: a five-digit answer must be five digits.
 		expect(validateAudioSolution("1234", "12345")).toBe(false);
 		expect(validateAudioSolution("123456", "12345")).toBe(false);
 		expect(validateAudioSolution("012345", "12345")).toBe(false);
 	});
 
 	test("rejects a single-substitution near miss", () => {
-		// Deliberately no edit-distance tolerance: one allowed substitution
-		// widens the accepted set by far more than it helps a listener.
 		expect(validateAudioSolution("12395", "12345")).toBe(false);
 	});
 
@@ -77,8 +72,6 @@ describe("validateAudioSolution", () => {
 	});
 
 	test("rejects everything when the stored answer is empty", () => {
-		// A record with an empty `answer` should be impossible, but if one
-		// existed, "" === "" must not pass every submission.
 		expect(validateAudioSolution("", "")).toBe(false);
 		expect(validateAudioSolution("12345", "")).toBe(false);
 	});

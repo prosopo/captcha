@@ -678,10 +678,7 @@ export class CaptchaManager {
 				}
 			}
 
-			// Check the captcha type of the session is the same as the requested
-			// captcha type. The one exception is the audio accessibility
-			// alternative, which is served against the visual session the user
-			// was given — see `isAudioAlternativeAllowed`.
+			// Check the captcha type of the session is the same as the requested captcha type
 			if (
 				sessionRecord.captchaType !== requestedCaptchaType &&
 				!isAudioAlternativeAllowed(
@@ -722,9 +719,7 @@ export class CaptchaManager {
 
 		// No Session ID
 
-		// Audio is only ever served against a visual session, as the
-		// accessibility alternative. With no session there is nothing to
-		// exchange, and no site setting can select audio directly.
+		// Audio is only served in exchange for a visual session.
 		if (requestedCaptchaType === CaptchaType.audio) {
 			this.logger.warn(() => ({
 				msg: "Sessionless audio captcha request rejected",

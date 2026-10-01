@@ -238,16 +238,12 @@ describe("ProviderDatabase projection contracts", () => {
 	});
 
 	// ─── Audio captcha record ────────────────────────────────────────────
-	// getAudioCaptchaRecordByChallenge is called by `verifyAudioCaptchaSolution`
-	// and, through the shared base, `serverVerifyInteractiveCaptchaSolution`.
 	// Consumer field manifest derived by `grep -oE "challengeRecord\.[a-zA-Z_]+"`
-	// on `audioCaptcha/audioTasks.ts` and
-	// `interactiveCaptcha/interactiveCaptchaManager.ts`. `clientMetaData` was
-	// once missing here, which rejected every verify that sent a
-	// clientSessionId.
+	// on `interactiveCaptcha/interactiveCaptchaManager.ts` plus the audio
+	// fields `audioTasks.ts` reads.
 	testProjectionContract<AudioCaptchaRecord>({
 		name: "getAudioCaptchaRecordByChallenge",
-		consumerName: "serverVerifyAudioCaptchaSolution",
+		consumerName: "serverVerifyInteractiveCaptchaSolution",
 		insert: async () => {
 			const challenge =
 				"1___2___audio-projection-contract" as unknown as string;
