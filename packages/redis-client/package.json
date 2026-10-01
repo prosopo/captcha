@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/redis-client",
-	"version": "1.0.37",
+	"version": "1.0.39",
 	"description": "Pluggable Redis client for non-blocking connections with smart index creation",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -24,7 +24,8 @@
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
 		"test:integration": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=integration npx vitest run --config ./vite.test.config.ts",
-		"test": "npm run test:integration"
+		"test:unit": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=unit npx vitest run --config ./vite.test.config.ts",
+		"test": "npm run test:unit && npm run test:integration"
 	},
 	"repository": {
 		"type": "git",
@@ -38,12 +39,12 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@prosopo/logger": "2.1.0",
+		"@prosopo/logger": "2.1.2",
 		"@redis/search": "6.2.1",
 		"redis": "6.2.1"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.1",
+		"@prosopo/config": "3.4.2",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",

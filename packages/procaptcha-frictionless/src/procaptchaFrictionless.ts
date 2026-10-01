@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { loadI18next } from "@prosopo/locale";
+import { loadI18next, localiseErrorMessage } from "@prosopo/locale";
 import {
 	type CheckboxProps,
 	type Component,
@@ -135,7 +135,8 @@ export const mountProcaptchaFrictionless = (
 	// Set when the re-mint was triggered by a wrong puzzle answer rather than a
 	// reload press, so the replacement challenge still tells the user they
 	// missed. Held alongside `nextMountAutoStart` for the same reason.
-	let nextMountShowRetry = false;
+	// Also seeded by a full restart after a rejected image answer.
+	let nextMountShowRetry = true === props.startShowRetry;
 	// The session the user refreshed away from, sent with the next
 	// /frictionless request so the provider can count refreshes in a row.
 	// Survives provider retries for the same reason as `nextMountAutoStart`,
@@ -220,6 +221,9 @@ export const mountProcaptchaFrictionless = (
 		teardown.add(() => clearTimeout(timer));
 	};
 
+	const cannotLoadText = (): string =>
+		i18n.isInitialized ? i18n.t("WIDGET.CANNOT_LOAD") : "Cannot load CAPTCHA";
+
 	const fallOverWithStyle = (errorMessage?: string, errorKey?: string) => {
 		// We could always re-render here after a period but this will result in
 		// never-ending requests to Providers when settings are incorrect, or the
@@ -238,7 +242,9 @@ export const mountProcaptchaFrictionless = (
 		}
 		renderPlaceholder(
 			config.mode,
-			errorMessage || "Cannot load CAPTCHA",
+			errorMessage
+				? localiseErrorMessage(i18n, { message: errorMessage, key: errorKey })
+				: cannotLoadText(),
 			false,
 		);
 	};
@@ -394,6 +400,13 @@ export const mountProcaptchaFrictionless = (
 				userAccount: frictionlessState.userAccount,
 				provider: frictionlessState.provider,
 				callbacks,
+				theme: "light" === config.theme ? lightTheme : darkTheme,
+				labels: i18n.isInitialized
+					? {
+							verifiedAgent: i18n.t("WIDGET.VERIFIED_AGENT"),
+							trustedRequest: i18n.t("WIDGET.TRUSTED_REQUEST"),
+						}
+					: undefined,
 			});
 			return;
 		}
@@ -482,6 +495,7 @@ export const mountProcaptchaFrictionless = (
 					behaviorCollector1: result.behaviorCollector1,
 					behaviorCollector2: result.behaviorCollector2,
 					behaviorCollector3: result.behaviorCollector3,
+					behaviorCollector4: result.behaviorCollector4,
 					deviceCapability: result.deviceCapability,
 					encryptBehavioralData: result.encryptBehavioralData,
 					getSimdReadings: result.getSimdReadings,

@@ -159,6 +159,40 @@ describe("where the surface renders", () => {
 	});
 });
 
+describe("text direction", () => {
+	it("takes the widget's direction, across the shadow root it sits in", () => {
+		// The bundle sets dir on the widget host; the anchor is inside its
+		// shadow tree, and the layer is under an ltr body.
+		const host = document.createElement("div");
+		host.dir = "rtl";
+		const shadow = host.attachShadow({ mode: "open" });
+		const inner = document.createElement("div");
+		shadow.append(inner);
+		inner.append(anchor);
+		document.body.append(host);
+		document.documentElement.dir = "ltr";
+
+		render({});
+
+		expect(layer()?.getAttribute("dir")).toBe("rtl");
+		host.remove();
+		document.documentElement.removeAttribute("dir");
+	});
+
+	it("follows the widget when its direction changes", () => {
+		anchor.dir = "rtl";
+		render({});
+		anchor.dir = "ltr";
+		surface?.update({ show: true, anchor });
+		expect(layer()?.getAttribute("dir")).toBe("ltr");
+	});
+
+	it("leaves the page's direction alone without a widget to follow", () => {
+		render({ withAnchor: false });
+		expect(layer()?.hasAttribute("dir")).toBe(false);
+	});
+});
+
 describe("popup", () => {
 	it("is the default placement", () => {
 		render({});

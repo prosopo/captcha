@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { severityToPuzzleDifficulty } from "@prosopo/captcha-severity";
+import {
+	resolveMaxEscalationLevel,
+	severityToPuzzleDifficulty,
+} from "@prosopo/captcha-severity";
 import type { Logger } from "@prosopo/logger";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
@@ -459,7 +462,12 @@ export class FrictionlessManager extends CaptchaManager {
 				status: "API.CLIENT_SESSION_MISMATCH",
 			};
 		}
-		await this.db.updateSessionRecord(sessionId, { serverChecked: true });
+		if (!(await this.db.claimSessionServerCheck(sessionId))) {
+			return {
+				verified: false,
+				status: "API.USER_ALREADY_VERIFIED",
+			};
+		}
 		return { verified: true, status: "API.USER_VERIFIED" };
 	}
 
@@ -574,9 +582,11 @@ export class FrictionlessManager extends CaptchaManager {
 				? (() => {
 						// The site's own ceiling on automatic escalation; 0 pins the
 						// level to 0 so its configured puzzle settings render every time.
-						const maxLevel =
+						const maxLevel = resolveMaxEscalationLevel(
 							this.routingContext?.puzzleMaxDifficulty ??
-							puzzleMaxDifficultyDefault;
+								puzzleMaxDifficultyDefault,
+							this.routingContext?.platform.isMobile ?? false,
+						);
 						// Paths that measured nothing carry a fixed fallback round count,
 						// not a severity, so they must not read as an escalation.
 						const level =

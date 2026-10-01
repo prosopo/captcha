@@ -11,7 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { severityToPuzzleDifficulty } from "@prosopo/captcha-severity";
+import {
+	resolveMaxEscalationLevel,
+	severityToPuzzleDifficulty,
+} from "@prosopo/captcha-severity";
 import { ProsopoApiError } from "@prosopo/common";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
@@ -38,6 +41,7 @@ import {
 } from "../../utils/devicePlatform.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
 import { rawTlsSignalsForSession } from "../rawTlsSignalsMiddleware.js";
+import { summariseRequestBody } from "../requestBodySummary.js";
 import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -69,7 +73,7 @@ export default (env: ProviderEnvironment) =>
 		} catch (err) {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: req.body },
+					context: { code: 400, error: err, body: summariseRequestBody(req) },
 					i18n: req.i18n,
 					logger: req.logger,
 				}),
@@ -225,6 +229,7 @@ export default (env: ProviderEnvironment) =>
 				{
 					frictionlessTypes: clientRecord.settings?.frictionlessTypes,
 					imageMaxRounds: clientRecord.settings?.imageMaxRounds,
+					puzzleMaxDifficulty: clientRecord.settings?.puzzleMaxDifficulty,
 				},
 			);
 			const response: PowCaptchaSolutionResponse = {
@@ -238,7 +243,7 @@ export default (env: ProviderEnvironment) =>
 		} catch (err) {
 			req.logger.error(() => ({
 				err,
-				body: req.body,
+				body: summariseRequestBody(req),
 				msg: "Error in PoW captcha solution submission",
 			}));
 			return next(
@@ -293,6 +298,7 @@ export const buildEscalation = async (
 	siteConstraints?: {
 		frictionlessTypes?: IFrictionlessTypes;
 		imageMaxRounds?: number;
+		puzzleMaxDifficulty?: number;
 	},
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
@@ -344,9 +350,14 @@ export const buildEscalation = async (
 		| { puzzleTolerance: number; puzzle: IPuzzleSettings }
 		| undefined => {
 		if (escalatedType !== CaptchaType.puzzle) return undefined;
+		const { isMobile } = derivePlatform(
+			originSession.headers?.["user-agent"] ?? "",
+			originSession.webView,
+		);
 		const level = severityToPuzzleDifficulty(
 			routed.solvedImagesCount ?? originSession.solvedImagesCount,
 			tasks.config.captchas.solved.count,
+			resolveMaxEscalationLevel(siteConstraints?.puzzleMaxDifficulty, isMobile),
 		);
 		// As in sendCaptcha: level 0 leaves the site's configured puzzle
 		// settings in force rather than overriding them with band values.

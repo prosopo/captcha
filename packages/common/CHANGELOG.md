@@ -1,5 +1,28 @@
 # @prosopo/common
 
+## 3.1.61
+### Patch Changes
+
+- 06784d0: Error classes now only accept error keys that exist in the English translation catalogue, so a misspelt key such as `DATABASE.DATABASE_IMPORT_ERROR` fails to compile instead of showing the raw key to users.
+- 06784d0: Translation keys are now a typed union built from the English catalogue, so calling the translator with a key that does not exist fails to compile. Error classes only pass a message to the translator when it is a real catalogue key, and free-text messages are shown as they are.
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [06784d0]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/locale@3.6.2
+  - @prosopo/logger@2.1.2
+
+## 3.1.60
+### Patch Changes
+
+- b5e55a6: API error responses and error logs now carry at most 10 validation issues, plus the total count in the log. A body under the 1MB limit can fail validation with one issue per array element. For example, 150,000 `null` puzzle events give 150,000 issues. Every issue went into the 400 response and into the error log, so a 900KB request produced a 20MB response and a multi-MB log line. Both were built on the event loop, which stalled every other request on the provider while it ran.
+- Updated dependencies [294b480]
+  - @prosopo/locale@3.6.1
+  - @prosopo/logger@2.1.1
+
 ## 3.1.59
 ### Patch Changes
 

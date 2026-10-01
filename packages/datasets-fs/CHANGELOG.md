@@ -1,5 +1,55 @@
 # @prosopo/datasets-fs
 
+## 3.0.142
+### Patch Changes
+
+- Updated dependencies [ede4352]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [b017dfb]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+- Updated dependencies [97a799e]
+- Updated dependencies [9fc1e8a]
+  - @prosopo/util-crypto@13.6.0
+  - @prosopo/types@5.12.0
+  - @prosopo/util@3.3.13
+  - @prosopo/common@3.1.61
+  - @prosopo/logger@2.1.2
+
+## 3.0.141
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+
+## 3.0.140
+### Patch Changes
+
+- 3296ab6: Remove the unused `@prosopo/workspace` dependency from datasets-fs. The tests stopped importing it in the fixture-assertions change, and the leftover dependency made the lint check fail on every PR.
+- 2d976f6: The dataset command tests now actually check their output. Before, the image comparisons for flatten and resize were computed and thrown away, which hid that the checked-in fixtures were out of date (they still used the old 512-bit image names). The fixtures are regenerated with the current commands, the comparisons are real assertions, and the tests write into a temporary directory instead of rewriting the checked-in fixture files while they run.
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+- Updated dependencies [0d29dde]
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/util@3.3.12
+  - @prosopo/logger@2.1.1
+
+## 3.0.139
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+
 ## 3.0.138
 ### Patch Changes
 

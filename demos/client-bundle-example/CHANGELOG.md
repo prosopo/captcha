@@ -1,5 +1,20 @@
 # @prosopo/client-bundle-example
 
+## 2.11.3
+### Patch Changes
+
+- 8178ab2: The explicit-render demo pages now wait for `render()` before logging, so they show the real widget id instead of `widget ID: [object Promise]`. The two frictionless explicit pages log the id as well. A test checks that every demo page waits for `render()`.
+
+## 2.11.2
+### Patch Changes
+
+- d4c1fa2: Make the explicit-render demo pages show a widget again. The status-log helper was defined in a module script that Vite placed after the page's own entry module, so `window.updateCaptchaStatus(...)` threw at the top of frictionless-, image-, puzzle- and puzzle-bind-explicit before `render()` was called. The helper is now defined by a classic script at the start of `<head>`, and only the callback wrapping stays in a module after the entry.
+
+## 2.11.1
+### Patch Changes
+
+- 495c016: The public demo at demo.prosopo.io now reports page views to Plausible under the `demo.prosopo.io` site, so we can see who uses it. The tracker only loads on that exact host, so local runs, staging and the Cypress suite send nothing.
+
 ## 2.11.0
 ### Minor Changes
 

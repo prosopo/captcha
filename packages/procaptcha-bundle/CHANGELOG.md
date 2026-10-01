@@ -1,5 +1,76 @@
 # @prosopo/procaptcha-bundle
 
+## 4.5.7
+### Patch Changes
+
+- 4ea2ca9: Challenge popups now use the same text direction as the widget that opened them, so an Arabic or Hebrew widget gets a right-to-left popup. When a later widget on the page changes the shared language, earlier widgets now update their direction too instead of keeping the old one.
+- 2145922: A wrong image answer no longer just closes the popup. The widget now says "Not quite — try again" beside the checkbox (the same translated line the puzzle uses), and the checkbox stays clickable so the user can have another go. This happens even when the site supplies its own failed callback, and it survives the frictionless widget restarting itself after the failure. The notice clears as soon as the user starts again.
+- 92edebd: The widget's loading spinner and the reload icon no longer announce hard-coded English. The spinner is a progress indicator labelled from the new `WIDGET.LOADING` string (in all 32 languages) once translations are loaded, and the reload icon's tooltip uses the same translated label as the button.
+- 7b65240: If a challenge is left open until its time limit runs out, the widget used to close the challenge and untick itself without saying why. It now shows a "captcha solution has expired" message under the widget, in the widget's language, the same way a failed challenge does. The message is removed when the next challenge is solved. Sites that pass a `chalexpired-callback` are unaffected.
+- b38d55f: A failed challenge no longer opens a blocking, English-only `alert()`. By default the widget now shows the failure message under itself, in the widget's language and with `role="alert"` so screen readers announce it. For an invisible-mode button the message goes beside the button, so the button's label is left alone. The message is removed when the next challenge is solved. Sites that pass a `failed-callback` are unaffected.
+- 6d5b7f5: The widget now lays itself out right to left when its language is written right to left (Arabic today). The bundle sets `dir` on the widget from its language, and the checkbox, spinner and logo use start/end spacing so they mirror. The widget still ignores the page's own direction, so an English widget on an Arabic page stays left to right. `@prosopo/locale` gains `getLanguageDirection` for this.
+- Updated dependencies [ede4352]
+- Updated dependencies [4ea2ca9]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [7b65240]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b38d55f]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/types@5.12.0
+  - @prosopo/procaptcha-common@2.18.2
+  - @prosopo/util@3.3.13
+  - @prosopo/procaptcha-frictionless@2.18.7
+  - @prosopo/locale@3.6.2
+  - @prosopo/widget-skeleton@2.10.1
+  - @prosopo/dotenv@3.0.59
+
+## 4.5.6
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/procaptcha-common@2.18.1
+  - @prosopo/procaptcha-frictionless@2.18.6
+
+## 4.5.5
+### Patch Changes
+
+- ba4a43c: `procaptcha.remove()` on an invisible-mode widget cleared the whole host element. That element is usually the site's own submit button, so the button lost its label. In invisible mode, `remove()` now removes only the node the widget added. `reset()` also removes that node before it rebuilds, so the button no longer collects an extra widget node on every reset.
+- 4b4cdbf: Calling `procaptcha.reset()` again while a reset was still rebuilding the widget (for example from an error callback and a user click at the same time) left one replacement widget running but untracked, so `remove()` could never reach it. Overlapping resets of the same widget now share one rebuild, and a replacement that finishes after `remove()` is torn down instead of coming back.
+- 55480f3: `render(el, { language })` with a language Procaptcha doesn't support, such as `"he"`, now falls back to English. Before, the value failed config validation, `render()` rejected, and the widget's loading spinner never went away.
+- Updated dependencies [59b7e87]
+- Updated dependencies [294b480]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [caabd39]
+- Updated dependencies [dab0338]
+- Updated dependencies [0d29dde]
+  - @prosopo/types@5.11.0
+  - @prosopo/locale@3.6.1
+  - @prosopo/procaptcha-common@2.18.0
+  - @prosopo/util@3.3.12
+  - @prosopo/procaptcha-frictionless@2.18.5
+  - @prosopo/dotenv@3.0.58
+
+## 4.5.4
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/procaptcha-frictionless@2.18.4
+  - @prosopo/procaptcha-common@2.17.3
+
 ## 4.5.3
 ### Patch Changes
 

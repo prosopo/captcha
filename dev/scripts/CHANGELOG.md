@@ -1,5 +1,123 @@
 # @prosopo/scripts
 
+## 3.1.195
+### Patch Changes
+
+- e8b5f98: `npm run setup` no longer rewrites the site key in the demo HTML files. It used to rewrite every `data-sitekey` once for each captcha type, so every demo page ended up with the last key registered (puzzle), and the PoW and frictionless demos served puzzle challenges. The demos already read their keys from the `PROSOPO_SITE_KEY_*` env vars at build time, and setup still writes those.
+- Updated dependencies [ede4352]
+- Updated dependencies [478bc6f]
+- Updated dependencies [97d65fa]
+- Updated dependencies [08daf16]
+- Updated dependencies [1144e04]
+- Updated dependencies [fc79e06]
+- Updated dependencies [382f96b]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [b017dfb]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [e62661c]
+- Updated dependencies [9ed0afd]
+- Updated dependencies [3fe7b19]
+- Updated dependencies [b1becee]
+- Updated dependencies [3e1053b]
+- Updated dependencies [df06006]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+- Updated dependencies [97a799e]
+- Updated dependencies [9fc1e8a]
+- Updated dependencies [7e9cd1e]
+- Updated dependencies [f7cfa1c]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/util-crypto@13.6.0
+  - @prosopo/keyring@2.10.0
+  - @prosopo/types@5.12.0
+  - @prosopo/provider@5.14.0
+  - @prosopo/cli@3.8.25
+  - @prosopo/datasets@3.2.0
+  - @prosopo/util@3.3.13
+  - @prosopo/locale@3.6.2
+  - @prosopo/common@3.1.61
+  - @prosopo/env@3.6.68
+  - @prosopo/types-env@2.11.14
+  - @prosopo/logger@2.1.2
+  - @prosopo/dotenv@3.0.59
+
+## 3.1.194
+### Patch Changes
+
+- Updated dependencies [bcf59f1]
+  - @prosopo/provider@5.13.4
+  - @prosopo/types-env@2.11.13
+  - @prosopo/cli@3.8.24
+  - @prosopo/env@3.6.67
+
+## 3.1.193
+### Patch Changes
+
+- Updated dependencies [1291cb0]
+- Updated dependencies [d01f19b]
+- Updated dependencies [254bc05]
+  - @prosopo/provider@5.13.3
+  - @prosopo/types@5.11.1
+  - @prosopo/cli@3.8.23
+  - @prosopo/datasets@3.1.93
+  - @prosopo/env@3.6.66
+  - @prosopo/keyring@2.9.99
+  - @prosopo/types-env@2.11.12
+
+## 3.1.192
+### Patch Changes
+
+- Updated dependencies [f650c66]
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [e482b25]
+- Updated dependencies [8933ad5]
+- Updated dependencies [294b480]
+- Updated dependencies [026b126]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [7065689]
+- Updated dependencies [dab0338]
+- Updated dependencies [9318584]
+- Updated dependencies [0d29dde]
+- Updated dependencies [084da7e]
+- Updated dependencies [fa316d6]
+- Updated dependencies [9ed0ac5]
+  - @prosopo/provider@5.13.2
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/datasets@3.1.92
+  - @prosopo/locale@3.6.1
+  - @prosopo/util@3.3.12
+  - @prosopo/cli@3.8.22
+  - @prosopo/env@3.6.65
+  - @prosopo/types-env@2.11.11
+  - @prosopo/keyring@2.9.98
+  - @prosopo/dotenv@3.0.58
+  - @prosopo/logger@2.1.1
+
+## 3.1.191
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/provider@5.13.1
+  - @prosopo/cli@3.8.21
+  - @prosopo/datasets@3.1.91
+  - @prosopo/env@3.6.64
+  - @prosopo/keyring@2.9.97
+  - @prosopo/types-env@2.11.10
+
 ## 3.1.190
 ### Patch Changes
 
