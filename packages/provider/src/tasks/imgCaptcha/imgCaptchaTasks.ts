@@ -58,6 +58,7 @@ import {
 } from "@prosopo/user-access-policy";
 import { at, extractData } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
+import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
@@ -69,7 +70,6 @@ import {
 	resolveInputMethods,
 	selectionsLookScripted,
 } from "../../pairs.js";
-import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import { checkLangRules } from "../../rules/lang.js";
 import { deepValidateIpAddress, shuffleArray } from "../../util.js";
 import {

@@ -61,12 +61,12 @@ import {
 	extractData,
 	verifyRecency,
 } from "@prosopo/util";
+import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
 	isSameIpOrigin,
 } from "../../compositeIpAddress.js";
-import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import { deepValidateIpAddress } from "../../util.js";
 import {
 	type UsageCounters,
