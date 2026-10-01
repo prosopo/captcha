@@ -213,7 +213,7 @@ services:
   # `prosopo/tcp-probe:${TCP_PROBE_IMAGE}` to Docker Hub — currently only
   # built locally under `protect/tcp-probe`. See `deploy/DEPLOY.md` there
   # for the bumblebee-side reference deployment; the same wire protocol
-  # (12-byte req, 80-byte reply) and image are reused here.
+  # (12-byte req, 80- or 104-byte reply) and image are reused here.
   #
   # `network_mode: host` is mandatory: XDP/TC hooks attach to real host
   # interfaces, and the container-network veth wouldn't see the outside
@@ -225,7 +225,13 @@ services:
     container_name: tcp-probe
     profiles:
       - tcp-probe
-    image: prosopo/tcp-probe:${TCP_PROBE_IMAGE:-latest}
+    # Pinned, not `:latest`. The probe's reply is a bare fixed-size struct
+    # with no version in it, so the tag is the only thing that says which
+    # layout a host is serving — and publishing `:latest` would change that
+    # on every pronode at the next pull, with nobody running a deploy. Set
+    # TCP_PROBE_IMAGE explicitly to move a host. 0.1.1 serves the 80-byte
+    # record; chaddy reads that and the 104-byte one (prosopo/chaddy#17).
+    image: prosopo/tcp-probe:${TCP_PROBE_IMAGE:-0.1.1}
     network_mode: host
     cap_add:
       - BPF

@@ -40,7 +40,11 @@ import {
 	deriveTrafficPolicies,
 } from "../../utils/devicePlatform.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
-import { rawTlsSignalsForSession } from "../rawTlsSignalsMiddleware.js";
+import {
+	type RawTlsSignals,
+	rawTlsSignalsForSession,
+	rawTlsSignalsFromRecord,
+} from "../rawTlsSignalsMiddleware.js";
 import { summariseRequestBody } from "../requestBodySummary.js";
 import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
@@ -277,18 +281,9 @@ export const buildEscalation = async (
 	// signals) come from the CURRENT PoW-submit request, not from
 	// `originSession` — those values belong to a different TCP connection
 	// made during the earlier frictionless request.
-	perConnectionSignals?: {
+	perConnectionSignals?: RawTlsSignals & {
 		tcpToChelloUs?: number;
 		chelloToHandshakeUs?: number;
-		synNs?: number;
-		synackNs?: number;
-		ackNs?: number;
-		observedTtl?: number;
-		tcpMss?: number;
-		tcpWscale?: number;
-		tcpOptsFlags?: number;
-		tcpOptsOrder?: number;
-		tcpWindow?: number;
 	},
 	// Site constraints on what an escalation may serve. Threaded from the
 	// handler, which already holds the client record, rather than re-read
@@ -435,15 +430,7 @@ export const buildEscalation = async (
 		// origin's. The escalation session belongs on this hop's fingerprint.
 		tcpToChelloUs: perConnectionSignals?.tcpToChelloUs,
 		chelloToHandshakeUs: perConnectionSignals?.chelloToHandshakeUs,
-		synNs: perConnectionSignals?.synNs,
-		synackNs: perConnectionSignals?.synackNs,
-		ackNs: perConnectionSignals?.ackNs,
-		observedTtl: perConnectionSignals?.observedTtl,
-		tcpMss: perConnectionSignals?.tcpMss,
-		tcpWscale: perConnectionSignals?.tcpWscale,
-		tcpOptsFlags: perConnectionSignals?.tcpOptsFlags,
-		tcpOptsOrder: perConnectionSignals?.tcpOptsOrder,
-		tcpWindow: perConnectionSignals?.tcpWindow,
+		...rawTlsSignalsFromRecord(perConnectionSignals),
 		puzzleTolerance: escalationPuzzleOverrides?.puzzleTolerance,
 		puzzle: escalationPuzzleOverrides?.puzzle,
 		// The escalated session is the same render as the origin, so it answers

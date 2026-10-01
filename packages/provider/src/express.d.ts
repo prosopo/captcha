@@ -44,9 +44,23 @@ export interface AugmentedRequest {
 	observedTtl?: number;
 	tcpMss?: number;
 	tcpWscale?: number;
+	tcpWindow?: number;
+	tcpOptsKinds?: number[];
+	tcpOptsPresent?: number;
+	tcpOptsCount?: number;
+	tcpTsval?: number;
+	tcpTsecr?: number;
+	tcpFlags?: number;
+	tcpDataOffsetResv?: number;
+	tcpUrgPtr?: number;
+	ipIdent?: number;
+	ipTotalLen?: number;
+	ipFragFlags?: number;
+	ipTos?: number;
+	// Superseded by tcpOptsPresent / tcpOptsKinds; still sent by a chaddy
+	// older than prosopo/chaddy#16.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
-	tcpWindow?: number;
 }
 
 declare global {
@@ -70,9 +84,21 @@ declare global {
 			observedTtl?: number;
 			tcpMss?: number;
 			tcpWscale?: number;
+			tcpWindow?: number;
+			tcpOptsKinds?: number[];
+			tcpOptsPresent?: number;
+			tcpOptsCount?: number;
+			tcpTsval?: number;
+			tcpTsecr?: number;
+			tcpFlags?: number;
+			tcpDataOffsetResv?: number;
+			tcpUrgPtr?: number;
+			ipIdent?: number;
+			ipTotalLen?: number;
+			ipFragFlags?: number;
+			ipTos?: number;
 			tcpOptsFlags?: number;
 			tcpOptsOrder?: number;
-			tcpWindow?: number;
 		}
 		interface Locals {
 			padBytes?: number;
