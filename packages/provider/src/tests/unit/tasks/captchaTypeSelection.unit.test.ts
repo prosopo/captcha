@@ -16,7 +16,9 @@ import { CaptchaType, type IFrictionlessTypes } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
 	type ConcreteCaptchaType,
+	PUZZLE_REFRESHES_BEFORE_IMAGE,
 	coerceToEnabledCaptchaType,
+	switchTypeAfterRefreshes,
 } from "../../../tasks/captchaTypeSelection.js";
 
 const BOTH: IFrictionlessTypes = { image: true, puzzle: true };
@@ -99,6 +101,50 @@ describe("coerceToEnabledCaptchaType", () => {
 			expect(coerceToEnabledCaptchaType(CaptchaType.pow, types)).toBe(
 				CaptchaType.pow,
 			);
+		}
+	});
+});
+
+describe("switchTypeAfterRefreshes", () => {
+	it("keeps the puzzle below the refresh limit", () => {
+		expect(
+			switchTypeAfterRefreshes(
+				CaptchaType.puzzle,
+				PUZZLE_REFRESHES_BEFORE_IMAGE - 1,
+				BOTH,
+			),
+		).toBe(CaptchaType.puzzle);
+	});
+
+	it("keeps the puzzle when nothing was refreshed", () => {
+		expect(switchTypeAfterRefreshes(CaptchaType.puzzle, undefined, BOTH)).toBe(
+			CaptchaType.puzzle,
+		);
+	});
+
+	it("serves image once the refresh limit is reached", () => {
+		expect(
+			switchTypeAfterRefreshes(
+				CaptchaType.puzzle,
+				PUZZLE_REFRESHES_BEFORE_IMAGE,
+				BOTH,
+			),
+		).toBe(CaptchaType.image);
+	});
+
+	it("keeps the puzzle on a site with image disabled", () => {
+		expect(
+			switchTypeAfterRefreshes(
+				CaptchaType.puzzle,
+				PUZZLE_REFRESHES_BEFORE_IMAGE + 5,
+				NO_IMAGE,
+			),
+		).toBe(CaptchaType.puzzle);
+	});
+
+	it("never moves image or pow, however many refreshes", () => {
+		for (const type of [CaptchaType.image, CaptchaType.pow] as const) {
+			expect(switchTypeAfterRefreshes(type, 100, BOTH)).toBe(type);
 		}
 	});
 });

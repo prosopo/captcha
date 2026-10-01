@@ -398,7 +398,8 @@
 			"KEYBOARD_HINT": "Dùng các phím mũi tên để di chuyển mảnh ghép, giữ Shift để đi từng bước nhỏ hơn. Nhấn Enter để gửi, Home để đưa nó về vị trí ban đầu, hoặc Escape để hủy.",
 			"POSITION": "{{x}} phần trăm từ bên trái, {{y}} phần trăm từ trên xuống",
 			"CHECKING": "Đang kiểm tra câu trả lời của bạn",
-			"RETRY_ANNOUNCEMENT": "Suýt nữa. Một hình ghép mới đã được tải và mảnh ghép trở lại vị trí ban đầu."
+			"RETRY_ANNOUNCEMENT": "Suýt nữa. Một hình ghép mới đã được tải và mảnh ghép trở lại vị trí ban đầu.",
+			"REFRESH": "Hình ghép khác"
 		}
 	},
 	"CONTRACT": {

@@ -23,9 +23,10 @@ import {
 	createElement,
 	isEventTrusted,
 	mountChallengeSurface,
+	mountReloadButton,
 } from "@prosopo/procaptcha-common";
 import type { PlacementType, PuzzleEvent } from "@prosopo/types";
-import type { Theme } from "@prosopo/widget-skeleton";
+import { type Theme, lightTheme } from "@prosopo/widget-skeleton";
 
 export interface PuzzleCanvasProps {
 	originX: number;
@@ -48,6 +49,8 @@ export interface PuzzleCanvasProps {
 	placement?: PlacementType;
 	anchor?: HTMLElement | null;
 	onDismiss?: () => void;
+	// Swaps this puzzle for a new one. No control is drawn when absent.
+	onRefresh?: () => void;
 }
 
 const CONTAINER_WIDTH = 300;
@@ -247,11 +250,26 @@ export const mountPuzzleCanvas = (
 		children: [backgroundLayer, piece],
 	});
 
-	const instruction = createElement("div", {
+	const instructionText = createElement("span", {
 		attributes: { id: instructionId },
+	});
+
+	const refreshSlot = createElement("div", {
 		style: {
+			position: "absolute",
+			right: "8px",
+			top: "50%",
+			transform: "translateY(-50%)",
+		},
+	});
+
+	const instruction = createElement("div", {
+		style: {
+			position: "relative",
 			borderRadius: "20px 20px 0 0",
-			padding: "12px 20px",
+			// Wide enough either side for the refresh control to sit in without
+			// pushing the centred text off-centre.
+			padding: "12px 48px",
 			width: `${CONTAINER_WIDTH}px`,
 			boxSizing: "border-box",
 			textAlign: "center",
@@ -259,6 +277,7 @@ export const mountPuzzleCanvas = (
 			fontWeight: 500,
 			transition: "color 0.3s ease, border-color 0.3s ease",
 		},
+		children: [instructionText, refreshSlot],
 	});
 
 	const panel = createElement("div", {
@@ -271,6 +290,23 @@ export const mountPuzzleCanvas = (
 		},
 		children: [instruction, area],
 	});
+
+	const refreshButtonProps = () => ({
+		themeColor:
+			lightTheme === props.theme ? ("light" as const) : ("dark" as const),
+		label: t("WIDGET.PUZZLE.REFRESH", {
+			defaultValue: "Show a different puzzle",
+		}),
+		compact: true,
+		onReload: () => {
+			if (!props.submitting && !dragging) {
+				props.onRefresh?.();
+			}
+		},
+	});
+	const refreshButton = props.onRefresh
+		? mountReloadButton(refreshSlot, refreshButtonProps())
+		: undefined;
 
 	const surfaceProps = () => ({
 		show: true,
@@ -376,7 +412,7 @@ export const mountPuzzleCanvas = (
 			transform: visible ? "scale(1)" : "scale(0.9)",
 			animation: shaking ? "prosopo-puzzle-shake 0.5s ease" : "none",
 		});
-		instruction.textContent = props.showRetry
+		instructionText.textContent = props.showRetry
 			? t("WIDGET.PUZZLE.RETRY", { defaultValue: "Not quite — try again" })
 			: t("WIDGET.PUZZLE.DRAG", {
 					defaultValue: "Drag the piece to the target",
@@ -395,6 +431,10 @@ export const mountPuzzleCanvas = (
 				props.showRetry ? theme.palette.error.main : "transparent"
 			}`,
 		});
+		applyStyles(refreshSlot, {
+			visibility: props.submitting ? "hidden" : "visible",
+		});
+		refreshButton?.update(refreshButtonProps());
 		applyStyles(area, {
 			// Material 3 purple tonal fallback shown before the server-rendered
 			// background image loads.
@@ -652,6 +692,7 @@ export const mountPuzzleCanvas = (
 		},
 		destroy: () => {
 			teardown.run();
+			refreshButton?.destroy();
 			surface.destroy();
 		},
 	};

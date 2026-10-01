@@ -461,6 +461,9 @@ export const SessionSchema = object({
 	// to the origin for fields the escalation doesn't carry itself
 	// (simdReadings, dnsEvent, etc.). Absent on non-escalation sessions.
 	originSessionId: string().optional(),
+	refreshOf: string().optional(),
+	refreshCount: number().optional(),
+	refreshedAfterMs: number().optional(),
 	decryptedHeadHash: string(),
 	siteKey: string().optional(),
 	// Full page URL the widget was rendered on (origin + path only — query
@@ -593,6 +596,13 @@ export type Session = {
 	// SessionId of the origin session this one escalated from. Populated
 	// alongside isEscalation; consumed by the DM-input read path.
 	originSessionId?: string;
+	// Set when this session was minted because the user pressed refresh on
+	// the challenge of `refreshOf`. `refreshCount` is how many refreshes in a
+	// row led here, and `refreshedAfterMs` how long the replaced session had
+	// been alive when the user gave up on it. Absent on every other session.
+	refreshOf?: string;
+	refreshCount?: number;
+	refreshedAfterMs?: number;
 	decryptedHeadHash: string;
 	// The provider-assigned detector pool bundle this session's detector ran
 	// from, promoted off the short-lived detectorSessionId→bundleId Redis

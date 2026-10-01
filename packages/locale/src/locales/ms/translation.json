@@ -398,7 +398,8 @@
 			"KEYBOARD_HINT": "Gunakan kekunci anak panah untuk menggerakkan kepingan, tekan dan tahan Shift untuk langkah yang lebih kecil. Tekan Enter untuk menghantarnya, Home untuk mengembalikannya ke permulaan, atau Escape untuk membatalkan.",
 			"POSITION": "{{x}} peratus dari kiri, {{y}} peratus dari atas",
 			"CHECKING": "Memeriksa jawapan anda",
-			"RETRY_ANNOUNCEMENT": "Hampir. Teka-teki baharu telah dimuatkan dan kepingan kembali ke permulaan."
+			"RETRY_ANNOUNCEMENT": "Hampir. Teka-teki baharu telah dimuatkan dan kepingan kembali ke permulaan.",
+			"REFRESH": "Teka-teki lain"
 		}
 	},
 	"CONTRACT": {

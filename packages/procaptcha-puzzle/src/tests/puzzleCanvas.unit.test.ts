@@ -285,6 +285,48 @@ describe("what it puts on screen", () => {
 	});
 });
 
+describe("the refresh control", () => {
+	const refreshControl = (): HTMLElement | null =>
+		overlay().querySelector<HTMLElement>(
+			'[aria-label="Show a different puzzle"]',
+		);
+
+	test("is not drawn when nothing can refresh the puzzle", () => {
+		render(props());
+		expect(refreshControl()).toBeNull();
+	});
+
+	test("asks for a different puzzle when pressed", () => {
+		const onRefresh = vi.fn<() => void>();
+		render(props({ onRefresh }));
+		required(refreshControl(), "the refresh control").click();
+		expect(onRefresh).toHaveBeenCalledTimes(1);
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	test("is hidden and inert while a solution is in flight", () => {
+		const onRefresh = vi.fn<() => void>();
+		render(props({ onRefresh, submitting: true }));
+		const control = required(refreshControl(), "the refresh control");
+		expect(control.parentElement?.style.visibility).toBe("hidden");
+		control.click();
+		expect(onRefresh).not.toHaveBeenCalled();
+	});
+
+	test("is ignored mid-drag", () => {
+		const onRefresh = vi.fn<() => void>();
+		render(props({ onRefresh }));
+		mouseDown(20, 100);
+		required(refreshControl(), "the refresh control").click();
+		expect(onRefresh).not.toHaveBeenCalled();
+	});
+
+	test("stays out of what a screen reader reads for the piece", () => {
+		render(props({ onRefresh: vi.fn<() => void>() }));
+		expect(pieceDescription()).not.toContain("different puzzle");
+	});
+});
+
 describe("dragging with a mouse", () => {
 	test("the piece follows the pointer", () => {
 		render(props());

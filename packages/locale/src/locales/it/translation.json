@@ -99,7 +99,8 @@
 			"KEYBOARD_HINT": "Usa i tasti freccia per spostare il pezzo, tenendo premuto Maiusc per passi più piccoli. Premi Invio per inviarlo, Home per riportarlo all'inizio o Esc per annullare.",
 			"POSITION": "{{x}} percento da sinistra, {{y}} percento dall'alto",
 			"CHECKING": "Verifica della tua risposta in corso",
-			"RETRY_ANNOUNCEMENT": "Quasi. È stato caricato un nuovo puzzle e il pezzo è tornato all'inizio."
+			"RETRY_ANNOUNCEMENT": "Quasi. È stato caricato un nuovo puzzle e il pezzo è tornato all'inizio.",
+			"REFRESH": "Un altro puzzle"
 		}
 	},
 	"CONTRACT": {

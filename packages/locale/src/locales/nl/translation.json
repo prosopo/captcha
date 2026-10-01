@@ -398,7 +398,8 @@
 			"KEYBOARD_HINT": "Gebruik de pijltoetsen om het stukje te verplaatsen, houd Shift ingedrukt voor kleinere stappen. Druk op Enter om te versturen, Home om het terug te zetten, of Escape om te annuleren.",
 			"POSITION": "{{x}} procent vanaf links, {{y}} procent vanaf boven",
 			"CHECKING": "Je antwoord wordt gecontroleerd",
-			"RETRY_ANNOUNCEMENT": "Net niet. Er is een nieuwe puzzel geladen en het stukje staat weer aan het begin."
+			"RETRY_ANNOUNCEMENT": "Net niet. Er is een nieuwe puzzel geladen en het stukje staat weer aan het begin.",
+			"REFRESH": "Andere puzzel"
 		}
 	},
 	"CONTRACT": {

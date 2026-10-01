@@ -692,10 +692,11 @@ describe("the manager itself", () => {
 		// Under frictionless the wrapper is the only thing that can mint the
 		// session a replacement challenge needs, so the manager must ask it
 		// rather than reloading itself.
-		const onReload = vi.fn<(x?: number, y?: number) => void>();
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
 		render({ onReload });
 		managerArgs[0]?.[6]?.(120, 340);
-		expect(onReload).toHaveBeenCalledWith(120, 340);
+		// Marked as a refresh so the provider can count it.
+		expect(onReload).toHaveBeenCalledWith(120, 340, { refresh: true });
 	});
 
 	test("keeps reload to itself when no wrapper offered to handle it", () => {

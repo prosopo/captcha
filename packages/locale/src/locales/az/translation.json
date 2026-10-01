@@ -398,7 +398,8 @@
 			"KEYBOARD_HINT": "Hissəni ox düymələri ilə hərəkət etdirin, daha kiçik addımlar üçün Shift düyməsini basılı saxlayın. Göndərmək üçün Enter, başlanğıca qaytarmaq üçün Home, ləğv etmək üçün Escape düyməsini basın.",
 			"POSITION": "soldan {{x}} faiz, yuxarıdan {{y}} faiz",
 			"CHECKING": "Cavabınız yoxlanılır",
-			"RETRY_ANNOUNCEMENT": "Az qaldı. Yeni tapmaca yükləndi və hissə yenidən başlanğıcdadır."
+			"RETRY_ANNOUNCEMENT": "Az qaldı. Yeni tapmaca yükləndi və hissə yenidən başlanğıcdadır.",
+			"REFRESH": "Başqa tapmaca"
 		}
 	},
 	"CONTRACT": {

@@ -398,7 +398,8 @@
 			"KEYBOARD_HINT": "矢印キーでピースを動かします。Shift キーを押しながらだと細かく動きます。Enter キーで送信、Home キーで開始位置に戻す、Escape キーで中止します。",
 			"POSITION": "左から {{x}} パーセント、上から {{y}} パーセント",
 			"CHECKING": "回答を確認しています",
-			"RETRY_ANNOUNCEMENT": "惜しい。新しいパズルが読み込まれ、ピースは開始位置に戻りました。"
+			"RETRY_ANNOUNCEMENT": "惜しい。新しいパズルが読み込まれ、ピースは開始位置に戻りました。",
+			"REFRESH": "別のパズル"
 		}
 	},
 	"CONTRACT": {

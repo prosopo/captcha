@@ -73,6 +73,9 @@ export type BotDetectionFunction = (
 	// detection can re-select a random provider instead of re-using the
 	// DNS-routed one that just failed. Absent on the initial attempt.
 	retryContext?: ProviderSelectRetryContext,
+	// The sessionId the user refreshed away from, when this run replaces a
+	// challenge they asked to swap. Forwarded to the provider as `refreshOf`.
+	refreshOf?: string,
 ) => Promise<BotDetectionFunctionResult>;
 
 /**
