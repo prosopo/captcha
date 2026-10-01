@@ -37,6 +37,8 @@ services:
             # silently drops time ranges past it (default 1000). Kept finite because it is also
             # the only cap on raw-row queries with no LIMIT.
             ZO_QUERY_DEFAULT_LIMIT: 20000
+            # The compactor deletes data older than this (default 3650). Per-stream retention set in the UI overrides it.
+            ZO_COMPACT_DATA_RETENTION_DAYS: 90
         restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
         volumes:
             - ./oo_data:/data
