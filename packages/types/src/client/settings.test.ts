@@ -47,6 +47,7 @@ import {
 	imageThresholdDefault,
 	powDifficultyDefault,
 	puzzleToleranceDefault,
+	resolveFrictionlessTypes,
 	resolveImageRoundsBounds,
 	trafficFilterAbuserScoreThresholdDefault,
 } from "./settings.js";
@@ -738,6 +739,18 @@ describe("IconOrderSettingsSchema", () => {
 });
 
 describe("ClientSettingsSchema icon-order fields", () => {
+	it("leaves icon-order off unless the site turns it on", () => {
+		const parsed = parse(minimal);
+		expect(parsed.frictionlessTypes.iconOrder).toBeUndefined();
+		expect(resolveFrictionlessTypes(parsed.frictionlessTypes).iconOrder).toBe(
+			false,
+		);
+		expect(
+			resolveFrictionlessTypes({ image: true, puzzle: true, iconOrder: true })
+				.iconOrder,
+		).toBe(true);
+	});
+
 	it("defaults the tolerance to a size-relative radius", () => {
 		const parsed = parse(minimal);
 		expect(parsed.iconOrderTolerance).toBe(iconOrderToleranceDefault);

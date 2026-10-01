@@ -195,11 +195,8 @@ export const frictionlessThresholdDefault: IFrictionlessThreshold = {
 export const FrictionlessTypesSchema = object({
 	image: boolean().optional().default(true),
 	puzzle: boolean().optional().default(true),
-	// Defaults on, like the other two: the flag only bites once something
-	// explicitly selects icon-order (a site-wide `captchaType`, a Restrict
-	// rule, a traffic-filter policy or a routing machine). Defaulting it off
-	// would silently coerce away a type the operator had just asked for.
-	iconOrder: boolean().optional().default(true),
+	// Off unless the site opts in, so icon-order can be rolled out per site.
+	iconOrder: boolean().optional(),
 });
 
 export type IFrictionlessTypes = output<typeof FrictionlessTypesSchema>;
@@ -207,7 +204,6 @@ export type IFrictionlessTypes = output<typeof FrictionlessTypesSchema>;
 export const frictionlessTypesDefault: IFrictionlessTypes = {
 	image: true,
 	puzzle: true,
-	iconOrder: true,
 };
 
 /**
@@ -215,14 +211,15 @@ export const frictionlessTypesDefault: IFrictionlessTypes = {
  *
  * Tolerates `undefined` (a client record written before the field existed)
  * and a partial object, so a provider handed an older settings blob keeps
- * serving every type rather than silently narrowing to PoW.
+ * serving image and puzzle rather than silently narrowing to PoW. Icon-order
+ * stays off until the site turns it on.
  */
 export const resolveFrictionlessTypes = (
 	configured: Partial<IFrictionlessTypes> | undefined | null,
-): IFrictionlessTypes => ({
+): Required<IFrictionlessTypes> => ({
 	image: configured?.image ?? frictionlessTypesDefault.image,
 	puzzle: configured?.puzzle ?? frictionlessTypesDefault.puzzle,
-	iconOrder: configured?.iconOrder ?? frictionlessTypesDefault.iconOrder,
+	iconOrder: configured?.iconOrder ?? false,
 });
 
 /**

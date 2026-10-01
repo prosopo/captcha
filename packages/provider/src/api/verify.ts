@@ -702,9 +702,9 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			try {
 				const { token, dappSignature, ip, email, clientSessionId } = parsed;
 
-				// This can error if the token is invalid
-				const { dapp, user, timestamp, challenge, providerUrl } =
-					decodeProcaptchaOutput(token);
+				const decoded = decodeTokenOr400(token, req.i18n, req.logger, next);
+				if (decoded === null) return;
+				const { dapp, user, timestamp, challenge, providerUrl } = decoded;
 
 				// Reserved CI test site keys force a deterministic verdict before
 				// the signature and registered-key checks, so the dapp server needs
@@ -768,8 +768,13 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				// Verify using the dapp pair passed in the request
 				const dappPair = env.keyring.addFromAddress(dapp);
 
-				// Will throw an error if the signature is invalid
-				verifySignature(dappSignature, timestamp.toString(), dappPair);
+				const signatureError = dappSignatureError(
+					dappSignature,
+					timestamp.toString(),
+					dappPair,
+					req,
+				);
+				if (signatureError) return next(signatureError);
 
 				const { verified, score, sessionId } =
 					await tasks.iconOrderCaptchaManager.serverVerifyIconOrderCaptchaSolution(

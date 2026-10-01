@@ -45,6 +45,18 @@ const ALL_TYPES: ConcreteCaptchaType[] = [
 ];
 
 describe("coerceToEnabledCaptchaType", () => {
+	it("never serves icon-order to a site that has not turned it on", () => {
+		expect(
+			coerceToEnabledCaptchaType(CaptchaType.iconOrder, {
+				image: true,
+				puzzle: true,
+			}),
+		).toBe(CaptchaType.puzzle);
+		expect(coerceToEnabledCaptchaType(CaptchaType.iconOrder, undefined)).toBe(
+			CaptchaType.puzzle,
+		);
+	});
+
 	it("passes every type through untouched when both are enabled", () => {
 		for (const type of ALL_TYPES) {
 			expect(coerceToEnabledCaptchaType(type, BOTH)).toBe(type);
