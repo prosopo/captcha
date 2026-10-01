@@ -29,10 +29,8 @@ import {
 import { type Mounted, fire, mount, settle } from "./domHarness.js";
 import { challengeResponse, config, frictionless } from "./managerHarness.js";
 
-// The canvas is deliberately NOT mocked here: the point of this suite is
-// whether the overlay the user has to click through actually becomes visible. The
-// widget suite stubs the canvas, so it asserts the challenge was handed over,
-// not that anything reached the screen.
+// The canvas is deliberately real here: the widget suite stubs it, so only
+// this suite shows the overlay actually becoming visible.
 const mocks = vi.hoisted(() => {
 	const start =
 		vi.fn<
@@ -90,21 +88,15 @@ const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps =>
 let mounted: Mounted;
 let handle: ProcaptchaIconOrderHandle | undefined;
 
-// Class names are hashed by the CSS-module build, so the surface is addressed
-// through the `data-cy` hooks the components ship for exactly this reason.
 const surface = (): HTMLElement | null =>
 	document.querySelector<HTMLElement>('[data-cy="challenge-surface"]');
 
-// The panel carrying the entrance animation is the outermost element under
-// the surface with an inline opacity; the frame and buttons inside it dim
-// themselves independently.
+// The outermost inline opacity is the panel's entrance animation.
 const panelOpacity = (): string | undefined =>
 	document
 		.querySelector('[data-cy="challenge-content"]')
 		?.querySelector<HTMLElement>("[style*='opacity']")?.style.opacity;
 
-// The entrance animation flips opacity inside a requestAnimationFrame, so a
-// test has to let a frame run before reading it.
 const frame = async (): Promise<void> => {
 	await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 	await settle();
@@ -141,9 +133,6 @@ describe("the icon-order overlay actually reaches the screen", () => {
 		expect(panelOpacity()).toBe("1");
 	});
 
-	// Invisible mode has no checkbox, so the overlay is opened by the host
-	// page's execute(). It still has to reach the screen: the icons are
-	// picked by hand, and a panel left at opacity 0 is a challenge nobody can solve.
 	test("invisible mode: the panel is opaque after the entrance frame", async () => {
 		handle = mountProcaptchaIconOrderWidget(
 			mounted.container,

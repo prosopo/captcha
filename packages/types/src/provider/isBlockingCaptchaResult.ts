@@ -19,9 +19,9 @@ import { ResultReason } from "./reasons.js";
 
 // Reasons that represent a legitimate user-side failure of an interactive
 // challenge — the user selected the wrong images, dropped the puzzle piece in
-// the wrong place, clicked the icons in the wrong order, or mistyped what they
-// heard. Everything else that produces a Disapproved verdict on those flows is
-// a server-side block (traffic filter, decision machine, IP validation, spam
+// the wrong place, clicked the wrong icons, or mistyped what they heard.
+// Everything else that produces a Disapproved verdict on those flows is a
+// server-side block (traffic filter, decision machine, IP validation, spam
 // rules, replay/timestamp detection, etc.).
 const USER_FAILURE_REASONS: ReadonlySet<ResultReason> = new Set([
 	ResultReason.CAPTCHA_INVALID_SOLUTION,

@@ -321,82 +321,62 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			}));
 		}
 
-		if (puzzleCaptchaEvents.length) {
-			const result = await this.tables.puzzlecaptcha.bulkWrite(
-				puzzleCaptchaEvents.map((doc) => {
-					const { _id, ...safeDoc } = doc;
-					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
-					return {
-						updateOne: {
-							filter: { challenge: normalised.challenge },
-							update: { $set: normalised },
-							upsert: true,
-						},
-					};
-				}),
-			);
-			logger.info(() => ({
-				data: {
-					upsertedCount: result.upsertedCount,
-					matchedCount: result.matchedCount,
-					modifiedCount: result.modifiedCount,
-					totalProcessed: puzzleCaptchaEvents.length,
-				},
-				msg: "Mongo Saved Puzzle Events",
-			}));
-		}
-
-		if (audioCaptchaEvents.length) {
-			const result = await this.tables.audiocaptcha.bulkWrite(
-				audioCaptchaEvents.map((doc) => {
-					const { _id, ...safeDoc } = doc;
-					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
-					return {
-						updateOne: {
-							filter: { challenge: normalised.challenge },
-							update: { $set: normalised },
-							upsert: true,
-						},
-					};
-				}),
-			);
-			logger.info(() => ({
-				data: {
-					upsertedCount: result.upsertedCount,
-					matchedCount: result.matchedCount,
-					modifiedCount: result.modifiedCount,
-					totalProcessed: audioCaptchaEvents.length,
-				},
-				msg: "Mongo Saved Audio Events",
-			}));
-		}
-
-		if (iconOrderCaptchaEvents.length) {
-			const result = await this.tables.iconordercaptcha.bulkWrite(
-				iconOrderCaptchaEvents.map((doc) => {
-					const { _id, ...safeDoc } = doc;
-					const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
-					return {
-						updateOne: {
-							filter: { challenge: normalised.challenge },
-							update: { $set: normalised },
-							upsert: true,
-						},
-					};
-				}),
-			);
-			logger.info(() => ({
-				data: {
-					upsertedCount: result.upsertedCount,
-					matchedCount: result.matchedCount,
-					modifiedCount: result.modifiedCount,
-					totalProcessed: iconOrderCaptchaEvents.length,
-				},
-				msg: "Mongo Saved Icon Order Events",
-			}));
-		}
+		await this.upsertChallengeRecords(
+			TableNames.puzzlecaptcha,
+			puzzleCaptchaEvents,
+			"Mongo Saved Puzzle Events",
+		);
+		await this.upsertChallengeRecords(
+			TableNames.audiocaptcha,
+			audioCaptchaEvents,
+			"Mongo Saved Audio Events",
+		);
+		await this.upsertChallengeRecords(
+			TableNames.iconordercaptcha,
+			iconOrderCaptchaEvents,
+			"Mongo Saved Icon Order Events",
+		);
 
 		await this.close();
+	}
+
+	private async upsertChallengeRecords(
+		table:
+			| TableNames.puzzlecaptcha
+			| TableNames.iconordercaptcha
+			| TableNames.audiocaptcha,
+		records: (
+			| PuzzleCaptchaRecord
+			| IconOrderCaptchaRecord
+			| AudioCaptchaRecord
+		)[],
+		msg: string,
+	): Promise<void> {
+		if (!records.length) {
+			return;
+		}
+		const result = await this.tables[table].bulkWrite(
+			records.map((doc) => {
+				const { _id, ...safeDoc } = doc;
+				const normalised = CaptchaDatabase.normaliseDocCompositeIps(safeDoc);
+				return {
+					updateOne: {
+						filter: { challenge: normalised.challenge },
+						update: { $set: normalised },
+						upsert: true,
+					},
+				};
+			}),
+		);
+		logger.info(() => ({
+			data: {
+				upsertedCount: result.upsertedCount,
+				matchedCount: result.matchedCount,
+				modifiedCount: result.modifiedCount,
+				totalProcessed: records.length,
+			},
+			msg,
+		}));
 	}
 
 	async getCaptchas(

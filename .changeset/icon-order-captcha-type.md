@@ -5,20 +5,29 @@
 "@prosopo/provider": minor
 "@prosopo/api": minor
 "@prosopo/server": minor
-"@prosopo/procaptcha-frictionless": minor
+"@prosopo/captcha-severity": minor
+"@prosopo/icon-order-assets": minor
 "@prosopo/procaptcha-icon-order": minor
+"@prosopo/procaptcha-common": minor
+"@prosopo/procaptcha-frictionless": minor
+"@prosopo/procaptcha-puzzle": patch
+"@prosopo/puzzle-assets": patch
+"@prosopo/locale": patch
 "@prosopo/keyring": patch
-"@prosopo/scripts": patch
 "@prosopo/cli": patch
+"@prosopo/scripts": patch
 "@prosopo/client-bundle-example": patch
+"@prosopo/cypress-shared": patch
 ---
 
-New captcha type: `iconOrder`, a frame of procedurally generated icons with a legend naming which of them to click and in what order.
+New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
 
-The answer never leaves the provider. Icon positions and the required order are written to the challenge record before the response is sent, and the widget receives only the composited frame and the legend strip — there is no coordinate for a client to echo back. Grading is strict on order, and the hit radius scales with each icon's own size so the renderer's size jitter doesn't make small targets disproportionately hard.
+It is off unless a site turns it on with `frictionlessTypes.iconOrder`. A site that has not opted in is never served icon-order by any route, and the challenge endpoint refuses it.
 
-Two new packages carry it: `@prosopo/icon-order-assets` generates the imagery (reusing `puzzle-assets`' PRNG, background generator, encoders and background buffer), and `@prosopo/procaptcha-icon-order` is the widget.
+The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
 
-The server-verify pipeline shared by every interactive type — replay and recency checks, client-session correlation, access policies, spam rules, traffic filter, IP validation and the decision machine — moves to a new `InteractiveCaptchaManager` base that both the puzzle and icon-order managers extend. Puzzle's behaviour is unchanged.
+`@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
 
-Existing sites are unaffected: icon-order ranks above puzzle and below image wherever captcha types are ordered by harshness, and captcha-type coercion only reaches for icon-order when icon-order was asked for, leaving the puzzle and image fallbacks exactly as they were.
+Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+
+The demo playground has icon-order pages, and there is an end-to-end test for it.

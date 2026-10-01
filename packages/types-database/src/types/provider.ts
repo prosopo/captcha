@@ -16,6 +16,7 @@ import type { AllKeys } from "@prosopo/common";
 import { translationKeys } from "@prosopo/locale";
 import {
 	type AudioCaptchaStored,
+	type AudioEvent,
 	CaptchaLabel,
 	CaptchaType,
 	type ClientContextEntropy,
@@ -365,15 +366,9 @@ PoWCaptchaRecordSchema.index(
 );
 
 /**
- * Fields every interactive captcha record carries: identity, timings, result,
- * network and device context, and the operational flags the portal and audit
- * surfaces query on.
- *
- * Hoisted rather than restated per type because these are the fields the rest
- * of the system reads generically — a new flag added for one interactive type
- * and forgotten on another shows up as a silently empty column in the audit
- * view, not as a compile error. The per-type answer fields are declared by
- * each schema below.
+ * Fields shared by every interactive captcha record. Kept in one place because
+ * the portal and audit views read them generically, so a field missed on one
+ * type shows up as an empty column rather than a compile error.
  */
 const interactiveCaptchaRecordFields = {
 	challenge: { type: String, required: true },
@@ -447,6 +442,16 @@ const interactiveCaptchaRecordFields = {
 	providerSignature: { type: String, required: true },
 };
 
+const pointerEventSchema = () =>
+	new Schema<{ x: number; y: number; t: number }>(
+		{
+			x: { type: Number, required: true },
+			y: { type: Number, required: true },
+			t: { type: Number, required: true },
+		},
+		{ _id: false },
+	);
+
 export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	...interactiveCaptchaRecordFields,
 	targetX: { type: Number, required: true },
@@ -455,32 +460,13 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 	originY: { type: Number, required: true },
 	tolerance: { type: Number, required: true },
 	puzzleEvents: {
-		type: [
-			new Schema<{ x: number; y: number; t: number }>(
-				{
-					x: { type: Number, required: true },
-					y: { type: Number, required: true },
-					t: { type: Number, required: true },
-				},
-				{ _id: false },
-			),
-		],
+		type: [pointerEventSchema()],
 		required: false,
 	},
 });
 
-/**
- * The icon-order answer at rest: the ordered target placements, plus the
- * ordered clicks the user submitted against them.
- *
- * `targets` is required — a record without it cannot be graded — and is
- * written before the imagery is rendered, so a crash between the two can
- * never leave a challenge the user can see but the server cannot score.
- */
 export const IconOrderCaptchaRecordSchema = new Schema<IconOrderCaptchaRecord>({
 	...interactiveCaptchaRecordFields,
-	// Hit radius as a multiple of each icon's own size, unlike the puzzle
-	// type's `tolerance`, which is in pixels.
 	tolerance: { type: Number, required: true },
 	targets: {
 		type: [
@@ -509,76 +495,60 @@ export const IconOrderCaptchaRecordSchema = new Schema<IconOrderCaptchaRecord>({
 		required: false,
 	},
 	iconOrderEvents: {
-		type: [
-			new Schema<{ x: number; y: number; t: number }>(
-				{
-					x: { type: Number, required: true },
-					y: { type: Number, required: true },
-					t: { type: Number, required: true },
-				},
-				{ _id: false },
-			),
-		],
+		type: [pointerEventSchema()],
 		required: false,
 	},
 });
 
-// Set an index on the challenge field, ascending
-PuzzleCaptchaRecordSchema.index({ challenge: 1 });
-PuzzleCaptchaRecordSchema.index({ lastUpdatedTimestamp: 1 });
-PuzzleCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
-PuzzleCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
-PuzzleCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
-PuzzleCaptchaRecordSchema.index({ "result.reason": 1 });
-PuzzleCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
-PuzzleCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
-PuzzleCaptchaRecordSchema.index({ ipInfo: 1 });
-PuzzleCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
-// Compound `{pendingStage:1, _id:1}` partial — see PoWCaptchaRecordSchema's
-// pendingStage_partial for rationale.
-PuzzleCaptchaRecordSchema.index(
-	{ pendingStage: 1, _id: 1 },
-	{
-		name: "pendingStage_partial",
-		partialFilterExpression: { pendingStage: true },
-	},
-);
-// See `PoWCaptchaRecordSchema.spamEmailCount_partial` — same purpose here
-// for puzzle captchas.
-PuzzleCaptchaRecordSchema.index(
-	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
-	{
-		name: "spamEmailCount_partial",
-		partialFilterExpression: {
-			"metadata.emailNormalised": { $exists: true },
-			serverChecked: true,
+const indexInteractiveCaptchaRecord = <T>(schema: Schema<T>): void => {
+	schema.index({ challenge: 1 });
+	schema.index({ lastUpdatedTimestamp: 1 });
+	schema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
+	schema.index({ "ipAddress.lower": 1 });
+	schema.index({ "ipAddress.upper": 1 });
+	schema.index({ "result.reason": 1 });
+	schema.index({ "ipInfo.countryCode": 1 });
+	schema.index({ "ipInfo.isVPN": 1 });
+	schema.index({ ipInfo: 1 });
+	schema.index({ parsedUserAgentInfo: 1 });
+	// Compound `{pendingStage:1, _id:1}` partial — see PoWCaptchaRecordSchema's
+	// pendingStage_partial for rationale.
+	schema.index(
+		{ pendingStage: 1, _id: 1 },
+		{
+			name: "pendingStage_partial",
+			partialFilterExpression: { pendingStage: true },
 		},
-	},
-);
-// See `PoWCaptchaRecordSchema.blocked_partial`.
-PuzzleCaptchaRecordSchema.index(
-	{ blocked: 1 },
-	{
-		name: "blocked_partial",
-		partialFilterExpression: { blocked: true },
-	},
-);
+	);
+	// See `PoWCaptchaRecordSchema.spamEmailCount_partial`.
+	schema.index(
+		{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
+		{
+			name: "spamEmailCount_partial",
+			partialFilterExpression: {
+				"metadata.emailNormalised": { $exists: true },
+				serverChecked: true,
+			},
+		},
+	);
+	// See `PoWCaptchaRecordSchema.blocked_partial`.
+	schema.index(
+		{ blocked: 1 },
+		{
+			name: "blocked_partial",
+			partialFilterExpression: { blocked: true },
+		},
+	);
+};
 
 export const AudioCaptchaRecordSchema = new Schema<AudioCaptchaRecord>({
 	...interactiveCaptchaRecordFields,
-	// The spoken transcript. Required, because a record without it cannot
-	// be graded. Never serialised into any response — see
-	// `AudioCaptchaStored` and `GetAudioCaptchaResponse`.
 	answer: { type: String, required: true },
-	// What the user actually typed. Kept alongside `answer` so difficulty
-	// can be tuned against real failures: "users mishear 5 as 9" is a
-	// phoneme-table problem, and there is no way to see it without the
-	// wrong answers.
 	submittedAnswer: { type: String, required: false },
 	replays: { type: Number, required: false },
 	audioEvents: {
 		type: [
-			new Schema<{ kind: string; t: number }>(
+			new Schema<AudioEvent>(
 				{
 					kind: { type: String, required: true },
 					t: { type: Number, required: true },
@@ -590,84 +560,9 @@ export const AudioCaptchaRecordSchema = new Schema<AudioCaptchaRecord>({
 	},
 });
 
-// Same index set as the puzzle and pow records — the audit, spam-count
-// and blocked-chart queries are shared code that filters on exactly
-// these fields, so an audio record missing one of them turns a covered
-// query into a collection scan.
-AudioCaptchaRecordSchema.index({ challenge: 1 });
-AudioCaptchaRecordSchema.index({ lastUpdatedTimestamp: 1 });
-AudioCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
-AudioCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
-AudioCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
-AudioCaptchaRecordSchema.index({ "result.reason": 1 });
-AudioCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
-AudioCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
-AudioCaptchaRecordSchema.index({ ipInfo: 1 });
-AudioCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
-AudioCaptchaRecordSchema.index(
-	{ pendingStage: 1, _id: 1 },
-	{
-		name: "pendingStage_partial",
-		partialFilterExpression: { pendingStage: true },
-	},
-);
-AudioCaptchaRecordSchema.index(
-	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
-	{
-		name: "spamEmailCount_partial",
-		partialFilterExpression: {
-			"metadata.emailNormalised": { $exists: true },
-			serverChecked: true,
-		},
-	},
-);
-AudioCaptchaRecordSchema.index(
-	{ blocked: 1 },
-	{
-		name: "blocked_partial",
-		partialFilterExpression: { blocked: true },
-	},
-);
-
-// The icon-order record is queried on the same axes as the puzzle record —
-// challenge lookup at submit time, and the dappAccount / ip / result / ipInfo
-// fan-out the portal and audit surfaces use — so it carries the same index
-// set. See the PuzzleCaptchaRecordSchema block above for the rationale behind
-// each partial.
-IconOrderCaptchaRecordSchema.index({ challenge: 1 });
-IconOrderCaptchaRecordSchema.index({ lastUpdatedTimestamp: 1 });
-IconOrderCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
-IconOrderCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
-IconOrderCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
-IconOrderCaptchaRecordSchema.index({ "result.reason": 1 });
-IconOrderCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
-IconOrderCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
-IconOrderCaptchaRecordSchema.index({ ipInfo: 1 });
-IconOrderCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
-IconOrderCaptchaRecordSchema.index(
-	{ pendingStage: 1, _id: 1 },
-	{
-		name: "pendingStage_partial",
-		partialFilterExpression: { pendingStage: true },
-	},
-);
-IconOrderCaptchaRecordSchema.index(
-	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
-	{
-		name: "spamEmailCount_partial",
-		partialFilterExpression: {
-			"metadata.emailNormalised": { $exists: true },
-			serverChecked: true,
-		},
-	},
-);
-IconOrderCaptchaRecordSchema.index(
-	{ blocked: 1 },
-	{
-		name: "blocked_partial",
-		partialFilterExpression: { blocked: true },
-	},
-);
+indexInteractiveCaptchaRecord(PuzzleCaptchaRecordSchema);
+indexInteractiveCaptchaRecord(IconOrderCaptchaRecordSchema);
+indexInteractiveCaptchaRecord(AudioCaptchaRecordSchema);
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -923,7 +818,6 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// already validated by RoutingMachineOutputSchema before it gets here.
 	puzzleTolerance: { type: Number, required: false },
 	puzzle: { type: Object, required: false },
-	// Icon-order equivalents, stored the same way and for the same reason.
 	iconOrderTolerance: { type: Number, required: false },
 	iconOrder: { type: Object, required: false },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
@@ -1490,10 +1384,10 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<void>;
 
 	/**
-	 * Counts server-checked captcha records (across image, PoW and puzzle
-	 * collections) for a dapp whose `metadata.emailNormalised` equals the
-	 * given value. Backs the per-email submission-count rejection in the
-	 * verify tasks. Returns 0 when the normalised email is empty.
+	 * Counts server-checked captcha records (across image, PoW, puzzle and
+	 * icon-order collections) for a dapp whose `metadata.emailNormalised`
+	 * equals the given value. Backs the per-email submission-count rejection
+	 * in the verify tasks. Returns 0 when the normalised email is empty.
 	 */
 	countCommitmentsByNormalisedEmail(
 		dappAccount: string,
@@ -1633,11 +1527,6 @@ export interface IProviderDatabase extends IDatabase {
 		ipInfo?: IPInfoResponse,
 	): Promise<void>;
 
-	/**
-	 * `targets` is the answer, so it is written here — before the imagery is
-	 * rendered — and never leaves the provider. See
-	 * `IconOrderCaptchaStored.targets`.
-	 */
 	storeIconOrderCaptchaRecord(
 		challenge: PoWChallengeId,
 		components: PoWChallengeComponents,
@@ -1670,26 +1559,13 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<IconOrderCaptchaRecord | null>;
 
 	/**
-	 * Atomically take the single submission a challenge allows.
-	 *
-	 * Resolves `true` for the caller that flipped `userSubmitted` from unset to
-	 * true, and `false` for every other caller — including a concurrent one
-	 * that read the same not-yet-submitted record. Grading must happen behind
-	 * this rather than behind a read of `userSubmitted`, because the answer is
-	 * an ordered subset of a handful of on-screen positions: parallel
-	 * submissions against one challenge would otherwise each get a verdict and
-	 * the ordering would be enumerable.
+	 * Atomically take the single submission a challenge allows: `true` only
+	 * for the caller that set `userSubmitted`, so concurrent submitters cannot
+	 * each be graded.
 	 */
 	claimIconOrderCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
 
-	/**
-	 * Atomically claims the single submission an audio challenge allows.
-	 * Resolves `true` for exactly one caller, `false` for every other caller
-	 * that read the same not-yet-submitted record. Grading must happen behind
-	 * this rather than behind a read of `userSubmitted`: the answer is a
-	 * handful of digits, so parallel submissions against one challenge would
-	 * otherwise each get a verdict and the answer would be enumerable.
-	 */
+	/** Same claim contract as {@link claimIconOrderCaptchaSubmission}. */
 	claimAudioCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
 
 	updateIconOrderCaptchaRecordResult(

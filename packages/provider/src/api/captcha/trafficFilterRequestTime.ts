@@ -53,13 +53,9 @@ export type RequestTimeTrafficVerdict =
 			// as the top of the override chain (asset default → client
 			// setting → this).
 			puzzleSettings?: IPuzzleSettings;
-			// Merged audio render overrides, same cascade position as
-			// `puzzleSettings`.
 			audioSettings?: IAudioSettings;
-			// Icon-order equivalents, consumed by
-			// getIconOrderCaptchaChallenge's resolver.
 			iconOrderTolerance?: number;
-			iconOrder?: IIconOrderSettings;
+			iconOrderSettings?: IIconOrderSettings;
 			sourceCategories: ResolvedChallengePolicy["sourceCategories"];
 	  };
 
@@ -115,7 +111,7 @@ export const applyTrafficFilterAtRequestTime = (
 		puzzleSettings: resolved.puzzleSettings,
 		audioSettings: resolved.audioSettings,
 		iconOrderTolerance: resolved.iconOrderTolerance,
-		iconOrder: resolved.iconOrderSettings,
+		iconOrderSettings: resolved.iconOrderSettings,
 		sourceCategories: resolved.sourceCategories,
 	};
 };

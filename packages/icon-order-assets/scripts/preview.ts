@@ -19,20 +19,16 @@ import sharp from "sharp";
 import {
 	DEFAULT_GEOMETRY,
 	DEFAULT_RENDER_SETTINGS,
-	createIconOrderChallenge,
+	renderIconOrder,
 } from "../src/index.js";
 
-/**
- * Renders a sheet of challenges to `preview/` as PNG so the imagery can be
- * eyeballed. PNG rather than WebP so what you are looking at is the generator
- * output and not a codec artefact.
- */
+/** Writes sample challenges to `preview/` as PNG, so codec artefacts don't hide generator output. */
 const main = async (): Promise<void> => {
 	const outDir = path.resolve("preview");
 	await mkdir(outDir, { recursive: true });
 
 	for (let i = 0; i < 4; i++) {
-		const challenge = await createIconOrderChallenge(
+		const challenge = await renderIconOrder(
 			DEFAULT_GEOMETRY,
 			DEFAULT_RENDER_SETTINGS,
 		);
@@ -61,7 +57,6 @@ const main = async (): Promise<void> => {
 				height: legend.info.height,
 			}),
 		);
-		// eslint-disable-next-line no-console
 		console.log(
 			"frame-%d: targets %s",
 			i,

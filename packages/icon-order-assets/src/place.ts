@@ -14,23 +14,18 @@
 
 import type { Prng } from "@prosopo/puzzle-assets";
 import { GLYPH_KINDS, type GlyphKind } from "./glyphs.js";
+import { shuffle } from "./shuffle.js";
 import type { IconOrderGeometry, IconPlacement } from "./types.js";
 
 /**
- * Minimum centre-to-centre distance between two icons, as a multiple of the
- * larger of the two icon sizes. Icons that overlap are ambiguous to click —
- * the user's tap would sit inside two hit radii at once and the grader could
- * not tell which was meant.
+ * Minimum centre-to-centre distance, as a multiple of the larger icon's size,
+ * so a click cannot land on two icons at once.
  */
 const MIN_SEPARATION = 1.15;
 
 /** Keep whole icons inside the frame; a clipped glyph is unidentifiable. */
 const EDGE_MARGIN = 0.55;
 
-/**
- * Rejection sampling has to give up eventually — with a large icon size and a
- * high decoy count there may be no valid position left.
- */
 const MAX_ATTEMPTS_PER_ICON = 60;
 
 const SIZE_JITTER: readonly [number, number] = [0.85, 1.15];
@@ -54,11 +49,8 @@ const farEnough = (
 	});
 
 /**
- * Draw `count` distinct glyph kinds. Distinctness is a correctness
- * requirement, not a nicety: the legend identifies a target by its shape, so
- * two icons of the same kind on one frame would make the intended click
- * ambiguous. That extends across the target/decoy split, which is why both
- * groups are drawn from one shuffled deck.
+ * The legend identifies a target by its shape, so every icon on the frame,
+ * target or decoy, must be a distinct glyph; hence one deck for both.
  */
 const drawKinds = (prng: Prng, count: number): GlyphKind[] => {
 	if (count > GLYPH_KINDS.length) {
@@ -66,19 +58,7 @@ const drawKinds = (prng: Prng, count: number): GlyphKind[] => {
 			`icon-order-assets: asked for ${count} distinct glyphs but only ${GLYPH_KINDS.length} exist`,
 		);
 	}
-	const deck = [...GLYPH_KINDS];
-	// Fisher-Yates, so every subset of the vocabulary is equally likely.
-	for (let i = deck.length - 1; i > 0; i--) {
-		const j = prng.int(0, i);
-		const a = deck[i];
-		const b = deck[j];
-		if (a === undefined || b === undefined) {
-			throw new Error("icon-order-assets: deck underflow");
-		}
-		deck[i] = b;
-		deck[j] = a;
-	}
-	return deck.slice(0, count);
+	return shuffle(prng, GLYPH_KINDS).slice(0, count);
 };
 
 const tryPlace = (
@@ -108,13 +88,9 @@ const tryPlace = (
 };
 
 /**
- * Lay out `targetCount` clickable icons plus `decoyCount` distractors.
- *
- * Targets are placed first and are mandatory: a frame with fewer targets than
- * the legend advertises is unsolvable, so failing to place one throws rather
- * than silently shortening the answer. Decoys are best-effort — dropping one
- * only makes the frame slightly less busy, so a crowded geometry degrades
- * density instead of failing the request.
+ * Targets are mandatory, since a frame missing one is unsolvable, so failing
+ * to place one throws. Decoys are best-effort and are dropped when the frame
+ * is too crowded.
  */
 export const placeIcons = (
 	prng: Prng,

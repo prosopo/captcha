@@ -40,9 +40,6 @@ describe("getDefaultSiteKeys", SLOW, () => {
 			CaptchaType.image,
 			CaptchaType.pow,
 			CaptchaType.frictionless,
-			// Before `puzzle` on purpose — see the note on the seed list: the
-			// last-seeded type is the one `updateDemoHTMLFiles` leaves in the
-			// webview demos.
 			CaptchaType.iconOrder,
 			// The audio demos' site: audio is only an accessibility alternative,
 			// so it is an image site with that alternative on.

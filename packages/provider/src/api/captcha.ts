@@ -146,33 +146,21 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 		asyncHandler(submitPuzzleCaptchaSolution(env)),
 	);
 
-	/**
-	 * Supplies an Audio challenge to a Dapp User
-	 */
 	router.post(
 		ClientApiPaths.GetAudioCaptchaChallenge,
 		asyncHandler(getAudioCaptchaChallenge(env, userAccessRulesStorage)),
 	);
 
-	/**
-	 * Verifies a user's Audio solution as being approved or not
-	 */
 	router.post(
 		ClientApiPaths.SubmitAudioCaptchaSolution,
 		asyncHandler(submitAudioCaptchaSolution(env)),
 	);
 
-	/**
-	 * Supplies an icon-order challenge to a Dapp User
-	 */
 	router.post(
 		ClientApiPaths.GetIconOrderCaptchaChallenge,
 		asyncHandler(getIconOrderCaptchaChallenge(env, userAccessRulesStorage)),
 	);
 
-	/**
-	 * Verifies a user's icon-order solution as being approved or not
-	 */
 	router.post(
 		ClientApiPaths.SubmitIconOrderCaptchaSolution,
 		asyncHandler(submitIconOrderCaptchaSolution(env)),

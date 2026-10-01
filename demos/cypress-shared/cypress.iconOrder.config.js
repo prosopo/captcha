@@ -32,10 +32,7 @@ export default defineConfig({
 	headers: { "Accept-Encoding": "gzip, deflate" },
 	expose: {
 		...process.env,
-		// icon-order-implicit.html has a signup form wired to /signup on the
-		// demo dapp server, matching how the puzzle and image specs drive
-		// their paths. That /signup call is what exercises
-		// prosopoServer.isVerified() → icon-order endpoint.
+		// Its signup form posts to /signup, which runs prosopoServer.isVerified().
 		default_page: "/icon-order-implicit.html",
 		visualRegressionType: "regression",
 		visualRegressionBaseDirectory: "cypress/snapshots/baseline",

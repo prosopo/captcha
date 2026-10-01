@@ -33,9 +33,9 @@ enum CaptchaType {
 
 const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
 
-// Every type a decision machine may route to. Excludes `frictionless`,
-// which is the flow that *runs* the machine rather than an outcome of it,
-// and `authenticated`, a pre-verified pass-through with no scoring surface.
+// Decision machines only work with the concrete challenge types.
+// Frictionless is the outer flow that dispatches to these; authenticated
+// is a pre-verified pass-through and has no scoring surface.
 const DecisionMachineCaptchaTypeSchema = z.union([
 	z.literal(CaptchaType.pow),
 	z.literal(CaptchaType.image),

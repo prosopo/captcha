@@ -11,7 +11,7 @@
 			"path": "../../dev/config/tsconfig.cjs.json"
 		},
 		{
-			"path": "../puzzle-assets"
+			"path": "../puzzle-assets/tsconfig.cjs.json"
 		}
 	]
 }

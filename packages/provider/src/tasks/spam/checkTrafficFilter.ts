@@ -300,6 +300,15 @@ export const checkTrafficFilter = (
 	return { isBlocked: false, matches };
 };
 
+/** A lower tolerance is a smaller hit radius, so the strictest is the minimum. */
+const strictestTolerance = (
+	current: number | undefined,
+	next: number | undefined,
+): number | undefined =>
+	next === undefined || current === undefined
+		? (next ?? current)
+		: Math.min(current, next);
+
 // Precedence for combining multiple `challenge` matches on the same
 // request. `block` outranks any challenge (short-circuited earlier in
 // `checkTrafficFilter`); among captcha types, image outranks puzzle
@@ -320,7 +329,6 @@ export type ResolvedChallengePolicy = {
 	// means no challenge matches at all (already short-circuited above).
 	puzzleSettings?: IPuzzleSettings;
 	audioSettings?: IAudioSettings;
-	// Icon-order equivalents of the two fields above, merged the same way.
 	iconOrderTolerance?: number;
 	iconOrderSettings?: IIconOrderSettings;
 	// Categories whose policies contributed to the resolved combination.
@@ -369,12 +377,10 @@ export const resolveChallengePolicy = (
 					? m.policy.solvedImagesCount
 					: Math.max(solvedImagesCount, m.policy.solvedImagesCount);
 		}
-		if (m.policy.puzzleTolerance !== undefined) {
-			puzzleTolerance =
-				puzzleTolerance === undefined
-					? m.policy.puzzleTolerance
-					: Math.min(puzzleTolerance, m.policy.puzzleTolerance);
-		}
+		puzzleTolerance = strictestTolerance(
+			puzzleTolerance,
+			m.policy.puzzleTolerance,
+		);
 		// Per-field merge across categories: last-writer-wins on any sub-
 		// field that is set. If no category sets a given puzzle field, the
 		// combined object leaves it undefined and the downstream resolver
@@ -383,19 +389,12 @@ export const resolveChallengePolicy = (
 			puzzleSettings = { ...(puzzleSettings ?? {}), ...m.policy.puzzle };
 		}
 		if (m.policy.audio) {
-			// Shallow-merge across matched categories, same as puzzle: a
-			// later category overriding one field must not wipe the fields
-			// an earlier one set.
 			audioSettings = { ...(audioSettings ?? {}), ...m.policy.audio };
 		}
-		// Lower tolerance is stricter for icon-order too — it shrinks the hit
-		// radius around each target — so the same `min` combination applies.
-		if (m.policy.iconOrderTolerance !== undefined) {
-			iconOrderTolerance =
-				iconOrderTolerance === undefined
-					? m.policy.iconOrderTolerance
-					: Math.min(iconOrderTolerance, m.policy.iconOrderTolerance);
-		}
+		iconOrderTolerance = strictestTolerance(
+			iconOrderTolerance,
+			m.policy.iconOrderTolerance,
+		);
 		if (m.policy.iconOrder) {
 			iconOrderSettings = {
 				...(iconOrderSettings ?? {}),

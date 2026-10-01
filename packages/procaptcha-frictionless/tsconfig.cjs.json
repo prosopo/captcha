@@ -26,7 +26,7 @@
 			"path": "../procaptcha-common/tsconfig.cjs.json"
 		},
 		{
-			"path": "../procaptcha-icon-order"
+			"path": "../procaptcha-icon-order/tsconfig.cjs.json"
 		},
 		{
 			"path": "../procaptcha-pow/tsconfig.cjs.json"

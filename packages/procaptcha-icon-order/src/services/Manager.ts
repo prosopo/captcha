@@ -19,6 +19,9 @@ import {
 	ExtensionLoader,
 	buildClientMetaData,
 	buildUpdateState,
+	createManagerLifecycle,
+	createSpentSessionGuard,
+	encryptBehavioralDataForSubmit,
 	getDefaultEvents,
 	getProcaptchaRandomActiveProvider,
 	getSimdReadingsForSubmit,
@@ -62,40 +65,25 @@ export const Manager = (
 	onStateUpdate: ProcaptchaStateUpdateFn,
 	callbacks: ProcaptchaCallbacks,
 	frictionlessState?: FrictionlessState,
-	// Reads the live honeypot input value at submit time. Returns undefined
-	// when the honeypot is disabled or the input hasn't been filled.
 	getHoneypotValue?: () => string | undefined,
 ): IconOrderManagerHandle => {
 	const events = getDefaultEvents(callbacks);
 
-	// Closure variables to share state between start and submitSolution
 	let storedChallengeResponse: GetIconOrderCaptchaResponse | undefined;
 	let storedProviderApi: ProviderApi | undefined;
 	let storedProviderUrl: string | undefined;
 	let storedUser: Account | undefined;
-	// Checkbox click coords, captured by start() and embedded into the
-	// solution salt at submit time — same shape as the POW flow so the
-	// provider records identical entry-point telemetry for both types.
+	// Checkbox click coords, carried in the solution salt for telemetry.
 	let storedClickX: number | undefined;
 	let storedClickY: number | undefined;
 
-	// URL of the provider used on the previous attempt. Kept outside the
-	// resetState-cleared closure state so a retry can exclude it from the
-	// candidate pool and land on a different provider.
+	// Outlives resetState so a retry can avoid the provider that just failed.
 	let previousProviderUrl: string | undefined;
-	// The sessionId this manager has already exchanged for a challenge. The
-	// provider consumes a session the moment it issues a challenge against it
-	// (`checkAndRemoveSession`), so asking for a second challenge with the same
-	// id is a guaranteed 400 CAPTCHA.NO_SESSION_FOUND. Mirrors the image
-	// manager's guard: the id lives on `frictionlessState`, which `resetState()`
-	// does not own, so every path that re-enters `start()` — a wrong answer, a
-	// providerRetry after a late failure, a `procaptcha:execute` event — would
-	// otherwise re-send it.
-	let spentSessionId: string | undefined;
+	const spentSession = createSpentSessionGuard();
 
 	const defaultState = (): Partial<ProcaptchaState> => {
 		return {
-			// note order matters! see buildUpdateState. These fields are set in order, so disable modal first, then set loading to false, etc.
+			// Order matters: buildUpdateState applies fields in insertion order.
 			showModal: false,
 			loading: false,
 			index: 0,
@@ -104,15 +92,7 @@ export const Manager = (
 			isHuman: false,
 			captchaApi: undefined,
 			account: undefined,
-			// don't handle timeout here, this should be handled by the state management
 		};
-	};
-
-	const clearTimeout = () => {
-		// clear the timeout
-		window.clearTimeout(Number(state.timeout));
-		// then clear the timeout from the state
-		updateState({ timeout: undefined });
 	};
 
 	const onFailed = () => {
@@ -124,21 +104,13 @@ export const Manager = (
 		resetState(frictionlessState?.restart);
 	};
 
-	const clearSuccessfulChallengeTimeout = () => {
-		// clear the timeout
-		window.clearTimeout(Number(state.successfullChallengeTimeout));
-		// then clear the timeout from the state
-		updateState({ successfullChallengeTimeout: undefined });
-	};
-
 	const getConfig = () => {
 		const config: ProcaptchaClientConfigInput = {
 			userAccountAddress: configInput.userAccountAddress || "",
 			...configInput,
 		};
 
-		// overwrite the account in use with the one in state if it exists. Reduces likelihood of bugs where the user
-		// changes account in the middle of the captcha process.
+		// Pin the account in state so a mid-challenge account switch is ignored.
 		if (state.account) {
 			config.userAccountAddress = state.account.account.address;
 		}
@@ -165,20 +137,16 @@ export const Manager = (
 		return dappAccount;
 	};
 
-	// get the state update mechanism
 	const updateState = buildUpdateState(state, onStateUpdate);
+	const lifecycle = createManagerLifecycle(state, updateState);
 
 	const resetState = (frictionlessRestart?: () => void) => {
-		// clear timeout just in case a timer is still active (shouldn't be)
-		clearTimeout();
-		clearSuccessfulChallengeTimeout();
+		lifecycle.clearTimers();
 		updateState(defaultState());
 		events.onReset();
-		// reset the frictionless state if necessary
 		if (frictionlessRestart) {
 			frictionlessRestart();
 		}
-		// clear closure state
 		storedChallengeResponse = undefined;
 		storedProviderApi = undefined;
 		storedProviderUrl = undefined;
@@ -188,17 +156,14 @@ export const Manager = (
 	};
 
 	const setValidChallengeTimeout = () => {
-		const timeMillis: number = getConfig().captchas.iconOrder.solutionTimeout;
-		const successfullChallengeTimeout = setTimeout(() => {
-			if (disposed) return;
-			// Human state expired, disallow user's claim to be human
-			updateState({ isHuman: false });
-
-			events.onExpired();
-			resetState(frictionlessState?.restart);
-		}, timeMillis);
-
-		updateState({ successfullChallengeTimeout });
+		lifecycle.expireSolutionAfter(
+			getConfig().captchas.iconOrder.solutionTimeout,
+			() => {
+				updateState({ isHuman: false });
+				events.onExpired();
+				resetState(frictionlessState?.restart);
+			},
+		);
 	};
 
 	const start = async (
@@ -214,17 +179,12 @@ export const Manager = (
 					return;
 				}
 
-				// reset the state to defaults - do not reset the frictionless state
 				resetState();
 
-				// Persist click coords on every entry so retries inherit the
-				// trusted coordinates captured by the widget on initial click.
-				// Set after the reset, which clears the closure state: setting
-				// them before it meant the salt never carried the coordinates.
+				// After the reset, which clears them, so retries keep the real click.
 				storedClickX = x;
 				storedClickY = y;
 
-				// set the loading flag to true (allow UI to show some sort of loading / pending indicator while we get the captcha process going)
 				updateState({
 					loading: true,
 				});
@@ -232,7 +192,6 @@ export const Manager = (
 
 				const config = getConfig();
 
-				// check if account exists in extension
 				const selectAccount = async () => {
 					if (frictionlessState) {
 						return frictionlessState.userAccount;
@@ -241,22 +200,18 @@ export const Manager = (
 					return ext.getAccount(config);
 				};
 
-				// use the passed in account (could be web3) or create a new account
 				const user = await selectAccount();
 				const userAccount = user.account.address;
 
-				// set the account created or injected by the extension
 				updateState({
 					account: { account: { address: userAccount } },
 				});
 
-				// snapshot the config into the state
 				updateState({ dappAccount: config.account.address });
 
 				// allow UI to catch up with the loading state
 				await sleep(100);
 
-				// check if account has been provided in config (doesn't matter in web2 mode)
 				if (!config.web2 && !config.userAccountAddress) {
 					throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
 						context: {
@@ -283,12 +238,10 @@ export const Manager = (
 
 				const providerApi = new ProviderApi(providerUrl, getDappAccount());
 
-				// Short-circuit a challenge fetch we already know the provider
-				// will reject, and route straight to the recovery path the
-				// wrapper listens for — re-minting a session is the only way
-				// forward, and the doomed round trip only delays it.
+				// The provider would reject a spent session, so go straight to the
+				// re-mint recovery the wrapper listens for.
 				const challengeSessionId = frictionlessState?.sessionId;
-				if (challengeSessionId && challengeSessionId === spentSessionId) {
+				if (spentSession.isSpent(challengeSessionId)) {
 					updateState({
 						loading: false,
 						error: {
@@ -300,8 +253,7 @@ export const Manager = (
 					return;
 				}
 
-				// Non-blocking check — attach SIMD readings only if the
-				// prefetched benchmark has already resolved.
+				// A zero timeout attaches SIMD readings only if they are already in.
 				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
 					? await frictionlessState.getSimdReadings(0)
 					: undefined;
@@ -311,14 +263,10 @@ export const Manager = (
 					challengeSessionId,
 					simdReadingsOnChallenge,
 				);
-				// The provider answered, so it has seen the id and consumed it —
-				// a challenge and a 4xx mean the same thing here. Marked after
-				// the await rather than before it on purpose: a throw is the one
-				// case where the request may never have landed, and that is
-				// exactly when `providerRetry` re-enters `start()` to fail over
-				// onto a different provider. Marking it spent up front would
-				// turn every transport blip into "No session found".
-				if (challengeSessionId) spentSessionId = challengeSessionId;
+				// Marked only once the provider has answered: a throw may mean the
+				// request never landed, and providerRetry then fails over with the
+				// same session.
+				spentSession.markSpent(challengeSessionId);
 
 				if (challenge.error) {
 					updateState({
@@ -331,20 +279,17 @@ export const Manager = (
 					return;
 				}
 
-				// Store closure state for submitSolution
 				storedChallengeResponse = challenge;
 				storedProviderApi = providerApi;
 				storedProviderUrl = providerUrl;
 				storedUser = user;
 
-				// Set loading to false to signal the widget to show the icon-order frame
 				updateState({
 					loading: false,
 				});
 			},
 			async () => {
-				// Carry the original coords into the retry: re-entering with the
-				// defaults would replace the user's real click with (0, 0).
+				// Re-entering with the defaults would replace the real click with (0, 0).
 				await start(x, y);
 			},
 			() => {
@@ -354,8 +299,7 @@ export const Manager = (
 			3,
 		);
 
-		// Return the stored challenge so retries (which re-enter `start`)
-		// still surface the resolved challenge to the original caller.
+		// Retries re-enter start(), so return what the last attempt stored.
 		return storedChallengeResponse;
 	};
 
@@ -400,42 +344,9 @@ export const Manager = (
 				type: "bytes",
 			});
 
-			let encryptedBehavioralData: string | undefined;
+			const encryptedBehavioralData =
+				await encryptBehavioralDataForSubmit(frictionlessState);
 
-			// Collect and encrypt behavioral data before submission
-			if (
-				frictionlessState?.encryptBehavioralData &&
-				(frictionlessState?.behaviorCollector1 ||
-					frictionlessState?.behaviorCollector2 ||
-					frictionlessState?.behaviorCollector3 ||
-					frictionlessState?.behaviorCollector4)
-			) {
-				try {
-					const behavioralData = {
-						collector1: frictionlessState.behaviorCollector1?.getData() || [],
-						collector2: frictionlessState.behaviorCollector2?.getData() || [],
-						collector3: frictionlessState.behaviorCollector3?.getData() || [],
-						collector4: frictionlessState.behaviorCollector4?.getData() || [],
-						deviceCapability: frictionlessState.deviceCapability || "unknown",
-					};
-
-					// Pack the behavioral data before stringifying
-					const dataToEncrypt = frictionlessState.packBehavioralData
-						? frictionlessState.packBehavioralData(behavioralData)
-						: behavioralData;
-
-					encryptedBehavioralData =
-						await frictionlessState.encryptBehavioralData(
-							JSON.stringify(dataToEncrypt),
-						);
-				} catch {
-					// Silently ignore behavioral data errors - captcha should still work
-				}
-			}
-
-			// Encode the checkbox click coordinates into a random salt, same
-			// shape as the POW flow. The provider decodes this on submit and
-			// records the (x, y) on the icon-order captcha record for telemetry.
 			let salt: string | undefined;
 			if (storedClickX !== undefined && storedClickY !== undefined) {
 				const coords = [storedClickX, storedClickY];
@@ -447,7 +358,6 @@ export const Manager = (
 				salt = embedData(randomSalt, coords);
 			}
 
-			// Wait 5 secs for ongoing SIMD, else submit without
 			const simdReadings = await getSimdReadingsForSubmit(frictionlessState);
 			const clientMetaData = buildClientMetaData(
 				getHoneypotValue?.(),
@@ -465,7 +375,7 @@ export const Manager = (
 				simdReadings,
 				clientMetaData,
 			);
-			if (disposed) return false;
+			if (lifecycle.isDisposed()) return false;
 
 			if (verifiedSolution[ApiParams.verified]) {
 				updateState({
@@ -501,27 +411,10 @@ export const Manager = (
 		}
 	};
 
-	// Set once the widget that owns this manager is torn down. A solve still in
-	// flight can land afterwards, so the timer callbacks check it as well as
-	// being cleared here.
-	let disposed = false;
-
-	/**
-	 * Stops this manager's challenge and solution-expiry timers without firing
-	 * any event. Left running after the widget is destroyed (reset(), a
-	 * restart, an SPA route change) they fired onExpired/onReset later on,
-	 * which also cleared the replacement widget's token from the form.
-	 */
-	const dispose = () => {
-		disposed = true;
-		window.clearTimeout(Number(state.timeout));
-		window.clearTimeout(Number(state.successfullChallengeTimeout));
-	};
-
 	return {
 		start,
 		submitSolution,
 		resetState,
-		dispose,
+		dispose: lifecycle.dispose,
 	};
 };

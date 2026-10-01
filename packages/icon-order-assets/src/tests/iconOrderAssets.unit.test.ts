@@ -21,8 +21,8 @@ import {
 	DEFAULT_GEOMETRY,
 	DEFAULT_RENDER_SETTINGS,
 	LEGEND_ICON_SIZE,
-	createIconOrderChallenge,
 	gradeClicks,
+	renderIconOrder,
 } from "../index.js";
 import { placeIcons } from "../place.js";
 import type {
@@ -114,7 +114,6 @@ describe("placeIcons", () => {
 	});
 
 	it("throws rather than shortening the answer when a target cannot be placed", () => {
-		// One icon nearly as wide as the frame leaves nowhere for a second.
 		const cramped: IconOrderGeometry = {
 			width: 60,
 			height: 60,
@@ -242,7 +241,6 @@ describe("gradeClicks", () => {
 });
 
 describe("the collage background", () => {
-	/** Mean absolute difference between neighbouring pixels, per channel. */
 	const edgeEnergy = (image: RgbaImage): number => {
 		const { data, width, height } = image;
 		const channels = 4;
@@ -262,10 +260,6 @@ describe("the collage background", () => {
 	};
 
 	it("puts more edges on the frame as clutter rises", async () => {
-		// The whole point of the collage: a frame with its own strokes and
-		// corners, so an icon stroke is not the only strong local signal.
-		// Same seed on both sides and no icons, so the only difference between
-		// the two frames is the clutter.
 		const frameAt = (backgroundClutter: number): Promise<RgbaImage> =>
 			compositeIcons(createPrng(seed(7)), [], DEFAULT_GEOMETRY, {
 				...DEFAULT_RENDER_SETTINGS,
@@ -276,7 +270,7 @@ describe("the collage background", () => {
 	});
 
 	it("still renders at zero clutter, as the operator escape hatch", async () => {
-		const challenge = await createIconOrderChallenge(DEFAULT_GEOMETRY, {
+		const challenge = await renderIconOrder(DEFAULT_GEOMETRY, {
 			...DEFAULT_RENDER_SETTINGS,
 			backgroundClutter: 0,
 		});
@@ -286,9 +280,9 @@ describe("the collage background", () => {
 	});
 });
 
-describe("createIconOrderChallenge", () => {
+describe("renderIconOrder", () => {
 	it("renders a frame and a legend sized to the target count", async () => {
-		const challenge = await createIconOrderChallenge();
+		const challenge = await renderIconOrder();
 
 		const background = await sharp(challenge.background).metadata();
 		expect(background.width).toBe(DEFAULT_GEOMETRY.width);
@@ -296,7 +290,6 @@ describe("createIconOrderChallenge", () => {
 
 		const legend = await sharp(challenge.legend).metadata();
 		expect(legend.height).toBe(LEGEND_ICON_SIZE);
-		// Three chips plus the two gaps between them.
 		expect(legend.width).toBe(
 			DEFAULT_RENDER_SETTINGS.targetCount * (LEGEND_ICON_SIZE + 6) - 6,
 		);
@@ -306,10 +299,7 @@ describe("createIconOrderChallenge", () => {
 	});
 
 	it("produces a different frame every call, so a background is never reused", async () => {
-		const [a, b] = await Promise.all([
-			createIconOrderChallenge(),
-			createIconOrderChallenge(),
-		]);
+		const [a, b] = await Promise.all([renderIconOrder(), renderIconOrder()]);
 		expect(a.background.equals(b.background)).toBe(false);
 	});
 
@@ -319,10 +309,7 @@ describe("createIconOrderChallenge", () => {
 			targetCount: 4,
 			decoyCount: 2,
 		};
-		const challenge = await createIconOrderChallenge(
-			DEFAULT_GEOMETRY,
-			settings,
-		);
+		const challenge = await renderIconOrder(DEFAULT_GEOMETRY, settings);
 		expect(challenge.targets).toHaveLength(4);
 		const legend = await sharp(challenge.legend).metadata();
 		expect(legend.width).toBe(4 * (LEGEND_ICON_SIZE + 6) - 6);

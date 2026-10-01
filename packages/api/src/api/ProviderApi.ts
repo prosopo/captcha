@@ -32,18 +32,18 @@ import {
 	type DecisionMachineLanguage,
 	type DecisionMachineRuntime,
 	type DecisionMachineScope,
-	type GetAudioCaptchaChallengeRequestBodyType,
 	type GetAudioCaptchaResponse,
 	type GetFrictionlessCaptchaChallengeRequestBodyOutput,
 	type GetFrictionlessCaptchaResponse,
-	type GetIconOrderCaptchaChallengeRequestBodyType,
 	type GetIconOrderCaptchaResponse,
 	type GetPowCaptchaChallengeRequestBodyType,
 	type GetPowCaptchaResponse,
 	type GetPuzzleCaptchaChallengeRequestBodyType,
 	type GetPuzzleCaptchaResponse,
 	type IUserSettings,
+	type IconClick,
 	type IconOrderCaptchaSolutionResponse,
+	type IconOrderEvent,
 	type ImageVerificationResponse,
 	type ModeEnum,
 	type PowCaptchaSolutionResponse,
@@ -59,8 +59,6 @@ import {
 	RemoveSitekeyBody,
 	RemoveSitekeysBody,
 	type RemoveSitekeysBodyTypeOutput,
-	type ServerAudioCaptchaVerifyRequestBodyType,
-	type ServerIconOrderCaptchaVerifyRequestBodyType,
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type ServerPuzzleCaptchaVerifyRequestBodyType,
 	type StoredEvents,
@@ -90,6 +88,36 @@ import { ApiClient } from "./apiClient.js";
 // value only makes a provider verify locally (the safe default), so it carries
 // no trust assumption.
 export const VERIFY_FORWARDED_HEADER = "prosopo-verify-forwarded";
+
+/** The fields every interactive captcha solution submission carries. */
+const interactiveSolutionEnvelope = (
+	challenge:
+		| GetPuzzleCaptchaResponse
+		| GetIconOrderCaptchaResponse
+		| GetAudioCaptchaResponse,
+	userAccount: string,
+	dappAccount: string,
+	userTimestampSignature: string,
+	behavioralData?: string,
+	salt?: string,
+	simdReadings?: string,
+	clientMetaData?: ClientMetaData,
+) => ({
+	[ApiParams.challenge]: challenge.challenge,
+	[ApiParams.timestamp]: challenge.timestamp,
+	[ApiParams.user]: userAccount.toString(),
+	[ApiParams.dapp]: dappAccount.toString(),
+	[ApiParams.signature]: {
+		[ApiParams.provider]: challenge[ApiParams.signature][ApiParams.provider],
+		[ApiParams.user]: {
+			[ApiParams.timestamp]: userTimestampSignature,
+		},
+	},
+	...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
+	...(salt && { [ApiParams.salt]: salt }),
+	...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
+	...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
+});
 
 export default class ProviderApi
 	extends ApiClient
@@ -307,6 +335,55 @@ export default class ProviderApi
 		sessionId?: string,
 		simdReadings?: string,
 	): Promise<GetPuzzleCaptchaResponse> {
+		return this.getInteractiveCaptchaChallenge(
+			ClientApiPaths.GetPuzzleCaptchaChallenge,
+			user,
+			dapp,
+			sessionId,
+			simdReadings,
+		);
+	}
+
+	public getIconOrderCaptchaChallenge(
+		user: string,
+		dapp: string,
+		sessionId?: string,
+		simdReadings?: string,
+	): Promise<GetIconOrderCaptchaResponse> {
+		return this.getInteractiveCaptchaChallenge(
+			ClientApiPaths.GetIconOrderCaptchaChallenge,
+			user,
+			dapp,
+			sessionId,
+			simdReadings,
+		);
+	}
+
+	public getAudioCaptchaChallenge(
+		user: string,
+		dapp: string,
+		sessionId?: string,
+		simdReadings?: string,
+	): Promise<GetAudioCaptchaResponse> {
+		return this.getInteractiveCaptchaChallenge(
+			ClientApiPaths.GetAudioCaptchaChallenge,
+			user,
+			dapp,
+			sessionId,
+			simdReadings,
+		);
+	}
+
+	private getInteractiveCaptchaChallenge<TResponse>(
+		path:
+			| ClientApiPaths.GetPuzzleCaptchaChallenge
+			| ClientApiPaths.GetIconOrderCaptchaChallenge
+			| ClientApiPaths.GetAudioCaptchaChallenge,
+		user: string,
+		dapp: string,
+		sessionId?: string,
+		simdReadings?: string,
+	): Promise<TResponse> {
 		const body: GetPuzzleCaptchaChallengeRequestBodyType = {
 			[ApiParams.user]: user.toString(),
 			[ApiParams.dapp]: dapp.toString(),
@@ -314,9 +391,9 @@ export default class ProviderApi
 			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
 		};
 		return this.dedupedPost<
-			GetPuzzleCaptchaResponse,
+			TResponse,
 			GetPuzzleCaptchaChallengeRequestBodyType
-		>(ClientApiPaths.GetPuzzleCaptchaChallenge, sessionId, body, {
+		>(path, sessionId, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
@@ -338,24 +415,19 @@ export default class ProviderApi
 		clientMetaData?: ClientMetaData,
 	): Promise<PuzzleCaptchaSolutionResponse> {
 		const body = SubmitPuzzleCaptchaSolutionBody.parse({
-			[ApiParams.challenge]: challenge.challenge,
-			[ApiParams.timestamp]: challenge.timestamp,
-			[ApiParams.user]: userAccount.toString(),
-			[ApiParams.dapp]: dappAccount.toString(),
+			...interactiveSolutionEnvelope(
+				challenge,
+				userAccount,
+				dappAccount,
+				userTimestampSignature,
+				behavioralData,
+				salt,
+				simdReadings,
+				clientMetaData,
+			),
 			[ApiParams.finalX]: finalX,
 			[ApiParams.finalY]: finalY,
 			[ApiParams.puzzleEvents]: puzzleEvents,
-			[ApiParams.signature]: {
-				[ApiParams.provider]:
-					challenge[ApiParams.signature][ApiParams.provider],
-				[ApiParams.user]: {
-					[ApiParams.timestamp]: userTimestampSignature,
-				},
-			},
-			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
-			...(salt && { [ApiParams.salt]: salt }),
-			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
-			...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
 		});
 		return this.post(ClientApiPaths.SubmitPuzzleCaptchaSolution, body, {
 			headers: {
@@ -366,6 +438,67 @@ export default class ProviderApi
 	}
 
 	public submitPuzzleCaptchaVerify(
+		token: string,
+		signatureHex: string,
+		user: string,
+		ip?: string,
+		email?: string,
+		clientSessionId?: string,
+	): Promise<VerificationResponse> {
+		return this.submitInteractiveCaptchaVerify(
+			ClientApiPaths.VerifyPuzzleCaptchaSolution,
+			token,
+			signatureHex,
+			user,
+			ip,
+			email,
+			clientSessionId,
+		);
+	}
+
+	public submitIconOrderCaptchaVerify(
+		token: string,
+		signatureHex: string,
+		user: string,
+		ip?: string,
+		email?: string,
+		clientSessionId?: string,
+	): Promise<VerificationResponse> {
+		return this.submitInteractiveCaptchaVerify(
+			ClientApiPaths.VerifyIconOrderCaptchaSolution,
+			token,
+			signatureHex,
+			user,
+			ip,
+			email,
+			clientSessionId,
+		);
+	}
+
+	public submitAudioCaptchaVerify(
+		token: string,
+		signatureHex: string,
+		user: string,
+		ip?: string,
+		email?: string,
+		clientSessionId?: string,
+	): Promise<VerificationResponse> {
+		return this.submitInteractiveCaptchaVerify(
+			ClientApiPaths.VerifyAudioCaptchaSolution,
+			token,
+			signatureHex,
+			user,
+			ip,
+			email,
+			clientSessionId,
+		);
+	}
+
+	private submitInteractiveCaptchaVerify(
+		path:
+			| ClientApiPaths.VerifyPuzzleCaptchaSolution
+			| ClientApiPaths.VerifyIconOrderCaptchaSolution
+			| ClientApiPaths.VerifyAudioCaptchaSolution,
 		token: string,
 		signatureHex: string,
 		user: string,
@@ -384,53 +517,7 @@ export default class ProviderApi
 		if (clientSessionId) {
 			body[ApiParams.clientSessionId] = clientSessionId;
 		}
-		return this.post(ClientApiPaths.VerifyPuzzleCaptchaSolution, body, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				"Prosopo-User": user,
-			},
-		});
-	}
-
-	public getAudioCaptchaChallenge(
-		user: string,
-		dapp: string,
-		sessionId?: string,
-		simdReadings?: string,
-	): Promise<GetAudioCaptchaResponse> {
-		const body: GetAudioCaptchaChallengeRequestBodyType = {
-			[ApiParams.user]: user.toString(),
-			[ApiParams.dapp]: dapp.toString(),
-			...(sessionId && { [ApiParams.sessionId]: sessionId }),
-			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
-		};
-		return this.dedupedPost<
-			GetAudioCaptchaResponse,
-			GetAudioCaptchaChallengeRequestBodyType
-		>(ClientApiPaths.GetAudioCaptchaChallenge, sessionId, body, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				"Prosopo-User": user,
-			},
-		});
-	}
-
-	public getIconOrderCaptchaChallenge(
-		user: string,
-		dapp: string,
-		sessionId?: string,
-		simdReadings?: string,
-	): Promise<GetIconOrderCaptchaResponse> {
-		const body: GetIconOrderCaptchaChallengeRequestBodyType = {
-			[ApiParams.user]: user.toString(),
-			[ApiParams.dapp]: dapp.toString(),
-			...(sessionId && { [ApiParams.sessionId]: sessionId }),
-			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
-		};
-		return this.dedupedPost<
-			GetIconOrderCaptchaResponse,
-			GetIconOrderCaptchaChallengeRequestBodyType
-		>(ClientApiPaths.GetIconOrderCaptchaChallenge, sessionId, body, {
+		return this.post(path, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
@@ -452,24 +539,19 @@ export default class ProviderApi
 		clientMetaData?: ClientMetaData,
 	): Promise<AudioCaptchaSolutionResponse> {
 		const body = SubmitAudioCaptchaSolutionBody.parse({
-			[ApiParams.challenge]: challenge.challenge,
-			[ApiParams.timestamp]: challenge.timestamp,
-			[ApiParams.user]: userAccount.toString(),
-			[ApiParams.dapp]: dappAccount.toString(),
+			...interactiveSolutionEnvelope(
+				challenge,
+				userAccount,
+				dappAccount,
+				userTimestampSignature,
+				behavioralData,
+				salt,
+				simdReadings,
+				clientMetaData,
+			),
 			[ApiParams.answer]: answer,
 			[ApiParams.replays]: replays,
 			[ApiParams.audioEvents]: audioEvents,
-			[ApiParams.signature]: {
-				[ApiParams.provider]:
-					challenge[ApiParams.signature][ApiParams.provider],
-				[ApiParams.user]: {
-					[ApiParams.timestamp]: userTimestampSignature,
-				},
-			},
-			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
-			...(salt && { [ApiParams.salt]: salt }),
-			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
-			...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
 		});
 		return this.post(ClientApiPaths.SubmitAudioCaptchaSolution, body, {
 			headers: {
@@ -483,8 +565,8 @@ export default class ProviderApi
 		challenge: GetIconOrderCaptchaResponse,
 		userAccount: string,
 		dappAccount: string,
-		clicks: Array<{ x: number; y: number }>,
-		iconOrderEvents: Array<{ x: number; y: number; t: number }>,
+		clicks: IconClick[],
+		iconOrderEvents: IconOrderEvent[],
 		userTimestampSignature: string,
 		behavioralData?: string,
 		salt?: string,
@@ -492,82 +574,23 @@ export default class ProviderApi
 		clientMetaData?: ClientMetaData,
 	): Promise<IconOrderCaptchaSolutionResponse> {
 		const body = SubmitIconOrderCaptchaSolutionBody.parse({
-			[ApiParams.challenge]: challenge.challenge,
-			[ApiParams.timestamp]: challenge.timestamp,
-			[ApiParams.user]: userAccount.toString(),
-			[ApiParams.dapp]: dappAccount.toString(),
+			...interactiveSolutionEnvelope(
+				challenge,
+				userAccount,
+				dappAccount,
+				userTimestampSignature,
+				behavioralData,
+				salt,
+				simdReadings,
+				clientMetaData,
+			),
 			[ApiParams.clicks]: clicks,
 			[ApiParams.iconOrderEvents]: iconOrderEvents,
-			[ApiParams.signature]: {
-				[ApiParams.provider]:
-					challenge[ApiParams.signature][ApiParams.provider],
-				[ApiParams.user]: {
-					[ApiParams.timestamp]: userTimestampSignature,
-				},
-			},
-			...(behavioralData && { [ApiParams.behavioralData]: behavioralData }),
-			...(salt && { [ApiParams.salt]: salt }),
-			...(simdReadings && { [ApiParams.simdReadings]: simdReadings }),
-			...(clientMetaData && { [ApiParams.clientMetaData]: clientMetaData }),
 		});
 		return this.post(ClientApiPaths.SubmitIconOrderCaptchaSolution, body, {
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": userAccount,
-			},
-		});
-	}
-
-	public submitAudioCaptchaVerify(
-		token: string,
-		signatureHex: string,
-		user: string,
-		ip?: string,
-		email?: string,
-		clientSessionId?: string,
-	): Promise<VerificationResponse> {
-		const body: ServerAudioCaptchaVerifyRequestBodyType = {
-			[ApiParams.token]: token,
-			[ApiParams.dappSignature]: signatureHex,
-			[ApiParams.ip]: ip,
-		};
-		if (email) {
-			body[ApiParams.email] = email;
-		}
-		if (clientSessionId) {
-			body[ApiParams.clientSessionId] = clientSessionId;
-		}
-		return this.post(ClientApiPaths.VerifyAudioCaptchaSolution, body, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				"Prosopo-User": user,
-			},
-		});
-	}
-
-	public submitIconOrderCaptchaVerify(
-		token: string,
-		signatureHex: string,
-		user: string,
-		ip?: string,
-		email?: string,
-		clientSessionId?: string,
-	): Promise<VerificationResponse> {
-		const body: ServerIconOrderCaptchaVerifyRequestBodyType = {
-			[ApiParams.token]: token,
-			[ApiParams.dappSignature]: signatureHex,
-			[ApiParams.ip]: ip,
-		};
-		if (email) {
-			body[ApiParams.email] = email;
-		}
-		if (clientSessionId) {
-			body[ApiParams.clientSessionId] = clientSessionId;
-		}
-		return this.post(ClientApiPaths.VerifyIconOrderCaptchaSolution, body, {
-			headers: {
-				"Prosopo-Site-Key": this.account,
-				"Prosopo-User": user,
 			},
 		});
 	}

@@ -19,8 +19,10 @@ import {
 } from "@prosopo/locale";
 import {
 	type CheckboxProps,
+	type ClickCoords,
 	type Component,
 	type HoneypotComponent,
+	PROCAPTCHA_EXECUTE_EVENT,
 	type ProcaptchaStateHandle,
 	Teardown,
 	audioAlternativeOffer,
@@ -28,9 +30,9 @@ import {
 	createElement,
 	createProcaptchaState,
 	createRenderScheduler,
-	isEventTrusted,
 	mountCheckbox,
 	mountHoneypot,
+	trustedClickCoords,
 } from "@prosopo/procaptcha-common";
 import {
 	type GetIconOrderCaptchaResponse,
@@ -47,9 +49,6 @@ import {
 	mountIconOrderCanvas,
 } from "./iconOrderCanvas.js";
 
-// Define the same event name as in the bundle for consistency
-const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
-
 type IconOrderPhase = "checkbox" | "selecting" | "submitting";
 
 export interface ProcaptchaIconOrderHandle {
@@ -63,10 +62,11 @@ export const mountProcaptchaIconOrderWidget = (
 	const teardown = new Teardown();
 	const config = props.config;
 	const i18n = props.i18n;
-	const frictionlessState = props.frictionlessState; // Set up Session ID and Provider if they exist
+	const frictionlessState = props.frictionlessState;
 	const callbacks = props.callbacks || {};
 	const translator = createTranslator(i18n);
 	const isInvisible = ModeEnum.invisible === config.mode;
+	const theme = "light" === config.theme ? lightTheme : darkTheme;
 
 	const store: ProcaptchaStateHandle = createProcaptchaState();
 	let loading = false;
@@ -76,16 +76,13 @@ export const mountProcaptchaIconOrderWidget = (
 	// only still on screen if the wrapper hands it back to us.
 	let showRetry = true === props.startShowRetry;
 	let lastError: ProcaptchaState["error"] = store.state.error;
-	// See procaptcha-pow's widget — same session-invalidation recovery contract
-	// with coords preservation across a re-mint.
-	let lastCoords: { x: number; y: number } | null = null;
+	let lastCoords: ClickCoords | null = null;
 	let sessionInvalidatedFired = false;
 
 	let honeypot: HoneypotComponent | undefined;
 	let checkbox: Component<CheckboxProps> | undefined;
 	let canvas: Component<IconOrderCanvasProps> | undefined;
 
-	// get the state update mechanism
 	const updateState = buildUpdateState(store.state, store.update);
 
 	const manager = Manager(
@@ -104,6 +101,27 @@ export const mountProcaptchaIconOrderWidget = (
 		honeypot = mountHoneypot(root, { encodedQuestion: frictionlessState.hp });
 	}
 
+	const reportError = (error: unknown) => {
+		callbacks.onError?.(
+			error instanceof Error ? error : new Error(String(error)),
+		);
+	};
+
+	const returnToCheckbox = () => {
+		iconOrderPhase = "checkbox";
+		challengeData = null;
+		showRetry = false;
+	};
+
+	const showChallenge = (
+		challenge: GetIconOrderCaptchaResponse | undefined,
+	) => {
+		if (challenge) {
+			challengeData = challenge;
+			iconOrderPhase = "selecting";
+		}
+	};
+
 	const handleIconOrderComplete = async (
 		clicks: IconClick[],
 		iconOrderEvents: IconOrderEvent[],
@@ -115,32 +133,24 @@ export const mountProcaptchaIconOrderWidget = (
 		try {
 			verified = await manager.submitSolution(clicks, iconOrderEvents);
 		} catch (error) {
-			callbacks.onError?.(
-				error instanceof Error ? error : new Error(String(error)),
-			);
+			reportError(error);
 		}
 
 		if (verified) {
-			iconOrderPhase = "checkbox";
-			challengeData = null;
-			showRetry = false;
+			returnToCheckbox();
 			loading = false;
 			scheduler.schedule();
 			return;
 		}
 
-		// Failed — show retry message and fetch a new challenge
 		showRetry = true;
 		iconOrderPhase = "selecting";
 		scheduler.schedule();
 
-		// A frictionless session is single-use: the provider consumed it when it
-		// issued the challenge the user just got wrong, so asking `manager.start()`
-		// for a replacement on the same sessionId can only ever come back
-		// CAPTCHA.NO_SESSION_FOUND — a wasted round trip that surfaces an error
-		// on the checkbox before the wrapper recovers. Go straight to the
-		// re-mint instead; the wrapper mints a new session and re-mounts us with
-		// `autoStart`, so a fresh challenge appears in place.
+		// The provider consumed the frictionless session when it issued this
+		// challenge, so a replacement on the same sessionId can only come back
+		// NO_SESSION_FOUND. Re-mint instead: the wrapper re-mounts us with
+		// `autoStart` and a fresh challenge.
 		if (frictionlessState?.sessionId && props.onReload) {
 			iconOrderPhase = "submitting";
 			scheduler.schedule();
@@ -153,25 +163,18 @@ export const mountProcaptchaIconOrderWidget = (
 			if (newChallenge) {
 				challengeData = newChallenge;
 			} else {
-				// Couldn't get new challenge, fall back to checkbox
-				iconOrderPhase = "checkbox";
-				challengeData = null;
-				showRetry = false;
+				returnToCheckbox();
 			}
 		} catch {
-			iconOrderPhase = "checkbox";
-			challengeData = null;
-			showRetry = false;
+			returnToCheckbox();
 		}
 		loading = false;
 		scheduler.schedule();
 	};
 
-	// Dismissing returns to the checkbox; clicking away is not a wrong answer.
+	// Clicking away is not a wrong answer, so no retry prompt.
 	const handleDismiss = () => {
-		iconOrderPhase = "checkbox";
-		challengeData = null;
-		showRetry = false;
+		returnToCheckbox();
 		loading = false;
 		scheduler.schedule();
 	};
@@ -187,7 +190,7 @@ export const mountProcaptchaIconOrderWidget = (
 		},
 		showRetry,
 		submitting: "submitting" === iconOrderPhase,
-		theme: "light" === config.theme ? lightTheme : darkTheme,
+		theme,
 		translator,
 		placement: config.placement,
 		anchor: props.container,
@@ -207,18 +210,13 @@ export const mountProcaptchaIconOrderWidget = (
 			return;
 		}
 		loading = false;
-		iconOrderPhase = "checkbox";
-		challengeData = null;
-		showRetry = false;
+		returnToCheckbox();
 		if ("CAPTCHA.NO_SESSION_FOUND" !== store.state.error.key) {
 			return;
 		}
-		// Suppressed only when something is actually going to re-mint: this is
-		// an internal recovery signal, not something the user should read, so
-		// hold the spinner rather than paint a support code that is about to
-		// stop being true. Clearing it re-enters this effect once, which returns
-		// at the `!error` guard. With no recovery route the error stands — a
-		// spinner that never resolves is worse than a message.
+		// An internal recovery signal, not something the user should read: hold
+		// the spinner while something re-mints. With no recovery route the
+		// error stands, since a spinner that never resolves is worse.
 		const willRecover =
 			(props.onSessionInvalidated && !sessionInvalidatedFired) ||
 			undefined !== frictionlessState;
@@ -242,12 +240,8 @@ export const mountProcaptchaIconOrderWidget = (
 	const render = () => {
 		runErrorEffect();
 
-		// Icon-order overlay — shown in both visible and invisible modes once a
-		// challenge has been fetched; selecting icons in order is inherently
-		// interactive.
 		const showOverlay =
-			("selecting" === iconOrderPhase || "submitting" === iconOrderPhase) &&
-			null !== challengeData;
+			"selecting" === iconOrderPhase || "submitting" === iconOrderPhase;
 
 		if (showOverlay && null !== challengeData) {
 			if (undefined === canvas) {
@@ -265,9 +259,31 @@ export const mountProcaptchaIconOrderWidget = (
 
 	const scheduler = createRenderScheduler(render);
 
+	const beginChallenge = async (coords?: ClickCoords): Promise<void> => {
+		if (loading) {
+			return;
+		}
+		loading = true;
+		showRetry = false;
+		scheduler.schedule();
+		if (coords) {
+			lastCoords = coords;
+		}
+		try {
+			showChallenge(await manager.start(coords?.x, coords?.y));
+		} catch (error) {
+			// Failures already reach the user through state.error; rethrowing
+			// would only be an unhandled rejection.
+			reportError(error);
+		} finally {
+			loading = false;
+			scheduler.schedule();
+		}
+	};
+
 	const checkboxProps = (): CheckboxProps => ({
 		checked: store.state.isHuman,
-		theme: "light" === config.theme ? lightTheme : darkTheme,
+		theme,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",
 		error: store.state.error
 			? localiseErrorMessage(translator.i18n, store.state.error)
@@ -276,59 +292,11 @@ export const mountProcaptchaIconOrderWidget = (
 			defaultValue: "Checking that you are human",
 		}),
 		loading: loading || "submitting" === iconOrderPhase,
-		onChange: async (
-			event: MouseEvent | KeyboardEvent | TouchEvent,
-		): Promise<void> => {
-			if (loading) {
-				return;
-			}
-			loading = true;
-			showRetry = false;
-			scheduler.schedule();
-
-			// Capture click coordinates (mirrors the PoW widget) so the
-			// icon-order solution salt records the entry-point telemetry.
-			let x = 0;
-			let y = 0;
-			if (!isEventTrusted(event)) {
-				// Don't capture coordinates for non-trusted events
-			} else if ("touches" in event && event.touches.length > 0) {
-				const touch = event.touches[0];
-				if (touch) {
-					x = touch.clientX;
-					y = touch.clientY;
-				}
-			} else if ("clientX" in event && "clientY" in event) {
-				x = event.clientX;
-				y = event.clientY;
-			}
-
-			lastCoords = { x, y };
-			try {
-				const challenge = await manager.start(x, y);
-
-				if (challenge) {
-					challengeData = challenge;
-					iconOrderPhase = "selecting";
-				}
-			} catch (error) {
-				// The manager reports failures through state.error; rethrowing here
-				// only produces an unhandled rejection, since nothing awaits this
-				// handler.
-				callbacks.onError?.(
-					error instanceof Error ? error : new Error(String(error)),
-				);
-			} finally {
-				// A rejected start would otherwise leave the spinner up for good,
-				// with no way back to the checkbox for the user.
-				loading = false;
-				scheduler.schedule();
-			}
-		},
+		onChange: (event: MouseEvent | KeyboardEvent | TouchEvent) =>
+			beginChallenge(trustedClickCoords(event)),
 	});
 
-	// Checkbox — only in visible mode. Invisible mode is driven by the host
-	// page's execute() call (e.g. on form submit).
+	// Invisible mode has no checkbox: the host page's execute() drives it.
 	if (!isInvisible) {
 		checkbox = mountCheckbox(root, checkboxProps());
 	}
@@ -337,34 +305,10 @@ export const mountProcaptchaIconOrderWidget = (
 	teardown.add(store.subscribe(scheduler.schedule));
 	teardown.add(translator.subscribe(scheduler.schedule));
 
-	// A bare execute() reaches every invisible widget via document. A targeted
-	// execute() is dispatched on this widget's container and works in either
-	// mode, which is what lets a bound button drive a visible widget. Either
-	// way it fetches a challenge and drives the icon-order UI through the same
-	// phase transitions as the visible checkbox flow.
+	// A bare execute() reaches every invisible widget via document; a targeted
+	// one is dispatched on this widget's container and works in either mode.
 	const handleExecute = () => {
-		void (async () => {
-			if (loading) {
-				return;
-			}
-			loading = true;
-			showRetry = false;
-			scheduler.schedule();
-			try {
-				const challenge = await manager.start();
-				if (challenge) {
-					challengeData = challenge;
-					iconOrderPhase = "selecting";
-				}
-			} catch (error) {
-				callbacks.onError?.(
-					error instanceof Error ? error : new Error(String(error)),
-				);
-			} finally {
-				loading = false;
-				scheduler.schedule();
-			}
-		})();
+		void beginChallenge();
 	};
 
 	if (props.container) {
@@ -388,27 +332,22 @@ export const mountProcaptchaIconOrderWidget = (
 				void i18n.changeLanguage(config.language);
 			}
 		} else {
-			// Direct consumers don't go through WidgetFactory, so pass the language
-			// into loadI18next — first init boots with the right language (skipping
-			// browser detection), and subsequent calls reconcile via changeLanguage
-			// inside loadI18next.
+			// Without WidgetFactory nothing has initialised i18n yet, so boot it
+			// in the configured language rather than the detected one.
 			void loadI18next(false, config.language);
 		}
 	}
 
 	if (props.autoStart) {
 		loading = true;
-		// Deliberately not cleared: an autoStart mount is how a re-mint after a
-		// wrong answer arrives, and `startShowRetry` says whether it was one.
+		// showRetry is deliberately left alone: an autoStart mount is how a
+		// re-mint after a wrong answer arrives.
 		const coords = props.startCoords;
 		lastCoords = coords ?? null;
 		scheduler.schedule();
 		manager.start(coords?.x ?? 0, coords?.y ?? 0).then(
 			(challenge: GetIconOrderCaptchaResponse | undefined) => {
-				if (challenge) {
-					challengeData = challenge;
-					iconOrderPhase = "selecting";
-				}
+				showChallenge(challenge);
 				loading = false;
 				scheduler.schedule();
 			},

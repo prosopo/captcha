@@ -184,18 +184,11 @@ export type DecisionMachineInput = {
 	// captured client-side and persisted on the puzzle captcha record.
 	// Always undefined on pow / image / audio inputs.
 	puzzleEvents?: PuzzleEvent[];
-	// Audio-only: playback and typing events, persisted on the audio
-	// captcha record. Always undefined on pow / image / puzzle inputs.
-	//
-	// Thinner than `puzzleEvents` — there is no spatial path here, only
-	// when the clip was played and when keys were pressed. It is still
-	// the audio flow's most useful verify-time signal: perfect answers
-	// typed in a single burst with no replay are not what people do.
+	// Audio-only: playback and typing events, persisted on the audio record.
 	audioEvents?: AudioEvent[];
 	// Audio-only: how many times the clip was played before submitting.
 	audioReplays?: number;
-	// Icon-order-only: the pointer trail across the frame, captured
-	// client-side and persisted on the icon-order captcha record.
+	// Icon-order-only equivalent of `puzzleEvents`.
 	iconOrderEvents?: IconOrderEvent[];
 	// Raw per-connection TCP-handshake signals persisted on the Session
 	// at frictionless entry (see rawTlsSignalsMiddleware). Surfaced here
@@ -466,8 +459,6 @@ export interface RoutingMachineOutput {
 	// Ignored unless the resolved captchaType is `puzzle`.
 	puzzleTolerance?: number;
 	puzzle?: IPuzzleSettings;
-	// Icon-order equivalents of the two fields above, with identical
-	// semantics and the same layering path through the Session record.
 	// Ignored unless the resolved captchaType is `iconOrder`.
 	iconOrderTolerance?: number;
 	iconOrder?: IIconOrderSettings;

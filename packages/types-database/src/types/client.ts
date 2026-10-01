@@ -194,9 +194,7 @@ export const TrafficCategoryPolicySchema = new Schema(
 		// read `undefined` and no category was ever padded.
 		padBytes: { type: Number, min: 0, max: MAX_PAD_BYTES, required: false },
 		iconOrderTolerance: { type: Number, required: false },
-		// Mixed for the same reason as `frictionlessThreshold` below: zod owns
-		// the shape, and a typed sub-document would make mongoose cast-fail on
-		// read instead of letting the provider resolve it.
+		// Mixed: the shape is validated by zod, not mongoose.
 		iconOrder: { type: MongooseSchema.Types.Mixed, required: false },
 		// Per-category render overrides, layered on top of the site-wide
 		// `puzzle` and `audio` blocks by the traffic filter.
@@ -271,9 +269,6 @@ export const UserSettingsSchema = new Schema({
 		type: Number,
 		required: false,
 	},
-	// Declared explicitly because mongoose is strict — see the
-	// `frictionlessTypes` note above for what happens to a field that is only
-	// in the zod schema.
 	iconOrder: {
 		type: MongooseSchema.Types.Mixed,
 		required: false,

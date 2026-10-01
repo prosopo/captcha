@@ -18,6 +18,8 @@ import {
 	type Component,
 	type StaticComponent,
 	Teardown,
+	type WidgetHandle,
+	type WidgetMountFn,
 	clearElement,
 	createElement,
 	getDefaultEvents,
@@ -34,6 +36,7 @@ import {
 	type ModeType,
 	PROCAPTCHA_START_EVENT,
 	ProcaptchaConfigSchema,
+	type ProcaptchaEscalationHandler,
 	type ProcaptchaFrictionlessProps,
 	type ProcaptchaProps,
 	type ProcaptchaStartEventDetail,
@@ -69,19 +72,19 @@ const ProcaptchaPowLoader = async () =>
 const ProcaptchaAudioLoader = async () =>
 	(await import("@prosopo/procaptcha-audio")).mountProcaptchaAudioWidget;
 
-/**
- * The visual challenges, which are the only ones that offer "use audio
- * instead". Mirrors the provider's `isAudioAlternativeSessionType`.
- */
-const offersAudioAlternative = (captchaType: string): boolean =>
-	CaptchaType.image === captchaType ||
-	CaptchaType.puzzle === captchaType ||
-	CaptchaType.iconOrder === captchaType;
+/** Solvers that ask for a fresh session through `onReload`. */
+const reloadableSolverLoaders: ReadonlyMap<
+	string,
+	() => Promise<WidgetMountFn>
+> = new Map<string, () => Promise<WidgetMountFn>>([
+	[CaptchaType.image, ProcaptchaLoader],
+	[CaptchaType.puzzle, ProcaptchaPuzzleLoader],
+	[CaptchaType.iconOrder, ProcaptchaIconOrderLoader],
+]);
 
-/** A mounted solver widget. Every solver exposes the same teardown. */
-interface SolverHandle {
-	destroy(): void;
-}
+/** Mirrors the provider's `isAudioAlternativeSessionType`. */
+const offersAudioAlternative = (captchaType: string): boolean =>
+	reloadableSolverLoaders.has(captchaType);
 
 export interface ProcaptchaFrictionlessHandle {
 	destroy(): void;
@@ -181,7 +184,7 @@ export const mountProcaptchaFrictionless = (
 	const slot = createElement("div");
 	container.appendChild(slot);
 
-	let solver: SolverHandle | undefined;
+	let solver: WidgetHandle | undefined;
 	let placeholder: Component<CheckboxProps> | undefined;
 
 	const clearSlot = () => {
@@ -294,17 +297,16 @@ export const mountProcaptchaFrictionless = (
 		autoStart = false,
 		escalationCoords?: RetryCoords,
 	): Promise<void> => {
-		// Audio is never a type /frictionless hands back: it is only reachable
-		// as the accessibility alternative, so it is mounted here on the user's
-		// request, against the visual session the re-run just minted. If the
-		// re-run came back with no visual challenge (PoW, a verified agent)
-		// there is nothing to exchange, and the provider's choice stands.
+		// Audio is never a type /frictionless hands back, so it is mounted here
+		// on the user's request, against the visual session the re-run just
+		// minted. If the re-run came back with no visual challenge there is
+		// nothing to exchange, and the provider's choice stands.
 		const mountAudio =
 			forceAudioNextMount && offersAudioAlternative(captchaType);
 		forceAudioNextMount = false;
 
-		const onEscalate = (
-			next: CaptchaType.image | CaptchaType.puzzle | CaptchaType.iconOrder,
+		const onEscalate: ProcaptchaEscalationHandler = (
+			next: Parameters<ProcaptchaEscalationHandler>[0],
 			newSessionId: string,
 			coords?: RetryCoords,
 		) => {
@@ -482,26 +484,9 @@ export const mountProcaptchaFrictionless = (
 			return;
 		}
 
-		if (CaptchaType.image === captchaType) {
-			const mount = await ProcaptchaLoader();
-			if (destroyed) return;
-			clearSlot();
-			solver = mount(slot, { ...visualWidgetProps, onReload });
-			replayPendingExecute();
-			return;
-		}
-
-		if (CaptchaType.puzzle === captchaType) {
-			const mount = await ProcaptchaPuzzleLoader();
-			if (destroyed) return;
-			clearSlot();
-			solver = mount(slot, { ...visualWidgetProps, onReload });
-			replayPendingExecute();
-			return;
-		}
-
-		if (CaptchaType.iconOrder === captchaType) {
-			const mount = await ProcaptchaIconOrderLoader();
+		const loadReloadableSolver = reloadableSolverLoaders.get(captchaType);
+		if (loadReloadableSolver) {
+			const mount = await loadReloadableSolver();
 			if (destroyed) return;
 			clearSlot();
 			solver = mount(slot, { ...visualWidgetProps, onReload });

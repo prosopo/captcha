@@ -116,12 +116,7 @@ const findHardBlockPolicy = (
 	});
 };
 
-/**
- * What `checkForHardBlock` actually reads off a captcha record. Structural
- * rather than a union of the concrete record types: every captcha record
- * satisfies it, so a new captcha type does not have to be added to a union
- * here to be able to consult access policies.
- */
+/** The fields `checkForHardBlock` reads; every captcha record has them. */
 export interface HardBlockRecordView {
 	dappAccount: string;
 	ipAddress: CompositeIpAddress;

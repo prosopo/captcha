@@ -17,6 +17,7 @@ import {
 	CaptchaStatus,
 	type CompositeIpAddress,
 	IpAddressType,
+	type PoWChallengeId,
 } from "@prosopo/types";
 import {
 	type PoWCaptchaRecord,
@@ -26,9 +27,11 @@ import {
 	type UserCommitmentRecord,
 	UserCommitmentRecordSchema,
 } from "@prosopo/types-database";
+import { MongoMemoryServer } from "mongodb-memory-server";
 import type mongoose from "mongoose";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { MongoMemoryDatabase } from "../../base/mongoMemory.js";
+import { ProviderDatabase } from "../../databases/provider.js";
 
 const logger = getLogger(
 	LogLevel.enum.error,
@@ -304,5 +307,58 @@ describe("countCommitmentsByNormalisedEmail — cross-collection sum + filters",
 		});
 
 		expect(await countAcross("dapp-A", "")).toBe(0);
+	});
+});
+
+class TestProviderDatabase extends ProviderDatabase {
+	protected override async setupRedis(): Promise<void> {
+		// intentionally empty
+	}
+}
+
+describe("ProviderDatabase.countCommitmentsByNormalisedEmail", () => {
+	let mongod: MongoMemoryServer;
+	let db: TestProviderDatabase;
+
+	beforeAll(async () => {
+		mongod = await MongoMemoryServer.create({
+			instance: { launchTimeout: 60_000 },
+		});
+		db = new TestProviderDatabase({
+			mongo: { url: mongod.getUri(), dbname: "captchastorage" },
+			logger,
+		});
+		await db.connect();
+	}, 90_000);
+
+	afterAll(async () => {
+		await db.close();
+		await mongod.stop();
+	}, 30_000);
+
+	it("counts verified icon-order records towards the per-email limit", async () => {
+		await db.getTables().iconordercaptcha.create({
+			challenge: "1___u1___dapp-A___icon-order" as PoWChallengeId,
+			userAccount: "u1",
+			dappAccount: "dapp-A",
+			requestedAtTimestamp: new Date(),
+			ipAddress: ipv4Composite(1n),
+			headers: { host: "example.com" },
+			ja4: "j",
+			result: { status: CaptchaStatus.approved },
+			userSubmitted: true,
+			serverChecked: true,
+			targets: [{ x: 10, y: 10, size: 24, kind: "star" }],
+			tolerance: 1,
+			providerSignature: "sig",
+			metadata: {
+				email: "alice@gmail.com",
+				emailNormalised: "alice@gmail.com",
+			},
+		});
+
+		expect(
+			await db.countCommitmentsByNormalisedEmail("dapp-A", "alice@gmail.com"),
+		).toBe(1);
 	});
 });

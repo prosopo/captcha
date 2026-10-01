@@ -48,9 +48,8 @@ export type ShortCircuitInput = {
 	// bypass paths resolve the assigned bundleId via Redis and promote it
 	// onto the session so SIMD / BDP attach at later hops (challenge GET,
 	// solution submit) can find the right keypair. Without this, sessions on
-	// configured-captchaType sitekeys (pow / image / puzzle /
-	// icon-order) had no bundleId
-	// and every attach silently dropped the payload.
+	// configured-captchaType sitekeys (pow / image / puzzle / icon-order)
+	// had no bundleId and every attach silently dropped the payload.
 	detectorSessionId?: string;
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;

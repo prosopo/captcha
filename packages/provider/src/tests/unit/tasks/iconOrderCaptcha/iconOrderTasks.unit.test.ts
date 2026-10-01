@@ -16,11 +16,9 @@ import { stringToHex, u8aToHex } from "@polkadot/util";
 import { GlyphKind, type IconPlacement } from "@prosopo/icon-order-assets";
 import {
 	CaptchaStatus,
-	CaptchaType,
 	type IconOrderCaptchaStored,
 	type KeyringPair,
 	type PoWChallengeId,
-	type RequestHeaders,
 	ResultReason,
 	type StoredIconTarget,
 	iconOrderToleranceDefault,
@@ -50,10 +48,6 @@ vi.mock("../../../../tasks/powCaptcha/powTasksUtils.js", () => ({
 	checkPowSignature: vi.fn(),
 }));
 
-// The tests only care about a handful of stored fields; this widens a partial
-// fixture without a cast at every mock call site. `submittedAtTimestamp`
-// defaults to now because the shared verify pipeline reads it directly and
-// treats a missing value as infinitely old.
 const asRecord = (
 	partial: Partial<IconOrderCaptchaStored>,
 ): IconOrderCaptchaRecord =>
@@ -68,11 +62,6 @@ const targets: StoredIconTarget[] = [
 	{ x: 240, y: 150, size: 38, kind: GlyphKind.bolt },
 ];
 
-/**
- * The stored shape drops rotation and hue, which the renderer's own placements
- * carry; add them back so the fixture matches what `renderIconOrderImages`
- * really hands over.
- */
 const asPlacements = (): IconPlacement[] =>
 	targets.map((target) => ({
 		...target,
@@ -98,8 +87,6 @@ describe("IconOrderCaptchaManager", () => {
 		db = {
 			storeIconOrderCaptchaRecord: vi.fn(),
 			getIconOrderCaptchaRecordByChallenge: vi.fn(),
-			// Default to winning the claim: every test but the re-submission
-			// ones is the first and only submitter for its challenge.
 			claimIconOrderCaptchaSubmission: vi.fn().mockResolvedValue(true),
 			updateIconOrderCaptchaRecord: vi.fn(),
 			updateIconOrderCaptchaRecordResult: vi.fn(),
@@ -128,7 +115,6 @@ describe("IconOrderCaptchaManager", () => {
 			const challenge = await manager.getIconOrderCaptchaChallenge(
 				"user",
 				"dapp",
-				"https://example.com",
 				0.5,
 				render,
 			);
@@ -145,7 +131,6 @@ describe("IconOrderCaptchaManager", () => {
 			const challenge = await manager.getIconOrderCaptchaChallenge(
 				"user",
 				"dapp",
-				"https://example.com",
 				undefined,
 				render,
 			);
@@ -160,13 +145,10 @@ describe("IconOrderCaptchaManager", () => {
 			const challenge = await manager.getIconOrderCaptchaChallenge(
 				"user",
 				"dapp",
-				"https://example.com",
 				undefined,
 				render,
 			);
 
-			// The response is built from `images`; anything on it would reach
-			// the client, so the answer must not be reachable from there.
 			expect(challenge.images).toEqual({
 				background: "data:image/webp;base64,BG",
 				legend: "data:image/webp;base64,LEGEND",
@@ -179,7 +161,6 @@ describe("IconOrderCaptchaManager", () => {
 			const challenge = await manager.getIconOrderCaptchaChallenge(
 				"user",
 				"dapp",
-				"https://example.com",
 				undefined,
 				vi.fn().mockResolvedValue(renderedImages()),
 			);
@@ -189,7 +170,6 @@ describe("IconOrderCaptchaManager", () => {
 
 	describe("verifyIconOrderCaptchaSolution", () => {
 		const challenge: PoWChallengeId = `${Date.now()}___user___dapp___1`;
-		const headers: RequestHeaders = {};
 		const ip = getIPAddress("1.1.1.1");
 
 		const submit = (clicks: { x: number; y: number }[]) =>
@@ -201,7 +181,6 @@ describe("IconOrderCaptchaManager", () => {
 				60000,
 				"0xuser",
 				ip,
-				headers,
 			);
 
 		const storedRecord = (over: Partial<IconOrderCaptchaStored> = {}) =>
@@ -307,16 +286,12 @@ describe("IconOrderCaptchaManager", () => {
 			expect(db.updateIconOrderCaptchaRecordResult).not.toHaveBeenCalled();
 		});
 
-		// The claim is what makes the challenge single-use, so a losing claim
-		// has to stop the request even when the record still reads unsubmitted
-		// — which is exactly the state a concurrent submitter sees.
 		it("grades nothing when it loses the claim on an unsubmitted record", async () => {
 			vi.mocked(db.getIconOrderCaptchaRecordByChallenge).mockResolvedValue(
 				storedRecord({ userSubmitted: false }),
 			);
 			vi.mocked(db.claimIconOrderCaptchaSubmission).mockResolvedValue(false);
 
-			// The correct answer: it must still be refused.
 			await expect(
 				submit([
 					{ x: 60, y: 50 },
@@ -394,7 +369,6 @@ describe("IconOrderCaptchaManager", () => {
 				60000,
 				"0xuser",
 				ip,
-				headers,
 			);
 
 			expect(db.updateIconOrderCaptchaRecord).toHaveBeenCalledWith(challenge, {
@@ -417,13 +391,6 @@ describe("IconOrderCaptchaManager", () => {
 				.mocked(db.getIconOrderCaptchaRecordByChallenge)
 				.mock.invocationCallOrder.at(0);
 			expect(order).toBeLessThan(dbOrder ?? Number.POSITIVE_INFINITY);
-		});
-	});
-
-	describe("captcha type identity", () => {
-		it("stamps its own type on results", () => {
-			const handle = manager as unknown as { captchaType: CaptchaType };
-			expect(handle.captchaType).toBe(CaptchaType.iconOrder);
 		});
 	});
 });

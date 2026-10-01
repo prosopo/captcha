@@ -750,10 +750,6 @@ describe("IconOrderSettingsSchema", () => {
 	});
 
 	it("counts the defaults when only one side of the pair is overridden", () => {
-		// decoyCount defaults to 4, so targetCount 6 lands exactly on the
-		// vocabulary limit, while decoyCount 8 against the default
-		// targetCount of 3 overflows it. Neither is caught by the individual
-		// field bounds — only the cross-field refine sees it.
 		expect(() =>
 			IconOrderSettingsSchema.parse({ targetCount: 6 }),
 		).not.toThrow();
@@ -800,8 +796,6 @@ describe("ClientSettingsSchema icon-order fields", () => {
 		expect(() => parse({ ...minimal, iconOrderTolerance: 13 })).toThrow();
 	});
 
-	// The e2e specs pin themselves to this ceiling, so a change here has to be
-	// made deliberately rather than by loosening the field schema in passing.
 	it("accepts the ceiling the end-to-end specs rely on", () => {
 		expect(
 			parse({ ...minimal, iconOrderTolerance: 12 }).iconOrderTolerance,

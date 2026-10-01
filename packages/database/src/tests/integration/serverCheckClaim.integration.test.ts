@@ -134,6 +134,27 @@ describe("server-check claims are single-use under concurrency", () => {
 		expect(record?.serverChecked).toBe(true);
 	});
 
+	it("claims an icon-order submission for exactly one of N concurrent submits", async () => {
+		const challenge = "1___user___dapp___icon-order-submit" as PoWChallengeId;
+		await db.getTables().iconordercaptcha.create({
+			...baseChallenge,
+			challenge,
+			userSubmitted: false,
+			targets: [{ x: 10, y: 10, size: 24, kind: "star" }],
+			tolerance: 1,
+		});
+
+		const claims: boolean[] = await Promise.all(
+			Array.from({ length: CONCURRENCY }, () =>
+				db.claimIconOrderCaptchaSubmission(challenge),
+			),
+		);
+
+		expect(claims.filter(Boolean)).toHaveLength(1);
+		const record = await db.getIconOrderCaptchaRecordByChallenge(challenge);
+		expect(record?.userSubmitted).toBe(true);
+	});
+
 	it("claims an audio challenge for exactly one of N concurrent verifies", async () => {
 		const challenge = "1___user___dapp___audio-claim" as PoWChallengeId;
 		await db.getTables().audiocaptcha.create({
@@ -151,6 +172,26 @@ describe("server-check claims are single-use under concurrency", () => {
 		expect(claims.filter(Boolean)).toHaveLength(1);
 		const record = await db.getAudioCaptchaRecordByChallenge(challenge);
 		expect(record?.serverChecked).toBe(true);
+	});
+
+	it("claims an audio submission for exactly one of N concurrent submits", async () => {
+		const challenge = "1___user___dapp___audio-submit" as PoWChallengeId;
+		await db.getTables().audiocaptcha.create({
+			...baseChallenge,
+			challenge,
+			userSubmitted: false,
+			answer: "123456",
+		});
+
+		const claims: boolean[] = await Promise.all(
+			Array.from({ length: CONCURRENCY }, () =>
+				db.claimAudioCaptchaSubmission(challenge),
+			),
+		);
+
+		expect(claims.filter(Boolean)).toHaveLength(1);
+		const record = await db.getAudioCaptchaRecordByChallenge(challenge);
+		expect(record?.userSubmitted).toBe(true);
 	});
 
 	it("claims an image commitment for exactly one of N concurrent verifies", async () => {

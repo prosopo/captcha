@@ -12,23 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
-import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
+	ApiParams,
+	type BehavioralDataPacked,
+	type CaptchaResult,
+	CaptchaStatus,
+	type ClientMetaData,
 	type DecisionMachineCaptchaType,
 	DecisionMachineDecision,
 	type DecisionMachineInput,
-} from "@prosopo/types";
-import {
-	type CaptchaResult,
-	CaptchaStatus,
+	type IPAddress,
 	type ISpamFilterRules,
 	type ITrafficFilter,
+	type InteractiveCaptchaStored,
+	type KeyringPair,
 	POW_SEPARATOR,
 	type PoWChallengeId,
-	type RequestHeaders,
+	type ProsopoConfigOutput,
 	ResultReason,
+	type Session,
+	SimdReadingsStage,
 	isBlockingCaptchaResult,
 } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
@@ -38,12 +44,24 @@ import {
 	describeMatchedRule,
 } from "@prosopo/user-access-policy";
 import {
+	assertCoordsSafe,
+	at,
+	extractData,
+	verifyRecency,
+} from "@prosopo/util";
+import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
 } from "../../compositeIpAddress.js";
 import { deepValidateIpAddress } from "../../util.js";
-import type { UsageCounters } from "../../util/usageCounters.js";
-import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
+import {
+	type UsageCounters,
+	buildAllWindowIncrements,
+} from "../../util/usageCounters.js";
+import {
+	isClientSessionMismatch,
+	toStoredClientMetaData,
+} from "../../utils/clientMetaData.js";
 import { deriveTrafficPolicies } from "../../utils/devicePlatform.js";
 import { CaptchaManager } from "../captchaManager.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
@@ -53,58 +71,56 @@ import {
 	getIpInfoAsn,
 } from "../dnsEvent/enrichDnsEvent.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { checkPowSignature } from "../powCaptcha/powTasksUtils.js";
 import { normaliseEmailForMatching } from "../spam/evaluateEmailSpamRules.js";
 
-/**
- * The fields `serverVerifyInteractiveCaptchaSolution` reads off a captcha
- * record. Every interactive captcha record satisfies this structurally — it is
- * the `StoredCaptcha` surface plus the challenge identity — so the base can
- * work against it without knowing which collection the record came from.
- */
-export interface InteractiveCaptchaRecordView {
+/** Fields the shared pipeline writes back onto a captcha record. */
+export type InteractiveCaptchaRecordUpdate = Partial<
+	Pick<
+		InteractiveCaptchaStored,
+		| "result"
+		| "blocked"
+		| "serverChecked"
+		| "lastUpdatedTimestamp"
+		| "providedIp"
+		| "metadata"
+		| "behavioralDataPacked"
+		| "deviceCapability"
+		| "clientMetaData"
+	>
+>;
+
+export interface MintedChallenge {
 	challenge: PoWChallengeId;
-	userAccount: string;
-	dappAccount: string;
-	result: CaptchaResult;
-	serverChecked: boolean;
-	userSubmitted: boolean;
-	submittedAtTimestamp?: Date;
-	sessionId?: string;
-	headers: RequestHeaders;
-	ipAddress: Parameters<typeof getIpAddressFromComposite>[0];
-	ja4: string;
-	ipInfo?: DecisionMachineInput["ipInfo"];
-	coords?: [number, number][][];
-	behavioralDataPacked?: DecisionMachineInput["behavioralDataPacked"];
-	deviceCapability?: string;
-	clientMetaData?: { clientSessionId?: string };
+	providerSignature: string;
+	requestedAtTimestamp: number;
+}
+
+/** A user's submission, plus the two steps that differ by captcha type. */
+export interface InteractiveSubmission<TRecord> {
+	challenge: PoWChallengeId;
+	providerChallengeSignature: string;
+	/** Milliseconds allowed between issuing the challenge and this submission. */
+	timeout: number;
+	userTimestampSignature: string;
+	ipAddress: IPAddress;
+	behavioralData?: string;
+	salt?: string;
+	simdReadings?: string;
+	clientMetaData?: ClientMetaData;
+	isCorrect: (record: TRecord) => boolean;
+	/** Persists the raw interaction trail, whatever the verdict. */
+	persistInteraction: () => Promise<void>;
 }
 
 /**
- * Fields the base writes back onto a captcha record. Deliberately narrow: the
- * shared pipeline only ever records a verdict and the provenance around it,
- * so a subclass's own answer fields are not reachable from here.
+ * Shared pipeline for the captcha types a human solves on screen (puzzle,
+ * icon-order). Subclasses supply the record accessors and grading; minting,
+ * submission bookkeeping and server verification live here.
  */
-export interface InteractiveCaptchaRecordUpdate {
-	result?: CaptchaResult;
-	blocked?: boolean;
-	serverChecked?: boolean;
-	lastUpdatedTimestamp?: Date;
-	providedIp?: ReturnType<typeof getCompositeIpAddress>;
-	metadata?: { email?: string; emailNormalised?: string };
-}
-
-/**
- * Shared behaviour for the interactive captcha types — the ones a human
- * actually solves on screen (puzzle, icon-order) as opposed to PoW.
- *
- * They differ only in what the challenge looks like and how a solution is
- * graded. Everything after grading — the server-side verify gate — is
- * identical, and lives here so a change to the block classification, the
- * decision-machine contract or the session bookkeeping lands on every type at
- * once instead of on whichever one the author happened to be editing.
- */
-export abstract class InteractiveCaptchaManager extends CaptchaManager {
+export abstract class InteractiveCaptchaManager<
+	TRecord extends InteractiveCaptchaStored,
+> extends CaptchaManager {
 	POW_SEPARATOR: string;
 	protected decisionMachineRunner: DecisionMachineRunner;
 	protected readonly usageCounters: UsageCounters | null;
@@ -122,24 +138,30 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 		this.usageCounters = usageCounters ?? null;
 	}
 
-	/**
-	 * Stamped onto results and handed to the decision machine. Narrowed to
-	 * the concrete types a decision machine can be written against —
-	 * `frictionless` is a routing stage, never a solved challenge.
-	 */
 	protected abstract readonly captchaType: DecisionMachineCaptchaType;
 
-	/** Human-readable type name, used only in log messages. */
+	/** Type name used in log messages. */
 	protected abstract readonly logLabel: string;
 
 	protected abstract getRecordByChallenge(
 		challenge: string,
-	): Promise<InteractiveCaptchaRecordView | null>;
+	): Promise<TRecord | null>;
 
 	protected abstract updateRecord(
 		challenge: PoWChallengeId,
 		updates: InteractiveCaptchaRecordUpdate,
 	): Promise<void>;
+
+	/** Records the verdict of a user's submission. */
+	protected abstract updateSubmissionResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		userSignature: string,
+		coords: [number, number][][] | undefined,
+	): Promise<void>;
+
+	/** Takes the single submission a challenge allows; false if already taken. */
+	protected abstract claimSubmission(record: TRecord): Promise<boolean>;
 
 	/**
 	 * Mark the record server-checked only if it isn't already, returning
@@ -149,27 +171,255 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 		challenge: PoWChallengeId,
 	): Promise<boolean>;
 
-	/**
-	 * The per-type interaction trail handed to the decision machine — the
-	 * drag for a puzzle, the click sequence for icon-order. Returned as a
-	 * partial `DecisionMachineInput` so each type names its own field.
-	 */
+	/** The per-type interaction trail handed to the decision machine. */
 	protected abstract decisionMachineEventFields(
-		record: InteractiveCaptchaRecordView,
+		record: TRecord,
 	): Partial<DecisionMachineInput>;
 
+	protected mintChallenge(
+		userAccount: string,
+		dappAccount: string,
+	): MintedChallenge {
+		const requestedAtTimestamp = Date.now();
+		const nonce = Math.floor(Math.random() * 1000000);
+		const challenge: PoWChallengeId = `${requestedAtTimestamp}___${userAccount}___${dappAccount}___${nonce}`;
+		const providerSignature = u8aToHex(this.pair.sign(stringToHex(challenge)));
+		return { challenge, providerSignature, requestedAtTimestamp };
+	}
+
 	/**
-	 * Server-side verification shared by every interactive captcha type.
-	 *
-	 * This is the post-solve gate the site's server calls: the widget has
-	 * already been told it passed, and this decides whether the token it holds
-	 * is honoured. Everything here is type-agnostic — replay and recency
-	 * checks, client-session correlation, access policies, spam rules, traffic
-	 * filter, IP validation and the decision machine — which is why it lives
-	 * on the base rather than being restated per type. The subclass supplies
-	 * the four things that genuinely differ: which collection to read and
-	 * write, which CaptchaType to stamp, and which event trail to hand the
-	 * decision machine.
+	 * Grades a user's submission and records the outcome on the captcha and
+	 * session records. Returns whether the solution was correct.
+	 */
+	protected async submitInteractiveCaptchaSolution(
+		submission: InteractiveSubmission<TRecord>,
+	): Promise<boolean> {
+		const { challenge, userTimestampSignature, behavioralData, simdReadings } =
+			submission;
+		// Check signatures before doing DB reads to avoid unnecessary network connections
+		checkPowSignature(
+			challenge,
+			submission.providerChallengeSignature,
+			this.pair.address,
+			ApiParams.challenge,
+		);
+
+		const challengeSplit = challenge.split(this.POW_SEPARATOR);
+		const timestamp = Number.parseInt(at(challengeSplit, 0));
+		const userAccount = at(challengeSplit, 1);
+
+		checkPowSignature(
+			timestamp.toString(),
+			userTimestampSignature,
+			userAccount,
+			ApiParams.timestamp,
+		);
+
+		const challengeRecord = await this.getRecordByChallenge(challenge);
+
+		if (!challengeRecord) {
+			this.logger.debug(() => ({
+				msg: `No record of this challenge: ${challenge}`,
+			}));
+			return false;
+		}
+
+		const { coords, saltDecodeError } = this.decodeSaltCoords(submission.salt);
+
+		// Single-use: the answer space is small enough to brute-force if a
+		// challenge accepted repeated guesses.
+		if (!(await this.claimSubmission(challengeRecord))) {
+			this.logger.debug(() => ({
+				msg: `Challenge already submitted: ${challenge}`,
+			}));
+			return false;
+		}
+
+		if (saltDecodeError) {
+			await this.recordSubmissionResult(
+				challengeRecord,
+				{
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_SALT,
+				},
+				userTimestampSignature,
+				undefined,
+			);
+			return false;
+		}
+
+		if (!verifyRecency(challenge, submission.timeout)) {
+			await this.recordSubmissionResult(
+				challengeRecord,
+				{
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_TIMESTAMP,
+				},
+				userTimestampSignature,
+				coords,
+			);
+			return false;
+		}
+
+		const correct = submission.isCorrect(challengeRecord);
+		const result: CaptchaResult = correct
+			? { status: CaptchaStatus.approved }
+			: {
+					status: CaptchaStatus.disapproved,
+					reason: ResultReason.CAPTCHA_INVALID_SOLUTION,
+				};
+
+		// Solved-counter writes: fire-and-forget, only on a correct solve.
+		// Runs before any decision-machine veto.
+		if (correct && this.usageCounters) {
+			this.usageCounters.incrManyAsync(
+				at(challengeSplit, 2),
+				buildAllWindowIncrements(
+					"solved",
+					this.captchaType,
+					submission.ipAddress.address,
+					userAccount,
+				),
+			);
+		}
+
+		// Unconditional, so the trail survives when the behavioural payload is
+		// missing or fails to decrypt; the decision machine reads it either way.
+		await submission.persistInteraction();
+
+		const decodedPayloads = await this.decodeSubmissionPayloads(
+			challengeRecord.sessionId,
+			{ behavioural: behavioralData, simd: simdReadings },
+		);
+
+		if (behavioralData) {
+			try {
+				const decryptedData = decodedPayloads.behavioural;
+
+				if (decryptedData) {
+					this.logger?.info(() => ({
+						msg: "Behavioral analysis completed",
+						data: {
+							userAccount,
+							dappAccount: at(challengeSplit, 2),
+							challenge,
+							mouseEventsCount: decryptedData.collector1?.length || 0,
+							touchEventsCount: decryptedData.collector2?.length || 0,
+							clickEventsCount: decryptedData.collector3?.length || 0,
+							scrollEventsCount: decryptedData.collector4?.length || 0,
+							deviceCapability: decryptedData.deviceCapability,
+							captchaResult: correct ? "passed" : "failed",
+						},
+					}));
+
+					const packedData: BehavioralDataPacked = {
+						c1: decryptedData.collector1 || [],
+						c2: decryptedData.collector2 || [],
+						c3: decryptedData.collector3 || [],
+						c4: decryptedData.collector4 || [],
+						d: decryptedData.deviceCapability,
+					};
+
+					await this.updateRecord(challenge, {
+						behavioralDataPacked: packedData,
+						deviceCapability: decryptedData.deviceCapability,
+					});
+				}
+			} catch (error) {
+				this.logger?.error(() => ({
+					msg: "Failed to process behavioral data",
+					err: error,
+				}));
+				// Don't fail the captcha if behavioral analysis fails
+			}
+		}
+
+		const storedClientMetaData = toStoredClientMetaData(
+			submission.clientMetaData,
+		);
+		if (storedClientMetaData) {
+			await this.updateRecord(challenge, {
+				clientMetaData: storedClientMetaData,
+			});
+		}
+
+		await this.recordSubmissionResult(
+			challengeRecord,
+			result,
+			userTimestampSignature,
+			coords,
+			storedClientMetaData,
+		);
+
+		if (challengeRecord.sessionId && decodedPayloads.simd) {
+			await this.recordSessionSimdReadingsIfAbsentWithCache(
+				challengeRecord.sessionId,
+				decodedPayloads.simd,
+				SimdReadingsStage.submit,
+			);
+		}
+
+		return correct;
+	}
+
+	/** Invalid salt disapproves the submission rather than being ignored. */
+	private decodeSaltCoords(salt: string | undefined): {
+		coords?: [number, number][][];
+		saltDecodeError?: unknown;
+	} {
+		if (!salt) {
+			return {};
+		}
+		try {
+			const extractedData = extractData(salt);
+			if (extractedData.length < 2) {
+				return {};
+			}
+			const coords: [number, number][][] = [
+				[[extractedData[0], extractedData[1]] as [number, number]],
+			];
+			assertCoordsSafe(coords, "coords");
+			return { coords };
+		} catch (error) {
+			this.logger.warn(() => ({
+				msg: "Failed to extract coordinates from salt",
+				error,
+				salt,
+			}));
+			return { saltDecodeError: error };
+		}
+	}
+
+	private async recordSubmissionResult(
+		challengeRecord: TRecord,
+		result: CaptchaResult,
+		userSignature: string,
+		coords: [number, number][][] | undefined,
+		clientMetaData?: ClientMetaData,
+	): Promise<void> {
+		await this.updateSubmissionResult(
+			challengeRecord.challenge,
+			result,
+			userSignature,
+			coords,
+		);
+		if (challengeRecord.sessionId) {
+			await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+				userSubmitted: true,
+				result,
+				...(isBlockingCaptchaResult(this.captchaType, result) && {
+					blocked: true,
+				}),
+				// Mirrored so the session carries the clientSessionId that the
+				// verify call correlates against.
+				...(clientMetaData && { clientMetaData }),
+			});
+		}
+	}
+
+	/**
+	 * The post-solve gate the site's server calls: decides whether the token
+	 * the widget was given is honoured.
 	 *
 	 * @param dappAccount - the dapp that is requesting the captcha
 	 * @param challenge - the challenge string
@@ -187,7 +437,7 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 	 *   with. When supplied, the solve must carry the same value in its
 	 *   `clientMetaData` or it is disapproved.
 	 */
-	protected async serverVerifyInteractiveCaptchaSolution(
+	async serverVerifyInteractiveCaptchaSolution(
 		dappAccount: string,
 		challenge: string,
 		timeout: number,
@@ -264,25 +514,10 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 				? Date.now() - submittedAt.getTime()
 				: Number.POSITIVE_INFINITY;
 		if (submitToVerifyMs > timeout) {
-			const disapprovedResult = {
-				status: CaptchaStatus.disapproved,
-				reason: ResultReason.TIMESTAMP_TOO_OLD,
-			};
-			const isBlocked = isBlockingCaptchaResult(
-				this.captchaType,
-				disapprovedResult,
+			await this.disapproveVerification(
+				challengeRecord,
+				ResultReason.TIMESTAMP_TOO_OLD,
 			);
-			await this.updateRecord(challengeRecord.challenge, {
-				result: disapprovedResult,
-				...(isBlocked && { blocked: true }),
-			});
-			if (challengeRecord.sessionId) {
-				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
-					serverChecked: true,
-					result: disapprovedResult,
-					...(isBlocked && { blocked: true }),
-				});
-			}
 			return notVerifiedResponse;
 		}
 
@@ -304,25 +539,10 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 					),
 				},
 			}));
-			const mismatchResult = {
-				status: CaptchaStatus.disapproved,
-				reason: ResultReason.CLIENT_SESSION_MISMATCH,
-			};
-			const isBlocked = isBlockingCaptchaResult(
-				this.captchaType,
-				mismatchResult,
+			await this.disapproveVerification(
+				challengeRecord,
+				ResultReason.CLIENT_SESSION_MISMATCH,
 			);
-			await this.updateRecord(challengeRecord.challenge, {
-				result: mismatchResult,
-				...(isBlocked && { blocked: true }),
-			});
-			if (challengeRecord.sessionId) {
-				await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
-					serverChecked: true,
-					result: mismatchResult,
-					...(isBlocked && { blocked: true }),
-				});
-			}
 			return notVerifiedResponse;
 		}
 
@@ -351,30 +571,17 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 							policy: blockPolicy,
 						},
 					}));
-					const blockedResult = {
-						status: CaptchaStatus.disapproved,
-						reason: ResultReason.ACCESS_POLICY_BLOCK,
-					};
-					const isBlocked = isBlockingCaptchaResult(
-						this.captchaType,
-						blockedResult,
-					);
-					await this.updateRecord(challengeRecord.challenge, {
-						result: blockedResult,
-						...(isBlocked && { blocked: true }),
-					});
-					if (challengeRecord.sessionId) {
-						await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
-							serverChecked: true,
-							result: blockedResult,
-							...(isBlocked && { blocked: true }),
+					await this.disapproveVerification(
+						challengeRecord,
+						ResultReason.ACCESS_POLICY_BLOCK,
+						{
 							// Name the rule behind the ACCESS_POLICY_BLOCK on the
 							// audit row. This path is where `deferToVerify` rules
 							// land, which is precisely where "why was I rejected?"
 							// is least obvious.
 							matchedRule: describeMatchedRule(blockPolicy),
-						});
-					}
+						},
+					);
 					return notVerifiedResponse;
 				}
 			} catch (error) {
@@ -395,16 +602,11 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 						msg: `Spam email domain detected in server ${this.logLabel} verification`,
 						data: { emailDomain },
 					}));
-					const spamResult = {
-						status: CaptchaStatus.disapproved,
-						reason: ResultReason.SPAM_EMAIL_DOMAIN,
-					};
-					await this.updateRecord(challengeRecord.challenge, {
-						result: spamResult,
-						...(isBlockingCaptchaResult(this.captchaType, spamResult) && {
-							blocked: true,
-						}),
-					});
+					await this.disapproveVerification(
+						challengeRecord,
+						ResultReason.SPAM_EMAIL_DOMAIN,
+						null,
+					);
 					return notVerifiedResponse;
 				}
 			} catch (error) {
@@ -436,17 +638,11 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 							msg: `Email submission count exceeded in server ${this.logLabel} verification`,
 							data: { priorCount, maxEmailSubmissionCount },
 						}));
-						const spamCountResult = {
-							status: CaptchaStatus.disapproved,
-							reason: ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
-						};
-						await this.updateRecord(challengeRecord.challenge, {
-							result: spamCountResult,
-							...(isBlockingCaptchaResult(
-								this.captchaType,
-								spamCountResult,
-							) && { blocked: true }),
-						});
+						await this.disapproveVerification(
+							challengeRecord,
+							ResultReason.SPAM_EMAIL_COUNT_EXCEEDED,
+							null,
+						);
 						return notVerifiedResponse;
 					}
 				} catch (error) {
@@ -489,25 +685,7 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 						dnsPathValid: enrichedDnsEvent?.pathValid,
 					},
 				}));
-				const blockedResult = {
-					status: CaptchaStatus.disapproved,
-					reason: check.reason,
-				};
-				const isBlocked = isBlockingCaptchaResult(
-					this.captchaType,
-					blockedResult,
-				);
-				await this.updateRecord(challengeRecord.challenge, {
-					result: blockedResult,
-					...(isBlocked && { blocked: true }),
-				});
-				if (challengeRecord.sessionId) {
-					await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
-						serverChecked: true,
-						result: blockedResult,
-						...(isBlocked && { blocked: true }),
-					});
-				}
+				await this.disapproveVerification(challengeRecord, check.reason);
 				return notVerifiedResponse;
 			}
 		}
@@ -558,25 +736,10 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 							distanceKm: ipValidation.distanceKm,
 						},
 					}));
-					const ipFailResult = {
-						status: CaptchaStatus.disapproved,
-						reason: ResultReason.FAILED_IP_VALIDATION,
-					};
-					const isBlocked = isBlockingCaptchaResult(
-						this.captchaType,
-						ipFailResult,
+					await this.disapproveVerification(
+						challengeRecord,
+						ResultReason.FAILED_IP_VALIDATION,
 					);
-					await this.updateRecord(challengeRecord.challenge, {
-						result: ipFailResult,
-						...(isBlocked && { blocked: true }),
-					});
-					if (challengeRecord.sessionId) {
-						await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
-							serverChecked: true,
-							result: ipFailResult,
-							...(isBlocked && { blocked: true }),
-						});
-					}
 					return notVerifiedResponse;
 				}
 			}
@@ -674,23 +837,11 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 				// Decision machines are operator-authored JS — their `reason`
 				// is just `string | undefined`. Cast to `ResultReason` at the
 				// boundary so the strict types on `CaptchaResult` hold.
-				const dmResult = {
-					status: CaptchaStatus.disapproved,
-					reason: (decision.reason ||
+				await this.disapproveVerification(
+					challengeRecord,
+					(decision.reason ||
 						ResultReason.CAPTCHA_DECISION_MACHINE_DENIED) as ResultReason,
-				};
-				const isBlocked = isBlockingCaptchaResult(this.captchaType, dmResult);
-				await this.updateRecord(challengeRecord.challenge, {
-					result: dmResult,
-					...(isBlocked && { blocked: true }),
-				});
-				if (challengeRecord.sessionId) {
-					await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
-						serverChecked: true,
-						result: dmResult,
-						...(isBlocked && { blocked: true }),
-					});
-				}
+				);
 				return notVerifiedResponse;
 			}
 
@@ -725,5 +876,30 @@ export abstract class InteractiveCaptchaManager extends CaptchaManager {
 				sessionId: challengeRecord.sessionId,
 			}),
 		};
+	}
+
+	/**
+	 * Records a server-verification rejection on the captcha record and, unless
+	 * `session` is null, on the linked session.
+	 */
+	private async disapproveVerification(
+		challengeRecord: TRecord,
+		reason: ResultReason,
+		session: Pick<Session, "matchedRule"> | null = {},
+	): Promise<void> {
+		const result: CaptchaResult = { status: CaptchaStatus.disapproved, reason };
+		const isBlocked = isBlockingCaptchaResult(this.captchaType, result);
+		await this.updateRecord(challengeRecord.challenge, {
+			result,
+			...(isBlocked && { blocked: true }),
+		});
+		if (session && challengeRecord.sessionId) {
+			await this.updateSessionRecordWithCache(challengeRecord.sessionId, {
+				serverChecked: true,
+				result,
+				...(isBlocked && { blocked: true }),
+				...session,
+			});
+		}
 	}
 }

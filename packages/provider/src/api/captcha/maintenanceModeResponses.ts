@@ -170,10 +170,8 @@ export const buildPuzzleMaintenanceResponse = async (
 	};
 };
 
-// Rendered for real, for the same reason as the puzzle response above: the
-// widget has nothing to show without imagery. The targets the renderer picks
-// are thrown away here — /submit/icon-order doesn't grade in maintenance mode,
-// so there is nothing to score them against.
+// Rendered for real, like the puzzle response above. The targets are
+// discarded: nothing is graded in maintenance mode.
 export const buildIconOrderMaintenanceResponse = async (
 	user: string,
 	dapp: string,

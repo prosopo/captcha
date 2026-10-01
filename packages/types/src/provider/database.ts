@@ -592,9 +592,6 @@ export type Session = {
 	// trafficFilter challenge-policy fields of the same names.
 	puzzleTolerance?: number;
 	puzzle?: IPuzzleSettings;
-	// Icon-order equivalents of the two fields above, with identical
-	// semantics: persisted by the routing machine so
-	// getIconOrderCaptchaChallenge can layer them in.
 	iconOrderTolerance?: number;
 	iconOrder?: IIconOrderSettings;
 	storedAtTimestamp?: Date;
@@ -809,38 +806,28 @@ export interface PoWCaptchaStored
 	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
 		StoredCaptcha {}
 
-export interface PuzzleCaptchaStored extends StoredCaptcha {
+/** Fields shared by the challenge records of the on-screen captcha types. */
+export interface InteractiveCaptchaStored extends StoredCaptcha {
 	challenge: PoWChallengeId;
+	providerSignature: string;
+	userSignature?: string;
+	userAccount: string;
+	dappAccount: string;
+}
+
+export interface PuzzleCaptchaStored extends InteractiveCaptchaStored {
+	tolerance: number;
 	targetX: number;
 	targetY: number;
 	originX: number;
 	originY: number;
-	tolerance: number;
-	providerSignature: string;
-	userSignature?: string;
-	userAccount: string;
-	dappAccount: string;
 	puzzleEvents?: PuzzleEvent[];
 }
 
-/**
- * An audio challenge as stored by the provider.
- *
- * `answer` is the spoken transcript. It is the secret: it never appears
- * in any response body, and the audio-challenge response type has no
- * field it could be written to. The puzzle captcha shipped its target
- * coordinates to the client once, which let any caller echo them back
- * and pass without rendering anything — this is the same secret in a
- * different medium.
- */
-export interface AudioCaptchaStored extends StoredCaptcha {
-	challenge: PoWChallengeId;
+/** `answer` is the spoken transcript: the secret, never sent to a client. */
+export interface AudioCaptchaStored extends InteractiveCaptchaStored {
 	answer: string;
-	providerSignature: string;
-	userSignature?: string;
-	userAccount: string;
-	dappAccount: string;
-	/** What the user typed. Kept for audit and for tuning difficulty. */
+	/** What the user typed, kept for audit and difficulty tuning. */
 	submittedAnswer?: string;
 	/** How many times the clip was played before submitting. */
 	replays?: number;
@@ -848,35 +835,18 @@ export interface AudioCaptchaStored extends StoredCaptcha {
 }
 
 /**
- * The icon-order answer, at rest.
- *
- * `targets` is the whole secret: the ordered icon placements the user has to
- * click. It is written here at challenge time and read back at submit time,
- * and it is the reason the challenge response can be pure imagery — nothing
- * in this record is ever serialised to a client. Decoy placements are
- * deliberately NOT stored: they are already expressed in the pixels and
- * grading never consults them.
+ * `targets` is the answer. Nothing on this record is ever sent to a client,
+ * and decoys are not stored because grading never consults them.
  */
-export interface IconOrderCaptchaStored extends StoredCaptcha {
-	challenge: PoWChallengeId;
+export interface IconOrderCaptchaStored extends InteractiveCaptchaStored {
 	targets: StoredIconTarget[];
 	/** Hit radius as a multiple of each icon's own size. */
 	tolerance: number;
-	providerSignature: string;
-	userSignature?: string;
-	userAccount: string;
-	dappAccount: string;
 	clicks?: IconClick[];
 	iconOrderEvents?: IconOrderEvent[];
 }
 
-/**
- * One target icon as persisted. Mirrors `IconPlacement` from
- * `@prosopo/icon-order-assets` minus the fields that only matter to the
- * renderer (rotation, hue): grading needs the centre and the size, and
- * storing the rest would put more of the frame's construction in the
- * database than the grader has any use for.
- */
+/** A target icon as persisted: what grading needs, without render-only fields. */
 export interface StoredIconTarget {
 	x: number;
 	y: number;

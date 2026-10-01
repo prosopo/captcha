@@ -21,10 +21,7 @@ import {
 import { DEV_PHRASE } from "../keyring/index.js";
 import { getPair } from "./getPair.js";
 
-/**
- * One dev site. `name` is the suffix its key is derived from, and matches the
- * `PROSOPO_SITE_KEY_<NAME>` variable the demos read.
- */
+/** `name` derives the key and matches the demos' `PROSOPO_SITE_KEY_<NAME>`. */
 interface SiteKeySeed {
 	name: string;
 	captchaType: CaptchaType;
@@ -42,16 +39,11 @@ export function getDefaultSiteKeys(): ISite[] {
 		seed(CaptchaType.image),
 		seed(CaptchaType.pow),
 		seed(CaptchaType.frictionless),
-		// Ordered before `puzzle` deliberately. `updateDemoHTMLFiles` rewrites
-		// the sitekey in EVERY demo HTML file once per seeded type, so whichever
-		// type is seeded last is the one left in the webview demos. Appending
-		// here would silently repoint them from puzzle to icon-order.
+		// Before `puzzle`: `updateDemoHTMLFiles` leaves the last-seeded type's
+		// sitekey in the webview demos, which must stay puzzle.
 		seed(CaptchaType.iconOrder),
-		// The audio demos' key. Audio is not a type a site can select — it is
-		// only the accessibility alternative a user picks from a visual
-		// challenge — so this is an image site with that alternative on. The
-		// `audio` name keeps the derived key, and PROSOPO_SITE_KEY_AUDIO, stable.
-		// Before `puzzle` for the same reason as icon-order.
+		// Audio is not selectable, so the audio demos' key is an image site
+		// with the alternative on.
 		seed(CaptchaType.image, "audio", true),
 		seed(CaptchaType.puzzle),
 	];

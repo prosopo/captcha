@@ -72,11 +72,7 @@ describe("frictionlessTypes bounds what the ladder may serve", () => {
 	 * all, which is the shape every client record written before the field
 	 * existed still has.
 	 */
-	const configure = (types?: {
-		image: boolean;
-		puzzle: boolean;
-		iconOrder?: boolean;
-	}) => {
+	const configure = (types?: { image: boolean; puzzle: boolean }) => {
 		cy.registerSiteKey(baseCaptchaType, undefined, {
 			frictionlessThreshold: {
 				frictionlessPuzzleThreshold: PUZZLE_RUNG,
