@@ -12,16 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// The device ceiling end to end: `resolveMaxEscalationLevel` lives in
-// @prosopo/captcha-severity and only decides a LEVEL. What a user actually
-// experiences is the render sampled from that level's band, which is this
-// package's half of the ladder. The pin that matters to a touch user is the
-// tolerance in pixels, so assert on that rather than on the level index.
-//
-// Both provider call sites (`sendCaptcha` and the post-PoW escalation in
-// `submitPoWCaptchaSolution`) feed the same two functions, so this covers the
-// contract they both rely on.
-
 import {
 	MAX_AUTO_ESCALATION_LEVEL,
 	MAX_AUTO_ESCALATION_LEVEL_TOUCH,
@@ -36,7 +26,6 @@ import { samplePuzzleDifficulty } from "../../../tasks/puzzle/puzzleDifficulty.j
 const BASE_IMAGE_ROUNDS = 2;
 const SAMPLES = 400;
 
-/** The level a session severe enough to max out the ladder actually lands on. */
 const escalatedLevel = (
 	siteMax: number | undefined,
 	isTouch: boolean,
@@ -49,8 +38,6 @@ const escalatedLevel = (
 
 describe("puzzle difficulty device ceiling", () => {
 	it("never serves a touch session a tolerance below the L2 floor", () => {
-		// The customer-visible invariant. L3 can draw tolerance 8; measured
-		// touch pass rate there is 21%. L2 floors at 10.
 		const level = escalatedLevel(4, true);
 		const floor = PUZZLE_DIFFICULTY_LEVELS[MAX_AUTO_ESCALATION_LEVEL_TOUCH]
 			?.tolerance.min as number;
@@ -64,8 +51,6 @@ describe("puzzle difficulty device ceiling", () => {
 	});
 
 	it("still serves pointer sessions the full L3 range", () => {
-		// The change must not quietly soften desktop. Sampling is stratified,
-		// so over enough draws L3's floor has to actually appear.
 		const level = escalatedLevel(undefined, false);
 		expect(level).toBe(MAX_AUTO_ESCALATION_LEVEL);
 		const band = PUZZLE_DIFFICULTY_LEVELS[MAX_AUTO_ESCALATION_LEVEL];
@@ -90,16 +75,11 @@ describe("puzzle difficulty device ceiling", () => {
 	});
 
 	it("lets a site pin itself below the device ceiling on either device", () => {
-		// puzzleMaxDifficulty 0 means "never escalate"; the device ceiling must
-		// not raise it. Level 0 renders the site's own settings, so the
-		// provider leaves the session bare rather than sampling at all.
 		expect(escalatedLevel(0, true)).toBe(0);
 		expect(escalatedLevel(0, false)).toBe(0);
 	});
 
 	it("keeps the reserved level unreachable by escalation on both devices", () => {
-		// L4 exists for sessions already destined to fail verification. No
-		// automatic path may reach it, device ceiling or not.
 		const reserved = PUZZLE_DIFFICULTY_LEVELS.length - 1;
 		expect(escalatedLevel(4, true)).toBeLessThan(reserved);
 		expect(escalatedLevel(4, false)).toBeLessThan(reserved);

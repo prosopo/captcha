@@ -350,11 +350,6 @@ export const buildEscalation = async (
 		| { puzzleTolerance: number; puzzle: IPuzzleSettings }
 		| undefined => {
 		if (escalatedType !== CaptchaType.puzzle) return undefined;
-		// Device ceiling, for the same reason as in sendCaptcha: the upper
-		// bands ask a placement accuracy a fingertip cannot deliver. Derived
-		// from the originating session because that is where this path's
-		// device signal lives — `headers.user-agent` is in
-		// SESSION_PROJECTION precisely so an escalation can forward it.
 		const { isMobile } = derivePlatform(
 			originSession.headers?.["user-agent"] ?? "",
 			originSession.webView,

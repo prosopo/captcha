@@ -164,7 +164,6 @@ describe("resolveMaxEscalationLevel", () => {
 	});
 
 	it("does not let a permissive site cap out-vote the touch ceiling", () => {
-		// The case this function exists for: twickets.live is set to 4.
 		expect(resolveMaxEscalationLevel(4, true)).toBe(
 			MAX_AUTO_ESCALATION_LEVEL_TOUCH,
 		);
@@ -174,9 +173,6 @@ describe("resolveMaxEscalationLevel", () => {
 	});
 
 	it("does not raise a site that deliberately sits below the ceiling", () => {
-		// 0 pins the site to its own puzzle settings and must survive both
-		// directions — being raised to the device ceiling would escalate a
-		// site that opted out of escalation entirely.
 		expect(resolveMaxEscalationLevel(0, true)).toBe(0);
 		expect(resolveMaxEscalationLevel(0, false)).toBe(0);
 		expect(resolveMaxEscalationLevel(1, true)).toBe(1);
@@ -193,8 +189,6 @@ describe("resolveMaxEscalationLevel", () => {
 	});
 
 	it("caps the level actually served on touch at L2", () => {
-		// End to end through the mapping the provider uses: a session severe
-		// enough to ask for L4 lands on L2 when the pointer is a fingertip.
 		const touchMax = resolveMaxEscalationLevel(4, true);
 		expect(severityToPuzzleDifficulty(100, 2, touchMax)).toBe(
 			MAX_AUTO_ESCALATION_LEVEL_TOUCH,
@@ -212,9 +206,6 @@ describe("resolveMaxEscalationLevel", () => {
 	});
 
 	it("keeps the touch ceiling strictly easier than the pointer ceiling", () => {
-		// The parity argument only holds if the band L2 can draw is genuinely
-		// easier than the band L3 can draw. Compare worst cases, since a level
-		// samples anywhere in its band.
 		const touch = PUZZLE_DIFFICULTY_LEVELS[MAX_AUTO_ESCALATION_LEVEL_TOUCH];
 		const pointer = PUZZLE_DIFFICULTY_LEVELS[MAX_AUTO_ESCALATION_LEVEL];
 		expect(touch).toBeDefined();
