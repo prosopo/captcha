@@ -19,8 +19,7 @@ import { ResultReason } from "./reasons.js";
 
 // Reasons that represent a legitimate user-side failure of an interactive
 // challenge — the user selected the wrong images, dropped the puzzle piece in
-// the wrong place, or clicked the icons in the wrong order. Everything else
-// that produces a
+// the wrong place, or clicked the wrong icons. Everything else that produces a
 // Disapproved verdict on those flows is a server-side block (traffic
 // filter, decision machine, IP validation, spam rules, replay/timestamp
 // detection, etc.).

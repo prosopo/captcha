@@ -52,10 +52,8 @@ export type RequestTimeTrafficVerdict =
 			// as the top of the override chain (asset default → client
 			// setting → this).
 			puzzleSettings?: IPuzzleSettings;
-			// Icon-order equivalents, consumed by
-			// getIconOrderCaptchaChallenge's resolver.
 			iconOrderTolerance?: number;
-			iconOrder?: IIconOrderSettings;
+			iconOrderSettings?: IIconOrderSettings;
 			sourceCategories: ResolvedChallengePolicy["sourceCategories"];
 	  };
 
@@ -110,7 +108,7 @@ export const applyTrafficFilterAtRequestTime = (
 		padBytes,
 		puzzleSettings: resolved.puzzleSettings,
 		iconOrderTolerance: resolved.iconOrderTolerance,
-		iconOrder: resolved.iconOrderSettings,
+		iconOrderSettings: resolved.iconOrderSettings,
 		sourceCategories: resolved.sourceCategories,
 	};
 };

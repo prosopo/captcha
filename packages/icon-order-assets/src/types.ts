@@ -14,11 +14,7 @@
 
 import type { GlyphKind } from "./glyphs.js";
 
-/**
- * Frame and icon sizing. Widget-coupled and not exposed to operators — the
- * widget scales the served background to its own container, and every
- * coordinate the provider stores is in these background pixels.
- */
+/** Widget-coupled; every stored coordinate is in these background pixels. */
 export interface IconOrderGeometry {
 	width: number;
 	height: number;
@@ -26,14 +22,7 @@ export interface IconOrderGeometry {
 	iconSize: number;
 }
 
-/**
- * One icon stamped onto the frame.
- *
- * SECURITY: a placement is the answer. Placements for the icons the user must
- * click are persisted on the challenge record and never serialised to the
- * widget — the widget receives pixels and nothing else. See
- * `docs` on `renderIconOrder` for why the legend cannot leak them either.
- */
+/** SECURITY: a target's placement is the answer and must never reach the widget. */
 export interface IconPlacement {
 	/** Centre of the icon, in background pixels. */
 	x: number;
@@ -50,51 +39,26 @@ export interface IconPlacement {
 export interface RenderedIconOrder {
 	/** Frame with every icon (targets and decoys) composited, WebP. */
 	background: Buffer;
-	/** The ordered target icons on transparency, WebP. */
+	/** The target icons in click order, WebP. */
 	legend: Buffer;
-	/** Height of the legend strip in px; its width is a multiple of this. */
+	/** Height of the legend strip in px. */
 	legendIconSize: number;
-	/**
-	 * The icons the user must click, in the order the legend shows them.
-	 * Provider-only — must never reach a response body.
-	 */
+	/** The answer, in click order. Must never reach a response body. */
 	targets: IconPlacement[];
 }
 
-/**
- * Per-render tunables, resolved by the provider from asset defaults <-
- * client settings <- traffic-filter category override, exactly as the puzzle
- * type resolves its own.
- */
+/** Per-render tunables; the provider layers operator overrides onto the defaults. */
 export interface IconOrderRenderSettings {
 	/** How many icons the user must click, in order. */
 	targetCount: number;
-	/**
-	 * Icons stamped on the frame that are absent from the legend. They make
-	 * the frame a search problem rather than a "click every icon" problem, so
-	 * a detector that finds icon-like regions still has to solve which ones
-	 * count. Set 0 to disable.
-	 */
+	/** Icons on the frame that are not in the legend. */
 	decoyCount: number;
 	/** Bright inner stroke width, in px at the icon's own scale. */
 	strokeWidth: number;
-	/**
-	 * Opacity of the bright inner stroke, 0..1. Lower sinks the icons into
-	 * the background — harder for a solver's edge detector, and harder for
-	 * the user.
-	 */
+	/** Opacity of the bright inner stroke, 0..1. */
 	iconOpacity: number;
-	/**
-	 * Opacity of the dark halo drawn under each icon, 0..1. The halo is what
-	 * keeps a bright stroke legible where it crosses a light region of the
-	 * background; without it icons vanish over pale areas.
-	 */
+	/** Opacity of the dark outline under each icon, 0..1. */
 	haloOpacity: number;
-	/**
-	 * Scales every family of background collage element at once — panels,
-	 * ripple rings and bars. Higher is a busier frame: more competing strokes
-	 * and corners for a detector to sift through, and a harder search for the
-	 * user.
-	 */
+	/** Scales the number of every kind of background collage element. */
 	backgroundClutter: number;
 }

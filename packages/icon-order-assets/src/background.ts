@@ -16,18 +16,9 @@ import { type Prng, hslToRgb } from "@prosopo/puzzle-assets";
 import type { IconOrderGeometry } from "./types.js";
 
 /**
- * The frame the icons sit on.
- *
- * A smooth gradient is the wrong background for this captcha: it has almost no
- * edges of its own, so every icon stroke is the strongest local signal in the
- * picture and an edge detector finds all of them in one pass. This draws a
- * hard-edged collage instead — colour panels, concentric ripples and heavy
- * bars — so the frame is already full of strokes, arcs and corners competing
- * with the icons.
- *
- * Everything is emitted as SVG and rasterised by the same sharp/librsvg
- * pipeline that draws the icons, so the shapes are native-fast and correctly
- * antialiased rather than built pixel by pixel.
+ * A hard-edged collage rather than a smooth gradient: on a gradient every icon
+ * stroke is the strongest local edge, so an edge detector finds them all at
+ * once.
  */
 
 const round = (value: number): number => Math.round(value * 100) / 100;
@@ -37,7 +28,6 @@ const rgb = (hue: number, saturation: number, lightness: number): string => {
 	return `rgb(${r},${g},${b})`;
 };
 
-/** Big flat shapes that block the frame into regions. */
 const panels = (
 	prng: Prng,
 	geometry: IconOrderGeometry,
@@ -47,9 +37,7 @@ const panels = (
 	const out: string[] = [];
 	for (let i = 0; i < count; i++) {
 		const hue = hues[i % hues.length] ?? 0;
-		// Lightness is drawn from one of three bands rather than a single
-		// range, so the frame carries genuinely dark, mid and near-white
-		// regions instead of settling into one uniform tone.
+		// Dark, near-white or mid bands, so the frame is not one uniform tone.
 		const tone = prng.next();
 		const fill =
 			tone < 0.2
@@ -61,8 +49,7 @@ const panels = (
 		const cy = prng.range(-0.1, 1.1) * geometry.height;
 		switch (prng.int(0, 2)) {
 			case 0: {
-				// Rotated slab. Oversized so its edges leave the frame and read
-				// as a region boundary rather than a floating rectangle.
+				// Oversized so it reads as a region boundary, not a floating rectangle.
 				const w = prng.range(0.45, 1.1) * geometry.width;
 				const h = prng.range(0.3, 0.8) * geometry.height;
 				out.push(
@@ -78,9 +65,7 @@ const panels = (
 				break;
 			}
 			default: {
-				// Quarter-disc wedge: two straight edges meeting a long curve,
-				// which is the shape an arc-detector most easily confuses with
-				// the ring and arc glyphs.
+				// A wedge, which an arc detector confuses with the ring and arc glyphs.
 				const r = prng.range(0.35, 0.8) * geometry.width;
 				const a = prng.range(0, Math.PI * 2);
 				const x1 = cx + r * Math.cos(a);
@@ -96,12 +81,7 @@ const panels = (
 	return out;
 };
 
-/**
- * Concentric stroked circles. The ripple family in the reference imagery, and
- * the single most useful element here: it fills a wide area with evenly spaced
- * curves, so a detector looking for "a closed curve of roughly icon size" gets
- * a dozen candidates from one shape.
- */
+/** Concentric rings: many icon-sized closed curves from one element. */
 const ripples = (
 	prng: Prng,
 	geometry: IconOrderGeometry,
@@ -122,13 +102,7 @@ const ripples = (
 	return out;
 };
 
-/**
- * Heavy bars slicing across the frame.
- *
- * Drawn opaque, in near-black or near-white rather than a translucent grey: a
- * washed bar reads as a soft shadow, where the point is a hard edge with as
- * much local contrast as an icon stroke has.
- */
+/** Opaque near-black or near-white bars, for edges as strong as an icon stroke. */
 const bars = (
 	prng: Prng,
 	geometry: IconOrderGeometry,
@@ -148,23 +122,13 @@ const bars = (
 	return out;
 };
 
-/**
- * Build the collage as SVG markup for the frame.
- *
- * `clutter` scales every element family at once, so one operator-facing knob
- * moves the whole frame from "clean" to "busy" without needing a count per
- * shape type.
- */
 export const collageMarkup = (
 	prng: Prng,
 	geometry: IconOrderGeometry,
 	clutter: number,
 ): string => {
-	// A base hue plus deliberate jumps around the wheel. An analogous band
-	// alone looks tidy but gives neighbouring regions almost no contrast,
-	// which is exactly the boundary an icon stroke needs to hide against.
-	// The complementary and triadic offsets keep the frame looking composed
-	// while still putting unlike colours next to each other.
+	// Complementary and triadic jumps rather than an analogous band, so
+	// neighbouring regions contrast enough for icon strokes to hide against.
 	const baseHue = prng.range(0, 360);
 	const hues = [
 		baseHue,

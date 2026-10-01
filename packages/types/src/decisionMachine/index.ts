@@ -182,8 +182,7 @@ export type DecisionMachineInput = {
 	// captured client-side and persisted on the puzzle captcha record.
 	// Always undefined on pow / image inputs.
 	puzzleEvents?: PuzzleEvent[];
-	// Icon-order-only: the pointer trail across the frame, captured
-	// client-side and persisted on the icon-order captcha record.
+	// Icon-order-only equivalent of `puzzleEvents`.
 	iconOrderEvents?: IconOrderEvent[];
 	// Raw per-connection TCP-handshake signals persisted on the Session
 	// at frictionless entry (see rawTlsSignalsMiddleware). Surfaced here
@@ -451,8 +450,6 @@ export interface RoutingMachineOutput {
 	// Ignored unless the resolved captchaType is `puzzle`.
 	puzzleTolerance?: number;
 	puzzle?: IPuzzleSettings;
-	// Icon-order equivalents of the two fields above, with identical
-	// semantics and the same layering path through the Session record.
 	// Ignored unless the resolved captchaType is `iconOrder`.
 	iconOrderTolerance?: number;
 	iconOrder?: IIconOrderSettings;

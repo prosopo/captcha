@@ -40,10 +40,9 @@ export const DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT =
 export const DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT =
 	DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT * 3;
 
-// The icon-order captcha asks the user to find several icons and click them in
-// order, so it takes longer to solve than dragging one puzzle piece. The
-// solution window is doubled accordingly; the verified and cached windows keep
-// the same multiples of it that the puzzle type uses.
+// Double the puzzle's solution window, since finding and clicking several
+// icons takes longer than one drag; the other windows keep the puzzle's
+// multiples of it.
 export const DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT = ONE_MINUTE * 2;
 export const DEFAULT_ICON_ORDER_CAPTCHA_VERIFIED_TIMEOUT =
 	DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT * 2;

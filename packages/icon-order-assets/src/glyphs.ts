@@ -13,16 +13,8 @@
 // limitations under the License.
 
 /**
- * The icon vocabulary.
- *
- * Every glyph is authored as stroked path data in a 100x100 box, so one
- * definition serves both the frame (stamped at `IconPlacement.size`) and the
- * legend (stamped small), and the two renderings are the same shape at
- * different scales — the user matches them by outline alone.
- *
- * Shapes are chosen to stay distinguishable under rotation. Anything with
- * rotational symmetry that maps onto another member of the set would make the
- * legend ambiguous, so e.g. there is no plain "line" and no second ring.
+ * Shapes must stay distinguishable from each other under rotation, or the
+ * legend becomes ambiguous; hence no plain line and only one ring.
  */
 export enum GlyphKind {
 	ring = "ring",
@@ -37,10 +29,7 @@ export enum GlyphKind {
 	arc = "arc",
 }
 
-/**
- * Path data in a 100x100 viewBox, centred on (50, 50) so rotation about the
- * centre never clips.
- */
+/** Stroked path data in a 100x100 box centred on (50, 50). */
 const GLYPH_PATHS: Readonly<Record<GlyphKind, string>> = {
 	[GlyphKind.ring]: "M 14 50 A 36 36 0 1 0 86 50 A 36 36 0 1 0 14 50",
 	[GlyphKind.spiral]:

@@ -84,7 +84,7 @@ graph TB
             PowTasks["PoW Captcha Manager"]
             PuzzleTasks["Puzzle Captcha Manager"]
             IconOrderTasks["Icon Order Captcha Manager"]
-            InteractiveBase["InteractiveCaptchaManager<br/>(shared base: replay + recency,<br/>client-session correlation,<br/>access policies, spam rules,<br/>traffic filter, IP validation,<br/>decision machine)"]
+            InteractiveBase["InteractiveCaptchaManager<br/>(shared base: challenge minting,<br/>single-use submit + bookkeeping,<br/>server verify pipeline)"]
             FrictionlessTasks["Frictionless Manager"]
             DetectorPool["Detector Bundle Pool<br/>(precomputed bundles loaded<br/>from disk; empty pool ⇒ no<br/>detection ⇒ PoW fallback)"]
             SolutionVerifier["Solution Verifier<br/>Merkle tree + salt embedding<br/>repeated pointer positions / keyboard with a position → reject"]
@@ -213,14 +213,15 @@ graph TB
 
     %% ===== ICON ORDER FLOW =====
     %% Icon-order is never reached from the score ladder. It is served only
-    %% when something names it: a site-wide captchaType, a Restrict rule, a
-    %% traffic-filter policy, or a routing machine.
+    %% when something names it (site-wide captchaType, Restrict rule,
+    %% traffic-filter policy, routing machine) AND the site has opted in via
+    %% frictionlessTypes.iconOrder; otherwise it is coerced to puzzle.
     Manager -->|"configured / routed: icon-order"| IconOrderCaptcha
     IconOrderCaptcha -->|get challenge| IconOrderChallengeEP
     IconOrderChallengeEP -->|"1. AccessPolicy lookup"| AccessPolicies
     IconOrderChallengeEP -->|"2. applyTrafficFilterAtRequestTime<br/>(challenge → iconOrderTolerance +<br/>render overrides; same non-401<br/>handling as the puzzle flow)"| TrafficFilter
     IconOrderChallengeEP --> IconOrderTasks
-    IconOrderTasks -->|"render collage + legend, THEN store.<br/>The imagery IS the answer, so targets<br/>only exist once pixels do — the endpoint<br/>persists them before responding"| MongoDB
+    IconOrderTasks -->|"render, then store targets<br/>before responding (the render<br/>decides the answer)"| MongoDB
     IconOrderTasks -->|"background + legend strip only.<br/>Target positions are never serialised"| IconOrderCaptcha
     IconOrderCaptcha -->|"ordered clicks<br/>+ behavioural data"| IconOrderSolutionEP
     IconOrderSolutionEP --> IconOrderTasks
@@ -231,7 +232,9 @@ graph TB
 
     %% ===== SHARED INTERACTIVE PIPELINE =====
     %% Puzzle and icon-order differ only in how a challenge is drawn and
-    %% graded; everything after that is one implementation.
+    %% graded. Their challenge, solution and verify endpoints share handlers
+    %% too (interactiveCaptchaChallenge / interactiveCaptchaSolution /
+    %% interactiveVerifyHandler).
     PuzzleTasks -.->|extends| InteractiveBase
     IconOrderTasks -.->|extends| InteractiveBase
 

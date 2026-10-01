@@ -26,10 +26,8 @@ export function getDefaultSiteKeys(): ISite[] {
 		CaptchaType.image,
 		CaptchaType.pow,
 		CaptchaType.frictionless,
-		// Ordered before `puzzle` deliberately. `updateDemoHTMLFiles` rewrites
-		// the sitekey in EVERY demo HTML file once per seeded type, so whichever
-		// type is seeded last is the one left in the webview demos. Appending
-		// here would silently repoint them from puzzle to icon-order.
+		// Before `puzzle`: `updateDemoHTMLFiles` leaves the last-seeded type's
+		// sitekey in the webview demos, which must stay puzzle.
 		CaptchaType.iconOrder,
 		CaptchaType.puzzle,
 	];

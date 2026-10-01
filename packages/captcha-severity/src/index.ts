@@ -102,9 +102,7 @@ const MAX_INTRA_TIER = TIER_GAP - 1;
  */
 const CAPTCHA_TYPE_TIER: ReadonlyMap<string, number> = new Map([
 	["image", 5 * TIER_GAP],
-	// Icon-order sits above puzzle: it asks for several ordered clicks rather
-	// than one drag. Below image, and a whole tier below it, so no intra-tier
-	// component can lift an icon-order policy over an image one.
+	// Several ordered clicks is harder than one drag, but easier than image.
 	["iconOrder", 4 * TIER_GAP],
 	["puzzle", 3 * TIER_GAP],
 	["pow", 2 * TIER_GAP],

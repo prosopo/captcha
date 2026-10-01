@@ -24,6 +24,7 @@ const { mockGetMaintenanceMode, mockedDbMethods, mockedManagers } = vi.hoisted(
 			getSessionByuserSitekeyIpHash: vi.fn(),
 			storePowCaptchaRecord: vi.fn(),
 			storePuzzleCaptchaRecord: vi.fn(),
+			storeIconOrderCaptchaRecord: vi.fn(),
 		};
 		const managers = {
 			powCaptchaManager: {
@@ -34,6 +35,11 @@ const { mockGetMaintenanceMode, mockedDbMethods, mockedManagers } = vi.hoisted(
 			puzzleCaptchaManager: {
 				isValidRequest: vi.fn(),
 				getPuzzleCaptchaChallenge: vi.fn(),
+				getPrioritisedAccessPolicies: vi.fn(),
+			},
+			iconOrderCaptchaManager: {
+				isValidRequest: vi.fn(),
+				getIconOrderCaptchaChallenge: vi.fn(),
 				getPrioritisedAccessPolicies: vi.fn(),
 			},
 			frictionlessManager: {
@@ -72,6 +78,7 @@ vi.mock("../../../../tasks/index.js", () => ({
 	}),
 }));
 
+import getIconOrderChallenge from "../../../../api/captcha/getIconOrderCaptchaChallenge.js";
 import getPowChallenge from "../../../../api/captcha/getPoWCaptchaChallenge.js";
 import getPuzzleChallenge from "../../../../api/captcha/getPuzzleCaptchaChallenge.js";
 
@@ -189,6 +196,44 @@ describe("maintenance mode short-circuit", () => {
 			await handler(req as never, res as never, next);
 
 			expect(mockedDbMethods.getClientRecord).toHaveBeenCalled();
+		});
+	});
+
+	describe("getIconOrderCaptchaChallenge", () => {
+		it("returns dummy challenge without hitting the DB", async () => {
+			const handler = getIconOrderChallenge({} as never, {} as never);
+			const { req, res, next } = buildReqRes(validBody);
+			await handler(req as never, res as never, next);
+
+			expect(res.json).toHaveBeenCalledTimes(1);
+			const body = res.json.mock.calls[0]?.[0];
+			expect(body[ApiParams.status]).toBe("ok");
+			expect(body[ApiParams.legend]).toMatch(/^data:image\/webp;base64,/);
+			expect(mockedDbMethods.getClientRecord).not.toHaveBeenCalled();
+			expect(
+				mockedDbMethods.storeIconOrderCaptchaRecord,
+			).not.toHaveBeenCalled();
+		});
+
+		it("refuses a site that has not opted in to icon-order", async () => {
+			mockGetMaintenanceMode.mockReturnValue(false);
+			mockedDbMethods.getClientRecord.mockResolvedValueOnce({
+				settings: { frictionlessTypes: { image: true, puzzle: true } },
+			});
+
+			const handler = getIconOrderChallenge({} as never, {} as never);
+			const { req, res, next } = buildReqRes(validBody);
+			await handler(req as never, res as never, next);
+
+			expect(next).toHaveBeenCalledWith(
+				expect.objectContaining({
+					translationKey: "API.INCORRECT_CAPTCHA_TYPE",
+				}),
+			);
+			expect(
+				mockedManagers.iconOrderCaptchaManager.isValidRequest,
+			).not.toHaveBeenCalled();
+			expect(res.json).not.toHaveBeenCalled();
 		});
 	});
 });

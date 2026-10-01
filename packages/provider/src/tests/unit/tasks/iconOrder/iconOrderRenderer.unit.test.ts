@@ -12,13 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { DEFAULT_RENDER_SETTINGS, GlyphKind } from "@prosopo/icon-order-assets";
+import {
+	DEFAULT_RENDER_SETTINGS,
+	GLYPH_KINDS,
+	GlyphKind,
+} from "@prosopo/icon-order-assets";
+import {
+	ICON_ORDER_GLYPH_VOCABULARY,
+	iconOrderDecoyCountDefault,
+	iconOrderTargetCountDefault,
+} from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
-	isIconOrderRenderAvailable,
 	resolveIconOrderRenderSettings,
 	toStoredTargets,
 } from "../../../../tasks/iconOrder/iconOrderRenderer.js";
+
+describe("icon-order constants mirrored in @prosopo/types", () => {
+	it("match the asset package", () => {
+		expect(ICON_ORDER_GLYPH_VOCABULARY).toBe(GLYPH_KINDS.length);
+		expect(iconOrderTargetCountDefault).toBe(
+			DEFAULT_RENDER_SETTINGS.targetCount,
+		);
+		expect(iconOrderDecoyCountDefault).toBe(DEFAULT_RENDER_SETTINGS.decoyCount);
+	});
+});
 
 describe("resolveIconOrderRenderSettings", () => {
 	it("returns the asset defaults when nothing overrides", () => {
@@ -41,14 +59,10 @@ describe("resolveIconOrderRenderSettings", () => {
 			{ targetCount: 2 },
 		);
 		expect(resolved.targetCount).toBe(2);
-		// Untouched by the second source, so the first source's value survives.
 		expect(resolved.iconOpacity).toBe(0.5);
 	});
 
 	it("clamps a targets+decoys total that two valid layers add up past", () => {
-		// Each override is individually acceptable to the schema — 6 targets is
-		// in range, and 6 decoys is in range — but together they ask for 12
-		// distinct glyphs out of a vocabulary of 10.
 		const resolved = resolveIconOrderRenderSettings(
 			{ targetCount: 6 },
 			{ decoyCount: 6 },
@@ -89,11 +103,5 @@ describe("toStoredTargets", () => {
 				},
 			]),
 		).toEqual([{ x: 1, y: 2, size: 3, kind: GlyphKind.ring }]);
-	});
-});
-
-describe("isIconOrderRenderAvailable", () => {
-	it("is always available, because imagery is synthesised in-process", () => {
-		expect(isIconOrderRenderAvailable()).toBe(true);
 	});
 });

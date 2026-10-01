@@ -39,6 +39,7 @@ import {
 	type Hash,
 	type IPInfoResponse,
 	type IconOrderCaptchaStored,
+	type InteractiveCaptchaStored,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
 	type PoWChallengeComponents,
@@ -101,7 +102,10 @@ import { assertCoordsSafe, buildDomainSuffixCandidates } from "@prosopo/util";
 // structurally matches it (missing _bsontype/toHexString/...).
 import type { Types } from "mongoose";
 import { MongoDatabase } from "../base/mongo.js";
-import type { CentralDbStreamer } from "./centralDbStreamer.js";
+import type {
+	CentralDbStreamer,
+	MarkStoredCallback,
+} from "./centralDbStreamer.js";
 
 const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;
 const MAX_DOMAIN_SUFFIX_CANDIDATES = 5;
@@ -121,6 +125,23 @@ enum TableNames {
 	detector = "detector",
 	decisionMachine = "decisionMachine",
 	spamEmailDomain = "spamEmailDomain",
+}
+
+type InteractiveCaptchaType = CaptchaType.puzzle | CaptchaType.iconOrder;
+
+interface InteractiveCaptchaCollection {
+	table: TableNames.puzzlecaptcha | TableNames.iconordercaptcha;
+	label: string;
+	captchaType: InteractiveCaptchaType;
+	answerProjection: Record<string, 1>;
+	streamRecord: (
+		record: PuzzleCaptchaStored | IconOrderCaptchaStored,
+		markStored: MarkStoredCallback,
+	) => void;
+	streamUpdate: (
+		challenge: PoWChallengeId,
+		markStored: MarkStoredCallback,
+	) => void;
 }
 
 const PROVIDER_TABLES = [
@@ -1092,6 +1113,148 @@ export class ProviderDatabase
 		);
 	}
 
+	private interactiveCollection(
+		captchaType: InteractiveCaptchaType,
+	): InteractiveCaptchaCollection {
+		return captchaType === CaptchaType.puzzle
+			? {
+					table: TableNames.puzzlecaptcha,
+					label: "PuzzleCaptcha",
+					captchaType,
+					answerProjection: {
+						targetX: 1,
+						targetY: 1,
+						originX: 1,
+						originY: 1,
+						puzzleEvents: 1,
+					},
+					streamRecord: (record, markStored) =>
+						this.centralStreamer?.streamPuzzleRecord(
+							record as PuzzleCaptchaRecord,
+							markStored,
+						),
+					streamUpdate: (challenge, markStored) =>
+						this.centralStreamer?.streamPuzzleUpdate(
+							() => this.getPuzzleCaptchaRecordByChallenge(challenge),
+							markStored,
+						),
+				}
+			: {
+					table: TableNames.iconordercaptcha,
+					label: "IconOrderCaptcha",
+					captchaType,
+					answerProjection: {
+						// Grading reads the answer straight off this record.
+						targets: 1,
+						clicks: 1,
+						iconOrderEvents: 1,
+					},
+					streamRecord: (record, markStored) =>
+						this.centralStreamer?.streamIconOrderRecord(
+							record as IconOrderCaptchaRecord,
+							markStored,
+						),
+					streamUpdate: (challenge, markStored) =>
+						this.centralStreamer?.streamIconOrderUpdate(
+							() => this.getIconOrderCaptchaRecordByChallenge(challenge),
+							markStored,
+						),
+				};
+	}
+
+	private markInteractiveRecordStored(
+		collection: InteractiveCaptchaCollection,
+		challenge: PoWChallengeId,
+	): MarkStoredCallback {
+		return (ts) =>
+			this.tables[collection.table]
+				.updateOne(
+					{ challenge, lastUpdatedTimestamp: { $lte: ts } },
+					{
+						$set: { storedAtTimestamp: ts },
+						$unset: { pendingStage: 1 },
+					},
+				)
+				.then(() => {});
+	}
+
+	private streamInteractiveUpdate(
+		collection: InteractiveCaptchaCollection,
+		challenge: PoWChallengeId,
+	): void {
+		collection.streamUpdate(
+			challenge,
+			this.markInteractiveRecordStored(collection, challenge),
+		);
+	}
+
+	private async storeInteractiveCaptchaRecord(
+		collection: InteractiveCaptchaCollection,
+		record: PuzzleCaptchaStored | IconOrderCaptchaStored,
+	): Promise<void> {
+		const tables = this.getTables();
+		const { challenge, ipInfo } = record;
+		try {
+			await tables[collection.table].create(record);
+			this.logger.info(() => ({
+				data: {
+					challenge,
+					countryCode: ipInfo?.isValid ? ipInfo.countryCode : undefined,
+				},
+				msg: `${collection.label} record added successfully`,
+			}));
+			collection.streamRecord(
+				record,
+				this.markInteractiveRecordStored(collection, challenge),
+			);
+		} catch (error) {
+			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
+				context: {
+					error,
+					challenge,
+					ipInfo,
+				},
+				logger: this.logger,
+			});
+			this.logger.error(() => ({
+				err: error,
+				msg: `Failed to add ${collection.label} record`,
+			}));
+			throw err;
+		}
+	}
+
+	private pendingInteractiveRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		tolerance: number,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		ipInfo?: IPInfoResponse,
+	): InteractiveCaptchaStored {
+		return {
+			challenge,
+			userAccount: components.userAccount,
+			dappAccount: components.dappAccount,
+			requestedAtTimestamp: new Date(components.requestedAtTimestamp),
+			ipAddress,
+			headers,
+			ja4,
+			result: { status: CaptchaStatus.pending },
+			userSubmitted: false,
+			serverChecked: false,
+			tolerance,
+			providerSignature,
+			lastUpdatedTimestamp: new Date(),
+			pendingStage: true,
+			sessionId,
+			ipInfo,
+		};
+	}
+
 	async storePuzzleCaptchaRecord(
 		challenge: PoWChallengeId,
 		components: PoWChallengeComponents,
@@ -1107,294 +1270,25 @@ export class ProviderDatabase
 		sessionId?: string,
 		ipInfo?: IPInfoResponse,
 	): Promise<void> {
-		const tables = this.getTables();
-
-		const puzzleCaptchaRecord: PuzzleCaptchaStored = {
-			challenge,
-			userAccount: components.userAccount,
-			dappAccount: components.dappAccount,
-			requestedAtTimestamp: new Date(components.requestedAtTimestamp),
-			ipAddress,
-			headers,
-			ja4,
-			result: { status: CaptchaStatus.pending },
-			userSubmitted: false,
-			serverChecked: false,
-			targetX,
-			targetY,
-			originX,
-			originY,
-			tolerance,
-			providerSignature,
-			lastUpdatedTimestamp: new Date(),
-			pendingStage: true,
-			sessionId,
-			ipInfo,
-		};
-
-		try {
-			await tables.puzzlecaptcha.create(puzzleCaptchaRecord);
-			this.logger.info(() => ({
-				data: {
+		await this.storeInteractiveCaptchaRecord(
+			this.interactiveCollection(CaptchaType.puzzle),
+			{
+				...this.pendingInteractiveRecord(
 					challenge,
-					countryCode: ipInfo?.isValid ? ipInfo.countryCode : undefined,
-				},
-				msg: "PuzzleCaptcha record added successfully",
-			}));
-			this.centralStreamer?.streamPuzzleRecord(
-				puzzleCaptchaRecord as PuzzleCaptchaRecord,
-				(ts) =>
-					this.tables.puzzlecaptcha
-						.updateOne(
-							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
-							{
-								$set: { storedAtTimestamp: ts },
-								$unset: { pendingStage: 1 },
-							},
-						)
-						.then(() => {}),
-			);
-		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: {
-					error,
-					challenge,
+					components,
+					tolerance,
+					providerSignature,
+					ipAddress,
+					headers,
+					ja4,
+					sessionId,
 					ipInfo,
-				},
-				logger: this.logger,
-			});
-			this.logger.error(() => ({
-				err: error,
-				msg: "Failed to add PuzzleCaptcha record",
-			}));
-			throw err;
-		}
-	}
-
-	/**
-	 * @description Retrieves a Puzzle Captcha record by its challenge string.
-	 * @param {string} challenge The challenge string to search for.
-	 * @returns {Promise<PuzzleCaptchaRecord | null>} A promise that resolves with the found record or null if not found.
-	 */
-	async getPuzzleCaptchaRecordByChallenge(
-		challenge: string,
-	): Promise<PuzzleCaptchaRecord | null> {
-		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
-				context: {
-					failedFuncName: this.getPuzzleCaptchaRecordByChallenge.name,
-				},
-				logger: this.logger,
-			});
-		}
-
-		try {
-			const filter: {
-				[key in keyof Pick<PuzzleCaptchaRecord, "challenge">]: string;
-			} = { challenge };
-			const record: PuzzleCaptchaRecord | null | undefined =
-				await this.tables.puzzlecaptcha
-					.findOne(filter, {
-						challenge: 1,
-						userAccount: 1,
-						dappAccount: 1,
-						requestedAtTimestamp: 1,
-						// submittedAtTimestamp gates the submit → verify
-						// recency check in serverVerifyPuzzleCaptchaSolution.
-						// Missing it here silently trips the "too old" path
-						// even on freshly-solved puzzles because the code
-						// treats a missing field as Number.POSITIVE_INFINITY.
-						submittedAtTimestamp: 1,
-						ipAddress: 1,
-						headers: 1,
-						ja4: 1,
-						result: 1,
-						targetX: 1,
-						targetY: 1,
-						originX: 1,
-						originY: 1,
-						tolerance: 1,
-						puzzleEvents: 1,
-						sessionId: 1,
-						ipInfo: 1,
-						deviceCapability: 1,
-						behavioralDataPacked: 1,
-						serverChecked: 1,
-						userSubmitted: 1,
-						coords: 1,
-						// See the PoW projection above — same verify-time read.
-						clientMetaData: 1,
-					} as { [key in keyof Partial<PuzzleCaptchaRecord>]: 1 })
-					.lean<PuzzleCaptchaRecord>();
-			if (record) {
-				this.logger.info(() => ({
-					data: { challenge },
-					msg: "PuzzleCaptcha record retrieved successfully",
-				}));
-				return record;
-			}
-			this.logger.info(() => ({
-				data: { challenge },
-				msg: "No PuzzleCaptcha record found",
-			}));
-			return null;
-		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
-				context: { error, challenge },
-				logger: this.logger,
-			});
-			this.logger.error(() => ({
-				err: err,
-				msg: "Failed to retrieve PuzzleCaptcha record",
-			}));
-			throw err;
-		}
-	}
-
-	/**
-	 * @description Updates a Puzzle Captcha record result in the database.
-	 * @param {string} challenge The challenge string of the captcha to be updated.
-	 * @param result
-	 * @param serverChecked
-	 * @param userSubmitted
-	 * @param userSignature
-	 * @param coords
-	 * @param lastUpdatedTimestamp
-	 * @returns {Promise<void>} A promise that resolves when the record is updated.
-	 */
-	async updatePuzzleCaptchaRecordResult(
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
-		serverChecked = false,
-		userSubmitted = false,
-		userSignature?: string,
-		coords?: [number, number][][],
-		lastUpdatedTimestamp?: Date,
-	): Promise<void> {
-		const tables = this.getTables();
-		const timestamp = lastUpdatedTimestamp ?? new Date();
-		const isDisapproved = result.status === CaptchaStatus.disapproved;
-		// Defence-in-depth: validate coords before write.
-		assertCoordsSafe(coords, "coords");
-		// submittedAtTimestamp / failedAtTimestamp are direct writes rather
-		// than `$ifNull` pipeline exprs: puzzle refuses re-submission at
-		// `puzzleTasks.ts:228-233` (single-use challenge), so both fields are
-		// only ever written by the one submit that lands. A prior attempt to
-		// use `$ifNull` inside a pipeline `$set` was silently dropping the
-		// timestamps on the wire — 0 of the last 3002 submitted puzzle records
-		// had `submittedAtTimestamp` set — which then always tripped the
-		// `submitToVerifyMs > timeout → TIMESTAMP_TOO_OLD` disapproval branch
-		// in `serverVerifyPuzzleCaptchaSolution`. That looked to customers
-		// like every solved puzzle failing server-verify.
-		const setStage: Record<string, unknown> = {
-			result,
-			serverChecked,
-			userSubmitted,
-			userSignature,
-			lastUpdatedTimestamp: timestamp,
-			pendingStage: true,
-			// See the matching comment on `updatePowCaptchaRecordResult` —
-			// mirrors the block classification onto the puzzle record so
-			// either collection can be queried the same way.
-			blocked: isBlockingCaptchaResult(CaptchaType.puzzle, result),
-			...(coords && { coords }),
-			...(userSubmitted && { submittedAtTimestamp: timestamp }),
-			...(isDisapproved && { failedAtTimestamp: timestamp }),
-		};
-		try {
-			const updateResult = await tables.puzzlecaptcha.updateOne(
-				{ challenge },
-				{ $set: setStage },
-			);
-			if (updateResult.matchedCount === 0) {
-				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
-					context: {
-						challenge,
-						...setStage,
-					},
-					logger: this.logger,
-				});
-				this.logger.info(() => ({
-					err: err,
-					msg: "No PuzzleCaptcha record found to update",
-				}));
-				throw err;
-			}
-			this.logger.info(() => ({
-				data: {
-					challenge,
-					...setStage,
-				},
-				msg: "PuzzleCaptcha record updated successfully",
-			}));
-			this.centralStreamer?.streamPuzzleUpdate(
-				() => this.getPuzzleCaptchaRecordByChallenge(challenge),
-				(ts) =>
-					this.tables.puzzlecaptcha
-						.updateOne(
-							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
-							{
-								$set: { storedAtTimestamp: ts },
-								$unset: { pendingStage: 1 },
-							},
-						)
-						.then(() => {}),
-			);
-		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: {
-					error,
-					challenge,
-					...setStage,
-				},
-				logger: this.logger,
-			});
-			this.logger.error(() => ({
-				err: err,
-				msg: "Failed to update PuzzleCaptcha record",
-			}));
-			throw err;
-		}
-	}
-
-	async updatePuzzleCaptchaRecord(
-		challenge: PoWChallengeId,
-		updates: Partial<PuzzleCaptchaRecord>,
-	): Promise<void> {
-		const tables = this.getTables();
-		const timestamp = new Date();
-		// verifiedAtTimestamp / submittedAtTimestamp / failedAtTimestamp are
-		// direct writes, not `$ifNull` pipeline exprs — see the matching
-		// note on `updatePuzzleCaptchaRecordResult`. Puzzle challenges are
-		// single-use so each stamp only ever gets one write in its lifetime.
-		// The pipeline-`$ifNull` variant was silently dropping these fields
-		// on the wire, which broke server-verify's recency check.
-		const baseSet: Record<string, unknown> = {
-			...updates,
-			pendingStage: true,
-			...(updates.serverChecked === true && {
-				verifiedAtTimestamp: timestamp,
-			}),
-			...(updates.userSubmitted === true && {
-				submittedAtTimestamp: timestamp,
-			}),
-			...(updates.result?.status === CaptchaStatus.disapproved && {
-				failedAtTimestamp: timestamp,
-			}),
-		};
-		await tables.puzzlecaptcha.updateOne({ challenge }, { $set: baseSet });
-		this.centralStreamer?.streamPuzzleUpdate(
-			() => this.getPuzzleCaptchaRecordByChallenge(challenge),
-			(ts) =>
-				this.tables.puzzlecaptcha
-					.updateOne(
-						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
-						{
-							$set: { storedAtTimestamp: ts },
-							$unset: { pendingStage: 1 },
-						},
-					)
-					.then(() => {}),
+				),
+				targetX,
+				targetY,
+				originX,
+				originY,
+			},
 		);
 	}
 
@@ -1410,109 +1304,59 @@ export class ProviderDatabase
 		sessionId?: string,
 		ipInfo?: IPInfoResponse,
 	): Promise<void> {
-		const tables = this.getTables();
-
-		const iconOrderCaptchaRecord: IconOrderCaptchaStored = {
-			challenge,
-			userAccount: components.userAccount,
-			dappAccount: components.dappAccount,
-			requestedAtTimestamp: new Date(components.requestedAtTimestamp),
-			ipAddress,
-			headers,
-			ja4,
-			result: { status: CaptchaStatus.pending },
-			userSubmitted: false,
-			serverChecked: false,
-			targets,
-			tolerance,
-			providerSignature,
-			lastUpdatedTimestamp: new Date(),
-			pendingStage: true,
-			sessionId,
-			ipInfo,
-		};
-
-		try {
-			await tables.iconordercaptcha.create(iconOrderCaptchaRecord);
-			this.logger.info(() => ({
-				data: {
+		await this.storeInteractiveCaptchaRecord(
+			this.interactiveCollection(CaptchaType.iconOrder),
+			{
+				...this.pendingInteractiveRecord(
 					challenge,
-					countryCode: ipInfo?.isValid ? ipInfo.countryCode : undefined,
-				},
-				msg: "IconOrderCaptcha record added successfully",
-			}));
-			this.centralStreamer?.streamIconOrderRecord(
-				iconOrderCaptchaRecord as IconOrderCaptchaRecord,
-				(ts) =>
-					this.tables.iconordercaptcha
-						.updateOne(
-							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
-							{
-								$set: { storedAtTimestamp: ts },
-								$unset: { pendingStage: 1 },
-							},
-						)
-						.then(() => {}),
-			);
-		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: {
-					error,
-					challenge,
+					components,
+					tolerance,
+					providerSignature,
+					ipAddress,
+					headers,
+					ja4,
+					sessionId,
 					ipInfo,
-				},
-				logger: this.logger,
-			});
-			this.logger.error(() => ({
-				err: error,
-				msg: "Failed to add IconOrderCaptcha record",
-			}));
-			throw err;
-		}
+				),
+				targets,
+			},
+		);
 	}
 
-	/**
-	 * @description Retrieves an icon-order captcha record by its challenge string.
-	 * @param {string} challenge The challenge string to search for.
-	 * @returns {Promise<IconOrderCaptchaRecord | null>} A promise that resolves with the found record or null if not found.
-	 */
-	async getIconOrderCaptchaRecordByChallenge(
+	private async getInteractiveCaptchaRecordByChallenge<
+		T extends PuzzleCaptchaRecord | IconOrderCaptchaRecord,
+	>(
+		collection: InteractiveCaptchaCollection,
 		challenge: string,
-	): Promise<IconOrderCaptchaRecord | null> {
+		failedFuncName: string,
+	): Promise<T | null> {
 		if (!this.tables) {
 			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
-				context: {
-					failedFuncName: this.getIconOrderCaptchaRecordByChallenge.name,
-				},
+				context: { failedFuncName },
 				logger: this.logger,
 			});
 		}
 
 		try {
-			const filter: {
-				[key in keyof Pick<IconOrderCaptchaRecord, "challenge">]: string;
-			} = { challenge };
-			const record: IconOrderCaptchaRecord | null | undefined =
-				await this.tables.iconordercaptcha
-					.findOne(filter, {
+			const record: T | null | undefined = await this.tables[collection.table]
+				.findOne(
+					{ challenge },
+					{
 						challenge: 1,
 						userAccount: 1,
 						dappAccount: 1,
 						requestedAtTimestamp: 1,
-						// See the puzzle projection above — omitting this
-						// silently trips the "too old" branch on every
-						// freshly-solved challenge.
+						// submittedAtTimestamp gates the submit → verify
+						// recency check in serverVerifyInteractiveCaptchaSolution.
+						// Missing it here silently trips the "too old" path
+						// even on freshly-solved challenges because the code
+						// treats a missing field as Number.POSITIVE_INFINITY.
 						submittedAtTimestamp: 1,
 						ipAddress: 1,
 						headers: 1,
 						ja4: 1,
 						result: 1,
-						// The answer. Grading reads it straight back out of
-						// the record; it has no other source.
-						targets: 1,
 						tolerance: 1,
-						clicks: 1,
-						iconOrderEvents: 1,
 						sessionId: 1,
 						ipInfo: 1,
 						deviceCapability: 1,
@@ -1520,19 +1364,22 @@ export class ProviderDatabase
 						serverChecked: 1,
 						userSubmitted: 1,
 						coords: 1,
+						// See the PoW projection above — same verify-time read.
 						clientMetaData: 1,
-					} as { [key in keyof Partial<IconOrderCaptchaRecord>]: 1 })
-					.lean<IconOrderCaptchaRecord>();
+						...collection.answerProjection,
+					},
+				)
+				.lean<T>();
 			if (record) {
 				this.logger.info(() => ({
 					data: { challenge },
-					msg: "IconOrderCaptcha record retrieved successfully",
+					msg: `${collection.label} record retrieved successfully`,
 				}));
 				return record;
 			}
 			this.logger.info(() => ({
 				data: { challenge },
-				msg: "No IconOrderCaptcha record found",
+				msg: `No ${collection.label} record found`,
 			}));
 			return null;
 		} catch (error) {
@@ -1542,23 +1389,41 @@ export class ProviderDatabase
 			});
 			this.logger.error(() => ({
 				err: err,
-				msg: "Failed to retrieve IconOrderCaptcha record",
+				msg: `Failed to retrieve ${collection.label} record`,
 			}));
 			throw err;
 		}
 	}
 
 	/**
-	 * Atomically take the single submission an icon-order challenge allows.
-	 *
-	 * The filter is the guard: `userSubmitted: { $ne: true }` matches only a
-	 * record nobody has claimed, so of N concurrent submitters exactly one sees
-	 * `modifiedCount === 1`. A read-then-check would let all N through the gap
-	 * between the read and the write, and each would come back with a verdict —
-	 * enough to enumerate an ordered subset of a handful of positions.
-	 *
-	 * `submittedAtTimestamp` is stamped here rather than left to
-	 * `updateIconOrderCaptchaRecordResult` so the claim is self-contained: the
+	 * @description Retrieves a Puzzle Captcha record by its challenge string.
+	 * @param {string} challenge The challenge string to search for.
+	 * @returns {Promise<PuzzleCaptchaRecord | null>} A promise that resolves with the found record or null if not found.
+	 */
+	async getPuzzleCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<PuzzleCaptchaRecord | null> {
+		return this.getInteractiveCaptchaRecordByChallenge<PuzzleCaptchaRecord>(
+			this.interactiveCollection(CaptchaType.puzzle),
+			challenge,
+			this.getPuzzleCaptchaRecordByChallenge.name,
+		);
+	}
+
+	async getIconOrderCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<IconOrderCaptchaRecord | null> {
+		return this.getInteractiveCaptchaRecordByChallenge<IconOrderCaptchaRecord>(
+			this.interactiveCollection(CaptchaType.iconOrder),
+			challenge,
+			this.getIconOrderCaptchaRecordByChallenge.name,
+		);
+	}
+
+	/**
+	 * The filter is the guard: of N concurrent submitters only one matches
+	 * `userSubmitted: { $ne: true }`, where a read-then-check would let them
+	 * all through to be graded. `submittedAtTimestamp` is stamped here so the
 	 * record is consistent even if the caller dies before writing a result.
 	 */
 	async claimIconOrderCaptchaSubmission(
@@ -1591,11 +1456,12 @@ export class ProviderDatabase
 		}
 	}
 
-	async updateIconOrderCaptchaRecordResult(
+	private async updateInteractiveCaptchaRecordResult(
+		collection: InteractiveCaptchaCollection,
 		challenge: PoWChallengeId,
 		result: CaptchaResult,
-		serverChecked = false,
-		userSubmitted = false,
+		serverChecked: boolean,
+		userSubmitted: boolean,
 		userSignature?: string,
 		coords?: [number, number][][],
 		lastUpdatedTimestamp?: Date,
@@ -1603,11 +1469,17 @@ export class ProviderDatabase
 		const tables = this.getTables();
 		const timestamp = lastUpdatedTimestamp ?? new Date();
 		const isDisapproved = result.status === CaptchaStatus.disapproved;
+		// Defence-in-depth: validate coords before write.
 		assertCoordsSafe(coords, "coords");
-		// Direct writes rather than `$ifNull` pipeline exprs, for the reason
-		// documented at length on `updatePuzzleCaptchaRecordResult`: the
-		// challenge is single-use, so each stamp is only ever written once,
-		// and the pipeline variant silently dropped them on the wire.
+		// submittedAtTimestamp / failedAtTimestamp are direct writes rather
+		// than `$ifNull` pipeline exprs: these challenges are single-use, so
+		// both fields are only ever written by the one submit that lands. A
+		// prior attempt to use `$ifNull` inside a pipeline `$set` was silently
+		// dropping the timestamps on the wire — 0 of the last 3002 submitted
+		// puzzle records had `submittedAtTimestamp` set — which then always
+		// tripped the `submitToVerifyMs > timeout → TIMESTAMP_TOO_OLD`
+		// disapproval branch in server verification. That looked to customers
+		// like every solved puzzle failing server-verify.
 		const setStage: Record<string, unknown> = {
 			result,
 			serverChecked,
@@ -1615,13 +1487,16 @@ export class ProviderDatabase
 			userSignature,
 			lastUpdatedTimestamp: timestamp,
 			pendingStage: true,
-			blocked: isBlockingCaptchaResult(CaptchaType.iconOrder, result),
+			// See the matching comment on `updatePowCaptchaRecordResult` —
+			// mirrors the block classification onto this record so every
+			// collection can be queried the same way.
+			blocked: isBlockingCaptchaResult(collection.captchaType, result),
 			...(coords && { coords }),
 			...(userSubmitted && { submittedAtTimestamp: timestamp }),
 			...(isDisapproved && { failedAtTimestamp: timestamp }),
 		};
 		try {
-			const updateResult = await tables.iconordercaptcha.updateOne(
+			const updateResult = await tables[collection.table].updateOne(
 				{ challenge },
 				{ $set: setStage },
 			);
@@ -1635,7 +1510,7 @@ export class ProviderDatabase
 				});
 				this.logger.info(() => ({
 					err: err,
-					msg: "No IconOrderCaptcha record found to update",
+					msg: `No ${collection.label} record found to update`,
 				}));
 				throw err;
 			}
@@ -1644,21 +1519,9 @@ export class ProviderDatabase
 					challenge,
 					...setStage,
 				},
-				msg: "IconOrderCaptcha record updated successfully",
+				msg: `${collection.label} record updated successfully`,
 			}));
-			this.centralStreamer?.streamIconOrderUpdate(
-				() => this.getIconOrderCaptchaRecordByChallenge(challenge),
-				(ts) =>
-					this.tables.iconordercaptcha
-						.updateOne(
-							{ challenge, lastUpdatedTimestamp: { $lte: ts } },
-							{
-								$set: { storedAtTimestamp: ts },
-								$unset: { pendingStage: 1 },
-							},
-						)
-						.then(() => {}),
-			);
+			this.streamInteractiveUpdate(collection, challenge);
 		} catch (error) {
 			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
 				context: {
@@ -1670,19 +1533,74 @@ export class ProviderDatabase
 			});
 			this.logger.error(() => ({
 				err: err,
-				msg: "Failed to update IconOrderCaptcha record",
+				msg: `Failed to update ${collection.label} record`,
 			}));
 			throw err;
 		}
 	}
 
-	async updateIconOrderCaptchaRecord(
+	/**
+	 * @description Updates a Puzzle Captcha record result in the database.
+	 * @param {string} challenge The challenge string of the captcha to be updated.
+	 * @param result
+	 * @param serverChecked
+	 * @param userSubmitted
+	 * @param userSignature
+	 * @param coords
+	 * @param lastUpdatedTimestamp
+	 * @returns {Promise<void>} A promise that resolves when the record is updated.
+	 */
+	async updatePuzzleCaptchaRecordResult(
 		challenge: PoWChallengeId,
-		updates: Partial<IconOrderCaptchaRecord>,
+		result: CaptchaResult,
+		serverChecked = false,
+		userSubmitted = false,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void> {
+		await this.updateInteractiveCaptchaRecordResult(
+			this.interactiveCollection(CaptchaType.puzzle),
+			challenge,
+			result,
+			serverChecked,
+			userSubmitted,
+			userSignature,
+			coords,
+			lastUpdatedTimestamp,
+		);
+	}
+
+	async updateIconOrderCaptchaRecordResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		serverChecked = false,
+		userSubmitted = false,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void> {
+		await this.updateInteractiveCaptchaRecordResult(
+			this.interactiveCollection(CaptchaType.iconOrder),
+			challenge,
+			result,
+			serverChecked,
+			userSubmitted,
+			userSignature,
+			coords,
+			lastUpdatedTimestamp,
+		);
+	}
+
+	private async updateInteractiveCaptchaRecord(
+		collection: InteractiveCaptchaCollection,
+		challenge: PoWChallengeId,
+		updates: Partial<PuzzleCaptchaRecord> | Partial<IconOrderCaptchaRecord>,
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = new Date();
-		// Direct writes — see `updatePuzzleCaptchaRecord`.
+		// Direct writes, not `$ifNull` pipeline exprs — see the matching note
+		// on `updateInteractiveCaptchaRecordResult`.
 		const baseSet: Record<string, unknown> = {
 			...updates,
 			pendingStage: true,
@@ -1696,90 +1614,72 @@ export class ProviderDatabase
 				failedAtTimestamp: timestamp,
 			}),
 		};
-		await tables.iconordercaptcha.updateOne({ challenge }, { $set: baseSet });
-		this.centralStreamer?.streamIconOrderUpdate(
-			() => this.getIconOrderCaptchaRecordByChallenge(challenge),
-			(ts) =>
-				this.tables.iconordercaptcha
-					.updateOne(
-						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
-						{
-							$set: { storedAtTimestamp: ts },
-							$unset: { pendingStage: 1 },
-						},
-					)
-					.then(() => {}),
+		await tables[collection.table].updateOne({ challenge }, { $set: baseSet });
+		this.streamInteractiveUpdate(collection, challenge);
+	}
+
+	async updatePuzzleCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<PuzzleCaptchaRecord>,
+	): Promise<void> {
+		await this.updateInteractiveCaptchaRecord(
+			this.interactiveCollection(CaptchaType.puzzle),
+			challenge,
+			updates,
 		);
+	}
+
+	async updateIconOrderCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<IconOrderCaptchaRecord>,
+	): Promise<void> {
+		await this.updateInteractiveCaptchaRecord(
+			this.interactiveCollection(CaptchaType.iconOrder),
+			challenge,
+			updates,
+		);
+	}
+
+	private async markInteractiveCaptchaRecordChecked(
+		collection: InteractiveCaptchaCollection,
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		const tables = this.getTables();
+		const timestamp = new Date();
+		const result = await tables[collection.table].updateOne(
+			{ challenge, serverChecked: { $ne: true } },
+			{
+				$set: {
+					serverChecked: true,
+					lastUpdatedTimestamp: timestamp,
+					verifiedAtTimestamp: timestamp,
+					pendingStage: true,
+				},
+			},
+		);
+		if (result.modifiedCount === 0) {
+			return false;
+		}
+		this.streamInteractiveUpdate(collection, challenge);
+		return true;
 	}
 
 	async markIconOrderCaptchaRecordChecked(
 		challenge: PoWChallengeId,
 	): Promise<boolean> {
-		const tables = this.getTables();
-		const timestamp = new Date();
-		const result = await tables.iconordercaptcha.updateOne(
-			{ challenge, serverChecked: { $ne: true } },
-			{
-				$set: {
-					serverChecked: true,
-					lastUpdatedTimestamp: timestamp,
-					verifiedAtTimestamp: timestamp,
-					pendingStage: true,
-				},
-			},
+		return this.markInteractiveCaptchaRecordChecked(
+			this.interactiveCollection(CaptchaType.iconOrder),
+			challenge,
 		);
-		if (result.modifiedCount === 0) {
-			return false;
-		}
-		this.centralStreamer?.streamIconOrderUpdate(
-			() => this.getIconOrderCaptchaRecordByChallenge(challenge),
-			(ts) =>
-				this.tables.iconordercaptcha
-					.updateOne(
-						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
-						{
-							$set: { storedAtTimestamp: ts },
-							$unset: { pendingStage: 1 },
-						},
-					)
-					.then(() => {}),
-		);
-		return true;
 	}
 
 	async markPuzzleCaptchaRecordChecked(
 		challenge: PoWChallengeId,
 	): Promise<boolean> {
-		const tables = this.getTables();
-		const timestamp = new Date();
-		const result = await tables.puzzlecaptcha.updateOne(
-			{ challenge, serverChecked: { $ne: true } },
-			{
-				$set: {
-					serverChecked: true,
-					lastUpdatedTimestamp: timestamp,
-					verifiedAtTimestamp: timestamp,
-					pendingStage: true,
-				},
-			},
+		return this.markInteractiveCaptchaRecordChecked(
+			this.interactiveCollection(CaptchaType.puzzle),
+			challenge,
 		);
-		if (result.modifiedCount === 0) {
-			return false;
-		}
-		this.centralStreamer?.streamPuzzleUpdate(
-			() => this.getPuzzleCaptchaRecordByChallenge(challenge),
-			(ts) =>
-				this.tables.puzzlecaptcha
-					.updateOne(
-						{ challenge, lastUpdatedTimestamp: { $lte: ts } },
-						{
-							$set: { storedAtTimestamp: ts },
-							$unset: { pendingStage: 1 },
-						},
-					)
-					.then(() => {}),
-		);
-		return true;
 	}
 
 	/** @description Get serverChecked Dapp User image captcha commitments from the commitments table
@@ -1934,13 +1834,13 @@ export class ProviderDatabase
 	}
 
 	/**
-	 * Counts server-checked captcha records across image (`commitment`),
-	 * PoW and puzzle collections whose `metadata.emailNormalised` matches.
-	 * Each collection carries the same partial index
-	 * (`spamEmailCount_partial`) so all three counts hit index-only scans.
-	 * The three counts are summed — one dapp can mix captcha types over
-	 * time, and per-email rate limits should apply across the whole
-	 * verified surface, not per-type.
+	 * Counts server-checked captcha records across the image (`commitment`),
+	 * PoW, puzzle and icon-order collections whose `metadata.emailNormalised`
+	 * matches. Each collection carries the same partial index
+	 * (`spamEmailCount_partial`) so every count hits an index-only scan. The
+	 * counts are summed — one dapp can mix captcha types over time, and
+	 * per-email rate limits should apply across the whole verified surface,
+	 * not per-type.
 	 */
 	async countCommitmentsByNormalisedEmail(
 		dappAccount: string,
@@ -1953,12 +1853,13 @@ export class ProviderDatabase
 			serverChecked: true,
 			"metadata.emailNormalised": emailNormalised,
 		};
-		const [imgCount, powCount, puzzleCount] = await Promise.all([
+		const counts = await Promise.all([
 			tables.commitment.countDocuments(filter),
 			tables.powcaptcha.countDocuments(filter),
 			tables.puzzlecaptcha.countDocuments(filter),
+			tables.iconordercaptcha.countDocuments(filter),
 		]);
-		return imgCount + powCount + puzzleCount;
+		return counts.reduce((total, count) => total + count, 0);
 	}
 
 	/**

@@ -247,6 +247,8 @@ export class FrictionlessManager extends CaptchaManager {
 			simdReadings,
 			puzzleTolerance,
 			puzzle,
+			iconOrderTolerance,
+			iconOrder,
 			isEscalation,
 			originSessionId,
 			refreshOf,
@@ -274,6 +276,8 @@ export class FrictionlessManager extends CaptchaManager {
 			powDifficulty,
 			...(puzzleTolerance !== undefined && { puzzleTolerance }),
 			...(puzzle && { puzzle }),
+			...(iconOrderTolerance !== undefined && { iconOrderTolerance }),
+			...(iconOrder && { iconOrder }),
 			userSitekeyIpHash,
 			webView,
 			iFrame,
@@ -495,9 +499,6 @@ export class FrictionlessManager extends CaptchaManager {
 		return this.sendCaptcha(CaptchaType.iconOrder, params);
 	}
 
-	// Shared body for the concrete `send*Captcha` helpers. Each helper is
-	// kept as its own thin wrapper so call-sites read clearly, but session
-	// validation and the createSession invocation only live in one place.
 	private async sendCaptcha(
 		captchaType:
 			| CaptchaType.image
@@ -633,6 +634,18 @@ export class FrictionlessManager extends CaptchaManager {
 						};
 					})()
 				: {};
+		const finalIconOrderOverrides: Pick<
+			Session,
+			"iconOrderTolerance" | "iconOrder"
+		> =
+			finalCaptchaType === CaptchaType.iconOrder
+				? {
+						...(routed.iconOrderTolerance !== undefined && {
+							iconOrderTolerance: routed.iconOrderTolerance,
+						}),
+						...(routed.iconOrder && { iconOrder: routed.iconOrder }),
+					}
+				: {};
 		const blocked =
 			finalCaptchaType === CaptchaType.image
 				? effectiveParams.blocked
@@ -655,6 +668,8 @@ export class FrictionlessManager extends CaptchaManager {
 			blocked,
 			puzzleTolerance: finalPuzzleOverrides.puzzleTolerance,
 			puzzle: finalPuzzleOverrides.puzzle,
+			iconOrderTolerance: finalIconOrderOverrides.iconOrderTolerance,
+			iconOrder: finalIconOrderOverrides.iconOrder,
 			// Never set on this path; pinned so a stale value on
 			// `effectiveParams` can't reach the record through the spread.
 			deleted: undefined,
@@ -715,6 +730,8 @@ export class FrictionlessManager extends CaptchaManager {
 			deleted: true,
 			puzzleTolerance: undefined,
 			puzzle: undefined,
+			iconOrderTolerance: undefined,
+			iconOrder: undefined,
 			isEscalation: undefined,
 			originSessionId: undefined,
 		});

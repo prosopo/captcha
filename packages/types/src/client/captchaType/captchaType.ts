@@ -32,8 +32,7 @@ enum CaptchaType {
 
 const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
 
-// Decision machines only work with pow, image, puzzle and icon-order
-// captcha types.
+// Decision machines only work with the concrete challenge types.
 // Frictionless is the outer flow that dispatches to these; authenticated
 // is a pre-verified pass-through and has no scoring surface.
 const DecisionMachineCaptchaTypeSchema = z.union([

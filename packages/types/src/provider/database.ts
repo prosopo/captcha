@@ -591,9 +591,6 @@ export type Session = {
 	// trafficFilter challenge-policy fields of the same names.
 	puzzleTolerance?: number;
 	puzzle?: IPuzzleSettings;
-	// Icon-order equivalents of the two fields above, with identical
-	// semantics: persisted by the routing machine so
-	// getIconOrderCaptchaChallenge can layer them in.
 	iconOrderTolerance?: number;
 	iconOrder?: IIconOrderSettings;
 	storedAtTimestamp?: Date;
@@ -808,50 +805,37 @@ export interface PoWCaptchaStored
 	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
 		StoredCaptcha {}
 
-export interface PuzzleCaptchaStored extends StoredCaptcha {
+/** Fields shared by the challenge records of the on-screen captcha types. */
+export interface InteractiveCaptchaStored extends StoredCaptcha {
 	challenge: PoWChallengeId;
+	tolerance: number;
+	providerSignature: string;
+	userSignature?: string;
+	userAccount: string;
+	dappAccount: string;
+}
+
+export interface PuzzleCaptchaStored extends InteractiveCaptchaStored {
 	targetX: number;
 	targetY: number;
 	originX: number;
 	originY: number;
-	tolerance: number;
-	providerSignature: string;
-	userSignature?: string;
-	userAccount: string;
-	dappAccount: string;
 	puzzleEvents?: PuzzleEvent[];
 }
 
 /**
- * The icon-order answer, at rest.
- *
- * `targets` is the whole secret: the ordered icon placements the user has to
- * click. It is written here at challenge time and read back at submit time,
- * and it is the reason the challenge response can be pure imagery — nothing
- * in this record is ever serialised to a client. Decoy placements are
- * deliberately NOT stored: they are already expressed in the pixels and
- * grading never consults them.
+ * `targets` is the answer. Nothing on this record is ever sent to a client,
+ * and decoys are not stored because grading never consults them.
  */
-export interface IconOrderCaptchaStored extends StoredCaptcha {
-	challenge: PoWChallengeId;
+export interface IconOrderCaptchaStored extends InteractiveCaptchaStored {
 	targets: StoredIconTarget[];
 	/** Hit radius as a multiple of each icon's own size. */
 	tolerance: number;
-	providerSignature: string;
-	userSignature?: string;
-	userAccount: string;
-	dappAccount: string;
 	clicks?: IconClick[];
 	iconOrderEvents?: IconOrderEvent[];
 }
 
-/**
- * One target icon as persisted. Mirrors `IconPlacement` from
- * `@prosopo/icon-order-assets` minus the fields that only matter to the
- * renderer (rotation, hue): grading needs the centre and the size, and
- * storing the rest would put more of the frame's construction in the
- * database than the grader has any use for.
- */
+/** A target icon as persisted: what grading needs, without render-only fields. */
 export interface StoredIconTarget {
 	x: number;
 	y: number;
