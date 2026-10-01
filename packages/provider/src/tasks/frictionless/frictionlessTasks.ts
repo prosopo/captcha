@@ -561,11 +561,8 @@ export class FrictionlessManager extends CaptchaManager {
 		const finalPuzzleOverrides: Pick<Session, "puzzleTolerance" | "puzzle"> =
 			finalCaptchaType === CaptchaType.puzzle
 				? (() => {
-						// The ceiling on automatic escalation: the stricter of the
-						// site's own `puzzleMaxDifficulty` (0 pins the level to 0 so its
-						// configured puzzle settings render every time) and the
-						// device's, since a fingertip cannot hit the placement
-						// tolerance the upper bands ask for.
+						// The site's own ceiling on automatic escalation; 0 pins the
+						// level to 0 so its configured puzzle settings render every time.
 						const maxLevel = resolveMaxEscalationLevel(
 							this.routingContext?.puzzleMaxDifficulty ??
 								puzzleMaxDifficultyDefault,
