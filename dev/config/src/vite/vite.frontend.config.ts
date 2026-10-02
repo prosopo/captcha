@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { builtinModules } from "node:module";
+import { builtinModules, createRequire } from "node:module";
 import path from "node:path";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
@@ -176,8 +176,27 @@ export default async function (
 
 	const rollupExternal: ExternalOption = allExternal;
 
+	// nodePolyfills injects bare imports of its shims into every module it
+	// transforms, and each resolves from that module's own location. Point them
+	// at this package's copy of the plugin so they do not depend on it being
+	// hoisted to a node_modules above every bundled package.
+	const polyfillsDir = path.dirname(
+		path.dirname(
+			createRequire(import.meta.url).resolve("vite-plugin-node-polyfills"),
+		),
+	);
+	const polyfillShimAliases = Object.fromEntries(
+		["buffer", "global", "process"].map((shim) => [
+			`vite-plugin-node-polyfills/shims/${shim}`,
+			path.join(polyfillsDir, "shims", shim, "dist", "index.js"),
+		]),
+	);
+
 	console.info({ bundleName }, "Bundle name");
 	return {
+		resolve: {
+			alias: polyfillShimAliases,
+		},
 		server: {
 			host: "127.0.0.1",
 		},

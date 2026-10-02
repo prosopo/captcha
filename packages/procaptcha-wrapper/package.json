@@ -3,8 +3,7 @@
 	"version": "2.7.15",
 	"type": "module",
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -17,27 +16,28 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
-		"test:watch": "NODE_ENV=${NODE_ENV:-test}; npx vitest --config ./vite.test.config.ts",
-		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --coverage --config ./vite.test.config.ts"
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
+		"test:watch": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest --config ./vite.test.config.ts",
+		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --coverage --config ./vite.test.config.ts"
 	},
 	"dependencies": {
-		"@prosopo/types": "5.12.0",
-		"@prosopo/locale": "3.6.2"
+		"@prosopo/types": "workspace:*",
+		"@prosopo/locale": "workspace:*"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.2",
+		"@prosopo/config": "workspace:*",
 		"@types/jsdom": "30.0.0",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",
 		"del-cli": "6.0.0",
 		"dotenv": "17.3.1",
 		"jsdom": "25.0.0",
+		"typescript": "5.6.2",
 		"vite": "8.1.5",
 		"vitest": "4.1.11"
 	},

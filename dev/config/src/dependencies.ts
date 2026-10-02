@@ -12,36 +12,106 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import child_process from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import util from "node:util";
+import fg from "fast-glob";
 import type { ProjectReference } from "typescript";
-
-const exec = util.promisify(child_process.exec);
-const peerDepsRegex = /UNMET\sOPTIONAL\sDEPENDENCY\s+(@*[\w\-/.]+)@/;
-const depsRegex = /\s+(@*[\w\-/.]+)@/;
+import { parse } from "yaml";
 
 const getTsconfigDir = (tsConfigPath: string): string =>
 	".json" === path.extname(tsConfigPath)
 		? path.dirname(tsConfigPath)
 		: tsConfigPath;
 
-async function getPackageDir(packageName: string): Promise<string> {
-	let pkg = packageName;
-	if (packageName && !packageName.startsWith("@prosopo/")) {
-		pkg = `@prosopo/${packageName}`;
+interface Manifest {
+	name?: string;
+	dependencies?: Record<string, string>;
+	devDependencies?: Record<string, string>;
+	optionalDependencies?: Record<string, string>;
+	peerDependencies?: Record<string, string>;
+	peerDependenciesMeta?: Record<string, { optional?: boolean }>;
+}
+
+const readManifest = (dir: string): Manifest =>
+	JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8"));
+
+/**
+ * The directory `name` resolves to from `fromDir`, following node's lookup up
+ * the node_modules chain. Symlinks are resolved, so a pnpm package's own
+ * dependencies are then looked up beside it in the virtual store.
+ */
+const resolvePackageDir = (
+	name: string,
+	fromDir: string,
+): string | undefined => {
+	let dir = fromDir;
+	for (;;) {
+		const candidate = path.join(dir, "node_modules", name);
+		if (fs.existsSync(path.join(candidate, "package.json"))) {
+			return fs.realpathSync(candidate);
+		}
+		const parent = path.dirname(dir);
+		if (parent === dir) {
+			return undefined;
+		}
+		dir = parent;
 	}
-	const pkgCommand = `npm list ${pkg} -ap`;
-	console.info(`Running command ${pkgCommand}`);
-	// get package directory
-	const { stdout: packageDir, stderr } = await exec(pkgCommand);
-	if (stderr) {
-		if (stderr.includes("ERR!")) {
-			throw new Error("CONFIG.INVALID_PACKAGE_DIR");
+};
+
+/** The outermost pnpm workspace containing `from`, as npm's workspace root was. */
+const findWorkspaceRoot = (from: string): string | undefined => {
+	let root: string | undefined;
+	for (let dir = from; ; dir = path.dirname(dir)) {
+		if (fs.existsSync(path.join(dir, "pnpm-workspace.yaml"))) {
+			root = dir;
+		}
+		if (path.dirname(dir) === dir) {
+			return root;
 		}
 	}
-	return packageDir.trim() || path.resolve();
+};
+
+const findWorkspacePackageDir = (
+	name: string,
+	from: string,
+): string | undefined => {
+	const root = findWorkspaceRoot(from);
+	if (root === undefined) {
+		return undefined;
+	}
+	const manifest: { packages?: string[] } = parse(
+		fs.readFileSync(path.join(root, "pnpm-workspace.yaml"), "utf8"),
+	);
+	const globs = manifest.packages ?? [];
+	const match = fg
+		.globSync(
+			globs.map((glob) =>
+				glob.startsWith("!")
+					? `!${glob.slice(1)}/package.json`
+					: `${glob}/package.json`,
+			),
+			{ cwd: root, ignore: ["**/node_modules/**"] },
+		)
+		.find(
+			(manifestPath) =>
+				readManifest(path.join(root, path.dirname(manifestPath))).name === name,
+		);
+	return match === undefined ? undefined : path.join(root, path.dirname(match));
+};
+
+/**
+ * The directory of the named workspace package, or cwd when there is none, so
+ * a config naming a bundle rather than a package reads the package it runs in.
+ */
+function getPackageDir(packageName: string): string {
+	const pkg = packageName.startsWith("@prosopo/")
+		? packageName
+		: `@prosopo/${packageName}`;
+	const cwd = path.resolve();
+	if (readManifest(cwd).name === pkg) {
+		return cwd;
+	}
+	return findWorkspacePackageDir(pkg, cwd) ?? cwd;
 }
 
 /**
@@ -166,70 +236,62 @@ export async function getExternalsFromReferences(
 }
 
 /**
- * Get the dependencies for a package
- * @param packageName
- * @param production
+ * Get every package installed beneath a package, walking the installed tree
+ * rather than asking a package manager, so the answer is the same under any
+ * node_modules layout. Optional dependencies and optional peers that are not
+ * installed are reported separately so bundlers can leave them external.
+ * @param packageName the package to start from; defaults to the one in cwd
+ * @param production leave out the starting package's devDependencies
  */
 export async function getDependencies(
 	packageName?: string,
 	production?: boolean,
 ): Promise<{ dependencies: string[]; optionalPeerDependencies: string[] }> {
-	let cmd = production
-		? "npm ls -a --silent --omit=dev --package-lock-only"
-		: "npm ls --silent -a --package-lock-only";
+	const rootDir = packageName ? getPackageDir(packageName) : path.resolve();
+	// The package itself is listed too, as `npm ls` in a workspace listed it,
+	// so the configs' name filters still see it (a package named *aws* stays
+	// external to its own bundle).
+	const rootName = readManifest(rootDir).name;
+	const dependencies = new Set<string>(rootName ? [rootName] : []);
+	const optionalPeerDependencies = new Set<string>();
+	const visited = new Set<string>([rootDir]);
+	const queue: { dir: string; includeDev: boolean }[] = [
+		{ dir: rootDir, includeDev: !production },
+	];
 
-	if (packageName) {
-		const packageDir = await getPackageDir(packageName);
-		cmd = `cd ${packageDir.trim()} && ${cmd}`;
-		console.info(`Running command ${cmd} in ${packageDir}`);
-	}
-
-	let concat = "";
-	// `npm ls` exits non-zero on any invalid/unmet/extraneous dependency (e.g.
-	// Vite 8's optional `yaml` peer being satisfied by a hoisted v1 from
-	// cosmiconfig). It still prints the full tree to stdout in that case, so we
-	// tolerate the non-zero exit and parse whatever was emitted.
-	try {
-		const { stdout, stderr } = await exec(cmd);
-		concat = stdout + stderr;
-	} catch (error) {
-		const execError = error as { stdout?: string; stderr?: string };
-		if (typeof execError.stdout === "string") {
-			concat = execError.stdout + (execError.stderr ?? "");
-		} else {
-			throw error;
-		}
-	}
-
-	let deps: string[] = [];
-	let peerDeps: string[] = [];
-	// for each line, check if there is an unmet optional dependency
-	for (const line of concat.split("\n")) {
-		if (line.includes("UNMET OPTIONAL DEPENDENCY")) {
-			//  │ │ │   ├── UNMET OPTIONAL DEPENDENCY bufferutil@^4.0.1
-			const parts = line.match(peerDepsRegex);
-			if (parts && parts.length > 1) {
-				peerDeps.push(parts[1] as string);
+	for (let next = queue.shift(); next; next = queue.shift()) {
+		const manifest = readManifest(next.dir);
+		const optional = new Set([
+			...Object.keys(manifest.optionalDependencies ?? {}),
+			...Object.entries(manifest.peerDependenciesMeta ?? {})
+				.filter(([, meta]) => meta.optional)
+				.map(([name]) => name),
+		]);
+		const names = new Set([
+			...Object.keys(manifest.dependencies ?? {}),
+			...Object.keys(manifest.optionalDependencies ?? {}),
+			...Object.keys(manifest.peerDependencies ?? {}),
+			...(next.includeDev ? Object.keys(manifest.devDependencies ?? {}) : []),
+		]);
+		for (const name of names) {
+			const dir = resolvePackageDir(name, next.dir);
+			if (dir === undefined) {
+				(optional.has(name) ? optionalPeerDependencies : dependencies).add(
+					name,
+				);
+				continue;
 			}
-		} else {
-			//  │ │ │ ├─┬ mongodb-memory-server-core@8.15.1
-			const parts = line.match(depsRegex);
-			if (parts && parts.length > 1) {
-				deps.push(parts[1] as string);
+			dependencies.add(name);
+			if (!visited.has(dir)) {
+				visited.add(dir);
+				queue.push({ dir, includeDev: false });
 			}
 		}
 	}
 
-	// ensure deps and peerDeps are unique
-	deps = [...new Set(deps)];
-	peerDeps = [...new Set(peerDeps)];
-
-	// dedupe and return deps and peer deps
 	return {
-		dependencies: deps.filter((x, i) => i === deps.indexOf(x)),
-		optionalPeerDependencies: peerDeps.filter(
-			(x, i) => i === peerDeps.indexOf(x),
-		),
+		dependencies: [...dependencies],
+		optionalPeerDependencies: [...optionalPeerDependencies],
 	};
 }
 

@@ -47,11 +47,12 @@ If your IDE supports `biome` (directly, or via plugin), you can configure it to 
 
 ## 3. Commands
 
-* Installation: `npm install`
-* Building packages: `npm run build:all`
-* Building the bundle: `npm run build:bundle`
-* Lint checks: `npm run lint`
-* Lint formatting fixes: `npm run lint-fix`
+* Installation: `pnpm install` (needs pnpm 11: `corepack enable`). When captcha is a submodule of captcha-private, run it
+  from the captcha-private root instead.
+* Building packages: `pnpm run build:all`
+* Building the bundle: `pnpm run build:bundle`
+* Lint checks: `pnpm run lint`
+* Lint formatting fixes: `pnpm run lint-fix`
 
 ## 4. Local setup
 
@@ -90,7 +91,7 @@ This command should be called once per the container lifetime, and adds the init
 siteKeys, etc.
 
 ```
-NODE_ENV="test" npm run setup
+NODE_ENV="test" pnpm run setup
 ```
 
 ## 5. Local tests
@@ -100,7 +101,7 @@ NODE_ENV="test" npm run setup
 Launch services:
 
 ```
-NODE_ENV=test npm run start:provider:admin
+NODE_ENV=test pnpm run start:provider:admin
 ```
 
 * `Provider:admin` service is required for the `provider` unit tests.
@@ -108,13 +109,13 @@ NODE_ENV=test npm run start:provider:admin
 Run all the unit tests:
 
 ```
-npm run test
+pnpm run test
 ```
 
 * The command will loop through all the `package/*` folders, and run individual unit tests for each
   package.
 
-Tip: You can also run package-related unit tests individually, by running `npm run test` inside the target package
+Tip: You can also run package-related unit tests individually, by running `pnpm run test` inside the target package
 folder.
 
 ### 5.2) E2E Bundle Tests
@@ -122,31 +123,31 @@ folder.
 Launch services:
 
 ```
-npm run -w @prosopo/client-example-server build ; NODE_ENV=test npm run start:server
-NODE_ENV=test npm run start:provider:admin
-NODE_ENV="development" npm -w @prosopo/procaptcha-bundle run bundle
-NODE_ENV=test npm run start:bundle
+pnpm --filter @prosopo/client-example-server run build ; NODE_ENV=test pnpm run start:server
+NODE_ENV=test pnpm run start:provider:admin
+NODE_ENV="development" pnpm --filter @prosopo/procaptcha-bundle run bundle
+NODE_ENV=test pnpm run start:bundle
 ```
 
 Run tests:
 
 ```
-NODE_ENV=test npm -w @prosopo/cypress-shared run cypress:open:client-bundle-example
+NODE_ENV=test pnpm --filter @prosopo/cypress-shared run cypress:open:client-bundle-example
 ```
 
 ## 6. Local playground (demo)
 
 ```
 # demo
-npm run start:bundle
+pnpm run start:bundle
 
 # server (if you need verification)
-NODE_ENV=test npm run start:provider:admin
+NODE_ENV=test pnpm run start:provider:admin
 
 # bundle
 turbo run build --filter @prosopo/procaptcha-bundle...; 
-NODE_ENV=development npm -w @prosopo/procaptcha-bundle run bundle; 
-npm -w @prosopo/procaptcha-bundle run serve
+NODE_ENV=development pnpm --filter @prosopo/procaptcha-bundle run bundle; 
+pnpm --filter @prosopo/procaptcha-bundle run serve
 
 # visit
 http://localhost:9232/pow-explicit.html

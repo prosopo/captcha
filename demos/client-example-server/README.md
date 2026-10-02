@@ -15,8 +15,8 @@ From the root of this repository, run the following commands:
 
 ```bash
 cp demos/client-example-server/env.production demos/client-example-server/.env.production && \
-npm i && \
-npm run start:server
+pnpm install && \
+pnpm run start:server
 ```
 
 Make sure you replace the following placeholders in the `.env.production` file with your own site key and secret key.
@@ -42,10 +42,10 @@ From the root of this repository, run the following commands:
 cp demos/client-example-server/env.development demos/client-example-server/.env.development && \
 cp dev/scripts/env.development dev/scripts/.env.development && \
 docker compose --file ./docker/docker-compose.development.yml up -d && \
-npm i && \
-npm run build:all && \
-npm run setup:all && \
-npm run start:server
+pnpm install && \
+pnpm run build:all && \
+pnpm run setup:all && \
+pnpm run start:server
 ```
 
 ### Use the API

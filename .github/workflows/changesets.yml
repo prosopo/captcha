@@ -55,14 +55,14 @@ jobs:
           submodules: 'recursive'
           fetch-depth: 0 # required for comparing changesets to the base branch
 
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: 'pnpm'
 
-      - uses: prosopo/github_actions/.github/actions/npm@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
-        with:
-          npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
+      - run: pnpm install --frozen-lockfile --prefer-offline
 
       # checkout the base and head refs
       # ensures we have history for both
@@ -78,11 +78,11 @@ jobs:
           HEAD_REF: ${{ github.head_ref }}
         run: git fetch origin "$HEAD_REF" && git checkout "$HEAD_REF"
 
-      # if this fails, you need to run `npm run changesets:add` (preferred!) or `npm run changesets:empty` for an empty changeset (avoid if possible)
+      # if this fails, you need to run `pnpm run changesets:add` (preferred!) or `pnpm run changesets:empty` for an empty changeset (avoid if possible)
       - name: check changesets
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
 
           # check that the changesets are present for each package which has been modified
-          npm run changesets -- --since "$BASE_REF"
+          pnpm run changesets --since "$BASE_REF"

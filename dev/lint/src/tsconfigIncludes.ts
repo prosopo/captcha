@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import fs from "node:fs";
-import path from "node:path";
+import { getWorkspacePatterns } from "@prosopo/workspace";
 import fg from "fast-glob";
 import type { Argv } from "yargs";
 import z from "zod";
@@ -31,6 +31,12 @@ export const buildTsconfigIncludesCommand = () => {
 					alias: "f",
 					type: "boolean",
 					default: false,
+				})
+				.option("ignore", {
+					alias: "i",
+					type: "array",
+					string: true,
+					default: [],
 				});
 		},
 		handler: async (argv: unknown) => {
@@ -38,6 +44,7 @@ export const buildTsconfigIncludesCommand = () => {
 				.object({
 					pkg: z.string(),
 					fix: z.boolean(),
+					ignore: z.array(z.string()),
 				})
 				.parse(argv);
 			await checkTsconfigIncludes(args);
@@ -48,14 +55,9 @@ export const buildTsconfigIncludesCommand = () => {
 const checkTsconfigIncludes = (args: {
 	pkg: string;
 	fix: boolean;
+	ignore: string[];
 }) => {
 	console.log("Checking", args.pkg);
-	// read the pkg json file
-	const pkgJson = JSON.parse(fs.readFileSync(args.pkg, "utf8"));
-	// only accept workspace pkg json
-	if (pkgJson.workspaces === undefined) {
-		throw new Error(`${args.pkg} is not a workspace`);
-	}
 
 	// Helper function to check and optionally fix includes
 	function checkAndFixInclude({
@@ -80,13 +82,13 @@ const checkTsconfigIncludes = (args: {
 	}
 
 	// for each package in the workspace
-	const globs = z
-		.string()
-		.array()
-		.parse(pkgJson.workspaces)
-		.map((g) => `${path.dirname(args.pkg)}/${g}/tsconfig{,.+}.json`);
+	const globs = getWorkspacePatterns(args.pkg, "tsconfig{,.+}.json");
 	const tsconfigPaths = fg.globSync(globs, {
-		ignore: ["**packages/docs**", "**/packages/fingerprintjs/**"],
+		ignore: [
+			"**packages/docs**",
+			"**/packages/fingerprintjs/**",
+			...args.ignore,
+		],
 	});
 	for (const tsconfigPath of tsconfigPaths) {
 		console.log("Checking", tsconfigPath);
