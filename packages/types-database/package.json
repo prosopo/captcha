@@ -41,8 +41,8 @@
 		"@prosopo/logger": "workspace:*",
 		"@prosopo/types": "workspace:*",
 		"@prosopo/user-access-policy": "workspace:*",
-		"bson": "7.3.2",
-		"mongoose": "9.10.0",
+		"bson": "7.3.3",
+		"mongoose": "9.10.2",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
