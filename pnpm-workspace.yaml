@@ -24,6 +24,17 @@ allowBuilds:
 # parent's node_modules before running.
 verifyDepsBeforeRun: false
 
+# The provider bundle leaves `sharp` external — bundling its JS half without
+# the platform `.node` binary gives a runtime "Could not load the sharp module"
+# — and is then run from `packages/cli/dist/bundle`, which has no node_modules
+# of its own. Resolution walks up to the workspace root, where npm's hoisting
+# used to leave `sharp` by accident; pnpm links a package only under whatever
+# asked for it, which here is `@prosopo/puzzle-assets` alone. Hoisting it back
+# rather than declaring it on `@prosopo/cli`, because the CLI's sources do not
+# import it and `lint:refs` rightly rejects a dependency nothing imports.
+publicHoistPattern:
+  - "sharp"
+
 savePrefix: ""
 maxSockets: 10
 fetchRetries: 100
