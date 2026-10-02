@@ -6,7 +6,7 @@
 	"type": "module",
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
@@ -17,8 +17,9 @@
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
-		"@prosopo/config": "3.4.2",
+		"@prosopo/config": "workspace:*",
 		"@types/node": "22.5.5",
+		"@types/yargs": "17.0.33",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
@@ -39,12 +40,11 @@
 		}
 	},
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"dependencies": {
-		"@prosopo/util": "3.3.13",
-		"@prosopo/workspace": "3.2.1",
+		"@prosopo/util": "workspace:*",
+		"@prosopo/workspace": "workspace:*",
 		"fast-glob": "3.3.3",
 		"yargs": "18.1.0",
 		"zod": "3.23.8"

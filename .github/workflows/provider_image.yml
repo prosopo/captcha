@@ -60,14 +60,14 @@ jobs:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
-      - uses: prosopo/github_actions/.github/actions/npm@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
-        with:
-          npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: env
         run: |
@@ -78,8 +78,8 @@ jobs:
           # Append the development PROVIDER_MNEMONIC from env.development to the .env.production file
           grep -PoIe "PROSOPO_PROVIDER_MNEMONIC.*" ./dev/scripts/env.development >> .env.production
 
-      - run: NODE_ENV="production" npx turbo run @prosopo/cli#build
-      - run: NODE_ENV="production" npx turbo run @prosopo/cli#bundle
+      - run: NODE_ENV="production" pnpm exec turbo run @prosopo/cli#build
+      - run: NODE_ENV="production" pnpm exec turbo run @prosopo/cli#bundle
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
@@ -105,7 +105,7 @@ jobs:
       # Generate a mnemonic for the provider image
       - name: Generate mnemonic and add to env file
         run: |
-          PROSOPO_ROOT_DIR=$(pwd) NODE_ENV="production" npx tsx dev/scripts/src/scripts/generateMnemonic.ts --env
+          PROSOPO_ROOT_DIR=$(pwd) NODE_ENV="production" pnpm exec tsx dev/scripts/src/scripts/generateMnemonic.ts --env
 
       # Check that the version command works when running the bundle in the provider image
       - name: Check provider bundle runs

@@ -1,2 +1,2 @@
-# choose remote package-lock.json on merge
-**/package-lock.json merge=theirs
+# choose remote pnpm-lock.yaml on merge; `pnpm install` then re-resolves it
+pnpm-lock.yaml merge=theirs

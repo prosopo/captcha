@@ -43,6 +43,7 @@ import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
 import { buildDnsEventUrl } from "../../api/dnsEventUrl.js";
+import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import { checkLangRules } from "../../rules/lang.js";
 import {
 	type UsageCounters,
@@ -179,15 +180,7 @@ export class FrictionlessManager extends CaptchaManager {
 			d: params.d,
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
-			synNs: params.synNs,
-			synackNs: params.synackNs,
-			ackNs: params.ackNs,
-			observedTtl: params.observedTtl,
-			tcpMss: params.tcpMss,
-			tcpWscale: params.tcpWscale,
-			tcpOptsFlags: params.tcpOptsFlags,
-			tcpOptsOrder: params.tcpOptsOrder,
-			tcpWindow: params.tcpWindow,
+			...rawTlsSignalsFromRecord(params),
 			refreshOf: params.refreshOf,
 			refreshCount: params.refreshCount,
 			refreshedAfterMs: params.refreshedAfterMs,
@@ -242,15 +235,6 @@ export class FrictionlessManager extends CaptchaManager {
 			d,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
-			synNs,
-			synackNs,
-			ackNs,
-			observedTtl,
-			tcpMss,
-			tcpWscale,
-			tcpOptsFlags,
-			tcpOptsOrder,
-			tcpWindow,
 			simdReadings,
 			puzzleTolerance,
 			puzzle,
@@ -313,15 +297,7 @@ export class FrictionlessManager extends CaptchaManager {
 			d,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
-			synNs,
-			synackNs,
-			ackNs,
-			observedTtl,
-			tcpMss,
-			tcpWscale,
-			tcpOptsFlags,
-			tcpOptsOrder,
-			tcpWindow,
+			...rawTlsSignalsFromRecord(input),
 			...(matchedRule && { matchedRule }),
 			// Stamped at issuance, not only mirrored up at solve time, so a
 			// session that is never solved still correlates back to the render.

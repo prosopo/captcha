@@ -17,7 +17,7 @@
  * references and an HTML page with the answers behind a reveal button.
  * `--clean` turns off noise, babble and reverb to judge the synthesiser alone.
  *
- *   npm -w @prosopo/audio-assets run preview -- --count 12 --out ./preview
+ *   pnpm --filter @prosopo/audio-assets run preview --count 12 --out ./preview
  */
 
 import { mkdirSync, writeFileSync } from "node:fs";

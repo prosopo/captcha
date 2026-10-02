@@ -52,30 +52,48 @@ jobs:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: 'pnpm'
 
-      # don't restore the cache, otherwise we get artifacts left over from the previous run sit in the cache for eternity. Do a clean build every time.
-      - run: npm cache clean --force
+      - run: pnpm install --frozen-lockfile --prefer-offline
 
-      - uses: prosopo/github_actions/.github/actions/npm@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
-        with:
-          npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
-
-      - run: npm run clean:turbo
+      - run: pnpm run clean:turbo
 
       # install cypress so we don't have to do that every time
-      - run: npx cypress install
+      - run: pnpm --filter @prosopo/cypress-shared exec cypress install
 
       # build everything so it's cached
-      - run: npx turbo run typecheck
-      - run: npx turbo run build
-      - run: npx turbo run build:cjs
-      - run: npx turbo run bundle
-      - run: NODE_ENV=development npx turbo run bundle:webpack
+      - run: pnpm exec turbo run typecheck
+      - run: pnpm exec turbo run build
+      - run: pnpm exec turbo run build:cjs
+      - run: pnpm exec turbo run bundle
+      - run: NODE_ENV=development pnpm exec turbo run bundle:webpack
 
-      - name: Save npm cache
-        uses: prosopo/github_actions/.github/actions/save_npm_cache@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
+      - name: Locate pnpm store
+        id: pnpm_store
+        run: |
+          echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+          mkdir -p ~/.cache/Cypress .turbo/cache .nx/cache
+
+      - name: Save pnpm cache
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ${{ steps.pnpm_store.outputs.path }}
+            ~/.cache/Cypress
+            .turbo/cache
+            .nx/cache
+          key: pnpm-${{ runner.os }}-${{ runner.arch }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Remove older pnpm caches
+        run: |
+          cacheKeys=$(gh cache list --sort created_at --order desc --limit 100 -R "${{ github.repository }}" --key "pnpm-${{ runner.os }}-${{ runner.arch }}-" | cut -f 1 | tail -n +3)
+          set +e
+          for cacheKey in $cacheKeys; do
+            gh cache delete "$cacheKey" -R "${{ github.repository }}"
+          done
 

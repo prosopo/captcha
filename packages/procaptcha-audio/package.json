@@ -7,8 +7,7 @@
 	"type": "module",
 	"sideEffects": false,
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"exports": {
 		".": {
@@ -21,29 +20,29 @@
 	"source": "./src/index.ts",
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
-		"test:watch": "NODE_ENV=${NODE_ENV:-test}; npx vitest --config ./vite.test.config.ts",
-		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --coverage --config ./vite.test.config.ts"
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
+		"test:watch": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest --config ./vite.test.config.ts",
+		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --coverage --config ./vite.test.config.ts"
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
 		"@polkadot/util": "14.0.3",
-		"@prosopo/api": "4.3.8",
-		"@prosopo/common": "3.1.61",
-		"@prosopo/locale": "3.6.2",
-		"@prosopo/procaptcha-common": "2.18.2",
-		"@prosopo/types": "5.12.0",
-		"@prosopo/util": "3.3.13",
-		"@prosopo/util-crypto": "13.6.0",
-		"@prosopo/widget-skeleton": "2.10.1"
+		"@prosopo/api": "workspace:*",
+		"@prosopo/common": "workspace:*",
+		"@prosopo/locale": "workspace:*",
+		"@prosopo/procaptcha-common": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
+		"@prosopo/util-crypto": "workspace:*",
+		"@prosopo/widget-skeleton": "workspace:*"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.2",
+		"@prosopo/config": "workspace:*",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",

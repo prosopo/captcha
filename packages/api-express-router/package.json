@@ -5,8 +5,7 @@
 	"types": "dist/index.d.ts",
 	"type": "module",
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"exports": {
 		".": {
@@ -17,23 +16,23 @@
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts"
 	},
 	"dependencies": {
 		"@polkadot/util": "14.0.3",
-		"@prosopo/api-route": "2.6.62",
-		"@prosopo/common": "3.1.61",
-		"@prosopo/logger": "2.1.2",
-		"@prosopo/env": "3.6.68",
-		"@prosopo/locale": "3.6.2",
-		"@prosopo/types": "5.12.0",
-		"@prosopo/util": "3.3.13",
-		"@prosopo/util-crypto": "13.6.0",
+		"@prosopo/api-route": "workspace:*",
+		"@prosopo/common": "workspace:*",
+		"@prosopo/logger": "workspace:*",
+		"@prosopo/env": "workspace:*",
+		"@prosopo/locale": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
+		"@prosopo/util-crypto": "workspace:*",
 		"dotenv": "16.4.5",
 		"express": "4.22.2",
 		"i18next": "26.4.2",
@@ -41,8 +40,12 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.2",
+		"@prosopo/config": "workspace:*",
+		"@types/express": "4.17.25",
 		"@types/node": "22.10.2",
+		"del-cli": "6.0.0",
+		"typescript": "5.6.2",
+		"vite": "8.1.5",
 		"vitest": "4.1.11"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",

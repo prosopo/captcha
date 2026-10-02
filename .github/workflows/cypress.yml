@@ -81,14 +81,14 @@ jobs:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: 'pnpm'
 
-      - uses: prosopo/github_actions/.github/actions/npm@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
-        with:
-          npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
+      - run: pnpm install --frozen-lockfile --prefer-offline
 
       # setup certs
       - name: Setup certs
@@ -120,7 +120,7 @@ jobs:
           echo NODE_ENV: "$NODE_ENV"
 
       # build all packages in workspace
-      - run: npx turbo run build
+      - run: pnpm exec turbo run build
 
       - name: Start the docker images
         run: |
@@ -129,16 +129,16 @@ jobs:
           sleep 10s
 
       # deploy dapp + protocol and run setup to register, stake and load a dataset for a provider
-      - run: NODE_ENV="test" npm run setup
+      - run: NODE_ENV="test" pnpm run setup
 
       # Build a test version of the procaptcha bundle and run the cypress tests on it and on the React client-example
       # Running using NODE_ENV=development instead of NODE_ENV=production means the bundle will be built with selectors that can be used
       # by the cypress tests to find the elements they need to interact with
-      - run: NODE_ENV="development" npx turbo run @prosopo/procaptcha-bundle#bundle
+      - run: NODE_ENV="development" pnpm exec turbo run @prosopo/procaptcha-bundle#bundle
 
       - name: Run the cypress tests on client-bundle-example
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:image" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:image" --success "first" --kill-others
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with frictionless captcha
         env:
@@ -147,27 +147,27 @@ jobs:
           # detection instead of the empty-pool PoW fallback.
           PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionless" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionless" --success "first" --kill-others
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with pow captcha
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:pow" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:pow" --success "first" --kill-others
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with puzzle captcha
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:puzzle" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:puzzle" --success "first" --kill-others
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with audio captcha
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:audio" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:audio" --success "first" --kill-others
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with icon-order captcha
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:iconOrder" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:iconOrder" --success "first" --kill-others
 
       - name: Run the cypress tests on client-bundle-example explicit rendering with invisible captcha
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:invisible" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:invisible" --success "first" --kill-others
 
       - name: Run the cypress tests for the post-PoW route() escalation flow
         env:
@@ -178,7 +178,7 @@ jobs:
           # set it by accident.
           PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE: "1"
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:escalation" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:escalation" --success "first" --kill-others
 
       - name: Run the cypress tests for the frictionless-phase routing machine
         env:
@@ -194,41 +194,41 @@ jobs:
           # fixture pool keeps that fallback declined.
           PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:routingFrictionless" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:routingFrictionless" --success "first" --kill-others
 
       - name: Run the cypress tests for the post-PoW route() escalation to puzzle
         env:
           PROSOPO_TEST_FRICTIONLESS_DETECTOR_OVERRIDE: "1"
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:postPowPuzzle" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:postPowPuzzle" --success "first" --kill-others
 
       - name: Run the cypress tests for decide() decision machine deny at verify — image
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDeny" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDeny" --success "first" --kill-others
 
       - name: Run the cypress tests for decide() decision machine deny at verify — pow
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPow" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPow" --success "first" --kill-others
 
       - name: Run the cypress tests for decide() decision machine deny at verify — puzzle
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPuzzle" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:decisionMachineDenyPuzzle" --success "first" --kill-others
 
       - name: Run the cypress tests for the client session id correlation
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:clientSessionId" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:clientSessionId" --success "first" --kill-others
 
       - name: Run the cypress tests for user access policy blocks (request-time + defer-to-verify)
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicy" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicy" --success "first" --kill-others
 
       - name: Run the cypress tests for user access policy Restrict rules
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyRestrict" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyRestrict" --success "first" --kill-others
 
       - name: Run the cypress tests for user access policy conflict resolution (specificity + harshness)
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyConflicts" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:accessPolicyConflicts" --success "first" --kill-others
 
       - name: Run the cypress tests for the frictionless score ladder (pow / puzzle / image bands)
         env:
@@ -252,7 +252,7 @@ jobs:
           # LANG_PUZZLE_BAND / LANG_IMAGE_BAND in frictionlessLadder.cy.ts.
           L_RULES: '{"zz-puzzleband":0.8,"zz-imageband":1.5}'
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessLadder" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessLadder" --success "first" --kill-others
 
       - name: Run the cypress tests for the frictionless challenge-type toggles (image / puzzle on / off)
         env:
@@ -273,11 +273,11 @@ jobs:
           # in frictionlessTypes.cy.ts, which mirror frictionlessLadder.cy.ts.
           L_RULES: '{"zz-puzzleband":0.8,"zz-imageband":1.5}'
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessTypes" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessTypes" --success "first" --kill-others
 
       - name: Run the cypress tests for the frictionless no-captchaType widget-cascade guard
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessNoCaptchaTypeCascade" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:run:client-bundle-example:frictionlessNoCaptchaTypeCascade" --success "first" --kill-others
 
       # after the test run completes store videos and any screenshots
       - uses: actions/upload-artifact@v7

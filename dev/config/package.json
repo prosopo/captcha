@@ -4,17 +4,16 @@
 	"description": "Prosopo config library",
 	"type": "module",
 	"scripts": {
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts --mode $NODE_ENV"
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts --mode $NODE_ENV"
 	},
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
@@ -33,9 +32,11 @@
 		"rollup-plugin-visualizer": "5.12.0",
 		"terser-webpack-plugin": "5.6.1",
 		"vite-plugin-no-bundle": "4.0.0",
-		"vite-tsconfig-paths": "6.1.1"
+		"vite-tsconfig-paths": "6.1.1",
+		"yaml": "2.9.0"
 	},
 	"devDependencies": {
+		"@babel/core": "7.29.7",
 		"@babel/plugin-proposal-import-attributes-to-assertions": "7.29.7",
 		"@babel/plugin-syntax-import-attributes": "7.29.7",
 		"@babel/plugin-transform-class-properties": "7.27.1",
@@ -44,6 +45,7 @@
 		"@babel/plugin-transform-runtime": "7.28.5",
 		"@babel/preset-env": "8.0.5",
 		"@babel/preset-typescript": "7.28.5",
+		"@babel/runtime": "7.29.7",
 		"@rollup/plugin-alias": "6.0.0",
 		"@rollup/plugin-babel": "7.1.0",
 		"@rollup/plugin-dynamic-import-vars": "2.1.5",
@@ -69,7 +71,8 @@
 		"vitest": "4.1.11",
 		"webpack": "5.110.3",
 		"webpack-cli": "7.2.3",
-		"webpack-dev-server": "6.0.0"
+		"webpack-dev-server": "6.0.0",
+		"zod": "3.23.8"
 	},
 	"repository": {
 		"type": "git",

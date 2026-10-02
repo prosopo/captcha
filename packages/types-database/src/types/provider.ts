@@ -932,9 +932,26 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	observedTtl: { type: Number, required: false },
 	tcpMss: { type: Number, required: false },
 	tcpWscale: { type: Number, required: false },
+	tcpWindow: { type: Number, required: false },
+	// Whole-SYN fields from the 104-byte probe record. `tcpOptsKinds` is the
+	// decoded option-kind list in wire order, not the probe's packed u64 —
+	// see @prosopo/types Session for why it cannot be stored packed.
+	tcpOptsKinds: { type: [Number], required: false },
+	tcpOptsPresent: { type: Number, required: false },
+	tcpOptsCount: { type: Number, required: false },
+	tcpTsval: { type: Number, required: false },
+	tcpTsecr: { type: Number, required: false },
+	tcpFlags: { type: Number, required: false },
+	tcpDataOffsetResv: { type: Number, required: false },
+	tcpUrgPtr: { type: Number, required: false },
+	ipIdent: { type: Number, required: false },
+	ipTotalLen: { type: Number, required: false },
+	ipFragFlags: { type: Number, required: false },
+	ipTos: { type: Number, required: false },
+	// Superseded by tcpOptsPresent / tcpOptsKinds; kept because historical
+	// rows hold them and routing rules read them.
 	tcpOptsFlags: { type: Number, required: false },
 	tcpOptsOrder: { type: Number, required: false },
-	tcpWindow: { type: Number, required: false },
 	// DNS observation merge target. Populated by
 	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
 	// sidecar (see types/provider/database.ts → Session.dnsEvent).
@@ -1216,9 +1233,21 @@ export const SESSION_PROJECTION = {
 	observedTtl: 1,
 	tcpMss: 1,
 	tcpWscale: 1,
+	tcpWindow: 1,
+	tcpOptsKinds: 1,
+	tcpOptsPresent: 1,
+	tcpOptsCount: 1,
+	tcpTsval: 1,
+	tcpTsecr: 1,
+	tcpFlags: 1,
+	tcpDataOffsetResv: 1,
+	tcpUrgPtr: 1,
+	ipIdent: 1,
+	ipTotalLen: 1,
+	ipFragFlags: 1,
+	ipTos: 1,
 	tcpOptsFlags: 1,
 	tcpOptsOrder: 1,
-	tcpWindow: 1,
 	"headers.user-agent": 1,
 	"headers.accept": 1,
 	"headers.accept-language": 1,

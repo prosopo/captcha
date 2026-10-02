@@ -79,8 +79,14 @@ const outerStyle = (theme: Theme): StyleMap => ({
 	// the bottom row unreachable rather than merely off-screen. Stopping the
 	// page behind from scrolling is `overscroll-behavior`'s job, below, and it
 	// still does it; what `none` added on top of that was blocking the one
-	// gesture the panel needs. Pinch-zoom stays blocked either way.
-	touchAction: "pan-y",
+	// gesture the panel needs.
+	//
+	// `pinch-zoom` is listed alongside it because the tiles are small on a
+	// phone and zooming is the only way a user who cannot make out an image
+	// can get a closer look. Withholding it is the barrier WCAG 1.4.4 is
+	// about, and it buys nothing: a solver automating this drives the DOM, not
+	// the viewport.
+	touchAction: "pan-y pinch-zoom",
 	overscrollBehavior: "none",
 });
 
