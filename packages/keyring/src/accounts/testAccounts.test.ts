@@ -30,6 +30,7 @@ describe("getDefaultSiteKeys", SLOW, () => {
 			CaptchaType.image,
 			CaptchaType.pow,
 			CaptchaType.frictionless,
+			CaptchaType.iconOrder,
 			CaptchaType.puzzle,
 		]);
 	});
@@ -64,7 +65,7 @@ describe("getDefaultSiteKeys", SLOW, () => {
 		const second = getDefaultSiteKeys();
 		expect(first).not.toBe(second);
 		first.pop();
-		expect(second).toHaveLength(4);
+		expect(second).toHaveLength(5);
 	});
 });
 

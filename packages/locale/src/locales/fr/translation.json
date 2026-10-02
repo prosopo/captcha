@@ -101,6 +101,15 @@
 			"CHECKING": "Vérification de votre réponse",
 			"RETRY_ANNOUNCEMENT": "Presque. Un nouveau puzzle a été chargé et la pièce est revenue au départ.",
 			"REFRESH": "Autre puzzle"
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Défi d’ordre des icônes",
+			"SELECT": "Sélectionnez dans cet ordre",
+			"RETRY": "Presque — réessayez",
+			"LEGEND_ALT": "Icônes à sélectionner, dans l’ordre",
+			"RESET": "Réinitialiser",
+			"CHECKING": "Vérification…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

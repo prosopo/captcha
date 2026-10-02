@@ -400,6 +400,15 @@
 			"CHECKING": "Memeriksa jawaban Anda",
 			"RETRY_ANNOUNCEMENT": "Nyaris. Teka-teki baru telah dimuat dan kepingan kembali ke awal.",
 			"REFRESH": "Teka-teki lain"
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Tantangan urutan ikon",
+			"SELECT": "Pilih dalam urutan ini",
+			"RETRY": "Nyaris — coba lagi",
+			"LEGEND_ALT": "Ikon yang harus dipilih, berurutan",
+			"RESET": "Atur ulang",
+			"CHECKING": "Memeriksa…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

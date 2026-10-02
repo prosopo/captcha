@@ -16,6 +16,8 @@ import type { ZodIssue } from "zod";
 import {
 	CaptchaRequestBody,
 	CaptchaSolutionBody,
+	MAX_ICON_CLICKS,
+	SubmitIconOrderCaptchaSolutionBody,
 	SubmitPuzzleCaptchaSolutionBody,
 } from "./api.js";
 
@@ -27,6 +29,18 @@ const puzzleBody = (puzzleEvents: unknown[]): object => ({
 	finalX: 1,
 	finalY: 1,
 	puzzleEvents,
+	signature: { user: { timestamp: "0x01" }, provider: { challenge: "0x02" } },
+	user: USER,
+	dapp: DAPP,
+});
+
+const iconOrderBody = (
+	clicks: unknown[],
+	iconOrderEvents: unknown[],
+): object => ({
+	challenge: `1700000000000___${USER}___${DAPP}___1`,
+	clicks,
+	iconOrderEvents,
 	signature: { user: { timestamp: "0x01" }, provider: { challenge: "0x02" } },
 	user: USER,
 	dapp: DAPP,
@@ -78,6 +92,33 @@ describe("request array caps", () => {
 		);
 		expect(result.success).toBe(false);
 		expect(issues(result)).toHaveLength(1);
+	});
+
+	it("accepts iconOrderEvents up to 10,000 and rejects more", () => {
+		const ok = Array.from({ length: 10_000 }, (_, i) => event(i));
+		expect(
+			SubmitIconOrderCaptchaSolutionBody.safeParse(iconOrderBody([], ok))
+				.success,
+		).toBe(true);
+		const result = SubmitIconOrderCaptchaSolutionBody.safeParse(
+			iconOrderBody([], [...ok, event(10_000)]),
+		);
+		expect(result.success).toBe(false);
+		expect(issues(result)[0]?.path).toEqual(["iconOrderEvents"]);
+	});
+
+	it("caps icon-order clicks", () => {
+		const click = { x: 1, y: 1 };
+		const within = Array.from({ length: MAX_ICON_CLICKS }, () => click);
+		expect(
+			SubmitIconOrderCaptchaSolutionBody.safeParse(iconOrderBody(within, []))
+				.success,
+		).toBe(true);
+		const result = SubmitIconOrderCaptchaSolutionBody.safeParse(
+			iconOrderBody([...within, click], []),
+		);
+		expect(result.success).toBe(false);
+		expect(issues(result)[0]?.path).toEqual(["clicks"]);
 	});
 
 	it("caps captchas at 256", () => {

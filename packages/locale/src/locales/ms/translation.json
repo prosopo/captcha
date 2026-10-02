@@ -400,6 +400,15 @@
 			"CHECKING": "Memeriksa jawapan anda",
 			"RETRY_ANNOUNCEMENT": "Hampir. Teka-teki baharu telah dimuatkan dan kepingan kembali ke permulaan.",
 			"REFRESH": "Teka-teki lain"
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Cabaran susunan ikon",
+			"SELECT": "Pilih mengikut susunan ini",
+			"RETRY": "Hampir — cuba lagi",
+			"LEGEND_ALT": "Ikon untuk dipilih, mengikut susunan",
+			"RESET": "Set semula",
+			"CHECKING": "Menyemak…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

@@ -101,6 +101,15 @@
 			"CHECKING": "Comprobando tu respuesta",
 			"RETRY_ANNOUNCEMENT": "Casi. Se ha cargado un rompecabezas nuevo y la pieza vuelve a estar al principio.",
 			"REFRESH": "Otro rompecabezas"
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Desafío de orden de iconos",
+			"SELECT": "Selecciona en este orden",
+			"RETRY": "Casi — inténtalo de nuevo",
+			"LEGEND_ALT": "Iconos que seleccionar, en orden",
+			"RESET": "Restablecer",
+			"CHECKING": "Comprobando…",
+			"SUBMIT": "Aceptar"
 		}
 	},
 	"CONTRACT": {

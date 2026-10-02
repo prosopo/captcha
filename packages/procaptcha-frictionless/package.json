@@ -33,6 +33,7 @@
 		"@prosopo/common": "workspace:*",
 		"@prosopo/locale": "workspace:*",
 		"@prosopo/procaptcha-common": "workspace:*",
+		"@prosopo/procaptcha-icon-order": "workspace:*",
 		"@prosopo/procaptcha-pow": "workspace:*",
 		"@prosopo/procaptcha-puzzle": "workspace:*",
 		"@prosopo/procaptcha-react": "workspace:*",

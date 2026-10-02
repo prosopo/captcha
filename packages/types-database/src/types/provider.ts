@@ -25,6 +25,7 @@ import {
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
+	type IconOrderCaptchaStored,
 	IpAddressType,
 	ModeEnum,
 	type PendingImageCaptchaRequest,
@@ -34,6 +35,7 @@ import {
 	type Session,
 	type SimdReadingsStage,
 	type SolutionRecord,
+	type StoredIconTarget,
 	Tier,
 	type UserCommitment,
 	type UserSolutionSchema,
@@ -167,6 +169,8 @@ export const ClientMetaDataRecordSchemaObj = {
 export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
 export type PuzzleCaptchaRecord = mongoose.Document & PuzzleCaptchaStored;
+
+export type IconOrderCaptchaRecord = mongoose.Document & IconOrderCaptchaStored;
 
 export type UserCommitmentRecord = mongoose.Document & UserCommitment;
 
@@ -358,7 +362,12 @@ PoWCaptchaRecordSchema.index(
 	},
 );
 
-export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
+/**
+ * Fields shared by every interactive captcha record. Kept in one place because
+ * the portal and audit views read them generically, so a field missed on one
+ * type shows up as an empty column rather than a compile error.
+ */
+const interactiveCaptchaRecordFields = {
 	challenge: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
@@ -375,24 +384,6 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 			required: false,
 		},
 		error: { type: String, required: false },
-	},
-	targetX: { type: Number, required: true },
-	targetY: { type: Number, required: true },
-	originX: { type: Number, required: true },
-	originY: { type: Number, required: true },
-	tolerance: { type: Number, required: true },
-	puzzleEvents: {
-		type: [
-			new Schema<{ x: number; y: number; t: number }>(
-				{
-					x: { type: Number, required: true },
-					y: { type: Number, required: true },
-					t: { type: Number, required: true },
-				},
-				{ _id: false },
-			),
-		],
-		required: false,
 	},
 	ipAddress: CompositeIpAddressRecordSchemaObj,
 	providedIp: {
@@ -446,48 +437,109 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 		required: false,
 	},
 	providerSignature: { type: String, required: true },
+};
+
+const pointerEventSchema = () =>
+	new Schema<{ x: number; y: number; t: number }>(
+		{
+			x: { type: Number, required: true },
+			y: { type: Number, required: true },
+			t: { type: Number, required: true },
+		},
+		{ _id: false },
+	);
+
+export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
+	...interactiveCaptchaRecordFields,
+	targetX: { type: Number, required: true },
+	targetY: { type: Number, required: true },
+	originX: { type: Number, required: true },
+	originY: { type: Number, required: true },
+	tolerance: { type: Number, required: true },
+	puzzleEvents: {
+		type: [pointerEventSchema()],
+		required: false,
+	},
 });
 
-// Set an index on the challenge field, ascending
-PuzzleCaptchaRecordSchema.index({ challenge: 1 });
-PuzzleCaptchaRecordSchema.index({ lastUpdatedTimestamp: 1 });
-PuzzleCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
-PuzzleCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
-PuzzleCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
-PuzzleCaptchaRecordSchema.index({ "result.reason": 1 });
-PuzzleCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
-PuzzleCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
-PuzzleCaptchaRecordSchema.index({ ipInfo: 1 });
-PuzzleCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
-// Compound `{pendingStage:1, _id:1}` partial — see PoWCaptchaRecordSchema's
-// pendingStage_partial for rationale.
-PuzzleCaptchaRecordSchema.index(
-	{ pendingStage: 1, _id: 1 },
-	{
-		name: "pendingStage_partial",
-		partialFilterExpression: { pendingStage: true },
+export const IconOrderCaptchaRecordSchema = new Schema<IconOrderCaptchaRecord>({
+	...interactiveCaptchaRecordFields,
+	tolerance: { type: Number, required: true },
+	targets: {
+		type: [
+			new Schema<StoredIconTarget>(
+				{
+					x: { type: Number, required: true },
+					y: { type: Number, required: true },
+					size: { type: Number, required: true },
+					kind: { type: String, required: true },
+				},
+				{ _id: false },
+			),
+		],
+		required: true,
 	},
-);
-// See `PoWCaptchaRecordSchema.spamEmailCount_partial` — same purpose here
-// for puzzle captchas.
-PuzzleCaptchaRecordSchema.index(
-	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
-	{
-		name: "spamEmailCount_partial",
-		partialFilterExpression: {
-			"metadata.emailNormalised": { $exists: true },
-			serverChecked: true,
+	clicks: {
+		type: [
+			new Schema<{ x: number; y: number }>(
+				{
+					x: { type: Number, required: true },
+					y: { type: Number, required: true },
+				},
+				{ _id: false },
+			),
+		],
+		required: false,
+	},
+	iconOrderEvents: {
+		type: [pointerEventSchema()],
+		required: false,
+	},
+});
+
+const indexInteractiveCaptchaRecord = <T>(schema: Schema<T>): void => {
+	schema.index({ challenge: 1 });
+	schema.index({ lastUpdatedTimestamp: 1 });
+	schema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
+	schema.index({ "ipAddress.lower": 1 });
+	schema.index({ "ipAddress.upper": 1 });
+	schema.index({ "result.reason": 1 });
+	schema.index({ "ipInfo.countryCode": 1 });
+	schema.index({ "ipInfo.isVPN": 1 });
+	schema.index({ ipInfo: 1 });
+	schema.index({ parsedUserAgentInfo: 1 });
+	// Compound `{pendingStage:1, _id:1}` partial — see PoWCaptchaRecordSchema's
+	// pendingStage_partial for rationale.
+	schema.index(
+		{ pendingStage: 1, _id: 1 },
+		{
+			name: "pendingStage_partial",
+			partialFilterExpression: { pendingStage: true },
 		},
-	},
-);
-// See `PoWCaptchaRecordSchema.blocked_partial`.
-PuzzleCaptchaRecordSchema.index(
-	{ blocked: 1 },
-	{
-		name: "blocked_partial",
-		partialFilterExpression: { blocked: true },
-	},
-);
+	);
+	// See `PoWCaptchaRecordSchema.spamEmailCount_partial`.
+	schema.index(
+		{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
+		{
+			name: "spamEmailCount_partial",
+			partialFilterExpression: {
+				"metadata.emailNormalised": { $exists: true },
+				serverChecked: true,
+			},
+		},
+	);
+	// See `PoWCaptchaRecordSchema.blocked_partial`.
+	schema.index(
+		{ blocked: 1 },
+		{
+			name: "blocked_partial",
+			partialFilterExpression: { blocked: true },
+		},
+	);
+};
+
+indexInteractiveCaptchaRecord(PuzzleCaptchaRecordSchema);
+indexInteractiveCaptchaRecord(IconOrderCaptchaRecordSchema);
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -743,6 +795,8 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// already validated by RoutingMachineOutputSchema before it gets here.
 	puzzleTolerance: { type: Number, required: false },
 	puzzle: { type: Object, required: false },
+	iconOrderTolerance: { type: Number, required: false },
+	iconOrder: { type: Object, required: false },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	// See `StoredCaptcha.pendingStage` — same semantics on Session records.
@@ -992,7 +1046,12 @@ export const DecisionMachineArtifactRecordSchema =
 		version: { type: String, required: false },
 		captchaType: {
 			type: String,
-			enum: [CaptchaType.pow, CaptchaType.image, CaptchaType.puzzle],
+			enum: [
+				CaptchaType.pow,
+				CaptchaType.image,
+				CaptchaType.puzzle,
+				CaptchaType.iconOrder,
+			],
 			required: false,
 		},
 		createdAt: { type: Date, required: true },
@@ -1087,6 +1146,8 @@ export const SESSION_PROJECTION = {
 	// overrides silently never apply.
 	puzzleTolerance: 1,
 	puzzle: 1,
+	iconOrderTolerance: 1,
+	iconOrder: 1,
 	// Read by captchaManager.peek* to report the session's own
 	// difficulty alongside solvedImagesCount.
 	powDifficulty: 1,
@@ -1328,10 +1389,10 @@ export interface IProviderDatabase extends IDatabase {
 	): Promise<void>;
 
 	/**
-	 * Counts server-checked captcha records (across image, PoW and puzzle
-	 * collections) for a dapp whose `metadata.emailNormalised` equals the
-	 * given value. Backs the per-email submission-count rejection in the
-	 * verify tasks. Returns 0 when the normalised email is empty.
+	 * Counts server-checked captcha records (across image, PoW, puzzle and
+	 * icon-order collections) for a dapp whose `metadata.emailNormalised`
+	 * equals the given value. Backs the per-email submission-count rejection
+	 * in the verify tasks. Returns 0 when the normalised email is empty.
 	 */
 	countCommitmentsByNormalisedEmail(
 		dappAccount: string,
@@ -1352,6 +1413,11 @@ export interface IProviderDatabase extends IDatabase {
 
 	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
 	markPuzzleCaptchaRecordChecked(challenge: PoWChallengeId): Promise<boolean>;
+
+	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
+	markIconOrderCaptchaRecordChecked(
+		challenge: PoWChallengeId,
+	): Promise<boolean>;
 
 	markDappUserPoWCommitmentsStored(
 		challengeIds: string[],
@@ -1449,6 +1515,45 @@ export interface IProviderDatabase extends IDatabase {
 	updatePuzzleCaptchaRecord(
 		challenge: PoWChallengeId,
 		updates: Partial<PuzzleCaptchaRecord>,
+	): Promise<void>;
+
+	storeIconOrderCaptchaRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		targets: StoredIconTarget[],
+		tolerance: number,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		ipInfo?: IPInfoResponse,
+	): Promise<void>;
+
+	getIconOrderCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<IconOrderCaptchaRecord | null>;
+
+	/**
+	 * Atomically take the single submission a challenge allows: `true` only
+	 * for the caller that set `userSubmitted`, so concurrent submitters cannot
+	 * each be graded.
+	 */
+	claimIconOrderCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
+
+	updateIconOrderCaptchaRecordResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		serverChecked: boolean,
+		userSubmitted: boolean,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void>;
+
+	updateIconOrderCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<IconOrderCaptchaRecord>,
 	): Promise<void>;
 
 	// Accepts plain records: the client-list poll builds these from the

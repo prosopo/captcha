@@ -22,6 +22,7 @@ import {
 	Tier,
 	frictionlessImageThresholdDefault,
 	frictionlessTypesDefault,
+	iconOrderToleranceDefault,
 	puzzleMaxDifficultyDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
@@ -134,8 +135,8 @@ export default (
 								frictionless_image_threshold ??
 								frictionlessImageThresholdDefault,
 						},
-						// Registering a sitekey leaves every challenge type
-						// available; narrowing is a portal-side decision.
+						// Registering a sitekey leaves image and puzzle on; anything
+						// further is a portal-side decision.
 						frictionlessTypes: frictionlessTypesDefault,
 						domains: domains || [],
 						powDifficulty: pow_difficulty as number,
@@ -143,6 +144,7 @@ export default (
 						imageMaxRounds: image_max_rounds as number,
 						imageMinRounds: image_min_rounds as number,
 						puzzleTolerance: puzzleToleranceDefault,
+						iconOrderTolerance: iconOrderToleranceDefault,
 						puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 						disallowWebView: false,
 						verifiedTimeout: 60000,

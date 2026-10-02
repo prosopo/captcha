@@ -171,6 +171,9 @@ export const TrafficCategoryPolicySchema = new Schema(
 		// dropped on write at each end — so `checkTrafficFilter` only ever
 		// read `undefined` and no category was ever padded.
 		padBytes: { type: Number, min: 0, max: MAX_PAD_BYTES, required: false },
+		iconOrderTolerance: { type: Number, required: false },
+		// Mixed: the shape is validated by zod, not mongoose.
+		iconOrder: { type: MongooseSchema.Types.Mixed, required: false },
 		// Per-category puzzle render overrides, layered on top of the
 		// site-wide `puzzle` block by the traffic filter.
 		puzzle: { type: PuzzleRenderSettingsSchema, required: false },
@@ -214,6 +217,7 @@ export const UserSettingsSchema = new Schema({
 			{
 				image: { type: Boolean, default: true },
 				puzzle: { type: Boolean, default: true },
+				iconOrder: { type: Boolean, required: false },
 			},
 			{ _id: false },
 		),
@@ -236,6 +240,14 @@ export const UserSettingsSchema = new Schema({
 	},
 	puzzleTolerance: {
 		type: Number,
+		required: false,
+	},
+	iconOrderTolerance: {
+		type: Number,
+		required: false,
+	},
+	iconOrder: {
+		type: MongooseSchema.Types.Mixed,
 		required: false,
 	},
 	// Ceiling on automatic puzzle escalation, in difficulty-ladder levels.

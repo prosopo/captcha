@@ -26,6 +26,9 @@ export function getDefaultSiteKeys(): ISite[] {
 		CaptchaType.image,
 		CaptchaType.pow,
 		CaptchaType.frictionless,
+		// Before `puzzle`: `updateDemoHTMLFiles` leaves the last-seeded type's
+		// sitekey in the webview demos, which must stay puzzle.
+		CaptchaType.iconOrder,
 		CaptchaType.puzzle,
 	];
 	const sites: ISite[] = [];
@@ -43,6 +46,9 @@ export function getDefaultSiteKeys(): ISite[] {
 				domains: ["localhost"],
 				imageMaxRounds: 2,
 				frictionlessThreshold: 0.8,
+				...(captchaType === CaptchaType.iconOrder && {
+					frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+				}),
 			}),
 		});
 	}

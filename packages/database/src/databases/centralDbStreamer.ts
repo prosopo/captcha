@@ -14,6 +14,7 @@
 
 import { type Logger, getLogger } from "@prosopo/logger";
 import type {
+	IconOrderCaptchaRecord,
 	PoWCaptchaRecord,
 	PuzzleCaptchaRecord,
 	StoredSession,
@@ -222,23 +223,7 @@ export class CentralDbStreamer {
 		record: PuzzleCaptchaRecord,
 		markStored?: MarkStoredCallback,
 	): void {
-		const timestamp = this.getRecordTimestamp(record);
-		this.ensureConnected()
-			.then(() => {
-				const { _id, ...safeDoc } = record;
-				return this.db.tables.puzzlecaptcha.updateOne(
-					{ challenge: safeDoc.challenge },
-					{ $set: safeDoc },
-					{ upsert: true },
-				);
-			})
-			.then(() => markStored?.(timestamp))
-			.catch((err: unknown) => {
-				this.logger.error(() => ({
-					err,
-					msg: "Failed to stream puzzle record to central DB",
-				}));
-			});
+		this.streamChallengeRecord("puzzlecaptcha", "puzzle", record, markStored);
 	}
 
 	/**
@@ -248,16 +233,76 @@ export class CentralDbStreamer {
 		getFullRecord: () => Promise<PuzzleCaptchaRecord | null>,
 		markStored?: MarkStoredCallback,
 	): void {
+		this.streamChallengeUpdate(
+			getFullRecord,
+			(record) => this.streamPuzzleRecord(record, markStored),
+			"puzzle",
+		);
+	}
+
+	streamIconOrderRecord(
+		record: IconOrderCaptchaRecord,
+		markStored?: MarkStoredCallback,
+	): void {
+		this.streamChallengeRecord(
+			"iconordercaptcha",
+			"icon-order",
+			record,
+			markStored,
+		);
+	}
+
+	streamIconOrderUpdate(
+		getFullRecord: () => Promise<IconOrderCaptchaRecord | null>,
+		markStored?: MarkStoredCallback,
+	): void {
+		this.streamChallengeUpdate(
+			getFullRecord,
+			(record) => this.streamIconOrderRecord(record, markStored),
+			"icon-order",
+		);
+	}
+
+	private streamChallengeRecord(
+		table: "puzzlecaptcha" | "iconordercaptcha",
+		label: string,
+		record: PuzzleCaptchaRecord | IconOrderCaptchaRecord,
+		markStored?: MarkStoredCallback,
+	): void {
+		const timestamp = this.getRecordTimestamp(record);
+		this.ensureConnected()
+			.then(() => {
+				const { _id, ...safeDoc } = record;
+				return this.db.tables[table].updateOne(
+					{ challenge: safeDoc.challenge },
+					{ $set: safeDoc },
+					{ upsert: true },
+				);
+			})
+			.then(() => markStored?.(timestamp))
+			.catch((err: unknown) => {
+				this.logger.error(() => ({
+					err,
+					msg: `Failed to stream ${label} record to central DB`,
+				}));
+			});
+	}
+
+	private streamChallengeUpdate<T>(
+		getFullRecord: () => Promise<T | null>,
+		stream: (record: T) => void,
+		label: string,
+	): void {
 		getFullRecord()
 			.then((record) => {
 				if (record) {
-					this.streamPuzzleRecord(record, markStored);
+					stream(record);
 				}
 			})
 			.catch((err: unknown) => {
 				this.logger.error(() => ({
 					err,
-					msg: "Failed to fetch puzzle record for central DB streaming",
+					msg: `Failed to fetch ${label} record for central DB streaming`,
 				}));
 			});
 	}

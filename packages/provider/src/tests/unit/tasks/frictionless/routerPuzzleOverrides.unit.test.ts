@@ -311,4 +311,36 @@ describe("router-supplied puzzle overrides reach the session record", () => {
 			expect(storedSession().puzzle).toBeDefined();
 		});
 	});
+
+	it("persists router icon-order overrides on an icon-order session", async () => {
+		manager.setRoutingContext({
+			...context,
+			frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+		});
+		routerReturns({
+			captchaType: CaptchaType.iconOrder,
+			iconOrderTolerance: 0.5,
+			iconOrder: { decoyCount: 2 },
+		});
+
+		await manager.sendIconOrderCaptcha();
+
+		expect(storedSession().captchaType).toBe(CaptchaType.iconOrder);
+		expect(storedSession().iconOrderTolerance).toBe(0.5);
+		expect(storedSession().iconOrder).toEqual({ decoyCount: 2 });
+		expect(storedSession().puzzleTolerance).toBeUndefined();
+	});
+
+	it("drops icon-order overrides when the session is not icon-order", async () => {
+		routerReturns({
+			captchaType: CaptchaType.puzzle,
+			iconOrderTolerance: 0.5,
+			iconOrder: { decoyCount: 2 },
+		});
+
+		await manager.sendPuzzleCaptcha();
+
+		expect(storedSession().iconOrderTolerance).toBeUndefined();
+		expect(storedSession().iconOrder).toBeUndefined();
+	});
 });
