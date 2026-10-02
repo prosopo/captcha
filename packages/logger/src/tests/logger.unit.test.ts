@@ -439,3 +439,55 @@ describe("Logger.with subscope", () => {
 		}
 	});
 });
+
+describe("print leaves the caller's data alone", () => {
+	let captured: string[] = [];
+
+	beforeEach(() => {
+		captured = [];
+		vi.spyOn(console, "info").mockImplementation((...args: unknown[]) => {
+			captured.push(String(args[0]));
+		});
+		vi.spyOn(console, "error").mockImplementation((...args: unknown[]) => {
+			captured.push(String(args[0]));
+		});
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it("does not turn bigints in logged objects into strings", () => {
+		const logger = getLogger("info", "test");
+		const session: { ip: { lower: bigint; upper: bigint }; ids: bigint[] } = {
+			ip: { lower: 3232235777n, upper: 0n },
+			ids: [1n, 2n],
+		};
+		logger.info(() => ({ data: { session } }));
+
+		expect(typeof session.ip.lower).toBe("bigint");
+		expect(session.ids[0]).toBe(1n);
+		const record = JSON.parse(captured[0] ?? "") as {
+			data: { session: { ip: { lower: string } } };
+		};
+		expect(record.data.session.ip.lower).toBe("3232235777");
+	});
+
+	it("does not throw on circular data", () => {
+		const logger = getLogger("info", "test");
+		const node: { name: string; self?: unknown } = { name: "a" };
+		node.self = node;
+		expect(() => logger.info(() => ({ data: { node } }))).not.toThrow();
+		expect(captured[0]).toContain('"name":"a"');
+	});
+
+	it("does not overflow the stack on an error whose cause loops back", () => {
+		const logger = getLogger("error", "test");
+		const outer: Error & { cause?: unknown } = new Error("outer");
+		const inner: Error & { cause?: unknown } = new Error("inner");
+		inner.cause = outer;
+		outer.cause = inner;
+		expect(() => logger.error(() => ({ err: outer }))).not.toThrow();
+		expect(captured[0]).toContain("inner");
+	});
+});
