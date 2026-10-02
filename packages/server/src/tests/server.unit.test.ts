@@ -28,6 +28,7 @@ import type { HardcodedProvider } from "@prosopo/load-balancer";
 import {
 	ApiParams,
 	CaptchaType,
+	type KeyringPair,
 	type ProcaptchaOutput,
 	type ProsopoServerConfigOutput,
 	encodeProcaptchaOutput,
@@ -86,6 +87,16 @@ const buildConfig = (
 				solutionTimeout: 10_000,
 				cachedTimeout: puzzleCachedMs,
 			},
+			iconOrder: {
+				verifiedTimeout: 10_000,
+				solutionTimeout: 10_000,
+				cachedTimeout: puzzleCachedMs,
+			},
+			audio: {
+				verifiedTimeout: 10_000,
+				solutionTimeout: 10_000,
+				cachedTimeout: puzzleCachedMs,
+			},
 			contract: { maxVerifiedTime: 10_000 },
 		},
 		// biome-ignore lint/suspicious/noExplicitAny: config schema uses union types the test doesn't need
@@ -128,6 +139,8 @@ const stubPair = () => ({
 
 interface ProviderApiSpies {
 	puzzle: MockInstance;
+	iconOrder: MockInstance;
+	audio: MockInstance;
 	pow: MockInstance;
 	image: MockInstance;
 }
@@ -136,13 +149,19 @@ const installProviderApiSpies = (): ProviderApiSpies => {
 	const puzzle = vi
 		.spyOn(ProviderApi.prototype, "submitPuzzleCaptchaVerify")
 		.mockResolvedValue({ status: "ok", verified: true });
+	const iconOrder = vi
+		.spyOn(ProviderApi.prototype, "submitIconOrderCaptchaVerify")
+		.mockResolvedValue({ status: "ok", verified: true });
+	const audio = vi
+		.spyOn(ProviderApi.prototype, "submitAudioCaptchaVerify")
+		.mockResolvedValue({ status: "ok", verified: true });
 	const pow = vi
 		.spyOn(ProviderApi.prototype, "submitPowCaptchaVerify")
 		.mockResolvedValue({ status: "ok", verified: true });
 	const image = vi
 		.spyOn(ProviderApi.prototype, "verifyDappUser")
 		.mockResolvedValue({ status: "ok", verified: true });
-	return { puzzle, pow, image };
+	return { puzzle, iconOrder, audio, pow, image };
 };
 
 // ProsopoServer asks the load balancer for the one provider that minted the
@@ -183,6 +202,38 @@ describe("ProsopoServer.verifyProvider — captchaType dispatch", () => {
 		expect(spies.puzzle).toHaveBeenCalledTimes(1);
 		expect(spies.pow).not.toHaveBeenCalled();
 		expect(spies.image).not.toHaveBeenCalled();
+	});
+
+	it("routes icon-order tokens to submitIconOrderCaptchaVerify only", async () => {
+		const now = Date.now();
+		const token = buildToken(now, {
+			[ApiParams.captchaType]: CaptchaType.iconOrder,
+		});
+		const server = new ProsopoServer(
+			buildConfig(60_000, 60_000, 60_000),
+			stubPair() as unknown as KeyringPair,
+		);
+		const result = await server.isVerified(token);
+		expect(result.verified).toBe(true);
+		expect(spies.iconOrder).toHaveBeenCalledTimes(1);
+		expect(spies.puzzle).not.toHaveBeenCalled();
+		expect(spies.pow).not.toHaveBeenCalled();
+	});
+
+	it("routes audio tokens to submitAudioCaptchaVerify only", async () => {
+		const now = Date.now();
+		const token = buildToken(now, {
+			[ApiParams.captchaType]: CaptchaType.audio,
+		});
+		const server = new ProsopoServer(
+			buildConfig(60_000, 60_000, 60_000),
+			stubPair() as unknown as KeyringPair,
+		);
+		const result = await server.isVerified(token);
+		expect(result.verified).toBe(true);
+		expect(spies.audio).toHaveBeenCalledTimes(1);
+		expect(spies.puzzle).not.toHaveBeenCalled();
+		expect(spies.iconOrder).not.toHaveBeenCalled();
 	});
 
 	it("routes pow tokens to submitPowCaptchaVerify only", async () => {

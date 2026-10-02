@@ -400,7 +400,28 @@
 			"CHECKING": "Ověřujeme vaši odpověď",
 			"RETRY_ANNOUNCEMENT": "Skoro. Načetla se nová skládačka a dílek je zpět na začátku.",
 			"REFRESH": "Jiná skládačka"
-		}
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Úloha s pořadím ikon",
+			"SELECT": "Vyberte v tomto pořadí",
+			"RETRY": "Skoro — zkuste to znovu",
+			"LEGEND_ALT": "Ikony k výběru, v daném pořadí",
+			"RESET": "Obnovit",
+			"CHECKING": "Ověřujeme…",
+			"SUBMIT": "OK"
+		},
+		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
+		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
+		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
+		"AUDIO_PLAY": "Play",
+		"AUDIO_REPLAY": "Play again",
+		"AUDIO_PLAYING": "Playing",
+		"AUDIO_FINISHED": "Playback finished",
+		"AUDIO_PLAYBACK_FAILED": "Audio could not be played. Check your device volume and try again.",
+		"AUDIO_INCORRECT": "That wasn't right. Here's a new one.",
+		"AUDIO_SUBMIT": "Verify",
+		"AUDIO_CHECKING": "Checking",
+		"AUDIO_ALTERNATIVE": "Use audio instead"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nepodařilo se zakódovat neplatnou adresu",

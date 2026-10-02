@@ -12,43 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { ProcaptchaProps } from "@prosopo/types";
+import { type WidgetMountFn, lazyMount } from "@prosopo/procaptcha-common";
 import type { ProcaptchaPuzzleHandle } from "./procaptchaWidget.js";
 
 export type { ProcaptchaPuzzleHandle };
 
-export type ProcaptchaPuzzleMountFn = (
-	container: HTMLElement,
-	props: ProcaptchaProps,
-) => ProcaptchaPuzzleHandle;
+export type ProcaptchaPuzzleMountFn = WidgetMountFn<ProcaptchaPuzzleHandle>;
 
-/**
- * Dynamic import so the puzzle widget lands in its own chunk, replacing the
- * `lazy()` + `<Suspense>` pair that used to provide the split.
- */
 export const loadProcaptchaPuzzle =
 	async (): Promise<ProcaptchaPuzzleMountFn> =>
 		(await import("./procaptchaWidget.js")).mountProcaptchaPuzzleWidget;
 
-export const mountProcaptchaPuzzle = (
-	container: HTMLElement,
-	props: ProcaptchaProps,
-): ProcaptchaPuzzleHandle => {
-	let destroyed = false;
-	let inner: ProcaptchaPuzzleHandle | undefined;
-
-	void loadProcaptchaPuzzle().then((mount: ProcaptchaPuzzleMountFn) => {
-		if (destroyed) {
-			return;
-		}
-		inner = mount(container, props);
-	});
-
-	return {
-		destroy: () => {
-			destroyed = true;
-			inner?.destroy();
-			inner = undefined;
-		},
-	};
-};
+export const mountProcaptchaPuzzle: ProcaptchaPuzzleMountFn =
+	lazyMount(loadProcaptchaPuzzle);

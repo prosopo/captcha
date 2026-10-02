@@ -20,11 +20,12 @@ import {
 } from "@prosopo/types";
 import { isPuzzleRenderAvailable } from "./puzzle/puzzleRenderer.js";
 
-/** The three concrete types a session can actually be minted as. */
+/** The concrete types a session can actually be minted as. */
 export type ConcreteCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
-	| CaptchaType.puzzle;
+	| CaptchaType.puzzle
+	| CaptchaType.iconOrder;
 
 /**
  * Resolve a requested captcha type against what the site permits and what
@@ -59,6 +60,7 @@ export const coerceToEnabledCaptchaType = (
 	// separately — a site with image off would otherwise be handed an image.
 	const puzzleAllowed = types.puzzle && isPuzzleRenderAvailable();
 	const imageAllowed = types.image;
+	const iconOrderAllowed = types.iconOrder;
 
 	const resolved = ((): ConcreteCaptchaType => {
 		switch (requested) {
@@ -72,6 +74,13 @@ export const coerceToEnabledCaptchaType = (
 			case CaptchaType.image:
 				if (imageAllowed) return CaptchaType.image;
 				return puzzleAllowed ? CaptchaType.puzzle : CaptchaType.pow;
+			// Only an explicit icon-order request is served icon-order: the
+			// branches above never fall back to it, which would hand users a
+			// harsher challenge than the one coerced away.
+			case CaptchaType.iconOrder:
+				if (iconOrderAllowed) return CaptchaType.iconOrder;
+				if (puzzleAllowed) return CaptchaType.puzzle;
+				return imageAllowed ? CaptchaType.image : CaptchaType.pow;
 		}
 	})();
 
@@ -84,6 +93,7 @@ export const coerceToEnabledCaptchaType = (
 				imageEnabled: types.image,
 				puzzleEnabled: types.puzzle,
 				puzzleRenderable: isPuzzleRenderAvailable(),
+				iconOrderEnabled: types.iconOrder,
 			},
 		}));
 	}

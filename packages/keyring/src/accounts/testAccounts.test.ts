@@ -23,22 +23,48 @@ import { getDefaultProviders, getDefaultSiteKeys } from "./testAccounts.js";
 const SLOW = { timeout: 60000 };
 
 describe("getDefaultSiteKeys", SLOW, () => {
-	it("provides one site per captcha type, in a stable order", () => {
+	const NAMES = [
+		"image",
+		"pow",
+		"frictionless",
+		"iconOrder",
+		"audio",
+		"puzzle",
+	];
+
+	it("provides one site per demo, in a stable order", () => {
 		expect(
 			getDefaultSiteKeys().map((site) => site.settings.captchaType),
 		).toEqual([
 			CaptchaType.image,
 			CaptchaType.pow,
 			CaptchaType.frictionless,
+			CaptchaType.iconOrder,
+			CaptchaType.image,
 			CaptchaType.puzzle,
 		]);
 	});
 
-	it("derives each site key from the dev phrase and its captcha type", () => {
+	it("never seeds a site with audio as its captcha type", () => {
+		for (const site of getDefaultSiteKeys()) {
+			expect(site.settings.captchaType).not.toBe(CaptchaType.audio);
+		}
+	});
+
+	it("turns the audio alternative on for the audio demos' site only", () => {
+		const enabled = getDefaultSiteKeys().map(
+			(site) => site.settings.audioAccessibilityEnabled,
+		);
+		expect(enabled).toEqual(NAMES.map((name) => name === "audio"));
+	});
+
+	it("derives each site key from the dev phrase and its seed name", () => {
 		// The seeded dev site keys are checked into fixtures and referenced by
 		// the demos, so the derivation must not drift.
-		for (const site of getDefaultSiteKeys()) {
-			expect(site.secret).toBe(`${DEV_PHRASE}//${site.settings.captchaType}`);
+		const sites = getDefaultSiteKeys();
+		expect(sites).toHaveLength(NAMES.length);
+		for (const [index, site] of sites.entries()) {
+			expect(site.secret).toBe(`${DEV_PHRASE}//${NAMES[index]}`);
 			expect(site.address).toBe(getPair(site.secret).address);
 			expect(site.pair?.address).toBe(site.address);
 		}
@@ -64,7 +90,7 @@ describe("getDefaultSiteKeys", SLOW, () => {
 		const second = getDefaultSiteKeys();
 		expect(first).not.toBe(second);
 		first.pop();
-		expect(second).toHaveLength(4);
+		expect(second).toHaveLength(NAMES.length);
 	});
 });
 

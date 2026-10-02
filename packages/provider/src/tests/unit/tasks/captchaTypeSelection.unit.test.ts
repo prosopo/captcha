@@ -21,10 +21,22 @@ import {
 	switchTypeAfterRefreshes,
 } from "../../../tasks/captchaTypeSelection.js";
 
-const BOTH: IFrictionlessTypes = { image: true, puzzle: true };
-const NO_IMAGE: IFrictionlessTypes = { image: false, puzzle: true };
-const NO_PUZZLE: IFrictionlessTypes = { image: true, puzzle: false };
-const NEITHER: IFrictionlessTypes = { image: false, puzzle: false };
+const BOTH: IFrictionlessTypes = { image: true, puzzle: true, iconOrder: true };
+const NO_IMAGE: IFrictionlessTypes = {
+	image: false,
+	puzzle: true,
+	iconOrder: true,
+};
+const NO_PUZZLE: IFrictionlessTypes = {
+	image: true,
+	puzzle: false,
+	iconOrder: false,
+};
+const NEITHER: IFrictionlessTypes = {
+	image: false,
+	puzzle: false,
+	iconOrder: false,
+};
 
 const ALL_TYPES: ConcreteCaptchaType[] = [
 	CaptchaType.pow,
@@ -33,6 +45,18 @@ const ALL_TYPES: ConcreteCaptchaType[] = [
 ];
 
 describe("coerceToEnabledCaptchaType", () => {
+	it("never serves icon-order to a site that has not turned it on", () => {
+		expect(
+			coerceToEnabledCaptchaType(CaptchaType.iconOrder, {
+				image: true,
+				puzzle: true,
+			}),
+		).toBe(CaptchaType.puzzle);
+		expect(coerceToEnabledCaptchaType(CaptchaType.iconOrder, undefined)).toBe(
+			CaptchaType.puzzle,
+		);
+	});
+
 	it("passes every type through untouched when both are enabled", () => {
 		for (const type of ALL_TYPES) {
 			expect(coerceToEnabledCaptchaType(type, BOTH)).toBe(type);
@@ -91,6 +115,20 @@ describe("coerceToEnabledCaptchaType", () => {
 		expect(
 			coerceToEnabledCaptchaType(CaptchaType.puzzle, { image: false }),
 		).toBe(CaptchaType.puzzle);
+	});
+
+	it("never hands out audio, which is only reachable as the accessibility alternative", () => {
+		const requested: ConcreteCaptchaType[] = [
+			...ALL_TYPES,
+			CaptchaType.iconOrder,
+		];
+		for (const settings of [BOTH, NO_IMAGE, NO_PUZZLE, NEITHER, undefined]) {
+			for (const type of requested) {
+				expect(coerceToEnabledCaptchaType(type, settings)).not.toBe(
+					CaptchaType.audio,
+				);
+			}
+		}
 	});
 
 	it("only ever narrows — coercion cannot introduce an interactive type", () => {

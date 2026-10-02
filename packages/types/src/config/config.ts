@@ -43,6 +43,12 @@ import {
 // Re-exported to consumers by ./index.js, not from here.
 import { PlacementEnum, type PlacementType, Placements } from "./placement.js";
 import {
+	DEFAULT_AUDIO_CAPTCHA_CACHED_TIMEOUT,
+	DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_AUDIO_CAPTCHA_VERIFIED_TIMEOUT,
+	DEFAULT_ICON_ORDER_CAPTCHA_CACHED_TIMEOUT,
+	DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_ICON_ORDER_CAPTCHA_VERIFIED_TIMEOUT,
 	DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
 	DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT,
@@ -177,6 +183,18 @@ const defaultPuzzleCaptchaTimeouts = {
 	cachedTimeout: DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT,
 };
 
+const defaultAudioCaptchaTimeouts = {
+	verifiedTimeout: DEFAULT_AUDIO_CAPTCHA_VERIFIED_TIMEOUT,
+	solutionTimeout: DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT,
+	cachedTimeout: DEFAULT_AUDIO_CAPTCHA_CACHED_TIMEOUT,
+};
+
+const defaultIconOrderCaptchaTimeouts = {
+	verifiedTimeout: DEFAULT_ICON_ORDER_CAPTCHA_VERIFIED_TIMEOUT,
+	solutionTimeout: DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT,
+	cachedTimeout: DEFAULT_ICON_ORDER_CAPTCHA_CACHED_TIMEOUT,
+};
+
 const defaultContractCaptchaTimeouts = {
 	maxVerifiedTime: DEFAULT_MAX_VERIFIED_TIME_CONTRACT,
 };
@@ -185,6 +203,8 @@ const defaultCaptchaTimeouts = {
 	image: defaultImageCaptchaTimeouts,
 	pow: defaultPoWCaptchaTimeouts,
 	puzzle: defaultPuzzleCaptchaTimeouts,
+	audio: defaultAudioCaptchaTimeouts,
+	iconOrder: defaultIconOrderCaptchaTimeouts,
 	contract: defaultContractCaptchaTimeouts,
 };
 
@@ -237,6 +257,34 @@ export const CaptchaTimeoutSchema = object({
 			.optional()
 			.default(DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT),
 	}).default(defaultPuzzleCaptchaTimeouts),
+	audio: object({
+		verifiedTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_AUDIO_CAPTCHA_VERIFIED_TIMEOUT),
+		solutionTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT),
+		cachedTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_AUDIO_CAPTCHA_CACHED_TIMEOUT),
+	}).default(defaultAudioCaptchaTimeouts),
+	iconOrder: object({
+		verifiedTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_ICON_ORDER_CAPTCHA_VERIFIED_TIMEOUT),
+		solutionTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT),
+		cachedTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_ICON_ORDER_CAPTCHA_CACHED_TIMEOUT),
+	}).default(defaultIconOrderCaptchaTimeouts),
 	contract: object({
 		maxVerifiedTime: number()
 			.positive()

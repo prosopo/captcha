@@ -27,6 +27,7 @@ import type {
 } from "./types.js";
 
 export { createPrng, createSeed, SEED_BYTES } from "./prng.js";
+export type { Prng } from "./prng.js";
 export { generateBackground } from "./background.js";
 export {
 	bestPairContrast,

@@ -18,6 +18,7 @@ export type DemoCaptchaType =
 	| CaptchaType.frictionless
 	| CaptchaType.pow
 	| CaptchaType.puzzle
+	| CaptchaType.iconOrder
 	| CaptchaType.image;
 
 export type DemoMode = "standard" | "invisible";
@@ -58,6 +59,11 @@ export const captchaTypeOptions: CaptchaTypeOption[] = [
 		value: CaptchaType.puzzle,
 		label: "Puzzle",
 		description: "Drag a piece into place.",
+	},
+	{
+		value: CaptchaType.iconOrder,
+		label: "Icon order",
+		description: "Click the icons in the order shown.",
 	},
 	{
 		value: CaptchaType.image,
@@ -159,6 +165,18 @@ export const demoPages: DemoPage[] = [
 		"invisible-puzzle-explicit.html",
 		CaptchaType.puzzle,
 		"invisible",
+		"explicit",
+	),
+	page(
+		"icon-order-implicit.html",
+		CaptchaType.iconOrder,
+		"standard",
+		"implicit",
+	),
+	page(
+		"icon-order-explicit.html",
+		CaptchaType.iconOrder,
+		"standard",
 		"explicit",
 	),
 	page("image-implicit.html", CaptchaType.image, "standard", "implicit"),

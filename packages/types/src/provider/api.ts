@@ -22,6 +22,7 @@ import {
 	boolean,
 	coerce,
 	type input,
+	literal,
 	nativeEnum,
 	number,
 	object,
@@ -93,6 +94,12 @@ export enum ClientApiPaths {
 	GetPuzzleCaptchaChallenge = "/v1/prosopo/provider/client/captcha/puzzle",
 	SubmitPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/solution",
 	VerifyPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/verify",
+	GetAudioCaptchaChallenge = "/v1/prosopo/provider/client/captcha/audio",
+	SubmitAudioCaptchaSolution = "/v1/prosopo/provider/client/audio/solution",
+	VerifyAudioCaptchaSolution = "/v1/prosopo/provider/client/audio/verify",
+	GetIconOrderCaptchaChallenge = "/v1/prosopo/provider/client/captcha/icon-order",
+	SubmitIconOrderCaptchaSolution = "/v1/prosopo/provider/client/icon-order/solution",
+	VerifyIconOrderCaptchaSolution = "/v1/prosopo/provider/client/icon-order/verify",
 	// Verify path for Web Bot Auth authenticated sessions. Only accepts tokens
 	// minted with captchaType=authenticated. Requires the operator to forward
 	// the client IP so the session's `ipAddress` binding can be enforced;
@@ -190,6 +197,27 @@ export const ProviderDefaultRateLimits = {
 		limit: 300,
 	},
 	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 15000,
+	},
+	[ClientApiPaths.GetAudioCaptchaChallenge]: { windowMs: 60000, limit: 300 },
+	[ClientApiPaths.SubmitAudioCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 300,
+	},
+	[ClientApiPaths.VerifyAudioCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 15000,
+	},
+	[ClientApiPaths.GetIconOrderCaptchaChallenge]: {
+		windowMs: 60000,
+		limit: 300,
+	},
+	[ClientApiPaths.SubmitIconOrderCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 300,
+	},
+	[ClientApiPaths.VerifyIconOrderCaptchaSolution]: {
 		windowMs: 60000,
 		limit: 15000,
 	},
@@ -314,12 +342,15 @@ export interface CaptchaIdAndProof {
  *   datasets).
  * - puzzleEvents: one per pointer move during a single drag, sampled at the
  *   display refresh rate, so a few hundred to a few thousand.
+ * - audioEvents: one per play, pause or key press.
  */
 export const REQUEST_ARRAY_LIMITS = {
 	datasetId: 64,
 	captchas: 256,
 	solution: 64,
 	puzzleEvents: 10_000,
+	iconOrderEvents: 10_000,
+	audioEvents: 512,
 } as const;
 
 export const CaptchaRequestBody = object({
@@ -497,11 +528,50 @@ export interface PuzzleCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.error]?: ApiJsonError;
 }
 
+/**
+ * Carries the clip, never the transcript: the answer stays on the challenge
+ * record, so there is no field a client could echo back.
+ */
+export interface GetAudioCaptchaResponse extends ApiResponse {
+	[ApiParams.challenge]: PoWChallengeId;
+	/** RIFF/WAVE clip as a data URI. */
+	[ApiParams.clip]: string;
+	/** How many digits the user must type. */
+	[ApiParams.characterCount]: number;
+	[ApiParams.timestamp]: string;
+	[ApiParams.signature]: {
+		[ApiParams.provider]: ChallengeSignature;
+	};
+}
+
+/**
+ * Imagery only: icon positions and click order stay on the challenge record,
+ * so the widget gets nothing it could echo back.
+ */
+export interface GetIconOrderCaptchaResponse extends ApiResponse {
+	[ApiParams.challenge]: PoWChallengeId;
+	/** Frame with targets and decoys composited, as a data URI. */
+	[ApiParams.background]: string;
+	/** Ordered legend strip on transparency, as a data URI. */
+	[ApiParams.legend]: string;
+	/** Edge length of one legend chip in px. */
+	[ApiParams.legendIconSize]: number;
+	[ApiParams.timestamp]: string;
+	[ApiParams.signature]: {
+		[ApiParams.provider]: ChallengeSignature;
+	};
+}
+
+export type AudioCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
+
+export type IconOrderCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
+
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.captchaType]:
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
+		| CaptchaType.iconOrder
 		| CaptchaType.authenticated;
 	[ApiParams.sessionId]?: string;
 	// Encoded honeypot question. NOT serialised by the provider on the wire
@@ -516,10 +586,15 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	// Only present when captchaType === "authenticated". Rendered by the
 	// widget's badge so the operator can see WHICH agent verified.
 	agent?: string;
+	// The site's `audioAccessibilityEnabled`, sent only with a visual challenge.
+	audioAlternativeAvailable?: boolean;
 }
 
 export interface PowCaptchaSolutionEscalation {
-	[ApiParams.captchaType]: CaptchaType.image | CaptchaType.puzzle;
+	[ApiParams.captchaType]:
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder;
 	[ApiParams.sessionId]: string;
 }
 
@@ -821,6 +896,115 @@ export type ServerPuzzleCaptchaVerifyRequestBodyType = zInfer<
 export type ServerPuzzleCaptchaVerifyRequestBodyOutput = output<
 	typeof ServerPuzzleCaptchaVerifyRequestBody
 >;
+
+/** `t` is milliseconds since the challenge was issued. */
+export const AudioEventSchema = object({
+	kind: union([
+		literal("play"),
+		literal("pause"),
+		literal("replay"),
+		literal("key"),
+	]),
+	t: number(),
+});
+
+export type AudioEvent = zInfer<typeof AudioEventSchema>;
+
+// The longest answer the settings allow is 8 digits; the margin absorbs
+// separators and whitespace the grader strips.
+const MAX_AUDIO_ANSWER_LENGTH = 32;
+
+export const SubmitAudioCaptchaSolutionBody = object({
+	[ApiParams.challenge]: PowChallengeIdSchema,
+	[ApiParams.answer]: string().max(MAX_AUDIO_ANSWER_LENGTH),
+	[ApiParams.replays]: number().int().min(0).max(1000).optional(),
+	[ApiParams.audioEvents]: boundedArray(
+		AudioEventSchema,
+		REQUEST_ARRAY_LIMITS.audioEvents,
+	).optional(),
+	[ApiParams.signature]: object({
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.challenge]: boundedString(INPUT_LIMITS.TOKEN),
+		}),
+	}),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
+});
+
+/**
+ * Grading needs exactly one click per target, so this only has to clear the
+ * largest possible target count; it stops a client submitting a grid of
+ * points for the hit test to search.
+ */
+export const MAX_ICON_CLICKS = 10;
+
+export const GetIconOrderCaptchaChallengeRequestBody =
+	GetPuzzleCaptchaChallengeRequestBody;
+
+export type GetIconOrderCaptchaChallengeRequestBodyType =
+	GetPuzzleCaptchaChallengeRequestBodyType;
+
+export type GetIconOrderCaptchaChallengeRequestBodyTypeOutput =
+	GetPuzzleCaptchaChallengeRequestBodyTypeOutput;
+
+export const IconOrderEventSchema = PuzzleEventSchema;
+
+export type IconOrderEvent = PuzzleEvent;
+
+/** One click in background pixels; its index in `clicks` is its order. */
+export const IconClickSchema = object({
+	x: number(),
+	y: number(),
+});
+
+export type IconClick = zInfer<typeof IconClickSchema>;
+
+export const SubmitIconOrderCaptchaSolutionBody = object({
+	[ApiParams.challenge]: PowChallengeIdSchema,
+	[ApiParams.clicks]: boundedArray(IconClickSchema, MAX_ICON_CLICKS),
+	[ApiParams.iconOrderEvents]: boundedArray(
+		IconOrderEventSchema,
+		REQUEST_ARRAY_LIMITS.iconOrderEvents,
+	),
+	[ApiParams.signature]: object({
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.challenge]: boundedString(INPUT_LIMITS.TOKEN),
+		}),
+	}),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
+});
+
+export type SubmitIconOrderCaptchaSolutionBodyType = input<
+	typeof SubmitIconOrderCaptchaSolutionBody
+>;
+
+export type SubmitIconOrderCaptchaSolutionBodyTypeOutput = output<
+	typeof SubmitIconOrderCaptchaSolutionBody
+>;
+
+export const ServerIconOrderCaptchaVerifyRequestBody =
+	ServerPuzzleCaptchaVerifyRequestBody;
+
+export type ServerIconOrderCaptchaVerifyRequestBodyType =
+	ServerPuzzleCaptchaVerifyRequestBodyType;
+
+export type ServerIconOrderCaptchaVerifyRequestBodyOutput =
+	ServerPuzzleCaptchaVerifyRequestBodyOutput;
 
 export const VerifyPowCaptchaSolutionBody = object({
 	[ApiParams.siteKey]: boundedString(INPUT_LIMITS.ID),

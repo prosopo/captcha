@@ -1,0 +1,101 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import { builtinModules } from "node:module";
+import { loadEnv } from "@prosopo/dotenv";
+import { defineConfig } from "cypress";
+import { configureVisualRegression } from "cypress-visual-regression";
+import vitePreprocessor from "cypress-vite";
+
+loadEnv();
+
+const allExternal = [
+	...builtinModules,
+	...builtinModules.map((m) => `node:${m}`),
+];
+
+export default defineConfig({
+	video: true,
+	screenshotsFolder: "./cypress/snapshots/actual",
+	trashAssetsBeforeRuns: true,
+	headers: { "Accept-Encoding": "gzip, deflate" },
+	expose: {
+		...process.env,
+		// Its signup form posts to /signup, which runs prosopoServer.isVerified().
+		default_page: "/audio-implicit.html",
+		visualRegressionType: "regression",
+		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
+		visualRegressionDiffDirectory: "cypress/snapshots/diff",
+		visualRegressionGenerateDiff: "fail",
+		visualRegressionFailSilently: false,
+	},
+	e2e: {
+		setupNodeEvents(on, config) {
+			configureVisualRegression(on);
+			on(
+				"file:preprocessor",
+				vitePreprocessor({
+					watch: false,
+					esbuild: {
+						platform: "browser",
+					},
+					server: {
+						host: true,
+					},
+					build: {
+						ssr: false,
+						modulePreload: { polyfill: true },
+						rollupOptions: {
+							external: allExternal,
+						},
+					},
+					plugins: [],
+				}),
+			);
+			on("task", {
+				log(message) {
+					console.log(message);
+					return null;
+				},
+
+				// Cypress cannot listen to the clip, so it reads the answer from
+				// the provider's database rather than the provider growing a
+				// "make any answer pass" backdoor.
+				async audioAnswer({ challenge }) {
+					const { MongoClient } = await import("mongodb");
+					const uri = `mongodb://${process.env.PROSOPO_DATABASE_USERNAME}:${process.env.PROSOPO_DATABASE_PASSWORD}@${process.env.PROSOPO_DATABASE_HOST}:${process.env.PROSOPO_DATABASE_PORT}/?authSource=admin`;
+					const client = new MongoClient(uri);
+					try {
+						await client.connect();
+						const record = await client
+							.db(process.env.PROSOPO_DATABASE_NAME)
+							// Mongoose's pluralised name, not the TableNames value.
+							.collection("audiocaptchas")
+							.findOne({ challenge });
+						return record?.answer ?? null;
+					} finally {
+						await client.close();
+					}
+				},
+			});
+		},
+		specPattern: ["cypress/e2e/**/audio.cy.ts"],
+	},
+	component: {
+		devServer: {
+			framework: "create-react-app",
+			bundler: "vite",
+		},
+	},
+});

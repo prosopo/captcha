@@ -21,16 +21,35 @@ import {
 import { DEV_PHRASE } from "../keyring/index.js";
 import { getPair } from "./getPair.js";
 
+/** `name` derives the key and matches the demos' `PROSOPO_SITE_KEY_<NAME>`. */
+interface SiteKeySeed {
+	name: string;
+	captchaType: CaptchaType;
+	audioAccessibilityEnabled: boolean;
+}
+
+const seed = (
+	captchaType: CaptchaType,
+	name: string = captchaType,
+	audioAccessibilityEnabled = false,
+): SiteKeySeed => ({ name, captchaType, audioAccessibilityEnabled });
+
 export function getDefaultSiteKeys(): ISite[] {
-	const captchaTypes = [
-		CaptchaType.image,
-		CaptchaType.pow,
-		CaptchaType.frictionless,
-		CaptchaType.puzzle,
+	const seeds: SiteKeySeed[] = [
+		seed(CaptchaType.image),
+		seed(CaptchaType.pow),
+		seed(CaptchaType.frictionless),
+		// Before `puzzle`: `updateDemoHTMLFiles` leaves the last-seeded type's
+		// sitekey in the webview demos, which must stay puzzle.
+		seed(CaptchaType.iconOrder),
+		// Audio is not selectable, so the audio demos' key is an image site
+		// with the alternative on.
+		seed(CaptchaType.image, "audio", true),
+		seed(CaptchaType.puzzle),
 	];
 	const sites: ISite[] = [];
-	for (const captchaType of captchaTypes) {
-		const secret = `${DEV_PHRASE}//${captchaType}`;
+	for (const { name, captchaType, audioAccessibilityEnabled } of seeds) {
+		const secret = `${DEV_PHRASE}//${name}`;
 		const pair = getPair(secret);
 		// Settings are written explicitly rather than relying on schema defaults
 		// so dev seeds are self-describing and stay stable when defaults change.
@@ -40,9 +59,13 @@ export function getDefaultSiteKeys(): ISite[] {
 			secret: secret,
 			settings: ClientSettingsSchema.parse({
 				captchaType: captchaType,
+				audioAccessibilityEnabled,
 				domains: ["localhost"],
 				imageMaxRounds: 2,
 				frictionlessThreshold: 0.8,
+				...(captchaType === CaptchaType.iconOrder && {
+					frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+				}),
 			}),
 		});
 	}

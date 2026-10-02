@@ -17,13 +17,20 @@ import {
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaType,
+	type GetAudioCaptchaResponse,
 	type GetFrictionlessCaptchaResponse,
+	type GetIconOrderCaptchaResponse,
 	type GetPowCaptchaResponse,
 	type GetPuzzleCaptchaResponse,
 	POW_SEPARATOR,
 	type PoWChallengeId,
 	type VerificationResponse,
 } from "@prosopo/types";
+import {
+	renderAudioClip,
+	resolveAudioRenderSettings,
+} from "../../tasks/audio/audioRenderer.js";
+import { renderIconOrderImages } from "../../tasks/iconOrder/iconOrderRenderer.js";
 import { renderPuzzleImages } from "../../tasks/puzzle/puzzleRenderer.js";
 
 // Maintenance mode dummies. The matching submit/verify endpoints already
@@ -69,7 +76,11 @@ export const buildMaintenanceVerificationResponse = (
 });
 
 export const buildFrictionlessMaintenanceResponse = (
-	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle,
+	captchaType:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder,
 	host: string | undefined,
 ): GetFrictionlessCaptchaResponse => ({
 	[ApiParams.captchaType]: captchaType,
@@ -126,6 +137,47 @@ export const buildPuzzleMaintenanceResponse = async (
 		[ApiParams.pieceSize]: images.pieceSize,
 		[ApiParams.originX]: 60,
 		[ApiParams.originY]: 100,
+		[ApiParams.timestamp]: timestamp.toString(),
+		[ApiParams.signature]: {
+			[ApiParams.provider]: { [ApiParams.challenge]: "" },
+		},
+	};
+};
+
+// A real clip so the widget plays normally; the answer is discarded because
+// maintenance mode accepts every submission.
+export const buildAudioMaintenanceResponse = async (
+	user: string,
+	dapp: string,
+): Promise<GetAudioCaptchaResponse> => {
+	const timestamp = Date.now();
+	const rendered = renderAudioClip(resolveAudioRenderSettings());
+	return {
+		[ApiParams.status]: "ok",
+		[ApiParams.challenge]: buildChallenge(user, dapp),
+		[ApiParams.clip]: rendered.clip,
+		[ApiParams.characterCount]: rendered.characterCount,
+		[ApiParams.timestamp]: timestamp.toString(),
+		[ApiParams.signature]: {
+			[ApiParams.provider]: { [ApiParams.challenge]: "" },
+		},
+	};
+};
+
+// Rendered for real, like the puzzle response above. The targets are
+// discarded: nothing is graded in maintenance mode.
+export const buildIconOrderMaintenanceResponse = async (
+	user: string,
+	dapp: string,
+): Promise<GetIconOrderCaptchaResponse> => {
+	const timestamp = Date.now();
+	const images = await renderIconOrderImages();
+	return {
+		[ApiParams.status]: "ok",
+		[ApiParams.challenge]: buildChallenge(user, dapp),
+		[ApiParams.background]: images.background,
+		[ApiParams.legend]: images.legend,
+		[ApiParams.legendIconSize]: images.legendIconSize,
 		[ApiParams.timestamp]: timestamp.toString(),
 		[ApiParams.signature]: {
 			[ApiParams.provider]: { [ApiParams.challenge]: "" },

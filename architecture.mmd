@@ -29,6 +29,8 @@ graph TB
             ImageCaptcha["Image Captcha<br/>select matching images"]
             PoW["Proof of Work<br/>compute hash puzzle"]
             PuzzleCaptcha["Puzzle Captcha<br/>drag the piece into the notch"]
+            IconOrderCaptcha["Icon Order Captcha<br/>click the legend icons in order"]
+            AudioCaptcha["Audio Captcha<br/>type the spoken digits<br/>(accessibility alternative)"]
         end
     end
 
@@ -55,6 +57,12 @@ graph TB
             ImageVerifyEP["POST .../client/image/dapp/verify"]
             PowVerifyEP["POST .../client/pow/verify"]
             PuzzleVerifyEP["POST .../client/puzzle/verify"]
+            IconOrderChallengeEP["POST .../client/captcha/icon-order"]
+            IconOrderSolutionEP["POST .../client/icon-order/solution"]
+            IconOrderVerifyEP["POST .../client/icon-order/verify"]
+            AudioChallengeEP["POST .../client/captcha/audio"]
+            AudioSolutionEP["POST .../client/audio/solution"]
+            AudioVerifyEP["POST .../client/audio/verify"]
             AuthVerifyEP["POST .../client/authenticated/verify<br/>(authenticated frictionless session)"]
             UnroutedEP["declared, no handler:<br/>.../client/status, .../client/events"]
             SpamEmailEP["POST .../client/spam/email"]
@@ -79,6 +87,9 @@ graph TB
             ImgTasks["Image Captcha Manager"]
             PowTasks["PoW Captcha Manager"]
             PuzzleTasks["Puzzle Captcha Manager"]
+            IconOrderTasks["Icon Order Captcha Manager"]
+            AudioTasks["Audio Captcha Manager"]
+            InteractiveBase["InteractiveCaptchaManager<br/>(shared base: challenge minting,<br/>single-use submit + bookkeeping,<br/>server verify pipeline)"]
             FrictionlessTasks["Frictionless Manager"]
             DetectorPool["Detector Bundle Pool<br/>(precomputed bundles loaded<br/>from disk; empty pool ⇒ no<br/>detection ⇒ PoW fallback)"]
             SolutionVerifier["Solution Verifier<br/>Merkle tree + salt embedding<br/>repeated pointer positions / keyboard with a position → reject"]
@@ -139,7 +150,7 @@ graph TB
     WebBotAuth -.->|"fetch JWKS<br/>(no timeout)"| AgentJwks["Agent JWKS host<br/>(external, caller-named)"]
     FrictionlessTasks --> Redis
     FrictionlessTasks -->|"1. handleAccessPolicy<br/>(captchaType override)"| AccessPolicies
-    FrictionlessTasks -->|"2. handleFrictionlessTrafficFilter<br/>(block → 401, challenge →<br/>dispatch send{Image,Pow,Puzzle})"| TrafficFilter
+    FrictionlessTasks -->|"2. handleFrictionlessTrafficFilter<br/>(block → 401, challenge →<br/>dispatch send{Image,Pow,Puzzle,IconOrder})"| TrafficFilter
     FrictionlessTasks -->|"3. runDecisionMachine<br/>(score-based routing)"| DecisionMachine
     FrictionlessTasks -->|human detected| Manager
     FrictionlessTasks -->|bot suspected| ImageCaptcha
@@ -205,6 +216,53 @@ graph TB
     PuzzleTasks -->|"checkForHardBlock +<br/>deferToVerify block"| AccessPolicies
     PuzzleTasks -->|signed token| Manager
 
+    %% ===== ICON ORDER FLOW =====
+    %% Icon-order is never reached from the score ladder. It is served only
+    %% when something names it (site-wide captchaType, Restrict rule,
+    %% traffic-filter policy, routing machine) AND the site has opted in via
+    %% frictionlessTypes.iconOrder; otherwise it is coerced to puzzle.
+    Manager -->|"configured / routed: icon-order"| IconOrderCaptcha
+    IconOrderCaptcha -->|get challenge| IconOrderChallengeEP
+    IconOrderChallengeEP -->|"1. AccessPolicy lookup"| AccessPolicies
+    IconOrderChallengeEP -->|"2. applyTrafficFilterAtRequestTime<br/>(challenge → iconOrderTolerance +<br/>render overrides; same non-401<br/>handling as the puzzle flow)"| TrafficFilter
+    IconOrderChallengeEP --> IconOrderTasks
+    IconOrderTasks -->|"render, then store targets<br/>before responding (the render<br/>decides the answer)"| MongoDB
+    IconOrderTasks -->|"background + legend strip only.<br/>Target positions are never serialised"| IconOrderCaptcha
+    IconOrderCaptcha -->|"ordered clicks<br/>+ behavioural data"| IconOrderSolutionEP
+    IconOrderSolutionEP --> IconOrderTasks
+    IconOrderTasks -->|"claim the single submission,<br/>THEN grade clicks against<br/>stored targets (order-sensitive)"| MongoDB
+    IconOrderTasks -->|"resolveTrafficFilterCheck<br/>(block matches → disapprove)"| TrafficFilter
+    IconOrderTasks -->|"checkForHardBlock +<br/>deferToVerify block"| AccessPolicies
+    IconOrderTasks -->|signed token| Manager
+
+    %% ===== AUDIO FLOW =====
+    %% Audio is an accessibility alternative, not a routable type. A site
+    %% opts in with audioAccessibilityEnabled; the visual widgets (image,
+    %% puzzle, icon-order) then show a "use audio instead" control, and only
+    %% a user who presses it is served audio.
+    ImageCaptcha -->|"use audio instead<br/>(audioAccessibilityEnabled)"| AudioCaptcha
+    PuzzleCaptcha -->|"use audio instead<br/>(audioAccessibilityEnabled)"| AudioCaptcha
+    IconOrderCaptcha -->|"use audio instead<br/>(audioAccessibilityEnabled)"| AudioCaptcha
+    AudioCaptcha -->|get challenge| AudioChallengeEP
+    AudioChallengeEP -->|"1. AccessPolicy lookup"| AccessPolicies
+    AudioChallengeEP -->|"2. applyTrafficFilterAtRequestTime"| TrafficFilter
+    AudioChallengeEP --> AudioTasks
+    AudioTasks -->|"synthesise clip, store the transcript.<br/>The answer is never serialised"| MongoDB
+    AudioTasks -->|"WAV data URI + digit count only"| AudioCaptcha
+    AudioCaptcha -->|"typed digits + replays<br/>+ behavioural data"| AudioSolutionEP
+    AudioSolutionEP --> AudioTasks
+    AudioTasks -->|"claim the single submission,<br/>THEN grade (exact match,<br/>separators stripped)"| MongoDB
+    AudioTasks -->|signed token| Manager
+
+    %% ===== SHARED INTERACTIVE PIPELINE =====
+    %% Puzzle and icon-order differ only in how a challenge is drawn and
+    %% graded. Their challenge, solution and verify endpoints share handlers
+    %% too (interactiveCaptchaChallenge / interactiveCaptchaSolution /
+    %% interactiveVerifyHandler).
+    PuzzleTasks -.->|extends| InteractiveBase
+    IconOrderTasks -.->|extends| InteractiveBase
+    AudioTasks -.->|extends| InteractiveBase
+
     %% ===== TOKEN TO BACKEND =====
     Manager -->|"ProcaptchaToken<br/>(hex-encoded)"| EndUser
     EndUser -->|"submit form + token"| DappBackend
@@ -214,18 +272,26 @@ graph TB
     ServerPkg -->|"verify image token<br/>(+ optional clientSessionId)"| ImageVerifyEP
     ServerPkg -->|"verify pow token<br/>(+ optional clientSessionId)"| PowVerifyEP
     ServerPkg -->|"verify puzzle token<br/>(+ optional clientSessionId)"| PuzzleVerifyEP
+    ServerPkg -->|"verify icon-order token<br/>(+ optional clientSessionId)"| IconOrderVerifyEP
+    ServerPkg -->|"verify audio token<br/>(+ optional clientSessionId)"| AudioVerifyEP
     ServerPkg -->|"verify authenticated session"| AuthVerifyEP
     VerifyChecks["Verify handler checks, in order:<br/>1. maintenance mode: verified true (fail open)<br/>2. test site key: fixed verdict<br/>3. token issued by another provider:<br/>forward to it (allowlisted provider list),<br/>BEFORE the signature check<br/>4. client record exists<br/>5. dappSignature over the token<br/>timestamp, by the site key"]
     ImageVerifyEP --- VerifyChecks
     PowVerifyEP --- VerifyChecks
     PuzzleVerifyEP --- VerifyChecks
+    IconOrderVerifyEP --- VerifyChecks
+    AudioVerifyEP --- VerifyChecks
     VerifyChecks -.->|"forward verify"| OtherProvider["Issuing provider<br/>(from provider list)"]
     ImageVerifyEP -->|decode token, check commitment| MongoDB
     PowVerifyEP -->|decode token, check proof| MongoDB
     PuzzleVerifyEP -->|decode token, check placement| MongoDB
+    IconOrderVerifyEP -->|decode token, check click order| MongoDB
+    AudioVerifyEP -->|decode token, check transcript| MongoDB
     ImageVerifyEP -->|"verified: true/false"| ServerPkg
     PowVerifyEP -->|"verified: true/false"| ServerPkg
     PuzzleVerifyEP -->|"verified: true/false"| ServerPkg
+    IconOrderVerifyEP -->|"verified: true/false"| ServerPkg
+    AudioVerifyEP -->|"verified: true/false"| ServerPkg
     ServerPkg -->|grant or deny access| DappBackend
 
     %% ===== ADMIN =====
@@ -257,9 +323,9 @@ graph TB
     classDef external fill:#eceff1,stroke:#546e6a,color:#000
 
     class Developer,EndUser actor
-    class Widget,Manager,LB,Detector,Fingerprint,Behavioral,Frictionless,ImageCaptcha,PoW,PuzzleCaptcha browser
-    class Healthz,Details,FrictionlessEP,ImageChallengeEP,ImageSolutionEP,PowChallengeEP,PowSolutionEP,PuzzleChallengeEP,PuzzleSolutionEP,ImageVerifyEP,PowVerifyEP,PuzzleVerifyEP,SpamEmailEP,DetectorAssignEP,AuthVerifyEP,UnroutedEP,MetricsEP,Middleware,VerifyChecks,SessionGetEP,CountersClearEP,SiteKeyMgmt,DetectorPoolMgmt,DecisionMachineMgmt,MaintenanceToggle,RulesCRUD provider
-    class ImgTasks,PowTasks,PuzzleTasks,FrictionlessTasks,SolutionVerifier,DecisionMachine,DetectorPool,AccessPolicies,TrafficFilter,SpamFilter,WebBotAuth provider
+    class Widget,Manager,LB,Detector,Fingerprint,Behavioral,Frictionless,ImageCaptcha,PoW,PuzzleCaptcha,IconOrderCaptcha,AudioCaptcha browser
+    class Healthz,Details,FrictionlessEP,ImageChallengeEP,ImageSolutionEP,PowChallengeEP,PowSolutionEP,PuzzleChallengeEP,PuzzleSolutionEP,IconOrderChallengeEP,IconOrderSolutionEP,AudioChallengeEP,AudioSolutionEP,ImageVerifyEP,PowVerifyEP,PuzzleVerifyEP,IconOrderVerifyEP,AudioVerifyEP,SpamEmailEP,DetectorAssignEP,AuthVerifyEP,UnroutedEP,MetricsEP,Middleware,VerifyChecks,SessionGetEP,CountersClearEP,SiteKeyMgmt,DetectorPoolMgmt,DecisionMachineMgmt,MaintenanceToggle,RulesCRUD provider
+    class ImgTasks,PowTasks,PuzzleTasks,IconOrderTasks,AudioTasks,InteractiveBase,FrictionlessTasks,SolutionVerifier,DecisionMachine,DetectorPool,AccessPolicies,TrafficFilter,SpamFilter,WebBotAuth provider
     class MongoDB,Redis,Dataset storage
     class ServerPkg,DappBackend backend
     class ProviderList,AgentJwks,OtherProvider,Scraper external
