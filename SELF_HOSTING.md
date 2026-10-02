@@ -23,9 +23,10 @@ fills in everything else from the hostname you give it.
 ```bash
 git clone https://github.com/prosopo/captcha
 cd captcha
-npm ci
+corepack enable
+pnpm install --frozen-lockfile
 
-npx tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
+pnpm exec tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
 ```
 
 ```
@@ -92,11 +93,11 @@ and `reason` from the verification response — use `enterprise` if you want the
 The CDN bundle is compiled to talk to Prosopo's fleet, so build your own with `PROSOPO_PROVIDER_LIST` baked in:
 
 ```bash
-npm run build:all
+pnpm run build:all
 
 NODE_ENV=production \
 PROSOPO_PROVIDER_LIST=https://captcha.example.com \
-npm run -w @prosopo/procaptcha-bundle bundle
+pnpm --filter @prosopo/procaptcha-bundle run bundle
 ```
 
 A widget built this way never contacts Prosopo — it skips the hosted provider list and the `/healthz` discovery call
@@ -122,7 +123,7 @@ The CAPTCHA type comes from the site key record, not the page.
 A dataset holds image **URLs**, not images. You host the images yourself and the dataset points at them.
 
 ```bash
-npm run -w @prosopo/datasets-fs build
+pnpm --filter @prosopo/datasets-fs run build
 cd packages/datasets-fs
 
 node dist/cli.js flatten --in ./data --out ./flat --overwrite

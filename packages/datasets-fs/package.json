@@ -5,17 +5,16 @@
 	"license": "Apache-2.0",
 	"private": false,
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
 		"cli": "node ./dist/cli.js"
 	},
 	"main": "dist/index.js",
@@ -30,11 +29,11 @@
 	},
 	"dependencies": {
 		"@noble/hashes": "2.4.0",
-		"@prosopo/common": "3.1.61",
-		"@prosopo/logger": "2.1.2",
-		"@prosopo/types": "5.12.0",
-		"@prosopo/util": "3.3.13",
-		"@prosopo/util-crypto": "13.6.0",
+		"@prosopo/common": "workspace:*",
+		"@prosopo/logger": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
+		"@prosopo/util-crypto": "workspace:*",
 		"bcrypt": "6.0.0",
 		"cli-progress": "3.12.0",
 		"sharp": "0.35.4",
@@ -42,10 +41,11 @@
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.2",
+		"@prosopo/config": "workspace:*",
 		"@types/bcrypt": "6.0.0",
 		"@types/cli-progress": "3.11.6",
 		"@types/node": "22.10.2",
+		"@types/yargs": "17.0.33",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",

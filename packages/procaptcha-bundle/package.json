@@ -7,8 +7,7 @@
 	"type": "module",
 	"sideEffects": false,
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"exports": {
 		".": {
@@ -25,7 +24,7 @@
 	"source": "./src/index.tsx",
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
@@ -35,17 +34,17 @@
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode $NODE_ENV --host",
 		"bundle:webpack": "NODE_ENV=${NODE_ENV:-development}; MODE=${MODE:-$NODE_ENV}; webpack build --config webpack.config.cjs --mode $MODE",
 		"serve": "NODE_ENV=${NODE_ENV:-development}; vite serve --config vite.serve.config.ts --mode $NODE_ENV --host",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts"
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts"
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
-		"@prosopo/dotenv": "3.0.59",
-		"@prosopo/locale": "3.6.2",
-		"@prosopo/procaptcha-common": "2.18.2",
-		"@prosopo/procaptcha-frictionless": "2.18.7",
-		"@prosopo/types": "5.12.0",
-		"@prosopo/util": "3.3.13",
-		"@prosopo/widget-skeleton": "2.10.1",
+		"@prosopo/dotenv": "workspace:*",
+		"@prosopo/locale": "workspace:*",
+		"@prosopo/procaptcha-common": "workspace:*",
+		"@prosopo/procaptcha-frictionless": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
+		"@prosopo/widget-skeleton": "workspace:*",
 		"dotenv": "16.4.5",
 		"fast-glob": "3.3.3",
 		"jsdom": "25.0.0"
@@ -64,7 +63,9 @@
 		"registry": "https://registry.npmjs.org"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.2",
+		"@polkadot/x-textdecoder": "14.0.3",
+		"@polkadot/x-textencoder": "14.0.3",
+		"@prosopo/config": "workspace:*",
 		"@types/jsdom": "30.0.0",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",
@@ -75,7 +76,9 @@
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
 		"vite": "8.1.5",
-		"vitest": "4.1.11"
+		"vitest": "4.1.11",
+		"webpack": "5.110.3",
+		"webpack-cli": "7.2.3"
 	},
 	"overrides": {
 		"@types/react": "19.3.0"

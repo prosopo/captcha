@@ -53,14 +53,14 @@ jobs:
           token: ${{ secrets.PROSOPONATOR_PAT }}
           submodules: "recursive"
 
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: 'pnpm'
 
-      - uses: prosopo/github_actions/.github/actions/npm@a8f2d18145fedb774d5aacbde7b617c6c8852475 # main
-        with:
-          npm_ci_args: '--include=dev --no-audit --no-fund --prefer-offline'
+      - run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Setup certs
         run: |
@@ -83,7 +83,7 @@ jobs:
           sed -i 's|http://localhost|https://localhost|g' packages/procaptcha-bundle/.env.test
           sed -i '/^PROSOPO_VERIFICATION_TYPE=/s/=.*/=local/' demos/client-example-server/.env.test
 
-      - run: npx turbo run build
+      - run: pnpm exec turbo run build
 
       - name: Start the docker images
         run: |
@@ -91,29 +91,29 @@ jobs:
           docker container ls
           sleep 10s
 
-      - run: NODE_ENV="test" npm run setup
+      - run: NODE_ENV="test" pnpm run setup
 
-      - run: NODE_ENV="development" npx turbo run @prosopo/procaptcha-bundle#bundle
+      - run: NODE_ENV="development" pnpm exec turbo run @prosopo/procaptcha-bundle#bundle
 
       - name: Regenerate image baselines
         if: contains(inputs.configs, 'image')
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:baselines:image" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:baselines:image" --success "first" --kill-others
 
       - name: Regenerate frictionless baselines
         if: contains(inputs.configs, 'frictionless')
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:baselines:frictionless" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:baselines:frictionless" --success "first" --kill-others
 
       - name: Regenerate pow baselines
         if: contains(inputs.configs, 'pow')
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:baselines:pow" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:baselines:pow" --success "first" --kill-others
 
       - name: Regenerate invisible baselines
         if: contains(inputs.configs, 'invisible')
         run: |
-          npx concurrently "npm run start:server" "npm run start:provider:admin" "npm run start:bundle" "npm run serve:bundle" "npx tsx ./demos/cypress-shared/scripts/wait-for-services.ts && npm -w @prosopo/cypress-shared run cypress:baselines:invisible" --success "first" --kill-others
+          pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:baselines:invisible" --success "first" --kill-others
 
       - run: docker compose --file ./docker/docker-compose.test.yml down
         if: always()

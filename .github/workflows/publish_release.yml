@@ -14,8 +14,8 @@ on:
 permissions:
   contents: write
   packages: write
-  # Required so npm CLI can mint an OIDC token for trusted publishing.
-  # Without this, `npm publish` falls back to legacy NPM_TOKEN auth.
+  # Required so pnpm can mint an OIDC token for trusted publishing.
+  # Without this, `pnpm publish` falls back to legacy NPM_TOKEN auth.
   # See https://docs.npmjs.com/trusted-publishers
   id-token: write
 
@@ -57,10 +57,12 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/v{0}', inputs.version) || github.ref }}
 
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Log in to Docker Hub
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
@@ -90,23 +92,23 @@ jobs:
         # This turns that into a failure before anything is published. It
         # catches the two ways a package is unpublishable: a first publish
         # (trusted publishing cannot bootstrap a package that does not exist
-        # yet, and npm reports it as a misleading ENEEDAUTH) and a private
+        # yet, and the registry rejects it with a misleading auth error) and a private
         # workspace package leaked into a published package's runtime deps.
         run: node .github/scripts/check-publishable.mjs
 
-      - run: npm ci --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
+      - run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
 
       - name: Build packages
         run: |
           echo "Building all packages in production mode"
-          NODE_ENV=production npm run build:all:tsc
-          NODE_ENV=production npm run build:all
-          NODE_ENV=production npm run build:all:cjs
+          NODE_ENV=production pnpm run build:all:tsc
+          NODE_ENV=production pnpm run build:all
+          NODE_ENV=production pnpm run build:all:cjs
 
       - name: Bundle the production provider CLI
         run: |
           echo "Bundling provider CLI"
-          NODE_ENV="production" npm run -w @prosopo/cli bundle
+          NODE_ENV="production" pnpm --filter @prosopo/cli run bundle
 
       - name: Verify production build
         run: |
@@ -122,7 +124,7 @@ jobs:
           echo "✅ Build verification passed"
 
       - name: Publish to npm
-        # Trusted publishing: npm CLI auto-exchanges the GitHub OIDC token
+        # Trusted publishing: pnpm auto-exchanges the GitHub OIDC token
         # (granted via `id-token: write` above) for a short-lived registry
         # token. No NPM_TOKEN secret required. Each workspace package must
         # be registered as a trusted publisher on npmjs.com pointing at
@@ -136,14 +138,17 @@ jobs:
         # registry and only publishes packages whose local version is
         # ahead of npm.
         #
-        # NPM_CONFIG_PROVENANCE=true is the env-var form of
-        # `npm publish --provenance`; changeset publish delegates to npm
-        # CLI and inherits the flag, so each tarball gets a Sigstore
-        # attestation linking it to this workflow run. Provenance
-        # verification requires `repository.url` on every published
-        # manifest to match the OIDC claim.
+        # changeset publish runs `pnpm publish` because pnpm-lock.yaml sits at
+        # the repo root; `npm publish` would ship the literal `workspace:*`
+        # specifiers, which pnpm replaces with the real versions.
+        #
+        # PNPM_CONFIG_PROVENANCE=true is the env-var form of
+        # `pnpm publish --provenance` (pnpm 11 ignores NPM_CONFIG_*), so each
+        # tarball gets a Sigstore attestation linking it to this workflow run.
+        # Provenance verification requires `repository.url` on every
+        # published manifest to match the OIDC claim.
         env:
-          NPM_CONFIG_PROVENANCE: 'true'
+          PNPM_CONFIG_PROVENANCE: 'true'
         run: |
           # A version npm is still running its automated review over is
           # "staged": uploaded, not yet servable, and impossible to publish
@@ -157,7 +162,7 @@ jobs:
           # error still fails the job.
           set -o pipefail
           echo "Publishing changed packages via @changesets/cli"
-          if npx @changesets/cli publish 2>&1 | tee /tmp/changeset-publish.log; then
+          if pnpm exec changeset publish 2>&1 | tee /tmp/changeset-publish.log; then
             exit 0
           fi
           if grep -q "Cannot publish over previously staged version" /tmp/changeset-publish.log; then
@@ -169,19 +174,19 @@ jobs:
       - name: Publish production image to Docker Hub
         run: |
           echo "Publishing production provider image to Docker Hub"
-          NODE_ENV="production" npm run -w @prosopo/cli build:docker
-          NODE_ENV="production" npm run -w @prosopo/cli publish:docker
+          NODE_ENV="production" pnpm --filter @prosopo/cli run build:docker
+          NODE_ENV="production" pnpm --filter @prosopo/cli run publish:docker
 
       - name: Bundle the staging provider CLI
         run: |
           echo "Bundling provider CLI"
-          NODE_ENV="staging" npm run -w @prosopo/cli bundle
+          NODE_ENV="staging" pnpm --filter @prosopo/cli run bundle
 
       - name: Publish production image to Docker Hub
         run: |
           echo "Publishing staging provider image to Docker Hub"
-          NODE_ENV="staging" npm run -w @prosopo/cli build:docker
-          NODE_ENV="staging" npm run -w @prosopo/cli publish:docker
+          NODE_ENV="staging" pnpm --filter @prosopo/cli run build:docker
+          NODE_ENV="staging" pnpm --filter @prosopo/cli run publish:docker
 
       - name: Create GitHub Release
         env:

@@ -45,10 +45,12 @@ jobs:
           token: ${{ steps.app_token.outputs.token }}
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
-          cache: 'npm'
+          cache: 'pnpm'
 
       - name: Setup npm registry
         run: |
@@ -59,7 +61,7 @@ jobs:
           git config user.name "prosoponator[bot]"
           git config user.email "dev@prosopo.io"
 
-      - run: npm ci --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
+      - run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
 
       - name: Detect changesets
         id: detect
@@ -81,32 +83,31 @@ jobs:
       - name: Version bump
         if: steps.detect.outputs.has_changesets == 'true'
         run: |
-          npm i -g @changesets/cli --no-audit --no-fund --prefer-offline
-          npx @changesets/cli version --verbose
+          pnpm exec changeset version --verbose
 
-          npm i --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
+          pnpm install --lockfile-only --ignore-scripts
           
           # Set the root package.json version to match @prosopo/cli. The provider
           # image tag now comes from packages/cli's own version, so there is no
           # wrapper package left to keep in step.
-          root_version=$(npm -w @prosopo/cli pkg get version | jq -r '.["@prosopo/cli"]')
+          root_version=$(jq -r .version packages/cli/package.json)
           echo "root_version=$root_version" >> $GITHUB_ENV
           echo "Setting versions to $root_version"
           
-          npm pkg set version="$root_version"
+          pnpm pkg set version="$root_version"
           
           git add -u .
 
-      - run: npm ci --ignore-scripts --include=dev --no-audit --no-fund --prefer-offline
+      - run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
 
       - name: Build packages
         run: |
           echo "Building all packages"
-          npm run build:all
+          pnpm run build:all
 
       - name: lint-fix
         run: |
-          npm run lint-fix
+          pnpm run lint-fix
           git add -u .
 
       - name: Create release branch and PR

@@ -28,8 +28,8 @@ It takes four containers, a generated `.env` and the published `prosopo/provider
 and no image dataset:
 
 ```bash
-git clone https://github.com/prosopo/captcha && cd captcha && npm ci
-npx tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
+git clone https://github.com/prosopo/captcha && cd captcha && corepack enable && pnpm install --frozen-lockfile
+pnpm exec tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
 docker compose -f docker-compose.self-hosted.yml up -d
 ```
 
