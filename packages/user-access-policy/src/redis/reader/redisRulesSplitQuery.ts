@@ -13,18 +13,8 @@
 // limitations under the License.
 
 import { getBlockPoolClause } from "#policy/redis/reader/redisRulesQuery.js";
+import { escapeTagValue } from "#policy/redis/reader/redisTagValue.js";
 import { GLOBAL_CLIENT_SCOPE_SENTINEL, type UserScope } from "#policy/rule.js";
-
-// Escapes special characters in Redis TAG queries. Mirrors the escape
-// function in redisRulesQuery.ts — kept local to avoid coupling the two
-// query builders since they'll diverge in shape.
-const escapeTagValue = (value: string): string =>
-	value.replace(/([,.<>{}\[\]"':;!@#$%^&*()\-+=~|/\\])/g, "\\$1");
-
-// Fields where TAG queries need escaping (they may hold JSON etc.).
-const FIELDS_REQUIRING_ESCAPE: ReadonlySet<keyof UserScope> = new Set([
-	"coords",
-]);
 
 // Fields indexed as NUMERIC — require range syntax `@x:[N N]` not TAG.
 const NUMERIC_FIELDS: ReadonlySet<keyof UserScope> = new Set(["asn"]);
@@ -63,7 +53,7 @@ const buildScopeClause = (clientId: string | undefined): string => {
 	if (clientId === undefined) {
 		return `( ${GLOBAL_SCOPE_INNER} )`;
 	}
-	return `( @clientId:{${clientId}} | ${GLOBAL_SCOPE_INNER} )`;
+	return `( @clientId:{${escapeTagValue(clientId)}} | ${GLOBAL_SCOPE_INNER} )`;
 };
 
 const buildFieldClause = (
@@ -77,10 +67,7 @@ const buildFieldClause = (
 	if (NUMERIC_FIELDS.has(field)) {
 		return `@${field}:[${stringValue} ${stringValue}]`;
 	}
-	const queryValue = FIELDS_REQUIRING_ESCAPE.has(field)
-		? escapeTagValue(stringValue)
-		: stringValue;
-	return `@${field}:{${queryValue}}`;
+	return `@${field}:{${escapeTagValue(stringValue)}}`;
 };
 
 type SubQuery = {

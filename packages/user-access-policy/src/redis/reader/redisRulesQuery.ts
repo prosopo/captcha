@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { escapeTagValue } from "#policy/redis/reader/redisTagValue.js";
 import {
 	AccessPolicyType,
 	GLOBAL_CLIENT_SCOPE_SENTINEL,
@@ -26,15 +27,6 @@ import {
 } from "#policy/rulesStorage.js";
 
 type QueryBuilder = (value: unknown, scope: UserIp) => string;
-
-/**
- * Escapes special characters for Redis TAG field queries.
- * Redis TAG fields treat these characters as special and they must be escaped with a backslash.
- */
-const escapeTagValue = (value: string): string => {
-	// Characters that need escaping in Redis TAG queries
-	return value.replace(/([,.<>{}\[\]"':;!@#$%^&*()\-+=~|/\\])/g, "\\$1");
-};
 
 // #2 is a required option when the 'ismissing()' function is in the query body
 export const REDIS_QUERY_DIALECT = 2;
@@ -134,11 +126,6 @@ const getUserScopeQuery = (
 		.join(scopeJoinType);
 };
 
-// Fields that may contain special characters requiring escaping in Redis TAG queries
-const FIELDS_REQUIRING_ESCAPE: ReadonlySet<keyof UserScope> = new Set([
-	"coords",
-]);
-
 // Fields indexed as NUMERIC in RediSearch — must use range syntax `@x:[N N]`,
 // not the TAG syntax `@x:{N}`, or lookups silently return no results.
 const NUMERIC_FIELDS: ReadonlySet<keyof UserScope> = new Set(["asn"]);
@@ -165,12 +152,7 @@ const getUserScopeFieldQuery = (
 		return `@${fieldName}:[${stringValue} ${stringValue}]`;
 	}
 
-	// Only escape fields that may contain special characters (like coords with JSON)
-	const queryValue = FIELDS_REQUIRING_ESCAPE.has(fieldName)
-		? escapeTagValue(stringValue)
-		: stringValue;
-
-	return `@${fieldName}:{${queryValue}}`;
+	return `@${fieldName}:{${escapeTagValue(stringValue)}}`;
 };
 
 // Global rules are stamped with `@clientId:{global}` at write time so the
@@ -188,8 +170,8 @@ const getPolicyScopeQuery = (
 
 	if ("string" === typeof clientId) {
 		return FilterScopeMatch.Exact === scopeMatch
-			? `@clientId:{${clientId}}`
-			: `( @clientId:{${clientId}} | ${GLOBAL_MATCH_CLAUSE_INNER} )`;
+			? `@clientId:{${escapeTagValue(clientId)}}`
+			: `( @clientId:{${escapeTagValue(clientId)}} | ${GLOBAL_MATCH_CLAUSE_INNER} )`;
 	}
 
 	return FilterScopeMatch.Exact === scopeMatch
@@ -238,7 +220,7 @@ export const getRulesRedisQuery = (
 	const queryParts = [];
 
 	if (filter.groupId) {
-		queryParts.push(`@groupId:{${filter.groupId}}`);
+		queryParts.push(`@groupId:{${escapeTagValue(filter.groupId)}}`);
 	}
 
 	if (filter.blockOnly) {
