@@ -51,9 +51,7 @@ describe("puzzle background buffer", () => {
 
 		const seen = new Set<string>();
 		for (let i = 0; i < 6; i++) {
-			const image = buffer.take();
-			expect(image).not.toBeNull();
-			if (!image) throw new Error("unreachable");
+			const { image } = buffer.take();
 			const digest = image.data.toString("base64");
 			expect(seen.has(digest)).toBe(false);
 			seen.add(digest);

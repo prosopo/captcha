@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { DEFAULT_GEOMETRY, type PuzzleGeometry } from "@prosopo/puzzle-assets";
 import {
-	DEFAULT_GEOMETRY,
-	type PuzzleGeometry,
-	type RgbaImage,
-} from "@prosopo/puzzle-assets";
-import { createBackgroundNative } from "./nativeBackground.js";
+	type SeededBackground,
+	createBackgroundNative,
+} from "./nativeBackground.js";
 
 /**
  * Pre-generated puzzle backgrounds, handed out exactly once each.
@@ -33,8 +32,11 @@ import { createBackgroundNative } from "./nativeBackground.js";
  * while it waits (about 240 KB at the default geometry).
  */
 export interface PuzzleBackgroundBuffer {
-	/** Consume one background, or null when the buffer has run dry. */
-	take(): RgbaImage | null;
+	/**
+	 * Consume one background and the seed that made it. Never null: a dry
+	 * buffer generates inline rather than failing the request.
+	 */
+	take(): SeededBackground;
 	/** How many are ready right now. */
 	depth(): number;
 	/** Times `take()` found the buffer empty since construction. */
@@ -66,7 +68,7 @@ export const createPuzzleBackgroundBuffer = (
 	const refillBatch = options.refillBatch ?? DEFAULT_REFILL_BATCH;
 	const geometry = options.geometry ?? DEFAULT_GEOMETRY;
 
-	const ready: RgbaImage[] = [];
+	const ready: SeededBackground[] = [];
 	let starved = 0;
 
 	const topUp = (limit: number): void => {
@@ -84,15 +86,15 @@ export const createPuzzleBackgroundBuffer = (
 	timer.unref?.();
 
 	return {
-		take(): RgbaImage | null {
-			const image = ready.pop();
-			if (!image) {
+		take(): SeededBackground {
+			const background = ready.pop();
+			if (!background) {
 				starved++;
 				// Generate inline rather than failing the request. Slower, but a
 				// puzzle is still served and single-use is preserved.
 				return createBackgroundNative(geometry);
 			}
-			return image;
+			return background;
 		},
 		depth: (): number => ready.length,
 		starvations: (): number => starved,

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { ProsopoApiError } from "@prosopo/common";
+import { DEFAULT_GEOMETRY } from "@prosopo/puzzle-assets";
 import {
 	ApiParams,
 	CaptchaType,
@@ -305,6 +306,43 @@ export default (
 				effectivePuzzleSettings,
 				effectivePieceSize,
 			);
+
+			// Patch the render inputs on so the portal can replay this exact
+			// puzzle. A second write rather than an argument to
+			// storePuzzleCaptchaRecord because the sampled piece size and the
+			// two seeds only exist once the render above has run, and the
+			// record has to be durable before that — see the ordering note.
+			// Failure is logged and swallowed: the user has a solvable puzzle
+			// either way, and losing a diagnostic must not cost them the solve.
+			await tasks.db
+				.updatePuzzleCaptchaRecord(challenge.challenge, {
+					render: {
+						...(sessionRecord?.puzzleLevel !== undefined && {
+							level: sessionRecord.puzzleLevel,
+						}),
+						pieceSize: images.pieceSize,
+						geometry: {
+							width: DEFAULT_GEOMETRY.width,
+							height: DEFAULT_GEOMETRY.height,
+							notchSize: DEFAULT_GEOMETRY.notchSize,
+						},
+						settings: {
+							decoyCount: effectivePuzzleSettings.decoyCount,
+							decoyEdgeDarkness: effectivePuzzleSettings.decoyEdgeDarkness,
+							decoyBodyBrightness: effectivePuzzleSettings.decoyBodyBrightness,
+							holeDarken: effectivePuzzleSettings.holeDarken,
+							decoyHoleDarken: effectivePuzzleSettings.decoyHoleDarken,
+						},
+						backgroundSeed: images.backgroundSeed,
+						renderSeed: images.renderSeed,
+					},
+				})
+				.catch((updateErr) => {
+					req.logger.warn(() => ({
+						err: updateErr,
+						msg: "Failed to patch puzzle render inputs onto the challenge record",
+					}));
+				});
 
 			const padBytes = trafficVerdict.padBytes;
 

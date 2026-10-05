@@ -57,6 +57,8 @@ export interface RenderedPuzzleRgba {
 	background: RgbaImage;
 	piece: RgbaImage;
 	pieceSize: number;
+	/** See `RenderedPuzzle.seed` and the secrecy note in prng.ts. */
+	seed: Buffer;
 }
 
 /**
@@ -69,8 +71,9 @@ export const renderPuzzleToRgba = (
 	placement: NotchPlacement,
 	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
 	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
+	seed: Buffer = createSeed(),
 ): RenderedPuzzleRgba => {
-	const prng = createPrng(createSeed());
+	const prng = createPrng(seed);
 	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
 	paintDecoys(
 		background,
@@ -91,10 +94,11 @@ export const renderPuzzleToRgba = (
 		placement,
 		settings.holeDarken,
 	);
-	return { background: cut, piece, pieceSize };
+	return { background: cut, piece, pieceSize, seed };
 };
 
 export const createBackground = (
 	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
+	seed: Buffer = createSeed(),
 ): RgbaImage =>
-	generateBackground(createPrng(createSeed()), geometry.width, geometry.height);
+	generateBackground(createPrng(seed), geometry.width, geometry.height);
