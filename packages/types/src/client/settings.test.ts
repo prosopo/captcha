@@ -738,16 +738,16 @@ describe("IconOrderSettingsSchema", () => {
 });
 
 describe("ClientSettingsSchema icon-order fields", () => {
-	it("leaves icon-order off unless the site turns it on", () => {
+	it("defaults the owner's icon-order preference on, like image and puzzle", () => {
 		const parsed = parse(minimal);
-		expect(parsed.frictionlessTypes.iconOrder).toBeUndefined();
-		expect(resolveFrictionlessTypes(parsed.frictionlessTypes).iconOrder).toBe(
+		expect(parsed.frictionlessTypes.iconOrder).toBe(true);
+		expect(resolveFrictionlessTypes(undefined).iconOrder).toBe(true);
+		expect(
+			resolveFrictionlessTypes({ image: true, puzzle: true }).iconOrder,
+		).toBe(true);
+		expect(resolveFrictionlessTypes({ iconOrder: false }).iconOrder).toBe(
 			false,
 		);
-		expect(
-			resolveFrictionlessTypes({ image: true, puzzle: true, iconOrder: true })
-				.iconOrder,
-		).toBe(true);
 	});
 
 	it("defaults the tolerance to a size-relative radius", () => {
@@ -785,6 +785,17 @@ describe("captcha type feature flags", () => {
 		expect(isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, {})).toBe(true);
 	});
 
+	it("keeps icon-order off unless its flag is true", () => {
+		expect(captchaTypeFeatureFlagDefaults[CaptchaType.iconOrder]).toBe(false);
+		expect(isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, undefined)).toBe(
+			false,
+		);
+		expect(isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, {})).toBe(false);
+		expect(
+			isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, { iconOrder: true }),
+		).toBe(true);
+	});
+
 	it("disallows puzzle only when the flag is false", () => {
 		expect(
 			isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, { puzzle: false }),
@@ -817,7 +828,7 @@ describe("captcha type feature flags", () => {
 });
 
 describe("resolveAllowedCaptchaTypes", () => {
-	it("allows every type when nothing is configured", () => {
+	it("allows image and puzzle, but not icon-order, when nothing is configured", () => {
 		expect(resolveAllowedCaptchaTypes(undefined)).toEqual({
 			image: true,
 			puzzle: true,
@@ -849,13 +860,23 @@ describe("resolveAllowedCaptchaTypes", () => {
 		).toEqual({ image: true, puzzle: false, iconOrder: false });
 	});
 
-	it("passes the owner's icon-order choice through", () => {
+	it("allows icon-order only when the feature flag and the owner both do", () => {
 		expect(
 			resolveAllowedCaptchaTypes({
 				frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
-				captchaTypeFeatureFlags: { puzzle: false },
-			}),
-		).toEqual({ image: true, puzzle: false, iconOrder: true });
+			}).iconOrder,
+		).toBe(false);
+		expect(
+			resolveAllowedCaptchaTypes({
+				captchaTypeFeatureFlags: { iconOrder: true },
+			}).iconOrder,
+		).toBe(true);
+		expect(
+			resolveAllowedCaptchaTypes({
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: false },
+				captchaTypeFeatureFlags: { iconOrder: true },
+			}).iconOrder,
+		).toBe(false);
 	});
 
 	it("never lets the feature flag re-enable a type the owner switched off", () => {

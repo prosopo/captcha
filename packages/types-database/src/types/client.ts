@@ -217,7 +217,7 @@ export const UserSettingsSchema = new Schema({
 			{
 				image: { type: Boolean, default: true },
 				puzzle: { type: Boolean, default: true },
-				iconOrder: { type: Boolean, required: false },
+				iconOrder: { type: Boolean, default: true },
 			},
 			{ _id: false },
 		),
@@ -230,6 +230,7 @@ export const UserSettingsSchema = new Schema({
 		type: new Schema(
 			{
 				puzzle: { type: Boolean, required: false },
+				iconOrder: { type: Boolean, required: false },
 			},
 			{ _id: false },
 		),

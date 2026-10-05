@@ -22,6 +22,7 @@ import {
 } from "@prosopo/types";
 import {
 	CaptchaType,
+	type ICaptchaTypeFeatureFlags,
 	type IUserSettings,
 	ResultReason,
 	Tier,
@@ -519,6 +520,68 @@ describe("CaptchaManager", () => {
 				);
 
 				expect(result).toEqual({ valid: true, type: CaptchaType.puzzle });
+			});
+
+			describe("icon-order", () => {
+				const iconOrderSite = (
+					captchaTypeFeatureFlags?: ICaptchaTypeFeatureFlags,
+				): Pick<ClientRecord, "account" | "tier" | "settings"> => ({
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.iconOrder,
+						...(captchaTypeFeatureFlags && { captchaTypeFeatureFlags }),
+					},
+				});
+
+				it("refuses a sessionless icon-order request on a site without the flag", async () => {
+					const result = await captchaManager.isValidRequest(
+						iconOrderSite(),
+						CaptchaType.iconOrder,
+						mockEnv,
+					);
+
+					expect(result).toEqual({
+						valid: false,
+						reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+						type: CaptchaType.iconOrder,
+					});
+				});
+
+				it("refuses an icon-order session on a site without the flag, without consuming it", async () => {
+					vi.mocked(db.checkAndRemoveSession).mockResolvedValue({
+						sessionId: "sessionId",
+						captchaType: CaptchaType.iconOrder,
+					} as Session);
+
+					const result = await captchaManager.isValidRequest(
+						iconOrderSite(),
+						CaptchaType.iconOrder,
+						mockEnv,
+						"sessionId",
+					);
+
+					expect(result).toEqual({
+						valid: false,
+						reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+						type: CaptchaType.iconOrder,
+					});
+					expect(db.checkAndRemoveSession).not.toHaveBeenCalled();
+				});
+
+				it("serves icon-order once Prosopo turns the flag on", async () => {
+					const result = await captchaManager.isValidRequest(
+						iconOrderSite({ iconOrder: true }),
+						CaptchaType.iconOrder,
+						mockEnv,
+					);
+
+					expect(result).toEqual({
+						valid: true,
+						type: CaptchaType.iconOrder,
+					});
+				});
 			});
 		});
 

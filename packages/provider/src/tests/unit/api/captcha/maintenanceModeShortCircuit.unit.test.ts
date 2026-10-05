@@ -214,26 +214,5 @@ describe("maintenance mode short-circuit", () => {
 				mockedDbMethods.storeIconOrderCaptchaRecord,
 			).not.toHaveBeenCalled();
 		});
-
-		it("refuses a site that has not opted in to icon-order", async () => {
-			mockGetMaintenanceMode.mockReturnValue(false);
-			mockedDbMethods.getClientRecord.mockResolvedValueOnce({
-				settings: { frictionlessTypes: { image: true, puzzle: true } },
-			});
-
-			const handler = getIconOrderChallenge({} as never, {} as never);
-			const { req, res, next } = buildReqRes(validBody);
-			await handler(req as never, res as never, next);
-
-			expect(next).toHaveBeenCalledWith(
-				expect.objectContaining({
-					translationKey: "API.INCORRECT_CAPTCHA_TYPE",
-				}),
-			);
-			expect(
-				mockedManagers.iconOrderCaptchaManager.isValidRequest,
-			).not.toHaveBeenCalled();
-			expect(res.json).not.toHaveBeenCalled();
-		});
 	});
 });

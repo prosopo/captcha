@@ -16,6 +16,7 @@ import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
 	type IFrictionlessTypes,
+	resolveAllowedCaptchaTypes,
 	resolveFrictionlessTypes,
 } from "@prosopo/types";
 import { isPuzzleRenderAvailable } from "./puzzle/puzzleRenderer.js";
@@ -46,7 +47,8 @@ export type ConcreteCaptchaType =
  *
  * Pass `allowedTypes` from `resolveAllowedCaptchaTypes`, so Prosopo's
  * per-site captcha type feature flags are applied alongside the site owner's
- * own `frictionlessTypes`. Absent means every type is allowed.
+ * own `frictionlessTypes`. Absent means the defaults for both, so icon-order
+ * stays off.
  *
  * Coercion only ever narrows. A disabled type falls back to the other
  * interactive type if that is permitted, and to PoW otherwise — never the
@@ -57,7 +59,9 @@ export const coerceToEnabledCaptchaType = (
 	allowedTypes: Partial<IFrictionlessTypes> | undefined,
 	logger?: Logger,
 ): ConcreteCaptchaType => {
-	const types = resolveFrictionlessTypes(allowedTypes);
+	const types = allowedTypes
+		? resolveFrictionlessTypes(allowedTypes)
+		: resolveAllowedCaptchaTypes(undefined);
 
 	// A puzzle this provider cannot render is as unavailable as one the site
 	// disabled, and has to be treated identically here rather than downgraded

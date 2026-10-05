@@ -60,6 +60,16 @@ describe("getDefaultSiteKeys", SLOW, () => {
 		}
 	});
 
+	it("turns the icon-order feature flag on for the icon-order site only", () => {
+		for (const site of getDefaultSiteKeys()) {
+			expect(site.settings.captchaTypeFeatureFlags).toEqual(
+				site.settings.captchaType === CaptchaType.iconOrder
+					? { iconOrder: true }
+					: undefined,
+			);
+		}
+	});
+
 	it("returns a fresh array each call, so callers cannot corrupt the seed", () => {
 		const first = getDefaultSiteKeys();
 		const second = getDefaultSiteKeys();

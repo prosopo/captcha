@@ -218,12 +218,15 @@ graph TB
     %% ===== ICON ORDER FLOW =====
     %% Icon-order is never reached from the score ladder. It is served only
     %% when something names it (site-wide captchaType, Restrict rule,
-    %% traffic-filter policy, routing machine) AND the site has opted in via
-    %% frictionlessTypes.iconOrder; otherwise it is coerced to puzzle.
+    %% traffic-filter policy, routing machine) AND Prosopo has switched on
+    %% captchaTypeFeatureFlags.iconOrder for the site (plus, in the
+    %% frictionless flow, the owner's frictionlessTypes.iconOrder); otherwise
+    %% it is coerced to puzzle.
     Manager -->|"configured / routed: icon-order"| IconOrderCaptcha
     IconOrderCaptcha -->|get challenge| IconOrderChallengeEP
     IconOrderChallengeEP -->|"1. AccessPolicy lookup"| AccessPolicies
     IconOrderChallengeEP -->|"2. applyTrafficFilterAtRequestTime<br/>(challenge → iconOrderTolerance +<br/>render overrides; same non-401<br/>handling as the puzzle flow)"| TrafficFilter
+    IconOrderChallengeEP -->|"isValidRequest: refuse a site<br/>without the icon-order flag"| AllowedTypes
     IconOrderChallengeEP --> IconOrderTasks
     IconOrderTasks -->|"render, then store targets<br/>before responding (the render<br/>decides the answer)"| MongoDB
     IconOrderTasks -->|"background + legend strip only.<br/>Target positions are never serialised"| IconOrderCaptcha

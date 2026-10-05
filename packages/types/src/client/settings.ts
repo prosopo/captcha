@@ -167,7 +167,7 @@ export const frictionlessThresholdDefault: IFrictionlessThreshold = {
  *
  * PoW is deliberately absent and is always available: it is the terminal
  * fallback of the decision machine and the only type with no interaction
- * requirement, so a site with both of these off still has a way to challenge.
+ * requirement, so a site with all of these off still has a way to challenge.
  *
  * This is a hard constraint on OUTPUT, not a hint. A site with `image: false`
  * must never be served an image captcha by any path — score ladder, access
@@ -183,8 +183,7 @@ export const frictionlessThresholdDefault: IFrictionlessThreshold = {
 export const FrictionlessTypesSchema = object({
 	image: boolean().optional().default(true),
 	puzzle: boolean().optional().default(true),
-	// No default: icon-order stays off until a site opts in.
-	iconOrder: boolean().optional(),
+	iconOrder: boolean().optional().default(true),
 });
 
 export type IFrictionlessTypes = output<typeof FrictionlessTypesSchema>;
@@ -192,6 +191,7 @@ export type IFrictionlessTypes = output<typeof FrictionlessTypesSchema>;
 export const frictionlessTypesDefault: IFrictionlessTypes = {
 	image: true,
 	puzzle: true,
+	iconOrder: true,
 };
 
 /**
@@ -199,15 +199,14 @@ export const frictionlessTypesDefault: IFrictionlessTypes = {
  *
  * Tolerates `undefined` (a client record written before the field existed)
  * and a partial object, so a provider handed an older settings blob keeps
- * serving image and puzzle rather than silently narrowing to PoW. Icon-order
- * stays off until the site turns it on.
+ * serving image and puzzle rather than silently narrowing to PoW.
  */
 export const resolveFrictionlessTypes = (
 	configured: Partial<IFrictionlessTypes> | undefined | null,
 ): Required<IFrictionlessTypes> => ({
 	image: configured?.image ?? frictionlessTypesDefault.image,
 	puzzle: configured?.puzzle ?? frictionlessTypesDefault.puzzle,
-	iconOrder: configured?.iconOrder ?? false,
+	iconOrder: configured?.iconOrder ?? frictionlessTypesDefault.iconOrder,
 });
 
 /**
@@ -222,6 +221,7 @@ export const resolveFrictionlessTypes = (
  */
 export const CaptchaTypeFeatureFlagsSchema = object({
 	[CaptchaType.puzzle]: boolean().optional(),
+	[CaptchaType.iconOrder]: boolean().optional(),
 });
 
 export type ICaptchaTypeFeatureFlags = output<
@@ -236,6 +236,7 @@ export type FeatureFlaggedCaptchaType = Extract<
 export const captchaTypeFeatureFlagDefaults: Required<ICaptchaTypeFeatureFlags> =
 	{
 		[CaptchaType.puzzle]: true,
+		[CaptchaType.iconOrder]: false,
 	};
 
 const isFeatureFlaggedCaptchaType = (
@@ -265,16 +266,17 @@ export const resolveAllowedCaptchaTypes = (
 		  }
 		| undefined
 		| null,
-): IFrictionlessTypes => {
+): Required<IFrictionlessTypes> => {
 	const preferred = resolveFrictionlessTypes(settings?.frictionlessTypes);
+	const flags = settings?.captchaTypeFeatureFlags;
 	return {
 		image: preferred.image,
 		puzzle:
 			preferred.puzzle &&
-			isCaptchaTypeFeatureEnabled(
-				CaptchaType.puzzle,
-				settings?.captchaTypeFeatureFlags,
-			),
+			isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, flags),
+		iconOrder:
+			preferred.iconOrder &&
+			isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, flags),
 	};
 };
 

@@ -136,7 +136,7 @@ export class FrictionlessManager extends CaptchaManager {
 	 * The types this site may be served, from `resolveAllowedCaptchaTypes`.
 	 * Set before any path can mint a session, including the short-circuits
 	 * that skip routing, so the site's feature flags hold on every path.
-	 * Unset means every type is allowed.
+	 * Unset means the default flags and preferences.
 	 */
 	setAllowedCaptchaTypes(allowed: IFrictionlessTypes): void {
 		this.allowedCaptchaTypes = allowed;

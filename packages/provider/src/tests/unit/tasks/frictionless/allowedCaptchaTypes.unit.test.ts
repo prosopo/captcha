@@ -137,4 +137,46 @@ describe("FrictionlessManager allowed captcha types", () => {
 
 		expect(storedCaptchaType()).toBe(CaptchaType.puzzle);
 	});
+
+	describe("icon-order", () => {
+		it("serves puzzle on an icon-order-pinned site without the flag", async () => {
+			const manager = buildManager();
+			manager.setAllowedCaptchaTypes(resolveAllowedCaptchaTypes({}));
+
+			await manager.sendIconOrderCaptcha();
+
+			expect(storedCaptchaType()).toBe(CaptchaType.puzzle);
+		});
+
+		it("overrides a routing machine that picks icon-order on a site without the flag", async () => {
+			const routed: RoutingMachineOutput = {
+				captchaType: CaptchaType.iconOrder,
+			};
+			applyRouterMock.mockResolvedValue(routed);
+			const manager = buildManager();
+			manager.setRoutingContext(routingContext);
+			manager.setAllowedCaptchaTypes(
+				resolveAllowedCaptchaTypes({
+					frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+				}),
+			);
+
+			await manager.sendPowCaptcha();
+
+			expect(storedCaptchaType()).toBe(CaptchaType.puzzle);
+		});
+
+		it("serves icon-order once Prosopo turns the flag on", async () => {
+			const manager = buildManager();
+			manager.setAllowedCaptchaTypes(
+				resolveAllowedCaptchaTypes({
+					captchaTypeFeatureFlags: { iconOrder: true },
+				}),
+			);
+
+			await manager.sendIconOrderCaptcha();
+
+			expect(storedCaptchaType()).toBe(CaptchaType.iconOrder);
+		});
+	});
 });
