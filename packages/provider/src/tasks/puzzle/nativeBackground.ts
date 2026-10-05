@@ -36,21 +36,31 @@ const nativePuzzle: NativePuzzleModule = (() => {
 	}
 })();
 
+/** A background together with the seed that produced it. */
+export interface SeededBackground {
+	image: RgbaImage;
+	seed: Buffer;
+}
+
 /**
  * Synthesise one background in Rust.
  *
  * Byte-identical to `createBackground` from @prosopo/puzzle-assets given the
  * same seed — the JS remains the reference implementation and the contract
  * the differential test pins. Single-use is unchanged and still the caller's
- * responsibility: this mints a fresh CSPRNG seed per call and the seed never
- * leaves the process.
+ * responsibility.
+ *
+ * The seed is returned so the challenge record can keep it and the portal can
+ * regenerate this background later. See the secrecy note in prng.ts for where
+ * it may and may not go.
  */
 export const createBackgroundNative = (
 	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
-): RgbaImage => {
+): SeededBackground => {
 	const { width, height } = geometry;
+	const seed = createSeed();
 	const data = measureSync("puzzle_background", () =>
-		nativePuzzle.generateBackground(createSeed(), width, height),
+		nativePuzzle.generateBackground(seed, width, height),
 	);
-	return { data, width, height };
+	return { image: { data, width, height }, seed };
 };

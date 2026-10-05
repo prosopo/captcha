@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { DEFAULT_GEOMETRY } from "@prosopo/puzzle-assets";
 import {
 	ApiParams,
 	CaptchaType,
@@ -112,6 +113,40 @@ const issuePuzzleChallenge = async ({
 		effectivePuzzleSettings,
 		effectivePieceSize,
 	);
+
+	// A second write rather than an argument to storePuzzleCaptchaRecord: the
+	// sampled piece size and the seeds only exist once the render has run, and
+	// the record has to be durable before it. Losing this diagnostic must not
+	// cost the user the solve, so a failure is only logged.
+	await tasks.db
+		.updatePuzzleCaptchaRecord(challenge.challenge, {
+			render: {
+				...(sessionRecord?.puzzleLevel !== undefined && {
+					level: sessionRecord.puzzleLevel,
+				}),
+				pieceSize: images.pieceSize,
+				geometry: {
+					width: DEFAULT_GEOMETRY.width,
+					height: DEFAULT_GEOMETRY.height,
+					notchSize: DEFAULT_GEOMETRY.notchSize,
+				},
+				settings: {
+					decoyCount: effectivePuzzleSettings.decoyCount,
+					decoyEdgeDarkness: effectivePuzzleSettings.decoyEdgeDarkness,
+					decoyBodyBrightness: effectivePuzzleSettings.decoyBodyBrightness,
+					holeDarken: effectivePuzzleSettings.holeDarken,
+					decoyHoleDarken: effectivePuzzleSettings.decoyHoleDarken,
+				},
+				backgroundSeed: images.backgroundSeed,
+				renderSeed: images.renderSeed,
+			},
+		})
+		.catch((updateErr: unknown) => {
+			tasks.logger.warn(() => ({
+				err: updateErr,
+				msg: "Failed to patch puzzle render inputs onto the challenge record",
+			}));
+		});
 
 	return {
 		logData: { tolerance: challenge.tolerance },
