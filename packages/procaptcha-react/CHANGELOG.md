@@ -1,5 +1,39 @@
 # @prosopo/procaptcha-react
 
+## 2.13.7
+### Patch Changes
+
+- 2e69b83: You can now pinch to zoom the image challenge. The panel set `touch-action: pan-y`, which lets a finger scroll it but tells the browser to ignore a pinch, so someone who could not make out a small tile had no way to get a closer look. It is now `pan-y pinch-zoom`, which keeps the scrolling and allows the zoom.
+  
+  Nothing else blocked zooming — the Protect challenge pages already allow it up to 5x — so this one property was the whole barrier. Confirmed honoured by Chrome on Android 14.
+- 4669e64: Put the image challenge back in the middle of the screen. The change that let
+  it use the full width of a phone screen made the box it sits in fill the page,
+  and the challenge was left sitting against the left edge instead of centred.
+  It now centres itself in whatever width that box gives it, on every screen
+  size.
+- dcb691b: Add a refresh control to the puzzle captcha.
+  
+  A user who can't solve the puzzle they were given can now ask for a different one, from a button in the puzzle's header. The replacement comes through a new frictionless session, like a wrong answer already does.
+  
+  The widget tells the provider which session was refreshed (`refreshOf`). The provider then records `refreshOf`, `refreshCount` and `refreshedAfterMs` on the new session, so refresh behaviour can be scored later. After three refreshes in a row it serves an image challenge instead, with reason `PUZZLE_REFRESH_LIMIT`. It only does this if the site has image enabled. The switch only goes from puzzle to image, so a client that lies about its refreshes can only make its own challenge harder. A client that leaves the field out gets a normal session, the same as reloading the page.
+  
+  The image widget's reload button now reports itself as a refresh too. That way a user who was moved onto image isn't sent back to the puzzle by their next reload.
+- Updated dependencies [1c13037]
+- Updated dependencies [2e69b83]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/procaptcha-common@2.19.0
+  - @prosopo/util@3.3.14
+  - @prosopo/locale@3.7.0
+  - @prosopo/common@3.1.62
+  - @prosopo/procaptcha@2.11.25
+  - @prosopo/widget-skeleton@2.10.1
+
 ## 2.13.6
 ### Patch Changes
 
