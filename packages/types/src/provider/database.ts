@@ -461,6 +461,9 @@ export const SessionSchema = object({
 	// to the origin for fields the escalation doesn't carry itself
 	// (simdReadings, dnsEvent, etc.). Absent on non-escalation sessions.
 	originSessionId: string().optional(),
+	refreshOf: string().optional(),
+	refreshCount: number().optional(),
+	refreshedAfterMs: number().optional(),
 	decryptedHeadHash: string(),
 	siteKey: string().optional(),
 	// Full page URL the widget was rendered on (origin + path only — query
@@ -546,9 +549,30 @@ export const SessionSchema = object({
 	observedTtl: number().min(0).max(255).optional(),
 	tcpMss: number().min(0).max(65535).optional(),
 	tcpWscale: number().min(0).max(255).optional(),
+	tcpWindow: number().min(0).max(65535).optional(),
+	// Whole-SYN fields from the 104-byte probe record
+	// (prosopo/Protect#1167). `tcpOptsKinds` holds the IANA kind number of
+	// each TCP option in wire order, decoded from the probe's packed u64 —
+	// that value reaches 2^64 and a JS number is exact only to 2^53, so the
+	// packed form could not be stored without losing the low bytes, which
+	// are the kinds themselves.
+	tcpOptsKinds: array(number().min(0).max(255)).max(8).optional(),
+	tcpOptsPresent: number().min(0).max(65535).optional(),
+	tcpOptsCount: number().min(0).max(255).optional(),
+	tcpTsval: number().min(0).max(4_294_967_295).optional(),
+	tcpTsecr: number().min(0).max(4_294_967_295).optional(),
+	tcpFlags: number().min(0).max(255).optional(),
+	tcpDataOffsetResv: number().min(0).max(255).optional(),
+	tcpUrgPtr: number().min(0).max(65535).optional(),
+	ipIdent: number().min(0).max(65535).optional(),
+	ipTotalLen: number().min(0).max(65535).optional(),
+	ipFragFlags: number().min(0).max(65535).optional(),
+	ipTos: number().min(0).max(255).optional(),
+	// Superseded by tcpOptsPresent / tcpOptsKinds. Still written on
+	// sessions served by a chaddy older than prosopo/chaddy#16, and kept
+	// because historical rows hold them and routing rules read them.
 	tcpOptsFlags: number().min(0).max(255).optional(),
 	tcpOptsOrder: number().min(0).max(4_294_967_295).optional(),
-	tcpWindow: number().min(0).max(65535).optional(),
 	dnsEvent: object({
 		resolverIp: string().optional(),
 		peerIp: string().optional(),
@@ -593,6 +617,13 @@ export type Session = {
 	// SessionId of the origin session this one escalated from. Populated
 	// alongside isEscalation; consumed by the DM-input read path.
 	originSessionId?: string;
+	// Set when this session was minted because the user pressed refresh on
+	// the challenge of `refreshOf`. `refreshCount` is how many refreshes in a
+	// row led here, and `refreshedAfterMs` how long the replaced session had
+	// been alive when the user gave up on it. Absent on every other session.
+	refreshOf?: string;
+	refreshCount?: number;
+	refreshedAfterMs?: number;
 	decryptedHeadHash: string;
 	// The provider-assigned detector pool bundle this session's detector ran
 	// from, promoted off the short-lived detectorSessionId→bundleId Redis
@@ -686,9 +717,24 @@ export type Session = {
 	observedTtl?: number;
 	tcpMss?: number;
 	tcpWscale?: number;
+	tcpWindow?: number;
+	tcpOptsKinds?: number[];
+	tcpOptsPresent?: number;
+	tcpOptsCount?: number;
+	tcpTsval?: number;
+	tcpTsecr?: number;
+	tcpFlags?: number;
+	tcpDataOffsetResv?: number;
+	tcpUrgPtr?: number;
+	ipIdent?: number;
+	ipTotalLen?: number;
+	ipFragFlags?: number;
+	ipTos?: number;
+	// Superseded by tcpOptsPresent / tcpOptsKinds. Still written on
+	// sessions served by a chaddy older than prosopo/chaddy#16, and kept
+	// because historical rows hold them and routing rules read them.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
-	tcpWindow?: number;
 	// DNS observation merge target — populated by the dns-event sidecar
 	// via POST /v1/prosopo/provider/admin/dns/event. At most one DNS
 	// event + one HTTP event per session under normal usage; the

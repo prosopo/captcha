@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { severityToPuzzleDifficulty } from "@prosopo/captcha-severity";
+import {
+	resolveMaxEscalationLevel,
+	severityToPuzzleDifficulty,
+} from "@prosopo/captcha-severity";
 import type { Logger } from "@prosopo/logger";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
@@ -40,6 +43,7 @@ import type { IProviderDatabase } from "@prosopo/types-database";
 import type { AccessPolicy } from "@prosopo/user-access-policy";
 import { v4 as uuidv4 } from "uuid";
 import { buildDnsEventUrl } from "../../api/dnsEventUrl.js";
+import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import { checkLangRules } from "../../rules/lang.js";
 import {
 	type UsageCounters,
@@ -47,7 +51,10 @@ import {
 } from "../../util/usageCounters.js";
 import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
 import { CaptchaManager } from "../captchaManager.js";
-import { coerceToEnabledCaptchaType } from "../captchaTypeSelection.js";
+import {
+	coerceToEnabledCaptchaType,
+	switchTypeAfterRefreshes,
+} from "../captchaTypeSelection.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
 	type DecodedDetectorPayload,
@@ -166,15 +173,10 @@ export class FrictionlessManager extends CaptchaManager {
 			d: params.d,
 			tcpToChelloUs: params.tcpToChelloUs,
 			chelloToHandshakeUs: params.chelloToHandshakeUs,
-			synNs: params.synNs,
-			synackNs: params.synackNs,
-			ackNs: params.ackNs,
-			observedTtl: params.observedTtl,
-			tcpMss: params.tcpMss,
-			tcpWscale: params.tcpWscale,
-			tcpOptsFlags: params.tcpOptsFlags,
-			tcpOptsOrder: params.tcpOptsOrder,
-			tcpWindow: params.tcpWindow,
+			...rawTlsSignalsFromRecord(params),
+			refreshOf: params.refreshOf,
+			refreshCount: params.refreshCount,
+			refreshedAfterMs: params.refreshedAfterMs,
 		};
 	}
 
@@ -226,20 +228,14 @@ export class FrictionlessManager extends CaptchaManager {
 			d,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
-			synNs,
-			synackNs,
-			ackNs,
-			observedTtl,
-			tcpMss,
-			tcpWscale,
-			tcpOptsFlags,
-			tcpOptsOrder,
-			tcpWindow,
 			simdReadings,
 			puzzleTolerance,
 			puzzle,
 			isEscalation,
 			originSessionId,
+			refreshOf,
+			refreshCount,
+			refreshedAfterMs,
 			isProtect,
 			matchedRule,
 			clientMetaData,
@@ -267,6 +263,9 @@ export class FrictionlessManager extends CaptchaManager {
 			iFrame,
 			...(isEscalation && { isEscalation: true }),
 			...(originSessionId && { originSessionId }),
+			...(refreshOf && { refreshOf }),
+			...(refreshCount !== undefined && { refreshCount }),
+			...(refreshedAfterMs !== undefined && { refreshedAfterMs }),
 			decryptedHeadHash,
 			bundleId,
 			reason,
@@ -287,15 +286,7 @@ export class FrictionlessManager extends CaptchaManager {
 			d,
 			tcpToChelloUs,
 			chelloToHandshakeUs,
-			synNs,
-			synackNs,
-			ackNs,
-			observedTtl,
-			tcpMss,
-			tcpWscale,
-			tcpOptsFlags,
-			tcpOptsOrder,
-			tcpWindow,
+			...rawTlsSignalsFromRecord(input),
 			...(matchedRule && { matchedRule }),
 			// Stamped at issuance, not only mirrored up at solve time, so a
 			// session that is never solved still correlates back to the render.
@@ -517,11 +508,17 @@ export class FrictionlessManager extends CaptchaManager {
 		// the last word on captchaType. A session minted as a type we cannot
 		// fulfil strands the user on INCORRECT_CAPTCHA_TYPE, since the
 		// serve-time endpoints cannot substitute another type.
-		const finalCaptchaType = coerceToEnabledCaptchaType(
+		const enabledCaptchaType = coerceToEnabledCaptchaType(
 			routed.captchaType,
 			this.routingContext?.frictionlessTypes,
 			this.logger,
 		);
+		const finalCaptchaType = switchTypeAfterRefreshes(
+			enabledCaptchaType,
+			effectiveParams.refreshCount,
+			this.routingContext?.frictionlessTypes,
+		);
+		const switchedByRefreshes = finalCaptchaType !== enabledCaptchaType;
 		// The routing-machine output schema only bounds the count as a positive
 		// int, so clamp it to the sitekey's rounds here as every other sizing
 		// path does. `effectiveParams` is already clamped by its caller.
@@ -546,9 +543,10 @@ export class FrictionlessManager extends CaptchaManager {
 		// score ladder left on the session params. Resolved here rather than
 		// beside its use on the session record below, because the puzzle
 		// overrides need it to tell an escalation from a missing measurement.
-		const finalReason =
-			(routed.reason as FrictionlessReason | undefined) ??
-			(effectiveParams.reason as FrictionlessReason | undefined);
+		const finalReason = switchedByRefreshes
+			? FrictionlessReason.PUZZLE_REFRESH_LIMIT
+			: ((routed.reason as FrictionlessReason | undefined) ??
+				(effectiveParams.reason as FrictionlessReason | undefined));
 		// Puzzle tunables persisted on the session so getPuzzleCaptchaChallenge
 		// can layer them over the site defaults — that endpoint re-derives its
 		// overrides from a live trafficFilter verdict, and a router- or
@@ -560,9 +558,11 @@ export class FrictionlessManager extends CaptchaManager {
 				? (() => {
 						// The site's own ceiling on automatic escalation; 0 pins the
 						// level to 0 so its configured puzzle settings render every time.
-						const maxLevel =
+						const maxLevel = resolveMaxEscalationLevel(
 							this.routingContext?.puzzleMaxDifficulty ??
-							puzzleMaxDifficultyDefault;
+								puzzleMaxDifficultyDefault,
+							this.routingContext?.platform.isMobile ?? false,
+						);
 						// Paths that measured nothing carry a fixed fallback round count,
 						// not a severity, so they must not read as an escalation.
 						const level =

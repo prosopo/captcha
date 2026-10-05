@@ -1,4 +1,4 @@
-# Secret scanning (gitleaks), SAST (semgrep) and dependency audit (npm, cargo).
+# Secret scanning (gitleaks), SAST (semgrep) and dependency audit (pnpm, cargo).
 #
 # Until now this repository had none of it -- dependabot opens PRs for
 # known-vulnerable versions, which is useful but is not a scan and gates
@@ -171,13 +171,15 @@ jobs:
             --metrics=off
 
   dependencies:
-    name: npm audit
+    name: pnpm audit
     if: ${{ github.event.action != 'converted_to_draft' && github.event.pull_request.draft != true }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           submodules: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -188,14 +190,14 @@ jobs:
       # audited in CI, so an unknown backlog gated at `high` would block every
       # PR on day one. Ratchet to `high` once it is clear.
       #
-      # `npm audit` needs no install step -- it resolves the lockfile against
+      # `pnpm audit` needs no install step -- it resolves the lockfile against
       # the advisory database over the network.
-      - name: npm audit (critical - gating)
-        run: npm audit --audit-level=critical
+      - name: pnpm audit (critical - gating)
+        run: pnpm audit --audit-level=critical
 
-      - name: npm audit (high - report only)
+      - name: pnpm audit (high - report only)
         continue-on-error: true
-        run: npm audit --audit-level=high
+        run: pnpm audit --audit-level=high
 
   cargo:
     name: cargo audit
@@ -219,7 +221,7 @@ jobs:
           tool: cargo-audit
 
       # This is what caught RUSTSEC-2026-0285 in Protect -- an advisory that
-      # appeared with no change to the tree at all. Gating, unlike npm audit:
+      # appeared with no change to the tree at all. Gating, unlike pnpm audit:
       # these two crates have a handful of dependencies between them, so there
       # is no backlog to grandfather in.
       - name: cargo audit

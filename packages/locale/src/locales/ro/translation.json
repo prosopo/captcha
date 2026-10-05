@@ -398,7 +398,8 @@
 			"KEYBOARD_HINT": "Folosește tastele săgeți pentru a muta piesa, ținând apăsat Shift pentru pași mai mici. Apasă Enter pentru a o trimite, Home pentru a o readuce la început sau Escape pentru a anula.",
 			"POSITION": "{{x}} la sută din stânga, {{y}} la sută de sus",
 			"CHECKING": "Îți verificăm răspunsul",
-			"RETRY_ANNOUNCEMENT": "Aproape. S-a încărcat un puzzle nou, iar piesa este din nou la început."
+			"RETRY_ANNOUNCEMENT": "Aproape. S-a încărcat un puzzle nou, iar piesa este din nou la început.",
+			"REFRESH": "Alt puzzle"
 		}
 	},
 	"CONTRACT": {

@@ -64,6 +64,7 @@ type MockTasks = {
 		getSessionByuserSitekeyIpHash: MockFn;
 		getClientRecord: MockFn;
 		checkAndRemoveSession: MockFn;
+		getSessionRecordBySessionId?: MockFn;
 	};
 	logger: Record<string, unknown>;
 };
@@ -318,6 +319,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			getSessionByuserSitekeyIpHash: vi.fn().mockResolvedValue(null),
 			getClientRecord: vi.fn(),
 			checkAndRemoveSession: vi.fn().mockResolvedValue(undefined),
+			getSessionRecordBySessionId: vi.fn().mockResolvedValue(undefined),
 		},
 		logger: mockLogger as unknown as Record<string, unknown>,
 	});
@@ -466,6 +468,74 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		expect(
 			tasksInstance.frictionlessManager.sendImageCaptcha,
 		).toHaveBeenCalled();
+	});
+
+	it("carries a refresh chain from the session the user refreshed away from", async () => {
+		tasksInstance.db.getClientRecord.mockResolvedValue({
+			account: "siteRefresh",
+			settings: { frictionlessThreshold: 0.5, disallowWebView: false },
+		});
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+			payload(false),
+		);
+		tasksInstance.db.getSessionRecordBySessionId?.mockResolvedValue({
+			siteKey: "siteRefresh",
+			createdAt: new Date(Date.now() - 3000),
+			refreshCount: 1,
+		});
+
+		const { req, res, next } = buildReqRes({
+			token: "tRefresh",
+			headHash: "hhRefresh",
+			dapp: "siteRefresh",
+			user: "u",
+			refreshOf: "replaced-session",
+		});
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(tasksInstance.db.getSessionRecordBySessionId).toHaveBeenCalledWith(
+			"replaced-session",
+		);
+		expect(
+			tasksInstance.frictionlessManager.setSessionParams,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({
+				refreshOf: "replaced-session",
+				refreshCount: 2,
+				refreshedAfterMs: expect.any(Number),
+			}),
+		);
+	});
+
+	it("does not look anything up for an ordinary request", async () => {
+		tasksInstance.db.getClientRecord.mockResolvedValue({
+			account: "siteNoRefresh",
+			settings: { frictionlessThreshold: 0.5, disallowWebView: false },
+		});
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+			payload(false),
+		);
+
+		const { req, res, next } = buildReqRes({
+			token: "tNoRefresh",
+			headHash: "hhNoRefresh",
+			dapp: "siteNoRefresh",
+			user: "u",
+		});
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(tasksInstance.db.getSessionRecordBySessionId).not.toHaveBeenCalled();
+		expect(
+			tasksInstance.frictionlessManager.setSessionParams,
+		).toHaveBeenCalledWith(
+			expect.not.objectContaining({ refreshOf: expect.anything() }),
+		);
 	});
 
 	it("reuses the cached session when no access policy conflicts with its captchaType", async () => {

@@ -58,6 +58,7 @@ import {
 } from "@prosopo/user-access-policy";
 import { at, extractData } from "@prosopo/util";
 import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
+import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
@@ -1149,15 +1150,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 				iframeUrl: sessionRecord?.iframeUrl,
 				coords: solution.coords,
 				// tcp-probe fields — see powTasks.ts for the reasoning.
-				synNs: sessionRecord?.synNs,
-				synackNs: sessionRecord?.synackNs,
-				ackNs: sessionRecord?.ackNs,
-				observedTtl: sessionRecord?.observedTtl,
-				tcpMss: sessionRecord?.tcpMss,
-				tcpWscale: sessionRecord?.tcpWscale,
-				tcpOptsFlags: sessionRecord?.tcpOptsFlags,
-				tcpOptsOrder: sessionRecord?.tcpOptsOrder,
-				tcpWindow: sessionRecord?.tcpWindow,
+				...rawTlsSignalsFromRecord(sessionRecord),
 				// Which egress categories this site blocks. Gates the
 				// egress-sensitive TCP-stack deny rules — a VPN
 				// concentrator legitimately terminates the handshake, so

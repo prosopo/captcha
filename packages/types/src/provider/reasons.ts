@@ -44,8 +44,9 @@ export enum FrictionlessReason {
 	// honest explanations are narrow — a mobile handoff mid-solve — while
 	// handing the challenge to a second host is the cheap way to farm the work
 	// out. Escalated to an image captcha rather than denied: a real network
-	// change should cost a picture, not a rejection. v6 is judged on the /64,
-	// since the low bits rotate by design (see isSameIpOrigin).
+	// change should cost a picture, not a rejection. Judged on the network part
+	// only — the v6 /64 and the v4 /24 — since the host bits are reassigned by
+	// design on both (see isSameIpOrigin).
 	IP_CHANGED = "IP_CHANGED",
 	// The detector payload could not be decrypted: no bundle resolved for the
 	// session (expired/missing Redis binding, bundle no longer in the pool), or
@@ -59,6 +60,10 @@ export enum FrictionlessReason {
 	MISSING_TOKEN = "MISSING_TOKEN",
 	// A token arrived without its accompanying head hash.
 	MISSING_HEAD_HASH = "MISSING_HEAD_HASH",
+	// The user kept refreshing the puzzle, so the replacement is an image
+	// challenge instead. Only ever this direction, and only where the site
+	// has image enabled (see switchTypeAfterRefreshes in @prosopo/provider).
+	PUZZLE_REFRESH_LIMIT = "PUZZLE_REFRESH_LIMIT",
 }
 
 /**

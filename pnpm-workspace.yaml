@@ -1,0 +1,62 @@
+packages:
+  - dev/*
+  - packages/*
+  - demos/*
+  - integration/*
+
+overrides:
+  "@types/express-serve-static-core": 4.19.6
+
+allowBuilds:
+  "@biomejs/biome": true
+  bcrypt: true
+  cpu-features: true
+  cypress: true
+  esbuild: true
+  fsevents: true
+  mongodb-memory-server: true
+  protobufjs: true
+  ssh2: true
+
+# captcha is also a submodule of captcha-private, whose workspace installs these
+# packages. pnpm treats the nearest pnpm-workspace.yaml as the root, so a
+# script run in here would otherwise install captcha standalone over the
+# parent's node_modules before running.
+verifyDepsBeforeRun: false
+
+# The provider bundle leaves `sharp` external — bundling its JS half without
+# the platform `.node` binary gives a runtime "Could not load the sharp module"
+# — and is then run from `packages/cli/dist/bundle`, which has no node_modules
+# of its own. Resolution walks up to the workspace root, where npm's hoisting
+# used to leave `sharp` by accident; pnpm links a package only under whatever
+# asked for it, which here is `@prosopo/puzzle-assets` alone. Hoisting it back
+# rather than declaring it on `@prosopo/cli`, because the CLI's sources do not
+# import it and `lint:refs` rightly rejects a dependency nothing imports.
+publicHoistPattern:
+  - "sharp"
+
+savePrefix: ""
+maxSockets: 10
+fetchRetries: 100
+fetchRetryMintimeout: 1
+fetchRetryMaxtimeout: 10000
+fetchRetryFactor: 2
+
+# Supply-chain policy. pnpm refuses versions published in the last seven days,
+# subdependencies resolved from git or tarball URLs, and versions carrying weaker
+# publish provenance than an earlier release of the same package.
+blockExoticSubdeps: true
+minimumReleaseAge: 10080
+# Already-locked versions that fall within the window at the time of writing.
+minimumReleaseAgeExclude:
+  - "undici@6.29.0"
+trustPolicy: no-downgrade
+# Published before these packages started attaching provenance, so they read
+# as downgrades against later releases; they are not takeovers.
+trustPolicyExclude:
+  - "semver@5.7.2"
+  - "semver@6.3.1"
+  - "ua-parser-js@0.7.41"
+  - "undici-types@6.19.8"
+  - "undici-types@6.20.0"
+  - "vite@6.4.1"

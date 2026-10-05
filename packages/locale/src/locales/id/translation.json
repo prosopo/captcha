@@ -398,7 +398,8 @@
 			"KEYBOARD_HINT": "Gunakan tombol panah untuk menggeser kepingan, tahan Shift untuk langkah yang lebih kecil. Tekan Enter untuk mengirimnya, Home untuk mengembalikannya ke awal, atau Escape untuk membatalkan.",
 			"POSITION": "{{x}} persen dari kiri, {{y}} persen dari atas",
 			"CHECKING": "Memeriksa jawaban Anda",
-			"RETRY_ANNOUNCEMENT": "Nyaris. Teka-teki baru telah dimuat dan kepingan kembali ke awal."
+			"RETRY_ANNOUNCEMENT": "Nyaris. Teka-teki baru telah dimuat dan kepingan kembali ke awal.",
+			"REFRESH": "Teka-teki lain"
 		}
 	},
 	"CONTRACT": {

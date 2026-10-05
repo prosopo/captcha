@@ -1,10 +1,11 @@
 # Supply-chain guard: ensure dependencies are pinned to exact versions.
 #
-# Floating ranges (^, ~, *, "latest") let `npm install` silently pull a newer
+# Floating ranges (^, ~, *, "latest") let `pnpm install` silently pull a newer
 # release than was reviewed. Recent npm worms/hijacks abused this exact gap:
 # the "Shai-Hulud" worm (Sep 2025, 500+ packages), the chalk/debug hijack
 # (Sep 2025, ~2.6B weekly downloads) and the nx attack (Aug 2025). Pinning exact
-# versions + committed lockfile + `npm ci` blocks the auto-pull of a bad release.
+# versions + committed lockfile + `pnpm install --frozen-lockfile` blocks the
+# auto-pull of a bad release.
 
 name: pinned-versions
 
@@ -51,6 +52,7 @@ jobs:
         with:
           node-version: "24"
 
-      # No `npm install` needed — the check only reads JSON files.
+      # No `pnpm install` needed — the check only reads package.json files and
+      # pnpm-lock.yaml.
       - name: Check dependencies are pinned to exact versions
         run: node .github/scripts/check-pinned-versions.mjs

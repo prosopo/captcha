@@ -398,7 +398,8 @@
 			"KEYBOARD_HINT": "Flytta biten med piltangenterna, håll ned skift för mindre steg. Tryck på Retur för att skicka in den, Home för att lägga tillbaka den vid starten, eller Escape för att avbryta.",
 			"POSITION": "{{x}} procent från vänster, {{y}} procent uppifrån",
 			"CHECKING": "Kontrollerar ditt svar",
-			"RETRY_ANNOUNCEMENT": "Nästan. Ett nytt pussel har laddats och biten är tillbaka vid starten."
+			"RETRY_ANNOUNCEMENT": "Nästan. Ett nytt pussel har laddats och biten är tillbaka vid starten.",
+			"REFRESH": "Ett annat pussel"
 		}
 	},
 	"CONTRACT": {

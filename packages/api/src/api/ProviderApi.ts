@@ -410,6 +410,7 @@ export default class ProviderApi
 		currentUrl?: string,
 		iframeUrl?: string,
 		clientSessionId?: string,
+		refreshOf?: string,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
 			[ApiParams.dapp]: dapp,
@@ -426,6 +427,7 @@ export default class ProviderApi
 			...(clientSessionId && {
 				[ApiParams.clientSessionId]: clientSessionId,
 			}),
+			...(refreshOf && { [ApiParams.refreshOf]: refreshOf }),
 		};
 		const { data, headers } = await this.postWithHeaders<
 			GetFrictionlessCaptchaResponse,

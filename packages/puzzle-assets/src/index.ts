@@ -28,6 +28,21 @@ import type {
 
 export { createPrng, createSeed, SEED_BYTES } from "./prng.js";
 export { generateBackground } from "./background.js";
+export {
+	bestPairContrast,
+	contrastRatio,
+	relativeLuminance,
+	simulateVision,
+	worstCaseContrast,
+	VISION_TYPES,
+	type VisionType,
+} from "./contrast.js";
+export {
+	MIN_PALETTE_CONTRAST,
+	drawPalette,
+	hslToRgb,
+	type Rgb,
+} from "./palette.js";
 export { paintDecoys, paintDecoyPiece } from "./decoys.js";
 export {
 	encodeBackground,

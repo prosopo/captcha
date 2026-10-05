@@ -99,7 +99,8 @@
 			"KEYBOARD_HINT": "Use as teclas de seta para mover a peça, segurando Shift para passos menores. Pressione Enter para enviar, Home para voltar ao início ou Esc para cancelar.",
 			"POSITION": "{{x}} por cento a partir da esquerda, {{y}} por cento a partir do topo",
 			"CHECKING": "Verificando sua resposta",
-			"RETRY_ANNOUNCEMENT": "Quase. Um novo quebra-cabeça foi carregado e a peça voltou ao início."
+			"RETRY_ANNOUNCEMENT": "Quase. Um novo quebra-cabeça foi carregado e a peça voltou ao início.",
+			"REFRESH": "Outro quebra-cabeça"
 		}
 	},
 	"CONTRACT": {

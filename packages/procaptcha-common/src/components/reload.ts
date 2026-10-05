@@ -33,6 +33,9 @@ export interface ReloadButtonProps {
 	onReload: () => void;
 	/** Accessible name; the button is icon-only, so this is all a screen reader hears. */
 	label?: string;
+	// Same icon on a tighter 32px container, for a header row that cannot
+	// fit the full-size control.
+	compact?: boolean;
 }
 
 const labelOf = (props: ReloadButtonProps): string => props.label || "Reload";
@@ -104,6 +107,7 @@ export const mountReloadButton = (
 		title.textContent = labelOf(props);
 		applyStyles(button, {
 			...buttonStyleBase,
+			...(props.compact && { padding: "4px", height: "24px", width: "24px" }),
 			// M3 focus indicator: 3dp outline, 2dp offset. Matched imperatively so
 			// the ring stays keyboard-only.
 			outline: focusVisible

@@ -169,6 +169,7 @@ const popupLayerStyle = (show: boolean, scrim: SurfaceScrim): StyleMap => ({
 });
 
 const floatContentStyle = (position: FloatPosition | null): StyleMap => ({
+	width: undefined,
 	maxWidth: undefined,
 	maxHeight: undefined,
 	overflowY: undefined,
@@ -195,6 +196,15 @@ const popupContentStyle = (): StyleMap => ({
 	position: "relative",
 	zIndex: CONTENT_Z_INDEX,
 	boxSizing: "border-box",
+	// Without a width this box shrink-wraps, and the panel inside it can only
+	// reach its own intrinsic width — which bottoms out at the grid's 300px
+	// `minWidth` floor. On a 360px phone that left 22px of the available width
+	// unused and every image tile at 94.7px regardless of screen size, a 500px
+	// desktop panel included. Filling the layer lets the panel grow to its
+	// `maxWidth`, so the tiles scale with the viewport instead of being fixed
+	// at the floor. `maxWidth: 100%` below still bounds it, and a viewport
+	// narrower than the floor keeps the panel's existing horizontal scroll.
+	width: "100%",
 	maxWidth: "100%",
 	maxHeight: "100%",
 	overflowY: "auto",

@@ -18,6 +18,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
 	getRawTlsSignals,
 	rawTlsSignalsForSession,
+	rawTlsSignalsFromRecord,
 } from "../../../api/rawTlsSignalsMiddleware.js";
 
 const mockLogger = (): Logger => {
@@ -145,6 +146,157 @@ describe("rawTlsSignalsForSession", () => {
 			tcpOptsOrder: 8,
 			tcpWindow: 9,
 		});
+	});
+});
+
+describe("getRawTlsSignals — whole-SYN fields from the 104-byte record", () => {
+	it("parses every new header", () => {
+		const headers: IncomingHttpHeaders = {
+			// MSS(2), SACK-permitted(4), Timestamps(8), NOP(1), Window-Scale(3)
+			// packed one byte per option, least-significant byte first. The
+			// probe sends this as decimal, so it is built from the hex here
+			// rather than written out.
+			"x-tls-tcp-opts-kinds": String(0x0000000301080402n),
+			// The same five options as presence bits: 4 | 16 | 64 | 2 | 8.
+			"x-tls-tcp-opts-present": "94",
+			"x-tls-tcp-opts-count": "5",
+			"x-tls-tcp-tsval": "3456789",
+			"x-tls-tcp-tsecr": "0",
+			"x-tls-tcp-flags": "2",
+			"x-tls-tcp-data-offset-resv": "160",
+			"x-tls-tcp-urg-ptr": "0",
+			"x-tls-ip-ident": "0",
+			"x-tls-ip-total-len": "60",
+			"x-tls-ip-frag-flags": "16384",
+			"x-tls-ip-tos": "0",
+		};
+
+		const result = getRawTlsSignals(headers, mockLogger());
+
+		expect(result.tcpOptsKinds).toEqual([2, 4, 8, 1, 3]);
+		expect(result.tcpOptsPresent).toBe(94);
+		expect(result.tcpOptsCount).toBe(5);
+		expect(result.tcpTsval).toBe(3456789);
+		expect(result.tcpTsecr).toBe(0);
+		expect(result.tcpFlags).toBe(2);
+		expect(result.tcpDataOffsetResv).toBe(160);
+		expect(result.tcpUrgPtr).toBe(0);
+		expect(result.ipIdent).toBe(0);
+		expect(result.ipTotalLen).toBe(60);
+		expect(result.ipFragFlags).toBe(16384);
+		expect(result.ipTos).toBe(0);
+	});
+
+	// The whole reason the packed value is decoded rather than stored: a u64
+	// reaches 2^64 and a JS number is exact only to 2^53, so Number.parseInt
+	// would round — and the rounding lands in the low bytes, which are the
+	// option kinds themselves.
+	it("reads a packed value above 2^53 without losing the low bytes", () => {
+		// Eight options, every slot occupied, so the value needs all 64 bits.
+		const packed = 0x22130805040302_01n;
+		expect(Number(packed) > Number.MAX_SAFE_INTEGER).toBe(true);
+
+		const result = getRawTlsSignals(
+			{ "x-tls-tcp-opts-kinds": String(packed) },
+			mockLogger(),
+		);
+
+		expect(result.tcpOptsKinds).toEqual([1, 2, 3, 4, 5, 8, 0x13, 0x22]);
+	});
+
+	// Kind numbers a 4-bit-per-slot encoding could not tell apart: MSS(2) vs
+	// Fast Open(34), Window Scale(3) vs MD5(19).
+	it("keeps the kind numbers the old packed order aliased together", () => {
+		const result = getRawTlsSignals(
+			{ "x-tls-tcp-opts-kinds": String(0x00000000_13220302n) },
+			mockLogger(),
+		);
+		expect(result.tcpOptsKinds).toEqual([2, 3, 34, 19]);
+	});
+
+	it("stops at the first empty slot so a trailing EOL is not an option", () => {
+		const result = getRawTlsSignals(
+			{ "x-tls-tcp-opts-kinds": String(0x0000000000000402n) },
+			mockLogger(),
+		);
+		expect(result.tcpOptsKinds).toEqual([2, 4]);
+	});
+
+	// The probe's absent-marker. An empty array would claim a SYN that
+	// carried no options at all, which is a different statement.
+	it("treats an all-zero packed value as absent, not as an empty list", () => {
+		const result = getRawTlsSignals(
+			{ "x-tls-tcp-opts-kinds": "0" },
+			mockLogger(),
+		);
+		expect(result.tcpOptsKinds).toBeUndefined();
+	});
+
+	it("ignores a malformed or out-of-range packed value", () => {
+		for (const raw of ["not a number", "-1", "1.5", String((1n << 64n) + 1n)]) {
+			const result = getRawTlsSignals(
+				{ "x-tls-tcp-opts-kinds": raw },
+				mockLogger(),
+			);
+			expect(result.tcpOptsKinds, raw).toBeUndefined();
+		}
+	});
+
+	// chaddy sends exactly one of the two option encodings, so a provider
+	// behind an un-upgraded chaddy must still get the legacy pair.
+	it("still reads the legacy option headers an 80-byte record produces", () => {
+		const result = getRawTlsSignals(
+			{
+				"x-tls-tcp-opts-flags": "31",
+				"x-tls-tcp-opts-order": "202818",
+			},
+			mockLogger(),
+		);
+		expect(result.tcpOptsFlags).toBe(31);
+		expect(result.tcpOptsOrder).toBe(202818);
+		expect(result.tcpOptsKinds).toBeUndefined();
+		expect(result.tcpOptsPresent).toBeUndefined();
+	});
+});
+
+describe("rawTlsSignalsFromRecord", () => {
+	it("carries every field off a session record", () => {
+		const out = rawTlsSignalsFromRecord({
+			synNs: 1,
+			tcpOptsKinds: [2, 4, 8],
+			tcpOptsPresent: 94,
+			tcpTsval: 7,
+			ipIdent: 0,
+		});
+		expect(out).toEqual({
+			synNs: 1,
+			tcpOptsKinds: [2, 4, 8],
+			tcpOptsPresent: 94,
+			tcpTsval: 7,
+			ipIdent: 0,
+		});
+	});
+
+	// Called with `sessionRecord?.` at several sites, where the session may
+	// not exist at all.
+	it("is an empty object for a missing record", () => {
+		expect(rawTlsSignalsFromRecord(undefined)).toEqual({});
+		expect(rawTlsSignalsFromRecord(null)).toEqual({});
+	});
+
+	it("omits undefined fields so Mongo docs stay slim", () => {
+		expect(rawTlsSignalsFromRecord({ tcpMss: 1460 })).toEqual({
+			tcpMss: 1460,
+		});
+	});
+
+	// A zero here is a real observation — Linux sends ip_ident 0 with DF set,
+	// and a TSecr of 0 is what a well-formed SYN carries — so the filter has
+	// to be on `undefined`, not on falsiness.
+	it("keeps a zero, which is a real reading for several of these", () => {
+		expect(
+			rawTlsSignalsFromRecord({ ipIdent: 0, tcpTsecr: 0, tcpFlags: 0 }),
+		).toEqual({ ipIdent: 0, tcpTsecr: 0, tcpFlags: 0 });
 	});
 });
 

@@ -398,7 +398,8 @@
 			"KEYBOARD_HINT": "用方向键移动拼块，按住 Shift 可以小步移动。按 Enter 提交，按 Home 让它回到起点，按 Escape 取消。",
 			"POSITION": "距左边 {{x}} %，距顶部 {{y}} %",
 			"CHECKING": "正在检查您的答案",
-			"RETRY_ANNOUNCEMENT": "差一点。已加载新的拼图，拼块回到了起点。"
+			"RETRY_ANNOUNCEMENT": "差一点。已加载新的拼图，拼块回到了起点。",
+			"REFRESH": "换一个拼图"
 		}
 	},
 	"CONTRACT": {

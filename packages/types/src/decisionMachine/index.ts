@@ -184,9 +184,27 @@ export type DecisionMachineInput = {
 	observedTtl?: number;
 	tcpMss?: number;
 	tcpWscale?: number;
+	tcpWindow?: number;
+	// Whole-SYN fields from the 104-byte probe record. `tcpOptsKinds` is the
+	// option-kind list in wire order ([2, 4, 8, 1, 3] on an ordinary Linux
+	// SYN), which replaces the lossy packed `tcpOptsOrder`.
+	tcpOptsKinds?: number[];
+	tcpOptsPresent?: number;
+	tcpOptsCount?: number;
+	tcpTsval?: number;
+	tcpTsecr?: number;
+	tcpFlags?: number;
+	tcpDataOffsetResv?: number;
+	tcpUrgPtr?: number;
+	ipIdent?: number;
+	ipTotalLen?: number;
+	ipFragFlags?: number;
+	ipTos?: number;
+	// Superseded by tcpOptsPresent / tcpOptsKinds. Rules already reading
+	// these keep working on historical sessions; on sessions served by a
+	// rolled-out chaddy they are undefined.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
-	tcpWindow?: number;
 	// The site's per-category traffic-filter policies. Gates the
 	// egress-sensitive TCP-stack rules and supplies the action they inherit —
 	// see TrafficCategoryPolicies.
@@ -346,9 +364,27 @@ export interface RoutingMachineRawSignals {
 	observedTtl?: number;
 	tcpMss?: number;
 	tcpWscale?: number;
+	tcpWindow?: number;
+	// Whole-SYN fields from the 104-byte probe record. `tcpOptsKinds` is the
+	// option-kind list in wire order ([2, 4, 8, 1, 3] on an ordinary Linux
+	// SYN), which replaces the lossy packed `tcpOptsOrder`.
+	tcpOptsKinds?: number[];
+	tcpOptsPresent?: number;
+	tcpOptsCount?: number;
+	tcpTsval?: number;
+	tcpTsecr?: number;
+	tcpFlags?: number;
+	tcpDataOffsetResv?: number;
+	tcpUrgPtr?: number;
+	ipIdent?: number;
+	ipTotalLen?: number;
+	ipFragFlags?: number;
+	ipTos?: number;
+	// Superseded by tcpOptsPresent / tcpOptsKinds. Rules already reading
+	// these keep working on historical sessions; on sessions served by a
+	// rolled-out chaddy they are undefined.
 	tcpOptsFlags?: number;
 	tcpOptsOrder?: number;
-	tcpWindow?: number;
 	// IP metadata as looked up by `ipInfoMiddleware` from the provider's
 	// ipapi/isp mirror at request time. Undefined when the lookup failed
 	// or the middleware wasn't reached (dev requests bypassing the
