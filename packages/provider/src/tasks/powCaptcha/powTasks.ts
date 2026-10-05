@@ -93,7 +93,11 @@ import {
 	evaluateEmailSpamRules,
 	normaliseEmailForMatching,
 } from "../spam/evaluateEmailSpamRules.js";
-import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
+import {
+	checkPowSignature,
+	isCoordsAllZero,
+	validateSolution,
+} from "./powTasksUtils.js";
 
 /**
  * Request-side data the handler can supply for the post-pow routing pass.
@@ -525,6 +529,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					challengeRecord,
 					challengeSplit,
 					behavioralDataPacked: decryptedBehavioralDataPacked,
+					coords,
 				})
 			: undefined;
 
@@ -559,10 +564,12 @@ export class PowCaptchaManager extends CaptchaManager {
 		challengeRecord: PoWCaptchaRecord;
 		challengeSplit: string[];
 		behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
+		coords?: [number, number][][];
 	}): Promise<RoutingMachineOutput | undefined> {
 		if (!this.postPowContext) return undefined;
 
-		const { challengeRecord, challengeSplit, behavioralDataPacked } = args;
+		const { challengeRecord, challengeSplit, behavioralDataPacked, coords } =
+			args;
 
 		if (!challengeRecord.sessionId) {
 			this.logger.debug(() => ({
@@ -607,6 +614,8 @@ export class PowCaptchaManager extends CaptchaManager {
 			raw: {
 				...this.postPowContext.raw,
 				...(behavioralDataPacked && { behavioralDataPacked }),
+				...(sessionRecord.mode && { mode: sessionRecord.mode }),
+				coordsAllZero: isCoordsAllZero(coords),
 				// SIMD readings are decrypted and attached to the session above
 				// (decryptAndAttachSimdReadingsIfAbsent) before this re-fetch, so
 				// they are available here in decoded form for the routing machine.

@@ -24,6 +24,7 @@ import {
 	PuzzleSettingsSchema,
 	puzzleToleranceFieldSchema,
 } from "../client/settings.js";
+import type { ModeEnum } from "../config/mode.js";
 import type { PuzzleEvent, RequestHeaders } from "../provider/api.js";
 import type { ScoreComponents } from "../provider/database.js";
 import type { DetectorData, SimdReadings } from "../provider/detection.js";
@@ -415,6 +416,13 @@ export interface RoutingMachineRawSignals {
 	// egress-sensitive middlebox route rules and supplies the challenge
 	// policy they inherit — see TrafficCategoryPolicies.
 	trafficPolicies?: TrafficCategoryPolicies;
+	// Widget mode persisted on the originating Session. `postPow` only;
+	// undefined when the session pre-dates the field.
+	mode?: ModeEnum;
+	// True when the PoW salt carried click coords and every pair was (0,0).
+	// The widget reports (0,0) for a keyboard activation as well as for the
+	// frictionless auto-start. `postPow` only.
+	coordsAllZero?: boolean;
 }
 
 export type RoutingMachinePhase = "route" | "postPow";
