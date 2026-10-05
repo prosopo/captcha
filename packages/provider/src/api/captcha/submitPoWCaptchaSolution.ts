@@ -342,7 +342,11 @@ export const buildEscalation = async (
 	// takes these as its trailing overrides; they are dropped for non-puzzle
 	// types by the same rule as in sendCaptcha.
 	const escalationPuzzleOverrides = (():
-		| { puzzleTolerance: number; puzzle: IPuzzleSettings }
+		| {
+				puzzleTolerance: number;
+				puzzle: IPuzzleSettings;
+				puzzleLevel: number;
+		  }
 		| undefined => {
 		if (escalatedType !== CaptchaType.puzzle) return undefined;
 		const { isMobile } = derivePlatform(
@@ -364,6 +368,7 @@ export const buildEscalation = async (
 		return {
 			puzzleTolerance: difficulty.tolerance,
 			puzzle: difficulty.puzzle,
+			puzzleLevel: difficulty.level,
 		};
 	})();
 
