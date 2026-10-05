@@ -85,14 +85,19 @@ describe("getDefaultSiteKeys", SLOW, () => {
 		}
 	});
 
-	it("turns the icon-order feature flag on for the icon-order site only", () => {
-		for (const site of getDefaultSiteKeys()) {
-			expect(site.settings.captchaTypeFeatureFlags).toEqual(
-				site.settings.captchaType === CaptchaType.iconOrder
+	it("turns on the icon-order and audio feature flags for their demo sites only", () => {
+		const flags = getDefaultSiteKeys().map(
+			(site) => site.settings.captchaTypeFeatureFlags,
+		);
+		expect(flags).toEqual(
+			NAMES.map((name) =>
+				name === "iconOrder"
 					? { iconOrder: true }
-					: undefined,
-			);
-		}
+					: name === "audio"
+						? { audio: true }
+						: undefined,
+			),
+		);
 	});
 
 	it("returns a fresh array each call, so callers cannot corrupt the seed", () => {

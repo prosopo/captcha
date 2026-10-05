@@ -866,6 +866,24 @@ describe("captcha type feature flags", () => {
 		).toBe(true);
 	});
 
+	it("keeps audio off unless its flag is true", () => {
+		expect(captchaTypeFeatureFlagDefaults[CaptchaType.audio]).toBe(false);
+		expect(isCaptchaTypeFeatureEnabled(CaptchaType.audio, undefined)).toBe(
+			false,
+		);
+		expect(
+			isCaptchaTypeFeatureEnabled(CaptchaType.audio, { audio: true }),
+		).toBe(true);
+	});
+
+	it("never makes audio a type the frictionless flow can serve", () => {
+		expect(
+			resolveAllowedCaptchaTypes({
+				captchaTypeFeatureFlags: { audio: true },
+			}),
+		).not.toHaveProperty(CaptchaType.audio);
+	});
+
 	it("disallows puzzle only when the flag is false", () => {
 		expect(
 			isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, { puzzle: false }),

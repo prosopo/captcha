@@ -31,7 +31,10 @@ import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
-import { offersAudioAlternative } from "../../../tasks/audioAlternative.js";
+import {
+	isAudioAlternativeEnabled,
+	offersAudioAlternative,
+} from "../../../tasks/audioAlternative.js";
 import { coerceToEnabledCaptchaType } from "../../../tasks/captchaTypeSelection.js";
 import { Tasks } from "../../../tasks/index.js";
 import {
@@ -241,10 +244,11 @@ export default (
 				);
 			}
 
-			const audioAccessibilityEnabled =
-				clientRecord.settings?.audioAccessibilityEnabled === true;
-			tasks.frictionlessManager.setAudioAccessibilityEnabled(
-				audioAccessibilityEnabled,
+			const audioAlternativeEnabled = isAudioAlternativeEnabled(
+				clientRecord.settings,
+			);
+			tasks.frictionlessManager.setAudioAlternativeEnabled(
+				audioAlternativeEnabled,
 			);
 			const allowedCaptchaTypes = resolveSiteAllowedCaptchaTypes(
 				clientRecord.settings,
@@ -537,7 +541,7 @@ export default (
 						dns_url: buildDnsEventUrl(dedup.sessionId),
 						...(offersAudioAlternative(
 							dedup.captchaType,
-							audioAccessibilityEnabled,
+							audioAlternativeEnabled,
 						) && { audioAlternativeAvailable: true }),
 					});
 				}

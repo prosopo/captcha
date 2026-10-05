@@ -15,6 +15,7 @@
 import {
 	CaptchaType,
 	ClientSettingsSchema,
+	type ICaptchaTypeFeatureFlags,
 	type IProviderAccount,
 	type ISite,
 } from "@prosopo/types";
@@ -26,6 +27,7 @@ interface SiteKeySeed {
 	name: string;
 	captchaType: CaptchaType;
 	audioAccessibilityEnabled: boolean;
+	captchaTypeFeatureFlags?: ICaptchaTypeFeatureFlags;
 }
 
 const seed = (
@@ -41,14 +43,25 @@ export function getDefaultSiteKeys(): ISite[] {
 		seed(CaptchaType.frictionless),
 		// Before `puzzle`: `updateDemoHTMLFiles` leaves the last-seeded type's
 		// sitekey in the webview demos, which must stay puzzle.
-		seed(CaptchaType.iconOrder),
+		{
+			...seed(CaptchaType.iconOrder),
+			captchaTypeFeatureFlags: { iconOrder: true },
+		},
 		// Audio is not selectable, so the audio demos' key is an image site
 		// with the alternative on.
-		seed(CaptchaType.image, "audio", true),
+		{
+			...seed(CaptchaType.image, "audio", true),
+			captchaTypeFeatureFlags: { audio: true },
+		},
 		seed(CaptchaType.puzzle),
 	];
 	const sites: ISite[] = [];
-	for (const { name, captchaType, audioAccessibilityEnabled } of seeds) {
+	for (const {
+		name,
+		captchaType,
+		audioAccessibilityEnabled,
+		captchaTypeFeatureFlags,
+	} of seeds) {
 		const secret = `${DEV_PHRASE}//${name}`;
 		const pair = getPair(secret);
 		// Settings are written explicitly rather than relying on schema defaults
@@ -63,9 +76,7 @@ export function getDefaultSiteKeys(): ISite[] {
 				domains: ["localhost"],
 				imageMaxRounds: 2,
 				frictionlessThreshold: 0.8,
-				...(captchaType === CaptchaType.iconOrder && {
-					captchaTypeFeatureFlags: { iconOrder: true },
-				}),
+				...(captchaTypeFeatureFlags && { captchaTypeFeatureFlags }),
 			}),
 		});
 	}

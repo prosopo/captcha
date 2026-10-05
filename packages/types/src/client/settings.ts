@@ -230,6 +230,7 @@ export const resolveFrictionlessTypes = (
 export const CaptchaTypeFeatureFlagsSchema = object({
 	[CaptchaType.puzzle]: boolean().optional(),
 	[CaptchaType.iconOrder]: boolean().optional(),
+	[CaptchaType.audio]: boolean().optional(),
 });
 
 export type ICaptchaTypeFeatureFlags = output<
@@ -245,6 +246,7 @@ export const captchaTypeFeatureFlagDefaults: Required<ICaptchaTypeFeatureFlags> 
 	{
 		[CaptchaType.puzzle]: true,
 		[CaptchaType.iconOrder]: false,
+		[CaptchaType.audio]: false,
 	};
 
 const isFeatureFlaggedCaptchaType = (
@@ -864,7 +866,8 @@ export const ClientSettingsSchema = object({
 	audio: AudioSettingsSchema.optional(),
 	// Offers audio as an accessibility alternative from the visual widgets;
 	// the only route to it, since audio is not a selectable type. Off when
-	// absent: the audio path is English-only, so a site has to opt in.
+	// absent: the audio path is English-only, so a site has to opt in. Also
+	// needs `captchaTypeFeatureFlags.audio`, which only Prosopo can set.
 	audioAccessibilityEnabled: boolean().optional(),
 	iconOrderTolerance: iconOrderToleranceFieldSchema
 		.optional()

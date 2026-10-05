@@ -86,7 +86,8 @@ const issueAudioChallenge = async ({
 	};
 };
 
-// `isValidRequest` also requires a visual session to exchange; see
+// `isValidRequest` refuses audio unless the site has it on, and requires a
+// visual session to exchange; see `isAudioAlternativeEnabled` and
 // `isAudioAlternativeAllowed`.
 export default (
 	env: ProviderEnvironment,
@@ -97,6 +98,5 @@ export default (
 		label: "audio",
 		manager: (tasks) => tasks.audioCaptchaManager,
 		maintenanceResponse: buildAudioMaintenanceResponse,
-		isEnabled: (settings) => settings?.audioAccessibilityEnabled === true,
 		issue: issueAudioChallenge,
 	});

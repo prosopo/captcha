@@ -503,7 +503,7 @@ describe("Frictionless Task Manager", () => {
 			};
 
 			frictionlessTaskManager.setSessionParams(sessionParams);
-			frictionlessTaskManager.setAudioAccessibilityEnabled(true);
+			frictionlessTaskManager.setAudioAlternativeEnabled(true);
 			const image = await frictionlessTaskManager.sendImageCaptcha({
 				solvedImagesCount: 0,
 			});
@@ -512,7 +512,7 @@ describe("Frictionless Task Manager", () => {
 				powDifficulty: undefined,
 			});
 			frictionlessTaskManager.setSessionParams(sessionParams);
-			frictionlessTaskManager.setAudioAccessibilityEnabled(false);
+			frictionlessTaskManager.setAudioAlternativeEnabled(false);
 			const imageOff = await frictionlessTaskManager.sendImageCaptcha({
 				solvedImagesCount: 0,
 			});

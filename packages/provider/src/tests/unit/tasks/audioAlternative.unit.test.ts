@@ -16,6 +16,7 @@ import { CaptchaType } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
 	isAudioAlternativeAllowed,
+	isAudioAlternativeEnabled,
 	isAudioAlternativeSessionType,
 } from "../../../tasks/audioAlternative.js";
 
@@ -46,18 +47,55 @@ describe("isAudioAlternativeSessionType", () => {
 	});
 });
 
-describe("isAudioAlternativeAllowed", () => {
-	const on = { audioAccessibilityEnabled: true };
-	const off = { audioAccessibilityEnabled: false };
+describe("isAudioAlternativeEnabled", () => {
+	it("needs both the owner's switch and the audio feature flag", () => {
+		expect(
+			isAudioAlternativeEnabled({
+				audioAccessibilityEnabled: true,
+				captchaTypeFeatureFlags: { audio: true },
+			}),
+		).toBe(true);
+		expect(isAudioAlternativeEnabled({ audioAccessibilityEnabled: true })).toBe(
+			false,
+		);
+		expect(
+			isAudioAlternativeEnabled({
+				audioAccessibilityEnabled: true,
+				captchaTypeFeatureFlags: { audio: false },
+			}),
+		).toBe(false);
+		expect(
+			isAudioAlternativeEnabled({
+				audioAccessibilityEnabled: false,
+				captchaTypeFeatureFlags: { audio: true },
+			}),
+		).toBe(false);
+		expect(
+			isAudioAlternativeEnabled({ captchaTypeFeatureFlags: { audio: true } }),
+		).toBe(false);
+		expect(isAudioAlternativeEnabled(undefined)).toBe(false);
+	});
+});
 
-	it("allows audio against a visual session on a site that opted in", () => {
+describe("isAudioAlternativeAllowed", () => {
+	const on = {
+		audioAccessibilityEnabled: true,
+		captchaTypeFeatureFlags: { audio: true },
+	};
+	const off = {
+		audioAccessibilityEnabled: false,
+		captchaTypeFeatureFlags: { audio: true },
+	};
+	const unflagged = { audioAccessibilityEnabled: true };
+
+	it("allows audio against a visual session on a site with both switches on", () => {
 		for (const type of VISUAL) {
 			expect(isAudioAlternativeAllowed(CaptchaType.audio, type, on)).toBe(true);
 		}
 	});
 
-	it("refuses when the site has not opted in", () => {
-		for (const settings of [off, {}, undefined]) {
+	it("refuses when either switch is off", () => {
+		for (const settings of [off, unflagged, {}, undefined]) {
 			expect(
 				isAudioAlternativeAllowed(
 					CaptchaType.audio,

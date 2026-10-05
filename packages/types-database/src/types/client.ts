@@ -250,6 +250,7 @@ export const UserSettingsSchema = new Schema({
 			{
 				puzzle: { type: Boolean, required: false },
 				iconOrder: { type: Boolean, required: false },
+				audio: { type: Boolean, required: false },
 			},
 			{ _id: false },
 		),

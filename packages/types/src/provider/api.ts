@@ -586,7 +586,8 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	// Only present when captchaType === "authenticated". Rendered by the
 	// widget's badge so the operator can see WHICH agent verified.
 	agent?: string;
-	// The site's `audioAccessibilityEnabled`, sent only with a visual challenge.
+	// Whether the site has the audio alternative on (`isAudioAlternativeEnabled`
+	// in the provider), sent only with a visual challenge.
 	audioAlternativeAvailable?: boolean;
 }
 

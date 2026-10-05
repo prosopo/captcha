@@ -104,7 +104,7 @@ export class FrictionlessManager extends CaptchaManager {
 		"sessionId" | "createdAt" | "captchaType"
 	>;
 	private routingContext?: RoutingContext;
-	private audioAccessibilityEnabled = false;
+	private audioAlternativeEnabled = false;
 	private allowedCaptchaTypes?: IFrictionlessTypes;
 	private readonly decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
@@ -135,8 +135,8 @@ export class FrictionlessManager extends CaptchaManager {
 	}
 
 	/** Separate from `setSessionParams`, which the short-circuit path bypasses. */
-	setAudioAccessibilityEnabled(enabled: boolean): void {
-		this.audioAccessibilityEnabled = enabled;
+	setAudioAlternativeEnabled(enabled: boolean): void {
+		this.audioAlternativeEnabled = enabled;
 	}
 
 	/**
@@ -696,7 +696,7 @@ export class FrictionlessManager extends CaptchaManager {
 			dns_url: buildDnsEventUrl(sessionRecord.sessionId),
 			...(offersAudioAlternative(
 				finalCaptchaType,
-				this.audioAccessibilityEnabled,
+				this.audioAlternativeEnabled,
 			) && { audioAlternativeAvailable: true }),
 		};
 	}

@@ -53,7 +53,10 @@ import {
 	normalizeHeadersForMatching,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
-import { isAudioAlternativeAllowed } from "./audioAlternative.js";
+import {
+	isAudioAlternativeAllowed,
+	isAudioAlternativeEnabled,
+} from "./audioAlternative.js";
 import { getDetectorBundlePool } from "./detection/bundlePool.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
@@ -458,13 +461,17 @@ export class CaptchaManager {
 		}));
 
 		// Ahead of the session lookup so a session minted before the type was
-		// switched off is refused rather than consumed and served.
-		if (
-			!isCaptchaTypeFeatureEnabled(
-				requestedCaptchaType,
-				clientSettings.settings?.captchaTypeFeatureFlags,
-			)
-		) {
+		// switched off is refused rather than consumed and served. Audio also
+		// needs the site owner's switch, which is checked here for the same
+		// reason: refusing it later would spend the visual session it trades.
+		const typeEnabled =
+			requestedCaptchaType === CaptchaType.audio
+				? isAudioAlternativeEnabled(clientSettings.settings)
+				: isCaptchaTypeFeatureEnabled(
+						requestedCaptchaType,
+						clientSettings.settings?.captchaTypeFeatureFlags,
+					);
+		if (!typeEnabled) {
 			this.logger.warn(() => ({
 				msg: "Captcha type is switched off for this site",
 				data: {

@@ -54,7 +54,7 @@ const FULLY_POPULATED_SETTINGS = {
 		frictionlessImageThreshold: 1.3,
 	},
 	frictionlessTypes: { image: false, puzzle: true, iconOrder: true },
-	captchaTypeFeatureFlags: { puzzle: false, iconOrder: true },
+	captchaTypeFeatureFlags: { puzzle: false, iconOrder: true, audio: true },
 	powDifficulty: 6,
 	imageThreshold: 0.81,
 	imageMaxRounds: 12,

@@ -14,9 +14,9 @@
 /// <reference types="cypress" />
 
 // Reaches audio through "use audio instead" on an image site with
-// `audioAccessibilityEnabled`, solves it, then proves the token verifies
-// server-side: /signup only answers "user created" if the SDK dispatched the
-// token to the audio endpoint.
+// `audioAccessibilityEnabled` and the audio feature flag, solves it, then
+// proves the token verifies server-side: /signup only answers "user created"
+// if the SDK dispatched the token to the audio endpoint.
 
 import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
@@ -53,6 +53,7 @@ describe("Audio CAPTCHA — signup", () => {
 			return cy
 				.registerSiteKey(baseCaptchaType, CaptchaType.image, {
 					audioAccessibilityEnabled: true,
+					captchaTypeFeatureFlags: { audio: true },
 					// Production difficulty: the spec reads the answer, so it
 					// gains nothing from an easier clip.
 					audio: {

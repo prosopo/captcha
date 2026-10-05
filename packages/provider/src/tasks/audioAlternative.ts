@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CaptchaType, type IUserSettings } from "@prosopo/types";
+import {
+	CaptchaType,
+	type IUserSettings,
+	isCaptchaTypeFeatureEnabled,
+} from "@prosopo/types";
 
 // Nothing can select audio, so it is served against a visual session: "use
 // audio instead" re-runs /frictionless (issuing the visual challenge consumed
@@ -30,21 +34,39 @@ export const isAudioAlternativeSessionType = (
 ): boolean =>
 	captchaType !== undefined && AUDIO_ALTERNATIVE_SESSION_TYPES.has(captchaType);
 
+type AudioAlternativeSettings = Pick<
+	IUserSettings,
+	"audioAccessibilityEnabled" | "captchaTypeFeatureFlags"
+>;
+
+/**
+ * The site owner has to turn the alternative on, and Prosopo has to have
+ * switched on the audio feature flag for the site.
+ */
+export const isAudioAlternativeEnabled = (
+	settings: AudioAlternativeSettings | undefined,
+): boolean =>
+	settings?.audioAccessibilityEnabled === true &&
+	isCaptchaTypeFeatureEnabled(
+		CaptchaType.audio,
+		settings.captchaTypeFeatureFlags,
+	);
+
 /** Whether a challenge of this type shows "use audio instead". */
 export const offersAudioAlternative = (
 	captchaType: string | undefined,
-	audioAccessibilityEnabled: boolean,
+	audioAlternativeEnabled: boolean,
 ): boolean =>
-	audioAccessibilityEnabled && isAudioAlternativeSessionType(captchaType);
+	audioAlternativeEnabled && isAudioAlternativeSessionType(captchaType);
 
 /** Whether an audio challenge may be issued against a session of another type. */
 export const isAudioAlternativeAllowed = (
 	requestedCaptchaType: CaptchaType,
 	sessionCaptchaType: CaptchaType,
-	settings: Pick<IUserSettings, "audioAccessibilityEnabled"> | undefined,
+	settings: AudioAlternativeSettings | undefined,
 ): boolean =>
 	requestedCaptchaType === CaptchaType.audio &&
 	offersAudioAlternative(
 		sessionCaptchaType,
-		settings?.audioAccessibilityEnabled === true,
+		isAudioAlternativeEnabled(settings),
 	);

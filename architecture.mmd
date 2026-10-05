@@ -243,16 +243,18 @@ graph TB
     IconOrderTasks -->|signed token| Manager
 
     %% ===== AUDIO FLOW =====
-    %% Audio is an accessibility alternative, not a routable type. A site
-    %% opts in with audioAccessibilityEnabled; the visual widgets (image,
-    %% puzzle, icon-order) then show a "use audio instead" control, and only
-    %% a user who presses it is served audio.
-    ImageCaptcha -->|"use audio instead<br/>(audioAccessibilityEnabled)"| AudioCaptcha
-    PuzzleCaptcha -->|"use audio instead<br/>(audioAccessibilityEnabled)"| AudioCaptcha
-    IconOrderCaptcha -->|"use audio instead<br/>(audioAccessibilityEnabled)"| AudioCaptcha
+    %% Audio is an accessibility alternative, not a routable type. It needs
+    %% both the owner's audioAccessibilityEnabled and Prosopo's
+    %% captchaTypeFeatureFlags.audio; the visual widgets (image, puzzle,
+    %% icon-order) then show a "use audio instead" control, and only a user
+    %% who presses it is served audio.
+    ImageCaptcha -->|"use audio instead<br/>(audioAccessibilityEnabled<br/>+ audio feature flag)"| AudioCaptcha
+    PuzzleCaptcha -->|"use audio instead<br/>(audioAccessibilityEnabled<br/>+ audio feature flag)"| AudioCaptcha
+    IconOrderCaptcha -->|"use audio instead<br/>(audioAccessibilityEnabled<br/>+ audio feature flag)"| AudioCaptcha
     AudioCaptcha -->|get challenge| AudioChallengeEP
     AudioChallengeEP -->|"1. AccessPolicy lookup"| AccessPolicies
     AudioChallengeEP -->|"2. applyTrafficFilterAtRequestTime"| TrafficFilter
+    AudioChallengeEP -->|"isValidRequest: refuse unless both<br/>switches are on, before the<br/>visual session is spent"| AllowedTypes
     AudioChallengeEP --> AudioTasks
     AudioTasks -->|"synthesise clip, store the transcript.<br/>The answer is never serialised"| MongoDB
     AudioTasks -->|"WAV data URI + digit count only"| AudioCaptcha
