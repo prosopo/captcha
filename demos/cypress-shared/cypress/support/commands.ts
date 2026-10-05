@@ -226,7 +226,9 @@ function clickCheckbox(): Cypress.Chainable<JQuery<HTMLElement>> {
 function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 	// First wait for the procaptcha script to be loaded
 	return cy.waitForProcaptchaScript().then(() => {
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+		// The checkbox takes a click before /frictionless has answered, so a
+		// `captcha/**` pattern would catch that response instead.
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/image").as(
 			"getCaptcha",
 		);
 
