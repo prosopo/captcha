@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import {
+	CaptchaType,
 	frictionlessImageThresholdDefault,
 	frictionlessPuzzleThresholdDefault,
 } from "@prosopo/types";
@@ -22,6 +23,7 @@ import {
 	MAX_DETECTOR_EXTRA_IMAGE_ROUNDS,
 	getRoundsFromTriggeredDetectors,
 	resolveScoreLadder,
+	resolveSiteAllowedCaptchaTypes,
 } from "../../../../../api/captcha/getFrictionlessCaptchaChallenge/constants.js";
 
 describe("getFrictionlessCaptchaChallenge/constants", () => {
@@ -114,5 +116,51 @@ describe("getFrictionlessCaptchaChallenge/constants", () => {
 				last = rounds;
 			}
 		});
+	});
+});
+
+describe("resolveSiteAllowedCaptchaTypes", () => {
+	it("allows every type on a site with nothing configured", () => {
+		expect(resolveSiteAllowedCaptchaTypes({})).toEqual({
+			image: true,
+			puzzle: true,
+		});
+	});
+
+	it("applies the owner's frictionlessTypes on a frictionless site", () => {
+		expect(
+			resolveSiteAllowedCaptchaTypes({
+				captchaType: CaptchaType.frictionless,
+				frictionlessTypes: { image: false, puzzle: true },
+			}),
+		).toEqual({ image: false, puzzle: true });
+	});
+
+	it("ignores frictionlessTypes on a site pinned to a concrete type", () => {
+		expect(
+			resolveSiteAllowedCaptchaTypes({
+				captchaType: CaptchaType.image,
+				frictionlessTypes: { image: false, puzzle: false },
+			}),
+		).toEqual({ image: true, puzzle: true });
+	});
+
+	it("applies the puzzle feature flag on a site pinned to puzzle", () => {
+		expect(
+			resolveSiteAllowedCaptchaTypes({
+				captchaType: CaptchaType.puzzle,
+				captchaTypeFeatureFlags: { puzzle: false },
+			}),
+		).toEqual({ image: true, puzzle: false });
+	});
+
+	it("applies the puzzle feature flag on a frictionless site", () => {
+		expect(
+			resolveSiteAllowedCaptchaTypes({
+				captchaType: CaptchaType.frictionless,
+				frictionlessTypes: { image: true, puzzle: true },
+				captchaTypeFeatureFlags: { puzzle: false },
+			}),
+		).toEqual({ image: true, puzzle: false });
 	});
 });
