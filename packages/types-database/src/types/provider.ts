@@ -54,6 +54,7 @@ import {
 	type Item,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
+	type PuzzleRenderRecord,
 	type RequestHeaders,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
@@ -446,6 +447,35 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 		required: false,
 	},
 	providerSignature: { type: String, required: true },
+	// Render inputs kept so the portal can replay the exact puzzle a user was
+	// served. Patched on after the imagery is produced, so absent on older
+	// records and on any challenge whose render threw. `backgroundSeed` and
+	// `renderSeed` regenerate the clean background and must never be served to
+	// a caller — see puzzle-assets/src/prng.ts.
+	render: {
+		type: new Schema<PuzzleRenderRecord>(
+			{
+				level: { type: Number, required: false },
+				pieceSize: { type: Number, required: true },
+				geometry: {
+					width: { type: Number, required: true },
+					height: { type: Number, required: true },
+					notchSize: { type: Number, required: true },
+				},
+				settings: {
+					decoyCount: { type: Number, required: true },
+					decoyEdgeDarkness: { type: Number, required: true },
+					decoyBodyBrightness: { type: Number, required: true },
+					holeDarken: { type: Number, required: true },
+					decoyHoleDarken: { type: Number, required: true },
+				},
+				backgroundSeed: { type: String, required: true },
+				renderSeed: { type: String, required: true },
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
 });
 
 // Set an index on the challenge field, ascending
@@ -743,6 +773,9 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// already validated by RoutingMachineOutputSchema before it gets here.
 	puzzleTolerance: { type: Number, required: false },
 	puzzle: { type: Object, required: false },
+	// Ladder index the two fields above were sampled from, reported onto the
+	// challenge record. See `Session.puzzleLevel`.
+	puzzleLevel: { type: Number, required: false },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	// See `StoredCaptcha.pendingStage` — same semantics on Session records.
@@ -1087,6 +1120,9 @@ export const SESSION_PROJECTION = {
 	// overrides silently never apply.
 	puzzleTolerance: 1,
 	puzzle: 1,
+	// Projected alongside them so the challenge record can report which ladder
+	// level produced the override it just applied.
+	puzzleLevel: 1,
 	// Read by captchaManager.peek* to report the session's own
 	// difficulty alongside solvedImagesCount.
 	powDifficulty: 1,

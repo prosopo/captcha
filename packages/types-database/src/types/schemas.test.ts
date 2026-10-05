@@ -39,6 +39,7 @@ import {
 	ClientRecordSchema,
 	CompositeIpAddressRecordSchemaObj,
 	PoWCaptchaRecordSchema,
+	PuzzleCaptchaRecordSchema,
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
 	SessionRecordSchema,
@@ -682,5 +683,60 @@ describe("the stored-event schemas", () => {
 		// sessionId index to one must not add it to the other.
 		expect(StoredPoWCaptchaRecordSchema).not.toBe(PoWCaptchaRecordSchema);
 		expect(hasIndexOn(PoWCaptchaRecordSchema, "sessionId")).toBe(false);
+	});
+});
+
+describe("the puzzle render record", () => {
+	const render = {
+		level: 2,
+		pieceSize: 47,
+		geometry: { width: 300, height: 200, notchSize: 44 },
+		settings: {
+			decoyCount: 7,
+			decoyEdgeDarkness: 31,
+			decoyBodyBrightness: 4,
+			holeDarken: 0.55,
+			decoyHoleDarken: 0.71,
+		},
+		backgroundSeed: "00112233445566778899aabbccddeeff",
+		renderSeed: "ffeeddccbbaa99887766554433221100",
+	};
+
+	// Schemas are strict, so a field the schema does not declare is dropped on
+	// write without an error. Asserting each value survives is the only way to
+	// catch a sub-field that was added to the type but not to the schema —
+	// which would silently store nothing and make a replay impossible.
+	it("survives a strict-mode write on both the provider and stored schemas", () => {
+		for (const schema of [
+			PuzzleCaptchaRecordSchema,
+			StoredPuzzleCaptchaRecordSchema,
+		]) {
+			const doc = validate(schema, { render });
+			expect(doc.render.level).toBe(render.level);
+			expect(doc.render.pieceSize).toBe(render.pieceSize);
+			expect(doc.render.geometry.width).toBe(render.geometry.width);
+			expect(doc.render.geometry.height).toBe(render.geometry.height);
+			expect(doc.render.geometry.notchSize).toBe(render.geometry.notchSize);
+			for (const key of Object.keys(render.settings)) {
+				expect(doc.render.settings[key]).toBe(
+					render.settings[key as keyof typeof render.settings],
+				);
+			}
+			expect(doc.render.backgroundSeed).toBe(render.backgroundSeed);
+			expect(doc.render.renderSeed).toBe(render.renderSeed);
+		}
+	});
+
+	it("is optional, so records written before it existed still validate", () => {
+		const doc = validate(PuzzleCaptchaRecordSchema, {});
+		expect(doc.render).toBeUndefined();
+		expect(errorPaths(doc.validateSync() ?? null)).not.toContain("render");
+	});
+
+	// The ladder sets these together; a projection that drops the level leaves
+	// the challenge record unable to report which band it came from.
+	it("keeps puzzleLevel on the session schema and its projection", () => {
+		const session = validate(SessionRecordSchema, { puzzleLevel: 3 });
+		expect(session.puzzleLevel).toBe(3);
 	});
 });
