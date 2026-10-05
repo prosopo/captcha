@@ -54,6 +54,7 @@ const FULLY_POPULATED_SETTINGS = {
 		frictionlessImageThreshold: 1.3,
 	},
 	frictionlessTypes: { image: false, puzzle: true, iconOrder: true },
+	captchaTypeFeatureFlags: { puzzle: false, iconOrder: true },
 	powDifficulty: 6,
 	imageThreshold: 0.81,
 	imageMaxRounds: 12,
@@ -245,6 +246,9 @@ describe("Client settings Mongo persistence", () => {
 		// as Mixed, so a mongoose regression here silently flattens it.
 		expect(stored.frictionlessThreshold).toMatchObject(
 			FULLY_POPULATED_SETTINGS.frictionlessThreshold,
+		);
+		expect(stored.captchaTypeFeatureFlags).toEqual(
+			FULLY_POPULATED_SETTINGS.captchaTypeFeatureFlags,
 		);
 		expect(stored.powDifficulty).toBe(FULLY_POPULATED_SETTINGS.powDifficulty);
 		expect(stored.imageThreshold).toBe(FULLY_POPULATED_SETTINGS.imageThreshold);

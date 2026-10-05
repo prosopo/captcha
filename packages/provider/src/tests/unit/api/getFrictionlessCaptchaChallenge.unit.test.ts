@@ -45,6 +45,7 @@ type MockTasks = {
 		setSessionParams: MockFn;
 		setRoutingContext: MockFn;
 		setAudioAccessibilityEnabled: MockFn;
+		setAllowedCaptchaTypes: MockFn;
 		applyRoutingMachine: MockFn;
 		sendImageCaptcha: MockFn;
 		sendPowCaptcha: MockFn;
@@ -194,6 +195,7 @@ vi.mock("../../../tasks/index.js", async () => {
 					setSessionParams: vi.fn(),
 					setRoutingContext: vi.fn(),
 					setAudioAccessibilityEnabled: vi.fn(),
+					setAllowedCaptchaTypes: vi.fn(),
 					applyRoutingMachine: vi.fn(
 						async (baseline: { captchaType: CaptchaType }) => ({
 							captchaType: baseline.captchaType,
@@ -279,6 +281,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			setSessionParams: vi.fn(),
 			setRoutingContext: vi.fn(),
 			setAudioAccessibilityEnabled: vi.fn(),
+			setAllowedCaptchaTypes: vi.fn(),
 			applyRoutingMachine: vi.fn(
 				async (baseline: { captchaType: CaptchaType }) => ({
 					captchaType: baseline.captchaType,
@@ -644,6 +647,138 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		expect(res.json).not.toHaveBeenCalledWith(
 			expect.objectContaining({ sessionId: "stale-pow-session-routing" }),
 		);
+	});
+
+	describe("captcha type feature flags", () => {
+		const stubDecrypt = () =>
+			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
+				baseBotScore: 0,
+				timestamp: Date.now(),
+				userId: "u",
+				userAgent: "844bc172f032bdd2d0baae3536c1d66c",
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "abc",
+				decryptionFailed: false,
+			});
+
+		const request = async (dapp: string) => {
+			const { req, res, next } = buildReqRes({
+				token: `t-${dapp}`,
+				headHash: `hh-${dapp}`,
+				dapp,
+				user: "u",
+			});
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+			return { res, next };
+		};
+
+		it("evicts a reused puzzle session once puzzle is switched off", async () => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "sitePuzzleOff",
+				settings: {
+					captchaType: CaptchaType.frictionless,
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					captchaTypeFeatureFlags: { puzzle: false },
+				},
+			});
+			tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+				sessionId: "puzzle-minted-before-switch-off",
+				captchaType: CaptchaType.puzzle,
+				score: 0,
+				webView: false,
+			});
+			stubDecrypt();
+
+			const { res } = await request("sitePuzzleOff");
+
+			expect(tasksInstance.db.checkAndRemoveSession).toHaveBeenCalledWith(
+				"puzzle-minted-before-switch-off",
+			);
+			expect(res.json).not.toHaveBeenCalledWith(
+				expect.objectContaining({
+					sessionId: "puzzle-minted-before-switch-off",
+				}),
+			);
+		});
+
+		it("keeps reusing an image session while the router asks for a switched-off puzzle", async () => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "sitePuzzleOffRouter",
+				settings: {
+					captchaType: CaptchaType.frictionless,
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					captchaTypeFeatureFlags: { puzzle: false },
+				},
+			});
+			tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+				sessionId: "image-session",
+				captchaType: CaptchaType.image,
+				score: 0,
+				webView: false,
+			});
+			tasksInstance.frictionlessManager.applyRoutingMachine.mockResolvedValue({
+				captchaType: CaptchaType.puzzle,
+			});
+
+			const { res } = await request("sitePuzzleOffRouter");
+
+			expect(tasksInstance.db.checkAndRemoveSession).not.toHaveBeenCalled();
+			expect(res.json).toHaveBeenCalledWith(
+				expect.objectContaining({ sessionId: "image-session" }),
+			);
+		});
+
+		it("holds a frictionless site to its challenge types and the feature flags", async () => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "siteFrictionlessTypes",
+				settings: {
+					captchaType: CaptchaType.frictionless,
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					frictionlessTypes: { image: false, puzzle: true },
+					captchaTypeFeatureFlags: { puzzle: false },
+				},
+			});
+			stubDecrypt();
+
+			await request("siteFrictionlessTypes");
+
+			expect(
+				tasksInstance.frictionlessManager.setAllowedCaptchaTypes,
+			).toHaveBeenCalledWith({ image: false, puzzle: false, iconOrder: false });
+		});
+
+		it("holds a site pinned to puzzle to the feature flags before the short-circuit", async () => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "sitePinnedPuzzle",
+				settings: {
+					captchaType: CaptchaType.puzzle,
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					frictionlessTypes: { image: false, puzzle: true },
+					captchaTypeFeatureFlags: { puzzle: false },
+				},
+			});
+
+			await request("sitePinnedPuzzle");
+
+			const setAllowed =
+				tasksInstance.frictionlessManager.setAllowedCaptchaTypes;
+			const sendPuzzle = tasksInstance.frictionlessManager.sendPuzzleCaptcha;
+			expect(setAllowed).toHaveBeenCalledWith({
+				image: true,
+				puzzle: false,
+				iconOrder: false,
+			});
+			expect(sendPuzzle).toHaveBeenCalled();
+			expect(setAllowed.mock.invocationCallOrder[0]).toBeLessThan(
+				sendPuzzle.mock.invocationCallOrder[0] ?? 0,
+			);
+		});
 	});
 
 	// `decryptPayload` returns `userAgent` hashed, for the mismatch check only.

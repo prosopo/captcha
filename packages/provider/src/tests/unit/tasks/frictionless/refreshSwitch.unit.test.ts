@@ -70,7 +70,6 @@ describe("a refreshed puzzle session", () => {
 			platform: { isMobile: false, isApple: true, isWebView: false },
 			raw: { headers: {}, userAgent: "ua" },
 			imageMaxRounds: 8,
-			...(frictionlessTypes && { frictionlessTypes }),
 		};
 
 		const manager = new FrictionlessManager(db, pair, config);
@@ -87,6 +86,7 @@ describe("a refreshed puzzle session", () => {
 			...refresh,
 		});
 		manager.setRoutingContext(context);
+		if (frictionlessTypes) manager.setAllowedCaptchaTypes(frictionlessTypes);
 		return manager;
 	};
 
@@ -140,7 +140,7 @@ describe("a refreshed puzzle session", () => {
 				refreshCount: PUZZLE_REFRESHES_BEFORE_IMAGE,
 				refreshedAfterMs: 1000,
 			},
-			{ image: false, puzzle: true },
+			{ image: false, puzzle: true, iconOrder: false },
 		).sendPuzzleCaptcha();
 
 		expect(storedSession().captchaType).toBe(CaptchaType.puzzle);

@@ -35,6 +35,7 @@ import {
 	TrafficFilterSchema,
 	abuseScoreThresholdDefault,
 	captchaTypeDefault,
+	captchaTypeFeatureFlagDefaults,
 	clampImageRounds,
 	contextTypeFor,
 	deviceContextTypes,
@@ -48,8 +49,10 @@ import {
 	imageMaxRoundsDefault,
 	imageMinRoundsDefault,
 	imageThresholdDefault,
+	isCaptchaTypeFeatureEnabled,
 	powDifficultyDefault,
 	puzzleToleranceDefault,
+	resolveAllowedCaptchaTypes,
 	resolveFrictionlessTypes,
 	resolveImageRoundsBounds,
 	trafficFilterAbuserScoreThresholdDefault,
@@ -763,16 +766,16 @@ describe("IconOrderSettingsSchema", () => {
 });
 
 describe("ClientSettingsSchema icon-order fields", () => {
-	it("leaves icon-order off unless the site turns it on", () => {
+	it("defaults the owner's icon-order preference on, like image and puzzle", () => {
 		const parsed = parse(minimal);
-		expect(parsed.frictionlessTypes.iconOrder).toBeUndefined();
-		expect(resolveFrictionlessTypes(parsed.frictionlessTypes).iconOrder).toBe(
+		expect(parsed.frictionlessTypes.iconOrder).toBe(true);
+		expect(resolveFrictionlessTypes(undefined).iconOrder).toBe(true);
+		expect(
+			resolveFrictionlessTypes({ image: true, puzzle: true }).iconOrder,
+		).toBe(true);
+		expect(resolveFrictionlessTypes({ iconOrder: false }).iconOrder).toBe(
 			false,
 		);
-		expect(
-			resolveFrictionlessTypes({ image: true, puzzle: true, iconOrder: true })
-				.iconOrder,
-		).toBe(true);
 	});
 
 	it("defaults the tolerance to a size-relative radius", () => {
@@ -840,5 +843,118 @@ describe("ClientSettingsSchema audio fields", () => {
 
 	it("rejects a render override outside the field bounds", () => {
 		expect(() => parse({ ...minimal, audio: { digitCount: 12 } })).toThrow();
+	});
+});
+
+describe("captcha type feature flags", () => {
+	it("allows puzzle by default", () => {
+		expect(captchaTypeFeatureFlagDefaults[CaptchaType.puzzle]).toBe(true);
+		expect(isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, undefined)).toBe(
+			true,
+		);
+		expect(isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, {})).toBe(true);
+	});
+
+	it("keeps icon-order off unless its flag is true", () => {
+		expect(captchaTypeFeatureFlagDefaults[CaptchaType.iconOrder]).toBe(false);
+		expect(isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, undefined)).toBe(
+			false,
+		);
+		expect(isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, {})).toBe(false);
+		expect(
+			isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, { iconOrder: true }),
+		).toBe(true);
+	});
+
+	it("disallows puzzle only when the flag is false", () => {
+		expect(
+			isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, { puzzle: false }),
+		).toBe(false);
+		expect(
+			isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, { puzzle: true }),
+		).toBe(true);
+	});
+
+	it("leaves types without a flag enabled", () => {
+		for (const type of [
+			CaptchaType.pow,
+			CaptchaType.image,
+			CaptchaType.frictionless,
+		]) {
+			expect(isCaptchaTypeFeatureEnabled(type, { puzzle: false })).toBe(true);
+		}
+	});
+
+	it("is absent from parsed settings unless set", () => {
+		const parsed = ClientSettingsSchema.parse({ domains: ["example.com"] });
+		expect(parsed).not.toHaveProperty("captchaTypeFeatureFlags");
+		expect(
+			ClientSettingsSchema.parse({
+				domains: ["example.com"],
+				captchaTypeFeatureFlags: { puzzle: false },
+			}).captchaTypeFeatureFlags,
+		).toEqual({ puzzle: false });
+	});
+});
+
+describe("resolveAllowedCaptchaTypes", () => {
+	it("allows image and puzzle, but not icon-order, when nothing is configured", () => {
+		expect(resolveAllowedCaptchaTypes(undefined)).toEqual({
+			image: true,
+			puzzle: true,
+			iconOrder: false,
+		});
+		expect(resolveAllowedCaptchaTypes({})).toEqual({
+			image: true,
+			puzzle: true,
+			iconOrder: false,
+		});
+	});
+
+	it("matches the owner's frictionlessTypes when no flag is set", () => {
+		for (const image of [true, false]) {
+			for (const puzzle of [true, false]) {
+				expect(
+					resolveAllowedCaptchaTypes({ frictionlessTypes: { image, puzzle } }),
+				).toEqual({ image, puzzle, iconOrder: false });
+			}
+		}
+	});
+
+	it("lets the feature flag override the owner's choice", () => {
+		expect(
+			resolveAllowedCaptchaTypes({
+				frictionlessTypes: { image: true, puzzle: true },
+				captchaTypeFeatureFlags: { puzzle: false },
+			}),
+		).toEqual({ image: true, puzzle: false, iconOrder: false });
+	});
+
+	it("allows icon-order only when the feature flag and the owner both do", () => {
+		expect(
+			resolveAllowedCaptchaTypes({
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+			}).iconOrder,
+		).toBe(false);
+		expect(
+			resolveAllowedCaptchaTypes({
+				captchaTypeFeatureFlags: { iconOrder: true },
+			}).iconOrder,
+		).toBe(true);
+		expect(
+			resolveAllowedCaptchaTypes({
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: false },
+				captchaTypeFeatureFlags: { iconOrder: true },
+			}).iconOrder,
+		).toBe(false);
+	});
+
+	it("never lets the feature flag re-enable a type the owner switched off", () => {
+		expect(
+			resolveAllowedCaptchaTypes({
+				frictionlessTypes: { image: true, puzzle: false },
+				captchaTypeFeatureFlags: { puzzle: true },
+			}),
+		).toEqual({ image: true, puzzle: false, iconOrder: false });
 	});
 });

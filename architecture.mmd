@@ -98,6 +98,7 @@ graph TB
             TrafficFilter["Traffic Filter<br/>(site-wide: per-category<br/>vpn / proxy / tor / abuser /<br/>datacenter / mobile /<br/>satellite / crawler)<br/>action = block | challenge"]
             SpamFilter["Spam Filter<br/>(email rules)"]
             WebBotAuth["Web Bot Auth<br/>(signed-agent check in frictionless;<br/>fetches the agent's JWKS URL)"]
+            AllowedTypes["Allowed Captcha Types<br/>(coerceToEnabledCaptchaType:<br/>frictionlessTypes ∩<br/>captchaTypeFeatureFlags;<br/>last word on every minted type)"]
         end
 
         subgraph Storage["Storage"]
@@ -156,6 +157,7 @@ graph TB
     FrictionlessTasks -->|bot suspected| ImageCaptcha
     FrictionlessTasks -->|bot suspected| PoW
     FrictionlessTasks -->|"middle band of the<br/>score ladder"| PuzzleCaptcha
+    FrictionlessTasks -->|"sendCaptcha: clamp the routed<br/>type before the session is written<br/>(configured-type short-circuit too)"| AllowedTypes
 
     %% ===== DETECTOR POOL =====
     %% The detector ships ONLY as a provider-served pool bundle — there is no
@@ -199,6 +201,7 @@ graph TB
     PowTasks -->|"post-pow routing<br/>(re-evaluate with behavioural<br/>data, widget mode + click coords)"| DecisionMachine
     PowTasks -->|signed token| Manager
     PowTasks -->|escalate: image/puzzle<br/>+ new sessionId| PoW
+    PowTasks -->|"buildEscalation: clamp<br/>the escalated type"| AllowedTypes
     PoW -->|escalation handoff| ImageCaptcha
     PoW -->|escalation handoff| PuzzleCaptcha
 
@@ -207,6 +210,7 @@ graph TB
     PuzzleCaptcha -->|get challenge| PuzzleChallengeEP
     PuzzleChallengeEP -->|"1. AccessPolicy lookup"| AccessPolicies
     PuzzleChallengeEP -->|"2. applyTrafficFilterAtRequestTime<br/>(challenge → puzzleTolerance +<br/>render overrides; block is NOT a 401<br/>here — it is enforced at submit/verify<br/>so the user still gets a captcha)"| TrafficFilter
+    PuzzleChallengeEP -->|"isValidRequest: refuse a type<br/>its feature flag switched off"| AllowedTypes
     PuzzleChallengeEP --> PuzzleTasks
     PuzzleTasks -->|"background + notch placement<br/>(tolerance cascade: trafficFilter →<br/>session → siteSettings)"| PuzzleCaptcha
     PuzzleCaptcha -->|"dropped piece position<br/>+ behavioural data"| PuzzleSolutionEP
@@ -219,12 +223,15 @@ graph TB
     %% ===== ICON ORDER FLOW =====
     %% Icon-order is never reached from the score ladder. It is served only
     %% when something names it (site-wide captchaType, Restrict rule,
-    %% traffic-filter policy, routing machine) AND the site has opted in via
-    %% frictionlessTypes.iconOrder; otherwise it is coerced to puzzle.
+    %% traffic-filter policy, routing machine) AND Prosopo has switched on
+    %% captchaTypeFeatureFlags.iconOrder for the site (plus, in the
+    %% frictionless flow, the owner's frictionlessTypes.iconOrder); otherwise
+    %% it is coerced to puzzle.
     Manager -->|"configured / routed: icon-order"| IconOrderCaptcha
     IconOrderCaptcha -->|get challenge| IconOrderChallengeEP
     IconOrderChallengeEP -->|"1. AccessPolicy lookup"| AccessPolicies
     IconOrderChallengeEP -->|"2. applyTrafficFilterAtRequestTime<br/>(challenge → iconOrderTolerance +<br/>render overrides; same non-401<br/>handling as the puzzle flow)"| TrafficFilter
+    IconOrderChallengeEP -->|"isValidRequest: refuse a site<br/>without the icon-order flag"| AllowedTypes
     IconOrderChallengeEP --> IconOrderTasks
     IconOrderTasks -->|"render, then store targets<br/>before responding (the render<br/>decides the answer)"| MongoDB
     IconOrderTasks -->|"background + legend strip only.<br/>Target positions are never serialised"| IconOrderCaptcha

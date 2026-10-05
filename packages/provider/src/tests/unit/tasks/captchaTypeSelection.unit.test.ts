@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CaptchaType, type IFrictionlessTypes } from "@prosopo/types";
+import {
+	CaptchaType,
+	type IFrictionlessTypes,
+	resolveAllowedCaptchaTypes,
+} from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import {
 	type ConcreteCaptchaType,
@@ -45,16 +49,48 @@ const ALL_TYPES: ConcreteCaptchaType[] = [
 ];
 
 describe("coerceToEnabledCaptchaType", () => {
-	it("never serves icon-order to a site that has not turned it on", () => {
+	it("never serves icon-order to a site without the icon-order feature flag", () => {
+		const everyPreferenceOn = {
+			frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+		};
 		expect(
-			coerceToEnabledCaptchaType(CaptchaType.iconOrder, {
-				image: true,
-				puzzle: true,
-			}),
+			coerceToEnabledCaptchaType(
+				CaptchaType.iconOrder,
+				resolveAllowedCaptchaTypes(everyPreferenceOn),
+			),
+		).toBe(CaptchaType.puzzle);
+		expect(
+			coerceToEnabledCaptchaType(
+				CaptchaType.iconOrder,
+				resolveAllowedCaptchaTypes({
+					...everyPreferenceOn,
+					captchaTypeFeatureFlags: { iconOrder: false },
+				}),
+			),
 		).toBe(CaptchaType.puzzle);
 		expect(coerceToEnabledCaptchaType(CaptchaType.iconOrder, undefined)).toBe(
 			CaptchaType.puzzle,
 		);
+	});
+
+	it("serves icon-order once the feature flag is on and the owner has not turned it off", () => {
+		expect(
+			coerceToEnabledCaptchaType(
+				CaptchaType.iconOrder,
+				resolveAllowedCaptchaTypes({
+					captchaTypeFeatureFlags: { iconOrder: true },
+				}),
+			),
+		).toBe(CaptchaType.iconOrder);
+		expect(
+			coerceToEnabledCaptchaType(
+				CaptchaType.iconOrder,
+				resolveAllowedCaptchaTypes({
+					frictionlessTypes: { iconOrder: false },
+					captchaTypeFeatureFlags: { iconOrder: true },
+				}),
+			),
+		).toBe(CaptchaType.puzzle);
 	});
 
 	it("passes every type through untouched when both are enabled", () => {

@@ -64,7 +64,7 @@ export function getDefaultSiteKeys(): ISite[] {
 				imageMaxRounds: 2,
 				frictionlessThreshold: 0.8,
 				...(captchaType === CaptchaType.iconOrder && {
-					frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+					captchaTypeFeatureFlags: { iconOrder: true },
 				}),
 			}),
 		});

@@ -569,6 +569,27 @@ describe("UserSettingsSchema", () => {
 		expect(doc.puzzle.pieceScale.max).toBe(0.35);
 	});
 
+	it("persists the captcha type feature flags", () => {
+		const flags = settings({
+			captchaTypeFeatureFlags: { puzzle: false, iconOrder: true },
+		}).captchaTypeFeatureFlags;
+		expect(flags.puzzle).toBe(false);
+		expect(flags.iconOrder).toBe(true);
+	});
+
+	it("leaves the captcha type feature flags unset unless configured", () => {
+		// Absent means "use captchaTypeFeatureFlagDefaults"; a stored default
+		// would pin today's default into every site.
+		expect(settings().captchaTypeFeatureFlags).toBeUndefined();
+		expect(
+			settings({ captchaTypeFeatureFlags: {} }).captchaTypeFeatureFlags.puzzle,
+		).toBeUndefined();
+		expect(
+			settings({ captchaTypeFeatureFlags: {} }).captchaTypeFeatureFlags
+				.iconOrder,
+		).toBeUndefined();
+	});
+
 	it("leaves the puzzle overrides unset unless configured", () => {
 		// Absent means "use the provider defaults" — a defaulted empty
 		// subdocument would write a `puzzle` block onto every site.

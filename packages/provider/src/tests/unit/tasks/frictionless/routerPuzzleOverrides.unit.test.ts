@@ -313,9 +313,11 @@ describe("router-supplied puzzle overrides reach the session record", () => {
 	});
 
 	it("persists router icon-order overrides on an icon-order session", async () => {
-		manager.setRoutingContext({
-			...context,
-			frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+		manager.setRoutingContext(context);
+		manager.setAllowedCaptchaTypes({
+			image: true,
+			puzzle: true,
+			iconOrder: true,
 		});
 		routerReturns({
 			captchaType: CaptchaType.iconOrder,

@@ -15,7 +15,6 @@ import {
 	ApiParams,
 	CaptchaType,
 	type GetIconOrderCaptchaResponse,
-	resolveFrictionlessTypes,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
@@ -108,7 +107,5 @@ export default (
 		label: "icon-order",
 		manager: (tasks) => tasks.iconOrderCaptchaManager,
 		maintenanceResponse: buildIconOrderMaintenanceResponse,
-		isEnabled: (settings) =>
-			resolveFrictionlessTypes(settings?.frictionlessTypes).iconOrder,
 		issue: issueIconOrderChallenge,
 	});

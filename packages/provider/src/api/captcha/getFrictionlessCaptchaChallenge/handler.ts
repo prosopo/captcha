@@ -32,6 +32,7 @@ import { v4 as uuidv4 } from "uuid";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
 import { offersAudioAlternative } from "../../../tasks/audioAlternative.js";
+import { coerceToEnabledCaptchaType } from "../../../tasks/captchaTypeSelection.js";
 import { Tasks } from "../../../tasks/index.js";
 import {
 	derivePlatform,
@@ -59,7 +60,10 @@ import {
 	handleFrictionlessTrafficFilter,
 } from "../trafficFilterRequestTime.js";
 import { handleAccessPolicy } from "./accessPolicy.js";
-import { resolveScoreLadder } from "./constants.js";
+import {
+	resolveScoreLadder,
+	resolveSiteAllowedCaptchaTypes,
+} from "./constants.js";
 import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
 import { attachHoneypot } from "./honeypotResponse.js";
@@ -242,6 +246,10 @@ export default (
 			tasks.frictionlessManager.setAudioAccessibilityEnabled(
 				audioAccessibilityEnabled,
 			);
+			const allowedCaptchaTypes = resolveSiteAllowedCaptchaTypes(
+				clientRecord.settings,
+			);
+			tasks.frictionlessManager.setAllowedCaptchaTypes(allowedCaptchaTypes);
 
 			if (dedup) {
 				// A reused session must still honour an active user access policy
@@ -391,8 +399,17 @@ export default (
 							},
 						)
 					: { captchaType: cachedCaptchaType };
+				// Compared after coercion, as `sendCaptcha` would mint it, so a router
+				// that keeps asking for a disallowed type doesn't evict every reuse.
 				const dedupConflictsWithRouting =
-					dedupRouted.captchaType !== cachedCaptchaType;
+					coerceToEnabledCaptchaType(
+						dedupRouted.captchaType,
+						allowedCaptchaTypes,
+					) !== cachedCaptchaType;
+				// Catches sessions minted before the site's allowed types changed.
+				const dedupConflictsWithAllowedTypes =
+					coerceToEnabledCaptchaType(cachedCaptchaType, allowedCaptchaTypes) !==
+					cachedCaptchaType;
 
 				// The reused session's `bundleId` is what the provider will
 				// use to decrypt every later behavioural / SIMD payload for
@@ -428,9 +445,13 @@ export default (
 					}
 				}
 
-				if (dedupConflictsWithPolicy || dedupConflictsWithRouting) {
+				if (
+					dedupConflictsWithPolicy ||
+					dedupConflictsWithRouting ||
+					dedupConflictsWithAllowedTypes
+				) {
 					req.logger.info(() => ({
-						msg: "Evicting reused session: cached captchaType conflicts with access policy or routing machine",
+						msg: "Evicting reused session: cached captchaType conflicts with access policy, routing machine or allowed types",
 						data: {
 							userSitekeyIpHash,
 							sessionId: dedup.sessionId,
@@ -441,6 +462,9 @@ export default (
 							}),
 							...(dedupConflictsWithRouting && {
 								routedCaptchaType: dedupRouted.captchaType,
+							}),
+							...(dedupConflictsWithAllowedTypes && {
+								allowedCaptchaTypes,
 							}),
 						},
 					}));
@@ -847,9 +871,6 @@ export default (
 				score: botScore,
 				imageMaxRounds: clientRecord.settings.imageMaxRounds,
 				imageMinRounds: clientRecord.settings.imageMinRounds,
-				// Constrains what `sendCaptcha` may finally mint, and sizes a
-				// puzzle chosen in place of a disabled image challenge.
-				frictionlessTypes: clientRecord.settings.frictionlessTypes,
 				baseImageRounds: env.config.captchas.solved.count,
 				puzzleMaxDifficulty: clientRecord.settings.puzzleMaxDifficulty,
 				platform: derivePlatform(requestUserAgent, webView, {

@@ -175,7 +175,7 @@ export const frictionlessThresholdDefault: IFrictionlessThreshold = {
  *
  * PoW is deliberately absent and is always available: it is the terminal
  * fallback of the decision machine and the only type with no interaction
- * requirement, so a site with both of these off still has a way to challenge.
+ * requirement, so a site with all of these off still has a way to challenge.
  *
  * This is a hard constraint on OUTPUT, not a hint. A site with `image: false`
  * must never be served an image captcha by any path — score ladder, access
@@ -191,8 +191,7 @@ export const frictionlessThresholdDefault: IFrictionlessThreshold = {
 export const FrictionlessTypesSchema = object({
 	image: boolean().optional().default(true),
 	puzzle: boolean().optional().default(true),
-	// No default: icon-order stays off until a site opts in.
-	iconOrder: boolean().optional(),
+	iconOrder: boolean().optional().default(true),
 });
 
 export type IFrictionlessTypes = output<typeof FrictionlessTypesSchema>;
@@ -200,6 +199,7 @@ export type IFrictionlessTypes = output<typeof FrictionlessTypesSchema>;
 export const frictionlessTypesDefault: IFrictionlessTypes = {
 	image: true,
 	puzzle: true,
+	iconOrder: true,
 };
 
 /**
@@ -207,16 +207,86 @@ export const frictionlessTypesDefault: IFrictionlessTypes = {
  *
  * Tolerates `undefined` (a client record written before the field existed)
  * and a partial object, so a provider handed an older settings blob keeps
- * serving image and puzzle rather than silently narrowing to PoW. Icon-order
- * stays off until the site turns it on.
+ * serving image and puzzle rather than silently narrowing to PoW.
  */
 export const resolveFrictionlessTypes = (
 	configured: Partial<IFrictionlessTypes> | undefined | null,
 ): Required<IFrictionlessTypes> => ({
 	image: configured?.image ?? frictionlessTypesDefault.image,
 	puzzle: configured?.puzzle ?? frictionlessTypesDefault.puzzle,
-	iconOrder: configured?.iconOrder ?? false,
+	iconOrder: configured?.iconOrder ?? frictionlessTypesDefault.iconOrder,
 });
+
+/**
+ * Prosopo-controlled switches for whether a captcha type may be served on a
+ * site at all. Set by Prosopo staff, never by the site owner, and outranks
+ * every other selector: the configured `captchaType`, `frictionlessTypes`,
+ * access policies, traffic filter, routing machines and escalation.
+ *
+ * Each key is optional with no stored default, so a record that never had a
+ * flag set keeps whatever `captchaTypeFeatureFlagDefaults` says for that type.
+ * A new gated type adds a key here and a default there.
+ */
+export const CaptchaTypeFeatureFlagsSchema = object({
+	[CaptchaType.puzzle]: boolean().optional(),
+	[CaptchaType.iconOrder]: boolean().optional(),
+});
+
+export type ICaptchaTypeFeatureFlags = output<
+	typeof CaptchaTypeFeatureFlagsSchema
+>;
+
+export type FeatureFlaggedCaptchaType = Extract<
+	CaptchaType,
+	keyof ICaptchaTypeFeatureFlags
+>;
+
+export const captchaTypeFeatureFlagDefaults: Required<ICaptchaTypeFeatureFlags> =
+	{
+		[CaptchaType.puzzle]: true,
+		[CaptchaType.iconOrder]: false,
+	};
+
+const isFeatureFlaggedCaptchaType = (
+	captchaType: CaptchaType,
+): captchaType is FeatureFlaggedCaptchaType =>
+	captchaType in captchaTypeFeatureFlagDefaults;
+
+/** Types without a feature flag are always enabled. */
+export const isCaptchaTypeFeatureEnabled = (
+	captchaType: CaptchaType,
+	flags: ICaptchaTypeFeatureFlags | undefined | null,
+): boolean =>
+	isFeatureFlaggedCaptchaType(captchaType)
+		? (flags?.[captchaType] ?? captchaTypeFeatureFlagDefaults[captchaType])
+		: true;
+
+/**
+ * The interactive challenge types a site may be served: the site owner's
+ * `frictionlessTypes` narrowed by Prosopo's captcha type feature flags.
+ * PoW is always allowed, as in `frictionlessTypes`.
+ */
+export const resolveAllowedCaptchaTypes = (
+	settings:
+		| {
+				frictionlessTypes?: Partial<IFrictionlessTypes> | null;
+				captchaTypeFeatureFlags?: ICaptchaTypeFeatureFlags | null;
+		  }
+		| undefined
+		| null,
+): Required<IFrictionlessTypes> => {
+	const preferred = resolveFrictionlessTypes(settings?.frictionlessTypes);
+	const flags = settings?.captchaTypeFeatureFlags;
+	return {
+		image: preferred.image,
+		puzzle:
+			preferred.puzzle &&
+			isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, flags),
+		iconOrder:
+			preferred.iconOrder &&
+			isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, flags),
+	};
+};
 
 /**
  * Read a stored `frictionlessThreshold` into a complete ladder.
@@ -750,6 +820,7 @@ export const ClientSettingsSchema = object({
 	frictionlessTypes: FrictionlessTypesSchema.optional().default(
 		frictionlessTypesDefault,
 	),
+	captchaTypeFeatureFlags: CaptchaTypeFeatureFlagsSchema.optional(),
 	powDifficulty: powDifficultyFieldSchema
 		.optional()
 		.default(powDifficultyDefault),

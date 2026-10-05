@@ -80,8 +80,6 @@ export interface InteractiveChallengeSpec<TResponse extends ChallengeResponse> {
 	label: string;
 	manager: (tasks: Tasks) => CaptchaManager;
 	maintenanceResponse: (user: string, dapp: string) => Promise<TResponse>;
-	/** Refuses the request when false, for types a site must opt in to. */
-	isEnabled?: (settings: ClientRecord["settings"]) => boolean;
 	/** Mints, persists and renders the challenge. */
 	issue: (
 		context: ChallengeIssueContext,
@@ -155,16 +153,6 @@ export const interactiveChallengeHandler =
 			if (!clientSettings) {
 				return next(
 					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
-					}),
-				);
-			}
-
-			if (spec.isEnabled && !spec.isEnabled(clientSettings.settings)) {
-				return next(
-					new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
 						context: { code: 400, siteKey: dapp },
 						i18n: req.i18n,
 						logger: req.logger,

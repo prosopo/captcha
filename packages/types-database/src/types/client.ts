@@ -236,11 +236,24 @@ export const UserSettingsSchema = new Schema({
 			{
 				image: { type: Boolean, default: true },
 				puzzle: { type: Boolean, default: true },
-				iconOrder: { type: Boolean, required: false },
+				iconOrder: { type: Boolean, default: true },
 			},
 			{ _id: false },
 		),
 		default: () => ({ ...frictionlessTypesDefault }),
+	},
+	// No defaults at either level: an absent flag has to stay absent so that
+	// `captchaTypeFeatureFlagDefaults` decides it, rather than a value frozen
+	// into the record when it was first written.
+	captchaTypeFeatureFlags: {
+		type: new Schema(
+			{
+				puzzle: { type: Boolean, required: false },
+				iconOrder: { type: Boolean, required: false },
+			},
+			{ _id: false },
+		),
+		required: false,
 	},
 	powDifficulty: { type: Number, default: powDifficultyDefault },
 	imageThreshold: {
@@ -434,6 +447,7 @@ export const AccountSchema = new Schema<AccountRecord>({
 				captchaType: String,
 				frictionlessThreshold: MongooseSchema.Types.Mixed,
 				frictionlessTypes: MongooseSchema.Types.Mixed,
+				captchaTypeFeatureFlags: MongooseSchema.Types.Mixed,
 				ipValidationRules: IPValidationRulesSchema,
 			},
 			createdAt: Number,
