@@ -614,6 +614,13 @@ export type Session = {
 	puzzle?: IPuzzleSettings;
 	iconOrderTolerance?: number;
 	iconOrder?: IIconOrderSettings;
+	/**
+	 * Difficulty ladder index `puzzleTolerance` and `puzzle` were sampled from.
+	 * Carried only so the challenge record can report it; nothing reads it to
+	 * make a decision, and a router that set the overrides directly leaves it
+	 * unset.
+	 */
+	puzzleLevel?: number;
 	storedAtTimestamp?: Date;
 	lastUpdatedTimestamp?: Date;
 	// See StoredCaptcha.pendingStage — same semantics on Session records.
@@ -841,6 +848,44 @@ export interface PoWCaptchaStored
 	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
 		StoredCaptcha {}
 
+/**
+ * Everything needed to reproduce a served puzzle exactly, for the portal's
+ * replay view. `tolerance`, `targetX` and `targetY` live on the record itself
+ * and are not repeated here.
+ *
+ * Written after the imagery is rendered rather than at issue, because the
+ * sampled piece size and the two seeds only exist once the render has run.
+ * Absent on records written before this field existed, and on any challenge
+ * whose render failed.
+ *
+ * `backgroundSeed` and `renderSeed` are the secrets described in
+ * puzzle-assets/src/prng.ts: they regenerate the clean background, from which
+ * the target position can be read by diffing. They must never be served to a
+ * caller, and never while the challenge is still live.
+ */
+export interface PuzzleRenderRecord {
+	/**
+	 * Difficulty ladder index the settings were sampled from. Absent when the
+	 * ladder did not pick this render — a site-configured puzzle, or a
+	 * trafficFilter category override, has no level.
+	 */
+	level?: number;
+	/** Piece bounding box in px, drawn per-challenge from the scale range. */
+	pieceSize: number;
+	geometry: { width: number; height: number; notchSize: number };
+	settings: {
+		decoyCount: number;
+		decoyEdgeDarkness: number;
+		decoyBodyBrightness: number;
+		holeDarken: number;
+		decoyHoleDarken: number;
+	};
+	/** 128-bit hex. Regenerates the clean background. */
+	backgroundSeed: string;
+	/** 128-bit hex. Drives decoy placement and the notch cut. */
+	renderSeed: string;
+}
+
 /** Fields shared by the challenge records of the on-screen captcha types. */
 export interface InteractiveCaptchaStored extends StoredCaptcha {
 	challenge: PoWChallengeId;
@@ -857,6 +902,7 @@ export interface PuzzleCaptchaStored extends InteractiveCaptchaStored {
 	originX: number;
 	originY: number;
 	puzzleEvents?: PuzzleEvent[];
+	render?: PuzzleRenderRecord;
 }
 
 /**

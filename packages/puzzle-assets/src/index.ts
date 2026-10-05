@@ -92,8 +92,9 @@ export const DEFAULT_RENDER_SETTINGS: PuzzleRenderSettings = {
  */
 export const createBackground = (
 	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
+	seed: Buffer = createSeed(),
 ): RgbaImage =>
-	generateBackground(createPrng(createSeed()), geometry.width, geometry.height);
+	generateBackground(createPrng(seed), geometry.width, geometry.height);
 
 /**
  * Cut a notch at `placement` and encode both halves.
@@ -105,8 +106,9 @@ export const renderPuzzle = async (
 	placement: NotchPlacement,
 	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
 	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
+	seed: Buffer = createSeed(),
 ): Promise<RenderedPuzzle> => {
-	const prng = createPrng(createSeed());
+	const prng = createPrng(seed);
 	const pieceSize = geometry.pieceSize ?? geometry.notchSize;
 	// Decoys go on first so the real cut sits on top of any overlap and
 	// always reads as the deepest, darkest region on the board. Decoys use
@@ -141,13 +143,28 @@ export const renderPuzzle = async (
 		background: backgroundWebp,
 		piece: pieceWebp,
 		pieceSize,
+		seed,
 	};
 };
 
-/** Convenience: generate, cut and encode in one call. */
+/**
+ * Convenience: generate, cut and encode in one call.
+ *
+ * Takes both seeds so a caller holding a persisted pair can reproduce a served
+ * challenge byte for byte — the background seed and the render seed are
+ * independent and both are required.
+ */
 export const createPuzzle = async (
 	placement: NotchPlacement,
 	geometry: PuzzleGeometry = DEFAULT_GEOMETRY,
 	settings: PuzzleRenderSettings = DEFAULT_RENDER_SETTINGS,
+	backgroundSeed: Buffer = createSeed(),
+	renderSeed: Buffer = createSeed(),
 ): Promise<RenderedPuzzle> =>
-	renderPuzzle(createBackground(geometry), placement, geometry, settings);
+	renderPuzzle(
+		createBackground(geometry, backgroundSeed),
+		placement,
+		geometry,
+		settings,
+		renderSeed,
+	);
