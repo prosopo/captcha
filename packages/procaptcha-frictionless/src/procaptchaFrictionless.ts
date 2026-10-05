@@ -184,9 +184,6 @@ export const mountProcaptchaFrictionless = (
 
 		placeholder = mountCheckbox(slot, {
 			theme: "light" === config.theme ? lightTheme : darkTheme,
-			// Inert unless the site asked for a manual start: this checkbox
-			// stands in until detection picks a solver, and clicking it must
-			// not start anything of its own.
 			onChange: onChange ?? (() => undefined),
 			checked: false,
 			labelText: i18n.isInitialized ? i18n.t("WIDGET.I_AM_HUMAN") : "",
@@ -557,26 +554,35 @@ export const mountProcaptchaFrictionless = (
 		}
 	}
 
+	const clickCoords = (
+		event: MouseEvent | KeyboardEvent | TouchEvent,
+	): RetryCoords | null =>
+		"clientX" in event && "clientY" in event
+			? normaliseRetryCoords(event.clientX, event.clientY)
+			: null;
+
 	const manualCheckboxHandler: CheckboxProps["onChange"] = async (
 		event: MouseEvent | KeyboardEvent | TouchEvent,
 	): Promise<void> => {
-		let x = 0;
-		let y = 0;
-		if ("clientX" in event && "clientY" in event) {
-			x = event.clientX;
-			y = event.clientY;
-		}
-		await startManually(true, normaliseRetryCoords(x, y) ?? undefined);
+		await startManually(true, clickCoords(event) ?? undefined);
 	};
 
-	// Initial paint: the loading placeholder, before detection resolves. Under
-	// manual start there is nothing in flight yet, so the box is idle and
-	// clickable rather than spinning.
+	// Detection takes seconds, and the user should not have to wait it out
+	// before the checkbox responds. A click while it runs is held and replayed
+	// on the solver detection picks, so no token is issued any sooner.
+	const holdClickUntilDetected: CheckboxProps["onChange"] = (
+		event: MouseEvent | KeyboardEvent | TouchEvent,
+	): void => {
+		pendingRetryCoords.current = clickCoords(event);
+		nextMountAutoStart = true;
+		renderPlaceholder(config.mode, undefined, true);
+	};
+
 	renderPlaceholder(
 		config.mode,
 		state.errorMessage,
-		!manualStart,
-		manualStart ? manualCheckboxHandler : undefined,
+		false,
+		manualStart ? manualCheckboxHandler : holdClickUntilDetected,
 	);
 
 	if (manualStart) {

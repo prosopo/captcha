@@ -223,9 +223,9 @@ describe("the loading placeholder", () => {
 			container,
 			props(() => new Promise<BotDetectionFunctionResult>(() => undefined)),
 		);
-		// The spinner is the checkbox's loading state; either way there must be
-		// something widget-shaped on the page while the round trip is in flight.
-		expect(container.querySelector('[role="status"]')).not.toBe(null);
+		expect(
+			container.querySelector('[data-cy="captcha-checkbox"]'),
+		).not.toBeNull();
 	});
 
 	test("is replaced by the solver, not left behind it", async () => {

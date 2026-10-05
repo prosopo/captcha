@@ -389,3 +389,74 @@ describe("manual start mode", () => {
 		});
 	});
 });
+
+describe("auto start mode, before detection finishes", () => {
+	const autoConfig = (): ProcaptchaClientConfigOutput =>
+		config({ startMode: StartModeEnum.auto });
+
+	const detectBotPending = () => {
+		let finish: (() => void) | undefined;
+		const detectBot = vi.fn<BotDetectionFunction>().mockImplementation(
+			() =>
+				new Promise<BotDetectionFunctionResult>((resolve) => {
+					finish = () => resolve(detectionResult());
+				}),
+		);
+		const resolveDetection = async (): Promise<void> => {
+			finish?.();
+			await settle();
+		};
+		return { detectBot, resolveDetection };
+	};
+
+	it("shows a clickable checkbox while detection runs", async () => {
+		const { detectBot } = detectBotPending();
+		await mountWrapper({ config: autoConfig(), detectBot });
+
+		expect(detectBot).toHaveBeenCalledTimes(1);
+		expect(checkbox().disabled).toBe(false);
+		expect(spinner()).toBeNull();
+	});
+
+	it("holds a click and opens the challenge where the user clicked once detection lands", async () => {
+		const { detectBot, resolveDetection } = detectBotPending();
+		await mountWrapper({ config: autoConfig(), detectBot });
+
+		await click(checkbox(), { clientX: 11, clientY: 22 });
+
+		expect(spinner()).not.toBeNull();
+		expect(mocks.mounts).toHaveLength(0);
+
+		await resolveDetection();
+
+		expect(detectBot).toHaveBeenCalledTimes(1);
+		const mount = lastMountOf("image").props;
+		expect(mount.autoStart).toBe(true);
+		expect(mount.startCoords).toEqual({ x: 11, y: 22 });
+	});
+
+	it("holds a keyboard activation with no position", async () => {
+		const { detectBot, resolveDetection } = detectBotPending();
+		await mountWrapper({ config: autoConfig(), detectBot });
+
+		await click(checkbox());
+		await resolveDetection();
+
+		const mount = lastMountOf("image").props;
+		expect(mount.autoStart).toBe(true);
+		expect(mount.startCoords).toBeUndefined();
+	});
+
+	it("ignores a synthetic click", async () => {
+		const { detectBot, resolveDetection } = detectBotPending();
+		await mountWrapper({ config: autoConfig(), detectBot });
+
+		await click(checkbox(), { trusted: false, clientX: 1, clientY: 1 });
+
+		expect(spinner()).toBeNull();
+
+		await resolveDetection();
+
+		expect(lastMountOf("image").props.autoStart).toBe(false);
+	});
+});
