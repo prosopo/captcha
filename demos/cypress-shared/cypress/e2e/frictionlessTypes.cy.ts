@@ -33,7 +33,7 @@
 // server actually settled on, before any widget-side interpretation.
 
 import "@cypress/xpath";
-import { CaptchaType } from "@prosopo/types";
+import { CaptchaType, type ICaptchaTypeFeatureFlags } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
@@ -72,13 +72,17 @@ describe("frictionlessTypes bounds what the ladder may serve", () => {
 	 * all, which is the shape every client record written before the field
 	 * existed still has.
 	 */
-	const configure = (types?: { image: boolean; puzzle: boolean }) => {
+	const configure = (
+		types?: { image: boolean; puzzle: boolean },
+		captchaTypeFeatureFlags?: ICaptchaTypeFeatureFlags,
+	) => {
 		cy.registerSiteKey(baseCaptchaType, undefined, {
 			frictionlessThreshold: {
 				frictionlessPuzzleThreshold: PUZZLE_RUNG,
 				frictionlessImageThreshold: IMAGE_RUNG,
 			},
 			...(types ? { frictionlessTypes: types } : {}),
+			...(captchaTypeFeatureFlags ? { captchaTypeFeatureFlags } : {}),
 		}).then((response) => {
 			expect(response.status).to.equal(200);
 		});
@@ -236,6 +240,30 @@ describe("frictionlessTypes bounds what the ladder may serve", () => {
 			expectServedType(
 				CaptchaType.pow,
 				"with both types enabled a clean score must still pass to PoW",
+			);
+		});
+	});
+
+	describe("puzzle switched off by its feature flag", () => {
+		it("serves an image in the puzzle band even though the owner enabled puzzle", () => {
+			configure({ image: true, puzzle: true }, { puzzle: false });
+			primeAndVisit(LANG_PUZZLE_BAND);
+			expectServedType(
+				CaptchaType.image,
+				"the feature flag must override the owner's frictionlessTypes",
+			);
+		});
+
+		it("serves an image on a site pinned to puzzle", () => {
+			cy.registerSiteKey(baseCaptchaType, CaptchaType.puzzle, {
+				captchaTypeFeatureFlags: { puzzle: false },
+			}).then((response) => {
+				expect(response.status).to.equal(200);
+			});
+			primeAndVisit();
+			expectServedType(
+				CaptchaType.image,
+				"the feature flag must override the site's configured captchaType",
 			);
 		});
 	});

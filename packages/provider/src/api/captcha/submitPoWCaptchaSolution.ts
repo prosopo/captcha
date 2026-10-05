@@ -27,6 +27,7 @@ import {
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 	imageMaxRoundsDefault,
+	resolveAllowedCaptchaTypes,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
@@ -231,7 +232,9 @@ export default (env: ProviderEnvironment) =>
 					...rawTlsSignalsForSession(req),
 				},
 				{
-					frictionlessTypes: clientRecord.settings?.frictionlessTypes,
+					allowedCaptchaTypes: resolveAllowedCaptchaTypes(
+						clientRecord.settings,
+					),
 					imageMaxRounds: clientRecord.settings?.imageMaxRounds,
 					puzzleMaxDifficulty: clientRecord.settings?.puzzleMaxDifficulty,
 				},
@@ -287,11 +290,11 @@ export const buildEscalation = async (
 	},
 	// Site constraints on what an escalation may serve. Threaded from the
 	// handler, which already holds the client record, rather than re-read
-	// here. An absent `frictionlessTypes` means "no constraint recorded" and
-	// leaves every type enabled; an absent `imageMaxRounds` falls back to the
+	// here. An absent `allowedCaptchaTypes` means "no constraint recorded"
+	// and leaves every type enabled; an absent `imageMaxRounds` falls back to the
 	// schema default so the round count is bounded either way.
 	siteConstraints?: {
-		frictionlessTypes?: IFrictionlessTypes;
+		allowedCaptchaTypes?: IFrictionlessTypes;
 		imageMaxRounds?: number;
 		puzzleMaxDifficulty?: number;
 	},
@@ -323,7 +326,7 @@ export const buildEscalation = async (
 	// session it can never satisfy.
 	const escalatedType = coerceToEnabledCaptchaType(
 		routed.captchaType,
-		siteConstraints?.frictionlessTypes,
+		siteConstraints?.allowedCaptchaTypes,
 	);
 
 	// Coercion bottoms out at PoW, which is not an escalation: the user has
