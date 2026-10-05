@@ -605,6 +605,9 @@ export class FrictionlessManager extends CaptchaManager {
 						return {
 							...(tolerance !== undefined && { puzzleTolerance: tolerance }),
 							...(puzzle !== undefined && { puzzle }),
+							...(difficulty !== undefined && {
+								puzzleLevel: difficulty.level,
+							}),
 						};
 					})()
 				: {};
