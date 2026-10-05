@@ -32,6 +32,12 @@ export interface RenderedPuzzle {
 	piece: Buffer;
 	/** Piece bounding-box size in px; the widget centres it on the cursor. */
 	pieceSize: number;
+	/**
+	 * The seed that drove decoy placement and the notch cut. Returned so the
+	 * caller can persist it and replay this exact render later; see the
+	 * secrecy note in prng.ts before putting it anywhere else.
+	 */
+	seed: Buffer;
 }
 
 export interface PuzzleGeometry {
