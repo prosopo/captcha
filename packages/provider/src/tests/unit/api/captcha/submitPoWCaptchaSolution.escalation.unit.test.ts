@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CaptchaType, type DetectorData, type Session } from "@prosopo/types";
+import {
+	CaptchaType,
+	type DetectorData,
+	type Session,
+	resolveAllowedCaptchaTypes,
+} from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildEscalation } from "../../../../api/captcha/submitPoWCaptchaSolution.js";
 import type { CreateSessionInput } from "../../../../tasks/frictionless/frictionlessTasks.js";
@@ -283,6 +288,31 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		const input = createSessionInput();
 		expect(input.captchaType).toBe(CaptchaType.puzzle);
 		expect(input.originSessionId).toBe("origin-id");
+	});
+
+	it("escalates to image instead of puzzle when the site has puzzle switched off", async () => {
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue(
+			makeOriginSession(),
+		);
+
+		const out = await buildEscalation(
+			env.tasks,
+			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
+			"challenge",
+			undefined,
+			{
+				allowedCaptchaTypes: resolveAllowedCaptchaTypes({
+					captchaTypeFeatureFlags: { puzzle: false },
+				}),
+			},
+		);
+
+		expect(out?.captchaType).toBe(CaptchaType.image);
+		expect(createSessionInput().captchaType).toBe(CaptchaType.image);
 	});
 
 	it("carries the origin's simdReadings onto the image escalation at creation time (so the DM verify path doesn't have to lean on chain fallback for the common case)", async () => {

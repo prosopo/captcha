@@ -30,6 +30,7 @@ import {
 	type SimdReadingsStage,
 	Tier,
 	TrafficFilterAction,
+	isCaptchaTypeFeatureEnabled,
 } from "@prosopo/types";
 import type {
 	ClientRecord,
@@ -454,6 +455,29 @@ export class CaptchaManager {
 				sessionId,
 			},
 		}));
+
+		// Ahead of the session lookup so a session minted before the type was
+		// switched off is refused rather than consumed and served.
+		if (
+			!isCaptchaTypeFeatureEnabled(
+				requestedCaptchaType,
+				clientSettings.settings?.captchaTypeFeatureFlags,
+			)
+		) {
+			this.logger.warn(() => ({
+				msg: "Captcha type is switched off for this site",
+				data: {
+					account: clientSettings.account,
+					requestedCaptchaType,
+					sessionId,
+				},
+			}));
+			return {
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: requestedCaptchaType,
+			};
+		}
 
 		// User Access Policies override default behaviour, but only for
 		// sessionless requests. When a sessionId is present the session record

@@ -25,6 +25,7 @@ import {
 	DEFAULT_MAX_TIMESTAMP_AGE,
 	FrictionlessReason,
 	type GetFrictionlessCaptchaResponse,
+	type IFrictionlessTypes,
 	type IPInfoResponse,
 	type ImageRoundsBounds,
 	type KeyringPair,
@@ -102,6 +103,7 @@ export class FrictionlessManager extends CaptchaManager {
 		"sessionId" | "createdAt" | "captchaType"
 	>;
 	private routingContext?: RoutingContext;
+	private allowedCaptchaTypes?: IFrictionlessTypes;
 	private readonly decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
 
@@ -128,6 +130,16 @@ export class FrictionlessManager extends CaptchaManager {
 	 */
 	setRoutingContext(ctx: RoutingContext): void {
 		this.routingContext = ctx;
+	}
+
+	/**
+	 * The types this site may be served, from `resolveAllowedCaptchaTypes`.
+	 * Set before any path can mint a session, including the short-circuits
+	 * that skip routing, so the site's feature flags hold on every path.
+	 * Unset means every type is allowed.
+	 */
+	setAllowedCaptchaTypes(allowed: IFrictionlessTypes): void {
+		this.allowedCaptchaTypes = allowed;
 	}
 
 	/**
@@ -524,13 +536,13 @@ export class FrictionlessManager extends CaptchaManager {
 		// serve-time endpoints cannot substitute another type.
 		const enabledCaptchaType = coerceToEnabledCaptchaType(
 			routed.captchaType,
-			this.routingContext?.frictionlessTypes,
+			this.allowedCaptchaTypes,
 			this.logger,
 		);
 		const finalCaptchaType = switchTypeAfterRefreshes(
 			enabledCaptchaType,
 			effectiveParams.refreshCount,
-			this.routingContext?.frictionlessTypes,
+			this.allowedCaptchaTypes,
 		);
 		const switchedByRefreshes = finalCaptchaType !== enabledCaptchaType;
 		// The routing-machine output schema only bounds the count as a positive

@@ -211,6 +211,74 @@ export const resolveFrictionlessTypes = (
 });
 
 /**
+ * Prosopo-controlled switches for whether a captcha type may be served on a
+ * site at all. Set by Prosopo staff, never by the site owner, and outranks
+ * every other selector: the configured `captchaType`, `frictionlessTypes`,
+ * access policies, traffic filter, routing machines and escalation.
+ *
+ * Each key is optional with no stored default, so a record that never had a
+ * flag set keeps whatever `captchaTypeFeatureFlagDefaults` says for that type.
+ * A new gated type adds a key here and a default there.
+ */
+export const CaptchaTypeFeatureFlagsSchema = object({
+	[CaptchaType.puzzle]: boolean().optional(),
+});
+
+export type ICaptchaTypeFeatureFlags = output<
+	typeof CaptchaTypeFeatureFlagsSchema
+>;
+
+export type FeatureFlaggedCaptchaType = Extract<
+	CaptchaType,
+	keyof ICaptchaTypeFeatureFlags
+>;
+
+export const captchaTypeFeatureFlagDefaults: Required<ICaptchaTypeFeatureFlags> =
+	{
+		[CaptchaType.puzzle]: true,
+	};
+
+const isFeatureFlaggedCaptchaType = (
+	captchaType: CaptchaType,
+): captchaType is FeatureFlaggedCaptchaType =>
+	captchaType in captchaTypeFeatureFlagDefaults;
+
+/** Types without a feature flag are always enabled. */
+export const isCaptchaTypeFeatureEnabled = (
+	captchaType: CaptchaType,
+	flags: ICaptchaTypeFeatureFlags | undefined | null,
+): boolean =>
+	isFeatureFlaggedCaptchaType(captchaType)
+		? (flags?.[captchaType] ?? captchaTypeFeatureFlagDefaults[captchaType])
+		: true;
+
+/**
+ * The interactive challenge types a site may be served: the site owner's
+ * `frictionlessTypes` narrowed by Prosopo's captcha type feature flags.
+ * PoW is always allowed, as in `frictionlessTypes`.
+ */
+export const resolveAllowedCaptchaTypes = (
+	settings:
+		| {
+				frictionlessTypes?: Partial<IFrictionlessTypes> | null;
+				captchaTypeFeatureFlags?: ICaptchaTypeFeatureFlags | null;
+		  }
+		| undefined
+		| null,
+): IFrictionlessTypes => {
+	const preferred = resolveFrictionlessTypes(settings?.frictionlessTypes);
+	return {
+		image: preferred.image,
+		puzzle:
+			preferred.puzzle &&
+			isCaptchaTypeFeatureEnabled(
+				CaptchaType.puzzle,
+				settings?.captchaTypeFeatureFlags,
+			),
+	};
+};
+
+/**
  * Read a stored `frictionlessThreshold` into a complete ladder.
  *
  * The single place that knows how to interpret the pre-ladder shape. Records
@@ -720,6 +788,7 @@ export const ClientSettingsSchema = object({
 	frictionlessTypes: FrictionlessTypesSchema.optional().default(
 		frictionlessTypesDefault,
 	),
+	captchaTypeFeatureFlags: CaptchaTypeFeatureFlagsSchema.optional(),
 	powDifficulty: powDifficultyFieldSchema
 		.optional()
 		.default(powDifficultyDefault),
