@@ -51,6 +51,7 @@ describe("a refreshed puzzle session", () => {
 	const managerFor = (
 		refresh: Pick<Session, "refreshOf" | "refreshCount" | "refreshedAfterMs">,
 		frictionlessTypes?: IFrictionlessTypes,
+		imageSwitchRequested = false,
 	): FrictionlessManager => {
 		const db = { storeSessionRecord } as unknown as IProviderDatabase;
 		const pair = {
@@ -87,6 +88,7 @@ describe("a refreshed puzzle session", () => {
 		});
 		manager.setRoutingContext(context);
 		if (frictionlessTypes) manager.setAllowedCaptchaTypes(frictionlessTypes);
+		manager.setImageSwitchRequested(imageSwitchRequested);
 		return manager;
 	};
 
@@ -147,5 +149,55 @@ describe("a refreshed puzzle session", () => {
 		expect(storedSession().reason).not.toBe(
 			FrictionlessReason.PUZZLE_REFRESH_LIMIT,
 		);
+	});
+
+	it("serves image with its own reason when the user asks to switch", async () => {
+		await managerFor(
+			{ refreshOf: "prev", refreshCount: 1, refreshedAfterMs: 1000 },
+			undefined,
+			true,
+		).sendPuzzleCaptcha();
+
+		expect(storedSession().captchaType).toBe(CaptchaType.image);
+		expect(storedSession().reason).toBe(FrictionlessReason.PUZZLE_USER_SWITCH);
+		expect(storedSession().refreshOf).toBe("prev");
+	});
+
+	it("credits the user's switch over the refresh limit", async () => {
+		await managerFor(
+			{
+				refreshOf: "prev",
+				refreshCount: PUZZLE_REFRESHES_BEFORE_IMAGE,
+				refreshedAfterMs: 1000,
+			},
+			undefined,
+			true,
+		).sendPuzzleCaptcha();
+
+		expect(storedSession().reason).toBe(FrictionlessReason.PUZZLE_USER_SWITCH);
+	});
+
+	it("keeps a puzzle-only site on puzzle when the user asks to switch", async () => {
+		await managerFor(
+			{ refreshOf: "prev", refreshCount: 1, refreshedAfterMs: 1000 },
+			{ image: false, puzzle: true },
+			true,
+		).sendPuzzleCaptcha();
+
+		expect(storedSession().captchaType).toBe(CaptchaType.puzzle);
+		expect(storedSession().reason).not.toBe(
+			FrictionlessReason.PUZZLE_USER_SWITCH,
+		);
+	});
+
+	it("leaves a routed PoW alone when the user asks to switch", async () => {
+		applyRouterMock.mockResolvedValue({ captchaType: CaptchaType.pow });
+		await managerFor(
+			{ refreshOf: "prev", refreshCount: 1, refreshedAfterMs: 1000 },
+			undefined,
+			true,
+		).sendPuzzleCaptcha();
+
+		expect(storedSession().captchaType).toBe(CaptchaType.pow);
 	});
 });

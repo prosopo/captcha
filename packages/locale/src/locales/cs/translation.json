@@ -399,7 +399,10 @@
 			"POSITION": "{{x}} procent zleva, {{y}} procent shora",
 			"CHECKING": "Ověřujeme vaši odpověď",
 			"RETRY_ANNOUNCEMENT": "Skoro. Načetla se nová skládačka a dílek je zpět na začátku.",
-			"REFRESH": "Jiná skládačka"
+			"REFRESH": "Jiná skládačka",
+			"SWITCH_TO_IMAGE": "Přepnout na obrázkový test",
+			"SWITCH_TO_IMAGE_LABELLED": "Zkuste raději obrázkový test",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Můžete také přepnout na obrázkový test."
 		}
 	},
 	"CONTRACT": {

@@ -126,3 +126,22 @@ export const switchTypeAfterRefreshes = (
 	resolveFrictionlessTypes(allowedTypes).image
 		? CaptchaType.image
 		: resolved;
+
+/**
+ * Swap a puzzle for an image challenge because the user asked for one.
+ *
+ * Same one-way rule as `switchTypeAfterRefreshes`: the request is
+ * client-reported, so it may only ever earn a harder challenge. Whatever the
+ * routing settled on other than a puzzle stands, and so does a site that may
+ * not be served image challenges.
+ */
+export const switchTypeOnUserRequest = (
+	resolved: ConcreteCaptchaType,
+	switchToImage: boolean | undefined,
+	allowedTypes: Partial<IFrictionlessTypes> | undefined,
+): ConcreteCaptchaType =>
+	CaptchaType.puzzle === resolved &&
+	true === switchToImage &&
+	resolveFrictionlessTypes(allowedTypes).image
+		? CaptchaType.image
+		: resolved;

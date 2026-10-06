@@ -399,7 +399,10 @@
 			"POSITION": "左から {{x}} パーセント、上から {{y}} パーセント",
 			"CHECKING": "回答を確認しています",
 			"RETRY_ANNOUNCEMENT": "惜しい。新しいパズルが読み込まれ、ピースは開始位置に戻りました。",
-			"REFRESH": "別のパズル"
+			"REFRESH": "別のパズル",
+			"SWITCH_TO_IMAGE": "画像チャレンジに切り替える",
+			"SWITCH_TO_IMAGE_LABELLED": "代わりに画像チャレンジを試す",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "画像チャレンジに切り替えることもできます。"
 		}
 	},
 	"CONTRACT": {

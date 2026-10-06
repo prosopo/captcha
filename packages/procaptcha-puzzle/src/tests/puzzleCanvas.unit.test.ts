@@ -327,6 +327,71 @@ describe("the refresh control", () => {
 	});
 });
 
+describe("the switch to an image challenge", () => {
+	const switchControl = (): HTMLElement | null =>
+		overlay().querySelector<HTMLElement>(
+			'[aria-label="Switch to an image challenge"]',
+		);
+
+	test("is not drawn when the puzzle cannot be switched", () => {
+		render(props());
+		expect(switchControl()).toBeNull();
+	});
+
+	test("asks for an image challenge when pressed", () => {
+		const onSwitchToImage = vi.fn<() => void>();
+		render(props({ onSwitchToImage }));
+		required(switchControl(), "the switch control").click();
+		expect(onSwitchToImage).toHaveBeenCalledTimes(1);
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	test("is a bare icon until the user looks to be struggling", () => {
+		render(props({ onSwitchToImage: vi.fn<() => void>() }));
+		const control = required(switchControl(), "the switch control");
+		expect(control.textContent).toBe("");
+	});
+
+	test("carries a visible label once the user looks to be struggling", () => {
+		render(
+			props({
+				onSwitchToImage: vi.fn<() => void>(),
+				imageSwitchHighlighted: true,
+			}),
+		);
+		const control = required(switchControl(), "the switch control");
+		expect(control.textContent).toBe("Try an image challenge instead");
+	});
+
+	test("is hidden and inert while a solution is in flight", () => {
+		const onSwitchToImage = vi.fn<() => void>();
+		render(props({ onSwitchToImage, submitting: true }));
+		required(switchControl(), "the switch control").click();
+		expect(onSwitchToImage).not.toHaveBeenCalled();
+	});
+
+	test("is ignored mid-drag", () => {
+		const onSwitchToImage = vi.fn<() => void>();
+		render(props({ onSwitchToImage }));
+		mouseDown(20, 100);
+		required(switchControl(), "the switch control").click();
+		expect(onSwitchToImage).not.toHaveBeenCalled();
+	});
+
+	test("is offered to a screen reader after a miss once highlighted", () => {
+		render(
+			props({
+				onSwitchToImage: vi.fn<() => void>(),
+				imageSwitchHighlighted: true,
+				showRetry: true,
+			}),
+		);
+		expect(document.body.querySelector("output")?.textContent).toContain(
+			"You can also switch to an image challenge.",
+		);
+	});
+});
+
 describe("dragging with a mouse", () => {
 	test("the piece follows the pointer", () => {
 		render(props());

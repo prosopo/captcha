@@ -399,7 +399,10 @@
 			"POSITION": "{{x}} procent od lewej, {{y}} procent od góry",
 			"CHECKING": "Sprawdzanie odpowiedzi",
 			"RETRY_ANNOUNCEMENT": "Prawie. Wczytano nową układankę, a element wrócił na początek.",
-			"REFRESH": "Inna układanka"
+			"REFRESH": "Inna układanka",
+			"SWITCH_TO_IMAGE": "Przełącz na zadanie z obrazkami",
+			"SWITCH_TO_IMAGE_LABELLED": "Spróbuj zadania z obrazkami",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Możesz też przełączyć się na zadanie z obrazkami."
 		}
 	},
 	"CONTRACT": {

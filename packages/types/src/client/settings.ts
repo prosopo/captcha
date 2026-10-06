@@ -267,6 +267,29 @@ export const resolveAllowedCaptchaTypes = (
 };
 
 /**
+ * Prosopo-controlled switches for widget behaviour on a site. Like
+ * `captchaTypeFeatureFlags`, set by Prosopo staff and never by the site
+ * owner, with no stored default: `widgetFeatureFlagDefaults` decides.
+ */
+export const WidgetFeatureFlagsSchema = object({
+	// Offer a control on the puzzle that swaps it for an image challenge.
+	puzzleImageSwitch: boolean().optional(),
+});
+
+export type IWidgetFeatureFlags = output<typeof WidgetFeatureFlagsSchema>;
+
+export type WidgetFeature = keyof IWidgetFeatureFlags;
+
+export const widgetFeatureFlagDefaults: Required<IWidgetFeatureFlags> = {
+	puzzleImageSwitch: false,
+};
+
+export const isWidgetFeatureEnabled = (
+	feature: WidgetFeature,
+	flags: IWidgetFeatureFlags | undefined | null,
+): boolean => flags?.[feature] ?? widgetFeatureFlagDefaults[feature];
+
+/**
  * Read a stored `frictionlessThreshold` into a complete ladder.
  *
  * The single place that knows how to interpret the pre-ladder shape. Records
@@ -729,6 +752,7 @@ export const ClientSettingsSchema = object({
 		frictionlessTypesDefault,
 	),
 	captchaTypeFeatureFlags: CaptchaTypeFeatureFlagsSchema.optional(),
+	widgetFeatureFlags: WidgetFeatureFlagsSchema.optional(),
 	powDifficulty: powDifficultyFieldSchema
 		.optional()
 		.default(powDifficultyDefault),

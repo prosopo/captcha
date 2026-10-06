@@ -231,6 +231,16 @@ export const UserSettingsSchema = new Schema({
 		),
 		required: false,
 	},
+	// Unset for the same reason as `captchaTypeFeatureFlags`.
+	widgetFeatureFlags: {
+		type: new Schema(
+			{
+				puzzleImageSwitch: { type: Boolean, required: false },
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
 	powDifficulty: { type: Number, default: powDifficultyDefault },
 	imageThreshold: {
 		type: Number,
@@ -411,6 +421,7 @@ export const AccountSchema = new Schema<AccountRecord>({
 				frictionlessThreshold: MongooseSchema.Types.Mixed,
 				frictionlessTypes: MongooseSchema.Types.Mixed,
 				captchaTypeFeatureFlags: MongooseSchema.Types.Mixed,
+				widgetFeatureFlags: MongooseSchema.Types.Mixed,
 				ipValidationRules: IPValidationRulesSchema,
 			},
 			createdAt: Number,

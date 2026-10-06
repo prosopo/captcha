@@ -268,6 +268,61 @@ describe("frictionlessTypes bounds what the ladder may serve", () => {
 		});
 	});
 
+	describe("puzzle switched to image by the user", () => {
+		const configureSwitch = (puzzleImageSwitch: boolean) => {
+			cy.registerSiteKey(baseCaptchaType, undefined, {
+				frictionlessThreshold: {
+					frictionlessPuzzleThreshold: PUZZLE_RUNG,
+					frictionlessImageThreshold: IMAGE_RUNG,
+				},
+				frictionlessTypes: { image: true, puzzle: true },
+				widgetFeatureFlags: { puzzleImageSwitch },
+			}).then((response) => {
+				expect(response.status).to.equal(200);
+			});
+		};
+
+		it("serves an image challenge when the user asks for one", () => {
+			configureSwitch(true);
+			primeAndVisit(LANG_PUZZLE_BAND);
+			expectServedType(
+				CaptchaType.puzzle,
+				"the switch is only offered from a puzzle",
+			);
+			cy.get("@puzzle")
+				.its("response.body.imageSwitchAvailable")
+				.should("equal", true);
+
+			getWidgetElement('[data-cy="image-switch-button"]', { timeout: 15000 })
+				.first()
+				.realClick();
+
+			cy.wait("@frictionless", { timeout: 15000 }).then((interception) => {
+				expect(interception.request.body.switchToImage).to.equal(true);
+				expect(interception.request.body.refreshOf).to.be.a("string");
+				expect(
+					interception.response?.body.captchaType,
+					"the replacement must be the image challenge the user asked for",
+				).to.equal(CaptchaType.image);
+			});
+			cy.wait("@image", { timeout: 20000 })
+				.its("response.statusCode")
+				.should("equal", 200);
+		});
+
+		it("is not offered unless the site has it switched on", () => {
+			configureSwitch(false);
+			primeAndVisit(LANG_PUZZLE_BAND);
+			expectServedType(
+				CaptchaType.puzzle,
+				"the puzzle band must still reach puzzle",
+			);
+			cy.get("@puzzle")
+				.its("response.body")
+				.should("not.have.property", "imageSwitchAvailable");
+		});
+	});
+
 	describe("record written before the field existed", () => {
 		beforeEach(() => configure(undefined));
 

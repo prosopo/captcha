@@ -46,6 +46,10 @@ import { type PuzzleCanvasProps, mountPuzzleCanvas } from "./puzzleCanvas.js";
 // Define the same event name as in the bundle for consistency
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
+// Wrong answers and refreshes in a row before the switch to an image
+// challenge is drawn with a label rather than as a bare icon.
+const IMAGE_SWITCH_HIGHLIGHT_AFTER = 2;
+
 type PuzzlePhase = "checkbox" | "dragging" | "submitting";
 
 export interface ProcaptchaPuzzleHandle {
@@ -182,6 +186,24 @@ export const mountProcaptchaPuzzleWidget = (
 		void replaceChallenge({ refresh: true });
 	};
 
+	const handleSwitchToImage = () => {
+		if ("dragging" !== puzzlePhase) {
+			return;
+		}
+		callbacks.onReload?.();
+		showRetry = false;
+		puzzlePhase = "submitting";
+		scheduler.schedule();
+		void replaceChallenge({ refresh: true, switchToImage: true });
+	};
+
+	// Only a frictionless session can be re-minted as another type, so the
+	// switch is offered only where the wrapper will handle the reload.
+	const canSwitchToImage = (challenge: GetPuzzleCaptchaResponse): boolean =>
+		true === challenge.imageSwitchAvailable &&
+		undefined !== frictionlessState?.sessionId &&
+		undefined !== props.onReload;
+
 	// Dismissing returns to the checkbox; clicking away is not a wrong answer.
 	const handleDismiss = () => {
 		puzzlePhase = "checkbox";
@@ -210,6 +232,11 @@ export const mountProcaptchaPuzzleWidget = (
 		anchor: props.container,
 		onDismiss: handleDismiss,
 		onRefresh: handleRefresh,
+		...(canSwitchToImage(challenge) && {
+			onSwitchToImage: handleSwitchToImage,
+			imageSwitchHighlighted:
+				(props.startReplacementCount ?? 0) >= IMAGE_SWITCH_HIGHLIGHT_AFTER,
+		}),
 	});
 
 	const runErrorEffect = () => {

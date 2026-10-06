@@ -399,7 +399,10 @@
 			"POSITION": "{{x}} procent från vänster, {{y}} procent uppifrån",
 			"CHECKING": "Kontrollerar ditt svar",
 			"RETRY_ANNOUNCEMENT": "Nästan. Ett nytt pussel har laddats och biten är tillbaka vid starten.",
-			"REFRESH": "Ett annat pussel"
+			"REFRESH": "Ett annat pussel",
+			"SWITCH_TO_IMAGE": "Byt till en bilduppgift",
+			"SWITCH_TO_IMAGE_LABELLED": "Prova en bilduppgift i stället",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Du kan också byta till en bilduppgift."
 		}
 	},
 	"CONTRACT": {

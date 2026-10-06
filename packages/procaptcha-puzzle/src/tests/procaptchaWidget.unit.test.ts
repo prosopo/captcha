@@ -680,6 +680,68 @@ describe("refreshing the puzzle", () => {
 	});
 });
 
+describe("switching to an image challenge", () => {
+	const openPuzzle = async (widgetProps: ProcaptchaProps): Promise<void> => {
+		render(widgetProps);
+		await click();
+	};
+
+	const switchable = (
+		overrides: Partial<ProcaptchaProps> = {},
+	): ProcaptchaProps =>
+		props({
+			frictionlessState: frictionless({ sessionId: "session-one" }),
+			onReload: vi.fn<NonNullable<ProcaptchaProps["onReload"]>>(),
+			...overrides,
+		});
+
+	beforeEach(() => {
+		mocks.start.mockResolvedValue(
+			challengeResponse({ imageSwitchAvailable: true }),
+		);
+	});
+
+	test("offers the switch when the provider allows it", async () => {
+		await openPuzzle(switchable());
+		expect(mocks.canvasProps.current?.onSwitchToImage).toBeTypeOf("function");
+		expect(mocks.canvasProps.current?.imageSwitchHighlighted).toBe(false);
+	});
+
+	test("does not offer the switch when the provider does not allow it", async () => {
+		mocks.start.mockResolvedValue(challengeResponse());
+		await openPuzzle(switchable());
+		expect(mocks.canvasProps.current?.onSwitchToImage).toBeUndefined();
+	});
+
+	test("does not offer the switch without a session to re-mint", async () => {
+		await openPuzzle(props());
+		expect(mocks.canvasProps.current?.onSwitchToImage).toBeUndefined();
+	});
+
+	test("hands back to the wrapper asking for an image challenge", async () => {
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
+		await openPuzzle(switchable({ onReload }));
+		mocks.canvasProps.current?.onSwitchToImage?.();
+		await settle();
+		expect(onReload).toHaveBeenCalledWith(
+			expect.any(Number),
+			expect.any(Number),
+			{ refresh: true, switchToImage: true },
+		);
+		expect(mocks.submitSolution).not.toHaveBeenCalled();
+	});
+
+	test("labels the switch once the user has had two puzzles replaced", async () => {
+		await openPuzzle(switchable({ startReplacementCount: 2 }));
+		expect(mocks.canvasProps.current?.imageSwitchHighlighted).toBe(true);
+	});
+
+	test("keeps the switch as an icon after a single replacement", async () => {
+		await openPuzzle(switchable({ startReplacementCount: 1 }));
+		expect(mocks.canvasProps.current?.imageSwitchHighlighted).toBe(false);
+	});
+});
+
 describe("invisible mode", () => {
 	const execute = async (): Promise<void> => {
 		document.dispatchEvent(new Event("procaptcha:execute"));

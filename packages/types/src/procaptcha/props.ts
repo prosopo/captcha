@@ -113,6 +113,7 @@ export type ProcaptchaCallbacks = Partial<Callbacks>;
 export interface ReloadOptions {
 	showRetry?: boolean;
 	refresh?: boolean;
+	switchToImage?: boolean;
 }
 
 export interface ProcaptchaProps {
@@ -151,6 +152,9 @@ export interface ProcaptchaProps {
 	// without this the user is told to "Drag the piece to the target" as if
 	// nothing had happened.
 	startShowRetry?: boolean;
+	// How many challenges in a row this user has had replaced, by a wrong
+	// answer or a refresh, carried across re-mounts for the same reason.
+	startReplacementCount?: number;
 	// Called by the inner widget when it needs a replacement challenge: the
 	// user pressed reload, or the puzzle rejected their answer. The
 	// frictionless wrapper owns the response: the sessionId behind the
@@ -163,6 +167,7 @@ export interface ProcaptchaProps {
 	// `showRetry` asks the re-mounted widget to keep the retry prompt up.
 	// `refresh` marks the user asking for a different challenge rather than
 	// getting one wrong, so the provider can count the refreshes.
+	// `switchToImage` asks for that replacement to be an image challenge.
 	// When absent the widget falls back to the manager's own reload behaviour.
 	onReload?: (x?: number, y?: number, options?: ReloadOptions) => void;
 }

@@ -12,12 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Session } from "@prosopo/types";
+import { CaptchaType, type Session } from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 
 export type RefreshLineage = Required<
 	Pick<Session, "refreshOf" | "refreshCount" | "refreshedAfterMs">
 >;
+
+export interface ResolvedRefresh {
+	lineage: RefreshLineage;
+	replacedCaptchaType: Session["captchaType"];
+}
 
 /**
  * Work out where a refresh sits in its chain from the session it replaced.
@@ -31,16 +36,33 @@ export const resolveRefreshLineage = async (
 	refreshOf: string | undefined,
 	siteKey: string,
 	now: Date,
-): Promise<RefreshLineage | undefined> => {
+): Promise<ResolvedRefresh | undefined> => {
 	if (!refreshOf) return undefined;
 	const replaced = await db.getSessionRecordBySessionId(refreshOf);
 	if (!replaced || replaced.siteKey !== siteKey) return undefined;
 	return {
-		refreshOf,
-		refreshCount: (replaced.refreshCount ?? 0) + 1,
-		refreshedAfterMs: Math.max(
-			0,
-			now.getTime() - new Date(replaced.createdAt).getTime(),
-		),
+		lineage: {
+			refreshOf,
+			refreshCount: (replaced.refreshCount ?? 0) + 1,
+			refreshedAfterMs: Math.max(
+				0,
+				now.getTime() - new Date(replaced.createdAt).getTime(),
+			),
+		},
+		replacedCaptchaType: replaced.captchaType,
 	};
 };
+
+/**
+ * Whether to honour the user's request to swap their puzzle for an image
+ * challenge: the request must be a genuine refresh of a puzzle session on
+ * this site, and the site must have the switch enabled.
+ */
+export const isImageSwitchRequestValid = (
+	switchToImage: boolean | undefined,
+	refresh: ResolvedRefresh | undefined,
+	switchEnabled: boolean,
+): boolean =>
+	true === switchToImage &&
+	switchEnabled &&
+	CaptchaType.puzzle === refresh?.replacedCaptchaType;

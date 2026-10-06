@@ -399,7 +399,10 @@
 			"POSITION": "距左边 {{x}} %，距顶部 {{y}} %",
 			"CHECKING": "正在检查您的答案",
 			"RETRY_ANNOUNCEMENT": "差一点。已加载新的拼图，拼块回到了起点。",
-			"REFRESH": "换一个拼图"
+			"REFRESH": "换一个拼图",
+			"SWITCH_TO_IMAGE": "切换到图片验证",
+			"SWITCH_TO_IMAGE_LABELLED": "改用图片验证",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "你也可以切换到图片验证。"
 		}
 	},
 	"CONTRACT": {

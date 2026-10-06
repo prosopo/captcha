@@ -100,7 +100,10 @@
 			"POSITION": "{{x}} Prozent von links, {{y}} Prozent von oben",
 			"CHECKING": "Deine Antwort wird geprüft",
 			"RETRY_ANNOUNCEMENT": "Knapp daneben. Ein neues Puzzle wurde geladen und das Teil steht wieder am Anfang.",
-			"REFRESH": "Anderes Puzzle"
+			"REFRESH": "Anderes Puzzle",
+			"SWITCH_TO_IMAGE": "Zu einer Bildaufgabe wechseln",
+			"SWITCH_TO_IMAGE_LABELLED": "Stattdessen eine Bildaufgabe versuchen",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Du kannst auch zu einer Bildaufgabe wechseln."
 		}
 	},
 	"CONTRACT": {

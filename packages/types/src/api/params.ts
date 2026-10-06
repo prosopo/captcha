@@ -97,6 +97,8 @@ export enum ApiParams {
 	// from `sessionId`, which is the provider's own frictionless session.
 	clientSessionId = "clientSessionId",
 	refreshOf = "refreshOf",
+	switchToImage = "switchToImage",
+	imageSwitchAvailable = "imageSwitchAvailable",
 	honeypot = "honeypot",
 	fingerprintProof = "fingerprintProof",
 }

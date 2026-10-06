@@ -43,6 +43,7 @@ import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { summariseRequestBody } from "../requestBodySummary.js";
 import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
+import { isPuzzleImageSwitchAvailable } from "./getFrictionlessCaptchaChallenge/constants.js";
 import { buildPuzzleMaintenanceResponse } from "./maintenanceModeResponses.js";
 import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
 
@@ -360,6 +361,9 @@ export default (
 						[ApiParams.challenge]: challenge.providerSignature,
 					},
 				},
+				...(isPuzzleImageSwitchAvailable(clientSettings.settings) && {
+					[ApiParams.imageSwitchAvailable]: true,
+				}),
 			};
 
 			req.logger.info(() => ({

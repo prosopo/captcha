@@ -76,6 +76,8 @@ export type BotDetectionFunction = (
 	// The sessionId the user refreshed away from, when this run replaces a
 	// challenge they asked to swap. Forwarded to the provider as `refreshOf`.
 	refreshOf?: string,
+	// The user asked for the replacement to be an image challenge.
+	switchToImage?: boolean,
 ) => Promise<BotDetectionFunctionResult>;
 
 /**

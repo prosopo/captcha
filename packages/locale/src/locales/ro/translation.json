@@ -399,7 +399,10 @@
 			"POSITION": "{{x}} la sută din stânga, {{y}} la sută de sus",
 			"CHECKING": "Îți verificăm răspunsul",
 			"RETRY_ANNOUNCEMENT": "Aproape. S-a încărcat un puzzle nou, iar piesa este din nou la început.",
-			"REFRESH": "Alt puzzle"
+			"REFRESH": "Alt puzzle",
+			"SWITCH_TO_IMAGE": "Treci la o provocare cu imagini",
+			"SWITCH_TO_IMAGE_LABELLED": "Încearcă o provocare cu imagini",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Poți trece și la o provocare cu imagini."
 		}
 	},
 	"CONTRACT": {

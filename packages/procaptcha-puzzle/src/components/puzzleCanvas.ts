@@ -16,6 +16,7 @@ import type { TranslationKey, Translator } from "@prosopo/locale";
 import {
 	type ChallengeSurfaceComponent,
 	type Component,
+	type ImageSwitchButtonProps,
 	type StyleMap,
 	Teardown,
 	applyAttributes,
@@ -23,6 +24,7 @@ import {
 	createElement,
 	isEventTrusted,
 	mountChallengeSurface,
+	mountImageSwitchButton,
 	mountReloadButton,
 } from "@prosopo/procaptcha-common";
 import type { PlacementType, PuzzleEvent } from "@prosopo/types";
@@ -51,12 +53,18 @@ export interface PuzzleCanvasProps {
 	onDismiss?: () => void;
 	// Swaps this puzzle for a new one. No control is drawn when absent.
 	onRefresh?: () => void;
+	// Swaps this puzzle for an image challenge. No control is drawn when absent.
+	onSwitchToImage?: () => void;
+	// Draws the switch as a labelled button under the puzzle rather than an
+	// icon in the header, for a user who looks to be struggling.
+	imageSwitchHighlighted?: boolean;
 }
 
 const CONTAINER_WIDTH = 300;
 const CONTAINER_HEIGHT = 200;
 
 const PIECE_CSS_CLASS = "prosopo-puzzle-piece";
+const SWITCH_ROW_CSS_CLASS = "prosopo-puzzle-switch-row";
 
 // An arrow press moves a tenth of the board's width. The provider accepts a
 // solution within 15px of the target, so a 10px lattice always contains a
@@ -92,6 +100,18 @@ const stylesheet = (focusRingColor: string): string => `
 .${PIECE_CSS_CLASS}:focus-visible {
 	outline: 3px solid ${focusRingColor};
 	outline-offset: 2px;
+}
+@keyframes prosopo-puzzle-switch-in {
+	from { opacity: 0; transform: translateY(-4px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+.${SWITCH_ROW_CSS_CLASS} {
+	animation: prosopo-puzzle-switch-in 0.3s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+	.${SWITCH_ROW_CSS_CLASS} {
+		animation: none;
+	}
 }
 `;
 
@@ -263,6 +283,27 @@ export const mountPuzzleCanvas = (
 		},
 	});
 
+	const switchSlot = createElement("div", {
+		style: {
+			position: "absolute",
+			left: "8px",
+			top: "50%",
+			transform: "translateY(-50%)",
+		},
+	});
+
+	const switchRow = createElement("div", {
+		className: SWITCH_ROW_CSS_CLASS,
+		style: {
+			display: "none",
+			justifyContent: "center",
+			padding: "10px 12px 12px",
+			width: `${CONTAINER_WIDTH}px`,
+			boxSizing: "border-box",
+			borderRadius: "0 0 20px 20px",
+		},
+	});
+
 	const instruction = createElement("div", {
 		style: {
 			position: "relative",
@@ -277,7 +318,7 @@ export const mountPuzzleCanvas = (
 			fontWeight: 500,
 			transition: "color 0.3s ease, border-color 0.3s ease",
 		},
-		children: [instructionText, refreshSlot],
+		children: [switchSlot, instructionText, refreshSlot],
 	});
 
 	const panel = createElement("div", {
@@ -288,7 +329,7 @@ export const mountPuzzleCanvas = (
 			gap: "0",
 			transition: "opacity 0.3s ease, transform 0.3s ease",
 		},
-		children: [instruction, area],
+		children: [instruction, area, switchRow],
 	});
 
 	const refreshButtonProps = () => ({
@@ -307,6 +348,41 @@ export const mountPuzzleCanvas = (
 	const refreshButton = props.onRefresh
 		? mountReloadButton(refreshSlot, refreshButtonProps())
 		: undefined;
+
+	const imageSwitchButtonProps = (): ImageSwitchButtonProps => ({
+		themeColor:
+			lightTheme === props.theme ? ("light" as const) : ("dark" as const),
+		label: t("WIDGET.PUZZLE.SWITCH_TO_IMAGE", {
+			defaultValue: "Switch to an image challenge",
+		}),
+		labelled: true === props.imageSwitchHighlighted,
+		labelledText: t("WIDGET.PUZZLE.SWITCH_TO_IMAGE_LABELLED", {
+			defaultValue: "Try an image challenge instead",
+		}),
+		onSwitch: () => {
+			if (!props.submitting && !dragging) {
+				props.onSwitchToImage?.();
+			}
+		},
+	});
+	let imageSwitchButton: Component<ImageSwitchButtonProps> | undefined;
+	let imageSwitchLabelled: boolean | undefined;
+	const syncImageSwitchButton = () => {
+		const wanted = undefined !== props.onSwitchToImage;
+		const labelled = true === props.imageSwitchHighlighted;
+		if (imageSwitchButton && (!wanted || labelled !== imageSwitchLabelled)) {
+			imageSwitchButton.destroy();
+			imageSwitchButton = undefined;
+		}
+		if (wanted && !imageSwitchButton) {
+			imageSwitchButton = mountImageSwitchButton(
+				labelled ? switchRow : switchSlot,
+				imageSwitchButtonProps(),
+			);
+			imageSwitchLabelled = labelled;
+		}
+		imageSwitchButton?.update(imageSwitchButtonProps());
+	};
 
 	const surfaceProps = () => ({
 		show: true,
@@ -435,10 +511,23 @@ export const mountPuzzleCanvas = (
 			visibility: props.submitting ? "hidden" : "visible",
 		});
 		refreshButton?.update(refreshButtonProps());
+		syncImageSwitchButton();
+		const switchRowShown =
+			undefined !== props.onSwitchToImage &&
+			true === props.imageSwitchHighlighted;
+		applyStyles(switchSlot, {
+			visibility: props.submitting ? "hidden" : "visible",
+		});
+		applyStyles(switchRow, {
+			display: switchRowShown ? "flex" : "none",
+			visibility: props.submitting ? "hidden" : "visible",
+			backgroundColor: theme.palette.surface,
+		});
 		applyStyles(area, {
 			// Material 3 purple tonal fallback shown before the server-rendered
 			// background image loads.
 			background: `linear-gradient(135deg, ${theme.palette.surface} 0%, ${theme.palette.primaryContainer.main} 50%, ${theme.palette.surface} 100%)`,
+			borderRadius: switchRowShown ? "0" : "0 0 20px 20px",
 			opacity: props.submitting ? 0.6 : 1,
 			pointerEvents: props.submitting ? "none" : "auto",
 		});
@@ -640,11 +729,19 @@ export const mountPuzzleCanvas = (
 	};
 
 	const announceRetry = () => {
+		const retry = t("WIDGET.PUZZLE.RETRY_ANNOUNCEMENT", {
+			defaultValue:
+				"Not quite. A new puzzle has loaded and the piece is back at the start.",
+		});
+		const offerSwitch =
+			undefined !== props.onSwitchToImage &&
+			true === props.imageSwitchHighlighted;
 		announce(
-			t("WIDGET.PUZZLE.RETRY_ANNOUNCEMENT", {
-				defaultValue:
-					"Not quite. A new puzzle has loaded and the piece is back at the start.",
-			}),
+			offerSwitch
+				? `${retry} ${t("WIDGET.PUZZLE.SWITCH_TO_IMAGE_ANNOUNCEMENT", {
+						defaultValue: "You can also switch to an image challenge.",
+					})}`
+				: retry,
 		);
 	};
 
@@ -693,6 +790,7 @@ export const mountPuzzleCanvas = (
 		destroy: () => {
 			teardown.run();
 			refreshButton?.destroy();
+			imageSwitchButton?.destroy();
 			surface.destroy();
 		},
 	};

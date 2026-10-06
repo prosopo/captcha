@@ -437,7 +437,10 @@
 			"POSITION": "{{x}} prosenttia vasemmalta, {{y}} prosenttia ylhäältä",
 			"CHECKING": "Tarkistetaan vastaustasi",
 			"RETRY_ANNOUNCEMENT": "Melkein. Uusi palapeli ladattiin ja pala on taas alussa.",
-			"REFRESH": "Toinen palapeli"
+			"REFRESH": "Toinen palapeli",
+			"SWITCH_TO_IMAGE": "Vaihda kuvatehtävään",
+			"SWITCH_TO_IMAGE_LABELLED": "Kokeile kuvatehtävää",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Voit myös vaihtaa kuvatehtävään."
 		}
 	},
 	"CONTRACT": {

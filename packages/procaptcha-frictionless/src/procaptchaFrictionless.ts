@@ -145,6 +145,12 @@ export const mountProcaptchaFrictionless = (
 	// Survives provider retries for the same reason as `nextMountAutoStart`,
 	// and is cleared once a replacement session has been minted.
 	let nextRefreshOf: string | undefined;
+	// Whether that replacement should be an image challenge, as the user asked.
+	let nextSwitchToImage = false;
+	// Challenges in a row replaced by a wrong answer or a refresh. Lets the
+	// puzzle draw its switch to an image challenge more prominently for a user
+	// who looks to be struggling.
+	let replacementCount = 0;
 	const manualStart = StartModeEnum.manual === config.startMode;
 	let manualStarted = false;
 	// The inner widget only listens for `procaptcha:execute` once /frictionless
@@ -365,6 +371,9 @@ export const mountProcaptchaFrictionless = (
 			nextMountShowRetry = true === options?.showRetry;
 			nextRefreshOf =
 				true === options?.refresh ? frictionlessState.sessionId : undefined;
+			nextSwitchToImage =
+				true === options?.refresh && true === options?.switchToImage;
+			replacementCount = nextSwitchToImage ? 0 : replacementCount + 1;
 			// A reload mints a genuinely new session, so the invalidation
 			// budget for the *previous* one shouldn't count against it.
 			sessionInvalidatedAttempts.current = 0;
@@ -399,6 +408,7 @@ export const mountProcaptchaFrictionless = (
 				autoStart: resumedAutoStart,
 				startCoords: escalationCoords ?? retryStartCoords,
 				startShowRetry,
+				startReplacementCount: replacementCount,
 				onSessionInvalidated,
 				container: widgetContainer,
 			};
@@ -492,6 +502,7 @@ export const mountProcaptchaFrictionless = (
 					restart,
 					{ attempt: state.attemptCount },
 					nextRefreshOf,
+					nextSwitchToImage,
 				);
 
 				const guard = evaluateFrictionlessResult(result);
@@ -515,6 +526,7 @@ export const mountProcaptchaFrictionless = (
 				}
 
 				nextRefreshOf = undefined;
+				nextSwitchToImage = false;
 
 				const frictionlessState: FrictionlessState = {
 					provider: result.provider,

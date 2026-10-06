@@ -399,7 +399,10 @@
 			"POSITION": "soldan {{x}} faiz, yuxarıdan {{y}} faiz",
 			"CHECKING": "Cavabınız yoxlanılır",
 			"RETRY_ANNOUNCEMENT": "Az qaldı. Yeni tapmaca yükləndi və hissə yenidən başlanğıcdadır.",
-			"REFRESH": "Başqa tapmaca"
+			"REFRESH": "Başqa tapmaca",
+			"SWITCH_TO_IMAGE": "Şəkil tapşırığına keçin",
+			"SWITCH_TO_IMAGE_LABELLED": "Əvəzində şəkil tapşırığını sınayın",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Şəkil tapşırığına da keçə bilərsiniz."
 		}
 	},
 	"CONTRACT": {
