@@ -521,6 +521,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			replacedCaptchaType: CaptchaType,
 			widgetFeatureFlags: { puzzleImageSwitch?: boolean } | undefined,
 			switchToImage: boolean | undefined,
+			captchaType?: CaptchaType,
 		): Promise<void> => {
 			tasksInstance.db.getClientRecord.mockResolvedValue({
 				account: "siteSwitch",
@@ -528,6 +529,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 					frictionlessThreshold: 0.5,
 					disallowWebView: false,
 					...(widgetFeatureFlags && { widgetFeatureFlags }),
+					...(captchaType && { captchaType }),
 				},
 			});
 			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
@@ -562,6 +564,16 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 				CaptchaType.puzzle,
 				{ puzzleImageSwitch: true },
 				true,
+			);
+			expect(switchRequested()).toBe(true);
+		});
+
+		it("honours the switch on a site pinned to puzzle", async () => {
+			await requestSwitch(
+				CaptchaType.puzzle,
+				{ puzzleImageSwitch: true },
+				true,
+				CaptchaType.puzzle,
 			);
 			expect(switchRequested()).toBe(true);
 		});

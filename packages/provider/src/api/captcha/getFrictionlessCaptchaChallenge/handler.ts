@@ -574,6 +574,22 @@ export default (
 				...rawTlsSignalsForSession(req),
 			};
 
+			// Ahead of the short-circuits, so a site pinned to puzzle can still be
+			// switched to image.
+			const refresh = await resolveRefreshLineage(
+				tasks.db,
+				refreshOf,
+				dapp,
+				new Date(),
+			);
+			tasks.frictionlessManager.setImageSwitchRequested(
+				isImageSwitchRequestValid(
+					switchToImage,
+					refresh,
+					isPuzzleImageSwitchAvailable(clientRecord.settings),
+				),
+			);
+
 			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
 				shortCircuitInput,
 				res,
@@ -803,20 +819,6 @@ export default (
 					triggeredDetectors.length > 0 && { triggeredDetectors }),
 				...(shadowDomPenalty !== undefined && { shadowDomPenalty }),
 			};
-
-			const refresh = await resolveRefreshLineage(
-				tasks.db,
-				refreshOf,
-				dapp,
-				new Date(),
-			);
-			tasks.frictionlessManager.setImageSwitchRequested(
-				isImageSwitchRequestValid(
-					switchToImage,
-					refresh,
-					isPuzzleImageSwitchAvailable(clientRecord.settings),
-				),
-			);
 
 			tasks.frictionlessManager.setSessionParams({
 				token: sessionToken,

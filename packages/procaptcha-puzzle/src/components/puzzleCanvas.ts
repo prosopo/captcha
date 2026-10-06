@@ -289,6 +289,8 @@ export const mountPuzzleCanvas = (
 			left: "8px",
 			top: "50%",
 			transform: "translateY(-50%)",
+			// Above the board, which would otherwise cover the tooltip.
+			zIndex: "1",
 		},
 	});
 
