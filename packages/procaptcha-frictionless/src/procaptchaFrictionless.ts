@@ -22,6 +22,7 @@ import {
 	createElement,
 	getDefaultEvents,
 	getRestartDelayMs,
+	isEventTrusted,
 	isSecureBrowserContext,
 	mountCheckbox,
 	mountTestModeBanner,
@@ -53,6 +54,8 @@ import {
 } from "./sessionInvalidatedRecovery.js";
 
 const NO_SESSION_FOUND_KEY = "CAPTCHA.NO_SESSION_FOUND";
+
+const MAX_PRESS_HOLD_MS = 1000;
 
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
@@ -162,6 +165,27 @@ export const mountProcaptchaFrictionless = (
 	let solver: SolverHandle | undefined;
 	let placeholder: Component<CheckboxProps> | undefined;
 
+	// A press that starts on the placeholder has to end on it: swap the solver
+	// in mid-press and the browser fires the click on neither box, so it is
+	// lost. The swap waits for the press to finish, which lets the click be
+	// held and replayed instead. Capped, since a release outside the page may
+	// never be reported.
+	let pressReleased: Promise<void> | undefined;
+	teardown.addEventListener(slot, "pointerdown", (event: Event) => {
+		if (!placeholder || !isEventTrusted(event)) return;
+		pressReleased = new Promise<void>((resolve: () => void) => {
+			const release = () => {
+				clearTimeout(timer);
+				window.removeEventListener("pointerup", release, true);
+				window.removeEventListener("pointercancel", release, true);
+				setTimeout(resolve, 0);
+			};
+			const timer = setTimeout(release, MAX_PRESS_HOLD_MS);
+			window.addEventListener("pointerup", release, true);
+			window.addEventListener("pointercancel", release, true);
+		});
+	});
+
 	const clearSlot = () => {
 		solver?.destroy();
 		solver = undefined;
@@ -184,9 +208,6 @@ export const mountProcaptchaFrictionless = (
 
 		placeholder = mountCheckbox(slot, {
 			theme: "light" === config.theme ? lightTheme : darkTheme,
-			// Inert unless the site asked for a manual start: this checkbox
-			// stands in until detection picks a solver, and clicking it must
-			// not start anything of its own.
 			onChange: onChange ?? (() => undefined),
 			checked: false,
 			labelText: i18n.isInitialized ? i18n.t("WIDGET.I_AM_HUMAN") : "",
@@ -351,31 +372,36 @@ export const mountProcaptchaFrictionless = (
 			void start();
 		};
 
-		// Consume any pending retry coords now — the resumed widget owns them
-		// for exactly one auto-fired `manager.start(x, y)`. Cleared so a
-		// subsequent escalation/re-render doesn't accidentally re-inject.
+		// Consume any pending retry coords at mount time — the resumed widget
+		// owns them for exactly one auto-fired `manager.start(x, y)`. Cleared so
+		// a subsequent escalation/re-render doesn't accidentally re-inject.
 		// Escalation coords (from a PoW→image/puzzle handoff) take precedence
 		// over pending retry coords when both are present, because escalation
 		// is the current transition and the pending retry belongs to a prior
-		// widget instance that never got to consume them.
-		const forcedAutoStart = nextMountAutoStart;
-		nextMountAutoStart = false;
-		const startShowRetry = nextMountShowRetry;
-		nextMountShowRetry = false;
-		const { autoStart: resumedAutoStart, startCoords: retryStartCoords } =
-			consumeRetryMountProps(pendingRetryCoords, autoStart || forcedAutoStart);
-		const startCoords = escalationCoords ?? retryStartCoords;
-
-		const widgetProps: ProcaptchaProps = {
-			config,
-			callbacks,
-			frictionlessState,
-			i18n,
-			autoStart: resumedAutoStart,
-			startCoords,
-			startShowRetry,
-			onSessionInvalidated,
-			container: widgetContainer,
+		// widget instance that never got to consume them. Read only once the
+		// solver's chunk has loaded, because the placeholder stays clickable
+		// while it loads.
+		const takeWidgetProps = (): ProcaptchaProps => {
+			const forcedAutoStart = nextMountAutoStart;
+			nextMountAutoStart = false;
+			const startShowRetry = nextMountShowRetry;
+			nextMountShowRetry = false;
+			const { autoStart: resumedAutoStart, startCoords: retryStartCoords } =
+				consumeRetryMountProps(
+					pendingRetryCoords,
+					autoStart || forcedAutoStart,
+				);
+			return {
+				config,
+				callbacks,
+				frictionlessState,
+				i18n,
+				autoStart: resumedAutoStart,
+				startCoords: escalationCoords ?? retryStartCoords,
+				startShowRetry,
+				onSessionInvalidated,
+				container: widgetContainer,
+			};
 		};
 
 		if (CaptchaType.authenticated === captchaType) {
@@ -413,26 +439,29 @@ export const mountProcaptchaFrictionless = (
 
 		if (CaptchaType.image === captchaType) {
 			const mount = await ProcaptchaLoader();
+			await pressReleased;
 			if (destroyed) return;
 			clearSlot();
-			solver = mount(slot, { ...widgetProps, onReload });
+			solver = mount(slot, { ...takeWidgetProps(), onReload });
 			replayPendingExecute();
 			return;
 		}
 
 		if (CaptchaType.puzzle === captchaType) {
 			const mount = await ProcaptchaPuzzleLoader();
+			await pressReleased;
 			if (destroyed) return;
 			clearSlot();
-			solver = mount(slot, { ...widgetProps, onReload });
+			solver = mount(slot, { ...takeWidgetProps(), onReload });
 			replayPendingExecute();
 			return;
 		}
 
 		const mount = await ProcaptchaPowLoader();
+		await pressReleased;
 		if (destroyed) return;
 		clearSlot();
-		solver = mount(slot, { ...widgetProps, onEscalate });
+		solver = mount(slot, { ...takeWidgetProps(), onEscalate });
 		replayPendingExecute();
 	};
 
@@ -557,26 +586,35 @@ export const mountProcaptchaFrictionless = (
 		}
 	}
 
+	const clickCoords = (
+		event: MouseEvent | KeyboardEvent | TouchEvent,
+	): RetryCoords | null =>
+		"clientX" in event && "clientY" in event
+			? normaliseRetryCoords(event.clientX, event.clientY)
+			: null;
+
 	const manualCheckboxHandler: CheckboxProps["onChange"] = async (
 		event: MouseEvent | KeyboardEvent | TouchEvent,
 	): Promise<void> => {
-		let x = 0;
-		let y = 0;
-		if ("clientX" in event && "clientY" in event) {
-			x = event.clientX;
-			y = event.clientY;
-		}
-		await startManually(true, normaliseRetryCoords(x, y) ?? undefined);
+		await startManually(true, clickCoords(event) ?? undefined);
 	};
 
-	// Initial paint: the loading placeholder, before detection resolves. Under
-	// manual start there is nothing in flight yet, so the box is idle and
-	// clickable rather than spinning.
+	// Detection takes seconds, and the user should not have to wait it out
+	// before the checkbox responds. A click while it runs is held and replayed
+	// on the solver detection picks, so no token is issued any sooner.
+	const holdClickUntilDetected: CheckboxProps["onChange"] = (
+		event: MouseEvent | KeyboardEvent | TouchEvent,
+	): void => {
+		pendingRetryCoords.current = clickCoords(event);
+		nextMountAutoStart = true;
+		renderPlaceholder(config.mode, undefined, true);
+	};
+
 	renderPlaceholder(
 		config.mode,
 		state.errorMessage,
-		!manualStart,
-		manualStart ? manualCheckboxHandler : undefined,
+		false,
+		manualStart ? manualCheckboxHandler : holdClickUntilDetected,
 	);
 
 	if (manualStart) {
