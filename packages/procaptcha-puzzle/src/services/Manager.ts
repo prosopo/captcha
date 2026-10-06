@@ -65,6 +65,10 @@ export const Manager = (
 	// Reads the live honeypot input value at submit time. Returns undefined
 	// when the honeypot is disabled or the input hasn't been filled.
 	getHoneypotValue?: () => string | undefined,
+	// Set when the widget re-mints the session itself after a wrong answer.
+	// Restarting the whole frictionless flow as well would tear that widget
+	// down before it can, losing the retry prompt and its count of misses.
+	options: { widgetReloadsOnFailure?: boolean } = {},
 ): PuzzleManagerHandle => {
 	const events = getDefaultEvents(callbacks);
 
@@ -121,7 +125,9 @@ export const Manager = (
 			loading: false,
 		});
 		events.onFailed();
-		resetState(frictionlessState?.restart);
+		resetState(
+			options.widgetReloadsOnFailure ? undefined : frictionlessState?.restart,
+		);
 	};
 
 	const clearSuccessfulChallengeTimeout = () => {

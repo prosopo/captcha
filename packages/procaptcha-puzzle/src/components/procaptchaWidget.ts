@@ -88,6 +88,11 @@ export const mountProcaptchaPuzzleWidget = (
 	// get the state update mechanism
 	const updateState = buildUpdateState(store.state, store.update);
 
+	// A frictionless session is single-use, so a replacement challenge needs a
+	// new one, which the wrapper mints when asked through `onReload`.
+	const remintsSession =
+		undefined !== frictionlessState?.sessionId && undefined !== props.onReload;
+
 	const manager = Manager(
 		config,
 		store.state,
@@ -95,6 +100,7 @@ export const mountProcaptchaPuzzleWidget = (
 		callbacks,
 		frictionlessState,
 		() => honeypot?.getValue(),
+		{ widgetReloadsOnFailure: remintsSession },
 	);
 
 	const root = createElement("div");
@@ -146,10 +152,10 @@ export const mountProcaptchaPuzzleWidget = (
 		// on the checkbox before the wrapper recovers. Go straight to the
 		// re-mint instead; the wrapper mints a new session and re-mounts us with
 		// `autoStart`, so a fresh puzzle appears in place.
-		if (frictionlessState?.sessionId && props.onReload) {
+		if (remintsSession) {
 			puzzlePhase = "submitting";
 			scheduler.schedule();
-			props.onReload(lastCoords?.x, lastCoords?.y, options);
+			props.onReload?.(lastCoords?.x, lastCoords?.y, options);
 			return;
 		}
 
@@ -197,12 +203,8 @@ export const mountProcaptchaPuzzleWidget = (
 		void replaceChallenge({ refresh: true, switchToImage: true });
 	};
 
-	// Only a frictionless session can be re-minted as another type, so the
-	// switch is offered only where the wrapper will handle the reload.
 	const canSwitchToImage = (challenge: GetPuzzleCaptchaResponse): boolean =>
-		true === challenge.imageSwitchAvailable &&
-		undefined !== frictionlessState?.sessionId &&
-		undefined !== props.onReload;
+		true === challenge.imageSwitchAvailable && remintsSession;
 
 	// Dismissing returns to the checkbox; clicking away is not a wrong answer.
 	const handleDismiss = () => {

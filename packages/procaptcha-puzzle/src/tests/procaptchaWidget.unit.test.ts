@@ -55,6 +55,7 @@ const mocks = vi.hoisted(() => {
 	const constructions: {
 		updateState: (next: Partial<ProcaptchaState>) => void;
 		getHoneypotValue?: () => string | undefined;
+		widgetReloadsOnFailure?: boolean;
 	}[] = [];
 	const loadI18next = vi.fn<(a?: boolean, b?: string) => Promise<unknown>>();
 	const canvasProps: { current: PuzzleCanvasProps | undefined } = {
@@ -81,8 +82,13 @@ vi.mock("../services/Manager.js", () => ({
 		_callbacks: unknown,
 		_frictionlessState: unknown,
 		getHoneypotValue?: () => string | undefined,
+		options?: { widgetReloadsOnFailure?: boolean },
 	) => {
-		mocks.constructions.push({ updateState, getHoneypotValue });
+		mocks.constructions.push({
+			updateState,
+			getHoneypotValue,
+			widgetReloadsOnFailure: options?.widgetReloadsOnFailure,
+		});
 		return {
 			start: mocks.start,
 			submitSolution: mocks.submitSolution,
@@ -729,6 +735,16 @@ describe("switching to an image challenge", () => {
 			{ refresh: true, switchToImage: true },
 		);
 		expect(mocks.submitSolution).not.toHaveBeenCalled();
+	});
+
+	test("leaves the reload after a wrong answer to the wrapper", async () => {
+		await openPuzzle(switchable());
+		expect(mocks.constructions[0]?.widgetReloadsOnFailure).toBe(true);
+	});
+
+	test("lets the manager restart when nothing can re-mint", async () => {
+		await openPuzzle(props());
+		expect(mocks.constructions[0]?.widgetReloadsOnFailure).toBe(false);
 	});
 
 	test("labels the switch once the user has had two puzzles replaced", async () => {
