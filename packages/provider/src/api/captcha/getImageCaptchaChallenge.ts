@@ -1,3 +1,4 @@
+import { isHex } from "@polkadot/util/is";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -93,6 +94,22 @@ export default (
 		// to the env's default — populated from the most-recently-uploaded
 		// dataset at startup, see `Environment.isReady` in packages/env.
 		const datasetId = clientDatasetId ?? env.datasetId;
+
+		// A client-supplied datasetId must be a hex hash. Anything else fails
+		// the dataset lookup deep in the DB layer and used to surface as a 500,
+		// and a large number array was logged in full several times on the way.
+		if (
+			clientDatasetId !== undefined &&
+			!(typeof clientDatasetId === "string" && isHex(clientDatasetId))
+		) {
+			return next(
+				new ProsopoApiError("API.BAD_REQUEST", {
+					context: { code: 400, error: "datasetId must be a hex hash" },
+					i18n: req.i18n,
+					logger: req.logger,
+				}),
+			);
+		}
 
 		if (!datasetId) {
 			return next(
