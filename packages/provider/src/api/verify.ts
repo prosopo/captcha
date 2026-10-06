@@ -34,8 +34,15 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import { validateAddress } from "@prosopo/util-crypto";
-import express, { type NextFunction, type Request, type Router } from "express";
+import express, {
+	type NextFunction,
+	type Request,
+	type Response,
+	type Router,
+} from "express";
 import type { TFunction } from "i18next";
+import type { IconOrderCaptchaManager } from "../tasks/iconOrderCaptcha/iconOrderTasks.js";
+import type { PuzzleCaptchaManager } from "../tasks/puzzleCaptcha/puzzleTasks.js";
 import { Tasks } from "../tasks/tasks.js";
 import {
 	getMaintenanceMode,
@@ -74,6 +81,7 @@ const VERIFY_PATH_TYPE: Partial<Record<ClientApiPaths, CaptchaType>> = {
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: CaptchaType.image,
 	[ClientApiPaths.VerifyPowCaptchaSolution]: CaptchaType.pow,
 	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: CaptchaType.puzzle,
+	[ClientApiPaths.VerifyIconOrderCaptchaSolution]: CaptchaType.iconOrder,
 };
 
 // Decodes a hex-encoded ProcaptchaToken, mapping an undecodable token to a
@@ -124,6 +132,197 @@ const dappSignatureError = (
 		});
 	}
 };
+
+/**
+ * Verifies a dapp's token for an interactive captcha type as approved or not.
+ * The body carries the token, the dapp's signature over it, and optional
+ * `ip`, `email` and `clientSessionId`.
+ */
+const interactiveVerifyHandler =
+	({
+		env,
+		userAccessRulesStorage,
+		path,
+		label,
+		handlerName,
+		manager,
+	}: {
+		env: ProviderEnvironment;
+		userAccessRulesStorage: AccessRulesStorage;
+		path:
+			| ClientApiPaths.VerifyPuzzleCaptchaSolution
+			| ClientApiPaths.VerifyIconOrderCaptchaSolution;
+		label: string;
+		handlerName: string;
+		manager: (tasks: Tasks) => PuzzleCaptchaManager | IconOrderCaptchaManager;
+	}) =>
+	async (req: Request, res: Response, next: NextFunction) => {
+		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
+		// because the Tasks constructor calls `env.getDb()`, which throws when
+		// `env.db` is undefined (the maintenance-mode case).
+		if (getMaintenanceMode()) {
+			req.logger.info(() => ({
+				msg: `Maintenance mode active - returning verified for ${label} captcha verification`,
+			}));
+			const verificationResponse: VerificationResponse =
+				buildMaintenanceVerificationResponse(req.i18n.t);
+			return res.json(verificationResponse);
+		}
+
+		let parsed: ServerPuzzleCaptchaVerifyRequestBodyOutput;
+
+		// We can be helpful and provide a more detailed error message when there are missing fields
+		try {
+			parsed = ServerPuzzleCaptchaVerifyRequestBody.parse(req.body);
+		} catch (err) {
+			return next(
+				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
+					context: { code: 400, error: err, body: summariseRequestBody(req) },
+					i18n: req.i18n,
+					logger: req.logger,
+				}),
+			);
+		}
+
+		// We don't want to expose any other errors to the client
+		try {
+			const { token, dappSignature, ip, email, clientSessionId } = parsed;
+
+			// A malformed token is a client error (400), handled inside the
+			// helper; the rest of this block may still legitimately 500.
+			const decoded = decodeTokenOr400(token, req.i18n, req.logger, next);
+			if (decoded === null) return;
+			const { dapp, user, timestamp, challenge, providerUrl } = decoded;
+
+			// Reserved CI test site keys force a deterministic verdict before
+			// the signature and registered-key checks, so the dapp server needs
+			// no real secret and the key works in every environment.
+			const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
+			if (testVerdict !== null) {
+				const verificationResponse: VerificationResponse = {
+					status: "ok",
+					verified: testVerdict,
+				};
+				return res.json(verificationResponse);
+			}
+
+			// A client can verify against any pronode: if this node did not
+			// issue the token, forward the request to the provider that did
+			// and return its result. Only this provider can verify its own
+			// challenge, so do this before any local lookup.
+			const forwarded = await forwardVerifyIfNotIssuer({
+				env,
+				logger: req.logger,
+				path,
+				providerUrl,
+				dapp,
+				user,
+				body: parsed,
+				alreadyForwarded: req.headers[VERIFY_FORWARDED_HEADER] !== undefined,
+			});
+			if (forwarded) {
+				return res.json(forwarded);
+			}
+
+			// Only construct Tasks (which opens the DB) once we know this node
+			// is the issuer and must verify locally — non-issuer nodes forward
+			// above and never touch the DB.
+			const tasks = new Tasks(env, req.logger);
+
+			// Do this before checking the db
+			validateAddress(dapp, false, 42);
+			validateAddress(user, false, 42);
+
+			// Reject any unregistered site keys
+			const clientRecord = await tasks.db.getClientRecord(dapp);
+			if (!clientRecord) {
+				return next(
+					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
+						context: { code: 400, siteKey: dapp },
+						i18n: req.i18n,
+						logger: req.logger,
+					}),
+				);
+			}
+
+			if (!challenge) {
+				const unverifiedResponse: VerificationResponse = {
+					status: req.i18n.t("API.USER_NOT_VERIFIED"),
+					[ApiParams.verified]: false,
+				};
+				return res.json(unverifiedResponse);
+			}
+
+			// Verify using the dapp pair passed in the request
+			const dappPair = env.keyring.addFromAddress(dapp);
+
+			const signatureError = dappSignatureError(
+				dappSignature,
+				timestamp.toString(),
+				dappPair,
+				req,
+			);
+			if (signatureError) return next(signatureError);
+
+			// Scoped maintenance mode: this customer has been taken out of
+			// scoring, so approve without running it. Checked here rather than
+			// alongside the node-wide short-circuit at the top of the handler
+			// because `dapp` is only trustworthy once its signature has been
+			// verified — deciding a forced approval from an unverified site key
+			// would hand a free pass to anyone who names a key in maintenance.
+			if (isSiteKeyInMaintenanceMode(dapp)) {
+				req.logger.info(() => ({
+					msg: "Site key in maintenance mode - returning verified",
+					data: { siteKey: dapp },
+				}));
+				const maintenanceResponse: VerificationResponse =
+					buildMaintenanceVerificationResponse(req.i18n.t);
+				return res.json(maintenanceResponse);
+			}
+
+			const captchaManager = manager(tasks);
+			const { verified, score, sessionId } =
+				await captchaManager.serverVerifyInteractiveCaptchaSolution(
+					dapp,
+					challenge,
+					clientRecord.settings.verifiedTimeout,
+					env,
+					ip,
+					userAccessRulesStorage,
+					email,
+					clientRecord.settings.spamEmailDomainCheckEnabled,
+					clientRecord.settings.spamFilter,
+					clientRecord.settings.trafficFilter,
+					clientRecord.settings.storeMetadata,
+					clientSessionId,
+				);
+
+			const verificationResponse: VerificationResponse =
+				captchaManager.getVerificationResponse(
+					verified,
+					clientRecord,
+					req.i18n.t,
+					score,
+					undefined,
+					sessionId,
+				);
+
+			return res.json(verificationResponse);
+		} catch (err) {
+			req.logger.error(() => ({
+				msg: `Error in ${handlerName}`,
+				err,
+				data: { body: summariseRequestBody(req) },
+			}));
+			return next(
+				new ProsopoApiError("API.BAD_REQUEST", {
+					context: { code: 500, error: err },
+					i18n: req.i18n,
+					logger: req.logger,
+				}),
+			);
+		}
+	};
 
 /**
  * Returns a router connected to the database which can interact with the Proposo protocol
@@ -532,181 +731,28 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 		},
 	);
 
-	/**
-	 * Verifies a dapp's puzzle captcha solution as being approved or not
-	 *
-	 * @param {string} token - Token containing dapp, blockNumber and challenge
-	 * @param {string} dappSignature - Signed token
-	 * @param {number} verifiedTimeout - The maximum time in milliseconds to be valid
-	 */
 	router.post(
 		ClientApiPaths.VerifyPuzzleCaptchaSolution,
-		async (req, res, next) => {
-			// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
-			// because the Tasks constructor calls `env.getDb()`, which throws when
-			// `env.db` is undefined (the maintenance-mode case).
-			if (getMaintenanceMode()) {
-				req.logger.info(() => ({
-					msg: "Maintenance mode active - returning verified for puzzle captcha verification",
-				}));
-				const verificationResponse: VerificationResponse =
-					buildMaintenanceVerificationResponse(req.i18n.t);
-				return res.json(verificationResponse);
-			}
+		interactiveVerifyHandler({
+			env,
+			userAccessRulesStorage,
+			path: ClientApiPaths.VerifyPuzzleCaptchaSolution,
+			label: "puzzle",
+			handlerName: "verifyPuzzleCaptchaSolution",
+			manager: (tasks) => tasks.puzzleCaptchaManager,
+		}),
+	);
 
-			let parsed: ServerPuzzleCaptchaVerifyRequestBodyOutput;
-
-			// We can be helpful and provide a more detailed error message when there are missing fields
-			try {
-				parsed = ServerPuzzleCaptchaVerifyRequestBody.parse(req.body);
-			} catch (err) {
-				return next(
-					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-						context: { code: 400, error: err, body: summariseRequestBody(req) },
-						i18n: req.i18n,
-						logger: req.logger,
-					}),
-				);
-			}
-
-			// We don't want to expose any other errors to the client
-			try {
-				const { token, dappSignature, ip, email, clientSessionId } = parsed;
-
-				// A malformed token is a client error (400), handled inside the
-				// helper; the rest of this block may still legitimately 500.
-				const decoded = decodeTokenOr400(token, req.i18n, req.logger, next);
-				if (decoded === null) return;
-				const { dapp, user, timestamp, challenge, providerUrl } = decoded;
-
-				// Reserved CI test site keys force a deterministic verdict before
-				// the signature and registered-key checks, so the dapp server needs
-				// no real secret and the key works in every environment.
-				const testVerdict = resolveTestSiteKeyVerdict(dapp, req.logger);
-				if (testVerdict !== null) {
-					const verificationResponse: VerificationResponse = {
-						status: "ok",
-						verified: testVerdict,
-					};
-					return res.json(verificationResponse);
-				}
-
-				// A client can verify against any pronode: if this node did not
-				// issue the token, forward the request to the provider that did
-				// and return its result. Only this provider can verify its own
-				// challenge, so do this before any local lookup.
-				const forwarded = await forwardVerifyIfNotIssuer({
-					env,
-					logger: req.logger,
-					path: ClientApiPaths.VerifyPuzzleCaptchaSolution,
-					providerUrl,
-					dapp,
-					user,
-					body: parsed,
-					alreadyForwarded: req.headers[VERIFY_FORWARDED_HEADER] !== undefined,
-				});
-				if (forwarded) {
-					return res.json(forwarded);
-				}
-
-				// Only construct Tasks (which opens the DB) once we know this node
-				// is the issuer and must verify locally — non-issuer nodes forward
-				// above and never touch the DB.
-				const tasks = new Tasks(env, req.logger);
-
-				// Do this before checking the db
-				validateAddress(dapp, false, 42);
-				validateAddress(user, false, 42);
-
-				// Reject any unregistered site keys
-				const clientRecord = await tasks.db.getClientRecord(dapp);
-				if (!clientRecord) {
-					return next(
-						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-							context: { code: 400, siteKey: dapp },
-							i18n: req.i18n,
-							logger: req.logger,
-						}),
-					);
-				}
-
-				if (!challenge) {
-					const unverifiedResponse: VerificationResponse = {
-						status: req.i18n.t("API.USER_NOT_VERIFIED"),
-						[ApiParams.verified]: false,
-					};
-					return res.json(unverifiedResponse);
-				}
-
-				// Verify using the dapp pair passed in the request
-				const dappPair = env.keyring.addFromAddress(dapp);
-
-				const signatureError = dappSignatureError(
-					dappSignature,
-					timestamp.toString(),
-					dappPair,
-					req,
-				);
-				if (signatureError) return next(signatureError);
-
-				// Scoped maintenance mode: this customer has been taken out of
-				// scoring, so approve without running it. Checked here rather than
-				// alongside the node-wide short-circuit at the top of the handler
-				// because `dapp` is only trustworthy once its signature has been
-				// verified — deciding a forced approval from an unverified site key
-				// would hand a free pass to anyone who names a key in maintenance.
-				if (isSiteKeyInMaintenanceMode(dapp)) {
-					req.logger.info(() => ({
-						msg: "Site key in maintenance mode - returning verified",
-						data: { siteKey: dapp },
-					}));
-					const maintenanceResponse: VerificationResponse =
-						buildMaintenanceVerificationResponse(req.i18n.t);
-					return res.json(maintenanceResponse);
-				}
-
-				const { verified, score, sessionId } =
-					await tasks.puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
-						dapp,
-						challenge,
-						clientRecord.settings.verifiedTimeout,
-						env,
-						ip,
-						userAccessRulesStorage,
-						email,
-						clientRecord.settings.spamEmailDomainCheckEnabled,
-						clientRecord.settings.spamFilter,
-						clientRecord.settings.trafficFilter,
-						clientRecord.settings.storeMetadata,
-						clientSessionId,
-					);
-
-				const verificationResponse: VerificationResponse =
-					tasks.puzzleCaptchaManager.getVerificationResponse(
-						verified,
-						clientRecord,
-						req.i18n.t,
-						score,
-						undefined,
-						sessionId,
-					);
-
-				return res.json(verificationResponse);
-			} catch (err) {
-				req.logger.error(() => ({
-					msg: "Error in verifyPuzzleCaptchaSolution",
-					err,
-					data: { body: summariseRequestBody(req) },
-				}));
-				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { code: 500, error: err },
-						i18n: req.i18n,
-						logger: req.logger,
-					}),
-				);
-			}
-		},
+	router.post(
+		ClientApiPaths.VerifyIconOrderCaptchaSolution,
+		interactiveVerifyHandler({
+			env,
+			userAccessRulesStorage,
+			path: ClientApiPaths.VerifyIconOrderCaptchaSolution,
+			label: "icon-order",
+			handlerName: "verifyIconOrderCaptchaSolution",
+			manager: (tasks) => tasks.iconOrderCaptchaManager,
+		}),
 	);
 
 	/**

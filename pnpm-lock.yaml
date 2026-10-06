@@ -1666,6 +1666,46 @@ importers:
         specifier: 4.1.10
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/coverage-v8@4.1.10)(jsdom@26.1.0(supports-color@8.1.1))(vite@6.4.1(@types/node@22.10.2)(lightningcss@1.33.0)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.0))
 
+  packages/icon-order-assets:
+    dependencies:
+      '@prosopo/puzzle-assets':
+        specifier: workspace:*
+        version: link:../puzzle-assets
+      sharp:
+        specifier: 0.35.4
+        version: 0.35.4(@types/node@22.10.2)
+    devDependencies:
+      '@prosopo/config':
+        specifier: workspace:*
+        version: link:../../dev/config
+      '@types/node':
+        specifier: 22.10.2
+        version: 22.10.2
+      '@vitest/coverage-v8':
+        specifier: 4.1.11
+        version: 4.1.11(vitest@4.1.11)
+      del-cli:
+        specifier: 6.0.0
+        version: 6.0.0
+      dotenv:
+        specifier: 16.4.5
+        version: 16.4.5
+      tslib:
+        specifier: 2.7.0
+        version: 2.7.0
+      tsx:
+        specifier: 4.20.3
+        version: 4.20.3
+      typescript:
+        specifier: 5.6.2
+        version: 5.6.2
+      vite:
+        specifier: 8.1.5
+        version: 8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.0)
+      vitest:
+        specifier: 4.1.11
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.0))
+
   packages/ipinfo:
     dependencies:
       '@maxmind/geoip2-node':
@@ -2144,6 +2184,9 @@ importers:
       '@prosopo/procaptcha-common':
         specifier: workspace:*
         version: link:../procaptcha-common
+      '@prosopo/procaptcha-icon-order':
+        specifier: workspace:*
+        version: link:../procaptcha-icon-order
       '@prosopo/procaptcha-pow':
         specifier: workspace:*
         version: link:../procaptcha-pow
@@ -2196,6 +2239,73 @@ importers:
       vitest:
         specifier: 4.1.11
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.0))
+
+  packages/procaptcha-icon-order:
+    dependencies:
+      '@polkadot/util':
+        specifier: 14.0.3
+        version: 14.0.3
+      '@prosopo/api':
+        specifier: workspace:*
+        version: link:../api
+      '@prosopo/common':
+        specifier: workspace:*
+        version: link:../common
+      '@prosopo/locale':
+        specifier: workspace:*
+        version: link:../locale
+      '@prosopo/procaptcha-common':
+        specifier: workspace:*
+        version: link:../procaptcha-common
+      '@prosopo/types':
+        specifier: workspace:*
+        version: link:../types
+      '@prosopo/util':
+        specifier: workspace:*
+        version: link:../util
+      '@prosopo/util-crypto':
+        specifier: workspace:*
+        version: link:../util-crypto
+      '@prosopo/widget-skeleton':
+        specifier: workspace:*
+        version: link:../widget-skeleton
+    devDependencies:
+      '@prosopo/config':
+        specifier: workspace:*
+        version: link:../../dev/config
+      '@types/node':
+        specifier: 22.5.5
+        version: 22.5.5
+      '@vitest/coverage-v8':
+        specifier: 4.1.11
+        version: 4.1.11(vitest@4.1.11)
+      concurrently:
+        specifier: 9.0.1
+        version: 9.0.1
+      del-cli:
+        specifier: 6.0.0
+        version: 6.0.0
+      jsdom:
+        specifier: 26.1.0
+        version: 26.1.0(supports-color@8.1.1)
+      npm-run-all:
+        specifier: 4.1.5
+        version: 4.1.5
+      tslib:
+        specifier: 2.7.0
+        version: 2.7.0
+      tsx:
+        specifier: 4.20.3
+        version: 4.20.3
+      typescript:
+        specifier: 5.6.2
+        version: 5.6.2
+      vite:
+        specifier: 8.1.5
+        version: 8.1.5(@types/node@22.5.5)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.0)
+      vitest:
+        specifier: 4.1.11
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.5.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.5(@types/node@22.5.5)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.0))
 
   packages/procaptcha-pow:
     dependencies:
@@ -2467,6 +2577,9 @@ importers:
       '@prosopo/env':
         specifier: workspace:*
         version: link:../env
+      '@prosopo/icon-order-assets':
+        specifier: workspace:*
+        version: link:../icon-order-assets
       '@prosopo/ipinfo':
         specifier: workspace:*
         version: link:../ipinfo
@@ -12042,7 +12155,7 @@ snapshots:
   '@emnapi/core@1.9.2':
     dependencies:
       '@emnapi/wasi-threads': 1.2.1
-      tslib: 2.8.1
+      tslib: 2.7.0
     optional: true
 
   '@emnapi/runtime@1.11.1':
@@ -12052,7 +12165,7 @@ snapshots:
 
   '@emnapi/runtime@1.11.2':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
     optional: true
 
   '@emnapi/runtime@1.11.3':
@@ -12062,12 +12175,12 @@ snapshots:
 
   '@emnapi/runtime@1.9.2':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
     optional: true
 
   '@emnapi/wasi-threads@1.2.1':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
     optional: true
 
   '@emnapi/wasi-threads@1.2.2':
@@ -12542,133 +12655,133 @@ snapshots:
 
   '@js-sdsl/ordered-map@4.4.2': {}
 
-  '@jsonjoy.com/base64@1.1.2(tslib@2.8.1)':
+  '@jsonjoy.com/base64@1.1.2(tslib@2.7.0)':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
 
-  '@jsonjoy.com/base64@17.67.0(tslib@2.8.1)':
+  '@jsonjoy.com/base64@17.67.0(tslib@2.7.0)':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
 
-  '@jsonjoy.com/buffers@1.2.1(tslib@2.8.1)':
+  '@jsonjoy.com/buffers@1.2.1(tslib@2.7.0)':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
 
-  '@jsonjoy.com/buffers@17.67.0(tslib@2.8.1)':
+  '@jsonjoy.com/buffers@17.67.0(tslib@2.7.0)':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
 
-  '@jsonjoy.com/codegen@1.0.0(tslib@2.8.1)':
+  '@jsonjoy.com/codegen@1.0.0(tslib@2.7.0)':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
 
-  '@jsonjoy.com/codegen@17.67.0(tslib@2.8.1)':
+  '@jsonjoy.com/codegen@17.67.0(tslib@2.7.0)':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
 
-  '@jsonjoy.com/fs-core@4.68.1(tslib@2.8.1)':
+  '@jsonjoy.com/fs-core@4.68.1(tslib@2.7.0)':
     dependencies:
-      '@jsonjoy.com/fs-node-builtins': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-node-utils': 4.68.1(tslib@2.8.1)
-      thingies: 2.6.1(tslib@2.8.1)
-      tslib: 2.8.1
+      '@jsonjoy.com/fs-node-builtins': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-node-utils': 4.68.1(tslib@2.7.0)
+      thingies: 2.6.1(tslib@2.7.0)
+      tslib: 2.7.0
 
-  '@jsonjoy.com/fs-fsa@4.68.1(tslib@2.8.1)':
+  '@jsonjoy.com/fs-fsa@4.68.1(tslib@2.7.0)':
     dependencies:
-      '@jsonjoy.com/fs-core': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-node-builtins': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-node-utils': 4.68.1(tslib@2.8.1)
-      thingies: 2.6.1(tslib@2.8.1)
-      tslib: 2.8.1
+      '@jsonjoy.com/fs-core': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-node-builtins': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-node-utils': 4.68.1(tslib@2.7.0)
+      thingies: 2.6.1(tslib@2.7.0)
+      tslib: 2.7.0
 
-  '@jsonjoy.com/fs-node-builtins@4.68.1(tslib@2.8.1)':
+  '@jsonjoy.com/fs-node-builtins@4.68.1(tslib@2.7.0)':
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
 
-  '@jsonjoy.com/fs-node-to-fsa@4.68.1(tslib@2.8.1)':
+  '@jsonjoy.com/fs-node-to-fsa@4.68.1(tslib@2.7.0)':
     dependencies:
-      '@jsonjoy.com/fs-fsa': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-node-builtins': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-node-utils': 4.68.1(tslib@2.8.1)
-      tslib: 2.8.1
+      '@jsonjoy.com/fs-fsa': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-node-builtins': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-node-utils': 4.68.1(tslib@2.7.0)
+      tslib: 2.7.0
 
-  '@jsonjoy.com/fs-node-utils@4.68.1(tslib@2.8.1)':
+  '@jsonjoy.com/fs-node-utils@4.68.1(tslib@2.7.0)':
     dependencies:
-      '@jsonjoy.com/fs-node-builtins': 4.68.1(tslib@2.8.1)
-      glob-to-regex.js: 1.2.0(tslib@2.8.1)
-      tslib: 2.8.1
+      '@jsonjoy.com/fs-node-builtins': 4.68.1(tslib@2.7.0)
+      glob-to-regex.js: 1.2.0(tslib@2.7.0)
+      tslib: 2.7.0
 
-  '@jsonjoy.com/fs-node@4.68.1(tslib@2.8.1)':
+  '@jsonjoy.com/fs-node@4.68.1(tslib@2.7.0)':
     dependencies:
-      '@jsonjoy.com/fs-core': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-node-builtins': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-node-utils': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-print': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-snapshot': 4.68.1(tslib@2.8.1)
-      glob-to-regex.js: 1.2.0(tslib@2.8.1)
-      thingies: 2.6.1(tslib@2.8.1)
-      tslib: 2.8.1
+      '@jsonjoy.com/fs-core': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-node-builtins': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-node-utils': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-print': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-snapshot': 4.68.1(tslib@2.7.0)
+      glob-to-regex.js: 1.2.0(tslib@2.7.0)
+      thingies: 2.6.1(tslib@2.7.0)
+      tslib: 2.7.0
 
-  '@jsonjoy.com/fs-print@4.68.1(tslib@2.8.1)':
+  '@jsonjoy.com/fs-print@4.68.1(tslib@2.7.0)':
     dependencies:
-      '@jsonjoy.com/fs-node-utils': 4.68.1(tslib@2.8.1)
-      tree-dump: 1.1.0(tslib@2.8.1)
-      tslib: 2.8.1
+      '@jsonjoy.com/fs-node-utils': 4.68.1(tslib@2.7.0)
+      tree-dump: 1.1.0(tslib@2.7.0)
+      tslib: 2.7.0
 
-  '@jsonjoy.com/fs-snapshot@4.68.1(tslib@2.8.1)':
+  '@jsonjoy.com/fs-snapshot@4.68.1(tslib@2.7.0)':
     dependencies:
-      '@jsonjoy.com/buffers': 17.67.0(tslib@2.8.1)
-      '@jsonjoy.com/fs-node-utils': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/json-pack': 17.67.0(tslib@2.8.1)
-      '@jsonjoy.com/util': 17.67.0(tslib@2.8.1)
-      tslib: 2.8.1
+      '@jsonjoy.com/buffers': 17.67.0(tslib@2.7.0)
+      '@jsonjoy.com/fs-node-utils': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/json-pack': 17.67.0(tslib@2.7.0)
+      '@jsonjoy.com/util': 17.67.0(tslib@2.7.0)
+      tslib: 2.7.0
 
-  '@jsonjoy.com/json-pack@1.21.0(tslib@2.8.1)':
+  '@jsonjoy.com/json-pack@1.21.0(tslib@2.7.0)':
     dependencies:
-      '@jsonjoy.com/base64': 1.1.2(tslib@2.8.1)
-      '@jsonjoy.com/buffers': 1.2.1(tslib@2.8.1)
-      '@jsonjoy.com/codegen': 1.0.0(tslib@2.8.1)
-      '@jsonjoy.com/json-pointer': 1.0.2(tslib@2.8.1)
-      '@jsonjoy.com/util': 1.9.0(tslib@2.8.1)
+      '@jsonjoy.com/base64': 1.1.2(tslib@2.7.0)
+      '@jsonjoy.com/buffers': 1.2.1(tslib@2.7.0)
+      '@jsonjoy.com/codegen': 1.0.0(tslib@2.7.0)
+      '@jsonjoy.com/json-pointer': 1.0.2(tslib@2.7.0)
+      '@jsonjoy.com/util': 1.9.0(tslib@2.7.0)
       hyperdyperid: 1.2.0
-      thingies: 2.6.1(tslib@2.8.1)
-      tree-dump: 1.1.0(tslib@2.8.1)
-      tslib: 2.8.1
+      thingies: 2.6.1(tslib@2.7.0)
+      tree-dump: 1.1.0(tslib@2.7.0)
+      tslib: 2.7.0
 
-  '@jsonjoy.com/json-pack@17.67.0(tslib@2.8.1)':
+  '@jsonjoy.com/json-pack@17.67.0(tslib@2.7.0)':
     dependencies:
-      '@jsonjoy.com/base64': 17.67.0(tslib@2.8.1)
-      '@jsonjoy.com/buffers': 17.67.0(tslib@2.8.1)
-      '@jsonjoy.com/codegen': 17.67.0(tslib@2.8.1)
-      '@jsonjoy.com/json-pointer': 17.67.0(tslib@2.8.1)
-      '@jsonjoy.com/util': 17.67.0(tslib@2.8.1)
+      '@jsonjoy.com/base64': 17.67.0(tslib@2.7.0)
+      '@jsonjoy.com/buffers': 17.67.0(tslib@2.7.0)
+      '@jsonjoy.com/codegen': 17.67.0(tslib@2.7.0)
+      '@jsonjoy.com/json-pointer': 17.67.0(tslib@2.7.0)
+      '@jsonjoy.com/util': 17.67.0(tslib@2.7.0)
       hyperdyperid: 1.2.0
-      thingies: 2.6.1(tslib@2.8.1)
-      tree-dump: 1.1.0(tslib@2.8.1)
-      tslib: 2.8.1
+      thingies: 2.6.1(tslib@2.7.0)
+      tree-dump: 1.1.0(tslib@2.7.0)
+      tslib: 2.7.0
 
-  '@jsonjoy.com/json-pointer@1.0.2(tslib@2.8.1)':
+  '@jsonjoy.com/json-pointer@1.0.2(tslib@2.7.0)':
     dependencies:
-      '@jsonjoy.com/codegen': 1.0.0(tslib@2.8.1)
-      '@jsonjoy.com/util': 1.9.0(tslib@2.8.1)
-      tslib: 2.8.1
+      '@jsonjoy.com/codegen': 1.0.0(tslib@2.7.0)
+      '@jsonjoy.com/util': 1.9.0(tslib@2.7.0)
+      tslib: 2.7.0
 
-  '@jsonjoy.com/json-pointer@17.67.0(tslib@2.8.1)':
+  '@jsonjoy.com/json-pointer@17.67.0(tslib@2.7.0)':
     dependencies:
-      '@jsonjoy.com/util': 17.67.0(tslib@2.8.1)
-      tslib: 2.8.1
+      '@jsonjoy.com/util': 17.67.0(tslib@2.7.0)
+      tslib: 2.7.0
 
-  '@jsonjoy.com/util@1.9.0(tslib@2.8.1)':
+  '@jsonjoy.com/util@1.9.0(tslib@2.7.0)':
     dependencies:
-      '@jsonjoy.com/buffers': 1.2.1(tslib@2.8.1)
-      '@jsonjoy.com/codegen': 1.0.0(tslib@2.8.1)
-      tslib: 2.8.1
+      '@jsonjoy.com/buffers': 1.2.1(tslib@2.7.0)
+      '@jsonjoy.com/codegen': 1.0.0(tslib@2.7.0)
+      tslib: 2.7.0
 
-  '@jsonjoy.com/util@17.67.0(tslib@2.8.1)':
+  '@jsonjoy.com/util@17.67.0(tslib@2.7.0)':
     dependencies:
-      '@jsonjoy.com/buffers': 17.67.0(tslib@2.8.1)
-      '@jsonjoy.com/codegen': 17.67.0(tslib@2.8.1)
-      tslib: 2.8.1
+      '@jsonjoy.com/buffers': 17.67.0(tslib@2.7.0)
+      '@jsonjoy.com/codegen': 17.67.0(tslib@2.7.0)
+      tslib: 2.7.0
 
   '@kwsites/file-exists@1.1.1(supports-color@8.1.1)':
     dependencies:
@@ -13534,12 +13647,12 @@ snapshots:
       '@polkadot/util': 14.0.3
       '@polkadot/wasm-util': 7.5.4(@polkadot/util@14.0.3)
       '@polkadot/x-randomvalues': 14.0.3(@polkadot/util@14.0.3)(@polkadot/wasm-util@7.5.4(@polkadot/util@14.0.3))
-      tslib: 2.8.1
+      tslib: 2.7.0
 
   '@polkadot/wasm-crypto-asmjs@7.5.4(@polkadot/util@14.0.3)':
     dependencies:
       '@polkadot/util': 14.0.3
-      tslib: 2.8.1
+      tslib: 2.7.0
 
   '@polkadot/wasm-crypto-init@7.5.4(@polkadot/util@14.0.3)(@polkadot/x-randomvalues@14.0.3(@polkadot/util@14.0.3)(@polkadot/wasm-util@7.5.4(@polkadot/util@14.0.3)))':
     dependencies:
@@ -13549,13 +13662,13 @@ snapshots:
       '@polkadot/wasm-crypto-wasm': 7.5.4(@polkadot/util@14.0.3)
       '@polkadot/wasm-util': 7.5.4(@polkadot/util@14.0.3)
       '@polkadot/x-randomvalues': 14.0.3(@polkadot/util@14.0.3)(@polkadot/wasm-util@7.5.4(@polkadot/util@14.0.3))
-      tslib: 2.8.1
+      tslib: 2.7.0
 
   '@polkadot/wasm-crypto-wasm@7.5.4(@polkadot/util@14.0.3)':
     dependencies:
       '@polkadot/util': 14.0.3
       '@polkadot/wasm-util': 7.5.4(@polkadot/util@14.0.3)
-      tslib: 2.8.1
+      tslib: 2.7.0
 
   '@polkadot/wasm-crypto@7.5.4(@polkadot/util@14.0.3)(@polkadot/x-randomvalues@14.0.3(@polkadot/util@14.0.3)(@polkadot/wasm-util@7.5.4(@polkadot/util@14.0.3)))':
     dependencies:
@@ -13566,7 +13679,7 @@ snapshots:
       '@polkadot/wasm-crypto-wasm': 7.5.4(@polkadot/util@14.0.3)
       '@polkadot/wasm-util': 7.5.4(@polkadot/util@14.0.3)
       '@polkadot/x-randomvalues': 14.0.3(@polkadot/util@14.0.3)(@polkadot/wasm-util@7.5.4(@polkadot/util@14.0.3))
-      tslib: 2.8.1
+      tslib: 2.7.0
 
   '@polkadot/wasm-util@7.5.4(@polkadot/util@14.0.3)':
     dependencies:
@@ -14572,7 +14685,7 @@ snapshots:
 
   async-mutex@0.5.0:
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
 
   async@3.2.6: {}
 
@@ -16090,9 +16203,9 @@ snapshots:
     dependencies:
       is-glob: 4.0.3
 
-  glob-to-regex.js@1.2.0(tslib@2.8.1):
+  glob-to-regex.js@1.2.0(tslib@2.7.0):
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
 
   glob-to-regexp@0.4.1: {}
 
@@ -16954,20 +17067,20 @@ snapshots:
 
   memfs@4.68.1:
     dependencies:
-      '@jsonjoy.com/fs-core': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-fsa': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-node': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-node-builtins': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-node-to-fsa': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-node-utils': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-print': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/fs-snapshot': 4.68.1(tslib@2.8.1)
-      '@jsonjoy.com/json-pack': 1.21.0(tslib@2.8.1)
-      '@jsonjoy.com/util': 1.9.0(tslib@2.8.1)
-      glob-to-regex.js: 1.2.0(tslib@2.8.1)
-      thingies: 2.6.1(tslib@2.8.1)
-      tree-dump: 1.1.0(tslib@2.8.1)
-      tslib: 2.8.1
+      '@jsonjoy.com/fs-core': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-fsa': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-node': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-node-builtins': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-node-to-fsa': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-node-utils': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-print': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/fs-snapshot': 4.68.1(tslib@2.7.0)
+      '@jsonjoy.com/json-pack': 1.21.0(tslib@2.7.0)
+      '@jsonjoy.com/util': 1.9.0(tslib@2.7.0)
+      glob-to-regex.js: 1.2.0(tslib@2.7.0)
+      thingies: 2.6.1(tslib@2.7.0)
+      tree-dump: 1.1.0(tslib@2.7.0)
+      tslib: 2.7.0
 
   memory-pager@1.5.0: {}
 
@@ -18040,7 +18153,7 @@ snapshots:
 
   rxjs@7.8.2:
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
 
   safe-array-concat@1.1.4:
     dependencies:
@@ -18617,9 +18730,9 @@ snapshots:
     transitivePeerDependencies:
       - react-native-b4a
 
-  thingies@2.6.1(tslib@2.8.1):
+  thingies@2.6.1(tslib@2.7.0):
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
 
   throttleit@1.0.1: {}
 
@@ -18685,9 +18798,9 @@ snapshots:
 
   traverse@0.3.9: {}
 
-  tree-dump@1.1.0(tslib@2.8.1):
+  tree-dump@1.1.0(tslib@2.7.0):
     dependencies:
-      tslib: 2.8.1
+      tslib: 2.7.0
 
   tree-kill@1.2.2: {}
 

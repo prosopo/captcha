@@ -25,9 +25,11 @@ import { padResponseMiddleware } from "../utils/tarpitPadding.js";
 import assignDetectorBundle from "./captcha/assignDetectorBundle.js";
 import checkSpamEmail from "./captcha/checkSpamEmail.js";
 import getFrictionlessCaptchaChallenge from "./captcha/getFrictionlessCaptchaChallenge.js";
+import getIconOrderCaptchaChallenge from "./captcha/getIconOrderCaptchaChallenge.js";
 import getImageCaptchaChallenge from "./captcha/getImageCaptchaChallenge.js";
 import getPoWCaptchaChallenge from "./captcha/getPoWCaptchaChallenge.js";
 import getPuzzleCaptchaChallenge from "./captcha/getPuzzleCaptchaChallenge.js";
+import submitIconOrderCaptchaSolution from "./captcha/submitIconOrderCaptchaSolution.js";
 import submitImageCaptchaSolution from "./captcha/submitImageCaptchaSolution.js";
 import submitPoWCaptchaSolution from "./captcha/submitPoWCaptchaSolution.js";
 import submitPuzzleCaptchaSolution from "./captcha/submitPuzzleCaptchaSolution.js";
@@ -140,6 +142,16 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.SubmitPuzzleCaptchaSolution,
 		asyncHandler(submitPuzzleCaptchaSolution(env)),
+	);
+
+	router.post(
+		ClientApiPaths.GetIconOrderCaptchaChallenge,
+		asyncHandler(getIconOrderCaptchaChallenge(env, userAccessRulesStorage)),
+	);
+
+	router.post(
+		ClientApiPaths.SubmitIconOrderCaptchaSolution,
+		asyncHandler(submitIconOrderCaptchaSolution(env)),
 	);
 
 	/**

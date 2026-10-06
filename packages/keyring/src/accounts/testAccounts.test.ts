@@ -30,6 +30,7 @@ describe("getDefaultSiteKeys", SLOW, () => {
 			CaptchaType.image,
 			CaptchaType.pow,
 			CaptchaType.frictionless,
+			CaptchaType.iconOrder,
 			CaptchaType.puzzle,
 		]);
 	});
@@ -59,12 +60,22 @@ describe("getDefaultSiteKeys", SLOW, () => {
 		}
 	});
 
+	it("turns the icon-order feature flag on for the icon-order site only", () => {
+		for (const site of getDefaultSiteKeys()) {
+			expect(site.settings.captchaTypeFeatureFlags).toEqual(
+				site.settings.captchaType === CaptchaType.iconOrder
+					? { iconOrder: true }
+					: undefined,
+			);
+		}
+	});
+
 	it("returns a fresh array each call, so callers cannot corrupt the seed", () => {
 		const first = getDefaultSiteKeys();
 		const second = getDefaultSiteKeys();
 		expect(first).not.toBe(second);
 		first.pop();
-		expect(second).toHaveLength(4);
+		expect(second).toHaveLength(5);
 	});
 });
 

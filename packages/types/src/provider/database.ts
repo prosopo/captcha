@@ -33,7 +33,11 @@ import {
 } from "zod";
 import type { IPInfoResponse } from "../api/ipapi.js";
 import { CaptchaType } from "../client/index.js";
-import type { ContextType, IPuzzleSettings } from "../client/settings.js";
+import type {
+	ContextType,
+	IIconOrderSettings,
+	IPuzzleSettings,
+} from "../client/settings.js";
 import { ModeEnum } from "../config/mode.js";
 import {
 	type CaptchaResult,
@@ -52,7 +56,12 @@ import type {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
-import type { PuzzleEvent, RequestHeaders } from "./api.js";
+import type {
+	IconClick,
+	IconOrderEvent,
+	PuzzleEvent,
+	RequestHeaders,
+} from "./api.js";
 import type { DetectorData, SimdReadings } from "./detection.js";
 import {
 	type MatchedAccessRule,
@@ -603,6 +612,8 @@ export type Session = {
 	// trafficFilter challenge-policy fields of the same names.
 	puzzleTolerance?: number;
 	puzzle?: IPuzzleSettings;
+	iconOrderTolerance?: number;
+	iconOrder?: IIconOrderSettings;
 	/**
 	 * Difficulty ladder index `puzzleTolerance` and `puzzle` were sampled from.
 	 * Carried only so the challenge record can report it; nothing reads it to
@@ -875,19 +886,43 @@ export interface PuzzleRenderRecord {
 	renderSeed: string;
 }
 
-export interface PuzzleCaptchaStored extends StoredCaptcha {
+/** Fields shared by the challenge records of the on-screen captcha types. */
+export interface InteractiveCaptchaStored extends StoredCaptcha {
 	challenge: PoWChallengeId;
-	targetX: number;
-	targetY: number;
-	originX: number;
-	originY: number;
 	tolerance: number;
 	providerSignature: string;
 	userSignature?: string;
 	userAccount: string;
 	dappAccount: string;
+}
+
+export interface PuzzleCaptchaStored extends InteractiveCaptchaStored {
+	targetX: number;
+	targetY: number;
+	originX: number;
+	originY: number;
 	puzzleEvents?: PuzzleEvent[];
 	render?: PuzzleRenderRecord;
+}
+
+/**
+ * `targets` is the answer. Nothing on this record is ever sent to a client,
+ * and decoys are not stored because grading never consults them.
+ */
+export interface IconOrderCaptchaStored extends InteractiveCaptchaStored {
+	targets: StoredIconTarget[];
+	/** Hit radius as a multiple of each icon's own size. */
+	tolerance: number;
+	clicks?: IconClick[];
+	iconOrderEvents?: IconOrderEvent[];
+}
+
+/** A target icon as persisted: what grading needs, without render-only fields. */
+export interface StoredIconTarget {
+	x: number;
+	y: number;
+	size: number;
+	kind: string;
 }
 
 export interface SolutionRecord extends CaptchaSolution {
@@ -933,7 +968,11 @@ export type DecisionMachineArtifact = {
 	source: string;
 	name?: string;
 	version?: string;
-	captchaType?: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType?:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder;
 	createdAt: Date;
 	updatedAt: Date;
 };

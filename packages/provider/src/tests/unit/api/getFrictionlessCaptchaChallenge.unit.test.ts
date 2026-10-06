@@ -746,7 +746,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 
 			expect(
 				tasksInstance.frictionlessManager.setAllowedCaptchaTypes,
-			).toHaveBeenCalledWith({ image: false, puzzle: false });
+			).toHaveBeenCalledWith({ image: false, puzzle: false, iconOrder: false });
 		});
 
 		it("holds a site pinned to puzzle to the feature flags before the short-circuit", async () => {
@@ -766,7 +766,11 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			const setAllowed =
 				tasksInstance.frictionlessManager.setAllowedCaptchaTypes;
 			const sendPuzzle = tasksInstance.frictionlessManager.sendPuzzleCaptcha;
-			expect(setAllowed).toHaveBeenCalledWith({ image: true, puzzle: false });
+			expect(setAllowed).toHaveBeenCalledWith({
+				image: true,
+				puzzle: false,
+				iconOrder: false,
+			});
 			expect(sendPuzzle).toHaveBeenCalled();
 			expect(setAllowed.mock.invocationCallOrder[0]).toBeLessThan(
 				sendPuzzle.mock.invocationCallOrder[0] ?? 0,

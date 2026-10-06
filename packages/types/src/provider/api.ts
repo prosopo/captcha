@@ -93,6 +93,9 @@ export enum ClientApiPaths {
 	GetPuzzleCaptchaChallenge = "/v1/prosopo/provider/client/captcha/puzzle",
 	SubmitPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/solution",
 	VerifyPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/verify",
+	GetIconOrderCaptchaChallenge = "/v1/prosopo/provider/client/captcha/icon-order",
+	SubmitIconOrderCaptchaSolution = "/v1/prosopo/provider/client/icon-order/solution",
+	VerifyIconOrderCaptchaSolution = "/v1/prosopo/provider/client/icon-order/verify",
 	// Verify path for Web Bot Auth authenticated sessions. Only accepts tokens
 	// minted with captchaType=authenticated. Requires the operator to forward
 	// the client IP so the session's `ipAddress` binding can be enforced;
@@ -190,6 +193,18 @@ export const ProviderDefaultRateLimits = {
 		limit: 300,
 	},
 	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 15000,
+	},
+	[ClientApiPaths.GetIconOrderCaptchaChallenge]: {
+		windowMs: 60000,
+		limit: 300,
+	},
+	[ClientApiPaths.SubmitIconOrderCaptchaSolution]: {
+		windowMs: 60000,
+		limit: 300,
+	},
+	[ClientApiPaths.VerifyIconOrderCaptchaSolution]: {
 		windowMs: 60000,
 		limit: 15000,
 	},
@@ -320,6 +335,7 @@ export const REQUEST_ARRAY_LIMITS = {
 	captchas: 256,
 	solution: 64,
 	puzzleEvents: 10_000,
+	iconOrderEvents: 10_000,
 } as const;
 
 export const CaptchaRequestBody = object({
@@ -497,11 +513,32 @@ export interface PuzzleCaptchaSolutionResponse extends ApiResponse {
 	[ApiParams.error]?: ApiJsonError;
 }
 
+/**
+ * Imagery only: icon positions and click order stay on the challenge record,
+ * so the widget gets nothing it could echo back.
+ */
+export interface GetIconOrderCaptchaResponse extends ApiResponse {
+	[ApiParams.challenge]: PoWChallengeId;
+	/** Frame with targets and decoys composited, as a data URI. */
+	[ApiParams.background]: string;
+	/** Ordered legend strip on transparency, as a data URI. */
+	[ApiParams.legend]: string;
+	/** Edge length of one legend chip in px. */
+	[ApiParams.legendIconSize]: number;
+	[ApiParams.timestamp]: string;
+	[ApiParams.signature]: {
+		[ApiParams.provider]: ChallengeSignature;
+	};
+}
+
+export type IconOrderCaptchaSolutionResponse = PuzzleCaptchaSolutionResponse;
+
 export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 	[ApiParams.captchaType]:
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
+		| CaptchaType.iconOrder
 		| CaptchaType.authenticated;
 	[ApiParams.sessionId]?: string;
 	// Encoded honeypot question. NOT serialised by the provider on the wire
@@ -519,7 +556,10 @@ export interface GetFrictionlessCaptchaResponse extends ApiResponse {
 }
 
 export interface PowCaptchaSolutionEscalation {
-	[ApiParams.captchaType]: CaptchaType.image | CaptchaType.puzzle;
+	[ApiParams.captchaType]:
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder;
 	[ApiParams.sessionId]: string;
 }
 
@@ -821,6 +861,74 @@ export type ServerPuzzleCaptchaVerifyRequestBodyType = zInfer<
 export type ServerPuzzleCaptchaVerifyRequestBodyOutput = output<
 	typeof ServerPuzzleCaptchaVerifyRequestBody
 >;
+
+/**
+ * Grading needs exactly one click per target, so this only has to clear the
+ * largest possible target count; it stops a client submitting a grid of
+ * points for the hit test to search.
+ */
+export const MAX_ICON_CLICKS = 10;
+
+export const GetIconOrderCaptchaChallengeRequestBody =
+	GetPuzzleCaptchaChallengeRequestBody;
+
+export type GetIconOrderCaptchaChallengeRequestBodyType =
+	GetPuzzleCaptchaChallengeRequestBodyType;
+
+export type GetIconOrderCaptchaChallengeRequestBodyTypeOutput =
+	GetPuzzleCaptchaChallengeRequestBodyTypeOutput;
+
+export const IconOrderEventSchema = PuzzleEventSchema;
+
+export type IconOrderEvent = PuzzleEvent;
+
+/** One click in background pixels; its index in `clicks` is its order. */
+export const IconClickSchema = object({
+	x: number(),
+	y: number(),
+});
+
+export type IconClick = zInfer<typeof IconClickSchema>;
+
+export const SubmitIconOrderCaptchaSolutionBody = object({
+	[ApiParams.challenge]: PowChallengeIdSchema,
+	[ApiParams.clicks]: boundedArray(IconClickSchema, MAX_ICON_CLICKS),
+	[ApiParams.iconOrderEvents]: boundedArray(
+		IconOrderEventSchema,
+		REQUEST_ARRAY_LIMITS.iconOrderEvents,
+	),
+	[ApiParams.signature]: object({
+		[ApiParams.user]: object({
+			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
+		}),
+		[ApiParams.provider]: object({
+			[ApiParams.challenge]: boundedString(INPUT_LIMITS.TOKEN),
+		}),
+	}),
+	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
+	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
+	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
+});
+
+export type SubmitIconOrderCaptchaSolutionBodyType = input<
+	typeof SubmitIconOrderCaptchaSolutionBody
+>;
+
+export type SubmitIconOrderCaptchaSolutionBodyTypeOutput = output<
+	typeof SubmitIconOrderCaptchaSolutionBody
+>;
+
+export const ServerIconOrderCaptchaVerifyRequestBody =
+	ServerPuzzleCaptchaVerifyRequestBody;
+
+export type ServerIconOrderCaptchaVerifyRequestBodyType =
+	ServerPuzzleCaptchaVerifyRequestBodyType;
+
+export type ServerIconOrderCaptchaVerifyRequestBodyOutput =
+	ServerPuzzleCaptchaVerifyRequestBodyOutput;
 
 export const VerifyPowCaptchaSolutionBody = object({
 	[ApiParams.siteKey]: boundedString(INPUT_LIMITS.ID),

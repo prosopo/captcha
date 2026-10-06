@@ -140,7 +140,7 @@ describe("a refreshed puzzle session", () => {
 				refreshCount: PUZZLE_REFRESHES_BEFORE_IMAGE,
 				refreshedAfterMs: 1000,
 			},
-			{ image: false, puzzle: true },
+			{ image: false, puzzle: true, iconOrder: false },
 		).sendPuzzleCaptcha();
 
 		expect(storedSession().captchaType).toBe(CaptchaType.puzzle);

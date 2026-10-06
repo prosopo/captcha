@@ -400,6 +400,15 @@
 			"CHECKING": "回答を確認しています",
 			"RETRY_ANNOUNCEMENT": "惜しい。新しいパズルが読み込まれ、ピースは開始位置に戻りました。",
 			"REFRESH": "別のパズル"
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "アイコン順序チャレンジ",
+			"SELECT": "この順番で選択してください",
+			"RETRY": "惜しい — もう一度お試しください",
+			"LEGEND_ALT": "選択するアイコン（順番どおり）",
+			"RESET": "リセット",
+			"CHECKING": "確認中…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

@@ -101,6 +101,15 @@
 			"CHECKING": "Deine Antwort wird geprüft",
 			"RETRY_ANNOUNCEMENT": "Knapp daneben. Ein neues Puzzle wurde geladen und das Teil steht wieder am Anfang.",
 			"REFRESH": "Anderes Puzzle"
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Symbolreihenfolge-Aufgabe",
+			"SELECT": "In dieser Reihenfolge auswählen",
+			"RETRY": "Knapp daneben — versuche es erneut",
+			"LEGEND_ALT": "Auszuwählende Symbole, in Reihenfolge",
+			"RESET": "Zurücksetzen",
+			"CHECKING": "Wird geprüft…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

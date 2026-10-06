@@ -101,6 +101,15 @@
 			"CHECKING": "Verifica della tua risposta in corso",
 			"RETRY_ANNOUNCEMENT": "Quasi. È stato caricato un nuovo puzzle e il pezzo è tornato all'inizio.",
 			"REFRESH": "Un altro puzzle"
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Sfida sull’ordine delle icone",
+			"SELECT": "Seleziona in questo ordine",
+			"RETRY": "Quasi — riprova",
+			"LEGEND_ALT": "Icone da selezionare, in ordine",
+			"RESET": "Reimposta",
+			"CHECKING": "Verifica in corso…",
+			"SUBMIT": "OK"
 		}
 	},
 	"CONTRACT": {

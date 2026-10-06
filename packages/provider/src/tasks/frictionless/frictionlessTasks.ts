@@ -136,7 +136,7 @@ export class FrictionlessManager extends CaptchaManager {
 	 * The types this site may be served, from `resolveAllowedCaptchaTypes`.
 	 * Set before any path can mint a session, including the short-circuits
 	 * that skip routing, so the site's feature flags hold on every path.
-	 * Unset means every type is allowed.
+	 * Unset means the default flags and preferences.
 	 */
 	setAllowedCaptchaTypes(allowed: IFrictionlessTypes): void {
 		this.allowedCaptchaTypes = allowed;
@@ -243,6 +243,8 @@ export class FrictionlessManager extends CaptchaManager {
 			simdReadings,
 			puzzleTolerance,
 			puzzle,
+			iconOrderTolerance,
+			iconOrder,
 			isEscalation,
 			originSessionId,
 			refreshOf,
@@ -270,6 +272,8 @@ export class FrictionlessManager extends CaptchaManager {
 			powDifficulty,
 			...(puzzleTolerance !== undefined && { puzzleTolerance }),
 			...(puzzle && { puzzle }),
+			...(iconOrderTolerance !== undefined && { iconOrderTolerance }),
+			...(iconOrder && { iconOrder }),
 			userSitekeyIpHash,
 			webView,
 			iFrame,
@@ -477,8 +481,18 @@ export class FrictionlessManager extends CaptchaManager {
 		return this.sendCaptcha(CaptchaType.puzzle, params);
 	}
 
+	async sendIconOrderCaptcha(
+		params?: Partial<Session>,
+	): Promise<GetFrictionlessCaptchaResponse> {
+		return this.sendCaptcha(CaptchaType.iconOrder, params);
+	}
+
 	private async sendCaptcha(
-		captchaType: CaptchaType.image | CaptchaType.pow | CaptchaType.puzzle,
+		captchaType:
+			| CaptchaType.image
+			| CaptchaType.pow
+			| CaptchaType.puzzle
+			| CaptchaType.iconOrder,
 		params?: Partial<Session>,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const effectiveParams = { ...this.sessionParams, ...params };
@@ -611,6 +625,18 @@ export class FrictionlessManager extends CaptchaManager {
 						};
 					})()
 				: {};
+		const finalIconOrderOverrides: Pick<
+			Session,
+			"iconOrderTolerance" | "iconOrder"
+		> =
+			finalCaptchaType === CaptchaType.iconOrder
+				? {
+						...(routed.iconOrderTolerance !== undefined && {
+							iconOrderTolerance: routed.iconOrderTolerance,
+						}),
+						...(routed.iconOrder && { iconOrder: routed.iconOrder }),
+					}
+				: {};
 		const blocked =
 			finalCaptchaType === CaptchaType.image
 				? effectiveParams.blocked
@@ -633,6 +659,8 @@ export class FrictionlessManager extends CaptchaManager {
 			blocked,
 			puzzleTolerance: finalPuzzleOverrides.puzzleTolerance,
 			puzzle: finalPuzzleOverrides.puzzle,
+			iconOrderTolerance: finalIconOrderOverrides.iconOrderTolerance,
+			iconOrder: finalIconOrderOverrides.iconOrder,
 			// Never set on this path; pinned so a stale value on
 			// `effectiveParams` can't reach the record through the spread.
 			deleted: undefined,
@@ -693,6 +721,8 @@ export class FrictionlessManager extends CaptchaManager {
 			deleted: true,
 			puzzleTolerance: undefined,
 			puzzle: undefined,
+			iconOrderTolerance: undefined,
+			iconOrder: undefined,
 			isEscalation: undefined,
 			originSessionId: undefined,
 		});

@@ -37,6 +37,7 @@ import {
 	ProsopoConfigSchema,
 	Tier,
 	TrafficFilterAction,
+	iconOrderToleranceDefault,
 	puzzleMaxDifficultyDefault,
 } from "@prosopo/types";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
@@ -52,8 +53,8 @@ const FULLY_POPULATED_SETTINGS = {
 		frictionlessPuzzleThreshold: 0.42,
 		frictionlessImageThreshold: 1.3,
 	},
-	frictionlessTypes: { image: false, puzzle: true },
-	captchaTypeFeatureFlags: { puzzle: false },
+	frictionlessTypes: { image: false, puzzle: true, iconOrder: true },
+	captchaTypeFeatureFlags: { puzzle: false, iconOrder: true },
 	powDifficulty: 6,
 	imageThreshold: 0.81,
 	imageMaxRounds: 12,
@@ -62,6 +63,7 @@ const FULLY_POPULATED_SETTINGS = {
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
 	puzzleTolerance: 20,
+	iconOrderTolerance: iconOrderToleranceDefault,
 	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 	disallowWebView: true,
 	ipValidationRules: {
