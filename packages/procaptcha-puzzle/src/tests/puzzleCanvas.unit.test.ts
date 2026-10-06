@@ -346,21 +346,42 @@ describe("the switch to an image challenge", () => {
 		expect(onComplete).not.toHaveBeenCalled();
 	});
 
-	test("is a bare icon until the user looks to be struggling", () => {
-		render(props({ onSwitchToImage: vi.fn<() => void>() }));
-		const control = required(switchControl(), "the switch control");
-		expect(control.textContent).toBe("");
+	const switchTooltip = (): HTMLElement =>
+		required(
+			overlay().querySelector<HTMLElement>('[role="tooltip"]'),
+			"the switch tooltip",
+		);
+
+	// Refresh always comes with the switch, and the dialog opens with focus on
+	// it; without it the switch would take focus and show its tooltip.
+	const withRefresh = { onRefresh: vi.fn<() => void>() };
+
+	test("keeps its tooltip for hover until the user looks to be struggling", () => {
+		render(props({ ...withRefresh, onSwitchToImage: vi.fn<() => void>() }));
+		expect(switchTooltip().style.display).toBe("none");
 	});
 
-	test("carries a visible label once the user looks to be struggling", () => {
+	test("shows its tooltip unprompted once the user looks to be struggling", () => {
 		render(
 			props({
 				onSwitchToImage: vi.fn<() => void>(),
 				imageSwitchHighlighted: true,
 			}),
 		);
-		const control = required(switchControl(), "the switch control");
-		expect(control.textContent).toBe("Try an image challenge instead");
+		expect(switchTooltip().style.display).toBe("block");
+		expect(switchTooltip().textContent).toBe("Switch to an image challenge");
+	});
+
+	test("puts the tooltip away once the user starts dragging", () => {
+		render(
+			props({
+				...withRefresh,
+				onSwitchToImage: vi.fn<() => void>(),
+				imageSwitchHighlighted: true,
+			}),
+		);
+		mouseDown(20, 100);
+		expect(switchTooltip().style.display).toBe("none");
 	});
 
 	test("is hidden and inert while a solution is in flight", () => {

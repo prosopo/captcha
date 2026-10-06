@@ -32,7 +32,6 @@
 			"RETRY_ANNOUNCEMENT": "Not quite. A new puzzle has loaded and the piece is back at the start.",
 			"REFRESH": "Show a different puzzle",
 			"SWITCH_TO_IMAGE": "Switch to an image challenge",
-			"SWITCH_TO_IMAGE_LABELLED": "Try an image challenge instead",
 			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "You can also switch to an image challenge."
 		}
 	},

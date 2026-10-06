@@ -55,8 +55,8 @@ export interface PuzzleCanvasProps {
 	onRefresh?: () => void;
 	// Swaps this puzzle for an image challenge. No control is drawn when absent.
 	onSwitchToImage?: () => void;
-	// Draws the switch as a labelled button under the puzzle rather than an
-	// icon in the header, for a user who looks to be struggling.
+	// Shows the switch's tooltip without a hover, for a user who looks to be
+	// struggling: a touch screen has no hover to reveal it.
 	imageSwitchHighlighted?: boolean;
 }
 
@@ -64,7 +64,6 @@ const CONTAINER_WIDTH = 300;
 const CONTAINER_HEIGHT = 200;
 
 const PIECE_CSS_CLASS = "prosopo-puzzle-piece";
-const SWITCH_ROW_CSS_CLASS = "prosopo-puzzle-switch-row";
 
 // An arrow press moves a tenth of the board's width. The provider accepts a
 // solution within 15px of the target, so a 10px lattice always contains a
@@ -100,18 +99,6 @@ const stylesheet = (focusRingColor: string): string => `
 .${PIECE_CSS_CLASS}:focus-visible {
 	outline: 3px solid ${focusRingColor};
 	outline-offset: 2px;
-}
-@keyframes prosopo-puzzle-switch-in {
-	from { opacity: 0; transform: translateY(-4px); }
-	to { opacity: 1; transform: translateY(0); }
-}
-.${SWITCH_ROW_CSS_CLASS} {
-	animation: prosopo-puzzle-switch-in 0.3s ease;
-}
-@media (prefers-reduced-motion: reduce) {
-	.${SWITCH_ROW_CSS_CLASS} {
-		animation: none;
-	}
 }
 `;
 
@@ -152,6 +139,7 @@ export const mountPuzzleCanvas = (
 	// Set by the first arrow press of a keyboard run, so the run starts from a
 	// clean trail exactly as a fresh mouse grab does.
 	let keyboardDragging = false;
+	let hasMovedPiece = false;
 
 	const baseId = `prosopo-puzzle-${instanceCount++}`;
 	const instructionId = `${baseId}-instruction`;
@@ -294,18 +282,6 @@ export const mountPuzzleCanvas = (
 		},
 	});
 
-	const switchRow = createElement("div", {
-		className: SWITCH_ROW_CSS_CLASS,
-		style: {
-			display: "none",
-			justifyContent: "center",
-			padding: "10px 12px 12px",
-			width: `${CONTAINER_WIDTH}px`,
-			boxSizing: "border-box",
-			borderRadius: "0 0 20px 20px",
-		},
-	});
-
 	const instruction = createElement("div", {
 		style: {
 			position: "relative",
@@ -320,7 +296,9 @@ export const mountPuzzleCanvas = (
 			fontWeight: 500,
 			transition: "color 0.3s ease, border-color 0.3s ease",
 		},
-		children: [switchSlot, instructionText, refreshSlot],
+		// The switch is drawn on the left but comes after refresh, so the dialog
+		// still opens with focus on refresh as it did before the switch existed.
+		children: [instructionText, refreshSlot, switchSlot],
 	});
 
 	const panel = createElement("div", {
@@ -331,7 +309,7 @@ export const mountPuzzleCanvas = (
 			gap: "0",
 			transition: "opacity 0.3s ease, transform 0.3s ease",
 		},
-		children: [instruction, area, switchRow],
+		children: [instruction, area],
 	});
 
 	const refreshButtonProps = () => ({
@@ -357,10 +335,8 @@ export const mountPuzzleCanvas = (
 		label: t("WIDGET.PUZZLE.SWITCH_TO_IMAGE", {
 			defaultValue: "Switch to an image challenge",
 		}),
-		labelled: true === props.imageSwitchHighlighted,
-		labelledText: t("WIDGET.PUZZLE.SWITCH_TO_IMAGE_LABELLED", {
-			defaultValue: "Try an image challenge instead",
-		}),
+		// Out of the way once the user has a go, since it sits over the board.
+		tooltipPinned: true === props.imageSwitchHighlighted && !hasMovedPiece,
 		onSwitch: () => {
 			if (!props.submitting && !dragging) {
 				props.onSwitchToImage?.();
@@ -368,22 +344,27 @@ export const mountPuzzleCanvas = (
 		},
 	});
 	let imageSwitchButton: Component<ImageSwitchButtonProps> | undefined;
-	let imageSwitchLabelled: boolean | undefined;
-	const syncImageSwitchButton = () => {
-		const wanted = undefined !== props.onSwitchToImage;
-		const labelled = true === props.imageSwitchHighlighted;
-		if (imageSwitchButton && (!wanted || labelled !== imageSwitchLabelled)) {
-			imageSwitchButton.destroy();
-			imageSwitchButton = undefined;
+	const hidePinnedSwitchTooltip = () => {
+		if (hasMovedPiece) {
+			return;
 		}
-		if (wanted && !imageSwitchButton) {
+		hasMovedPiece = true;
+		imageSwitchButton?.update(imageSwitchButtonProps());
+	};
+	const syncImageSwitchButton = () => {
+		if (undefined === props.onSwitchToImage) {
+			imageSwitchButton?.destroy();
+			imageSwitchButton = undefined;
+			return;
+		}
+		if (imageSwitchButton) {
+			imageSwitchButton.update(imageSwitchButtonProps());
+		} else {
 			imageSwitchButton = mountImageSwitchButton(
-				labelled ? switchRow : switchSlot,
+				switchSlot,
 				imageSwitchButtonProps(),
 			);
-			imageSwitchLabelled = labelled;
 		}
-		imageSwitchButton?.update(imageSwitchButtonProps());
 	};
 
 	const surfaceProps = () => ({
@@ -514,22 +495,13 @@ export const mountPuzzleCanvas = (
 		});
 		refreshButton?.update(refreshButtonProps());
 		syncImageSwitchButton();
-		const switchRowShown =
-			undefined !== props.onSwitchToImage &&
-			true === props.imageSwitchHighlighted;
 		applyStyles(switchSlot, {
 			visibility: props.submitting ? "hidden" : "visible",
-		});
-		applyStyles(switchRow, {
-			display: switchRowShown ? "flex" : "none",
-			visibility: props.submitting ? "hidden" : "visible",
-			backgroundColor: theme.palette.surface,
 		});
 		applyStyles(area, {
 			// Material 3 purple tonal fallback shown before the server-rendered
 			// background image loads.
 			background: `linear-gradient(135deg, ${theme.palette.surface} 0%, ${theme.palette.primaryContainer.main} 50%, ${theme.palette.surface} 100%)`,
-			borderRadius: switchRowShown ? "0" : "0 0 20px 20px",
 			opacity: props.submitting ? 0.6 : 1,
 			pointerEvents: props.submitting ? "none" : "auto",
 		});
@@ -603,6 +575,7 @@ export const mountPuzzleCanvas = (
 		dragging = true;
 		keyboardDragging = false;
 		puzzleEvents = [];
+		hidePinnedSwitchTooltip();
 		const offset = containerOffset();
 		dragOffset = { x: clientX - offset.x - posX, y: clientY - offset.y - posY };
 		applyPieceChrome();
@@ -613,6 +586,7 @@ export const mountPuzzleCanvas = (
 		if (!keyboardDragging) {
 			keyboardDragging = true;
 			puzzleEvents = [];
+			hidePinnedSwitchTooltip();
 		}
 
 		posX = clamp(posX + deltaX, 0, CONTAINER_WIDTH);

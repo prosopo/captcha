@@ -32,14 +32,13 @@ import { createControl } from "../dom/obfuscation.js";
 export interface ImageSwitchButtonProps {
 	themeColor: "light" | "dark";
 	onSwitch: () => void;
-	/** Accessible name, and the tooltip on the icon-only variant. */
+	/** Accessible name, and the tooltip's text. */
 	label: string;
 	/**
-	 * Drawn as a filled pill with `labelledText` beside the icon instead of a
-	 * bare icon, for a user who looks to be struggling.
+	 * Shows the tooltip without a hover, and draws the button on the primary
+	 * colour, for a user who looks to be struggling.
 	 */
-	labelled?: boolean;
-	labelledText?: string;
+	tooltipPinned?: boolean;
 }
 
 // A 3×3 grid, the shape of the image challenge itself. A photo glyph reads as
@@ -57,11 +56,7 @@ const GRID_CELLS: readonly [number, number][] = [
 ];
 const GRID_CELL_SIZE = 5;
 
-const prefersReducedMotion = (): boolean =>
-	"function" === typeof window.matchMedia &&
-	window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-const iconButtonStyle: StyleMap = {
+const buttonStyle: StyleMap = {
 	border: "none",
 	cursor: "pointer",
 	display: "flex",
@@ -71,23 +66,7 @@ const iconButtonStyle: StyleMap = {
 	padding: "4px",
 	height: "24px",
 	width: "24px",
-	gap: "0",
-};
-
-const labelledButtonStyle: StyleMap = {
-	border: "none",
-	cursor: "pointer",
-	display: "flex",
-	alignItems: "center",
-	justifyContent: "center",
-	borderRadius: "999px",
-	padding: "8px 16px",
-	height: "auto",
-	width: "auto",
-	gap: "8px",
-	fontSize: "13px",
-	fontWeight: 500,
-	lineHeight: "16px",
+	transition: "background-color 0.25s",
 };
 
 export const mountImageSwitchButton = (
@@ -125,15 +104,13 @@ export const mountImageSwitchButton = (
 		children: cells,
 	});
 
-	const text = createElement("span");
-
 	const button = createControl(teardown, {
 		className: randomToken(),
 		attributes: {
 			"aria-label": props.label,
 			"data-cy": isDevMode() ? "image-switch-button" : undefined,
 		},
-		children: [svg, text],
+		children: [svg],
 		onActivate: (event: MouseEvent | KeyboardEvent) => {
 			event.preventDefault();
 			props.onSwitch();
@@ -141,13 +118,23 @@ export const mountImageSwitchButton = (
 	});
 
 	// Hover alone cannot explain an icon: there is no hover on a touch screen.
-	// The tooltip is for pointer and keyboard users; touch users get the
-	// labelled variant once they look to be struggling.
+	// That is what pinning the tooltip is for.
+	const tooltipArrow = createElement("span", {
+		style: {
+			position: "absolute",
+			top: "-4px",
+			left: "12px",
+			width: "8px",
+			height: "8px",
+			transform: "rotate(45deg)",
+		},
+	});
+	const tooltipText = createElement("span");
 	const tooltip = createElement("span", {
 		attributes: { role: "tooltip", "aria-hidden": "true" },
 		style: {
 			position: "absolute",
-			top: "calc(100% + 6px)",
+			top: "calc(100% + 8px)",
 			left: "0",
 			whiteSpace: "nowrap",
 			padding: "4px 8px",
@@ -158,6 +145,7 @@ export const mountImageSwitchButton = (
 			pointerEvents: "none",
 			zIndex: "1",
 		},
+		children: [tooltipArrow, tooltipText],
 	});
 
 	const wrapper = createElement("div", {
@@ -167,41 +155,34 @@ export const mountImageSwitchButton = (
 
 	const render = () => {
 		const theme = themeFor(props.themeColor);
-		const labelled = true === props.labelled;
+		const pinned = true === props.tooltipPinned;
 		button.setAttribute("aria-label", props.label);
-		text.textContent = labelled ? (props.labelledText ?? props.label) : "";
-		const fill = labelled
+		const fill = pinned
 			? theme.palette.primary.contrastText
 			: theme.palette.primaryContainer.contrastText;
 		for (const cell of cells) {
 			cell.setAttribute("fill", fill);
 		}
-		applyStyles(text, { display: labelled ? "inline" : "none" });
 		applyStyles(button, {
-			...(labelled ? labelledButtonStyle : iconButtonStyle),
+			...buttonStyle,
 			outline: focusVisible
 				? `3px solid ${theme.palette.primary.main}`
 				: "none",
 			outlineOffset: focusVisible ? "2px" : undefined,
-			backgroundColor: labelled
+			backgroundColor: pinned
 				? theme.palette.primary.main
 				: hover
 					? theme.palette.primaryContainer.hover
 					: theme.palette.primaryContainer.main,
-			color: fill,
-			fontFamily: theme.font.fontFamily,
-			transition: prefersReducedMotion()
-				? "none"
-				: "background-color 0.25s, padding 0.25s",
-			filter: labelled && hover ? "brightness(1.08)" : "none",
 		});
-		tooltip.textContent = props.label;
+		tooltipText.textContent = props.label;
 		applyStyles(tooltip, {
-			display: !labelled && (hover || focusVisible) ? "block" : "none",
+			display: pinned || hover || focusVisible ? "block" : "none",
 			backgroundColor: theme.palette.onSurface,
 			color: theme.palette.surface,
 			fontFamily: theme.font.fontFamily,
 		});
+		applyStyles(tooltipArrow, { backgroundColor: theme.palette.onSurface });
 	};
 
 	if (canHover()) {

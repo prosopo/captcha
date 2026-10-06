@@ -22,7 +22,6 @@ import type { Component } from "../dom/component.js";
 import { type Mounted, asRgb, fire, mount } from "./domHarness.js";
 
 const LABEL = "Switch to an image challenge";
-const LABELLED_TEXT = "Try an image challenge instead";
 const CONTROL_SELECTOR = '[data-cy="image-switch-button"]';
 
 let mounted: Mounted;
@@ -36,7 +35,6 @@ const render = (
 		themeColor: "light",
 		onSwitch,
 		label: LABEL,
-		labelledText: LABELLED_TEXT,
 		...overrides,
 	};
 	if (button) {
@@ -74,10 +72,6 @@ describe("the icon variant", () => {
 		expect(render().getAttribute("aria-label")).toBe(LABEL);
 	});
 
-	test("draws no text beside the icon", () => {
-		expect(render().textContent).toBe("");
-	});
-
 	test("explains itself in a tooltip on hover", () => {
 		const element = render();
 		expect(tooltip().style.display).toBe("none");
@@ -103,24 +97,38 @@ describe("the icon variant", () => {
 	});
 });
 
-describe("the labelled variant", () => {
-	test("says what it does in words", () => {
-		expect(render({ labelled: true }).textContent).toBe(LABELLED_TEXT);
+describe("the pinned tooltip", () => {
+	test("shows without a hover, for a touch screen that has none", () => {
+		vi.stubGlobal("matchMedia", (query: string) => ({
+			matches: "(hover: hover)" !== query,
+			media: query,
+		}));
+		render({ tooltipPinned: true });
+		expect(tooltip().style.display).toBe("block");
+		expect(tooltip().textContent).toBe(LABEL);
 	});
 
-	test("stands out on the theme's primary colour", () => {
-		expect(render({ labelled: true }).style.backgroundColor).toBe(
+	test("stays up when the pointer leaves", () => {
+		const element = render({ tooltipPinned: true });
+		fire(element, "mouseenter");
+		fire(element, "mouseleave");
+		expect(tooltip().style.display).toBe("block");
+	});
+
+	test("goes once it is unpinned", () => {
+		render({ tooltipPinned: true });
+		render({ tooltipPinned: false });
+		expect(tooltip().style.display).toBe("none");
+	});
+
+	test("puts the button on the theme's primary colour", () => {
+		expect(render({ tooltipPinned: true }).style.backgroundColor).toBe(
 			asRgb(lightTheme.palette.primary.main),
 		);
 	});
 
-	test("needs no tooltip", () => {
-		fire(render({ labelled: true }), "mouseenter");
-		expect(tooltip().style.display).toBe("none");
-	});
-
 	test("asks for the switch when pressed", () => {
-		fire(render({ labelled: true }), "click");
+		fire(render({ tooltipPinned: true }), "click");
 		expect(onSwitch).toHaveBeenCalledTimes(1);
 	});
 });
