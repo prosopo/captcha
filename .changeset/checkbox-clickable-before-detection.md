@@ -14,3 +14,5 @@ Nothing about what a token needs has changed: no challenge opens and no token is
 Tests: the checkbox is live while detection is pending; a click during detection shows the spinner and opens the chosen challenge with the click position once detection lands; a keyboard activation is held the same way; a synthetic click is ignored. `manualStart.test.ts` is renamed `startMode.test.ts`, since it now covers both start modes.
 
 The e2e `clickIAmHuman` helper now waits on `/captcha/image` rather than any `/captcha/*` request. Cypress now clicks the checkbox before `/frictionless` has answered, so the broad pattern was catching that response instead of the image challenge.
+
+The e2e checkbox helpers also click straight off a fresh query, rather than through a wrapped element. The widget swaps its placeholder checkbox for the challenge's own once detection answers, and a wrapped element that has left the page reports a (0, 0) position, so the click landed on the page corner.
