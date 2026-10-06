@@ -23,9 +23,30 @@ import layoutInjector from "./src/plugins/layout-injector.js";
 import placementInjector from "./src/plugins/placement-injector.js";
 import statusLogInjector from "./src/plugins/status-log-injector.js";
 
-loadEnv();
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// A .env.<mode> found by searching up from here wins. The private repo's root
+// one carries no demo site keys, so the committed env.<mode> beside this file
+// fills in whatever is still unset.
+loadEnv();
+loadEnv(__dirname, "env");
+
+const DEMO_SITE_KEY_VARS = [
+	"PROSOPO_SITE_KEY_FRICTIONLESS",
+	"PROSOPO_SITE_KEY_POW",
+	"PROSOPO_SITE_KEY_IMAGE",
+	"PROSOPO_SITE_KEY_PUZZLE",
+] as const;
+
+const assertDemoSiteKeysSet = (mode: string) => {
+	const missing = DEMO_SITE_KEY_VARS.filter((name) => !process.env[name]);
+	if (missing.length > 0) {
+		throw new Error(
+			`Refusing to build the demos for mode "${mode}" without ${missing.join(", ")}: every page would ship data-sitekey="undefined".`,
+		);
+	}
+};
+
 const certPath = path.resolve(__dirname, "../../certs");
 const keyPath = path.join(certPath, "server.key");
 const crtPath = path.join(certPath, "server.crt");
@@ -93,6 +114,10 @@ function moveDirectoryContents(
 }
 
 export default defineConfig(({ command, mode }) => {
+	if (command === "build") {
+		assertDemoSiteKeysSet(mode);
+	}
+
 	// Check if certificates exist
 	const useTls = fs.existsSync(keyPath) && fs.existsSync(crtPath);
 
