@@ -40,6 +40,7 @@ export enum ApiParams {
 	signature = "signature",
 	error = "error",
 	siteKey = "siteKey",
+	siteKeys = "siteKeys",
 	captchaType = "captchaType",
 	sessionId = "sessionId",
 	settings = "settings",
