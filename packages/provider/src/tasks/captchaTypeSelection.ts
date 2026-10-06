@@ -43,16 +43,20 @@ export type ConcreteCaptchaType =
  * Restrict rules, traffic-filter category policies, routing-machine actions
  * and detector-generated rules.
  *
+ * Pass `allowedTypes` from `resolveAllowedCaptchaTypes`, so Prosopo's
+ * per-site captcha type feature flags are applied alongside the site owner's
+ * own `frictionlessTypes`. Absent means every type is allowed.
+ *
  * Coercion only ever narrows. A disabled type falls back to the other
  * interactive type if that is permitted, and to PoW otherwise — never the
  * reverse, so this can't hand a user a harder challenge than was asked for.
  */
 export const coerceToEnabledCaptchaType = (
 	requested: ConcreteCaptchaType,
-	frictionlessTypes: Partial<IFrictionlessTypes> | undefined,
+	allowedTypes: Partial<IFrictionlessTypes> | undefined,
 	logger?: Logger,
 ): ConcreteCaptchaType => {
-	const types = resolveFrictionlessTypes(frictionlessTypes);
+	const types = resolveFrictionlessTypes(allowedTypes);
 
 	// A puzzle this provider cannot render is as unavailable as one the site
 	// disabled, and has to be treated identically here rather than downgraded
@@ -115,10 +119,10 @@ export const PUZZLE_REFRESHES_BEFORE_IMAGE = 3;
 export const switchTypeAfterRefreshes = (
 	resolved: ConcreteCaptchaType,
 	refreshCount: number | undefined,
-	frictionlessTypes: Partial<IFrictionlessTypes> | undefined,
+	allowedTypes: Partial<IFrictionlessTypes> | undefined,
 ): ConcreteCaptchaType =>
 	CaptchaType.puzzle === resolved &&
 	(refreshCount ?? 0) >= PUZZLE_REFRESHES_BEFORE_IMAGE &&
-	resolveFrictionlessTypes(frictionlessTypes).image
+	resolveFrictionlessTypes(allowedTypes).image
 		? CaptchaType.image
 		: resolved;

@@ -13,8 +13,12 @@
 // limitations under the License.
 
 import {
+	CaptchaType,
 	type IFrictionlessThreshold,
+	type IFrictionlessTypes,
+	type IUserSettings,
 	frictionlessPuzzleThresholdDefault,
+	resolveAllowedCaptchaTypes,
 	resolveFrictionlessThreshold,
 } from "@prosopo/types";
 
@@ -35,6 +39,25 @@ export const resolveScoreLadder = (
 		botImageThreshold: ladder.frictionlessImageThreshold,
 	};
 };
+
+/**
+ * The types any session minted by /frictionless may be. The owner's
+ * `frictionlessTypes` only governs the frictionless flow, so a site pinned to
+ * a concrete `captchaType` is held to the feature flags alone.
+ */
+export const resolveSiteAllowedCaptchaTypes = (
+	settings: Pick<
+		Partial<IUserSettings>,
+		"captchaType" | "frictionlessTypes" | "captchaTypeFeatureFlags"
+	>,
+): IFrictionlessTypes =>
+	resolveAllowedCaptchaTypes({
+		captchaTypeFeatureFlags: settings.captchaTypeFeatureFlags,
+		...((!settings.captchaType ||
+			settings.captchaType === CaptchaType.frictionless) && {
+			frictionlessTypes: settings.frictionlessTypes,
+		}),
+	});
 
 /**
  * Image rounds served when the detector payload could not be decrypted.

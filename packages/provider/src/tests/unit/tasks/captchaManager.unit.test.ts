@@ -434,6 +434,88 @@ describe("CaptchaManager", () => {
 	});
 
 	describe("isValidRequest", () => {
+		describe("captcha type feature flags", () => {
+			const puzzleSwitchedOff = (
+				captchaType: CaptchaType,
+			): Pick<ClientRecord, "account" | "tier" | "settings"> => ({
+				account: "account",
+				tier: Tier.Free,
+				settings: {
+					...defaultUserSettings,
+					captchaType,
+					captchaTypeFeatureFlags: { puzzle: false },
+				},
+			});
+
+			it("refuses a sessionless puzzle on a puzzle site with puzzle switched off", async () => {
+				const result = await captchaManager.isValidRequest(
+					puzzleSwitchedOff(CaptchaType.puzzle),
+					CaptchaType.puzzle,
+					mockEnv,
+				);
+
+				expect(result).toEqual({
+					valid: false,
+					reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+					type: CaptchaType.puzzle,
+				});
+			});
+
+			it("refuses a puzzle session minted before puzzle was switched off, without consuming it", async () => {
+				vi.mocked(db.checkAndRemoveSession).mockResolvedValue({
+					sessionId: "sessionId",
+					captchaType: CaptchaType.puzzle,
+				} as Session);
+
+				const result = await captchaManager.isValidRequest(
+					puzzleSwitchedOff(CaptchaType.frictionless),
+					CaptchaType.puzzle,
+					mockEnv,
+					"sessionId",
+				);
+
+				expect(result).toEqual({
+					valid: false,
+					reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+					type: CaptchaType.puzzle,
+				});
+				expect(db.checkAndRemoveSession).not.toHaveBeenCalled();
+			});
+
+			it("still serves the other types", async () => {
+				vi.mocked(db.checkAndRemoveSession).mockResolvedValue({
+					sessionId: "sessionId",
+					captchaType: CaptchaType.image,
+				} as Session);
+
+				const result = await captchaManager.isValidRequest(
+					puzzleSwitchedOff(CaptchaType.frictionless),
+					CaptchaType.image,
+					mockEnv,
+					"sessionId",
+				);
+
+				expect(result.valid).toBe(true);
+			});
+
+			it("serves puzzle when the flag is absent", async () => {
+				const result = await captchaManager.isValidRequest(
+					{
+						account: "account",
+						tier: Tier.Free,
+						settings: {
+							...defaultUserSettings,
+							captchaType: CaptchaType.puzzle,
+						},
+					},
+					CaptchaType.puzzle,
+					mockEnv,
+				);
+
+				expect(result).toEqual({ valid: true, type: CaptchaType.puzzle });
+			});
+		});
+
 		it("should validate a request for an image captcha when the client settings are set to image and no session ID is passed", async () => {
 			const result = await captchaManager.isValidRequest(
 				{
