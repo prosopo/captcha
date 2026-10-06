@@ -348,31 +348,36 @@ export const mountProcaptchaFrictionless = (
 			void start();
 		};
 
-		// Consume any pending retry coords now — the resumed widget owns them
-		// for exactly one auto-fired `manager.start(x, y)`. Cleared so a
-		// subsequent escalation/re-render doesn't accidentally re-inject.
+		// Consume any pending retry coords at mount time — the resumed widget
+		// owns them for exactly one auto-fired `manager.start(x, y)`. Cleared so
+		// a subsequent escalation/re-render doesn't accidentally re-inject.
 		// Escalation coords (from a PoW→image/puzzle handoff) take precedence
 		// over pending retry coords when both are present, because escalation
 		// is the current transition and the pending retry belongs to a prior
-		// widget instance that never got to consume them.
-		const forcedAutoStart = nextMountAutoStart;
-		nextMountAutoStart = false;
-		const startShowRetry = nextMountShowRetry;
-		nextMountShowRetry = false;
-		const { autoStart: resumedAutoStart, startCoords: retryStartCoords } =
-			consumeRetryMountProps(pendingRetryCoords, autoStart || forcedAutoStart);
-		const startCoords = escalationCoords ?? retryStartCoords;
-
-		const widgetProps: ProcaptchaProps = {
-			config,
-			callbacks,
-			frictionlessState,
-			i18n,
-			autoStart: resumedAutoStart,
-			startCoords,
-			startShowRetry,
-			onSessionInvalidated,
-			container: widgetContainer,
+		// widget instance that never got to consume them. Read only once the
+		// solver's chunk has loaded, because the placeholder stays clickable
+		// while it loads.
+		const takeWidgetProps = (): ProcaptchaProps => {
+			const forcedAutoStart = nextMountAutoStart;
+			nextMountAutoStart = false;
+			const startShowRetry = nextMountShowRetry;
+			nextMountShowRetry = false;
+			const { autoStart: resumedAutoStart, startCoords: retryStartCoords } =
+				consumeRetryMountProps(
+					pendingRetryCoords,
+					autoStart || forcedAutoStart,
+				);
+			return {
+				config,
+				callbacks,
+				frictionlessState,
+				i18n,
+				autoStart: resumedAutoStart,
+				startCoords: escalationCoords ?? retryStartCoords,
+				startShowRetry,
+				onSessionInvalidated,
+				container: widgetContainer,
+			};
 		};
 
 		if (CaptchaType.authenticated === captchaType) {
@@ -412,7 +417,7 @@ export const mountProcaptchaFrictionless = (
 			const mount = await ProcaptchaLoader();
 			if (destroyed) return;
 			clearSlot();
-			solver = mount(slot, { ...widgetProps, onReload });
+			solver = mount(slot, { ...takeWidgetProps(), onReload });
 			replayPendingExecute();
 			return;
 		}
@@ -421,7 +426,7 @@ export const mountProcaptchaFrictionless = (
 			const mount = await ProcaptchaPuzzleLoader();
 			if (destroyed) return;
 			clearSlot();
-			solver = mount(slot, { ...widgetProps, onReload });
+			solver = mount(slot, { ...takeWidgetProps(), onReload });
 			replayPendingExecute();
 			return;
 		}
@@ -429,7 +434,7 @@ export const mountProcaptchaFrictionless = (
 		const mount = await ProcaptchaPowLoader();
 		if (destroyed) return;
 		clearSlot();
-		solver = mount(slot, { ...widgetProps, onEscalate });
+		solver = mount(slot, { ...takeWidgetProps(), onEscalate });
 		replayPendingExecute();
 	};
 
