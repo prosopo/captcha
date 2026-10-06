@@ -1,5 +1,26 @@
 # @prosopo/cypress-shared
 
+## 2.8.150
+### Patch Changes
+
+- 1c13037: Add `captchaTypeFeatureFlags` to site settings, starting with `puzzle`. Setting
+  `puzzle: false` stops a site being served the puzzle captcha by any path: its
+  configured `captchaType`, `frictionlessTypes`, access policies, the traffic
+  filter, routing machines, PoW escalation, and puzzle sessions that already
+  exist. A site pinned to puzzle gets an image captcha instead (or PoW if image is
+  also off). The field is optional and has no stored default, so sites that never
+  set it behave exactly as before. The flag is meant for Prosopo staff, not site
+  owners.
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/util@3.3.14
+
 ## 2.8.149
 ### Patch Changes
 

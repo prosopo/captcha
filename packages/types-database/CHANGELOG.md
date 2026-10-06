@@ -1,5 +1,96 @@
 # @prosopo/types-database
 
+## 5.8.0
+### Minor Changes
+
+- 1c13037: Add `captchaTypeFeatureFlags` to site settings, starting with `puzzle`. Setting
+  `puzzle: false` stops a site being served the puzzle captcha by any path: its
+  configured `captchaType`, `frictionlessTypes`, access policies, the traffic
+  filter, routing machines, PoW escalation, and puzzle sessions that already
+  exist. A site pinned to puzzle gets an image captcha instead (or PoW if image is
+  also off). The field is optional and has no stored default, so sites that never
+  set it behave exactly as before. The flag is meant for Prosopo staff, not site
+  owners.
+- f961dab: Store everything needed to redraw a puzzle, so the portal can show the exact challenge a user was served.
+  
+  Until now a puzzle record kept the target, the origin and the accuracy required (`tolerance`), and
+  nothing else. The things that decide what the puzzle actually looked like — how many decoy shapes were
+  scattered on it, how dark they were, how big the piece was, and which background was used — were
+  picked per challenge and then thrown away. So you could see that someone failed by 11px and had no way
+  to know whether they had been handed an easy puzzle or a nasty one.
+  
+  Puzzle records now carry a `render` object with all of it: the difficulty ladder level, the piece size,
+  the frame geometry, the five render settings, and the two 128-bit seeds that regenerate the imagery.
+  Given those, the portal reproduces the background and the piece byte for byte.
+  
+  To make that possible the renderer had to become reproducible. `renderPuzzle` and `createBackground`
+  now take an optional seed and report the one they used, instead of generating one internally and
+  discarding it; the background pool hands out each image together with its seed. Default behaviour is
+  unchanged — omit the seed and you still get a fresh random one.
+  
+  The ladder level is new on the session too (`puzzleLevel`), because it was computed when the puzzle
+  was escalated and never written down anywhere. It is absent when the ladder did not choose the
+  puzzle — a site-configured puzzle or a traffic-filter override has no level.
+  
+  The record is patched after the imagery is produced rather than written with the rest of the record,
+  because the piece size and the seeds only exist once the render has run, and the target has to be
+  durable before it is expressed in pixels. If that patch fails it is logged and ignored: losing a
+  diagnostic must not cost the user their solve. Records written before this change, and any challenge
+  whose render threw, simply have no `render`.
+  
+  **The seeds are secret.** `puzzle-assets/src/prng.ts` explains why: they regenerate the clean
+  background, and a clean background can be diffed against the composite to read the target position
+  straight off. They were previously barred from leaving the provider entirely. They may now sit on the
+  captcha record, and nowhere else — not in a response, not in a log, not on the session. Anything that
+  exposes a puzzle record to a caller has to drop `render.backgroundSeed` and `render.renderSeed`, and
+  must not serve them at all while the challenge is still live. The comment in `prng.ts` now says so.
+  
+  Test coverage. Three guards, each confirmed to fail when the thing it protects is broken:
+  `renderReplay.unit.test.ts` re-renders from the stored fields and asserts the bytes match, with one
+  case per field asserting that changing *only* that field changes the output — so a record missing a
+  field cannot pass; `puzzleRenderer.unit.test.ts` replays through the same entry points the portal would
+  use, which catches a background paired with the wrong seed; and `schemas.test.ts` asserts every
+  sub-field survives a strict-mode mongoose write, since a field absent from the schema is dropped
+  silently and would store nothing at all.
+- dcb691b: Add a refresh control to the puzzle captcha.
+  
+  A user who can't solve the puzzle they were given can now ask for a different one, from a button in the puzzle's header. The replacement comes through a new frictionless session, like a wrong answer already does.
+  
+  The widget tells the provider which session was refreshed (`refreshOf`). The provider then records `refreshOf`, `refreshCount` and `refreshedAfterMs` on the new session, so refresh behaviour can be scored later. After three refreshes in a row it serves an image challenge instead, with reason `PUZZLE_REFRESH_LIMIT`. It only does this if the site has image enabled. The switch only goes from puzzle to image, so a client that lies about its refreshes can only make its own challenge harder. A client that leaves the field out gets a normal session, the same as reloading the page.
+  
+  The image widget's reload button now reports itself as a refresh too. That way a user who was moved onto image isn't sent back to the puzzle by their next reload.
+
+### Patch Changes
+
+- dd4c27c: Store the whole-SYN fields the tcp-probe sidecar now reports.
+  
+  The sidecar's handshake record grew from 80 to 104 bytes and the tail was reordered (prosopo/Protect#1167). chaddy was updated to read both layouts and to forward the new fields as their own headers (prosopo/chaddy#16, #17); this is the provider side of that, so the values have somewhere to land instead of being dropped at the middleware.
+  
+  Twelve new fields on `Session`, all optional: `tcpOptsKinds`, `tcpOptsPresent`, `tcpOptsCount`, `tcpTsval`, `tcpTsecr`, `tcpFlags`, `tcpDataOffsetResv`, `tcpUrgPtr`, `ipIdent`, `ipTotalLen`, `ipFragFlags`, `ipTos`. They are surfaced on the decision-machine input the same way the existing TCP fields are, so routing and verify rules can read them.
+  
+  `tcpOptsKinds` is stored decoded — the IANA kind number of each TCP option in wire order, `[2, 4, 8, 1, 3]` on an ordinary Linux SYN. The probe emits it packed into a u64, and a u64 reaches 2^64 while a JS number is exact only to 2^53, so the packed form could not be held without rounding; the rounding would land in the low bytes, which are the option kinds themselves. The array holds the same information and is queryable per position. It also replaces the old `tcpOptsOrder`, which packed 4 bits per option and so could not tell MSS from TCP Fast Open, or Window Scale from MD5, and could not represent MPTCP at all.
+  
+  `tcpOptsFlags` and `tcpOptsOrder` are kept and still read. A pronode running an older chaddy still sends them, and years of rows hold them, so removing them would both lose the rollout window and break any routing rule already reading them. They go undefined on new sessions once the fleet is rolled.
+  
+  `tcpTsval` and `tcpTsecr` are written only when the Timestamps option was actually on the SYN. A TSval of 0 is legal and a TSecr of 0 is expected, so neither can use zero to mean absent.
+  
+  Six places named every one of these fields by hand — the middleware's copy onto the request, the session write, and four task files building the decision-machine bag. They now all go through one list, with a compile-time check that every field of `RawTlsSignals` is on it. That is not tidying: the Session projection comment in `@prosopo/types-database` records a field being missed in exactly this way, after which the rules reading it got `undefined` and silently never fired against real traffic.
+  
+  Separately, the provider compose no longer defaults the sidecar to `prosopo/tcp-probe:latest`. The probe's reply is a bare fixed-size struct with no version in it, so the image tag is the only statement of which layout a host serves, and publishing `:latest` would change that on every pronode at the next pull with nobody running a deploy. The default is now the `0.1.1` both Protect inventories already pin.
+  
+  Tests: the new headers all parse; a packed value above 2^53 decodes without losing its low bytes; the kind pairs the old encoding aliased stay distinct; a trailing end-of-option-list terminates the list rather than appearing in it; an all-zero packed value reads as absent rather than as an empty list; malformed and out-of-range values are ignored; the legacy header pair is still read; and a zero is kept rather than dropped, since `ipIdent` 0 and `tcpTsecr` 0 are real readings.
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/locale@3.7.0
+  - @prosopo/common@3.1.62
+  - @prosopo/user-access-policy@3.14.15
+  - @prosopo/logger@2.1.3
+
 ## 5.7.3
 ### Patch Changes
 
