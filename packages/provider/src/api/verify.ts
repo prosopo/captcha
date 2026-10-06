@@ -44,7 +44,10 @@ import type { TFunction } from "i18next";
 import type { IconOrderCaptchaManager } from "../tasks/iconOrderCaptcha/iconOrderTasks.js";
 import type { PuzzleCaptchaManager } from "../tasks/puzzleCaptcha/puzzleTasks.js";
 import { Tasks } from "../tasks/tasks.js";
-import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
+import {
+	getMaintenanceMode,
+	isSiteKeyInMaintenanceMode,
+} from "./admin/apiToggleMaintenanceModeEndpoint.js";
 import { buildMaintenanceVerificationResponse } from "./captcha/maintenanceModeResponses.js";
 import { forwardVerifyIfNotIssuer } from "./forwardVerify.js";
 import { metricsEnabled, recordCaptchaVerify } from "./metrics.js";
@@ -261,6 +264,22 @@ const interactiveVerifyHandler =
 			);
 			if (signatureError) return next(signatureError);
 
+			// Scoped maintenance mode: this customer has been taken out of
+			// scoring, so approve without running it. Checked here rather than
+			// alongside the node-wide short-circuit at the top of the handler
+			// because `dapp` is only trustworthy once its signature has been
+			// verified — deciding a forced approval from an unverified site key
+			// would hand a free pass to anyone who names a key in maintenance.
+			if (isSiteKeyInMaintenanceMode(dapp)) {
+				req.logger.info(() => ({
+					msg: "Site key in maintenance mode - returning verified",
+					data: { siteKey: dapp },
+				}));
+				const maintenanceResponse: VerificationResponse =
+					buildMaintenanceVerificationResponse(req.i18n.t);
+				return res.json(maintenanceResponse);
+			}
+
 			const captchaManager = manager(tasks);
 			const { verified, score, sessionId } =
 				await captchaManager.serverVerifyInteractiveCaptchaSolution(
@@ -472,6 +491,22 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				);
 				if (signatureError) return next(signatureError);
 
+				// Scoped maintenance mode: this customer has been taken out of
+				// scoring, so approve without running it. Checked here rather than
+				// alongside the node-wide short-circuit at the top of the handler
+				// because `dapp` is only trustworthy once its signature has been
+				// verified — deciding a forced approval from an unverified site key
+				// would hand a free pass to anyone who names a key in maintenance.
+				if (isSiteKeyInMaintenanceMode(dapp)) {
+					req.logger.info(() => ({
+						msg: "Site key in maintenance mode - returning verified",
+						data: { siteKey: dapp },
+					}));
+					const maintenanceResponse: VerificationResponse =
+						buildMaintenanceVerificationResponse(req.i18n.t);
+					return res.json(maintenanceResponse);
+				}
+
 				const response =
 					await tasks.imgCaptchaManager.verifyImageCaptchaSolution(
 						user,
@@ -636,6 +671,22 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				);
 				if (signatureError) return next(signatureError);
 
+				// Scoped maintenance mode: this customer has been taken out of
+				// scoring, so approve without running it. Checked here rather than
+				// alongside the node-wide short-circuit at the top of the handler
+				// because `dapp` is only trustworthy once its signature has been
+				// verified — deciding a forced approval from an unverified site key
+				// would hand a free pass to anyone who names a key in maintenance.
+				if (isSiteKeyInMaintenanceMode(dapp)) {
+					req.logger.info(() => ({
+						msg: "Site key in maintenance mode - returning verified",
+						data: { siteKey: dapp },
+					}));
+					const maintenanceResponse: VerificationResponse =
+						buildMaintenanceVerificationResponse(req.i18n.t);
+					return res.json(maintenanceResponse);
+				}
+
 				const { verified, score, reason, sessionId } =
 					await tasks.powCaptchaManager.serverVerifyPowCaptchaSolution(
 						dapp,
@@ -792,6 +843,22 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					req,
 				);
 				if (signatureError) return next(signatureError);
+
+				// Scoped maintenance mode: this customer has been taken out of
+				// scoring, so approve without running it. Checked here rather than
+				// alongside the node-wide short-circuit at the top of the handler
+				// because `dapp` is only trustworthy once its signature has been
+				// verified — deciding a forced approval from an unverified site key
+				// would hand a free pass to anyone who names a key in maintenance.
+				if (isSiteKeyInMaintenanceMode(dapp)) {
+					req.logger.info(() => ({
+						msg: "Site key in maintenance mode - returning verified",
+						data: { siteKey: dapp },
+					}));
+					const maintenanceResponse: VerificationResponse =
+						buildMaintenanceVerificationResponse(req.i18n.t);
+					return res.json(maintenanceResponse);
+				}
 
 				if (!sessionId) {
 					return res.json({

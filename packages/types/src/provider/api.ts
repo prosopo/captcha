@@ -1060,6 +1060,11 @@ export type RemoveAllDecisionMachinesResponseType = z.infer<
 
 export const ToggleMaintenanceModeBody = object({
 	[ApiParams.enabled]: boolean(),
+	// Scopes the toggle to specific site keys instead of the whole node. Absent
+	// means the node-wide flag, which is what the deploy path uses. Scoped
+	// maintenance mode exists so one customer can be taken out of scoring
+	// without forcing a pass for everybody else on the node.
+	[ApiParams.siteKeys]: array(string()).optional(),
 });
 
 export type ToggleMaintenanceModeBodyOutput = output<

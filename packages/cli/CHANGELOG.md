@@ -1,5 +1,39 @@
 # @prosopo/cli
 
+## 3.8.26
+### Patch Changes
+
+- 4669e64: Make the provider bundle runnable from a checkout again.
+  
+  `sharp` is a native module, so it is deliberately left out of the bundle and
+  installed next to it instead. Under npm it also ended up in the repo's top
+  level `node_modules`, so running the bundle from a checkout found it there.
+  pnpm puts a package only where something asked for it, and only
+  `@prosopo/puzzle-assets` asks for `sharp`, so running the bundle failed with
+  "Cannot find package 'sharp'" — which is what broke the bundle test. pnpm is
+  now told to put `sharp` at the top level too. Nothing about what goes into
+  the bundle, or about the provider image, changes.
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [2118584]
+- Updated dependencies [1ce9482]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/provider@5.15.0
+  - @prosopo/workspace@3.2.2
+  - @prosopo/util@3.3.14
+  - @prosopo/api@4.4.0
+  - @prosopo/locale@3.7.0
+  - @prosopo/common@3.1.62
+  - @prosopo/env@3.6.69
+  - @prosopo/keyring@2.10.1
+  - @prosopo/dotenv@3.0.60
+  - @prosopo/logger@2.1.3
+
 ## 3.8.25
 ### Patch Changes
 
