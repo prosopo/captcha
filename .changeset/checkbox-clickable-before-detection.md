@@ -9,6 +9,8 @@ Detection downloads and runs a detector bundle before the widget knows which cha
 
 This includes a click made after detection has answered but while the chosen challenge's code is still downloading. That click was being dropped, because the widget checked for a held click before the download rather than after it.
 
+It also includes a click whose press begins on the placeholder just as the challenge is ready. Swapping the box out mid-press made the browser deliver the click to neither box, so the swap now waits, for up to a second, for the press to finish.
+
 Nothing about what a token needs has changed: no challenge opens and no token is issued until detection has produced a verdict, so clicking early does not let a bot skip it. Synthetic clicks are still ignored, and a detection failure still falls back the same way it did before.
 
 Tests: the checkbox is live while detection is pending; a click during detection shows the spinner and opens the chosen challenge with the click position once detection lands; a keyboard activation is held the same way; a synthetic click is ignored. `manualStart.test.ts` is renamed `startMode.test.ts`, since it now covers both start modes.

@@ -447,6 +447,28 @@ describe("auto start mode, before detection finishes", () => {
 		expect(mount.startCoords).toBeUndefined();
 	});
 
+	it("waits for a press on the placeholder to finish before swapping the solver in", async () => {
+		const { detectBot, resolveDetection } = detectBotPending();
+		await mountWrapper({ config: autoConfig(), detectBot });
+
+		const placeholder = checkbox();
+		const press = new MouseEvent("pointerdown", { bubbles: true });
+		setTrusted(press, true);
+		placeholder.dispatchEvent(press);
+		await resolveDetection();
+
+		expect(mocks.mounts).toHaveLength(0);
+		expect(placeholder.isConnected).toBe(true);
+
+		window.dispatchEvent(new MouseEvent("pointerup"));
+		await click(placeholder, { clientX: 7, clientY: 8 });
+		await vi.waitFor(() => expect(mocks.mounts).toHaveLength(1));
+
+		const mount = lastMountOf("image").props;
+		expect(mount.autoStart).toBe(true);
+		expect(mount.startCoords).toEqual({ x: 7, y: 8 });
+	});
+
 	it("ignores a synthetic click", async () => {
 		const { detectBot, resolveDetection } = detectBotPending();
 		await mountWrapper({ config: autoConfig(), detectBot });

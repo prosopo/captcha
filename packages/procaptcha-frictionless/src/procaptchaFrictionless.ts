@@ -22,6 +22,7 @@ import {
 	createElement,
 	getDefaultEvents,
 	getRestartDelayMs,
+	isEventTrusted,
 	isSecureBrowserContext,
 	mountCheckbox,
 	mountTestModeBanner,
@@ -53,6 +54,8 @@ import {
 } from "./sessionInvalidatedRecovery.js";
 
 const NO_SESSION_FOUND_KEY = "CAPTCHA.NO_SESSION_FOUND";
+
+const MAX_PRESS_HOLD_MS = 1000;
 
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
@@ -161,6 +164,27 @@ export const mountProcaptchaFrictionless = (
 
 	let solver: SolverHandle | undefined;
 	let placeholder: Component<CheckboxProps> | undefined;
+
+	// A press that starts on the placeholder has to end on it: swap the solver
+	// in mid-press and the browser fires the click on neither box, so it is
+	// lost. The swap waits for the press to finish, which lets the click be
+	// held and replayed instead. Capped, since a release outside the page may
+	// never be reported.
+	let pressReleased: Promise<void> | undefined;
+	teardown.addEventListener(slot, "pointerdown", (event: Event) => {
+		if (!placeholder || !isEventTrusted(event)) return;
+		pressReleased = new Promise<void>((resolve: () => void) => {
+			const release = () => {
+				clearTimeout(timer);
+				window.removeEventListener("pointerup", release, true);
+				window.removeEventListener("pointercancel", release, true);
+				setTimeout(resolve, 0);
+			};
+			const timer = setTimeout(release, MAX_PRESS_HOLD_MS);
+			window.addEventListener("pointerup", release, true);
+			window.addEventListener("pointercancel", release, true);
+		});
+	});
 
 	const clearSlot = () => {
 		solver?.destroy();
@@ -415,6 +439,7 @@ export const mountProcaptchaFrictionless = (
 
 		if (CaptchaType.image === captchaType) {
 			const mount = await ProcaptchaLoader();
+			await pressReleased;
 			if (destroyed) return;
 			clearSlot();
 			solver = mount(slot, { ...takeWidgetProps(), onReload });
@@ -424,6 +449,7 @@ export const mountProcaptchaFrictionless = (
 
 		if (CaptchaType.puzzle === captchaType) {
 			const mount = await ProcaptchaPuzzleLoader();
+			await pressReleased;
 			if (destroyed) return;
 			clearSlot();
 			solver = mount(slot, { ...takeWidgetProps(), onReload });
@@ -432,6 +458,7 @@ export const mountProcaptchaFrictionless = (
 		}
 
 		const mount = await ProcaptchaPowLoader();
+		await pressReleased;
 		if (destroyed) return;
 		clearSlot();
 		solver = mount(slot, { ...takeWidgetProps(), onEscalate });
