@@ -32,6 +32,7 @@
 		"@prosopo/api": "workspace:*",
 		"@prosopo/common": "workspace:*",
 		"@prosopo/locale": "workspace:*",
+		"@prosopo/procaptcha-audio": "workspace:*",
 		"@prosopo/procaptcha-common": "workspace:*",
 		"@prosopo/procaptcha-icon-order": "workspace:*",
 		"@prosopo/procaptcha-pow": "workspace:*",

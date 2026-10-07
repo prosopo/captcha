@@ -18,6 +18,8 @@ import {
 	type ApiResponse,
 	type AssignDetectorBundleRequestBodyOutput,
 	type AssignDetectorBundleResponse,
+	type AudioCaptchaSolutionResponse,
+	type AudioEvent,
 	type CaptchaRequestBodyType,
 	type CaptchaResponseBody,
 	type CaptchaSolution,
@@ -30,6 +32,7 @@ import {
 	type DecisionMachineLanguage,
 	type DecisionMachineRuntime,
 	type DecisionMachineScope,
+	type GetAudioCaptchaResponse,
 	type GetFrictionlessCaptchaChallengeRequestBodyOutput,
 	type GetFrictionlessCaptchaResponse,
 	type GetIconOrderCaptchaResponse,
@@ -59,6 +62,7 @@ import {
 	type ServerPowCaptchaVerifyRequestBodyType,
 	type ServerPuzzleCaptchaVerifyRequestBodyType,
 	type StoredEvents,
+	SubmitAudioCaptchaSolutionBody,
 	SubmitIconOrderCaptchaSolutionBody,
 	SubmitPowCaptchaSolutionBody,
 	SubmitPuzzleCaptchaSolutionBody,
@@ -87,7 +91,10 @@ export const VERIFY_FORWARDED_HEADER = "prosopo-verify-forwarded";
 
 /** The fields every interactive captcha solution submission carries. */
 const interactiveSolutionEnvelope = (
-	challenge: GetPuzzleCaptchaResponse | GetIconOrderCaptchaResponse,
+	challenge:
+		| GetPuzzleCaptchaResponse
+		| GetIconOrderCaptchaResponse
+		| GetAudioCaptchaResponse,
 	userAccount: string,
 	dappAccount: string,
 	userTimestampSignature: string,
@@ -352,10 +359,26 @@ export default class ProviderApi
 		);
 	}
 
+	public getAudioCaptchaChallenge(
+		user: string,
+		dapp: string,
+		sessionId?: string,
+		simdReadings?: string,
+	): Promise<GetAudioCaptchaResponse> {
+		return this.getInteractiveCaptchaChallenge(
+			ClientApiPaths.GetAudioCaptchaChallenge,
+			user,
+			dapp,
+			sessionId,
+			simdReadings,
+		);
+	}
+
 	private getInteractiveCaptchaChallenge<TResponse>(
 		path:
 			| ClientApiPaths.GetPuzzleCaptchaChallenge
-			| ClientApiPaths.GetIconOrderCaptchaChallenge,
+			| ClientApiPaths.GetIconOrderCaptchaChallenge
+			| ClientApiPaths.GetAudioCaptchaChallenge,
 		user: string,
 		dapp: string,
 		sessionId?: string,
@@ -452,10 +475,30 @@ export default class ProviderApi
 		);
 	}
 
+	public submitAudioCaptchaVerify(
+		token: string,
+		signatureHex: string,
+		user: string,
+		ip?: string,
+		email?: string,
+		clientSessionId?: string,
+	): Promise<VerificationResponse> {
+		return this.submitInteractiveCaptchaVerify(
+			ClientApiPaths.VerifyAudioCaptchaSolution,
+			token,
+			signatureHex,
+			user,
+			ip,
+			email,
+			clientSessionId,
+		);
+	}
+
 	private submitInteractiveCaptchaVerify(
 		path:
 			| ClientApiPaths.VerifyPuzzleCaptchaSolution
-			| ClientApiPaths.VerifyIconOrderCaptchaSolution,
+			| ClientApiPaths.VerifyIconOrderCaptchaSolution
+			| ClientApiPaths.VerifyAudioCaptchaSolution,
 		token: string,
 		signatureHex: string,
 		user: string,
@@ -478,6 +521,42 @@ export default class ProviderApi
 			headers: {
 				"Prosopo-Site-Key": this.account,
 				"Prosopo-User": user,
+			},
+		});
+	}
+
+	public submitAudioCaptchaSolution(
+		challenge: GetAudioCaptchaResponse,
+		userAccount: string,
+		dappAccount: string,
+		answer: string,
+		replays: number,
+		audioEvents: AudioEvent[],
+		userTimestampSignature: string,
+		behavioralData?: string,
+		salt?: string,
+		simdReadings?: string,
+		clientMetaData?: ClientMetaData,
+	): Promise<AudioCaptchaSolutionResponse> {
+		const body = SubmitAudioCaptchaSolutionBody.parse({
+			...interactiveSolutionEnvelope(
+				challenge,
+				userAccount,
+				dappAccount,
+				userTimestampSignature,
+				behavioralData,
+				salt,
+				simdReadings,
+				clientMetaData,
+			),
+			[ApiParams.answer]: answer,
+			[ApiParams.replays]: replays,
+			[ApiParams.audioEvents]: audioEvents,
+		});
+		return this.post(ClientApiPaths.SubmitAudioCaptchaSolution, body, {
+			headers: {
+				"Prosopo-Site-Key": this.account,
+				"Prosopo-User": userAccount,
 			},
 		});
 	}

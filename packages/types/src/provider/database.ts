@@ -57,6 +57,7 @@ import type {
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
 import type {
+	AudioEvent,
 	IconClick,
 	IconOrderEvent,
 	PuzzleEvent,
@@ -889,7 +890,6 @@ export interface PuzzleRenderRecord {
 /** Fields shared by the challenge records of the on-screen captcha types. */
 export interface InteractiveCaptchaStored extends StoredCaptcha {
 	challenge: PoWChallengeId;
-	tolerance: number;
 	providerSignature: string;
 	userSignature?: string;
 	userAccount: string;
@@ -897,12 +897,23 @@ export interface InteractiveCaptchaStored extends StoredCaptcha {
 }
 
 export interface PuzzleCaptchaStored extends InteractiveCaptchaStored {
+	tolerance: number;
 	targetX: number;
 	targetY: number;
 	originX: number;
 	originY: number;
 	puzzleEvents?: PuzzleEvent[];
 	render?: PuzzleRenderRecord;
+}
+
+/** `answer` is the spoken transcript: the secret, never sent to a client. */
+export interface AudioCaptchaStored extends InteractiveCaptchaStored {
+	answer: string;
+	/** What the user typed, kept for audit and difficulty tuning. */
+	submittedAnswer?: string;
+	/** How many times the clip was played before submitting. */
+	replays?: number;
+	audioEvents?: AudioEvent[];
 }
 
 /**
@@ -972,6 +983,7 @@ export type DecisionMachineArtifact = {
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
+		| CaptchaType.audio
 		| CaptchaType.iconOrder;
 	createdAt: Date;
 	updatedAt: Date;

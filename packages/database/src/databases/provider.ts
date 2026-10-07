@@ -21,6 +21,7 @@ import {
 	setupRedisIndex,
 } from "@prosopo/redis-client";
 import {
+	type AudioCaptchaStored,
 	type Captcha,
 	type CaptchaResult,
 	type CaptchaSolution,
@@ -62,6 +63,8 @@ import {
 } from "@prosopo/types";
 import type { SessionRecord, StoredSession } from "@prosopo/types-database";
 import {
+	type AudioCaptchaRecord,
+	AudioCaptchaRecordSchema,
 	CaptchaRecordSchema,
 	type ClientRecord,
 	ClientRecordSchema,
@@ -119,6 +122,7 @@ enum TableNames {
 	scheduler = "scheduler",
 	powcaptcha = "powcaptcha",
 	puzzlecaptcha = "puzzlecaptcha",
+	audiocaptcha = "audiocaptcha",
 	iconordercaptcha = "iconordercaptcha",
 	client = "client",
 	session = "session",
@@ -127,15 +131,31 @@ enum TableNames {
 	spamEmailDomain = "spamEmailDomain",
 }
 
-type InteractiveCaptchaType = CaptchaType.puzzle | CaptchaType.iconOrder;
+type InteractiveCaptchaType =
+	| CaptchaType.puzzle
+	| CaptchaType.iconOrder
+	| CaptchaType.audio;
+
+type InteractiveCaptchaStoredRecord =
+	| PuzzleCaptchaStored
+	| IconOrderCaptchaStored
+	| AudioCaptchaStored;
+
+type InteractiveCaptchaRecordType =
+	| PuzzleCaptchaRecord
+	| IconOrderCaptchaRecord
+	| AudioCaptchaRecord;
 
 interface InteractiveCaptchaCollection {
-	table: TableNames.puzzlecaptcha | TableNames.iconordercaptcha;
+	table:
+		| TableNames.puzzlecaptcha
+		| TableNames.iconordercaptcha
+		| TableNames.audiocaptcha;
 	label: string;
 	captchaType: InteractiveCaptchaType;
 	answerProjection: Record<string, 1>;
 	streamRecord: (
-		record: PuzzleCaptchaStored | IconOrderCaptchaStored,
+		record: InteractiveCaptchaStoredRecord,
 		markStored: MarkStoredCallback,
 	) => void;
 	streamUpdate: (
@@ -159,6 +179,11 @@ const PROVIDER_TABLES = [
 		collectionName: TableNames.puzzlecaptcha,
 		modelName: "PuzzleCaptcha",
 		schema: PuzzleCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.audiocaptcha,
+		modelName: "AudioCaptcha",
+		schema: AudioCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.iconordercaptcha,
@@ -1116,8 +1141,9 @@ export class ProviderDatabase
 	private interactiveCollection(
 		captchaType: InteractiveCaptchaType,
 	): InteractiveCaptchaCollection {
-		return captchaType === CaptchaType.puzzle
-			? {
+		switch (captchaType) {
+			case CaptchaType.puzzle:
+				return {
 					table: TableNames.puzzlecaptcha,
 					label: "PuzzleCaptcha",
 					captchaType,
@@ -1126,6 +1152,7 @@ export class ProviderDatabase
 						targetY: 1,
 						originX: 1,
 						originY: 1,
+						tolerance: 1,
 						puzzleEvents: 1,
 					},
 					streamRecord: (record, markStored) =>
@@ -1138,14 +1165,16 @@ export class ProviderDatabase
 							() => this.getPuzzleCaptchaRecordByChallenge(challenge),
 							markStored,
 						),
-				}
-			: {
+				};
+			case CaptchaType.iconOrder:
+				return {
 					table: TableNames.iconordercaptcha,
 					label: "IconOrderCaptcha",
 					captchaType,
 					answerProjection: {
 						// Grading reads the answer straight off this record.
 						targets: 1,
+						tolerance: 1,
 						clicks: 1,
 						iconOrderEvents: 1,
 					},
@@ -1160,6 +1189,29 @@ export class ProviderDatabase
 							markStored,
 						),
 				};
+			case CaptchaType.audio:
+				return {
+					table: TableNames.audiocaptcha,
+					label: "AudioCaptcha",
+					captchaType,
+					answerProjection: {
+						answer: 1,
+						submittedAnswer: 1,
+						replays: 1,
+						audioEvents: 1,
+					},
+					streamRecord: (record, markStored) =>
+						this.centralStreamer?.streamAudioRecord(
+							record as AudioCaptchaRecord,
+							markStored,
+						),
+					streamUpdate: (challenge, markStored) =>
+						this.centralStreamer?.streamAudioUpdate(
+							() => this.getAudioCaptchaRecordByChallenge(challenge),
+							markStored,
+						),
+				};
+		}
 	}
 
 	private markInteractiveRecordStored(
@@ -1190,7 +1242,7 @@ export class ProviderDatabase
 
 	private async storeInteractiveCaptchaRecord(
 		collection: InteractiveCaptchaCollection,
-		record: PuzzleCaptchaStored | IconOrderCaptchaStored,
+		record: InteractiveCaptchaStoredRecord,
 	): Promise<void> {
 		const tables = this.getTables();
 		const { challenge, ipInfo } = record;
@@ -1227,7 +1279,6 @@ export class ProviderDatabase
 	private pendingInteractiveRecord(
 		challenge: PoWChallengeId,
 		components: PoWChallengeComponents,
-		tolerance: number,
 		providerSignature: string,
 		ipAddress: CompositeIpAddress,
 		headers: RequestHeaders,
@@ -1246,7 +1297,6 @@ export class ProviderDatabase
 			result: { status: CaptchaStatus.pending },
 			userSubmitted: false,
 			serverChecked: false,
-			tolerance,
 			providerSignature,
 			lastUpdatedTimestamp: new Date(),
 			pendingStage: true,
@@ -1276,7 +1326,6 @@ export class ProviderDatabase
 				...this.pendingInteractiveRecord(
 					challenge,
 					components,
-					tolerance,
 					providerSignature,
 					ipAddress,
 					headers,
@@ -1284,10 +1333,40 @@ export class ProviderDatabase
 					sessionId,
 					ipInfo,
 				),
+				tolerance,
 				targetX,
 				targetY,
 				originX,
 				originY,
+			},
+		);
+	}
+
+	async storeAudioCaptchaRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		answer: string,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		ipInfo?: IPInfoResponse,
+	): Promise<void> {
+		await this.storeInteractiveCaptchaRecord(
+			this.interactiveCollection(CaptchaType.audio),
+			{
+				...this.pendingInteractiveRecord(
+					challenge,
+					components,
+					providerSignature,
+					ipAddress,
+					headers,
+					ja4,
+					sessionId,
+					ipInfo,
+				),
+				answer,
 			},
 		);
 	}
@@ -1310,7 +1389,6 @@ export class ProviderDatabase
 				...this.pendingInteractiveRecord(
 					challenge,
 					components,
-					tolerance,
 					providerSignature,
 					ipAddress,
 					headers,
@@ -1319,12 +1397,13 @@ export class ProviderDatabase
 					ipInfo,
 				),
 				targets,
+				tolerance,
 			},
 		);
 	}
 
 	private async getInteractiveCaptchaRecordByChallenge<
-		T extends PuzzleCaptchaRecord | IconOrderCaptchaRecord,
+		T extends InteractiveCaptchaRecordType,
 	>(
 		collection: InteractiveCaptchaCollection,
 		challenge: string,
@@ -1356,7 +1435,6 @@ export class ProviderDatabase
 						headers: 1,
 						ja4: 1,
 						result: 1,
-						tolerance: 1,
 						sessionId: 1,
 						ipInfo: 1,
 						deviceCapability: 1,
@@ -1420,18 +1498,29 @@ export class ProviderDatabase
 		);
 	}
 
+	async getAudioCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<AudioCaptchaRecord | null> {
+		return this.getInteractiveCaptchaRecordByChallenge<AudioCaptchaRecord>(
+			this.interactiveCollection(CaptchaType.audio),
+			challenge,
+			this.getAudioCaptchaRecordByChallenge.name,
+		);
+	}
+
 	/**
 	 * The filter is the guard: of N concurrent submitters only one matches
 	 * `userSubmitted: { $ne: true }`, where a read-then-check would let them
 	 * all through to be graded. `submittedAtTimestamp` is stamped here so the
 	 * record is consistent even if the caller dies before writing a result.
 	 */
-	async claimIconOrderCaptchaSubmission(
+	private async claimInteractiveCaptchaSubmission(
+		collection: InteractiveCaptchaCollection,
 		challenge: PoWChallengeId,
 	): Promise<boolean> {
 		const tables = this.getTables();
 		try {
-			const claim = await tables.iconordercaptcha.updateOne(
+			const claim = await tables[collection.table].updateOne(
 				{ challenge, userSubmitted: { $ne: true } },
 				{ $set: { userSubmitted: true, submittedAtTimestamp: new Date() } },
 			);
@@ -1439,8 +1528,8 @@ export class ProviderDatabase
 			this.logger.info(() => ({
 				data: { challenge, won },
 				msg: won
-					? "IconOrderCaptcha submission claimed"
-					: "IconOrderCaptcha submission already claimed",
+					? `${collection.label} submission claimed`
+					: `${collection.label} submission already claimed`,
 			}));
 			return won;
 		} catch (error) {
@@ -1450,10 +1539,28 @@ export class ProviderDatabase
 			});
 			this.logger.error(() => ({
 				err: err,
-				msg: "Failed to claim IconOrderCaptcha submission",
+				msg: `Failed to claim ${collection.label} submission`,
 			}));
 			throw err;
 		}
+	}
+
+	async claimIconOrderCaptchaSubmission(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		return this.claimInteractiveCaptchaSubmission(
+			this.interactiveCollection(CaptchaType.iconOrder),
+			challenge,
+		);
+	}
+
+	async claimAudioCaptchaSubmission(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		return this.claimInteractiveCaptchaSubmission(
+			this.interactiveCollection(CaptchaType.audio),
+			challenge,
+		);
 	}
 
 	private async updateInteractiveCaptchaRecordResult(
@@ -1592,10 +1699,31 @@ export class ProviderDatabase
 		);
 	}
 
+	async updateAudioCaptchaRecordResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		serverChecked = false,
+		userSubmitted = false,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void> {
+		await this.updateInteractiveCaptchaRecordResult(
+			this.interactiveCollection(CaptchaType.audio),
+			challenge,
+			result,
+			serverChecked,
+			userSubmitted,
+			userSignature,
+			coords,
+			lastUpdatedTimestamp,
+		);
+	}
+
 	private async updateInteractiveCaptchaRecord(
 		collection: InteractiveCaptchaCollection,
 		challenge: PoWChallengeId,
-		updates: Partial<PuzzleCaptchaRecord> | Partial<IconOrderCaptchaRecord>,
+		updates: Partial<InteractiveCaptchaRecordType>,
 	): Promise<void> {
 		const tables = this.getTables();
 		const timestamp = new Date();
@@ -1640,6 +1768,17 @@ export class ProviderDatabase
 		);
 	}
 
+	async updateAudioCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<AudioCaptchaRecord>,
+	): Promise<void> {
+		await this.updateInteractiveCaptchaRecord(
+			this.interactiveCollection(CaptchaType.audio),
+			challenge,
+			updates,
+		);
+	}
+
 	private async markInteractiveCaptchaRecordChecked(
 		collection: InteractiveCaptchaCollection,
 		challenge: PoWChallengeId,
@@ -1669,6 +1808,15 @@ export class ProviderDatabase
 	): Promise<boolean> {
 		return this.markInteractiveCaptchaRecordChecked(
 			this.interactiveCollection(CaptchaType.iconOrder),
+			challenge,
+		);
+	}
+
+	async markAudioCaptchaRecordChecked(
+		challenge: PoWChallengeId,
+	): Promise<boolean> {
+		return this.markInteractiveCaptchaRecordChecked(
+			this.interactiveCollection(CaptchaType.audio),
 			challenge,
 		);
 	}
@@ -1858,6 +2006,7 @@ export class ProviderDatabase
 			tables.powcaptcha.countDocuments(filter),
 			tables.puzzlecaptcha.countDocuments(filter),
 			tables.iconordercaptcha.countDocuments(filter),
+			tables.audiocaptcha.countDocuments(filter),
 		]);
 		return counts.reduce((total, count) => total + count, 0);
 	}

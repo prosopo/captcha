@@ -15,11 +15,13 @@
 import { ProsopoDBError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
+	type AudioCaptchaRecord,
 	type CaptchaProperties,
 	type ICaptchaDatabase,
 	type IconOrderCaptchaRecord,
 	type PoWCaptchaRecord,
 	type PuzzleCaptchaRecord,
+	StoredAudioCaptchaRecordSchema,
 	StoredIconOrderCaptchaRecordSchema,
 	StoredPoWCaptchaRecordSchema,
 	StoredPuzzleCaptchaRecordSchema,
@@ -52,6 +54,7 @@ enum TableNames {
 	commitment = "commitment",
 	powcaptcha = "powcaptcha",
 	puzzlecaptcha = "puzzlecaptcha",
+	audiocaptcha = "audiocaptcha",
 	iconordercaptcha = "iconordercaptcha",
 }
 
@@ -75,6 +78,11 @@ const CAPTCHA_TABLES = [
 		collectionName: TableNames.puzzlecaptcha,
 		modelName: "PuzzleCaptcha",
 		schema: StoredPuzzleCaptchaRecordSchema,
+	},
+	{
+		collectionName: TableNames.audiocaptcha,
+		modelName: "AudioCaptcha",
+		schema: StoredAudioCaptchaRecordSchema,
 	},
 	{
 		collectionName: TableNames.iconordercaptcha,
@@ -210,6 +218,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		powCaptchaEvents: PoWCaptchaRecord[],
 		puzzleCaptchaEvents: PuzzleCaptchaRecord[] = [],
 		iconOrderCaptchaEvents: IconOrderCaptchaRecord[] = [],
+		audioCaptchaEvents: AudioCaptchaRecord[] = [],
 	) {
 		await this.connect();
 		if (sessionEvents.length) {
@@ -318,6 +327,11 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 			"Mongo Saved Puzzle Events",
 		);
 		await this.upsertChallengeRecords(
+			TableNames.audiocaptcha,
+			audioCaptchaEvents,
+			"Mongo Saved Audio Events",
+		);
+		await this.upsertChallengeRecords(
 			TableNames.iconordercaptcha,
 			iconOrderCaptchaEvents,
 			"Mongo Saved Icon Order Events",
@@ -327,8 +341,15 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 	}
 
 	private async upsertChallengeRecords(
-		table: TableNames.puzzlecaptcha | TableNames.iconordercaptcha,
-		records: (PuzzleCaptchaRecord | IconOrderCaptchaRecord)[],
+		table:
+			| TableNames.puzzlecaptcha
+			| TableNames.iconordercaptcha
+			| TableNames.audiocaptcha,
+		records: (
+			| PuzzleCaptchaRecord
+			| IconOrderCaptchaRecord
+			| AudioCaptchaRecord
+		)[],
 		msg: string,
 	): Promise<void> {
 		if (!records.length) {
@@ -365,6 +386,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 		userCommitmentRecords: UserCommitmentRecord[];
 		powCaptchaRecords: PoWCaptchaRecord[];
 		puzzleCaptchaRecords: PuzzleCaptchaRecord[];
+		audioCaptchaRecords: AudioCaptchaRecord[];
 		iconOrderCaptchaRecords: IconOrderCaptchaRecord[];
 	}> {
 		await this.connect();
@@ -385,6 +407,11 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				.limit(limit)
 				.lean<PuzzleCaptchaRecord[]>();
 
+			const audioCaptchaResults = await this.tables.audiocaptcha
+				.find(filter)
+				.limit(limit)
+				.lean<AudioCaptchaRecord[]>();
+
 			const iconOrderCaptchaResults = await this.tables.iconordercaptcha
 				.find(filter)
 				.limit(limit)
@@ -394,6 +421,7 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				userCommitmentRecords: commitmentResults,
 				powCaptchaRecords: powCaptchaResults,
 				puzzleCaptchaRecords: puzzleCaptchaResults,
+				audioCaptchaRecords: audioCaptchaResults,
 				iconOrderCaptchaRecords: iconOrderCaptchaResults,
 			};
 		} catch (error) {

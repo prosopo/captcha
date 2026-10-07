@@ -283,6 +283,9 @@ importers:
       del-cli:
         specifier: 6.0.0
         version: 6.0.0
+      mongodb:
+        specifier: 7.6.0
+        version: 7.6.0
       npm-run-all:
         specifier: 4.1.5
         version: 4.1.5
@@ -1020,6 +1023,43 @@ importers:
       del-cli:
         specifier: 6.0.0
         version: 6.0.0
+      typescript:
+        specifier: 5.6.2
+        version: 5.6.2
+      vite:
+        specifier: 8.1.5
+        version: 8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.0)
+      vitest:
+        specifier: 4.1.11
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.0))
+
+  packages/audio-assets:
+    dependencies:
+      '@prosopo/puzzle-assets':
+        specifier: workspace:*
+        version: link:../puzzle-assets
+    devDependencies:
+      '@prosopo/config':
+        specifier: workspace:*
+        version: link:../../dev/config
+      '@types/node':
+        specifier: 22.10.2
+        version: 22.10.2
+      '@vitest/coverage-v8':
+        specifier: 4.1.11
+        version: 4.1.11(vitest@4.1.11)
+      del-cli:
+        specifier: 6.0.0
+        version: 6.0.0
+      dotenv:
+        specifier: 16.4.5
+        version: 16.4.5
+      tslib:
+        specifier: 2.7.0
+        version: 2.7.0
+      tsx:
+        specifier: 4.20.3
+        version: 4.20.3
       typescript:
         specifier: 5.6.2
         version: 5.6.2
@@ -2030,6 +2070,73 @@ importers:
         specifier: 4.1.11
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.0))
 
+  packages/procaptcha-audio:
+    dependencies:
+      '@polkadot/util':
+        specifier: 14.0.3
+        version: 14.0.3
+      '@prosopo/api':
+        specifier: workspace:*
+        version: link:../api
+      '@prosopo/common':
+        specifier: workspace:*
+        version: link:../common
+      '@prosopo/locale':
+        specifier: workspace:*
+        version: link:../locale
+      '@prosopo/procaptcha-common':
+        specifier: workspace:*
+        version: link:../procaptcha-common
+      '@prosopo/types':
+        specifier: workspace:*
+        version: link:../types
+      '@prosopo/util':
+        specifier: workspace:*
+        version: link:../util
+      '@prosopo/util-crypto':
+        specifier: workspace:*
+        version: link:../util-crypto
+      '@prosopo/widget-skeleton':
+        specifier: workspace:*
+        version: link:../widget-skeleton
+    devDependencies:
+      '@prosopo/config':
+        specifier: workspace:*
+        version: link:../../dev/config
+      '@types/node':
+        specifier: 22.5.5
+        version: 22.5.5
+      '@vitest/coverage-v8':
+        specifier: 4.1.11
+        version: 4.1.11(vitest@4.1.11)
+      concurrently:
+        specifier: 9.0.1
+        version: 9.0.1
+      del-cli:
+        specifier: 6.0.0
+        version: 6.0.0
+      jsdom:
+        specifier: 26.1.0
+        version: 26.1.0(supports-color@8.1.1)
+      npm-run-all:
+        specifier: 4.1.5
+        version: 4.1.5
+      tslib:
+        specifier: 2.7.0
+        version: 2.7.0
+      tsx:
+        specifier: 4.20.3
+        version: 4.20.3
+      typescript:
+        specifier: 5.6.2
+        version: 5.6.2
+      vite:
+        specifier: 8.1.5
+        version: 8.1.5(@types/node@22.5.5)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.0)
+      vitest:
+        specifier: 4.1.11
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.5.5)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.5(@types/node@22.5.5)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.0))
+
   packages/procaptcha-bundle:
     dependencies:
       '@prosopo/dotenv':
@@ -2181,6 +2288,9 @@ importers:
       '@prosopo/locale':
         specifier: workspace:*
         version: link:../locale
+      '@prosopo/procaptcha-audio':
+        specifier: workspace:*
+        version: link:../procaptcha-audio
       '@prosopo/procaptcha-common':
         specifier: workspace:*
         version: link:../procaptcha-common
@@ -2562,6 +2672,9 @@ importers:
       '@prosopo/api-route':
         specifier: workspace:*
         version: link:../api-route
+      '@prosopo/audio-assets':
+        specifier: workspace:*
+        version: link:../audio-assets
       '@prosopo/captcha-severity':
         specifier: workspace:*
         version: link:../captcha-severity

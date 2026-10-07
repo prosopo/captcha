@@ -25,6 +25,7 @@ import {
 	type ProcaptchaStateHandle,
 	Teardown,
 	activationOf,
+	audioAlternativeOffer,
 	createElement,
 	createProcaptchaState,
 	createRenderScheduler,
@@ -139,6 +140,10 @@ export const mountProcaptchaImageWidget = (
 		onReload: manager.reload,
 		themeColor: config.theme ?? "light",
 		translator,
+		audioAlternative: audioAlternativeOffer(
+			props,
+			translator.isReady() ? translator.t("WIDGET.AUDIO_ALTERNATIVE") : "",
+		),
 	});
 
 	const renderModal = () => {

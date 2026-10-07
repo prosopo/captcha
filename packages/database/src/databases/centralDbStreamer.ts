@@ -14,6 +14,7 @@
 
 import { type Logger, getLogger } from "@prosopo/logger";
 import type {
+	AudioCaptchaRecord,
 	IconOrderCaptchaRecord,
 	PoWCaptchaRecord,
 	PuzzleCaptchaRecord,
@@ -240,6 +241,24 @@ export class CentralDbStreamer {
 		);
 	}
 
+	streamAudioRecord(
+		record: AudioCaptchaRecord,
+		markStored?: MarkStoredCallback,
+	): void {
+		this.streamChallengeRecord("audiocaptcha", "audio", record, markStored);
+	}
+
+	streamAudioUpdate(
+		getFullRecord: () => Promise<AudioCaptchaRecord | null>,
+		markStored?: MarkStoredCallback,
+	): void {
+		this.streamChallengeUpdate(
+			getFullRecord,
+			(record) => this.streamAudioRecord(record, markStored),
+			"audio",
+		);
+	}
+
 	streamIconOrderRecord(
 		record: IconOrderCaptchaRecord,
 		markStored?: MarkStoredCallback,
@@ -264,9 +283,9 @@ export class CentralDbStreamer {
 	}
 
 	private streamChallengeRecord(
-		table: "puzzlecaptcha" | "iconordercaptcha",
+		table: "puzzlecaptcha" | "iconordercaptcha" | "audiocaptcha",
 		label: string,
-		record: PuzzleCaptchaRecord | IconOrderCaptchaRecord,
+		record: PuzzleCaptchaRecord | IconOrderCaptchaRecord | AudioCaptchaRecord,
 		markStored?: MarkStoredCallback,
 	): void {
 		const timestamp = this.getRecordTimestamp(record);

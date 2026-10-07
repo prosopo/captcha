@@ -72,6 +72,8 @@ const ProcaptchaIconOrderLoader = async () =>
 		.mountProcaptchaIconOrderWidget;
 const ProcaptchaPowLoader = async () =>
 	(await import("@prosopo/procaptcha-pow")).mountProcaptchaPowWidget;
+const ProcaptchaAudioLoader = async () =>
+	(await import("@prosopo/procaptcha-audio")).mountProcaptchaAudioWidget;
 
 /** Solvers that ask for a fresh session through `onReload`. */
 const reloadableSolverLoaders: ReadonlyMap<
@@ -82,6 +84,10 @@ const reloadableSolverLoaders: ReadonlyMap<
 	[CaptchaType.puzzle, ProcaptchaPuzzleLoader],
 	[CaptchaType.iconOrder, ProcaptchaIconOrderLoader],
 ]);
+
+/** Mirrors the provider's `isAudioAlternativeSessionType`. */
+const offersAudioAlternative = (captchaType: string): boolean =>
+	reloadableSolverLoaders.has(captchaType);
 
 export interface ProcaptchaFrictionlessHandle {
 	destroy(): void;
@@ -156,6 +162,11 @@ export const mountProcaptchaFrictionless = (
 	// Survives provider retries for the same reason as `nextMountAutoStart`,
 	// and is cleared once a replacement session has been minted.
 	let nextRefreshOf: string | undefined;
+	// Set when the user asks for audio, and kept across re-mints until one comes
+	// back with no visual challenge to swap for it. /frictionless knows nothing
+	// of the choice and keeps handing back the site's visual type.
+	let audioChosen = false;
+	let audioAlternativeAvailable = false;
 	const manualStart = StartModeEnum.manual === config.startMode;
 	let manualStarted = false;
 	// The inner widget only listens for `procaptcha:execute` once /frictionless
@@ -304,6 +315,9 @@ export const mountProcaptchaFrictionless = (
 		autoStart = false,
 		escalationCoords?: RetryCoords,
 	): Promise<void> => {
+		// Audio is mounted against the visual session /frictionless just minted.
+		audioChosen = audioChosen && offersAudioAlternative(captchaType);
+
 		const onEscalate: ProcaptchaEscalationHandler = (
 			next: Parameters<ProcaptchaEscalationHandler>[0],
 			newSessionId: string,
@@ -383,6 +397,15 @@ export const mountProcaptchaFrictionless = (
 			void start();
 		};
 
+		// The visual challenge spent this session, so audio needs a fresh one.
+		const onRequestAudioAlternative = () => {
+			audioChosen = true;
+			nextMountAutoStart = true;
+			sessionInvalidatedAttempts.current = 0;
+			resetState(0);
+			void start();
+		};
+
 		// Consume any pending retry coords at mount time — the resumed widget
 		// owns them for exactly one auto-fired `manager.start(x, y)`. Cleared so
 		// a subsequent escalation/re-render doesn't accidentally re-inject.
@@ -448,13 +471,23 @@ export const mountProcaptchaFrictionless = (
 			return;
 		}
 
-		const loadReloadableSolver = reloadableSolverLoaders.get(captchaType);
+		const loadReloadableSolver = audioChosen
+			? ProcaptchaAudioLoader
+			: reloadableSolverLoaders.get(captchaType);
 		if (loadReloadableSolver) {
+			const offerAudio = audioAlternativeAvailable && !audioChosen;
 			const mount = await loadReloadableSolver();
 			await pressReleased;
 			if (destroyed) return;
 			clearSlot();
-			solver = mount(slot, { ...takeWidgetProps(), onReload });
+			solver = mount(slot, {
+				...takeWidgetProps(),
+				onReload,
+				...(offerAudio && {
+					audioAlternativeAvailable: true,
+					onRequestAudioAlternative,
+				}),
+			});
 			replayPendingExecute();
 			return;
 		}
@@ -533,6 +566,8 @@ export const mountProcaptchaFrictionless = (
 					hp: result.hp,
 					agent: result.agent,
 				};
+
+				audioAlternativeAvailable = true === result.audioAlternativeAvailable;
 
 				await renderForCaptchaType(result.captchaType, frictionlessState);
 

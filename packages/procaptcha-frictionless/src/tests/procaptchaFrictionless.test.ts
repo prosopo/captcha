@@ -67,6 +67,9 @@ vi.mock("@prosopo/procaptcha-icon-order", () => ({
 vi.mock("@prosopo/procaptcha-pow", () => ({
 	mountProcaptchaPowWidget: mocks.probe("pow"),
 }));
+vi.mock("@prosopo/procaptcha-audio", () => ({
+	mountProcaptchaAudioWidget: mocks.probe("audio"),
+}));
 
 const { mountProcaptchaFrictionless } = await import(
 	"../procaptchaFrictionless.js"
@@ -442,6 +445,133 @@ describe("recovering an invalidated session", () => {
 		expect(detectBot).toHaveBeenCalledTimes(
 			MAX_SESSION_INVALIDATED_RETRIES + 1,
 		);
+	});
+});
+
+describe("the audio alternative", () => {
+	const withAudio = (
+		captchaType: CaptchaType,
+		sessionId = "session-1",
+	): BotDetectionFunctionResult =>
+		detection(captchaType, { sessionId, audioAlternativeAvailable: true });
+
+	const switchToAudio = async (
+		detectBot: BotDetectionFunction,
+	): Promise<void> => {
+		widget = mountProcaptchaFrictionless(container, props(detectBot));
+		await settle();
+		mocks.mounted.at(-1)?.props.onRequestAudioAlternative?.();
+		await settle();
+	};
+
+	test("is not offered when the site has not turned it on", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(detection(CaptchaType.image))),
+		);
+		await settle();
+		expect(mocks.mounted[0]?.props.audioAlternativeAvailable).toBeUndefined();
+		expect(mocks.mounted[0]?.props.onRequestAudioAlternative).toBeUndefined();
+	});
+
+	test.each([CaptchaType.image, CaptchaType.puzzle, CaptchaType.iconOrder])(
+		"is offered on the %s challenge when the site turned it on",
+		async (captchaType: CaptchaType) => {
+			widget = mountProcaptchaFrictionless(
+				container,
+				props(() => Promise.resolve(withAudio(captchaType))),
+			);
+			await settle();
+			expect(mocks.mounted[0]?.props).toMatchObject({
+				audioAlternativeAvailable: true,
+				onRequestAudioAlternative: expect.any(Function),
+			});
+		},
+	);
+
+	test("is not offered on PoW, which has no visual challenge to escape", async () => {
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(() => Promise.resolve(withAudio(CaptchaType.pow))),
+		);
+		await settle();
+		expect(mocks.mounted[0]?.props.onRequestAudioAlternative).toBeUndefined();
+	});
+
+	test("asking for it mints a fresh session and mounts the audio widget against it", async () => {
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValueOnce(withAudio(CaptchaType.image))
+			.mockResolvedValue(withAudio(CaptchaType.image, "session-2"));
+		await switchToAudio(detectBot);
+		expect(detectBot).toHaveBeenCalledTimes(2);
+		expect(solvers()).toEqual(["audio"]);
+		expect(mocks.destroyed).toContain("image");
+		expect(mocks.mounted.at(-1)?.props).toMatchObject({
+			autoStart: true,
+			frictionlessState: expect.objectContaining({ sessionId: "session-2" }),
+		});
+	});
+
+	test("the audio widget is not offered a switch to itself", async () => {
+		await switchToAudio(
+			vi
+				.fn<BotDetectionFunction>()
+				.mockResolvedValue(withAudio(CaptchaType.puzzle)),
+		);
+		expect(solvers()).toEqual(["audio"]);
+		expect(
+			mocks.mounted.at(-1)?.props.onRequestAudioAlternative,
+		).toBeUndefined();
+		expect(
+			mocks.mounted.at(-1)?.props.audioAlternativeAvailable,
+		).toBeUndefined();
+	});
+
+	test("a wrong audio answer stays on audio for the replacement clip", async () => {
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValue(withAudio(CaptchaType.image));
+		await switchToAudio(detectBot);
+		mocks.mounted.at(-1)?.props.onReload?.(5, 6, { showRetry: true });
+		await settle();
+		expect(solvers()).toEqual(["audio"]);
+		expect(mocks.mounted.at(-1)?.props).toMatchObject({
+			autoStart: true,
+			startShowRetry: true,
+			startCoords: { x: 5, y: 6 },
+		});
+	});
+
+	test("an invalidated audio session is re-minted as audio", async () => {
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValue(withAudio(CaptchaType.image));
+		await switchToAudio(detectBot);
+		mocks.mounted.at(-1)?.props.onSessionInvalidated?.(1, 2);
+		await settle();
+		expect(solvers()).toEqual(["audio"]);
+	});
+
+	test("falls back to the provider's choice when the re-run has no visual challenge", async () => {
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValueOnce(withAudio(CaptchaType.image))
+			.mockResolvedValue(withAudio(CaptchaType.pow));
+		await switchToAudio(detectBot);
+		expect(solvers()).toEqual(["pow"]);
+	});
+
+	test("the choice is spent once honoured, so a later re-mint follows the provider", async () => {
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValueOnce(withAudio(CaptchaType.image))
+			.mockResolvedValueOnce(withAudio(CaptchaType.pow))
+			.mockResolvedValue(withAudio(CaptchaType.image));
+		await switchToAudio(detectBot);
+		mocks.mounted.at(-1)?.props.onSessionInvalidated?.(1, 2);
+		await settle();
+		expect(solvers()).toEqual(["image"]);
 	});
 });
 
