@@ -104,6 +104,7 @@ const CAPTCHA_TYPE_TIER: ReadonlyMap<string, number> = new Map([
 	["image", 5 * TIER_GAP],
 	// Several ordered clicks is harder than one drag, but easier than image.
 	["iconOrder", 4 * TIER_GAP],
+	// No `audio`: nothing selects it, so it ranks 0 like any unknown value.
 	["puzzle", 3 * TIER_GAP],
 	["pow", 2 * TIER_GAP],
 	["frictionless", 1 * TIER_GAP],

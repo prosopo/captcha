@@ -20,6 +20,9 @@
 			"path": "../locale/tsconfig.cjs.json"
 		},
 		{
+			"path": "../procaptcha-audio/tsconfig.cjs.json"
+		},
+		{
 			"path": "../procaptcha-common/tsconfig.cjs.json"
 		},
 		{

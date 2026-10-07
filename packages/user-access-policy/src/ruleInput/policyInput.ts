@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { AllKeys } from "@prosopo/common";
-import { CaptchaTypeSchema, ResultReason } from "@prosopo/types";
+import { ResultReason, SelectableCaptchaTypeSchema } from "@prosopo/types";
 import { z } from "zod";
 import {
 	type AccessPolicy,
@@ -46,7 +46,7 @@ import {
 // `ZodEffects`, which loses `.shape`.
 export const accessPolicyInputShape = z.object({
 	type: z.nativeEnum(AccessPolicyType),
-	captchaType: CaptchaTypeSchema.optional(),
+	captchaType: SelectableCaptchaTypeSchema.optional(),
 	description: z.coerce.string().optional(),
 	// Redis stores values as strings, so coerce is needed to parse properly
 	solvedImagesCount: z.coerce.number().optional(),

@@ -54,7 +54,7 @@ const FULLY_POPULATED_SETTINGS = {
 		frictionlessImageThreshold: 1.3,
 	},
 	frictionlessTypes: { image: false, puzzle: true, iconOrder: true },
-	captchaTypeFeatureFlags: { puzzle: false, iconOrder: true },
+	captchaTypeFeatureFlags: { puzzle: false, iconOrder: true, audio: true },
 	widgetFeatureFlags: { puzzleImageSwitch: true },
 	powDifficulty: 6,
 	imageThreshold: 0.81,
@@ -66,6 +66,23 @@ const FULLY_POPULATED_SETTINGS = {
 	puzzleTolerance: 20,
 	iconOrderTolerance: iconOrderToleranceDefault,
 	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+	puzzle: {
+		decoyCount: 7,
+		decoyEdgeDarkness: 25,
+		decoyBodyBrightness: -3,
+		decoyHoleDarken: 0.62,
+		holeDarken: 0.48,
+		pieceScale: { min: 0.2, max: 0.5 },
+	},
+	audio: {
+		digitCount: 6,
+		noiseSnrDb: 18,
+		babbleGain: 0.22,
+		babbleVoices: 3,
+		reverbMix: 0.08,
+		gapMs: 300,
+	},
+	audioAccessibilityEnabled: true,
 	disallowWebView: true,
 	ipValidationRules: {
 		enabled: true,
@@ -247,6 +264,9 @@ describe("Client settings Mongo persistence", () => {
 		expect(stored.puzzleTolerance).toBe(
 			FULLY_POPULATED_SETTINGS.puzzleTolerance,
 		);
+		expect(stored.audioAccessibilityEnabled).toBe(
+			FULLY_POPULATED_SETTINGS.audioAccessibilityEnabled,
+		);
 		expect(stored.disallowWebView).toBe(
 			FULLY_POPULATED_SETTINGS.disallowWebView,
 		);
@@ -323,6 +343,40 @@ describe("Client settings Mongo persistence", () => {
 		expect(trafficFilter.crawler).toEqual(
 			FULLY_POPULATED_SETTINGS.trafficFilter.crawler,
 		);
+
+		// Mongoose silently drops nested paths its schema does not declare.
+		const puzzle = stored.puzzle;
+		expect(puzzle).toBeDefined();
+		if (!puzzle) return;
+		expect(puzzle.decoyCount).toBe(FULLY_POPULATED_SETTINGS.puzzle.decoyCount);
+		expect(puzzle.decoyEdgeDarkness).toBe(
+			FULLY_POPULATED_SETTINGS.puzzle.decoyEdgeDarkness,
+		);
+		expect(puzzle.decoyBodyBrightness).toBe(
+			FULLY_POPULATED_SETTINGS.puzzle.decoyBodyBrightness,
+		);
+		expect(puzzle.decoyHoleDarken).toBe(
+			FULLY_POPULATED_SETTINGS.puzzle.decoyHoleDarken,
+		);
+		expect(puzzle.holeDarken).toBe(FULLY_POPULATED_SETTINGS.puzzle.holeDarken);
+		expect(puzzle.pieceScale?.min).toBe(
+			FULLY_POPULATED_SETTINGS.puzzle.pieceScale.min,
+		);
+		expect(puzzle.pieceScale?.max).toBe(
+			FULLY_POPULATED_SETTINGS.puzzle.pieceScale.max,
+		);
+
+		const audio = stored.audio;
+		expect(audio).toBeDefined();
+		if (!audio) return;
+		expect(audio.digitCount).toBe(FULLY_POPULATED_SETTINGS.audio.digitCount);
+		expect(audio.noiseSnrDb).toBe(FULLY_POPULATED_SETTINGS.audio.noiseSnrDb);
+		expect(audio.babbleGain).toBe(FULLY_POPULATED_SETTINGS.audio.babbleGain);
+		expect(audio.babbleVoices).toBe(
+			FULLY_POPULATED_SETTINGS.audio.babbleVoices,
+		);
+		expect(audio.reverbMix).toBe(FULLY_POPULATED_SETTINGS.audio.reverbMix);
+		expect(audio.gapMs).toBe(FULLY_POPULATED_SETTINGS.audio.gapMs);
 
 		// Honeypot — per-field, same rationale as trafficFilter.
 		const honeypot = stored.honeypot;

@@ -51,6 +51,7 @@ import {
 	buildAllWindowIncrements,
 } from "../../util/usageCounters.js";
 import { isClientSessionMismatch } from "../../utils/clientMetaData.js";
+import { offersAudioAlternative } from "../audioAlternative.js";
 import { CaptchaManager } from "../captchaManager.js";
 import {
 	coerceToEnabledCaptchaType,
@@ -104,6 +105,7 @@ export class FrictionlessManager extends CaptchaManager {
 		"sessionId" | "createdAt" | "captchaType"
 	>;
 	private routingContext?: RoutingContext;
+	private audioAlternativeEnabled = false;
 	private allowedCaptchaTypes?: IFrictionlessTypes;
 	private imageSwitchRequested = false;
 	private readonly decisionMachineRunner: DecisionMachineRunner;
@@ -132,6 +134,11 @@ export class FrictionlessManager extends CaptchaManager {
 	 */
 	setRoutingContext(ctx: RoutingContext): void {
 		this.routingContext = ctx;
+	}
+
+	/** Separate from `setSessionParams`, which the short-circuit path bypasses. */
+	setAudioAlternativeEnabled(enabled: boolean): void {
+		this.audioAlternativeEnabled = enabled;
 	}
 
 	/**
@@ -706,6 +713,10 @@ export class FrictionlessManager extends CaptchaManager {
 			[ApiParams.sessionId]: sessionRecord.sessionId,
 			[ApiParams.status]: "ok",
 			dns_url: buildDnsEventUrl(sessionRecord.sessionId),
+			...(offersAudioAlternative(
+				finalCaptchaType,
+				this.audioAlternativeEnabled,
+			) && { audioAlternativeAvailable: true }),
 		};
 	}
 

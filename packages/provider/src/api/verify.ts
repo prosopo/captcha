@@ -41,6 +41,7 @@ import express, {
 	type Router,
 } from "express";
 import type { TFunction } from "i18next";
+import type { AudioCaptchaManager } from "../tasks/audioCaptcha/audioTasks.js";
 import type { IconOrderCaptchaManager } from "../tasks/iconOrderCaptcha/iconOrderTasks.js";
 import type { PuzzleCaptchaManager } from "../tasks/puzzleCaptcha/puzzleTasks.js";
 import { Tasks } from "../tasks/tasks.js";
@@ -81,6 +82,7 @@ const VERIFY_PATH_TYPE: Partial<Record<ClientApiPaths, CaptchaType>> = {
 	[ClientApiPaths.VerifyImageCaptchaSolutionDapp]: CaptchaType.image,
 	[ClientApiPaths.VerifyPowCaptchaSolution]: CaptchaType.pow,
 	[ClientApiPaths.VerifyPuzzleCaptchaSolution]: CaptchaType.puzzle,
+	[ClientApiPaths.VerifyAudioCaptchaSolution]: CaptchaType.audio,
 	[ClientApiPaths.VerifyIconOrderCaptchaSolution]: CaptchaType.iconOrder,
 };
 
@@ -151,10 +153,13 @@ const interactiveVerifyHandler =
 		userAccessRulesStorage: AccessRulesStorage;
 		path:
 			| ClientApiPaths.VerifyPuzzleCaptchaSolution
-			| ClientApiPaths.VerifyIconOrderCaptchaSolution;
+			| ClientApiPaths.VerifyIconOrderCaptchaSolution
+			| ClientApiPaths.VerifyAudioCaptchaSolution;
 		label: string;
 		handlerName: string;
-		manager: (tasks: Tasks) => PuzzleCaptchaManager | IconOrderCaptchaManager;
+		manager: (
+			tasks: Tasks,
+		) => PuzzleCaptchaManager | IconOrderCaptchaManager | AudioCaptchaManager;
 	}) =>
 	async (req: Request, res: Response, next: NextFunction) => {
 		// Maintenance-mode short-circuit must run before `new Tasks(env, ...)`
@@ -740,6 +745,18 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 			label: "puzzle",
 			handlerName: "verifyPuzzleCaptchaSolution",
 			manager: (tasks) => tasks.puzzleCaptchaManager,
+		}),
+	);
+
+	router.post(
+		ClientApiPaths.VerifyAudioCaptchaSolution,
+		interactiveVerifyHandler({
+			env,
+			userAccessRulesStorage,
+			path: ClientApiPaths.VerifyAudioCaptchaSolution,
+			label: "audio",
+			handlerName: "verifyAudioCaptchaSolution",
+			manager: (tasks) => tasks.audioCaptchaManager,
 		}),
 	);
 

@@ -155,6 +155,45 @@ describe("server-check claims are single-use under concurrency", () => {
 		expect(record?.userSubmitted).toBe(true);
 	});
 
+	it("claims an audio challenge for exactly one of N concurrent verifies", async () => {
+		const challenge = "1___user___dapp___audio-claim" as PoWChallengeId;
+		await db.getTables().audiocaptcha.create({
+			...baseChallenge,
+			challenge,
+			answer: "123456",
+		});
+
+		const claims: boolean[] = await Promise.all(
+			Array.from({ length: CONCURRENCY }, () =>
+				db.markAudioCaptchaRecordChecked(challenge),
+			),
+		);
+
+		expect(claims.filter(Boolean)).toHaveLength(1);
+		const record = await db.getAudioCaptchaRecordByChallenge(challenge);
+		expect(record?.serverChecked).toBe(true);
+	});
+
+	it("claims an audio submission for exactly one of N concurrent submits", async () => {
+		const challenge = "1___user___dapp___audio-submit" as PoWChallengeId;
+		await db.getTables().audiocaptcha.create({
+			...baseChallenge,
+			challenge,
+			userSubmitted: false,
+			answer: "123456",
+		});
+
+		const claims: boolean[] = await Promise.all(
+			Array.from({ length: CONCURRENCY }, () =>
+				db.claimAudioCaptchaSubmission(challenge),
+			),
+		);
+
+		expect(claims.filter(Boolean)).toHaveLength(1);
+		const record = await db.getAudioCaptchaRecordByChallenge(challenge);
+		expect(record?.userSubmitted).toBe(true);
+	});
+
 	it("claims an image commitment for exactly one of N concurrent verifies", async () => {
 		const id = "0xcommitmentclaim";
 		await db.getTables().commitment.create({

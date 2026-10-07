@@ -15,6 +15,7 @@
 import { isStricterCaptchaType } from "@prosopo/captcha-severity";
 import {
 	type CaptchaType,
+	type IAudioSettings,
 	type IIconOrderSettings,
 	type IPInfoResponse,
 	type IPInfoResult,
@@ -327,6 +328,7 @@ export type ResolvedChallengePolicy = {
 	// object means "no policy specified any puzzle setting"; undefined
 	// means no challenge matches at all (already short-circuited above).
 	puzzleSettings?: IPuzzleSettings;
+	audioSettings?: IAudioSettings;
 	iconOrderTolerance?: number;
 	iconOrderSettings?: IIconOrderSettings;
 	// Categories whose policies contributed to the resolved combination.
@@ -359,6 +361,7 @@ export const resolveChallengePolicy = (
 	let solvedImagesCount: number | undefined;
 	let puzzleTolerance: number | undefined;
 	let puzzleSettings: IPuzzleSettings | undefined;
+	let audioSettings: IAudioSettings | undefined;
 	let iconOrderTolerance: number | undefined;
 	let iconOrderSettings: IIconOrderSettings | undefined;
 	for (const m of challenges) {
@@ -385,6 +388,9 @@ export const resolveChallengePolicy = (
 		if (m.policy.puzzle) {
 			puzzleSettings = { ...(puzzleSettings ?? {}), ...m.policy.puzzle };
 		}
+		if (m.policy.audio) {
+			audioSettings = { ...(audioSettings ?? {}), ...m.policy.audio };
+		}
 		iconOrderTolerance = strictestTolerance(
 			iconOrderTolerance,
 			m.policy.iconOrderTolerance,
@@ -403,6 +409,7 @@ export const resolveChallengePolicy = (
 		solvedImagesCount,
 		puzzleTolerance,
 		puzzleSettings,
+		audioSettings,
 		iconOrderTolerance,
 		iconOrderSettings,
 		sourceCategories: challenges.map((m) => m.category),

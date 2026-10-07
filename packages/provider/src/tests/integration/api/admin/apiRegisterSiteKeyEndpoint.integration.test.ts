@@ -79,6 +79,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				puzzleTolerance: 15,
 				iconOrderTolerance: iconOrderToleranceDefault,
 				puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+				audioAccessibilityEnabled: false,
 				disallowWebView: false,
 			},
 		};
@@ -117,6 +118,7 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 				puzzleTolerance: 15,
 				iconOrderTolerance: iconOrderToleranceDefault,
 				puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
+				audioAccessibilityEnabled: false,
 				disallowWebView: false,
 			},
 		};

@@ -17,7 +17,7 @@ import {
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 } from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
-import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
+import { SelectableCaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
 export const captchaTypeDefault = CaptchaType.frictionless;
 export const domainsDefault: string[] = [];
@@ -95,6 +95,14 @@ export const puzzleDecoyHoleDarkenDefault = 0.7;
 export const puzzlePieceScaleMinDefault = 0.15;
 export const puzzlePieceScaleMaxDefault = 0.45;
 
+// Must match `DEFAULT_RENDER_SETTINGS` in @prosopo/audio-assets. Tuned for
+// intelligibility rather than difficulty: this is the accessibility path.
+export const audioDigitCountDefault = 5;
+export const audioNoiseSnrDbDefault = 14;
+export const audioBabbleGainDefault = 0.16;
+export const audioBabbleVoicesDefault = 2;
+export const audioReverbMixDefault = 0.12;
+export const audioGapMsDefault = 220;
 // Must match `DEFAULT_RENDER_SETTINGS` in @prosopo/icon-order-assets.
 export const iconOrderTargetCountDefault = 3;
 export const iconOrderDecoyCountDefault = 4;
@@ -222,6 +230,7 @@ export const resolveFrictionlessTypes = (
 export const CaptchaTypeFeatureFlagsSchema = object({
 	[CaptchaType.puzzle]: boolean().optional(),
 	[CaptchaType.iconOrder]: boolean().optional(),
+	[CaptchaType.audio]: boolean().optional(),
 });
 
 export type ICaptchaTypeFeatureFlags = output<
@@ -237,6 +246,7 @@ export const captchaTypeFeatureFlagDefaults: Required<ICaptchaTypeFeatureFlags> 
 	{
 		[CaptchaType.puzzle]: true,
 		[CaptchaType.iconOrder]: false,
+		[CaptchaType.audio]: false,
 	};
 
 const isFeatureFlaggedCaptchaType = (
@@ -352,6 +362,27 @@ export const puzzleDecoyHoleDarkenFieldSchema = number().min(0).max(1);
 // fixed size (min == max) or explore the full frame. Cross-field
 // `min <= max` is enforced on the containing object schema.
 export const puzzlePieceScaleFieldSchema = number().min(0.05).max(0.95);
+// Past 8 digits a spoken sequence outruns most listeners' working memory.
+export const audioDigitCountFieldSchema = number().int().min(3).max(8);
+// Below about 3 dB the noise drowns the speech.
+export const audioNoiseSnrDbFieldSchema = number().min(3).max(60);
+export const audioBabbleGainFieldSchema = number().min(0).max(0.6);
+export const audioBabbleVoicesFieldSchema = number().int().min(0).max(4);
+export const audioReverbMixFieldSchema = number().min(0).max(0.6);
+export const audioGapMsFieldSchema = number().int().min(0).max(1500);
+
+/** Partial overrides of the audio-assets `DEFAULT_RENDER_SETTINGS`. */
+export const AudioSettingsSchema = object({
+	digitCount: audioDigitCountFieldSchema.optional(),
+	noiseSnrDb: audioNoiseSnrDbFieldSchema.optional(),
+	babbleGain: audioBabbleGainFieldSchema.optional(),
+	babbleVoices: audioBabbleVoicesFieldSchema.optional(),
+	reverbMix: audioReverbMixFieldSchema.optional(),
+	gapMs: audioGapMsFieldSchema.optional(),
+});
+
+export type IAudioSettings = output<typeof AudioSettingsSchema>;
+
 export const PuzzlePieceScaleSchema = object({
 	min: puzzlePieceScaleFieldSchema
 		.optional()
@@ -695,7 +726,7 @@ export const TrafficFilterActionSchema = z.nativeEnum(TrafficFilterAction);
 // are reused verbatim from the site-wide settings so bounds stay in sync.
 export const TrafficCategoryPolicySchema = object({
 	action: TrafficFilterActionSchema,
-	captchaType: CaptchaTypeSpec.optional(),
+	captchaType: SelectableCaptchaTypeSpec.optional(),
 	powDifficulty: powDifficultyFieldSchema.optional(),
 	solvedImagesCount: imageMaxRoundsFieldSchema.optional(),
 	puzzleTolerance: puzzleToleranceFieldSchema.optional(),
@@ -707,6 +738,7 @@ export const TrafficCategoryPolicySchema = object({
 	// the nested object are themselves optional, so a category can
 	// override, say, just `decoyCount` without restating the rest.
 	puzzle: PuzzleSettingsSchema.optional(),
+	audio: AudioSettingsSchema.optional(),
 	iconOrderTolerance: iconOrderToleranceFieldSchema.optional(),
 	iconOrder: IconOrderSettingsSchema.optional(),
 });
@@ -782,7 +814,7 @@ export const HoneypotSettingsSchema = object({
 export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
 
 export const ClientSettingsSchema = object({
-	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
+	captchaType: SelectableCaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
 	// Maximum ms between user submission and the dapp's /verify call.
 	verifiedTimeout: number()
@@ -855,6 +887,12 @@ export const ClientSettingsSchema = object({
 	// the asset package's defaults. Traffic-filter category policies may
 	// further override any of these on a per-request basis.
 	puzzle: PuzzleSettingsSchema.optional(),
+	audio: AudioSettingsSchema.optional(),
+	// Offers audio as an accessibility alternative from the visual widgets;
+	// the only route to it, since audio is not a selectable type. Off when
+	// absent: the audio path is English-only, so a site has to opt in. Also
+	// needs `captchaTypeFeatureFlags.audio`, which only Prosopo can set.
+	audioAccessibilityEnabled: boolean().optional(),
 	iconOrderTolerance: iconOrderToleranceFieldSchema
 		.optional()
 		.default(iconOrderToleranceDefault),

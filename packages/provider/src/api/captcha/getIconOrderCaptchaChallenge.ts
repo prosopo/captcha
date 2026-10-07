@@ -81,7 +81,7 @@ const issueIconOrderChallenge = async ({
 	);
 
 	return {
-		tolerance: challenge.tolerance,
+		logData: { tolerance: challenge.tolerance },
 		response: {
 			[ApiParams.status]: "ok",
 			[ApiParams.challenge]: challenge.challenge,

@@ -44,6 +44,11 @@ describe("rankCaptchaType", () => {
 		expect(new Set(ranks).size).toBe(ascending.length);
 	});
 
+	it("does not rank audio above unset", () => {
+		expect(rankCaptchaType("audio")).toBe(0);
+		expect(isStricterCaptchaType("audio", undefined)).toBe(false);
+	});
+
 	it("ranks unset and unrecognised values at 0", () => {
 		expect(rankCaptchaType(undefined)).toBe(0);
 		expect(rankCaptchaType("")).toBe(0);

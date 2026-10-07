@@ -170,4 +170,9 @@ export interface ProcaptchaProps {
 	// `switchToImage` asks for that replacement to be an image challenge.
 	// When absent the widget falls back to the manager's own reload behaviour.
 	onReload?: (x?: number, y?: number, options?: ReloadOptions) => void;
+	// Whether to offer "use audio instead"; set by the frictionless wrapper.
+	audioAlternativeAvailable?: boolean;
+	// The wrapper mints a fresh session and mounts the audio widget: the
+	// provider consumed the visual challenge's session when it issued it.
+	onRequestAudioAlternative?: () => void;
 }

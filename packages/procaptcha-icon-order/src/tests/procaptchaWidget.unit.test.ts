@@ -762,6 +762,40 @@ describe("an invalidated session", () => {
 	});
 });
 
+describe("the audio alternative", () => {
+	const onRequestAudioAlternative = vi.fn<() => void>();
+
+	const openChallenge = async (overrides: Partial<ProcaptchaProps>) => {
+		render(props(overrides));
+		await click();
+	};
+
+	test("is not offered unless the site turned it on", async () => {
+		await openChallenge({ onRequestAudioAlternative });
+		expect(mocks.canvasProps.current?.audioAlternative).toBeUndefined();
+	});
+
+	test("hands the canvas the translated offer and the wrapper's handler", async () => {
+		await openChallenge({
+			audioAlternativeAvailable: true,
+			onRequestAudioAlternative,
+		});
+		const offer = mocks.canvasProps.current?.audioAlternative;
+		expect(offer?.label).toBe("WIDGET.AUDIO_ALTERNATIVE");
+		offer?.onRequestAudio();
+		expect(onRequestAudioAlternative).toHaveBeenCalledTimes(1);
+	});
+
+	test("leaves the label empty while the translations load", async () => {
+		mocks.translationsReady.current = false;
+		await openChallenge({
+			audioAlternativeAvailable: true,
+			onRequestAudioAlternative,
+		});
+		expect(mocks.canvasProps.current?.audioAlternative?.label).toBe("");
+	});
+});
+
 describe("destroy", () => {
 	test("disposes the manager so its expiry timers cannot outlive the widget", () => {
 		render(props());
