@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/captcha-severity",
-	"version": "1.2.0",
+	"version": "1.3.0",
 	"description": "Relative severity of the captcha types, and the helpers for picking the strictest when policies compete",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
