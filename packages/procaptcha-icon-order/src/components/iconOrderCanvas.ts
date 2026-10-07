@@ -14,8 +14,6 @@
 
 import type { TranslationKey, Translator } from "@prosopo/locale";
 import {
-	type AudioAlternativeFooterProps,
-	type AudioAlternativeOffer,
 	type ChallengeSurfaceComponent,
 	type ChallengeSurfaceProps,
 	type Component,
@@ -23,7 +21,6 @@ import {
 	applyAttributes,
 	applyStyles,
 	createElement,
-	mountAudioAlternativeFooter,
 	mountChallengeSurface,
 } from "@prosopo/procaptcha-common";
 import type { IconClick, IconOrderEvent, PlacementType } from "@prosopo/types";
@@ -44,8 +41,6 @@ export interface IconOrderCanvasProps {
 	placement?: PlacementType;
 	anchor?: HTMLElement | null;
 	onDismiss?: () => void;
-	/** Renders "use audio instead" below the controls. Absent hides it. */
-	audioAlternative?: AudioAlternativeOffer;
 }
 
 /**
@@ -206,16 +201,6 @@ export const mountIconOrderCanvas = (
 	);
 	surface.content.append(style, panel);
 
-	const audioAlternativeFooterProps = (): AudioAlternativeFooterProps => ({
-		offer: props.audioAlternative,
-		theme: props.theme,
-		width: CONTAINER_WIDTH,
-	});
-	const audioAlternativeFooter = mountAudioAlternativeFooter(
-		panel,
-		audioAlternativeFooterProps(),
-	);
-
 	const createMarker = (): HTMLDivElement =>
 		createElement("div", {
 			style: {
@@ -304,11 +289,7 @@ export const mountIconOrderCanvas = (
 		});
 		renderMarkers();
 
-		applyStyles(controls, {
-			backgroundColor: theme.palette.surface,
-			borderRadius: props.audioAlternative ? "0" : "0 0 20px 20px",
-		});
-		audioAlternativeFooter.update(audioAlternativeFooterProps());
+		applyStyles(controls, { backgroundColor: theme.palette.surface });
 
 		resetButton.textContent = t("WIDGET.ICON_ORDER.RESET", {
 			defaultValue: "Reset",
@@ -454,7 +435,6 @@ export const mountIconOrderCanvas = (
 		},
 		destroy: () => {
 			teardown.run();
-			audioAlternativeFooter.destroy();
 			surface.destroy();
 		},
 	};

@@ -571,11 +571,10 @@ describe("UserSettingsSchema", () => {
 
 	it("persists the captcha type feature flags", () => {
 		const flags = settings({
-			captchaTypeFeatureFlags: { puzzle: false, iconOrder: true, audio: true },
+			captchaTypeFeatureFlags: { puzzle: false, iconOrder: true },
 		}).captchaTypeFeatureFlags;
 		expect(flags.puzzle).toBe(false);
 		expect(flags.iconOrder).toBe(true);
-		expect(flags.audio).toBe(true);
 	});
 
 	it("leaves the captcha type feature flags unset unless configured", () => {

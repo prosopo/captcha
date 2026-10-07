@@ -165,7 +165,6 @@ afterEach(() => {
 	destroy();
 	vi.useRealTimers();
 	vi.restoreAllMocks();
-	vi.unstubAllGlobals();
 });
 
 describe("what it puts on screen", () => {
@@ -228,68 +227,6 @@ describe("what it puts on screen", () => {
 		expect(
 			overlay().querySelector('[data-cy="prosopo-icon-order-frame"]'),
 		).toBeNull();
-	});
-});
-
-describe("the audio accessibility alternative", () => {
-	const audioButton = (): HTMLButtonElement | null =>
-		overlay().querySelector<HTMLButtonElement>(
-			'[data-cy="prosopo-audio-alternative"]',
-		);
-
-	test("is not offered unless the site turned it on", () => {
-		render(props());
-		expect(audioButton()).toBeNull();
-	});
-
-	test("is offered, labelled, when the site turned it on", () => {
-		render(
-			props({
-				audioAlternative: {
-					onRequestAudio: vi.fn<() => void>(),
-					label: "Use audio instead",
-				},
-			}),
-		);
-		expect(audioButton()?.textContent).toBe("Use audio instead");
-	});
-
-	test("asks for audio when pressed, without submitting an answer", () => {
-		// jsdom's click() is untrusted, which the control would otherwise drop.
-		vi.stubGlobal("__PROSOPO_ALLOW_UNTRUSTED_EVENTS__", true);
-		const onRequestAudio = vi.fn<() => void>();
-		render(props({ audioAlternative: { onRequestAudio, label: "Audio" } }));
-		audioButton()?.click();
-		expect(onRequestAudio).toHaveBeenCalledTimes(1);
-		expect(onComplete).not.toHaveBeenCalled();
-	});
-
-	test("takes over the card's rounded corners from the controls", () => {
-		render(props());
-		const controls = submitButton().parentElement;
-		expect(controls?.style.borderRadius).toBe("0 0 20px 20px");
-		render(
-			props({
-				audioAlternative: {
-					onRequestAudio: vi.fn<() => void>(),
-					label: "Audio",
-				},
-			}),
-		);
-		expect(controls?.style.borderRadius).toBe("0");
-	});
-
-	test("goes with the canvas", () => {
-		render(
-			props({
-				audioAlternative: {
-					onRequestAudio: vi.fn<() => void>(),
-					label: "Audio",
-				},
-			}),
-		);
-		destroy();
-		expect(audioButton()).toBeNull();
 	});
 });
 

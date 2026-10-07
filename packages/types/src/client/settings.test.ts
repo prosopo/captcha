@@ -19,7 +19,6 @@ import {
 } from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import {
-	AudioSettingsSchema,
 	ClientSettingsSchema,
 	ContextType,
 	DeviceType,
@@ -30,8 +29,6 @@ import {
 	IPValidationRulesSchema,
 	IconOrderSettingsSchema,
 	SpamFilterRulesSchema,
-	TrafficCategoryPolicySchema,
-	TrafficFilterAction,
 	TrafficFilterSchema,
 	abuseScoreThresholdDefault,
 	captchaTypeDefault,
@@ -195,35 +192,10 @@ describe("ClientSettingsSchema", () => {
 		});
 	});
 
-	it("accepts every selectable captcha type", () => {
+	it("accepts every captcha type", () => {
 		for (const captchaType of Object.values(CaptchaType)) {
-			if (captchaType === CaptchaType.audio) continue;
 			expect(parse({ ...minimal, captchaType }).captchaType).toBe(captchaType);
 		}
-	});
-
-	it("rejects audio as a site's captcha type", () => {
-		expect(
-			ClientSettingsSchema.safeParse({
-				...minimal,
-				captchaType: CaptchaType.audio,
-			}).success,
-		).toBe(false);
-	});
-
-	it("rejects audio as a traffic category's captcha type", () => {
-		expect(
-			TrafficCategoryPolicySchema.safeParse({
-				action: TrafficFilterAction.Challenge,
-				captchaType: CaptchaType.audio,
-			}).success,
-		).toBe(false);
-		expect(
-			TrafficCategoryPolicySchema.safeParse({
-				action: TrafficFilterAction.Challenge,
-				captchaType: CaptchaType.image,
-			}).success,
-		).toBe(true);
 	});
 
 	it("rejects an unknown captcha type", () => {
@@ -806,48 +778,6 @@ describe("ClientSettingsSchema icon-order fields", () => {
 	});
 });
 
-describe("AudioSettingsSchema", () => {
-	it("accepts a partial override without restating the defaults", () => {
-		const parsed = AudioSettingsSchema.parse({ digitCount: 6 });
-		expect(parsed.digitCount).toBe(6);
-		expect(parsed.noiseSnrDb).toBeUndefined();
-	});
-
-	it("bounds the render tunables", () => {
-		expect(() => AudioSettingsSchema.parse({ digitCount: 2 })).toThrow();
-		expect(() => AudioSettingsSchema.parse({ digitCount: 9 })).toThrow();
-		expect(() => AudioSettingsSchema.parse({ noiseSnrDb: 2 })).toThrow();
-		expect(() => AudioSettingsSchema.parse({ babbleGain: 0.7 })).toThrow();
-		expect(() => AudioSettingsSchema.parse({ babbleVoices: 5 })).toThrow();
-		expect(() => AudioSettingsSchema.parse({ reverbMix: 0.7 })).toThrow();
-		expect(() => AudioSettingsSchema.parse({ gapMs: 1501 })).toThrow();
-	});
-});
-
-describe("ClientSettingsSchema audio fields", () => {
-	it("leaves the accessibility alternative unset, which means off", () => {
-		const parsed = parse(minimal);
-		expect(parsed.audioAccessibilityEnabled).toBeUndefined();
-		expect(parsed.audio).toBeUndefined();
-	});
-
-	it("keeps an explicit opt-in", () => {
-		expect(
-			parse({ ...minimal, audioAccessibilityEnabled: true })
-				.audioAccessibilityEnabled,
-		).toBe(true);
-	});
-
-	it("keeps a site-wide render override", () => {
-		const parsed = parse({ ...minimal, audio: { digitCount: 4, gapMs: 400 } });
-		expect(parsed.audio).toEqual({ digitCount: 4, gapMs: 400 });
-	});
-
-	it("rejects a render override outside the field bounds", () => {
-		expect(() => parse({ ...minimal, audio: { digitCount: 12 } })).toThrow();
-	});
-});
-
 describe("captcha type feature flags", () => {
 	it("allows puzzle by default", () => {
 		expect(captchaTypeFeatureFlagDefaults[CaptchaType.puzzle]).toBe(true);
@@ -866,24 +796,6 @@ describe("captcha type feature flags", () => {
 		expect(
 			isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, { iconOrder: true }),
 		).toBe(true);
-	});
-
-	it("keeps audio off unless its flag is true", () => {
-		expect(captchaTypeFeatureFlagDefaults[CaptchaType.audio]).toBe(false);
-		expect(isCaptchaTypeFeatureEnabled(CaptchaType.audio, undefined)).toBe(
-			false,
-		);
-		expect(
-			isCaptchaTypeFeatureEnabled(CaptchaType.audio, { audio: true }),
-		).toBe(true);
-	});
-
-	it("never makes audio a type the frictionless flow can serve", () => {
-		expect(
-			resolveAllowedCaptchaTypes({
-				captchaTypeFeatureFlags: { audio: true },
-			}),
-		).not.toHaveProperty(CaptchaType.audio);
 	});
 
 	it("disallows puzzle only when the flag is false", () => {

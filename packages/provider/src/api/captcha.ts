@@ -24,13 +24,11 @@ import express, {
 import { padResponseMiddleware } from "../utils/tarpitPadding.js";
 import assignDetectorBundle from "./captcha/assignDetectorBundle.js";
 import checkSpamEmail from "./captcha/checkSpamEmail.js";
-import getAudioCaptchaChallenge from "./captcha/getAudioCaptchaChallenge.js";
 import getFrictionlessCaptchaChallenge from "./captcha/getFrictionlessCaptchaChallenge.js";
 import getIconOrderCaptchaChallenge from "./captcha/getIconOrderCaptchaChallenge.js";
 import getImageCaptchaChallenge from "./captcha/getImageCaptchaChallenge.js";
 import getPoWCaptchaChallenge from "./captcha/getPoWCaptchaChallenge.js";
 import getPuzzleCaptchaChallenge from "./captcha/getPuzzleCaptchaChallenge.js";
-import submitAudioCaptchaSolution from "./captcha/submitAudioCaptchaSolution.js";
 import submitIconOrderCaptchaSolution from "./captcha/submitIconOrderCaptchaSolution.js";
 import submitImageCaptchaSolution from "./captcha/submitImageCaptchaSolution.js";
 import submitPoWCaptchaSolution from "./captcha/submitPoWCaptchaSolution.js";
@@ -144,16 +142,6 @@ export function prosopoRouter(env: ProviderEnvironment): Router {
 	router.post(
 		ClientApiPaths.SubmitPuzzleCaptchaSolution,
 		asyncHandler(submitPuzzleCaptchaSolution(env)),
-	);
-
-	router.post(
-		ClientApiPaths.GetAudioCaptchaChallenge,
-		asyncHandler(getAudioCaptchaChallenge(env, userAccessRulesStorage)),
-	);
-
-	router.post(
-		ClientApiPaths.SubmitAudioCaptchaSolution,
-		asyncHandler(submitAudioCaptchaSolution(env)),
 	);
 
 	router.post(

@@ -12,10 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type {
-	AudioAlternativeOffer,
-	Component,
-} from "@prosopo/procaptcha-common";
+import type { Component } from "@prosopo/procaptcha-common";
 import { type ImageSelection, InputMethod } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -33,7 +30,6 @@ const onCancel = vi.fn<() => void>();
 const onClick = vi.fn<(hash: string, x?: number, y?: number) => void>();
 const onNext = vi.fn<() => void>();
 const onReload = vi.fn<() => void>();
-const onRequestAudio = vi.fn<() => void>();
 
 const twoRoundChallenge = () =>
 	challengeResponse({
@@ -49,7 +45,6 @@ const props = (
 		index?: number;
 		solutions?: ImageSelection[][];
 		themeColor?: "light" | "dark";
-		audioAlternative?: AudioAlternativeOffer;
 	} = {},
 ): CaptchaComponentProps => ({
 	challenge: overrides.challenge ?? challengeResponse(),
@@ -62,7 +57,6 @@ const props = (
 	onReload,
 	themeColor: overrides.themeColor ?? "light",
 	translator: translator(),
-	audioAlternative: overrides.audioAlternative,
 });
 
 const render = (overrides: Parameters<typeof props>[0] = {}): void => {
@@ -242,61 +236,6 @@ describe("theming", () => {
 		// label colour rather than in a border.
 		render({ themeColor: "dark" });
 		expect(buttonLabelled("WIDGET.CANCEL").style.color).toBe(
-			asRgb(darkTheme.palette.primary.main),
-		);
-	});
-});
-
-describe("the audio alternative", () => {
-	const AUDIO_ALTERNATIVE = '[data-cy="prosopo-audio-alternative"]';
-	const offer: AudioAlternativeOffer = {
-		onRequestAudio,
-		label: "Use audio instead",
-	};
-
-	const audioControl = (): HTMLElement | null =>
-		mounted.container.querySelector<HTMLElement>(AUDIO_ALTERNATIVE);
-
-	test("is absent when the site has not offered it", () => {
-		render();
-		expect(audioControl()).toBeNull();
-	});
-
-	test("is rendered with its label when offered", () => {
-		render({ audioAlternative: offer });
-		expect(audioControl()?.textContent).toBe("Use audio instead");
-	});
-
-	test("asks for audio when pressed", () => {
-		render({ audioAlternative: offer });
-		const control = audioControl();
-		if (!control) throw new Error("expected the audio alternative");
-		fire(control, "click");
-		expect(onRequestAudio).toHaveBeenCalledTimes(1);
-		expect(onReload).not.toHaveBeenCalled();
-	});
-
-	test("sits below the action row, not inside it", () => {
-		render({ audioAlternative: offer });
-		const control = audioControl();
-		const cancel = buttonLabelled("WIDGET.CANCEL");
-		if (!control) throw new Error("expected the audio alternative");
-		expect(
-			cancel.compareDocumentPosition(control) &
-				Node.DOCUMENT_POSITION_FOLLOWING,
-		).toBeTruthy();
-		expect(control.closest("div")?.contains(cancel)).toBe(false);
-	});
-
-	test("goes away when a later render withdraws the offer", () => {
-		render({ audioAlternative: offer });
-		render();
-		expect(audioControl()).toBeNull();
-	});
-
-	test("follows the theme", () => {
-		render({ audioAlternative: offer, themeColor: "dark" });
-		expect(audioControl()?.style.color).toBe(
 			asRgb(darkTheme.palette.primary.main),
 		);
 	});

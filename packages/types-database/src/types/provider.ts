@@ -15,8 +15,6 @@
 import type { AllKeys } from "@prosopo/common";
 import { translationKeys } from "@prosopo/locale";
 import {
-	type AudioCaptchaStored,
-	type AudioEvent,
 	CaptchaLabel,
 	CaptchaType,
 	type ClientContextEntropy,
@@ -172,7 +170,6 @@ export const ClientMetaDataRecordSchemaObj = {
 export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
 export type PuzzleCaptchaRecord = mongoose.Document & PuzzleCaptchaStored;
-export type AudioCaptchaRecord = mongoose.Document & AudioCaptchaStored;
 
 export type IconOrderCaptchaRecord = mongoose.Document & IconOrderCaptchaStored;
 
@@ -571,28 +568,8 @@ const indexInteractiveCaptchaRecord = <T>(schema: Schema<T>): void => {
 	);
 };
 
-export const AudioCaptchaRecordSchema = new Schema<AudioCaptchaRecord>({
-	...interactiveCaptchaRecordFields,
-	answer: { type: String, required: true },
-	submittedAnswer: { type: String, required: false },
-	replays: { type: Number, required: false },
-	audioEvents: {
-		type: [
-			new Schema<AudioEvent>(
-				{
-					kind: { type: String, required: true },
-					t: { type: Number, required: true },
-				},
-				{ _id: false },
-			),
-		],
-		required: false,
-	},
-});
-
 indexInteractiveCaptchaRecord(PuzzleCaptchaRecordSchema);
 indexInteractiveCaptchaRecord(IconOrderCaptchaRecordSchema);
-indexInteractiveCaptchaRecord(AudioCaptchaRecordSchema);
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -1107,7 +1084,6 @@ export const DecisionMachineArtifactRecordSchema =
 				CaptchaType.image,
 				CaptchaType.puzzle,
 				CaptchaType.iconOrder,
-				CaptchaType.audio,
 			],
 			required: false,
 		},
@@ -1479,9 +1455,6 @@ export interface IProviderDatabase extends IDatabase {
 		challenge: PoWChallengeId,
 	): Promise<boolean>;
 
-	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
-	markAudioCaptchaRecordChecked(challenge: PoWChallengeId): Promise<boolean>;
-
 	markDappUserPoWCommitmentsStored(
 		challengeIds: string[],
 		asOfTimestamp?: Date,
@@ -1580,18 +1553,6 @@ export interface IProviderDatabase extends IDatabase {
 		updates: Partial<PuzzleCaptchaRecord>,
 	): Promise<void>;
 
-	storeAudioCaptchaRecord(
-		challenge: PoWChallengeId,
-		components: PoWChallengeComponents,
-		answer: string,
-		providerSignature: string,
-		ipAddress: CompositeIpAddress,
-		headers: RequestHeaders,
-		ja4: string,
-		sessionId?: string,
-		ipInfo?: IPInfoResponse,
-	): Promise<void>;
-
 	storeIconOrderCaptchaRecord(
 		challenge: PoWChallengeId,
 		components: PoWChallengeComponents,
@@ -1605,20 +1566,6 @@ export interface IProviderDatabase extends IDatabase {
 		ipInfo?: IPInfoResponse,
 	): Promise<void>;
 
-	getAudioCaptchaRecordByChallenge(
-		challenge: string,
-	): Promise<AudioCaptchaRecord | null>;
-
-	updateAudioCaptchaRecordResult(
-		challenge: PoWChallengeId,
-		result: CaptchaResult,
-		serverChecked: boolean,
-		userSubmitted: boolean,
-		userSignature?: string,
-		coords?: [number, number][][],
-		lastUpdatedTimestamp?: Date,
-	): Promise<void>;
-
 	getIconOrderCaptchaRecordByChallenge(
 		challenge: string,
 	): Promise<IconOrderCaptchaRecord | null>;
@@ -1630,9 +1577,6 @@ export interface IProviderDatabase extends IDatabase {
 	 */
 	claimIconOrderCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
 
-	/** Same claim contract as {@link claimIconOrderCaptchaSubmission}. */
-	claimAudioCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
-
 	updateIconOrderCaptchaRecordResult(
 		challenge: PoWChallengeId,
 		result: CaptchaResult,
@@ -1641,11 +1585,6 @@ export interface IProviderDatabase extends IDatabase {
 		userSignature?: string,
 		coords?: [number, number][][],
 		lastUpdatedTimestamp?: Date,
-	): Promise<void>;
-
-	updateAudioCaptchaRecord(
-		challenge: PoWChallengeId,
-		updates: Partial<AudioCaptchaRecord>,
 	): Promise<void>;
 
 	updateIconOrderCaptchaRecord(

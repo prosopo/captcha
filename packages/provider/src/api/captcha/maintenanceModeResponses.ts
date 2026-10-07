@@ -17,7 +17,6 @@ import {
 	ApiParams,
 	type CaptchaResponseBody,
 	type CaptchaType,
-	type GetAudioCaptchaResponse,
 	type GetFrictionlessCaptchaResponse,
 	type GetIconOrderCaptchaResponse,
 	type GetPowCaptchaResponse,
@@ -26,10 +25,6 @@ import {
 	type PoWChallengeId,
 	type VerificationResponse,
 } from "@prosopo/types";
-import {
-	renderAudioClip,
-	resolveAudioRenderSettings,
-} from "../../tasks/audio/audioRenderer.js";
 import { renderIconOrderImages } from "../../tasks/iconOrder/iconOrderRenderer.js";
 import { renderPuzzleImages } from "../../tasks/puzzle/puzzleRenderer.js";
 
@@ -137,26 +132,6 @@ export const buildPuzzleMaintenanceResponse = async (
 		[ApiParams.pieceSize]: images.pieceSize,
 		[ApiParams.originX]: 60,
 		[ApiParams.originY]: 100,
-		[ApiParams.timestamp]: timestamp.toString(),
-		[ApiParams.signature]: {
-			[ApiParams.provider]: { [ApiParams.challenge]: "" },
-		},
-	};
-};
-
-// A real clip so the widget plays normally; the answer is discarded because
-// maintenance mode accepts every submission.
-export const buildAudioMaintenanceResponse = async (
-	user: string,
-	dapp: string,
-): Promise<GetAudioCaptchaResponse> => {
-	const timestamp = Date.now();
-	const rendered = renderAudioClip(resolveAudioRenderSettings());
-	return {
-		[ApiParams.status]: "ok",
-		[ApiParams.challenge]: buildChallenge(user, dapp),
-		[ApiParams.clip]: rendered.clip,
-		[ApiParams.characterCount]: rendered.characterCount,
 		[ApiParams.timestamp]: timestamp.toString(),
 		[ApiParams.signature]: {
 			[ApiParams.provider]: { [ApiParams.challenge]: "" },

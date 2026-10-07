@@ -30,9 +30,6 @@
 			"path": "../api-route"
 		},
 		{
-			"path": "../audio-assets"
-		},
-		{
 			"path": "../captcha-severity"
 		},
 		{

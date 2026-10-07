@@ -361,29 +361,4 @@ describe("ProviderDatabase.countCommitmentsByNormalisedEmail", () => {
 			await db.countCommitmentsByNormalisedEmail("dapp-A", "alice@gmail.com"),
 		).toBe(1);
 	});
-
-	it("counts verified audio records towards the per-email limit", async () => {
-		await db.getTables().audiocaptcha.create({
-			challenge: "1___u1___dapp-B___audio" as PoWChallengeId,
-			userAccount: "u1",
-			dappAccount: "dapp-B",
-			requestedAtTimestamp: new Date(),
-			ipAddress: ipv4Composite(1n),
-			headers: { host: "example.com" },
-			ja4: "j",
-			result: { status: CaptchaStatus.approved },
-			userSubmitted: true,
-			serverChecked: true,
-			answer: "12345",
-			providerSignature: "sig",
-			metadata: {
-				email: "alice@gmail.com",
-				emailNormalised: "alice@gmail.com",
-			},
-		});
-
-		expect(
-			await db.countCommitmentsByNormalisedEmail("dapp-B", "alice@gmail.com"),
-		).toBe(1);
-	});
 });

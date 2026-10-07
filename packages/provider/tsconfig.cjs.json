@@ -21,9 +21,6 @@
 			"path": "../api-route/tsconfig.cjs.json"
 		},
 		{
-			"path": "../audio-assets/tsconfig.cjs.json"
-		},
-		{
 			"path": "../api/tsconfig.cjs.json"
 		},
 		{

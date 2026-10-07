@@ -35,7 +35,6 @@ export * from "./state/managerLifecycle.js";
 export * from "./state/spentSession.js";
 export * from "./dom/lazyMount.js";
 export * from "./components/reload.js";
-export * from "./components/audioAlternative.js";
 export * from "./components/checkbox.js";
 export * from "./components/challengeSurface.js";
 export * from "./components/honeypot.js";

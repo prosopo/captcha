@@ -31,10 +31,6 @@ import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
-import {
-	isAudioAlternativeEnabled,
-	offersAudioAlternative,
-} from "../../../tasks/audioAlternative.js";
 import { coerceToEnabledCaptchaType } from "../../../tasks/captchaTypeSelection.js";
 import { Tasks } from "../../../tasks/index.js";
 import {
@@ -249,12 +245,6 @@ export default (
 				);
 			}
 
-			const audioAlternativeEnabled = isAudioAlternativeEnabled(
-				clientRecord.settings,
-			);
-			tasks.frictionlessManager.setAudioAlternativeEnabled(
-				audioAlternativeEnabled,
-			);
 			const allowedCaptchaTypes = resolveSiteAllowedCaptchaTypes(
 				clientRecord.settings,
 			);
@@ -334,8 +324,7 @@ export default (
 				const cachedCaptchaType = dedup.captchaType as
 					| CaptchaType.image
 					| CaptchaType.pow
-					| CaptchaType.puzzle
-					| CaptchaType.iconOrder;
+					| CaptchaType.puzzle;
 				const dedupRouted = normalizedIp
 					? await tasks.frictionlessManager.applyRoutingMachine(
 							{
@@ -539,15 +528,10 @@ export default (
 						[ApiParams.captchaType]: dedup.captchaType as
 							| CaptchaType.image
 							| CaptchaType.pow
-							| CaptchaType.puzzle
-							| CaptchaType.iconOrder,
+							| CaptchaType.puzzle,
 						[ApiParams.sessionId]: dedup.sessionId,
 						[ApiParams.status]: "ok",
 						dns_url: buildDnsEventUrl(dedup.sessionId),
-						...(offersAudioAlternative(
-							dedup.captchaType,
-							audioAlternativeEnabled,
-						) && { audioAlternativeAvailable: true }),
 					});
 				}
 			}

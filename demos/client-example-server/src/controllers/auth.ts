@@ -83,9 +83,6 @@ const getPairAndSecretForSiteKey = (
 		CaptchaType.image,
 		CaptchaType.frictionless,
 		CaptchaType.puzzle,
-		// Not a site type: the seed name of the audio demos' image site.
-		CaptchaType.audio,
-		CaptchaType.iconOrder,
 	]) {
 		const newSecret = `${baseSecret}//${captchaType}`;
 		pair = getPair(newSecret);

@@ -29,7 +29,6 @@ import {
 } from "../client/settings.js";
 import type { ModeEnum } from "../config/mode.js";
 import type {
-	AudioEvent,
 	IconOrderEvent,
 	PuzzleEvent,
 	RequestHeaders,
@@ -139,7 +138,6 @@ export type DecisionMachineInput = {
 		| CaptchaType.pow
 		| CaptchaType.image
 		| CaptchaType.puzzle
-		| CaptchaType.audio
 		| CaptchaType.iconOrder;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
@@ -183,12 +181,8 @@ export type DecisionMachineInput = {
 	coords?: [number, number][][];
 	// Puzzle-only: per-event trail of the drag from origin to target,
 	// captured client-side and persisted on the puzzle captcha record.
-	// Always undefined on pow / image / audio inputs.
+	// Always undefined on pow / image inputs.
 	puzzleEvents?: PuzzleEvent[];
-	// Audio-only: playback and typing events, persisted on the audio record.
-	audioEvents?: AudioEvent[];
-	// Audio-only: how many times the clip was played before submitting.
-	audioReplays?: number;
 	// Icon-order-only equivalent of `puzzleEvents`.
 	iconOrderEvents?: IconOrderEvent[];
 	// Raw per-connection TCP-handshake signals persisted on the Session
@@ -248,7 +242,6 @@ export type DecisionMachineCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
 	| CaptchaType.puzzle
-	| CaptchaType.audio
 	| CaptchaType.iconOrder;
 
 // This is the API configuration type (used for uploads/API calls)
@@ -310,7 +303,6 @@ export type CounterCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
 	| CaptchaType.puzzle
-	| CaptchaType.audio
 	| CaptchaType.iconOrder
 	| typeof COUNTER_CAPTCHA_ANY;
 
@@ -327,7 +319,6 @@ export const CounterSpecSchema = z.object({
 		z.literal(CaptchaType.pow),
 		z.literal(CaptchaType.image),
 		z.literal(CaptchaType.puzzle),
-		z.literal(CaptchaType.audio),
 		z.literal(CaptchaType.iconOrder),
 		z.literal(COUNTER_CAPTCHA_ANY),
 	]),
@@ -509,7 +500,6 @@ export interface RoutingMachineOutput {
 }
 
 export const RoutingMachineOutputSchema = z.object({
-	// No `audio`: it is only reachable as the accessibility alternative.
 	captchaType: z.union([
 		z.literal(CaptchaType.pow),
 		z.literal(CaptchaType.image),

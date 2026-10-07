@@ -78,7 +78,6 @@ describe("ApiRegisterSiteKeyEndpoint", () => {
 			puzzleTolerance: 15,
 			iconOrderTolerance: iconOrderToleranceDefault,
 			puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
-			audioAccessibilityEnabled: false,
 			disallowWebView: false,
 		};
 

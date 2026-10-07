@@ -146,9 +146,6 @@ export default defineConfig(({ command, mode }) => {
 			"import.meta.env.PROSOPO_SITE_KEY_PUZZLE": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY_PUZZLE,
 			),
-			"import.meta.env.PROSOPO_SITE_KEY_AUDIO": JSON.stringify(
-				process.env.PROSOPO_SITE_KEY_AUDIO,
-			),
 			"import.meta.env.PROSOPO_SITE_KEY_ICONORDER": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY_ICONORDER,
 			),
@@ -253,16 +250,6 @@ export default defineConfig(({ command, mode }) => {
 					"invisible-puzzle-explicit": path.resolve(
 						__dirname,
 						"src/invisible-puzzle-explicit.html",
-					),
-					"audio-implicit": path.resolve(__dirname, "src/audio-implicit.html"),
-					"audio-explicit": path.resolve(__dirname, "src/audio-explicit.html"),
-					"invisible-audio-implicit": path.resolve(
-						__dirname,
-						"src/invisible-audio-implicit.html",
-					),
-					"invisible-audio-explicit": path.resolve(
-						__dirname,
-						"src/invisible-audio-explicit.html",
 					),
 					"icon-order-implicit": path.resolve(
 						__dirname,

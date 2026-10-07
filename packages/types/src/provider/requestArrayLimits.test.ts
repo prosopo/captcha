@@ -17,7 +17,6 @@ import {
 	CaptchaRequestBody,
 	CaptchaSolutionBody,
 	MAX_ICON_CLICKS,
-	SubmitAudioCaptchaSolutionBody,
 	SubmitIconOrderCaptchaSolutionBody,
 	SubmitPuzzleCaptchaSolutionBody,
 } from "./api.js";
@@ -42,15 +41,6 @@ const iconOrderBody = (
 	challenge: `1700000000000___${USER}___${DAPP}___1`,
 	clicks,
 	iconOrderEvents,
-	signature: { user: { timestamp: "0x01" }, provider: { challenge: "0x02" } },
-	user: USER,
-	dapp: DAPP,
-});
-
-const audioBody = (audioEvents: unknown[]): object => ({
-	challenge: `1700000000000___${USER}___${DAPP}___1`,
-	answer: "12345",
-	audioEvents,
 	signature: { user: { timestamp: "0x01" }, provider: { challenge: "0x02" } },
 	user: USER,
 	dapp: DAPP,
@@ -115,27 +105,6 @@ describe("request array caps", () => {
 		);
 		expect(result.success).toBe(false);
 		expect(issues(result)[0]?.path).toEqual(["iconOrderEvents"]);
-	});
-
-	it("accepts audioEvents up to 512 and rejects more", () => {
-		const audioEvent = { kind: "key", t: 1 };
-		const ok = Array.from({ length: 512 }, () => audioEvent);
-		expect(
-			SubmitAudioCaptchaSolutionBody.safeParse(audioBody(ok)).success,
-		).toBe(true);
-		const result = SubmitAudioCaptchaSolutionBody.safeParse(
-			audioBody([...ok, audioEvent]),
-		);
-		expect(result.success).toBe(false);
-		expect(issues(result)[0]?.path).toEqual(["audioEvents"]);
-	});
-
-	it("rejects a huge array of invalid audioEvents with one issue, not one per element", () => {
-		const result = SubmitAudioCaptchaSolutionBody.safeParse(
-			audioBody(Array.from({ length: 150_000 }, () => null)),
-		);
-		expect(result.success).toBe(false);
-		expect(issues(result)).toHaveLength(1);
 	});
 
 	it("caps icon-order clicks", () => {

@@ -150,7 +150,7 @@ const issuePuzzleChallenge = async ({
 		});
 
 	return {
-		logData: { tolerance: challenge.tolerance },
+		tolerance: challenge.tolerance,
 		response: {
 			[ApiParams.status]: "ok",
 			[ApiParams.challenge]: challenge.challenge,

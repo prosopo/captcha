@@ -25,7 +25,6 @@ import {
 	PROCAPTCHA_EXECUTE_EVENT,
 	type ProcaptchaStateHandle,
 	Teardown,
-	audioAlternativeOffer,
 	buildUpdateState,
 	createElement,
 	createProcaptchaState,
@@ -195,10 +194,6 @@ export const mountProcaptchaIconOrderWidget = (
 		placement: config.placement,
 		anchor: props.container,
 		onDismiss: handleDismiss,
-		audioAlternative: audioAlternativeOffer(
-			props,
-			translator.isReady() ? translator.t("WIDGET.AUDIO_ALTERNATIVE") : "",
-		),
 	});
 
 	const runErrorEffect = () => {

@@ -17,7 +17,7 @@ import type { TranslationKey } from "@prosopo/locale";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	ApiParams,
-	CaptchaType,
+	type CaptchaType,
 	type CompositeIpAddress,
 	type EnrichedDnsEvent,
 	type IPInfoResponse,
@@ -53,10 +53,6 @@ import {
 	normalizeHeadersForMatching,
 } from "../api/blacklistRequestInspector.js";
 import { getIpAddressFromComposite } from "../compositeIpAddress.js";
-import {
-	isAudioAlternativeAllowed,
-	isAudioAlternativeEnabled,
-} from "./audioAlternative.js";
 import { getDetectorBundlePool } from "./detection/bundlePool.js";
 import type { BehavioralDataResult } from "./detection/decodeBehavior.js";
 import type { SimdReadingsResult } from "./detection/decodeSimd.js";
@@ -461,17 +457,13 @@ export class CaptchaManager {
 		}));
 
 		// Ahead of the session lookup so a session minted before the type was
-		// switched off is refused rather than consumed and served. Audio also
-		// needs the site owner's switch, which is checked here for the same
-		// reason: refusing it later would spend the visual session it trades.
-		const typeEnabled =
-			requestedCaptchaType === CaptchaType.audio
-				? isAudioAlternativeEnabled(clientSettings.settings)
-				: isCaptchaTypeFeatureEnabled(
-						requestedCaptchaType,
-						clientSettings.settings?.captchaTypeFeatureFlags,
-					);
-		if (!typeEnabled) {
+		// switched off is refused rather than consumed and served.
+		if (
+			!isCaptchaTypeFeatureEnabled(
+				requestedCaptchaType,
+				clientSettings.settings?.captchaTypeFeatureFlags,
+			)
+		) {
 			this.logger.warn(() => ({
 				msg: "Captcha type is switched off for this site",
 				data: {
@@ -710,14 +702,7 @@ export class CaptchaManager {
 			}
 
 			// Check the captcha type of the session is the same as the requested captcha type
-			if (
-				sessionRecord.captchaType !== requestedCaptchaType &&
-				!isAudioAlternativeAllowed(
-					requestedCaptchaType,
-					sessionRecord.captchaType,
-					clientSettings.settings,
-				)
-			) {
+			if (sessionRecord.captchaType !== requestedCaptchaType) {
 				this.logger.warn(() => ({
 					msg: "Session captcha type does not match requested type",
 					data: {
@@ -749,19 +734,6 @@ export class CaptchaManager {
 		}
 
 		// No Session ID
-
-		// Audio is only served in exchange for a visual session.
-		if (requestedCaptchaType === CaptchaType.audio) {
-			this.logger.warn(() => ({
-				msg: "Sessionless audio captcha request rejected",
-				data: { account: clientSettings.account },
-			}));
-			return {
-				valid: false,
-				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
-				type: requestedCaptchaType,
-			};
-		}
 
 		// Sessionless request: policy captchaType (if pinned by an active
 		// restrict rule) still takes precedence over the client's configured

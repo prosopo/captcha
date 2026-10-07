@@ -105,9 +105,4 @@ export enum ApiParams {
 	imageSwitchAvailable = "imageSwitchAvailable",
 	honeypot = "honeypot",
 	fingerprintProof = "fingerprintProof",
-	clip = "clip",
-	answer = "answer",
-	audioEvents = "audioEvents",
-	replays = "replays",
-	characterCount = "characterCount",
 }

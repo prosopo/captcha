@@ -70,12 +70,11 @@ type ChallengeResponse = ApiResponse & { challenge: PoWChallengeId };
 
 export interface IssuedChallenge<TResponse> {
 	response: TResponse;
-	/** Non-secret challenge parameters for the issuance log line. */
-	logData: Readonly<Record<string, number>>;
+	tolerance: number;
 }
 
 export interface InteractiveChallengeSpec<TResponse extends ChallengeResponse> {
-	captchaType: CaptchaType.puzzle | CaptchaType.iconOrder | CaptchaType.audio;
+	captchaType: CaptchaType.puzzle | CaptchaType.iconOrder;
 	/** Lower-case type name used in log messages. */
 	label: string;
 	manager: (tasks: Tasks) => CaptchaManager;
@@ -273,7 +272,7 @@ export const interactiveChallengeHandler =
 					});
 			}
 
-			const { response, logData } = await spec.issue({
+			const { response, tolerance } = await spec.issue({
 				tasks,
 				user,
 				dapp,
@@ -298,7 +297,7 @@ export const interactiveChallengeHandler =
 				data: {
 					captchaType,
 					challenge: response.challenge,
-					...logData,
+					tolerance,
 					user,
 					dapp,
 					session: sessionId,
