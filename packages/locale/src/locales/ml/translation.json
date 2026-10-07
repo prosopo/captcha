@@ -402,7 +402,28 @@
 			"REFRESH": "മറ്റൊരു പസിൽ",
 			"SWITCH_TO_IMAGE": "ചിത്ര ചലഞ്ചിലേക്ക് മാറുക",
 			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "നിങ്ങൾക്ക് ചിത്ര ചലഞ്ചിലേക്കും മാറാം."
-		}
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "ഐക്കൺ ക്രമം വെല്ലുവിളി",
+			"SELECT": "ഈ ക്രമത്തിൽ തിരഞ്ഞെടുക്കുക",
+			"RETRY": "ഏതാണ്ട് ശരിയായി — വീണ്ടും ശ്രമിക്കുക",
+			"LEGEND_ALT": "തിരഞ്ഞെടുക്കേണ്ട ഐക്കണുകൾ, ക്രമത്തിൽ",
+			"RESET": "പുനഃസജ്ജമാക്കുക",
+			"CHECKING": "പരിശോധിക്കുന്നു…",
+			"SUBMIT": "ശരി"
+		},
+		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
+		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
+		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
+		"AUDIO_PLAY": "Play",
+		"AUDIO_REPLAY": "Play again",
+		"AUDIO_PLAYING": "Playing",
+		"AUDIO_FINISHED": "Playback finished",
+		"AUDIO_PLAYBACK_FAILED": "Audio could not be played. Check your device volume and try again.",
+		"AUDIO_INCORRECT": "That wasn't right. Here's a new one.",
+		"AUDIO_SUBMIT": "Verify",
+		"AUDIO_CHECKING": "Checking",
+		"AUDIO_ALTERNATIVE": "Use audio instead"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Nahimong pakyas ang pag-encode sa dili balido nga address",

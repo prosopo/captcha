@@ -14,9 +14,15 @@
 
 import type { RedisWriteQueue } from "@prosopo/database";
 import { type Logger, getLogger } from "@prosopo/logger";
-import { IpAddressType, type KeyringPair, type Session } from "@prosopo/types";
+import {
+	IpAddressType,
+	type KeyringPair,
+	type Session,
+	iconOrderToleranceDefault,
+} from "@prosopo/types";
 import {
 	CaptchaType,
+	type ICaptchaTypeFeatureFlags,
 	type IUserSettings,
 	ResultReason,
 	Tier,
@@ -45,9 +51,10 @@ const defaultUserSettings: IUserSettings = {
 		frictionlessPuzzleThreshold: 0.8,
 		frictionlessImageThreshold: 1,
 	},
-	frictionlessTypes: { image: true, puzzle: true },
+	frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
 	domains: [],
 	captchaType: CaptchaType.frictionless,
+	audioAccessibilityEnabled: false,
 	powDifficulty: 4,
 	imageThreshold: 0.8,
 	imageMaxRounds: 3,
@@ -55,6 +62,7 @@ const defaultUserSettings: IUserSettings = {
 	verifiedTimeout: 120000,
 	solutionTimeout: 60000,
 	puzzleTolerance: 15,
+	iconOrderTolerance: iconOrderToleranceDefault,
 	puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 	disallowWebView: false,
 };
@@ -513,6 +521,68 @@ describe("CaptchaManager", () => {
 				);
 
 				expect(result).toEqual({ valid: true, type: CaptchaType.puzzle });
+			});
+
+			describe("icon-order", () => {
+				const iconOrderSite = (
+					captchaTypeFeatureFlags?: ICaptchaTypeFeatureFlags,
+				): Pick<ClientRecord, "account" | "tier" | "settings"> => ({
+					account: "account",
+					tier: Tier.Free,
+					settings: {
+						...defaultUserSettings,
+						captchaType: CaptchaType.iconOrder,
+						...(captchaTypeFeatureFlags && { captchaTypeFeatureFlags }),
+					},
+				});
+
+				it("refuses a sessionless icon-order request on a site without the flag", async () => {
+					const result = await captchaManager.isValidRequest(
+						iconOrderSite(),
+						CaptchaType.iconOrder,
+						mockEnv,
+					);
+
+					expect(result).toEqual({
+						valid: false,
+						reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+						type: CaptchaType.iconOrder,
+					});
+				});
+
+				it("refuses an icon-order session on a site without the flag, without consuming it", async () => {
+					vi.mocked(db.checkAndRemoveSession).mockResolvedValue({
+						sessionId: "sessionId",
+						captchaType: CaptchaType.iconOrder,
+					} as Session);
+
+					const result = await captchaManager.isValidRequest(
+						iconOrderSite(),
+						CaptchaType.iconOrder,
+						mockEnv,
+						"sessionId",
+					);
+
+					expect(result).toEqual({
+						valid: false,
+						reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+						type: CaptchaType.iconOrder,
+					});
+					expect(db.checkAndRemoveSession).not.toHaveBeenCalled();
+				});
+
+				it("serves icon-order once Prosopo turns the flag on", async () => {
+					const result = await captchaManager.isValidRequest(
+						iconOrderSite({ iconOrder: true }),
+						CaptchaType.iconOrder,
+						mockEnv,
+					);
+
+					expect(result).toEqual({
+						valid: true,
+						type: CaptchaType.iconOrder,
+					});
+				});
 			});
 		});
 
@@ -1648,6 +1718,165 @@ describe("CaptchaManager", () => {
 			});
 		});
 	});
+	describe("isValidRequest — audio accessibility alternative", () => {
+		const settingsWith = (
+			audioAccessibilityEnabled: boolean,
+			audioFeatureFlag = true,
+		): ClientRecord["settings"] => ({
+			...defaultUserSettings,
+			captchaType: CaptchaType.frictionless,
+			audioAccessibilityEnabled,
+			captchaTypeFeatureFlags: { audio: audioFeatureFlag },
+		});
+
+		const sessionOf = (captchaType: CaptchaType): Session =>
+			({ sessionId: "sessionId", captchaType }) as Session;
+
+		it("serves audio against a visual session when the site has the alternative on", async () => {
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(
+				sessionOf(CaptchaType.image),
+			);
+
+			const result = await captchaManager.isValidRequest(
+				{ account: "account", tier: Tier.Free, settings: settingsWith(true) },
+				CaptchaType.audio,
+				mockEnv,
+				"sessionId",
+			);
+
+			expect(result).toEqual({
+				valid: true,
+				type: CaptchaType.audio,
+				sessionId: "sessionId",
+			});
+		});
+
+		it("serves audio against an icon-order session too", async () => {
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(
+				sessionOf(CaptchaType.iconOrder),
+			);
+
+			const result = await captchaManager.isValidRequest(
+				{ account: "account", tier: Tier.Free, settings: settingsWith(true) },
+				CaptchaType.audio,
+				mockEnv,
+				"sessionId",
+			);
+
+			expect(result.valid).toBe(true);
+		});
+
+		it("refuses audio, without spending the session, when the site has the alternative off", async () => {
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(
+				sessionOf(CaptchaType.image),
+			);
+
+			const result = await captchaManager.isValidRequest(
+				{ account: "account", tier: Tier.Free, settings: settingsWith(false) },
+				CaptchaType.audio,
+				mockEnv,
+				"sessionId",
+			);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: CaptchaType.audio,
+			});
+			expect(db.checkAndRemoveSession).not.toHaveBeenCalled();
+		});
+
+		it("refuses audio, without spending the session, on a site without the audio feature flag", async () => {
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(
+				sessionOf(CaptchaType.image),
+			);
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: settingsWith(true, false),
+				},
+				CaptchaType.audio,
+				mockEnv,
+				"sessionId",
+			);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: CaptchaType.audio,
+			});
+			expect(db.checkAndRemoveSession).not.toHaveBeenCalled();
+		});
+
+		it("keeps serving the visual types on a site without the audio feature flag", async () => {
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(
+				sessionOf(CaptchaType.image),
+			);
+
+			const result = await captchaManager.isValidRequest(
+				{
+					account: "account",
+					tier: Tier.Free,
+					settings: settingsWith(true, false),
+				},
+				CaptchaType.image,
+				mockEnv,
+				"sessionId",
+			);
+
+			expect(result.valid).toBe(true);
+		});
+
+		it("refuses audio against a PoW session, which offers no alternative", async () => {
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(
+				sessionOf(CaptchaType.pow),
+			);
+
+			const result = await captchaManager.isValidRequest(
+				{ account: "account", tier: Tier.Free, settings: settingsWith(true) },
+				CaptchaType.audio,
+				mockEnv,
+				"sessionId",
+			);
+
+			expect(result.valid).toBe(false);
+			expect(result.reason).toBe(ResultReason.INCORRECT_CAPTCHA_TYPE);
+		});
+
+		it("does not let the alternative widen any other type mismatch", async () => {
+			vi.mocked(db.checkAndRemoveSession).mockResolvedValue(
+				sessionOf(CaptchaType.image),
+			);
+
+			const result = await captchaManager.isValidRequest(
+				{ account: "account", tier: Tier.Free, settings: settingsWith(true) },
+				CaptchaType.puzzle,
+				mockEnv,
+				"sessionId",
+			);
+
+			expect(result.valid).toBe(false);
+			expect(result.reason).toBe(ResultReason.INCORRECT_CAPTCHA_TYPE);
+		});
+
+		it("refuses a sessionless audio request even with the alternative on", async () => {
+			const result = await captchaManager.isValidRequest(
+				{ account: "account", tier: Tier.Free, settings: settingsWith(true) },
+				CaptchaType.audio,
+				mockEnv,
+			);
+
+			expect(result).toEqual({
+				valid: false,
+				reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+				type: CaptchaType.audio,
+			});
+			expect(db.checkAndRemoveSession).not.toHaveBeenCalled();
+		});
+	});
+
 	describe("getVerificationResponse", () => {
 		it("should return a verification response with a score if the tier is not free", async () => {
 			const result = captchaManager.getVerificationResponse(

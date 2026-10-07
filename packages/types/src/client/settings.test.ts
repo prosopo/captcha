@@ -19,6 +19,7 @@ import {
 } from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import {
+	AudioSettingsSchema,
 	ClientSettingsSchema,
 	ContextType,
 	DeviceType,
@@ -27,7 +28,10 @@ import {
 	HoneypotSettingsSchema,
 	IPValidationAction,
 	IPValidationRulesSchema,
+	IconOrderSettingsSchema,
 	SpamFilterRulesSchema,
+	TrafficCategoryPolicySchema,
+	TrafficFilterAction,
 	TrafficFilterSchema,
 	abuseScoreThresholdDefault,
 	captchaTypeDefault,
@@ -41,6 +45,7 @@ import {
 	frictionlessPuzzleThresholdDefault,
 	frictionlessThresholdDefault,
 	honeypotEncodingTypeDefault,
+	iconOrderToleranceDefault,
 	imageMaxRoundsDefault,
 	imageMinRoundsDefault,
 	imageThresholdDefault,
@@ -49,6 +54,7 @@ import {
 	powDifficultyDefault,
 	puzzleToleranceDefault,
 	resolveAllowedCaptchaTypes,
+	resolveFrictionlessTypes,
 	resolveImageRoundsBounds,
 	trafficFilterAbuserScoreThresholdDefault,
 	widgetFeatureFlagDefaults,
@@ -189,10 +195,35 @@ describe("ClientSettingsSchema", () => {
 		});
 	});
 
-	it("accepts every captcha type", () => {
+	it("accepts every selectable captcha type", () => {
 		for (const captchaType of Object.values(CaptchaType)) {
+			if (captchaType === CaptchaType.audio) continue;
 			expect(parse({ ...minimal, captchaType }).captchaType).toBe(captchaType);
 		}
+	});
+
+	it("rejects audio as a site's captcha type", () => {
+		expect(
+			ClientSettingsSchema.safeParse({
+				...minimal,
+				captchaType: CaptchaType.audio,
+			}).success,
+		).toBe(false);
+	});
+
+	it("rejects audio as a traffic category's captcha type", () => {
+		expect(
+			TrafficCategoryPolicySchema.safeParse({
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.audio,
+			}).success,
+		).toBe(false);
+		expect(
+			TrafficCategoryPolicySchema.safeParse({
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.image,
+			}).success,
+		).toBe(true);
 	});
 
 	it("rejects an unknown captcha type", () => {
@@ -708,6 +739,115 @@ describe("image round bounds", () => {
 	});
 });
 
+describe("IconOrderSettingsSchema", () => {
+	it("accepts a partial override without restating the defaults", () => {
+		const parsed = IconOrderSettingsSchema.parse({ decoyCount: 2 });
+		expect(parsed.decoyCount).toBe(2);
+		expect(parsed.targetCount).toBeUndefined();
+	});
+
+	it("rejects a targets+decoys total the glyph vocabulary cannot supply", () => {
+		expect(() =>
+			IconOrderSettingsSchema.parse({ targetCount: 6, decoyCount: 6 }),
+		).toThrow();
+	});
+
+	it("counts the defaults when only one side of the pair is overridden", () => {
+		expect(() =>
+			IconOrderSettingsSchema.parse({ targetCount: 6 }),
+		).not.toThrow();
+		expect(() => IconOrderSettingsSchema.parse({ decoyCount: 8 })).toThrow();
+	});
+
+	it("bounds the render tunables", () => {
+		expect(() => IconOrderSettingsSchema.parse({ targetCount: 1 })).toThrow();
+		expect(() => IconOrderSettingsSchema.parse({ iconOpacity: 0 })).toThrow();
+		expect(() => IconOrderSettingsSchema.parse({ strokeWidth: 0 })).toThrow();
+		expect(() => IconOrderSettingsSchema.parse({ haloOpacity: 1.5 })).toThrow();
+	});
+});
+
+describe("ClientSettingsSchema icon-order fields", () => {
+	it("defaults the owner's icon-order preference on, like image and puzzle", () => {
+		const parsed = parse(minimal);
+		expect(parsed.frictionlessTypes.iconOrder).toBe(true);
+		expect(resolveFrictionlessTypes(undefined).iconOrder).toBe(true);
+		expect(
+			resolveFrictionlessTypes({ image: true, puzzle: true }).iconOrder,
+		).toBe(true);
+		expect(resolveFrictionlessTypes({ iconOrder: false }).iconOrder).toBe(
+			false,
+		);
+	});
+
+	it("defaults the tolerance to a size-relative radius", () => {
+		const parsed = parse(minimal);
+		expect(parsed.iconOrderTolerance).toBe(iconOrderToleranceDefault);
+		expect(parsed.iconOrder).toBeUndefined();
+	});
+
+	it("keeps a site-wide render override", () => {
+		const parsed = parse({
+			...minimal,
+			iconOrder: { targetCount: 4, decoyCount: 3 },
+		});
+		expect(parsed.iconOrder).toEqual({ targetCount: 4, decoyCount: 3 });
+	});
+
+	it("rejects a tolerance outside the field bounds", () => {
+		expect(() => parse({ ...minimal, iconOrderTolerance: 0 })).toThrow();
+		expect(() => parse({ ...minimal, iconOrderTolerance: 13 })).toThrow();
+	});
+
+	it("accepts the ceiling the end-to-end specs rely on", () => {
+		expect(
+			parse({ ...minimal, iconOrderTolerance: 12 }).iconOrderTolerance,
+		).toBe(12);
+	});
+});
+
+describe("AudioSettingsSchema", () => {
+	it("accepts a partial override without restating the defaults", () => {
+		const parsed = AudioSettingsSchema.parse({ digitCount: 6 });
+		expect(parsed.digitCount).toBe(6);
+		expect(parsed.noiseSnrDb).toBeUndefined();
+	});
+
+	it("bounds the render tunables", () => {
+		expect(() => AudioSettingsSchema.parse({ digitCount: 2 })).toThrow();
+		expect(() => AudioSettingsSchema.parse({ digitCount: 9 })).toThrow();
+		expect(() => AudioSettingsSchema.parse({ noiseSnrDb: 2 })).toThrow();
+		expect(() => AudioSettingsSchema.parse({ babbleGain: 0.7 })).toThrow();
+		expect(() => AudioSettingsSchema.parse({ babbleVoices: 5 })).toThrow();
+		expect(() => AudioSettingsSchema.parse({ reverbMix: 0.7 })).toThrow();
+		expect(() => AudioSettingsSchema.parse({ gapMs: 1501 })).toThrow();
+	});
+});
+
+describe("ClientSettingsSchema audio fields", () => {
+	it("leaves the accessibility alternative unset, which means off", () => {
+		const parsed = parse(minimal);
+		expect(parsed.audioAccessibilityEnabled).toBeUndefined();
+		expect(parsed.audio).toBeUndefined();
+	});
+
+	it("keeps an explicit opt-in", () => {
+		expect(
+			parse({ ...minimal, audioAccessibilityEnabled: true })
+				.audioAccessibilityEnabled,
+		).toBe(true);
+	});
+
+	it("keeps a site-wide render override", () => {
+		const parsed = parse({ ...minimal, audio: { digitCount: 4, gapMs: 400 } });
+		expect(parsed.audio).toEqual({ digitCount: 4, gapMs: 400 });
+	});
+
+	it("rejects a render override outside the field bounds", () => {
+		expect(() => parse({ ...minimal, audio: { digitCount: 12 } })).toThrow();
+	});
+});
+
 describe("captcha type feature flags", () => {
 	it("allows puzzle by default", () => {
 		expect(captchaTypeFeatureFlagDefaults[CaptchaType.puzzle]).toBe(true);
@@ -715,6 +855,35 @@ describe("captcha type feature flags", () => {
 			true,
 		);
 		expect(isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, {})).toBe(true);
+	});
+
+	it("keeps icon-order off unless its flag is true", () => {
+		expect(captchaTypeFeatureFlagDefaults[CaptchaType.iconOrder]).toBe(false);
+		expect(isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, undefined)).toBe(
+			false,
+		);
+		expect(isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, {})).toBe(false);
+		expect(
+			isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, { iconOrder: true }),
+		).toBe(true);
+	});
+
+	it("keeps audio off unless its flag is true", () => {
+		expect(captchaTypeFeatureFlagDefaults[CaptchaType.audio]).toBe(false);
+		expect(isCaptchaTypeFeatureEnabled(CaptchaType.audio, undefined)).toBe(
+			false,
+		);
+		expect(
+			isCaptchaTypeFeatureEnabled(CaptchaType.audio, { audio: true }),
+		).toBe(true);
+	});
+
+	it("never makes audio a type the frictionless flow can serve", () => {
+		expect(
+			resolveAllowedCaptchaTypes({
+				captchaTypeFeatureFlags: { audio: true },
+			}),
+		).not.toHaveProperty(CaptchaType.audio);
 	});
 
 	it("disallows puzzle only when the flag is false", () => {
@@ -749,14 +918,16 @@ describe("captcha type feature flags", () => {
 });
 
 describe("resolveAllowedCaptchaTypes", () => {
-	it("allows every type when nothing is configured", () => {
+	it("allows image and puzzle, but not icon-order, when nothing is configured", () => {
 		expect(resolveAllowedCaptchaTypes(undefined)).toEqual({
 			image: true,
 			puzzle: true,
+			iconOrder: false,
 		});
 		expect(resolveAllowedCaptchaTypes({})).toEqual({
 			image: true,
 			puzzle: true,
+			iconOrder: false,
 		});
 	});
 
@@ -765,7 +936,7 @@ describe("resolveAllowedCaptchaTypes", () => {
 			for (const puzzle of [true, false]) {
 				expect(
 					resolveAllowedCaptchaTypes({ frictionlessTypes: { image, puzzle } }),
-				).toEqual({ image, puzzle });
+				).toEqual({ image, puzzle, iconOrder: false });
 			}
 		}
 	});
@@ -776,7 +947,26 @@ describe("resolveAllowedCaptchaTypes", () => {
 				frictionlessTypes: { image: true, puzzle: true },
 				captchaTypeFeatureFlags: { puzzle: false },
 			}),
-		).toEqual({ image: true, puzzle: false });
+		).toEqual({ image: true, puzzle: false, iconOrder: false });
+	});
+
+	it("allows icon-order only when the feature flag and the owner both do", () => {
+		expect(
+			resolveAllowedCaptchaTypes({
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+			}).iconOrder,
+		).toBe(false);
+		expect(
+			resolveAllowedCaptchaTypes({
+				captchaTypeFeatureFlags: { iconOrder: true },
+			}).iconOrder,
+		).toBe(true);
+		expect(
+			resolveAllowedCaptchaTypes({
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: false },
+				captchaTypeFeatureFlags: { iconOrder: true },
+			}).iconOrder,
+		).toBe(false);
 	});
 
 	it("never lets the feature flag re-enable a type the owner switched off", () => {
@@ -785,7 +975,7 @@ describe("resolveAllowedCaptchaTypes", () => {
 				frictionlessTypes: { image: true, puzzle: false },
 				captchaTypeFeatureFlags: { puzzle: true },
 			}),
-		).toEqual({ image: true, puzzle: false });
+		).toEqual({ image: true, puzzle: false, iconOrder: false });
 	});
 });
 

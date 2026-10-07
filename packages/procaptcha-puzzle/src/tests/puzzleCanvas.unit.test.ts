@@ -788,3 +788,52 @@ describe("after it goes away", () => {
 		expect(onComplete).not.toHaveBeenCalled();
 	});
 });
+
+describe("the audio alternative", () => {
+	const onRequestAudio = vi.fn<() => void>();
+	const offer = { onRequestAudio, label: "Use audio instead" };
+
+	const audioControl = (): HTMLElement | null =>
+		overlay().querySelector<HTMLElement>(
+			'[data-cy="prosopo-audio-alternative"]',
+		);
+
+	const board = (): HTMLElement => required(piece().parentElement, "the board");
+
+	test("is absent when the site has not offered it", () => {
+		render(props());
+		expect(audioControl()).toBeNull();
+		expect(board().style.borderRadius).toBe("0 0 20px 20px");
+	});
+
+	test("sits below the board, which squares off its corners for it", () => {
+		render(props({ audioAlternative: offer }));
+		const control = required(audioControl(), "the audio alternative");
+		expect(control.textContent).toBe("Use audio instead");
+		expect(
+			board().compareDocumentPosition(control) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		expect(board().style.borderRadius).toBe("0");
+	});
+
+	test("asks for audio without submitting the puzzle", () => {
+		render(props({ audioAlternative: offer }));
+		required(audioControl(), "the audio alternative").click();
+		expect(onRequestAudio).toHaveBeenCalledTimes(1);
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	test("goes away when a later render withdraws the offer", () => {
+		render(props({ audioAlternative: offer }));
+		render(props());
+		expect(audioControl()).toBeNull();
+		expect(board().style.borderRadius).toBe("0 0 20px 20px");
+	});
+
+	test("is removed with the canvas", () => {
+		render(props({ audioAlternative: offer }));
+		destroy();
+		expect(audioControl()).toBeNull();
+	});
+});

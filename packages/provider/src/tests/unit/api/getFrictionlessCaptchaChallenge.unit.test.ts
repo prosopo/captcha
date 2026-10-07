@@ -44,6 +44,7 @@ type MockTasks = {
 		checkLangRules: MockFn;
 		setSessionParams: MockFn;
 		setRoutingContext: MockFn;
+		setAudioAlternativeEnabled: MockFn;
 		setAllowedCaptchaTypes: MockFn;
 		setImageSwitchRequested: MockFn;
 		applyRoutingMachine: MockFn;
@@ -194,6 +195,7 @@ vi.mock("../../../tasks/index.js", async () => {
 					checkLangRules: vi.fn().mockReturnValue(0),
 					setSessionParams: vi.fn(),
 					setRoutingContext: vi.fn(),
+					setAudioAlternativeEnabled: vi.fn(),
 					setAllowedCaptchaTypes: vi.fn(),
 					setImageSwitchRequested: vi.fn(),
 					applyRoutingMachine: vi.fn(
@@ -280,6 +282,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			checkLangRules: vi.fn().mockReturnValue(0),
 			setSessionParams: vi.fn(),
 			setRoutingContext: vi.fn(),
+			setAudioAlternativeEnabled: vi.fn(),
 			setAllowedCaptchaTypes: vi.fn(),
 			setImageSwitchRequested: vi.fn(),
 			applyRoutingMachine: vi.fn(
@@ -831,7 +834,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 
 			expect(
 				tasksInstance.frictionlessManager.setAllowedCaptchaTypes,
-			).toHaveBeenCalledWith({ image: false, puzzle: false });
+			).toHaveBeenCalledWith({ image: false, puzzle: false, iconOrder: false });
 		});
 
 		it("holds a site pinned to puzzle to the feature flags before the short-circuit", async () => {
@@ -851,12 +854,44 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			const setAllowed =
 				tasksInstance.frictionlessManager.setAllowedCaptchaTypes;
 			const sendPuzzle = tasksInstance.frictionlessManager.sendPuzzleCaptcha;
-			expect(setAllowed).toHaveBeenCalledWith({ image: true, puzzle: false });
+			expect(setAllowed).toHaveBeenCalledWith({
+				image: true,
+				puzzle: false,
+				iconOrder: false,
+			});
 			expect(sendPuzzle).toHaveBeenCalled();
 			expect(setAllowed.mock.invocationCallOrder[0]).toBeLessThan(
 				sendPuzzle.mock.invocationCallOrder[0] ?? 0,
 			);
 		});
+
+		it.each([
+			{ audioAccessibilityEnabled: true, audio: true, offered: true },
+			{ audioAccessibilityEnabled: true, audio: false, offered: false },
+			{ audioAccessibilityEnabled: true, audio: undefined, offered: false },
+			{ audioAccessibilityEnabled: false, audio: true, offered: false },
+		])(
+			"offers the audio alternative only with both switches on: %o",
+			async ({ audioAccessibilityEnabled, audio, offered }) => {
+				const dapp = `siteAudio-${audioAccessibilityEnabled}-${audio}`;
+				tasksInstance.db.getClientRecord.mockResolvedValue({
+					account: dapp,
+					settings: {
+						captchaType: CaptchaType.image,
+						frictionlessThreshold: 0.5,
+						disallowWebView: false,
+						audioAccessibilityEnabled,
+						captchaTypeFeatureFlags: { audio },
+					},
+				});
+
+				await request(dapp);
+
+				expect(
+					tasksInstance.frictionlessManager.setAudioAlternativeEnabled,
+				).toHaveBeenCalledWith(offered);
+			},
+		);
 	});
 
 	// `decryptPayload` returns `userAgent` hashed, for the mismatch check only.

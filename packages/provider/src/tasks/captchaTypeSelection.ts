@@ -16,15 +16,17 @@ import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
 	type IFrictionlessTypes,
+	resolveAllowedCaptchaTypes,
 	resolveFrictionlessTypes,
 } from "@prosopo/types";
 import { isPuzzleRenderAvailable } from "./puzzle/puzzleRenderer.js";
 
-/** The three concrete types a session can actually be minted as. */
+/** The concrete types a session can actually be minted as. */
 export type ConcreteCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
-	| CaptchaType.puzzle;
+	| CaptchaType.puzzle
+	| CaptchaType.iconOrder;
 
 /**
  * Resolve a requested captcha type against what the site permits and what
@@ -45,7 +47,8 @@ export type ConcreteCaptchaType =
  *
  * Pass `allowedTypes` from `resolveAllowedCaptchaTypes`, so Prosopo's
  * per-site captcha type feature flags are applied alongside the site owner's
- * own `frictionlessTypes`. Absent means every type is allowed.
+ * own `frictionlessTypes`. Absent means the defaults for both, so icon-order
+ * stays off.
  *
  * Coercion only ever narrows. A disabled type falls back to the other
  * interactive type if that is permitted, and to PoW otherwise — never the
@@ -56,13 +59,16 @@ export const coerceToEnabledCaptchaType = (
 	allowedTypes: Partial<IFrictionlessTypes> | undefined,
 	logger?: Logger,
 ): ConcreteCaptchaType => {
-	const types = resolveFrictionlessTypes(allowedTypes);
+	const types = allowedTypes
+		? resolveFrictionlessTypes(allowedTypes)
+		: resolveAllowedCaptchaTypes(undefined);
 
 	// A puzzle this provider cannot render is as unavailable as one the site
 	// disabled, and has to be treated identically here rather than downgraded
 	// separately — a site with image off would otherwise be handed an image.
 	const puzzleAllowed = types.puzzle && isPuzzleRenderAvailable();
 	const imageAllowed = types.image;
+	const iconOrderAllowed = types.iconOrder;
 
 	const resolved = ((): ConcreteCaptchaType => {
 		switch (requested) {
@@ -76,6 +82,13 @@ export const coerceToEnabledCaptchaType = (
 			case CaptchaType.image:
 				if (imageAllowed) return CaptchaType.image;
 				return puzzleAllowed ? CaptchaType.puzzle : CaptchaType.pow;
+			// Only an explicit icon-order request is served icon-order: the
+			// branches above never fall back to it, which would hand users a
+			// harsher challenge than the one coerced away.
+			case CaptchaType.iconOrder:
+				if (iconOrderAllowed) return CaptchaType.iconOrder;
+				if (puzzleAllowed) return CaptchaType.puzzle;
+				return imageAllowed ? CaptchaType.image : CaptchaType.pow;
 		}
 	})();
 
@@ -88,6 +101,7 @@ export const coerceToEnabledCaptchaType = (
 				imageEnabled: types.image,
 				puzzleEnabled: types.puzzle,
 				puzzleRenderable: isPuzzleRenderAvailable(),
+				iconOrderEnabled: types.iconOrder,
 			},
 		}));
 	}

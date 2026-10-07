@@ -432,6 +432,53 @@ describe("the challenge", () => {
 	});
 });
 
+describe("the audio alternative", () => {
+	const AUDIO_ALTERNATIVE = `${SURFACE_SELECTOR} [data-cy="prosopo-audio-alternative"]`;
+	const onRequestAudioAlternative = vi.fn<() => void>();
+
+	const withChallenge = async (
+		overrides: Partial<ProcaptchaProps>,
+	): Promise<void> => {
+		render(overrides);
+		await setState({ showModal: true, ...openChallenge() });
+	};
+
+	test("is not offered unless the site turned it on", async () => {
+		await withChallenge({ onRequestAudioAlternative });
+		expect(document.querySelector(AUDIO_ALTERNATIVE)).toBeNull();
+	});
+
+	test("is offered, translated, when the site turned it on", async () => {
+		await withChallenge({
+			audioAlternativeAvailable: true,
+			onRequestAudioAlternative,
+		});
+		expect(document.querySelector(AUDIO_ALTERNATIVE)?.textContent).toBe(
+			"WIDGET.AUDIO_ALTERNATIVE",
+		);
+	});
+
+	test("hands the request to the wrapper", async () => {
+		await withChallenge({
+			audioAlternativeAvailable: true,
+			onRequestAudioAlternative,
+		});
+		const control = document.querySelector(AUDIO_ALTERNATIVE);
+		if (!control) throw new Error("expected the audio alternative");
+		fire(control, "click");
+		expect(onRequestAudioAlternative).toHaveBeenCalledTimes(1);
+	});
+
+	test("is offered in invisible mode too", async () => {
+		await withChallenge({
+			config: config({ mode: ModeEnum.invisible }),
+			audioAlternativeAvailable: true,
+			onRequestAudioAlternative,
+		});
+		expect(document.querySelector(AUDIO_ALTERNATIVE)).not.toBeNull();
+	});
+});
+
 describe("recovering from an error", () => {
 	test("stops the spinner so the user can try again", async () => {
 		render();

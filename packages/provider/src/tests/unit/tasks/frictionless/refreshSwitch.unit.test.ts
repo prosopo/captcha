@@ -142,7 +142,7 @@ describe("a refreshed puzzle session", () => {
 				refreshCount: PUZZLE_REFRESHES_BEFORE_IMAGE,
 				refreshedAfterMs: 1000,
 			},
-			{ image: false, puzzle: true },
+			{ image: false, puzzle: true, iconOrder: false },
 		).sendPuzzleCaptcha();
 
 		expect(storedSession().captchaType).toBe(CaptchaType.puzzle);
@@ -180,7 +180,7 @@ describe("a refreshed puzzle session", () => {
 	it("keeps a puzzle-only site on puzzle when the user asks to switch", async () => {
 		await managerFor(
 			{ refreshOf: "prev", refreshCount: 1, refreshedAfterMs: 1000 },
-			{ image: false, puzzle: true },
+			{ image: false, puzzle: true, iconOrder: false },
 			true,
 		).sendPuzzleCaptcha();
 

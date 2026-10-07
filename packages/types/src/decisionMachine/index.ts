@@ -19,13 +19,21 @@ import {
 	DecisionMachineCaptchaTypeSchema,
 } from "../client/captchaType/captchaType.js";
 import {
+	type IIconOrderSettings,
 	type IPuzzleSettings,
 	type ITrafficCategoryPolicy,
+	IconOrderSettingsSchema,
 	PuzzleSettingsSchema,
+	iconOrderToleranceFieldSchema,
 	puzzleToleranceFieldSchema,
 } from "../client/settings.js";
 import type { ModeEnum } from "../config/mode.js";
-import type { PuzzleEvent, RequestHeaders } from "../provider/api.js";
+import type {
+	AudioEvent,
+	IconOrderEvent,
+	PuzzleEvent,
+	RequestHeaders,
+} from "../provider/api.js";
 import type { ScoreComponents } from "../provider/database.js";
 import type { DetectorData, SimdReadings } from "../provider/detection.js";
 import type { FrictionlessReason } from "../provider/reasons.js";
@@ -127,7 +135,12 @@ export type DecisionMachineInput = {
 	dappAccount: string;
 	captchaResult: "passed" | "failed";
 	headers: Record<string, string | string[] | undefined>;
-	captchaType?: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType?:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.audio
+		| CaptchaType.iconOrder;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	deviceCapability?: string;
 	countryCode?: string;
@@ -170,8 +183,14 @@ export type DecisionMachineInput = {
 	coords?: [number, number][][];
 	// Puzzle-only: per-event trail of the drag from origin to target,
 	// captured client-side and persisted on the puzzle captcha record.
-	// Always undefined on pow / image inputs.
+	// Always undefined on pow / image / audio inputs.
 	puzzleEvents?: PuzzleEvent[];
+	// Audio-only: playback and typing events, persisted on the audio record.
+	audioEvents?: AudioEvent[];
+	// Audio-only: how many times the clip was played before submitting.
+	audioReplays?: number;
+	// Icon-order-only equivalent of `puzzleEvents`.
+	iconOrderEvents?: IconOrderEvent[];
 	// Raw per-connection TCP-handshake signals persisted on the Session
 	// at frictionless entry (see rawTlsSignalsMiddleware). Surfaced here
 	// so verify-time decide rules can gate on the raw TCP fingerprint
@@ -228,7 +247,9 @@ export type DecisionMachineOutput = {
 export type DecisionMachineCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
-	| CaptchaType.puzzle;
+	| CaptchaType.puzzle
+	| CaptchaType.audio
+	| CaptchaType.iconOrder;
 
 // This is the API configuration type (used for uploads/API calls)
 // The database storage type is DecisionMachineArtifact in provider/database.ts
@@ -289,6 +310,8 @@ export type CounterCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
 	| CaptchaType.puzzle
+	| CaptchaType.audio
+	| CaptchaType.iconOrder
 	| typeof COUNTER_CAPTCHA_ANY;
 
 export interface CounterSpec {
@@ -304,6 +327,8 @@ export const CounterSpecSchema = z.object({
 		z.literal(CaptchaType.pow),
 		z.literal(CaptchaType.image),
 		z.literal(CaptchaType.puzzle),
+		z.literal(CaptchaType.audio),
+		z.literal(CaptchaType.iconOrder),
 		z.literal(COUNTER_CAPTCHA_ANY),
 	]),
 	dimension: z.enum(COUNTER_DIMENSIONS),
@@ -318,7 +343,11 @@ export const encodeCounterKey = (
 	`cnt:${dappAccount}:${spec.kind}:${spec.captchaType}:${spec.dimension}:${value}:${spec.window}`;
 
 export interface RoutingMachineBaseline {
-	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
 }
@@ -453,7 +482,11 @@ export interface RoutingMachineInput extends RoutingMachineInputBase {
 }
 
 export interface RoutingMachineOutput {
-	captchaType: CaptchaType.pow | CaptchaType.image | CaptchaType.puzzle;
+	captchaType:
+		| CaptchaType.pow
+		| CaptchaType.image
+		| CaptchaType.puzzle
+		| CaptchaType.iconOrder;
 	solvedImagesCount?: number;
 	powDifficulty?: number;
 	// Optional selection reason the machine can attach to explain an escalation
@@ -470,13 +503,18 @@ export interface RoutingMachineOutput {
 	// Ignored unless the resolved captchaType is `puzzle`.
 	puzzleTolerance?: number;
 	puzzle?: IPuzzleSettings;
+	// Ignored unless the resolved captchaType is `iconOrder`.
+	iconOrderTolerance?: number;
+	iconOrder?: IIconOrderSettings;
 }
 
 export const RoutingMachineOutputSchema = z.object({
+	// No `audio`: it is only reachable as the accessibility alternative.
 	captchaType: z.union([
 		z.literal(CaptchaType.pow),
 		z.literal(CaptchaType.image),
 		z.literal(CaptchaType.puzzle),
+		z.literal(CaptchaType.iconOrder),
 	]),
 	solvedImagesCount: z.number().int().positive().optional(),
 	powDifficulty: z.number().positive().optional(),
@@ -486,4 +524,6 @@ export const RoutingMachineOutputSchema = z.object({
 	// reject.
 	puzzleTolerance: puzzleToleranceFieldSchema.optional(),
 	puzzle: PuzzleSettingsSchema.optional(),
+	iconOrderTolerance: iconOrderToleranceFieldSchema.optional(),
+	iconOrder: IconOrderSettingsSchema.optional(),
 });

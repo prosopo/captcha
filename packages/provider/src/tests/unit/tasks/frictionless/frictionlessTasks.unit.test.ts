@@ -488,6 +488,40 @@ describe("Frictionless Task Manager", () => {
 			expect(response).toHaveProperty("status", "ok");
 		});
 
+		it("offers the audio alternative only on a visual challenge of an opted-in site", async () => {
+			vi.mocked(db.storeSessionRecord).mockResolvedValue(undefined);
+			const sessionParams = {
+				token: "mockToken123",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("127.0.0.1"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "mockSiteKey",
+			};
+
+			frictionlessTaskManager.setSessionParams(sessionParams);
+			frictionlessTaskManager.setAudioAlternativeEnabled(true);
+			const image = await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+			frictionlessTaskManager.setSessionParams(sessionParams);
+			const pow = await frictionlessTaskManager.sendPowCaptcha({
+				powDifficulty: undefined,
+			});
+			frictionlessTaskManager.setSessionParams(sessionParams);
+			frictionlessTaskManager.setAudioAlternativeEnabled(false);
+			const imageOff = await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+
+			expect(image).toHaveProperty("audioAlternativeAvailable", true);
+			expect(pow).not.toHaveProperty("audioAlternativeAvailable");
+			expect(imageOff).not.toHaveProperty("audioAlternativeAvailable");
+		});
+
 		it("should throw when sendPuzzleCaptcha is called without session params", async () => {
 			await expect(frictionlessTaskManager.sendPuzzleCaptcha()).rejects.toThrow(
 				/Session parameters must be set/,

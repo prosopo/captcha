@@ -402,7 +402,28 @@
 			"REFRESH": "Teka-teki lain",
 			"SWITCH_TO_IMAGE": "Tukar kepada cabaran imej",
 			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Anda juga boleh tukar kepada cabaran imej."
-		}
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Cabaran susunan ikon",
+			"SELECT": "Pilih mengikut susunan ini",
+			"RETRY": "Hampir — cuba lagi",
+			"LEGEND_ALT": "Ikon untuk dipilih, mengikut susunan",
+			"RESET": "Set semula",
+			"CHECKING": "Menyemak…",
+			"SUBMIT": "OK"
+		},
+		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
+		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
+		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
+		"AUDIO_PLAY": "Play",
+		"AUDIO_REPLAY": "Play again",
+		"AUDIO_PLAYING": "Playing",
+		"AUDIO_FINISHED": "Playback finished",
+		"AUDIO_PLAYBACK_FAILED": "Audio could not be played. Check your device volume and try again.",
+		"AUDIO_INCORRECT": "That wasn't right. Here's a new one.",
+		"AUDIO_SUBMIT": "Verify",
+		"AUDIO_CHECKING": "Checking",
+		"AUDIO_ALTERNATIVE": "Use audio instead"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Failed to encode invalid address",

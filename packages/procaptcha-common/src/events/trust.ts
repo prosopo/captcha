@@ -44,3 +44,25 @@ export function isEventTrusted(event: TrustableEvent): boolean {
 		__PROSOPO_ALLOW_UNTRUSTED_EVENTS__
 	);
 }
+
+export interface ClickCoords {
+	x: number;
+	y: number;
+}
+
+/** Where a trusted click or tap landed; (0, 0) for untrusted or keyboard input. */
+export const trustedClickCoords = (
+	event: MouseEvent | KeyboardEvent | TouchEvent,
+): ClickCoords => {
+	if (!isEventTrusted(event)) {
+		return { x: 0, y: 0 };
+	}
+	const touch = "touches" in event ? event.touches[0] : undefined;
+	if (touch) {
+		return { x: touch.clientX, y: touch.clientY };
+	}
+	if ("clientX" in event) {
+		return { x: event.clientX, y: event.clientY };
+	}
+	return { x: 0, y: 0 };
+};

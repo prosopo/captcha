@@ -290,9 +290,9 @@ export const buildEscalation = async (
 	},
 	// Site constraints on what an escalation may serve. Threaded from the
 	// handler, which already holds the client record, rather than re-read
-	// here. An absent `allowedCaptchaTypes` means "no constraint recorded"
-	// and leaves every type enabled; an absent `imageMaxRounds` falls back to the
-	// schema default so the round count is bounded either way.
+	// here. An absent `allowedCaptchaTypes` falls back to the default flags and
+	// preferences, and an absent `imageMaxRounds` to the schema default, so the
+	// round count is bounded either way.
 	siteConstraints?: {
 		allowedCaptchaTypes?: IFrictionlessTypes;
 		imageMaxRounds?: number;

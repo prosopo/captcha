@@ -570,10 +570,12 @@ describe("UserSettingsSchema", () => {
 	});
 
 	it("persists the captcha type feature flags", () => {
-		expect(
-			settings({ captchaTypeFeatureFlags: { puzzle: false } })
-				.captchaTypeFeatureFlags.puzzle,
-		).toBe(false);
+		const flags = settings({
+			captchaTypeFeatureFlags: { puzzle: false, iconOrder: true, audio: true },
+		}).captchaTypeFeatureFlags;
+		expect(flags.puzzle).toBe(false);
+		expect(flags.iconOrder).toBe(true);
+		expect(flags.audio).toBe(true);
 	});
 
 	it("leaves the captcha type feature flags unset unless configured", () => {
@@ -582,6 +584,10 @@ describe("UserSettingsSchema", () => {
 		expect(settings().captchaTypeFeatureFlags).toBeUndefined();
 		expect(
 			settings({ captchaTypeFeatureFlags: {} }).captchaTypeFeatureFlags.puzzle,
+		).toBeUndefined();
+		expect(
+			settings({ captchaTypeFeatureFlags: {} }).captchaTypeFeatureFlags
+				.iconOrder,
 		).toBeUndefined();
 	});
 

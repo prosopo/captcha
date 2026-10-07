@@ -103,7 +103,28 @@
 			"REFRESH": "Otro rompecabezas",
 			"SWITCH_TO_IMAGE": "Cambiar a un desafío de imágenes",
 			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "También puedes cambiar a un desafío de imágenes."
-		}
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Desafío de orden de iconos",
+			"SELECT": "Selecciona en este orden",
+			"RETRY": "Casi — inténtalo de nuevo",
+			"LEGEND_ALT": "Iconos que seleccionar, en orden",
+			"RESET": "Restablecer",
+			"CHECKING": "Comprobando…",
+			"SUBMIT": "Aceptar"
+		},
+		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
+		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
+		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
+		"AUDIO_PLAY": "Play",
+		"AUDIO_REPLAY": "Play again",
+		"AUDIO_PLAYING": "Playing",
+		"AUDIO_FINISHED": "Playback finished",
+		"AUDIO_PLAYBACK_FAILED": "Audio could not be played. Check your device volume and try again.",
+		"AUDIO_INCORRECT": "That wasn't right. Here's a new one.",
+		"AUDIO_SUBMIT": "Verify",
+		"AUDIO_CHECKING": "Checking",
+		"AUDIO_ALTERNATIVE": "Use audio instead"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Error al codificar dirección inválida",

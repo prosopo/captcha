@@ -17,7 +17,7 @@ import {
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 } from "../config/timeouts.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
-import { CaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
+import { SelectableCaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
 
 export const captchaTypeDefault = CaptchaType.frictionless;
 export const domainsDefault: string[] = [];
@@ -95,6 +95,22 @@ export const puzzleDecoyHoleDarkenDefault = 0.7;
 export const puzzlePieceScaleMinDefault = 0.15;
 export const puzzlePieceScaleMaxDefault = 0.45;
 
+// Must match `DEFAULT_RENDER_SETTINGS` in @prosopo/audio-assets. Tuned for
+// intelligibility rather than difficulty: this is the accessibility path.
+export const audioDigitCountDefault = 5;
+export const audioNoiseSnrDbDefault = 14;
+export const audioBabbleGainDefault = 0.16;
+export const audioBabbleVoicesDefault = 2;
+export const audioReverbMixDefault = 0.12;
+export const audioGapMsDefault = 220;
+// Must match `DEFAULT_RENDER_SETTINGS` in @prosopo/icon-order-assets.
+export const iconOrderTargetCountDefault = 3;
+export const iconOrderDecoyCountDefault = 4;
+// A multiple of the clicked icon's own size, not pixels like
+// `puzzleTolerance`: icon sizes are jittered, and a fixed pixel radius would
+// make the smaller icons harder to hit.
+export const iconOrderToleranceDefault = 0.75;
+
 // Field-level schemas hoisted so `TrafficFilterSchema` per-category
 // challenge policies validate captcha parameters with the same bounds as
 // the site-wide defaults on `ClientSettingsSchema`. Do not redefine these
@@ -159,7 +175,7 @@ export const frictionlessThresholdDefault: IFrictionlessThreshold = {
  *
  * PoW is deliberately absent and is always available: it is the terminal
  * fallback of the decision machine and the only type with no interaction
- * requirement, so a site with both of these off still has a way to challenge.
+ * requirement, so a site with all of these off still has a way to challenge.
  *
  * This is a hard constraint on OUTPUT, not a hint. A site with `image: false`
  * must never be served an image captcha by any path — score ladder, access
@@ -175,6 +191,7 @@ export const frictionlessThresholdDefault: IFrictionlessThreshold = {
 export const FrictionlessTypesSchema = object({
 	image: boolean().optional().default(true),
 	puzzle: boolean().optional().default(true),
+	iconOrder: boolean().optional().default(true),
 });
 
 export type IFrictionlessTypes = output<typeof FrictionlessTypesSchema>;
@@ -182,6 +199,7 @@ export type IFrictionlessTypes = output<typeof FrictionlessTypesSchema>;
 export const frictionlessTypesDefault: IFrictionlessTypes = {
 	image: true,
 	puzzle: true,
+	iconOrder: true,
 };
 
 /**
@@ -189,13 +207,14 @@ export const frictionlessTypesDefault: IFrictionlessTypes = {
  *
  * Tolerates `undefined` (a client record written before the field existed)
  * and a partial object, so a provider handed an older settings blob keeps
- * serving every type rather than silently narrowing to PoW.
+ * serving image and puzzle rather than silently narrowing to PoW.
  */
 export const resolveFrictionlessTypes = (
 	configured: Partial<IFrictionlessTypes> | undefined | null,
-): IFrictionlessTypes => ({
+): Required<IFrictionlessTypes> => ({
 	image: configured?.image ?? frictionlessTypesDefault.image,
 	puzzle: configured?.puzzle ?? frictionlessTypesDefault.puzzle,
+	iconOrder: configured?.iconOrder ?? frictionlessTypesDefault.iconOrder,
 });
 
 /**
@@ -210,6 +229,8 @@ export const resolveFrictionlessTypes = (
  */
 export const CaptchaTypeFeatureFlagsSchema = object({
 	[CaptchaType.puzzle]: boolean().optional(),
+	[CaptchaType.iconOrder]: boolean().optional(),
+	[CaptchaType.audio]: boolean().optional(),
 });
 
 export type ICaptchaTypeFeatureFlags = output<
@@ -224,6 +245,8 @@ export type FeatureFlaggedCaptchaType = Extract<
 export const captchaTypeFeatureFlagDefaults: Required<ICaptchaTypeFeatureFlags> =
 	{
 		[CaptchaType.puzzle]: true,
+		[CaptchaType.iconOrder]: false,
+		[CaptchaType.audio]: false,
 	};
 
 const isFeatureFlaggedCaptchaType = (
@@ -253,16 +276,17 @@ export const resolveAllowedCaptchaTypes = (
 		  }
 		| undefined
 		| null,
-): IFrictionlessTypes => {
+): Required<IFrictionlessTypes> => {
 	const preferred = resolveFrictionlessTypes(settings?.frictionlessTypes);
+	const flags = settings?.captchaTypeFeatureFlags;
 	return {
 		image: preferred.image,
 		puzzle:
 			preferred.puzzle &&
-			isCaptchaTypeFeatureEnabled(
-				CaptchaType.puzzle,
-				settings?.captchaTypeFeatureFlags,
-			),
+			isCaptchaTypeFeatureEnabled(CaptchaType.puzzle, flags),
+		iconOrder:
+			preferred.iconOrder &&
+			isCaptchaTypeFeatureEnabled(CaptchaType.iconOrder, flags),
 	};
 };
 
@@ -338,6 +362,27 @@ export const puzzleDecoyHoleDarkenFieldSchema = number().min(0).max(1);
 // fixed size (min == max) or explore the full frame. Cross-field
 // `min <= max` is enforced on the containing object schema.
 export const puzzlePieceScaleFieldSchema = number().min(0.05).max(0.95);
+// Past 8 digits a spoken sequence outruns most listeners' working memory.
+export const audioDigitCountFieldSchema = number().int().min(3).max(8);
+// Below about 3 dB the noise drowns the speech.
+export const audioNoiseSnrDbFieldSchema = number().min(3).max(60);
+export const audioBabbleGainFieldSchema = number().min(0).max(0.6);
+export const audioBabbleVoicesFieldSchema = number().int().min(0).max(4);
+export const audioReverbMixFieldSchema = number().min(0).max(0.6);
+export const audioGapMsFieldSchema = number().int().min(0).max(1500);
+
+/** Partial overrides of the audio-assets `DEFAULT_RENDER_SETTINGS`. */
+export const AudioSettingsSchema = object({
+	digitCount: audioDigitCountFieldSchema.optional(),
+	noiseSnrDb: audioNoiseSnrDbFieldSchema.optional(),
+	babbleGain: audioBabbleGainFieldSchema.optional(),
+	babbleVoices: audioBabbleVoicesFieldSchema.optional(),
+	reverbMix: audioReverbMixFieldSchema.optional(),
+	gapMs: audioGapMsFieldSchema.optional(),
+});
+
+export type IAudioSettings = output<typeof AudioSettingsSchema>;
+
 export const PuzzlePieceScaleSchema = object({
 	min: puzzlePieceScaleFieldSchema
 		.optional()
@@ -365,6 +410,52 @@ export const PuzzleSettingsSchema = object({
 });
 
 export type IPuzzleSettings = output<typeof PuzzleSettingsSchema>;
+
+// Every icon on a frame is a distinct glyph, so this caps targets + decoys.
+// Must match `GLYPH_KINDS.length` in @prosopo/icon-order-assets.
+export const ICON_ORDER_GLYPH_VOCABULARY = 10;
+
+export const iconOrderTargetCountFieldSchema = number().int().min(2).max(6);
+export const iconOrderDecoyCountFieldSchema = number()
+	.int()
+	.min(0)
+	.max(ICON_ORDER_GLYPH_VOCABULARY - 2);
+export const iconOrderStrokeWidthFieldSchema = number().min(1).max(10);
+export const iconOrderIconOpacityFieldSchema = number().min(0.1).max(1);
+export const iconOrderHaloOpacityFieldSchema = number().min(0).max(1);
+export const iconOrderBackgroundClutterFieldSchema = number()
+	.int()
+	.min(0)
+	.max(40);
+// The end-to-end tests click without reading the imagery, which needs a
+// tolerance at which any click on the 300x200 frame is a hit: the smallest
+// icon is 32.3px and the furthest click ~336px away, so above ~10.4. Keep the
+// ceiling near that; past it the hit test checks nothing.
+export const iconOrderToleranceFieldSchema = number().min(0.1).max(12);
+
+/**
+ * Partial overrides of the icon-order render settings. The refine rejects a
+ * targets + decoys total the glyph vocabulary cannot supply, which would
+ * otherwise only surface as a 500 on every challenge request.
+ */
+export const IconOrderSettingsSchema = object({
+	targetCount: iconOrderTargetCountFieldSchema.optional(),
+	decoyCount: iconOrderDecoyCountFieldSchema.optional(),
+	strokeWidth: iconOrderStrokeWidthFieldSchema.optional(),
+	iconOpacity: iconOrderIconOpacityFieldSchema.optional(),
+	haloOpacity: iconOrderHaloOpacityFieldSchema.optional(),
+	backgroundClutter: iconOrderBackgroundClutterFieldSchema.optional(),
+}).refine(
+	(v) =>
+		(v.targetCount ?? iconOrderTargetCountDefault) +
+			(v.decoyCount ?? iconOrderDecoyCountDefault) <=
+		ICON_ORDER_GLYPH_VOCABULARY,
+	{
+		message: `icon-order targetCount + decoyCount must be <= ${ICON_ORDER_GLYPH_VOCABULARY}, the number of distinct glyphs available`,
+	},
+);
+
+export type IIconOrderSettings = output<typeof IconOrderSettingsSchema>;
 
 // IP Validation Rules
 export enum IPValidationAction {
@@ -635,7 +726,7 @@ export const TrafficFilterActionSchema = z.nativeEnum(TrafficFilterAction);
 // are reused verbatim from the site-wide settings so bounds stay in sync.
 export const TrafficCategoryPolicySchema = object({
 	action: TrafficFilterActionSchema,
-	captchaType: CaptchaTypeSpec.optional(),
+	captchaType: SelectableCaptchaTypeSpec.optional(),
 	powDifficulty: powDifficultyFieldSchema.optional(),
 	solvedImagesCount: imageMaxRoundsFieldSchema.optional(),
 	puzzleTolerance: puzzleToleranceFieldSchema.optional(),
@@ -647,6 +738,9 @@ export const TrafficCategoryPolicySchema = object({
 	// the nested object are themselves optional, so a category can
 	// override, say, just `decoyCount` without restating the rest.
 	puzzle: PuzzleSettingsSchema.optional(),
+	audio: AudioSettingsSchema.optional(),
+	iconOrderTolerance: iconOrderToleranceFieldSchema.optional(),
+	iconOrder: IconOrderSettingsSchema.optional(),
 });
 
 export type ITrafficCategoryPolicy = output<typeof TrafficCategoryPolicySchema>;
@@ -720,7 +814,7 @@ export const HoneypotSettingsSchema = object({
 export type IHoneypotSettings = output<typeof HoneypotSettingsSchema>;
 
 export const ClientSettingsSchema = object({
-	captchaType: CaptchaTypeSpec.optional().default(captchaTypeDefault),
+	captchaType: SelectableCaptchaTypeSpec.optional().default(captchaTypeDefault),
 	domains: array(string()).min(1),
 	// Maximum ms between user submission and the dapp's /verify call.
 	verifiedTimeout: number()
@@ -793,6 +887,16 @@ export const ClientSettingsSchema = object({
 	// the asset package's defaults. Traffic-filter category policies may
 	// further override any of these on a per-request basis.
 	puzzle: PuzzleSettingsSchema.optional(),
+	audio: AudioSettingsSchema.optional(),
+	// Offers audio as an accessibility alternative from the visual widgets;
+	// the only route to it, since audio is not a selectable type. Off when
+	// absent: the audio path is English-only, so a site has to opt in. Also
+	// needs `captchaTypeFeatureFlags.audio`, which only Prosopo can set.
+	audioAccessibilityEnabled: boolean().optional(),
+	iconOrderTolerance: iconOrderToleranceFieldSchema
+		.optional()
+		.default(iconOrderToleranceDefault),
+	iconOrder: IconOrderSettingsSchema.optional(),
 	ipValidationRules: IPValidationRulesSchema.optional(),
 	// The trailing `.optional()` that used to sit after `.default(false)` made
 	// the default unreachable, so this parsed to `undefined` rather than

@@ -22,9 +22,10 @@
  * between equally-specific rules (`ruleHarshness`); and downstream routing
  * consumers outside this repository.
  *
- * They agreed on the order — image > puzzle > pow > frictionless — but nothing
- * held them to it, and they disagreed on the encoding, which is where the
- * tier-crossing bug documented on `TIER_GAP` came from.
+ * They agreed on the order — image > iconOrder > puzzle > pow >
+ * frictionless — but nothing held them to it, and they disagreed on the
+ * encoding, which is where the tier-crossing bug documented on `TIER_GAP`
+ * came from.
  *
  * ## Two questions, two APIs
  *
@@ -100,7 +101,10 @@ const MAX_INTRA_TIER = TIER_GAP - 1;
  * `constructor` or `__proto__` misses instead of reading Object.prototype.
  */
 const CAPTCHA_TYPE_TIER: ReadonlyMap<string, number> = new Map([
-	["image", 4 * TIER_GAP],
+	["image", 5 * TIER_GAP],
+	// Several ordered clicks is harder than one drag, but easier than image.
+	["iconOrder", 4 * TIER_GAP],
+	// No `audio`: nothing selects it, so it ranks 0 like any unknown value.
 	["puzzle", 3 * TIER_GAP],
 	["pow", 2 * TIER_GAP],
 	["frictionless", 1 * TIER_GAP],

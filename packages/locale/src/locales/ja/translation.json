@@ -402,7 +402,28 @@
 			"REFRESH": "別のパズル",
 			"SWITCH_TO_IMAGE": "画像チャレンジに切り替える",
 			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "画像チャレンジに切り替えることもできます。"
-		}
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "アイコン順序チャレンジ",
+			"SELECT": "この順番で選択してください",
+			"RETRY": "惜しい — もう一度お試しください",
+			"LEGEND_ALT": "選択するアイコン（順番どおり）",
+			"RESET": "リセット",
+			"CHECKING": "確認中…",
+			"SUBMIT": "OK"
+		},
+		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
+		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
+		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
+		"AUDIO_PLAY": "Play",
+		"AUDIO_REPLAY": "Play again",
+		"AUDIO_PLAYING": "Playing",
+		"AUDIO_FINISHED": "Playback finished",
+		"AUDIO_PLAYBACK_FAILED": "Audio could not be played. Check your device volume and try again.",
+		"AUDIO_INCORRECT": "That wasn't right. Here's a new one.",
+		"AUDIO_SUBMIT": "Verify",
+		"AUDIO_CHECKING": "Checking",
+		"AUDIO_ALTERNATIVE": "Use audio instead"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "無効なアドレスをエンコードできませんでした",

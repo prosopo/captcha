@@ -23,6 +23,7 @@ import {
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
+	type IFrictionlessTypes,
 	type IUserSettings,
 	Tier,
 	frictionlessImageThresholdDefault,
@@ -412,17 +413,20 @@ function elementExists(selector: string) {
 /**
  * Settings a test may hand to `registerSiteKey`.
  *
- * Widened past `Partial<IUserSettings>` on one field only: the score ladder
+ * Widened past `Partial<IUserSettings>` on two fields. The score ladder
  * migration has to keep working for records still holding the pre-ladder bare
  * number, and the ladder spec registers exactly that shape to prove it. Typed
  * as an explicit union rather than cast at the call site, so the legacy shape
- * is documented instead of smuggled through `unknown`.
+ * is documented instead of smuggled through `unknown`. `frictionlessTypes` may
+ * be partial because the admin endpoint fills the missing types in with their
+ * defaults.
  */
 export type RegisterSiteKeySettings = Omit<
 	Partial<IUserSettings>,
-	"frictionlessThreshold"
+	"frictionlessThreshold" | "frictionlessTypes"
 > & {
 	frictionlessThreshold?: IUserSettings["frictionlessThreshold"] | number;
+	frictionlessTypes?: Partial<IFrictionlessTypes>;
 };
 
 function registerSiteKey(
@@ -465,6 +469,7 @@ function registerSiteKey(
 			imageMaxRounds: MAX_IMAGE_CAPTCHA_ROUNDS,
 			imageMinRounds: MIN_IMAGE_CAPTCHA_ROUNDS,
 			puzzleTolerance: puzzleToleranceDefault,
+			audioAccessibilityEnabled: false,
 			disallowWebView: false,
 			verifiedTimeout: 60000,
 			solutionTimeout: 60000,
