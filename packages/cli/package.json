@@ -45,9 +45,9 @@
 		"@prosopo/types": "workspace:*",
 		"@prosopo/util": "workspace:*",
 		"@prosopo/workspace": "workspace:*",
-		"cron-parser": "5.10.0",
+		"cron-parser": "5.10.1",
 		"dotenv": "16.4.5",
-		"yargs": "18.1.0",
+		"yargs": "18.2.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {

@@ -36,8 +36,8 @@
 		"@prosopo/util-crypto": "workspace:*",
 		"bcrypt": "6.0.0",
 		"cli-progress": "3.12.0",
-		"sharp": "0.35.4",
-		"yargs": "18.1.0",
+		"sharp": "0.35.5",
+		"yargs": "18.2.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
@@ -45,7 +45,7 @@
 		"@types/bcrypt": "6.0.0",
 		"@types/cli-progress": "3.11.6",
 		"@types/node": "22.10.2",
-		"@types/yargs": "17.0.33",
+		"@types/yargs": "17.0.35",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
