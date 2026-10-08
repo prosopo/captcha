@@ -1179,8 +1179,8 @@ importers:
         specifier: 4.1.5
         version: 4.1.5
       smoldot:
-        specifier: 2.0.26
-        version: 2.0.26
+        specifier: 3.6.0
+        version: 3.6.0
       tslib:
         specifier: 2.7.0
         version: 2.7.0
@@ -10138,6 +10138,9 @@ packages:
   smoldot@2.0.26:
     resolution: {integrity: sha512-F+qYmH4z2s2FK+CxGj8moYcd1ekSIKH8ywkdqlOz88Dat35iB1DIYL11aILN46YSGMzQW/lbJNS307zBSDN5Ig==}
 
+  smoldot@3.6.0:
+    resolution: {integrity: sha512-kBN6gKq06qPUEfwFmk9Bn5z8Kkzuuvc6VOjZ81KDu080vY0r9Hdd2OCCAqFFwnSC9T/znnHxpNK27gu6eKf8tg==}
+
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
@@ -18532,6 +18535,14 @@ snapshots:
       is-fullwidth-code-point: 5.1.0
 
   smoldot@2.0.26:
+    dependencies:
+      ws: 8.21.3
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    optional: true
+
+  smoldot@3.6.0:
     dependencies:
       ws: 8.21.3
     transitivePeerDependencies:
