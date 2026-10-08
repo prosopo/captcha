@@ -197,6 +197,7 @@ interface HarnessOptions {
 	frictionlessState?: FrictionlessState;
 	withFrictionless?: boolean;
 	honeypot?: () => string | undefined;
+	widgetReloadsOnFailure?: boolean;
 }
 
 const build = (options: HarnessOptions = {}): Harness => {
@@ -224,6 +225,7 @@ const build = (options: HarnessOptions = {}): Harness => {
 		callbackInput,
 		frictionlessState,
 		options.honeypot,
+		{ widgetReloadsOnFailure: options.widgetReloadsOnFailure },
 	);
 	return { manager, state: currentState, updates, events, restart };
 };
@@ -783,6 +785,16 @@ describe("submitSolution: the verdict", () => {
 		expect(harness.events.onHuman).not.toHaveBeenCalled();
 		expect(harness.restart).toHaveBeenCalled();
 		expect(lastUpdate(harness, "isHuman")).toBe(false);
+	});
+
+	test("a rejected solution leaves the reload to a widget that re-mints", async () => {
+		mocks.submitPuzzleCaptchaSolution.mockResolvedValue(
+			solutionResponse({ verified: false }),
+		);
+		const harness = build({ widgetReloadsOnFailure: true });
+		await expect(solve(harness)).resolves.toBe(false);
+		expect(harness.events.onFailed).toHaveBeenCalled();
+		expect(harness.restart).not.toHaveBeenCalled();
 	});
 
 	test("a rejected solution without a frictionless state still resets", async () => {

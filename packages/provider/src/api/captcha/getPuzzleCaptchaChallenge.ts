@@ -24,6 +24,7 @@ import {
 	resolvePuzzlePieceSize,
 	resolvePuzzleRenderSettings,
 } from "../../tasks/puzzle/puzzleRenderer.js";
+import { isPuzzleImageSwitchAvailable } from "./getFrictionlessCaptchaChallenge/constants.js";
 import {
 	type ChallengeIssueContext,
 	type IssuedChallenge,
@@ -164,6 +165,9 @@ const issuePuzzleChallenge = async ({
 					[ApiParams.challenge]: challenge.providerSignature,
 				},
 			},
+			...(isPuzzleImageSwitchAvailable(clientSettings?.settings ?? {}) && {
+				[ApiParams.imageSwitchAvailable]: true,
+			}),
 		},
 	};
 };

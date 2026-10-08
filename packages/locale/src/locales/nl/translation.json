@@ -399,7 +399,9 @@
 			"POSITION": "{{x}} procent vanaf links, {{y}} procent vanaf boven",
 			"CHECKING": "Je antwoord wordt gecontroleerd",
 			"RETRY_ANNOUNCEMENT": "Net niet. Er is een nieuwe puzzel geladen en het stukje staat weer aan het begin.",
-			"REFRESH": "Andere puzzel"
+			"REFRESH": "Andere puzzel",
+			"SWITCH_TO_IMAGE": "Overschakelen naar een afbeeldingsopdracht",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Je kunt ook overschakelen naar een afbeeldingsopdracht."
 		},
 		"ICON_ORDER": {
 			"DIALOG_LABEL": "Uitdaging met pictogramvolgorde",

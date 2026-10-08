@@ -591,6 +591,20 @@ describe("UserSettingsSchema", () => {
 		).toBeUndefined();
 	});
 
+	it("persists the widget feature flags", () => {
+		expect(
+			settings({ widgetFeatureFlags: { puzzleImageSwitch: true } })
+				.widgetFeatureFlags.puzzleImageSwitch,
+		).toBe(true);
+	});
+
+	it("leaves the widget feature flags unset unless configured", () => {
+		expect(settings().widgetFeatureFlags).toBeUndefined();
+		expect(
+			settings({ widgetFeatureFlags: {} }).widgetFeatureFlags.puzzleImageSwitch,
+		).toBeUndefined();
+	});
+
 	it("leaves the puzzle overrides unset unless configured", () => {
 		// Absent means "use the provider defaults" — a defaulted empty
 		// subdocument would write a `puzzle` block onto every site.

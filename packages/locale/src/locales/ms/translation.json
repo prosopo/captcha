@@ -399,7 +399,9 @@
 			"POSITION": "{{x}} peratus dari kiri, {{y}} peratus dari atas",
 			"CHECKING": "Memeriksa jawapan anda",
 			"RETRY_ANNOUNCEMENT": "Hampir. Teka-teki baharu telah dimuatkan dan kepingan kembali ke permulaan.",
-			"REFRESH": "Teka-teki lain"
+			"REFRESH": "Teka-teki lain",
+			"SWITCH_TO_IMAGE": "Tukar kepada cabaran imej",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Anda juga boleh tukar kepada cabaran imej."
 		},
 		"ICON_ORDER": {
 			"DIALOG_LABEL": "Cabaran susunan ikon",

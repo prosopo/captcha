@@ -18,6 +18,7 @@ import {
 	type IFrictionlessTypes,
 	type IUserSettings,
 	frictionlessPuzzleThresholdDefault,
+	isWidgetFeatureEnabled,
 	resolveAllowedCaptchaTypes,
 	resolveFrictionlessThreshold,
 } from "@prosopo/types";
@@ -58,6 +59,22 @@ export const resolveSiteAllowedCaptchaTypes = (
 			frictionlessTypes: settings.frictionlessTypes,
 		}),
 	});
+
+/**
+ * Whether a user on this site may swap a puzzle for an image challenge: the
+ * switch is on and the site may be served image challenges at all.
+ */
+export const isPuzzleImageSwitchAvailable = (
+	settings: Pick<
+		Partial<IUserSettings>,
+		| "captchaType"
+		| "frictionlessTypes"
+		| "captchaTypeFeatureFlags"
+		| "widgetFeatureFlags"
+	>,
+): boolean =>
+	isWidgetFeatureEnabled("puzzleImageSwitch", settings.widgetFeatureFlags) &&
+	resolveSiteAllowedCaptchaTypes(settings).image;
 
 /**
  * Image rounds served when the detector payload could not be decrypted.

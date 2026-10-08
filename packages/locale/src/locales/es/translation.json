@@ -100,7 +100,9 @@
 			"POSITION": "{{x}} por ciento desde la izquierda, {{y}} por ciento desde arriba",
 			"CHECKING": "Comprobando tu respuesta",
 			"RETRY_ANNOUNCEMENT": "Casi. Se ha cargado un rompecabezas nuevo y la pieza vuelve a estar al principio.",
-			"REFRESH": "Otro rompecabezas"
+			"REFRESH": "Otro rompecabezas",
+			"SWITCH_TO_IMAGE": "Cambiar a un desafío de imágenes",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "También puedes cambiar a un desafío de imágenes."
 		},
 		"ICON_ORDER": {
 			"DIALOG_LABEL": "Desafío de orden de iconos",

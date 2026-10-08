@@ -327,6 +327,92 @@ describe("the refresh control", () => {
 	});
 });
 
+describe("the switch to an image challenge", () => {
+	const switchControl = (): HTMLElement | null =>
+		overlay().querySelector<HTMLElement>(
+			'[aria-label="Switch to an image challenge"]',
+		);
+
+	test("is not drawn when the puzzle cannot be switched", () => {
+		render(props());
+		expect(switchControl()).toBeNull();
+	});
+
+	test("asks for an image challenge when pressed", () => {
+		const onSwitchToImage = vi.fn<() => void>();
+		render(props({ onSwitchToImage }));
+		required(switchControl(), "the switch control").click();
+		expect(onSwitchToImage).toHaveBeenCalledTimes(1);
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	const switchTooltip = (): HTMLElement =>
+		required(
+			overlay().querySelector<HTMLElement>('[role="tooltip"]'),
+			"the switch tooltip",
+		);
+
+	// Refresh always comes with the switch, and the dialog opens with focus on
+	// it; without it the switch would take focus and show its tooltip.
+	const withRefresh = { onRefresh: vi.fn<() => void>() };
+
+	test("keeps its tooltip for hover until the user looks to be struggling", () => {
+		render(props({ ...withRefresh, onSwitchToImage: vi.fn<() => void>() }));
+		expect(switchTooltip().style.display).toBe("none");
+	});
+
+	test("shows its tooltip unprompted once the user looks to be struggling", () => {
+		render(
+			props({
+				onSwitchToImage: vi.fn<() => void>(),
+				imageSwitchHighlighted: true,
+			}),
+		);
+		expect(switchTooltip().style.display).toBe("block");
+		expect(switchTooltip().textContent).toBe("Switch to an image challenge");
+	});
+
+	test("puts the tooltip away once the user starts dragging", () => {
+		render(
+			props({
+				...withRefresh,
+				onSwitchToImage: vi.fn<() => void>(),
+				imageSwitchHighlighted: true,
+			}),
+		);
+		mouseDown(20, 100);
+		expect(switchTooltip().style.display).toBe("none");
+	});
+
+	test("is hidden and inert while a solution is in flight", () => {
+		const onSwitchToImage = vi.fn<() => void>();
+		render(props({ onSwitchToImage, submitting: true }));
+		required(switchControl(), "the switch control").click();
+		expect(onSwitchToImage).not.toHaveBeenCalled();
+	});
+
+	test("is ignored mid-drag", () => {
+		const onSwitchToImage = vi.fn<() => void>();
+		render(props({ onSwitchToImage }));
+		mouseDown(20, 100);
+		required(switchControl(), "the switch control").click();
+		expect(onSwitchToImage).not.toHaveBeenCalled();
+	});
+
+	test("is offered to a screen reader after a miss once highlighted", () => {
+		render(
+			props({
+				onSwitchToImage: vi.fn<() => void>(),
+				imageSwitchHighlighted: true,
+				showRetry: true,
+			}),
+		);
+		expect(document.body.querySelector("output")?.textContent).toContain(
+			"You can also switch to an image challenge.",
+		);
+	});
+});
+
 describe("dragging with a mouse", () => {
 	test("the piece follows the pointer", () => {
 		render(props());

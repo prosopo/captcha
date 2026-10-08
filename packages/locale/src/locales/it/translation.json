@@ -100,7 +100,9 @@
 			"POSITION": "{{x}} percento da sinistra, {{y}} percento dall'alto",
 			"CHECKING": "Verifica della tua risposta in corso",
 			"RETRY_ANNOUNCEMENT": "Quasi. È stato caricato un nuovo puzzle e il pezzo è tornato all'inizio.",
-			"REFRESH": "Un altro puzzle"
+			"REFRESH": "Un altro puzzle",
+			"SWITCH_TO_IMAGE": "Passa a una sfida con immagini",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Puoi anche passare a una sfida con immagini."
 		},
 		"ICON_ORDER": {
 			"DIALOG_LABEL": "Sfida sull’ordine delle icone",

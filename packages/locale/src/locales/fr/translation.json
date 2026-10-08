@@ -100,7 +100,9 @@
 			"POSITION": "{{x}} pour cent depuis la gauche, {{y}} pour cent depuis le haut",
 			"CHECKING": "Vérification de votre réponse",
 			"RETRY_ANNOUNCEMENT": "Presque. Un nouveau puzzle a été chargé et la pièce est revenue au départ.",
-			"REFRESH": "Autre puzzle"
+			"REFRESH": "Autre puzzle",
+			"SWITCH_TO_IMAGE": "Passer à un défi d'images",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Vous pouvez aussi passer à un défi d'images."
 		},
 		"ICON_ORDER": {
 			"DIALOG_LABEL": "Défi d’ordre des icônes",

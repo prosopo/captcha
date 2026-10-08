@@ -64,13 +64,17 @@ import {
 } from "../trafficFilterRequestTime.js";
 import { handleAccessPolicy } from "./accessPolicy.js";
 import {
+	isPuzzleImageSwitchAvailable,
 	resolveScoreLadder,
 	resolveSiteAllowedCaptchaTypes,
 } from "./constants.js";
 import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
 import { attachHoneypot } from "./honeypotResponse.js";
-import { resolveRefreshLineage } from "./refreshLineage.js";
+import {
+	isImageSwitchRequestValid,
+	resolveRefreshLineage,
+} from "./refreshLineage.js";
 import { resolveSessionDedup } from "./sessionDedup.js";
 import {
 	runConfiguredCaptchaTypeShortCircuit,
@@ -110,6 +114,7 @@ export default (
 				iframeUrl: reportedIframeUrl,
 				clientSessionId,
 				refreshOf,
+				switchToImage,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
 			// Re-sanitise whatever the client reported: keep only scheme + host
@@ -585,6 +590,22 @@ export default (
 				...rawTlsSignalsForSession(req),
 			};
 
+			// Ahead of the short-circuits, so a site pinned to puzzle can still be
+			// switched to image.
+			const refresh = await resolveRefreshLineage(
+				tasks.db,
+				refreshOf,
+				dapp,
+				new Date(),
+			);
+			tasks.frictionlessManager.setImageSwitchRequested(
+				isImageSwitchRequestValid(
+					switchToImage,
+					refresh,
+					isPuzzleImageSwitchAvailable(clientRecord.settings),
+				),
+			);
+
 			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
 				shortCircuitInput,
 				res,
@@ -815,13 +836,6 @@ export default (
 				...(shadowDomPenalty !== undefined && { shadowDomPenalty }),
 			};
 
-			const refreshLineage = await resolveRefreshLineage(
-				tasks.db,
-				refreshOf,
-				dapp,
-				new Date(),
-			);
-
 			tasks.frictionlessManager.setSessionParams({
 				token: sessionToken,
 				score: botScore,
@@ -845,7 +859,7 @@ export default (
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
 				...(d !== undefined && { d }),
 				...(clientSessionId && { clientMetaData: { clientSessionId } }),
-				...refreshLineage,
+				...refresh?.lineage,
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),

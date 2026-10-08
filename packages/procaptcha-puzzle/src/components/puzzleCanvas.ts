@@ -18,6 +18,7 @@ import {
 	type AudioAlternativeOffer,
 	type ChallengeSurfaceComponent,
 	type Component,
+	type ImageSwitchButtonProps,
 	type StyleMap,
 	Teardown,
 	applyAttributes,
@@ -26,6 +27,7 @@ import {
 	isEventTrusted,
 	mountAudioAlternativeFooter,
 	mountChallengeSurface,
+	mountImageSwitchButton,
 	mountReloadButton,
 } from "@prosopo/procaptcha-common";
 import type { PlacementType, PuzzleEvent } from "@prosopo/types";
@@ -56,6 +58,11 @@ export interface PuzzleCanvasProps {
 	audioAlternative?: AudioAlternativeOffer;
 	// Swaps this puzzle for a new one. No control is drawn when absent.
 	onRefresh?: () => void;
+	// Swaps this puzzle for an image challenge. No control is drawn when absent.
+	onSwitchToImage?: () => void;
+	// Shows the switch's tooltip without a hover, for a user who looks to be
+	// struggling: a touch screen has no hover to reveal it.
+	imageSwitchHighlighted?: boolean;
 }
 
 const CONTAINER_WIDTH = 300;
@@ -137,6 +144,7 @@ export const mountPuzzleCanvas = (
 	// Set by the first arrow press of a keyboard run, so the run starts from a
 	// clean trail exactly as a fresh mouse grab does.
 	let keyboardDragging = false;
+	let hasMovedPiece = false;
 
 	const baseId = `prosopo-puzzle-${instanceCount++}`;
 	const instructionId = `${baseId}-instruction`;
@@ -268,6 +276,17 @@ export const mountPuzzleCanvas = (
 		},
 	});
 
+	const switchSlot = createElement("div", {
+		style: {
+			position: "absolute",
+			left: "8px",
+			top: "50%",
+			transform: "translateY(-50%)",
+			// Above the board, which would otherwise cover the tooltip.
+			zIndex: "1",
+		},
+	});
+
 	const instruction = createElement("div", {
 		style: {
 			position: "relative",
@@ -282,7 +301,9 @@ export const mountPuzzleCanvas = (
 			fontWeight: 500,
 			transition: "color 0.3s ease, border-color 0.3s ease",
 		},
-		children: [instructionText, refreshSlot],
+		// The switch is drawn on the left but comes after refresh, so the dialog
+		// still opens with focus on refresh as it did before the switch existed.
+		children: [instructionText, refreshSlot, switchSlot],
 	});
 
 	const panel = createElement("div", {
@@ -312,6 +333,44 @@ export const mountPuzzleCanvas = (
 	const refreshButton = props.onRefresh
 		? mountReloadButton(refreshSlot, refreshButtonProps())
 		: undefined;
+
+	const imageSwitchButtonProps = (): ImageSwitchButtonProps => ({
+		themeColor:
+			lightTheme === props.theme ? ("light" as const) : ("dark" as const),
+		label: t("WIDGET.PUZZLE.SWITCH_TO_IMAGE", {
+			defaultValue: "Switch to an image challenge",
+		}),
+		// Out of the way once the user has a go, since it sits over the board.
+		tooltipPinned: true === props.imageSwitchHighlighted && !hasMovedPiece,
+		onSwitch: () => {
+			if (!props.submitting && !dragging) {
+				props.onSwitchToImage?.();
+			}
+		},
+	});
+	let imageSwitchButton: Component<ImageSwitchButtonProps> | undefined;
+	const hidePinnedSwitchTooltip = () => {
+		if (hasMovedPiece) {
+			return;
+		}
+		hasMovedPiece = true;
+		imageSwitchButton?.update(imageSwitchButtonProps());
+	};
+	const syncImageSwitchButton = () => {
+		if (undefined === props.onSwitchToImage) {
+			imageSwitchButton?.destroy();
+			imageSwitchButton = undefined;
+			return;
+		}
+		if (imageSwitchButton) {
+			imageSwitchButton.update(imageSwitchButtonProps());
+		} else {
+			imageSwitchButton = mountImageSwitchButton(
+				switchSlot,
+				imageSwitchButtonProps(),
+			);
+		}
+	};
 
 	const surfaceProps = () => ({
 		show: true,
@@ -450,6 +509,10 @@ export const mountPuzzleCanvas = (
 			visibility: props.submitting ? "hidden" : "visible",
 		});
 		refreshButton?.update(refreshButtonProps());
+		syncImageSwitchButton();
+		applyStyles(switchSlot, {
+			visibility: props.submitting ? "hidden" : "visible",
+		});
 		applyStyles(area, {
 			// Material 3 purple tonal fallback shown before the server-rendered
 			// background image loads.
@@ -529,6 +592,7 @@ export const mountPuzzleCanvas = (
 		dragging = true;
 		keyboardDragging = false;
 		puzzleEvents = [];
+		hidePinnedSwitchTooltip();
 		const offset = containerOffset();
 		dragOffset = { x: clientX - offset.x - posX, y: clientY - offset.y - posY };
 		applyPieceChrome();
@@ -539,6 +603,7 @@ export const mountPuzzleCanvas = (
 		if (!keyboardDragging) {
 			keyboardDragging = true;
 			puzzleEvents = [];
+			hidePinnedSwitchTooltip();
 		}
 
 		posX = clamp(posX + deltaX, 0, CONTAINER_WIDTH);
@@ -657,11 +722,19 @@ export const mountPuzzleCanvas = (
 	};
 
 	const announceRetry = () => {
+		const retry = t("WIDGET.PUZZLE.RETRY_ANNOUNCEMENT", {
+			defaultValue:
+				"Not quite. A new puzzle has loaded and the piece is back at the start.",
+		});
+		const offerSwitch =
+			undefined !== props.onSwitchToImage &&
+			true === props.imageSwitchHighlighted;
 		announce(
-			t("WIDGET.PUZZLE.RETRY_ANNOUNCEMENT", {
-				defaultValue:
-					"Not quite. A new puzzle has loaded and the piece is back at the start.",
-			}),
+			offerSwitch
+				? `${retry} ${t("WIDGET.PUZZLE.SWITCH_TO_IMAGE_ANNOUNCEMENT", {
+						defaultValue: "You can also switch to an image challenge.",
+					})}`
+				: retry,
 		);
 	};
 
@@ -711,6 +784,7 @@ export const mountPuzzleCanvas = (
 			teardown.run();
 			audioAlternativeFooter.destroy();
 			refreshButton?.destroy();
+			imageSwitchButton?.destroy();
 			surface.destroy();
 		},
 	};

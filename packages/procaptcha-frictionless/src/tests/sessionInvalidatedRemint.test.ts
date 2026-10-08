@@ -306,3 +306,70 @@ describe("refreshing the challenge", () => {
 		expect(refreshOfOnCall(2)).toBeUndefined();
 	});
 });
+
+describe("switching the puzzle to an image challenge", () => {
+	const refreshOfOnCall = (call: number): string | undefined =>
+		detectBot.mock.calls[call]?.[4];
+	const switchToImageOnCall = (call: number): boolean | undefined =>
+		detectBot.mock.calls[call]?.[5];
+
+	it("asks the next /frictionless run for an image challenge", async () => {
+		lastMount().props.onReload?.(10, 20, {
+			refresh: true,
+			switchToImage: true,
+		});
+		await settle();
+
+		expect(refreshOfOnCall(1)).toBe("provider-session-1");
+		expect(switchToImageOnCall(1)).toBe(true);
+	});
+
+	it("does not ask for an image challenge on a plain refresh", async () => {
+		lastMount().props.onReload?.(10, 20, { refresh: true });
+		await settle();
+
+		expect(switchToImageOnCall(1)).toBe(false);
+	});
+
+	it("does not carry the switch onto a later refresh", async () => {
+		lastMount().props.onReload?.(10, 20, {
+			refresh: true,
+			switchToImage: true,
+		});
+		await settle();
+		lastMount().props.onReload?.(10, 20, { refresh: true });
+		await settle();
+
+		expect(switchToImageOnCall(2)).toBe(false);
+	});
+});
+
+describe("counting replaced challenges", () => {
+	const replacementCount = (): number | undefined =>
+		lastMount().props.startReplacementCount;
+
+	it("starts at zero", () => {
+		expect(replacementCount()).toBe(0);
+	});
+
+	it("counts wrong answers and refreshes in a row", async () => {
+		lastMount().props.onReload?.(10, 20, { showRetry: true });
+		await settle();
+		lastMount().props.onReload?.(10, 20, { refresh: true });
+		await settle();
+
+		expect(replacementCount()).toBe(2);
+	});
+
+	it("starts again once the user switches to an image challenge", async () => {
+		lastMount().props.onReload?.(10, 20, { showRetry: true });
+		await settle();
+		lastMount().props.onReload?.(10, 20, {
+			refresh: true,
+			switchToImage: true,
+		});
+		await settle();
+
+		expect(replacementCount()).toBe(0);
+	});
+});

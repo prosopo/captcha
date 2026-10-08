@@ -46,6 +46,7 @@ type MockTasks = {
 		setRoutingContext: MockFn;
 		setAudioAlternativeEnabled: MockFn;
 		setAllowedCaptchaTypes: MockFn;
+		setImageSwitchRequested: MockFn;
 		applyRoutingMachine: MockFn;
 		sendImageCaptcha: MockFn;
 		sendPowCaptcha: MockFn;
@@ -196,6 +197,7 @@ vi.mock("../../../tasks/index.js", async () => {
 					setRoutingContext: vi.fn(),
 					setAudioAlternativeEnabled: vi.fn(),
 					setAllowedCaptchaTypes: vi.fn(),
+					setImageSwitchRequested: vi.fn(),
 					applyRoutingMachine: vi.fn(
 						async (baseline: { captchaType: CaptchaType }) => ({
 							captchaType: baseline.captchaType,
@@ -282,6 +284,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			setRoutingContext: vi.fn(),
 			setAudioAlternativeEnabled: vi.fn(),
 			setAllowedCaptchaTypes: vi.fn(),
+			setImageSwitchRequested: vi.fn(),
 			applyRoutingMachine: vi.fn(
 				async (baseline: { captchaType: CaptchaType }) => ({
 					captchaType: baseline.captchaType,
@@ -514,6 +517,88 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 				refreshedAfterMs: expect.any(Number),
 			}),
 		);
+	});
+
+	describe("switching a puzzle to image", () => {
+		const requestSwitch = async (
+			replacedCaptchaType: CaptchaType,
+			widgetFeatureFlags: { puzzleImageSwitch?: boolean } | undefined,
+			switchToImage: boolean | undefined,
+			captchaType?: CaptchaType,
+		): Promise<void> => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "siteSwitch",
+				settings: {
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					...(widgetFeatureFlags && { widgetFeatureFlags }),
+					...(captchaType && { captchaType }),
+				},
+			});
+			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+				payload(false),
+			);
+			tasksInstance.db.getSessionRecordBySessionId?.mockResolvedValue({
+				siteKey: "siteSwitch",
+				createdAt: new Date(Date.now() - 3000),
+				captchaType: replacedCaptchaType,
+			});
+
+			const { req, res, next } = buildReqRes({
+				token: "tSwitch",
+				headHash: "hhSwitch",
+				dapp: "siteSwitch",
+				user: "u",
+				refreshOf: "replaced-puzzle",
+				...(switchToImage !== undefined && { switchToImage }),
+			});
+
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+			expect(next).not.toHaveBeenCalled();
+		};
+
+		const switchRequested = (): unknown =>
+			tasksInstance.frictionlessManager.setImageSwitchRequested.mock
+				.calls[0]?.[0];
+
+		it("honours the switch on a site with it enabled", async () => {
+			await requestSwitch(
+				CaptchaType.puzzle,
+				{ puzzleImageSwitch: true },
+				true,
+			);
+			expect(switchRequested()).toBe(true);
+		});
+
+		it("honours the switch on a site pinned to puzzle", async () => {
+			await requestSwitch(
+				CaptchaType.puzzle,
+				{ puzzleImageSwitch: true },
+				true,
+				CaptchaType.puzzle,
+			);
+			expect(switchRequested()).toBe(true);
+		});
+
+		it("ignores the switch on a site without it enabled", async () => {
+			await requestSwitch(CaptchaType.puzzle, undefined, true);
+			expect(switchRequested()).toBe(false);
+		});
+
+		it("ignores the switch away from anything but a puzzle", async () => {
+			await requestSwitch(CaptchaType.pow, { puzzleImageSwitch: true }, true);
+			expect(switchRequested()).toBe(false);
+		});
+
+		it("ignores a plain refresh", async () => {
+			await requestSwitch(
+				CaptchaType.puzzle,
+				{ puzzleImageSwitch: true },
+				undefined,
+			);
+			expect(switchRequested()).toBe(false);
+		});
 	});
 
 	it("does not look anything up for an ordinary request", async () => {

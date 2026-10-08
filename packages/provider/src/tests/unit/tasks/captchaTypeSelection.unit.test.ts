@@ -23,6 +23,7 @@ import {
 	PUZZLE_REFRESHES_BEFORE_IMAGE,
 	coerceToEnabledCaptchaType,
 	switchTypeAfterRefreshes,
+	switchTypeOnUserRequest,
 } from "../../../tasks/captchaTypeSelection.js";
 
 const BOTH: IFrictionlessTypes = { image: true, puzzle: true, iconOrder: true };
@@ -220,5 +221,37 @@ describe("switchTypeAfterRefreshes", () => {
 		for (const type of [CaptchaType.image, CaptchaType.pow] as const) {
 			expect(switchTypeAfterRefreshes(type, 100, BOTH)).toBe(type);
 		}
+	});
+});
+
+describe("switchTypeOnUserRequest", () => {
+	it("serves image when the user asks to switch from a puzzle", () => {
+		expect(switchTypeOnUserRequest(CaptchaType.puzzle, true, BOTH)).toBe(
+			CaptchaType.image,
+		);
+	});
+
+	it("keeps the puzzle when the user did not ask", () => {
+		expect(switchTypeOnUserRequest(CaptchaType.puzzle, false, BOTH)).toBe(
+			CaptchaType.puzzle,
+		);
+		expect(switchTypeOnUserRequest(CaptchaType.puzzle, undefined, BOTH)).toBe(
+			CaptchaType.puzzle,
+		);
+	});
+
+	it("keeps the puzzle on a site with image disabled", () => {
+		expect(switchTypeOnUserRequest(CaptchaType.puzzle, true, NO_IMAGE)).toBe(
+			CaptchaType.puzzle,
+		);
+	});
+
+	it("leaves anything but a puzzle alone", () => {
+		expect(switchTypeOnUserRequest(CaptchaType.pow, true, BOTH)).toBe(
+			CaptchaType.pow,
+		);
+		expect(switchTypeOnUserRequest(CaptchaType.image, true, BOTH)).toBe(
+			CaptchaType.image,
+		);
 	});
 });

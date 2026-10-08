@@ -64,6 +64,8 @@ export enum FrictionlessReason {
 	// challenge instead. Only ever this direction, and only where the site
 	// has image enabled (see switchTypeAfterRefreshes in @prosopo/provider).
 	PUZZLE_REFRESH_LIMIT = "PUZZLE_REFRESH_LIMIT",
+	// The user asked to swap the puzzle for an image challenge.
+	PUZZLE_USER_SWITCH = "PUZZLE_USER_SWITCH",
 }
 
 /**

@@ -399,7 +399,9 @@
 			"POSITION": "{{x}} persen dari kiri, {{y}} persen dari atas",
 			"CHECKING": "Memeriksa jawaban Anda",
 			"RETRY_ANNOUNCEMENT": "Nyaris. Teka-teki baru telah dimuat dan kepingan kembali ke awal.",
-			"REFRESH": "Teka-teki lain"
+			"REFRESH": "Teka-teki lain",
+			"SWITCH_TO_IMAGE": "Beralih ke tantangan gambar",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Anda juga dapat beralih ke tantangan gambar."
 		},
 		"ICON_ORDER": {
 			"DIALOG_LABEL": "Tantangan urutan ikon",

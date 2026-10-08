@@ -399,7 +399,9 @@
 			"POSITION": "{{x}} százalék balról, {{y}} százalék fentről",
 			"CHECKING": "Ellenőrizzük a válaszodat",
 			"RETRY_ANNOUNCEMENT": "Majdnem. Új kirakós töltődött be, a darab pedig visszakerült a kiindulóhelyre.",
-			"REFRESH": "Másik kirakós"
+			"REFRESH": "Másik kirakós",
+			"SWITCH_TO_IMAGE": "Váltás képes feladatra",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Képes feladatra is válthatsz."
 		},
 		"ICON_ORDER": {
 			"DIALOG_LABEL": "Ikonsorrend-feladat",

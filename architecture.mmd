@@ -212,6 +212,7 @@ graph TB
     PuzzleChallengeEP -->|"2. applyTrafficFilterAtRequestTime<br/>(challenge → puzzleTolerance +<br/>render overrides; block is NOT a 401<br/>here — it is enforced at submit/verify<br/>so the user still gets a captcha)"| TrafficFilter
     PuzzleChallengeEP -->|"isValidRequest: refuse a type<br/>its feature flag switched off"| AllowedTypes
     PuzzleChallengeEP --> PuzzleTasks
+    PuzzleCaptcha -->|"switch to image<br/>(refreshOf + switchToImage;<br/>only where widgetFeatureFlags<br/>.puzzleImageSwitch is on)"| FrictionlessEP
     PuzzleTasks -->|"background + notch placement<br/>(tolerance cascade: trafficFilter →<br/>session → siteSettings)"| PuzzleCaptcha
     PuzzleCaptcha -->|"dropped piece position<br/>+ behavioural data"| PuzzleSolutionEP
     PuzzleSolutionEP --> PuzzleTasks

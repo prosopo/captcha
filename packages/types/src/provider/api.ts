@@ -521,6 +521,8 @@ export interface GetPuzzleCaptchaResponse extends ApiResponse {
 	[ApiParams.signature]: {
 		[ApiParams.provider]: ChallengeSignature;
 	};
+	/** Whether the widget may offer to swap this puzzle for an image challenge. */
+	[ApiParams.imageSwitchAvailable]?: boolean;
 }
 
 export interface PuzzleCaptchaSolutionResponse extends ApiResponse {
@@ -753,6 +755,10 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// challenge harder (see `switchTypeAfterRefreshes`): a client that omits
 	// it is treated as a fresh visit, exactly as a page reload already is.
 	[ApiParams.refreshOf]: boundedString(INPUT_LIMITS.ID).optional(),
+	// The user pressed the puzzle's switch-to-image control rather than plain
+	// refresh. Only honoured alongside a `refreshOf` naming a puzzle session
+	// on a site with the switch enabled, and only ever moves puzzle to image.
+	[ApiParams.switchToImage]: boolean().optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<

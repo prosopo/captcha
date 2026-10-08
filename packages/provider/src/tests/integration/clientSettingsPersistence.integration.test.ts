@@ -55,6 +55,7 @@ const FULLY_POPULATED_SETTINGS = {
 	},
 	frictionlessTypes: { image: false, puzzle: true, iconOrder: true },
 	captchaTypeFeatureFlags: { puzzle: false, iconOrder: true, audio: true },
+	widgetFeatureFlags: { puzzleImageSwitch: true },
 	powDifficulty: 6,
 	imageThreshold: 0.81,
 	imageMaxRounds: 12,
@@ -249,6 +250,9 @@ describe("Client settings Mongo persistence", () => {
 		);
 		expect(stored.captchaTypeFeatureFlags).toEqual(
 			FULLY_POPULATED_SETTINGS.captchaTypeFeatureFlags,
+		);
+		expect(stored.widgetFeatureFlags).toEqual(
+			FULLY_POPULATED_SETTINGS.widgetFeatureFlags,
 		);
 		expect(stored.powDifficulty).toBe(FULLY_POPULATED_SETTINGS.powDifficulty);
 		expect(stored.imageThreshold).toBe(FULLY_POPULATED_SETTINGS.imageThreshold);

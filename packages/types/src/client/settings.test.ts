@@ -50,12 +50,14 @@ import {
 	imageMinRoundsDefault,
 	imageThresholdDefault,
 	isCaptchaTypeFeatureEnabled,
+	isWidgetFeatureEnabled,
 	powDifficultyDefault,
 	puzzleToleranceDefault,
 	resolveAllowedCaptchaTypes,
 	resolveFrictionlessTypes,
 	resolveImageRoundsBounds,
 	trafficFilterAbuserScoreThresholdDefault,
+	widgetFeatureFlagDefaults,
 } from "./settings.js";
 
 type Settings = output<typeof ClientSettingsSchema>;
@@ -974,5 +976,35 @@ describe("resolveAllowedCaptchaTypes", () => {
 				captchaTypeFeatureFlags: { puzzle: true },
 			}),
 		).toEqual({ image: true, puzzle: false, iconOrder: false });
+	});
+});
+
+describe("widget feature flags", () => {
+	it("leaves the puzzle image switch off by default", () => {
+		expect(widgetFeatureFlagDefaults.puzzleImageSwitch).toBe(false);
+		expect(isWidgetFeatureEnabled("puzzleImageSwitch", undefined)).toBe(false);
+		expect(isWidgetFeatureEnabled("puzzleImageSwitch", {})).toBe(false);
+	});
+
+	it("turns the puzzle image switch on only when the flag is true", () => {
+		expect(
+			isWidgetFeatureEnabled("puzzleImageSwitch", { puzzleImageSwitch: true }),
+		).toBe(true);
+		expect(
+			isWidgetFeatureEnabled("puzzleImageSwitch", {
+				puzzleImageSwitch: false,
+			}),
+		).toBe(false);
+	});
+
+	it("is absent from parsed settings unless set", () => {
+		const parsed = ClientSettingsSchema.parse({ domains: ["example.com"] });
+		expect(parsed).not.toHaveProperty("widgetFeatureFlags");
+		expect(
+			ClientSettingsSchema.parse({
+				domains: ["example.com"],
+				widgetFeatureFlags: { puzzleImageSwitch: true },
+			}).widgetFeatureFlags,
+		).toEqual({ puzzleImageSwitch: true });
 	});
 });

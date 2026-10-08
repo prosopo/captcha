@@ -56,6 +56,7 @@ import { CaptchaManager } from "../captchaManager.js";
 import {
 	coerceToEnabledCaptchaType,
 	switchTypeAfterRefreshes,
+	switchTypeOnUserRequest,
 } from "../captchaTypeSelection.js";
 import { DecisionMachineRunner } from "../decisionMachine/decisionMachineRunner.js";
 import {
@@ -106,6 +107,7 @@ export class FrictionlessManager extends CaptchaManager {
 	private routingContext?: RoutingContext;
 	private audioAlternativeEnabled = false;
 	private allowedCaptchaTypes?: IFrictionlessTypes;
+	private imageSwitchRequested = false;
 	private readonly decisionMachineRunner: DecisionMachineRunner;
 	private readonly usageCounters: UsageCounters | null;
 
@@ -147,6 +149,15 @@ export class FrictionlessManager extends CaptchaManager {
 	 */
 	setAllowedCaptchaTypes(allowed: IFrictionlessTypes): void {
 		this.allowedCaptchaTypes = allowed;
+	}
+
+	/**
+	 * Record that the user asked to swap their puzzle for an image challenge.
+	 * Only call this once the request has been checked as a refresh of a
+	 * puzzle on a site with the switch enabled.
+	 */
+	setImageSwitchRequested(requested: boolean): void {
+		this.imageSwitchRequested = requested;
 	}
 
 	/**
@@ -546,12 +557,18 @@ export class FrictionlessManager extends CaptchaManager {
 			this.allowedCaptchaTypes,
 			this.logger,
 		);
-		const finalCaptchaType = switchTypeAfterRefreshes(
+		const userSwitchedCaptchaType = switchTypeOnUserRequest(
 			enabledCaptchaType,
+			this.imageSwitchRequested,
+			this.allowedCaptchaTypes,
+		);
+		const switchedByUser = userSwitchedCaptchaType !== enabledCaptchaType;
+		const finalCaptchaType = switchTypeAfterRefreshes(
+			userSwitchedCaptchaType,
 			effectiveParams.refreshCount,
 			this.allowedCaptchaTypes,
 		);
-		const switchedByRefreshes = finalCaptchaType !== enabledCaptchaType;
+		const switchedByRefreshes = finalCaptchaType !== userSwitchedCaptchaType;
 		// The routing-machine output schema only bounds the count as a positive
 		// int, so clamp it to the sitekey's rounds here as every other sizing
 		// path does. `effectiveParams` is already clamped by its caller.
@@ -576,10 +593,12 @@ export class FrictionlessManager extends CaptchaManager {
 		// score ladder left on the session params. Resolved here rather than
 		// beside its use on the session record below, because the puzzle
 		// overrides need it to tell an escalation from a missing measurement.
-		const finalReason = switchedByRefreshes
-			? FrictionlessReason.PUZZLE_REFRESH_LIMIT
-			: ((routed.reason as FrictionlessReason | undefined) ??
-				(effectiveParams.reason as FrictionlessReason | undefined));
+		const finalReason = switchedByUser
+			? FrictionlessReason.PUZZLE_USER_SWITCH
+			: switchedByRefreshes
+				? FrictionlessReason.PUZZLE_REFRESH_LIMIT
+				: ((routed.reason as FrictionlessReason | undefined) ??
+					(effectiveParams.reason as FrictionlessReason | undefined));
 		// Puzzle tunables persisted on the session so getPuzzleCaptchaChallenge
 		// can layer them over the site defaults — that endpoint re-derives its
 		// overrides from a live trafficFilter verdict, and a router- or

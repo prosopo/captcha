@@ -399,7 +399,9 @@
 			"POSITION": "{{x}} prosent fra venstre, {{y}} prosent ovenfra",
 			"CHECKING": "Kontrollerer svaret ditt",
 			"RETRY_ANNOUNCEMENT": "Nesten. Et nytt puslespill er lastet inn, og brikken er tilbake ved start.",
-			"REFRESH": "Et annet puslespill"
+			"REFRESH": "Et annet puslespill",
+			"SWITCH_TO_IMAGE": "Bytt til en bildeoppgave",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Du kan også bytte til en bildeoppgave."
 		},
 		"ICON_ORDER": {
 			"DIALOG_LABEL": "Oppgave med ikonrekkefølge",

@@ -30,6 +30,7 @@ export * from "./dom/element.js";
 export * from "./dom/obfuscation.js";
 export * from "./dom/styleSheet.js";
 export * from "./state/store.js";
+export * from "./components/imageSwitch.js";
 export * from "./state/managerLifecycle.js";
 export * from "./state/spentSession.js";
 export * from "./dom/lazyMount.js";
