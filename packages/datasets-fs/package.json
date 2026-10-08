@@ -36,7 +36,7 @@
 		"@prosopo/util-crypto": "workspace:*",
 		"bcrypt": "6.0.0",
 		"cli-progress": "3.12.0",
-		"sharp": "0.35.4",
+		"sharp": "0.35.5",
 		"yargs": "18.1.0",
 		"zod": "3.23.8"
 	},
