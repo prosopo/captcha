@@ -38,7 +38,7 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@prosopo/puzzle-assets": "workspace:*",
-		"sharp": "0.35.4"
+		"sharp": "0.35.5"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
