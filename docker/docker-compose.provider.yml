@@ -107,12 +107,16 @@ services:
       - production
       - staging
     image: mongo:6.0.28
-    command: mongod --wiredTigerCacheSizeGB 2.0
+    # Sized per host: node RAM spans 15-47 GB and retained data spans 1-25 GB,
+    # so a single figure either starves the big nodes or overcommits the small
+    # ones. The defaults are the values every node ran before, so a host that
+    # sets neither variable is unchanged.
+    command: mongod --wiredTigerCacheSizeGB ${MONGO_WT_CACHE_GB:-2.0}
     deploy:
       resources:
         limits:
           # Total container ceiling (Cache + overhead)
-          memory: 3G
+          memory: ${MONGO_MEMORY_LIMIT:-3G}
     labels:
       - "vector.mongo=true" # enable logging as a provider
       - "vector.docker=true" # log docker events
