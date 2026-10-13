@@ -1,5 +1,16 @@
 # @prosopo/datasets
 
+## 3.2.4
+### Patch Changes
+
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+  - @prosopo/common@3.1.65
+  - @prosopo/logger@2.1.4
+  - @prosopo/util-crypto@13.6.0
+
 ## 3.2.3
 ### Patch Changes
 

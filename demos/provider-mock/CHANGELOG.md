@@ -1,5 +1,25 @@
 # @prosopo/provider-mock
 
+## 2.8.195
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/database@4.2.2
+  - @prosopo/provider@5.17.1
+  - @prosopo/types@5.15.1
+  - @prosopo/types-database@5.10.1
+  - @prosopo/api-express-router@3.2.4
+  - @prosopo/common@3.1.65
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/locale@3.9.1
+  - @prosopo/logger@2.1.4
+
 ## 2.8.194
 ### Patch Changes
 

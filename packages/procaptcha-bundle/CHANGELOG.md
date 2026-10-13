@@ -1,5 +1,23 @@
 # @prosopo/procaptcha-bundle
 
+## 4.5.11
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+  - @prosopo/procaptcha-common@2.21.1
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/locale@3.9.1
+  - @prosopo/procaptcha-frictionless@2.21.1
+  - @prosopo/widget-skeleton@2.10.1
+
 ## 4.5.10
 ### Patch Changes
 

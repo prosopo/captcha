@@ -1,5 +1,50 @@
 # @prosopo/provider
 
+## 5.17.1
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- 0e02b4b: Let iCloud Private Relay users through the datacenter traffic-filter rule by default.
+  
+  Relay sends Safari users on iPhone, iPad and Mac out through Apple's partner CDN servers, so ipinfo flags them as datacenter, and a site that blocked or challenged datacenter traffic caught every relay user. Each relay IP is shared by many real people. Relay is now treated as if it were on every site's `datacenterNameAllowlist`, both for the visitor's own IP and for the DNS-path check. A site that wants relay treated as datacenter traffic again adds "iCloud Private Relay" to `datacenterNameDenylist`, which already wins over the allowlist.
+  
+  A relay IP that passes the datacenter rule also skips the lower categories (abuser, crawler, satellite, mobile). Its abuser score belongs to the shared CDN server, and every site has an abuser block at submit. Without this, letting relay through the datacenter rule would have exposed relay users to that block, which the datacenter step used to stop them reaching. Relay IPs that ipinfo also flags as VPN, proxy or Tor are still caught by those rules.
+  
+  The DNS-asymmetry score stored when a DNS event arrives was worked out without the site's filter, and the verify-time recompute only ever raises it. Relay resolvers now count as clean there too, so a relay session no longer carries a datacenter-resolver penalty into its frictionless score.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/database@4.2.2
+  - @prosopo/icon-order-assets@0.2.1
+  - @prosopo/native-ja4@0.0.8
+  - @prosopo/native-merkle@0.0.7
+  - @prosopo/native-puzzle@0.1.1
+  - @prosopo/puzzle-assets@0.2.2
+  - @prosopo/redis-client@1.0.41
+  - @prosopo/types@5.15.1
+  - @prosopo/types-database@5.10.1
+  - @prosopo/user-access-policy@3.14.18
+  - @prosopo/util@3.3.15
+  - @prosopo/api@4.6.1
+  - @prosopo/api-express-router@3.2.4
+  - @prosopo/api-route@2.6.64
+  - @prosopo/audio-assets@0.2.1
+  - @prosopo/captcha-severity@1.3.0
+  - @prosopo/common@3.1.65
+  - @prosopo/datasets@3.2.4
+  - @prosopo/env@3.6.72
+  - @prosopo/ipinfo@0.4.17
+  - @prosopo/keyring@2.10.4
+  - @prosopo/load-balancer@2.11.8
+  - @prosopo/locale@3.9.1
+  - @prosopo/logger@2.1.4
+  - @prosopo/types-env@2.11.18
+  - @prosopo/util-crypto@13.6.0
+  - @prosopo/web-bot-auth@0.1.3
+
 ## 5.17.0
 ### Minor Changes
 

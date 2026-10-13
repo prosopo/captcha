@@ -1,5 +1,30 @@
 # @prosopo/scripts
 
+## 3.1.199
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/cli@3.8.29
+  - @prosopo/provider@5.17.1
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+  - @prosopo/workspace@3.2.3
+  - @prosopo/common@3.1.65
+  - @prosopo/datasets@3.2.4
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/env@3.6.72
+  - @prosopo/keyring@2.10.4
+  - @prosopo/locale@3.9.1
+  - @prosopo/logger@2.1.4
+  - @prosopo/types-env@2.11.18
+  - @prosopo/util-crypto@13.6.0
+
 ## 3.1.198
 ### Patch Changes
 

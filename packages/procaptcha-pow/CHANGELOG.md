@@ -1,5 +1,21 @@
 # @prosopo/procaptcha-pow
 
+## 2.13.11
+### Patch Changes
+
+- aab71a1: On a slow device the proof-of-work can take longer than the provider's one-minute window, and the provider then rejects it. The widget reported that as a failed captcha. It now reports it as an expired challenge, which shows the "captcha solution has expired" message, and resets so the user can tick the box again for a new challenge.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+  - @prosopo/procaptcha-common@2.21.1
+  - @prosopo/api@4.6.1
+  - @prosopo/common@3.1.65
+  - @prosopo/fingerprint@2.7.61
+  - @prosopo/locale@3.9.1
+  - @prosopo/util-crypto@13.6.0
+  - @prosopo/widget-skeleton@2.10.1
+
 ## 2.13.10
 ### Patch Changes
 
