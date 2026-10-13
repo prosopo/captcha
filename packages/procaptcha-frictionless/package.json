@@ -1,14 +1,13 @@
 {
 	"name": "@prosopo/procaptcha-frictionless",
-	"version": "2.18.3",
+	"version": "2.21.0",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "dist/index.js",
 	"type": "module",
 	"sideEffects": false,
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"exports": {
 		".": {
@@ -21,8 +20,8 @@
 	"source": "./src/index.ts",
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
+		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
@@ -30,19 +29,21 @@
 	},
 	"browserslist": ["> 0.5%, last 2 versions, not dead"],
 	"dependencies": {
-		"@prosopo/api": "4.3.4",
-		"@prosopo/common": "3.1.59",
-		"@prosopo/locale": "3.6.0",
-		"@prosopo/procaptcha-common": "2.17.2",
-		"@prosopo/procaptcha-pow": "2.13.3",
-		"@prosopo/procaptcha-puzzle": "2.14.3",
-		"@prosopo/procaptcha-react": "2.13.2",
-		"@prosopo/types": "5.10.1",
-		"@prosopo/widget-skeleton": "2.10.0",
+		"@prosopo/api": "workspace:*",
+		"@prosopo/common": "workspace:*",
+		"@prosopo/locale": "workspace:*",
+		"@prosopo/procaptcha-audio": "workspace:*",
+		"@prosopo/procaptcha-common": "workspace:*",
+		"@prosopo/procaptcha-icon-order": "workspace:*",
+		"@prosopo/procaptcha-pow": "workspace:*",
+		"@prosopo/procaptcha-puzzle": "workspace:*",
+		"@prosopo/procaptcha-react": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/widget-skeleton": "workspace:*",
 		"dotenv": "16.4.5"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.1",
+		"@prosopo/config": "workspace:*",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",

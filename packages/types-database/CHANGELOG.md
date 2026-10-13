@@ -1,5 +1,228 @@
 # @prosopo/types-database
 
+## 5.10.0
+### Minor Changes
+
+- 4570692: Let a user swap the puzzle captcha for an image challenge, on sites where Prosopo has switched it on.
+  
+  Sites get a new staff-only setting, `widgetFeatureFlags.puzzleImageSwitch`. It is off by default and has no stored default. When it is on and the site allows image challenges, the puzzle response says `imageSwitchAvailable: true`. The puzzle then shows a small grid icon next to its title, with a "Switch to an image challenge" tooltip on hover or keyboard focus. After two wrong answers or refreshes in a row, the icon fills with the primary colour and its tooltip shows without a hover, because a touch screen has no hover. The tooltip goes away once the user starts moving the piece.
+  
+  Pressing it re-mints the session the same way refresh does, with `switchToImage: true`. The provider only honours that when the request is a refresh of a puzzle session on the same site and the switch is on. The new session is then an image challenge with reason `PUZZLE_USER_SWITCH`. Like the refresh limit, it only ever moves from puzzle to image, so a client that fakes the request can only make its own challenge harder.
+  
+  Also fixes a wrong puzzle answer restarting the whole widget. The user was sent back to the checkbox instead of getting a new puzzle with "Not quite — try again", and a wasted `/frictionless` request went out. The puzzle now retries in place.
+
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+  - @prosopo/locale@3.9.0
+  - @prosopo/user-access-policy@3.14.17
+  - @prosopo/common@3.1.64
+
+## 5.9.0
+### Minor Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- e13d7a8: New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
+  
+  Icon-order is off by default. Only Prosopo can switch it on for a site, with the `captchaTypeFeatureFlags.iconOrder` feature flag; the site owner cannot. A site without the flag is never served icon-order by any route, and the challenge endpoint refuses it. Once the flag is on, the owner can still keep icon-order out of the frictionless flow with `frictionlessTypes.iconOrder`, the same way as image and puzzle.
+  
+  The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
+  
+  `@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
+  
+  Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+  
+  The demo playground has icon-order pages, and there is an end-to-end test for it.
+
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/locale@3.8.0
+  - @prosopo/user-access-policy@3.14.16
+  - @prosopo/common@3.1.63
+
+## 5.8.0
+### Minor Changes
+
+- 1c13037: Add `captchaTypeFeatureFlags` to site settings, starting with `puzzle`. Setting
+  `puzzle: false` stops a site being served the puzzle captcha by any path: its
+  configured `captchaType`, `frictionlessTypes`, access policies, the traffic
+  filter, routing machines, PoW escalation, and puzzle sessions that already
+  exist. A site pinned to puzzle gets an image captcha instead (or PoW if image is
+  also off). The field is optional and has no stored default, so sites that never
+  set it behave exactly as before. The flag is meant for Prosopo staff, not site
+  owners.
+- f961dab: Store everything needed to redraw a puzzle, so the portal can show the exact challenge a user was served.
+  
+  Until now a puzzle record kept the target, the origin and the accuracy required (`tolerance`), and
+  nothing else. The things that decide what the puzzle actually looked like — how many decoy shapes were
+  scattered on it, how dark they were, how big the piece was, and which background was used — were
+  picked per challenge and then thrown away. So you could see that someone failed by 11px and had no way
+  to know whether they had been handed an easy puzzle or a nasty one.
+  
+  Puzzle records now carry a `render` object with all of it: the difficulty ladder level, the piece size,
+  the frame geometry, the five render settings, and the two 128-bit seeds that regenerate the imagery.
+  Given those, the portal reproduces the background and the piece byte for byte.
+  
+  To make that possible the renderer had to become reproducible. `renderPuzzle` and `createBackground`
+  now take an optional seed and report the one they used, instead of generating one internally and
+  discarding it; the background pool hands out each image together with its seed. Default behaviour is
+  unchanged — omit the seed and you still get a fresh random one.
+  
+  The ladder level is new on the session too (`puzzleLevel`), because it was computed when the puzzle
+  was escalated and never written down anywhere. It is absent when the ladder did not choose the
+  puzzle — a site-configured puzzle or a traffic-filter override has no level.
+  
+  The record is patched after the imagery is produced rather than written with the rest of the record,
+  because the piece size and the seeds only exist once the render has run, and the target has to be
+  durable before it is expressed in pixels. If that patch fails it is logged and ignored: losing a
+  diagnostic must not cost the user their solve. Records written before this change, and any challenge
+  whose render threw, simply have no `render`.
+  
+  **The seeds are secret.** `puzzle-assets/src/prng.ts` explains why: they regenerate the clean
+  background, and a clean background can be diffed against the composite to read the target position
+  straight off. They were previously barred from leaving the provider entirely. They may now sit on the
+  captcha record, and nowhere else — not in a response, not in a log, not on the session. Anything that
+  exposes a puzzle record to a caller has to drop `render.backgroundSeed` and `render.renderSeed`, and
+  must not serve them at all while the challenge is still live. The comment in `prng.ts` now says so.
+  
+  Test coverage. Three guards, each confirmed to fail when the thing it protects is broken:
+  `renderReplay.unit.test.ts` re-renders from the stored fields and asserts the bytes match, with one
+  case per field asserting that changing *only* that field changes the output — so a record missing a
+  field cannot pass; `puzzleRenderer.unit.test.ts` replays through the same entry points the portal would
+  use, which catches a background paired with the wrong seed; and `schemas.test.ts` asserts every
+  sub-field survives a strict-mode mongoose write, since a field absent from the schema is dropped
+  silently and would store nothing at all.
+- dcb691b: Add a refresh control to the puzzle captcha.
+  
+  A user who can't solve the puzzle they were given can now ask for a different one, from a button in the puzzle's header. The replacement comes through a new frictionless session, like a wrong answer already does.
+  
+  The widget tells the provider which session was refreshed (`refreshOf`). The provider then records `refreshOf`, `refreshCount` and `refreshedAfterMs` on the new session, so refresh behaviour can be scored later. After three refreshes in a row it serves an image challenge instead, with reason `PUZZLE_REFRESH_LIMIT`. It only does this if the site has image enabled. The switch only goes from puzzle to image, so a client that lies about its refreshes can only make its own challenge harder. A client that leaves the field out gets a normal session, the same as reloading the page.
+  
+  The image widget's reload button now reports itself as a refresh too. That way a user who was moved onto image isn't sent back to the puzzle by their next reload.
+
+### Patch Changes
+
+- dd4c27c: Store the whole-SYN fields the tcp-probe sidecar now reports.
+  
+  The sidecar's handshake record grew from 80 to 104 bytes and the tail was reordered (prosopo/Protect#1167). chaddy was updated to read both layouts and to forward the new fields as their own headers (prosopo/chaddy#16, #17); this is the provider side of that, so the values have somewhere to land instead of being dropped at the middleware.
+  
+  Twelve new fields on `Session`, all optional: `tcpOptsKinds`, `tcpOptsPresent`, `tcpOptsCount`, `tcpTsval`, `tcpTsecr`, `tcpFlags`, `tcpDataOffsetResv`, `tcpUrgPtr`, `ipIdent`, `ipTotalLen`, `ipFragFlags`, `ipTos`. They are surfaced on the decision-machine input the same way the existing TCP fields are, so routing and verify rules can read them.
+  
+  `tcpOptsKinds` is stored decoded — the IANA kind number of each TCP option in wire order, `[2, 4, 8, 1, 3]` on an ordinary Linux SYN. The probe emits it packed into a u64, and a u64 reaches 2^64 while a JS number is exact only to 2^53, so the packed form could not be held without rounding; the rounding would land in the low bytes, which are the option kinds themselves. The array holds the same information and is queryable per position. It also replaces the old `tcpOptsOrder`, which packed 4 bits per option and so could not tell MSS from TCP Fast Open, or Window Scale from MD5, and could not represent MPTCP at all.
+  
+  `tcpOptsFlags` and `tcpOptsOrder` are kept and still read. A pronode running an older chaddy still sends them, and years of rows hold them, so removing them would both lose the rollout window and break any routing rule already reading them. They go undefined on new sessions once the fleet is rolled.
+  
+  `tcpTsval` and `tcpTsecr` are written only when the Timestamps option was actually on the SYN. A TSval of 0 is legal and a TSecr of 0 is expected, so neither can use zero to mean absent.
+  
+  Six places named every one of these fields by hand — the middleware's copy onto the request, the session write, and four task files building the decision-machine bag. They now all go through one list, with a compile-time check that every field of `RawTlsSignals` is on it. That is not tidying: the Session projection comment in `@prosopo/types-database` records a field being missed in exactly this way, after which the rules reading it got `undefined` and silently never fired against real traffic.
+  
+  Separately, the provider compose no longer defaults the sidecar to `prosopo/tcp-probe:latest`. The probe's reply is a bare fixed-size struct with no version in it, so the image tag is the only statement of which layout a host serves, and publishing `:latest` would change that on every pronode at the next pull with nobody running a deploy. The default is now the `0.1.1` both Protect inventories already pin.
+  
+  Tests: the new headers all parse; a packed value above 2^53 decodes without losing its low bytes; the kind pairs the old encoding aliased stay distinct; a trailing end-of-option-list terminates the list rather than appearing in it; an all-zero packed value reads as absent rather than as an empty list; malformed and out-of-range values are ignored; the legacy header pair is still read; and a zero is kept rather than dropped, since `ipIdent` 0 and `tcpTsecr` 0 are real readings.
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/locale@3.7.0
+  - @prosopo/common@3.1.62
+  - @prosopo/user-access-policy@3.14.15
+  - @prosopo/logger@2.1.3
+
+## 5.7.3
+### Patch Changes
+
+- 06784d0: Translation keys are now a typed union built from the English catalogue, so calling the translator with a key that does not exist fails to compile. Error classes only pass a message to the translator when it is a real catalogue key, and free-text messages are shown as they are.
+- Updated dependencies [ede4352]
+- Updated dependencies [2145922]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/types@5.12.0
+  - @prosopo/locale@3.6.2
+  - @prosopo/common@3.1.61
+  - @prosopo/user-access-policy@3.14.14
+  - @prosopo/logger@2.1.2
+
+## 5.7.2
+### Patch Changes
+
+- bcf59f1: Make the traffic-filter tarpit actually reach a visitor. As shipped, `padBytes` could not survive being saved and never fired on the endpoint nearly every site uses, so no response was ever padded.
+  
+  `TrafficCategoryPolicySchema` in `types-database` never declared `padBytes`, and Mongoose drops undeclared fields on write. The setting round-tripped through zod at both ends — the portal's site save and the provider's client-list push — and was then thrown away by the database at each, so `checkTrafficFilter` only ever read `undefined`. Declared now, bounded to the same 0–5 MiB range zod enforces.
+  
+  The frictionless endpoint resolved a traffic-filter verdict but never passed its `padBytes` to the response middleware, so only the direct `/pow`, `/image` and `/puzzle` endpoints padded anything. It is now set as soon as the verdict is known, which covers both the challenge the traffic filter dispatches and the one the decision machine issues.
+  
+  Also stops the padding writer emitting invalid JSON for a body with no fields (it spliced in a trailing comma), and leaves a non-object body unpadded rather than corrupting it.
+  
+  Tests: the Mongoose round-trip for a challenge and a blocked category plus the cap, `resolvePadBytes` across block/challenge/multiple matches, the request-time verdict carrying the count, the frictionless handler attaching it, and the padding middleware itself — byte count, pad-first ordering, incompressibility, the 5 MiB clamp, and the untouched-by-default path.
+
+## 5.7.1
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/user-access-policy@3.14.13
+
+## 5.7.0
+### Minor Changes
+
+- b77c5f4: The image captcha widget now tells the provider whether each tile, and the checkbox, was picked with a mouse or finger or with the keyboard. Keyboard presses have no screen position, so they all arrive as (0, 0). The provider used to see those repeats as a script clicking the same pixel and reject people who solve with the keyboard. It now looks for repeated positions among pointer selections only. It rejects a keyboard selection that claims a position. Requests from older widgets, which send no input method, are checked as strictly as before. The input method is stored on the commitment next to the coordinates.
+
+### Patch Changes
+
+- f650c66: A Web Bot Auth (authenticated) token can now only be verified once, even when several verify requests for it arrive at the same time. Before, the provider checked whether the session was already used and then marked it used in a separate step, so parallel verifies could all return `verified: true`. Marking the session used is now a single conditional database write, and only the request that wins it is verified; the rest get `API.USER_ALREADY_VERIFIED`.
+- fa316d6: A captcha token now verifies at most once even when a site's server sends several verify requests for it at the same moment. Before, each request read the record, saw it had not been checked yet, and then marked it checked, so every request that arrived before the first write finished was accepted. Marking a PoW, puzzle or image result as checked is now a single conditional write, and only the request that wins it is verified. The same applies to image captcha submissions: a request hash can now only be spent by one submission, so answers can no longer be tried in parallel against one challenge.
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [294b480]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/locale@3.6.1
+  - @prosopo/user-access-policy@3.14.12
+  - @prosopo/logger@2.1.1
+
+## 5.6.5
+### Patch Changes
+
+- 20542d8: Send page scroll events with the captcha's behavioural data.
+  
+  The widget now passes a fourth collector, the page's scroll position and the
+  time of each scroll, alongside mouse, touch and click data, and the provider
+  stores it as `c4` on the captcha record. People scroll in uneven bursts while
+  bots tend to scroll at a steady rate, so this gives detection something to
+  work with. Detector bundles that predate the scroll tracker simply send no
+  `c4`.
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/user-access-policy@3.14.11
+
 ## 5.6.4
 ### Patch Changes
 

@@ -18,6 +18,7 @@ import { signatureVerify } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	checkPowSignature,
+	isCoordsAllZero,
 	validateSolution,
 } from "../../../../tasks/powCaptcha/powTasksUtils.js";
 
@@ -334,5 +335,32 @@ describe("checkPowSignature", () => {
 			expect(apiError.context?.signature).toBe(customSignature);
 			expect(apiError.context?.signatureType).toBe("ecdsa");
 		}
+	});
+});
+
+describe("isCoordsAllZero", () => {
+	it("is false when no coords were submitted", () => {
+		expect(isCoordsAllZero(undefined)).toBe(false);
+		expect(isCoordsAllZero([])).toBe(false);
+		expect(isCoordsAllZero([[]])).toBe(false);
+	});
+
+	it("is true when every pair is (0,0)", () => {
+		expect(isCoordsAllZero([[[0, 0]]])).toBe(true);
+		expect(
+			isCoordsAllZero([
+				[
+					[0, 0],
+					[0, 0],
+				],
+				[[0, 0]],
+			]),
+		).toBe(true);
+	});
+
+	it("is false when any component is non-zero", () => {
+		expect(isCoordsAllZero([[[12, 0]]])).toBe(false);
+		expect(isCoordsAllZero([[[0, 34]]])).toBe(false);
+		expect(isCoordsAllZero([[[0, 0]], [[5, 6]]])).toBe(false);
 	});
 });

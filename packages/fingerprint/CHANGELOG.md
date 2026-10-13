@@ -1,5 +1,67 @@
 # @prosopo/fingerprint
 
+## 2.7.60
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+
+## 2.7.59
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+
+## 2.7.58
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/fingerprintjs@5.2.0
+  - @prosopo/util-crypto@13.6.0
+
+## 2.7.57
+### Patch Changes
+
+- Updated dependencies [ede4352]
+- Updated dependencies [2145922]
+- Updated dependencies [b017dfb]
+- Updated dependencies [97a799e]
+- Updated dependencies [9fc1e8a]
+  - @prosopo/util-crypto@13.6.0
+  - @prosopo/types@5.12.0
+
+## 2.7.56
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+
+## 2.7.55
+### Patch Changes
+
+- Updated dependencies [59b7e87]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+  - @prosopo/types@5.11.0
+
+## 2.7.54
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+
 ## 2.7.53
 ### Patch Changes
 

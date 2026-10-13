@@ -326,7 +326,10 @@ describe("publicRouter", () => {
 			status: vi.fn().mockReturnThis(),
 			send: vi.fn(),
 		} as unknown as Response;
-		const metricsReq = { headers: {} } as Request;
+		const metricsReq = {
+			headers: {},
+			socket: { remoteAddress: "127.0.0.1" },
+		} as Request;
 
 		await metricsHandler(mockEnv)(metricsReq, metricsRes, mockNext);
 

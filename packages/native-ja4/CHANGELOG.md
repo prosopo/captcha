@@ -1,5 +1,10 @@
 # @prosopo/native-ja4
 
+## 0.0.7
+### Patch Changes
+
+- 0a4ae2f: A malformed TLS ClientHello no longer kills the provider process. The JA4 parser indexes extension bytes without checking they exist, and a panic inside the native module aborted Node outright. The binding now catches the panic and throws an ordinary error, which the provider already turns into the default JA4 fingerprint. Fingerprints for well-formed hellos are unchanged.
+
 ## 0.0.6
 ### Patch Changes
 

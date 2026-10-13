@@ -1,5 +1,87 @@
 # @prosopo/types-env
 
+## 2.11.17
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+  - @prosopo/types-database@5.10.0
+  - @prosopo/keyring@2.10.3
+
+## 2.11.16
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/types-database@5.9.0
+  - @prosopo/keyring@2.10.2
+
+## 2.11.15
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/types-database@5.8.0
+  - @prosopo/keyring@2.10.1
+  - @prosopo/logger@2.1.3
+
+## 2.11.14
+### Patch Changes
+
+- Updated dependencies [ede4352]
+- Updated dependencies [2145922]
+- Updated dependencies [06784d0]
+  - @prosopo/keyring@2.10.0
+  - @prosopo/types@5.12.0
+  - @prosopo/types-database@5.7.3
+  - @prosopo/logger@2.1.2
+
+## 2.11.13
+### Patch Changes
+
+- Updated dependencies [bcf59f1]
+  - @prosopo/types-database@5.7.2
+
+## 2.11.12
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/keyring@2.9.99
+  - @prosopo/types-database@5.7.1
+
+## 2.11.11
+### Patch Changes
+
+- Updated dependencies [f650c66]
+- Updated dependencies [59b7e87]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+- Updated dependencies [fa316d6]
+  - @prosopo/types-database@5.7.0
+  - @prosopo/types@5.11.0
+  - @prosopo/keyring@2.9.98
+  - @prosopo/logger@2.1.1
+
+## 2.11.10
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/types-database@5.6.5
+  - @prosopo/keyring@2.9.97
+
 ## 2.11.9
 ### Patch Changes
 

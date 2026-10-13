@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Неважећи потпис",
 		"SITE_KEY_MISSING": "Недостаје кључ сајта",
 		"ACCOUNT_NOT_FOUND": "Налог није пронађен",
-		"INVALID_TIMESTAMP": "Неважећа временска ознака"
+		"INVALID_TIMESTAMP": "Неважећа временска ознака",
+		"MISSING_AUTH_HEADER": "Недостаје заглавље за ауторизацију",
+		"INVALID_JWT": "Неважећи JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Недовољне дозволе за обављање ове радње",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Захтеви са мобилних мрежних конекција нису дозвољени за овај сајт",
 		"SATELLITE_BLOCKED": "З��хтеви са сателитских конекција нису дозвољени за овај сајт",
 		"CRAWLER_BLOCKED": "Захтеви од познатих ботова нису дозвољени за овај сајт",
-		"DISALLOWED_WEBVIEW": "Захтеви из уграђених прегледача (WebView) нису дозвољени за овај сајт"
+		"DISALLOWED_WEBVIEW": "Захтеви из уграђених прегледача (WebView) нису дозвољени за овај сајт",
+		"INTERNAL_SERVER_ERROR": "Интерна грешка сервера"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Није могуће изменити власника корисника",
@@ -381,6 +384,11 @@
 		"INSECURE_CONTEXT": "Procaptcha захтева безбедну (HTTPS) везу",
 		"CHECKING": "Проверавамо да ли сте човек",
 		"IMAGE_DIALOG_LABEL": "Провера сликама",
+		"CANNOT_LOAD": "Није могуће учитати CAPTCHA",
+		"RELOAD": "Поново учитај",
+		"VERIFIED_AGENT": "Верификовани агент",
+		"TRUSTED_REQUEST": "Поуздан захтев",
+		"LOADING": "Учитавање",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Провера слагалицом",
 			"DRAG": "Превуците део до циља",
@@ -390,8 +398,32 @@
 			"KEYBOARD_HINT": "Померајте део стрелицама, уз држање тастера Shift за ситније кораке. Притисните Enter да га пошаљете, Home да га вратите на почетак или Escape да откажете.",
 			"POSITION": "{{x}} посто с лева, {{y}} посто одозго",
 			"CHECKING": "Проверавамо ваш одговор",
-			"RETRY_ANNOUNCEMENT": "За длаку. Учитана је нова слагалица и део је поново на почетку."
-		}
+			"RETRY_ANNOUNCEMENT": "За длаку. Учитана је нова слагалица и део је поново на почетку.",
+			"REFRESH": "Друга слагалица",
+			"SWITCH_TO_IMAGE": "Пређите на задатак са сликама",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Можете прећи и на задатак са сликама."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Изазов редоследа иконица",
+			"SELECT": "Изаберите овим редоследом",
+			"RETRY": "За длаку — покушајте поново",
+			"LEGEND_ALT": "Иконице за избор, по редоследу",
+			"RESET": "Поништи",
+			"CHECKING": "Провера…",
+			"SUBMIT": "У реду"
+		},
+		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
+		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
+		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
+		"AUDIO_PLAY": "Play",
+		"AUDIO_REPLAY": "Play again",
+		"AUDIO_PLAYING": "Playing",
+		"AUDIO_FINISHED": "Playback finished",
+		"AUDIO_PLAYBACK_FAILED": "Audio could not be played. Check your device volume and try again.",
+		"AUDIO_INCORRECT": "That wasn't right. Here's a new one.",
+		"AUDIO_SUBMIT": "Verify",
+		"AUDIO_CHECKING": "Checking",
+		"AUDIO_ALTERNATIVE": "Use audio instead"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Немогуће кодирање неважеће адресе",
@@ -436,7 +468,13 @@
 		"TABLES_UNDEFINED": "Табеле нису дефинисане",
 		"CONNECTION_UNDEFINED": "Веза није дефинисана",
 		"COMMITMENT_FLAG_FAILED": "Означавање обавезе као обрађене није успело",
-		"UNKNOWN": "Непозната грешка базе података"
+		"UNKNOWN": "Непозната грешка базе података",
+		"QUERY_ERROR": "Упит бази података није успео",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis веза за правила приступа није дефинисана",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Складиште правила приступа корисника није дефинисано",
+		"SESSION_STORE_FAILED": "Чување сесије није успело",
+		"SESSION_CHECK_REMOVE_FAILED": "Провера и уклањање сесије нису успели",
+		"SESSION_GET_FAILED": "Преузимање сесије није успело"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Грешка при рашчлањивању капче",
@@ -455,7 +493,10 @@
 		"INVALID_SALT": "Неважећа со",
 		"INVALID_TOKEN": "Неважећи токен",
 		"INVALID_SOLUTION": "Неважеће решење",
-		"DECRYPTION_ERROR": "Грешка при дешифровању"
+		"DECRYPTION_ERROR": "Грешка при дешифровању",
+		"SOLUTION_NOT_FOUND": "Решење није пронађено",
+		"DECISION_MACHINE_DENIED": "Одбијено од стране машине за одлучивање",
+		"INVALID_TIMESTAMP": "Неважећа временска ознака"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Неважећи параметар"

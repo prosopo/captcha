@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/native-ja4",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"description": "Rust JA4 TLS fingerprint parser exposed to Node via napi-rs.",
 	"license": "Apache-2.0",
 	"author": "Prosopo Limited",
@@ -13,8 +13,7 @@
 	"types": "index.d.ts",
 	"files": ["index.js", "index.d.ts", "*.node"],
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"napi": {
 		"binaryName": "prosopo-native-ja4",
@@ -23,6 +22,7 @@
 	"scripts": {
 		"build": "napi build --platform --release",
 		"build:debug": "napi build --platform",
+		"test": "node --test \"tests/**/*.test.ts\"",
 		"test:cargo": "cargo test --release",
 		"clean": "cargo clean && rm -f *.node index.js index.d.ts"
 	},

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { timingSafeEqual } from "node:crypto";
+import { BlockList, isIPv4, isIPv6 } from "node:net";
 import type { ProviderEnvironment } from "@prosopo/env";
 import {
 	AdminApiPaths,
@@ -30,9 +32,8 @@ import {
 import type { HealthzGeoOutcome } from "./healthzGeo.js";
 
 // Whether the /metrics endpoint and instrumentation are active. Defaults to on;
-// set PROSOPO_METRICS_ENABLED=false to disable. The endpoint only ever listens
-// on the existing internal provider port and is scraped by vector over the
-// docker network, so it is safe to leave enabled in production.
+// set PROSOPO_METRICS_ENABLED=false to disable. Who can scrape it is decided by
+// `metricsAccess` below.
 export const metricsEnabled = (): boolean =>
 	process.env.PROSOPO_METRICS_ENABLED !== "false";
 
@@ -442,18 +443,68 @@ export const metricsMiddleware = (): RequestHandler => {
 	};
 };
 
+const internalNetworks = (): BlockList => {
+	const list = new BlockList();
+	list.addSubnet("127.0.0.0", 8, "ipv4");
+	list.addSubnet("10.0.0.0", 8, "ipv4");
+	list.addSubnet("172.16.0.0", 12, "ipv4");
+	list.addSubnet("192.168.0.0", 16, "ipv4");
+	list.addAddress("::1", "ipv6");
+	list.addSubnet("fc00::", 7, "ipv6");
+	list.addSubnet("fe80::", 10, "ipv6");
+	return list;
+};
+
+const INTERNAL_NETWORKS = internalNetworks();
+
+const isInternalAddress = (address: string | undefined): boolean => {
+	if (!address) return false;
+	const v4 = address.startsWith("::ffff:") ? address.slice(7) : address;
+	if (isIPv4(v4)) return INTERNAL_NETWORKS.check(v4, "ipv4");
+	if (isIPv6(address)) return INTERNAL_NETWORKS.check(address, "ipv6");
+	return false;
+};
+
+const tokenMatches = (header: string | undefined, token: string): boolean => {
+	const expected = Buffer.from(`Bearer ${token}`);
+	const actual = Buffer.from(header ?? "");
+	return actual.length === expected.length && timingSafeEqual(actual, expected);
+};
+
+/**
+ * Who may scrape /metrics.
+ *
+ * - PROSOPO_METRICS_TOKEN set: any caller with `Authorization: Bearer <token>`.
+ * - Otherwise only direct connections from loopback or private addresses, e.g.
+ *   vector on the docker network. A request that came through a reverse proxy
+ *   (it carries a forwarding header) is refused even though its socket peer is
+ *   the proxy's private address, so the public site cannot reach it.
+ * - PROSOPO_METRICS_PUBLIC=true restores the old open endpoint.
+ */
+export const metricsAccess = (
+	req: Request,
+	vars: Record<string, string | undefined> = process.env,
+): 200 | 401 | 403 => {
+	const token = vars.PROSOPO_METRICS_TOKEN;
+	if (token) {
+		return tokenMatches(req.headers.authorization, token) ? 200 : 401;
+	}
+	if (vars.PROSOPO_METRICS_PUBLIC === "true") return 200;
+	const proxied =
+		req.headers["x-forwarded-for"] !== undefined ||
+		req.headers.forwarded !== undefined ||
+		req.headers["x-real-ip"] !== undefined;
+	return !proxied && isInternalAddress(req.socket?.remoteAddress) ? 200 : 403;
+};
+
 // Serves the Prometheus exposition. Refreshes the redis-readiness gauges from
 // the live DB connections at scrape time so they reflect current state.
-//
-// The endpoint is intended for the internal docker network (vector scrapes it),
-// so it is unauthenticated by default. Set PROSOPO_METRICS_TOKEN to require an
-// `Authorization: Bearer <token>` header — use this if the provider port is
-// reachable outside the internal network.
+// Access is decided by `metricsAccess`.
 export const metricsHandler = (env: ProviderEnvironment): RequestHandler => {
 	return async (req: Request, res: Response) => {
-		const token = process.env.PROSOPO_METRICS_TOKEN;
-		if (token && req.headers.authorization !== `Bearer ${token}`) {
-			res.status(401).send("Unauthorized");
+		const access = metricsAccess(req);
+		if (access !== 200) {
+			res.status(access).send(access === 401 ? "Unauthorized" : "Forbidden");
 			return;
 		}
 		const m = getMetrics();

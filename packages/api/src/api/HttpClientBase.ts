@@ -15,14 +15,34 @@ import { HttpError } from "./HttpError.js";
 
 export class HttpClientBase {
 	protected readonly baseURL: string;
+	// Undefined keeps the platform default, which for undici is ~300s of
+	// silence before a stalled request fails.
+	protected readonly timeoutMs: number | undefined;
 
-	constructor(baseURL: string, prefix = "") {
+	constructor(baseURL: string, prefix = "", timeoutMs?: number) {
 		this.baseURL = baseURL + prefix;
+		this.timeoutMs = timeoutMs;
+	}
+
+	// The signal stays attached while the body is read, so a server that sends
+	// headers and then stalls is cut off too.
+	protected withTimeout(init?: RequestInit): RequestInit | undefined {
+		if (this.timeoutMs === undefined) {
+			return init;
+		}
+		const timeout = AbortSignal.timeout(this.timeoutMs);
+		const signal = init?.signal
+			? AbortSignal.any([init.signal, timeout])
+			: timeout;
+		return { ...init, signal };
 	}
 
 	protected async fetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
 		try {
-			const response = await fetch(this.baseURL + input, init);
+			const response = await fetch(
+				this.baseURL + input,
+				this.withTimeout(init),
+			);
 			if (
 				!response.ok &&
 				// Only throw an error if the response is not JSON and not a 400 error
@@ -47,12 +67,15 @@ export class HttpClientBase {
 			...(init?.headers || {}),
 		};
 		try {
-			const response = await fetch(this.baseURL + input, {
-				method: "POST",
-				body: JSON.stringify(body),
-				...init,
-				headers,
-			});
+			const response = await fetch(
+				this.baseURL + input,
+				this.withTimeout({
+					method: "POST",
+					body: JSON.stringify(body),
+					...init,
+					headers,
+				}),
+			);
 			if (
 				!response.ok &&
 				// Only throw an error if the response is not JSON and not a 400 error
@@ -80,12 +103,15 @@ export class HttpClientBase {
 			...(init?.headers || {}),
 		};
 		try {
-			const response = await fetch(this.baseURL + input, {
-				method: "POST",
-				body: JSON.stringify(body),
-				...init,
-				headers,
-			});
+			const response = await fetch(
+				this.baseURL + input,
+				this.withTimeout({
+					method: "POST",
+					body: JSON.stringify(body),
+					...init,
+					headers,
+				}),
+			);
 			if (
 				!response.ok &&
 				response.status !== 400 &&

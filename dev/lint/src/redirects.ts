@@ -514,7 +514,7 @@ const redirects = async (args: {
 				"\n❌ Linting failed! Please add trailing slashes to all internal URLs.",
 			);
 			console.error(
-				'\n💡 Run "npm run lint-fix:redirects" to automatically fix these issues.',
+				'\n💡 Run "pnpm run lint-fix:redirects" to automatically fix these issues.',
 			);
 			process.exit(1);
 		}

@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Ogiltig signatur",
 		"SITE_KEY_MISSING": "SITE KEY saknas",
 		"ACCOUNT_NOT_FOUND": "Konto hittades inte",
-		"INVALID_TIMESTAMP": "Ogiltig tidsstämpel"
+		"INVALID_TIMESTAMP": "Ogiltig tidsstämpel",
+		"MISSING_AUTH_HEADER": "Auktoriseringshuvud saknas",
+		"INVALID_JWT": "Ogiltig JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Otillräckliga behörigheter för att utföra denna åtgärd",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Förfrågningar från mobilnätverksanslutningar är inte tillåtna för denna webbplats",
 		"SATELLITE_BLOCKED": "Förfrågningar från satellitanslutningar är inte tillåtna för denna webbplats",
 		"CRAWLER_BLOCKED": "Förfrågningar från kända crawlers är inte tillåtna för denna webbplats",
-		"DISALLOWED_WEBVIEW": "Förfrågningar från inbäddade webbläsare (WebView) är inte tillåtna för denna webbplats"
+		"DISALLOWED_WEBVIEW": "Förfrågningar från inbäddade webbläsare (WebView) är inte tillåtna för denna webbplats",
+		"INTERNAL_SERVER_ERROR": "Internt serverfel"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Kan inte ändra ägare användare",
@@ -381,6 +384,11 @@
 		"INSECURE_CONTEXT": "Procaptcha kräver en säker (HTTPS) anslutning",
 		"CHECKING": "Kontrollerar att du är en människa",
 		"IMAGE_DIALOG_LABEL": "Bilduppgift",
+		"CANNOT_LOAD": "Det går inte att läsa in CAPTCHA",
+		"RELOAD": "Läs in igen",
+		"VERIFIED_AGENT": "Verifierad agent",
+		"TRUSTED_REQUEST": "Betrodd begäran",
+		"LOADING": "Läser in",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Pusseluppgift",
 			"DRAG": "Dra biten till målet",
@@ -390,8 +398,32 @@
 			"KEYBOARD_HINT": "Flytta biten med piltangenterna, håll ned skift för mindre steg. Tryck på Retur för att skicka in den, Home för att lägga tillbaka den vid starten, eller Escape för att avbryta.",
 			"POSITION": "{{x}} procent från vänster, {{y}} procent uppifrån",
 			"CHECKING": "Kontrollerar ditt svar",
-			"RETRY_ANNOUNCEMENT": "Nästan. Ett nytt pussel har laddats och biten är tillbaka vid starten."
-		}
+			"RETRY_ANNOUNCEMENT": "Nästan. Ett nytt pussel har laddats och biten är tillbaka vid starten.",
+			"REFRESH": "Ett annat pussel",
+			"SWITCH_TO_IMAGE": "Byt till en bilduppgift",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Du kan också byta till en bilduppgift."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Utmaning med ikonordning",
+			"SELECT": "Välj i den här ordningen",
+			"RETRY": "Nästan — försök igen",
+			"LEGEND_ALT": "Ikoner att välja, i ordning",
+			"RESET": "Återställ",
+			"CHECKING": "Kontrollerar…",
+			"SUBMIT": "OK"
+		},
+		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
+		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
+		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
+		"AUDIO_PLAY": "Play",
+		"AUDIO_REPLAY": "Play again",
+		"AUDIO_PLAYING": "Playing",
+		"AUDIO_FINISHED": "Playback finished",
+		"AUDIO_PLAYBACK_FAILED": "Audio could not be played. Check your device volume and try again.",
+		"AUDIO_INCORRECT": "That wasn't right. Here's a new one.",
+		"AUDIO_SUBMIT": "Verify",
+		"AUDIO_CHECKING": "Checking",
+		"AUDIO_ALTERNATIVE": "Use audio instead"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Misslyckades att koda ogiltig adress",
@@ -436,7 +468,13 @@
 		"TABLES_UNDEFINED": "Tabeller ospecificerade",
 		"CONNECTION_UNDEFINED": "Anslutning ospecificerad",
 		"COMMITMENT_FLAG_FAILED": "Misslyckades att flagga åtagande som behandlad",
-		"UNKNOWN": "Okänt databasfel"
+		"UNKNOWN": "Okänt databasfel",
+		"QUERY_ERROR": "Databasfrågan misslyckades",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis-anslutning för åtkomstregler är inte definierad",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Lagring för användarnas åtkomstregler är inte definierad",
+		"SESSION_STORE_FAILED": "Det gick inte att spara sessionen",
+		"SESSION_CHECK_REMOVE_FAILED": "Det gick inte att kontrollera och ta bort sessionen",
+		"SESSION_GET_FAILED": "Det gick inte att hämta sessionen"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Fel vid tolkning av captcha",
@@ -455,7 +493,10 @@
 		"INVALID_SALT": "Ogiltigt salt",
 		"INVALID_TOKEN": "Ogiltig token",
 		"INVALID_SOLUTION": "Ogiltig lösning",
-		"DECRYPTION_ERROR": "Fel vid avkryptering"
+		"DECRYPTION_ERROR": "Fel vid avkryptering",
+		"SOLUTION_NOT_FOUND": "Lösningen hittades inte",
+		"DECISION_MACHINE_DENIED": "Nekad av beslutsmaskinen",
+		"INVALID_TIMESTAMP": "Ogiltig tidsstämpel"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Ogiltig parameter"

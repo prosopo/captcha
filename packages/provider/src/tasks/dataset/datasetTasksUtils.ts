@@ -39,8 +39,8 @@ export const providerValidateDataset = async (
 	}
 
 	// Check enough unsolved captchas
-	if (solutions < minUnsolvedCaptchas) {
-		throw new ProsopoEnvError("DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED", {
+	if (datasetRaw.captchas.length - solutions < minUnsolvedCaptchas) {
+		throw new ProsopoEnvError("DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED", {
 			context: { failedFuncName: providerValidateDataset.name },
 		});
 	}

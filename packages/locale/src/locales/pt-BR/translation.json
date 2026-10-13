@@ -10,7 +10,9 @@
 		"INVALID_SIGNATURE": "Assinatura inválida",
 		"SITE_KEY_MISSING": "Chave do SITE ausente",
 		"ACCOUNT_NOT_FOUND": "Conta não encontrada",
-		"INVALID_TIMESTAMP": "Timestamp inválido"
+		"INVALID_TIMESTAMP": "Timestamp inválido",
+		"MISSING_AUTH_HEADER": "Cabeçalho de autorização ausente",
+		"INVALID_JWT": "JWT inválido"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Permissões insuficientes para realizar esta ação",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Solicitações de conexões de rede móvel não são permitidas para este site",
 		"SATELLITE_BLOCKED": "Solicitações de conexões por satélite não são permitidas para este site",
 		"CRAWLER_BLOCKED": "Solicitações de crawlers conhecidos não são permitidas para este site",
-		"DISALLOWED_WEBVIEW": "Solicitações de navegadores incorporados (WebView) não são permitidas para este site"
+		"DISALLOWED_WEBVIEW": "Solicitações de navegadores incorporados (WebView) não são permitidas para este site",
+		"INTERNAL_SERVER_ERROR": "Erro interno do servidor"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Não é possível modificar o usuário proprietário",
@@ -82,6 +85,11 @@
 		"INSECURE_CONTEXT": "O Procaptcha requer uma conexão segura (HTTPS)",
 		"CHECKING": "Verificando se você é humano",
 		"IMAGE_DIALOG_LABEL": "Desafio de imagens",
+		"CANNOT_LOAD": "Não foi possível carregar o CAPTCHA",
+		"RELOAD": "Recarregar",
+		"VERIFIED_AGENT": "Agente verificado",
+		"TRUSTED_REQUEST": "Solicitação confiável",
+		"LOADING": "Carregando",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Desafio de quebra-cabeça",
 			"DRAG": "Arraste a peça até o alvo",
@@ -91,8 +99,32 @@
 			"KEYBOARD_HINT": "Use as teclas de seta para mover a peça, segurando Shift para passos menores. Pressione Enter para enviar, Home para voltar ao início ou Esc para cancelar.",
 			"POSITION": "{{x}} por cento a partir da esquerda, {{y}} por cento a partir do topo",
 			"CHECKING": "Verificando sua resposta",
-			"RETRY_ANNOUNCEMENT": "Quase. Um novo quebra-cabeça foi carregado e a peça voltou ao início."
-		}
+			"RETRY_ANNOUNCEMENT": "Quase. Um novo quebra-cabeça foi carregado e a peça voltou ao início.",
+			"REFRESH": "Outro quebra-cabeça",
+			"SWITCH_TO_IMAGE": "Mudar para um desafio de imagens",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Você também pode mudar para um desafio de imagens."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Desafio de ordem dos ícones",
+			"SELECT": "Selecione nesta ordem",
+			"RETRY": "Quase — tente de novo",
+			"LEGEND_ALT": "Ícones para selecionar, em ordem",
+			"RESET": "Redefinir",
+			"CHECKING": "Verificando…",
+			"SUBMIT": "OK"
+		},
+		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
+		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
+		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
+		"AUDIO_PLAY": "Play",
+		"AUDIO_REPLAY": "Play again",
+		"AUDIO_PLAYING": "Playing",
+		"AUDIO_FINISHED": "Playback finished",
+		"AUDIO_PLAYBACK_FAILED": "Audio could not be played. Check your device volume and try again.",
+		"AUDIO_INCORRECT": "That wasn't right. Here's a new one.",
+		"AUDIO_SUBMIT": "Verify",
+		"AUDIO_CHECKING": "Checking",
+		"AUDIO_ALTERNATIVE": "Use audio instead"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Falha ao codificar endereço inválido",
@@ -137,7 +169,13 @@
 		"TABLES_UNDEFINED": "Tabelas indefinidas",
 		"CONNECTION_UNDEFINED": "Conexão indefinida",
 		"COMMITMENT_FLAG_FAILED": "Falha ao marcar compromisso como processado",
-		"UNKNOWN": "Erro de banco de dados desconhecido"
+		"UNKNOWN": "Erro de banco de dados desconhecido",
+		"QUERY_ERROR": "A consulta ao banco de dados falhou",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Conexão Redis das regras de acesso não definida",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Armazenamento das regras de acesso de usuários não definido",
+		"SESSION_STORE_FAILED": "Falha ao salvar a sessão",
+		"SESSION_CHECK_REMOVE_FAILED": "Falha ao verificar e remover a sessão",
+		"SESSION_GET_FAILED": "Falha ao obter a sessão"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Erro ao analisar captcha",
@@ -156,7 +194,10 @@
 		"INVALID_SALT": "Salt inválido",
 		"INVALID_TOKEN": "Token inválido",
 		"INVALID_SOLUTION": "Solução inválida",
-		"DECRYPTION_ERROR": "Erro ao descriptografar"
+		"DECRYPTION_ERROR": "Erro ao descriptografar",
+		"SOLUTION_NOT_FOUND": "Solução não encontrada",
+		"DECISION_MACHINE_DENIED": "Negado pela máquina de decisão",
+		"INVALID_TIMESTAMP": "Timestamp inválido"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Parâmetro inválido"

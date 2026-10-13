@@ -22,11 +22,13 @@ import {
 	LanguageCodes,
 	Languages,
 	type Ti18n,
+	type TranslateFn,
 	type TranslationKey,
 	createTranslator,
 	i18nMiddleware,
 	isClientSide,
 	isLanguage,
+	isTranslationKey,
 	loadI18next,
 	translationKeys,
 } from "../index.js";
@@ -67,8 +69,30 @@ describe("isLanguage", () => {
 });
 
 describe("TranslationKey", () => {
-	it("is a plain string — keys are read from JSON, never narrowed", () => {
-		expectTypeOf<TranslationKey>().toEqualTypeOf<string>();
+	it("is the union of the English catalogue's leaf paths", () => {
+		expectTypeOf<"WIDGET.I_AM_HUMAN">().toExtend<TranslationKey>();
+		expectTypeOf<"WIDGET.PUZZLE.RETRY">().toExtend<TranslationKey>();
+		expectTypeOf<string>().not.toExtend<TranslationKey>();
+	});
+
+	it("rejects a mistyped key", () => {
+		// @ts-expect-error not a key in the English catalogue
+		assertType<TranslationKey>("WIDGET.I_AM_HUMANN");
+	});
+
+	it("rejects a branch, which has no text of its own", () => {
+		// @ts-expect-error WIDGET is an object, not a leaf
+		assertType<TranslationKey>("WIDGET");
+	});
+
+	it("rejects a mistyped key at a translate call", () => {
+		const translate: TranslateFn = (key: TranslationKey): string => key;
+		// @ts-expect-error not a key in the English catalogue
+		translate("API.UNKNOWNN");
+	});
+
+	it("narrows a runtime string with isTranslationKey", () => {
+		expectTypeOf(isTranslationKey).guards.toEqualTypeOf<TranslationKey>();
 	});
 
 	it("accepts a key literal, so error call sites need no cast", () => {

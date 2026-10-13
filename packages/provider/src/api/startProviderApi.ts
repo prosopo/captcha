@@ -45,10 +45,12 @@ import {
 	initDetectorBundlePool,
 } from "../tasks/detection/bundlePool.js";
 import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvider.js";
+import { adminAuthOptions } from "./adminAuthOptions.js";
 import { getVerdictCache } from "./blacklistRequestInspector.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
 import { startCpuProfiler } from "./cpuProfiler.js";
+import { detectorPoolBodyParser } from "./detectorPoolBodyParser.js";
 import { domainMiddleware } from "./domainMiddleware.js";
 import { handshakeTimingMiddleware } from "./handshakeTimingMiddleware.js";
 import { headerCheckMiddleware } from "./headerCheckMiddleware.js";
@@ -281,9 +283,12 @@ export async function startProviderApi(
 	// express.json buffers the body into a single string before JSON.parse, and
 	// V8 caps strings at 512 MiB (~620 bundles), with the parse itself needing
 	// roughly the same again in heap on top of the raw body.
+	//
+	// Only requests with a valid admin JWT get the large limit: this runs ahead
+	// of the auth middleware and rate limits.
 	apiApp.use(
 		AdminApiPaths.ReplaceDetectorPool,
-		express.json({ limit: DETECTOR_POOL_BODY_LIMIT }),
+		detectorPoolBodyParser(DETECTOR_POOL_BODY_LIMIT, env.pair, env.authAccount),
 	);
 	// Coarse request body-size backstop. Generous enough for legitimate
 	// payloads (captcha solutions, behavioural/simd readings, DNS event
@@ -389,17 +394,16 @@ export async function startProviderApi(
 
 	//  Admin routes - do not put after block middleware as this can block admin requests
 	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
-	apiApp.use(
-		"/v1/prosopo/provider/admin",
-		authMiddleware(env.pair, env.authAccount),
+	const adminAuth = authMiddleware(
+		env.pair,
+		env.authAccount,
+		adminAuthOptions(process.env, env.config.host),
 	);
+	apiApp.use("/v1/prosopo/provider/admin", adminAuth);
 	if (apiRuleRoutesProvider) {
 		const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
 		for (const userAccessRuleRoute in userAccessRuleRoutes) {
-			apiApp.use(
-				userAccessRuleRoute,
-				authMiddleware(env.pair, env.authAccount),
-			);
+			apiApp.use(userAccessRuleRoute, adminAuth);
 		}
 		// Rule mutations must invalidate the process-wide verdict cache —
 		// otherwise a fresh Block rule takes up to DEFAULT_VERDICT_CACHE_TTL_MS

@@ -19,6 +19,7 @@ import translationEn from "../locales/en/translation.json" with {
 import {
 	type TranslationNode,
 	getLeafFieldPath,
+	isTranslationKey,
 	translationKeys,
 } from "../translationKey.js";
 
@@ -136,5 +137,19 @@ describe("translationKeys", () => {
 
 	test("does not contain the empty string", () => {
 		expect(translationKeys).not.toContain("");
+	});
+});
+
+describe("isTranslationKey", () => {
+	test("accepts a leaf of the English catalogue", () => {
+		expect(isTranslationKey("WIDGET.I_AM_HUMAN")).toBe(true);
+		expect(isTranslationKey("API.INVALID_SITE_KEY")).toBe(true);
+	});
+
+	test("rejects a section, a mistyped key, free text and the empty string", () => {
+		expect(isTranslationKey("WIDGET")).toBe(false);
+		expect(isTranslationKey("WIDGET.I_AM_HUMANN")).toBe(false);
+		expect(isTranslationKey("Invalid site key")).toBe(false);
+		expect(isTranslationKey("")).toBe(false);
 	});
 });

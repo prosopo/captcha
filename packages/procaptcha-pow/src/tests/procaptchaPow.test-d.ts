@@ -87,9 +87,9 @@ describe("Manager's types", () => {
 			.toEqualTypeOf<(() => string | undefined) | undefined>();
 	});
 
-	test("it exposes exactly start and resetState", () => {
+	test("it exposes exactly start, resetState and dispose", () => {
 		expectTypeOf<keyof ReturnType<typeof Manager>>().toEqualTypeOf<
-			"start" | "resetState"
+			"start" | "resetState" | "dispose"
 		>();
 		expectTypeOf<ReturnType<typeof Manager>["start"]>().toEqualTypeOf<
 			(x?: number, y?: number) => Promise<void>

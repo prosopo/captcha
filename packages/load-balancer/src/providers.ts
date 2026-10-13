@@ -155,13 +155,27 @@ const resolvePinnedUrl = async (
 	return promise;
 };
 
-// Cached, in-flight provider-list load per env. The list rarely changes, so a
-// single fetch is shared across callers rather than re-fetching the
-// provider-list JSON on every verify-forward decision.
-const providerListPromiseCache: Map<
-	EnvironmentTypes,
-	Promise<HardcodedProvider[]>
-> = new Map();
+// How long a loaded list is served before the next caller reloads it. The
+// hosted list advertises `cache-control: max-age=300`, so this matches what it
+// asks for. `findProvider` covers the window where a pronode is added mid-TTL.
+export const PROVIDER_LIST_TTL_MS = 5 * 60 * 1000;
+
+// Floor on how often a lookup miss may force an early reload. `providerUrl` is
+// read from the token, which a caller controls, so an unknown url must not be
+// able to turn every request into a fresh fetch of the list.
+export const PROVIDER_LIST_MISS_RELOAD_MS = 10 * 1000;
+
+interface ProviderListEntry {
+	providers: Promise<HardcodedProvider[]>;
+	loadedAt: number;
+}
+
+// Cached, in-flight provider-list load per env + ipMode. The list rarely
+// changes, so a single fetch is shared across callers rather than re-fetching
+// the provider-list JSON on every verify decision. Keyed the same way as the
+// pin cache: the `ipv4`/`ipv6` sections carry different urls to the dual-stack
+// default, so they cannot share an entry.
+const providerListCache: Map<CacheKey, ProviderListEntry> = new Map();
 
 /**
  * Returns the full (cached) list of active providers for an environment.
@@ -170,18 +184,59 @@ const providerListPromiseCache: Map<
  */
 export const getProviders = async (
 	env: EnvironmentTypes,
+	ipMode?: IpMode,
 ): Promise<HardcodedProvider[]> => {
-	const cached = providerListPromiseCache.get(env);
-	if (cached) return cached;
+	const key = cacheKey(env, ipMode);
+	const cached = providerListCache.get(key);
+	if (cached && Date.now() - cached.loadedAt < PROVIDER_LIST_TTL_MS) {
+		return cached.providers;
+	}
 
-	const promise = loadBalancer(env).catch((err) => {
+	const providers = loadBalancer(env, ipMode).catch((err) => {
 		// Don't cache failures — a transient fetch error shouldn't poison the
-		// cache for the lifetime of the process.
-		providerListPromiseCache.delete(env);
+		// cache for the lifetime of the process. Only evict this entry: a
+		// later load may already have replaced it.
+		if (providerListCache.get(key)?.providers === providers) {
+			providerListCache.delete(key);
+		}
 		throw err;
 	});
-	providerListPromiseCache.set(env, promise);
-	return promise;
+	providerListCache.set(key, { providers, loadedAt: Date.now() });
+	return providers;
+};
+
+/**
+ * Finds the provider that minted a token, by exact url match.
+ *
+ * Exact-string rather than normalised: the single-stack sections of the list
+ * carry sub-zone urls (`https://ipv4.pronode15.prosopo.io`), so the caller
+ * passes the `ipMode` it derived from the token's own hostname and both sides
+ * of the comparison stay in the same section.
+ *
+ * A miss reloads the list once before giving up, so a pronode added part-way
+ * through the TTL still verifies the tokens it has already minted. That reload
+ * is rate-limited, because a miss is also what an unknown url produces.
+ */
+export const findProvider = async (
+	env: EnvironmentTypes,
+	providerUrl: string | undefined,
+	ipMode?: IpMode,
+): Promise<HardcodedProvider | undefined> => {
+	if (!providerUrl) return undefined;
+
+	const providers = await getProviders(env, ipMode);
+	const provider = providers.find((p) => p.url === providerUrl);
+	if (provider) return provider;
+
+	const key = cacheKey(env, ipMode);
+	const cached = providerListCache.get(key);
+	if (cached && Date.now() - cached.loadedAt < PROVIDER_LIST_MISS_RELOAD_MS) {
+		return undefined;
+	}
+	providerListCache.delete(key);
+
+	const reloaded = await getProviders(env, ipMode);
+	return reloaded.find((p) => p.url === providerUrl);
 };
 
 export const getRandomActiveProvider = async (
@@ -270,7 +325,7 @@ export const _resetPinCache = () => {
 // Test-only escape hatch to isolate the provider-list cache between cases.
 // Not exported from the package index — internal use only.
 export const _resetProviderListCache = () => {
-	providerListPromiseCache.clear();
+	providerListCache.clear();
 };
 
 // Test-only override for the healthz retry policy — tests use it to disable

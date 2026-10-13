@@ -1,5 +1,90 @@
 # @prosopo/locale
 
+## 3.9.0
+### Minor Changes
+
+- 4570692: Let a user swap the puzzle captcha for an image challenge, on sites where Prosopo has switched it on.
+  
+  Sites get a new staff-only setting, `widgetFeatureFlags.puzzleImageSwitch`. It is off by default and has no stored default. When it is on and the site allows image challenges, the puzzle response says `imageSwitchAvailable: true`. The puzzle then shows a small grid icon next to its title, with a "Switch to an image challenge" tooltip on hover or keyboard focus. After two wrong answers or refreshes in a row, the icon fills with the primary colour and its tooltip shows without a hover, because a touch screen has no hover. The tooltip goes away once the user starts moving the piece.
+  
+  Pressing it re-mints the session the same way refresh does, with `switchToImage: true`. The provider only honours that when the request is a refresh of a puzzle session on the same site and the switch is on. The new session is then an image challenge with reason `PUZZLE_USER_SWITCH`. Like the refresh limit, it only ever moves from puzzle to image, so a client that fakes the request can only make its own challenge harder.
+  
+  Also fixes a wrong puzzle answer restarting the whole widget. The user was sent back to the checkbox instead of getting a new puzzle with "Not quite — try again", and a wasted `/frictionless` request went out. The puzzle now retries in place.
+
+## 3.8.0
+### Minor Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+
+### Patch Changes
+
+- e13d7a8: New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
+  
+  Icon-order is off by default. Only Prosopo can switch it on for a site, with the `captchaTypeFeatureFlags.iconOrder` feature flag; the site owner cannot. A site without the flag is never served icon-order by any route, and the challenge endpoint refuses it. Once the flag is on, the owner can still keep icon-order out of the frictionless flow with `frictionlessTypes.iconOrder`, the same way as image and puzzle.
+  
+  The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
+  
+  `@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
+  
+  Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+  
+  The demo playground has icon-order pages, and there is an end-to-end test for it.
+
+## 3.7.0
+### Minor Changes
+
+- dcb691b: Add a refresh control to the puzzle captcha.
+  
+  A user who can't solve the puzzle they were given can now ask for a different one, from a button in the puzzle's header. The replacement comes through a new frictionless session, like a wrong answer already does.
+  
+  The widget tells the provider which session was refreshed (`refreshOf`). The provider then records `refreshOf`, `refreshCount` and `refreshedAfterMs` on the new session, so refresh behaviour can be scored later. After three refreshes in a row it serves an image challenge instead, with reason `PUZZLE_REFRESH_LIMIT`. It only does this if the site has image enabled. The switch only goes from puzzle to image, so a client that lies about its refreshes can only make its own challenge harder. A client that leaves the field out gets a normal session, the same as reloading the page.
+  
+  The image widget's reload button now reports itself as a refresh too. That way a user who was moved onto image isn't sent back to the puzzle by their next reload.
+
+### Patch Changes
+
+- Updated dependencies [a17e8eb]
+  - @prosopo/util@3.3.14
+
+## 3.6.2
+### Patch Changes
+
+- 8ed0eb8: Every error key the code throws now has a translation. Twelve keys were missing from the catalogue, so users and logs saw the raw key: ten thrown keys plus the `CAPTCHA.INVALID_TIMESTAMP` and `CAPTCHA.DECISION_MACHINE_DENIED` result reasons. They are added to all 32 locales. The database import error threw `DATABASE.DATABASE_IMPORT_ERROR`, a typo for the existing `DATABASE.DATABASE_IMPORT_FAILED`. A new test fails if an error is thrown with a key that is not in the catalogue.
+- 06784d0: Translation keys are now a typed union built from the English catalogue, so calling the translator with a key that does not exist fails to compile. Error classes only pass a message to the translator when it is a real catalogue key, and free-text messages are shown as they are.
+- 4461043: Widget accessibility fixes.
+  
+  - Screen readers now announce the checkbox's error message, through a polite live region that exists from the moment the widget mounts.
+  - The authenticated ("Verified agent" / "Trusted request") badge now follows `theme: "dark"` and the widget's language.
+  - The badge no longer carries a fixed `aria-label`, which hid its visible text and said "Verified agent" even for a trusted request.
+- 92edebd: The widget's loading spinner and the reload icon no longer announce hard-coded English. The spinner is a progress indicator labelled from the new `WIDGET.LOADING` string (in all 32 languages) once translations are loaded, and the reload icon's tooltip uses the same translated label as the button.
+- 54a07f3: Provider errors shown in the widget now use the widget's configured language. The provider translates errors into the browser's language, so a German widget in an English browser showed English errors. The widget now translates the error key itself and keeps the provider's text only for errors its catalogue does not know.
+- b75e9b7: Fix the error FAQ link and translate two widget strings.
+  
+  - The error FAQ link no longer ends in `//` when `PROSOPO_DOCS_URL` is set, and a trailing slash on that variable no longer breaks it.
+  - The "Cannot load CAPTCHA" fallback message now shows in the widget's language.
+  - The image challenge's reload button now has a translated accessible name instead of always being "Reload".
+  - Adds `WIDGET.CANNOT_LOAD` and `WIDGET.RELOAD` to every locale.
+- 6d5b7f5: The widget now lays itself out right to left when its language is written right to left (Arabic today). The bundle sets `dir` on the widget from its language, and the checkbox, spinner and logo use start/end spacing so they mirror. The widget still ignores the page's own direction, so an English widget on an Arabic page stays left to right. `@prosopo/locale` gains `getLanguageDirection` for this.
+- Updated dependencies [de6bb08]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+  - @prosopo/util@3.3.13
+
+## 3.6.1
+### Patch Changes
+
+- 294b480: Hindi text is readable again. A bulk edit in July 2025 had stripped every vowel sign from 410 of the 444 Hindi strings, so the widget said "म मनषय ह" instead of "मैं मनुष्य हूँ". The originals are restored, and the 14 strings added since then are translated properly. The Finnish, Hindi and Dutch "can't find keyring pair" messages had also translated their `{{address}}` placeholder, so the address was never filled in; that is fixed too. New tests check that every locale keeps all of the English placeholders, and that Hindi strings keep their vowel signs.
+- Updated dependencies [0d29dde]
+  - @prosopo/util@3.3.12
+
 ## 3.6.0
 ### Minor Changes
 

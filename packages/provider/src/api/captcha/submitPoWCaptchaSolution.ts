@@ -11,7 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { severityToPuzzleDifficulty } from "@prosopo/captcha-severity";
+import {
+	resolveMaxEscalationLevel,
+	severityToPuzzleDifficulty,
+} from "@prosopo/captcha-severity";
 import { ProsopoApiError } from "@prosopo/common";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
@@ -24,6 +27,7 @@ import {
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
 	imageMaxRoundsDefault,
+	resolveAllowedCaptchaTypes,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
@@ -37,7 +41,12 @@ import {
 	deriveTrafficPolicies,
 } from "../../utils/devicePlatform.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
-import { rawTlsSignalsForSession } from "../rawTlsSignalsMiddleware.js";
+import {
+	type RawTlsSignals,
+	rawTlsSignalsForSession,
+	rawTlsSignalsFromRecord,
+} from "../rawTlsSignalsMiddleware.js";
+import { summariseRequestBody } from "../requestBodySummary.js";
 import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -69,7 +78,7 @@ export default (env: ProviderEnvironment) =>
 		} catch (err) {
 			return next(
 				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: req.body },
+					context: { code: 400, error: err, body: summariseRequestBody(req) },
 					i18n: req.i18n,
 					logger: req.logger,
 				}),
@@ -223,8 +232,11 @@ export default (env: ProviderEnvironment) =>
 					...rawTlsSignalsForSession(req),
 				},
 				{
-					frictionlessTypes: clientRecord.settings?.frictionlessTypes,
+					allowedCaptchaTypes: resolveAllowedCaptchaTypes(
+						clientRecord.settings,
+					),
 					imageMaxRounds: clientRecord.settings?.imageMaxRounds,
+					puzzleMaxDifficulty: clientRecord.settings?.puzzleMaxDifficulty,
 				},
 			);
 			const response: PowCaptchaSolutionResponse = {
@@ -238,7 +250,7 @@ export default (env: ProviderEnvironment) =>
 		} catch (err) {
 			req.logger.error(() => ({
 				err,
-				body: req.body,
+				body: summariseRequestBody(req),
 				msg: "Error in PoW captcha solution submission",
 			}));
 			return next(
@@ -272,27 +284,19 @@ export const buildEscalation = async (
 	// signals) come from the CURRENT PoW-submit request, not from
 	// `originSession` — those values belong to a different TCP connection
 	// made during the earlier frictionless request.
-	perConnectionSignals?: {
+	perConnectionSignals?: RawTlsSignals & {
 		tcpToChelloUs?: number;
 		chelloToHandshakeUs?: number;
-		synNs?: number;
-		synackNs?: number;
-		ackNs?: number;
-		observedTtl?: number;
-		tcpMss?: number;
-		tcpWscale?: number;
-		tcpOptsFlags?: number;
-		tcpOptsOrder?: number;
-		tcpWindow?: number;
 	},
 	// Site constraints on what an escalation may serve. Threaded from the
 	// handler, which already holds the client record, rather than re-read
-	// here. An absent `frictionlessTypes` means "no constraint recorded" and
-	// leaves every type enabled; an absent `imageMaxRounds` falls back to the
-	// schema default so the round count is bounded either way.
+	// here. An absent `allowedCaptchaTypes` falls back to the default flags and
+	// preferences, and an absent `imageMaxRounds` to the schema default, so the
+	// round count is bounded either way.
 	siteConstraints?: {
-		frictionlessTypes?: IFrictionlessTypes;
+		allowedCaptchaTypes?: IFrictionlessTypes;
 		imageMaxRounds?: number;
+		puzzleMaxDifficulty?: number;
 	},
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
@@ -322,7 +326,7 @@ export const buildEscalation = async (
 	// session it can never satisfy.
 	const escalatedType = coerceToEnabledCaptchaType(
 		routed.captchaType,
-		siteConstraints?.frictionlessTypes,
+		siteConstraints?.allowedCaptchaTypes,
 	);
 
 	// Coercion bottoms out at PoW, which is not an escalation: the user has
@@ -341,12 +345,21 @@ export const buildEscalation = async (
 	// takes these as its trailing overrides; they are dropped for non-puzzle
 	// types by the same rule as in sendCaptcha.
 	const escalationPuzzleOverrides = (():
-		| { puzzleTolerance: number; puzzle: IPuzzleSettings }
+		| {
+				puzzleTolerance: number;
+				puzzle: IPuzzleSettings;
+				puzzleLevel: number;
+		  }
 		| undefined => {
 		if (escalatedType !== CaptchaType.puzzle) return undefined;
+		const { isMobile } = derivePlatform(
+			originSession.headers?.["user-agent"] ?? "",
+			originSession.webView,
+		);
 		const level = severityToPuzzleDifficulty(
 			routed.solvedImagesCount ?? originSession.solvedImagesCount,
 			tasks.config.captchas.solved.count,
+			resolveMaxEscalationLevel(siteConstraints?.puzzleMaxDifficulty, isMobile),
 		);
 		// As in sendCaptcha: level 0 leaves the site's configured puzzle
 		// settings in force rather than overriding them with band values.
@@ -358,6 +371,7 @@ export const buildEscalation = async (
 		return {
 			puzzleTolerance: difficulty.tolerance,
 			puzzle: difficulty.puzzle,
+			puzzleLevel: difficulty.level,
 		};
 	})();
 
@@ -424,15 +438,7 @@ export const buildEscalation = async (
 		// origin's. The escalation session belongs on this hop's fingerprint.
 		tcpToChelloUs: perConnectionSignals?.tcpToChelloUs,
 		chelloToHandshakeUs: perConnectionSignals?.chelloToHandshakeUs,
-		synNs: perConnectionSignals?.synNs,
-		synackNs: perConnectionSignals?.synackNs,
-		ackNs: perConnectionSignals?.ackNs,
-		observedTtl: perConnectionSignals?.observedTtl,
-		tcpMss: perConnectionSignals?.tcpMss,
-		tcpWscale: perConnectionSignals?.tcpWscale,
-		tcpOptsFlags: perConnectionSignals?.tcpOptsFlags,
-		tcpOptsOrder: perConnectionSignals?.tcpOptsOrder,
-		tcpWindow: perConnectionSignals?.tcpWindow,
+		...rawTlsSignalsFromRecord(perConnectionSignals),
 		puzzleTolerance: escalationPuzzleOverrides?.puzzleTolerance,
 		puzzle: escalationPuzzleOverrides?.puzzle,
 		// The escalated session is the same render as the origin, so it answers

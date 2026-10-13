@@ -331,6 +331,32 @@ describe("statusLogInjector", () => {
 		expect(html).toContain("updateCaptchaStatus");
 	});
 
+	it("defines updateCaptchaStatus before the page's entry module runs", () => {
+		// What Vite hands a "post" transform: the entry module already hoisted
+		// into <head>. Module scripts run in document order, so the helper must
+		// be defined by a classic script ahead of it.
+		const built =
+			'<html><head><title>demo</title><script type="module" crossorigin src="/assets/entry.js"></script></head><body><p>hi</p></body></html>';
+		const html = handler(built, ctx("src/frictionless-explicit.html"));
+
+		const definedAt = html.indexOf("window.updateCaptchaStatus = ");
+		const entryAt = html.indexOf('src="/assets/entry.js"');
+		expect(definedAt).toBeGreaterThan(-1);
+		expect(definedAt).toBeLessThan(entryAt);
+		const definingScript = html.lastIndexOf("<script", definedAt);
+		expect(html.slice(definingScript, definedAt)).not.toContain("module");
+	});
+
+	it("wraps the page callbacks after the page's entry module", () => {
+		const built =
+			'<html><head><script type="module" src="/assets/entry.js"></script></head><body></body></html>';
+		const html = handler(built, ctx("src/image-explicit.html"));
+
+		expect(html.indexOf("window.onCaptchaFailed = ")).toBeGreaterThan(
+			html.indexOf('src="/assets/entry.js"'),
+		);
+	});
+
 	it("fills the events slot when the layout provides one", () => {
 		const html = handler(
 			page(`<form></form>${slotMarkup("events")}`),

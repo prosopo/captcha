@@ -13,16 +13,22 @@
 // limitations under the License.
 import type { Translator } from "@prosopo/locale";
 import {
+	type AudioAlternativeOffer,
 	type Component,
 	type StyleMap,
 	applyAttributes,
 	applyStyles,
 	createElement,
+	mountAudioAlternativeSlot,
 	mountReloadButton,
 	threeColumnBasis,
 	wrapRandomly,
 } from "@prosopo/procaptcha-common";
-import type { CaptchaResponseBody } from "@prosopo/types";
+import type {
+	CaptchaResponseBody,
+	ImageSelection,
+	InputMethod,
+} from "@prosopo/types";
 import { at } from "@prosopo/util";
 import {
 	type Theme,
@@ -37,14 +43,21 @@ import { mountCaptchaWidget } from "./captchaWidget.js";
 export interface CaptchaComponentProps {
 	challenge: CaptchaResponseBody;
 	index: number;
-	solutions: [string, number, number][][];
+	solutions: ImageSelection[][];
 	onSubmit: () => void;
 	onCancel: () => void;
-	onClick: (hash: string, x?: number, y?: number) => void;
+	onClick: (
+		hash: string,
+		x?: number,
+		y?: number,
+		inputMethod?: InputMethod,
+	) => void;
 	onNext: () => void;
 	onReload: () => void;
 	themeColor: "light" | "dark";
 	translator: Translator;
+	/** Renders "use audio instead" under the action row. Absent hides it. */
+	audioAlternative?: AudioAlternativeOffer;
 }
 
 const outerStyle = (theme: Theme): StyleMap => ({
@@ -66,8 +79,14 @@ const outerStyle = (theme: Theme): StyleMap => ({
 	// the bottom row unreachable rather than merely off-screen. Stopping the
 	// page behind from scrolling is `overscroll-behavior`'s job, below, and it
 	// still does it; what `none` added on top of that was blocking the one
-	// gesture the panel needs. Pinch-zoom stays blocked either way.
-	touchAction: "pan-y",
+	// gesture the panel needs.
+	//
+	// `pinch-zoom` is listed alongside it because the tiles are small on a
+	// phone and zooming is the only way a user who cannot make out an image
+	// can get a closer look. Withholding it is the barrier WCAG 1.4.4 is
+	// about, and it buys nothing: a solver automating this drives the DOM, not
+	// the viewport.
+	touchAction: "pan-y pinch-zoom",
 	overscrollBehavior: "none",
 });
 
@@ -209,6 +228,15 @@ export const mountCaptchaComponent = (
 		children: [decoy(controls)],
 	});
 
+	// Below the action row so it reads as an alternative to the whole
+	// challenge, not as a fourth action on it.
+	const audioAlternativeRow = createElement("div", {
+		style: {
+			textAlign: "center",
+			paddingBottom: `${theme.spacing.unit * 2}px`,
+		},
+	});
+
 	const inner = createElement("div", {
 		style: {
 			backgroundColor: theme.palette.background.default,
@@ -219,7 +247,12 @@ export const mountCaptchaComponent = (
 			marginRight: `${jittered(theme.spacing.unit)}px`,
 			justifyContent: "center",
 		},
-		children: [decoy(headerRow), decoy(gridHost), decoy(controlsRow)],
+		children: [
+			decoy(headerRow),
+			decoy(gridHost),
+			decoy(controlsRow),
+			audioAlternativeRow,
+		],
 	});
 
 	const root = createElement("div", {
@@ -244,6 +277,7 @@ export const mountCaptchaComponent = (
 
 	const reloadButton = mountReloadButton(reloadHost, {
 		themeColor: props.themeColor,
+		label: props.translator.t("WIDGET.RELOAD"),
 		onReload: () => props.onReload(),
 	});
 
@@ -252,6 +286,11 @@ export const mountCaptchaComponent = (
 		buttonType: "next",
 		onClick: () => (isLastRound() ? props.onSubmit() : props.onNext()),
 		text: props.translator.t("WIDGET.SUBMIT"),
+	});
+
+	const audioAlternative = mountAudioAlternativeSlot(audioAlternativeRow, {
+		offer: props.audioAlternative,
+		theme,
 	});
 
 	const render = () => {
@@ -298,6 +337,7 @@ export const mountCaptchaComponent = (
 
 		reloadButton.update({
 			themeColor: props.themeColor,
+			label: props.translator.t("WIDGET.RELOAD"),
 			onReload: () => props.onReload(),
 		});
 
@@ -306,6 +346,11 @@ export const mountCaptchaComponent = (
 			buttonType: "next",
 			onClick: () => (isLastRound() ? props.onSubmit() : props.onNext()),
 			text: isLastRound() ? t("WIDGET.SUBMIT") : t("WIDGET.NEXT"),
+		});
+
+		audioAlternative.update({
+			offer: props.audioAlternative,
+			theme: activeTheme,
 		});
 	};
 
@@ -322,6 +367,7 @@ export const mountCaptchaComponent = (
 			cancelButton.destroy();
 			reloadButton.destroy();
 			nextButton.destroy();
+			audioAlternative.destroy();
 			root.parentNode?.removeChild(root);
 		},
 	};

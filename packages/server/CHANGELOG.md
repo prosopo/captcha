@@ -1,5 +1,138 @@
 # @prosopo/server
 
+## 2.13.1
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/api@4.6.0
+  - @prosopo/types@5.15.0
+  - @prosopo/common@3.1.64
+  - @prosopo/keyring@2.10.3
+  - @prosopo/load-balancer@2.11.7
+
+## 2.13.0
+### Minor Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- e13d7a8: New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
+  
+  Icon-order is off by default. Only Prosopo can switch it on for a site, with the `captchaTypeFeatureFlags.iconOrder` feature flag; the site owner cannot. A site without the flag is never served icon-order by any route, and the challenge endpoint refuses it. Once the flag is on, the owner can still keep icon-order out of the frictionless flow with `frictionlessTypes.iconOrder`, the same way as image and puzzle.
+  
+  The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
+  
+  `@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
+  
+  Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+  
+  The demo playground has icon-order pages, and there is an end-to-end test for it.
+
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/api@4.5.0
+  - @prosopo/keyring@2.10.2
+  - @prosopo/common@3.1.63
+  - @prosopo/load-balancer@2.11.6
+
+## 2.12.15
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/util@3.3.14
+  - @prosopo/api@4.4.0
+  - @prosopo/common@3.1.62
+  - @prosopo/keyring@2.10.1
+  - @prosopo/load-balancer@2.11.5
+  - @prosopo/logger@2.1.3
+
+## 2.12.14
+### Patch Changes
+
+- Updated dependencies [ede4352]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [70fcefd]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+  - @prosopo/keyring@2.10.0
+  - @prosopo/types@5.12.0
+  - @prosopo/util@3.3.13
+  - @prosopo/load-balancer@2.11.4
+  - @prosopo/common@3.1.61
+  - @prosopo/api@4.3.8
+  - @prosopo/logger@2.1.2
+
+## 2.12.13
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/api@4.3.7
+  - @prosopo/keyring@2.9.99
+  - @prosopo/load-balancer@2.11.3
+
+## 2.12.12
+### Patch Changes
+
+- e5aefc6: Stop re-downloading the provider list on every server-side verification.
+  
+  `ProsopoServer.isVerified` only needs the list to find the one provider that minted the token, but it called `loadBalancer` directly, which fetches the list fresh every time. The package already had a cached `getProviders`, and the verify path was the one caller not using it.
+  
+  That fetch was measured at 201 ms (p50, and flat — 216 ms at p90) inside the production `siteverify` lambda, on a total invocation of 376 ms. It is a 5.6 KB file listing eight providers that changes when the fleet does, and it was being downloaded roughly 360,000 times a day.
+  
+  `getProviders` is now keyed by environment *and* ipMode — the `ipv4`/`ipv6` sections of the list carry different urls to the dual-stack default, so they can't share a cache entry — and it ages entries out after five minutes, matching the `cache-control: max-age=300` the list is served with.
+  
+  A new `findProvider` does the lookup. On a miss it reloads the list once before giving up, so a pronode added part-way through the TTL still verifies the tokens it has already minted. That reload is rate-limited to once every ten seconds, because `providerUrl` is read from the token and an unknown url is a miss too — without the floor, a caller could put the fetch back on every request.
+- dab0338: A site owner's `isVerified` call no longer hangs when the provider stops answering. Requests from `@prosopo/api` clients can now carry a timeout, and `@prosopo/server` sets one of 10 seconds for its verify calls. You can change it with the new `providerRequestTimeoutMs` config option. When the timeout fires, `isVerified` throws `API.BAD_REQUEST` with code 504 and the user is not verified. Before, the call waited for the platform default of about 300 seconds. Browser clients keep their current behaviour.
+- 2cd89a9: Reject captcha tokens whose timestamp is dated in the future when the server-side SDK runs its local freshness pre-check. Previously the check only compared `now - timestamp` against the timeout, so any timestamp ahead of the verifier's clock was treated as recent and passed straight through to the provider. A small clock-skew allowance is kept for honest drift between the issuing provider and the verifier.
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [e5aefc6]
+- Updated dependencies [5375d10]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+- Updated dependencies [0d29dde]
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/load-balancer@2.11.2
+  - @prosopo/api@4.3.6
+  - @prosopo/util@3.3.12
+  - @prosopo/keyring@2.9.98
+  - @prosopo/logger@2.1.1
+
+## 2.12.11
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/api@4.3.5
+  - @prosopo/keyring@2.9.97
+  - @prosopo/load-balancer@2.11.1
+
 ## 2.12.10
 ### Patch Changes
 

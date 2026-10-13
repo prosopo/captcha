@@ -1,5 +1,185 @@
 # @prosopo/cli
 
+## 3.8.28
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/provider@5.17.0
+  - @prosopo/api@4.6.0
+  - @prosopo/types@5.15.0
+  - @prosopo/locale@3.9.0
+  - @prosopo/common@3.1.64
+  - @prosopo/env@3.6.71
+  - @prosopo/keyring@2.10.3
+
+## 3.8.27
+### Patch Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- e13d7a8: New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
+  
+  Icon-order is off by default. Only Prosopo can switch it on for a site, with the `captchaTypeFeatureFlags.iconOrder` feature flag; the site owner cannot. A site without the flag is never served icon-order by any route, and the challenge endpoint refuses it. Once the flag is on, the owner can still keep icon-order out of the frictionless flow with `frictionlessTypes.iconOrder`, the same way as image and puzzle.
+  
+  The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
+  
+  `@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
+  
+  Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+  
+  The demo playground has icon-order pages, and there is an end-to-end test for it.
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/provider@5.16.0
+  - @prosopo/api@4.5.0
+  - @prosopo/locale@3.8.0
+  - @prosopo/keyring@2.10.2
+  - @prosopo/common@3.1.63
+  - @prosopo/env@3.6.70
+
+## 3.8.26
+### Patch Changes
+
+- 4669e64: Make the provider bundle runnable from a checkout again.
+  
+  `sharp` is a native module, so it is deliberately left out of the bundle and
+  installed next to it instead. Under npm it also ended up in the repo's top
+  level `node_modules`, so running the bundle from a checkout found it there.
+  pnpm puts a package only where something asked for it, and only
+  `@prosopo/puzzle-assets` asks for `sharp`, so running the bundle failed with
+  "Cannot find package 'sharp'" — which is what broke the bundle test. pnpm is
+  now told to put `sharp` at the top level too. Nothing about what goes into
+  the bundle, or about the provider image, changes.
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [2118584]
+- Updated dependencies [1ce9482]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/provider@5.15.0
+  - @prosopo/workspace@3.2.2
+  - @prosopo/util@3.3.14
+  - @prosopo/api@4.4.0
+  - @prosopo/locale@3.7.0
+  - @prosopo/common@3.1.62
+  - @prosopo/env@3.6.69
+  - @prosopo/keyring@2.10.1
+  - @prosopo/dotenv@3.0.60
+  - @prosopo/logger@2.1.3
+
+## 3.8.25
+### Patch Changes
+
+- 478bc6f: The cli bundle test builds a full production bundle and takes over a minute, so it is now named as an integration test instead of a unit test. Running only unit tests (`TEST_TYPE=unit`) no longer includes it. CI runs every test type, so it still runs there.
+- Updated dependencies [ede4352]
+- Updated dependencies [fc79e06]
+- Updated dependencies [382f96b]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [e62661c]
+- Updated dependencies [9ed0afd]
+- Updated dependencies [3fe7b19]
+- Updated dependencies [b1becee]
+- Updated dependencies [3e1053b]
+- Updated dependencies [df06006]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+- Updated dependencies [7e9cd1e]
+- Updated dependencies [f7cfa1c]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/keyring@2.10.0
+  - @prosopo/types@5.12.0
+  - @prosopo/provider@5.14.0
+  - @prosopo/util@3.3.13
+  - @prosopo/locale@3.6.2
+  - @prosopo/common@3.1.61
+  - @prosopo/env@3.6.68
+  - @prosopo/api@4.3.8
+  - @prosopo/logger@2.1.2
+  - @prosopo/dotenv@3.0.59
+
+## 3.8.24
+### Patch Changes
+
+- Updated dependencies [bcf59f1]
+  - @prosopo/provider@5.13.4
+  - @prosopo/env@3.6.67
+
+## 3.8.23
+### Patch Changes
+
+- Updated dependencies [1291cb0]
+- Updated dependencies [d01f19b]
+- Updated dependencies [254bc05]
+  - @prosopo/provider@5.13.3
+  - @prosopo/types@5.11.1
+  - @prosopo/api@4.3.7
+  - @prosopo/env@3.6.66
+  - @prosopo/keyring@2.9.99
+
+## 3.8.22
+### Patch Changes
+
+- Updated dependencies [f650c66]
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [e482b25]
+- Updated dependencies [8933ad5]
+- Updated dependencies [294b480]
+- Updated dependencies [026b126]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [7065689]
+- Updated dependencies [dab0338]
+- Updated dependencies [9318584]
+- Updated dependencies [0d29dde]
+- Updated dependencies [084da7e]
+- Updated dependencies [fa316d6]
+- Updated dependencies [9ed0ac5]
+  - @prosopo/provider@5.13.2
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/locale@3.6.1
+  - @prosopo/api@4.3.6
+  - @prosopo/util@3.3.12
+  - @prosopo/env@3.6.65
+  - @prosopo/keyring@2.9.98
+  - @prosopo/dotenv@3.0.58
+  - @prosopo/logger@2.1.1
+
+## 3.8.21
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/provider@5.13.1
+  - @prosopo/api@4.3.5
+  - @prosopo/env@3.6.64
+  - @prosopo/keyring@2.9.97
+
 ## 3.8.20
 ### Patch Changes
 

@@ -39,6 +39,7 @@ import {
 	type RandomProvider,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
+import { type Theme, lightTheme, withAlpha } from "@prosopo/widget-skeleton";
 
 export type AuthenticatedBadgeProps = {
 	sessionId: string;
@@ -47,6 +48,18 @@ export type AuthenticatedBadgeProps = {
 	userAccount: Account;
 	provider: RandomProvider;
 	callbacks: ProcaptchaCallbacks;
+	theme?: Theme;
+	labels?: AuthenticatedBadgeLabels;
+};
+
+export type AuthenticatedBadgeLabels = {
+	verifiedAgent: string;
+	trustedRequest: string;
+};
+
+const DEFAULT_LABELS: AuthenticatedBadgeLabels = {
+	verifiedAgent: "Verified agent",
+	trustedRequest: "Trusted request",
 };
 
 const displayHost = (agent?: string): string => {
@@ -58,19 +71,22 @@ const displayHost = (agent?: string): string => {
 	}
 };
 
-const buildLabel = (agent?: string): HTMLElement => {
+const buildLabel = (
+	labels: AuthenticatedBadgeLabels,
+	agent?: string,
+): HTMLElement => {
 	if (!agent) {
 		// No Signature-Agent URL on the response — the operator's Allow rule
 		// matched on a non-Web-Bot-Auth condition (IP CIDR, JA4, UA substring,
 		// ASN, country). Fall back to generic copy so the operator isn't misled
 		// about which qualifier fired.
 		return createElement("span", {
-			children: [createElement("strong", { text: "Trusted request" })],
+			children: [createElement("strong", { text: labels.trustedRequest })],
 		});
 	}
 	return createElement("span", {
 		children: [
-			createElement("strong", { text: "Verified agent" }),
+			createElement("strong", { text: labels.verifiedAgent }),
 			document.createTextNode(`: ${displayHost(agent)}`),
 		],
 	});
@@ -103,6 +119,7 @@ export const mountAuthenticatedBadge = (
 	props: AuthenticatedBadgeProps,
 ): StaticComponent => {
 	const { sessionId, agent, dapp, userAccount, provider, callbacks } = props;
+	const { palette } = props.theme ?? lightTheme;
 
 	const badge = createElement("div", {
 		style: {
@@ -111,16 +128,18 @@ export const mountAuthenticatedBadge = (
 			gap: "8px",
 			padding: "8px 12px",
 			borderRadius: "6px",
-			background: "#eef2ff",
-			border: "1px solid #c7d2fe",
-			color: "#3730a3",
+			background: palette.primaryContainer.main,
+			border: `1px solid ${withAlpha(palette.primary.main, 0.4)}`,
+			color: palette.primaryContainer.contrastText,
 			fontFamily:
 				"-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
 			fontSize: "13px",
 			lineHeight: 1.4,
 		},
-		attributes: { role: "status", "aria-label": "Verified agent" },
-		children: [buildTick(), buildLabel(agent)],
+		// No aria-label: it replaced the visible text, and said "Verified agent"
+		// even for a trusted request.
+		attributes: { role: "status" },
+		children: [buildTick(), buildLabel(props.labels ?? DEFAULT_LABELS, agent)],
 	});
 
 	container.appendChild(badge);

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { IpMode } from "@prosopo/load-balancer";
+import type { ScrollEventPoint } from "@prosopo/types";
 import {
 	ApiParams,
 	type BehavioralData,
@@ -23,7 +24,9 @@ import {
 	type ClickEventPoint,
 	type ClientMetaData,
 	type EnvironmentTypes,
+	type FrictionlessRestart,
 	type FrictionlessState,
+	InputMethod,
 	type MouseMovementPoint,
 	type PackedBehavioralData,
 	type ProcaptchaCallbacks,
@@ -212,7 +215,7 @@ interface Harness {
 		onChallengeExpired: Mock<() => void>;
 		onReload: Mock<() => void>;
 	};
-	restart: Mock<() => void>;
+	restart: Mock<FrictionlessRestart>;
 	onReloadRequest: Mock<(x?: number, y?: number) => void>;
 }
 
@@ -225,6 +228,8 @@ interface HarnessOptions {
 	/** Mirrors the widget only handing the manager a delegate when its
 	 * wrapper actually supplied one. */
 	delegateReload?: boolean;
+	/** Applies each update to the state object, as the widget's store does. */
+	liveState?: boolean;
 }
 
 const build = (options: HarnessOptions = {}): Harness => {
@@ -241,7 +246,7 @@ const build = (options: HarnessOptions = {}): Harness => {
 		onChallengeExpired: vi.fn<() => void>(),
 		onReload: vi.fn<() => void>(),
 	};
-	const restart = vi.fn<() => void>();
+	const restart = vi.fn<FrictionlessRestart>();
 	const onReloadRequest = vi.fn<(x?: number, y?: number) => void>();
 	const callbackInput: ProcaptchaCallbacks = callbacks(events);
 	const frictionlessState =
@@ -254,6 +259,7 @@ const build = (options: HarnessOptions = {}): Harness => {
 		currentState,
 		(next: Partial<ProcaptchaState>) => {
 			updates.push({ ...next });
+			if (options.liveState) Object.assign(currentState, next);
 		},
 		callbackInput,
 		frictionlessState,
@@ -593,6 +599,18 @@ describe("start", () => {
 		expect(lastUpdate(harness, "showModal")).toBe(false);
 	});
 
+	test("a disposed manager never expires the open challenge", async () => {
+		vi.useFakeTimers();
+		const harness = build();
+		mocks.getCaptchaChallenge.mockResolvedValue(
+			challengeResponse({ captchas: [captcha({ timeLimitMs: 1000 })] }),
+		);
+		await harness.manager.start();
+		harness.manager.dispose();
+		vi.advanceTimersByTime(1000);
+		expect(harness.events.onChallengeExpired).not.toHaveBeenCalled();
+	});
+
 	test("falls back to the configured challenge timeout per captcha", async () => {
 		vi.useFakeTimers();
 		const configured = config();
@@ -690,7 +708,7 @@ describe("submit", () => {
 		const harness = build(options);
 		await harness.manager.start(clickX, clickY);
 		Object.assign(harness.state, {
-			solutions: [[["hash-1", 10, 20]]],
+			solutions: [[["hash-1", 10, 20, InputMethod.pointer]]],
 			...options.afterStart,
 		});
 		harness.updates.length = 0;
@@ -769,18 +787,74 @@ describe("submit", () => {
 		expect(first.solution).toEqual(["hash-1"]);
 	});
 
+	test("declares how each embedded position was made, checkbox first", async () => {
+		mocks.getCaptchaChallenge.mockResolvedValue(
+			challengeResponse({ captchas: [captcha(), captcha()] }),
+		);
+		const harness = build();
+		await harness.manager.start(0, 0, InputMethod.keyboard);
+		Object.assign(harness.state, {
+			solutions: [
+				[
+					["hash-1", 0, 0, InputMethod.keyboard],
+					["hash-2", 30, 40, InputMethod.pointer],
+				],
+				[["hash-3", 0, 0, InputMethod.keyboard]],
+			],
+		});
+		await harness.manager.submit();
+		const solutions = mocks.submitCaptchaSolution.mock.calls[0]?.[2];
+		expect(solutions?.map((captcha) => captcha.inputMethods)).toEqual([
+			[InputMethod.keyboard, InputMethod.keyboard, InputMethod.pointer],
+			[InputMethod.keyboard],
+		]);
+		expect(extractData(solutions?.[0]?.salt ?? "")).toEqual([
+			0, 0, 0, 0, 30, 40,
+		]);
+	});
+
+	test("declares the checkbox as a pointer press when started without one", async () => {
+		const harness = await started();
+		await harness.manager.submit();
+		const solutions = mocks.submitCaptchaSolution.mock.calls[0]?.[2];
+		expect(solutions?.[0]?.inputMethods).toEqual([
+			InputMethod.pointer,
+			InputMethod.pointer,
+		]);
+	});
+
 	test("omits the click coordinates from later captchas", async () => {
 		mocks.getCaptchaChallenge.mockResolvedValue(
 			challengeResponse({ captchas: [captcha(), captcha()] }),
 		);
 		const harness = await started(
-			{ afterStart: { solutions: [[["hash-1", 1, 2]], [["hash-2", 3, 4]]] } },
+			{
+				afterStart: {
+					solutions: [
+						[["hash-1", 1, 2, InputMethod.pointer]],
+						[["hash-2", 3, 4, InputMethod.pointer]],
+					],
+				},
+			},
 			7,
 			9,
 		);
 		await harness.manager.submit();
 		const solutions = mocks.submitCaptchaSolution.mock.calls[0]?.[2];
 		expect(extractData(solutions?.[1]?.salt ?? "")).toEqual([3, 4]);
+	});
+
+	test("submits a later captcha with no selections", async () => {
+		mocks.getCaptchaChallenge.mockResolvedValue(
+			challengeResponse({ captchas: [captcha(), captcha()] }),
+		);
+		const harness = await started({
+			afterStart: { solutions: [[["hash-1", 1, 2, InputMethod.pointer]], []] },
+		});
+		await harness.manager.submit();
+		const solutions = mocks.submitCaptchaSolution.mock.calls[0]?.[2];
+		expect(solutions?.[1]?.solution).toEqual([]);
+		expect(extractData(solutions?.[1]?.salt ?? "")).toEqual([]);
 	});
 
 	test("handles a captcha with no selections at all", async () => {
@@ -830,6 +904,34 @@ describe("submit", () => {
 		expect(lastUpdate(harness, "isHuman")).toBe(false);
 	});
 
+	test("a disposed manager never expires the human verdict", async () => {
+		vi.useFakeTimers();
+		const configured = config();
+		const harness = await started({ configInput: configured });
+		await harness.manager.submit();
+		harness.manager.dispose();
+		vi.advanceTimersByTime(configured.captchas.image.solutionTimeout);
+		expect(harness.events.onExpired).not.toHaveBeenCalled();
+	});
+
+	test("a reset drops the earlier solve's expiry", async () => {
+		vi.useFakeTimers();
+		const configured = config();
+		const harness = await started({ configInput: configured, liveState: true });
+		await harness.manager.submit();
+		await harness.manager.cancel();
+		vi.advanceTimersByTime(configured.captchas.image.solutionTimeout);
+		expect(harness.events.onExpired).not.toHaveBeenCalled();
+	});
+
+	test("a solve that lands after dispose never reaches the site", async () => {
+		const harness = await started();
+		harness.manager.dispose();
+		await harness.manager.submit();
+		expect(harness.events.onHuman).not.toHaveBeenCalled();
+		expect(harness.events.onFailed).not.toHaveBeenCalled();
+	});
+
 	test("fails and restarts frictionless when the solution is rejected", async () => {
 		const harness = await started();
 		mocks.submitCaptchaSolution.mockResolvedValue([
@@ -842,11 +944,44 @@ describe("submit", () => {
 		expect(harness.restart).toHaveBeenCalledTimes(1);
 	});
 
+	test("asks the restarted frictionless widget to say the answer was wrong", async () => {
+		const harness = await started();
+		mocks.submitCaptchaSolution.mockResolvedValue([
+			solutionResponse({ verified: false }),
+			"0xcommitment",
+		]);
+		await harness.manager.submit();
+		expect(harness.restart).toHaveBeenCalledWith({ showRetry: true });
+	});
+
+	test("marks a rejected answer in state, whatever onFailed does", async () => {
+		const harness = await started({ withFrictionless: false });
+		mocks.submitCaptchaSolution.mockResolvedValue([
+			solutionResponse({ verified: false }),
+			"0xcommitment",
+		]);
+		await harness.manager.submit();
+		expect(harness.state.answeredIncorrectly).toBe(true);
+		expect(harness.state.showModal).toBe(false);
+	});
+
+	test("does not mark an accepted answer as wrong", async () => {
+		const harness = await started();
+		await harness.manager.submit();
+		expect(harness.state.answeredIncorrectly).not.toBe(true);
+	});
+
+	test("clears the wrong-answer mark when the user tries again", async () => {
+		const harness = build({ initialState: { answeredIncorrectly: true } });
+		await harness.manager.start();
+		expect(harness.state.answeredIncorrectly).toBe(false);
+	});
+
 	test("does not submit when no captcha api was ever built", async () => {
 		const harness = build({
 			initialState: {
 				challenge: challengeResponse(),
-				solutions: [[["hash-1", 1, 2]]],
+				solutions: [[["hash-1", 1, 2, InputMethod.pointer]]],
 				account: account(signRawMock),
 			},
 		});
@@ -859,7 +994,7 @@ describe("submit", () => {
 		const harness = build({
 			initialState: {
 				challenge: challengeResponse(),
-				solutions: [[["hash-1", 1, 2]]],
+				solutions: [[["hash-1", 1, 2, InputMethod.pointer]]],
 				account: undefined,
 			},
 		});
@@ -941,6 +1076,28 @@ describe("submit", () => {
 			timestamp: 1,
 			eventType: "click",
 			button: 0,
+		});
+		const scrollPoint = (y: number): ScrollEventPoint => ({
+			x: 0,
+			y,
+			timestamp: 1,
+		});
+
+		test("sends the scroll offsets even when no other collector ran", async () => {
+			const encryptBehavioralData = vi.fn<(data: string) => Promise<string>>();
+			encryptBehavioralData.mockResolvedValue("0xencrypted");
+			const harness = await started({
+				frictionlessState: frictionless({
+					encryptBehavioralData,
+					behaviorCollector4: collector([scrollPoint(120), scrollPoint(480)]),
+					restart: vi.fn(),
+				}),
+			});
+			await harness.manager.submit();
+			const payload: BehavioralData = JSON.parse(
+				encryptBehavioralData.mock.calls[0]?.[0] ?? "{}",
+			);
+			expect(payload.collector4).toEqual([scrollPoint(120), scrollPoint(480)]);
 		});
 
 		test("encrypts the collected data when an encryptor is present", async () => {
@@ -1076,20 +1233,32 @@ describe("select", () => {
 	test("adds an unselected image with its coordinates", () => {
 		const harness = selectable();
 		harness.manager.select("hash-1", 5, 6);
-		expect(lastUpdate(harness, "solutions")).toEqual([[["hash-1", 5, 6]]]);
+		expect(lastUpdate(harness, "solutions")).toEqual([
+			[["hash-1", 5, 6, InputMethod.pointer]],
+		]);
+	});
+
+	test("records how the image was selected", () => {
+		const harness = selectable();
+		harness.manager.select("hash-1", 0, 0, InputMethod.keyboard);
+		expect(lastUpdate(harness, "solutions")).toEqual([
+			[["hash-1", 0, 0, InputMethod.keyboard]],
+		]);
 	});
 
 	test("defaults missing coordinates to the origin", () => {
 		const harness = selectable();
 		harness.manager.select("hash-1");
-		expect(lastUpdate(harness, "solutions")).toEqual([[["hash-1", 0, 0]]]);
+		expect(lastUpdate(harness, "solutions")).toEqual([
+			[["hash-1", 0, 0, InputMethod.pointer]],
+		]);
 	});
 
 	test("removes an image that was already selected", () => {
 		const harness = build({
 			initialState: {
 				challenge: challengeResponse(),
-				solutions: [[["hash-1", 5, 6]]],
+				solutions: [[["hash-1", 5, 6, InputMethod.pointer]]],
 			},
 		});
 		harness.manager.select("hash-1");
@@ -1100,14 +1269,14 @@ describe("select", () => {
 		const harness = build({
 			initialState: {
 				challenge: challengeResponse({ captchas: [captcha(), captcha()] }),
-				solutions: [[["hash-1", 1, 1]], []],
+				solutions: [[["hash-1", 1, 1, InputMethod.pointer]], []],
 				index: 1,
 			},
 		});
 		harness.manager.select("hash-2");
 		expect(lastUpdate(harness, "solutions")).toEqual([
-			[["hash-1", 1, 1]],
-			[["hash-2", 0, 0]],
+			[["hash-1", 1, 1, InputMethod.pointer]],
+			[["hash-2", 0, 0, InputMethod.pointer]],
 		]);
 	});
 });
@@ -1185,12 +1354,29 @@ describe("reload", () => {
 		const harness = build({ withFrictionless: false });
 		await harness.manager.start(120, 340);
 		await harness.manager.reload();
-		Object.assign(harness.state, { solutions: [[["hash-1", 10, 20]]] });
+		Object.assign(harness.state, {
+			solutions: [[["hash-1", 10, 20, InputMethod.pointer]]],
+		});
 		await harness.manager.submit();
 		const solutions = mocks.submitCaptchaSolution.mock.calls[0]?.[2];
 		const first = solutions?.[0];
 		if (!first) throw new Error("no solution submitted");
 		expect(extractData(first.salt)).toEqual([120, 340, 10, 20]);
+	});
+
+	test("keeps the checkbox input method on the replacement challenge", async () => {
+		const harness = build({ withFrictionless: false });
+		await harness.manager.start(0, 0, InputMethod.keyboard);
+		await harness.manager.reload();
+		Object.assign(harness.state, {
+			solutions: [[["hash-1", 0, 0, InputMethod.keyboard]]],
+		});
+		await harness.manager.submit();
+		const solutions = mocks.submitCaptchaSolution.mock.calls[0]?.[2];
+		expect(solutions?.[0]?.inputMethods).toEqual([
+			InputMethod.keyboard,
+			InputMethod.keyboard,
+		]);
 	});
 
 	test("hands reload to the caller when one owns re-minting the challenge", async () => {

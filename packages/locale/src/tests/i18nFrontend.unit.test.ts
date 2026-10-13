@@ -220,22 +220,30 @@ describe("translating", () => {
 
 	test("substitutes interpolation values", async () => {
 		const harness = await load({
-			catalogues: { en: { POSITION: "{{x}} across, {{y}} down" } },
+			catalogues: {
+				en: { WIDGET: { PUZZLE: { POSITION: "{{x}} across, {{y}} down" } } },
+			},
 		});
 
-		expect((await initialised(harness)).t("POSITION", { x: 10, y: 20 })).toBe(
-			"10 across, 20 down",
-		);
+		expect(
+			(await initialised(harness)).t("WIDGET.PUZZLE.POSITION", {
+				x: 10,
+				y: 20,
+			}),
+		).toBe("10 across, 20 down");
 	});
 
 	test("falls back to English when the translation lacks the key", async () => {
 		const harness = await load({
-			catalogues: { fr: { KEPT: "gardé" }, en: { KEPT: "kept", ONLY: "only" } },
+			catalogues: {
+				fr: { WIDGET: { SUBMIT: "gardé" } },
+				en: { WIDGET: { SUBMIT: "kept", CANCEL: "only" } },
+			},
 		});
 		const i18n = await initialised(harness, "fr");
 
-		expect(i18n.t("KEPT")).toBe("gardé");
-		expect(i18n.t("ONLY")).toBe("only");
+		expect(i18n.t("WIDGET.SUBMIT")).toBe("gardé");
+		expect(i18n.t("WIDGET.CANCEL")).toBe("only");
 	});
 
 	test("falls back to the caller's default when no catalogue has the key", async () => {
@@ -252,7 +260,7 @@ describe("translating", () => {
 		const harness = await load({ catalogues: { en: {} } });
 
 		expect(
-			(await initialised(harness)).t("POSITION", {
+			(await initialised(harness)).t("WIDGET.PUZZLE.POSITION", {
 				defaultValue: "{{x}} across",
 				x: 7,
 			}),
@@ -262,17 +270,17 @@ describe("translating", () => {
 	test("falls back to the key when there is no default either", async () => {
 		const harness = await load({ catalogues: { en: {} } });
 
-		expect((await initialised(harness)).t("WIDGET.MISSING")).toBe(
-			"WIDGET.MISSING",
+		expect((await initialised(harness)).t("WIDGET.SUBMIT")).toBe(
+			"WIDGET.SUBMIT",
 		);
 	});
 
 	test("leaves a placeholder alone when no value was supplied for it", async () => {
 		const harness = await load({
-			catalogues: { en: { GREET: "hello {{name}}" } },
+			catalogues: { en: { WIDGET: { SUBMIT: "hello {{name}}" } } },
 		});
 
-		expect((await initialised(harness)).t("GREET", { other: 1 })).toBe(
+		expect((await initialised(harness)).t("WIDGET.SUBMIT", { other: 1 })).toBe(
 			"hello {{name}}",
 		);
 	});
@@ -304,14 +312,17 @@ describe("when the catalogue cannot be fetched", () => {
 describe("switching language", () => {
 	test("loads the new catalogue and translates against it", async () => {
 		const harness = await load({
-			catalogues: { en: { YES: "yes" }, de: { YES: "ja" } },
+			catalogues: {
+				en: { WIDGET: { SUBMIT: "yes" } },
+				de: { WIDGET: { SUBMIT: "ja" } },
+			},
 		});
 		const i18n = await initialised(harness, "en");
 
 		await i18n.changeLanguage("de");
 
 		expect(i18n.language).toBe("de");
-		expect(i18n.t("YES")).toBe("ja");
+		expect(i18n.t("WIDGET.SUBMIT")).toBe("ja");
 	});
 
 	test("notifies subscribers", async () => {

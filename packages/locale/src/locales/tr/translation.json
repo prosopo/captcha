@@ -10,7 +10,9 @@
 		"ENVIRONMENT_NOT_READY": "Çevre hazır değil",
 		"INVALID_SIGNATURE": "Geçersiz imza",
 		"SITE_KEY_MISSING": "SITE KEY eksik",
-		"INVALID_TIMESTAMP": "Geçersiz zaman damgası"
+		"INVALID_TIMESTAMP": "Geçersiz zaman damgası",
+		"MISSING_AUTH_HEADER": "Yetkilendirme başlığı eksik",
+		"INVALID_JWT": "Geçersiz JWT"
 	},
 	"API": {
 		"INSUFFICIENT_PERMISSIONS": "Insufficient permissions to perform this action",
@@ -54,7 +56,8 @@
 		"MOBILE_BLOCKED": "Bu site için mobil ağ bağlantılarından gelen isteklere izin verilmiyor",
 		"SATELLITE_BLOCKED": "Bu site için uydu bağlantılarından gelen isteklere izin verilmiyor",
 		"CRAWLER_BLOCKED": "Bu site için bilinen tarayıcılardan gelen isteklere izin verilmiyor",
-		"DISALLOWED_WEBVIEW": "Bu site için uygulama içi tarayıcılardan (WebView) gelen isteklere izin verilmiyor"
+		"DISALLOWED_WEBVIEW": "Bu site için uygulama içi tarayıcılardan (WebView) gelen isteklere izin verilmiyor",
+		"INTERNAL_SERVER_ERROR": "Dahili sunucu hatası"
 	},
 	"PORTAL": {
 		"CANNOT_MODIFY_OWNER_USER": "Cannot modify owner user",
@@ -381,6 +384,11 @@
 		"INSECURE_CONTEXT": "Procaptcha güvenli bir (HTTPS) bağlantı gerektirir",
 		"CHECKING": "İnsan olduğunuz doğrulanıyor",
 		"IMAGE_DIALOG_LABEL": "Görsel doğrulama",
+		"CANNOT_LOAD": "CAPTCHA yüklenemiyor",
+		"RELOAD": "Yeniden yükle",
+		"VERIFIED_AGENT": "Doğrulanmış aracı",
+		"TRUSTED_REQUEST": "Güvenilir istek",
+		"LOADING": "Yükleniyor",
 		"PUZZLE": {
 			"DIALOG_LABEL": "Yapboz doğrulaması",
 			"DRAG": "Parçayı hedefe sürükleyin",
@@ -390,8 +398,32 @@
 			"KEYBOARD_HINT": "Parçayı ok tuşlarıyla taşıyın, daha küçük adımlar için Shift tuşunu basılı tutun. Göndermek için Enter'a, başa döndürmek için Home'a, iptal etmek için Escape'e basın.",
 			"POSITION": "soldan yüzde {{x}}, yukarıdan yüzde {{y}}",
 			"CHECKING": "Cevabınız kontrol ediliyor",
-			"RETRY_ANNOUNCEMENT": "Az kaldı. Yeni bir yapboz yüklendi ve parça yeniden başlangıçta."
-		}
+			"RETRY_ANNOUNCEMENT": "Az kaldı. Yeni bir yapboz yüklendi ve parça yeniden başlangıçta.",
+			"REFRESH": "Başka bir yapboz",
+			"SWITCH_TO_IMAGE": "Görsel doğrulamaya geç",
+			"SWITCH_TO_IMAGE_ANNOUNCEMENT": "Görsel doğrulamaya da geçebilirsiniz."
+		},
+		"ICON_ORDER": {
+			"DIALOG_LABEL": "Simge sırası görevi",
+			"SELECT": "Bu sırayla seçin",
+			"RETRY": "Az kaldı — tekrar deneyin",
+			"LEGEND_ALT": "Seçilecek simgeler, sırayla",
+			"RESET": "Sıfırla",
+			"CHECKING": "Kontrol ediliyor…",
+			"SUBMIT": "Tamam"
+		},
+		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
+		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
+		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
+		"AUDIO_PLAY": "Play",
+		"AUDIO_REPLAY": "Play again",
+		"AUDIO_PLAYING": "Playing",
+		"AUDIO_FINISHED": "Playback finished",
+		"AUDIO_PLAYBACK_FAILED": "Audio could not be played. Check your device volume and try again.",
+		"AUDIO_INCORRECT": "That wasn't right. Here's a new one.",
+		"AUDIO_SUBMIT": "Verify",
+		"AUDIO_CHECKING": "Checking",
+		"AUDIO_ALTERNATIVE": "Use audio instead"
 	},
 	"CONTRACT": {
 		"INVALID_ADDRESS": "Geçersiz adresi kodlama başarısız oldu",
@@ -436,7 +468,13 @@
 		"TABLES_UNDEFINED": "Tablolar tanımsız",
 		"CONNECTION_UNDEFINED": "Bağlantı tanımsız",
 		"COMMITMENT_FLAG_FAILED": "Taahhütü işlenmiş olarak işaretleme başarısız oldu",
-		"UNKNOWN": "Bilinmeyen veritabanı hatası"
+		"UNKNOWN": "Bilinmeyen veritabanı hatası",
+		"QUERY_ERROR": "Veritabanı sorgusu başarısız oldu",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Erişim kuralları Redis bağlantısı tanımlı değil",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Kullanıcı erişim kuralları depolaması tanımlı değil",
+		"SESSION_STORE_FAILED": "Oturum kaydedilemedi",
+		"SESSION_CHECK_REMOVE_FAILED": "Oturum kontrol edilip kaldırılamadı",
+		"SESSION_GET_FAILED": "Oturum alınamadı"
 	},
 	"CAPTCHA": {
 		"PARSE_ERROR": "Captcha ayrıştırma hatası",
@@ -455,7 +493,10 @@
 		"INVALID_SALT": "Geçersiz salt",
 		"INVALID_TOKEN": "Geçersiz belirteç",
 		"INVALID_SOLUTION": "Geçersiz çözüm",
-		"DECRYPTION_ERROR": "Şifreleme hatası"
+		"DECRYPTION_ERROR": "Şifreleme hatası",
+		"SOLUTION_NOT_FOUND": "Çözüm bulunamadı",
+		"DECISION_MACHINE_DENIED": "Karar makinesi tarafından reddedildi",
+		"INVALID_TIMESTAMP": "Geçersiz zaman damgası"
 	},
 	"CLI": {
 		"PARAMETER_ERROR": "Geçersiz parametre"

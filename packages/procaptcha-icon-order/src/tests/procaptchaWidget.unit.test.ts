@@ -1,0 +1,806 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import type { Ti18n, TranslateOptions } from "@prosopo/locale";
+import type { Component } from "@prosopo/procaptcha-common";
+import {
+	type GetIconOrderCaptchaResponse,
+	type IconClick,
+	type IconOrderEvent,
+	ModeEnum,
+	type ProcaptchaProps,
+	type ProcaptchaState,
+} from "@prosopo/types";
+import {
+	type Mock,
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	test,
+	vi,
+} from "vitest";
+import type { IconOrderCanvasProps } from "../components/iconOrderCanvas.js";
+import {
+	type ProcaptchaIconOrderHandle,
+	mountProcaptchaIconOrderWidget,
+} from "../components/procaptchaWidget.js";
+import { type Mounted, fire, mount, settle } from "./domHarness.js";
+import { challengeResponse, config, frictionless } from "./managerHarness.js";
+
+const mocks = vi.hoisted(() => {
+	const start =
+		vi.fn<
+			(
+				x?: number,
+				y?: number,
+			) => Promise<GetIconOrderCaptchaResponse | undefined>
+		>();
+	const submitSolution =
+		vi.fn<
+			(clicks: IconClick[], events: IconOrderEvent[]) => Promise<boolean>
+		>();
+	const resetState = vi.fn<() => void>();
+	const dispose = vi.fn<() => void>();
+	const constructions: {
+		updateState: (next: Partial<ProcaptchaState>) => void;
+		getHoneypotValue?: () => string | undefined;
+	}[] = [];
+	const loadI18next = vi.fn<(a?: boolean, b?: string) => Promise<unknown>>();
+	const canvasProps: { current: IconOrderCanvasProps | undefined } = {
+		current: undefined,
+	};
+	const translationsReady = { current: true };
+	const translatorI18n: { current: Ti18n | undefined } = { current: undefined };
+	return {
+		translationsReady,
+		translatorI18n,
+		start,
+		submitSolution,
+		resetState,
+		dispose,
+		constructions,
+		loadI18next,
+		canvasProps,
+	};
+});
+
+vi.mock("../services/Manager.js", () => ({
+	Manager: (
+		_config: unknown,
+		_state: ProcaptchaState,
+		updateState: (next: Partial<ProcaptchaState>) => void,
+		_callbacks: unknown,
+		_frictionlessState: unknown,
+		getHoneypotValue?: () => string | undefined,
+	) => {
+		mocks.constructions.push({ updateState, getHoneypotValue });
+		return {
+			start: mocks.start,
+			submitSolution: mocks.submitSolution,
+			resetState: mocks.resetState,
+			dispose: mocks.dispose,
+		};
+	},
+}));
+
+// A probe, so a test can read the canvas props and fire its completion.
+vi.mock("../components/iconOrderCanvas.js", () => ({
+	mountIconOrderCanvas: (
+		canvasProps: IconOrderCanvasProps,
+	): Component<IconOrderCanvasProps> => {
+		mocks.canvasProps.current = canvasProps;
+		const element = document.createElement("div");
+		element.setAttribute("data-cy", "canvas-stub");
+		document.body.appendChild(element);
+		return {
+			update: (next: IconOrderCanvasProps) => {
+				mocks.canvasProps.current = next;
+			},
+			destroy: () => {
+				element.remove();
+				mocks.canvasProps.current = undefined;
+			},
+		};
+	},
+}));
+
+vi.mock("@prosopo/locale", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("@prosopo/locale")>();
+	return {
+		...actual,
+		loadI18next: mocks.loadI18next,
+		createTranslator: () => ({
+			t: (key: string) => key,
+			isReady: () => mocks.translationsReady.current,
+			subscribe: () => () => undefined,
+			i18n: mocks.translatorI18n.current,
+		}),
+	};
+});
+
+let mounted: Mounted;
+let widget: ProcaptchaIconOrderHandle | undefined;
+
+const i18nStub = (
+	language: string,
+	changeLanguage: Mock<(l: string) => void>,
+) => ({ language, changeLanguage }) as unknown as Ti18n;
+
+// Stands in for the shared i18n instance after the widget's own language (de)
+// has loaded; lookups follow i18nFrontend.ts: catalogue, then defaultValue.
+const germanI18n = (): Ti18n => {
+	const catalogue: Record<string, string> = {
+		"API.INVALID_SITE_KEY": "Ungültiger Site-Schlüssel",
+	};
+	return {
+		language: "de",
+		isInitialized: true,
+		t: (key: string, options?: TranslateOptions): string =>
+			catalogue[key] ?? options?.defaultValue ?? key,
+		changeLanguage: async (): Promise<void> => undefined,
+		hasLoadedNamespace: (): boolean => true,
+		on: (): void => undefined,
+		off: (): void => undefined,
+	};
+};
+
+const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps => ({
+	config: config(),
+	callbacks: {},
+	i18n: undefined as unknown as Ti18n,
+	...overrides,
+});
+
+const render = (widgetProps: ProcaptchaProps): void => {
+	widget = mountProcaptchaIconOrderWidget(mounted.container, widgetProps);
+};
+
+const destroy = (): void => {
+	widget?.destroy();
+	widget = undefined;
+};
+
+beforeEach(() => {
+	vi.clearAllMocks();
+	mocks.constructions.length = 0;
+	mocks.translationsReady.current = true;
+	mocks.translatorI18n.current = undefined;
+	mocks.canvasProps.current = undefined;
+	mocks.start.mockResolvedValue(challengeResponse());
+	mocks.submitSolution.mockResolvedValue(true);
+	mocks.loadI18next.mockResolvedValue(undefined);
+	widget = undefined;
+	mounted = mount();
+});
+
+afterEach(() => {
+	destroy();
+	mounted.unmount();
+	vi.useRealTimers();
+	vi.restoreAllMocks();
+});
+
+const checkbox = (): HTMLInputElement => {
+	const element = mounted.container.querySelector<HTMLInputElement>(
+		'input[type="checkbox"]',
+	);
+	if (!element) throw new Error("expected a checkbox to be rendered");
+	return element;
+};
+
+const canvas = (): Element | null =>
+	document.body.querySelector('[data-cy="canvas-stub"]');
+
+const spinner = (): Element | null =>
+	mounted.container.querySelector('[role="status"]');
+
+const honeypotInput = (): HTMLInputElement => {
+	const element = document.querySelector<HTMLInputElement>(
+		'input[name="email_confirm"]',
+	);
+	if (!element) throw new Error("expected a honeypot to be rendered");
+	return element;
+};
+
+interface ClickOptions {
+	trusted?: boolean;
+	clientX?: number;
+	clientY?: number;
+	touches?: { clientX: number; clientY: number }[];
+}
+
+const click = async (options: ClickOptions = {}): Promise<void> => {
+	fire(checkbox(), "click", options);
+	await settle();
+};
+
+const clickWithoutWaiting = (): void => {
+	fire(checkbox(), "click");
+};
+
+interface Deferred<T> {
+	promise: Promise<T>;
+	release: (value: T) => void;
+}
+
+const deferred = <T>(): Deferred<T> => {
+	let release!: (value: T) => void;
+	const promise = new Promise<T>((resolve: (value: T) => void) => {
+		release = resolve;
+	});
+	return { promise, release };
+};
+
+const complete = async (
+	clicks: IconClick[] = [{ x: 60, y: 50 }],
+	events: IconOrderEvent[] = [{ x: 60, y: 50, t: 5 }],
+): Promise<void> => {
+	await mocks.canvasProps.current?.onComplete(clicks, events);
+	await settle();
+};
+
+describe("what the widget renders", () => {
+	test("a visible widget shows a checkbox", () => {
+		render(props());
+		expect(checkbox()).toBeDefined();
+	});
+
+	test("an invisible widget shows no checkbox at all", () => {
+		render(props({ config: config({ mode: ModeEnum.invisible }) }));
+		expect(
+			mounted.container.querySelector('input[type="checkbox"]'),
+		).toBeNull();
+	});
+
+	test("no icon-order is shown until a challenge has been fetched", () => {
+		render(props());
+		expect(canvas()).toBeNull();
+	});
+
+	test("a session with a honeypot question renders the honeypot", () => {
+		render(
+			props({ frictionlessState: frictionless({ hp: btoa("question") }) }),
+		);
+		expect(honeypotInput()).toBeDefined();
+		expect(document.body.textContent).toContain("question");
+	});
+
+	test("a session without one renders no bait at all", () => {
+		render(props({ frictionlessState: frictionless() }));
+		expect(document.querySelector('input[name="email_confirm"]')).toBeNull();
+	});
+
+	test("the manager can read the honeypot input the widget rendered", () => {
+		render(
+			props({ frictionlessState: frictionless({ hp: btoa("question") }) }),
+		);
+		honeypotInput().value = "bot@example.com";
+		expect(mocks.constructions[0]?.getHoneypotValue?.()).toBe(
+			"bot@example.com",
+		);
+	});
+
+	test("a dark-themed widget still renders its checkbox", () => {
+		render(props({ config: config({ theme: "dark" }) }));
+		expect(checkbox()).toBeDefined();
+	});
+
+	test("the checkbox is labelled once the translations are ready", () => {
+		render(props());
+		expect(checkbox().getAttribute("aria-label")).toBe("WIDGET.I_AM_HUMAN");
+	});
+
+	test("the label is left empty while the translations load", () => {
+		mocks.translationsReady.current = false;
+		render(props());
+		expect(checkbox().getAttribute("aria-label")).toBe("");
+	});
+
+	test("the widget builds exactly one manager", async () => {
+		render(props());
+		await click();
+		expect(mocks.constructions).toHaveLength(1);
+	});
+});
+
+describe("language", () => {
+	test("nothing is loaded when no language is configured", () => {
+		render(props());
+		expect(mocks.loadI18next).not.toHaveBeenCalled();
+	});
+
+	test("a configured language boots i18next with it", () => {
+		render(props({ config: config({ language: "fr" }) }));
+		expect(mocks.loadI18next).toHaveBeenCalledWith(false, "fr");
+	});
+
+	test("an injected i18n on another language is switched over", () => {
+		const changeLanguage = vi.fn<(l: string) => void>();
+		render(
+			props({
+				config: config({ language: "fr" }),
+				i18n: i18nStub("en", changeLanguage),
+			}),
+		);
+		expect(changeLanguage).toHaveBeenCalledWith("fr");
+		expect(mocks.loadI18next).not.toHaveBeenCalled();
+	});
+
+	test("an injected i18n already on that language is left alone", () => {
+		const changeLanguage = vi.fn<(l: string) => void>();
+		render(
+			props({
+				config: config({ language: "fr" }),
+				i18n: i18nStub("fr", changeLanguage),
+			}),
+		);
+		expect(changeLanguage).not.toHaveBeenCalled();
+	});
+});
+
+describe("starting from the checkbox", () => {
+	test("a click starts the solve and opens the icon-order", async () => {
+		render(props());
+		await click({ clientX: 12, clientY: 34 });
+		expect(mocks.start).toHaveBeenCalledWith(12, 34);
+		expect(canvas()).not.toBeNull();
+		expect(mocks.canvasProps.current).toMatchObject({
+			background: challengeResponse().background,
+			legend: challengeResponse().legend,
+			legendIconSize: challengeResponse().legendIconSize,
+			submitting: false,
+			showRetry: false,
+		});
+	});
+
+	test("a synthetic click never reaches the manager", async () => {
+		// The checkbox drops untrusted events before the widget sees them, so an
+		// automated solver cannot open a challenge at all.
+		render(props());
+		await click({ trusted: false, clientX: 12, clientY: 34 });
+		expect(mocks.start).not.toHaveBeenCalled();
+	});
+
+	test("a tap reports the coordinates of the first touch", async () => {
+		render(props());
+		await click({ touches: [{ clientX: 7, clientY: 9 }] });
+		expect(mocks.start).toHaveBeenCalledWith(7, 9);
+	});
+
+	test("a touch event with no touches falls back to the pointer", async () => {
+		render(props());
+		await click({ touches: [] });
+		expect(mocks.start).toHaveBeenCalledWith(0, 0);
+	});
+
+	test("a second click while the first is in flight is ignored", async () => {
+		const { promise, release } = deferred<GetIconOrderCaptchaResponse>();
+		mocks.start.mockReturnValue(promise);
+		render(props());
+		clickWithoutWaiting();
+		clickWithoutWaiting();
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+		release(challengeResponse());
+		await settle();
+	});
+
+	test("the checkbox shows a spinner while the solve is loading", async () => {
+		const { promise, release } = deferred<GetIconOrderCaptchaResponse>();
+		mocks.start.mockReturnValue(promise);
+		render(props());
+		clickWithoutWaiting();
+		await settle();
+		expect(spinner()).not.toBeNull();
+		release(challengeResponse());
+		await settle();
+		expect(spinner()).toBeNull();
+	});
+
+	test("a start that yields no challenge leaves the checkbox in place", async () => {
+		mocks.start.mockResolvedValue(undefined);
+		render(props());
+		await click();
+		expect(canvas()).toBeNull();
+		expect(spinner()).toBeNull();
+	});
+
+	test("a start that throws returns the user to a usable checkbox", async () => {
+		const onError = vi.fn<(error: Error) => void>();
+		mocks.start.mockRejectedValue(new Error("provider down"));
+		render(props({ callbacks: { onError } }));
+		await click();
+		expect(spinner()).toBeNull();
+		expect(onError).toHaveBeenCalledWith(expect.any(Error));
+	});
+
+	test("a start that throws without an error callback is still recoverable", async () => {
+		mocks.start.mockRejectedValue(new Error("provider down"));
+		render(props());
+		await click();
+		expect(spinner()).toBeNull();
+	});
+});
+
+describe("autoStart", () => {
+	test("fetches a challenge and opens the icon-order without a click", async () => {
+		render(props({ autoStart: true, startCoords: { x: 5, y: 6 } }));
+		await settle();
+		expect(mocks.start).toHaveBeenCalledWith(5, 6);
+		expect(canvas()).not.toBeNull();
+	});
+
+	test("starts at the origin when no coordinates were handed over", async () => {
+		render(props({ autoStart: true }));
+		await settle();
+		expect(mocks.start).toHaveBeenCalledWith(0, 0);
+	});
+
+	test("a failed autoStart leaves the checkbox usable", async () => {
+		mocks.start.mockRejectedValue(new Error("nope"));
+		render(props({ autoStart: true }));
+		await settle();
+		expect(canvas()).toBeNull();
+		expect(spinner()).toBeNull();
+	});
+
+	test("no autoStart means no solve until the user acts", () => {
+		render(props());
+		expect(mocks.start).not.toHaveBeenCalled();
+	});
+});
+
+describe("finishing the selection", () => {
+	const openIconOrder = async (
+		widgetProps: ProcaptchaProps = props(),
+	): Promise<void> => {
+		render(widgetProps);
+		await click();
+	};
+
+	test("submits the ordered clicks and the trail the canvas gathered", async () => {
+		await openIconOrder();
+		const clicks: IconClick[] = [{ x: 150, y: 60 }];
+		const events: IconOrderEvent[] = [{ x: 1, y: 2, t: 3 }];
+		await complete(clicks, events);
+		expect(mocks.submitSolution).toHaveBeenCalledWith(clicks, events);
+	});
+
+	test("a verified solution closes the icon-order", async () => {
+		await openIconOrder();
+		await complete();
+		expect(canvas()).toBeNull();
+		expect(spinner()).toBeNull();
+	});
+
+	test("a rejected solution asks for another go on a fresh challenge", async () => {
+		mocks.submitSolution.mockResolvedValue(false);
+		const retryChallenge = challengeResponse({
+			legend: "data:image/webp;base64,cmV0cnk=",
+		});
+		mocks.start
+			.mockResolvedValueOnce(challengeResponse())
+			.mockResolvedValue(retryChallenge);
+		await openIconOrder();
+		await complete();
+		expect(canvas()).not.toBeNull();
+		expect(mocks.canvasProps.current).toMatchObject({
+			showRetry: true,
+			legend: "data:image/webp;base64,cmV0cnk=",
+			submitting: false,
+		});
+	});
+
+	test("a rejected solution on a frictionless session re-mints rather than re-requesting", async () => {
+		mocks.submitSolution.mockResolvedValue(false);
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
+		await openIconOrder(
+			props({
+				frictionlessState: frictionless({ sessionId: "session-one" }),
+				onReload,
+			}),
+		);
+		await complete();
+		expect(onReload).toHaveBeenCalledTimes(1);
+		expect(onReload).toHaveBeenCalledWith(
+			expect.any(Number),
+			expect.any(Number),
+			{ showRetry: true },
+		);
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+	});
+
+	test("a rejected solution still re-requests when there is no session to re-mint", async () => {
+		mocks.submitSolution.mockResolvedValue(false);
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
+		await openIconOrder(props({ frictionlessState: frictionless(), onReload }));
+		await complete();
+		expect(onReload).not.toHaveBeenCalled();
+		expect(mocks.start).toHaveBeenCalledTimes(2);
+	});
+
+	test("a re-minted widget keeps the retry prompt on the replacement challenge", async () => {
+		render(props({ autoStart: true, startShowRetry: true }));
+		await settle();
+		expect(mocks.canvasProps.current).toMatchObject({ showRetry: true });
+	});
+
+	test("a rejected solution with no replacement challenge closes the icon-order", async () => {
+		mocks.submitSolution.mockResolvedValue(false);
+		mocks.start
+			.mockResolvedValueOnce(challengeResponse())
+			.mockResolvedValue(undefined);
+		await openIconOrder();
+		await complete();
+		expect(canvas()).toBeNull();
+	});
+
+	test("a rejected solution whose retry throws closes the icon-order", async () => {
+		mocks.submitSolution.mockResolvedValue(false);
+		mocks.start
+			.mockResolvedValueOnce(challengeResponse())
+			.mockRejectedValue(new Error("provider down"));
+		await openIconOrder();
+		await complete();
+		expect(canvas()).toBeNull();
+	});
+
+	test("a submit that throws is reported and treated as a failure", async () => {
+		const onError = vi.fn<(error: Error) => void>();
+		mocks.submitSolution.mockRejectedValue(new Error("boom"));
+		await openIconOrder(props({ callbacks: { onError } }));
+		await complete();
+		expect(onError).toHaveBeenCalledWith(expect.any(Error));
+		expect(mocks.start).toHaveBeenCalledTimes(2);
+	});
+
+	test("a submit that throws a non-error still reaches the callback", async () => {
+		const onError = vi.fn<(error: Error) => void>();
+		mocks.submitSolution.mockRejectedValue("just a string");
+		await openIconOrder(props({ callbacks: { onError } }));
+		await complete();
+		expect(onError).toHaveBeenCalledWith(expect.any(Error));
+	});
+
+	test("the icon-order is frozen while the solution is in flight", async () => {
+		const { promise, release } = deferred<boolean>();
+		mocks.submitSolution.mockReturnValue(promise);
+		await openIconOrder();
+		void mocks.canvasProps.current?.onComplete([{ x: 60, y: 50 }], []);
+		await settle();
+		expect(mocks.canvasProps.current?.submitting).toBe(true);
+		expect(spinner()).not.toBeNull();
+		release(true);
+		await settle();
+	});
+});
+
+describe("invisible mode", () => {
+	const execute = async (): Promise<void> => {
+		document.dispatchEvent(new Event("procaptcha:execute"));
+		await settle();
+	};
+
+	test("an execute event fetches a challenge and opens the icon-order", async () => {
+		render(props({ config: config({ mode: ModeEnum.invisible }) }));
+		await execute();
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+		expect(canvas()).not.toBeNull();
+	});
+
+	test("a visible widget ignores the execute event entirely", async () => {
+		render(props());
+		await execute();
+		expect(mocks.start).not.toHaveBeenCalled();
+	});
+
+	test("a targeted execute on the container runs a visible widget", async () => {
+		const target = document.createElement("div");
+		render(props({ container: target }));
+		target.dispatchEvent(new Event("procaptcha:execute"));
+		await settle();
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+		expect(canvas()).not.toBeNull();
+	});
+
+	test("a targeted execute on the container runs an invisible widget", async () => {
+		const target = document.createElement("div");
+		render(
+			props({
+				config: config({ mode: ModeEnum.invisible }),
+				container: target,
+			}),
+		);
+		target.dispatchEvent(new Event("procaptcha:execute"));
+		await settle();
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+	});
+
+	test("an execute that yields no challenge shows no icon-order", async () => {
+		mocks.start.mockResolvedValue(undefined);
+		render(props({ config: config({ mode: ModeEnum.invisible }) }));
+		await execute();
+		expect(canvas()).toBeNull();
+	});
+
+	test("an execute that throws is reported to the host page", async () => {
+		const onError = vi.fn<(error: Error) => void>();
+		mocks.start.mockRejectedValue(new Error("provider down"));
+		render(
+			props({
+				config: config({ mode: ModeEnum.invisible }),
+				callbacks: { onError },
+			}),
+		);
+		await execute();
+		expect(onError).toHaveBeenCalledWith(expect.any(Error));
+	});
+
+	test("an execute that throws a non-error is still reported", async () => {
+		const onError = vi.fn<(error: Error) => void>();
+		mocks.start.mockRejectedValue("just a string");
+		render(
+			props({
+				config: config({ mode: ModeEnum.invisible }),
+				callbacks: { onError },
+			}),
+		);
+		await execute();
+		expect(onError).toHaveBeenCalledWith(expect.any(Error));
+	});
+
+	test("the listener is dropped when the widget is destroyed", async () => {
+		render(props({ config: config({ mode: ModeEnum.invisible }) }));
+		destroy();
+		await execute();
+		expect(mocks.start).not.toHaveBeenCalled();
+	});
+});
+
+describe("an invalidated session", () => {
+	const invalidate = async (
+		key = "CAPTCHA.NO_SESSION_FOUND",
+		message = "session gone",
+	): Promise<void> => {
+		mocks.constructions[0]?.updateState({ error: { message, key } });
+		await settle();
+	};
+
+	test("the error is shown on the checkbox and the icon-order is torn down", async () => {
+		render(props());
+		await click();
+		await invalidate("API.UNKNOWN_ERROR", "something broke");
+		expect(mounted.container.textContent).toContain("something broke");
+		expect(canvas()).toBeNull();
+		expect(spinner()).toBeNull();
+	});
+
+	test("the host is told to re-mint, with the coordinates of the original click", async () => {
+		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
+		render(props({ onSessionInvalidated }));
+		await click({ clientX: 12, clientY: 34 });
+		await invalidate();
+		expect(onSessionInvalidated).toHaveBeenCalledWith(12, 34);
+	});
+
+	test("the host is told only once, however many errors arrive", async () => {
+		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
+		render(props({ onSessionInvalidated }));
+		await click();
+		await invalidate("CAPTCHA.NO_SESSION_FOUND", "gone");
+		await invalidate("CAPTCHA.NO_SESSION_FOUND", "gone again");
+		expect(onSessionInvalidated).toHaveBeenCalledTimes(1);
+	});
+
+	test("with no host handler the frictionless session restarts instead", async () => {
+		const restart = vi.fn<() => void>();
+		render(props({ frictionlessState: frictionless({ restart }) }));
+		await invalidate();
+		expect(restart).not.toHaveBeenCalled();
+		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 150));
+		expect(restart).toHaveBeenCalledTimes(1);
+	});
+
+	test("a restart pending at destroy is cancelled", async () => {
+		const restart = vi.fn<() => void>();
+		render(props({ frictionlessState: frictionless({ restart }) }));
+		await invalidate();
+		destroy();
+		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 200));
+		expect(restart).not.toHaveBeenCalled();
+	});
+
+	test("a lost session that will be re-minted shows no error", async () => {
+		render(props({ frictionlessState: frictionless({ restart: () => {} }) }));
+		await click();
+		await invalidate();
+		expect(mounted.container.textContent).not.toContain("session gone");
+		expect(spinner()).not.toBeNull();
+	});
+
+	test("a lost session handed to the wrapper shows no error either", async () => {
+		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
+		render(props({ onSessionInvalidated }));
+		await click();
+		await invalidate();
+		expect(onSessionInvalidated).toHaveBeenCalledTimes(1);
+		expect(mounted.container.textContent).not.toContain("session gone");
+	});
+
+	test("the error is shown in the widget's language, not the provider's", async () => {
+		mocks.translatorI18n.current = germanI18n();
+		render(props());
+		await invalidate("API.INVALID_SITE_KEY", "Invalid site key");
+		expect(mounted.container.textContent).toContain(
+			"Ungültiger Site-Schlüssel",
+		);
+		expect(mounted.container.textContent).not.toContain("Invalid site key");
+	});
+
+	test("a lost session with nothing to recover it is simply surfaced", async () => {
+		render(props());
+		await invalidate();
+		expect(mounted.container.textContent).toContain("session gone");
+	});
+
+	test("no coordinates are reported when the session was never clicked into", async () => {
+		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
+		render(props({ onSessionInvalidated }));
+		await invalidate();
+		expect(onSessionInvalidated).toHaveBeenCalledWith(undefined, undefined);
+	});
+});
+
+describe("the audio alternative", () => {
+	const onRequestAudioAlternative = vi.fn<() => void>();
+
+	const openChallenge = async (overrides: Partial<ProcaptchaProps>) => {
+		render(props(overrides));
+		await click();
+	};
+
+	test("is not offered unless the site turned it on", async () => {
+		await openChallenge({ onRequestAudioAlternative });
+		expect(mocks.canvasProps.current?.audioAlternative).toBeUndefined();
+	});
+
+	test("hands the canvas the translated offer and the wrapper's handler", async () => {
+		await openChallenge({
+			audioAlternativeAvailable: true,
+			onRequestAudioAlternative,
+		});
+		const offer = mocks.canvasProps.current?.audioAlternative;
+		expect(offer?.label).toBe("WIDGET.AUDIO_ALTERNATIVE");
+		offer?.onRequestAudio();
+		expect(onRequestAudioAlternative).toHaveBeenCalledTimes(1);
+	});
+
+	test("leaves the label empty while the translations load", async () => {
+		mocks.translationsReady.current = false;
+		await openChallenge({
+			audioAlternativeAvailable: true,
+			onRequestAudioAlternative,
+		});
+		expect(mocks.canvasProps.current?.audioAlternative?.label).toBe("");
+	});
+});
+
+describe("destroy", () => {
+	test("disposes the manager so its expiry timers cannot outlive the widget", () => {
+		render(props());
+		expect(mocks.dispose).not.toHaveBeenCalled();
+		destroy();
+		expect(mocks.dispose).toHaveBeenCalledTimes(1);
+	});
+});

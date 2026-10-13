@@ -197,6 +197,7 @@ interface HarnessOptions {
 	frictionlessState?: FrictionlessState;
 	withFrictionless?: boolean;
 	honeypot?: () => string | undefined;
+	widgetReloadsOnFailure?: boolean;
 }
 
 const build = (options: HarnessOptions = {}): Harness => {
@@ -224,6 +225,7 @@ const build = (options: HarnessOptions = {}): Harness => {
 		callbackInput,
 		frictionlessState,
 		options.honeypot,
+		{ widgetReloadsOnFailure: options.widgetReloadsOnFailure },
 	);
 	return { manager, state: currentState, updates, events, restart };
 };
@@ -755,6 +757,24 @@ describe("submitSolution: the verdict", () => {
 		expect(lastUpdate(harness, "isHuman")).toBe(false);
 	});
 
+	test("a disposed manager never expires the solve", async () => {
+		vi.useFakeTimers();
+		const harness = build();
+		await solve(harness);
+		harness.manager.dispose();
+		await vi.runOnlyPendingTimersAsync();
+		expect(harness.events.onExpired).not.toHaveBeenCalled();
+	});
+
+	test("a solve that lands after dispose never reaches the site", async () => {
+		const harness = build();
+		await harness.manager.start(11, 22);
+		harness.manager.dispose();
+		await harness.manager.submitSolution(200, 80, puzzleEvents());
+		expect(harness.events.onHuman).not.toHaveBeenCalled();
+		expect(harness.events.onFailed).not.toHaveBeenCalled();
+	});
+
 	test("a rejected solution fails the widget and restarts frictionless", async () => {
 		mocks.submitPuzzleCaptchaSolution.mockResolvedValue(
 			solutionResponse({ verified: false }),
@@ -765,6 +785,16 @@ describe("submitSolution: the verdict", () => {
 		expect(harness.events.onHuman).not.toHaveBeenCalled();
 		expect(harness.restart).toHaveBeenCalled();
 		expect(lastUpdate(harness, "isHuman")).toBe(false);
+	});
+
+	test("a rejected solution leaves the reload to a widget that re-mints", async () => {
+		mocks.submitPuzzleCaptchaSolution.mockResolvedValue(
+			solutionResponse({ verified: false }),
+		);
+		const harness = build({ widgetReloadsOnFailure: true });
+		await expect(solve(harness)).resolves.toBe(false);
+		expect(harness.events.onFailed).toHaveBeenCalled();
+		expect(harness.restart).not.toHaveBeenCalled();
 	});
 
 	test("a rejected solution without a frictionless state still resets", async () => {

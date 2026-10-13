@@ -1,25 +1,24 @@
 {
 	"name": "@prosopo/procaptcha",
-	"version": "2.11.20",
+	"version": "2.11.27",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"main": "./dist/index.js",
 	"type": "module",
 	"types": "./dist/index.d.ts",
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"scripts": {
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
-		"test:watch": "NODE_ENV=${NODE_ENV:-test}; npx vitest watch --config ./vite.test.config.ts",
-		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --coverage --config ./vite.test.config.ts"
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
+		"test:watch": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest watch --config ./vite.test.config.ts",
+		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --coverage --config ./vite.test.config.ts"
 	},
 	"exports": {
 		".": {
@@ -36,17 +35,17 @@
 	},
 	"dependencies": {
 		"@polkadot/util": "14.0.3",
-		"@prosopo/api": "4.3.4",
-		"@prosopo/common": "3.1.59",
-		"@prosopo/datasets": "3.1.90",
-		"@prosopo/load-balancer": "2.11.0",
-		"@prosopo/procaptcha-common": "2.17.2",
-		"@prosopo/types": "5.10.1",
-		"@prosopo/util": "3.3.11",
-		"@prosopo/util-crypto": "13.5.33"
+		"@prosopo/api": "workspace:*",
+		"@prosopo/common": "workspace:*",
+		"@prosopo/datasets": "workspace:*",
+		"@prosopo/load-balancer": "workspace:*",
+		"@prosopo/procaptcha-common": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
+		"@prosopo/util-crypto": "workspace:*"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.1",
+		"@prosopo/config": "workspace:*",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",

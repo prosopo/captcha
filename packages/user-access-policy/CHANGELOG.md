@@ -1,5 +1,103 @@
 # @prosopo/user-access-policy
 
+## 3.14.17
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/api@4.6.0
+  - @prosopo/types@5.15.0
+  - @prosopo/common@3.1.64
+
+## 3.14.16
+### Patch Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/api@4.5.0
+  - @prosopo/common@3.1.63
+
+## 3.14.15
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/util@3.3.14
+  - @prosopo/api@4.4.0
+  - @prosopo/common@3.1.62
+  - @prosopo/api-route@2.6.63
+  - @prosopo/logger@2.1.3
+  - @prosopo/redis-client@1.0.40
+
+## 3.14.14
+### Patch Changes
+
+- Updated dependencies [ede4352]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+  - @prosopo/types@5.12.0
+  - @prosopo/util@3.3.13
+  - @prosopo/common@3.1.61
+  - @prosopo/api@4.3.8
+  - @prosopo/logger@2.1.2
+  - @prosopo/api-route@2.6.62
+  - @prosopo/redis-client@1.0.39
+
+## 3.14.13
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/api@4.3.7
+
+## 3.14.12
+### Patch Changes
+
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [4109641]
+- Updated dependencies [dab0338]
+- Updated dependencies [0d29dde]
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/redis-client@1.0.38
+  - @prosopo/api@4.3.6
+  - @prosopo/util@3.3.12
+  - @prosopo/api-route@2.6.61
+  - @prosopo/logger@2.1.1
+
+## 3.14.11
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/api@4.3.5
+
 ## 3.14.10
 ### Patch Changes
 

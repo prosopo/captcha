@@ -10,6 +10,9 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    # Matches pnpm's minimumReleaseAge, which refuses versions younger than this.
+    cooldown:
+      default-days: 7
     # Keep majors as standalone PRs (they may need manual review / a larger bump),
     # group everything else to cut down on PR + changeset noise across the workspace.
     groups:

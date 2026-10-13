@@ -52,3 +52,12 @@ export const checkPowSignature = (
 		});
 	}
 };
+
+export const isCoordsAllZero = (
+	coords: [number, number][][] | undefined,
+): boolean =>
+	coords !== undefined &&
+	coords.length > 0 &&
+	coords.every(
+		(group) => group.length > 0 && group.every(([x, y]) => x === 0 && y === 0),
+	);

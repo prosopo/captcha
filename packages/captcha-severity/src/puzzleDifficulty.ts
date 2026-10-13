@@ -82,6 +82,15 @@ export const MIN_DECOY_HOLE_DARKEN_MARGIN = 0.04;
 export const MAX_AUTO_ESCALATION_LEVEL = 3;
 
 /**
+ * Highest level reachable by automatic escalation on a touch device.
+ *
+ * `tolerance` is an absolute CSS-pixel target and the widget renders into a
+ * fixed 300x200 container on every device, so a level asks the same placement
+ * accuracy of a fingertip as it does of a mouse.
+ */
+export const MAX_AUTO_ESCALATION_LEVEL_TOUCH = 2;
+
+/**
  * Image rounds per difficulty step.
  *
  * `severityToPuzzleDifficulty` and `puzzleDifficultyToSeverity` are inverses
@@ -169,6 +178,23 @@ export const clampDifficultyLevel = (
 	const ceiling = Math.min(maxLevel, PUZZLE_DIFFICULTY_LEVELS.length - 1);
 	if (!Number.isFinite(level)) return 0;
 	return Math.max(0, Math.min(Math.floor(level), ceiling));
+};
+
+/**
+ * The escalation ceiling for one session: the stricter of the site's own
+ * `puzzleMaxDifficulty` and the device's ceiling.
+ */
+export const resolveMaxEscalationLevel = (
+	siteMaxLevel: number | undefined,
+	isTouch: boolean,
+): number => {
+	const deviceCeiling = isTouch
+		? MAX_AUTO_ESCALATION_LEVEL_TOUCH
+		: MAX_AUTO_ESCALATION_LEVEL;
+	if (siteMaxLevel === undefined || !Number.isFinite(siteMaxLevel)) {
+		return deviceCeiling;
+	}
+	return Math.min(Math.max(0, Math.floor(siteMaxLevel)), deviceCeiling);
 };
 
 /**

@@ -31,6 +31,11 @@ import type { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { getCompositeIpAddress } from "../../../compositeIpAddress.js";
 import type { AugmentedRequest } from "../../../express.js";
+import {
+	isAudioAlternativeEnabled,
+	offersAudioAlternative,
+} from "../../../tasks/audioAlternative.js";
+import { coerceToEnabledCaptchaType } from "../../../tasks/captchaTypeSelection.js";
 import { Tasks } from "../../../tasks/index.js";
 import {
 	derivePlatform,
@@ -58,10 +63,18 @@ import {
 	handleFrictionlessTrafficFilter,
 } from "../trafficFilterRequestTime.js";
 import { handleAccessPolicy } from "./accessPolicy.js";
-import { resolveScoreLadder } from "./constants.js";
+import {
+	isPuzzleImageSwitchAvailable,
+	resolveScoreLadder,
+	resolveSiteAllowedCaptchaTypes,
+} from "./constants.js";
 import { runDecisionMachine } from "./decisionMachine.js";
 import { decryptIncomingSimdReadings } from "./decryptSimdReadings.js";
 import { attachHoneypot } from "./honeypotResponse.js";
+import {
+	isImageSwitchRequestValid,
+	resolveRefreshLineage,
+} from "./refreshLineage.js";
 import { resolveSessionDedup } from "./sessionDedup.js";
 import {
 	runConfiguredCaptchaTypeShortCircuit,
@@ -100,6 +113,8 @@ export default (
 				currentUrl: reportedCurrentUrl,
 				iframeUrl: reportedIframeUrl,
 				clientSessionId,
+				refreshOf,
+				switchToImage,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
 			// Re-sanitise whatever the client reported: keep only scheme + host
@@ -234,6 +249,17 @@ export default (
 				);
 			}
 
+			const audioAlternativeEnabled = isAudioAlternativeEnabled(
+				clientRecord.settings,
+			);
+			tasks.frictionlessManager.setAudioAlternativeEnabled(
+				audioAlternativeEnabled,
+			);
+			const allowedCaptchaTypes = resolveSiteAllowedCaptchaTypes(
+				clientRecord.settings,
+			);
+			tasks.frictionlessManager.setAllowedCaptchaTypes(allowedCaptchaTypes);
+
 			if (dedup) {
 				// A reused session must still honour an active user access policy
 				// AND the configured routing machine. This fast-path returns
@@ -308,7 +334,8 @@ export default (
 				const cachedCaptchaType = dedup.captchaType as
 					| CaptchaType.image
 					| CaptchaType.pow
-					| CaptchaType.puzzle;
+					| CaptchaType.puzzle
+					| CaptchaType.iconOrder;
 				const dedupRouted = normalizedIp
 					? await tasks.frictionlessManager.applyRoutingMachine(
 							{
@@ -381,8 +408,17 @@ export default (
 							},
 						)
 					: { captchaType: cachedCaptchaType };
+				// Compared after coercion, as `sendCaptcha` would mint it, so a router
+				// that keeps asking for a disallowed type doesn't evict every reuse.
 				const dedupConflictsWithRouting =
-					dedupRouted.captchaType !== cachedCaptchaType;
+					coerceToEnabledCaptchaType(
+						dedupRouted.captchaType,
+						allowedCaptchaTypes,
+					) !== cachedCaptchaType;
+				// Catches sessions minted before the site's allowed types changed.
+				const dedupConflictsWithAllowedTypes =
+					coerceToEnabledCaptchaType(cachedCaptchaType, allowedCaptchaTypes) !==
+					cachedCaptchaType;
 
 				// The reused session's `bundleId` is what the provider will
 				// use to decrypt every later behavioural / SIMD payload for
@@ -418,9 +454,13 @@ export default (
 					}
 				}
 
-				if (dedupConflictsWithPolicy || dedupConflictsWithRouting) {
+				if (
+					dedupConflictsWithPolicy ||
+					dedupConflictsWithRouting ||
+					dedupConflictsWithAllowedTypes
+				) {
 					req.logger.info(() => ({
-						msg: "Evicting reused session: cached captchaType conflicts with access policy or routing machine",
+						msg: "Evicting reused session: cached captchaType conflicts with access policy, routing machine or allowed types",
 						data: {
 							userSitekeyIpHash,
 							sessionId: dedup.sessionId,
@@ -431,6 +471,9 @@ export default (
 							}),
 							...(dedupConflictsWithRouting && {
 								routedCaptchaType: dedupRouted.captchaType,
+							}),
+							...(dedupConflictsWithAllowedTypes && {
+								allowedCaptchaTypes,
 							}),
 						},
 					}));
@@ -496,10 +539,15 @@ export default (
 						[ApiParams.captchaType]: dedup.captchaType as
 							| CaptchaType.image
 							| CaptchaType.pow
-							| CaptchaType.puzzle,
+							| CaptchaType.puzzle
+							| CaptchaType.iconOrder,
 						[ApiParams.sessionId]: dedup.sessionId,
 						[ApiParams.status]: "ok",
 						dns_url: buildDnsEventUrl(dedup.sessionId),
+						...(offersAudioAlternative(
+							dedup.captchaType,
+							audioAlternativeEnabled,
+						) && { audioAlternativeAvailable: true }),
 					});
 				}
 			}
@@ -542,6 +590,22 @@ export default (
 				...rawTlsSignalsForSession(req),
 			};
 
+			// Ahead of the short-circuits, so a site pinned to puzzle can still be
+			// switched to image.
+			const refresh = await resolveRefreshLineage(
+				tasks.db,
+				refreshOf,
+				dapp,
+				new Date(),
+			);
+			tasks.frictionlessManager.setImageSwitchRequested(
+				isImageSwitchRequestValid(
+					switchToImage,
+					refresh,
+					isPuzzleImageSwitchAvailable(clientRecord.settings),
+				),
+			);
+
 			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
 				shortCircuitInput,
 				res,
@@ -567,11 +631,18 @@ export default (
 			// match on the verified identity. Unsigned traffic falls through
 			// with webBotAuthAgent=undefined and hits the normal detector
 			// stack.
-			const verified = await verifyWebBotAuth({
-				method: req.method,
-				url: `https://${req.headers.host ?? ""}${req.originalUrl ?? req.url}`,
-				headers: flatten(req.headers),
-			});
+			const verified = await verifyWebBotAuth(
+				{
+					method: req.method,
+					url: `https://${req.headers.host ?? ""}${req.originalUrl ?? req.url}`,
+					headers: flatten(req.headers),
+				},
+				{
+					allowLocalSigners:
+						process.env.NODE_ENV === "test" ||
+						process.env.NODE_ENV === "development",
+				},
+			);
 			const verifiedSignerUrl = verified.verified
 				? verified.signerUrl
 				: undefined;
@@ -788,6 +859,7 @@ export default (
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
 				...(d !== undefined && { d }),
 				...(clientSessionId && { clientMetaData: { clientSessionId } }),
+				...refresh?.lineage,
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
 				}),
@@ -817,9 +889,6 @@ export default (
 				score: botScore,
 				imageMaxRounds: clientRecord.settings.imageMaxRounds,
 				imageMinRounds: clientRecord.settings.imageMinRounds,
-				// Constrains what `sendCaptcha` may finally mint, and sizes a
-				// puzzle chosen in place of a disabled image challenge.
-				frictionlessTypes: clientRecord.settings.frictionlessTypes,
 				baseImageRounds: env.config.captchas.solved.count,
 				puzzleMaxDifficulty: clientRecord.settings.puzzleMaxDifficulty,
 				platform: derivePlatform(requestUserAgent, webView, {

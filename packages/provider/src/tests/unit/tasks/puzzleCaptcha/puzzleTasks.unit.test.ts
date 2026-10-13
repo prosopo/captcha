@@ -117,6 +117,7 @@ describe("PuzzleCaptchaManager", () => {
 			storePuzzleCaptchaRecord: vi.fn(),
 			getPuzzleCaptchaRecordByChallenge: vi.fn(),
 			updatePuzzleCaptchaRecord: vi.fn(),
+			markPuzzleCaptchaRecordChecked: vi.fn().mockResolvedValue(true),
 			updatePuzzleCaptchaRecordResult: vi.fn(),
 			getClientRecord: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
@@ -454,6 +455,7 @@ describe("PuzzleCaptchaManager", () => {
 					collector1: [{ x: 10, y: 20, timestamp: 100 }],
 					collector2: [],
 					collector3: [{ x: 15, y: 25, timestamp: 200 }],
+					collector4: [{ x: 0, y: 900, timestamp: 300 }],
 					deviceCapability: "desktop",
 				} as unknown as Awaited<
 					ReturnType<typeof puzzleCaptchaManager.decryptBehavioralData>
@@ -504,6 +506,7 @@ describe("PuzzleCaptchaManager", () => {
 						patch.behavioralDataPacked.c1.length === 1 &&
 						patch.behavioralDataPacked.c2.length === 0 &&
 						patch.behavioralDataPacked.c3.length === 1 &&
+						patch.behavioralDataPacked.c4?.length === 1 &&
 						patch.behavioralDataPacked.d === "desktop" &&
 						patch.deviceCapability === "desktop",
 				),
@@ -890,10 +893,40 @@ describe("PuzzleCaptchaManager", () => {
 
 			expect(result.verified).toBe(true);
 			// Records that the solution has been server-checked, gating reuse.
-			expect(db.updatePuzzleCaptchaRecord).toHaveBeenCalledWith(
-				challenge,
-				expect.objectContaining({ serverChecked: true }),
+			expect(db.markPuzzleCaptchaRecordChecked).toHaveBeenCalledWith(challenge);
+		});
+
+		it("returns verified:false when a concurrent verify already claimed the record", async () => {
+			// Both verifies read the record before either marked it checked.
+			vi.mocked(db.getPuzzleCaptchaRecordByChallenge).mockResolvedValue(
+				asPuzzleRecord({
+					challenge,
+					dappAccount,
+					userAccount: "user",
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					headers: { a: "1" },
+				}),
 			);
+			vi.mocked(db.markPuzzleCaptchaRecordChecked).mockResolvedValue(false);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			mockDecisionMachine(
+				vi.fn().mockResolvedValue({
+					decision: "allow",
+					reason: undefined,
+					score: 1,
+				}),
+			);
+
+			const result =
+				await puzzleCaptchaManager.serverVerifyPuzzleCaptchaSolution(
+					dappAccount,
+					challenge,
+					1000,
+					mockEnv,
+				);
+
+			expect(result.verified).toBe(false);
 		});
 
 		it("returns verified:false when the decision machine denies", async () => {
@@ -1096,6 +1129,8 @@ describe("PuzzleCaptchaManager", () => {
 				captchaType: CaptchaType.puzzle,
 				webView: false,
 				iFrame: true,
+				currentUrl: "https://example.com/checkout",
+				iframeUrl: "https://embed.example.org/captcha/abc",
 				decryptedHeadHash: "h".repeat(16),
 				userSitekeyIpHash: "ush",
 				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
@@ -1137,6 +1172,8 @@ describe("PuzzleCaptchaManager", () => {
 			expect(input.ruleType).toEqual(sessionRecord.ruleType);
 			expect(input.webView).toBe(sessionRecord.webView);
 			expect(input.iFrame).toBe(sessionRecord.iFrame);
+			expect(input.currentUrl).toBe(sessionRecord.currentUrl);
+			expect(input.iframeUrl).toBe(sessionRecord.iframeUrl);
 			expect(typeof input.score).toBe("number");
 		});
 	});
