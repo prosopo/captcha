@@ -1,5 +1,15 @@
 # @prosopo/keyring
 
+## 2.10.4
+### Patch Changes
+
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+  - @prosopo/common@3.1.65
+  - @prosopo/util-crypto@13.6.0
+
 ## 2.10.3
 ### Patch Changes
 

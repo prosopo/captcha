@@ -1,5 +1,10 @@
 # @prosopo/dotenv
 
+## 3.0.61
+### Patch Changes
+
+  - @prosopo/logger@2.1.4
+
 ## 3.0.60
 ### Patch Changes
 
