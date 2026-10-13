@@ -39,8 +39,8 @@
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
 		"@prosopo/logger": "workspace:*",
-		"@redis/search": "6.2.1",
-		"redis": "6.2.1"
+		"@redis/search": "6.3.0",
+		"redis": "6.3.0"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",

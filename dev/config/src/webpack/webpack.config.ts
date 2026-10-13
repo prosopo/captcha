@@ -103,10 +103,6 @@ export default (mode: string) => {
 									require.resolve("@babel/plugin-transform-react-jsx"),
 									{ runtime: "automatic" },
 								],
-								[
-									require.resolve("@babel/plugin-syntax-import-attributes"),
-									{ deprecatedAssertSyntax: true },
-								],
 							],
 							presets: [
 								require.resolve("@babel/preset-env"),

@@ -19,7 +19,7 @@
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
 		"@types/node": "22.5.5",
-		"@types/yargs": "17.0.33",
+		"@types/yargs": "17.0.35",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
@@ -46,7 +46,7 @@
 		"@prosopo/util": "workspace:*",
 		"@prosopo/workspace": "workspace:*",
 		"fast-glob": "3.3.3",
-		"yargs": "18.1.0",
+		"yargs": "18.2.0",
 		"zod": "3.23.8"
 	}
 }
