@@ -1,0 +1,15 @@
+# Copy to .github/workflows/project-board.yml in each repo that feeds the org board.
+# pull_request_target so PRs from forks also get the token; no PR code is checked out.
+name: project-board
+
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review, closed]
+
+permissions: {}
+
+jobs:
+  board:
+    uses: prosopo/.github/.github/workflows/project-board.yml@main
+    secrets:
+      PROJECT_TOKEN: ${{ secrets.PROJECT_TOKEN }}
