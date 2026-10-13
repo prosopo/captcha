@@ -766,7 +766,8 @@ export const TrafficFilterSchema = object({
 	// `providerType === "isp"` bypass and any allowlist entry for the same
 	// name. Useful for named providers that upstream classifies as ISP but
 	// operators want treated as datacenter (for example IP-leasing platforms
-	// whose ranges sit on carrier ASNs but exit as proxy pools). Same
+	// whose ranges sit on carrier ASNs but exit as proxy pools), or for
+	// iCloud Private Relay, which the provider exempts by default. Same
 	// case-insensitive, whitespace-trimmed matching as the allowlist and the
 	// same three name sources (`datacenterName`, `providerName`,
 	// `asnOrganization`).

@@ -116,10 +116,22 @@ const matchesDatacenterNameList = (
 	return candidates.some((c) => normalisedList.includes(c));
 };
 
+// iCloud Private Relay puts many real Apple users behind each partner-CDN
+// egress IP, so it is allowlisted for every site without being configured.
+// An operator who wants it treated as datacenter names it in
+// `datacenterNameDenylist`, which wins over this as over any allowlist entry.
+const DEFAULT_DATACENTER_ALLOWLIST: ReadonlyArray<string> = [
+	"iCloud Private Relay",
+];
+
+export const isPrivateRelay = (ipInfo: IPInfoResult): boolean =>
+	matchesDatacenterNameList(ipInfo, DEFAULT_DATACENTER_ALLOWLIST);
+
 export const isDatacenterAllowlisted = (
 	ipInfo: IPInfoResult,
 	allowlist: ReadonlyArray<string> | undefined,
-): boolean => matchesDatacenterNameList(ipInfo, allowlist);
+): boolean =>
+	isPrivateRelay(ipInfo) || matchesDatacenterNameList(ipInfo, allowlist);
 
 // Counterpart to `isDatacenterAllowlisted`. When the datacenter rule is
 // active and the IP's name matches an entry in `datacenterNameDenylist`,
@@ -200,6 +212,13 @@ const evaluateIpInfo = (
 		return matches;
 	}
 
+	// A relay egress IP is a partner CDN node shared by many Apple users, so
+	// the lower flags (an abuser score in particular) describe the node, not
+	// the visitor. Relay owns the IP the way a VPN does.
+	if (ipInfo.isDatacenter && isPrivateRelay(ipInfo)) {
+		return matches;
+	}
+
 	if (ipInfo.isAbuser) {
 		const threshold =
 			trafficFilter.abuserScoreThreshold ??
@@ -256,9 +275,9 @@ const evaluateIpInfo = (
  * crawlers.
  *
  * Datacenter name lists: `datacenterNameAllowlist` lets operators opt named
- * consumer relays (e.g. iCloud Private Relay) out of the datacenter rule;
- * `datacenterNameDenylist` opts named providers back in even when the ISP
- * heuristic would exempt them.
+ * consumer relays out of the datacenter rule (iCloud Private Relay is out by
+ * default); `datacenterNameDenylist` opts named providers back in, including
+ * iCloud Private Relay, and even when the ISP heuristic would exempt them.
  *
  * When `trafficFilter.skipExtrasOnValidDnsPath` is on and the catcher
  * confirmed the DNS path matched the connection path (`pathValid: true`),
