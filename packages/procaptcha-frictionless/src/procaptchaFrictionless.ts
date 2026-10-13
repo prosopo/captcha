@@ -450,9 +450,9 @@ export const mountProcaptchaFrictionless = (
 
 		if (CaptchaType.authenticated === captchaType) {
 			// Web Bot Auth pre-verified pass-through. No challenge, no
-			// interaction — the badge encodes and fires the token on mount.
-			// Skip the loader chain the other branches use because there is no
-			// captcha module to lazy-import here.
+			// interaction — the badge fires the token on mount, or on execute()
+			// when invisible. Skip the loader chain the other branches use
+			// because there is no captcha module to lazy-import here.
 			if (!frictionlessState.sessionId) {
 				events.onError(
 					new Error(
@@ -477,7 +477,13 @@ export const mountProcaptchaFrictionless = (
 							trustedRequest: i18n.t("WIDGET.TRUSTED_REQUEST"),
 						}
 					: undefined,
+				invisible: ModeEnum.invisible === config.mode,
+				widgetContainer,
+				expiresInMs:
+					ProcaptchaConfigSchema.parse(config).captchas.pow.solutionTimeout,
+				restart,
 			});
+			replayPendingExecute();
 			return;
 		}
 
