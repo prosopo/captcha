@@ -2291,6 +2291,7 @@ describe("CaptchaManager", () => {
 				mockChallengeRecord,
 				"userAccount",
 				mockHeaders,
+				undefined,
 			);
 			expect(result).toBeUndefined();
 		});
@@ -2310,6 +2311,7 @@ describe("CaptchaManager", () => {
 				mockChallengeRecord,
 				"userAccount",
 				mockHeaders,
+				undefined,
 			);
 			expect(result).toBeUndefined();
 		});
@@ -2329,6 +2331,7 @@ describe("CaptchaManager", () => {
 				mockChallengeRecord,
 				"userAccount",
 				mockHeaders,
+				undefined,
 			);
 			expect(result).toEqual(hardBlockPolicy);
 		});
@@ -2347,6 +2350,7 @@ describe("CaptchaManager", () => {
 				mockChallengeRecord,
 				"userAccount",
 				mockHeaders,
+				undefined,
 			);
 			expect(result).toBeUndefined();
 		});
@@ -2374,6 +2378,7 @@ describe("CaptchaManager", () => {
 				mockChallengeRecord,
 				"userAccount",
 				mockHeaders,
+				undefined,
 			);
 			expect(result).toEqual(deferBlock);
 		});
@@ -2398,6 +2403,7 @@ describe("CaptchaManager", () => {
 				mockChallengeRecord,
 				"userAccount",
 				mockHeaders,
+				undefined,
 			);
 			expect(result).toEqual(deferBlockNoType);
 		});
@@ -2426,6 +2432,7 @@ describe("CaptchaManager", () => {
 				mockChallengeRecord,
 				"userAccount",
 				mockHeaders,
+				undefined,
 			);
 			expect(result).toEqual(restrictDefer);
 		});
@@ -2450,6 +2457,7 @@ describe("CaptchaManager", () => {
 				mockChallengeRecord,
 				"userAccount",
 				mockHeaders,
+				undefined,
 			);
 			expect(result).toBeUndefined();
 		});
@@ -2489,25 +2497,11 @@ describe("CaptchaManager", () => {
 			...overrides,
 		});
 
-		const mkEnvWithIpLookup = (
-			// biome-ignore lint/suspicious/noExplicitAny: only ipInfoService.lookup is read
-			ipLookup: () => Promise<any>,
-		): ProviderEnvironment =>
-			({
-				config: {},
-				ipInfoService: { lookup: ipLookup },
-			}) as unknown as ProviderEnvironment;
-
 		it("blocks a datacenter IP at verify time when the site configures datacenter:{action:block}", async () => {
 			const check = await captchaManager.resolveTrafficFilterCheck(
-				mkEnvWithIpLookup(() =>
-					Promise.resolve(
-						ipInfoResponse({ isDatacenter: true, providerType: "hosting" }),
-					),
-				),
 				undefined,
 				{ datacenter: { action: TrafficFilterAction.Block } },
-				"1.2.3.4",
+				ipInfoResponse({ isDatacenter: true, providerType: "hosting" }),
 			);
 			expect(check.isBlocked).toBe(true);
 			if (check.isBlocked) {
@@ -2521,11 +2515,6 @@ describe("CaptchaManager", () => {
 			// request-time; at verify-time they don't produce a block, so
 			// the interaction succeeds and is billed as normal.
 			const check = await captchaManager.resolveTrafficFilterCheck(
-				mkEnvWithIpLookup(() =>
-					Promise.resolve(
-						ipInfoResponse({ isDatacenter: true, providerType: "hosting" }),
-					),
-				),
 				undefined,
 				{
 					datacenter: {
@@ -2533,7 +2522,7 @@ describe("CaptchaManager", () => {
 						captchaType: CaptchaType.image,
 					},
 				},
-				"1.2.3.4",
+				ipInfoResponse({ isDatacenter: true, providerType: "hosting" }),
 			);
 			expect(check.isBlocked).toBe(false);
 		});
@@ -2544,18 +2533,13 @@ describe("CaptchaManager", () => {
 			// asymmetry is deliberate. At verify-time we default the
 			// abuser block; at request-time we defer to the operator.
 			const check = await captchaManager.resolveTrafficFilterCheck(
-				mkEnvWithIpLookup(() =>
-					Promise.resolve(
-						ipInfoResponse({
-							isAbuser: true,
-							abuserScore: 0.9,
-							companyAbuserScore: 0.9,
-						}),
-					),
-				),
 				undefined,
 				{},
-				"1.2.3.4",
+				ipInfoResponse({
+					isAbuser: true,
+					abuserScore: 0.9,
+					companyAbuserScore: 0.9,
+				}),
 			);
 			expect(check.isBlocked).toBe(true);
 			if (check.isBlocked) {
@@ -2565,10 +2549,27 @@ describe("CaptchaManager", () => {
 
 		it("passes when no category is active and the abuser default doesn't match (clean IP)", async () => {
 			const check = await captchaManager.resolveTrafficFilterCheck(
-				mkEnvWithIpLookup(() => Promise.resolve(ipInfoResponse())),
 				undefined,
 				{},
-				"1.2.3.4",
+				ipInfoResponse(),
+			);
+			expect(check.isBlocked).toBe(false);
+		});
+
+		it("falls back to the record's ip info when the site sent no current ip", async () => {
+			const check = await captchaManager.resolveTrafficFilterCheck(
+				ipInfoResponse({ isDatacenter: true, providerType: "hosting" }),
+				{ datacenter: { action: TrafficFilterAction.Block } },
+				undefined,
+			);
+			expect(check.isBlocked).toBe(true);
+		});
+
+		it("filters on the current ip info over the record's", async () => {
+			const check = await captchaManager.resolveTrafficFilterCheck(
+				ipInfoResponse({ isDatacenter: true, providerType: "hosting" }),
+				{ datacenter: { action: TrafficFilterAction.Block } },
+				ipInfoResponse(),
 			);
 			expect(check.isBlocked).toBe(false);
 		});

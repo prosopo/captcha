@@ -23,7 +23,8 @@
 		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts --mode $NODE_ENV",
 		"cli": "node dist/cli/index.js",
-		"setup": "node dist/cli/index.js setup"
+		"setup": "node dist/cli/index.js setup",
+		"bench:verify": "NODE_ENV=test tsx src/bench/verify/index.ts"
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",

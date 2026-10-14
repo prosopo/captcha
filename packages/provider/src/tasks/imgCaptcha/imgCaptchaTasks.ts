@@ -835,6 +835,14 @@ export class ImgCaptchaManager extends CaptchaManager {
 			failStatus = ResultReason.CLIENT_SESSION_MISMATCH;
 		}
 
+		// Read once: the hard-block check needs its head hash and the checks
+		// further down need the rest. Walker fills simdReadings / dnsEvent /
+		// entropy fields from the origin when this is an escalation record.
+		// See CaptchaManager.getSessionRecordWithOriginFallback.
+		const sessionRecord = solution.sessionId
+			? await this.getSessionRecordWithOriginFallback(solution.sessionId)
+			: undefined;
+
 		// Check user access policies for hard blocks
 		if (!failStatus && userAccessRulesStorage) {
 			try {
@@ -843,6 +851,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					solution,
 					solution.userAccount,
 					solution.headers,
+					sessionRecord?.decryptedHeadHash,
 					solution.coords,
 					solution.ipInfo?.isValid ? solution.ipInfo.countryCode : undefined,
 					solution.ipInfo?.isValid ? solution.ipInfo.asnNumber : undefined,
@@ -960,12 +969,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Walker fills simdReadings / dnsEvent / entropy fields from the origin
-		// when this is an escalation record. See CaptchaManager.getSessionRecordWithOriginFallback.
-		const sessionRecord = solution.sessionId
-			? await this.getSessionRecordWithOriginFallback(solution.sessionId)
-			: undefined;
-
 		const enrichedDnsEvent = await enrichDnsEvent(
 			sessionRecord?.dnsEvent,
 			env.ipInfoService,
@@ -974,10 +977,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		if (!failStatus) {
 			const check = await this.resolveTrafficFilterCheck(
-				env,
 				solution.ipInfo,
 				trafficFilter,
-				ip,
+				ip ? await env.ipInfoService.lookup(ip) : undefined,
 				enrichedDnsEvent,
 			);
 			if (check.isBlocked) {
