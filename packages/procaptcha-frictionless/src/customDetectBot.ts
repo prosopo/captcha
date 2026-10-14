@@ -20,23 +20,24 @@ import {
 	pickIpMode,
 	resolveClientSessionId,
 } from "@prosopo/procaptcha-common";
-import type {
-	BotDetectionFunction,
-	ProcaptchaClientConfigOutput,
-	ProviderSelectRetryContext,
-} from "@prosopo/types";
-import type { BotDetectionFunctionResult } from "@prosopo/types";
 import {
-	DetectorLoaderFromScript,
-	type DetectorOptions,
-	type DetectorType,
-} from "./detectorLoader.js";
+	type AssignDetectorBundleResponse,
+	type BotDetectionFunction,
+	type BotDetectionFunctionResult,
+	DetectorLoadFailure,
+	DetectorScriptDelivery,
+	type ProcaptchaClientConfigOutput,
+	type ProviderSelectRetryContext,
+} from "@prosopo/types";
+import type { DetectorOptions, DetectorType } from "./detectorLoader.js";
 import {
 	type PrefetchedDetector,
 	takePrefetchedDetector,
 } from "./detectorPrefetch.js";
+import { DetectorLoadError } from "./detectorScriptTag.js";
+import { loadAssignedDetector } from "./loadAssignedDetector.js";
 
-// Upper bound on the assign POST, which serves the detector bundle inline
+// Upper bound on the assign POST, which may serve the detector bundle inline
 // (~215 KB gzipped). The hop is always cold — /healthz pins a different
 // hostname, so it pays fresh DNS + TLS + a CORS preflight before the download
 // even starts, measured at 6.7s against staging. Anything tighter silently
@@ -147,7 +148,8 @@ const customDetectBot: BotDetectionFunction = async (
 	refreshOf?: string,
 	switchToImage?: boolean,
 ): Promise<BotDetectionFunctionResult> => {
-	if (!config.account.address) {
+	const siteKey = config.account.address;
+	if (!siteKey) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 	}
 
@@ -184,11 +186,7 @@ const customDetectBot: BotDetectionFunction = async (
 	// pronode failed, so it must re-resolve.
 	const isFirstAttempt = !retryContext || retryContext.attempt <= 1;
 	const prefetched = isFirstAttempt
-		? takePrefetchedDetector(
-				config.defaultEnvironment,
-				ipMode,
-				config.account.address,
-			)
+		? takePrefetchedDetector(config.defaultEnvironment, ipMode, siteKey)
 		: undefined;
 
 	// A prefetch that failed must not fail the flow — it is an optimisation, and
@@ -211,10 +209,7 @@ const customDetectBot: BotDetectionFunction = async (
 			retryContext,
 		));
 
-	const providerApi = new ProviderApi(
-		provider.provider.url,
-		config.account.address,
-	);
+	const providerApi = new ProviderApi(provider.provider.url, siteKey);
 
 	// Ask the provider for a per-session detector bundle. The detector lives ONLY
 	// in the provider-served pool: when the provider has a populated pool it
@@ -224,27 +219,45 @@ const customDetectBot: BotDetectionFunction = async (
 	let detectorSessionId: string | undefined;
 	let providerDetect: DetectorType | undefined;
 	let detectorOptions: DetectorOptions | undefined;
+	let detectorLoadFailure: DetectorLoadFailure | undefined;
 	try {
 		// Reuse the prefetched assignment when the entry already fetched one for
 		// this provider; otherwise issue it now.
-		const assigned =
-			prefetchedResult?.assigned ??
-			(await withTimeout(
-				providerApi.assignDetectorBundle(config.account.address),
-				ASSIGN_TIMEOUT_MS,
-			));
-		if (assigned.useProviderBundle && assigned.detectorScript) {
-			// Deliberately untimed: this is a local parse + evaluate, so a timer
-			// cannot rescue a stalled main thread — it can only throw away a bundle
-			// we are already holding.
-			providerDetect = await DetectorLoaderFromScript(assigned.detectorScript);
-			detectorSessionId = assigned.detectorSessionId;
-			detectorOptions = {
-				clientUrl: assigned.clientUrl,
-				assetOrigin: assigned.assetOrigin,
-			};
+		let assigned: AssignDetectorBundleResponse;
+		try {
+			assigned =
+				prefetchedResult?.assigned ??
+				(await withTimeout(
+					providerApi.assignDetectorBundle(siteKey, DetectorScriptDelivery.url),
+					ASSIGN_TIMEOUT_MS,
+				));
+		} catch (err) {
+			throw new DetectorLoadError(DetectorLoadFailure.assignFailed, err);
 		}
+		// The inline import is deliberately untimed: it is a local parse +
+		// evaluate, so a timer cannot rescue a stalled main thread — it can only
+		// throw away a bundle we are already holding.
+		const loaded = await loadAssignedDetector(
+			assigned,
+			provider.provider.url,
+			() =>
+				withTimeout(
+					providerApi.assignDetectorBundle(siteKey),
+					ASSIGN_TIMEOUT_MS,
+				),
+		);
+		providerDetect = loaded.detect;
+		detectorSessionId = loaded.assigned.detectorSessionId;
+		detectorOptions = {
+			clientUrl: loaded.assigned.clientUrl,
+			assetOrigin: loaded.assigned.assetOrigin,
+		};
+		detectorLoadFailure = loaded.recoveredFrom;
 	} catch (err) {
+		detectorLoadFailure =
+			err instanceof DetectorLoadError
+				? err.reason
+				: DetectorLoadFailure.inlineImportFailed;
 		// No detector available — fall through to the PoW request below.
 		//
 		// Report it. Falling back is by design, but the reasons are not equal: a
@@ -255,10 +268,12 @@ const customDetectBot: BotDetectionFunction = async (
 		// bundle that died with "Class constructor X cannot be invoked without
 		// 'new'", and the only way to see it was to reproduce the import by hand.
 		// The catch stays broad; it just no longer hides what it caught.
-		console.error(
-			"Procaptcha: no detector bundle available, falling back to a server-chosen captcha:",
-			err,
-		);
+		if (detectorLoadFailure !== DetectorLoadFailure.noBundle) {
+			console.error(
+				"Procaptcha: no detector bundle available, falling back to a server-chosen captcha:",
+				err,
+			);
+		}
 	}
 
 	const ExtClass = await extClassPromise;
@@ -281,7 +296,7 @@ const customDetectBot: BotDetectionFunction = async (
 			providerApi.getFrictionlessCaptcha(
 				undefined,
 				undefined,
-				config.account.address,
+				siteKey,
 				userAccount.account.address,
 				config.mode,
 				undefined,
@@ -291,6 +306,7 @@ const customDetectBot: BotDetectionFunction = async (
 				clientSessionId,
 				refreshOf,
 				switchToImage,
+				detectorLoadFailure,
 			),
 			10000,
 		);
@@ -341,7 +357,7 @@ const customDetectBot: BotDetectionFunction = async (
 	const captchaPromise = providerApi.getFrictionlessCaptcha(
 		detectionResult.token,
 		detectionResult.encryptHeadHash,
-		config.account.address,
+		siteKey,
 		userAccount.account.address,
 		config.mode,
 		undefined,
@@ -351,6 +367,7 @@ const customDetectBot: BotDetectionFunction = async (
 		clientSessionId,
 		refreshOf,
 		switchToImage,
+		detectorLoadFailure,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

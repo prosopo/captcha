@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { EnvironmentTypes } from "@prosopo/types";
+import { DetectorScriptDelivery, type EnvironmentTypes } from "@prosopo/types";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const assignDetectorBundle = vi.fn();
@@ -61,7 +61,10 @@ describe("detectorPrefetch", () => {
 			provider,
 			assigned: { useProviderBundle: true },
 		});
-		expect(assignDetectorBundle).toHaveBeenCalledWith(SITE_KEY);
+		expect(assignDetectorBundle).toHaveBeenCalledWith(
+			SITE_KEY,
+			DetectorScriptDelivery.url,
+		);
 	});
 
 	it("is single-use, so a retry does not reuse a stale provider pin", async () => {

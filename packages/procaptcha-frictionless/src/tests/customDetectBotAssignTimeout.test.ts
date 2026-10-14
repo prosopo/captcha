@@ -20,7 +20,11 @@
  * frictionless POST went out with an empty token and no detectorSessionId.
  */
 
-import type { AssignDetectorBundleResponse } from "@prosopo/types";
+import {
+	type AssignDetectorBundleResponse,
+	DetectorLoadFailure,
+	DetectorScriptDelivery,
+} from "@prosopo/types";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // `vi.mock` is hoisted; share state via `vi.hoisted` so the factories can
@@ -30,6 +34,7 @@ const mocks = vi.hoisted(() => ({
 	getProcaptchaRandomActiveProvider: vi.fn(),
 	assignDetectorBundle: vi.fn(),
 	detectorLoaderFromScript: vi.fn(),
+	detectorLoaderFromUrl: vi.fn(),
 	detect: vi.fn(),
 }));
 
@@ -67,7 +72,13 @@ vi.mock("../detectorLoader.js", () => ({
 	DetectorLoaderFromScript: mocks.detectorLoaderFromScript,
 }));
 
+vi.mock("../detectorScriptTag.js", async (importOriginal) => ({
+	...(await importOriginal<typeof import("../detectorScriptTag.js")>()),
+	DetectorLoaderFromUrl: mocks.detectorLoaderFromUrl,
+}));
+
 import customDetectBot from "../customDetectBot.js";
+import { DetectorLoadError } from "../detectorScriptTag.js";
 
 const baseConfig = {
 	account: { address: "5CcNvLUdiXFpzKDMjThGLSK9rhWHA1H4EF3zrgkpkjAdqmuP" },
@@ -116,12 +127,18 @@ const postedDetectorSessionId = (): string | undefined => {
 	return call?.[6] as string | undefined;
 };
 
+const postedLoadFailure = (): DetectorLoadFailure | undefined => {
+	const call = mocks.getFrictionlessCaptcha.mock.calls[0];
+	return call?.[12] as DetectorLoadFailure | undefined;
+};
+
 beforeEach(() => {
 	vi.useFakeTimers();
 	mocks.getFrictionlessCaptcha.mockReset();
 	mocks.getProcaptchaRandomActiveProvider.mockReset();
 	mocks.assignDetectorBundle.mockReset();
 	mocks.detectorLoaderFromScript.mockReset();
+	mocks.detectorLoaderFromUrl.mockReset();
 	mocks.detect.mockReset();
 
 	mocks.getProcaptchaRandomActiveProvider.mockResolvedValue({
@@ -181,5 +198,61 @@ describe("customDetectBot detector-assignment deadline", () => {
 		expect(mocks.detectorLoaderFromScript).not.toHaveBeenCalled();
 		expect(postedToken()).toBeUndefined();
 		expect(postedDetectorSessionId()).toBeUndefined();
+	});
+});
+
+describe("customDetectBot detector script URL", () => {
+	const byUrl: AssignDetectorBundleResponse = {
+		useProviderBundle: true,
+		detectorSessionId: "det-url",
+		detectorScriptPath:
+			"/v1/prosopo/provider/client/detector/script?detectorSessionId=det-url",
+		status: "ok",
+	};
+
+	it("asks for URL delivery and loads the script from the pinned provider", async () => {
+		mocks.assignDetectorBundle.mockResolvedValue(byUrl);
+		mocks.detectorLoaderFromUrl.mockResolvedValue(mocks.detect);
+
+		await runDetection();
+
+		expect(mocks.assignDetectorBundle).toHaveBeenCalledWith(
+			baseConfig.account.address,
+			DetectorScriptDelivery.url,
+		);
+		expect(mocks.detectorLoaderFromUrl).toHaveBeenCalledWith(
+			`https://staging-pronode3.prosopo.io${byUrl.detectorScriptPath}`,
+		);
+		expect(mocks.detectorLoaderFromScript).not.toHaveBeenCalled();
+		expect(postedToken()).toBe("ENCRYPTED_TOKEN");
+		expect(postedDetectorSessionId()).toBe("det-url");
+		expect(postedLoadFailure()).toBeUndefined();
+	});
+
+	it("falls back to an inline assignment and reports why", async () => {
+		mocks.assignDetectorBundle
+			.mockResolvedValueOnce(byUrl)
+			.mockResolvedValueOnce(assignResponse);
+		mocks.detectorLoaderFromUrl.mockRejectedValue(
+			new DetectorLoadError(DetectorLoadFailure.scriptCspBlocked),
+		);
+
+		await runDetection();
+
+		expect(mocks.assignDetectorBundle).toHaveBeenLastCalledWith(
+			baseConfig.account.address,
+		);
+		expect(postedToken()).toBe("ENCRYPTED_TOKEN");
+		expect(postedDetectorSessionId()).toBe(assignResponse.detectorSessionId);
+		expect(postedLoadFailure()).toBe(DetectorLoadFailure.scriptCspBlocked);
+	});
+
+	it("reports a failed assign alongside the empty token", async () => {
+		mocks.assignDetectorBundle.mockRejectedValue(new Error("network"));
+
+		await runDetection();
+
+		expect(postedToken()).toBeUndefined();
+		expect(postedLoadFailure()).toBe(DetectorLoadFailure.assignFailed);
 	});
 });

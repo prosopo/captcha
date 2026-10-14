@@ -79,3 +79,27 @@ export type DetectorResult = {
 	// Everything else the detector reported. Absent when it reported nothing.
 	d?: DetectorData;
 };
+
+/** Delivery the widget asks for on the detector assign hop. */
+export enum DetectorScriptDelivery {
+	// Return a path to fetch the bundle from instead of the bundle itself.
+	url = "url",
+}
+
+/** How the widget failed to load the detector, reported on the frictionless hop. */
+export enum DetectorLoadFailure {
+	noBundle = "no_bundle",
+	assignFailed = "assign_failed",
+	scriptCspBlocked = "script_csp_blocked",
+	scriptLoadError = "script_load_error",
+	scriptNotRegistered = "script_not_registered",
+	inlineImportFailed = "inline_import_failed",
+}
+
+/**
+ * `Symbol.for` key of the registry a detector bundle loaded by `<script>`
+ * hands its exports to. A module script cannot return a value to whoever
+ * injected it, so the loader plants a resolver keyed by the script URL and the
+ * bundle looks itself up by `import.meta.url`.
+ */
+export const DETECTOR_REGISTRY_KEY = "prosopo.detector";

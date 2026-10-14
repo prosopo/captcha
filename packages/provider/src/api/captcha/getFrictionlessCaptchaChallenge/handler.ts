@@ -52,6 +52,7 @@ import {
 import { buildDnsEventUrl } from "../../dnsEventUrl.js";
 import {
 	recordBotScore,
+	recordDetectorLoadFailure,
 	recordDetectorTriggered,
 	recordFrictionlessDecision,
 } from "../../metrics.js";
@@ -115,7 +116,11 @@ export default (
 				clientSessionId,
 				refreshOf,
 				switchToImage,
+				detectorLoadFailure,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+			if (detectorLoadFailure) {
+				recordDetectorLoadFailure(detectorLoadFailure, Boolean(token));
+			}
 
 			// Re-sanitise whatever the client reported: keep only scheme + host
 			// + path and drop the query string, fragment and any embedded
@@ -164,6 +169,7 @@ export default (
 					path: req.path,
 					method: req.method,
 					mode: sessionMode,
+					detectorLoadFailure,
 				},
 			}));
 
