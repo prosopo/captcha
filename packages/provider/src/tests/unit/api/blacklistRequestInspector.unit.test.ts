@@ -914,6 +914,37 @@ describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
 		expect(next).not.toHaveBeenCalled();
 	});
 
+	it("sends a messageKey that has no catalogue entry untranslated", async () => {
+		const inspector = new BlacklistRequestInspector(
+			{
+				findRules: vi.fn().mockResolvedValue([
+					{
+						type: AccessPolicyType.Block,
+						messageKey: ResultReason.EMAIL_INVALID,
+					},
+				]),
+			} as unknown as AccessRulesStorage,
+			async () => undefined,
+		);
+		const { res, json } = buildResponse();
+		const t = vi.fn((key: string) => `translated(${key})`);
+
+		await inspector.abortRequestForBlockedUsers(
+			buildRequest({ i18n: { t } } as unknown as Partial<Request>),
+			res,
+			vi.fn(),
+		);
+
+		expect(t).not.toHaveBeenCalled();
+		expect(json).toHaveBeenCalledWith({
+			error: {
+				message: `${ResultReason.EMAIL_INVALID}: test-request-id`,
+				code: 403,
+				key: ResultReason.EMAIL_INVALID,
+			},
+		});
+	});
+
 	it("keeps the generic Forbidden for a Block rule that names no reason", async () => {
 		const inspector = new BlacklistRequestInspector(
 			{

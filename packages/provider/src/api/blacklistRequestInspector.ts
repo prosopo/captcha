@@ -14,6 +14,7 @@
 
 import { randomUUID } from "node:crypto";
 import { captchaPolicySeverity } from "@prosopo/captcha-severity";
+import { isTranslationKey } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiPrefix,
@@ -552,7 +553,13 @@ export class BlacklistRequestInspector {
 			// generic "Cannot load CAPTCHA" fallback. Surfacing the
 			// requestId lets support quote it back on tickets.
 			const { messageKey } = blockOutcome;
-			const reason = messageKey ? request.i18n.t(messageKey) : "Forbidden";
+			// The EMAIL_* reasons have no catalogue entry; i18next used to echo
+			// such keys back, so they are sent untranslated.
+			const reason = !messageKey
+				? "Forbidden"
+				: isTranslationKey(messageKey)
+					? request.i18n.t(messageKey)
+					: messageKey;
 			res.status(403).json({
 				error: {
 					message: `${reason}: ${request.requestId ?? "unknown"}`,

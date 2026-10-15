@@ -20,6 +20,7 @@ import {
 	computePendingRequestHash,
 	parseAndSortCaptchaSolutions,
 } from "@prosopo/datasets";
+import type { TranslateFn } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
@@ -1276,7 +1277,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 	override getVerificationResponse(
 		verified: boolean,
 		clientRecord: ClientRecord,
-		translateFn: (key: string) => string,
+		translateFn: TranslateFn,
 		score?: number,
 		commitmentId?: Hash,
 		reason?: string,
