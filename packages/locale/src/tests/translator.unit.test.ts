@@ -34,7 +34,7 @@ const fakeI18n = (): FakeI18n => {
 	const fake: FakeI18n = {
 		handlers,
 		isInitialized: true,
-		loadedNamespaces: ["translation"],
+		loadedNamespaces: ["widget"],
 		translations: {},
 		instance: {
 			t: (key: string): string => fake.translations[key] ?? key,
@@ -140,11 +140,19 @@ describe("translating", () => {
 });
 
 describe("readiness", () => {
-	test("is ready once the instance has loaded the translation namespace", async () => {
+	test("is ready once the instance has loaded the widget namespace", async () => {
 		const { createTranslator } = await load();
 		const fake = fakeI18n();
 
 		expect(createTranslator(fake.instance).isReady()).toBe(true);
+	});
+
+	test("ignores the server namespaces, which the browser never loads", async () => {
+		const { createTranslator } = await load();
+		const fake = fakeI18n();
+		fake.loadedNamespaces = ["translation", "target"];
+
+		expect(createTranslator(fake.instance).isReady()).toBe(false);
 	});
 
 	test("is not ready before initialisation", async () => {

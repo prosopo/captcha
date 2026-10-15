@@ -17,6 +17,14 @@
 		"./locales/en/translation.json": {
 			"import": "./dist/locales/en/translation.json",
 			"require": "./dist/locales/en/translation.json"
+		},
+		"./locales/en/widget.json": {
+			"import": "./dist/locales/en/widget.json",
+			"require": "./dist/locales/en/widget.json"
+		},
+		"./locales/en/target.json": {
+			"import": "./dist/locales/en/target.json",
+			"require": "./dist/locales/en/target.json"
 		}
 	},
 	"scripts": {

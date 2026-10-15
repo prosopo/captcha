@@ -15,16 +15,28 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { NAMESPACES, type Namespace } from "../translationKey.js";
 import { type Language, Languages } from "../translations.js";
 import { keptAsIs } from "./keptAsIs.js";
 
 type TranslationTree = { [key: string]: unknown };
 
-const readLocale = (locale: string): TranslationTree =>
+const namespaces: readonly Namespace[] = Object.values(NAMESPACES);
+
+const readNamespace = (locale: string, namespace: Namespace): TranslationTree =>
 	JSON.parse(
 		fs.readFileSync(
-			path.resolve(`./src/locales/${locale}/translation.json`),
+			path.resolve(`./src/locales/${locale}/${namespace}.json`),
 			"utf8",
+		),
+	);
+
+/** All of a language's namespace files as one tree; keys never overlap. */
+const readLocale = (locale: string): TranslationTree =>
+	Object.assign(
+		{},
+		...namespaces.map((namespace: Namespace) =>
+			readNamespace(locale, namespace),
 		),
 	);
 
@@ -80,6 +92,24 @@ const keptFor = (language: Language): ReadonlySet<string> =>
 	new Set(keptAsIs[language] ?? []);
 
 describe("locale catalogues", () => {
+	it.each(languages)(
+		"%s has one file per namespace, each with the keys of en's",
+		(language: Language) => {
+			const files: string[] = fs
+				.readdirSync(path.resolve(`./src/locales/${language}`))
+				.sort();
+			expect(files).toEqual(
+				namespaces.map((namespace: Namespace) => `${namespace}.json`).sort(),
+			);
+			for (const namespace of namespaces) {
+				expect(
+					[...flatten(readNamespace(language, namespace)).keys()].sort(),
+					`${language}/${namespace}.json`,
+				).toEqual([...flatten(readNamespace("en", namespace)).keys()].sort());
+			}
+		},
+	);
+
 	it.each(languages)("%s has exactly the keys of en", (language: Language) => {
 		const keys: string[] = [...flatten(readLocale(language)).keys()];
 		expect(keys.filter((key: string) => !en.has(key))).toEqual([]);

@@ -38,7 +38,6 @@
 		"@prosopo/dotenv": "workspace:*",
 		"@prosopo/env": "workspace:*",
 		"@prosopo/keyring": "workspace:*",
-		"@prosopo/locale": "workspace:*",
 		"@prosopo/provider": "workspace:*",
 		"@prosopo/types": "workspace:*",
 		"@prosopo/types-env": "workspace:*",

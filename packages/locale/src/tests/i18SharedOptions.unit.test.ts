@@ -48,11 +48,6 @@ describe("i18nSharedOptions", () => {
 		expect(options.fallbackLng).toBe("en");
 	});
 
-	test("uses the single translation namespace", async () => {
-		const options = await loadOptions();
-		expect(options.namespace).toBe("translation");
-	});
-
 	test("supports exactly the declared language codes", async () => {
 		const options = await loadOptions();
 		expect(new Set(options.supportedLngs)).toEqual(

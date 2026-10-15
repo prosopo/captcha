@@ -97,8 +97,8 @@ async function loadI18next(backend: boolean, lng?: string): Promise<Ti18n> {
 			import("./i18nBackend.js")
 				.then(({ default: initializeI18n }) => {
 					if (!i18nInstance) {
-						// pass the resolver into the i18n init fn, which fires it on the first
-						// "loaded" event
+						// pass the resolver into the i18n init fn, which fires it once
+						// every namespace has been read
 						i18nInstance = initializeI18n(done);
 					} else {
 						// we've already initialised i18n so just return it

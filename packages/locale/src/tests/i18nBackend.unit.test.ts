@@ -26,7 +26,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 // side effect of the first call. Both are mocked so each test starts from a
 // known `isInitialized` state without a real filesystem backend.
 
-type Listener = (...args: unknown[]) => void;
+type InitCallback = (error: unknown) => void;
 
 // The real class: the module under test only hands it to i18next.use().
 const detector: LanguageDetector = new LanguageDetector(null, {});
@@ -43,22 +43,25 @@ class FakeFsBackend implements BackendModule {
 interface FakeI18n {
 	isInitialized: boolean;
 	use: (plugin: unknown) => FakeI18n;
-	init: (options: InitOptions) => FakeI18n;
-	on: (event: string, listener: Listener) => void;
+	init: (options: InitOptions, callback?: InitCallback) => FakeI18n;
+	on: (event: string, listener: () => void) => void;
 }
 
 interface Harness {
 	fake: FakeI18n;
 	plugins: unknown[];
 	initOptions: InitOptions[];
-	listeners: Map<string, Listener[]>;
+	listeners: Map<string, Array<() => void>>;
 	emit: (event: string) => void;
+	/** What i18next does once it has read every namespace file. */
+	finishInit: (error?: unknown) => void;
 }
 
 const makeHarness = (isInitialized: boolean): Harness => {
 	const plugins: unknown[] = [];
 	const initOptions: InitOptions[] = [];
-	const listeners = new Map<string, Listener[]>();
+	const listeners = new Map<string, Array<() => void>>();
+	const initCallbacks: InitCallback[] = [];
 
 	const fake: FakeI18n = {
 		isInitialized,
@@ -66,11 +69,14 @@ const makeHarness = (isInitialized: boolean): Harness => {
 			plugins.push(plugin);
 			return fake;
 		},
-		init: (options: InitOptions): FakeI18n => {
+		init: (options: InitOptions, callback?: InitCallback): FakeI18n => {
 			initOptions.push(options);
+			if (callback) {
+				initCallbacks.push(callback);
+			}
 			return fake;
 		},
-		on: (event: string, listener: Listener): void => {
+		on: (event: string, listener: () => void): void => {
 			listeners.set(event, [...(listeners.get(event) ?? []), listener]);
 		},
 	};
@@ -83,6 +89,11 @@ const makeHarness = (isInitialized: boolean): Harness => {
 		emit: (event: string): void => {
 			for (const listener of listeners.get(event) ?? []) {
 				listener();
+			}
+		},
+		finishInit: (error?: unknown): void => {
+			for (const callback of initCallbacks) {
+				callback(error);
 			}
 		},
 	};
@@ -156,10 +167,14 @@ describe("i18nBackend on a server, not yet initialised", () => {
 		expect(options?.nonExplicitSupportedLngs).toBe(false);
 	});
 
-	test("declares the translation namespace", async () => {
+	test("loads all three namespaces, server text by default", async () => {
 		const { initializeI18n, harness } = await load({});
 		initializeI18n();
-		expect(harness.initOptions[0]?.ns).toEqual(["translation"]);
+		const options = harness.initOptions[0];
+		expect(options?.ns).toEqual(["translation", "widget", "target"]);
+		expect(options?.defaultNS).toBe("translation");
+		// A key such as WIDGET.X or TARGET.owl resolves without a namespace.
+		expect(options?.fallbackNS).toEqual(["widget", "target"]);
 	});
 
 	test("points the backend at a filesystem path, not a file:// URL", async () => {
@@ -175,36 +190,47 @@ describe("i18nBackend on a server, not yet initialised", () => {
 		expect(backend?.loadPath).toContain("/locales/{{lng}}/{{ns}}.json");
 	});
 
-	test("defers the callback until resources have loaded", async () => {
+	test("defers the callback until init has read every namespace", async () => {
 		const callback = vi.fn();
 		const { initializeI18n, harness } = await load({});
 
 		initializeI18n(callback);
 		expect(callback).not.toHaveBeenCalled();
 
-		harness.emit("loaded");
+		harness.finishInit();
 		expect(callback).toHaveBeenCalledTimes(1);
 	});
 
-	test("fires the callback once, however often `loaded` is emitted", async () => {
-		// i18next emits `loaded` per namespace and again after changeLanguage,
-		// so an unguarded listener would repeat whatever side effect the caller
-		// attached to it.
+	test("ignores `loaded`, which fires per batch and before init completes", async () => {
+		// With three namespaces the first `loaded` arrives while `widget` and
+		// `target` are still being read (i18nBackendFiles.unit.test.ts).
 		const callback = vi.fn();
 		const { initializeI18n, harness } = await load({});
 
 		initializeI18n(callback);
 		harness.emit("loaded");
-		harness.emit("loaded");
+		expect(callback).not.toHaveBeenCalled();
+		harness.finishInit();
 		harness.emit("loaded");
 		expect(callback).toHaveBeenCalledTimes(1);
+	});
+
+	test("still calls back when a file failed to load", async () => {
+		// i18next falls back to English or the key; a server that never
+		// finishes booting is worse.
+		const callback = vi.fn();
+		const { initializeI18n, harness } = await load({});
+
+		initializeI18n(callback);
+		harness.finishInit(new Error("ENOENT"));
+		expect(callback).toHaveBeenCalledWith(harness.fake);
 	});
 
 	test("hands the i18next instance to the callback", async () => {
 		const callback = vi.fn();
 		const { initializeI18n, harness } = await load({});
 		initializeI18n(callback);
-		harness.emit("loaded");
+		harness.finishInit();
 		expect(callback).toHaveBeenCalledWith(harness.fake);
 	});
 
@@ -216,7 +242,7 @@ describe("i18nBackend on a server, not yet initialised", () => {
 	test("tolerates being called with no callback at all", async () => {
 		const { initializeI18n, harness } = await load({});
 		initializeI18n();
-		expect(() => harness.emit("loaded")).not.toThrow();
+		expect(() => harness.finishInit()).not.toThrow();
 	});
 });
 
@@ -242,8 +268,8 @@ describe("fsBackend", () => {
 	});
 });
 
-// Both of these skip initialisation. The `loaded` listener is only registered
-// on the init path, so without an explicit callback here the caller
+// Both of these skip initialisation. The init callback only exists on the
+// init path, so without an explicit callback here the caller
 // (loadI18next) would wait forever for an event that is never coming.
 describe("i18nBackend when there is nothing to initialise", () => {
 	test("fires the callback immediately when i18next is already up", async () => {

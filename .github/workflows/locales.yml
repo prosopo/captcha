@@ -1,8 +1,9 @@
 # Check the translation catalogues in packages/locale on every PR that touches
-# them: same keys as English, no empty or untranslated values (other than the
-# curated packages/locale/src/tests/keptAsIs.ts), the right script for
-# non-Latin languages, no U+FFFD or look-alike Latin letters, and matching
-# {{placeholders}}.
+# them: one file per namespace (widget, target, translation) with the same keys
+# as English's, checked at type level too; no empty or untranslated values
+# (other than the curated packages/locale/src/tests/keptAsIs.ts); the right
+# script for non-Latin languages; no U+FFFD or look-alike Latin letters; and
+# matching {{placeholders}}.
 #
 # These tests also run inside tests.yml, but only after a full workspace build
 # and docker stack, so a broken translation shows up there after ~30 minutes
@@ -72,3 +73,4 @@ jobs:
           src/tests/locales.unit.test.ts
           src/tests/localePlaceholders.unit.test.ts
           src/tests/translations.unit.test.ts
+          src/tests/catalogues.test-d.ts

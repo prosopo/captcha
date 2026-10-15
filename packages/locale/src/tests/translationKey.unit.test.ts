@@ -13,17 +13,28 @@
 // limitations under the License.
 
 import { describe, expect, test } from "vitest";
-import translationEn from "../locales/en/translation.json" with {
-	type: "json",
-};
+import targetEn from "../locales/en/target.json" with { type: "json" };
+import serverEn from "../locales/en/translation.json" with { type: "json" };
+import widgetEn from "../locales/en/widget.json" with { type: "json" };
 import {
+	NAMESPACES,
 	type TranslationNode,
 	getLeafFieldPath,
 	isTargetKey,
 	isTranslationKey,
+	isWidgetTranslationKey,
 	targetKeys,
 	translationKeys,
 } from "../translationKey.js";
+
+const widgetSections: readonly string[] = [
+	"WIDGET",
+	"API",
+	"CAPTCHA",
+	"GENERAL",
+	"ACCOUNT",
+	"DEVELOPER",
+];
 
 describe("getLeafFieldPath", () => {
 	test("returns no paths for a bare string, which is a leaf and not a container", () => {
@@ -116,7 +127,9 @@ describe("getLeafFieldPath", () => {
 });
 
 describe("translationKeys", () => {
-	const keys = getLeafFieldPath(translationEn as TranslationNode);
+	const keys: string[] = [widgetEn, targetEn, serverEn].flatMap(
+		(catalogue: TranslationNode) => getLeafFieldPath(catalogue),
+	);
 
 	test("is non-empty — mongoose validates against an empty enum too", () => {
 		expect(keys.length).toBeGreaterThan(0);
@@ -124,6 +137,11 @@ describe("translationKeys", () => {
 
 	test("is exactly the set of keys derived from the English translation", () => {
 		expect(new Set(translationKeys)).toEqual(new Set(keys));
+	});
+
+	test("has each key in one namespace only", () => {
+		expect(translationKeys).toHaveLength(keys.length);
+		expect(new Set(keys).size).toBe(keys.length);
 	});
 
 	test("holds leaves, not section names", () => {
@@ -158,7 +176,7 @@ describe("isTranslationKey", () => {
 
 describe("targetKeys", () => {
 	test("is every TARGET label of the English catalogue", () => {
-		expect(targetKeys).toEqual(Object.keys(translationEn.TARGET));
+		expect(targetKeys).toEqual(Object.keys(targetEn.TARGET));
 	});
 
 	test("is the TARGET leaves of translationKeys, without the prefix", () => {
@@ -184,5 +202,44 @@ describe("isTargetKey", () => {
 
 	test("is case-sensitive, as the dataset labels are", () => {
 		expect(isTargetKey("Owl")).toBe(false);
+	});
+});
+
+describe("NAMESPACES", () => {
+	test("keeps i18next's default namespace for the server-only text", () => {
+		expect(NAMESPACES).toEqual({
+			widget: "widget",
+			target: "target",
+			server: "translation",
+		});
+	});
+
+	test("puts the widget's sections in widget, labels in target, the rest in translation", () => {
+		expect(Object.keys(widgetEn).sort()).toEqual([...widgetSections].sort());
+		expect(Object.keys(targetEn)).toEqual(["TARGET"]);
+		for (const section of Object.keys(serverEn)) {
+			expect(widgetSections).not.toContain(section);
+			expect(section).not.toBe("TARGET");
+		}
+	});
+});
+
+describe("isWidgetTranslationKey", () => {
+	test("accepts every key in the widget namespace", () => {
+		for (const key of getLeafFieldPath(widgetEn)) {
+			expect(isWidgetTranslationKey(key)).toBe(true);
+		}
+	});
+
+	test("rejects keys only the server has text for", () => {
+		expect(isWidgetTranslationKey("TARGET.owl")).toBe(false);
+		expect(isWidgetTranslationKey("DATABASE.UNKNOWN")).toBe(false);
+		expect(isTranslationKey("DATABASE.UNKNOWN")).toBe(true);
+	});
+
+	test("rejects a section, free text and the empty string", () => {
+		expect(isWidgetTranslationKey("WIDGET")).toBe(false);
+		expect(isWidgetTranslationKey("Invalid site key")).toBe(false);
+		expect(isWidgetTranslationKey("")).toBe(false);
 	});
 });
