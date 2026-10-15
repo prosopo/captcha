@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { existsSync } from "node:fs";
 import type {
 	BackendModule,
 	InitOptions,
@@ -109,6 +110,10 @@ const load = async (options: {
 }): Promise<{
 	initializeI18n: (callback?: (value: i18n) => void) => i18n;
 	fsBackend: (loaded?: unknown) => NewableModule<BackendModule>;
+	localesDirectory: (
+		moduleDirectory: string,
+		exists?: (file: string) => boolean,
+	) => string;
 	harness: Harness;
 }> => {
 	vi.resetModules();
@@ -131,6 +136,7 @@ const load = async (options: {
 	return {
 		initializeI18n: imported.default,
 		fsBackend: imported.fsBackend,
+		localesDirectory: imported.localesDirectory,
 		harness,
 	};
 };
@@ -179,7 +185,7 @@ describe("i18nBackend on a server, not yet initialised", () => {
 
 	test("points the backend at a filesystem path, not a file:// URL", async () => {
 		// i18next-fs-backend reads with node:fs, which cannot open a file://
-		// URL — the module strips the scheme for exactly this reason.
+		// URL.
 		const { initializeI18n, harness } = await load({});
 		initializeI18n();
 		const backend = harness.initOptions[0]?.backend as
@@ -188,6 +194,18 @@ describe("i18nBackend on a server, not yet initialised", () => {
 		expect(backend?.loadPath).toBeDefined();
 		expect(backend?.loadPath).not.toContain("file://");
 		expect(backend?.loadPath).toContain("/locales/{{lng}}/{{ns}}.json");
+	});
+
+	test("points the backend at a directory holding the catalogues", async () => {
+		const { initializeI18n, harness } = await load({});
+		initializeI18n();
+		const backend = harness.initOptions[0]?.backend as
+			| { loadPath?: string }
+			| undefined;
+		const english = (backend?.loadPath ?? "")
+			.replace("{{lng}}", "en")
+			.replace("{{ns}}", "translation");
+		expect(existsSync(english)).toBe(true);
 	});
 
 	test("defers the callback until init has read every namespace", async () => {
@@ -243,6 +261,53 @@ describe("i18nBackend on a server, not yet initialised", () => {
 		const { initializeI18n, harness } = await load({});
 		initializeI18n();
 		expect(() => harness.finishInit()).not.toThrow();
+	});
+});
+
+describe("localesDirectory", () => {
+	const only =
+		(...present: string[]): ((file: string) => boolean) =>
+		(file: string): boolean =>
+			present.includes(file);
+
+	test("uses locales beside the module, as in the ESM build", async () => {
+		const { localesDirectory } = await load({});
+		expect(
+			localesDirectory(
+				"/pkg/dist",
+				only("/pkg/dist/locales/en/translation.json"),
+			),
+		).toBe("/pkg/dist/locales");
+	});
+
+	test("uses locales one level up, as in the CJS build", async () => {
+		const { localesDirectory } = await load({});
+		expect(
+			localesDirectory(
+				"/pkg/dist/cjs",
+				only("/pkg/dist/locales/en/translation.json"),
+			),
+		).toBe("/pkg/dist/locales");
+	});
+
+	test("prefers locales beside the module when both exist", async () => {
+		const { localesDirectory } = await load({});
+		expect(
+			localesDirectory(
+				"/pkg/dist/cjs",
+				only(
+					"/pkg/dist/cjs/locales/en/translation.json",
+					"/pkg/dist/locales/en/translation.json",
+				),
+			),
+		).toBe("/pkg/dist/cjs/locales");
+	});
+
+	test("falls back to locales beside the module when neither exists", async () => {
+		const { localesDirectory } = await load({});
+		expect(localesDirectory("/pkg/dist/cjs", only())).toBe(
+			"/pkg/dist/cjs/locales",
+		);
 	});
 });
 

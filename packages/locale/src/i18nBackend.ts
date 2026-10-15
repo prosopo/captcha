@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { existsSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import i18n, { type BackendModule, type NewableModule } from "i18next";
 import FSBackendCjs from "i18next-fs-backend/cjs";
 import { i18nSharedOptions } from "./i18SharedOptions.js";
@@ -20,11 +22,24 @@ import { createRequestLanguageDetector } from "./requestLanguageDetector.js";
 import { NAMESPACES } from "./translationKey.js";
 import { isServerSide } from "./util.js";
 
-const loadPath =
-	`${path.dirname(import.meta.url)}/locales/{{lng}}/{{ns}}.json`.replace(
-		"file://",
-		"",
-	);
+// The catalogues sit in `locales/` beside the ESM build (and the source), but
+// the CJS build runs from `dist/cjs/`, one level below them.
+export const localesDirectory = (
+	moduleDirectory: string,
+	exists: (file: string) => boolean = existsSync,
+): string => {
+	const beside = path.join(moduleDirectory, "locales");
+	const above = path.join(moduleDirectory, "..", "locales");
+	const hasCatalogues = (directory: string): boolean =>
+		exists(path.join(directory, "en", `${NAMESPACES.server}.json`));
+	return !hasCatalogues(beside) && hasCatalogues(above) ? above : beside;
+};
+
+const loadPath = path.join(
+	localesDirectory(path.dirname(fileURLToPath(import.meta.url))),
+	"{{lng}}",
+	"{{ns}}.json",
+);
 
 // The ESM entry uses top-level await, which breaks every non-ESM browser
 // bundle that reaches this file through loadI18next's dynamic import (the
