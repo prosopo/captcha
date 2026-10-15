@@ -42,7 +42,7 @@
 		"@prosopo/types-database": "workspace:*",
 		"cors": "2.8.6",
 		"express": "4.22.2",
-		"express-rate-limit": "7.4.0",
+		"express-rate-limit": "8.7.1",
 		"mongoose": "9.10.3"
 	},
 	"devDependencies": {
