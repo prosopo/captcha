@@ -41,7 +41,7 @@
 		"@prosopo/types": "workspace:*",
 		"@prosopo/util": "workspace:*",
 		"@prosopo/util-crypto": "workspace:*",
-		"dotenv": "16.4.5"
+		"dotenv": "18.0.6"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
