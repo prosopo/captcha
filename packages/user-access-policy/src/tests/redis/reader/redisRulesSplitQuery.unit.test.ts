@@ -73,13 +73,13 @@ describe("buildScopedBlockSubQueries", () => {
 		}
 	});
 
-	it("drops global rules that exclude the requesting client, but not its own rules", () => {
+	it("leaves client exclusions to the ranker instead of negating them in the query", () => {
+		// RediSearch 2.8 mis-evaluates a NOT inside this union and drops
+		// unrelated global rules, so the exclusion must not move back here.
 		const subs = buildScopedBlockSubQueries({ ja4Hash: "abc" }, "client-A");
 
 		for (const sub of subs) {
-			expect(sub.query).toContain(
-				"( @clientId:{client-A} | ( ( @clientId:{global} | ismissing(@clientId) ) -@excludedClientIds:{client-A} ) )",
-			);
+			expect(sub.query).not.toContain("excludedClientIds");
 		}
 	});
 
