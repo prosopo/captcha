@@ -24,7 +24,6 @@ on:
       - opened
       - synchronize
       - reopened
-      - ready_for_review
   workflow_dispatch:
 
 permissions:
@@ -43,8 +42,8 @@ jobs:
     name: locales
     # Hosted, as in lint.yml: this repository is public, so a fork PR must not
     # run on the self-hosted fleet.
+    # Runs on drafts too: it is cheap, and translators iterate on drafts.
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
