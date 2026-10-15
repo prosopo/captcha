@@ -70,7 +70,7 @@
 		"@types/pg": "8.23.1",
 		"@types/uuid": "11.0.0",
 		"@vitest/coverage-v8": "4.1.11",
-		"@vitest/spy": "4.1.11",
+		"@vitest/spy": "5.0.3",
 		"concurrently": "9.0.1",
 		"cors": "2.8.6",
 		"del-cli": "6.0.0",
