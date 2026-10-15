@@ -28,7 +28,7 @@ import {
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
 import { u8aToHex } from "@prosopo/util";
-import i18n from "i18next";
+import { translate } from "./translate.js";
 
 // Detect which section of the provider list the token's `providerUrl`
 // was minted from.
@@ -322,7 +322,7 @@ export class ProsopoServer {
 	private notRecentResponse(): VerificationResponse {
 		return {
 			verified: false,
-			status: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
+			status: translate("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
 		};
 	}
 
@@ -365,7 +365,7 @@ export class ProsopoServer {
 				}));
 				return {
 					verified: false,
-					status: i18n.t("API.USER_NOT_VERIFIED"),
+					status: translate("API.USER_NOT_VERIFIED"),
 				};
 			}
 			const verificationResponse = await this.verifyProvider(

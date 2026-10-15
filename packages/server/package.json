@@ -41,6 +41,7 @@
 		"@prosopo/common": "workspace:*",
 		"@prosopo/logger": "workspace:*",
 		"@prosopo/keyring": "workspace:*",
+		"@prosopo/locale": "workspace:*",
 		"@prosopo/load-balancer": "workspace:*",
 		"@prosopo/types": "workspace:*",
 		"@prosopo/util": "workspace:*",

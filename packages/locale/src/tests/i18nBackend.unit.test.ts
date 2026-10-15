@@ -84,7 +84,7 @@ const load = async (options: {
 	const harness = makeHarness(options.isInitialized ?? false);
 
 	vi.doMock("i18next", () => ({ default: harness.fake }));
-	vi.doMock("i18next-fs-backend/cjs", () => ({ default: "FSBackend" }));
+	vi.doMock("i18next-fs-backend", () => ({ default: "FSBackend" }));
 	vi.doMock("i18next-http-middleware", () => ({
 		LanguageDetector: class {
 			options: unknown;
@@ -105,7 +105,7 @@ const load = async (options: {
 afterEach(() => {
 	vi.resetModules();
 	vi.doUnmock("i18next");
-	vi.doUnmock("i18next-fs-backend/cjs");
+	vi.doUnmock("i18next-fs-backend");
 	vi.doUnmock("i18next-http-middleware");
 	vi.doUnmock("../util.js");
 });
