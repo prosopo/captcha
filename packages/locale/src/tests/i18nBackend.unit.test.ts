@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { InitOptions, i18n } from "i18next";
+import type {
+	BackendModule,
+	InitOptions,
+	NewableModule,
+	ReadCallback,
+	i18n,
+} from "i18next";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 // i18next is a mutable singleton and the module under test configures it as a
@@ -20,6 +26,15 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 // known `isInitialized` state without a real filesystem backend.
 
 type Listener = (...args: unknown[]) => void;
+
+class FakeFsBackend implements BackendModule {
+	static type = "backend" as const;
+	type = "backend" as const;
+	init(): void {}
+	read(_language: string, _namespace: string, callback: ReadCallback): void {
+		callback(null, {});
+	}
+}
 
 interface FakeI18n {
 	isInitialized: boolean;
@@ -78,13 +93,14 @@ const load = async (options: {
 	serverSide?: boolean;
 }): Promise<{
 	initializeI18n: (callback?: (value: i18n) => void) => i18n;
+	fsBackend: (loaded?: unknown) => NewableModule<BackendModule>;
 	harness: Harness;
 }> => {
 	vi.resetModules();
 	const harness = makeHarness(options.isInitialized ?? false);
 
 	vi.doMock("i18next", () => ({ default: harness.fake }));
-	vi.doMock("i18next-fs-backend", () => ({ default: "FSBackend" }));
+	vi.doMock("i18next-fs-backend/cjs", () => ({ default: FakeFsBackend }));
 	vi.doMock("i18next-http-middleware", () => ({
 		LanguageDetector: class {
 			options: unknown;
@@ -99,13 +115,17 @@ const load = async (options: {
 	}));
 
 	const imported = await import("../i18nBackend.js");
-	return { initializeI18n: imported.default, harness };
+	return {
+		initializeI18n: imported.default,
+		fsBackend: imported.fsBackend,
+		harness,
+	};
 };
 
 afterEach(() => {
 	vi.resetModules();
 	vi.doUnmock("i18next");
-	vi.doUnmock("i18next-fs-backend");
+	vi.doUnmock("i18next-fs-backend/cjs");
 	vi.doUnmock("i18next-http-middleware");
 	vi.doUnmock("../util.js");
 });
@@ -123,7 +143,7 @@ describe("i18nBackend on a server, not yet initialised", () => {
 		const { initializeI18n, harness } = await load({});
 		initializeI18n();
 		expect(harness.plugins).toHaveLength(2);
-		expect(harness.plugins[0]).toBe("FSBackend");
+		expect(harness.plugins[0]).toBe(FakeFsBackend);
 	});
 
 	test("carries the shared options through to init", async () => {
@@ -196,6 +216,28 @@ describe("i18nBackend on a server, not yet initialised", () => {
 		const { initializeI18n, harness } = await load({});
 		initializeI18n();
 		expect(() => harness.emit("loaded")).not.toThrow();
+	});
+});
+
+describe("fsBackend", () => {
+	test("returns the backend class the CJS entry exports", async () => {
+		const { fsBackend } = await load({});
+		expect(fsBackend()).toBe(FakeFsBackend);
+	});
+
+	test.each([
+		["null", null],
+		["a module namespace", { default: FakeFsBackend }],
+		["a function that is not a backend", (): void => {}],
+		[
+			"a function of another module type",
+			Object.assign((): void => {}, { type: "logger" }),
+		],
+	])("rejects %s", async (_name: string, loaded: unknown) => {
+		const { fsBackend } = await load({});
+		expect(() => fsBackend(loaded)).toThrow(
+			"i18next-fs-backend/cjs did not export a backend class",
+		);
 	});
 });
 
