@@ -14,66 +14,178 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { describe, expect, test } from "vitest";
-import { Languages } from "../index.js";
+import { describe, expect, it } from "vitest";
+import { type Language, Languages } from "../translations.js";
+import { keptAsIs } from "./keptAsIs.js";
 
-describe("logging", () => {
-	test("Make sure the number of files present in the locales folder is the same size as the Languages array", () => {
-		const locales = fs.readdirSync(path.resolve("./src/locales"));
-		expect(locales.length).to.equal(Object.keys(Languages).length);
+type TranslationTree = { [key: string]: unknown };
+
+const readLocale = (locale: string): TranslationTree =>
+	JSON.parse(
+		fs.readFileSync(
+			path.resolve(`./src/locales/${locale}/translation.json`),
+			"utf8",
+		),
+	);
+
+const isTree = (value: unknown): value is TranslationTree =>
+	typeof value === "object" && value !== null && !Array.isArray(value);
+
+/** Every leaf as a dotted path; non-string leaves are kept so they can fail. */
+const flatten = (tree: TranslationTree, prefix = ""): Map<string, unknown> =>
+	new Map(
+		Object.entries(tree).flatMap(
+			([key, value]): Array<[string, unknown]> =>
+				isTree(value)
+					? [...flatten(value, `${prefix}${key}.`)]
+					: [[`${prefix}${key}`, value]],
+		),
+	);
+
+// Languages not written in Latin script must use their own script, so an
+// English word pasted into e.g. the Thai catalogue is caught.
+const scripts: Partial<Record<Language, RegExp>> = {
+	ar: /\p{Script=Arabic}/u,
+	el: /\p{Script=Greek}/u,
+	hi: /\p{Script=Devanagari}/u,
+	ja: /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u,
+	ko: /\p{Script=Hangul}/u,
+	ml: /\p{Script=Malayalam}/u,
+	ru: /\p{Script=Cyrillic}/u,
+	sr: /\p{Script=Cyrillic}/u,
+	th: /\p{Script=Thai}/u,
+	uk: /\p{Script=Cyrillic}/u,
+	zh: /\p{Script=Han}/u,
+	"zh-CN": /\p{Script=Han}/u,
+};
+
+// A Latin letter inside a Cyrillic or Greek word is a look-alike typo
+// (e.g. Latin "a" in "бубa") that renders fine but breaks search and speech.
+const homoglyphScripts: Partial<Record<Language, RegExp>> = {
+	el: /\p{Script=Greek}/u,
+	ru: /\p{Script=Cyrillic}/u,
+	sr: /\p{Script=Cyrillic}/u,
+	uk: /\p{Script=Cyrillic}/u,
+};
+
+const en: Map<string, unknown> = flatten(readLocale("en"));
+const languages: Language[] = Object.values(Languages);
+const others: Language[] = languages.filter(
+	(language: Language) => language !== Languages.english,
+);
+
+const leafName = (key: string): string => key.slice(key.lastIndexOf(".") + 1);
+
+const keptFor = (language: Language): ReadonlySet<string> =>
+	new Set(keptAsIs[language] ?? []);
+
+describe("locale catalogues", () => {
+	it.each(languages)("%s has exactly the keys of en", (language: Language) => {
+		const keys: string[] = [...flatten(readLocale(language)).keys()];
+		expect(keys.filter((key: string) => !en.has(key))).toEqual([]);
+		expect([...en.keys()].filter((key: string) => !keys.includes(key))).toEqual(
+			[],
+		);
 	});
 
-	test("Get all locale JSON files and ensure the keys are identical in each one", () => {
-		const locales = Object.values(Languages);
-		const sectionKeys = new Set<string>();
-		console.log("Local test running at ", path.resolve("."));
-		const sectionKeysObj: { [key: string]: Set<string> } = {};
-		const innerKeysObj: { [key: string]: { [key: string]: Set<string> } } = {};
-		for (const locale of locales) {
-			const localeData = fs.readFileSync(
-				path.resolve(`./src/locales/${locale}/translation.json`),
-				"utf8",
+	it.each(languages)(
+		"%s has a non-empty string for every key",
+		(language: Language) => {
+			const bad: string[] = [...flatten(readLocale(language))]
+				.filter(
+					([, value]: [string, unknown]) =>
+						typeof value !== "string" || value.trim() === "",
+				)
+				.map(([key]: [string, unknown]) => key);
+			expect(bad).toEqual([]);
+		},
+	);
+
+	it.each(languages)(
+		"%s has no unicode replacement characters",
+		(language: Language) => {
+			const bad: string[] = [...flatten(readLocale(language))]
+				.filter(
+					([, value]: [string, unknown]) =>
+						typeof value === "string" && value.includes("�"),
+				)
+				.map(([key]: [string, unknown]) => key);
+			expect(bad).toEqual([]);
+		},
+	);
+
+	it.each(others)(
+		"%s translates every value, apart from keptAsIs",
+		(language: Language) => {
+			const kept: ReadonlySet<string> = keptFor(language);
+			const untranslated: string[] = [...flatten(readLocale(language))]
+				.filter(
+					([key, value]: [string, unknown]) =>
+						!kept.has(key) &&
+						(value === en.get(key) || value === leafName(key)),
+				)
+				.map(([key, value]: [string, unknown]) => `${key}: ${value}`);
+			expect(untranslated).toEqual([]);
+		},
+	);
+
+	it.each(others)(
+		"%s keptAsIs entries still match en, so the list stays curated",
+		(language: Language) => {
+			const catalogue: Map<string, unknown> = flatten(readLocale(language));
+			const stale: string[] = [...keptFor(language)].filter(
+				(key: string) =>
+					catalogue.get(key) !== en.get(key) &&
+					catalogue.get(key) !== leafName(key),
 			);
-			const localeKeys = Object.keys(JSON.parse(localeData));
-			for (const sectionKey of localeKeys) {
-				sectionKeys.add(sectionKey);
-			}
-			sectionKeysObj[locale] = new Set(localeKeys);
-			for (const sectionKey of localeKeys) {
-				const innerKeys = JSON.parse(localeData)[sectionKey];
-				if (typeof innerKeys !== "object") {
-					continue;
-				}
+			expect(stale).toEqual([]);
+		},
+	);
 
-				if (!innerKeysObj[locale]) {
-					innerKeysObj[locale] = {};
-				}
-
-				// @ts-ignore
-				if (!innerKeysObj[locale][sectionKey]) {
-					// @ts-ignore
-					innerKeysObj[locale][sectionKey] = new Set();
-				}
-
-				for (const innerKey of Object.keys(innerKeys)) {
-					// @ts-ignore
-					innerKeysObj[locale][sectionKey].add(innerKey);
-				}
-			}
-		}
-
-		for (const locale of Array.from(locales)) {
-			console.log("Checking", locale);
-			expect(sectionKeysObj[locale]).to.deep.equal(sectionKeysObj.en);
-			// @ts-ignore
-			for (const sectionKey of Object.keys(innerKeysObj[locale])) {
-				console.log(`Checking ${locale} ${sectionKey}`);
-				// @ts-ignore
-				expect(innerKeysObj[locale][sectionKey]).to.deep.equal(
-					// @ts-ignore
-					innerKeysObj.en[sectionKey],
-				);
-			}
-		}
+	it.each(
+		others.filter((language: Language) => scripts[language] !== undefined),
+	)("%s writes every value in its own script", (language: Language) => {
+		const script: RegExp | undefined = scripts[language];
+		const kept: ReadonlySet<string> = keptFor(language);
+		const wrong: string[] = [...flatten(readLocale(language))]
+			.filter(
+				([key, value]: [string, unknown]) =>
+					!kept.has(key) &&
+					typeof value === "string" &&
+					script !== undefined &&
+					!script.test(value),
+			)
+			.map(([key, value]: [string, unknown]) => `${key}: ${value}`);
+		expect(wrong).toEqual([]);
 	});
+
+	it.each(
+		others.filter(
+			(language: Language) => homoglyphScripts[language] !== undefined,
+		),
+	)("%s has no Latin letters inside native words", (language: Language) => {
+		const script: RegExp | undefined = homoglyphScripts[language];
+		const mixed: string[] = [...flatten(readLocale(language))].flatMap(
+			([key, value]: [string, unknown]): string[] =>
+				typeof value !== "string" || script === undefined
+					? []
+					: (value.match(/\p{L}+/gu) ?? [])
+							.filter(
+								(word: string) =>
+									script.test(word) && /\p{Script=Latin}/u.test(word),
+							)
+							.map((word: string) => `${key}: ${word}`),
+		);
+		expect(mixed).toEqual([]);
+	});
+
+	it.each(languages)(
+		"%s ends the select-all prompt with a colon, as the label follows it",
+		(language: Language) => {
+			const prompt: unknown = flatten(readLocale(language)).get(
+				"WIDGET.SELECT_ALL",
+			);
+			expect(prompt).toMatch(/[:：]$/);
+		},
+	);
 });

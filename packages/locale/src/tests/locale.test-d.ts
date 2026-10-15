@@ -39,7 +39,8 @@ describe("Languages", () => {
 		// Widening this to Record<string, string> would silently reduce it to
 		// `string`.
 		expectTypeOf(Languages.english).toEqualTypeOf<"en">();
-		expectTypeOf(Languages.chinese).toEqualTypeOf<"zh-CN">();
+		expectTypeOf(Languages.chinese).toEqualTypeOf<"zh">();
+		expectTypeOf(Languages.chineseChina).toEqualTypeOf<"zh-CN">();
 	});
 
 	it("rejects assignment to a code", () => {
