@@ -59,11 +59,14 @@ const ALL_USER_SCOPE_FIELDS: ReadonlyArray<keyof UserScope> = [
 // the full rule set the way the old single-query path did.
 const GLOBAL_SCOPE_INNER = `@clientId:{${GLOBAL_CLIENT_SCOPE_SENTINEL}} | ismissing(@clientId)`;
 
+// A global rule applies to every client except those on its exclusion list.
+// The negation also matches rules with no list at all, so rules written
+// before the field existed keep applying everywhere.
 const buildScopeClause = (clientId: string | undefined): string => {
 	if (clientId === undefined) {
 		return `( ${GLOBAL_SCOPE_INNER} )`;
 	}
-	return `( @clientId:{${clientId}} | ${GLOBAL_SCOPE_INNER} )`;
+	return `( @clientId:{${clientId}} | ( ( ${GLOBAL_SCOPE_INNER} ) -@excludedClientIds:{${clientId}} ) )`;
 };
 
 const buildFieldClause = (

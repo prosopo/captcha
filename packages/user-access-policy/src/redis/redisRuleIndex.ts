@@ -95,6 +95,10 @@ export const accessRuleRedisSchema: RediSearchSchema = {
 	// index it can't be selected server-side and never fires.
 	// Stored by `getRedisRuleValue` as the string "true"/"false".
 	deferToVerify: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
+	// Indexed so the request-time probes can drop a global rule for a client
+	// it spares (`-@excludedClientIds:{clientId}`) before the per-probe cap,
+	// rather than fetching it only for `ruleApplies` to discard.
+	excludedClientIds: { type: SCHEMA_FIELD_TYPE.TAG, INDEXMISSING: true },
 } satisfies Keys<AccessRule>;
 
 export const ACCESS_RULES_REDIS_INDEX_NAME = "index:user-access-rules";

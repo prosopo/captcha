@@ -223,8 +223,16 @@ const ruleApplies = (
 	requestHeaders: Record<string, string>,
 ): boolean => {
 	// Client-scoped rules: rule.clientId must equal the request's clientId.
-	// Rules without a clientId are global and apply to any client.
+	// Rules without a clientId are global and apply to any client they do not
+	// exclude.
 	if (rule.clientId !== undefined && rule.clientId !== requestClientId) {
+		return false;
+	}
+	if (
+		rule.clientId === undefined &&
+		requestClientId !== undefined &&
+		rule.excludedClientIds?.includes(requestClientId)
+	) {
 		return false;
 	}
 	for (const field of SCALAR_USER_SCOPE_FIELDS) {
