@@ -19,6 +19,7 @@ import {
 	ProsopoEnvError,
 	ProsopoError,
 } from "@prosopo/common";
+import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	buildClientMetaData,
@@ -579,7 +580,15 @@ export function Manager(
 		if (!siteKey) {
 			throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
 		}
-		return { providerApi: new ProviderApi(providerUrl, siteKey), siteKey };
+		return {
+			providerApi: new ProviderApi(
+				providerUrl,
+				siteKey,
+				undefined,
+				widgetLanguageHeaders(config.language),
+			),
+			siteKey,
+		};
 	};
 
 	const clearTimeout = () => {

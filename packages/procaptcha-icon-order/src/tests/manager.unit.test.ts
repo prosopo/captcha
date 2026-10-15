@@ -71,6 +71,8 @@ type IpMode = ReturnType<typeof pickIpMode>;
  */
 const mocks = vi.hoisted(() => {
 	const providerApiConstructions: { url: string; siteKey: string }[] = [];
+	const providerApiHeaders: (Readonly<Record<string, string>> | undefined)[] =
+		[];
 	const getIconOrderCaptchaChallenge =
 		vi.fn<
 			(
@@ -99,8 +101,14 @@ const mocks = vi.hoisted(() => {
 	class ProviderApiMock {
 		public getIconOrderCaptchaChallenge = getIconOrderCaptchaChallenge;
 		public submitIconOrderCaptchaSolution = submitIconOrderCaptchaSolution;
-		constructor(url: string, siteKey: string) {
+		constructor(
+			url: string,
+			siteKey: string,
+			_timeoutMs?: number,
+			defaultHeaders?: Readonly<Record<string, string>>,
+		) {
 			providerApiConstructions.push({ url, siteKey });
+			providerApiHeaders.push(defaultHeaders);
 		}
 	}
 
@@ -123,6 +131,7 @@ const mocks = vi.hoisted(() => {
 
 	return {
 		providerApiConstructions,
+		providerApiHeaders,
 		getIconOrderCaptchaChallenge,
 		submitIconOrderCaptchaSolution,
 		ProviderApiMock,
@@ -248,6 +257,7 @@ const signRaw = signRawMock;
 beforeEach(() => {
 	vi.clearAllMocks();
 	mocks.providerApiConstructions.length = 0;
+	mocks.providerApiHeaders.length = 0;
 	signRaw.mockResolvedValue({ id: 1, signature: "0xuser-signature" });
 	mocks.getAccount.mockResolvedValue(account(signRaw));
 	mocks.extensionLoader.mockResolvedValue(mocks.ExtensionMock);
@@ -307,6 +317,22 @@ describe("start: getting to a challenge", () => {
 		const harness = build({ initialState: { attemptCount: 2 } });
 		await harness.manager.start();
 		expect(lastUpdate(harness, "attemptCount")).toBe(3);
+	});
+
+	test("sends the site's language to the provider", async () => {
+		vi.stubGlobal("navigator", { languages: ["de"] });
+		const harness = build({ configInput: config({ language: "tr" }) });
+		await harness.manager.start();
+		vi.unstubAllGlobals();
+		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr" }]);
+	});
+
+	test("sends the browser's languages when the site set none", async () => {
+		vi.stubGlobal("navigator", { languages: ["tr-TR", "en"] });
+		const harness = build();
+		await harness.manager.start();
+		vi.unstubAllGlobals();
+		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr-TR,en" }]);
 	});
 
 	test("asks the provider named by the frictionless state, when there is one", async () => {

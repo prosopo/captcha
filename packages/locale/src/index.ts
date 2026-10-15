@@ -17,6 +17,19 @@ export type { TextDirection } from "./direction.js";
 export { default as i18nMiddleware } from "./i18nMiddleware.js";
 export { default as loadI18next } from "./loadI18next.js";
 export { isLanguage, LanguageCodes, Languages } from "./translations.js";
+export {
+	browserLanguages,
+	LANGUAGE_HEADER,
+	LANGUAGE_QUERY_PARAM,
+	languageHeaders,
+	matchLanguage,
+	matchLanguageTag,
+	negotiateLanguage,
+	parseLanguageList,
+	requestLanguage,
+	widgetLanguageHeaders,
+} from "./languagePreference.js";
+export type { LanguageRequest } from "./languagePreference.js";
 export type { Language } from "./translations.js";
 export { isClientSide } from "./util.js";
 export {

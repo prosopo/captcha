@@ -29,6 +29,9 @@
 			"path": "../load-balancer"
 		},
 		{
+			"path": "../locale"
+		},
+		{
 			"path": "../procaptcha-common"
 		},
 		{

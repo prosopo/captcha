@@ -19,6 +19,7 @@ import type {
 	ReadCallback,
 	i18n,
 } from "i18next";
+import { LanguageDetector } from "i18next-http-middleware";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 // i18next is a mutable singleton and the module under test configures it as a
@@ -26,6 +27,9 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 // known `isInitialized` state without a real filesystem backend.
 
 type Listener = (...args: unknown[]) => void;
+
+// The real class: the module under test only hands it to i18next.use().
+const detector: LanguageDetector = new LanguageDetector(null, {});
 
 class FakeFsBackend implements BackendModule {
 	static type = "backend" as const;
@@ -101,14 +105,12 @@ const load = async (options: {
 
 	vi.doMock("i18next", () => ({ default: harness.fake }));
 	vi.doMock("i18next-fs-backend/cjs", () => ({ default: FakeFsBackend }));
-	vi.doMock("i18next-http-middleware", () => ({
-		LanguageDetector: class {
-			options: unknown;
-			constructor(_services: unknown, opts: unknown) {
-				this.options = opts;
-			}
-		},
-	}));
+	vi.doMock(
+		"../requestLanguageDetector.js",
+		(): typeof import("../requestLanguageDetector.js") => ({
+			createRequestLanguageDetector: (): LanguageDetector => detector,
+		}),
+	);
 	vi.doMock("../util.js", () => ({
 		isServerSide: (): boolean => options.serverSide ?? true,
 		isClientSide: (): boolean => !(options.serverSide ?? true),
@@ -126,7 +128,7 @@ afterEach(() => {
 	vi.resetModules();
 	vi.doUnmock("i18next");
 	vi.doUnmock("i18next-fs-backend/cjs");
-	vi.doUnmock("i18next-http-middleware");
+	vi.doUnmock("../requestLanguageDetector.js");
 	vi.doUnmock("../util.js");
 });
 
@@ -137,13 +139,12 @@ describe("i18nBackend on a server, not yet initialised", () => {
 		expect(harness.initOptions).toHaveLength(1);
 	});
 
-	test("registers the filesystem backend and the header language detector", async () => {
+	test("registers the filesystem backend and the request language detector", async () => {
 		// The detector is what makes Accept-Language work; losing it would
 		// silently serve every request in the fallback language.
 		const { initializeI18n, harness } = await load({});
 		initializeI18n();
-		expect(harness.plugins).toHaveLength(2);
-		expect(harness.plugins[0]).toBe(FakeFsBackend);
+		expect(harness.plugins).toEqual([FakeFsBackend, detector]);
 	});
 
 	test("carries the shared options through to init", async () => {
