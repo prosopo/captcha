@@ -73,6 +73,16 @@ describe("buildScopedBlockSubQueries", () => {
 		}
 	});
 
+	it("drops global rules that exclude the requesting client, but not its own rules", () => {
+		const subs = buildScopedBlockSubQueries({ ja4Hash: "abc" }, "client-A");
+
+		for (const sub of subs) {
+			expect(sub.query).toContain(
+				"( @clientId:{client-A} | ( ( @clientId:{global} | ismissing(@clientId) ) -@excludedClientIds:{client-A} ) )",
+			);
+		}
+	});
+
 	it("skips the client-specific probe when no clientId is passed", () => {
 		const subs = buildScopedBlockSubQueries({ ja4Hash: "abc" }, undefined);
 

@@ -346,4 +346,17 @@ describe("getRulesRedisQuery", () => {
 		expect(query).toContain("@clientId:{site-A}");
 		expect(query).toContain("@ja4Hash:{ja4Hash}");
 	});
+
+	it("leaves out global rules that exclude the client when matching greedily", () => {
+		const filter: AccessRulesFilter = {
+			policyScope: { clientId: "site-A" },
+			policyScopeMatch: FilterScopeMatch.Greedy,
+		};
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toBe(
+			"( @clientId:{site-A} | ( ( @clientId:{global} | ismissing(@clientId) ) -@excludedClientIds:{site-A} ) )",
+		);
+	});
 });

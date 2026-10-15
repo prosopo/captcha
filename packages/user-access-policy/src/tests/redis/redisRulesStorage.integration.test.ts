@@ -1803,6 +1803,79 @@ describe("redisAccessRulesStorage", () => {
 			);
 			expect(targetFound).toBeDefined();
 		});
+
+		test("skips a global rule for the clients it excludes on the request-time path", async () => {
+			const numericIp = 1482864477n;
+			const excludedSite = getUniqueString();
+			const otherExcludedSite = getUniqueString();
+			const unexcludedSite = getUniqueString();
+
+			const excludingGlobalRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp,
+				description: "excluding",
+				excludedClientIds: [excludedSite, otherExcludedSite],
+			};
+			const plainGlobalRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp,
+				description: "plain",
+			};
+			const excludedSitesOwnRule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp,
+				clientId: excludedSite,
+				description: "own",
+			};
+
+			await insertRules([
+				excludingGlobalRule,
+				plainGlobalRule,
+				excludedSitesOwnRule,
+			]);
+
+			const findFor = async (clientId: string): Promise<string[]> =>
+				(
+					await accessRulesReader.findRules(
+						{
+							policyScope: { clientId },
+							policyScopeMatch: FilterScopeMatch.Greedy,
+							userScope: { numericIp },
+							userScopeMatch: FilterScopeMatch.Greedy,
+							blockOnly: true,
+						},
+						true,
+					)
+				)
+					.map((rule) => rule.description ?? "")
+					.sort();
+
+			expect(await findFor(excludedSite)).toEqual(["own", "plain"]);
+			expect(await findFor(otherExcludedSite)).toEqual(["plain"]);
+			expect(await findFor(unexcludedSite)).toEqual(["excluding", "plain"]);
+		});
+	});
+
+	describe("writer exclusions", () => {
+		test("re-pushing a rule without exclusions clears the previous list", async () => {
+			const writer = new RedisRulesWriter(redisClient, mockLogger);
+			const rule: AccessRule = {
+				type: AccessPolicyType.Block,
+				numericIp: 100n,
+			};
+			const ruleKey = getAccessRuleRedisKey(rule);
+
+			await writer.insertRules([
+				{ rule: { ...rule, excludedClientIds: ["site-a"] } },
+			]);
+			expect(await redisClient.hGet(ruleKey, "excludedClientIds")).toBe(
+				"site-a",
+			);
+
+			await writer.insertRules([{ rule }]);
+
+			expect(await redisClient.hGet(ruleKey, "excludedClientIds")).toBeNull();
+		});
 	});
 
 	afterAll(async () => {
