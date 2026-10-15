@@ -1804,17 +1804,15 @@ describe("redisAccessRulesStorage", () => {
 			expect(targetFound).toBeDefined();
 		});
 
-		test("skips a global rule for the clients it excludes on the request-time path", async () => {
+		test("returns a global rule's exclusions on the request-time path so the ranker can apply them", async () => {
 			const numericIp = 1482864477n;
 			const excludedSite = getUniqueString();
-			const otherExcludedSite = getUniqueString();
-			const unexcludedSite = getUniqueString();
 
 			const excludingGlobalRule: AccessRule = {
 				type: AccessPolicyType.Block,
 				numericIp,
 				description: "excluding",
-				excludedClientIds: [excludedSite, otherExcludedSite],
+				excludedClientIds: [excludedSite, getUniqueString()],
 			};
 			const plainGlobalRule: AccessRule = {
 				type: AccessPolicyType.Block,
@@ -1834,25 +1832,26 @@ describe("redisAccessRulesStorage", () => {
 				excludedSitesOwnRule,
 			]);
 
-			const findFor = async (clientId: string): Promise<string[]> =>
-				(
-					await accessRulesReader.findRules(
-						{
-							policyScope: { clientId },
-							policyScopeMatch: FilterScopeMatch.Greedy,
-							userScope: { numericIp },
-							userScopeMatch: FilterScopeMatch.Greedy,
-							blockOnly: true,
-						},
-						true,
-					)
-				)
-					.map((rule) => rule.description ?? "")
-					.sort();
+			const found = await accessRulesReader.findRules(
+				{
+					policyScope: { clientId: excludedSite },
+					policyScopeMatch: FilterScopeMatch.Greedy,
+					userScope: { numericIp },
+					userScopeMatch: FilterScopeMatch.Greedy,
+					blockOnly: true,
+				},
+				true,
+			);
 
-			expect(await findFor(excludedSite)).toEqual(["own", "plain"]);
-			expect(await findFor(otherExcludedSite)).toEqual(["plain"]);
-			expect(await findFor(unexcludedSite)).toEqual(["excluding", "plain"]);
+			expect(found.map((rule) => rule.description).sort()).toEqual([
+				"excluding",
+				"own",
+				"plain",
+			]);
+			expect(
+				found.find((rule) => rule.description === "excluding")
+					?.excludedClientIds,
+			).toEqual(excludingGlobalRule.excludedClientIds);
 		});
 	});
 

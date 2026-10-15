@@ -189,7 +189,7 @@ const getPolicyScopeQuery = (
 	if ("string" === typeof clientId) {
 		return FilterScopeMatch.Exact === scopeMatch
 			? `@clientId:{${clientId}}`
-			: `( @clientId:{${clientId}} | ( ( ${GLOBAL_MATCH_CLAUSE_INNER} ) -@excludedClientIds:{${clientId}} ) )`;
+			: `( @clientId:{${clientId}} | ${GLOBAL_MATCH_CLAUSE_INNER} )`;
 	}
 
 	return FilterScopeMatch.Exact === scopeMatch
