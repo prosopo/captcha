@@ -346,6 +346,44 @@ describe("unwrapError still produces a translated HTTP response", () => {
 		);
 	});
 
+	it("adds English text for a key the widget has no text for", () => {
+		const turkish = makeI18n({
+			"DATABASE.CAPTCHA_GET_FAILED": "Captcha alınamadı",
+		});
+		const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+			i18n: turkish,
+			silent: true,
+		});
+
+		const { jsonError } = unwrapError(err, turkish);
+		expect(jsonError.message).toBe("Captcha alınamadı");
+		expect(jsonError.key).toBe("DATABASE.CAPTCHA_GET_FAILED");
+		expect(jsonError.messageEn).toBe("Failed to get captcha");
+	});
+
+	it("sends only the key's translation for a key the widget can look up", () => {
+		const err = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
+			context: { code: 400 },
+			i18n: frenchI18n,
+			silent: true,
+		});
+
+		const { jsonError } = unwrapError(err, frenchI18n);
+		expect(jsonError.message).toBe("Aucune session trouvée");
+		expect(jsonError).not.toHaveProperty("messageEn");
+	});
+
+	it("adds no English text for an error with no catalogue key", () => {
+		const err = new ProsopoApiError(new Error("upstream: timed out"), {
+			context: { code: 500, translationKey: "not.a.key" },
+			silent: true,
+		});
+
+		const { jsonError } = unwrapError(err);
+		expect(jsonError.key).toBe("not.a.key");
+		expect(jsonError).not.toHaveProperty("messageEn");
+	});
+
 	it("derives statusMessage from the resolved status code, not a hardcoded 'Bad Request'", () => {
 		const err = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
 			context: { code: 401 },

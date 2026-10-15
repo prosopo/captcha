@@ -15,7 +15,9 @@
 import {
 	type TranslateFn,
 	type TranslationKey,
+	englishText,
 	isTranslationKey,
+	isWidgetTranslationKey,
 } from "@prosopo/locale";
 import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { ApiJsonError } from "@prosopo/types";
@@ -286,6 +288,12 @@ export const unwrapError = (
 	}
 
 	jsonError.code = code;
+	// The widget has English text for its own keys. For any other key it can
+	// only show `message`, so send the English too, for logs and crash reports.
+	const key = jsonError.key;
+	if (key && isTranslationKey(key) && !isWidgetTranslationKey(key)) {
+		jsonError.messageEn = englishText(key);
+	}
 	// Derive the HTTP reason phrase from the final status code rather than
 	// hardcoding "Bad Request", so a 401/403/500 response carries the correct
 	// status message. For codes absent from the map, fall back by class so an

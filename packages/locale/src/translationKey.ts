@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { flatten } from "@prosopo/util";
 import targetEn from "./locales/en/target.json" with { type: "json" };
 import serverEn from "./locales/en/translation.json" with { type: "json" };
 import widgetEn from "./locales/en/widget.json" with { type: "json" };
@@ -118,3 +119,17 @@ const targetKeySet: ReadonlySet<string> = new Set(targetKeys);
  */
 export const isTargetKey = (value: string): value is TargetKey =>
 	targetKeySet.has(value);
+
+const englishTexts: ReadonlyMap<string, string> = new Map(
+	Object.entries(flatten(translationEn)),
+);
+
+/**
+ * The English text for a key, whatever the request's language. The provider
+ * sends it beside translated text the widget cannot look up itself (image
+ * labels, server-only errors), so logs and crash reports can be read in
+ * English. Read from the bundled catalogues, not i18next, so it cannot depend
+ * on which languages the server has loaded.
+ */
+export const englishText = (key: TranslationKey): string =>
+	englishTexts.get(key) ?? key;

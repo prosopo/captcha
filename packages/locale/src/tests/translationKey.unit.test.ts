@@ -19,6 +19,7 @@ import widgetEn from "../locales/en/widget.json" with { type: "json" };
 import {
 	NAMESPACES,
 	type TranslationNode,
+	englishText,
 	getLeafFieldPath,
 	isTargetKey,
 	isTranslationKey,
@@ -241,5 +242,21 @@ describe("isWidgetTranslationKey", () => {
 		expect(isWidgetTranslationKey("WIDGET")).toBe(false);
 		expect(isWidgetTranslationKey("Invalid site key")).toBe(false);
 		expect(isWidgetTranslationKey("")).toBe(false);
+	});
+});
+
+describe("englishText", () => {
+	test("reads each namespace's English text", () => {
+		expect(englishText("TARGET.owl")).toBe(targetEn.TARGET.owl);
+		expect(englishText("WIDGET.SELECT_ALL")).toBe(widgetEn.WIDGET.SELECT_ALL);
+		expect(englishText("DATABASE.UNKNOWN")).toBe(serverEn.DATABASE.UNKNOWN);
+	});
+
+	test("has English text for every key", () => {
+		for (const key of translationKeys) {
+			if (isTranslationKey(key)) {
+				expect(englishText(key)).not.toBe(key);
+			}
+		}
 	});
 });

@@ -33,6 +33,7 @@ export type { LanguageRequest } from "./languagePreference.js";
 export type { Language } from "./translations.js";
 export { isClientSide } from "./util.js";
 export {
+	englishText,
 	isTargetKey,
 	isTranslationKey,
 	isWidgetTranslationKey,
