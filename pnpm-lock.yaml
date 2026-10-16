@@ -674,9 +674,6 @@ importers:
       '@prosopo/keyring':
         specifier: workspace:*
         version: link:../../packages/keyring
-      '@prosopo/locale':
-        specifier: workspace:*
-        version: link:../../packages/locale
       '@prosopo/logger':
         specifier: workspace:*
         version: link:../../packages/logger
@@ -2160,9 +2157,6 @@ importers:
       dotenv:
         specifier: 16.4.5
         version: 16.4.5
-      fast-glob:
-        specifier: 3.3.3
-        version: 3.3.3
       jsdom:
         specifier: 25.0.0
         version: 25.0.0(supports-color@8.1.1)

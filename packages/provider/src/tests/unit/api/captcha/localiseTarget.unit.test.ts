@@ -41,17 +41,26 @@ beforeEach(() => {
 
 describe("localiseTarget", () => {
 	it("translates a known label under its TARGET key", () => {
-		expect(localiseTarget(t, "owl", logger)).toBe("baykuş");
+		expect(localiseTarget(t, "owl", logger).target).toBe("baykuş");
 		expect(t).toHaveBeenCalledWith("TARGET.owl");
 	});
 
-	it("translates a hyphenated label", () => {
-		expect(localiseTarget(t, "fire-hydrant", logger)).toBe("yangın musluğu");
+	it("sends the key and the English text beside the translation", () => {
+		// English comes from the catalogue, not from the request's translator.
+		expect(localiseTarget(t, "fire-hydrant", logger)).toEqual({
+			target: "yangın musluğu",
+			targetKey: "fire-hydrant",
+			targetEn: "fire hydrant",
+		});
+		expect(t).toHaveBeenCalledTimes(1);
 	});
 
-	it("shows an unknown label as-is rather than the raw TARGET. key", () => {
+	it("shows an unknown label as-is, in place of the raw TARGET. key, with no key", () => {
 		const warn = vi.spyOn(logger, "warn");
-		expect(localiseTarget(t, "zeppelin", logger)).toBe("zeppelin");
+		expect(localiseTarget(t, "zeppelin", logger)).toEqual({
+			target: "zeppelin",
+			targetEn: "zeppelin",
+		});
 		expect(t).not.toHaveBeenCalled();
 		expect(warn).toHaveBeenCalledTimes(1);
 	});

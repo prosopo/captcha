@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
+import { NAMESPACES } from "../translationKey.js";
 import { LanguageCodes, Languages, isLanguage } from "../translations.js";
 
 const codes: string[] = Object.values(Languages);
@@ -47,10 +48,12 @@ describe("Languages", () => {
 		}
 	});
 
-	test("every code has a locales directory containing translation.json", () => {
+	test("every code has a locales directory with every namespace file", () => {
 		for (const code of codes) {
-			const file = path.resolve(`./src/locales/${code}/translation.json`);
-			expect(fs.existsSync(file), `missing ${code}`).toBe(true);
+			for (const namespace of Object.values(NAMESPACES)) {
+				const file = path.resolve(`./src/locales/${code}/${namespace}.json`);
+				expect(fs.existsSync(file), `missing ${code}/${namespace}`).toBe(true);
+			}
 		}
 	});
 

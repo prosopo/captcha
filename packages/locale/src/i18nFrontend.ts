@@ -19,9 +19,11 @@ import {
 	matchLanguage,
 	resolveLanguageList,
 } from "./languagePreference.js";
+import widgetEn from "./locales/en/widget.json" with { type: "json" };
+import { NAMESPACES } from "./translationKey.js";
 import type { I18nEvent, Ti18n, TranslateOptions } from "./types.js";
 
-const NAMESPACE = "translation";
+const NAMESPACE = NAMESPACES.widget;
 const FALLBACK_LANGUAGE = i18nSharedOptions.fallbackLng;
 
 /**
@@ -34,6 +36,13 @@ const FALLBACK_LANGUAGE = i18nSharedOptions.fallbackLng;
 const CATALOGUE_FETCH_TIMEOUT_MS = 10_000;
 
 type Catalogue = Record<string, string>;
+
+/**
+ * English ships inside the bundle: the key checks in translationKey.ts import
+ * it anyway, and it means the widget always has English text, for its own
+ * fallback and for logs and crash reports, without a second fetch.
+ */
+const bundledEnglish: Catalogue = flatten(widgetEn);
 
 /**
  * Locale JSON sits next to the bundle that asked for it. The widget is embedded
@@ -89,7 +98,9 @@ interface BrowserI18n extends Ti18n {
 }
 
 const createBrowserI18n = (requested?: string): BrowserI18n => {
-	const catalogues = new Map<string, Catalogue>();
+	const catalogues = new Map<string, Catalogue>([
+		[FALLBACK_LANGUAGE, bundledEnglish],
+	]);
 	const listeners = new Map<I18nEvent, Set<() => void>>();
 	let language = resolveLanguageList(requested) ?? detectLanguage();
 	let initialised = false;
@@ -101,19 +112,15 @@ const createBrowserI18n = (requested?: string): BrowserI18n => {
 	};
 
 	/**
-	 * The fallback catalogue is fetched alongside the active one so a key
-	 * missing from a translation still renders English rather than its key —
-	 * the same key-level fallback i18next gave us via `fallbackLng`.
+	 * Only the active language's widget namespace is fetched. English is
+	 * already loaded, so a key missing from a translation still renders
+	 * English rather than its key, the key-level fallback i18next gives via
+	 * `fallbackLng`.
 	 */
 	const loadCatalogues = async (target: string): Promise<void> => {
-		const wanted = [...new Set([target, FALLBACK_LANGUAGE])].filter(
-			(candidate) => !catalogues.has(candidate),
-		);
-		await Promise.all(
-			wanted.map(async (candidate) => {
-				catalogues.set(candidate, await fetchCatalogue(candidate));
-			}),
-		);
+		if (!catalogues.has(target)) {
+			catalogues.set(target, await fetchCatalogue(target));
+		}
 	};
 
 	const lookup = (candidate: string, key: string): string | undefined =>

@@ -51,6 +51,7 @@ describe("handleErrors", async () => {
 				code: 400,
 				key: "CONTRACT.INVALID_DATA_FORMAT",
 				message: "Invalid data format",
+				messageEn: "Invalid data format",
 			},
 		});
 		expect(mockResponse.status).toHaveBeenCalledWith(400);

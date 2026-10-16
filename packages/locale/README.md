@@ -1,7 +1,41 @@
 # i18next localization for Prosopo
 
-Translation catalogues (`src/locales/<code>/translation.json`) and the language
+Translation catalogues (`src/locales/<code>/<namespace>.json`) and the language
 negotiation the widget and the provider share.
+
+## Catalogue files
+
+Each language has one file per i18next namespace (`NAMESPACES` in
+`src/translationKey.ts`). The browser downloads only what it renders:
+
+| File | Sections | Loaded by |
+| --- | --- | --- |
+| `widget.json` | WIDGET, API, CAPTCHA, GENERAL, ACCOUNT, DEVELOPER | widget and provider |
+| `target.json` | TARGET (image labels) | provider |
+| `translation.json` | DATABASE, DATASET, CONTRACT, CONFIG, PORTAL, CLI, FS | provider |
+
+- Keys keep their section prefix, so `TARGET.owl` and `WIDGET.SELECT_ALL` read
+  the same whichever file holds them. The provider loads all three with
+  `translation` as the default namespace and the others as `fallbackNS`, so
+  `t("TARGET.owl")` needs no namespace.
+- The widget bundles English `widget.json` and fetches only
+  `locales/<code>/widget.json` for another language. It always has English
+  text, for its own fallback and for logs and crash reports.
+- The provider translates image labels itself, so the browser never needs
+  `target.json`. Each captcha in the image challenge carries the translated
+  `target`, its `targetKey` and its English `targetEn`, and the response names
+  its `language` (`packages/provider/src/api/captcha/localiseTarget.ts`).
+- Provider errors carry their key. The widget re-translates keys it has
+  (`isWidgetTranslationKey`) and shows the provider's message for the rest. For
+  those, the provider also sends `messageEn` (`unwrapError` in
+  `packages/common/src/error.ts`), so the widget has English for every string
+  it shows. The bundle build copies `widget.json` whole, rather than stripping
+  keys its code never names (`packages/procaptcha-bundle/vite.config.ts`).
+- `englishText(key)` reads English from the bundled catalogues, whatever
+  language i18next is in.
+- A section moves between files by moving it in every language. The tests in
+  `src/tests/locales.unit.test.ts` and `src/tests/catalogues.test-d.ts` fail on
+  a file whose keys differ from English's.
 
 ## Choosing the language
 

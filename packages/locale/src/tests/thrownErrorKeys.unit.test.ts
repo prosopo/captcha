@@ -14,9 +14,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
-import translationEn from "../locales/en/translation.json" with {
-	type: "json",
-};
+import { isTranslationKey } from "../translationKey.js";
 
 // Error classes and ResultReason carry a catalogue key. A key with no entry
 // reaches users and logs untranslated, so every one used in the workspace's
@@ -27,14 +25,8 @@ const PACKAGES_DIR = path.resolve("..");
 const THROWN_KEY = /Error\(\s*["']([A-Z][A-Z_]*\.[A-Z0-9_]+)["']/g;
 const REASON_KEY = /=\s*"([A-Z][A-Z_]*\.[A-Z0-9_]+)"/g;
 
-const isCatalogueKey = (key: string): boolean => {
-	const [section, name] = key.split(".");
-	const entries: Record<string, unknown> | undefined =
-		section && section in translationEn
-			? translationEn[section as keyof typeof translationEn]
-			: undefined;
-	return name !== undefined && entries !== undefined && name in entries;
-};
+// Whichever namespace file holds it (see NAMESPACES in translationKey.ts).
+const isCatalogueKey = (key: string): boolean => isTranslationKey(key);
 
 const sourceFiles = (dir: string): string[] =>
 	fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry: fs.Dirent) => {

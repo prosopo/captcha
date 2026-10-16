@@ -34,12 +34,20 @@ export type { LanguageRequest } from "./languagePreference.js";
 export type { Language } from "./translations.js";
 export { isClientSide } from "./util.js";
 export {
+	englishText,
 	isTargetKey,
 	isTranslationKey,
+	isWidgetTranslationKey,
+	NAMESPACES,
 	targetKeys,
 	translationKeys,
 } from "./translationKey.js";
-export type { TargetKey, TranslationKey } from "./translationKey.js";
+export type {
+	Namespace,
+	TargetKey,
+	TranslationKey,
+	WidgetTranslationKey,
+} from "./translationKey.js";
 export { createTranslator } from "./translator.js";
 export type { Translator } from "./translator.js";
 export type {
