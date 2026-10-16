@@ -1,5 +1,10 @@
 # @prosopo/api
 
+## 4.7.1
+### Patch Changes
+
+  - @prosopo/types@5.16.1
+
 ## 4.7.0
 ### Minor Changes
 
