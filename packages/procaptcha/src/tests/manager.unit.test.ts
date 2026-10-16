@@ -381,9 +381,7 @@ describe("start", () => {
 		const harness = build({ configInput: config({ language: "tr" }) });
 		await harness.manager.start();
 		vi.unstubAllGlobals();
-		expect(mocks.providerApiHeaders).toEqual([
-			{ "Prosopo-Lang": "tr" },
-		]);
+		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr" }]);
 	});
 
 	test("sends the browser's languages when the site set none", async () => {
@@ -391,9 +389,7 @@ describe("start", () => {
 		const harness = build();
 		await harness.manager.start();
 		vi.unstubAllGlobals();
-		expect(mocks.providerApiHeaders).toEqual([
-			{ "Prosopo-Lang": "tr-TR,en" },
-		]);
+		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr-TR,en" }]);
 	});
 
 	test("carries the frictionless provider through instead of picking one", async () => {
