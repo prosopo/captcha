@@ -15,13 +15,14 @@
 import { builtinModules } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { build } from "vite";
+import { type Plugin, build } from "vite";
 import { describe, expect, test } from "vitest";
 
-const entry: string = path.resolve(
+const source: string = path.resolve(
 	path.dirname(fileURLToPath(import.meta.url)),
-	"../loadI18next.ts",
+	"..",
 );
+const entry: string = path.join(source, "loadI18next.ts");
 
 const nodeBuiltins: string[] = [
 	...builtinModules,
@@ -42,6 +43,42 @@ describe("a UMD browser bundle of loadI18next", () => {
 					reportCompressedSize: false,
 					lib: { entry, name: "loadI18next", formats: ["umd"] },
 					rollupOptions: { external: nodeBuiltins },
+				},
+			}),
+		).resolves.toBeDefined();
+	});
+});
+
+const EMPTY_FS = "\0empty-fs";
+
+// The portal and other Vite apps polyfill node builtins with
+// node-stdlib-browser, whose `fs` is an empty module with only a null default.
+const stubFs: Plugin = {
+	name: "stub-fs",
+	enforce: "pre",
+	resolveId: (id: string): string | undefined =>
+		id === "fs" || id === "node:fs" ? EMPTY_FS : undefined,
+	load: (id: string): string | undefined =>
+		id === EMPTY_FS ? "export default null;" : undefined,
+};
+
+describe("an ESM browser bundle of the package with fs stubbed out", () => {
+	test("builds, so nothing imports a named export from fs", async () => {
+		await expect(
+			build({
+				configFile: false,
+				logLevel: "silent",
+				plugins: [stubFs],
+				build: {
+					write: false,
+					minify: false,
+					reportCompressedSize: false,
+					lib: { entry: path.join(source, "index.ts"), formats: ["es"] },
+					rollupOptions: {
+						external: nodeBuiltins.filter(
+							(name: string): boolean => name !== "fs" && name !== "node:fs",
+						),
+					},
 				},
 			}),
 		).resolves.toBeDefined();
