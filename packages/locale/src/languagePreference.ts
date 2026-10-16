@@ -82,17 +82,33 @@ export const parseLanguageList = (value: string | undefined): string[] => {
 		.slice(0, MAX_PREFERENCES);
 };
 
+// The `zh` catalogue is Simplified Chinese, which Traditional Chinese readers
+// do not expect, so their tags skip it and the next preference gets a chance.
+const TRADITIONAL_CHINESE_SUBTAGS: ReadonlySet<string> = new Set([
+	"hant",
+	"tw",
+	"hk",
+	"mo",
+]);
+
+const isTraditionalChinese = (subtags: readonly string[]): boolean =>
+	subtags[0] === "zh" &&
+	!subtags.includes("hans") &&
+	subtags.some((subtag: string) => TRADITIONAL_CHINESE_SUBTAGS.has(subtag));
+
 /**
  * The catalogue for one tag: the exact code, then the tag with its last subtag
- * dropped, and so on (RFC 4647 lookup), so `zh-Hant-TW` reaches `zh` and
- * `pt-BR` stays `pt-BR`. Case is ignored. Aliases apply to the primary subtag.
+ * dropped, and so on (RFC 4647 lookup), so `zh-Hans-SG` reaches `zh` and
+ * `pt-BR` stays `pt-BR`. Traditional Chinese (`zh-TW`, `zh-Hant-HK`) never
+ * reaches `zh`. Case is ignored. Aliases apply to the primary subtag.
  */
 export const matchLanguageTag = (tag: string): Language | undefined => {
 	if (!LANGUAGE_TAG.test(tag)) {
 		return undefined;
 	}
 	const subtags = tag.toLowerCase().split("-");
-	for (let length = subtags.length; length > 0; length--) {
+	const shortest = isTraditionalChinese(subtags) ? 2 : 1;
+	for (let length = subtags.length; length >= shortest; length--) {
 		const match = byLowerCase.get(subtags.slice(0, length).join("-"));
 		if (match) {
 			return match;
@@ -113,6 +129,14 @@ export const matchLanguage = (
 	}
 	return undefined;
 };
+
+/**
+ * A site-supplied list such as `data-language="xx, tr-TR"`: the first entry we
+ * have a catalogue for, or undefined if none.
+ */
+export const resolveLanguageList = (
+	value: string | null | undefined,
+): Language | undefined => matchLanguage(parseLanguageList(value ?? undefined));
 
 /** Like matchLanguage, but falls back to English. */
 export const negotiateLanguage = (preferences: readonly string[]): Language =>
