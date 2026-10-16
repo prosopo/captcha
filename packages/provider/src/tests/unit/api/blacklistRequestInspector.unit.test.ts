@@ -1026,6 +1026,49 @@ describe("rankCandidateRules", () => {
 		expect(ranked).toEqual([rule]);
 	});
 
+	describe("global rule exclusions", () => {
+		const excludingGlobalRule: AccessRule = {
+			type: AccessPolicyType.Block,
+			numericIp: 16909060n,
+			excludedClientIds: ["site-excluded"],
+		};
+
+		it("skips a global rule for a client it excludes", () => {
+			expect(
+				rankCandidateRules([excludingGlobalRule], request, "site-excluded", {}),
+			).toEqual([]);
+		});
+
+		it("applies a global rule to a client it does not exclude", () => {
+			expect(
+				rankCandidateRules([excludingGlobalRule], request, "site-other", {}),
+			).toEqual([excludingGlobalRule]);
+		});
+
+		it("applies a global rule when the request carries no client id", () => {
+			expect(
+				rankCandidateRules([excludingGlobalRule], request, undefined, {}),
+			).toEqual([excludingGlobalRule]);
+		});
+
+		it("still applies the excluded client's own rules", () => {
+			const ownRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				numericIp: 16909060n,
+				clientId: "site-excluded",
+			};
+
+			expect(
+				rankCandidateRules(
+					[excludingGlobalRule, ownRule],
+					request,
+					"site-excluded",
+					{},
+				),
+			).toEqual([ownRule]);
+		});
+	});
+
 	it("rejects a CIDR rule when request IP is outside range", () => {
 		const rule: AccessRule = {
 			type: AccessPolicyType.Block,
