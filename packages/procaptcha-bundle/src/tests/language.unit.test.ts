@@ -54,7 +54,7 @@ describe("resolveLanguage", () => {
 	});
 
 	it("falls back from a region to its parent", () => {
-		expect(resolveLanguage(undefined, element("zh-TW"))).toBe("zh");
+		expect(resolveLanguage(undefined, element("zh-SG"))).toBe("zh");
 		expect(resolveLanguage(undefined, element("tr-TR"))).toBe("tr");
 		expect(resolveLanguage(undefined, element("nb"))).toBe("no");
 		expect(resolveLanguage(undefined, element("pt-BR"))).toBe("pt-BR");
