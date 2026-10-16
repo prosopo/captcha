@@ -1,5 +1,32 @@
 # @prosopo/api-express-router
 
+## 3.2.6
+### Patch Changes
+
+- aec7857: Type-check translation keys on the server and every language file.
+  
+  - `req.t` and `req.i18n.t` only accept keys from the English catalogue, so a typo fails to compile.
+  - New `TargetKey`, `targetKeys` and `isTargetKey` for image labels. An image label with no translation now shows the English label (and logs a warning) instead of the raw `TARGET.<label>` key.
+  - Every language file must have the English file's keys, checked by `typecheck`.
+  - `@prosopo/server` returns the key instead of `undefined` for its status text when i18next is not initialised.
+  - Removed the last `@ts-ignore` in `@prosopo/locale`.
+- 0bd0230: The widget bundle no longer contains the English image labels and server error strings. `ProsopoError` used to check message keys against every English catalogue, which pulled all of them into the widget. It now asks the i18n instance it was given (`exists`). The server-only key helpers (`isTranslationKey`, `isTargetKey`, `englishText`) moved to their own module.
+- Updated dependencies [eb99b3d]
+- Updated dependencies [f3f7243]
+- Updated dependencies [cbb6a10]
+- Updated dependencies [4961a7e]
+- Updated dependencies [b351896]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [1634139]
+  - @prosopo/locale@3.10.0
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/env@3.6.74
+
 ## 3.2.5
 ### Patch Changes
 

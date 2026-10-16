@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/cypress-shared",
-	"version": "2.8.153",
+	"version": "2.8.154",
 	"private": true,
 	"type": "module",
 	"main": "dist/index.js",
