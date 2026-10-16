@@ -1,5 +1,10 @@
 # @prosopo/fingerprint
 
+## 2.7.63
+### Patch Changes
+
+  - @prosopo/types@5.16.1
+
 ## 2.7.62
 ### Patch Changes
 

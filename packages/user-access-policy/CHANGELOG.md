@@ -1,5 +1,12 @@
 # @prosopo/user-access-policy
 
+## 3.15.2
+### Patch Changes
+
+  - @prosopo/common@3.2.1
+  - @prosopo/types@5.16.1
+  - @prosopo/api@4.7.1
+
 ## 3.15.1
 ### Patch Changes
 

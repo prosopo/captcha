@@ -1,5 +1,11 @@
 # @prosopo/keyring
 
+## 2.10.6
+### Patch Changes
+
+  - @prosopo/common@3.2.1
+  - @prosopo/types@5.16.1
+
 ## 2.10.5
 ### Patch Changes
 

@@ -1,5 +1,11 @@
 # @prosopo/load-balancer
 
+## 2.11.10
+### Patch Changes
+
+  - @prosopo/common@3.2.1
+  - @prosopo/types@5.16.1
+
 ## 2.11.9
 ### Patch Changes
 
