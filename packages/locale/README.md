@@ -31,8 +31,13 @@ Each language has one file per i18next namespace (`NAMESPACES` in
   `packages/common/src/error.ts`), so the widget has English for every string
   it shows. The bundle build copies `widget.json` whole, rather than stripping
   keys its code never names (`packages/procaptcha-bundle/vite.config.ts`).
-- `englishText(key)` reads English from the bundled catalogues, whatever
-  language i18next is in.
+- `englishText(key)`, `isTranslationKey` and `isTargetKey`
+  (`src/serverTranslationKeys.ts`) import every English catalogue, so only
+  server code calls them. They read English whatever language i18next is in.
+  Code that also runs in the widget, such as `ProsopoError`'s message
+  translation, asks the i18n instance instead (`canTranslate`, which uses
+  `exists`). That keeps `target.json` and `translation.json` out of the widget
+  bundle.
 - A section moves between files by moving it in every language. The tests in
   `src/tests/locales.unit.test.ts` and `src/tests/catalogues.test-d.ts` fail on
   a file whose keys differ from English's.

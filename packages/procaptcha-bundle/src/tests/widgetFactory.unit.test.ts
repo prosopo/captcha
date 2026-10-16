@@ -33,6 +33,7 @@ const i18nIn = (language: string): Ti18n => ({
 	t: (key: string): string =>
 		key === "WIDGET.LOADING" ? (LOADING_IN[language] ?? key) : key,
 	changeLanguage: async (): Promise<void> => undefined,
+	exists: (): boolean => false,
 	hasLoadedNamespace: (): boolean => true,
 	on: (): void => undefined,
 	off: (): void => undefined,
@@ -168,6 +169,7 @@ const sharedI18n = (initial: string): Ti18n => {
 			i18n.language = next;
 			for (const listener of listeners) listener();
 		},
+		exists: (): boolean => false,
 		hasLoadedNamespace: (): boolean => true,
 		on: (_event: string, listener: () => void): void => {
 			listeners.add(listener);

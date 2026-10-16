@@ -100,7 +100,7 @@ const callRoute = async (
 		path,
 		headers: {},
 		body,
-		i18n: { t: (key: string): string => key },
+		i18n: { t: (key: string): string => key, exists: (): boolean => false },
 		logger: {
 			info: vi.fn(),
 			warn: vi.fn(),

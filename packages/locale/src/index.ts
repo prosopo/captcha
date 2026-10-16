@@ -37,10 +37,13 @@ export {
 	englishText,
 	isTargetKey,
 	isTranslationKey,
-	isWidgetTranslationKey,
-	NAMESPACES,
 	targetKeys,
 	translationKeys,
+} from "./serverTranslationKeys.js";
+export {
+	canTranslate,
+	isWidgetTranslationKey,
+	NAMESPACES,
 } from "./translationKey.js";
 export type {
 	Namespace,
@@ -52,6 +55,7 @@ export { createTranslator } from "./translator.js";
 export type { Translator } from "./translator.js";
 export type {
 	I18nEvent,
+	I18nLookup,
 	Ti18n,
 	TranslateFn,
 	TranslateOptions,

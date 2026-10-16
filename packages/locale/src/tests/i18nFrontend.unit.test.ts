@@ -240,6 +240,20 @@ describe("translating", () => {
 		);
 	});
 
+	test("exists for a key of the active or the English catalogue only", async () => {
+		const harness = await load({
+			catalogues: { fr: { WIDGET: { I_AM_HUMAN: "Je suis humain" } } },
+		});
+		const i18n = await initialised(harness, "fr");
+
+		expect(i18n.exists("WIDGET.I_AM_HUMAN")).toBe(true);
+		expect(i18n.exists("WIDGET.SELECT_ALL")).toBe(true);
+		expect(i18n.exists("TARGET.owl")).toBe(false);
+		expect(i18n.exists("DATABASE.UNKNOWN")).toBe(false);
+		expect(i18n.exists("Something went wrong.")).toBe(false);
+		expect(i18n.exists("WIDGET")).toBe(false);
+	});
+
 	test("substitutes interpolation values", async () => {
 		const harness = await load({
 			catalogues: {

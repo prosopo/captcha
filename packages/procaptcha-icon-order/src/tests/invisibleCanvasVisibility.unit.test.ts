@@ -71,6 +71,7 @@ const i18nStub = {
 	language: "en",
 	t: (key: string) => key,
 	changeLanguage: vi.fn(),
+	exists: (): boolean => false,
 	hasLoadedNamespace: () => true,
 	on: () => undefined,
 	off: () => undefined,

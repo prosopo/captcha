@@ -15,7 +15,7 @@
 import { VERIFY_FORWARDED_HEADER } from "@prosopo/api";
 import { handleErrors, verifySignature } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
-import type { TranslateFn } from "@prosopo/locale";
+import type { I18nLookup } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
@@ -96,7 +96,7 @@ const VERIFY_PATH_TYPE: Partial<Record<ClientApiPaths, CaptchaType>> = {
 // forwarding a 400 error to `next` (callers must `return` when null).
 const decodeTokenOr400 = (
 	token: string,
-	i18n: { t: TranslateFn },
+	i18n: I18nLookup,
 	logger: Logger,
 	next: NextFunction,
 ): ReturnType<typeof decodeProcaptchaOutput> | null => {

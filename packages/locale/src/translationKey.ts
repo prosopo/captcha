@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import targetEn from "./locales/en/target.json" with { type: "json" };
-import serverEn from "./locales/en/translation.json" with { type: "json" };
 import widgetEn from "./locales/en/widget.json" with { type: "json" };
+import type { I18nLookup } from "./types.js";
+
+// Types only: the widget bundles this module, and the browser has no use for
+// the server and target catalogues (`serverTranslationKeys.ts` reads them).
+type ServerCatalogue = typeof import("./locales/en/translation.json");
+type TargetCatalogue = typeof import("./locales/en/target.json");
 
 /**
  * The catalogue is split into i18next namespaces so the browser downloads only
@@ -35,7 +39,7 @@ export const NAMESPACES = {
 
 export type Namespace = (typeof NAMESPACES)[keyof typeof NAMESPACES];
 
-const translationEn = { ...serverEn, ...widgetEn, ...targetEn };
+type EnglishCatalogue = ServerCatalogue & typeof widgetEn & TargetCatalogue;
 
 export type TranslationNode =
 	| {
@@ -78,8 +82,6 @@ export function getLeafFieldPath(obj: TranslationNode): string[] {
 	}, [] as string[]);
 }
 
-export const translationKeys: string[] = getLeafFieldPath(translationEn);
-
 type LeafPath<Node> = {
 	[Key in keyof Node & string]: Node[Key] extends string
 		? Key
@@ -87,16 +89,10 @@ type LeafPath<Node> = {
 }[keyof Node & string];
 
 /** A leaf path in the English catalogue, so a mistyped key fails to compile. */
-export type TranslationKey = LeafPath<typeof translationEn>;
+export type TranslationKey = LeafPath<EnglishCatalogue>;
 
 /** A key in the widget namespace: the only keys the browser has text for. */
 export type WidgetTranslationKey = LeafPath<typeof widgetEn>;
-
-const translationKeySet: ReadonlySet<string> = new Set(translationKeys);
-
-/** For keys that only exist at runtime, e.g. an error message. */
-export const isTranslationKey = (value: string): value is TranslationKey =>
-	translationKeySet.has(value);
 
 const widgetKeySet: ReadonlySet<string> = new Set(getLeafFieldPath(widgetEn));
 
@@ -106,33 +102,14 @@ export const isWidgetTranslationKey = (
 ): value is WidgetTranslationKey => widgetKeySet.has(value);
 
 /** An image label in the English catalogue, e.g. `owl` for `TARGET.owl`. */
-export type TargetKey = keyof typeof targetEn.TARGET;
-
-export const targetKeys: readonly string[] = Object.keys(targetEn.TARGET);
-
-const targetKeySet: ReadonlySet<string> = new Set(targetKeys);
+export type TargetKey = keyof TargetCatalogue["TARGET"];
 
 /**
- * For a dataset's target, which is only known at runtime. A dataset can carry
- * a label the catalogue does not have yet, so callers must handle `false`.
+ * For a key only known at runtime, e.g. an error message: does this instance
+ * have text for it? Every catalogue has English's keys, so a key it has text
+ * for is a `TranslationKey`.
  */
-export const isTargetKey = (value: string): value is TargetKey =>
-	targetKeySet.has(value);
-
-/**
- * The English text for a key, whatever the request's language. The provider
- * sends it beside translated text the widget cannot look up itself (image
- * labels, server-only errors), so logs and crash reports can be read in
- * English. Read from the bundled catalogues, not i18next, so it cannot depend
- * on which languages the server has loaded.
- */
-export const englishText = (key: TranslationKey): string => {
-	const text: TranslationNode | undefined = key
-		.split(".")
-		.reduce<TranslationNode | undefined>(
-			(node: TranslationNode | undefined, part: string) =>
-				typeof node === "object" ? node[part] : undefined,
-			translationEn,
-		);
-	return typeof text === "string" ? text : key;
-};
+export const canTranslate = (
+	i18n: Pick<I18nLookup, "exists">,
+	value: string,
+): value is TranslationKey => i18n.exists(value);

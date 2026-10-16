@@ -14,7 +14,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
-import { isTranslationKey } from "../translationKey.js";
+import { isTranslationKey } from "../serverTranslationKeys.js";
 
 // Error classes and ResultReason carry a catalogue key. A key with no entry
 // reaches users and logs untranslated, so every one used in the workspace's

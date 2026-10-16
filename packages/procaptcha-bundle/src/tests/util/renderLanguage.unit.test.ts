@@ -47,6 +47,7 @@ const i18n: Ti18n = {
 	isInitialized: true,
 	t: (key: string) => key,
 	changeLanguage: () => Promise.resolve(),
+	exists: (): boolean => false,
 	hasLoadedNamespace: () => true,
 	on: () => undefined,
 	off: () => undefined,
