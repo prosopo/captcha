@@ -64,13 +64,36 @@ describe("detectorPrefetch", () => {
 		expect(assignDetectorBundle).toHaveBeenCalledWith(SITE_KEY);
 	});
 
-	it("is single-use, so a retry does not reuse a stale provider pin", async () => {
+	it("is shareable, so every widget on a page claims the same assignment", async () => {
+		// Previously single-use. That meant a page mounting one widget per form
+		// paid a provider resolve + assign per widget; one production
+		// integration mounts eight, so a page view cost eight assign calls.
+		// Sharing is sound because detectorSessionId binds to a bundleId purely
+		// so the provider can resolve which cipher keys decrypt that widget's
+		// readings, and widgets sharing an assignment run the same bundle.
 		getProcaptchaRandomActiveProvider.mockResolvedValue(provider);
 		assignDetectorBundle.mockResolvedValue({ useProviderBundle: true });
 
 		prefetchDetector(ENV, undefined, SITE_KEY);
 		const first = takePrefetchedDetector(ENV, undefined, SITE_KEY);
 		await (first as Promise<unknown>);
+
+		expect(takePrefetchedDetector(ENV, undefined, SITE_KEY)).toBe(first);
+		expect(getProcaptchaRandomActiveProvider).toHaveBeenCalledTimes(1);
+		expect(assignDetectorBundle).toHaveBeenCalledTimes(1);
+	});
+
+	it("does not hand a failed pin to a later widget", async () => {
+		// The guarantee the old single-use behaviour existed for. It now comes
+		// from dropping the entry on rejection instead, and from customDetectBot
+		// only claiming on a first attempt — a retry re-resolves by construction.
+		getProcaptchaRandomActiveProvider.mockRejectedValue(
+			new Error("no provider"),
+		);
+
+		prefetchDetector(ENV, undefined, SITE_KEY);
+		const first = takePrefetchedDetector(ENV, undefined, SITE_KEY);
+		await (first as Promise<unknown>).catch(() => undefined);
 
 		expect(takePrefetchedDetector(ENV, undefined, SITE_KEY)).toBeUndefined();
 	});
