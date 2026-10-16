@@ -106,4 +106,5 @@ NODE_EXTRA_CA_CERTS=$PWD/certs/ca.crt NODE_ENV=test pnpm exec concurrently \
 over TLS and the signup specs fail with a 500. Drop `--spec` to run every spec the config picks up.
 
 `language.cy.ts` runs the image captcha in Turkish, choosing the language from the browser, from `data-language`, and
-from a `data-language` list, and falls back to English for an unsupported language.
+from a `data-language` list, and falls back to English for an unsupported language. It also runs it in Arabic, from the
+browser and from `data-language`, and checks the widget is laid out right to left (`dir="rtl"` on its host).

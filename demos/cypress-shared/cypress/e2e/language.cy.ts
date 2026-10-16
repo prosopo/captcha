@@ -39,27 +39,49 @@ interface Case {
 	name: string;
 	browser: readonly string[];
 	attribute?: string;
-	expected: "tr" | "en";
+	expected: "tr" | "ar" | "en";
+	direction: "ltr" | "rtl";
 }
 
 const cases: readonly Case[] = [
-	{ name: "the browser's language", browser: ["tr-TR", "tr"], expected: "tr" },
+	{
+		name: "the browser's language",
+		browser: ["tr-TR", "tr"],
+		expected: "tr",
+		direction: "ltr",
+	},
 	{
 		name: "data-language over the browser's language",
 		browser: ["en-GB", "en"],
 		attribute: "tr",
 		expected: "tr",
+		direction: "ltr",
 	},
 	{
 		name: "the first supported code in a data-language list",
 		browser: ["en-GB"],
 		attribute: "xx, tr",
 		expected: "tr",
+		direction: "ltr",
 	},
 	{
 		name: "English for an unsupported browser language",
 		browser: ["xx"],
 		expected: "en",
+		direction: "ltr",
+	},
+	{
+		name: "an Arabic browser, laid out right to left",
+		browser: ["ar-EG", "ar"],
+		expected: "ar",
+		direction: "rtl",
+	},
+	{
+		name: "data-language=ar on an English browser, laid out right to left",
+		browser: ["en-GB", "en"],
+		attribute: "ar",
+		expected: "ar",
+		direction: "rtl",
 	},
 ];
 
@@ -111,7 +133,7 @@ describe("Widget language", () => {
 	});
 
 	for (const testCase of cases) {
-		it(`renders in ${testCase.expected} from ${testCase.name}`, () => {
+		it(`renders in ${testCase.expected} (${testCase.direction}) from ${testCase.name}`, () => {
 			const page: string = Cypress.expose("default_page");
 			const language = testCase.expected;
 			if (testCase.attribute !== undefined) {
@@ -140,6 +162,11 @@ describe("Widget language", () => {
 						timeout: 15000,
 					}).should("be.visible");
 					getWidgetElement(checkboxClass).should("be.visible");
+					cy.get("prosopo-procaptcha").should(
+						"have.attr",
+						"dir",
+						testCase.direction,
+					);
 
 					cy.intercept("POST", "**/prosopo/provider/client/captcha/image").as(
 						"imageChallenge",

@@ -73,6 +73,39 @@ host's own. Its language comes only from the attribute or the browser.
 - Each parent catalogue (`zh`, `pt`) starts as a copy of its variant. People
   who read the variant generally read the parent too.
 
+## Text direction
+
+`getLanguageDirection` (`src/direction.ts`) says whether the chosen language is
+written right to left. The bundle sets the answer as `dir` on the widget's host
+(`packages/procaptcha-bundle/src/util/widgetFactory.ts`), and the widget's
+styles mirror only under that `dir`, never under the page's.
+
+- A tag is right to left if CLDR 48 says so or the browser's
+  `Intl.Locale#getTextInfo()` (older engines: `textInfo`) does. MDN listed
+  `getTextInfo` as Baseline 2026, newly available (checked 2026-10-16), so the
+  lists are what older browsers rely on.
+- The lists hold every right-to-left script (37) and language (286, with
+  deprecated and three-letter aliases such as `iw` and `per`), and 16
+  language-region pairs whose usual script is Arabic (`pa-PK`, `uz-AF`). They
+  cover languages we have no catalogue for, so adding one needs no change to
+  them. They were generated from cldr-core 48.0.0 (`likelySubtags.json`,
+  `aliases.json`) and the scripts Node 24's ICU 78.3 reports as right to left.
+- Cost: `direction.ts` is 1,187 bytes minified and gzipped, against 167 for
+  the ten-language version it replaced (esbuild `--minify`, gzip -9,
+  2026-10-16). Rejected: trimming the lists to languages we have catalogues
+  for, which would need a change here for every new catalogue.
+- An explicit script wins: `pa-Arab` is right to left, `az-Latn-IR` left to
+  right. Subtags after an extension singleton (`-u-nu-arab`) are ignored.
+- The direction follows the language the widget resolved, so a site asking
+  for a language we have no catalogue for gets English, left to right.
+- `src/tests/direction.unit.test.ts` compares the lists with Node's ICU for
+  every two- and three-letter language code and the scripts they use. When
+  Node moves to a newer CLDR, it fails and names the codes to add or remove.
+  It also checks the lists cover i18next 26.4.2's right-to-left codes, except
+  the ones CLDR writes left to right.
+- Rejected: i18next's `dir()`. It does the same Intl-then-list lookup, but
+  i18next is not in the widget (below).
+
 ## Sending it to the provider
 
 The provider translates the challenge text (the image dataset's labels) itself.
