@@ -12,9 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { stringifyBigInts } from "@prosopo/util";
-
 export type LogObject = object;
+
+const CIRCULAR = "[Circular]";
+
+/**
+ * JSON.stringify replacer that writes bigints as strings and replaces a
+ * reference back to an enclosing object with "[Circular]" instead of throwing.
+ * Tracks the ancestor chain, so an object shared by two siblings still
+ * serialises in full.
+ */
+const jsonSafeReplacer = (): ((
+	this: unknown,
+	key: string,
+	value: unknown,
+) => unknown) => {
+	const ancestors: unknown[] = [];
+	return function (this: unknown, _key: string, value: unknown): unknown {
+		if (typeof value === "bigint") return value.toString();
+		if (typeof value !== "object" || value === null) return value;
+		while (ancestors.length > 0 && ancestors[ancestors.length - 1] !== this) {
+			ancestors.pop();
+		}
+		if (ancestors.includes(value)) return CIRCULAR;
+		ancestors.push(value);
+		return value;
+	};
+};
 export type LogRecord = {
 	err?: unknown;
 	data?: LogObject;
@@ -297,10 +321,14 @@ export class NativeLogger implements Logger {
 		return this.level;
 	}
 
-	private unpackError(err: Error | object): {
+	private unpackError(
+		err: Error | object,
+		seen: Set<object> = new Set(),
+	): {
 		msg: string;
 		data: Record<string, unknown>;
 	} {
+		seen.add(err);
 		const e = err as Record<string, unknown>;
 		const data: Record<string, unknown> = {};
 
@@ -317,11 +345,13 @@ export class NativeLogger implements Logger {
 		// Recursively unpack the cause chain
 		const cause = e.cause;
 		if (cause !== undefined) {
-			if (
+			if (typeof cause === "object" && cause !== null && seen.has(cause)) {
+				data.cause = CIRCULAR;
+			} else if (
 				cause instanceof Error ||
 				(typeof cause === "object" && cause !== null)
 			) {
-				data.cause = this.unpackError(cause as Error | object);
+				data.cause = this.unpackError(cause as Error | object, seen);
 			} else {
 				data.cause = cause;
 			}
@@ -412,10 +442,13 @@ export class NativeLogger implements Logger {
 				dest(baseRecord);
 			}
 		} else {
-			// conversion to avoid "TypeError: Do not know how to serialize a BigInt" in JSON.stringify
-			const logRecord = stringifyBigInts(baseRecord) as object;
-
-			const output = JSON.stringify(logRecord, null, this.pretty);
+			// Serialise through a replacer rather than rewriting the record: the
+			// record holds the caller's own objects, which must not be mutated.
+			const output = JSON.stringify(
+				baseRecord,
+				jsonSafeReplacer(),
+				this.pretty,
+			);
 			dest(output);
 		}
 	}
