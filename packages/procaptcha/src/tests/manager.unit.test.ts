@@ -74,9 +74,17 @@ import {
  */
 const mocks = vi.hoisted(() => {
 	const providerApiConstructions: { url: string; siteKey: string }[] = [];
+	const providerApiHeaders: (Readonly<Record<string, string>> | undefined)[] =
+		[];
 	class ProviderApiMock {
-		constructor(url: string, siteKey: string) {
+		constructor(
+			url: string,
+			siteKey: string,
+			_timeoutMs?: number,
+			defaultHeaders?: Readonly<Record<string, string>>,
+		) {
 			providerApiConstructions.push({ url, siteKey });
+			providerApiHeaders.push(defaultHeaders);
 		}
 	}
 
@@ -144,6 +152,7 @@ const mocks = vi.hoisted(() => {
 
 	return {
 		providerApiConstructions,
+		providerApiHeaders,
 		ProviderApiMock,
 		getAccount,
 		ExtensionMock,
@@ -296,6 +305,7 @@ const wasUpdated = (harness: Harness, key: keyof ProcaptchaState): boolean =>
 beforeEach(() => {
 	vi.clearAllMocks();
 	mocks.providerApiConstructions.length = 0;
+	mocks.providerApiHeaders.length = 0;
 	mocks.captchaApiConstructions.length = 0;
 	mocks.extensionLoader.mockResolvedValue(mocks.ExtensionMock);
 	mocks.getAccount.mockResolvedValue(account(signRawMock));
@@ -364,6 +374,22 @@ describe("start", () => {
 		});
 		await harness.manager.start();
 		expect(lastUpdate(harness, "sessionId")).toBe("session-1");
+	});
+
+	test("sends the site's language to the provider", async () => {
+		vi.stubGlobal("navigator", { languages: ["de"] });
+		const harness = build({ configInput: config({ language: "tr" }) });
+		await harness.manager.start();
+		vi.unstubAllGlobals();
+		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr" }]);
+	});
+
+	test("sends the browser's languages when the site set none", async () => {
+		vi.stubGlobal("navigator", { languages: ["tr-TR", "en"] });
+		const harness = build();
+		await harness.manager.start();
+		vi.unstubAllGlobals();
+		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr-TR,en" }]);
 	});
 
 	test("carries the frictionless provider through instead of picking one", async () => {

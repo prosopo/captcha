@@ -15,8 +15,8 @@
 import path from "node:path";
 import i18n, { type BackendModule, type NewableModule } from "i18next";
 import FSBackendCjs from "i18next-fs-backend/cjs";
-import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
 import { i18nSharedOptions } from "./i18SharedOptions.js";
+import { createRequestLanguageDetector } from "./requestLanguageDetector.js";
 import { isServerSide } from "./util.js";
 
 const loadPath =
@@ -49,12 +49,9 @@ export function initializeI18n(
 	i18nLoadedCallback?: (value: typeof i18n) => void,
 ) {
 	if (!i18n.isInitialized && isServerSide()) {
-		const lngDetector = new MiddlewareLanguageDetector(null, {
-			order: ["header", "query", "cookie"],
-		});
 		i18n
 			.use(fsBackend())
-			.use(lngDetector) // this line should switch the language to the one the user reports in the Accept-Language header
+			.use(createRequestLanguageDetector())
 			.init({
 				...i18nSharedOptions,
 				ns: ["translation"],

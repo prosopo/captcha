@@ -16,8 +16,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { Ti18n } from "../types.js";
 
 // The module keeps a singleton, so every test re-imports it under a fresh
-// registry. `fetch`, `localStorage`, `navigator.languages` and `document.cookie`
-// are the module's four inputs and are all stubbed per test.
+// registry. `fetch` and `navigator.languages` are the module's inputs;
+// `localStorage` and `document.cookie` are stubbed to prove it leaves them alone.
 
 type Catalogues = Record<string, Record<string, unknown>>;
 
@@ -113,27 +113,6 @@ describe("choosing a language", () => {
 		expect(i18n.language).toBe("fr");
 	});
 
-	test("prefers a cookie over the browser", async () => {
-		const harness = await load({
-			catalogues: { es: {}, en: {} },
-			cookie: "es",
-			stored: "de",
-			languages: ["it"],
-		});
-
-		expect((await initialised(harness)).language).toBe("es");
-	});
-
-	test("prefers stored over the browser", async () => {
-		const harness = await load({
-			catalogues: { de: {}, en: {} },
-			stored: "de",
-			languages: ["it"],
-		});
-
-		expect((await initialised(harness)).language).toBe("de");
-	});
-
 	test("falls back to the browser when nothing is remembered", async () => {
 		const harness = await load({
 			catalogues: { it: {}, en: {} },
@@ -160,15 +139,63 @@ describe("choosing a language", () => {
 		expect((await initialised(harness)).language).toBe("en");
 	});
 
-	test("remembers the language in both cookie and storage", async () => {
-		// Kept from the i18next language detector: a visitor who has picked a
-		// language keeps it across pages that embed the widget.
-		const harness = await load({ catalogues: { fr: {}, en: {} } });
+	test("ignores a language the host page stored in cookie or storage", async () => {
+		// The i18next cookie and `i18nextLng` key belong to the host site's own
+		// i18n, not to the visitor's choice of widget language.
+		const harness = await load({
+			catalogues: { es: {}, de: {}, it: {}, en: {} },
+			cookie: "es",
+			stored: "de",
+			languages: ["it"],
+		});
 
-		await initialised(harness, "fr");
+		expect((await initialised(harness)).language).toBe("it");
+	});
 
-		expect(harness.stored().i18nextLng).toBe("fr");
-		expect(harness.cookie()).toContain("i18next=fr");
+	test("writes nothing to cookie or storage", async () => {
+		const harness = await load({ catalogues: { fr: {}, de: {}, en: {} } });
+
+		const i18n = await initialised(harness, "fr");
+		await i18n.changeLanguage("de");
+
+		expect(harness.stored()).toEqual({});
+		expect(harness.cookie()).toBe("");
+	});
+
+	test("takes the first browser language with a catalogue", async () => {
+		const harness = await load({
+			catalogues: { it: {}, en: {} },
+			languages: ["xx", "it-IT", "fr"],
+		});
+
+		expect((await initialised(harness)).language).toBe("it");
+	});
+
+	test("takes the first supported code from a comma list", async () => {
+		const harness = await load({
+			catalogues: { tr: {}, en: {} },
+			languages: ["de"],
+		});
+
+		expect((await initialised(harness, "xx, tr-TR, fr")).language).toBe("tr");
+	});
+
+	test("falls back to the browser when no requested code is supported", async () => {
+		const harness = await load({
+			catalogues: { de: {}, en: {} },
+			languages: ["de"],
+		});
+
+		expect((await initialised(harness, "xx")).language).toBe("de");
+	});
+
+	test("reads Norwegian Bokmål as Norwegian", async () => {
+		const harness = await load({
+			catalogues: { no: {}, en: {} },
+			languages: ["nb-NO"],
+		});
+
+		expect((await initialised(harness)).language).toBe("no");
 	});
 });
 

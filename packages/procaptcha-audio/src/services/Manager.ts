@@ -15,6 +15,7 @@
 import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
+import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	buildClientMetaData,
@@ -238,7 +239,12 @@ export const Manager = (
 				const providerUrl = getRandomProviderResponse.provider.url;
 				previousProviderUrl = providerUrl;
 
-				const providerApi = new ProviderApi(providerUrl, getDappAccount());
+				const providerApi = new ProviderApi(
+					providerUrl,
+					getDappAccount(),
+					undefined,
+					widgetLanguageHeaders(getConfig().language),
+				);
 
 				// The provider would reject a spent session, so go straight to the
 				// re-mint recovery the wrapper listens for.

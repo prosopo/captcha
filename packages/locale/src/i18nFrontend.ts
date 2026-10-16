@@ -14,13 +14,15 @@
 
 import { flatten } from "@prosopo/util";
 import { i18nSharedOptions } from "./i18SharedOptions.js";
+import {
+	browserLanguages,
+	matchLanguage,
+	resolveLanguageList,
+} from "./languagePreference.js";
 import type { I18nEvent, Ti18n, TranslateOptions } from "./types.js";
 
 const NAMESPACE = "translation";
 const FALLBACK_LANGUAGE = i18nSharedOptions.fallbackLng;
-const STORAGE_KEY = "i18nextLng";
-const COOKIE_KEY = "i18next";
-const COOKIE_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
 
 /**
  * How long to wait for a catalogue before rendering untranslated.
@@ -32,8 +34,6 @@ const COOKIE_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
 const CATALOGUE_FETCH_TIMEOUT_MS = 10_000;
 
 type Catalogue = Record<string, string>;
-
-const SUPPORTED_LANGUAGES: readonly string[] = i18nSharedOptions.supportedLngs;
 
 /**
  * Locale JSON sits next to the bundle that asked for it. The widget is embedded
@@ -47,78 +47,12 @@ const catalogueUrl = (language: string): string => {
 };
 
 /**
- * `en-GB` is not in the catalogue list but `en` is, so a regional tag resolves
- * to its base language rather than falling all the way back to English.
+ * Only the browser's own list. Nothing is read from or written to cookies or
+ * storage: the widget runs on other people's sites, where the i18next cookie
+ * and `i18nextLng` key may belong to the site's own i18n.
  */
-const resolveLanguage = (candidate: string | undefined): string | undefined => {
-	if (!candidate) {
-		return undefined;
-	}
-	if (SUPPORTED_LANGUAGES.includes(candidate)) {
-		return candidate;
-	}
-	const base = candidate.split("-")[0];
-	return base && SUPPORTED_LANGUAGES.includes(base) ? base : undefined;
-};
-
-const readCookie = (): string | undefined => {
-	try {
-		const match = document.cookie.match(
-			new RegExp(`(?:^|; )${COOKIE_KEY}=([^;]*)`),
-		);
-		return match?.[1] ? decodeURIComponent(match[1]) : undefined;
-	} catch {
-		return undefined;
-	}
-};
-
-const readStorage = (): string | undefined => {
-	try {
-		return localStorage.getItem(STORAGE_KEY) ?? undefined;
-	} catch {
-		return undefined;
-	}
-};
-
-const navigatorLanguages = (): readonly string[] => {
-	try {
-		return navigator.languages?.length
-			? navigator.languages
-			: [navigator.language];
-	} catch {
-		return [];
-	}
-};
-
-/**
- * Cookie and localStorage are both written, matching what the widget did when
- * i18next-browser-languagedetector handled this, so a visitor's choice survives
- * across pages that embed the widget. Either store can throw in a sandboxed
- * iframe or with third-party storage blocked; neither is load-bearing.
- */
-const cacheLanguage = (language: string): void => {
-	try {
-		localStorage.setItem(STORAGE_KEY, language);
-	} catch {
-		// storage unavailable — the language is still active for this page
-	}
-	try {
-		document.cookie = `${COOKIE_KEY}=${encodeURIComponent(language)};max-age=${COOKIE_MAX_AGE_SECONDS};path=/`;
-	} catch {
-		// cookies unavailable — as above
-	}
-};
-
-const detectLanguage = (): string => {
-	const candidates = [readCookie(), readStorage(), ...navigatorLanguages()];
-	for (const candidate of candidates) {
-		const resolved = resolveLanguage(candidate);
-		if (resolved) {
-			return resolved;
-		}
-	}
-	return FALLBACK_LANGUAGE;
-};
+const detectLanguage = (): string =>
+	matchLanguage(browserLanguages()) ?? FALLBACK_LANGUAGE;
 
 const fetchCatalogue = async (language: string): Promise<Catalogue> => {
 	const controller = new AbortController();
@@ -157,7 +91,7 @@ interface BrowserI18n extends Ti18n {
 const createBrowserI18n = (requested?: string): BrowserI18n => {
 	const catalogues = new Map<string, Catalogue>();
 	const listeners = new Map<I18nEvent, Set<() => void>>();
-	let language = resolveLanguage(requested) ?? detectLanguage();
+	let language = resolveLanguageList(requested) ?? detectLanguage();
 	let initialised = false;
 
 	const emit = (event: I18nEvent): void => {
@@ -185,7 +119,6 @@ const createBrowserI18n = (requested?: string): BrowserI18n => {
 	const lookup = (candidate: string, key: string): string | undefined =>
 		catalogues.get(candidate)?.[key];
 
-	cacheLanguage(language);
 	const loading = loadCatalogues(language).then(() => {
 		initialised = true;
 		emit("initialized");
@@ -210,10 +143,9 @@ const createBrowserI18n = (requested?: string): BrowserI18n => {
 		hasLoadedNamespace: (namespace: string): boolean =>
 			namespace === NAMESPACE && catalogues.has(language),
 		changeLanguage: async (next: string): Promise<BrowserI18n> => {
-			const resolved = resolveLanguage(next) ?? FALLBACK_LANGUAGE;
+			const resolved = resolveLanguageList(next) ?? FALLBACK_LANGUAGE;
 			if (resolved !== language) {
 				language = resolved;
-				cacheLanguage(resolved);
 				await loadCatalogues(resolved);
 				emit("loaded");
 				emit("languageChanged");

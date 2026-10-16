@@ -14,6 +14,7 @@
 
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoEnvError } from "@prosopo/common";
+import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	getProcaptchaRandomActiveProvider,
@@ -214,6 +215,8 @@ const customDetectBot: BotDetectionFunction = async (
 	const providerApi = new ProviderApi(
 		provider.provider.url,
 		config.account.address,
+		undefined,
+		widgetLanguageHeaders(config.language),
 	);
 
 	// Ask the provider for a per-session detector bundle. The detector lives ONLY
