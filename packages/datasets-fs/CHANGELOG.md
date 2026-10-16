@@ -1,5 +1,13 @@
 # @prosopo/datasets-fs
 
+## 3.0.147
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+- Updated dependencies [0bd0230]
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+
 ## 3.0.146
 ### Patch Changes
 

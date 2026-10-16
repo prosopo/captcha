@@ -1,5 +1,54 @@
 # @prosopo/provider
 
+## 5.19.0
+### Minor Changes
+
+- f8eddf7: Image challenges now send each label's key (`targetKey`) and English text (`targetEn`) beside the translated `target`, and say which `language` they were translated into. Error responses add `messageEn` when the widget has no text of its own for the error's key. All new fields are additive. New `englishText(key)` in `@prosopo/locale`.
+
+### Patch Changes
+
+- aec7857: Type-check translation keys on the server and every language file.
+  
+  - `req.t` and `req.i18n.t` only accept keys from the English catalogue, so a typo fails to compile.
+  - New `TargetKey`, `targetKeys` and `isTargetKey` for image labels. An image label with no translation now shows the English label (and logs a warning) instead of the raw `TARGET.<label>` key.
+  - Every language file must have the English file's keys, checked by `typecheck`.
+  - `@prosopo/server` returns the key instead of `undefined` for its status text when i18next is not initialised.
+  - Removed the last `@ts-ignore` in `@prosopo/locale`.
+- 0bd0230: The widget bundle no longer contains the English image labels and server error strings. `ProsopoError` used to check message keys against every English catalogue, which pulled all of them into the widget. It now asks the i18n instance it was given (`exists`). The server-only key helpers (`isTranslationKey`, `isTargetKey`, `englishText`) moved to their own module.
+- 6b11b15: The widget now tells the provider which language to use, so the challenge text comes back in the user's language.
+  
+  - The widget sends its language in a `Prosopo-Lang` header on every provider request. It uses the site's `data-language` if set, otherwise the browser's languages. The browser's own `Accept-Language` is left untouched, so bot detection still sees the real value.
+  - `data-language` may list several codes (`"xx, tr"`). The first one we support wins. If none are supported, the widget uses the browser's language instead of English.
+  - The provider picks `?lng=`, then `Prosopo-Lang`, then `Accept-Language`, then English.
+  - A variant uses its parent's catalogue (`zh-SG` → `zh`, `pt-PT` → `pt`). Traditional Chinese (`zh-TW`, `zh-HK`, `zh-Hant`) skips the Simplified `zh` catalogue and moves on to the reader's next language. `nb`/`nn` map to `no`, `in` to `id` and `jw` to `jv`.
+  - The widget no longer reads or writes an `i18next` cookie or local storage key on the host site.
+  - `ApiClient`/`ProviderApi` take optional default headers as a 4th constructor argument.
+- Updated dependencies [eb99b3d]
+- Updated dependencies [f3f7243]
+- Updated dependencies [cbb6a10]
+- Updated dependencies [4961a7e]
+- Updated dependencies [b351896]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [1634139]
+  - @prosopo/locale@3.10.0
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/api-express-router@3.2.6
+  - @prosopo/api@4.7.0
+  - @prosopo/types-database@5.10.3
+  - @prosopo/database@4.2.4
+  - @prosopo/datasets@3.2.5
+  - @prosopo/env@3.6.74
+  - @prosopo/ipinfo@0.4.18
+  - @prosopo/keyring@2.10.5
+  - @prosopo/load-balancer@2.11.9
+  - @prosopo/types-env@2.11.20
+  - @prosopo/user-access-policy@3.15.1
+
 ## 5.18.0
 ### Minor Changes
 

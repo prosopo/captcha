@@ -1,5 +1,22 @@
 # @prosopo/scripts
 
+## 3.1.201
+### Patch Changes
+
+- f8eddf7: Split each language's catalogue into `widget.json`, `target.json` and `translation.json`. The widget bundles English and downloads only the active language's `widget.json`. The provider loads all three. Server i18n now finishes loading every file before it reports ready. Removed two broken, unused scripts (`findUnused`, `testImport`) and the dependencies only they used.
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/provider@5.19.0
+  - @prosopo/cli@3.8.31
+  - @prosopo/datasets@3.2.5
+  - @prosopo/env@3.6.74
+  - @prosopo/keyring@2.10.5
+  - @prosopo/types-env@2.11.20
+
 ## 3.1.200
 ### Patch Changes
 

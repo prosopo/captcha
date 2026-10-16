@@ -1,5 +1,25 @@
 # @prosopo/types
 
+## 5.16.0
+### Minor Changes
+
+- f8eddf7: Image challenges now send each label's key (`targetKey`) and English text (`targetEn`) beside the translated `target`, and say which `language` they were translated into. Error responses add `messageEn` when the widget has no text of its own for the error's key. All new fields are additive. New `englishText(key)` in `@prosopo/locale`.
+
+### Patch Changes
+
+- Updated dependencies [eb99b3d]
+- Updated dependencies [f3f7243]
+- Updated dependencies [cbb6a10]
+- Updated dependencies [4961a7e]
+- Updated dependencies [b351896]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [1634139]
+  - @prosopo/locale@3.10.0
+
 ## 5.15.1
 ### Patch Changes
 
