@@ -71,3 +71,17 @@ const translationKeySet: ReadonlySet<string> = new Set(translationKeys);
 /** For keys that only exist at runtime, e.g. an error message. */
 export const isTranslationKey = (value: string): value is TranslationKey =>
 	translationKeySet.has(value);
+
+/** An image label in the English catalogue, e.g. `owl` for `TARGET.owl`. */
+export type TargetKey = keyof typeof translationEn.TARGET;
+
+export const targetKeys: readonly string[] = Object.keys(translationEn.TARGET);
+
+const targetKeySet: ReadonlySet<string> = new Set(targetKeys);
+
+/**
+ * For a dataset's target, which is only known at runtime. A dataset can carry
+ * a label the catalogue does not have yet, so callers must handle `false`.
+ */
+export const isTargetKey = (value: string): value is TargetKey =>
+	targetKeySet.has(value);

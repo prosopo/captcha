@@ -14,12 +14,12 @@
 
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
+import type { TranslateFn } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { decodeGoogleTranslateHost, parseUrl } from "@prosopo/util";
 import { validateAddress } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
-import type { TFunction } from "i18next";
 import { ZodError } from "zod";
 import { Tasks } from "../tasks/index.js";
 import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
@@ -137,7 +137,7 @@ const googleTranslateOrigins = (origin: string): string[] => {
 };
 
 const siteKeyNotRegisteredError = (
-	i18n: { t: TFunction<"translation", undefined> },
+	i18n: { t: TranslateFn },
 	dapp: string,
 	logger?: Logger,
 ) => {
@@ -149,7 +149,7 @@ const siteKeyNotRegisteredError = (
 };
 
 const invalidSiteKeyError = (
-	i18n: { t: TFunction<"translation", undefined> },
+	i18n: { t: TranslateFn },
 	siteKey: string,
 	logger?: Logger,
 ) => {
@@ -161,7 +161,7 @@ const invalidSiteKeyError = (
 };
 
 const unauthorizedOriginError = (
-	i18n: { t: TFunction<"translation", undefined> },
+	i18n: { t: TranslateFn },
 	origin?: string,
 	logger?: Logger,
 ) => {
@@ -173,7 +173,7 @@ const unauthorizedOriginError = (
 };
 
 const siteKeyInvalidDomainError = (
-	i18n: { t: TFunction<"translation", undefined> },
+	i18n: { t: TranslateFn },
 	dapp: string,
 	domain: string,
 	logger?: Logger,

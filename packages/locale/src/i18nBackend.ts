@@ -13,8 +13,8 @@
 // limitations under the License.
 
 import path from "node:path";
-import i18n from "i18next";
-import FSBackend from "i18next-fs-backend/cjs"; // https://github.com/i18next/i18next-fs-backend/issues/57
+import i18n, { type BackendModule, type NewableModule } from "i18next";
+import FSBackendCjs from "i18next-fs-backend/cjs";
 import { LanguageDetector as MiddlewareLanguageDetector } from "i18next-http-middleware";
 import { i18nSharedOptions } from "./i18SharedOptions.js";
 import { isServerSide } from "./util.js";
@@ -25,6 +25,26 @@ const loadPath =
 		"",
 	);
 
+// The ESM entry uses top-level await, which breaks every non-ESM browser
+// bundle that reaches this file through loadI18next's dynamic import (the
+// Cypress spec bundles are UMD). The CJS entry has none, but its .d.ts
+// declares an ES default export while the file sets `module.exports` to the
+// class itself (https://github.com/i18next/i18next-fs-backend/issues/57), so
+// the value is checked rather than trusted.
+const isBackendClass = (
+	value: unknown,
+): value is NewableModule<BackendModule> =>
+	typeof value === "function" && "type" in value && value.type === "backend";
+
+export const fsBackend = (
+	loaded: unknown = FSBackendCjs,
+): NewableModule<BackendModule> => {
+	if (!isBackendClass(loaded)) {
+		throw new Error("i18next-fs-backend/cjs did not export a backend class");
+	}
+	return loaded;
+};
+
 export function initializeI18n(
 	i18nLoadedCallback?: (value: typeof i18n) => void,
 ) {
@@ -33,8 +53,7 @@ export function initializeI18n(
 			order: ["header", "query", "cookie"],
 		});
 		i18n
-			// @ts-ignore https://github.com/i18next/i18next-fs-backend/issues/57
-			.use(FSBackend)
+			.use(fsBackend())
 			.use(lngDetector) // this line should switch the language to the one the user reports in the Accept-Language header
 			.init({
 				...i18nSharedOptions,

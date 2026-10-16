@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { TranslateFn } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
 import type { IPInfoResponse } from "@prosopo/types";
-import type { TFunction } from "i18next";
 export interface AugmentedRequest {
-	t: TFunction;
+	t: TranslateFn;
 	i18n: {
-		t: TFunction;
+		t: TranslateFn;
 	};
 	user?: string;
 	siteKey?: string;
@@ -66,9 +66,9 @@ export interface AugmentedRequest {
 declare global {
 	namespace Express {
 		interface Request {
-			t: TFunction;
+			t: TranslateFn;
 			i18n: {
-				t: TFunction;
+				t: TranslateFn;
 			};
 			user?: string;
 			siteKey?: string;

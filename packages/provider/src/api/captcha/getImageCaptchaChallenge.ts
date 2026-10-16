@@ -39,6 +39,7 @@ import {
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
+import { localiseTarget } from "./localiseTarget.js";
 import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
 import { getSealedAssetsResolver } from "./sealedAssetsResolver.js";
 import { getSignedAssetsResolver } from "./signedAssetsResolver.js";
@@ -307,7 +308,7 @@ export default (
 				[ApiParams.status]: "ok",
 				[ApiParams.captchas]: taskData.captchas.map((captcha: Captcha) => ({
 					...captcha,
-					target: req.t(`TARGET.${captcha.target}`),
+					target: localiseTarget(req.t, captcha.target, req.logger),
 					items: captcha.items.map((item) =>
 						parseCaptchaAssets(item, assetsResolver),
 					),

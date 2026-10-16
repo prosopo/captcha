@@ -19,7 +19,9 @@ import translationEn from "../locales/en/translation.json" with {
 import {
 	type TranslationNode,
 	getLeafFieldPath,
+	isTargetKey,
 	isTranslationKey,
+	targetKeys,
 	translationKeys,
 } from "../translationKey.js";
 
@@ -151,5 +153,36 @@ describe("isTranslationKey", () => {
 		expect(isTranslationKey("WIDGET.I_AM_HUMANN")).toBe(false);
 		expect(isTranslationKey("Invalid site key")).toBe(false);
 		expect(isTranslationKey("")).toBe(false);
+	});
+});
+
+describe("targetKeys", () => {
+	test("is every TARGET label of the English catalogue", () => {
+		expect(targetKeys).toEqual(Object.keys(translationEn.TARGET));
+	});
+
+	test("is the TARGET leaves of translationKeys, without the prefix", () => {
+		const fromKeys: string[] = translationKeys
+			.filter((key: string) => key.startsWith("TARGET."))
+			.map((key: string) => key.slice("TARGET.".length));
+		expect(new Set(targetKeys)).toEqual(new Set(fromKeys));
+	});
+});
+
+describe("isTargetKey", () => {
+	test("accepts a label, including a hyphenated one", () => {
+		expect(isTargetKey("owl")).toBe(true);
+		expect(isTargetKey("fire-hydrant")).toBe(true);
+	});
+
+	test("rejects the prefixed key, a section, an unknown label and the empty string", () => {
+		expect(isTargetKey("TARGET.owl")).toBe(false);
+		expect(isTargetKey("TARGET")).toBe(false);
+		expect(isTargetKey("not-a-label")).toBe(false);
+		expect(isTargetKey("")).toBe(false);
+	});
+
+	test("is case-sensitive, as the dataset labels are", () => {
+		expect(isTargetKey("Owl")).toBe(false);
 	});
 });

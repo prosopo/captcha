@@ -15,6 +15,7 @@
 import { VERIFY_FORWARDED_HEADER } from "@prosopo/api";
 import { handleErrors, verifySignature } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
+import type { TranslateFn } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
@@ -40,7 +41,6 @@ import express, {
 	type Response,
 	type Router,
 } from "express";
-import type { TFunction } from "i18next";
 import type { AudioCaptchaManager } from "../tasks/audioCaptcha/audioTasks.js";
 import type { IconOrderCaptchaManager } from "../tasks/iconOrderCaptcha/iconOrderTasks.js";
 import type { PuzzleCaptchaManager } from "../tasks/puzzleCaptcha/puzzleTasks.js";
@@ -96,7 +96,7 @@ const VERIFY_PATH_TYPE: Partial<Record<ClientApiPaths, CaptchaType>> = {
 // forwarding a 400 error to `next` (callers must `return` when null).
 const decodeTokenOr400 = (
 	token: string,
-	i18n: { t: TFunction },
+	i18n: { t: TranslateFn },
 	logger: Logger,
 	next: NextFunction,
 ): ReturnType<typeof decodeProcaptchaOutput> | null => {

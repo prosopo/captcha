@@ -961,9 +961,6 @@ importers:
       express:
         specifier: 4.22.2
         version: 4.22.2(supports-color@8.1.1)
-      i18next:
-        specifier: 26.4.2
-        version: 26.4.2(typescript@5.6.2)
       uuid:
         specifier: 14.0.2
         version: 14.0.2
@@ -2936,6 +2933,9 @@ importers:
       '@prosopo/load-balancer':
         specifier: workspace:*
         version: link:../load-balancer
+      '@prosopo/locale':
+        specifier: workspace:*
+        version: link:../locale
       '@prosopo/logger':
         specifier: workspace:*
         version: link:../logger
