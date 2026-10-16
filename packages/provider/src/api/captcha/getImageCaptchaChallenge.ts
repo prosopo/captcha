@@ -13,7 +13,7 @@
 // limitations under the License.
 import { ProsopoApiError } from "@prosopo/common";
 import { parseCaptchaAssets } from "@prosopo/datasets";
-import { requestLanguage } from "@prosopo/locale";
+import { Languages, isLanguage } from "@prosopo/locale";
 import {
 	ApiParams,
 	type Captcha,
@@ -314,9 +314,9 @@ export default (
 						parseCaptchaAssets(item, assetsResolver),
 					),
 				})),
-				// The detector req.t uses reads the same sources, so this names
-				// the language `target` was translated into.
-				language: requestLanguage(req),
+				[ApiParams.language]: isLanguage(req.language)
+					? req.language
+					: Languages.english,
 				[ApiParams.requestHash]: taskData.requestHash,
 				[ApiParams.timestamp]: taskData.timestamp.toString(),
 				[ApiParams.signature]: {
