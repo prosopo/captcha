@@ -25,6 +25,9 @@ import fg from "fast-glob";
 import { defineConfig } from "vite";
 import { version } from "./package.json" with { type: "json" };
 
+// load env using our util because vite loadEnv is not working for .env.development
+loadEnv();
+
 // Per-build opaque chunk name for the honeypot module. Changes with every
 // version (see buildToken) so the emitted URL (e.g. `c8f2a1b0-<hash>.js`) doesn't leak the
 // component's purpose and can't be fingerprinted by scrapers that maintain
@@ -40,9 +43,6 @@ const honeypotChunkName = `c${buildToken("honeypot", 4, version)}`;
 // `getImageData` — expensive on real GPUs) ran twice per widget session. One
 // shared chunk = one module instance = one populated cache = one run.
 const sharedBrowserChunkName = `b${buildToken("sharedBrowser", 4, version)}`;
-
-// load env using our util because vite loadEnv is not working for .env.development
-loadEnv();
 
 // Vite doesn't find the tsconfig for some reason
 process.env.TS_NODE_PROJECT = path.resolve("./tsconfig.json");
