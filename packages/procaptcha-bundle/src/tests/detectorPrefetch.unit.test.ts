@@ -76,7 +76,7 @@ describe("render", () => {
 
 	it("passes the site's language through to the prefetch", async () => {
 		const element: HTMLDivElement = document.createElement("div");
-		element.setAttribute("data-language", "zh-TW, tr");
+		element.setAttribute("data-language", "xx, tr");
 		await render(element, { siteKey: SITE_KEY });
 		await new Promise((resolve) => setTimeout(resolve, 0));
 

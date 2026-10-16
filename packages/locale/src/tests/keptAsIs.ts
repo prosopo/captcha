@@ -1253,4 +1253,6 @@ export const keptAsIs: Partial<Record<Language, readonly TranslationKey[]>> = {
 	],
 	zh: ["TARGET.ipod"],
 	"zh-CN": ["TARGET.ipod"],
+	"zh-HK": ["TARGET.ipod"],
+	"zh-TW": ["TARGET.ipod"],
 };

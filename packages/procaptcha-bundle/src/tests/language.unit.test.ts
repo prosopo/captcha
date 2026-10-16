@@ -58,12 +58,13 @@ describe("resolveLanguage", () => {
 		expect(resolveLanguage(undefined, element("tr-TR"))).toBe("tr");
 		expect(resolveLanguage(undefined, element("nb"))).toBe("no");
 		expect(resolveLanguage(undefined, element("pt-BR"))).toBe("pt-BR");
+		expect(resolveLanguage(undefined, element("he"))).toBe("he");
 	});
 
 	it("leaves an unsupported choice to the browser and says so", () => {
 		const error = vi.spyOn(console, "error").mockImplementation(() => {});
-		expect(resolveLanguage(undefined, element("he"))).toBeUndefined();
-		expect(error).toHaveBeenCalledWith(expect.stringContaining("he"));
+		expect(resolveLanguage(undefined, element("tlh"))).toBeUndefined();
+		expect(error).toHaveBeenCalledWith(expect.stringContaining("tlh"));
 	});
 
 	it("prefers renderOptions.language over data-language", () => {

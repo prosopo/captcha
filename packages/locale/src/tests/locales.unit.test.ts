@@ -96,6 +96,8 @@ const scripts: Partial<Record<Language, RegExp>> = {
 	ur: /\p{Script=Arabic}/u,
 	zh: /\p{Script=Han}/u,
 	"zh-CN": /\p{Script=Han}/u,
+	"zh-HK": /\p{Script=Han}/u,
+	"zh-TW": /\p{Script=Han}/u,
 };
 
 // A Latin letter inside a Cyrillic or Greek word is a look-alike typo

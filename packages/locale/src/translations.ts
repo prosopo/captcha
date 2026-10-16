@@ -103,6 +103,8 @@ export const Languages = {
 	xhosa: "xh",
 	chinese: "zh",
 	chineseChina: "zh-CN",
+	chineseHongKong: "zh-HK",
+	chineseTaiwan: "zh-TW",
 	zulu: "zu",
 } as const;
 

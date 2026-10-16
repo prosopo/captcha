@@ -290,6 +290,16 @@ import zhCnServer from "../locales/zh-CN/translation.json" with {
 	type: "json",
 };
 import zhCnWidget from "../locales/zh-CN/widget.json" with { type: "json" };
+import zhHkTarget from "../locales/zh-HK/target.json" with { type: "json" };
+import zhHkServer from "../locales/zh-HK/translation.json" with {
+	type: "json",
+};
+import zhHkWidget from "../locales/zh-HK/widget.json" with { type: "json" };
+import zhTwTarget from "../locales/zh-TW/target.json" with { type: "json" };
+import zhTwServer from "../locales/zh-TW/translation.json" with {
+	type: "json",
+};
+import zhTwWidget from "../locales/zh-TW/widget.json" with { type: "json" };
 import zhTarget from "../locales/zh/target.json" with { type: "json" };
 import zhServer from "../locales/zh/translation.json" with { type: "json" };
 import zhWidget from "../locales/zh/widget.json" with { type: "json" };
@@ -757,6 +767,16 @@ const catalogues = {
 		widget: zhCnWidget,
 		target: zhCnTarget,
 		translation: zhCnServer,
+	},
+	"zh-HK": {
+		widget: zhHkWidget,
+		target: zhHkTarget,
+		translation: zhHkServer,
+	},
+	"zh-TW": {
+		widget: zhTwWidget,
+		target: zhTwTarget,
+		translation: zhTwServer,
 	},
 	zu: {
 		widget: zuWidget,

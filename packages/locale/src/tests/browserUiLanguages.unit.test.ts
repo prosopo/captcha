@@ -20,8 +20,7 @@ import {
 import { getLanguageDirection } from "../direction.js";
 import { matchLanguageTag } from "../languagePreference.js";
 
-// Browser languages with no catalogue yet; their visitors get English. The
-// Traditional Chinese ones never fall back to the Simplified zh catalogue.
+// Browser languages with no catalogue yet; their visitors get English.
 const UNTRANSLATED: readonly string[] = [
 	"ach",
 	"br",
@@ -39,8 +38,6 @@ const UNTRANSLATED: readonly string[] = [
 	"son",
 	"szl",
 	"trs",
-	"zh-HK",
-	"zh-TW",
 ];
 
 const tags: string[] = BROWSER_UI_LANGUAGES.map(
