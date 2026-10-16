@@ -51,8 +51,9 @@ const buttonStyleBase: StyleMap = {
 	minWidth: "64px",
 	// min, not fixed: long localized labels wrap to two lines in narrow widgets
 	// and the button must grow to keep the text inside its rounded fill.
-	// 40dp is the M3 button height.
-	minHeight: "40px",
+	// 44px rather than the 40dp M3 height: it is the smallest target a
+	// fingertip reliably hits (WCAG 2.5.5, Apple HIG).
+	minHeight: "44px",
 	// Full pill — the Material 3 shape for the action row.
 	borderRadius: "100px",
 	border: "none",
