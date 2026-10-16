@@ -38,10 +38,12 @@ describe("a UMD browser bundle of loadI18next", () => {
 				logLevel: "silent",
 				build: {
 					write: false,
+					minify: false,
+					reportCompressedSize: false,
 					lib: { entry, name: "loadI18next", formats: ["umd"] },
 					rollupOptions: { external: nodeBuiltins },
 				},
 			}),
 		).resolves.toBeDefined();
-	}, 60000);
+	});
 });
