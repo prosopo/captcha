@@ -24,7 +24,8 @@
  *
  * Nothing in the request depends on the widget, i18n or its config: it needs
  * the site key (a DOM attribute, readable immediately), the environment (a
- * build-time constant) and the IP-mode flags (DOM attributes). So the entry
+ * build-time constant), the IP-mode flags and the site's language (DOM
+ * attributes). So the entry
  * point kicks it off as soon as it has read those, and `customDetectBot` picks
  * up the in-flight promise instead of starting its own.
  *
@@ -34,6 +35,7 @@
  */
 
 import { ProviderApi } from "@prosopo/api";
+import { type Language, widgetLanguageHeaders } from "@prosopo/locale";
 import { getProcaptchaRandomActiveProvider } from "@prosopo/procaptcha-common";
 import type {
 	AssignDetectorBundleResponse,
@@ -73,6 +75,7 @@ export const prefetchDetector = (
 	environment: EnvironmentTypes,
 	ipMode: IpModeParam,
 	siteKey: string,
+	language?: Language,
 ): void => {
 	const key = keyOf(environment, ipMode, siteKey);
 	if (inFlight.has(key)) return;
@@ -82,7 +85,12 @@ export const prefetchDetector = (
 			environment,
 			ipMode,
 		);
-		const providerApi = new ProviderApi(provider.provider.url, siteKey);
+		const providerApi = new ProviderApi(
+			provider.provider.url,
+			siteKey,
+			undefined,
+			widgetLanguageHeaders(language),
+		);
 		const assigned = await providerApi.assignDetectorBundle(siteKey);
 		return { provider, assigned };
 	})();

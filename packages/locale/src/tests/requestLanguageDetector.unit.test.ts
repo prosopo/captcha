@@ -114,11 +114,16 @@ describe("request language detection", () => {
 		expect(answer.language).toBe("tr");
 	});
 
-	it("maps nb to no and zh-TW to zh", async () => {
+	it("maps nb to no and zh-SG to zh", async () => {
 		expect((await ask({ [LANGUAGE_HEADER]: "nb-NO" })).language).toBe("no");
-		const chinese = await ask({ "Accept-Language": "zh-TW" });
+		const chinese = await ask({ "Accept-Language": "zh-SG" });
 		expect(chinese.language).toBe("zh");
 		expect(chinese.owl).toBe("猫头鹰");
+	});
+
+	it("does not serve Simplified Chinese for zh-TW", async () => {
+		const answer = await ask({ "Accept-Language": "zh-TW, de;q=0.8" });
+		expect(answer.language).toBe("de");
 	});
 
 	it("falls back to English for an unsupported language", async () => {
