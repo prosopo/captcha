@@ -70,6 +70,21 @@ describe("render", () => {
 			expect.anything(),
 			undefined,
 			SITE_KEY,
+			undefined,
+		);
+	});
+
+	it("passes the site's language through to the prefetch", async () => {
+		const element: HTMLDivElement = document.createElement("div");
+		element.setAttribute("data-language", "zh-TW, tr");
+		await render(element, { siteKey: SITE_KEY });
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(mocks.prefetchDetector).toHaveBeenCalledWith(
+			expect.anything(),
+			undefined,
+			SITE_KEY,
+			"tr",
 		);
 	});
 
@@ -80,6 +95,7 @@ describe("render", () => {
 			expect.anything(),
 			"ipv4",
 			SITE_KEY,
+			undefined,
 		);
 	});
 

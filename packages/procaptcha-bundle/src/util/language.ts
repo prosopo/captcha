@@ -12,11 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	type Language,
-	matchLanguage,
-	parseLanguageList,
-} from "@prosopo/locale";
+import { type Language, resolveLanguageList } from "@prosopo/locale";
 import type {
 	ProcaptchaClientConfigInput,
 	ProcaptchaRenderOptions,
@@ -38,11 +34,24 @@ export const setLanguage = (
 	}
 };
 
+const requestedLanguage = (
+	renderOptions: ProcaptchaRenderOptions | undefined,
+	element: Element,
+): string | null | undefined =>
+	renderOptions?.language || element.getAttribute("data-language");
+
+/** resolveLanguage without the console error, for callers other than the widget. */
+export const siteLanguage = (
+	renderOptions: ProcaptchaRenderOptions | undefined,
+	element: Element,
+): Language | undefined =>
+	resolveLanguageList(requestedLanguage(renderOptions, element));
+
 /**
  * The site owner's language: renderOptions.language, else the element's
  * `data-language`. Either may list several codes in Accept-Language form
  * (`"xx, tr-TR, de"`); the first one with a catalogue wins, regional tags
- * falling back to their parent (`zh-TW` to `zh`, `nb` to `no`).
+ * falling back to their parent (`pt-PT` to `pt`, `nb` to `no`).
  *
  * `undefined` means the site did not choose, or chose only languages we do
  * not have: the widget then uses the browser's languages, then English. So
@@ -55,14 +64,16 @@ export const resolveLanguage = (
 	renderOptions: ProcaptchaRenderOptions | undefined,
 	element: Element,
 ): Language | undefined => {
-	const requested: string | null | undefined =
-		renderOptions?.language || element.getAttribute("data-language");
+	const requested: string | null | undefined = requestedLanguage(
+		renderOptions,
+		element,
+	);
 
 	if (!requested) {
 		return undefined;
 	}
 
-	const resolved = matchLanguage(parseLanguageList(requested));
+	const resolved = resolveLanguageList(requested);
 	if (!resolved) {
 		console.error(
 			`Unsupported language attribute: ${requested}; using the browser's language`,

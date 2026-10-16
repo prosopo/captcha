@@ -27,6 +27,7 @@ export {
 	negotiateLanguage,
 	parseLanguageList,
 	requestLanguage,
+	resolveLanguageList,
 	widgetLanguageHeaders,
 } from "./languagePreference.js";
 export type { LanguageRequest } from "./languagePreference.js";
