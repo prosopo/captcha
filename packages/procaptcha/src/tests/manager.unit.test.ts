@@ -382,7 +382,7 @@ describe("start", () => {
 		await harness.manager.start();
 		vi.unstubAllGlobals();
 		expect(mocks.providerApiHeaders).toEqual([
-			{ "Prosopo-Lang": "tr", "Accept-Language": "tr" },
+			{ "Prosopo-Lang": "tr" },
 		]);
 	});
 
@@ -392,7 +392,7 @@ describe("start", () => {
 		await harness.manager.start();
 		vi.unstubAllGlobals();
 		expect(mocks.providerApiHeaders).toEqual([
-			{ "Prosopo-Lang": "tr-TR,en", "Accept-Language": "tr-TR, en;q=0.9" },
+			{ "Prosopo-Lang": "tr-TR,en" },
 		]);
 	});
 
