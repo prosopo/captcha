@@ -23,6 +23,7 @@ import {
 	negotiateLanguage,
 	parseLanguageList,
 	requestLanguage,
+	resolveLanguageList,
 	widgetLanguageHeaders,
 } from "../languagePreference.js";
 import { type Language, Languages } from "../translations.js";
@@ -70,9 +71,13 @@ describe("matchLanguageTag", () => {
 		["pt-br", Languages.portugeseBrazil],
 		["pt-PT", Languages.portuguese],
 		["zh-CN", Languages.chineseChina],
-		["zh-TW", Languages.chinese],
-		["zh-Hant-TW", Languages.chinese],
 		["zh-Hans-CN", Languages.chinese],
+		["zh-Hans-TW", Languages.chinese],
+		["zh-SG", Languages.chinese],
+		["zh-TW", undefined],
+		["zh-HK", undefined],
+		["zh-Hant", undefined],
+		["zh-Hant-TW", undefined],
 		["nb", Languages.norwegian],
 		["nn-NO", Languages.norwegian],
 		["no", Languages.norwegian],
@@ -92,6 +97,11 @@ describe("matchLanguageTag", () => {
 describe("matchLanguage / negotiateLanguage", () => {
 	it("takes the first preference with a catalogue", () => {
 		expect(matchLanguage(["xx", "tr-TR", "de"])).toBe(Languages.turkish);
+	});
+
+	it("moves past Traditional Chinese rather than serve Simplified", () => {
+		expect(matchLanguage(["zh-TW", "en"])).toBe(Languages.english);
+		expect(matchLanguage(["zh-TW"])).toBeUndefined();
 	});
 
 	it("matches a whole tag before moving to the next preference", () => {
@@ -246,5 +256,18 @@ describe("browserLanguages / widgetLanguageHeaders", () => {
 		expect(widgetLanguageHeaders(undefined)).toEqual({
 			[LANGUAGE_HEADER]: "xx,de-AT",
 		});
+	});
+});
+
+describe("resolveLanguageList", () => {
+	it("resolves a site-supplied list to its first catalogue", () => {
+		expect(resolveLanguageList("xx, tr-TR, de")).toBe(Languages.turkish);
+		expect(resolveLanguageList("zh-TW, de")).toBe(Languages.german);
+	});
+
+	it("has nothing for an empty or unsupported choice", () => {
+		expect(resolveLanguageList(null)).toBeUndefined();
+		expect(resolveLanguageList(undefined)).toBeUndefined();
+		expect(resolveLanguageList("xx")).toBeUndefined();
 	});
 });

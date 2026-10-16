@@ -17,7 +17,7 @@ import { i18nSharedOptions } from "./i18SharedOptions.js";
 import {
 	browserLanguages,
 	matchLanguage,
-	parseLanguageList,
+	resolveLanguageList,
 } from "./languagePreference.js";
 import type { I18nEvent, Ti18n, TranslateOptions } from "./types.js";
 
@@ -45,14 +45,6 @@ const catalogueUrl = (language: string): string => {
 	const directory = moduleUrl.slice(0, moduleUrl.lastIndexOf("/"));
 	return `${directory}/locales/${language}/${NAMESPACE}.json`;
 };
-
-/**
- * `requested` is the site's `data-language`, which may list several codes in
- * Accept-Language form. Regional tags fall back to their parent (`zh-TW` to
- * `zh`), and `nb`/`nn` to `no`; see languagePreference.ts.
- */
-const resolveLanguage = (requested: string | undefined): string | undefined =>
-	matchLanguage(parseLanguageList(requested));
 
 /**
  * Only the browser's own list. Nothing is read from or written to cookies or
@@ -99,7 +91,7 @@ interface BrowserI18n extends Ti18n {
 const createBrowserI18n = (requested?: string): BrowserI18n => {
 	const catalogues = new Map<string, Catalogue>();
 	const listeners = new Map<I18nEvent, Set<() => void>>();
-	let language = resolveLanguage(requested) ?? detectLanguage();
+	let language = resolveLanguageList(requested) ?? detectLanguage();
 	let initialised = false;
 
 	const emit = (event: I18nEvent): void => {
@@ -151,7 +143,7 @@ const createBrowserI18n = (requested?: string): BrowserI18n => {
 		hasLoadedNamespace: (namespace: string): boolean =>
 			namespace === NAMESPACE && catalogues.has(language),
 		changeLanguage: async (next: string): Promise<BrowserI18n> => {
-			const resolved = resolveLanguage(next) ?? FALLBACK_LANGUAGE;
+			const resolved = resolveLanguageList(next) ?? FALLBACK_LANGUAGE;
 			if (resolved !== language) {
 				language = resolved;
 				await loadCatalogues(resolved);

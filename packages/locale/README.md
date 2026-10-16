@@ -23,9 +23,12 @@ host's own. Its language comes only from the attribute or the browser.
 ### Matching a tag to a catalogue (`matchLanguageTag`)
 
 - Case is ignored: `TR-tr` → `tr`.
-- A variant falls back to its parent (RFC 4647 lookup): `zh-TW` → `zh`,
-  `zh-Hant-TW` → `zh`, `pt-PT` → `pt`. A variant with its own catalogue keeps
-  it: `pt-BR` → `pt-BR`, `zh-CN` → `zh-CN`.
+- A variant falls back to its parent (RFC 4647 lookup): `zh-SG` → `zh`,
+  `pt-PT` → `pt`. A variant with its own catalogue keeps it: `pt-BR` →
+  `pt-BR`, `zh-CN` → `zh-CN`.
+- Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant-*`) does not fall
+  back to `zh`, which is Simplified. The next preference is tried instead, then
+  English.
 - Aliases for codes we have no catalogue for: `nb` and `nn` → `no`; the
   withdrawn codes `in` → `id` and `jw` → `jv`, which some browsers still send.
 - Each parent catalogue (`zh`, `pt`) starts as a copy of its variant. People
