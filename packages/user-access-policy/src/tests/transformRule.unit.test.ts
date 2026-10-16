@@ -94,6 +94,21 @@ describe("makeAccessRuleHash", () => {
 
 		expect(hash1).toEqual(hash2);
 	});
+
+	it("should leave excludedClientIds out of the hash so the key survives a list change", () => {
+		const unexcluded: AccessRule = {
+			type: AccessPolicyType.Block,
+			numericIp: 100n,
+		};
+		const excluded: AccessRule = {
+			...unexcluded,
+			excludedClientIds: ["client-a", "client-b"],
+		};
+
+		expect(makeAccessRuleHash(excluded)).toEqual(
+			makeAccessRuleHash(unexcluded),
+		);
+	});
 });
 
 describe("transformRule", () => {
@@ -123,6 +138,7 @@ describe("transformRule", () => {
 		headerValue: "test",
 		headerOperator: "equals",
 		webBotAuthAgent: "https://signatures.openai.com",
+		excludedClientIds: ["other-client"],
 	} satisfies AccessRule;
 
 	it("should transform access rule record into rule", () => {

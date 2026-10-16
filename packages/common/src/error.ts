@@ -289,9 +289,16 @@ export const unwrapError = (
 
 	jsonError.code = code;
 	// The widget has English text for its own keys. For any other key it can
-	// only show `message`, so send the English too, for logs and crash reports.
+	// only show `message`, so send the English too, for logs and crash reports,
+	// but only when `message` is that key's text: an error can carry a key
+	// beside free text, or text translated from another key.
 	const key = jsonError.key;
-	if (key && isTranslationKey(key) && !isWidgetTranslationKey(key)) {
+	if (
+		key &&
+		isTranslationKey(key) &&
+		!isWidgetTranslationKey(key) &&
+		jsonError.message === i18n.t(key)
+	) {
 		jsonError.messageEn = englishText(key);
 	}
 	// Derive the HTTP reason phrase from the final status code rather than

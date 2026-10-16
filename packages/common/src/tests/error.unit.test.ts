@@ -373,6 +373,22 @@ describe("unwrapError still produces a translated HTTP response", () => {
 		expect(jsonError).not.toHaveProperty("messageEn");
 	});
 
+	it("adds no English text when the message is not the key's text", () => {
+		const turkish = makeI18n({
+			"DATABASE.CAPTCHA_GET_FAILED": "Captcha alınamadı",
+		});
+		const err = new ProsopoDBError(new Error("upstream: timed out"), {
+			context: { translationKey: "DATABASE.CAPTCHA_GET_FAILED" },
+			i18n: turkish,
+			silent: true,
+		});
+
+		const { jsonError } = unwrapError(err, turkish);
+		expect(jsonError.message).toBe("upstream: timed out");
+		expect(jsonError.key).toBe("DATABASE.CAPTCHA_GET_FAILED");
+		expect(jsonError).not.toHaveProperty("messageEn");
+	});
+
 	it("adds no English text for an error with no catalogue key", () => {
 		const err = new ProsopoApiError(new Error("upstream: timed out"), {
 			context: { code: 500, translationKey: "not.a.key" },
