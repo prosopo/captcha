@@ -83,6 +83,9 @@ const getPairAndSecretForSiteKey = (
 		CaptchaType.image,
 		CaptchaType.frictionless,
 		CaptchaType.puzzle,
+		// Not a site type: the seed name of the audio demos' image site.
+		CaptchaType.audio,
+		CaptchaType.iconOrder,
 	]) {
 		const newSecret = `${baseSecret}//${captchaType}`;
 		pair = getPair(newSecret);
@@ -129,7 +132,7 @@ const getResponse = async (
 
 	logger.info(() => ({
 		data: {
-			body,
+			body: { ...body, [ApiParams.secret]: "[redacted]" },
 		},
 	}));
 
@@ -296,7 +299,7 @@ const login = async (
 				const siteKey = payload[ApiParams.siteKey];
 
 				if (!config.account.secret) {
-					throw new ProsopoEnvError("GENERAL.SECRET_MISSING", {
+					throw new ProsopoEnvError("GENERAL.MISSING_SECRET_KEY", {
 						context: { missingParams: ["PROSOPO_SITE_PRIVATE_KEY"] },
 					});
 				}

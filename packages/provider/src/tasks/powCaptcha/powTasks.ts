@@ -61,6 +61,7 @@ import {
 	extractData,
 	verifyRecency,
 } from "@prosopo/util";
+import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import {
 	getCompositeIpAddress,
 	getIpAddressFromComposite,
@@ -92,7 +93,11 @@ import {
 	evaluateEmailSpamRules,
 	normaliseEmailForMatching,
 } from "../spam/evaluateEmailSpamRules.js";
-import { checkPowSignature, validateSolution } from "./powTasksUtils.js";
+import {
+	checkPowSignature,
+	isCoordsAllZero,
+	validateSolution,
+} from "./powTasksUtils.js";
 
 /**
  * Request-side data the handler can supply for the post-pow routing pass.
@@ -227,6 +232,17 @@ export class PowCaptchaManager extends CaptchaManager {
 				msg: `No record of this challenge: ${challenge}`,
 			}));
 			// no record of this challenge
+			return { verified: false };
+		}
+
+		// Single-use challenge. Every submission rewrites the record with
+		// serverChecked=false, so accepting a resubmission after the site's
+		// server has verified the token would re-arm that token for another
+		// verify.
+		if (challengeRecord.userSubmitted) {
+			this.logger.debug(() => ({
+				msg: `Challenge already submitted: ${challenge}`,
+			}));
 			return { verified: false };
 		}
 
@@ -382,6 +398,7 @@ export class PowCaptchaManager extends CaptchaManager {
 							mouseEventsCount: decryptedData.collector1?.length || 0,
 							touchEventsCount: decryptedData.collector2?.length || 0,
 							clickEventsCount: decryptedData.collector3?.length || 0,
+							scrollEventsCount: decryptedData.collector4?.length || 0,
 							deviceCapability: decryptedData.deviceCapability,
 							captchaResult: correct ? "passed" : "failed",
 						},
@@ -392,6 +409,7 @@ export class PowCaptchaManager extends CaptchaManager {
 						c1: decryptedData.collector1 || [],
 						c2: decryptedData.collector2 || [],
 						c3: decryptedData.collector3 || [],
+						c4: decryptedData.collector4 || [],
 						d: decryptedData.deviceCapability,
 					};
 
@@ -511,6 +529,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					challengeRecord,
 					challengeSplit,
 					behavioralDataPacked: decryptedBehavioralDataPacked,
+					coords,
 				})
 			: undefined;
 
@@ -545,10 +564,12 @@ export class PowCaptchaManager extends CaptchaManager {
 		challengeRecord: PoWCaptchaRecord;
 		challengeSplit: string[];
 		behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
+		coords?: [number, number][][];
 	}): Promise<RoutingMachineOutput | undefined> {
 		if (!this.postPowContext) return undefined;
 
-		const { challengeRecord, challengeSplit, behavioralDataPacked } = args;
+		const { challengeRecord, challengeSplit, behavioralDataPacked, coords } =
+			args;
 
 		if (!challengeRecord.sessionId) {
 			this.logger.debug(() => ({
@@ -593,6 +614,8 @@ export class PowCaptchaManager extends CaptchaManager {
 			raw: {
 				...this.postPowContext.raw,
 				...(behavioralDataPacked && { behavioralDataPacked }),
+				...(sessionRecord.mode && { mode: sessionRecord.mode }),
+				coordsAllZero: isCoordsAllZero(coords),
 				// SIMD readings are decrypted and attached to the session above
 				// (decryptAndAttachSimdReadingsIfAbsent) before this re-fetch, so
 				// they are available here in decoded form for the routing machine.
@@ -723,9 +746,17 @@ export class PowCaptchaManager extends CaptchaManager {
 		// Do not move this code down or put any other code before it. We want to drop out as early as possible if the
 		// solution has already been checked by the server. Moving this code around could result in solutions being
 		// re-usable.
-		await this.db.markDappUserPoWCommitmentsChecked([
+		// The claim is conditional on the record not being checked yet, so of
+		// several concurrent verifies of one token only one gets past here.
+		const claimed = await this.db.markDappUserPoWCommitmentsChecked([
 			challengeRecord.challenge,
 		]);
+		if (claimed === 0) {
+			return notVerified(
+				"API.USER_ALREADY_VERIFIED",
+				challengeRecord.sessionId,
+			);
+		}
 		// -- END WARNING --
 
 		// Accumulate all pow captcha record updates in memory.
@@ -1056,19 +1087,13 @@ export class PowCaptchaManager extends CaptchaManager {
 					ruleType: sessionRecord?.ruleType,
 					webView: sessionRecord?.webView,
 					iFrame: sessionRecord?.iFrame,
+					currentUrl: sessionRecord?.currentUrl,
+					iframeUrl: sessionRecord?.iframeUrl,
 					coords: challengeRecord.coords,
 					// tcp-probe fields from the frictionless Session — the
 					// middleware persists them at entry, verify surfaces them
 					// so decide rules can gate on the raw TCP fingerprint.
-					synNs: sessionRecord?.synNs,
-					synackNs: sessionRecord?.synackNs,
-					ackNs: sessionRecord?.ackNs,
-					observedTtl: sessionRecord?.observedTtl,
-					tcpMss: sessionRecord?.tcpMss,
-					tcpWscale: sessionRecord?.tcpWscale,
-					tcpOptsFlags: sessionRecord?.tcpOptsFlags,
-					tcpOptsOrder: sessionRecord?.tcpOptsOrder,
-					tcpWindow: sessionRecord?.tcpWindow,
+					...rawTlsSignalsFromRecord(sessionRecord),
 					// Which egress categories this site blocks. Gates the
 					// egress-sensitive TCP-stack deny rules — a VPN
 					// concentrator legitimately terminates the handshake, so

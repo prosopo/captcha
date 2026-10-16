@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { loadI18next } from "@prosopo/locale";
+import { getLanguageDirection, loadI18next } from "@prosopo/locale";
 import type { Ti18n } from "@prosopo/locale";
 import {
 	getDefaultCallbacks,
@@ -26,6 +26,7 @@ import {
 } from "@prosopo/widget-skeleton";
 import type { CaptchaRenderer } from "./captcha/captchaRenderer.js";
 import type { BundleCaptchaHandle } from "./captcha/components/bundleCaptcha.js";
+import { EXPIRED_NOTICE_KEY, FAILED_NOTICE_KEY } from "./failedNoticeKey.js";
 import { resolveLanguage } from "./language.js";
 import type { WidgetThemeResolver } from "./widgetThemeResolver.js";
 
@@ -58,7 +59,11 @@ class WidgetFactory {
 	): Promise<CreatedWidget[]> {
 		return Promise.all(
 			containers.map((container) => {
-				const callbacks = getDefaultCallbacks(container);
+				const callbacks = getDefaultCallbacks(
+					container,
+					() => this._i18n?.t(FAILED_NOTICE_KEY),
+					() => this._i18n?.t(EXPIRED_NOTICE_KEY),
+				);
 				setUserCallbacks(renderOptions, callbacks, container);
 				return this.createWidget(
 					container,
@@ -86,6 +91,13 @@ class WidgetFactory {
 		const widgetTheme =
 			"light" === renderOptions.theme ? lightTheme : darkTheme;
 
+		// Resolve the site-owner language BEFORE lazy-loading the renderer so
+		// i18n can boot (or reconcile) with the correct language on first init,
+		// rather than starting in the browser-detected language and swapping to
+		// the site-owner language via a post-mount effect (which caused mixed-
+		// language flashes visible to end users).
+		const language = resolveLanguage(renderOptions, container);
+
 		let widgetInteractiveArea: HTMLElement;
 		let widgetContainer: HTMLElement;
 
@@ -101,22 +113,27 @@ class WidgetFactory {
 				container,
 				widgetTheme,
 				"prosopo-procaptcha",
+				this.loadingLabel(language),
 			);
 			widgetInteractiveArea = widgetResult.widgetInteractiveArea;
 			widgetContainer = widgetResult.webComponent;
 		}
 
-		// Resolve the site-owner language BEFORE lazy-loading the renderer so
-		// i18n can boot (or reconcile) with the correct language on first init,
-		// rather than starting in the browser-detected language and swapping to
-		// the site-owner language via a post-mount effect (which caused mixed-
-		// language flashes visible to end users).
-		const language = resolveLanguage(renderOptions, container);
-
 		// all the captcha-rendering logic is lazy-loaded, so zod and the provider
 		// API don't delay the initial widget creation.
 
 		const captchaRenderer = await this.getCaptchaRenderer(language);
+
+		const i18n = this.i18n;
+		const host = widgetContainer;
+		host.dir = getLanguageDirection(language ?? i18n.language);
+		// Every widget's text follows the page-wide i18n instance, so a later
+		// widget switching its language re-labels this one too; keep the
+		// direction in step with the text.
+		const followLanguage = () => {
+			host.dir = getLanguageDirection(i18n.language);
+		};
+		i18n.on("languageChanged", followLanguage);
 
 		const captchaRoot = captchaRenderer.renderCaptcha(
 			widgetInteractiveArea,
@@ -129,7 +146,29 @@ class WidgetFactory {
 			container,
 		);
 
-		return { handle: captchaRoot, container: widgetContainer };
+		const handle: BundleCaptchaHandle = {
+			destroy: () => {
+				i18n.off("languageChanged", followLanguage);
+				captchaRoot.destroy();
+			},
+		};
+		return { handle, container: widgetContainer };
+	}
+
+	/** The first widget is drawn before i18n loads, so its spinner keeps the default label. */
+	protected get loadedI18n(): Ti18n | null {
+		return this._i18n;
+	}
+
+	private loadingLabel(language: string | undefined): string | undefined {
+		const i18n = this.loadedI18n;
+		if (!i18n?.isInitialized) {
+			return undefined;
+		}
+		if (language !== undefined && i18n.language !== language) {
+			return undefined;
+		}
+		return i18n.t("WIDGET.LOADING");
 	}
 
 	protected async getCaptchaRenderer(

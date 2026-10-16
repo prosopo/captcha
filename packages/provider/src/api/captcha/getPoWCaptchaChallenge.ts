@@ -34,6 +34,7 @@ import {
 	normalizeHeadersForMatching,
 } from "../blacklistRequestInspector.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
+import { summariseRequestBody } from "../requestBodySummary.js";
 import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildPowMaintenanceResponse } from "./maintenanceModeResponses.js";
@@ -274,6 +275,8 @@ export default (
 				req.ipInfo,
 			);
 
+			const padBytes = trafficVerdict.padBytes;
+
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {
 				[ApiParams.status]: "ok",
 				[ApiParams.challenge]: challenge.challenge,
@@ -297,13 +300,14 @@ export default (
 					session: sessionId,
 				},
 			}));
+			res.locals.padBytes = padBytes;
 			recordCaptchaIssued(CaptchaType.pow);
 			return res.json(getPowCaptchaResponse);
 		} catch (err) {
 			recordCaptchaIssueError(CaptchaType.pow);
 			req.logger.error(() => ({
 				err,
-				body: req.body,
+				body: summariseRequestBody(req),
 				msg: "Error in PoW captcha challenge request",
 			}));
 			return next(

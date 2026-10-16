@@ -144,6 +144,8 @@ const customDetectBot: BotDetectionFunction = async (
 	container: HTMLElement | undefined,
 	restartFn: () => void,
 	retryContext?: ProviderSelectRetryContext,
+	refreshOf?: string,
+	switchToImage?: boolean,
 ): Promise<BotDetectionFunctionResult> => {
 	if (!config.account.address) {
 		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
@@ -287,6 +289,8 @@ const customDetectBot: BotDetectionFunction = async (
 				fallbackUrl,
 				fallbackIframeUrl,
 				clientSessionId,
+				refreshOf,
+				switchToImage,
 			),
 			10000,
 		);
@@ -312,6 +316,7 @@ const customDetectBot: BotDetectionFunction = async (
 			error: captcha.error,
 			hp: captcha.hp,
 			agent: captcha.agent,
+			audioAlternativeAvailable: captcha.audioAlternativeAvailable,
 		};
 	}
 
@@ -344,6 +349,8 @@ const customDetectBot: BotDetectionFunction = async (
 		currentUrl,
 		iframeUrl,
 		clientSessionId,
+		refreshOf,
+		switchToImage,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher
@@ -377,10 +384,12 @@ const customDetectBot: BotDetectionFunction = async (
 		error: captcha.error,
 		hp: captcha.hp,
 		agent: captcha.agent,
+		audioAlternativeAvailable: captcha.audioAlternativeAvailable,
 		// Map specific trackers to generic behavioral collectors
 		behaviorCollector1: detectionResult.mouseTracker,
 		behaviorCollector2: detectionResult.touchTracker,
 		behaviorCollector3: detectionResult.clickTracker,
+		behaviorCollector4: detectionResult.scrollTracker,
 		deviceCapability: detectionResult.hasTouchSupport,
 		encryptBehavioralData: detectionResult.encryptBehavioralData,
 		packBehavioralData: detectionResult.packBehavioralData,

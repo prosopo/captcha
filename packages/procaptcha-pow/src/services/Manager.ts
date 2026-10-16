@@ -34,6 +34,7 @@ import {
 	type Account,
 	ApiParams,
 	CaptchaType,
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	type FrictionlessState,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
@@ -96,6 +97,19 @@ export const Manager = (
 		resetState(frictionlessState?.restart);
 	};
 
+	// The provider rejects a solution submitted after its solution window
+	// without saying why, and a slow phone can take longer than that to solve.
+	// Report it as an expired challenge rather than a failed one, and reset so
+	// the user can tick the box again for a fresh challenge.
+	const onSolutionExpired = () => {
+		updateState({
+			isHuman: false,
+			loading: false,
+		});
+		events.onChallengeExpired();
+		resetState(frictionlessState?.restart);
+	};
+
 	const clearSuccessfulChallengeTimeout = () => {
 		// clear the timeout
 		window.clearTimeout(Number(state.successfullChallengeTimeout));
@@ -155,6 +169,7 @@ export const Manager = (
 	const setValidChallengeTimeout = () => {
 		const timeMillis: number = getConfig().captchas.pow.solutionTimeout;
 		const successfullChallengeTimeout = setTimeout(() => {
+			if (disposed) return;
 			// Human state expired, disallow user's claim to be human
 			updateState({ isHuman: false });
 
@@ -254,6 +269,7 @@ export const Manager = (
 				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
 					? await frictionlessState.getSimdReadings(0)
 					: undefined;
+				const challengeRequestedAt = Date.now();
 				const challenge = await providerApi.getPowCaptchaChallenge(
 					userAccount,
 					getDappAccount(),
@@ -311,7 +327,8 @@ export const Manager = (
 						frictionlessState?.encryptBehavioralData &&
 						(frictionlessState?.behaviorCollector1 ||
 							frictionlessState?.behaviorCollector2 ||
-							frictionlessState?.behaviorCollector3)
+							frictionlessState?.behaviorCollector3 ||
+							frictionlessState?.behaviorCollector4)
 					) {
 						try {
 							const behavioralData = {
@@ -321,6 +338,8 @@ export const Manager = (
 									frictionlessState.behaviorCollector2?.getData() || [],
 								collector3:
 									frictionlessState.behaviorCollector3?.getData() || [],
+								collector4:
+									frictionlessState.behaviorCollector4?.getData() || [],
 								deviceCapability:
 									frictionlessState.deviceCapability || "unknown",
 							};
@@ -382,6 +401,7 @@ export const Manager = (
 						clientMetaData,
 						fingerprintProof,
 					);
+					if (disposed) return;
 					const escalation = verifiedSolution[ApiParams.escalation];
 					if (
 						escalation &&
@@ -435,6 +455,11 @@ export const Manager = (
 							}),
 						);
 						setValidChallengeTimeout();
+					} else if (
+						Date.now() - challengeRequestedAt >=
+						DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT
+					) {
+						onSolutionExpired();
 					} else {
 						onFailed();
 					}
@@ -452,8 +477,26 @@ export const Manager = (
 		);
 	};
 
+	// Set once the widget that owns this manager is torn down. A solve still in
+	// flight can land afterwards, so the timer callbacks check it as well as
+	// being cleared here.
+	let disposed = false;
+
+	/**
+	 * Stops this manager's challenge and solution-expiry timers without firing
+	 * any event. Left running after the widget is destroyed (reset(), a
+	 * restart, an SPA route change) they fired onExpired/onReset later on,
+	 * which also cleared the replacement widget's token from the form.
+	 */
+	const dispose = () => {
+		disposed = true;
+		window.clearTimeout(Number(state.timeout));
+		window.clearTimeout(Number(state.successfullChallengeTimeout));
+	};
+
 	return {
 		start,
 		resetState,
+		dispose,
 	};
 };

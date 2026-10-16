@@ -46,12 +46,19 @@ export const mountModal = (initialProps: ModalProps): ModalComponent => {
 	const inner = createElement("div", { className: randomToken() });
 
 	applyStyles(inner, {
+		// The surface fills the layer, so this box has to take the width it
+		// wants and then centre itself in what is left. Auto margins rather
+		// than an alignment property: the wrappers between here and the
+		// surface are `display: contents`, but the surface itself is a block
+		// box, so `alignSelf` has nothing to align against.
+		width: "100%",
 		maxWidth: "500px",
 		maxHeight: "100%",
+		marginLeft: "auto",
+		marginRight: "auto",
 		backgroundColor: "transparent",
 		border: "none",
 		borderRadius: "28px",
-		alignSelf: "center",
 		boxSizing: "border-box",
 	});
 

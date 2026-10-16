@@ -16,9 +16,9 @@
 // A trusted publisher is configured per package, on that package's settings
 // page on npmjs.com — which means the package has to already exist before the
 // trusted publisher can be attached to it. A package that has never been
-// published therefore has no trusted publisher, npm rejects the OIDC exchange,
-// and the npm CLI reports the failure as a generic `ENEEDAUTH` that looks like
-// a broken token rather than a missing configuration (npm/cli#9088).
+// published therefore has no trusted publisher, the registry rejects the OIDC
+// exchange, and the publish fails with a generic auth error that looks like a
+// broken token rather than a missing configuration (npm/cli#9088).
 //
 // `changeset publish` always attempts a brand-new package, because its local
 // version is by definition not on the registry yet. So adding a new publishable
@@ -34,8 +34,10 @@
 // A `private: true` workspace package is never published. If a *publishable*
 // package lists one in dependencies / peerDependencies / optionalDependencies,
 // the published tarball is installable only inside this monorepo: every
-// consumer gets E404 on the private name. npm does not catch this at publish
-// time, because the dependency is only resolved when someone installs.
+// consumer gets E404 on the private name. The publish does not catch this,
+// because the dependency is only resolved when someone installs. A
+// `workspace:*` specifier does not help either: `pnpm publish` rewrites it to
+// the private package's version, which the registry does not have.
 
 import { readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
@@ -186,12 +188,12 @@ if (unpublished.length > 0) {
 	console.error(
 		"\nA trusted publisher is attached to an existing package on npmjs.com, so the" +
 			"\nfirst version has to be published by hand once. `changeset publish` would" +
-			"\notherwise fail on these with a misleading ENEEDAUTH part way through the" +
+			"\notherwise fail on these with a misleading auth error part way through the" +
 			"\nrelease, after the earlier packages are already live and immutable." +
 			"\n\nFor each package above, from a machine logged in to npm as a @prosopo" +
 			"\npublisher:" +
-			"\n  npm run build:all:tsc && npm run build:all && npm run build:all:cjs" +
-			"\n  cd <package dir> && npm publish --access public" +
+			"\n  pnpm run build:all:tsc && pnpm run build:all && pnpm run build:all:cjs" +
+			"\n  cd <package dir> && pnpm publish --access public" +
 			"\nthen on https://www.npmjs.com/package/<name>/access add a GitHub Actions" +
 			"\ntrusted publisher for prosopo/captcha with workflow publish_release.yml," +
 			"\nand re-run this release.",

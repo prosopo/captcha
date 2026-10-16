@@ -37,6 +37,15 @@ export interface RenderedPuzzleImages {
 	background: string;
 	piece: string;
 	pieceSize: number;
+	/**
+	 * Hex seeds for the clean background and for decoy placement / notch cut.
+	 * Together with the geometry, render settings and notch placement these
+	 * reproduce the served imagery byte for byte, which is what the portal's
+	 * replay view needs. Handle per the secrecy note in prng.ts: they belong on
+	 * the challenge record and nowhere else.
+	 */
+	backgroundSeed: string;
+	renderSeed: string;
 }
 
 /**
@@ -145,15 +154,12 @@ export const renderPuzzleImages = async (
 ): Promise<RenderedPuzzleImages> => {
 	const buffer = getPuzzleBackgroundBuffer() ?? initPuzzleBackgroundBuffer();
 	const background = buffer.take();
-	if (!background) {
-		throw new Error("puzzle renderer: no background available");
-	}
 
 	// Only the decoy paint and notch cut are billed to the span; renderPuzzle
 	// hands the encode to sharp, which runs off the event loop.
 	const rendered = await measureSync("puzzle_render", () =>
 		renderPuzzle(
-			background,
+			background.image,
 			placement,
 			pieceSize !== undefined
 				? { ...DEFAULT_GEOMETRY, pieceSize }
@@ -166,5 +172,7 @@ export const renderPuzzleImages = async (
 		background: toDataUri(rendered.background),
 		piece: toDataUri(rendered.piece),
 		pieceSize: rendered.pieceSize,
+		backgroundSeed: background.seed.toString("hex"),
+		renderSeed: rendered.seed.toString("hex"),
 	};
 };

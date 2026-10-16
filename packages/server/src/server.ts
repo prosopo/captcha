@@ -15,7 +15,7 @@
 import { HttpError, ProviderApi } from "@prosopo/api";
 import { ProsopoApiError, ProsopoContractError } from "@prosopo/common";
 import { Keyring } from "@prosopo/keyring";
-import { loadBalancer } from "@prosopo/load-balancer";
+import { findProvider } from "@prosopo/load-balancer";
 import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import {
@@ -62,7 +62,15 @@ export const detectIpMode = (
 	return undefined;
 };
 
+// AbortSignal.timeout rejects fetch with a DOMException named TimeoutError.
+const isTimeoutError = (err: unknown): boolean =>
+	err instanceof Error && err.name === "TimeoutError";
+
 export class ProsopoServer {
+	// Tolerance for honest clock drift between the issuing provider and this
+	// verifier when checking a token timestamp against "now".
+	private static readonly MAX_CLOCK_SKEW_MS = 30_000;
+
 	config: ProsopoServerConfigOutput;
 	dappAccount: string | undefined;
 	defaultEnvironment: string;
@@ -85,13 +93,19 @@ export class ProsopoServer {
 	}
 
 	getProviderApi(providerUrl: string): ProviderApi {
-		return new ProviderApi(providerUrl, this.dappAccount || "");
+		return new ProviderApi(
+			providerUrl,
+			this.dappAccount || "",
+			this.config.providerRequestTimeoutMs,
+		);
 	}
 
 	/**
 	 * Verify a token with the issuing provider. Dispatches to the correct
 	 * verify endpoint by inspecting the token's declared captchaType:
 	 *  - puzzle        → submitPuzzleCaptchaVerify
+	 *  - audio         → submitAudioCaptchaVerify
+	 *  - iconOrder     → submitIconOrderCaptchaVerify
 	 *  - pow           → submitPowCaptchaVerify
 	 *  - image         → verifyDappUser
 	 *  - authenticated → submitAuthenticatedCaptchaVerify (Web Bot Auth fast-path)
@@ -137,12 +151,42 @@ export class ProsopoServer {
 		const signatureHex = u8aToHex(dappUserSignature);
 		const providerApi = this.getProviderApi(providerUrl);
 
+		if (captchaType === CaptchaType.iconOrder) {
+			const iconOrderTimeout = this.config.timeouts.iconOrder.cachedTimeout;
+			if (!this.isRecent(timestamp, iconOrderTimeout, "IconOrder")) {
+				return this.notRecentResponse();
+			}
+			return await providerApi.submitIconOrderCaptchaVerify(
+				token,
+				signatureHex,
+				user,
+				ip,
+				email,
+				clientSessionId,
+			);
+		}
+
 		if (captchaType === CaptchaType.puzzle) {
 			const puzzleTimeout = this.config.timeouts.puzzle.cachedTimeout;
 			if (!this.isRecent(timestamp, puzzleTimeout, "Puzzle")) {
 				return this.notRecentResponse();
 			}
 			return await providerApi.submitPuzzleCaptchaVerify(
+				token,
+				signatureHex,
+				user,
+				ip,
+				email,
+				clientSessionId,
+			);
+		}
+
+		if (captchaType === CaptchaType.audio) {
+			const audioTimeout = this.config.timeouts.audio.cachedTimeout;
+			if (!this.isRecent(timestamp, audioTimeout, "Audio")) {
+				return this.notRecentResponse();
+			}
+			return await providerApi.submitAudioCaptchaVerify(
 				token,
 				signatureHex,
 				user,
@@ -252,7 +296,20 @@ export class ProsopoServer {
 		label: string,
 	): boolean {
 		if (!timestamp) return false;
-		const recent = Date.now() - timestamp < timeoutMs;
+		const age = Date.now() - timestamp;
+		// A token stamped in the future is not fresh, it is forged or the clock
+		// is skewed: `age < timeoutMs` alone treated any future timestamp as
+		// recent, so a token dated hours ahead sailed through this local
+		// pre-check. Allow a small skew for honest clock drift between the
+		// issuing provider and this verifier, and reject anything beyond it.
+		if (age < -ProsopoServer.MAX_CLOCK_SKEW_MS) {
+			this.logger.error(() => ({
+				data: { timestamp, timeoutMs },
+				msg: `${label} captcha timestamp is in the future`,
+			}));
+			return false;
+		}
+		const recent = age < timeoutMs;
 		if (!recent) {
 			this.logger.error(() => ({
 				data: { timestamp, timeoutMs },
@@ -294,13 +351,11 @@ export class ProsopoServer {
 			// `find` against the dual-stack default would miss and the
 			// lambda would emit `Provider not found`. See `detectIpMode`.
 			const ipMode = detectIpMode(providerUrl);
-			const providers = await loadBalancer(
+			const provider = await findProvider(
 				this.config.defaultEnvironment,
+				providerUrl,
 				ipMode,
 			);
-
-			// find the provider by URL in providers
-			const provider = providers.find((p) => p.url === providerUrl);
 
 			// if the provider is not found, return an error
 			if (!provider) {
@@ -340,7 +395,8 @@ export class ProsopoServer {
 			return verificationResponse;
 		} catch (err) {
 			this.logger.error(() => ({ err, data: { token } }));
-			const code = err instanceof HttpError ? err.status : 500;
+			const code =
+				err instanceof HttpError ? err.status : isTimeoutError(err) ? 504 : 500;
 			throw new ProsopoApiError("API.BAD_REQUEST", {
 				context: { code, token },
 			});

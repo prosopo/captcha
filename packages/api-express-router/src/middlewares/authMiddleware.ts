@@ -13,43 +13,100 @@
 // limitations under the License.
 
 import { hexToU8a } from "@polkadot/util";
-import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
-import type { KeyringPair } from "@prosopo/types";
-import type { JWT } from "@prosopo/util-crypto";
+import { ProsopoApiError, ProsopoBaseError } from "@prosopo/common";
+import { type TranslationKey, isTranslationKey } from "@prosopo/locale";
+import type { ApiJsonError, KeyringPair } from "@prosopo/types";
+import type {
+	JWT,
+	JWTVerifyOptions,
+	JWTVerifyResult,
+} from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
+import type { JwtReplayGuard } from "./jwtReplayGuard.js";
+
+export type AuthMiddlewareOptions = {
+	/** Claim checks (audience, maximum lifetime) applied to every token. */
+	verify?: JWTVerifyOptions;
+	/**
+	 * Makes a token that carries a `jti` single-use. Tokens without `jti` are
+	 * unaffected, so existing issuers keep working until they add one.
+	 */
+	replayGuard?: JwtReplayGuard;
+};
+
+const verifyWith = (
+	key: KeyringPair | undefined,
+	jwt: JWT,
+	options: AuthMiddlewareOptions,
+): JWTVerifyResult | undefined => {
+	if (!key) return undefined;
+	const result = key.jwtVerify(jwt, options.verify);
+	return result.isValid ? result : undefined;
+};
+
+const isReplay = (
+	result: JWTVerifyResult,
+	options: AuthMiddlewareOptions,
+): boolean => {
+	const payload = result.payload;
+	if (!options.replayGuard || !payload || typeof payload.jti !== "string") {
+		return false;
+	}
+	return !options.replayGuard.claim(
+		`${payload.sub}:${payload.jti}`,
+		payload.exp,
+	);
+};
 
 export const authMiddleware = (
 	pair: KeyringPair | undefined,
 	authAccount?: KeyringPair | undefined,
+	options: AuthMiddlewareOptions = {},
 ) => {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		try {
 			const jwt = extractJWT(req);
 
-			let error: ProsopoApiError | undefined;
+			const verified =
+				verifyWith(authAccount, jwt, options) ?? verifyWith(pair, jwt, options);
 
-			if (authAccount?.jwtVerify(jwt).isValid) {
+			if (verified && !isReplay(verified, options)) {
 				next();
 				return;
 			}
 
-			if (pair?.jwtVerify(jwt).isValid) {
-				next();
-				return;
-			}
-
-			res.status(401).json({
-				error: new ProsopoEnvError(error || "API.UNAUTHORIZED", {
-					context: { i18n: req.i18n, code: 401 },
-				}),
-			});
+			unauthorized(req, res, "API.UNAUTHORIZED");
 			return;
 		} catch (err) {
 			req.logger.error(() => ({ err, msg: "Auth Middleware Error" }));
-			res.status(401).json({ error: "Unauthorized", message: err });
+			// The thrown value can carry request context, stack or config, so
+			// only its translation key goes back to the caller.
+			unauthorized(req, res, translationKeyOf(err));
 			return;
 		}
 	};
+};
+
+const translationKeyOf = (err: unknown): TranslationKey =>
+	err instanceof ProsopoBaseError &&
+	err.translationKey !== undefined &&
+	isTranslationKey(err.translationKey)
+		? err.translationKey
+		: "API.UNAUTHORIZED";
+
+const unauthorized = (
+	req: Request,
+	res: Response,
+	key: TranslationKey,
+): void => {
+	const body: { error: ApiJsonError } = {
+		error: {
+			code: 401,
+			key,
+			message: req.i18n ? req.i18n.t(key) : key,
+		},
+	};
+	res.status(401).json(body);
 };
 
 const extractJWT = (req: Request) => {

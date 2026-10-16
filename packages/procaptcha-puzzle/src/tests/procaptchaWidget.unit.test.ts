@@ -51,9 +51,11 @@ const mocks = vi.hoisted(() => {
 	const submitSolution =
 		vi.fn<(x: number, y: number, events: PuzzleEvent[]) => Promise<boolean>>();
 	const resetState = vi.fn<() => void>();
+	const dispose = vi.fn<() => void>();
 	const constructions: {
 		updateState: (next: Partial<ProcaptchaState>) => void;
 		getHoneypotValue?: () => string | undefined;
+		widgetReloadsOnFailure?: boolean;
 	}[] = [];
 	const loadI18next = vi.fn<(a?: boolean, b?: string) => Promise<unknown>>();
 	const canvasProps: { current: PuzzleCanvasProps | undefined } = {
@@ -65,6 +67,7 @@ const mocks = vi.hoisted(() => {
 		start,
 		submitSolution,
 		resetState,
+		dispose,
 		constructions,
 		loadI18next,
 		canvasProps,
@@ -79,12 +82,18 @@ vi.mock("../services/Manager.js", () => ({
 		_callbacks: unknown,
 		_frictionlessState: unknown,
 		getHoneypotValue?: () => string | undefined,
+		options?: { widgetReloadsOnFailure?: boolean },
 	) => {
-		mocks.constructions.push({ updateState, getHoneypotValue });
+		mocks.constructions.push({
+			updateState,
+			getHoneypotValue,
+			widgetReloadsOnFailure: options?.widgetReloadsOnFailure,
+		});
 		return {
 			start: mocks.start,
 			submitSolution: mocks.submitSolution,
 			resetState: mocks.resetState,
+			dispose: mocks.dispose,
 		};
 	},
 }));
@@ -596,6 +605,159 @@ describe("finishing the drag", () => {
 	});
 });
 
+describe("refreshing the puzzle", () => {
+	const openPuzzle = async (
+		widgetProps: ProcaptchaProps = props(),
+	): Promise<void> => {
+		render(widgetProps);
+		await click();
+	};
+
+	const refresh = async (): Promise<void> => {
+		mocks.canvasProps.current?.onRefresh?.();
+		await settle();
+	};
+
+	test("offers the canvas a refresh control", async () => {
+		await openPuzzle();
+		expect(mocks.canvasProps.current?.onRefresh).toBeTypeOf("function");
+	});
+
+	test("on a frictionless session, hands back to the wrapper marked as a refresh", async () => {
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
+		await openPuzzle(
+			props({
+				frictionlessState: frictionless({ sessionId: "session-one" }),
+				onReload,
+			}),
+		);
+		await refresh();
+		expect(onReload).toHaveBeenCalledWith(
+			expect.any(Number),
+			expect.any(Number),
+			{ refresh: true },
+		);
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+		expect(mocks.submitSolution).not.toHaveBeenCalled();
+	});
+
+	test("without a session to re-mint, fetches a new puzzle in place", async () => {
+		const replacement = challengeResponse({ originX: 40 });
+		mocks.start
+			.mockResolvedValueOnce(challengeResponse())
+			.mockResolvedValue(replacement);
+		await openPuzzle();
+		await refresh();
+		expect(mocks.start).toHaveBeenCalledTimes(2);
+		expect(mocks.canvasProps.current).toMatchObject({
+			originX: 40,
+			submitting: false,
+			showRetry: false,
+		});
+	});
+
+	test("clears a retry prompt, since a refresh is not a wrong answer", async () => {
+		mocks.submitSolution.mockResolvedValue(false);
+		await openPuzzle();
+		await complete();
+		expect(mocks.canvasProps.current?.showRetry).toBe(true);
+		await refresh();
+		expect(mocks.canvasProps.current?.showRetry).toBe(false);
+	});
+
+	test("tells the site the challenge was reloaded", async () => {
+		const onReload = vi.fn<() => void>();
+		await openPuzzle(props({ callbacks: { onReload } }));
+		await refresh();
+		expect(onReload).toHaveBeenCalledTimes(1);
+	});
+
+	test("is ignored while a solution is being checked", async () => {
+		mocks.submitSolution.mockReturnValue(
+			new Promise<boolean>(() => {
+				// never settles: the check stays in flight for the whole test
+			}),
+		);
+		await openPuzzle();
+		void mocks.canvasProps.current?.onComplete(200, 80, []);
+		await settle();
+		await refresh();
+		expect(mocks.start).toHaveBeenCalledTimes(1);
+	});
+});
+
+describe("switching to an image challenge", () => {
+	const openPuzzle = async (widgetProps: ProcaptchaProps): Promise<void> => {
+		render(widgetProps);
+		await click();
+	};
+
+	const switchable = (
+		overrides: Partial<ProcaptchaProps> = {},
+	): ProcaptchaProps =>
+		props({
+			frictionlessState: frictionless({ sessionId: "session-one" }),
+			onReload: vi.fn<NonNullable<ProcaptchaProps["onReload"]>>(),
+			...overrides,
+		});
+
+	beforeEach(() => {
+		mocks.start.mockResolvedValue(
+			challengeResponse({ imageSwitchAvailable: true }),
+		);
+	});
+
+	test("offers the switch when the provider allows it", async () => {
+		await openPuzzle(switchable());
+		expect(mocks.canvasProps.current?.onSwitchToImage).toBeTypeOf("function");
+		expect(mocks.canvasProps.current?.imageSwitchHighlighted).toBe(false);
+	});
+
+	test("does not offer the switch when the provider does not allow it", async () => {
+		mocks.start.mockResolvedValue(challengeResponse());
+		await openPuzzle(switchable());
+		expect(mocks.canvasProps.current?.onSwitchToImage).toBeUndefined();
+	});
+
+	test("does not offer the switch without a session to re-mint", async () => {
+		await openPuzzle(props());
+		expect(mocks.canvasProps.current?.onSwitchToImage).toBeUndefined();
+	});
+
+	test("hands back to the wrapper asking for an image challenge", async () => {
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
+		await openPuzzle(switchable({ onReload }));
+		mocks.canvasProps.current?.onSwitchToImage?.();
+		await settle();
+		expect(onReload).toHaveBeenCalledWith(
+			expect.any(Number),
+			expect.any(Number),
+			{ refresh: true, switchToImage: true },
+		);
+		expect(mocks.submitSolution).not.toHaveBeenCalled();
+	});
+
+	test("leaves the reload after a wrong answer to the wrapper", async () => {
+		await openPuzzle(switchable());
+		expect(mocks.constructions[0]?.widgetReloadsOnFailure).toBe(true);
+	});
+
+	test("lets the manager restart when nothing can re-mint", async () => {
+		await openPuzzle(props());
+		expect(mocks.constructions[0]?.widgetReloadsOnFailure).toBe(false);
+	});
+
+	test("labels the switch once the user has had two puzzles replaced", async () => {
+		await openPuzzle(switchable({ startReplacementCount: 2 }));
+		expect(mocks.canvasProps.current?.imageSwitchHighlighted).toBe(true);
+	});
+
+	test("keeps the switch as an icon after a single replacement", async () => {
+		await openPuzzle(switchable({ startReplacementCount: 1 }));
+		expect(mocks.canvasProps.current?.imageSwitchHighlighted).toBe(false);
+	});
+});
+
 describe("invisible mode", () => {
 	const execute = async (): Promise<void> => {
 		document.dispatchEvent(new Event("procaptcha:execute"));
@@ -761,5 +923,48 @@ describe("an invalidated session", () => {
 		render(props({ onSessionInvalidated }));
 		await invalidate();
 		expect(onSessionInvalidated).toHaveBeenCalledWith(undefined, undefined);
+	});
+});
+
+describe("the audio alternative", () => {
+	const onRequestAudioAlternative = vi.fn<() => void>();
+
+	const openPuzzle = async (overrides: Partial<ProcaptchaProps>) => {
+		render(props(overrides));
+		await click();
+	};
+
+	test("is not offered unless the site turned it on", async () => {
+		await openPuzzle({ onRequestAudioAlternative });
+		expect(mocks.canvasProps.current?.audioAlternative).toBeUndefined();
+	});
+
+	test("hands the canvas the translated offer and the wrapper's handler", async () => {
+		await openPuzzle({
+			audioAlternativeAvailable: true,
+			onRequestAudioAlternative,
+		});
+		const offer = mocks.canvasProps.current?.audioAlternative;
+		expect(offer?.label).toBe("WIDGET.AUDIO_ALTERNATIVE");
+		offer?.onRequestAudio();
+		expect(onRequestAudioAlternative).toHaveBeenCalledTimes(1);
+	});
+
+	test("leaves the label empty while the translations load", async () => {
+		mocks.translationsReady.current = false;
+		await openPuzzle({
+			audioAlternativeAvailable: true,
+			onRequestAudioAlternative,
+		});
+		expect(mocks.canvasProps.current?.audioAlternative?.label).toBe("");
+	});
+});
+
+describe("destroy", () => {
+	test("disposes the manager so its expiry timers cannot outlive the widget", () => {
+		render(props());
+		expect(mocks.dispose).not.toHaveBeenCalled();
+		destroy();
+		expect(mocks.dispose).toHaveBeenCalledTimes(1);
 	});
 });

@@ -23,6 +23,7 @@ import { trafficFilterAbuserScoreThresholdDefault } from "@prosopo/types";
 import {
 	isDatacenterAllowlisted,
 	isDatacenterDenylisted,
+	isPrivateRelay,
 } from "../spam/checkTrafficFilter.js";
 
 export type { EnrichedDnsEvent };
@@ -107,8 +108,9 @@ export const extraIpInfosFromEnrichedDnsEvent = (
  *
  * `pathValid` is a protocol signal, not a category — it always contributes
  * regardless of trafficFilter. When `trafficFilter` is omitted, all
- * datacenter / abuser flags count (preserves the pre-gating behaviour for
- * admin / diagnostic recompute callers).
+ * datacenter / abuser flags count except iCloud Private Relay's datacenter
+ * flag (preserves the pre-gating behaviour for admin / diagnostic recompute
+ * callers).
  */
 export const computeDnsAsymmetry = (
 	enriched: EnrichedDnsEvent | undefined,
@@ -121,7 +123,9 @@ export const computeDnsAsymmetry = (
 
 	const countDc = (ip: IPInfoResponse | undefined): boolean => {
 		if (!ip?.isValid || !ip.isDatacenter) return false;
-		if (!trafficFilter) return true;
+		// The verify-time recompute only ever raises the score this path
+		// stores, so a relay exemption left to the gated path never lands.
+		if (!trafficFilter) return !isPrivateRelay(ip);
 		if (trafficFilter.datacenter === undefined) return false;
 		// Denylist wins over shielding and over the ISP / allowlist checks —
 		// an explicitly named provider counts as DC no matter what.

@@ -40,7 +40,8 @@ const mocks = vi.hoisted(() => {
 	const submitSolution =
 		vi.fn<(x: number, y: number, events: PuzzleEvent[]) => Promise<boolean>>();
 	const resetState = vi.fn<() => void>();
-	return { start, submitSolution, resetState };
+	const dispose = vi.fn<() => void>();
+	return { start, submitSolution, resetState, dispose };
 });
 
 vi.mock("../services/Manager.js", () => ({
@@ -52,6 +53,7 @@ vi.mock("../services/Manager.js", () => ({
 		start: mocks.start,
 		submitSolution: mocks.submitSolution,
 		resetState: mocks.resetState,
+		dispose: mocks.dispose,
 	}),
 }));
 

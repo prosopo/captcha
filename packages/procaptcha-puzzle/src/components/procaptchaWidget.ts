@@ -12,20 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { createTranslator, loadI18next } from "@prosopo/locale";
+import {
+	createTranslator,
+	loadI18next,
+	localiseErrorMessage,
+} from "@prosopo/locale";
 import {
 	type CheckboxProps,
 	type Component,
 	type HoneypotComponent,
+	PROCAPTCHA_EXECUTE_EVENT,
 	type ProcaptchaStateHandle,
 	Teardown,
+	audioAlternativeOffer,
 	buildUpdateState,
 	createElement,
 	createProcaptchaState,
 	createRenderScheduler,
-	isEventTrusted,
 	mountCheckbox,
 	mountHoneypot,
+	trustedClickCoords,
 } from "@prosopo/procaptcha-common";
 import {
 	type GetPuzzleCaptchaResponse,
@@ -33,13 +39,15 @@ import {
 	type ProcaptchaProps,
 	type ProcaptchaState,
 	type PuzzleEvent,
+	type ReloadOptions,
 } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { Manager } from "../services/Manager.js";
 import { type PuzzleCanvasProps, mountPuzzleCanvas } from "./puzzleCanvas.js";
 
-// Define the same event name as in the bundle for consistency
-const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
+// Wrong answers and refreshes in a row before the switch to an image
+// challenge shows its tooltip without a hover.
+const IMAGE_SWITCH_HIGHLIGHT_AFTER = 2;
 
 type PuzzlePhase = "checkbox" | "dragging" | "submitting";
 
@@ -79,6 +87,11 @@ export const mountProcaptchaPuzzleWidget = (
 	// get the state update mechanism
 	const updateState = buildUpdateState(store.state, store.update);
 
+	// A frictionless session is single-use, so a replacement challenge needs a
+	// new one, which the wrapper mints when asked through `onReload`.
+	const remintsSession =
+		undefined !== frictionlessState?.sessionId && undefined !== props.onReload;
+
 	const manager = Manager(
 		config,
 		store.state,
@@ -86,6 +99,7 @@ export const mountProcaptchaPuzzleWidget = (
 		callbacks,
 		frictionlessState,
 		() => honeypot?.getValue(),
+		{ widgetReloadsOnFailure: remintsSession },
 	);
 
 	const root = createElement("div");
@@ -126,17 +140,21 @@ export const mountProcaptchaPuzzleWidget = (
 		puzzlePhase = "dragging";
 		scheduler.schedule();
 
+		await replaceChallenge({ showRetry: true });
+	};
+
+	const replaceChallenge = async (options: ReloadOptions): Promise<void> => {
 		// A frictionless session is single-use: the provider consumed it when it
-		// issued the puzzle the user just got wrong, so asking `manager.start()`
-		// for a replacement on the same sessionId can only ever come back
+		// issued the current puzzle, so asking `manager.start()` for a
+		// replacement on the same sessionId can only ever come back
 		// CAPTCHA.NO_SESSION_FOUND — a wasted round trip that surfaces an error
 		// on the checkbox before the wrapper recovers. Go straight to the
 		// re-mint instead; the wrapper mints a new session and re-mounts us with
 		// `autoStart`, so a fresh puzzle appears in place.
-		if (frictionlessState?.sessionId && props.onReload) {
+		if (remintsSession) {
 			puzzlePhase = "submitting";
 			scheduler.schedule();
-			props.onReload(lastCoords?.x, lastCoords?.y, { showRetry: true });
+			props.onReload?.(lastCoords?.x, lastCoords?.y, options);
 			return;
 		}
 
@@ -144,6 +162,7 @@ export const mountProcaptchaPuzzleWidget = (
 			const newChallenge = await manager.start();
 			if (newChallenge) {
 				challengeData = newChallenge;
+				puzzlePhase = "dragging";
 			} else {
 				// Couldn't get new challenge, fall back to checkbox
 				puzzlePhase = "checkbox";
@@ -158,6 +177,33 @@ export const mountProcaptchaPuzzleWidget = (
 		loading = false;
 		scheduler.schedule();
 	};
+
+	// Refreshing is not a wrong answer, so it drops any retry prompt rather
+	// than carrying it onto the new puzzle.
+	const handleRefresh = () => {
+		if ("dragging" !== puzzlePhase) {
+			return;
+		}
+		callbacks.onReload?.();
+		showRetry = false;
+		puzzlePhase = "submitting";
+		scheduler.schedule();
+		void replaceChallenge({ refresh: true });
+	};
+
+	const handleSwitchToImage = () => {
+		if ("dragging" !== puzzlePhase) {
+			return;
+		}
+		callbacks.onReload?.();
+		showRetry = false;
+		puzzlePhase = "submitting";
+		scheduler.schedule();
+		void replaceChallenge({ refresh: true, switchToImage: true });
+	};
+
+	const canSwitchToImage = (challenge: GetPuzzleCaptchaResponse): boolean =>
+		true === challenge.imageSwitchAvailable && remintsSession;
 
 	// Dismissing returns to the checkbox; clicking away is not a wrong answer.
 	const handleDismiss = () => {
@@ -186,6 +232,16 @@ export const mountProcaptchaPuzzleWidget = (
 		placement: config.placement,
 		anchor: props.container,
 		onDismiss: handleDismiss,
+		audioAlternative: audioAlternativeOffer(
+			props,
+			translator.isReady() ? translator.t("WIDGET.AUDIO_ALTERNATIVE") : "",
+		),
+		onRefresh: handleRefresh,
+		...(canSwitchToImage(challenge) && {
+			onSwitchToImage: handleSwitchToImage,
+			imageSwitchHighlighted:
+				(props.startReplacementCount ?? 0) >= IMAGE_SWITCH_HIGHLIGHT_AFTER,
+		}),
 	});
 
 	const runErrorEffect = () => {
@@ -258,7 +314,9 @@ export const mountProcaptchaPuzzleWidget = (
 		checked: store.state.isHuman,
 		theme: "light" === config.theme ? lightTheme : darkTheme,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",
-		error: store.state.error?.message,
+		error: store.state.error
+			? localiseErrorMessage(translator.i18n, store.state.error)
+			: undefined,
 		loadingText: translator.t("WIDGET.CHECKING", {
 			defaultValue: "Checking that you are human",
 		}),
@@ -273,23 +331,7 @@ export const mountProcaptchaPuzzleWidget = (
 			showRetry = false;
 			scheduler.schedule();
 
-			// Capture click coordinates (mirrors the PoW widget) so the puzzle
-			// solution salt records the entry-point telemetry.
-			let x = 0;
-			let y = 0;
-			if (!isEventTrusted(event)) {
-				// Don't capture coordinates for non-trusted events
-			} else if ("touches" in event && event.touches.length > 0) {
-				const touch = event.touches[0];
-				if (touch) {
-					x = touch.clientX;
-					y = touch.clientY;
-				}
-			} else if ("clientX" in event && "clientY" in event) {
-				x = event.clientX;
-				y = event.clientY;
-			}
-
+			const { x, y } = trustedClickCoords(event);
 			lastCoords = { x, y };
 			try {
 				const challenge = await manager.start(x, y);
@@ -410,6 +452,7 @@ export const mountProcaptchaPuzzleWidget = (
 
 	return {
 		destroy: () => {
+			manager.dispose();
 			teardown.run();
 			puzzle?.destroy();
 			checkbox?.destroy();

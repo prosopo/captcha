@@ -12,16 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { loadI18next } from "@prosopo/locale";
+import { loadI18next, localiseErrorMessage } from "@prosopo/locale";
 import {
 	type CheckboxProps,
 	type Component,
 	type StaticComponent,
 	Teardown,
+	type WidgetHandle,
+	type WidgetMountFn,
 	clearElement,
 	createElement,
 	getDefaultEvents,
 	getRestartDelayMs,
+	isEventTrusted,
 	isSecureBrowserContext,
 	mountCheckbox,
 	mountTestModeBanner,
@@ -34,9 +37,11 @@ import {
 	type ModeType,
 	PROCAPTCHA_START_EVENT,
 	ProcaptchaConfigSchema,
+	type ProcaptchaEscalationHandler,
 	type ProcaptchaFrictionlessProps,
 	type ProcaptchaProps,
 	type ProcaptchaStartEventDetail,
+	type ReloadOptions,
 	StartModeEnum,
 } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
@@ -53,6 +58,8 @@ import {
 
 const NO_SESSION_FOUND_KEY = "CAPTCHA.NO_SESSION_FOUND";
 
+const MAX_PRESS_HOLD_MS = 1000;
+
 const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 
 // Each session uses exactly one solver — chosen by the /frictionless response.
@@ -60,13 +67,27 @@ const ProcaptchaLoader = async () =>
 	(await import("@prosopo/procaptcha-react")).mountProcaptchaImageWidget;
 const ProcaptchaPuzzleLoader = async () =>
 	(await import("@prosopo/procaptcha-puzzle")).mountProcaptchaPuzzleWidget;
+const ProcaptchaIconOrderLoader = async () =>
+	(await import("@prosopo/procaptcha-icon-order"))
+		.mountProcaptchaIconOrderWidget;
 const ProcaptchaPowLoader = async () =>
 	(await import("@prosopo/procaptcha-pow")).mountProcaptchaPowWidget;
+const ProcaptchaAudioLoader = async () =>
+	(await import("@prosopo/procaptcha-audio")).mountProcaptchaAudioWidget;
 
-/** A mounted solver widget. All three solvers expose the same teardown. */
-interface SolverHandle {
-	destroy(): void;
-}
+/** Solvers that ask for a fresh session through `onReload`. */
+const reloadableSolverLoaders: ReadonlyMap<
+	string,
+	() => Promise<WidgetMountFn>
+> = new Map<string, () => Promise<WidgetMountFn>>([
+	[CaptchaType.image, ProcaptchaLoader],
+	[CaptchaType.puzzle, ProcaptchaPuzzleLoader],
+	[CaptchaType.iconOrder, ProcaptchaIconOrderLoader],
+]);
+
+/** Mirrors the provider's `isAudioAlternativeSessionType`. */
+const offersAudioAlternative = (captchaType: string): boolean =>
+	reloadableSolverLoaders.has(captchaType);
 
 export interface ProcaptchaFrictionlessHandle {
 	destroy(): void;
@@ -134,7 +155,24 @@ export const mountProcaptchaFrictionless = (
 	// Set when the re-mint was triggered by a wrong puzzle answer rather than a
 	// reload press, so the replacement challenge still tells the user they
 	// missed. Held alongside `nextMountAutoStart` for the same reason.
-	let nextMountShowRetry = false;
+	// Also seeded by a full restart after a rejected image answer.
+	let nextMountShowRetry = true === props.startShowRetry;
+	// The session the user refreshed away from, sent with the next
+	// /frictionless request so the provider can count refreshes in a row.
+	// Survives provider retries for the same reason as `nextMountAutoStart`,
+	// and is cleared once a replacement session has been minted.
+	let nextRefreshOf: string | undefined;
+	// Whether that replacement should be an image challenge, as the user asked.
+	let nextSwitchToImage = false;
+	// Challenges in a row replaced by a wrong answer or a refresh. Lets the
+	// puzzle draw its switch to an image challenge more prominently for a user
+	// who looks to be struggling.
+	let replacementCount = 0;
+	// Set when the user asks for audio, and kept across re-mints until one comes
+	// back with no visual challenge to swap for it. /frictionless knows nothing
+	// of the choice and keeps handing back the site's visual type.
+	let audioChosen = false;
+	let audioAlternativeAvailable = false;
 	const manualStart = StartModeEnum.manual === config.startMode;
 	let manualStarted = false;
 	// The inner widget only listens for `procaptcha:execute` once /frictionless
@@ -152,8 +190,29 @@ export const mountProcaptchaFrictionless = (
 	const slot = createElement("div");
 	container.appendChild(slot);
 
-	let solver: SolverHandle | undefined;
+	let solver: WidgetHandle | undefined;
 	let placeholder: Component<CheckboxProps> | undefined;
+
+	// A press that starts on the placeholder has to end on it: swap the solver
+	// in mid-press and the browser fires the click on neither box, so it is
+	// lost. The swap waits for the press to finish, which lets the click be
+	// held and replayed instead. Capped, since a release outside the page may
+	// never be reported.
+	let pressReleased: Promise<void> | undefined;
+	teardown.addEventListener(slot, "pointerdown", (event: Event) => {
+		if (!placeholder || !isEventTrusted(event)) return;
+		pressReleased = new Promise<void>((resolve: () => void) => {
+			const release = () => {
+				clearTimeout(timer);
+				window.removeEventListener("pointerup", release, true);
+				window.removeEventListener("pointercancel", release, true);
+				setTimeout(resolve, 0);
+			};
+			const timer = setTimeout(release, MAX_PRESS_HOLD_MS);
+			window.addEventListener("pointerup", release, true);
+			window.addEventListener("pointercancel", release, true);
+		});
+	});
 
 	const clearSlot = () => {
 		solver?.destroy();
@@ -177,9 +236,6 @@ export const mountProcaptchaFrictionless = (
 
 		placeholder = mountCheckbox(slot, {
 			theme: "light" === config.theme ? lightTheme : darkTheme,
-			// Inert unless the site asked for a manual start: this checkbox
-			// stands in until detection picks a solver, and clicking it must
-			// not start anything of its own.
 			onChange: onChange ?? (() => undefined),
 			checked: false,
 			labelText: i18n.isInitialized ? i18n.t("WIDGET.I_AM_HUMAN") : "",
@@ -214,6 +270,9 @@ export const mountProcaptchaFrictionless = (
 		teardown.add(() => clearTimeout(timer));
 	};
 
+	const cannotLoadText = (): string =>
+		i18n.isInitialized ? i18n.t("WIDGET.CANNOT_LOAD") : "Cannot load CAPTCHA";
+
 	const fallOverWithStyle = (errorMessage?: string, errorKey?: string) => {
 		// We could always re-render here after a period but this will result in
 		// never-ending requests to Providers when settings are incorrect, or the
@@ -232,7 +291,9 @@ export const mountProcaptchaFrictionless = (
 		}
 		renderPlaceholder(
 			config.mode,
-			errorMessage || "Cannot load CAPTCHA",
+			errorMessage
+				? localiseErrorMessage(i18n, { message: errorMessage, key: errorKey })
+				: cannotLoadText(),
 			false,
 		);
 	};
@@ -260,8 +321,11 @@ export const mountProcaptchaFrictionless = (
 		autoStart = false,
 		escalationCoords?: RetryCoords,
 	): Promise<void> => {
-		const onEscalate = (
-			next: CaptchaType.image | CaptchaType.puzzle,
+		// Audio is mounted against the visual session /frictionless just minted.
+		audioChosen = audioChosen && offersAudioAlternative(captchaType);
+
+		const onEscalate: ProcaptchaEscalationHandler = (
+			next: Parameters<ProcaptchaEscalationHandler>[0],
 			newSessionId: string,
 			coords?: RetryCoords,
 		) => {
@@ -326,14 +390,15 @@ export const mountProcaptchaFrictionless = (
 		// instead of the modal simply closing. Not one-shot: the user may keep
 		// asking for a different challenge, and at a low `puzzleTolerance` they
 		// may well miss several in a row.
-		const onReload = (
-			x?: number,
-			y?: number,
-			options?: { showRetry?: boolean },
-		) => {
+		const onReload = (x?: number, y?: number, options?: ReloadOptions) => {
 			pendingRetryCoords.current = normaliseRetryCoords(x, y);
 			nextMountAutoStart = true;
 			nextMountShowRetry = true === options?.showRetry;
+			nextRefreshOf =
+				true === options?.refresh ? frictionlessState.sessionId : undefined;
+			nextSwitchToImage =
+				true === options?.refresh && true === options?.switchToImage;
+			replacementCount = nextSwitchToImage ? 0 : replacementCount + 1;
 			// A reload mints a genuinely new session, so the invalidation
 			// budget for the *previous* one shouldn't count against it.
 			sessionInvalidatedAttempts.current = 0;
@@ -341,31 +406,46 @@ export const mountProcaptchaFrictionless = (
 			void start();
 		};
 
-		// Consume any pending retry coords now — the resumed widget owns them
-		// for exactly one auto-fired `manager.start(x, y)`. Cleared so a
-		// subsequent escalation/re-render doesn't accidentally re-inject.
+		// The visual challenge spent this session, so audio needs a fresh one.
+		const onRequestAudioAlternative = () => {
+			audioChosen = true;
+			nextMountAutoStart = true;
+			sessionInvalidatedAttempts.current = 0;
+			resetState(0);
+			void start();
+		};
+
+		// Consume any pending retry coords at mount time — the resumed widget
+		// owns them for exactly one auto-fired `manager.start(x, y)`. Cleared so
+		// a subsequent escalation/re-render doesn't accidentally re-inject.
 		// Escalation coords (from a PoW→image/puzzle handoff) take precedence
 		// over pending retry coords when both are present, because escalation
 		// is the current transition and the pending retry belongs to a prior
-		// widget instance that never got to consume them.
-		const forcedAutoStart = nextMountAutoStart;
-		nextMountAutoStart = false;
-		const startShowRetry = nextMountShowRetry;
-		nextMountShowRetry = false;
-		const { autoStart: resumedAutoStart, startCoords: retryStartCoords } =
-			consumeRetryMountProps(pendingRetryCoords, autoStart || forcedAutoStart);
-		const startCoords = escalationCoords ?? retryStartCoords;
-
-		const widgetProps: ProcaptchaProps = {
-			config,
-			callbacks,
-			frictionlessState,
-			i18n,
-			autoStart: resumedAutoStart,
-			startCoords,
-			startShowRetry,
-			onSessionInvalidated,
-			container: widgetContainer,
+		// widget instance that never got to consume them. Read only once the
+		// solver's chunk has loaded, because the placeholder stays clickable
+		// while it loads.
+		const takeWidgetProps = (): ProcaptchaProps => {
+			const forcedAutoStart = nextMountAutoStart;
+			nextMountAutoStart = false;
+			const startShowRetry = nextMountShowRetry;
+			nextMountShowRetry = false;
+			const { autoStart: resumedAutoStart, startCoords: retryStartCoords } =
+				consumeRetryMountProps(
+					pendingRetryCoords,
+					autoStart || forcedAutoStart,
+				);
+			return {
+				config,
+				callbacks,
+				frictionlessState,
+				i18n,
+				autoStart: resumedAutoStart,
+				startCoords: escalationCoords ?? retryStartCoords,
+				startShowRetry,
+				startReplacementCount: replacementCount,
+				onSessionInvalidated,
+				container: widgetContainer,
+			};
 		};
 
 		if (CaptchaType.authenticated === captchaType) {
@@ -390,32 +470,43 @@ export const mountProcaptchaFrictionless = (
 				userAccount: frictionlessState.userAccount,
 				provider: frictionlessState.provider,
 				callbacks,
+				theme: "light" === config.theme ? lightTheme : darkTheme,
+				labels: i18n.isInitialized
+					? {
+							verifiedAgent: i18n.t("WIDGET.VERIFIED_AGENT"),
+							trustedRequest: i18n.t("WIDGET.TRUSTED_REQUEST"),
+						}
+					: undefined,
 			});
 			return;
 		}
 
-		if (CaptchaType.image === captchaType) {
-			const mount = await ProcaptchaLoader();
+		const loadReloadableSolver = audioChosen
+			? ProcaptchaAudioLoader
+			: reloadableSolverLoaders.get(captchaType);
+		if (loadReloadableSolver) {
+			const offerAudio = audioAlternativeAvailable && !audioChosen;
+			const mount = await loadReloadableSolver();
+			await pressReleased;
 			if (destroyed) return;
 			clearSlot();
-			solver = mount(slot, { ...widgetProps, onReload });
-			replayPendingExecute();
-			return;
-		}
-
-		if (CaptchaType.puzzle === captchaType) {
-			const mount = await ProcaptchaPuzzleLoader();
-			if (destroyed) return;
-			clearSlot();
-			solver = mount(slot, { ...widgetProps, onReload });
+			solver = mount(slot, {
+				...takeWidgetProps(),
+				onReload,
+				...(offerAudio && {
+					audioAlternativeAvailable: true,
+					onRequestAudioAlternative,
+				}),
+			});
 			replayPendingExecute();
 			return;
 		}
 
 		const mount = await ProcaptchaPowLoader();
+		await pressReleased;
 		if (destroyed) return;
 		clearSlot();
-		solver = mount(slot, { ...widgetProps, onEscalate });
+		solver = mount(slot, { ...takeWidgetProps(), onEscalate });
 		replayPendingExecute();
 	};
 
@@ -440,9 +531,14 @@ export const mountProcaptchaFrictionless = (
 				// After the first attempt, tell detection this is a retry so it
 				// re-selects a random provider from the list rather than re-using
 				// the DNS-routed pronode that just failed.
-				const result = await detectBot(configOutput, widgetContainer, restart, {
-					attempt: state.attemptCount,
-				});
+				const result = await detectBot(
+					configOutput,
+					widgetContainer,
+					restart,
+					{ attempt: state.attemptCount },
+					nextRefreshOf,
+					nextSwitchToImage,
+				);
 
 				const guard = evaluateFrictionlessResult(result);
 				if ("error" === guard.kind) {
@@ -464,6 +560,9 @@ export const mountProcaptchaFrictionless = (
 					return;
 				}
 
+				nextRefreshOf = undefined;
+				nextSwitchToImage = false;
+
 				const frictionlessState: FrictionlessState = {
 					provider: result.provider,
 					sessionId: result.sessionId,
@@ -472,12 +571,15 @@ export const mountProcaptchaFrictionless = (
 					behaviorCollector1: result.behaviorCollector1,
 					behaviorCollector2: result.behaviorCollector2,
 					behaviorCollector3: result.behaviorCollector3,
+					behaviorCollector4: result.behaviorCollector4,
 					deviceCapability: result.deviceCapability,
 					encryptBehavioralData: result.encryptBehavioralData,
 					getSimdReadings: result.getSimdReadings,
 					hp: result.hp,
 					agent: result.agent,
 				};
+
+				audioAlternativeAvailable = true === result.audioAlternativeAvailable;
 
 				await renderForCaptchaType(result.captchaType, frictionlessState);
 
@@ -533,26 +635,35 @@ export const mountProcaptchaFrictionless = (
 		}
 	}
 
+	const clickCoords = (
+		event: MouseEvent | KeyboardEvent | TouchEvent,
+	): RetryCoords | null =>
+		"clientX" in event && "clientY" in event
+			? normaliseRetryCoords(event.clientX, event.clientY)
+			: null;
+
 	const manualCheckboxHandler: CheckboxProps["onChange"] = async (
 		event: MouseEvent | KeyboardEvent | TouchEvent,
 	): Promise<void> => {
-		let x = 0;
-		let y = 0;
-		if ("clientX" in event && "clientY" in event) {
-			x = event.clientX;
-			y = event.clientY;
-		}
-		await startManually(true, normaliseRetryCoords(x, y) ?? undefined);
+		await startManually(true, clickCoords(event) ?? undefined);
 	};
 
-	// Initial paint: the loading placeholder, before detection resolves. Under
-	// manual start there is nothing in flight yet, so the box is idle and
-	// clickable rather than spinning.
+	// Detection takes seconds, and the user should not have to wait it out
+	// before the checkbox responds. A click while it runs is held and replayed
+	// on the solver detection picks, so no token is issued any sooner.
+	const holdClickUntilDetected: CheckboxProps["onChange"] = (
+		event: MouseEvent | KeyboardEvent | TouchEvent,
+	): void => {
+		pendingRetryCoords.current = clickCoords(event);
+		nextMountAutoStart = true;
+		renderPlaceholder(config.mode, undefined, true);
+	};
+
 	renderPlaceholder(
 		config.mode,
 		state.errorMessage,
-		!manualStart,
-		manualStart ? manualCheckboxHandler : undefined,
+		false,
+		manualStart ? manualCheckboxHandler : holdClickUntilDetected,
 	);
 
 	if (manualStart) {

@@ -44,7 +44,8 @@ export const Languages = {
 	turkish: "tr",
 	ukrainian: "uk",
 	vietnamese: "vi",
-	chinese: "zh-CN",
+	chinese: "zh",
+	chineseChina: "zh-CN",
 } as const;
 
 export type Language = (typeof Languages)[keyof typeof Languages];

@@ -15,7 +15,11 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CaptchaType } from "@prosopo/types";
+import {
+	CaptchaType,
+	type IPInfoResult,
+	TrafficFilterAction,
+} from "@prosopo/types";
 import { AccessPolicyType } from "@prosopo/user-access-policy";
 import {
 	type Mock,
@@ -40,6 +44,9 @@ type MockTasks = {
 		checkLangRules: MockFn;
 		setSessionParams: MockFn;
 		setRoutingContext: MockFn;
+		setAudioAlternativeEnabled: MockFn;
+		setAllowedCaptchaTypes: MockFn;
+		setImageSwitchRequested: MockFn;
 		applyRoutingMachine: MockFn;
 		sendImageCaptcha: MockFn;
 		sendPowCaptcha: MockFn;
@@ -60,6 +67,7 @@ type MockTasks = {
 		getSessionByuserSitekeyIpHash: MockFn;
 		getClientRecord: MockFn;
 		checkAndRemoveSession: MockFn;
+		getSessionRecordBySessionId?: MockFn;
 	};
 	logger: Record<string, unknown>;
 };
@@ -81,6 +89,7 @@ type MockReq = {
 	requestId?: string;
 	path?: string;
 	method?: string;
+	ipInfo?: IPInfoResult;
 };
 
 type MockRes = {
@@ -88,6 +97,9 @@ type MockRes = {
 	status: (code: number) => MockRes;
 	on: (event: string, handler: () => void) => MockRes;
 	statusCode?: number;
+	// Express always provides this; the handler leaves the tarpit pad size
+	// here for `padResponseMiddleware` to pick up.
+	locals: Record<string, unknown>;
 };
 
 // Helper to build req/res/next
@@ -119,6 +131,7 @@ const buildReqRes = (body: unknown, ip = "127.0.0.1") => {
 		status: vi.fn().mockReturnThis(),
 		on: vi.fn().mockReturnThis(),
 		statusCode: 200,
+		locals: {},
 	} as unknown as MockRes;
 	const next = vi.fn();
 	return { req, res, next };
@@ -182,6 +195,9 @@ vi.mock("../../../tasks/index.js", async () => {
 					checkLangRules: vi.fn().mockReturnValue(0),
 					setSessionParams: vi.fn(),
 					setRoutingContext: vi.fn(),
+					setAudioAlternativeEnabled: vi.fn(),
+					setAllowedCaptchaTypes: vi.fn(),
+					setImageSwitchRequested: vi.fn(),
 					applyRoutingMachine: vi.fn(
 						async (baseline: { captchaType: CaptchaType }) => ({
 							captchaType: baseline.captchaType,
@@ -266,6 +282,9 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			checkLangRules: vi.fn().mockReturnValue(0),
 			setSessionParams: vi.fn(),
 			setRoutingContext: vi.fn(),
+			setAudioAlternativeEnabled: vi.fn(),
+			setAllowedCaptchaTypes: vi.fn(),
+			setImageSwitchRequested: vi.fn(),
 			applyRoutingMachine: vi.fn(
 				async (baseline: { captchaType: CaptchaType }) => ({
 					captchaType: baseline.captchaType,
@@ -309,6 +328,7 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 			getSessionByuserSitekeyIpHash: vi.fn().mockResolvedValue(null),
 			getClientRecord: vi.fn(),
 			checkAndRemoveSession: vi.fn().mockResolvedValue(undefined),
+			getSessionRecordBySessionId: vi.fn().mockResolvedValue(undefined),
 		},
 		logger: mockLogger as unknown as Record<string, unknown>,
 	});
@@ -459,6 +479,156 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		).toHaveBeenCalled();
 	});
 
+	it("carries a refresh chain from the session the user refreshed away from", async () => {
+		tasksInstance.db.getClientRecord.mockResolvedValue({
+			account: "siteRefresh",
+			settings: { frictionlessThreshold: 0.5, disallowWebView: false },
+		});
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+			payload(false),
+		);
+		tasksInstance.db.getSessionRecordBySessionId?.mockResolvedValue({
+			siteKey: "siteRefresh",
+			createdAt: new Date(Date.now() - 3000),
+			refreshCount: 1,
+		});
+
+		const { req, res, next } = buildReqRes({
+			token: "tRefresh",
+			headHash: "hhRefresh",
+			dapp: "siteRefresh",
+			user: "u",
+			refreshOf: "replaced-session",
+		});
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(tasksInstance.db.getSessionRecordBySessionId).toHaveBeenCalledWith(
+			"replaced-session",
+		);
+		expect(
+			tasksInstance.frictionlessManager.setSessionParams,
+		).toHaveBeenCalledWith(
+			expect.objectContaining({
+				refreshOf: "replaced-session",
+				refreshCount: 2,
+				refreshedAfterMs: expect.any(Number),
+			}),
+		);
+	});
+
+	describe("switching a puzzle to image", () => {
+		const requestSwitch = async (
+			replacedCaptchaType: CaptchaType,
+			widgetFeatureFlags: { puzzleImageSwitch?: boolean } | undefined,
+			switchToImage: boolean | undefined,
+			captchaType?: CaptchaType,
+		): Promise<void> => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "siteSwitch",
+				settings: {
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					...(widgetFeatureFlags && { widgetFeatureFlags }),
+					...(captchaType && { captchaType }),
+				},
+			});
+			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+				payload(false),
+			);
+			tasksInstance.db.getSessionRecordBySessionId?.mockResolvedValue({
+				siteKey: "siteSwitch",
+				createdAt: new Date(Date.now() - 3000),
+				captchaType: replacedCaptchaType,
+			});
+
+			const { req, res, next } = buildReqRes({
+				token: "tSwitch",
+				headHash: "hhSwitch",
+				dapp: "siteSwitch",
+				user: "u",
+				refreshOf: "replaced-puzzle",
+				...(switchToImage !== undefined && { switchToImage }),
+			});
+
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+			expect(next).not.toHaveBeenCalled();
+		};
+
+		const switchRequested = (): unknown =>
+			tasksInstance.frictionlessManager.setImageSwitchRequested.mock
+				.calls[0]?.[0];
+
+		it("honours the switch on a site with it enabled", async () => {
+			await requestSwitch(
+				CaptchaType.puzzle,
+				{ puzzleImageSwitch: true },
+				true,
+			);
+			expect(switchRequested()).toBe(true);
+		});
+
+		it("honours the switch on a site pinned to puzzle", async () => {
+			await requestSwitch(
+				CaptchaType.puzzle,
+				{ puzzleImageSwitch: true },
+				true,
+				CaptchaType.puzzle,
+			);
+			expect(switchRequested()).toBe(true);
+		});
+
+		it("ignores the switch on a site without it enabled", async () => {
+			await requestSwitch(CaptchaType.puzzle, undefined, true);
+			expect(switchRequested()).toBe(false);
+		});
+
+		it("ignores the switch away from anything but a puzzle", async () => {
+			await requestSwitch(CaptchaType.pow, { puzzleImageSwitch: true }, true);
+			expect(switchRequested()).toBe(false);
+		});
+
+		it("ignores a plain refresh", async () => {
+			await requestSwitch(
+				CaptchaType.puzzle,
+				{ puzzleImageSwitch: true },
+				undefined,
+			);
+			expect(switchRequested()).toBe(false);
+		});
+	});
+
+	it("does not look anything up for an ordinary request", async () => {
+		tasksInstance.db.getClientRecord.mockResolvedValue({
+			account: "siteNoRefresh",
+			settings: { frictionlessThreshold: 0.5, disallowWebView: false },
+		});
+		tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+			payload(false),
+		);
+
+		const { req, res, next } = buildReqRes({
+			token: "tNoRefresh",
+			headHash: "hhNoRefresh",
+			dapp: "siteNoRefresh",
+			user: "u",
+		});
+
+		// biome-ignore lint/suspicious/noExplicitAny: mock request
+		await handler(req as any, res as any, next);
+
+		expect(next).not.toHaveBeenCalled();
+		expect(tasksInstance.db.getSessionRecordBySessionId).not.toHaveBeenCalled();
+		expect(
+			tasksInstance.frictionlessManager.setSessionParams,
+		).toHaveBeenCalledWith(
+			expect.not.objectContaining({ refreshOf: expect.anything() }),
+		);
+	});
+
 	it("reuses the cached session when no access policy conflicts with its captchaType", async () => {
 		const clientRecord = {
 			account: "siteDedupOk",
@@ -561,6 +731,166 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		// Reuse-session response shape is NOT used.
 		expect(res.json).not.toHaveBeenCalledWith(
 			expect.objectContaining({ sessionId: "stale-pow-session-routing" }),
+		);
+	});
+
+	describe("captcha type feature flags", () => {
+		const stubDecrypt = () =>
+			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
+				baseBotScore: 0,
+				timestamp: Date.now(),
+				userId: "u",
+				userAgent: "844bc172f032bdd2d0baae3536c1d66c",
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "abc",
+				decryptionFailed: false,
+			});
+
+		const request = async (dapp: string) => {
+			const { req, res, next } = buildReqRes({
+				token: `t-${dapp}`,
+				headHash: `hh-${dapp}`,
+				dapp,
+				user: "u",
+			});
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+			return { res, next };
+		};
+
+		it("evicts a reused puzzle session once puzzle is switched off", async () => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "sitePuzzleOff",
+				settings: {
+					captchaType: CaptchaType.frictionless,
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					captchaTypeFeatureFlags: { puzzle: false },
+				},
+			});
+			tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+				sessionId: "puzzle-minted-before-switch-off",
+				captchaType: CaptchaType.puzzle,
+				score: 0,
+				webView: false,
+			});
+			stubDecrypt();
+
+			const { res } = await request("sitePuzzleOff");
+
+			expect(tasksInstance.db.checkAndRemoveSession).toHaveBeenCalledWith(
+				"puzzle-minted-before-switch-off",
+			);
+			expect(res.json).not.toHaveBeenCalledWith(
+				expect.objectContaining({
+					sessionId: "puzzle-minted-before-switch-off",
+				}),
+			);
+		});
+
+		it("keeps reusing an image session while the router asks for a switched-off puzzle", async () => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "sitePuzzleOffRouter",
+				settings: {
+					captchaType: CaptchaType.frictionless,
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					captchaTypeFeatureFlags: { puzzle: false },
+				},
+			});
+			tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+				sessionId: "image-session",
+				captchaType: CaptchaType.image,
+				score: 0,
+				webView: false,
+			});
+			tasksInstance.frictionlessManager.applyRoutingMachine.mockResolvedValue({
+				captchaType: CaptchaType.puzzle,
+			});
+
+			const { res } = await request("sitePuzzleOffRouter");
+
+			expect(tasksInstance.db.checkAndRemoveSession).not.toHaveBeenCalled();
+			expect(res.json).toHaveBeenCalledWith(
+				expect.objectContaining({ sessionId: "image-session" }),
+			);
+		});
+
+		it("holds a frictionless site to its challenge types and the feature flags", async () => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "siteFrictionlessTypes",
+				settings: {
+					captchaType: CaptchaType.frictionless,
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					frictionlessTypes: { image: false, puzzle: true },
+					captchaTypeFeatureFlags: { puzzle: false },
+				},
+			});
+			stubDecrypt();
+
+			await request("siteFrictionlessTypes");
+
+			expect(
+				tasksInstance.frictionlessManager.setAllowedCaptchaTypes,
+			).toHaveBeenCalledWith({ image: false, puzzle: false, iconOrder: false });
+		});
+
+		it("holds a site pinned to puzzle to the feature flags before the short-circuit", async () => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "sitePinnedPuzzle",
+				settings: {
+					captchaType: CaptchaType.puzzle,
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					frictionlessTypes: { image: false, puzzle: true },
+					captchaTypeFeatureFlags: { puzzle: false },
+				},
+			});
+
+			await request("sitePinnedPuzzle");
+
+			const setAllowed =
+				tasksInstance.frictionlessManager.setAllowedCaptchaTypes;
+			const sendPuzzle = tasksInstance.frictionlessManager.sendPuzzleCaptcha;
+			expect(setAllowed).toHaveBeenCalledWith({
+				image: true,
+				puzzle: false,
+				iconOrder: false,
+			});
+			expect(sendPuzzle).toHaveBeenCalled();
+			expect(setAllowed.mock.invocationCallOrder[0]).toBeLessThan(
+				sendPuzzle.mock.invocationCallOrder[0] ?? 0,
+			);
+		});
+
+		it.each([
+			{ audioAccessibilityEnabled: true, audio: true, offered: true },
+			{ audioAccessibilityEnabled: true, audio: false, offered: false },
+			{ audioAccessibilityEnabled: true, audio: undefined, offered: false },
+			{ audioAccessibilityEnabled: false, audio: true, offered: false },
+		])(
+			"offers the audio alternative only with both switches on: %o",
+			async ({ audioAccessibilityEnabled, audio, offered }) => {
+				const dapp = `siteAudio-${audioAccessibilityEnabled}-${audio}`;
+				tasksInstance.db.getClientRecord.mockResolvedValue({
+					account: dapp,
+					settings: {
+						captchaType: CaptchaType.image,
+						frictionlessThreshold: 0.5,
+						disallowWebView: false,
+						audioAccessibilityEnabled,
+						captchaTypeFeatureFlags: { audio },
+					},
+				});
+
+				await request(dapp);
+
+				expect(
+					tasksInstance.frictionlessManager.setAudioAlternativeEnabled,
+				).toHaveBeenCalledWith(offered);
+			},
 		);
 	});
 
@@ -1076,5 +1406,99 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 				tasksInstance.frictionlessManager.sendPuzzleCaptcha,
 			).not.toHaveBeenCalled();
 		});
+	});
+
+	describe("tarpit padding", () => {
+		const proxyIpInfo: IPInfoResult = {
+			ip: "1.2.3.4",
+			isValid: true,
+			isVPN: false,
+			isTor: false,
+			isProxy: true,
+			isDatacenter: false,
+			isAbuser: false,
+			isMobile: false,
+			isSatellite: false,
+			isCrawler: false,
+		};
+
+		const runTarpitted = async (
+			settings: Record<string, unknown>,
+		): Promise<MockRes> => {
+			tasksInstance.db.getClientRecord.mockResolvedValue({
+				account: "siteTarpit",
+				settings: {
+					frictionlessThreshold: 0.5,
+					disallowWebView: false,
+					trafficFilter: {
+						proxy: { action: TrafficFilterAction.Block, padBytes: 1_048_576 },
+					},
+					...settings,
+				},
+			});
+			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue({
+				baseBotScore: 0,
+				timestamp: Date.now(),
+				userId: "u",
+				userAgent: "844bc172f032bdd2d0baae3536c1d66c",
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "abc",
+				decryptionFailed: false,
+			});
+
+			const { req, res, next } = buildReqRes({
+				token: "tTarpit",
+				headHash: "hh",
+				dapp: "siteTarpit",
+				user: "u",
+			});
+			req.ipInfo = proxyIpInfo;
+
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+			expect(next).not.toHaveBeenCalled();
+			return res;
+		};
+
+		// The tarpit pads the challenge, and this endpoint does not serve one:
+		// GetFrictionlessCaptchaResponse carries a captchaType and a sessionId,
+		// and the widget fetches the challenge itself from /pow, /image or
+		// /puzzle — each of which resolves its own verdict and pads there.
+		// Padding here too would charge every tarpitted session twice.
+		it("does not pad the session envelope on the decision-machine path", async () => {
+			const res = await runTarpitted({
+				captchaType: CaptchaType.frictionless,
+				imageMaxRounds: 5,
+			});
+			expect(res.locals.padBytes).toBeUndefined();
+		});
+
+		it("does not pad the session envelope for a reused session", async () => {
+			tasksInstance.db.getSessionByuserSitekeyIpHash.mockResolvedValue({
+				sessionId: "live-pow-session",
+				captchaType: CaptchaType.pow,
+				score: 0,
+				webView: false,
+			});
+			const res = await runTarpitted({
+				captchaType: CaptchaType.frictionless,
+			});
+			expect(res.locals.padBytes).toBeUndefined();
+			expect(res.json).toHaveBeenCalledWith(
+				expect.objectContaining({ sessionId: "live-pow-session" }),
+			);
+		});
+
+		it.each([CaptchaType.pow, CaptchaType.image, CaptchaType.puzzle] as const)(
+			"does not pad the session envelope for a site pinned to %s",
+			async (pinned) => {
+				const res = await runTarpitted({
+					captchaType: pinned,
+					imageMaxRounds: 4,
+				});
+				expect(res.locals.padBytes).toBeUndefined();
+			},
+		);
 	});
 });

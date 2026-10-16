@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/cypress-shared",
-	"version": "2.8.145",
+	"version": "2.8.153",
 	"private": true,
 	"type": "module",
 	"main": "dist/index.js",
@@ -13,30 +13,30 @@
 		}
 	},
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"dependencies": {
-		"@prosopo/types": "5.10.1",
-		"@prosopo/util": "3.3.11"
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*"
 	},
 	"devDependencies": {
 		"@cypress/xpath": "2.0.3",
 		"@polkadot/util": "14.0.3",
-		"@prosopo/common": "3.1.59",
-		"@prosopo/config": "3.4.1",
-		"@prosopo/datasets": "3.1.90",
-		"@prosopo/dotenv": "3.0.57",
-		"@prosopo/keyring": "2.9.96",
-		"@prosopo/types-database": "5.6.4",
+		"@prosopo/common": "workspace:*",
+		"@prosopo/config": "workspace:*",
+		"@prosopo/datasets": "workspace:*",
+		"@prosopo/dotenv": "workspace:*",
+		"@prosopo/keyring": "workspace:*",
+		"@prosopo/types-database": "workspace:*",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
-		"cypress": "16.0.0",
-		"cypress-real-events": "1.15.0",
+		"cypress": "16.1.1",
+		"cypress-real-events": "1.15.1",
 		"cypress-visual-regression": "6.0.1",
 		"cypress-vite": "1.10.2",
 		"del-cli": "6.0.0",
+		"mongodb": "7.7.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
@@ -45,12 +45,12 @@
 		"vitest": "4.1.11"
 	},
 	"scripts": {
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
+		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
 		"cypress:open:client-bundle-example:image": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=image CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.image.config.js",
 		"cypress:run:client-bundle-example:image": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=image CYPRESS_BASE_URL='https://localhost:9232' cypress run --browser ${PROSOPO_CYPRESS_BROWSER:-chrome} --config-file cypress.image.config.js",
 		"cypress:open:client-bundle-example:frictionless": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.frictionless.config.js",
@@ -61,6 +61,10 @@
 		"cypress:run:client-bundle-example:clientSessionId": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=pow CYPRESS_BASE_URL='https://localhost:9232' cypress run --config-file cypress.clientSessionId.config.js --browser ${PROSOPO_CYPRESS_BROWSER:-chrome}",
 		"cypress:open:client-bundle-example:puzzle": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=puzzle CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.puzzle.config.js",
 		"cypress:run:client-bundle-example:puzzle": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=puzzle CYPRESS_BASE_URL='https://localhost:9232' cypress run --config-file cypress.puzzle.config.js --browser ${PROSOPO_CYPRESS_BROWSER:-chrome}",
+		"cypress:open:client-bundle-example:audio": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=audio CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.audio.config.js",
+		"cypress:run:client-bundle-example:audio": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=audio CYPRESS_BASE_URL='https://localhost:9232' cypress run --config-file cypress.audio.config.js --browser ${PROSOPO_CYPRESS_BROWSER:-chrome}",
+		"cypress:open:client-bundle-example:iconOrder": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=iconOrder CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.iconOrder.config.js",
+		"cypress:run:client-bundle-example:iconOrder": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=iconOrder CYPRESS_BASE_URL='https://localhost:9232' cypress run --config-file cypress.iconOrder.config.js --browser ${PROSOPO_CYPRESS_BROWSER:-chrome}",
 		"cypress:open:client-bundle-example:invisible": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=image CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.invisible.config.js",
 		"cypress:run:client-bundle-example:invisible": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=image CYPRESS_BASE_URL='https://localhost:9232' cypress run --config-file cypress.invisible.config.js --browser ${PROSOPO_CYPRESS_BROWSER:-chrome}",
 		"cypress:open:client-bundle-example:escalation": "NODE_TLS_REJECT_UNAUTHORIZED=0 CAPTCHA_TYPE=frictionless CYPRESS_BASE_URL='https://localhost:9232' cypress open --config-file cypress.escalation.config.js",
