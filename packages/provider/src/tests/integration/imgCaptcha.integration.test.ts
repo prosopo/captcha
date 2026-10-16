@@ -488,6 +488,53 @@ describe("Image Captcha Integration Tests", () => {
 			expect(data).toHaveProperty("captchas");
 		});
 
+		it("sends each label in the request's language with its key and English text", async () => {
+			// Every label in the mock dataset, as the tr and en catalogues have it.
+			const labels: Record<string, { tr: string; en: string }> = {
+				bird: { tr: "kuş", en: "bird" },
+				bus: { tr: "otobüs", en: "bus" },
+				car: { tr: "araba", en: "car" },
+				cat: { tr: "kedi", en: "cat" },
+				deer: { tr: "geyik", en: "deer" },
+				dog: { tr: "köpek", en: "dog" },
+				horse: { tr: "at", en: "horse" },
+				plane: { tr: "uçak", en: "plane" },
+				train: { tr: "tren", en: "train" },
+			};
+			const body: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
+			const response = await fetch(
+				`${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`,
+				{
+					method: "POST",
+					body: JSON.stringify(body),
+					headers: {
+						"Content-Type": "application/json",
+						Origin: "https://localhost",
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
+						"Prosopo-Lang": "tr-TR",
+						"Accept-Language": "de",
+					},
+				},
+			);
+			expect(response.status).toBe(200);
+
+			const data = (await response.json()) as CaptchaResponseBody;
+			expect(data.language).toBe("tr");
+			expect(data.captchas.length).toBeGreaterThan(0);
+			for (const captcha of data.captchas) {
+				const key: string | undefined = captcha.targetKey;
+				const expected = key === undefined ? undefined : labels[key];
+				expect(expected).toBeDefined();
+				expect(captcha.target).toBe(expected?.tr);
+				expect(captcha.targetEn).toBe(expected?.en);
+			}
+		});
+
 		it("should not supply an image captcha challenge to a Dapp User if the site key is not registered", async () => {
 			const origin = "https://localhost";
 			const [_mnemonic, unregisteredAccount] = await generateMnemonic();

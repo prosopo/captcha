@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { flatten } from "@prosopo/util";
 import { describe, expect, test } from "vitest";
 import targetEn from "../locales/en/target.json" with { type: "json" };
 import serverEn from "../locales/en/translation.json" with { type: "json" };
@@ -19,6 +20,7 @@ import widgetEn from "../locales/en/widget.json" with { type: "json" };
 import {
 	NAMESPACES,
 	type TranslationNode,
+	englishText,
 	getLeafFieldPath,
 	isTargetKey,
 	isTranslationKey,
@@ -241,5 +243,26 @@ describe("isWidgetTranslationKey", () => {
 		expect(isWidgetTranslationKey("WIDGET")).toBe(false);
 		expect(isWidgetTranslationKey("Invalid site key")).toBe(false);
 		expect(isWidgetTranslationKey("")).toBe(false);
+	});
+});
+
+describe("englishText", () => {
+	test("reads each namespace's English text", () => {
+		expect(englishText("TARGET.owl")).toBe(targetEn.TARGET.owl);
+		expect(englishText("WIDGET.SELECT_ALL")).toBe(widgetEn.WIDGET.SELECT_ALL);
+		expect(englishText("DATABASE.UNKNOWN")).toBe(serverEn.DATABASE.UNKNOWN);
+	});
+
+	test("matches the flattened English catalogues for every key", () => {
+		const english: Record<string, string> = flatten({
+			...serverEn,
+			...widgetEn,
+			...targetEn,
+		});
+		for (const key of translationKeys) {
+			if (isTranslationKey(key)) {
+				expect(englishText(key)).toBe(english[key]);
+			}
+		}
 	});
 });

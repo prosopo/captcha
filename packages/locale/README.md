@@ -22,11 +22,17 @@ Each language has one file per i18next namespace (`NAMESPACES` in
   `locales/<code>/widget.json` for another language. It always has English
   text, for its own fallback and for logs and crash reports.
 - The provider translates image labels itself, so the browser never needs
-  `target.json`.
+  `target.json`. Each captcha in the image challenge carries the translated
+  `target`, its `targetKey` and its English `targetEn`, and the response names
+  its `language` (`packages/provider/src/api/captcha/localiseTarget.ts`).
 - Provider errors carry their key. The widget re-translates keys it has
-  (`isWidgetTranslationKey`) and shows the provider's message for the rest. The
-  bundle build therefore copies `widget.json` whole, rather than stripping keys
-  its code never names (`packages/procaptcha-bundle/vite.config.ts`).
+  (`isWidgetTranslationKey`) and shows the provider's message for the rest. For
+  those, the provider also sends `messageEn` (`unwrapError` in
+  `packages/common/src/error.ts`), so the widget has English for every string
+  it shows. The bundle build copies `widget.json` whole, rather than stripping
+  keys its code never names (`packages/procaptcha-bundle/vite.config.ts`).
+- `englishText(key)` reads English from the bundled catalogues, whatever
+  language i18next is in.
 - A section moves between files by moving it in every language. The tests in
   `src/tests/locales.unit.test.ts` and `src/tests/catalogues.test-d.ts` fail on
   a file whose keys differ from English's.
