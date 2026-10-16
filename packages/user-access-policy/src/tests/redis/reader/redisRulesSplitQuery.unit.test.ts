@@ -64,10 +64,10 @@ describe("buildScopedBlockSubQueries", () => {
 		for (const sub of subs) {
 			expect(sub.query).toContain("@type:{block}");
 			// Every sub-query must include the client-or-global scope
-			// probe. `@clientId:{client-A}` matches client-scoped rules;
+			// probe. `@clientId:{client\-A}` matches client-scoped rules;
 			// `@clientId:{global}` matches new-format global rules;
 			// `ismissing(@clientId)` matches legacy pre-sentinel rules.
-			expect(sub.query).toMatch(/@clientId:\{client-A\}/);
+			expect(sub.query).toMatch(/@clientId:\{client\\-A\}/);
 			expect(sub.query).toMatch(/@clientId:\{global\}/);
 			expect(sub.query).toMatch(/ismissing\(@clientId\)/);
 		}
