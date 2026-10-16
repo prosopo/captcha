@@ -29,6 +29,7 @@ const i18nIn = (
 		isInitialized,
 		t: (key: string, options?: TranslateOptions): string =>
 			flat[key] ?? options?.defaultValue ?? key,
+		exists: (key: string): boolean => key in flat,
 		changeLanguage: async (): Promise<void> => undefined,
 		hasLoadedNamespace: (): boolean => isInitialized,
 		on: (): void => undefined,

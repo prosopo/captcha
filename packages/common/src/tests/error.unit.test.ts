@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { TranslateFn } from "@prosopo/locale";
+import {
+	type I18nLookup,
+	type TranslateFn,
+	isTranslationKey,
+} from "@prosopo/locale";
 import {
 	type LogObject,
 	type LogRecord,
@@ -32,10 +36,9 @@ import {
 // Tiny stand-in for the translator. Keys present in the map are translated,
 // anything else falls through unchanged (mirrors the real one's behaviour for
 // unknown keys).
-const makeI18n = (
-	translations: Record<string, string>,
-): { t: TranslateFn } => ({
+const makeI18n = (translations: Record<string, string>): I18nLookup => ({
 	t: (key: string): string => translations[key] ?? key,
+	exists: (key: string): boolean => key in translations,
 });
 
 const englishI18n = makeI18n({
@@ -298,16 +301,40 @@ describe("Logger.unpackError prefers translationKey over translated message", ()
 describe("unwrapError still produces a translated HTTP response", () => {
 	it("passes only catalogue keys to the translator, never free text", () => {
 		const t = vi.fn<TranslateFn>((key) => key);
+		const i18n: I18nLookup = { t, exists: isTranslationKey };
 		const err = new ProsopoApiError(new Error("upstream: timed out"), {
 			context: { code: 500 },
-			i18n: { t },
+			i18n,
 			silent: true,
 		});
 
-		const { jsonError } = unwrapError(err, { t });
+		const { jsonError } = unwrapError(err, i18n);
 		expect(err.message).toBe("upstream: timed out");
 		expect(jsonError.message).toBe("upstream: timed out");
 		expect(t).not.toHaveBeenCalledWith("upstream: timed out");
+	});
+
+	it("keeps a key the instance has no text for, as the widget does for server keys", () => {
+		const t = vi.fn<TranslateFn>((key) => key);
+		const widgetOnly: I18nLookup = {
+			t,
+			exists: (key: string): boolean => key.startsWith("WIDGET."),
+		};
+		const err = new ProsopoDBError(new Error("DATABASE.CAPTCHA_GET_FAILED"), {
+			i18n: widgetOnly,
+			silent: true,
+		});
+
+		expect(err.message).toBe("DATABASE.CAPTCHA_GET_FAILED");
+		expect(t).not.toHaveBeenCalled();
+	});
+
+	it("leaves a key untranslated without an i18n instance", () => {
+		const err = new ProsopoDBError(new Error("DATABASE.CAPTCHA_GET_FAILED"), {
+			silent: true,
+		});
+
+		expect(err.message).toBe("DATABASE.CAPTCHA_GET_FAILED");
 	});
 
 	it("translates the message via i18n for the response body even though the log emits the key", () => {

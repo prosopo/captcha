@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { I18nLookup } from "@prosopo/locale";
 import { ApiParams, POW_SEPARATOR } from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -93,7 +94,7 @@ type MockReq = {
 		error: ReturnType<typeof vi.fn>;
 		debug: ReturnType<typeof vi.fn>;
 	};
-	i18n: { t: (s: string) => string };
+	i18n: I18nLookup;
 	ipInfo?: unknown;
 };
 
@@ -114,7 +115,7 @@ const buildReqRes = (body: unknown) => {
 			error: vi.fn(),
 			debug: vi.fn(),
 		},
-		i18n: { t: (s: string) => s },
+		i18n: { t: (s: string): string => s, exists: (): boolean => false },
 	};
 	const res: MockRes = {
 		json: vi.fn().mockReturnValue(undefined),

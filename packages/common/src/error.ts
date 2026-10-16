@@ -13,8 +13,9 @@
 // limitations under the License.
 
 import {
-	type TranslateFn,
+	type I18nLookup,
 	type TranslationKey,
+	canTranslate,
 	englishText,
 	isTranslationKey,
 	isWidgetTranslationKey,
@@ -53,7 +54,7 @@ type BaseErrorOptions<ContextType> = {
 	logLevel?: LogLevel;
 	context?: ContextType;
 	silent?: boolean;
-	i18n?: { t: TranslateFn };
+	i18n?: I18nLookup;
 };
 
 interface BaseContextParams {
@@ -74,11 +75,16 @@ type ApiContextParams = BaseContextParams & {
 
 type ErrorKey = TranslationKey;
 
-const backupTranslationObj = { t: (key: string) => key };
+const backupTranslationObj: I18nLookup = {
+	t: (key: string): string => key,
+	exists: (): boolean => false,
+};
 
-// An error's message is usually already text, not a key.
-const translateMessage = (i18n: { t: TranslateFn }, message: string): string =>
-	isTranslationKey(message) ? i18n.t(message) : message;
+// An error's message is usually already text, not a key. Asking the instance,
+// rather than checking every English key, keeps the server catalogues out of
+// the widget bundle.
+const translateMessage = (i18n: I18nLookup, message: string): string =>
+	canTranslate(i18n, message) ? i18n.t(message) : message;
 
 export abstract class ProsopoBaseError<
 	ContextType extends BaseContextParams = BaseContextParams,
@@ -237,7 +243,7 @@ export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
 
 export const unwrapError = (
 	err: ProsopoBaseError | SyntaxError | ZodLikeError,
-	i18nInstance?: { t: TranslateFn },
+	i18nInstance?: I18nLookup,
 ) => {
 	const i18n = i18nInstance || backupTranslationObj;
 	let code = "code" in err ? (err.code as number) : 400;

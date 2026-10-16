@@ -18,16 +18,20 @@ import targetEn from "../locales/en/target.json" with { type: "json" };
 import serverEn from "../locales/en/translation.json" with { type: "json" };
 import widgetEn from "../locales/en/widget.json" with { type: "json" };
 import {
-	NAMESPACES,
-	type TranslationNode,
 	englishText,
-	getLeafFieldPath,
 	isTargetKey,
 	isTranslationKey,
-	isWidgetTranslationKey,
 	targetKeys,
 	translationKeys,
+} from "../serverTranslationKeys.js";
+import {
+	NAMESPACES,
+	type TranslationNode,
+	canTranslate,
+	getLeafFieldPath,
+	isWidgetTranslationKey,
 } from "../translationKey.js";
+import type { Ti18n } from "../types.js";
 
 const widgetSections: readonly string[] = [
 	"WIDGET",
@@ -264,5 +268,24 @@ describe("englishText", () => {
 				expect(englishText(key)).toBe(english[key]);
 			}
 		}
+	});
+});
+
+describe("canTranslate", () => {
+	const knowing = (...keys: string[]): Pick<Ti18n, "exists"> => ({
+		exists: (key: string): boolean => keys.includes(key),
+	});
+
+	test("accepts a key the instance has text for", () => {
+		expect(
+			canTranslate(knowing("WIDGET.SELECT_ALL"), "WIDGET.SELECT_ALL"),
+		).toBe(true);
+	});
+
+	test("rejects a key the instance lacks, even one English has", () => {
+		expect(canTranslate(knowing(), "TARGET.owl")).toBe(false);
+		expect(canTranslate(knowing("WIDGET.SELECT_ALL"), "Free text.")).toBe(
+			false,
+		);
 	});
 });

@@ -147,6 +147,9 @@ const createBrowserI18n = (requested?: string): BrowserI18n => {
 					key,
 				options,
 			),
+		exists: (key: string): boolean =>
+			lookup(language, key) !== undefined ||
+			lookup(FALLBACK_LANGUAGE, key) !== undefined,
 		hasLoadedNamespace: (namespace: string): boolean =>
 			namespace === NAMESPACE && catalogues.has(language),
 		changeLanguage: async (next: string): Promise<BrowserI18n> => {

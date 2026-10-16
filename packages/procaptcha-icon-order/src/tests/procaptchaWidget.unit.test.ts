@@ -150,6 +150,7 @@ const germanI18n = (): Ti18n => {
 		t: (key: string, options?: TranslateOptions): string =>
 			catalogue[key] ?? options?.defaultValue ?? key,
 		changeLanguage: async (): Promise<void> => undefined,
+		exists: (): boolean => false,
 		hasLoadedNamespace: (): boolean => true,
 		on: (): void => undefined,
 		off: (): void => undefined,

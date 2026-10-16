@@ -14,7 +14,7 @@
 
 import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoApiError } from "@prosopo/common";
-import type { TranslateFn } from "@prosopo/locale";
+import type { I18nLookup } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { decodeGoogleTranslateHost, parseUrl } from "@prosopo/util";
@@ -137,7 +137,7 @@ const googleTranslateOrigins = (origin: string): string[] => {
 };
 
 const siteKeyNotRegisteredError = (
-	i18n: { t: TranslateFn },
+	i18n: I18nLookup,
 	dapp: string,
 	logger?: Logger,
 ) => {
@@ -149,7 +149,7 @@ const siteKeyNotRegisteredError = (
 };
 
 const invalidSiteKeyError = (
-	i18n: { t: TranslateFn },
+	i18n: I18nLookup,
 	siteKey: string,
 	logger?: Logger,
 ) => {
@@ -161,7 +161,7 @@ const invalidSiteKeyError = (
 };
 
 const unauthorizedOriginError = (
-	i18n: { t: TranslateFn },
+	i18n: I18nLookup,
 	origin?: string,
 	logger?: Logger,
 ) => {
@@ -173,7 +173,7 @@ const unauthorizedOriginError = (
 };
 
 const siteKeyInvalidDomainError = (
-	i18n: { t: TranslateFn },
+	i18n: I18nLookup,
 	dapp: string,
 	domain: string,
 	logger?: Logger,

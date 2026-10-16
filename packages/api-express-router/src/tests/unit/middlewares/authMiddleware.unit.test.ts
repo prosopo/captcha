@@ -14,6 +14,7 @@
 
 import type { IncomingHttpHeaders } from "node:http";
 import { ProsopoApiError } from "@prosopo/common";
+import type { I18nLookup } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
 import type { ApiJsonError, KeyringPair } from "@prosopo/types";
 import type {
@@ -72,7 +73,7 @@ interface Harness {
 
 const build = (
 	headers: IncomingHttpHeaders = {},
-	i18n?: { t: (key: string) => string },
+	i18n?: I18nLookup,
 ): Harness => {
 	const json = vi.fn<(body: unknown) => Response>();
 	const status = vi.fn<(code: number) => Response>();
@@ -168,7 +169,10 @@ describe("a token neither key accepts", () => {
 	});
 
 	test("does not serialise the request's i18n instance or error context", () => {
-		harness = build(bearer("token-1"), { t: (key: string) => `t:${key}` });
+		harness = build(bearer("token-1"), {
+			t: (key: string): string => `t:${key}`,
+			exists: (): boolean => true,
+		});
 		return run(rejects(), rejects()).then(() => {
 			const body = harness.json.mock.calls[0]?.[0];
 			expect(JSON.stringify(body)).not.toContain("context");
