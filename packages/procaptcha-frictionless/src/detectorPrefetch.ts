@@ -35,10 +35,11 @@
 
 import { ProviderApi } from "@prosopo/api";
 import { getProcaptchaRandomActiveProvider } from "@prosopo/procaptcha-common";
-import type {
-	AssignDetectorBundleResponse,
-	EnvironmentTypes,
-	RandomProvider,
+import {
+	type AssignDetectorBundleResponse,
+	DetectorScriptDelivery,
+	type EnvironmentTypes,
+	type RandomProvider,
 } from "@prosopo/types";
 
 // `IpMode` is declared in @prosopo/load-balancer, which this package does not
@@ -83,7 +84,10 @@ export const prefetchDetector = (
 			ipMode,
 		);
 		const providerApi = new ProviderApi(provider.provider.url, siteKey);
-		const assigned = await providerApi.assignDetectorBundle(siteKey);
+		const assigned = await providerApi.assignDetectorBundle(
+			siteKey,
+			DetectorScriptDelivery.url,
+		);
 		return { provider, assigned };
 	})();
 

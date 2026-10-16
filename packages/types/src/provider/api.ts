@@ -68,6 +68,7 @@ import type {
 	ChallengeSignature,
 	RequestHashSignature,
 } from "../procaptcha/index.js";
+import { DetectorLoadFailure, DetectorScriptDelivery } from "./detection.js";
 
 export type ApiJsonError = {
 	message: string;
@@ -109,8 +110,11 @@ export enum ClientApiPaths {
 	SubmitUserEvents = "/v1/prosopo/provider/client/events",
 	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
 	// Assigns a precomputed detector bundle for this session and returns its
-	// obfuscated script inline (or signals the bundled fallback when no pool).
+	// obfuscated script inline, or a path to fetch it from on request.
 	AssignDetectorBundle = "/v1/prosopo/provider/client/detector/assign",
+	// Serves the bundle assigned to a detectorSessionId as a module script, for
+	// widgets that load it by <script src> rather than inline.
+	GetDetectorScript = "/v1/prosopo/provider/client/detector/script",
 }
 
 export enum PublicApiPaths {
@@ -232,6 +236,7 @@ export const ProviderDefaultRateLimits = {
 	[ClientApiPaths.GetProviderStatus]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.CheckSpamEmail]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.AssignDetectorBundle]: { windowMs: 60000, limit: 60 },
+	[ClientApiPaths.GetDetectorScript]: { windowMs: 60000, limit: 60 },
 	[PublicApiPaths.GetProviderDetails]: { windowMs: 60000, limit: 60 },
 	[ClientApiPaths.SubmitUserEvents]: { windowMs: 60000, limit: 60 },
 	[AdminApiPaths.SiteKeyRegister]: { windowMs: 60000, limit: 5 },
@@ -759,6 +764,9 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// refresh. Only honoured alongside a `refreshOf` naming a puzzle session
 	// on a site with the switch enabled, and only ever moves puzzle to image.
 	[ApiParams.switchToImage]: boolean().optional(),
+	// The first way the widget failed to load the detector, sent even when a
+	// fallback then loaded it. Client-reported and only ever logged.
+	[ApiParams.detectorLoadFailure]: nativeEnum(DetectorLoadFailure).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
@@ -769,11 +777,19 @@ export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<
 
 export const AssignDetectorBundleRequestBody = object({
 	[ApiParams.dapp]: string(),
+	// Absent from widgets that predate URL delivery; they get the script inline.
+	[ApiParams.detectorScriptDelivery]: nativeEnum(
+		DetectorScriptDelivery,
+	).optional(),
 });
 
 export type AssignDetectorBundleRequestBodyOutput = output<
 	typeof AssignDetectorBundleRequestBody
 >;
+
+export const GetDetectorScriptQuery = object({
+	[ApiParams.detectorSessionId]: boundedString(INPUT_LIMITS.ID),
+});
 
 export interface AssignDetectorBundleResponse extends ApiResponse {
 	// When false, no pool is available (dev / empty pool) — the client falls
@@ -782,6 +798,10 @@ export interface AssignDetectorBundleResponse extends ApiResponse {
 	[ApiParams.detectorSessionId]?: string;
 	// The obfuscated, self-contained detector ESM, served inline.
 	[ApiParams.detectorScript]?: string;
+	// Where to load the same script from instead, relative to the provider.
+	// Only set when the request asked for URL delivery, and then in place of
+	// `detectorScript`.
+	[ApiParams.detectorScriptPath]?: string;
 	[ApiParams.clientUrl]?: string;
 	[ApiParams.assetOrigin]?: string;
 }

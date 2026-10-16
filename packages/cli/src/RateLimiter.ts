@@ -155,6 +155,10 @@ export const getRateLimitConfig = () => {
 			windowMs: process.env.PROSOPO_ASSIGN_DETECTOR_BUNDLE_WINDOW,
 			limit: process.env.PROSOPO_ASSIGN_DETECTOR_BUNDLE_LIMIT,
 		},
+		[ClientApiPaths.GetDetectorScript]: {
+			windowMs: process.env.PROSOPO_GET_DETECTOR_SCRIPT_WINDOW,
+			limit: process.env.PROSOPO_GET_DETECTOR_SCRIPT_LIMIT,
+		},
 		[AdminApiPaths.ReplaceDetectorPool]: {
 			windowMs: process.env.PROSOPO_REPLACE_DETECTOR_POOL_WINDOW,
 			limit: process.env.PROSOPO_REPLACE_DETECTOR_POOL_LIMIT,

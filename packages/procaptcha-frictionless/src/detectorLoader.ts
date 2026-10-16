@@ -23,7 +23,7 @@ import type {
 } from "@prosopo/types";
 
 // The detector is NOT bundled into the widget — it lives only in the
-// provider-served pool bundles, loaded at runtime via a blob URL below. So the
+// provider-served pool bundles, loaded at runtime from the provider. So the
 // signature is declared locally here (mirroring `@prosopo/detector`'s default
 // export) from shared @prosopo/types primitives, rather than importing the
 // detector package as a build-time type dependency.
