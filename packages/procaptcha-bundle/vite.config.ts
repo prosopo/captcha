@@ -12,23 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { randomBytes } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import {
 	ViteFrontendConfig,
+	buildToken,
 	VitePluginRemoveUnusedTranslations,
 } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
 import { at, flatten } from "@prosopo/util";
 import fg from "fast-glob";
 import { defineConfig } from "vite";
+import { version } from "./package.json" with { type: "json" };
 
-// Per-build opaque chunk name for the honeypot module. Re-rolled on every
-// build so the emitted URL (e.g. `c8f2a1b0-<hash>.js`) doesn't leak the
+// Per-build opaque chunk name for the honeypot module. Changes with every
+// version (see buildToken) so the emitted URL (e.g. `c8f2a1b0-<hash>.js`) doesn't leak the
 // component's purpose and can't be fingerprinted by scrapers that maintain
 // static URL blocklists.
-const honeypotChunkName = `c${randomBytes(4).toString("hex")}`;
+const honeypotChunkName = `c${buildToken("honeypot", 4, version)}`;
 
 // Per-build opaque chunk name for the module that holds `@prosopo/fingerprint`
 // + `@prosopo/fingerprintjs`. Same rationale as `honeypotChunkName` — but the
@@ -38,7 +39,7 @@ const honeypotChunkName = `c${randomBytes(4).toString("hex")}`;
 // so the fingerprint sources (canvas / WebGL `getContext` / `getParameter` /
 // `getImageData` — expensive on real GPUs) ran twice per widget session. One
 // shared chunk = one module instance = one populated cache = one run.
-const sharedBrowserChunkName = `b${randomBytes(4).toString("hex")}`;
+const sharedBrowserChunkName = `b${buildToken("sharedBrowser", 4, version)}`;
 
 // load env using our util because vite loadEnv is not working for .env.development
 loadEnv();
