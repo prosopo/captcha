@@ -76,8 +76,14 @@ const others: Language[] = languages.filter(
 
 const leafName = (key: string): string => key.slice(key.lastIndexOf(".") + 1);
 
+// The audio captcha strings are still English in every language; they are
+// translated separately from the image captcha.
+const audioKeys: string[] = [...en.keys()].filter((key: string) =>
+	key.startsWith("WIDGET.AUDIO_"),
+);
+
 const keptFor = (language: Language): ReadonlySet<string> =>
-	new Set(keptAsIs[language] ?? []);
+	new Set([...(keptAsIs[language] ?? []), ...audioKeys]);
 
 describe("locale catalogues", () => {
 	it.each(languages)("%s has exactly the keys of en", (language: Language) => {
