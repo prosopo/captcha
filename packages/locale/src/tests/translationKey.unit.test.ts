@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { flatten } from "@prosopo/util";
 import { describe, expect, test } from "vitest";
 import targetEn from "../locales/en/target.json" with { type: "json" };
 import serverEn from "../locales/en/translation.json" with { type: "json" };
@@ -252,10 +253,15 @@ describe("englishText", () => {
 		expect(englishText("DATABASE.UNKNOWN")).toBe(serverEn.DATABASE.UNKNOWN);
 	});
 
-	test("has English text for every key", () => {
+	test("matches the flattened English catalogues for every key", () => {
+		const english: Record<string, string> = flatten({
+			...serverEn,
+			...widgetEn,
+			...targetEn,
+		});
 		for (const key of translationKeys) {
 			if (isTranslationKey(key)) {
-				expect(englishText(key)).not.toBe(key);
+				expect(englishText(key)).toBe(english[key]);
 			}
 		}
 	});

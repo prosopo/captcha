@@ -390,8 +390,8 @@ export interface ChallengeCaptcha extends Captcha {
 
 export interface CaptchaResponseBody extends ApiResponse {
 	[ApiParams.captchas]: ChallengeCaptcha[];
-	/** The language `target` and error messages were translated into. */
-	language?: Language;
+	/** The language `target` was translated into. */
+	[ApiParams.language]?: Language;
 	[ApiParams.requestHash]: string;
 	[ApiParams.timestamp]: string;
 	[ApiParams.signature]: {
