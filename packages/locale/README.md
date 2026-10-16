@@ -119,3 +119,34 @@ sequenceDiagram
 - **Rejected: the query parameter alone.** It is kept only as a backup.
   Headers keep URLs (and logs, and caches keyed on them) the same for every
   language.
+
+## Why the widget does not use i18next
+
+The provider uses i18next. The widget uses `src/i18nFrontend.ts`, a small
+look-up with the same `t` / `changeLanguage` / `on` surface. It fetches
+`locales/<code>/widget.json` and fills `{{name}}` placeholders, and does nothing
+else. The widget's strings need no plurals, context or nesting (the one count,
+`{{count}}` audio digits, is never 1). Image labels are translated by the
+provider.
+
+i18next was dropped from the browser in
+https://github.com/prosopo/captcha/pull/3310. With its language detector,
+HTTP, chained and resources backends and the `cross-fetch` polyfill, it was
+23.5 KB gzipped on the render path. That PR cut everything fetched before the
+widget renders from 145 KB to 21 KB gzipped.
+
+Measured again on 2026-10-15 (i18next 26.4.2). This was i18next core with a
+ten-line fetch backend, no plugins, against `i18nFrontend.ts`. Both were
+bundled by esbuild with `minify`, gzip level 9, with `@prosopo/*` and the JSON
+catalogues external:
+
+| | minified | gzipped |
+| --- | --- | --- |
+| i18next core + fetch backend | 43.7 KB | 14.1 KB |
+| `i18nFrontend.ts` | 3.5 KB | 1.8 KB |
+
+That is 12.2 KB more on a 21 KB render path for features the widget does not
+use, so the widget keeps its own. The two sides still share the parts that
+must agree: catalogues, key types (`WidgetTranslationKey`), language matching
+(`matchLanguage`) and options (`src/i18SharedOptions.ts`). Revisit this if the
+widget needs plurals or context.
