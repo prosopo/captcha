@@ -103,6 +103,11 @@ describe("the prompt", () => {
 		expect(text()).toContain("bus");
 	});
 
+	test("adds no colon of its own, as each translation ends with one", () => {
+		render();
+		expect(text()).toContain("WIDGET.SELECT_ALL\u00a0bus");
+	});
+
 	test("tells the user what to do when nothing matches", () => {
 		render();
 		expect(text()).toContain("WIDGET.IF_NONE_CLICK_NEXT");

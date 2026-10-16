@@ -26,7 +26,8 @@ describe("Languages", () => {
 
 	test("maps English language names to BCP 47 codes", () => {
 		expect(Languages.english).toBe("en");
-		expect(Languages.chinese).toBe("zh-CN");
+		expect(Languages.chinese).toBe("zh");
+		expect(Languages.chineseChina).toBe("zh-CN");
 		expect(Languages.portugeseBrazil).toBe("pt-BR");
 	});
 
