@@ -23,6 +23,13 @@ name: required-check
 # blocked forever, which is exactly the trap that stops the other seven from
 # being required directly (they are path-filtered, so a docs-only PR skips them
 # entirely and they never report at all).
+#
+# On a draft it FAILS rather than skipping, because the ruleset counts a skipped
+# `check` as passing. https://github.com/prosopo/captcha-private/pull/5271 merged
+# that way: marked ready at 17:58:16, merged at 17:58:21, and the real `check`
+# only registered at 17:58:23 -- the draft's skip was the result GitHub read, so
+# nothing had been tested. A failure from the draft holds the merge until the
+# ready_for_review run replaces it.
 
 on:
   pull_request:
@@ -60,9 +67,14 @@ jobs:
     # own, where it can also persist and poison later trusted jobs. This job is
     # pure API polling and costs seconds of compute either way.
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft != true
     timeout-minutes: 90
     steps:
+      - name: Refuse to pass a draft
+        if: github.event.pull_request.draft == true
+        run: |
+          echo "::error::draft PR: no checks run on drafts, so this cannot pass. Mark it ready for review to run them."
+          exit 1
+
       - name: Wait for every other check on this commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
