@@ -61,8 +61,9 @@ jobs:
       - run: pnpm install --frozen-lockfile --prefer-offline
 
       # vite.test.config.ts imports the built @prosopo/config and needs an
-      # .env.test.
-      - run: pnpm exec turbo run @prosopo/config#build
+      # .env.test, and the type tests resolve locale's other workspace
+      # dependencies (such as @prosopo/util) through their built declarations.
+      - run: pnpm exec turbo run build --filter='@prosopo/locale^...'
 
       - run: cp dev/scripts/env.test .env.test
 
