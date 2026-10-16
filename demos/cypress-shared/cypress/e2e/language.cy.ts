@@ -63,15 +63,14 @@ const cases: readonly Case[] = [
 	},
 ];
 
-const escapeRegExp = (text: string): string =>
-	text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
 /** Serves the demo page with `data-language` set on the widget's element. */
 const injectLanguageAttribute = (page: string, attribute: string): void => {
-	// Anchored so Vite's `?html-proxy` requests for the page's inline scripts,
-	// which share its pathname, pass through untouched.
-	const pageUrl = new RegExp(`${escapeRegExp(page)}$`);
-	cy.intercept({ method: "GET", url: pageUrl }, (req) => {
+	cy.intercept({ method: "GET", pathname: page }, (req) => {
+		// Vite's `?html-proxy` requests for the page's inline scripts share its
+		// pathname and must pass through untouched.
+		if (Object.keys(req.query).length > 0) {
+			return;
+		}
 		// A 304 has no body to rewrite.
 		req.headers = Object.fromEntries(
 			Object.entries(req.headers).filter(
