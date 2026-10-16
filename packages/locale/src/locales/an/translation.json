@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "No s'ha puesto codificar l'adreza no valida",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "No existe o compromiso de solución d'o captcha",
+		"SIGNER_UNDEFINED": "Sinyador no definiu",
+		"CANNOT_FIND_KEYPAIR": "No se puet trobar o par de claus",
+		"INVALID_DATA_FORMAT": "Formato de datos no valido"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "S'ha solicitau un entorno desconoixiu",
+		"INVALID_CAPTCHA_NUMBER": "Configura correctament as opcions d'os captchas",
+		"INVALID_LOG_LEVEL": "Libel de rechistro no valido",
+		"INVALID_PACKAGE_DIR": "Directorio de paquet no valido"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Error en analisar o conchunto de datos",
+		"SOLUTION_PARSE_ERROR": "Error en procesar o conchunto de datos",
+		"HASH_ERROR": "Error en calcular o hash d'o conchunto de datos",
+		"DATASET_ID_UNDEFINED": "ID d'o conchunto de datos no definida",
+		"NOT_ENOUGH_LABELS": "No i hai prou etiquetas",
+		"NOT_ENOUGH_IMAGES": "No i hai prou imachens",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "O numero de captchas d'o conchunto de datos ye menor que o configurau",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "O numero de solucions d'o conchunto de datos ye menor que o configurau",
+		"DUPLICATE_IMAGE": "S'ha detectau una imachen duplicada",
+		"MERKLE_ERROR": "Error en construir l'árbol de Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "No s'ha puesto importar o motor d'a base de datos",
+		"DATABASE_UNDEFINED": "O client d'a base de datos no ye connectau",
+		"DATABASE_HOST_UNDEFINED": "L'adreza de l'hoste d'a base de datos no ye definida",
+		"DATASET_LOAD_FAILED": "Ha fallau a carga d'o conchunto de datos",
+		"DATASET_GET_FAILED": "No s'ha puesto obtener o conchunto de datos",
+		"CAPTCHA_GET_FAILED": "No s'han puesto obtener os captchas",
+		"CAPTCHA_UPDATE_FAILED": "No s'han puesto actualizar os captchas",
+		"IMAGE_GET_FAILED": "No s'ha puesto obtener a imachen",
+		"PENDING_RECORD_NOT_FOUND": "No s'han trobau rechistros pendients",
+		"INVALID_HASH": "Hash no valido",
+		"SOLUTION_GET_FAILED": "No s'ha puesto obtener a solución",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "No s'ha trobau garra conchunto de datos con o numero necesario de solucions",
+		"SOLUTION_APPROVE_FAILED": "No s'ha puesto aprebar a solución",
+		"SOLUTION_FLAG_FAILED": "No s'ha puesto marcar a solución como procesada",
+		"TABLES_UNDEFINED": "Tablas no definidas",
+		"CONNECTION_UNDEFINED": "Connexión no definida",
+		"COMMITMENT_FLAG_FAILED": "No s'ha puesto marcar o compromiso como procesau",
+		"UNKNOWN": "Error desconoixiu d'a base de datos",
+		"QUERY_ERROR": "Ha fallau a consulta a la base de datos",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Connexión de Redis pa las reglas d'acceso no definida",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Almagacén de reglas d'acceso d'usuario no definiu",
+		"SESSION_STORE_FAILED": "No s'ha puesto alzar a sesión",
+		"SESSION_CHECK_REMOVE_FAILED": "No s'ha puesto comprebar y eliminar a sesión",
+		"SESSION_GET_FAILED": "No s'ha puesto obtener a sesión"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "No se puet cambiar l'usuario propietario",
+		"CANNOT_DELETE_OWN_USER": "No puetz eliminar a tuya propia cuenta",
+		"CANNOT_DELETE_LAST_USER": "No se puet eliminar o zaguer usuario",
+		"USER_ALREADY_EXISTS": "L'usuario ya existe",
+		"NO_SUGGESTIONS_FOUND": "No s'han trobau sucherencias",
+		"CANNOT_DEACTIVATE_LAST_SITE": "No se puet desactivar o zaguer puesto activo",
+		"DUPLICATE_SITE_NAME": "Ya existe un puesto con este nombre",
+		"INVALID_SITE_NAME": "O nombre d'o puesto nomás puet contener letras, numeros, guions baixos y guions"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Parametro no valido"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "No s'ha trobau o fichero",
+		"FILE_ALREADY_EXISTS": "O fichero ya existe",
+		"INVALID_DIR_FORMAT": "Formato de directorio no valido"
+	}
+}

@@ -171,12 +171,20 @@ describe("getLanguageDirection", () => {
 
 	test("is ltr for every other shipped language", () => {
 		const others: string[] = LanguageCodes.filter(
-			(code: string) => code !== "ar",
+			(code: string) => !["ar", "fa", "he", "ur"].includes(code),
 		);
 		for (const language of others) {
 			expect(getLanguageDirection(language)).toBe("ltr");
 		}
 	});
+
+	test.each(["ar", "fa", "he", "ur"])(
+		"is rtl for the shipped %s catalogue",
+		(code: string) => {
+			expect(LanguageCodes).toContain(code);
+			expect(getLanguageDirection(code)).toBe("rtl");
+		},
+	);
 
 	test("is ltr for an empty or unknown tag", () => {
 		expect(getLanguageDirection("")).toBe("ltr");

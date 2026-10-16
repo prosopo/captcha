@@ -44,7 +44,7 @@ describe("Languages", () => {
 
 	test("every code is a well-formed, lowercase-primary language tag", () => {
 		for (const code of codes) {
-			expect(code).toMatch(/^[a-z]{2}(-[A-Z]{2})?$/);
+			expect(code).toMatch(/^[a-z]{2,3}(-[A-Z]{2})?$/);
 		}
 	});
 

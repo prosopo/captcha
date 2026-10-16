@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Kodiranje nevažeće adrese nije uspjelo",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Obveza za rješenje captche ne postoji",
+		"SIGNER_UNDEFINED": "Potpisnik nije definisan",
+		"CANNOT_FIND_KEYPAIR": "Nije moguće pronaći par ključeva",
+		"INVALID_DATA_FORMAT": "Nevažeći format podataka"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Zatraženo je nepoznato okruženje",
+		"INVALID_CAPTCHA_NUMBER": "Ispravno konfigurišite postavke captcha",
+		"INVALID_LOG_LEVEL": "Nevažeća razina zapisivanja",
+		"INVALID_PACKAGE_DIR": "Nevažeći direktorij paketa"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Greška pri raščlanjivanju skupa podataka",
+		"SOLUTION_PARSE_ERROR": "Greška pri raščlanjivanju skupa podataka",
+		"HASH_ERROR": "Greška pri izračunu hasha skupa podataka",
+		"DATASET_ID_UNDEFINED": "ID skupa podataka nije definisan",
+		"NOT_ENOUGH_LABELS": "Nema dovoljno oznaka",
+		"NOT_ENOUGH_IMAGES": "Nema dovoljno slika",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Broj captcha u skupu podataka manji je od konfigurisanog broja captcha",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Broj rješenja u skupu podataka manji je od konfigurisanog broja rješenja",
+		"DUPLICATE_IMAGE": "otkrivena je duplicirana slika",
+		"MERKLE_ERROR": "Greška pri stvaranju Merkleova stabla"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Uvoz pogona baze podataka nije uspio",
+		"DATABASE_UNDEFINED": "Klijent baze podataka nije povezan",
+		"DATABASE_HOST_UNDEFINED": "Adresa servera baze podataka nije definisana",
+		"DATASET_LOAD_FAILED": "Učitavanje skupa podataka nije uspjelo",
+		"DATASET_GET_FAILED": "Dohvaćanje skupa podataka nije uspjelo",
+		"CAPTCHA_GET_FAILED": "Dohvaćanje captche nije uspjelo",
+		"CAPTCHA_UPDATE_FAILED": "Ažuriranje captche nije uspjelo",
+		"IMAGE_GET_FAILED": "Dohvaćanje slike nije uspjelo",
+		"PENDING_RECORD_NOT_FOUND": "Nije pronađen zapis na čekanju",
+		"INVALID_HASH": "Nevažeći hash",
+		"SOLUTION_GET_FAILED": "Dohvaćanje rješenja nije uspjelo",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nije pronađen skup podataka s potrebnim brojem rješenja",
+		"SOLUTION_APPROVE_FAILED": "Odobravanje rješenja nije uspjelo",
+		"SOLUTION_FLAG_FAILED": "Označavanje rješenja kao obrađenog nije uspjelo",
+		"TABLES_UNDEFINED": "Tabele nisu definisane",
+		"CONNECTION_UNDEFINED": "Veza nije definisana",
+		"COMMITMENT_FLAG_FAILED": "Označavanje obveze kao obrađene nije uspjelo",
+		"UNKNOWN": "Nepoznata greška baze podataka",
+		"QUERY_ERROR": "Upit bazi podataka nije uspio",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis veza za pravila pristupa nije definisana",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Skladište pravila pristupa korisnika nije definisano",
+		"SESSION_STORE_FAILED": "Spremanje sesije nije uspjelo",
+		"SESSION_CHECK_REMOVE_FAILED": "Provjera i uklanjanje sesije nije uspjelo",
+		"SESSION_GET_FAILED": "Dohvaćanje sesije nije uspjelo"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Nije moguće izmijeniti korisnika vlasnika",
+		"CANNOT_DELETE_OWN_USER": "Ne možete izbrisati vlastiti račun",
+		"CANNOT_DELETE_LAST_USER": "Nije moguće izbrisati posljednjeg korisnika",
+		"USER_ALREADY_EXISTS": "Korisnik već postoji",
+		"NO_SUGGESTIONS_FOUND": "Nisu pronađeni prijedlozi",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nije moguće deaktivirati posljednje aktivno stranica",
+		"DUPLICATE_SITE_NAME": "Stranica s ovim nazivom već postoji",
+		"INVALID_SITE_NAME": "Naziv stranice smije sadržavati samo slova, brojeve, crtice i podvlake"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Nevažeći parametar"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Datoteka nije pronađena",
+		"FILE_ALREADY_EXISTS": "Datoteka već postoji",
+		"INVALID_DIR_FORMAT": "Nevažeći format direktorija"
+	}
+}

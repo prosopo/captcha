@@ -38,9 +38,10 @@ const LANGUAGE_TAG = /^[A-Za-z]{1,8}(?:-[A-Za-z0-9]{1,8})*$/;
  */
 const ALIASES: Readonly<Record<string, Language>> = {
 	nb: Languages.norwegian,
-	nn: Languages.norwegian,
 	in: Languages.indonesian,
+	iw: Languages.hebrew,
 	jw: Languages.javanese,
+	tl: Languages.filipino,
 };
 
 const byLowerCase: ReadonlyMap<string, Language> = new Map(

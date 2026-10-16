@@ -57,16 +57,43 @@ const flatten = (tree: TranslationTree, prefix = ""): Map<string, unknown> =>
 // Languages not written in Latin script must use their own script, so an
 // English word pasted into e.g. the Thai catalogue is caught.
 const scripts: Partial<Record<Language, RegExp>> = {
+	am: /\p{Script=Ethiopic}/u,
 	ar: /\p{Script=Arabic}/u,
+	as: /\p{Script=Bengali}/u,
+	be: /\p{Script=Cyrillic}/u,
+	bg: /\p{Script=Cyrillic}/u,
+	bn: /\p{Script=Bengali}/u,
 	el: /\p{Script=Greek}/u,
+	fa: /\p{Script=Arabic}/u,
+	gu: /\p{Script=Gujarati}/u,
+	he: /\p{Script=Hebrew}/u,
 	hi: /\p{Script=Devanagari}/u,
+	hy: /\p{Script=Armenian}/u,
 	ja: /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u,
+	ka: /\p{Script=Georgian}/u,
+	kk: /\p{Script=Cyrillic}/u,
+	km: /\p{Script=Khmer}/u,
+	kn: /\p{Script=Kannada}/u,
 	ko: /\p{Script=Hangul}/u,
+	ky: /\p{Script=Cyrillic}/u,
+	lo: /\p{Script=Lao}/u,
+	mk: /\p{Script=Cyrillic}/u,
 	ml: /\p{Script=Malayalam}/u,
+	mn: /\p{Script=Cyrillic}/u,
+	mr: /\p{Script=Devanagari}/u,
+	my: /\p{Script=Myanmar}/u,
+	ne: /\p{Script=Devanagari}/u,
+	or: /\p{Script=Oriya}/u,
+	pa: /\p{Script=Gurmukhi}/u,
 	ru: /\p{Script=Cyrillic}/u,
+	si: /\p{Script=Sinhala}/u,
 	sr: /\p{Script=Cyrillic}/u,
+	ta: /\p{Script=Tamil}/u,
+	te: /\p{Script=Telugu}/u,
+	tg: /\p{Script=Cyrillic}/u,
 	th: /\p{Script=Thai}/u,
 	uk: /\p{Script=Cyrillic}/u,
+	ur: /\p{Script=Arabic}/u,
 	zh: /\p{Script=Han}/u,
 	"zh-CN": /\p{Script=Han}/u,
 };
@@ -74,9 +101,16 @@ const scripts: Partial<Record<Language, RegExp>> = {
 // A Latin letter inside a Cyrillic or Greek word is a look-alike typo
 // (e.g. Latin "a" in "бубa") that renders fine but breaks search and speech.
 const homoglyphScripts: Partial<Record<Language, RegExp>> = {
+	be: /\p{Script=Cyrillic}/u,
+	bg: /\p{Script=Cyrillic}/u,
 	el: /\p{Script=Greek}/u,
+	kk: /\p{Script=Cyrillic}/u,
+	ky: /\p{Script=Cyrillic}/u,
+	mk: /\p{Script=Cyrillic}/u,
+	mn: /\p{Script=Cyrillic}/u,
 	ru: /\p{Script=Cyrillic}/u,
 	sr: /\p{Script=Cyrillic}/u,
+	tg: /\p{Script=Cyrillic}/u,
 	uk: /\p{Script=Cyrillic}/u,
 };
 
@@ -221,7 +255,7 @@ describe("locale catalogues", () => {
 			const prompt: unknown = flatten(readLocale(language)).get(
 				"WIDGET.SELECT_ALL",
 			);
-			expect(prompt).toMatch(/[:：]$/);
+			expect(prompt).toMatch(/[:：៖]$/);
 		},
 	);
 });

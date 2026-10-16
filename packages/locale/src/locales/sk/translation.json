@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Neplatnú adresu sa nepodarilo zakódovať",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Záväzok riešenia captcha neexistuje",
+		"SIGNER_UNDEFINED": "Podpisovateľ nie je definovaný",
+		"CANNOT_FIND_KEYPAIR": "Nedá sa nájsť pár kľúčov",
+		"INVALID_DATA_FORMAT": "Neplatný formát údajov"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Požadované neznáme prostredie",
+		"INVALID_CAPTCHA_NUMBER": "Nakonfigurujte nastavenia captcha správne",
+		"INVALID_LOG_LEVEL": "Neplatná úroveň protokolovania",
+		"INVALID_PACKAGE_DIR": "Neplatný adresár balíka"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Chyba pri spracovaní množiny údajov",
+		"SOLUTION_PARSE_ERROR": "Chyba pri spracovaní množiny údajov",
+		"HASH_ERROR": "Chyba pri hašovaní množiny údajov",
+		"DATASET_ID_UNDEFINED": "ID množiny údajov nie je definované",
+		"NOT_ENOUGH_LABELS": "Nedostatok štítkov",
+		"NOT_ENOUGH_IMAGES": "Nedostatok obrázkov",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Počet captcha v množine údajov je menší ako nakonfigurovaný počet captcha",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Počet riešení v množine údajov je menší ako nakonfigurovaný počet riešení",
+		"DUPLICATE_IMAGE": "zistil sa duplicitný obrázok",
+		"MERKLE_ERROR": "Chyba pri vytváraní Merkleho stromu"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Nepodarilo sa importovať databázový stroj",
+		"DATABASE_UNDEFINED": "Databázový klient nie je pripojený",
+		"DATABASE_HOST_UNDEFINED": "Adresa databázového hostiteľa nie je definovaná",
+		"DATASET_LOAD_FAILED": "Načítanie množiny údajov zlyhalo",
+		"DATASET_GET_FAILED": "Nepodarilo sa získať množinu údajov",
+		"CAPTCHA_GET_FAILED": "Nepodarilo sa získať captcha",
+		"CAPTCHA_UPDATE_FAILED": "Nepodarilo sa aktualizovať captcha",
+		"IMAGE_GET_FAILED": "Nepodarilo sa získať obrázok",
+		"PENDING_RECORD_NOT_FOUND": "Nenašiel sa žiadny čakajúci záznam",
+		"INVALID_HASH": "Neplatný hash",
+		"SOLUTION_GET_FAILED": "Nepodarilo sa získať riešenie",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nenašli sa žiadne množiny údajov s požadovaným počtom riešení",
+		"SOLUTION_APPROVE_FAILED": "Nepodarilo sa schváliť riešenie",
+		"SOLUTION_FLAG_FAILED": "Nepodarilo sa označiť riešenie ako spracované",
+		"TABLES_UNDEFINED": "Tabuľky nie sú definované",
+		"CONNECTION_UNDEFINED": "Pripojenie nie je definované",
+		"COMMITMENT_FLAG_FAILED": "Nepodarilo sa označiť záväzok ako spracovaný",
+		"UNKNOWN": "Neznáma chyba databázy",
+		"QUERY_ERROR": "Dopyt do databázy zlyhal",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Pripojenie Redis pre pravidlá prístupu nie je definované",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Úložisko pravidiel prístupu používateľov nie je definované",
+		"SESSION_STORE_FAILED": "Nepodarilo sa uložiť reláciu",
+		"SESSION_CHECK_REMOVE_FAILED": "Nepodarilo sa skontrolovať a odstrániť reláciu",
+		"SESSION_GET_FAILED": "Nepodarilo sa získať reláciu"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Používateľa vlastníka nemožno upraviť",
+		"CANNOT_DELETE_OWN_USER": "Nemôžete odstrániť vlastný účet",
+		"CANNOT_DELETE_LAST_USER": "Posledného používateľa nemožno odstrániť",
+		"USER_ALREADY_EXISTS": "Používateľ už existuje",
+		"NO_SUGGESTIONS_FOUND": "Nenašli sa žiadne návrhy",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Poslednú aktívnu stránku nemožno deaktivovať",
+		"DUPLICATE_SITE_NAME": "Stránka s týmto názvom už existuje",
+		"INVALID_SITE_NAME": "Názov stránky môže obsahovať iba písmená, číslice, spojovníky a podčiarkovníky"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Neplatný parameter"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Súbor sa nenašiel",
+		"FILE_ALREADY_EXISTS": "Súbor už existuje",
+		"INVALID_DIR_FORMAT": "Neplatný formát adresára"
+	}
+}

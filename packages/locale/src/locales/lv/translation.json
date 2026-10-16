@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Neizdevās kodēt nederīgu adresi",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha risinājuma saistība nepastāv",
+		"SIGNER_UNDEFINED": "Parakstītājs nav definēts",
+		"CANNOT_FIND_KEYPAIR": "Nevar atrast atslēgu pāri",
+		"INVALID_DATA_FORMAT": "Nederīgs datu formāts"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Pieprasīta nezināma vide",
+		"INVALID_CAPTCHA_NUMBER": "Lūdzu, pareizi konfigurējiet captcha konfigurācijas",
+		"INVALID_LOG_LEVEL": "Nederīgs žurnāla līmenis",
+		"INVALID_PACKAGE_DIR": "Nederīgs pakotnes direktorijs"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Kļūda, parsējot datu kopu",
+		"SOLUTION_PARSE_ERROR": "Kļūda, parsējot datu kopu",
+		"HASH_ERROR": "Kļūda, aprēķinot datu kopas jaucējvērtību",
+		"DATASET_ID_UNDEFINED": "Datu kopas ID nav definēts",
+		"NOT_ENOUGH_LABELS": "Nepietiek etiķešu",
+		"NOT_ENOUGH_IMAGES": "Nepietiek attēlu",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Captcha skaits datu kopā ir mazāks par konfigurēto captcha skaitu",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Risinājumu skaits datu kopā ir mazāks par konfigurēto risinājumu skaitu",
+		"DUPLICATE_IMAGE": "konstatēts attēla dublikāts",
+		"MERKLE_ERROR": "Kļūda, veidojot Merkla koku"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Neizdevās importēt datubāzes dzinēju",
+		"DATABASE_UNDEFINED": "Datubāzes klients nav pievienots",
+		"DATABASE_HOST_UNDEFINED": "Datubāzes resursdatora adrese nav definēta",
+		"DATASET_LOAD_FAILED": "Datu kopas ielāde neizdevās",
+		"DATASET_GET_FAILED": "Neizdevās iegūt datu kopu",
+		"CAPTCHA_GET_FAILED": "Neizdevās iegūt captcha",
+		"CAPTCHA_UPDATE_FAILED": "Neizdevās atjaunināt captcha",
+		"IMAGE_GET_FAILED": "Neizdevās iegūt attēlu",
+		"PENDING_RECORD_NOT_FOUND": "Gaidošs ieraksts nav atrasts",
+		"INVALID_HASH": "Nederīga jaucējvērtība",
+		"SOLUTION_GET_FAILED": "Neizdevās iegūt risinājumu",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nav atrastas datu kopas ar nepieciešamo risinājumu skaitu",
+		"SOLUTION_APPROVE_FAILED": "Neizdevās apstiprināt risinājumu",
+		"SOLUTION_FLAG_FAILED": "Neizdevās atzīmēt risinājumu kā apstrādātu",
+		"TABLES_UNDEFINED": "Tabulas nav definētas",
+		"CONNECTION_UNDEFINED": "Savienojums nav definēts",
+		"COMMITMENT_FLAG_FAILED": "Neizdevās atzīmēt saistību kā apstrādātu",
+		"UNKNOWN": "Nezināma datubāzes kļūda",
+		"QUERY_ERROR": "Datubāzes vaicājums neizdevās",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis piekļuves noteikumu savienojums nav definēts",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Lietotāju piekļuves noteikumu krātuve nav definēta",
+		"SESSION_STORE_FAILED": "Neizdevās saglabāt sesiju",
+		"SESSION_CHECK_REMOVE_FAILED": "Neizdevās pārbaudīt un noņemt sesiju",
+		"SESSION_GET_FAILED": "Neizdevās iegūt sesiju"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Nevar mainīt īpašnieka lietotāju",
+		"CANNOT_DELETE_OWN_USER": "Nevar dzēst savu kontu",
+		"CANNOT_DELETE_LAST_USER": "Nevar dzēst pēdējo lietotāju",
+		"USER_ALREADY_EXISTS": "Lietotājs jau pastāv",
+		"NO_SUGGESTIONS_FOUND": "Ieteikumi nav atrasti",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Nevar deaktivizēt pēdējo aktīvo vietni",
+		"DUPLICATE_SITE_NAME": "Vietne ar šādu nosaukumu jau pastāv",
+		"INVALID_SITE_NAME": "Vietnes nosaukumā drīkst būt tikai burti, cipari, defises un pasvītras"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Nederīgs parametrs"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Fails nav atrasts",
+		"FILE_ALREADY_EXISTS": "Fails jau pastāv",
+		"INVALID_DIR_FORMAT": "Nederīgs direktorija formāts"
+	}
+}

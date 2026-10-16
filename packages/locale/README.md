@@ -68,10 +68,23 @@ host's own. Its language comes only from the attribute or the browser.
 - Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant-*`) does not fall
   back to `zh`, which is Simplified. The next preference is tried instead, then
   English.
-- Aliases for codes we have no catalogue for: `nb` and `nn` → `no`; the
-  withdrawn codes `in` → `id` and `jw` → `jv`, which some browsers still send.
+- Aliases for codes we have no catalogue for: `nb` → `no`; `tl` → `fil`,
+  which Firefox ships its Filipino interface under; the withdrawn codes
+  `in` → `id`, `iw` → `he` and `jw` → `jv`, which some browsers still send.
+  Nynorsk (`nn`) has its own catalogue.
 - Each parent catalogue (`zh`, `pt`) starts as a copy of its variant. People
   who read the variant generally read the parent too.
+
+### Which languages have a catalogue
+
+`BROWSER_UI_LANGUAGES` (`src/browserUiLanguages.ts`) lists every language
+Chrome and Firefox ship their interface in, since a visitor's browser is most
+likely set to one of them. `browserUiLanguages.unit.test.ts` fails if one of
+them reaches no catalogue, apart from its `UNTRANSLATED` list: Firefox-only
+languages with too few speakers for a confident draft (Acholi, Kaqchikel,
+Triqui, Songhay, Santali, Saraiki, Fulah, Guarani and others) and
+Traditional Chinese. Those visitors get English. The catalogues added from
+this list were drafted without a native speaker and need review.
 
 ## Text direction
 

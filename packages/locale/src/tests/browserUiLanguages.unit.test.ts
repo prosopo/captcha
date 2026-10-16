@@ -18,6 +18,30 @@ import {
 	type BrowserUiLanguage,
 } from "../browserUiLanguages.js";
 import { getLanguageDirection } from "../direction.js";
+import { matchLanguageTag } from "../languagePreference.js";
+
+// Browser languages with no catalogue yet; their visitors get English. The
+// Traditional Chinese ones never fall back to the Simplified zh catalogue.
+const UNTRANSLATED: readonly string[] = [
+	"ach",
+	"br",
+	"cak",
+	"dsb",
+	"ff",
+	"fur",
+	"gn",
+	"hsb",
+	"kab",
+	"lij",
+	"sat",
+	"sc",
+	"skr",
+	"son",
+	"szl",
+	"trs",
+	"zh-HK",
+	"zh-TW",
+];
 
 const tags: string[] = BROWSER_UI_LANGUAGES.map(
 	(language: BrowserUiLanguage) => language.tag,
@@ -61,5 +85,12 @@ describe("BROWSER_UI_LANGUAGES", () => {
 			).length;
 		expect(shippedBy("chrome")).toBe(84);
 		expect(shippedBy("firefox")).toBe(103);
+	});
+
+	test("every language has a catalogue, apart from the untranslated ones", () => {
+		const missing: string[] = tags.filter(
+			(tag: string) => matchLanguageTag(tag) === undefined,
+		);
+		expect(missing).toEqual(UNTRANSLATED);
 	});
 });
