@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Жараксыз даректи коддоо ишке ашкан жок",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha чечиминин милдеттенмеси жок",
+		"SIGNER_UNDEFINED": "Кол коюучу аныкталган эмес",
+		"CANNOT_FIND_KEYPAIR": "Ачкычтар жубу табылган жок",
+		"INVALID_DATA_FORMAT": "Жараксыз маалымат форматы"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Белгисиз чөйрө суралды",
+		"INVALID_CAPTCHA_NUMBER": "Captcha конфигурацияларын туура орнотуңуз",
+		"INVALID_LOG_LEVEL": "Жараксыз журнал деңгээли",
+		"INVALID_PACKAGE_DIR": "Жараксыз пакет каталогу"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Маалымат топтомун талдоодо ката",
+		"SOLUTION_PARSE_ERROR": "Маалымат топтомун талдоодо ката",
+		"HASH_ERROR": "Маалымат топтомун хэштөөдө ката",
+		"DATASET_ID_UNDEFINED": "Маалымат топтомунун ID аныкталган эмес",
+		"NOT_ENOUGH_LABELS": "Белгилер жетишсиз",
+		"NOT_ENOUGH_IMAGES": "Сүрөттөр жетишсиз",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Маалымат топтомундагы captcha саны орнотулган сандан аз",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Маалымат топтомундагы чечимдер саны орнотулган сандан аз",
+		"DUPLICATE_IMAGE": "кайталанган сүрөт аныкталды",
+		"MERKLE_ERROR": "Меркл дарагын түзүүдө ката"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Маалымат базасынын кыймылдаткычын импорттоо ишке ашкан жок",
+		"DATABASE_UNDEFINED": "Маалымат базасынын кардары туташкан эмес",
+		"DATABASE_HOST_UNDEFINED": "Маалымат базасынын хостунун дареги аныкталган эмес",
+		"DATASET_LOAD_FAILED": "Маалымат топтомун жүктөө ишке ашкан жок",
+		"DATASET_GET_FAILED": "Маалымат топтомун алуу ишке ашкан жок",
+		"CAPTCHA_GET_FAILED": "Captcha алуу ишке ашкан жок",
+		"CAPTCHA_UPDATE_FAILED": "Captcha жаңылоо ишке ашкан жок",
+		"IMAGE_GET_FAILED": "Сүрөттү алуу ишке ашкан жок",
+		"PENDING_RECORD_NOT_FOUND": "Күтүүдөгү жазуу табылган жок",
+		"INVALID_HASH": "Жараксыз хэш",
+		"SOLUTION_GET_FAILED": "Чечимди алуу ишке ашкан жок",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Керектүү чечимдер саны бар маалымат топтомдору табылган жок",
+		"SOLUTION_APPROVE_FAILED": "Чечимди бекитүү ишке ашкан жок",
+		"SOLUTION_FLAG_FAILED": "Чечимди иштетилген деп белгилөө ишке ашкан жок",
+		"TABLES_UNDEFINED": "Таблицалар аныкталган эмес",
+		"CONNECTION_UNDEFINED": "Туташуу аныкталган эмес",
+		"COMMITMENT_FLAG_FAILED": "Милдеттенмени иштетилген деп белгилөө ишке ашкан жок",
+		"UNKNOWN": "Белгисиз маалымат базасы катасы",
+		"QUERY_ERROR": "Маалымат базасына суроо ишке ашкан жок",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis кирүү эрежелеринин туташуусу аныкталган эмес",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Колдонуучулардын кирүү эрежелеринин сактагычы аныкталган эмес",
+		"SESSION_STORE_FAILED": "Сеансты сактоо ишке ашкан жок",
+		"SESSION_CHECK_REMOVE_FAILED": "Сеансты текшерүү жана өчүрүү ишке ашкан жок",
+		"SESSION_GET_FAILED": "Сеансты алуу ишке ашкан жок"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Ээси болгон колдонуучуну өзгөртүүгө болбойт",
+		"CANNOT_DELETE_OWN_USER": "Өз аккаунтуңузду өчүрүүгө болбойт",
+		"CANNOT_DELETE_LAST_USER": "Акыркы колдонуучуну өчүрүүгө болбойт",
+		"USER_ALREADY_EXISTS": "Колдонуучу мурунтан эле бар",
+		"NO_SUGGESTIONS_FOUND": "Сунуштар табылган жок",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Акыркы активдүү сайтты өчүрүүгө болбойт",
+		"DUPLICATE_SITE_NAME": "Мындай аталыштагы сайт мурунтан эле бар",
+		"INVALID_SITE_NAME": "Сайттын аталышында тамгалар, сандар, дефистер жана астын сызыктары гана болушу мүмкүн"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Жараксыз параметр"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Файл табылган жок",
+		"FILE_ALREADY_EXISTS": "Файл мурунтан эле бар",
+		"INVALID_DIR_FORMAT": "Жараксыз каталог форматы"
+	}
+}

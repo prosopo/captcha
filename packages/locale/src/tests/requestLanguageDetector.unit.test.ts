@@ -31,6 +31,7 @@ const resources = {
 	tr: { translation: { TARGET: { owl: "baykuş" } } },
 	no: { translation: { TARGET: { owl: "ugle" } } },
 	zh: { translation: { TARGET: { owl: "猫头鹰" } } },
+	"zh-TW": { translation: { TARGET: { owl: "貓頭鷹" } } },
 };
 
 type Answer = {
@@ -121,9 +122,10 @@ describe("request language detection", () => {
 		expect(chinese.owl).toBe("猫头鹰");
 	});
 
-	it("does not serve Simplified Chinese for zh-TW", async () => {
+	it("serves Traditional Chinese, not Simplified, for zh-TW", async () => {
 		const answer = await ask({ "Accept-Language": "zh-TW, de;q=0.8" });
-		expect(answer.language).toBe("de");
+		expect(answer.language).toBe("zh-TW");
+		expect(answer.owl).toBe("貓頭鷹");
 	});
 
 	it("falls back to English for an unsupported language", async () => {

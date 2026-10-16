@@ -110,7 +110,7 @@ describe("provider language negotiation", () => {
 
 	it("serves a variant from its parent and falls back to English", async () => {
 		expect((await ask({ [LANGUAGE_HEADER]: "zh-SG" })).language).toBe("zh");
-		expect((await ask({ [LANGUAGE_HEADER]: "zh-TW" })).language).toBe("en");
+		expect((await ask({ [LANGUAGE_HEADER]: "zh-MO" })).language).toBe("zh-HK");
 		const english = await ask({ "Accept-Language": "xx" });
 		expect(english.language).toBe("en");
 		expect(english.owl).toBe("owl");

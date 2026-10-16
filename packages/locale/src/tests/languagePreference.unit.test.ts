@@ -74,15 +74,26 @@ describe("matchLanguageTag", () => {
 		["zh-Hans-CN", Languages.chinese],
 		["zh-Hans-TW", Languages.chinese],
 		["zh-SG", Languages.chinese],
-		["zh-TW", undefined],
-		["zh-HK", undefined],
-		["zh-Hant", undefined],
-		["zh-Hant-TW", undefined],
+		["zh-TW", Languages.chineseTaiwan],
+		["zh-tw", Languages.chineseTaiwan],
+		["zh-HK", Languages.chineseHongKong],
+		["zh-MO", Languages.chineseHongKong],
+		["zh-Hant", Languages.chineseTaiwan],
+		["zh-Hant-TW", Languages.chineseTaiwan],
+		["zh-Hant-HK", Languages.chineseHongKong],
+		["zh-Hant-MO", Languages.chineseHongKong],
 		["nb", Languages.norwegian],
-		["nn-NO", Languages.norwegian],
+		["nn-NO", Languages.norwegianNynorsk],
 		["no", Languages.norwegian],
 		["in", Languages.indonesian],
 		["jw", Languages.javanese],
+		["iw", Languages.hebrew],
+		["iw-IL", Languages.hebrew],
+		["tl", Languages.filipino],
+		["fy-NL", Languages.frisian],
+		["ga-IE", Languages.irish],
+		["ca-valencia", Languages.catalan],
+		["es-419", Languages.spanish],
 		["sr-Latn", Languages.serbian],
 		["en-GB", Languages.english],
 		["xx", undefined],
@@ -99,9 +110,9 @@ describe("matchLanguage / negotiateLanguage", () => {
 		expect(matchLanguage(["xx", "tr-TR", "de"])).toBe(Languages.turkish);
 	});
 
-	it("moves past Traditional Chinese rather than serve Simplified", () => {
-		expect(matchLanguage(["zh-TW", "en"])).toBe(Languages.english);
-		expect(matchLanguage(["zh-TW"])).toBeUndefined();
+	it("serves Traditional Chinese its own catalogue, never Simplified", () => {
+		expect(matchLanguage(["zh-TW", "en"])).toBe(Languages.chineseTaiwan);
+		expect(matchLanguage(["zh-Hant-MO", "en"])).toBe(Languages.chineseHongKong);
 	});
 
 	it("matches a whole tag before moving to the next preference", () => {
@@ -262,7 +273,7 @@ describe("browserLanguages / widgetLanguageHeaders", () => {
 describe("resolveLanguageList", () => {
 	it("resolves a site-supplied list to its first catalogue", () => {
 		expect(resolveLanguageList("xx, tr-TR, de")).toBe(Languages.turkish);
-		expect(resolveLanguageList("zh-TW, de")).toBe(Languages.german);
+		expect(resolveLanguageList("xx-YY, de")).toBe(Languages.german);
 	});
 
 	it("has nothing for an empty or unsupported choice", () => {

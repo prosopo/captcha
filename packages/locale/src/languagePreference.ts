@@ -38,9 +38,10 @@ const LANGUAGE_TAG = /^[A-Za-z]{1,8}(?:-[A-Za-z0-9]{1,8})*$/;
  */
 const ALIASES: Readonly<Record<string, Language>> = {
 	nb: Languages.norwegian,
-	nn: Languages.norwegian,
 	in: Languages.indonesian,
+	iw: Languages.hebrew,
 	jw: Languages.javanese,
+	tl: Languages.filipino,
 };
 
 const byLowerCase: ReadonlyMap<string, Language> = new Map(
@@ -83,7 +84,8 @@ export const parseLanguageList = (value: string | undefined): string[] => {
 };
 
 // The `zh` catalogue is Simplified Chinese, which Traditional Chinese readers
-// do not expect, so their tags skip it and the next preference gets a chance.
+// do not expect, so their tags go to a Traditional catalogue instead: Hong
+// Kong's for Hong Kong and Macau, Taiwan's for the rest.
 const TRADITIONAL_CHINESE_SUBTAGS: ReadonlySet<string> = new Set([
 	"hant",
 	"tw",
@@ -91,24 +93,33 @@ const TRADITIONAL_CHINESE_SUBTAGS: ReadonlySet<string> = new Set([
 	"mo",
 ]);
 
+const HONG_KONG_CHINESE_SUBTAGS: ReadonlySet<string> = new Set(["hk", "mo"]);
+
 const isTraditionalChinese = (subtags: readonly string[]): boolean =>
 	subtags[0] === "zh" &&
 	!subtags.includes("hans") &&
 	subtags.some((subtag: string) => TRADITIONAL_CHINESE_SUBTAGS.has(subtag));
 
+const traditionalChinese = (subtags: readonly string[]): Language =>
+	subtags.some((subtag: string) => HONG_KONG_CHINESE_SUBTAGS.has(subtag))
+		? Languages.chineseHongKong
+		: Languages.chineseTaiwan;
+
 /**
  * The catalogue for one tag: the exact code, then the tag with its last subtag
  * dropped, and so on (RFC 4647 lookup), so `zh-Hans-SG` reaches `zh` and
- * `pt-BR` stays `pt-BR`. Traditional Chinese (`zh-TW`, `zh-Hant-HK`) never
- * reaches `zh`. Case is ignored. Aliases apply to the primary subtag.
+ * `pt-BR` stays `pt-BR`. Traditional Chinese (`zh-Hant`, `zh-MO`) goes to
+ * `zh-TW` or `zh-HK`, never `zh`. Case is ignored. Aliases apply to the primary subtag.
  */
 export const matchLanguageTag = (tag: string): Language | undefined => {
 	if (!LANGUAGE_TAG.test(tag)) {
 		return undefined;
 	}
 	const subtags = tag.toLowerCase().split("-");
-	const shortest = isTraditionalChinese(subtags) ? 2 : 1;
-	for (let length = subtags.length; length >= shortest; length--) {
+	if (isTraditionalChinese(subtags)) {
+		return traditionalChinese(subtags);
+	}
+	for (let length = subtags.length; length >= 1; length--) {
 		const match = byLowerCase.get(subtags.slice(0, length).join("-"));
 		if (match) {
 			return match;
