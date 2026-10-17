@@ -133,17 +133,17 @@
 			"CHECKING": "Tarkistetaan…",
 			"SUBMIT": "OK"
 		},
-		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
-		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
-		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
-		"AUDIO_PLAY": "Play",
-		"AUDIO_REPLAY": "Play again",
-		"AUDIO_PLAYING": "Playing",
-		"AUDIO_FINISHED": "Playback finished",
-		"AUDIO_PLAYBACK_FAILED": "Audio could not be played. Check your device volume and try again.",
-		"AUDIO_INCORRECT": "That wasn't right. Here's a new one.",
-		"AUDIO_SUBMIT": "Verify",
-		"AUDIO_CHECKING": "Checking",
-		"AUDIO_ALTERNATIVE": "Use audio instead"
+		"AUDIO_CHALLENGE_LABEL": "Äänitarkistus",
+		"AUDIO_INSTRUCTIONS": "Kuuntele ja kirjoita kuulemasi {{count}} numeroa.",
+		"AUDIO_INPUT_LABEL": "Kirjoita kuulemasi {{count}} numeroa",
+		"AUDIO_PLAY": "Toista",
+		"AUDIO_REPLAY": "Toista uudelleen",
+		"AUDIO_PLAYING": "Toistetaan",
+		"AUDIO_FINISHED": "Toisto päättyi",
+		"AUDIO_PLAYBACK_FAILED": "Ääntä ei voitu toistaa. Tarkista laitteen äänenvoimakkuus ja yritä uudelleen.",
+		"AUDIO_INCORRECT": "Se ei ollut oikein. Tässä uusi.",
+		"AUDIO_SUBMIT": "Vahvista",
+		"AUDIO_CHECKING": "Tarkistetaan",
+		"AUDIO_ALTERNATIVE": "Käytä ääntä"
 	}
 }
