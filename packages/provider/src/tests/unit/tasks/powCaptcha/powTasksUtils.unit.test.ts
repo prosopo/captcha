@@ -180,7 +180,7 @@ describe("checkPowSignature", () => {
 				message: validMessage,
 				signature: validSignature,
 				signatureType: undefined,
-				code: 500,
+				code: 400,
 			});
 		}
 	});
