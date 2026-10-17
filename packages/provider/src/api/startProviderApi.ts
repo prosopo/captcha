@@ -103,6 +103,9 @@ export const isTlsAvailable = (): boolean => {
 	return fs.existsSync(keyPath) && fs.existsSync(crtPath);
 };
 
+export const getServerVerifyPaths = (): ClientApiPaths[] =>
+	Object.values(ClientApiPaths).filter((path) => path.endsWith("/verify"));
+
 /**
  * Get client API paths that expect Prosopo headers (like site key) for validation, excluding verify and spam routes
  * @returns Array of ClientApiPaths excluding verify and spam routes
@@ -389,7 +392,10 @@ export async function startProviderApi(
 	apiApp.use(ja4Middleware(env));
 	apiApp.use(handshakeTimingMiddleware(env));
 	apiApp.use(rawTlsSignalsMiddleware(env));
-	apiApp.use(ipInfoMiddleware(env));
+	// Verify calls come from the site's backend, not the end user, and every
+	// verify handler reads ip info from the challenge record or the request
+	// body instead, so a sidecar lookup of the caller would be wasted latency.
+	apiApp.use(ipInfoMiddleware(env, new Set(getServerVerifyPaths())));
 
 	// Run Header check middleware on all client routes
 	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));

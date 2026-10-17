@@ -125,7 +125,6 @@ export interface HardBlockRecordView {
 	dappAccount: string;
 	ipAddress: CompositeIpAddress;
 	ja4: string;
-	sessionId?: string;
 }
 
 export class CaptchaManager {
@@ -1035,6 +1034,8 @@ export class CaptchaManager {
 		challengeRecord: HardBlockRecordView,
 		userAccount: string,
 		headers: RequestHeaders,
+		// From the session the caller has already read for its own checks.
+		headHash: string | undefined,
 		coords?: [number, number][][],
 		countryCode?: string,
 		asn?: number,
@@ -1042,15 +1043,6 @@ export class CaptchaManager {
 		// the matched rule (scope fields included) onto the record they
 		// disapprove, so the audit page can name the exact policy.
 	): Promise<AccessRule | undefined> {
-		// Get headHash from session record if available
-		let headHash: string | undefined;
-		if (challengeRecord.sessionId) {
-			const sessionRecord = await this.db.getSessionRecordBySessionId(
-				challengeRecord.sessionId,
-			);
-			headHash = sessionRecord?.decryptedHeadHash;
-		}
-
 		// Serialize coords to string for querying
 		const coordsString = coords ? JSON.stringify(coords) : undefined;
 
@@ -1113,8 +1105,9 @@ export class CaptchaManager {
 	 *   time (ipInfoMiddleware → storeXxxRecord), so by default we reuse it
 	 *   instead of hitting the sidecar again.
 	 * - If the dapp's server passed up the end user's current IP via the
-	 *   verify call, look that up fresh — it's the "now" IP for filtering
-	 *   and may differ from the IP that originally requested the captcha.
+	 *   verify call, the caller looks that up fresh and passes the result as
+	 *   `currentIpInfo` — it's the "now" IP for filtering and may differ from
+	 *   the IP that originally requested the captcha.
 	 * - When the session carries a `dnsEvent`, its `peerIp` and `resolverIp`
 	 *   are enriched and passed alongside the primary IP.
 	 * - The abuser category defaults to `{action:"block"}` so abusive
@@ -1128,10 +1121,9 @@ export class CaptchaManager {
 	 * the verdict.
 	 */
 	async resolveTrafficFilterCheck(
-		env: ProviderEnvironment,
 		recordIpInfo: IPInfoResponse | undefined,
 		trafficFilter: Partial<ITrafficFilter> | undefined,
-		currentIp?: string,
+		currentIpInfo?: IPInfoResponse,
 		enrichedDnsEvent?: EnrichedDnsEvent,
 	): Promise<TrafficCheckResult> {
 		const effective: Partial<ITrafficFilter> = {
@@ -1151,12 +1143,8 @@ export class CaptchaManager {
 			return { isBlocked: false, matches: [] };
 		}
 
-		const ipInfo = currentIp
-			? await env.ipInfoService.lookup(currentIp)
-			: recordIpInfo;
-
 		return checkTrafficFilter(
-			ipInfo,
+			currentIpInfo ?? recordIpInfo,
 			effective,
 			extraIpInfosFromEnrichedDnsEvent(enrichedDnsEvent),
 			enrichedDnsEvent?.pathValid,

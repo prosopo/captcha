@@ -706,6 +706,7 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 						clientRecord.settings.trafficFilter,
 						clientRecord.settings.storeMetadata,
 						clientSessionId,
+						clientRecord.settings.ipValidationRules,
 					);
 
 				const verificationResponse: VerificationResponse =

@@ -1,0 +1,39 @@
+# Stack for `pnpm bench:verify`. Every dependency the provider talks to sits
+# behind toxiproxy so the bench can add a fixed delay per round trip; the raw
+# ports are published separately so op counters can be read without passing
+# through (and being slowed by) the proxy.
+name: prosopo-bench
+services:
+    mongo:
+        image: mongo:6.0.28
+        ports:
+            - '27117:27017'
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=root
+            - MONGO_INITDB_ROOT_PASSWORD=root
+            - MONGO_INITDB_DATABASE=prosopo
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '20m'
+                max-file: '1'
+    redis:
+        image: redis/redis-stack-server:7.4.0-v8
+        ports:
+            - '6479:6379'
+        environment:
+            - REDIS_ARGS=--requirepass root
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '20m'
+                max-file: '1'
+    toxiproxy:
+        image: ghcr.io/shopify/toxiproxy:2.12.0
+        ports:
+            - '8474:8474' # control API
+            - '27118:27118' # mongo
+            - '6480:6480' # redis
+            - '3898:3898' # ipapi stub running on the host
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'

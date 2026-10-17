@@ -547,6 +547,12 @@ export abstract class InteractiveCaptchaManager<
 			return notVerifiedResponse;
 		}
 
+		// Read once: the hard-block check needs its head hash and the checks
+		// further down need the rest.
+		const sessionRecord = challengeRecord.sessionId
+			? await this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
+			: undefined;
+
 		// Check user access policies for hard blocks
 		if (userAccessRulesStorage) {
 			try {
@@ -555,6 +561,7 @@ export abstract class InteractiveCaptchaManager<
 					challengeRecord,
 					challengeRecord.userAccount,
 					challengeRecord.headers,
+					sessionRecord?.decryptedHeadHash,
 					challengeRecord.coords,
 					challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.countryCode
@@ -655,10 +662,6 @@ export abstract class InteractiveCaptchaManager<
 			}
 		}
 
-		const sessionRecord = challengeRecord.sessionId
-			? await this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
-			: undefined;
-
 		const enrichedDnsEvent = await enrichDnsEvent(
 			sessionRecord?.dnsEvent,
 			env.ipInfoService,
@@ -667,10 +670,9 @@ export abstract class InteractiveCaptchaManager<
 
 		{
 			const check = await this.resolveTrafficFilterCheck(
-				env,
 				challengeRecord.ipInfo,
 				trafficFilter,
-				ip,
+				ip ? await env.ipInfoService.lookup(ip) : undefined,
 				enrichedDnsEvent,
 			);
 			if (check.isBlocked) {
