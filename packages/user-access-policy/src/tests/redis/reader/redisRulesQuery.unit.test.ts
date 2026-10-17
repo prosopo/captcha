@@ -250,6 +250,19 @@ describe("getRulesRedisQuery", () => {
 		expect(query).toContain("@coords:{\\[\\[\\[100\\,200\\]\\]\\]}");
 	});
 
+	it("escapes the signer URL in a webBotAuthAgent query", () => {
+		const filter = {
+			userScope: {
+				webBotAuthAgent: "https://chatgpt.com",
+			},
+			userScopeMatch: FilterScopeMatch.Exact,
+		} as AccessRulesFilter;
+
+		const query = getRulesRedisQuery(filter, false);
+
+		expect(query).toBe("( @webBotAuthAgent:{https\\:\\/\\/chatgpt\\.com} )");
+	});
+
 	it("includes both headHash and coords when both provided", () => {
 		const filter = {
 			userScope: {

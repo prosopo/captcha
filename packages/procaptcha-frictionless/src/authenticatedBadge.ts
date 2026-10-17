@@ -14,10 +14,12 @@
 
 // Widget for the `authenticated` captcha outcome — no user-facing challenge,
 // just a visible acknowledgement that Web Bot Auth verification succeeded.
-// Mounts once, immediately encodes a ProcaptchaToken with the sessionId as
-// its commitmentId (matching what /client/authenticated/verify decodes) and
-// fires `onHuman`. The badge itself is purely presentational; the token
-// submission happens on mount.
+// Encodes a ProcaptchaToken with the sessionId as its commitmentId (matching
+// what /client/authenticated/verify decodes) and fires `onHuman`: on mount in
+// visible mode, and on execute() in invisible mode, where nothing is drawn.
+// Like a solved PoW, the pass expires and the frictionless flow is re-run for
+// a fresh session, so an agent that takes its time still submits a token the
+// site's server accepts as recent.
 //
 // The token carries empty signature bags (`{provider: {}, user: {}}`) — the
 // authenticated verify endpoint does not check the token's user or provider
@@ -26,6 +28,7 @@
 // is applied by the dApp on the way to /verify (not by the widget here).
 
 import {
+	PROCAPTCHA_EXECUTE_EVENT,
 	type StaticComponent,
 	createElement,
 	createSvgElement,
@@ -50,6 +53,11 @@ export type AuthenticatedBadgeProps = {
 	callbacks: ProcaptchaCallbacks;
 	theme?: Theme;
 	labels?: AuthenticatedBadgeLabels;
+	invisible?: boolean;
+	// Receives a targeted execute() for this widget.
+	widgetContainer?: HTMLElement;
+	expiresInMs: number;
+	restart: () => void;
 };
 
 export type AuthenticatedBadgeLabels = {
@@ -120,6 +128,7 @@ export const mountAuthenticatedBadge = (
 ): StaticComponent => {
 	const { sessionId, agent, dapp, userAccount, provider, callbacks } = props;
 	const { palette } = props.theme ?? lightTheme;
+	const events = getDefaultEvents(callbacks);
 
 	const badge = createElement("div", {
 		style: {
@@ -142,28 +151,52 @@ export const mountAuthenticatedBadge = (
 		children: [buildTick(), buildLabel(props.labels ?? DEFAULT_LABELS, agent)],
 	});
 
-	container.appendChild(badge);
+	let expiryTimer: ReturnType<typeof setTimeout> | undefined;
 
-	const events = getDefaultEvents(callbacks);
-	const token = encodeProcaptchaOutput({
-		[ApiParams.providerUrl]: provider.provider.url,
-		[ApiParams.user]: userAccount.account.address,
-		[ApiParams.dapp]: dapp,
-		// Verify endpoint reads commitmentId as the sessionId — reusing the
-		// existing slot avoids a token codec bump for this one flow.
-		[ApiParams.commitmentId]: sessionId,
-		[ApiParams.timestamp]: Date.now().toString(),
-		[ApiParams.signature]: {
-			[ApiParams.provider]: {},
-			[ApiParams.user]: {},
-		},
-		[ApiParams.captchaType]: CaptchaType.authenticated,
-	});
-	events.onHuman(token);
+	const issueToken = () => {
+		const token = encodeProcaptchaOutput({
+			[ApiParams.providerUrl]: provider.provider.url,
+			[ApiParams.user]: userAccount.account.address,
+			[ApiParams.dapp]: dapp,
+			// Verify endpoint reads commitmentId as the sessionId — reusing the
+			// existing slot avoids a token codec bump for this one flow.
+			[ApiParams.commitmentId]: sessionId,
+			[ApiParams.timestamp]: Date.now().toString(),
+			[ApiParams.signature]: {
+				[ApiParams.provider]: {},
+				[ApiParams.user]: {},
+			},
+			[ApiParams.captchaType]: CaptchaType.authenticated,
+		});
+		events.onHuman(token);
+		if (expiryTimer === undefined) {
+			expiryTimer = setTimeout(() => {
+				events.onExpired();
+				props.restart();
+			}, props.expiresInMs);
+		}
+	};
+
+	const executeTargets: EventTarget[] = [
+		...(props.widgetContainer ? [props.widgetContainer] : []),
+		...(props.invisible ? [document] : []),
+	];
+	for (const target of executeTargets) {
+		target.addEventListener(PROCAPTCHA_EXECUTE_EVENT, issueToken);
+	}
+
+	if (!props.invisible) {
+		container.appendChild(badge);
+		issueToken();
+	}
 
 	return {
 		update: () => undefined,
 		destroy: () => {
+			clearTimeout(expiryTimer);
+			for (const target of executeTargets) {
+				target.removeEventListener(PROCAPTCHA_EXECUTE_EVENT, issueToken);
+			}
 			badge.parentNode?.removeChild(badge);
 		},
 	};

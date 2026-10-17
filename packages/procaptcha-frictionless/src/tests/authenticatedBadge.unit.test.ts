@@ -12,7 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Account, RandomProvider } from "@prosopo/types";
+import { PROCAPTCHA_EXECUTE_EVENT } from "@prosopo/procaptcha-common";
+import {
+	type Account,
+	ApiParams,
+	CaptchaType,
+	type RandomProvider,
+	decodeProcaptchaOutput,
+} from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
@@ -38,6 +45,8 @@ const mount = (
 		userAccount: account,
 		provider,
 		callbacks: { onHuman: vi.fn<(token: string) => void>() },
+		expiresInMs: 60_000,
+		restart: vi.fn<() => void>(),
 		...overrides,
 	});
 	destroy = badge.destroy;
@@ -97,5 +106,97 @@ describe("authenticated badge", () => {
 		const badge = mount();
 		expect(badge.hasAttribute("aria-label")).toBe(false);
 		expect(badge.textContent).toContain("Trusted request");
+	});
+
+	test("issues an authenticated token for its session on mount", () => {
+		const onHuman = vi.fn<(token: string) => void>();
+		mount({ callbacks: { onHuman } });
+		expect(onHuman).toHaveBeenCalledTimes(1);
+		const token = decodeProcaptchaOutput(onHuman.mock.calls[0]?.[0] ?? "");
+		expect(token[ApiParams.commitmentId]).toBe("session-1");
+		expect(token[ApiParams.captchaType]).toBe(CaptchaType.authenticated);
+	});
+});
+
+describe("authenticated badge in invisible mode", () => {
+	const mountInvisible = (
+		overrides: Partial<AuthenticatedBadgeProps> = {},
+	): ReturnType<typeof vi.fn<(token: string) => void>> => {
+		const onHuman = vi.fn<(token: string) => void>();
+		destroy = mountAuthenticatedBadge(container, {
+			sessionId: "session-1",
+			dapp: "site-key",
+			userAccount: account,
+			provider,
+			callbacks: { onHuman },
+			invisible: true,
+			expiresInMs: 60_000,
+			restart: vi.fn<() => void>(),
+			...overrides,
+		}).destroy;
+		return onHuman;
+	};
+
+	test("draws nothing and waits for execute()", () => {
+		const onHuman = mountInvisible();
+		expect(container.childElementCount).toBe(0);
+		expect(onHuman).not.toHaveBeenCalled();
+
+		document.dispatchEvent(new CustomEvent(PROCAPTCHA_EXECUTE_EVENT));
+		expect(onHuman).toHaveBeenCalledTimes(1);
+	});
+
+	test("answers an execute() targeted at its widget container", () => {
+		const widgetContainer = document.createElement("div");
+		const onHuman = mountInvisible({ widgetContainer });
+
+		widgetContainer.dispatchEvent(new CustomEvent(PROCAPTCHA_EXECUTE_EVENT));
+		expect(onHuman).toHaveBeenCalledTimes(1);
+	});
+
+	test("stops listening once destroyed", () => {
+		const onHuman = mountInvisible();
+		destroy?.();
+		destroy = undefined;
+
+		document.dispatchEvent(new CustomEvent(PROCAPTCHA_EXECUTE_EVENT));
+		expect(onHuman).not.toHaveBeenCalled();
+	});
+});
+
+describe("authenticated badge expiry", () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	test("expires the pass and restarts for a fresh session", () => {
+		const onExpired = vi.fn<() => void>();
+		const restart = vi.fn<() => void>();
+		mount({
+			callbacks: { onHuman: vi.fn<(token: string) => void>(), onExpired },
+			expiresInMs: 60_000,
+			restart,
+		});
+
+		vi.advanceTimersByTime(59_999);
+		expect(restart).not.toHaveBeenCalled();
+
+		vi.advanceTimersByTime(1);
+		expect(onExpired).toHaveBeenCalledTimes(1);
+		expect(restart).toHaveBeenCalledTimes(1);
+	});
+
+	test("does not restart after it is destroyed", () => {
+		const restart = vi.fn<() => void>();
+		mount({ restart });
+		destroy?.();
+		destroy = undefined;
+
+		vi.advanceTimersByTime(120_000);
+		expect(restart).not.toHaveBeenCalled();
 	});
 });

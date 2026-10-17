@@ -361,7 +361,7 @@ export class FrictionlessManager extends CaptchaManager {
 	async createAuthenticatedSession(
 		token: string,
 		ipAddress: CompositeIpAddress,
-		webBotAuthAgent: string,
+		webBotAuthAgent: string | undefined,
 		siteKey: string,
 		userSitekeyIpHash?: string,
 		headers?: RequestHeaders,
@@ -387,8 +387,8 @@ export class FrictionlessManager extends CaptchaManager {
 			// Written rather than left absent so single-use enforcement can
 			// tell "never set" apart from "consumed".
 			serverChecked: false,
-			agent: true,
-			webBotAuthAgent,
+			agent: webBotAuthAgent !== undefined,
+			...(webBotAuthAgent && { webBotAuthAgent }),
 			...(ipInfo && { ipInfo }),
 			...(headers && { headers }),
 			...(clientSessionId && { clientMetaData: { clientSessionId } }),
