@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { i18n } from "i18next";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import type { Translator } from "../translator.js";
+import type { Ti18n } from "../types.js";
 
 // The translator is a thin wrapper: it forces the package's own i18next
 // instance in rather than letting a host app's provider decide, and exposes the
@@ -22,7 +22,7 @@ import type { Translator } from "../translator.js";
 // so the tests observe the wiring rather than i18next's own behaviour.
 
 interface FakeI18n {
-	readonly instance: i18n;
+	readonly instance: Ti18n;
 	readonly handlers: Map<string, Set<() => void>>;
 	isInitialized: boolean;
 	loadedNamespaces: string[];
@@ -37,7 +37,10 @@ const fakeI18n = (): FakeI18n => {
 		loadedNamespaces: ["widget"],
 		translations: {},
 		instance: {
+			language: "en",
 			t: (key: string): string => fake.translations[key] ?? key,
+			exists: (key: string): boolean => key in fake.translations,
+			changeLanguage: async (): Promise<void> => {},
 			get isInitialized(): boolean {
 				return fake.isInitialized;
 			},
@@ -51,7 +54,7 @@ const fakeI18n = (): FakeI18n => {
 			off: (event: string, listener: () => void): void => {
 				handlers.get(event)?.delete(listener);
 			},
-		} as unknown as i18n,
+		},
 	};
 	return fake;
 };
@@ -63,8 +66,8 @@ const emit = (fake: FakeI18n, event: string): void => {
 };
 
 const load = async (): Promise<{
-	createTranslator: (existing?: i18n) => Translator;
-	packageInstance: i18n;
+	createTranslator: (existing?: Ti18n) => Translator;
+	packageInstance: Ti18n;
 	initCount: () => number;
 }> => {
 	vi.resetModules();
@@ -73,7 +76,7 @@ const load = async (): Promise<{
 	let initCalls = 0;
 
 	vi.doMock("../i18nFrontend.js", () => ({
-		default: (): i18n => {
+		default: (): Ti18n => {
 			initCalls += 1;
 			return packageInstance;
 		},

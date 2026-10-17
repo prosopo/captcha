@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import { createUntranslatedI18n } from "@prosopo/locale";
 import {
 	type Account,
 	type BotDetectionFunction,
@@ -87,12 +87,12 @@ const config = (
 		...overrides,
 	}) as unknown as ProcaptchaClientConfigOutput;
 
-const i18nStub = {
+const i18nStub = createUntranslatedI18n({
 	isInitialized: true,
 	language: "en",
 	t: (key: string) => key,
 	changeLanguage: vi.fn(),
-} as unknown as Ti18n;
+});
 
 const detectionResult = (): BotDetectionFunctionResult =>
 	({

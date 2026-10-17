@@ -12,14 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { i18n } from "i18next";
+import { createInstance, type i18n } from "i18next";
 import type { handle } from "i18next-http-middleware";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 type HandleOptions = NonNullable<Parameters<typeof handle>[1]>;
 type Handler = ReturnType<typeof handle>;
-
-const asI18n = (value: object): i18n => value as unknown as i18n;
 
 interface Harness {
 	instance: i18n;
@@ -37,9 +35,9 @@ const load = async (options: {
 }> => {
 	vi.resetModules();
 
-	const instance = asI18n({ name: "the singleton" });
+	const instance: i18n = createInstance();
 	const handleCalls: [i18n, HandleOptions | undefined][] = [];
-	const handler = ((): void => {}) as unknown as Handler;
+	const handler: Handler = (): void => {};
 	let loaded = false;
 
 	// The middleware takes the i18next singleton directly: handle() needs the
@@ -126,10 +124,10 @@ describe("i18nMiddleware", () => {
 	test("always requests the backend instance", async () => {
 		// Middleware only ever runs on the server; asking for the frontend
 		// instance would pull in the browser detector and http backend.
-		const loadSpy = vi.fn(async (): Promise<i18n> => asI18n({}));
+		const loadSpy = vi.fn(async (): Promise<i18n> => createInstance());
 		vi.resetModules();
 		vi.doMock("i18next-http-middleware", () => ({
-			handle: (): Handler => ((): void => {}) as unknown as Handler,
+			handle: (): Handler => (): void => {},
 		}));
 		vi.doMock("../loadI18next.js", () => ({ default: loadSpy }));
 

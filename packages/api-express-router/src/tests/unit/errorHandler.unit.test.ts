@@ -14,7 +14,7 @@
 
 import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
 import { loadI18next } from "@prosopo/locale";
-import type { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request } from "express";
 import { describe, expect, it, vi } from "vitest";
 import { ZodError } from "zod";
 import { handleErrors } from "../../errorHandler.js";
@@ -24,15 +24,15 @@ describe("handleErrors", async () => {
 	await i18n.changeLanguage("en");
 
 	it("should handle ProsopoApiError", async () => {
-		const mockRequest = { i18n } as unknown as Request;
+		const mockRequest: Pick<Request, "i18n"> = { i18n };
 		const mockResponse = {
-			writeHead: vi.fn().mockReturnThis(),
 			set: vi.fn().mockReturnThis(),
 			status: vi.fn().mockReturnThis(),
 			send: vi.fn(),
 			end: vi.fn(),
-		} as unknown as Response;
-		const mockNext = vi.fn() as unknown as NextFunction;
+			statusMessage: "",
+		} satisfies Parameters<typeof handleErrors>[2];
+		const mockNext: NextFunction = vi.fn();
 
 		const error = new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
 			context: { code: 400 },
@@ -59,15 +59,15 @@ describe("handleErrors", async () => {
 	});
 
 	it("should not return SyntaxError", async () => {
-		const mockRequest = { i18n } as unknown as Request;
+		const mockRequest: Pick<Request, "i18n"> = { i18n };
 		const mockResponse = {
-			writeHead: vi.fn().mockReturnThis(),
 			set: vi.fn().mockReturnThis(),
 			status: vi.fn().mockReturnThis(),
 			send: vi.fn(),
 			end: vi.fn(),
-		} as unknown as Response;
-		const mockNext = vi.fn() as unknown as NextFunction;
+			statusMessage: "",
+		} satisfies Parameters<typeof handleErrors>[2];
+		const mockNext: NextFunction = vi.fn();
 
 		const message = "Unknown API error";
 		const error = new SyntaxError(message);
@@ -90,15 +90,15 @@ describe("handleErrors", async () => {
 	});
 
 	it("should handle ZodError", () => {
-		const mockRequest = { i18n } as unknown as Request;
+		const mockRequest: Pick<Request, "i18n"> = { i18n };
 		const mockResponse = {
-			writeHead: vi.fn().mockReturnThis(),
 			set: vi.fn().mockReturnThis(),
 			status: vi.fn().mockReturnThis(),
 			send: vi.fn(),
 			end: vi.fn(),
-		} as unknown as Response;
-		const mockNext = vi.fn() as unknown as NextFunction;
+			statusMessage: "",
+		} satisfies Parameters<typeof handleErrors>[2];
+		const mockNext: NextFunction = vi.fn();
 
 		const zodError = {
 			code: "custom" as const,
@@ -121,15 +121,15 @@ describe("handleErrors", async () => {
 	});
 
 	it("should unwrap nested ProsopoBaseError", async () => {
-		const mockRequest = { i18n } as unknown as Request;
+		const mockRequest: Pick<Request, "i18n"> = { i18n };
 		const mockResponse = {
-			writeHead: vi.fn().mockReturnThis(),
 			set: vi.fn().mockReturnThis(),
 			status: vi.fn().mockReturnThis(),
 			send: vi.fn(),
 			end: vi.fn(),
-		} as unknown as Response;
-		const mockNext = vi.fn() as unknown as NextFunction;
+			statusMessage: "",
+		} satisfies Parameters<typeof handleErrors>[2];
+		const mockNext: NextFunction = vi.fn();
 
 		const envError = new ProsopoEnvError("GENERAL.ENVIRONMENT_NOT_READY", {
 			i18n,
@@ -154,15 +154,15 @@ describe("handleErrors", async () => {
 	});
 
 	it("should unwrap nested ProsopoBaseErrors but not an Error that is nested inside them", async () => {
-		const mockRequest = { i18n } as unknown as Request;
+		const mockRequest: Pick<Request, "i18n"> = { i18n };
 		const mockResponse = {
-			writeHead: vi.fn().mockReturnThis(),
 			set: vi.fn().mockReturnThis(),
 			status: vi.fn().mockReturnThis(),
 			send: vi.fn(),
 			end: vi.fn(),
-		} as unknown as Response;
-		const mockNext = vi.fn() as unknown as NextFunction;
+			statusMessage: "",
+		} satisfies Parameters<typeof handleErrors>[2];
+		const mockNext: NextFunction = vi.fn();
 		const code = 400;
 		const key = "API.UNKNOWN";
 

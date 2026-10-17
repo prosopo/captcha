@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import { createUntranslatedI18n } from "@prosopo/locale";
 import type { Component } from "@prosopo/procaptcha-common";
 import {
 	type GetPuzzleCaptchaResponse,
@@ -140,13 +140,12 @@ let widget: ProcaptchaPuzzleHandle | undefined;
 
 const i18nStub = (
 	language: string,
-	changeLanguage: Mock<(l: string) => void>,
-) => ({ language, changeLanguage }) as unknown as Ti18n;
+	changeLanguage: Mock<(l: string) => Promise<unknown>>,
+) => createUntranslatedI18n({ language, changeLanguage });
 
 const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps => ({
 	config: config(),
 	callbacks: {},
-	i18n: undefined as unknown as Ti18n,
 	...overrides,
 });
 
@@ -312,7 +311,7 @@ describe("language", () => {
 	});
 
 	test("an injected i18n on another language is switched over", () => {
-		const changeLanguage = vi.fn<(l: string) => void>();
+		const changeLanguage = vi.fn<(l: string) => Promise<unknown>>();
 		render(
 			props({
 				config: config({ language: "fr" }),
@@ -324,7 +323,7 @@ describe("language", () => {
 	});
 
 	test("an injected i18n already on that language is left alone", () => {
-		const changeLanguage = vi.fn<(l: string) => void>();
+		const changeLanguage = vi.fn<(l: string) => Promise<unknown>>();
 		render(
 			props({
 				config: config({ language: "fr" }),

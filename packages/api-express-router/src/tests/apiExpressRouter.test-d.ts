@@ -16,6 +16,7 @@ import type { ApiEndpoint, ApiRoutesProvider } from "@prosopo/api-route";
 import type { LogLevel } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import type {
+	ErrorRequestHandler,
 	NextFunction,
 	Request,
 	RequestHandler,
@@ -184,9 +185,10 @@ describe("the error handler", () => {
 	test("takes an error first, which is what makes express treat it as one", () => {
 		// A three-parameter handler would be mounted as ordinary middleware and
 		// never see an error at all.
-		expectTypeOf(handleErrors).parameters.toMatchTypeOf<
-			[unknown, Request, Response, NextFunction]
-		>();
+		expectTypeOf<
+			Parameters<typeof handleErrors>["length"]
+		>().toEqualTypeOf<4>();
+		assertType<ErrorRequestHandler>(handleErrors);
 	});
 
 	test("rejects being mounted as an ordinary handler", () => {
