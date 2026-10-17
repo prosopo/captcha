@@ -21,7 +21,7 @@ services:
         image: redis/redis-stack:latest
         volumes:
             # - ./data:/data we don't need a persistent storage for Tests
-            - ./redis.conf:/redis-stack.conf
+            - ./redis/redis.conf:/redis-stack.conf
         ports:
             - '6379:6379' # DB
             - '8001:8001' # Insight tool
