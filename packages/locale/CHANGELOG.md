@@ -1,5 +1,22 @@
 # @prosopo/locale
 
+## 3.11.0
+### Minor Changes
+
+- 03df637: `@prosopo/locale` now exports `createUntranslatedI18n()`: a complete i18n instance with no catalogues, where `t` gives back the default value or the key. The tests use it in place of hand-made fakes that were cast to the i18n type. Those casts let a fake miss a method the code calls (as happened with `exists`) and still compile; now a missing method is a type error.
+  
+  `handleErrors` now only asks for the request and response fields it actually uses, so its tests can pass plain objects. It is still an Express error handler.
+  
+  The `i18n` prop on the image, audio, PoW and puzzle widgets is now typed as optional. The widgets already started their own i18n when none was passed; the type said it was required, so the tests had to cast `undefined` to pass nothing. The frictionless widget still requires it, because it reads from it straight away.
+
+### Patch Changes
+
+- 49e9385: The audio captcha's text (play button, instructions, error messages and so on) is now translated into all 92 languages. Before this it showed in English everywhere. The catalogue test had a special exemption for these strings, so nothing flagged it. That exemption is gone: any string left in English now fails the test, unless it is on the short list of words that really are the same in that language (brand names, loanwords, "OK").
+  
+  Some Filipino animal and object names and two Filipino/Scots error messages were on that list without being real loanwords. They are now translated too.
+  
+  Every translation still needs checking by a native speaker.
+
 ## 3.10.1
 ### Patch Changes
 
