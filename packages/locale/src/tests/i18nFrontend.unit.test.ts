@@ -58,10 +58,9 @@ const load = async (options: {
 			}
 			const language = url.split("/").at(-2) ?? "";
 			const body = options.catalogues?.[language];
-			return {
-				ok: body !== undefined,
-				json: async (): Promise<unknown> => body,
-			} as Response;
+			return body === undefined
+				? new Response(null, { status: 404 })
+				: new Response(JSON.stringify(body));
 		}),
 	);
 	vi.stubGlobal("localStorage", {

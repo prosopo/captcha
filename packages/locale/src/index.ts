@@ -54,6 +54,7 @@ export type {
 	WidgetTranslationKey,
 } from "./translationKey.js";
 export { createTranslator } from "./translator.js";
+export { createUntranslatedI18n } from "./untranslatedI18n.js";
 export type { Translator } from "./translator.js";
 export type {
 	I18nEvent,

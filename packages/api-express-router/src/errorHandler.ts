@@ -18,12 +18,17 @@ import { type ProsopoApiError, unwrapError } from "@prosopo/common";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodError } from "zod";
 
+type ErrorResponse = Pick<
+	Response,
+	"statusMessage" | "set" | "status" | "send" | "end"
+>;
+
 export const handleErrors = (
 	err: ProsopoApiError | SyntaxError | ZodError,
-	request: Request,
-	response: Response,
+	request: Pick<Request, "i18n">,
+	response: ErrorResponse,
 	next: NextFunction,
-) => {
+): void => {
 	const { code, statusMessage, jsonError } = unwrapError(err, request.i18n);
 	response.statusMessage = statusMessage;
 	response.set("content-type", "application/json");

@@ -55,7 +55,7 @@ export function getLeafFieldPath(obj: TranslationNode): string[] {
 		return [];
 	}
 
-	return Object.keys(obj).reduce((arr, key) => {
+	return Object.keys(obj).reduce<string[]>((arr, key) => {
 		const value = obj[key];
 		if (value === undefined) {
 			throw new Error(`Undefined value for key ${key}`);
@@ -79,7 +79,7 @@ export function getLeafFieldPath(obj: TranslationNode): string[] {
 				return `${key}.${child}`;
 			}),
 		);
-	}, [] as string[]);
+	}, []);
 }
 
 type LeafPath<Node> = {
