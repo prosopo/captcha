@@ -43,18 +43,18 @@
 			"CHECKING": "Checkin…",
 			"SUBMIT": "Aye"
 		},
-		"AUDIO_CHALLENGE_LABEL": "Audio verification challenge",
-		"AUDIO_INSTRUCTIONS": "Listen and type the {{count}} digits you hear.",
-		"AUDIO_INPUT_LABEL": "Type the {{count}} digits you hear",
-		"AUDIO_PLAY": "Play",
-		"AUDIO_REPLAY": "Play again",
-		"AUDIO_PLAYING": "Playing",
-		"AUDIO_FINISHED": "Playback finished",
-		"AUDIO_PLAYBACK_FAILED": "Audio could not be played. Check your device volume and try again.",
-		"AUDIO_INCORRECT": "That wasn't right. Here's a new one.",
-		"AUDIO_SUBMIT": "Verify",
-		"AUDIO_CHECKING": "Checking",
-		"AUDIO_ALTERNATIVE": "Use audio instead"
+		"AUDIO_CHALLENGE_LABEL": "Soond verification challenge",
+		"AUDIO_INSTRUCTIONS": "Lug in an type the {{count}} nummers ye hear.",
+		"AUDIO_INPUT_LABEL": "Type the {{count}} nummers ye hear",
+		"AUDIO_PLAY": "Pley",
+		"AUDIO_REPLAY": "Pley again",
+		"AUDIO_PLAYING": "Pleyin",
+		"AUDIO_FINISHED": "Pleyin feenished",
+		"AUDIO_PLAYBACK_FAILED": "The soond couldnae be pleyed. Check yer device volume an try again.",
+		"AUDIO_INCORRECT": "That wisnae richt. Here's a new ane.",
+		"AUDIO_SUBMIT": "Confirm",
+		"AUDIO_CHECKING": "Checkin",
+		"AUDIO_ALTERNATIVE": "Uise soond insteid"
 	},
 	"GENERAL": {
 		"JSON_LOAD_FAILED": "Couldnae lade the JSON file",
@@ -121,7 +121,7 @@
 		"FAILED_IP_VALIDATION": "IP validation failt",
 		"ACCESS_POLICY_BLOCK": "Access blockit by policy",
 		"CLIENT_SESSION_MISMATCH": "Session disnae match. The captcha wisnae feenished in this session.",
-		"FORBIDDEN": "Forbidden",
+		"FORBIDDEN": "No permittit",
 		"PROVIDER_VERIFY_FAILED": "Provider check failt",
 		"SPAM_EMAIL_DOMAIN": "Email domain no allooed",
 		"SPAM_EMAIL_RULE": "Email address blockit by a spam filter rule",
@@ -136,7 +136,7 @@
 		"SATELLITE_BLOCKED": "Requests fae satellite connections isnae allooed for this site",
 		"CRAWLER_BLOCKED": "Requests fae kent crawlers isnae allooed for this site",
 		"DISALLOWED_WEBVIEW": "Requests fae in-app browsers (WebView) isnae allooed for this site",
-		"INTERNAL_SERVER_ERROR": "Internal server error"
+		"INTERNAL_SERVER_ERROR": "Something's gane wrang wi the server"
 	},
 	"DEVELOPER": {
 		"PROSOPO_SITE_KEY_MISSING": "PROSOPO_SITE_KEY isnae set in the .env file.",
