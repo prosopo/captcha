@@ -31,7 +31,7 @@
  * second time on the same envelope.
  */
 
-import type { Ti18n } from "@prosopo/locale";
+import { createUntranslatedI18n } from "@prosopo/locale";
 import {
 	type Account,
 	ApiParams,
@@ -191,7 +191,7 @@ const config = (): ProcaptchaClientConfigOutput =>
 		mode: ModeEnum.visible,
 	}) as unknown as ProcaptchaClientConfigOutput;
 
-const i18nStub = {
+const i18nStub = createUntranslatedI18n({
 	isInitialized: true,
 	language: "en",
 	t: (key: string) => key,
@@ -200,7 +200,7 @@ const i18nStub = {
 	hasLoadedNamespace: () => true,
 	on: () => undefined,
 	off: () => undefined,
-} as unknown as Ti18n;
+});
 
 const detectBot: Mock<BotDetectionFunction> = vi.fn(
 	async () =>

@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n, TranslateOptions } from "@prosopo/locale";
+import {
+	type Ti18n,
+	type TranslateOptions,
+	createUntranslatedI18n,
+} from "@prosopo/locale";
 import {
 	type BotDetectionFunction,
 	type BotDetectionFunctionResult,
@@ -89,13 +93,13 @@ const config = (): ProcaptchaClientConfigOutput =>
 	}) as unknown as ProcaptchaClientConfigOutput;
 
 const i18n = (catalogue: Record<string, string> = {}): Ti18n =>
-	({
+	createUntranslatedI18n({
 		isInitialized: true,
 		t: (key: string, options?: TranslateOptions) =>
 			catalogue[key] ?? options?.defaultValue ?? key,
 		language: "en",
 		changeLanguage: () => Promise.resolve(),
-	}) as unknown as Ti18n;
+	});
 
 const detection = (
 	captchaType: CaptchaType,

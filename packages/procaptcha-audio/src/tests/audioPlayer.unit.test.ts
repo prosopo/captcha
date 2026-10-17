@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Translator } from "@prosopo/locale";
+import { type Translator, createUntranslatedI18n } from "@prosopo/locale";
 import type { Component } from "@prosopo/procaptcha-common";
 import type { AudioEvent } from "@prosopo/types";
 import { lightTheme } from "@prosopo/widget-skeleton";
@@ -43,7 +43,7 @@ const translator = (): Translator => ({
 	t: (key: string): string => key,
 	isReady: () => true,
 	subscribe: () => () => undefined,
-	i18n: {} as Translator["i18n"],
+	i18n: createUntranslatedI18n(),
 });
 
 const props = (
