@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import {
+	MAX_STALE_PAYLOAD_LEVEL,
 	resolveMaxEscalationLevel,
 	severityToPuzzleDifficulty,
 } from "@prosopo/captcha-severity";
@@ -261,6 +262,7 @@ export class FrictionlessManager extends CaptchaManager {
 			simdReadings,
 			puzzleTolerance,
 			puzzle,
+			puzzleLevel,
 			iconOrderTolerance,
 			iconOrder,
 			isEscalation,
@@ -290,6 +292,7 @@ export class FrictionlessManager extends CaptchaManager {
 			powDifficulty,
 			...(puzzleTolerance !== undefined && { puzzleTolerance }),
 			...(puzzle && { puzzle }),
+			...(puzzleLevel !== undefined && { puzzleLevel }),
 			...(iconOrderTolerance !== undefined && { iconOrderTolerance }),
 			...(iconOrder && { iconOrder }),
 			userSitekeyIpHash,
@@ -605,7 +608,10 @@ export class FrictionlessManager extends CaptchaManager {
 		// severity-chosen puzzle has no verdict to re-derive from. Two sources,
 		// in precedence order: the difficulty ladder derived from the requested
 		// round count, then explicit router overrides, which win.
-		const finalPuzzleOverrides: Pick<Session, "puzzleTolerance" | "puzzle"> =
+		const finalPuzzleOverrides: Pick<
+			Session,
+			"puzzleTolerance" | "puzzle" | "puzzleLevel"
+		> =
 			finalCaptchaType === CaptchaType.puzzle
 				? (() => {
 						// The site's own ceiling on automatic escalation; 0 pins the
@@ -615,6 +621,10 @@ export class FrictionlessManager extends CaptchaManager {
 								puzzleMaxDifficultyDefault,
 							this.routingContext?.platform.isMobile ?? false,
 						);
+						const ceiling =
+							finalReason === FrictionlessReason.OLD_TIMESTAMP
+								? Math.min(maxLevel, MAX_STALE_PAYLOAD_LEVEL)
+								: maxLevel;
 						// Paths that measured nothing carry a fixed fallback round count,
 						// not a severity, so they must not read as an escalation.
 						const level =
@@ -625,7 +635,7 @@ export class FrictionlessManager extends CaptchaManager {
 										requestedSolvedImagesCount,
 										this.routingContext?.baseImageRounds ??
 											this.config.captchas.solved.count,
-										maxLevel,
+										ceiling,
 									);
 						// Level 0 means nothing escalated this session: leave the session
 						// bare so getPuzzleCaptchaChallenge falls back to the site's own
@@ -685,6 +695,7 @@ export class FrictionlessManager extends CaptchaManager {
 			blocked,
 			puzzleTolerance: finalPuzzleOverrides.puzzleTolerance,
 			puzzle: finalPuzzleOverrides.puzzle,
+			puzzleLevel: finalPuzzleOverrides.puzzleLevel,
 			iconOrderTolerance: finalIconOrderOverrides.iconOrderTolerance,
 			iconOrder: finalIconOrderOverrides.iconOrder,
 			// Never set on this path; pinned so a stale value on

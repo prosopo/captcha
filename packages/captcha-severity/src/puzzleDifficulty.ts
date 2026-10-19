@@ -81,6 +81,8 @@ export const MIN_DECOY_HOLE_DARKEN_MARGIN = 0.04;
  */
 export const MAX_AUTO_ESCALATION_LEVEL = 3;
 
+export const MAX_STALE_PAYLOAD_LEVEL = 1;
+
 /**
  * Highest level reachable by automatic escalation on a touch device.
  *
