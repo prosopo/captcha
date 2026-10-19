@@ -3,7 +3,7 @@
 		"NO_POLKADOT_EXTENSION": "Polkadot-udvidelsen blev ikke fundet"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Vælg alle, der indeholder følgende:",
+		"SELECT_ALL": "Vælg alle, der indeholder følgende",
 		"IF_NONE_CLICK_NEXT": "Hvis der ikke er nogen, så klik på Næste",
 		"NEXT": "Næste",
 		"SUBMIT": "Send",

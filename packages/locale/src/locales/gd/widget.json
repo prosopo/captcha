@@ -3,7 +3,7 @@
 		"NO_POLKADOT_EXTENSION": "Cha deach an leudachan Polkadot a lorg"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Tagh gach aon anns a bheil na leanas:",
+		"SELECT_ALL": "Tagh gach aon anns a bheil na leanas",
 		"IF_NONE_CLICK_NEXT": "Mur eil gin ann, briog air Air adhart",
 		"NEXT": "Air adhart",
 		"SUBMIT": "Cuir a-null",

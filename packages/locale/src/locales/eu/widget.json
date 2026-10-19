@@ -3,7 +3,7 @@
 		"NO_POLKADOT_EXTENSION": "Ez da Polkadot luzapena aurkitu"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Hautatu hau duten irudi guztiak:",
+		"SELECT_ALL": "Hautatu hau duten irudi guztiak",
 		"IF_NONE_CLICK_NEXT": "Ez badago bat ere, egin klik Hurrengoa aukeran",
 		"NEXT": "Hurrengoa",
 		"SUBMIT": "Bidali",

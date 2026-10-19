@@ -3,7 +3,7 @@
 		"NO_POLKADOT_EXTENSION": "找不到 Polkadot 擴充功能"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "請選擇包含以下內容的所有圖片：",
+		"SELECT_ALL": "請選擇包含以下內容的所有圖片",
 		"IF_NONE_CLICK_NEXT": "如果沒有，請點選下一個",
 		"NEXT": "下一個",
 		"SUBMIT": "提交",

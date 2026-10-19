@@ -63,7 +63,7 @@
 		"NO_POLKADOT_EXTENSION": "Polkadot-förlängning hittades inte"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Välj alla bilder som innehåller följande:",
+		"SELECT_ALL": "Välj alla bilder som innehåller följande",
 		"IF_NONE_CLICK_NEXT": "Om det inte finns några, klicka på Nästa",
 		"NEXT": "Nästa",
 		"SUBMIT": "Skicka in",

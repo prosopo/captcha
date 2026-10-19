@@ -3,7 +3,7 @@
 		"NO_POLKADOT_EXTENSION": "የPolkadot ቅጥያ አልተገኘም"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "የሚከተሉትን የያዙትን ሁሉ ይምረጡ:",
+		"SELECT_ALL": "የሚከተሉትን የያዙትን ሁሉ ይምረጡ",
 		"IF_NONE_CLICK_NEXT": "ምንም ከሌለ፣ ቀጣይ የሚለውን ይጫኑ",
 		"NEXT": "ቀጣይ",
 		"SUBMIT": "አስገባ",

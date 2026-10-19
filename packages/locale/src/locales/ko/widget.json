@@ -63,7 +63,7 @@
 		"NO_POLKADOT_EXTENSION": "Polkadot 확장 프로그램을 찾을 수 없습니다"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "다음 항목이 포함된 이미지를 모두 선택하세요:",
+		"SELECT_ALL": "다음 항목이 포함된 이미지를 모두 선택하세요",
 		"IF_NONE_CLICK_NEXT": "없는 경우 '다음'을 클릭하세요",
 		"NEXT": "다음",
 		"SUBMIT": "제출",
