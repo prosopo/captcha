@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Жарамсыз мекенжайды кодтау сәтсіз аяқталды",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha шешімінің міндеттемесі жоқ",
+		"SIGNER_UNDEFINED": "Қол қоюшы анықталмаған",
+		"CANNOT_FIND_KEYPAIR": "Кілттер жұбы табылмады",
+		"INVALID_DATA_FORMAT": "Жарамсыз деректер пішімі"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Белгісіз орта сұралды",
+		"INVALID_CAPTCHA_NUMBER": "Captcha конфигурацияларын дұрыс баптаңыз",
+		"INVALID_LOG_LEVEL": "Жарамсыз журнал деңгейі",
+		"INVALID_PACKAGE_DIR": "Жарамсыз бума каталогы"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Деректер жинағын талдау қатесі",
+		"SOLUTION_PARSE_ERROR": "Деректер жинағын талдау қатесі",
+		"HASH_ERROR": "Деректер жинағын хэштеу қатесі",
+		"DATASET_ID_UNDEFINED": "Деректер жинағының ID анықталмаған",
+		"NOT_ENOUGH_LABELS": "Белгілер жеткіліксіз",
+		"NOT_ENOUGH_IMAGES": "Суреттер жеткіліксіз",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Деректер жинағындағы captcha саны бапталған саннан аз",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Деректер жинағындағы шешімдер саны бапталған саннан аз",
+		"DUPLICATE_IMAGE": "қайталанатын сурет анықталды",
+		"MERKLE_ERROR": "Меркл ағашын құру қатесі"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Дерекқор қозғалтқышын импорттау сәтсіз аяқталды",
+		"DATABASE_UNDEFINED": "Дерекқор клиенті қосылмаған",
+		"DATABASE_HOST_UNDEFINED": "Дерекқор хостының мекенжайы анықталмаған",
+		"DATASET_LOAD_FAILED": "Деректер жинағын жүктеу сәтсіз аяқталды",
+		"DATASET_GET_FAILED": "Деректер жинағын алу сәтсіз аяқталды",
+		"CAPTCHA_GET_FAILED": "Captcha алу сәтсіз аяқталды",
+		"CAPTCHA_UPDATE_FAILED": "Captcha жаңарту сәтсіз аяқталды",
+		"IMAGE_GET_FAILED": "Суретті алу сәтсіз аяқталды",
+		"PENDING_RECORD_NOT_FOUND": "Күтудегі жазба табылмады",
+		"INVALID_HASH": "Жарамсыз хэш",
+		"SOLUTION_GET_FAILED": "Шешімді алу сәтсіз аяқталды",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Қажетті шешімдер саны бар деректер жинақтары табылмады",
+		"SOLUTION_APPROVE_FAILED": "Шешімді бекіту сәтсіз аяқталды",
+		"SOLUTION_FLAG_FAILED": "Шешімді өңделген деп белгілеу сәтсіз аяқталды",
+		"TABLES_UNDEFINED": "Кестелер анықталмаған",
+		"CONNECTION_UNDEFINED": "Байланыс анықталмаған",
+		"COMMITMENT_FLAG_FAILED": "Міндеттемені өңделген деп белгілеу сәтсіз аяқталды",
+		"UNKNOWN": "Белгісіз дерекқор қатесі",
+		"QUERY_ERROR": "Дерекқор сұрауы сәтсіз аяқталды",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis кіру ережелерінің байланысы анықталмаған",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Пайдаланушылардың кіру ережелерінің қоймасы анықталмаған",
+		"SESSION_STORE_FAILED": "Сеансты сақтау сәтсіз аяқталды",
+		"SESSION_CHECK_REMOVE_FAILED": "Сеансты тексеру және жою сәтсіз аяқталды",
+		"SESSION_GET_FAILED": "Сеансты алу сәтсіз аяқталды"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Иесі пайдаланушыны өзгерту мүмкін емес",
+		"CANNOT_DELETE_OWN_USER": "Өз тіркелгіңізді жою мүмкін емес",
+		"CANNOT_DELETE_LAST_USER": "Соңғы пайдаланушыны жою мүмкін емес",
+		"USER_ALREADY_EXISTS": "Пайдаланушы бұрыннан бар",
+		"NO_SUGGESTIONS_FOUND": "Ұсыныстар табылмады",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Соңғы белсенді сайтты өшіру мүмкін емес",
+		"DUPLICATE_SITE_NAME": "Мұндай атауы бар сайт бұрыннан бар",
+		"INVALID_SITE_NAME": "Сайт атауында тек әріптер, сандар, сызықшалар және астын сызу таңбалары болуы керек"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Жарамсыз параметр"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Файл табылмады",
+		"FILE_ALREADY_EXISTS": "Файл бұрыннан бар",
+		"INVALID_DIR_FORMAT": "Жарамсыз каталог пішімі"
+	}
+}

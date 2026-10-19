@@ -28,6 +28,7 @@ const FIXTURE_FILES: readonly string[] = [
 	"src/untyped.test.ts",
 	"src/typed.unit.test.ts",
 	"src/typed.integration.test.ts",
+	"src/typed.browser.test.ts",
 	"src/nested/named.withDots.test.ts",
 	"src/component.spec.tsx",
 	"src/notATest.ts",
@@ -37,6 +38,7 @@ const FIXTURE_FILES: readonly string[] = [
 const ALL_RUNTIME_TESTS: readonly string[] = [
 	"src/component.spec.tsx",
 	"src/nested/named.withDots.test.ts",
+	"src/typed.browser.test.ts",
 	"src/typed.integration.test.ts",
 	"src/typed.unit.test.ts",
 	"src/untyped.test.ts",
@@ -105,8 +107,8 @@ const collected = async (
 	}
 };
 
-const without = (excluded: string): string[] =>
-	ALL_RUNTIME_TESTS.filter((f) => f !== excluded);
+const without = (...excluded: string[]): string[] =>
+	ALL_RUNTIME_TESTS.filter((f) => false === excluded.includes(f));
 
 describe.each([
 	["ViteTestConfig", (): ReturnType<typeof ViteTestConfig> => ViteTestConfig()],
@@ -123,21 +125,28 @@ describe.each([
 		expect(await collected(factory, "")).toEqual(ALL_RUNTIME_TESTS);
 	});
 
-	it("TEST_TYPE=unit keeps untyped tests and drops integration tests", async () => {
+	it("TEST_TYPE=unit keeps untyped tests and drops the other types", async () => {
 		expect(await collected(factory, "unit")).toEqual(
-			without("src/typed.integration.test.ts"),
+			without("src/typed.integration.test.ts", "src/typed.browser.test.ts"),
 		);
 	});
 
-	it("TEST_TYPE=integration keeps untyped tests and drops unit tests", async () => {
+	it("TEST_TYPE=integration keeps untyped tests and drops the other types", async () => {
 		expect(await collected(factory, "integration")).toEqual(
-			without("src/typed.unit.test.ts"),
+			without("src/typed.unit.test.ts", "src/typed.browser.test.ts"),
+		);
+	});
+
+	// Browser tests need a layout engine, so every jsdom run has to drop them.
+	it("TEST_TYPE=browser keeps untyped tests and drops the other types", async () => {
+		expect(await collected(factory, "browser")).toEqual(
+			without("src/typed.unit.test.ts", "src/typed.integration.test.ts"),
 		);
 	});
 
 	it("accepts a spaced, comma-separated list", async () => {
 		expect(await collected(factory, " unit , integration ")).toEqual(
-			ALL_RUNTIME_TESTS,
+			without("src/typed.browser.test.ts"),
 		);
 	});
 });
@@ -149,7 +158,7 @@ describe("testFileGlobs", () => {
 
 	it("excludes only the known types that were not selected", () => {
 		expect(testFileGlobs("unit").exclude).toEqual([
-			"src/**/*.@(integration).@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)",
+			"src/**/*.@(integration|browser).@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)",
 		]);
 	});
 

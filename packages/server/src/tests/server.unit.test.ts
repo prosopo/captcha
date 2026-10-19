@@ -369,6 +369,7 @@ describe("ProsopoServer.verifyProvider — recency checks", () => {
 		);
 		const result = await server.isVerified(token);
 		expect(result.verified).toBe(false);
+		expect(result.status).toBe("API.USER_NOT_VERIFIED_TIME_EXPIRED");
 		expect(spies.puzzle).not.toHaveBeenCalled();
 		expect(spies.pow).not.toHaveBeenCalled();
 	});
@@ -545,6 +546,7 @@ describe("ProsopoServer.isVerified — short-circuits", () => {
 		);
 		const result = await server.isVerified(token);
 		expect(result.verified).toBe(false);
+		expect(result.status).toBe("API.USER_NOT_VERIFIED");
 	});
 
 	it("throws BAD_REQUEST for an unparseable token", async () => {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import { createUntranslatedI18n } from "@prosopo/locale";
 import {
 	type GetIconOrderCaptchaResponse,
 	type IconClick,
@@ -66,15 +66,16 @@ vi.mock("@prosopo/locale", async (importOriginal) => ({
 	loadI18next: vi.fn(async () => undefined),
 }));
 
-const i18nStub = {
+const i18nStub = createUntranslatedI18n({
 	isInitialized: true,
 	language: "en",
 	t: (key: string) => key,
 	changeLanguage: vi.fn(),
+	exists: (): boolean => false,
 	hasLoadedNamespace: () => true,
 	on: () => undefined,
 	off: () => undefined,
-} as unknown as Ti18n;
+});
 
 const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps =>
 	({

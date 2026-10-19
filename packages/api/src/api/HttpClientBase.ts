@@ -18,10 +18,31 @@ export class HttpClientBase {
 	// Undefined keeps the platform default, which for undici is ~300s of
 	// silence before a stalled request fails.
 	protected readonly timeoutMs: number | undefined;
+	// Sent with every request, under any headers the call itself passes. The
+	// widget puts its language here (languageHeaders in @prosopo/locale).
+	protected readonly defaultHeaders: Readonly<Record<string, string>>;
 
-	constructor(baseURL: string, prefix = "", timeoutMs?: number) {
+	constructor(
+		baseURL: string,
+		prefix = "",
+		timeoutMs?: number,
+		defaultHeaders: Readonly<Record<string, string>> = {},
+	) {
 		this.baseURL = baseURL + prefix;
 		this.timeoutMs = timeoutMs;
+		this.defaultHeaders = defaultHeaders;
+	}
+
+	// Plain objects, not a Headers instance, so header names keep their case
+	// for callers and tests that read them back.
+	protected withDefaultHeaders(init?: RequestInit): RequestInit | undefined {
+		if (Object.keys(this.defaultHeaders).length === 0) {
+			return init;
+		}
+		return {
+			...init,
+			headers: { ...this.defaultHeaders, ...(init?.headers || {}) },
+		};
 	}
 
 	// The signal stays attached while the body is read, so a server that sends
@@ -41,7 +62,7 @@ export class HttpClientBase {
 		try {
 			const response = await fetch(
 				this.baseURL + input,
-				this.withTimeout(init),
+				this.withTimeout(this.withDefaultHeaders(init)),
 			);
 			if (
 				!response.ok &&
@@ -64,6 +85,7 @@ export class HttpClientBase {
 	): Promise<T> {
 		const headers = {
 			"Content-Type": "application/json",
+			...this.defaultHeaders,
 			...(init?.headers || {}),
 		};
 		try {
@@ -100,6 +122,7 @@ export class HttpClientBase {
 	): Promise<{ data: T; headers: Headers }> {
 		const headers = {
 			"Content-Type": "application/json",
+			...this.defaultHeaders,
 			...(init?.headers || {}),
 		};
 		try {

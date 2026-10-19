@@ -1,5 +1,69 @@
 # @prosopo/procaptcha-icon-order
 
+## 0.2.6
+### Patch Changes
+
+- Updated dependencies [b6e9459]
+- Updated dependencies [a5c953d]
+  - @prosopo/locale@3.11.1
+  - @prosopo/widget-skeleton@2.10.2
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+  - @prosopo/procaptcha-common@2.21.5
+  - @prosopo/api@4.7.3
+  - @prosopo/util@3.3.15
+  - @prosopo/util-crypto@13.6.0
+
+## 0.2.5
+### Patch Changes
+
+- Updated dependencies [49e9385]
+- Updated dependencies [03df637]
+  - @prosopo/locale@3.11.0
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+  - @prosopo/api@4.7.2
+  - @prosopo/procaptcha-common@2.21.4
+
+## 0.2.4
+### Patch Changes
+
+- Updated dependencies [e841741]
+  - @prosopo/locale@3.10.1
+  - @prosopo/common@3.2.1
+  - @prosopo/types@5.16.1
+  - @prosopo/api@4.7.1
+  - @prosopo/procaptcha-common@2.21.3
+
+## 0.2.3
+### Patch Changes
+
+- 6b11b15: The widget now tells the provider which language to use, so the challenge text comes back in the user's language.
+  
+  - The widget sends its language in a `Prosopo-Lang` header on every provider request. It uses the site's `data-language` if set, otherwise the browser's languages. The browser's own `Accept-Language` is left untouched, so bot detection still sees the real value.
+  - `data-language` may list several codes (`"xx, tr"`). The first one we support wins. If none are supported, the widget uses the browser's language instead of English.
+  - The provider picks `?lng=`, then `Prosopo-Lang`, then `Accept-Language`, then English.
+  - A variant uses its parent's catalogue (`zh-SG` → `zh`, `pt-PT` → `pt`). Traditional Chinese (`zh-TW`, `zh-HK`, `zh-Hant`) skips the Simplified `zh` catalogue and moves on to the reader's next language. `nb`/`nn` map to `no`, `in` to `id` and `jw` to `jv`.
+  - The widget no longer reads or writes an `i18next` cookie or local storage key on the host site.
+  - `ApiClient`/`ProviderApi` take optional default headers as a 4th constructor argument.
+- f8eddf7: Split each language's catalogue into `widget.json`, `target.json` and `translation.json`. The widget bundles English and downloads only the active language's `widget.json`. The provider loads all three. Server i18n now finishes loading every file before it reports ready. Removed two broken, unused scripts (`findUnused`, `testImport`) and the dependencies only they used.
+- Updated dependencies [eb99b3d]
+- Updated dependencies [f3f7243]
+- Updated dependencies [cbb6a10]
+- Updated dependencies [4961a7e]
+- Updated dependencies [b351896]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [1634139]
+  - @prosopo/locale@3.10.0
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/api@4.7.0
+  - @prosopo/procaptcha-common@2.21.2
+
 ## 0.2.2
 ### Patch Changes
 

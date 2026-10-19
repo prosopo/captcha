@@ -1,5 +1,30 @@
 # @prosopo/cypress-shared
 
+## 2.8.157
+### Patch Changes
+
+  - @prosopo/types@5.16.3
+  - @prosopo/util@3.3.15
+
+## 2.8.156
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+
+## 2.8.155
+### Patch Changes
+
+  - @prosopo/types@5.16.1
+
+## 2.8.154
+### Patch Changes
+
+- c505f59: Add an end-to-end test that runs the image captcha in Turkish. It checks that the widget picks up the browser's language, that `data-language` beats the browser, that the first supported code in a `data-language` list wins, and that an unsupported language falls back to English, with the challenge labels coming back translated from the provider.
+- 1634139: `getLanguageDirection` now knows every right-to-left language and script in CLDR 48, not just ten languages, including ones we have no translation for yet (Hebrew, Persian, Urdu, Pashto, Kurdish and so on). It also reads script subtags (`pa-Arab` is right to left, `az-Latn` left to right), regions whose usual script is Arabic (`pa-PK`, `uz-AF`), and old codes such as `iw` for Hebrew. Where the browser has `Intl.Locale` text info, a language it says is right to left is laid out that way too, so languages added to CLDR later work without a code change. The language e2e test now also checks that an Arabic widget, chosen by the browser or by `data-language`, is laid out right to left.
+- Updated dependencies [f8eddf7]
+  - @prosopo/types@5.16.0
+
 ## 2.8.153
 ### Patch Changes
 

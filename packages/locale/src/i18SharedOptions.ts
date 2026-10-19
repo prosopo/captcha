@@ -23,7 +23,6 @@ const logLevel = getProcess()?.env?.PROSOPO_LOG_LEVEL;
 export const i18nSharedOptions = {
 	debug: logLevel === "debug",
 	fallbackLng: Languages.english,
-	namespace: "translation",
 	supportedLngs: LanguageCodes,
 	nonExplicitSupportedLngs: false,
 };

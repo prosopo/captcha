@@ -14,7 +14,7 @@
 import { flatten } from "@prosopo/util";
 import { describe, expect, test } from "vitest";
 import { localiseErrorMessage } from "../errorMessage.js";
-import de from "../locales/de/translation.json" with { type: "json" };
+import de from "../locales/de/widget.json" with { type: "json" };
 import type { Ti18n, TranslateOptions } from "../types.js";
 
 // Same lookup order as the browser instance in i18nFrontend.ts: the active
@@ -29,6 +29,7 @@ const i18nIn = (
 		isInitialized,
 		t: (key: string, options?: TranslateOptions): string =>
 			flat[key] ?? options?.defaultValue ?? key,
+		exists: (key: string): boolean => key in flat,
 		changeLanguage: async (): Promise<void> => undefined,
 		hasLoadedNamespace: (): boolean => isInitialized,
 		on: (): void => undefined,
@@ -57,6 +58,18 @@ describe("localiseErrorMessage", () => {
 				key: "API.NOT_A_REAL_KEY",
 			}),
 		).toBe("upstream timed out");
+	});
+
+	test("keeps the server message for a key outside the widget namespace", () => {
+		// The browser has no text for server-only keys, so the provider's
+		// already-translated message is the best there is.
+		const i18n = germanI18n();
+		expect(
+			localiseErrorMessage(i18n, {
+				message: "Datenbankfehler",
+				key: "DATABASE.UNKNOWN",
+			}),
+		).toBe("Datenbankfehler");
 	});
 
 	test("keeps the server message when there is no key", () => {

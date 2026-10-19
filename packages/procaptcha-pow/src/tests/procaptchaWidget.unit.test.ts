@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n, TranslateOptions } from "@prosopo/locale";
+import {
+	type Ti18n,
+	type TranslateOptions,
+	createUntranslatedI18n,
+} from "@prosopo/locale";
 import {
 	ModeEnum,
 	type ProcaptchaProps,
@@ -97,8 +101,8 @@ let widget: ProcaptchaPowHandle | undefined;
 
 const i18nStub = (
 	language: string,
-	changeLanguage: Mock<(l: string) => void>,
-) => ({ language, changeLanguage }) as unknown as Ti18n;
+	changeLanguage: Mock<(l: string) => Promise<unknown>>,
+) => createUntranslatedI18n({ language, changeLanguage });
 
 // Stands in for the shared i18n instance after the widget's own language (de)
 // has loaded; lookups follow i18nFrontend.ts: catalogue, then defaultValue.
@@ -113,6 +117,7 @@ const germanI18n = (): Ti18n => {
 		t: (key: string, options?: TranslateOptions): string =>
 			catalogue[key] ?? options?.defaultValue ?? key,
 		changeLanguage: async (): Promise<void> => undefined,
+		exists: (): boolean => false,
 		hasLoadedNamespace: (): boolean => true,
 		on: (): void => undefined,
 		off: (): void => undefined,
@@ -122,7 +127,6 @@ const germanI18n = (): Ti18n => {
 const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps => ({
 	config: config(),
 	callbacks: {},
-	i18n: undefined as unknown as Ti18n,
 	...overrides,
 });
 
@@ -538,7 +542,7 @@ describe("language", () => {
 	});
 
 	test("an existing i18n instance is switched rather than re-booted", () => {
-		const changeLanguage = vi.fn<(l: string) => void>();
+		const changeLanguage = vi.fn<(l: string) => Promise<unknown>>();
 		render(
 			props({
 				config: config({ language: "fr" }),
@@ -550,7 +554,7 @@ describe("language", () => {
 	});
 
 	test("an instance already in the right language is left alone", () => {
-		const changeLanguage = vi.fn<(l: string) => void>();
+		const changeLanguage = vi.fn<(l: string) => Promise<unknown>>();
 		render(
 			props({
 				config: config({ language: "fr" }),
@@ -561,7 +565,7 @@ describe("language", () => {
 	});
 
 	test("no configured language means the page's own choice stands", () => {
-		const changeLanguage = vi.fn<(l: string) => void>();
+		const changeLanguage = vi.fn<(l: string) => Promise<unknown>>();
 		render(props({ i18n: i18nStub("en", changeLanguage) }));
 		expect(changeLanguage).not.toHaveBeenCalled();
 		expect(mocks.loadI18next).not.toHaveBeenCalled();

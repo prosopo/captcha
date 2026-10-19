@@ -21,6 +21,7 @@ import {
 	type Language,
 	LanguageCodes,
 	Languages,
+	type TargetKey,
 	type Ti18n,
 	type TranslateFn,
 	type TranslationKey,
@@ -28,8 +29,10 @@ import {
 	i18nMiddleware,
 	isClientSide,
 	isLanguage,
+	isTargetKey,
 	isTranslationKey,
 	loadI18next,
+	targetKeys,
 	translationKeys,
 } from "../index.js";
 
@@ -109,6 +112,30 @@ describe("TranslationKey", () => {
 
 	it("exposes the declared language codes as an array", () => {
 		expectTypeOf(LanguageCodes).toExtend<readonly string[]>();
+	});
+});
+
+describe("TargetKey", () => {
+	it("is the union of the English catalogue's TARGET labels", () => {
+		expectTypeOf<"owl">().toExtend<TargetKey>();
+		expectTypeOf<"fire-hydrant">().toExtend<TargetKey>();
+		expectTypeOf<string>().not.toExtend<TargetKey>();
+	});
+
+	it("rejects an unknown label and the prefixed key", () => {
+		// @ts-expect-error not a TARGET label
+		assertType<TargetKey>("owll");
+		// @ts-expect-error the label alone, without the TARGET. prefix
+		assertType<TargetKey>("TARGET.owl");
+	});
+
+	it("prefixed with TARGET. is a TranslationKey, so it translates without a cast", () => {
+		expectTypeOf<`TARGET.${TargetKey}`>().toExtend<TranslationKey>();
+	});
+
+	it("narrows a runtime string with isTargetKey", () => {
+		expectTypeOf(isTargetKey).guards.toEqualTypeOf<TargetKey>();
+		expectTypeOf(targetKeys).toExtend<readonly string[]>();
 	});
 });
 

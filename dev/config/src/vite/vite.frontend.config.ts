@@ -118,11 +118,9 @@ export default async function (
 	// The two i18next entries are server-only: the fs backend reads locale JSON
 	// off disk and the middleware is Express request handling. Neither can run
 	// in a browser — `i18nBackend.ts` also imports `node:path`, which is already
-	// external — so they are pure weight in a frontend bundle. The other
-	// i18next-* packages (http-backend, browser-languagedetector,
-	// chained-backend, resources-to-backend) ARE used in the browser and must
-	// stay bundled; these filters are substring matches, so they catch only
-	// themselves.
+	// external — so they are pure weight in a frontend bundle. No other i18next
+	// package is bundled: the widget uses its own `i18nFrontend.ts`. These
+	// filters are substring matches, so they catch only themselves.
 	const { external, internal } = filterDependencies(deps, [
 		"pm2",
 		"nodejs-polars",

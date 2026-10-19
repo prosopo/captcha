@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/scripts",
-	"version": "3.1.200",
+	"version": "3.1.204",
 	"description": "Dev scripts for working with prosopo packages",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -38,7 +38,6 @@
 		"@prosopo/dotenv": "workspace:*",
 		"@prosopo/env": "workspace:*",
 		"@prosopo/keyring": "workspace:*",
-		"@prosopo/locale": "workspace:*",
 		"@prosopo/provider": "workspace:*",
 		"@prosopo/types": "workspace:*",
 		"@prosopo/types-env": "workspace:*",

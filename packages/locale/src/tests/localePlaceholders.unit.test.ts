@@ -15,15 +15,27 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { NAMESPACES, type Namespace } from "../translationKey.js";
 import { Languages } from "../translations.js";
 
 type TranslationTree = { [key: string]: string | TranslationTree };
 
-const readLocale = (locale: string): TranslationTree =>
+const namespaces: readonly Namespace[] = Object.values(NAMESPACES);
+
+const readNamespace = (locale: string, namespace: Namespace): TranslationTree =>
 	JSON.parse(
 		fs.readFileSync(
-			path.resolve(`./src/locales/${locale}/translation.json`),
+			path.resolve(`./src/locales/${locale}/${namespace}.json`),
 			"utf8",
+		),
+	);
+
+/** All of a language's namespace files as one tree; keys never overlap. */
+const readLocale = (locale: string): TranslationTree =>
+	Object.assign(
+		{},
+		...namespaces.map((namespace: Namespace) =>
+			readNamespace(locale, namespace),
 		),
 	);
 

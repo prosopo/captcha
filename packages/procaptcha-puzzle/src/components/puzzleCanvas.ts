@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { TranslationKey, Translator } from "@prosopo/locale";
+import type { Translator, WidgetTranslationKey } from "@prosopo/locale";
 import {
 	type AudioAlternativeFooterProps,
 	type AudioAlternativeOffer,
@@ -150,8 +150,10 @@ export const mountPuzzleCanvas = (
 	const instructionId = `${baseId}-instruction`;
 	const keyboardHintId = `${baseId}-keyboard-hint`;
 
-	const t = (key: TranslationKey, options?: Record<string, unknown>): string =>
-		props.translator.t(key, options);
+	const t = (
+		key: WidgetTranslationKey,
+		options?: Record<string, unknown>,
+	): string => props.translator.t(key, options);
 
 	const style = createElement("style", {
 		text: stylesheet(props.theme.palette.primary.main),

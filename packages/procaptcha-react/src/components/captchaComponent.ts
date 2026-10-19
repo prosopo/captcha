@@ -310,9 +310,7 @@ export const mountCaptchaComponent = (
 
 		const t = props.translator.t;
 		targetLabel.textContent = `${currentCaptcha().target} `;
-		// Each translation carries its own colon (French " :", Chinese "："), so
-		// only the non-breaking space before the target word is added here.
-		promptText.textContent = `${t("WIDGET.SELECT_ALL")}\u00a0`;
+		promptText.textContent = `${t("WIDGET.SELECT_ALL")}:\u00a0`;
 		promptText.appendChild(targetLabel);
 		hintText.textContent = t("WIDGET.IF_NONE_CLICK_NEXT");
 
