@@ -1,5 +1,14 @@
 # @prosopo/datasets
 
+## 3.2.8
+### Patch Changes
+
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+  - @prosopo/logger@2.1.4
+  - @prosopo/util@3.3.15
+  - @prosopo/util-crypto@13.6.0
+
 ## 3.2.7
 ### Patch Changes
 

@@ -1,5 +1,10 @@
 # @prosopo/detector
 
+## 3.5.60
+### Patch Changes
+
+  - @prosopo/types@5.16.3
+
 ## 3.5.59
 ### Patch Changes
 
