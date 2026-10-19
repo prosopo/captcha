@@ -1,5 +1,19 @@
 # @prosopo/procaptcha-react
 
+## 2.14.6
+### Patch Changes
+
+- b6e9459: The colon after the "Select all …" prompt is added by the widget again, rather than being part of each translation. Every language's `WIDGET.SELECT_ALL` no longer ends with a colon, and the widget renders it as `<prompt>: <target>`. A locale test now fails if a translation brings its own colon back.
+- Updated dependencies [b6e9459]
+- Updated dependencies [a5c953d]
+  - @prosopo/locale@3.11.1
+  - @prosopo/widget-skeleton@2.10.2
+  - @prosopo/common@3.2.3
+  - @prosopo/procaptcha@2.11.32
+  - @prosopo/types@5.16.3
+  - @prosopo/procaptcha-common@2.21.5
+  - @prosopo/util@3.3.15
+
 ## 2.14.5
 ### Patch Changes
 

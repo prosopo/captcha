@@ -1,5 +1,11 @@
 # @prosopo/captcha-severity
 
+## 1.3.1
+### Patch Changes
+
+- ebcd4ed: Bound automatic puzzle difficulty escalation, and record the level a session was
+  given so it can be read back from the session record.
+
 ## 1.3.0
 ### Minor Changes
 
