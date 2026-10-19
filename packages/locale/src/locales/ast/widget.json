@@ -3,7 +3,7 @@
 		"NO_POLKADOT_EXTENSION": "Nun s'atopó la estensión de Polkadot"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Esbilla toles que contengan lo siguiente:",
+		"SELECT_ALL": "Esbilla toles que contengan lo siguiente",
 		"IF_NONE_CLICK_NEXT": "Si nun hai nenguna, calca en Siguiente",
 		"NEXT": "Siguiente",
 		"SUBMIT": "Unviar",

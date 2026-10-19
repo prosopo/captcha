@@ -63,7 +63,7 @@
 		"NO_POLKADOT_EXTENSION": "Extensão Polkadot não encontrada"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Selecione todas as imagens que contêm o seguinte:",
+		"SELECT_ALL": "Selecione todas as imagens que contêm o seguinte",
 		"IF_NONE_CLICK_NEXT": "Se não houver nenhum, clique em Próximo",
 		"NEXT": "Próximo",
 		"SUBMIT": "Enviar",

@@ -63,7 +63,7 @@
 		"NO_POLKADOT_EXTENSION": "A Polkadot kiterjesztés nem található"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Jelölje ki az összes képet, amelyen a következő látható:",
+		"SELECT_ALL": "Jelölje ki az összes képet, amelyen a következő látható",
 		"IF_NONE_CLICK_NEXT": "Ha nincs egy sem, kattintson a Következő gombra",
 		"NEXT": "Következő",
 		"SUBMIT": "Küldés",

@@ -3,7 +3,7 @@
 		"NO_POLKADOT_EXTENSION": "Fann ikkje Polkadot-utvidinga"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Vel alle bileta som inneheld følgjande:",
+		"SELECT_ALL": "Vel alle bileta som inneheld følgjande",
 		"IF_NONE_CLICK_NEXT": "Om det ikkje er nokon, klikk Neste",
 		"NEXT": "Neste",
 		"SUBMIT": "Send inn",

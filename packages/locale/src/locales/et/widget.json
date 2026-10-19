@@ -3,7 +3,7 @@
 		"NO_POLKADOT_EXTENSION": "Polkadoti laiendust ei leitud"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Valige kõik pildid, millel on:",
+		"SELECT_ALL": "Valige kõik pildid, millel on",
 		"IF_NONE_CLICK_NEXT": "Kui neid pole, klõpsake „Edasi“",
 		"NEXT": "Edasi",
 		"SUBMIT": "Esita",

@@ -3,7 +3,7 @@
 		"NO_POLKADOT_EXTENSION": "No s'ha trobau a extensión de Polkadot"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Trigar totas as que contiengan o siguient:",
+		"SELECT_ALL": "Trigar totas as que contiengan o siguient",
 		"IF_NONE_CLICK_NEXT": "Si no n'hi ha garra, fe clic en Siguient",
 		"NEXT": "Siguient",
 		"SUBMIT": "Ninviar",

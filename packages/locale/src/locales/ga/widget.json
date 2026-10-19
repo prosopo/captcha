@@ -3,7 +3,7 @@
 		"NO_POLKADOT_EXTENSION": "Níor aimsíodh an síneadh Polkadot"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Roghnaigh gach ceann ina bhfuil an méid seo a leanas:",
+		"SELECT_ALL": "Roghnaigh gach ceann ina bhfuil an méid seo a leanas",
 		"IF_NONE_CLICK_NEXT": "Mura bhfuil aon cheann ann, cliceáil Ar Aghaidh",
 		"NEXT": "Ar Aghaidh",
 		"SUBMIT": "Seol",
