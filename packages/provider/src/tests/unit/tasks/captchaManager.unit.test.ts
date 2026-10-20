@@ -868,7 +868,7 @@ describe("CaptchaManager", () => {
 		// follow-up `/captcha/{type}` request — old bundled SDKs, dapps
 		// that hand-roll the wrapper, network-glitch retries, browser-tab
 		// races. Without the fallback below, those requests landed on
-		// CAPTCHA.NO_SESSION_FOUND because the origin session had already
+		// NO_SESSION_FOUND because the origin session had already
 		// been consumed by the preceding /captcha/pow. The four tests
 		// below pin the contract.
 

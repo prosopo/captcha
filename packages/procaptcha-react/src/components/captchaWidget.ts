@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	type Component,
 	type StyleMap,
@@ -55,7 +55,10 @@ export interface CaptchaWidgetProps {
 // that can never be selected.
 const getHash = (item: HashedItem): string => {
 	if (!item.hash) {
-		throw new ProsopoDatasetError("CAPTCHA.MISSING_ITEM_HASH", {
+		throw new ProsopoError({
+			code: "INVALID_DATA",
+			errorSite: "PREA-1",
+			message: "missing item hash",
 			context: { item },
 		});
 	}

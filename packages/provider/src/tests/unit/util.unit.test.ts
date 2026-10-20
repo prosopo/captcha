@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoContractError, ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { ScheduledTaskNames, ScheduledTaskStatus } from "@prosopo/types";
 import type {
 	IProviderDatabase,
@@ -44,13 +44,11 @@ describe("encodeStringAddress", () => {
 		expect(typeof result).toBe("string");
 	});
 
-	it("should throw ProsopoContractError for invalid address", () => {
+	it("should throw ProsopoError for invalid address", () => {
 		const invalidAddress = "invalid-address";
+		expect(() => encodeStringAddress(invalidAddress)).toThrow(ProsopoError);
 		expect(() => encodeStringAddress(invalidAddress)).toThrow(
-			ProsopoContractError,
-		);
-		expect(() => encodeStringAddress(invalidAddress)).toThrow(
-			"CONTRACT.INVALID_ADDRESS",
+			expect.objectContaining({ errorId: "INVALID_DATA:PROV-77" }),
 		);
 	});
 });
@@ -206,11 +204,13 @@ describe("getIPAddress", () => {
 		expect(result.v4).toBe(false);
 	});
 
-	it("should throw ProsopoEnvError for invalid IP address", () => {
+	it("should throw ProsopoError for invalid IP address", () => {
 		const invalidIP = "invalid-ip-address";
 
-		expect(() => getIPAddress(invalidIP)).toThrow(ProsopoEnvError);
-		expect(() => getIPAddress(invalidIP)).toThrow("API.INVALID_IP");
+		expect(() => getIPAddress(invalidIP)).toThrow(ProsopoError);
+		expect(() => getIPAddress(invalidIP)).toThrow(
+			expect.objectContaining({ errorId: "INVALID_IP:PROV-78" }),
+		);
 	});
 
 	it("should handle IPv4 loopback", () => {

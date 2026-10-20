@@ -19,10 +19,13 @@ import type {
 import { object } from "zod";
 import { ApiParams } from "../api/index.js";
 import type { InputMethod } from "../datasets/index.js";
-import type { CaptchaResponseBody } from "../provider/index.js";
+import type { ApiJsonError, CaptchaResponseBody } from "../provider/index.js";
 import type { ProcaptchaApiInterface } from "./api.js";
 import type { TCaptchaSubmitResult } from "./client.js";
 import { type ProcaptchaToken, ProcaptchaTokenSpec } from "./token.js";
+
+/** A failure the widget shows: a provider error body, or one of its own. */
+export type WidgetError = Pick<ApiJsonError, "code" | "errorId" | "message">;
 
 /** A selected image: its hash, where it was selected and how. */
 export type ImageSelection = [
@@ -63,7 +66,7 @@ export interface ProcaptchaState {
 	successfullChallengeTimeout: NodeJS.Timeout | undefined; // the timer for the captcha challenge. undefined if not set
 	sendData: boolean; // whether to trigger sending user event data (mouse, keyboard, touch) to the provider
 	attemptCount: number; // Number of attempts to successfully complete captcha without errors
-	error: { message: string; key: string } | undefined; // any error message
+	error: WidgetError | undefined; // any error message
 	sessionId: string | undefined; // the session id for the captcha challenge
 	answeredIncorrectly?: boolean; // the last answer was rejected; the user may retry
 }

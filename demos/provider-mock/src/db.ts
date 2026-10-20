@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoDBError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { MongoDatabase } from "@prosopo/database";
 import type { Logger } from "@prosopo/logger";
 import type { Tables } from "@prosopo/types-database";
@@ -107,9 +107,11 @@ export class JA4Database extends MongoDatabase {
 			// super.connect() resolves only once the connection is open, so this
 			// cannot normally happen — but the models below would be read off
 			// undefined if it ever did, which is a worse error to debug.
-			throw new ProsopoDBError("DATABASE.CONNECTION_UNDEFINED", {
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "PMCK-3",
+				message: "Connection undefined",
 				context: { failedFuncName: this.connect.name },
-				logger: this.logger,
 			});
 		}
 		for (const { collectionName, modelName, schema } of DATA_TABLES) {
@@ -126,9 +128,11 @@ export class JA4Database extends MongoDatabase {
 	 */
 	getTables(): Tables<TableNames> {
 		if (this.tables[TableNames.ja4] === undefined) {
-			throw new ProsopoDBError("DATABASE.TABLES_UNDEFINED", {
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "PMCK-4",
+				message: "Tables undefined",
 				context: { failedFuncName: this.getTables.name },
-				logger: this.logger,
 			});
 		}
 		return this.tables;

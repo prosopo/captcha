@@ -482,13 +482,25 @@ describe("recovering from an error", () => {
 	test("stops the spinner so the user can try again", async () => {
 		render();
 		fire(checkbox(), "click");
-		await setState({ error: { message: "boom", key: "CAPTCHA.UNKNOWN" } });
+		await setState({
+			error: {
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:PROV-1",
+				message: "boom",
+			},
+		});
 		expect(spinner()).toBeNull();
 	});
 
 	test("shows the error text against the checkbox", async () => {
 		render();
-		await setState({ error: { message: "boom", key: "CAPTCHA.UNKNOWN" } });
+		await setState({
+			error: {
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:PROV-1",
+				message: "boom",
+			},
+		});
 		expect(mounted.container.textContent).toContain("boom");
 	});
 
@@ -497,7 +509,11 @@ describe("recovering from an error", () => {
 		render({ onSessionInvalidated });
 		fire(checkbox(), "click", { clientX: 7, clientY: 8 });
 		await setState({
-			error: { message: "gone", key: "CAPTCHA.NO_SESSION_FOUND" },
+			error: {
+				code: "NO_SESSION_FOUND",
+				errorId: "NO_SESSION_FOUND:PROV-1",
+				message: "gone",
+			},
 		});
 		// The coords of the click the user already made, so the retry still
 		// reports where the user actually entered the flow.
@@ -508,10 +524,18 @@ describe("recovering from an error", () => {
 		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
 		render({ onSessionInvalidated });
 		await setState({
-			error: { message: "gone", key: "CAPTCHA.NO_SESSION_FOUND" },
+			error: {
+				code: "NO_SESSION_FOUND",
+				errorId: "NO_SESSION_FOUND:PROV-1",
+				message: "gone",
+			},
 		});
 		await setState({
-			error: { message: "gone again", key: "CAPTCHA.NO_SESSION_FOUND" },
+			error: {
+				code: "NO_SESSION_FOUND",
+				errorId: "NO_SESSION_FOUND:PROV-1",
+				message: "gone again",
+			},
 		});
 		expect(onSessionInvalidated).toHaveBeenCalledTimes(1);
 	});
@@ -520,7 +544,11 @@ describe("recovering from an error", () => {
 		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
 		render({ onSessionInvalidated });
 		await setState({
-			error: { message: "gone", key: "CAPTCHA.NO_SESSION_FOUND" },
+			error: {
+				code: "NO_SESSION_FOUND",
+				errorId: "NO_SESSION_FOUND:PROV-1",
+				message: "gone",
+			},
 		});
 		expect(onSessionInvalidated).toHaveBeenCalledWith(undefined, undefined);
 	});
@@ -529,7 +557,11 @@ describe("recovering from an error", () => {
 		const restart = vi.fn<() => void>();
 		render({ frictionlessState: frictionless({ restart }) });
 		await setState({
-			error: { message: "gone", key: "CAPTCHA.NO_SESSION_FOUND" },
+			error: {
+				code: "NO_SESSION_FOUND",
+				errorId: "NO_SESSION_FOUND:PROV-1",
+				message: "gone",
+			},
 		});
 		expect(restart).not.toHaveBeenCalled();
 		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 150));
@@ -539,7 +571,13 @@ describe("recovering from an error", () => {
 	test("leaves an ordinary error to the host, restarting nothing", async () => {
 		const restart = vi.fn<() => void>();
 		render({ frictionlessState: frictionless({ restart }) });
-		await setState({ error: { message: "boom", key: "CAPTCHA.UNKNOWN" } });
+		await setState({
+			error: {
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:PROV-1",
+				message: "boom",
+			},
+		});
 		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 150));
 		expect(restart).not.toHaveBeenCalled();
 	});
@@ -597,7 +635,11 @@ describe("starting without a click", () => {
 			onSessionInvalidated,
 		});
 		await setState({
-			error: { message: "gone", key: "CAPTCHA.NO_SESSION_FOUND" },
+			error: {
+				code: "NO_SESSION_FOUND",
+				errorId: "NO_SESSION_FOUND:PROV-1",
+				message: "gone",
+			},
 		});
 		expect(onSessionInvalidated).toHaveBeenCalledWith(5, 6);
 	});

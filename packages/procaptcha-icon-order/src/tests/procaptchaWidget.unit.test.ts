@@ -146,7 +146,7 @@ const i18nStub = (
 // has loaded; lookups follow i18nFrontend.ts: catalogue, then defaultValue.
 const germanI18n = (): Ti18n => {
 	const catalogue: Record<string, string> = {
-		"API.INVALID_SITE_KEY": "Ungültiger Site-Schlüssel",
+		"ERRORS.SITE_KEY_INVALID": "Ungültiger Site-Schlüssel",
 	};
 	return {
 		language: "de",
@@ -674,17 +674,19 @@ describe("invisible mode", () => {
 
 describe("an invalidated session", () => {
 	const invalidate = async (
-		key = "CAPTCHA.NO_SESSION_FOUND",
+		code = "NO_SESSION_FOUND",
 		message = "session gone",
 	): Promise<void> => {
-		mocks.constructions[0]?.updateState({ error: { message, key } });
+		mocks.constructions[0]?.updateState({
+			error: { code, errorId: `${code}:PROV-1`, message },
+		});
 		await settle();
 	};
 
 	test("the error is shown on the checkbox and the icon-order is torn down", async () => {
 		render(props());
 		await click();
-		await invalidate("API.UNKNOWN_ERROR", "something broke");
+		await invalidate("BACKEND_ERROR", "something broke");
 		expect(mounted.container.textContent).toContain("something broke");
 		expect(canvas()).toBeNull();
 		expect(spinner()).toBeNull();
@@ -702,8 +704,8 @@ describe("an invalidated session", () => {
 		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
 		render(props({ onSessionInvalidated }));
 		await click();
-		await invalidate("CAPTCHA.NO_SESSION_FOUND", "gone");
-		await invalidate("CAPTCHA.NO_SESSION_FOUND", "gone again");
+		await invalidate("NO_SESSION_FOUND", "gone");
+		await invalidate("NO_SESSION_FOUND", "gone again");
 		expect(onSessionInvalidated).toHaveBeenCalledTimes(1);
 	});
 
@@ -745,7 +747,7 @@ describe("an invalidated session", () => {
 	test("the error is shown in the widget's language, not the provider's", async () => {
 		mocks.translatorI18n.current = germanI18n();
 		render(props());
-		await invalidate("API.INVALID_SITE_KEY", "Invalid site key");
+		await invalidate("SITE_KEY_INVALID", "Invalid site key");
 		expect(mounted.container.textContent).toContain(
 			"Ungültiger Site-Schlüssel",
 		);

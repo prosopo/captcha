@@ -442,9 +442,10 @@ describe("start: a session that has already bought a challenge", () => {
 		await harness.manager.start();
 		await harness.manager.start();
 		expect(mocks.getAudioCaptchaChallenge).toHaveBeenCalledTimes(1);
-		expect(lastUpdate(harness, "error")).toEqual({
+		expect(lastUpdate(harness, "error")).toMatchObject({
+			code: "NO_SESSION_FOUND",
+			errorId: "NO_SESSION_FOUND:AUDI-6",
 			message: "No session found",
-			key: "CAPTCHA.NO_SESSION_FOUND",
 		});
 		expect(lastUpdate(harness, "loading")).toBe(false);
 	});
@@ -465,7 +466,12 @@ describe("start: a session that has already bought a challenge", () => {
 	test("counts the id as spent when the provider answers with an error", async () => {
 		mocks.getAudioCaptchaChallenge.mockResolvedValue({
 			...challengeResponse(),
-			error: { message: "nope", key: "API.BAD_REQUEST", code: 400 },
+			error: {
+				code: "INVALID_REQUEST",
+				errorId: "INVALID_REQUEST:PROV-1",
+				status: 400,
+				message: "nope",
+			},
 		});
 		const harness = build({
 			frictionlessState: frictionless({ sessionId: "session-1" }),
@@ -489,36 +495,53 @@ describe("start: when the provider will not issue a challenge", () => {
 		mocks.getAudioCaptchaChallenge.mockResolvedValue(
 			challengeResponse({
 				error: {
+					code: "NO_SESSION_FOUND",
+					errorId: "NO_SESSION_FOUND:PROV-1",
+					status: 400,
 					message: "no session",
-					key: "CAPTCHA.NO_SESSION_FOUND",
-					code: 400,
 				},
 			}),
 		);
 		const harness = build();
 		await harness.manager.start();
-		expect(lastUpdate(harness, "error")).toEqual({
+		expect(lastUpdate(harness, "error")).toMatchObject({
+			code: "NO_SESSION_FOUND",
+			errorId: "NO_SESSION_FOUND:PROV-1",
 			message: "no session",
-			key: "CAPTCHA.NO_SESSION_FOUND",
 		});
 		expect(lastUpdate(harness, "loading")).toBe(false);
 	});
 
-	test("labels an error the provider left unkeyed", async () => {
+	test("passes a hidden provider error through with its errorId", async () => {
 		mocks.getAudioCaptchaChallenge.mockResolvedValue(
-			challengeResponse({ error: { message: "something broke", code: 500 } }),
+			challengeResponse({
+				error: {
+					code: "BACKEND_ERROR",
+					errorId: "BACKEND_ERROR:PROV-1",
+					status: 500,
+					message: "something broke",
+				},
+			}),
 		);
 		const harness = build();
 		await harness.manager.start();
-		expect(lastUpdate(harness, "error")).toEqual({
+		expect(lastUpdate(harness, "error")).toMatchObject({
+			code: "BACKEND_ERROR",
+			errorId: "BACKEND_ERROR:PROV-1",
 			message: "something broke",
-			key: "API.UNKNOWN_ERROR",
 		});
 	});
 
 	test("keeps no challenge, so a submit afterwards cannot pretend one exists", async () => {
 		mocks.getAudioCaptchaChallenge.mockResolvedValue(
-			challengeResponse({ error: { message: "no session", code: 400 } }),
+			challengeResponse({
+				error: {
+					code: "BACKEND_ERROR",
+					errorId: "BACKEND_ERROR:PROV-1",
+					status: 400,
+					message: "no session",
+				},
+			}),
 		);
 		const harness = build();
 		await expect(harness.manager.start()).resolves.toBeUndefined();

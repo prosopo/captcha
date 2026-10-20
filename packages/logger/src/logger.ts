@@ -327,9 +327,9 @@ export class NativeLogger implements Logger {
 			}
 		}
 
-		// Prefer translationKey when present (e.g. ProsopoBaseError) so the
-		// top-level `err` field is locale-stable and queryable.
-		const msg = String(e.translationKey ?? e.message ?? e.msg ?? "");
+		// Prefer errorId when present (a ProsopoError) so the message field is
+		// stable and queryable across deploys and languages.
+		const msg = String(e.errorId ?? e.message ?? e.msg ?? "");
 		return { msg, data };
 	}
 

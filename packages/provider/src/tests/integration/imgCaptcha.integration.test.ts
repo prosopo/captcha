@@ -636,9 +636,9 @@ describe("Image Captcha Integration Tests", () => {
 			const data = (await response.json()) as CaptchaResponseBody;
 			expect(data).toHaveProperty("error");
 			expect(data.error?.message).toBe("Incorrect CAPTCHA type");
-			expect(data.error?.code).toBe(400);
+			expect(data.error?.status).toBe(400);
 		});
-		it("should return a translated error if the captcha type is set to pow and the language is set to es", async () => {
+		it("should return the error code and English message whatever the language when the captcha type is pow", async () => {
 			const origin = "https://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			await registerSiteKeyInDb(env, dappAccount, CaptchaType.pow);
@@ -662,8 +662,9 @@ describe("Image Captcha Integration Tests", () => {
 			expect(response.status).toBe(400);
 			const data = (await response.json()) as CaptchaResponseBody;
 			expect(data).toHaveProperty("error");
-			expect(data.error?.message).toBe("Tipo de CAPTCHA incorrecto");
-			expect(data.error?.code).toBe(400);
+			expect(data.error?.code).toBe("INCORRECT_CAPTCHA_TYPE");
+			expect(data.error?.message).toBe("Incorrect CAPTCHA type");
+			expect(data.error?.status).toBe(400);
 		});
 	});
 	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
@@ -690,7 +691,7 @@ describe("Image Captcha Integration Tests", () => {
 		const data = (await response.json()) as CaptchaResponseBody;
 		expect(data).toHaveProperty("error");
 		expect(data.error?.message).toBe("Incorrect CAPTCHA type");
-		expect(data.error?.code).toBe(400);
+		expect(data.error?.status).toBe(400);
 	});
 
 	describe("SubmitImageCaptchaSolution", () => {

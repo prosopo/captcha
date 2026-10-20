@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoDBError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	type AudioCaptchaRecord,
@@ -118,9 +118,11 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 
 	getTables(): Tables<TableNames> {
 		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.TABLES_UNDEFINED", {
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "DBSE-2",
+				message: "Tables undefined",
 				context: { failedFuncName: this.getTables.name },
-				logger: this.logger,
 			});
 		}
 		return this.tables;
@@ -425,14 +427,11 @@ export class CaptchaDatabase extends MongoDatabase implements ICaptchaDatabase {
 				iconOrderCaptchaRecords: iconOrderCaptchaResults,
 			};
 		} catch (error) {
-			throw new ProsopoDBError("DATABASE.QUERY_ERROR", {
-				context: {
-					error,
-					filter,
-					limit,
-					failedFuncName: this.getCaptchas.name,
-				},
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-3",
+				cause: error,
+				context: { filter, limit, failedFuncName: this.getCaptchas.name },
 			});
 		} finally {
 			await this.close();

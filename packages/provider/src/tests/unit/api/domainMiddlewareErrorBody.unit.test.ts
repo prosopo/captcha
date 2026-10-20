@@ -90,8 +90,12 @@ describe("domainMiddleware error bodies", () => {
 		expect(res.status).toBe(401);
 		expect(text).not.toContain("hunter2");
 		expect(JSON.parse(text)).toEqual({
-			error: "Unauthorized",
-			message: "Unauthorized",
+			error: {
+				code: "UNAUTHORIZED",
+				errorId: "UNAUTHORIZED:PROV-85",
+				status: 401,
+				message: "Unauthorized",
+			},
 		});
 	});
 });
