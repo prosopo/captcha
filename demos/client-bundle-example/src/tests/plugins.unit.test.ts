@@ -527,7 +527,7 @@ describe("formFillerInjector with the language picker", () => {
 		dom.window.document.getElementById("form-filler-button")?.click();
 		return dom;
 	};
-	const valueOf = (dom: JSDOM, id: string): string | undefined => {
+	const fieldValue = (dom: JSDOM, id: string): string | undefined => {
 		const element = dom.window.document.getElementById(id);
 		return element instanceof dom.window.HTMLSelectElement ||
 			element instanceof dom.window.HTMLInputElement
@@ -538,15 +538,15 @@ describe("formFillerInjector with the language picker", () => {
 	it("leaves the browser-default language alone when filling the form", async () => {
 		const dom = await fillPage();
 
-		expect(valueOf(dom, "language-select")).toBe("");
+		expect(fieldValue(dom, "language-select")).toBe("");
 		expect(dom.window.location.href).toBe(demoUrl);
 	});
 
 	it("still fills the form's own fields", async () => {
 		const dom = await fillPage();
 
-		expect(valueOf(dom, "name")).toBe("John Doe");
-		expect(valueOf(dom, "plan")).toBe("pro");
+		expect(fieldValue(dom, "name")).toBe("John Doe");
+		expect(fieldValue(dom, "plan")).toBe("pro");
 	});
 });
 
