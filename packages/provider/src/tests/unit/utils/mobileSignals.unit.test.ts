@@ -14,7 +14,10 @@
 
 import type { RequestHeaders } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
-import { deriveMobileVerdict } from "../../../utils/mobileSignals.js";
+import {
+	type MobileSignals,
+	deriveMobileVerdict,
+} from "../../../utils/mobileSignals.js";
 
 const IPHONE_UA =
 	"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
@@ -137,6 +140,24 @@ describe("deriveMobileVerdict", () => {
 			},
 		);
 
+		it("scores the carrier bit and a tunnelled MSS once between them", () => {
+			const both = deriveMobileVerdict({ carrierNetwork: true, tcpMss: 1400 });
+			const one = deriveMobileVerdict({ carrierNetwork: true });
+			expect(both.score).toBe(one.score);
+			// Both are still reported, so the pair can be told from either alone
+			expect(both.evidence).toEqual(["carrierNetwork+tunnelledMss"]);
+		});
+
+		it("does not let the two network signals plus a webView decide", () => {
+			expect(
+				deriveMobileVerdict({
+					carrierNetwork: true,
+					tcpMss: 1400,
+					webView: true,
+				}).isMobile,
+			).toBe(false);
+		});
+
 		it.each([1452, 1460, 0])(
 			"does not count MSS %i as tunnelled",
 			(tcpMss: number) => {
@@ -176,6 +197,47 @@ describe("deriveMobileVerdict", () => {
 		expect(verdict.isMobile).toBe(false);
 		expect(verdict.score).toBe(0);
 		expect(verdict.evidence).toEqual([]);
+	});
+
+	describe("corroboration", () => {
+		it("is not corroborated by a User-Agent alone", () => {
+			const verdict = deriveMobileVerdict({ userAgent: IPHONE_UA });
+			expect(verdict.isMobile).toBe(true);
+			expect(verdict.corroborated).toBe(false);
+		});
+
+		it("is not corroborated by the client hints alone", () => {
+			const verdict = deriveMobileVerdict({ headers: androidChromeHints });
+			expect(verdict.isMobile).toBe(true);
+			expect(verdict.corroborated).toBe(false);
+		});
+
+		it.each([
+			["a carrier network", { carrierNetwork: true }],
+			["a tunnelled MSS", { tcpMss: 1400 }],
+			["an in-app browser", { webView: true }],
+			["touch support", { deviceCapability: "mobile" }],
+			["touch events", { touchEventCount: 9 }],
+		])(
+			"is corroborated by %s",
+			(_name: string, extra: Partial<MobileSignals>) => {
+				const verdict = deriveMobileVerdict({
+					userAgent: IPHONE_UA,
+					...extra,
+				});
+				expect(verdict.isMobile).toBe(true);
+				expect(verdict.corroborated).toBe(true);
+			},
+		);
+
+		it("is not corroborated by a signal that says desktop", () => {
+			expect(
+				deriveMobileVerdict({
+					userAgent: IPHONE_UA,
+					deviceCapability: "desktop",
+				}).corroborated,
+			).toBe(false);
+		});
 	});
 
 	it("ignores empty header values", () => {
