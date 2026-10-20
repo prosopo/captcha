@@ -93,6 +93,44 @@ export const MAX_STALE_PAYLOAD_LEVEL = 1;
 export const MAX_AUTO_ESCALATION_LEVEL_TOUCH = 2;
 
 /**
+ * Loosest placement target a touch device is ever asked for, in px.
+ *
+ * The ceiling above bounds how far the LADDER may climb, which leaves three
+ * routes to a harder puzzle untouched: the site's own `puzzleTolerance`, a
+ * traffic-filter policy's override, and a routing machine's. Observed solve
+ * rates on mobile fall off a cliff below this value — 56-70% at 12-15px
+ * against 4-5% at 8-9px — so a target tighter than this is not a harder
+ * challenge for a fingertip, it is a closed door.
+ *
+ * Applied as a floor at the point of issue, after every override has been
+ * resolved, so it covers all four routes at once.
+ *
+ * A starting point, like the ladder above: it wants validating against
+ * observed first-attempt solve rate by device class.
+ */
+export const TOUCH_MIN_TOLERANCE_PX = 12;
+
+/**
+ * Smallest puzzle piece served to a touch device, as a fraction of background
+ * width. Against the 300px-wide container that is a 60px piece.
+ *
+ * A fingertip covers roughly 40px of screen, so at the ladder's smallest
+ * scales the piece is entirely hidden by the finger dragging it. Also a
+ * starting point.
+ */
+export const TOUCH_MIN_PIECE_SCALE = 0.2;
+
+export const easeToleranceForTouch = (tolerance: number): number =>
+	Math.max(tolerance, TOUCH_MIN_TOLERANCE_PX);
+
+export const easePieceScaleForTouch = (
+	range: PuzzleDifficultyRange,
+): PuzzleDifficultyRange => ({
+	min: Math.max(range.min, TOUCH_MIN_PIECE_SCALE),
+	max: Math.max(range.max, TOUCH_MIN_PIECE_SCALE),
+});
+
+/**
  * Image rounds per difficulty step.
  *
  * `severityToPuzzleDifficulty` and `puzzleDifficultyToSeverity` are inverses

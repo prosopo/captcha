@@ -645,6 +645,7 @@ export class FrictionlessManager extends CaptchaManager {
 								? samplePuzzleDifficulty(
 										level,
 										DEFAULT_RENDER_SETTINGS.holeDarken,
+										ceiling,
 									)
 								: undefined;
 						const tolerance = routed.puzzleTolerance ?? difficulty?.tolerance;
