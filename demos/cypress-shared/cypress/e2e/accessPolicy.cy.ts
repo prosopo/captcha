@@ -161,7 +161,9 @@ describe("User access policy Block rules", () => {
 				expect(
 					response?.body?.error?.data?.requestId,
 					"403 body error.data.requestId should be set",
-				).to.be.a("string").and.not.equal("");
+				)
+					.to.be.a("string")
+					.and.not.equal("");
 			});
 	});
 
