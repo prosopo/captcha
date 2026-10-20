@@ -31,6 +31,7 @@
 		"@prosopo/dotenv": "workspace:*",
 		"@prosopo/locale": "workspace:*",
 		"@prosopo/types": "workspace:*",
+		"@types/jsdom": "30.0.0",
 		"@types/node": "22.5.5",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
