@@ -37,10 +37,7 @@ const windowsChromeHints: RequestHeaders = {
 };
 
 describe("deriveMobileVerdict", () => {
-	describe("the reported regressions", () => {
-		// prosopo/captcha-private#5183: ipInfo.isMobile answers "is this IP on
-		// a carrier network", and the old implementation preferred it whenever
-		// it was a boolean — which it essentially always is.
+	describe("device, not network", () => {
 		it("reads a phone on home Wi-Fi as mobile", () => {
 			expect(
 				deriveMobileVerdict({
@@ -62,9 +59,6 @@ describe("deriveMobileVerdict", () => {
 			).toBe(false);
 		});
 
-		// prosopo/captcha-private#4504: hasTouchSupport is one line —
-		// `"ontouchstart" in window || navigator.maxTouchPoints > 0` — so every
-		// touchscreen laptop and Windows tablet reports "mobile".
 		it("does not read a touchscreen laptop as mobile", () => {
 			expect(
 				deriveMobileVerdict({
@@ -78,7 +72,7 @@ describe("deriveMobileVerdict", () => {
 	});
 
 	describe("platform declarations", () => {
-		it("accepts a mobile UA alone, because WebKit sends no client hints", () => {
+		it("accepts a mobile UA alone, since WebKit sends no client hints", () => {
 			expect(deriveMobileVerdict({ userAgent: IPHONE_UA }).isMobile).toBe(true);
 		});
 

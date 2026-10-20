@@ -30,13 +30,8 @@ export type PlatformSignals = Omit<MobileSignals, "userAgent" | "webView">;
 /**
  * Derive platform flags from server-visible signals. `isWebView` is supplied
  * by the caller because that bit only comes from the encrypted bot-detection
- * payload, not request headers.
- *
- * `isMobile` is a weighed verdict over everything the caller can hand over —
- * see `deriveMobileVerdict`. It used to be IPInfo's network-classified mobile
- * bit, preferred whenever present, which answers "is this IP on a carrier
- * network" rather than "is this a phone": every phone on Wi-Fi or behind a VPN
- * read as not-mobile, and the touch escalation ceiling never bound for them.
+ * payload, not request headers. `isMobile` is a weighed verdict over whatever
+ * signals the caller can supply — see `deriveMobileVerdict`.
  */
 export const derivePlatform = (
 	userAgent: string,

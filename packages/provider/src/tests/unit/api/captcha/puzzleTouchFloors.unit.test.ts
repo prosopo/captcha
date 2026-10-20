@@ -13,10 +13,10 @@
 // limitations under the License.
 
 // The per-device floors are applied at the point of issue because that is the
-// only place every source of difficulty has been resolved — the site's own
-// setting, a traffic-filter policy, a routing machine's override and the
-// ladder all converge here. These tests pin that they bite on each route and
-// leave the pointer path alone.
+// only place every source of difficulty has resolved — the site's own setting,
+// a traffic-filter policy, a routing machine's override and the ladder all
+// converge here. These pin that they bite on each route and leave the pointer
+// path alone.
 
 import {
 	TOUCH_MIN_PIECE_SCALE,
@@ -151,8 +151,6 @@ describe("per-device puzzle floors at issuance", () => {
 
 	describe("tolerance", () => {
 		it("raises a site setting a fingertip cannot hit", async () => {
-			// prosopo/captcha-private#5185: a 5px target, solved by 12% of
-			// mobile users.
 			await issue({ userAgent: IPHONE_UA, sitePuzzleTolerance: 5 });
 			expect(servedTolerance()).toBe(TOUCH_MIN_TOLERANCE_PX);
 		});
