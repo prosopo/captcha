@@ -86,6 +86,9 @@ importers:
       '@prosopo/types':
         specifier: workspace:*
         version: link:../../packages/types
+      '@types/jsdom':
+        specifier: 30.0.0
+        version: 30.0.0
       '@types/node':
         specifier: 22.5.5
         version: 22.5.5
