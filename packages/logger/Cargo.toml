@@ -1,0 +1,19 @@
+[package]
+name = "prosopo-logger"
+version = "0.0.1"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "rust/lib.rs"
+
+[dependencies]
+serde_json = { version = "1.0", features = ["preserve_order"] }
+
+[dev-dependencies]
+serde = { version = "1.0", features = ["derive"] }

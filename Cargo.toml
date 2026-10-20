@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
 	"packages/captcha-severity",
+	"packages/logger",
 ]
 exclude = [
 	"packages/native-ja4",
