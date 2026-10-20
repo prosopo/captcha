@@ -158,7 +158,13 @@ export default (env: ProviderEnvironment) =>
 				countryCode,
 				// `false` here is a placeholder — `runPostPowRouting` overrides
 				// isWebView with the value recorded on the originating session.
-				platform: derivePlatform(userAgent, false),
+				platform: derivePlatform(userAgent, false, {
+					headers: flatHeaders,
+					...(req.ipInfo &&
+						"isValid" in req.ipInfo &&
+						req.ipInfo.isValid && { carrierNetwork: req.ipInfo.isMobile }),
+					...(req.tcpMss !== undefined && { tcpMss: req.tcpMss }),
+				}),
 				raw: {
 					headers: flatHeaders,
 					userAgent,
@@ -352,9 +358,28 @@ export const buildEscalation = async (
 		  }
 		| undefined => {
 		if (escalatedType !== CaptchaType.puzzle) return undefined;
+		// This is the one point in the flow where the behavioural signals are
+		// in hand: the solve the user just submitted carries the client's own
+		// touch-support reading and its touch events, both persisted on the
+		// PoW record before routing ran.
 		const { isMobile } = derivePlatform(
 			originSession.headers?.["user-agent"] ?? "",
 			originSession.webView,
+			{
+				...(originSession.headers && { headers: originSession.headers }),
+				...(originSession.ipInfo?.isValid && {
+					carrierNetwork: originSession.ipInfo.isMobile,
+				}),
+				...(originSession.tcpMss !== undefined && {
+					tcpMss: originSession.tcpMss,
+				}),
+				...(powRecord.deviceCapability !== undefined && {
+					deviceCapability: powRecord.deviceCapability,
+				}),
+				...(powRecord.behavioralDataPacked?.c2 !== undefined && {
+					touchEventCount: powRecord.behavioralDataPacked.c2.length,
+				}),
+			},
 		);
 		const level = severityToPuzzleDifficulty(
 			routed.solvedImagesCount ?? originSession.solvedImagesCount,
