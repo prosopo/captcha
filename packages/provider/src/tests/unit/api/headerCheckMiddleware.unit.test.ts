@@ -20,8 +20,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { headerCheckMiddleware } from "../../../api/headerCheckMiddleware.js";
 import * as validateAddressModule from "../../../api/validateAddress.js";
 
-vi.mock("@prosopo/api-express-router", () => ({
+vi.mock("@prosopo/api-express-router", async (importActual) => ({
 	handleErrors: vi.fn(),
+	sendProsopoError: (
+		await importActual<typeof import("@prosopo/api-express-router")>()
+	).sendProsopoError,
 }));
 
 vi.mock("../../../api/validateAddress.js", () => ({
@@ -76,8 +79,12 @@ describe("headerCheckMiddleware", () => {
 
 		expect(mockRes.status).toHaveBeenCalledWith(401);
 		expect(mockRes.json).toHaveBeenCalledWith({
-			error: "Unauthorized",
-			message: "Unauthorized",
+			error: {
+				code: "UNAUTHORIZED",
+				errorId: "UNAUTHORIZED:PROV-86",
+				status: 401,
+				message: "Missing prosopo-user header",
+			},
 		});
 		expect(mockNext).not.toHaveBeenCalled();
 	});
@@ -92,8 +99,12 @@ describe("headerCheckMiddleware", () => {
 
 		expect(mockRes.status).toHaveBeenCalledWith(401);
 		expect(mockRes.json).toHaveBeenCalledWith({
-			error: "Unauthorized",
-			message: "Unauthorized",
+			error: {
+				code: "UNAUTHORIZED",
+				errorId: "UNAUTHORIZED:PROV-87",
+				status: 401,
+				message: "Missing prosopo-site-key header",
+			},
 		});
 		expect(mockNext).not.toHaveBeenCalled();
 	});

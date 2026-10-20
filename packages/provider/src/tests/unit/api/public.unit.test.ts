@@ -42,8 +42,11 @@ import { resetHealthzGeoRouter } from "../../../api/healthzGeo.js";
 import { metricsHandler } from "../../../api/metrics.js";
 import { publicRouter } from "../../../api/public.js";
 
-vi.mock("@prosopo/api-express-router", () => ({
+vi.mock("@prosopo/api-express-router", async (importActual) => ({
 	handleErrors: vi.fn(),
+	sendProsopoError: (
+		await importActual<typeof import("@prosopo/api-express-router")>()
+	).sendProsopoError,
 }));
 
 vi.mock("@prosopo/util", async (importActual) => {
@@ -354,10 +357,10 @@ describe("publicRouter", () => {
 		process.env.PROSOPO_METRICS_TOKEN = "secret";
 		try {
 			const statusMock = vi.fn().mockReturnThis();
-			const sendMock = vi.fn();
+			const jsonMock = vi.fn();
 			const metricsRes = {
 				status: statusMock,
-				send: sendMock,
+				json: jsonMock,
 				set: vi.fn(),
 				end: vi.fn(),
 			} as unknown as Response;
@@ -366,8 +369,44 @@ describe("publicRouter", () => {
 			await metricsHandler(mockEnv)(metricsReq, metricsRes, mockNext);
 
 			expect(statusMock).toHaveBeenCalledWith(401);
+			expect(jsonMock).toHaveBeenCalledWith({
+				error: expect.objectContaining({
+					errorId: "UNAUTHORIZED:PROV-91",
+				}),
+			});
 		} finally {
 			restoreEnv("PROSOPO_METRICS_TOKEN", previous);
+		}
+	});
+
+	it("should forbid a proxied scrape when no metrics token is set", async () => {
+		vi.stubEnv("PROSOPO_METRICS_TOKEN", undefined);
+		vi.stubEnv("PROSOPO_METRICS_PUBLIC", undefined);
+		try {
+			const statusMock = vi.fn().mockReturnThis();
+			const jsonMock = vi.fn();
+			const metricsRes: Pick<Response, "status" | "json" | "set" | "end"> = {
+				status: statusMock,
+				json: jsonMock,
+				set: vi.fn(),
+				end: vi.fn(),
+			};
+			const metricsReq: Pick<Request, "headers"> = {
+				headers: { "x-forwarded-for": "203.0.113.1" },
+			};
+
+			await metricsHandler(mockEnv)(
+				metricsReq as Request,
+				metricsRes as Response,
+				mockNext,
+			);
+
+			expect(statusMock).toHaveBeenCalledWith(403);
+			expect(jsonMock).toHaveBeenCalledWith({
+				error: expect.objectContaining({ errorId: "FORBIDDEN:PROV-92" }),
+			});
+		} finally {
+			vi.unstubAllEnvs();
 		}
 	});
 

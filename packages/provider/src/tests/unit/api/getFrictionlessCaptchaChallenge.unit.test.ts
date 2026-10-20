@@ -410,7 +410,12 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		expect(next).not.toHaveBeenCalled();
 		expect(res.status).toHaveBeenCalledWith(401);
 		expect(res.json).toHaveBeenCalledWith(
-			expect.objectContaining({ error: "Unauthorized" }),
+			expect.objectContaining({
+				error: expect.objectContaining({
+					code: "ACCESS_POLICY_BLOCK",
+					errorId: "ACCESS_POLICY_BLOCK:PROV-89",
+				}),
+			}),
 		);
 		expect(
 			tasksInstance.frictionlessManager.registerBlockedSession,

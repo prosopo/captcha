@@ -22,7 +22,9 @@ export interface ErrorCodeDefinition {
 }
 
 /**
- * Every kind of failure, frontend and backend alike. The key is the code: it is
+ * Every kind of failure, frontend and backend alike. The key is the code, in
+ * UPPER_SNAKE naming the failure rather than the place (`SITE_KEY_INVALID`,
+ * not `PROVIDER_VERIFY_FAILED`): where it happened is the site's job. It is
  * what callers branch on and what the widget translates (`ERRORS.<CODE>`), so
  * renaming one is a breaking API change.
  */
@@ -45,6 +47,7 @@ export const ERROR_CODES = {
 	INVALID_REQUEST: { message: "Invalid request", status: 400, public: true },
 	UNAUTHORIZED: { message: "Unauthorized", status: 401, public: true },
 	FORBIDDEN: { message: "Forbidden", status: 403, public: true },
+	RATE_LIMITED: { message: "Too many requests", status: 429, public: true },
 	SITE_KEY_INVALID: { message: "Invalid site key", status: 400, public: true },
 	SITE_KEY_NOT_REGISTERED: {
 		message: "Site key not registered",

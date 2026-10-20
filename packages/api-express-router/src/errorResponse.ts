@@ -18,6 +18,7 @@ import {
 	describeError,
 	isSevereError,
 	toApiError,
+	toPublicError,
 } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 
@@ -25,6 +26,23 @@ export interface ErrorResponse {
 	status(code: number): ErrorResponse;
 	json(body: unknown): unknown;
 }
+
+export interface ChainableResponse<R> {
+	status(code: number): R;
+	json(body: unknown): R;
+}
+
+/**
+ * Answers with an error the handler raised on purpose. Not logged: the
+ * handler already knows what happened and logs the decision itself.
+ */
+export const sendProsopoError = <R extends ChainableResponse<R>>(
+	response: R,
+	error: ProsopoError,
+): R =>
+	response
+		.status(error.status)
+		.json({ error: toPublicError(error, "BACKEND_ERROR") });
 
 /**
  * Errors are only logged where nobody handled them. A fault (5xx) is logged as

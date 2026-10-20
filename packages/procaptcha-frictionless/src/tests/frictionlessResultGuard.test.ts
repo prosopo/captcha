@@ -90,10 +90,11 @@ describe("evaluateFrictionlessResult", () => {
 	});
 
 	it("halts when captchaType is missing (bare-string 401 body shape from access-policy / autoBan / middleware)", () => {
-		// Access-policy hard-block / decision-machine autoBan / domain
-		// middleware all return `{"error":"Unauthorized"}` — a bare
-		// string, not `{code}`, so `error.code` is undefined and
-		// would slip past the earlier error check. HttpClientBase does
+		// Providers before the error-code refactor answered access-policy
+		// blocks / autoBan / middleware rejections with
+		// `{"error":"Unauthorized"}` — a bare string, not `{code}`, so
+		// `error.code` is undefined and would slip past the earlier error
+		// check. Kept for any provider still on that build. HttpClientBase does
 		// not throw on 4xx JSON so the widget receives this as a
 		// valid-looking result.
 		expect(

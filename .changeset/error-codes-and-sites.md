@@ -57,3 +57,7 @@ Other changes in behaviour:
 - An invalid PoW signature is a 401 instead of a 500.
 - `stringifyBigInts` returns a copy instead of changing its input, so frozen
   error context can be logged.
+- The provider's last hand-written error replies now use the same error body.
+  These were the missing-header 401s, the access-policy block, autoBan, the
+  metrics 401/403 and the rate limiter. The rate limiter answers with a new
+  public `RATE_LIMITED` (429) code.

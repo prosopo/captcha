@@ -15,10 +15,14 @@
 import { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import type { NextFunction } from "express";
-import { describe, expect, it, vi } from "vitest";
+import { type Mock, describe, expect, it, vi } from "vitest";
 import { ZodError } from "zod";
 import { handleErrors } from "../../errorHandler.js";
-import { type ErrorResponse, logUnhandledError } from "../../errorResponse.js";
+import {
+	type ErrorResponse,
+	logUnhandledError,
+	sendProsopoError,
+} from "../../errorResponse.js";
 
 const mockResponse = () => {
 	const response = {
@@ -173,5 +177,88 @@ describe("logUnhandledError", () => {
 				new ProsopoError({ code: "UNEXPECTED", errorSite: "APIX-1" }),
 			),
 		).not.toThrow();
+	});
+});
+
+interface MockChainableResponse {
+	status: Mock<(code: number) => MockChainableResponse>;
+	json: Mock<(body: unknown) => MockChainableResponse>;
+}
+
+const mockChainableResponse = (): MockChainableResponse => {
+	const response: MockChainableResponse = {
+		status: vi.fn<(code: number) => MockChainableResponse>(),
+		json: vi.fn<(body: unknown) => MockChainableResponse>(),
+	};
+	response.status.mockReturnValue(response);
+	response.json.mockReturnValue(response);
+	return response;
+};
+
+describe("sendProsopoError", () => {
+	it("answers with the code's status and the public body", () => {
+		const response = mockChainableResponse();
+
+		sendProsopoError(
+			response,
+			new ProsopoError({ code: "UNAUTHORIZED", errorSite: "APIX-1" }),
+		);
+
+		expect(response.status).toHaveBeenCalledWith(401);
+		expect(response.json).toHaveBeenCalledWith({
+			error: {
+				code: "UNAUTHORIZED",
+				errorId: "UNAUTHORIZED:APIX-1",
+				status: 401,
+				message: "Unauthorized",
+			},
+		});
+	});
+
+	it("honours a status override", () => {
+		const response = mockChainableResponse();
+
+		sendProsopoError(
+			response,
+			new ProsopoError({
+				code: "ACCESS_POLICY_BLOCK",
+				errorSite: "APIX-1",
+				status: 401,
+			}),
+		);
+
+		expect(response.status).toHaveBeenCalledWith(401);
+	});
+
+	it("hides a non-public error behind BACKEND_ERROR", () => {
+		const response = mockChainableResponse();
+
+		sendProsopoError(
+			response,
+			new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "APIX-1",
+				context: { query: "secret" },
+			}),
+		);
+
+		expect(response.json).toHaveBeenCalledWith({
+			error: {
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:APIX-1",
+				status: 500,
+			},
+		});
+	});
+
+	it("returns what json returns, so a handler can return the response", () => {
+		const response = mockChainableResponse();
+
+		expect(
+			sendProsopoError(
+				response,
+				new ProsopoError({ code: "FORBIDDEN", errorSite: "APIX-1" }),
+			),
+		).toBe(response);
 	});
 });

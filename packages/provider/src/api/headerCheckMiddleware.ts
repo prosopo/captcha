@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { handleErrors } from "@prosopo/api-express-router";
+import { handleErrors, sendProsopoError } from "@prosopo/api-express-router";
+import { ProsopoError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 import { validateAddr, validateSiteKey } from "./validateAddress.js";
@@ -24,11 +25,25 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 			const siteKey = req.headers["prosopo-site-key"] as string;
 
 			if (!user) {
-				unauthorised(res);
+				sendProsopoError(
+					res,
+					new ProsopoError({
+						code: "UNAUTHORIZED",
+						errorSite: "PROV-86",
+						message: "Missing prosopo-user header",
+					}),
+				);
 				return;
 			}
 			if (!siteKey) {
-				unauthorised(res);
+				sendProsopoError(
+					res,
+					new ProsopoError({
+						code: "UNAUTHORIZED",
+						errorSite: "PROV-87",
+						message: "Missing prosopo-site-key header",
+					}),
+				);
 				return;
 			}
 
@@ -54,6 +69,3 @@ export const headerCheckMiddleware = (env: ProviderEnvironment) => {
 		}
 	};
 };
-
-const unauthorised = (res: Response) =>
-	res.status(401).json({ error: "Unauthorized", message: "Unauthorized" });

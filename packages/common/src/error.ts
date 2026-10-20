@@ -15,17 +15,31 @@
 import type { ApiJsonError } from "@prosopo/types";
 import { ERROR_CODES, type ErrorCode } from "./errorCodes.js";
 
+// How errors work:
+// - Throw `new ProsopoError({ code, errorSite })`. The code says WHAT failed
+//   (UPPER_SNAKE, defined once in errorCodes.ts with its status and whether a
+//   client may see it); the site says WHERE (see `ErrorSites`).
+// - `errorId` is `<CODE>:<SITE>`, e.g. `SITE_KEY_INVALID:PROV-31`. It is what
+//   a user quotes and what we grep for to find the throw.
+// - Edges answer with `toPublicError`: a public error shows its code, message
+//   and data; any other shows only `BACKEND_ERROR:<SITE>` or
+//   `FRONTEND_ERROR:<SITE>`, so internals never leak but the site still does.
+
 /**
- * Every throw site id, e.g. `PROV-12`. Each package declares its own in
- * `src/errorSites.ts` by augmenting this interface, so a typo is a type error.
- * Uniqueness across packages is checked by the `error-sites` unit test in
- * `@prosopo/scripts`, because declaration merging silently accepts duplicates.
+ * Every throw site id: `<PREFIX>-<N>`, e.g. `PROV-12`. The prefix is one per
+ * package and N counts up; a site is never reused or renumbered, so an errorId
+ * a user reported keeps pointing at the same line. Each package declares its
+ * own in `src/errorSites.ts` by augmenting this interface, so a typo is a type
+ * error. `tests/errorSites.unit.test.ts` checks the format, one prefix per
+ * package, and that each site is declared and used exactly once, because
+ * declaration merging silently accepts duplicates.
  */
 // biome-ignore lint/suspicious/noEmptyInterface: augmented per package
 export interface ErrorSites {}
 
 export type ErrorSite = Extract<keyof ErrorSites, string>;
 
+/** `<CODE>:<SITE>`, e.g. `SITE_KEY_INVALID:PROV-31`. */
 export type ErrorId<C extends string = ErrorCode> = `${C}:${ErrorSite}`;
 
 export type ErrorOrigin = "BACKEND_ERROR" | "FRONTEND_ERROR";

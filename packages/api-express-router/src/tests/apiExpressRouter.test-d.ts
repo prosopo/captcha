@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import type { ApiEndpoint, ApiRoutesProvider } from "@prosopo/api-route";
+import type { ProsopoError } from "@prosopo/common";
 import type { LogLevel } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
 import type {
@@ -34,6 +35,7 @@ import {
 	createApiExpressDefaultEndpointAdapter,
 	handleErrors,
 	requestLoggerMiddleware,
+	sendProsopoError,
 	verifySignature,
 } from "../index.js";
 
@@ -53,6 +55,7 @@ describe("the barrel's shape", () => {
 			| "createMemoryJwtReplayGuard"
 			| "verifySignature"
 			| "requestLoggerMiddleware"
+			| "sendProsopoError"
 		>();
 	});
 });
@@ -194,5 +197,19 @@ describe("the error handler", () => {
 	test("rejects being mounted as an ordinary handler", () => {
 		// @ts-expect-error - the first parameter is an error, not a request
 		assertType<RequestHandler>(handleErrors);
+	});
+});
+
+describe("sendProsopoError", () => {
+	test("hands back the express response it was given, so a handler can return it", () => {
+		expectTypeOf(sendProsopoError<Response>).returns.toEqualTypeOf<Response>();
+		expectTypeOf(sendProsopoError<Response>)
+			.parameter(1)
+			.toEqualTypeOf<ProsopoError>();
+	});
+
+	test("rejects a raw Error, which has no code or site to report", () => {
+		// @ts-expect-error - only a ProsopoError carries a code and site
+		sendProsopoError({} as Response, new Error("boom"));
 	});
 });
