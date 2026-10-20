@@ -31,7 +31,8 @@ export default function formFillerInjector(): Plugin {
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         function fillFormWithDefaults() {
-          const inputs = document.querySelectorAll('input, select, textarea');
+          // Only the demo form: the sidebar's pickers reload the page on change.
+          const inputs = document.querySelectorAll('form input, form select, form textarea');
           const filledElements = [];
 
           inputs.forEach(input => {
