@@ -187,6 +187,14 @@ export const ERROR_CODES = {
 		public: true,
 	},
 
+	INVALID_URL: { message: "Invalid URL", status: 400, public: true },
+	INVALID_TIER_REQUEST_QUOTA: {
+		message: "No plan matches the requested tier",
+		status: 400,
+		public: true,
+	},
+	EMAIL_SEND_FAILED: { message: "Failed to send email", public: true },
+	USER_NOT_FOUND: { message: "User not found", status: 404, public: true },
 	ACCOUNT_NOT_FOUND: {
 		message: "Account not found",
 		status: 404,
