@@ -17,7 +17,11 @@ import {
 	MAX_AUTO_ESCALATION_LEVEL,
 	MAX_AUTO_ESCALATION_LEVEL_TOUCH,
 	PUZZLE_DIFFICULTY_LEVELS,
+	TOUCH_MIN_PIECE_SCALE,
+	TOUCH_MIN_TOLERANCE_PX,
 	clampDifficultyLevel,
+	easePieceScaleForTouch,
+	easeToleranceForTouch,
 	puzzleDifficultyToSeverity,
 	resolveMaxEscalationLevel,
 	severityToPuzzleDifficulty,
@@ -214,5 +218,68 @@ describe("resolveMaxEscalationLevel", () => {
 		expect(touch.tolerance.min).toBeGreaterThan(pointer.tolerance.min);
 		expect(touch.pieceScale.min).toBeGreaterThan(pointer.pieceScale.min);
 		expect(touch.decoyCount.max).toBeLessThan(pointer.decoyCount.max);
+	});
+});
+
+describe("touch easing", () => {
+	it("raises a tolerance below the touch floor", () => {
+		expect(easeToleranceForTouch(5)).toBe(TOUCH_MIN_TOLERANCE_PX);
+		expect(easeToleranceForTouch(8)).toBe(TOUCH_MIN_TOLERANCE_PX);
+	});
+
+	it("leaves a tolerance at or above the floor alone", () => {
+		expect(easeToleranceForTouch(TOUCH_MIN_TOLERANCE_PX)).toBe(
+			TOUCH_MIN_TOLERANCE_PX,
+		);
+		expect(easeToleranceForTouch(15)).toBe(15);
+	});
+
+	it("never tightens a tolerance", () => {
+		for (const tolerance of [1, 5, 10, 12, 15, 20, 1000]) {
+			expect(easeToleranceForTouch(tolerance)).toBeGreaterThanOrEqual(
+				tolerance,
+			);
+		}
+	});
+
+	it("raises both ends of a piece-scale range that sits under the floor", () => {
+		expect(easePieceScaleForTouch({ min: 0.05, max: 0.1 })).toEqual({
+			min: TOUCH_MIN_PIECE_SCALE,
+			max: TOUCH_MIN_PIECE_SCALE,
+		});
+	});
+
+	it("raises only the min when the max is already above the floor", () => {
+		expect(easePieceScaleForTouch({ min: 0.1, max: 0.28 })).toEqual({
+			min: TOUCH_MIN_PIECE_SCALE,
+			max: 0.28,
+		});
+	});
+
+	it("never inverts a piece-scale range", () => {
+		for (const range of [
+			{ min: 0.05, max: 0.05 },
+			{ min: 0.1, max: 0.28 },
+			{ min: 0.15, max: 0.45 },
+			{ min: 0.3, max: 0.3 },
+		]) {
+			const eased = easePieceScaleForTouch(range);
+			expect(eased.max).toBeGreaterThanOrEqual(eased.min);
+			expect(eased.min).toBeGreaterThanOrEqual(range.min);
+		}
+	});
+
+	it("eases the hardest level a touch device can be escalated to", () => {
+		const band = PUZZLE_DIFFICULTY_LEVELS[MAX_AUTO_ESCALATION_LEVEL_TOUCH];
+		expect(band).toBeDefined();
+		if (!band) return;
+		// The floors have to bite at the touch ceiling or they do nothing for
+		// the users this exists for.
+		expect(easeToleranceForTouch(band.tolerance.min)).toBeGreaterThan(
+			band.tolerance.min,
+		);
+		expect(easePieceScaleForTouch(band.pieceScale).min).toBeGreaterThan(
+			band.pieceScale.min,
+		);
 	});
 });

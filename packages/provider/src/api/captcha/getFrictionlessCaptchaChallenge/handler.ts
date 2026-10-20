@@ -396,9 +396,11 @@ export default (
 									dedupUserAgent,
 									dedup.session.webView,
 									{
+										headers: dedupFlatHeaders,
 										...(typeof dedupIsMobile === "boolean" && {
-											isMobile: dedupIsMobile,
+											carrierNetwork: dedupIsMobile,
 										}),
+										...(req.tcpMss !== undefined && { tcpMss: req.tcpMss }),
 									},
 								),
 								// Session-derived, like `score` and `webView` above:
@@ -963,7 +965,11 @@ export default (
 				baseImageRounds: env.config.captchas.solved.count,
 				puzzleMaxDifficulty: clientRecord.settings.puzzleMaxDifficulty,
 				platform: derivePlatform(requestUserAgent, webView, {
-					...(typeof ipInfoMobile === "boolean" && { isMobile: ipInfoMobile }),
+					headers: flatHeaders,
+					...(typeof ipInfoMobile === "boolean" && {
+						carrierNetwork: ipInfoMobile,
+					}),
+					...(req.tcpMss !== undefined && { tcpMss: req.tcpMss }),
 				}),
 				// Straight from the payload this request arrived with — the
 				// session record is written from the same value.
