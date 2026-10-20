@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { RedisWriteQueue } from "@prosopo/database";
-import type { TranslationKey } from "@prosopo/locale";
+import type { TranslateFn, TranslationKey } from "@prosopo/locale";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	ApiParams,
@@ -814,7 +814,7 @@ export class CaptchaManager {
 	getVerificationResponse(
 		verified: boolean,
 		clientRecord: ClientRecord,
-		translateFn: (key: string) => string,
+		translateFn: TranslateFn,
 		score?: number,
 		reason?: string,
 		sessionId?: string,

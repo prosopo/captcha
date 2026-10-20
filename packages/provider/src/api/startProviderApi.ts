@@ -24,7 +24,7 @@ import {
 	requestLoggerMiddleware,
 } from "@prosopo/api-express-router";
 import type { ProviderEnvironment } from "@prosopo/env";
-import { i18nMiddleware } from "@prosopo/locale";
+import { LANGUAGE_HEADER, i18nMiddleware } from "@prosopo/locale";
 import { parseLogLevel } from "@prosopo/logger";
 import {
 	AdminApiPaths,
@@ -36,7 +36,7 @@ import {
 	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy/api";
 import type { JWT } from "@prosopo/util-crypto";
-import cors from "cors";
+import cors, { type CorsOptions } from "cors";
 import express from "express";
 import type { Request } from "express";
 import rateLimit, { type Options } from "express-rate-limit";
@@ -79,6 +79,26 @@ const crtPath = path.join(certPath, "server.crt");
  * Check if TLS certificates are available
  * @returns True if both key and cert files exist
  */
+/**
+ * CORS for the client API. See the comment where it is applied.
+ * `Prosopo-Lang` carries the widget's language list (see @prosopo/locale).
+ */
+export const providerCorsOptions: CorsOptions = {
+	exposedHeaders: ["x-prosopo-meta"],
+	allowedHeaders: [
+		"Accept",
+		"Accept-Language",
+		"Authorization",
+		"Content-Language",
+		"Content-Type",
+		LANGUAGE_HEADER,
+		"Prosopo-Site-Key",
+		"Prosopo-User",
+		"x-prosopo-meta",
+	],
+	maxAge: 86400,
+};
+
 export const isTlsAvailable = (): boolean => {
 	return fs.existsSync(keyPath) && fs.existsSync(crtPath);
 };
@@ -256,22 +276,7 @@ export async function startProviderApi(
 	// `maxAge: 86400` lets browsers cache the preflight result for 24h; the
 	// cors default is unset and most browsers fall back to 5s, so without
 	// this every /captcha/* call repays the OPTIONS round-trip.
-	apiApp.use(
-		cors({
-			exposedHeaders: ["x-prosopo-meta"],
-			allowedHeaders: [
-				"Accept",
-				"Accept-Language",
-				"Authorization",
-				"Content-Language",
-				"Content-Type",
-				"Prosopo-Site-Key",
-				"Prosopo-User",
-				"x-prosopo-meta",
-			],
-			maxAge: 86400,
-		}),
-	);
+	apiApp.use(cors(providerCorsOptions));
 	// The detector-pool push carries the entire pool in a single body: one
 	// obfuscated bundle is ~830 KB, so a 100-bundle pool JSON-encodes to ~86 MB
 	// (the obfuscated output is near-ASCII, so JSON escaping only adds ~2%).

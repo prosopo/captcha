@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n, Translator } from "@prosopo/locale";
+import {
+	type Ti18n,
+	type Translator,
+	createUntranslatedI18n,
+} from "@prosopo/locale";
 import type {
 	AudioEvent,
 	FrictionlessState,
@@ -41,7 +45,7 @@ import {
 } from "./managerHarness.js";
 
 /** The widget only ever reads `language`/`changeLanguage` off this. */
-const i18n = (): Ti18n => undefined as unknown as Ti18n;
+const i18n = (): Ti18n => createUntranslatedI18n();
 
 describe("the package entrypoint's types", () => {
 	test("mountProcaptchaAudio takes a host element and the shared widget props", () => {
@@ -62,7 +66,7 @@ describe("the package entrypoint's types", () => {
 		>();
 	});
 
-	test("config, callbacks and i18n are all required", () => {
+	test("config and callbacks are required; i18n is optional", () => {
 		// @ts-expect-error - a widget with no config has no provider to talk to.
 		assertType<ProcaptchaProps>({ callbacks: {}, i18n: i18n() });
 		// @ts-expect-error - callbacks decide what a solve reports back.
@@ -72,6 +76,7 @@ describe("the package entrypoint's types", () => {
 			callbacks: {},
 			i18n: i18n(),
 		});
+		assertType<ProcaptchaProps>({ config: config(), callbacks: {} });
 	});
 });
 
@@ -148,7 +153,12 @@ describe("Manager's types", () => {
 });
 
 describe("AudioPlayer's types", () => {
-	const translator = (): Translator => undefined as unknown as Translator;
+	const translator = (): Translator => ({
+		t: (key: string): string => key,
+		isReady: (): boolean => true,
+		subscribe: (): (() => void) => () => undefined,
+		i18n: createUntranslatedI18n(),
+	});
 	const onComplete = (
 		_answer: string,
 		_replays: number,

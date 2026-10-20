@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Klarte ikkje å kode ugyldig adresse",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Forpliktinga for captcha-løysinga finst ikkje",
+		"SIGNER_UNDEFINED": "Signeraren er ikkje definert",
+		"CANNOT_FIND_KEYPAIR": "Finn ikkje nøkkelparet",
+		"INVALID_DATA_FORMAT": "Ugyldig dataformat"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Ukjent miljø førespurt",
+		"INVALID_CAPTCHA_NUMBER": "Konfigurer captcha-innstillingane rett",
+		"INVALID_LOG_LEVEL": "Ugyldig loggnivå",
+		"INVALID_PACKAGE_DIR": "Ugyldig pakkemappe"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Feil ved tolking av datasett",
+		"SOLUTION_PARSE_ERROR": "Feil ved tolking av datasett",
+		"HASH_ERROR": "Feil ved hashing av datasett",
+		"DATASET_ID_UNDEFINED": "Datasett-ID er ikkje definert",
+		"NOT_ENOUGH_LABELS": "Ikkje nok etikettar",
+		"NOT_ENOUGH_IMAGES": "Ikkje nok bilete",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Talet på captchaer i datasettet er lågare enn det konfigurerte talet på captchaer",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Talet på løysingar i datasettet er lågare enn det konfigurerte talet på løysingar",
+		"DUPLICATE_IMAGE": "fann duplisert bilete",
+		"MERKLE_ERROR": "Feil ved oppretting av merkletre"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Klarte ikkje å importere databasemotoren",
+		"DATABASE_UNDEFINED": "Databaseklienten er ikkje tilkopla",
+		"DATABASE_HOST_UNDEFINED": "Adressa til databaseverten er ikkje definert",
+		"DATASET_LOAD_FAILED": "Innlasting av datasett mislukkast",
+		"DATASET_GET_FAILED": "Klarte ikkje å hente datasett",
+		"CAPTCHA_GET_FAILED": "Klarte ikkje å hente captcha",
+		"CAPTCHA_UPDATE_FAILED": "Klarte ikkje å oppdatere captcha",
+		"IMAGE_GET_FAILED": "Klarte ikkje å hente bilete",
+		"PENDING_RECORD_NOT_FOUND": "Fann ingen ventande post",
+		"INVALID_HASH": "Ugyldig hash",
+		"SOLUTION_GET_FAILED": "Klarte ikkje å hente løysing",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Fann ingen datasett med det naudsynte talet på løysingar",
+		"SOLUTION_APPROVE_FAILED": "Klarte ikkje å godkjenne løysinga",
+		"SOLUTION_FLAG_FAILED": "Klarte ikkje å merkje løysinga som handsama",
+		"TABLES_UNDEFINED": "Tabellar er ikkje definerte",
+		"CONNECTION_UNDEFINED": "Tilkopling er ikkje definert",
+		"COMMITMENT_FLAG_FAILED": "Klarte ikkje å merkje forpliktinga som handsama",
+		"UNKNOWN": "Ukjend databasefeil",
+		"QUERY_ERROR": "Databasespørjinga mislukkast",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis-tilkoplinga for tilgangsreglar er ikkje definert",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Lageret for tilgangsreglar for brukarar er ikkje definert",
+		"SESSION_STORE_FAILED": "Klarte ikkje å lagre økta",
+		"SESSION_CHECK_REMOVE_FAILED": "Klarte ikkje å sjekke og fjerne økta",
+		"SESSION_GET_FAILED": "Klarte ikkje å hente økta"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Kan ikkje endre eigarbrukaren",
+		"CANNOT_DELETE_OWN_USER": "Du kan ikkje slette din eigen konto",
+		"CANNOT_DELETE_LAST_USER": "Kan ikkje slette den siste brukaren",
+		"USER_ALREADY_EXISTS": "Brukaren finst allereie",
+		"NO_SUGGESTIONS_FOUND": "Fann ingen forslag",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Kan ikkje deaktivere den siste aktive nettstaden",
+		"DUPLICATE_SITE_NAME": "Det finst allereie ein nettstad med dette namnet",
+		"INVALID_SITE_NAME": "Nettstadnamnet kan berre innehalde bokstavar, tal, bindestrekar og understrekar"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Ugyldig parameter"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Fann ikkje fila",
+		"FILE_ALREADY_EXISTS": "Fila finst allereie",
+		"INVALID_DIR_FORMAT": "Ugyldig mappeformat"
+	}
+}

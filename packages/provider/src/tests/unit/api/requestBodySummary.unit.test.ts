@@ -148,7 +148,7 @@ describe("parse-failure logs on client routes", () => {
 		const app = express();
 		app.use(express.json({ limit: "1mb" }));
 		app.use((req: Request, _res: Response, next: NextFunction) => {
-			req.i18n = { t: i18n.t };
+			req.i18n = i18n;
 			req.logger = logger;
 			next();
 		});

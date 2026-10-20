@@ -16,12 +16,10 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import {
 	ViteFrontendConfig,
+	VitePluginCopy,
 	buildToken,
-	VitePluginRemoveUnusedTranslations,
 } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
-import { at, flatten } from "@prosopo/util";
-import fg from "fast-glob";
 import { defineConfig } from "vite";
 import { version } from "./package.json" with { type: "json" };
 
@@ -75,15 +73,6 @@ const copyDir = {
 	destDir: `${workspaceRoot}/packages/procaptcha-bundle/dist/bundle/locales`,
 };
 
-const localeFiles = await fg.glob(
-	`${workspaceRoot}/packages/locale/src/locales/**/*.json`,
-);
-
-const translationKeys = Object.keys(
-	flatten(JSON.parse(fs.readFileSync(at(localeFiles, 0), "utf-8"))),
-);
-
-// Merge with generic frontend config
 export default defineConfig(async ({ command, mode }) => {
 	// Test-only escape hatch for the firefox cypress leg: cypress can only
 	// dispatch trusted input over the chrome devtools protocol (chromium
@@ -214,25 +203,16 @@ export default defineConfig(async ({ command, mode }) => {
 			},
 		},
 		plugins: [
-			{
-				name: "copy-dir",
-				async writeBundle() {
-					if (copyDir) {
-						const containingFolder = path.dirname(copyDir.destDir);
-						if (!fs.existsSync(containingFolder)) {
-							fs.mkdirSync(containingFolder, { recursive: true });
-						}
-						console.log(`Copying ${copyDir.srcDir} to ${copyDir.destDir}`);
-						fs.cpSync(copyDir.srcDir, copyDir.destDir, {
-							recursive: true,
-						});
-					}
-				},
-			},
-			VitePluginRemoveUnusedTranslations(
-				translationKeys,
-				`${copyDir.destDir}/**/*.json`,
-			),
+			// Only the widget namespace: the browser renders nothing else, and
+			// the provider translates image labels itself. Copied whole: the
+			// provider sends any of these keys with an error for the widget to
+			// show, so stripping keys the bundle never names would leave those
+			// errors untranslated.
+			VitePluginCopy({
+				srcDir: copyDir.srcDir,
+				destDir: copyDir.destDir,
+				include: ["*/widget.json"],
+			}),
 
 			...(frontendConfig.plugins ? frontendConfig.plugins : []),
 		],

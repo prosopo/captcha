@@ -96,7 +96,7 @@ describe("ViteTestConfig", () => {
 		asPackage();
 		process.env.TEST_TYPE = "unit";
 		expect(ViteTestConfig().test?.exclude).toContain(
-			"src/**/*.@(integration).@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)",
+			"src/**/*.@(integration|browser).@(test|spec).@(mts|cts|mjs|cjs|js|ts|tsx|jsx)",
 		);
 	});
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { TranslationKey, Translator } from "@prosopo/locale";
+import type { Translator, WidgetTranslationKey } from "@prosopo/locale";
 import {
 	type AudioAlternativeFooterProps,
 	type AudioAlternativeOffer,
@@ -82,8 +82,10 @@ export const mountIconOrderCanvas = (
 	let shakeTimer: ReturnType<typeof setTimeout> | undefined;
 	const markers: HTMLDivElement[] = [];
 
-	const t = (key: TranslationKey, options?: Record<string, unknown>): string =>
-		props.translator.t(key, options);
+	const t = (
+		key: WidgetTranslationKey,
+		options?: Record<string, unknown>,
+	): string => props.translator.t(key, options);
 
 	const style = createElement("style", { text: SHAKE_KEYFRAMES });
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { TranslationKey, Translator } from "@prosopo/locale";
+import type { Translator, WidgetTranslationKey } from "@prosopo/locale";
 import {
 	type ChallengeSurfaceComponent,
 	type ChallengeSurfaceProps,
@@ -95,8 +95,10 @@ export const mountAudioPlayer = (
 	let events: AudioEvent[] = [];
 	let startedAt = Date.now();
 
-	const t = (key: TranslationKey, options?: Record<string, unknown>): string =>
-		props.translator.t(key, options);
+	const t = (
+		key: WidgetTranslationKey,
+		options?: Record<string, unknown>,
+	): string => props.translator.t(key, options);
 
 	const record = (kind: AudioEvent["kind"]) => {
 		events.push({ kind, t: Date.now() - startedAt });

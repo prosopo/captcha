@@ -46,7 +46,7 @@ const buildReqRes = (body: unknown) => {
 			error: vi.fn(),
 			debug: vi.fn(),
 		},
-		i18n: { t: (s: string) => s },
+		i18n: { t: (s: string): string => s, exists: (): boolean => false },
 	};
 	const res = {
 		json: vi.fn().mockReturnValue(undefined),

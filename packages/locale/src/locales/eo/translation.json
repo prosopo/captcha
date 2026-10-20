@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Malsukcesis kodi nevalidan adreson",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Devontigo de captcha-solvo ne ekzistas",
+		"SIGNER_UNDEFINED": "Subskribinto ne difinita",
+		"CANNOT_FIND_KEYPAIR": "Ne eblas trovi ŝlosilparon",
+		"INVALID_DATA_FORMAT": "Nevalida datumformato"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Nekonata medio petita",
+		"INVALID_CAPTCHA_NUMBER": "Bonvolu ĝuste agordi la captcha-agordojn",
+		"INVALID_LOG_LEVEL": "Nevalida protokolnivelo",
+		"INVALID_PACKAGE_DIR": "Nevalida paka dosierujo"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Eraro dum analizo de datumaro",
+		"SOLUTION_PARSE_ERROR": "Eraro dum prilaboro de datumaro",
+		"HASH_ERROR": "Eraro dum haketado de datumaro",
+		"DATASET_ID_UNDEFINED": "Datumaro-ID ne difinita",
+		"NOT_ENOUGH_LABELS": "Ne sufiĉe da etikedoj",
+		"NOT_ENOUGH_IMAGES": "Ne sufiĉe da bildoj",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "La nombro de captcha en la datumaro estas malpli ol la agordita nombro",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "La nombro de solvoj en la datumaro estas malpli ol la agordita nombro",
+		"DUPLICATE_IMAGE": "Duobla bildo detektita",
+		"MERKLE_ERROR": "Eraro dum konstruado de Merkle-arbo"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Malsukcesis importi datumbazan motoron",
+		"DATABASE_UNDEFINED": "Datumbaza kliento ne konektita",
+		"DATABASE_HOST_UNDEFINED": "Datumbaza gastiga adreso ne difinita",
+		"DATASET_LOAD_FAILED": "Ŝargado de datumaro malsukcesis",
+		"DATASET_GET_FAILED": "Malsukcesis akiri datumaron",
+		"CAPTCHA_GET_FAILED": "Malsukcesis akiri captcha",
+		"CAPTCHA_UPDATE_FAILED": "Malsukcesis ĝisdatigi captcha",
+		"IMAGE_GET_FAILED": "Malsukcesis akiri bildon",
+		"PENDING_RECORD_NOT_FOUND": "Neniuj atendantaj registroj troviĝis",
+		"INVALID_HASH": "Nevalida haketo",
+		"SOLUTION_GET_FAILED": "Malsukcesis akiri solvon",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Neniu datumaro kun la bezonata nombro de solvoj troviĝis",
+		"SOLUTION_APPROVE_FAILED": "Malsukcesis aprobi solvon",
+		"SOLUTION_FLAG_FAILED": "Malsukcesis marki solvon kiel prilaboritan",
+		"TABLES_UNDEFINED": "Tabeloj ne difinitaj",
+		"CONNECTION_UNDEFINED": "Konekto ne difinita",
+		"COMMITMENT_FLAG_FAILED": "Malsukcesis marki devontigon kiel prilaboritan",
+		"UNKNOWN": "Nekonata datumbaza eraro",
+		"QUERY_ERROR": "Datumbaza informpeto malsukcesis",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis-konekto por alirreguloj ne difinita",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Konservejo de uzantaj alirreguloj ne difinita",
+		"SESSION_STORE_FAILED": "Malsukcesis konservi seancon",
+		"SESSION_CHECK_REMOVE_FAILED": "Malsukcesis kontroli kaj forigi seancon",
+		"SESSION_GET_FAILED": "Malsukcesis akiri seancon"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Ne eblas ŝanĝi la posedantan uzanton",
+		"CANNOT_DELETE_OWN_USER": "Ne eblas forigi vian propran konton",
+		"CANNOT_DELETE_LAST_USER": "Ne eblas forigi la lastan uzanton",
+		"USER_ALREADY_EXISTS": "Uzanto jam ekzistas",
+		"NO_SUGGESTIONS_FOUND": "Neniuj sugestoj troviĝis",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Ne eblas malaktivigi la lastan aktivan retejon",
+		"DUPLICATE_SITE_NAME": "Retejo kun ĉi tiu nomo jam ekzistas",
+		"INVALID_SITE_NAME": "Reteja nomo povas enhavi nur literojn, ciferojn, substrekojn kaj streketojn"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Nevalida parametro"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Dosiero ne troviĝis",
+		"FILE_ALREADY_EXISTS": "Dosiero jam ekzistas",
+		"INVALID_DIR_FORMAT": "Nevalida dosieruja formato"
+	}
+}

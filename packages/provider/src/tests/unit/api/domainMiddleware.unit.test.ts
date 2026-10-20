@@ -99,7 +99,7 @@ beforeAll(async () => {
 	const app = express();
 	app.use((req, _res, next) => {
 		req.t = t;
-		req.i18n = { t };
+		req.i18n = i18n;
 		req.logger = getLogger("error", "test:domain-middleware");
 		next();
 	});

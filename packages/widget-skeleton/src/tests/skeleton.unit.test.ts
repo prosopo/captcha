@@ -17,6 +17,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import {
 	WIDGET_MAX_WIDTH,
 	WIDGET_MIN_HEIGHT,
+	WIDGET_MIN_WIDTH,
 	WIDGET_OUTER_HEIGHT,
 } from "../constants.js";
 import {
@@ -31,6 +32,30 @@ import { type Theme, darkTheme, lightTheme } from "../theme.js";
 
 const skeletonOf = (theme: Theme): HTMLElement =>
 	createWidgetSkeletonElement(theme).element;
+
+/** Reads one rule's declarations out of the generated stylesheet. */
+const declarationsFor = (
+	styles: string,
+	selector: string,
+): Map<string, string> => {
+	const body: string =
+		styles
+			.replace(/\/\*[\s\S]*?\*\//g, "")
+			.split("}")
+			.find((rule: string) => rule.split("{")[0]?.trim() === selector)
+			?.split("{")[1] ?? "";
+
+	return new Map(
+		body
+			.split(";")
+			.map((declaration: string) => declaration.split(":"))
+			.filter((parts: string[]) => 2 === parts.length)
+			.map(([property, value]: string[]) => [
+				(property ?? "").trim(),
+				(value ?? "").trim(),
+			]),
+	);
+};
 
 const originalNodeEnv: string | undefined = process.env.NODE_ENV;
 
@@ -107,6 +132,75 @@ describe("createWidgetSkeletonElement", () => {
 		expect(styles).toContain(WIDGET_MAX_WIDTH);
 		expect(styles).toContain(WIDGET_MIN_HEIGHT);
 		expect(styles).toContain(`height: ${WIDGET_OUTER_HEIGHT}px`);
+	});
+
+	describe("intrinsic width", () => {
+		// A host that sizes the widget by measuring it — an inline-block, a
+		// float, an auto-sized grid or flex item — asks how wide the widget
+		// wants to be. __wrapper is size contained so it answers with nothing,
+		// and every other box sizes in percentages, which resolve as `auto`
+		// against an indefinite width. __intrinsic answers in their place.
+		// Layout assertions live in intrinsicWidth.browser.test.ts; these pin
+		// the declarations that produce it.
+
+		test("states both intrinsic widths on a wrapping line", () => {
+			const styles: string =
+				skeletonOf(lightTheme).querySelector("style")?.textContent ?? "";
+			const row: Map<string, string> = declarationsFor(
+				styles,
+				".prosopo-widget__intrinsic",
+			);
+			// Wrapping is what keeps min-content at the floor rather than the
+			// sum: without it both boxes stay on one line and the widget
+			// overflows every host narrower than its natural width.
+			expect(row.get("display")).toBe("flex !important");
+			expect(row.get("flex-wrap")).toBe("wrap !important");
+			// It measures; it must never paint.
+			expect(row.get("height")).toBe("0 !important");
+			expect(row.get("overflow")).toBe("hidden !important");
+
+			const first: Map<string, string> = declarationsFor(
+				styles,
+				".prosopo-widget__intrinsic > i:first-child",
+			);
+			const last: Map<string, string> = declarationsFor(
+				styles,
+				".prosopo-widget__intrinsic > i:last-child",
+			);
+			// min-content: the wider box. max-content: the pair.
+			expect(first.get("width")).toBe(`${WIDGET_MIN_WIDTH} !important`);
+			expect(last.get("width")).toBe(
+				`calc(${WIDGET_MAX_WIDTH} - ${WIDGET_MIN_WIDTH}) !important`,
+			);
+		});
+
+		test("renders the row as a sibling of the contained wrapper", () => {
+			// Inside __wrapper it would be size contained too, and measure
+			// nothing. It has to sit in the box whose width is in question.
+			const outer: Element | null = skeletonOf(lightTheme).querySelector(
+				".prosopo-widget__outer",
+			);
+			const row: Element | null | undefined = outer?.querySelector(
+				":scope > .prosopo-widget__intrinsic",
+			);
+			expect(row).not.toBeNull();
+			expect(row?.children).toHaveLength(2);
+			// Empty measuring boxes, not content.
+			expect(row?.getAttribute("aria-hidden")).toBe("true");
+			expect(row?.textContent).toBe("");
+		});
+
+		test("leaves __outer free to fill or shrink", () => {
+			// A definite width here would set min-content as well as
+			// max-content, and the widget would overflow any shrink-to-fit host
+			// narrower than its natural width instead of shrinking into it.
+			const outer: Map<string, string> = declarationsFor(
+				skeletonOf(lightTheme).querySelector("style")?.textContent ?? "",
+				".prosopo-widget__outer",
+			);
+			expect(outer.get("width")).toBe("auto");
+			expect(outer.get("max-width")).toBe(WIDGET_MAX_WIDTH);
+		});
 	});
 
 	test("neutralises pseudo elements the embedding page may inject", () => {

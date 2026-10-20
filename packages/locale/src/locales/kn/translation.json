@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "ಅಮಾನ್ಯ ವಿಳಾಸವನ್ನು ಎನ್‌ಕೋಡ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "captcha ಪರಿಹಾರದ ಬದ್ಧತೆ ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ",
+		"SIGNER_UNDEFINED": "ಸಹಿದಾರರನ್ನು ವ್ಯಾಖ್ಯಾನಿಸಲಾಗಿಲ್ಲ",
+		"CANNOT_FIND_KEYPAIR": "ಕೀ ಜೋಡಿ ಕಂಡುಬಂದಿಲ್ಲ",
+		"INVALID_DATA_FORMAT": "ಅಮಾನ್ಯ ಡೇಟಾ ಸ್ವರೂಪ"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "ಅಜ್ಞಾತ ಪರಿಸರವನ್ನು ವಿನಂತಿಸಲಾಗಿದೆ",
+		"INVALID_CAPTCHA_NUMBER": "ದಯವಿಟ್ಟು captcha ಕಾನ್ಫಿಗರೇಶನ್‌ಗಳನ್ನು ಸರಿಯಾಗಿ ಹೊಂದಿಸಿ",
+		"INVALID_LOG_LEVEL": "ಅಮಾನ್ಯ ಲಾಗ್ ಮಟ್ಟ",
+		"INVALID_PACKAGE_DIR": "ಅಮಾನ್ಯ ಪ್ಯಾಕೇಜ್ ಡೈರೆಕ್ಟರಿ"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "ಡೇಟಾಸೆಟ್ ಪಾರ್ಸ್ ಮಾಡುವಲ್ಲಿ ದೋಷ",
+		"SOLUTION_PARSE_ERROR": "ಡೇಟಾಸೆಟ್ ಸಂಸ್ಕರಿಸುವಲ್ಲಿ ದೋಷ",
+		"HASH_ERROR": "ಡೇಟಾಸೆಟ್ ಹ್ಯಾಶ್ ಮಾಡುವಲ್ಲಿ ದೋಷ",
+		"DATASET_ID_UNDEFINED": "ಡೇಟಾಸೆಟ್ ID ವ್ಯಾಖ್ಯಾನಿಸಲಾಗಿಲ್ಲ",
+		"NOT_ENOUGH_LABELS": "ಸಾಕಷ್ಟು ಲೇಬಲ್‌ಗಳಿಲ್ಲ",
+		"NOT_ENOUGH_IMAGES": "ಸಾಕಷ್ಟು ಚಿತ್ರಗಳಿಲ್ಲ",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "ಡೇಟಾಸೆಟ್‌ನಲ್ಲಿರುವ captcha ಗಳ ಸಂಖ್ಯೆ ಕಾನ್ಫಿಗರ್ ಮಾಡಿದ ಸಂಖ್ಯೆಗಿಂತ ಕಡಿಮೆ ಇದೆ",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "ಡೇಟಾಸೆಟ್‌ನಲ್ಲಿರುವ ಪರಿಹಾರಗಳ ಸಂಖ್ಯೆ ಕಾನ್ಫಿಗರ್ ಮಾಡಿದ ಸಂಖ್ಯೆಗಿಂತ ಕಡಿಮೆ ಇದೆ",
+		"DUPLICATE_IMAGE": "ನಕಲಿ ಚಿತ್ರ ಪತ್ತೆಯಾಗಿದೆ",
+		"MERKLE_ERROR": "ಮರ್ಕಲ್ ಟ್ರೀ ರಚಿಸುವಲ್ಲಿ ದೋಷ"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "ಡೇಟಾಬೇಸ್ ಎಂಜಿನ್ ಆಮದು ಮಾಡಲು ವಿಫಲವಾಗಿದೆ",
+		"DATABASE_UNDEFINED": "ಡೇಟಾಬೇಸ್ ಕ್ಲೈಂಟ್ ಸಂಪರ್ಕಗೊಂಡಿಲ್ಲ",
+		"DATABASE_HOST_UNDEFINED": "ಡೇಟಾಬೇಸ್ ಹೋಸ್ಟ್ ವಿಳಾಸವನ್ನು ವ್ಯಾಖ್ಯಾನಿಸಲಾಗಿಲ್ಲ",
+		"DATASET_LOAD_FAILED": "ಡೇಟಾಸೆಟ್ ಲೋಡ್ ವಿಫಲವಾಗಿದೆ",
+		"DATASET_GET_FAILED": "ಡೇಟಾಸೆಟ್ ಪಡೆಯಲು ವಿಫಲವಾಗಿದೆ",
+		"CAPTCHA_GET_FAILED": "captcha ಪಡೆಯಲು ವಿಫಲವಾಗಿದೆ",
+		"CAPTCHA_UPDATE_FAILED": "captcha ನವೀಕರಿಸಲು ವಿಫಲವಾಗಿದೆ",
+		"IMAGE_GET_FAILED": "ಚಿತ್ರ ಪಡೆಯಲು ವಿಫಲವಾಗಿದೆ",
+		"PENDING_RECORD_NOT_FOUND": "ಬಾಕಿ ಇರುವ ಯಾವುದೇ ದಾಖಲೆ ಕಂಡುಬಂದಿಲ್ಲ",
+		"INVALID_HASH": "ಅಮಾನ್ಯ ಹ್ಯಾಶ್",
+		"SOLUTION_GET_FAILED": "ಪರಿಹಾರ ಪಡೆಯಲು ವಿಫಲವಾಗಿದೆ",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "ಅಗತ್ಯ ಸಂಖ್ಯೆಯ ಪರಿಹಾರಗಳಿರುವ ಯಾವುದೇ ಡೇಟಾಸೆಟ್ ಕಂಡುಬಂದಿಲ್ಲ",
+		"SOLUTION_APPROVE_FAILED": "ಪರಿಹಾರವನ್ನು ಅನುಮೋದಿಸಲು ವಿಫಲವಾಗಿದೆ",
+		"SOLUTION_FLAG_FAILED": "ಪರಿಹಾರವನ್ನು ಸಂಸ್ಕರಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಲು ವಿಫಲವಾಗಿದೆ",
+		"TABLES_UNDEFINED": "ಕೋಷ್ಟಕಗಳನ್ನು ವ್ಯಾಖ್ಯಾನಿಸಲಾಗಿಲ್ಲ",
+		"CONNECTION_UNDEFINED": "ಸಂಪರ್ಕವನ್ನು ವ್ಯಾಖ್ಯಾನಿಸಲಾಗಿಲ್ಲ",
+		"COMMITMENT_FLAG_FAILED": "ಬದ್ಧತೆಯನ್ನು ಸಂಸ್ಕರಿಸಲಾಗಿದೆ ಎಂದು ಗುರುತಿಸಲು ವಿಫಲವಾಗಿದೆ",
+		"UNKNOWN": "ಅಜ್ಞಾತ ಡೇಟಾಬೇಸ್ ದೋಷ",
+		"QUERY_ERROR": "ಡೇಟಾಬೇಸ್ ಕ್ವೆರಿ ವಿಫಲವಾಗಿದೆ",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "ಪ್ರವೇಶ ನಿಯಮಗಳ Redis ಸಂಪರ್ಕವನ್ನು ವ್ಯಾಖ್ಯಾನಿಸಲಾಗಿಲ್ಲ",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "ಬಳಕೆದಾರ ಪ್ರವೇಶ ನಿಯಮಗಳ ಸಂಗ್ರಹಣೆಯನ್ನು ವ್ಯಾಖ್ಯಾನಿಸಲಾಗಿಲ್ಲ",
+		"SESSION_STORE_FAILED": "ಸೆಷನ್ ಸಂಗ್ರಹಿಸಲು ವಿಫಲವಾಗಿದೆ",
+		"SESSION_CHECK_REMOVE_FAILED": "ಸೆಷನ್ ಪರಿಶೀಲಿಸಿ ತೆಗೆದುಹಾಕಲು ವಿಫಲವಾಗಿದೆ",
+		"SESSION_GET_FAILED": "ಸೆಷನ್ ಪಡೆಯಲು ವಿಫಲವಾಗಿದೆ"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "ಮಾಲೀಕ ಬಳಕೆದಾರರನ್ನು ಮಾರ್ಪಡಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ",
+		"CANNOT_DELETE_OWN_USER": "ನಿಮ್ಮ ಸ್ವಂತ ಖಾತೆಯನ್ನು ಅಳಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ",
+		"CANNOT_DELETE_LAST_USER": "ಕೊನೆಯ ಬಳಕೆದಾರರನ್ನು ಅಳಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ",
+		"USER_ALREADY_EXISTS": "ಬಳಕೆದಾರರು ಈಗಾಗಲೇ ಅಸ್ತಿತ್ವದಲ್ಲಿದ್ದಾರೆ",
+		"NO_SUGGESTIONS_FOUND": "ಯಾವುದೇ ಸಲಹೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+		"CANNOT_DEACTIVATE_LAST_SITE": "ಕೊನೆಯ ಸಕ್ರಿಯ ಸೈಟ್ ಅನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ",
+		"DUPLICATE_SITE_NAME": "ಈ ಹೆಸರಿನ ಸೈಟ್ ಈಗಾಗಲೇ ಅಸ್ತಿತ್ವದಲ್ಲಿದೆ",
+		"INVALID_SITE_NAME": "ಸೈಟ್ ಹೆಸರಿನಲ್ಲಿ ಅಕ್ಷರಗಳು, ಸಂಖ್ಯೆಗಳು, ಹೈಫನ್‌ಗಳು ಮತ್ತು ಅಂಡರ್‌ಸ್ಕೋರ್‌ಗಳು ಮಾತ್ರ ಇರಬಹುದು"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "ಅಮಾನ್ಯ ಪ್ಯಾರಾಮೀಟರ್"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "ಫೈಲ್ ಕಂಡುಬಂದಿಲ್ಲ",
+		"FILE_ALREADY_EXISTS": "ಫೈಲ್ ಈಗಾಗಲೇ ಅಸ್ತಿತ್ವದಲ್ಲಿದೆ",
+		"INVALID_DIR_FORMAT": "ಅಮಾನ್ಯ ಡೈರೆಕ್ಟರಿ ಸ್ವರೂಪ"
+	}
+}

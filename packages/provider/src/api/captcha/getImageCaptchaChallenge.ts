@@ -13,6 +13,7 @@
 // limitations under the License.
 import { ProsopoApiError } from "@prosopo/common";
 import { parseCaptchaAssets } from "@prosopo/datasets";
+import { Languages, isLanguage } from "@prosopo/locale";
 import {
 	ApiParams,
 	type Captcha,
@@ -39,6 +40,7 @@ import {
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
 import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
+import { localiseTarget } from "./localiseTarget.js";
 import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
 import { getSealedAssetsResolver } from "./sealedAssetsResolver.js";
 import { getSignedAssetsResolver } from "./signedAssetsResolver.js";
@@ -307,11 +309,14 @@ export default (
 				[ApiParams.status]: "ok",
 				[ApiParams.captchas]: taskData.captchas.map((captcha: Captcha) => ({
 					...captcha,
-					target: req.t(`TARGET.${captcha.target}`),
+					...localiseTarget(req.t, captcha.target, req.logger),
 					items: captcha.items.map((item) =>
 						parseCaptchaAssets(item, assetsResolver),
 					),
 				})),
+				[ApiParams.language]: isLanguage(req.language)
+					? req.language
+					: Languages.english,
 				[ApiParams.requestHash]: taskData.requestHash,
 				[ApiParams.timestamp]: taskData.timestamp.toString(),
 				[ApiParams.signature]: {

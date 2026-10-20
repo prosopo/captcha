@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import { type Ti18n, createUntranslatedI18n } from "@prosopo/locale";
 import type { Manager as ManagerType } from "@prosopo/procaptcha";
 import {
 	InputMethod,
@@ -82,13 +82,12 @@ let mounted: Mounted;
 let widget: ProcaptchaWidgetHandle | undefined;
 
 const i18n = (language: string): Ti18n =>
-	({ language, changeLanguage }) as unknown as Ti18n;
+	createUntranslatedI18n({ language, changeLanguage });
 
 const render = (overrides: Partial<ProcaptchaProps> = {}): void => {
 	widget = mountProcaptchaImageWidget(mounted.container, {
 		config: config(),
 		callbacks: {},
-		i18n: undefined as unknown as Ti18n,
 		...overrides,
 	});
 };

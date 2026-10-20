@@ -20,6 +20,7 @@ import {
 	encodeFingerprintProof,
 	getFingerprintProof,
 } from "@prosopo/fingerprint";
+import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	buildClientMetaData,
@@ -260,7 +261,12 @@ export const Manager = (
 				const providerUrl = getRandomProviderResponse.provider.url;
 				previousProviderUrl = providerUrl;
 
-				const providerApi = new ProviderApi(providerUrl, getDappAccount());
+				const providerApi = new ProviderApi(
+					providerUrl,
+					getDappAccount(),
+					undefined,
+					widgetLanguageHeaders(getConfig().language),
+				);
 
 				// Non-blocking check (timeoutMs=0): only attach SIMD readings if
 				// the benchmark prefetched by the catcher has already resolved.

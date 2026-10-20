@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Language } from "@prosopo/locale";
 import { getWindowCallback } from "@prosopo/procaptcha-common";
 import {
 	type EnvironmentTypes,
@@ -23,6 +24,7 @@ import {
 import { at } from "@prosopo/util";
 import type { BundleCaptchaHandle } from "./util/captcha/components/bundleCaptcha.js";
 import { extractParams, getProcaptchaScript } from "./util/config.js";
+import { siteLanguage } from "./util/language.js";
 import { resolveStartMode } from "./util/startMode.js";
 import { type CreatedWidget, WidgetFactory } from "./util/widgetFactory.js";
 import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
@@ -93,6 +95,7 @@ const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
 const startDetectorPrefetch = (
 	siteKey: string | null,
 	flags: { ipv4?: boolean; ipv6?: boolean; startMode?: StartModeEnum },
+	language: Language | undefined,
 ): void => {
 	if (!siteKey) return;
 	if (flags.startMode === StartModeEnum.manual) return;
@@ -105,6 +108,7 @@ const startDetectorPrefetch = (
 				process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes,
 				common.pickIpMode(flags),
 				siteKey,
+				language,
 			);
 		})
 		.catch(() => undefined);
@@ -141,7 +145,11 @@ const implicitRender = async () => {
 		// constant. Start it now so the round-trip overlaps the widget's own
 		// dynamic-import chain instead of queueing behind it —
 		// `customDetectBot` claims the in-flight promise when it eventually runs.
-		startDetectorPrefetch(siteKey, { ipv4, ipv6, startMode });
+		startDetectorPrefetch(
+			siteKey,
+			{ ipv4, ipv6, startMode },
+			siteLanguage(undefined, firstElement),
+		);
 
 		const implicitRenderOptions: ProcaptchaRenderOptions = {
 			siteKey: siteKey,
@@ -185,7 +193,11 @@ const implicitRender = async () => {
 			const ipv6 = button.getAttribute("data-ipv6") === "true";
 			const startMode = resolveStartMode(undefined, button);
 
-			startDetectorPrefetch(siteKey, { ipv4, ipv6, startMode });
+			startDetectorPrefetch(
+				siteKey,
+				{ ipv4, ipv6, startMode },
+				siteLanguage(undefined, button),
+			);
 
 			const buttonRenderOptions: ProcaptchaRenderOptions = {
 				siteKey: siteKey,
@@ -233,10 +245,14 @@ export const render = async (
 	element: Element,
 	renderOptions: ProcaptchaRenderOptions,
 ): Promise<string | undefined> => {
-	startDetectorPrefetch(renderOptions.siteKey, {
-		...renderOptions,
-		startMode: resolveStartMode(renderOptions, element),
-	});
+	startDetectorPrefetch(
+		renderOptions.siteKey,
+		{
+			...renderOptions,
+			startMode: resolveStartMode(renderOptions, element),
+		},
+		siteLanguage(renderOptions, element),
+	);
 
 	const hasInvisibleSize =
 		Object.prototype.hasOwnProperty.call(renderOptions, "size") &&

@@ -99,15 +99,11 @@ const pieceSizeSampler = createStratifiedSampler();
 
 /**
  * Resolve the effective piece scale range from the same layered
- * client-settings / traffic-filter overrides used for render settings, and
- * draw a per-challenge piece size in pixels. Stratified so the distribution
- * is evenly spread across the range even for short bursts of requests.
- * Rounded to an integer because the pixel buffer is allocated as
- * `size * size * 4`.
+ * client-settings / traffic-filter overrides used for render settings.
  */
-export const resolvePuzzlePieceSize = (
+export const resolvePuzzlePieceScaleRange = (
 	...overrides: (IPuzzleSettings | undefined)[]
-): number => {
+): { min: number; max: number } => {
 	let min = puzzlePieceScaleMinDefault;
 	let max = puzzlePieceScaleMaxDefault;
 	for (const override of overrides) {
@@ -118,7 +114,20 @@ export const resolvePuzzlePieceSize = (
 	// Defend against a partial override that inverts the range (e.g. only
 	// `min` set, above the default `max`).
 	if (min > max) min = max;
-	const scale = pieceSizeSampler.sample(min, max);
+	return { min, max };
+};
+
+/**
+ * Draw a per-challenge piece size in pixels from a scale range. Stratified so
+ * the distribution is evenly spread across the range even for short bursts of
+ * requests. Rounded to an integer because the pixel buffer is allocated as
+ * `size * size * 4`.
+ */
+export const samplePuzzlePieceSize = (range: {
+	min: number;
+	max: number;
+}): number => {
+	const scale = pieceSizeSampler.sample(range.min, range.max);
 	return Math.max(1, Math.round(DEFAULT_GEOMETRY.width * scale));
 };
 
