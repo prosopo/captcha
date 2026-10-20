@@ -5,6 +5,7 @@ members = [
 	"packages/logger",
 	"packages/puzzle-assets",
 	"packages/web-bot-auth",
+	"packages/api-route",
 ]
 exclude = [
 	"packages/native-ja4",

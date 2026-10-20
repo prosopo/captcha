@@ -1,0 +1,666 @@
+{
+	"status": {
+		"keys": [
+			"SUCCESS",
+			"FAIL",
+			"PROCESSING"
+		],
+		"values": [
+			"SUCCESS",
+			"FAIL",
+			"PROCESSING"
+		]
+	},
+	"responses": [
+		{
+			"response": {
+				"status": "SUCCESS"
+			},
+			"json": "{\"status\":\"SUCCESS\"}"
+		},
+		{
+			"response": {
+				"status": "FAIL"
+			},
+			"json": "{\"status\":\"FAIL\"}"
+		},
+		{
+			"response": {
+				"status": "PROCESSING"
+			},
+			"json": "{\"status\":\"PROCESSING\"}"
+		},
+		{
+			"response": {
+				"status": "SUCCESS",
+				"data": {}
+			},
+			"json": "{\"status\":\"SUCCESS\",\"data\":{}}"
+		},
+		{
+			"response": {
+				"status": "SUCCESS",
+				"data": {
+					"deleted_count": 0
+				}
+			},
+			"json": "{\"status\":\"SUCCESS\",\"data\":{\"deleted_count\":0}}"
+		},
+		{
+			"response": {
+				"status": "SUCCESS",
+				"data": {
+					"b": 1,
+					"a": "x",
+					"nested": {
+						"z": [
+							1,
+							"two",
+							null,
+							true
+						],
+						"y": {}
+					}
+				}
+			},
+			"json": "{\"status\":\"SUCCESS\",\"data\":{\"b\":1,\"a\":\"x\",\"nested\":{\"z\":[1,\"two\",null,true],\"y\":{}}}}"
+		},
+		{
+			"response": {
+				"status": "SUCCESS",
+				"data": [
+					1,
+					2,
+					3
+				]
+			},
+			"json": "{\"status\":\"SUCCESS\",\"data\":[1,2,3]}"
+		},
+		{
+			"response": {
+				"status": "SUCCESS",
+				"data": []
+			},
+			"json": "{\"status\":\"SUCCESS\",\"data\":[]}"
+		},
+		{
+			"response": {
+				"status": "FAIL",
+				"error": "boom"
+			},
+			"json": "{\"status\":\"FAIL\",\"error\":\"boom\"}"
+		},
+		{
+			"response": {
+				"status": "FAIL",
+				"error": ""
+			},
+			"json": "{\"status\":\"FAIL\",\"error\":\"\"}"
+		},
+		{
+			"response": {
+				"status": "FAIL",
+				"error": "quote \" backslash \\ newline \n tab \t \u0001 é 😀"
+			},
+			"json": "{\"status\":\"FAIL\",\"error\":\"quote \\\" backslash \\\\ newline \\n tab \\t \\u0001 é 😀\"}"
+		},
+		{
+			"response": {
+				"status": "FAIL",
+				"data": {
+					"partial": true
+				},
+				"error": "partial failure"
+			},
+			"json": "{\"status\":\"FAIL\",\"data\":{\"partial\":true},\"error\":\"partial failure\"}"
+		},
+		{
+			"response": {
+				"status": "PROCESSING",
+				"data": {
+					"jobId": "123"
+				}
+			},
+			"json": "{\"status\":\"PROCESSING\",\"data\":{\"jobId\":\"123\"}}"
+		},
+		{
+			"response": {
+				"status": "SUCCESS",
+				"data": {
+					"big": 9007199254740991,
+					"neg": -42,
+					"frac": 0.25
+				}
+			},
+			"json": "{\"status\":\"SUCCESS\",\"data\":{\"big\":9007199254740991,\"neg\":-42,\"frac\":0.25}}"
+		}
+	],
+	"parse": [
+		{
+			"input": {
+				"siteKey": "abc"
+			},
+			"success": true,
+			"output": {
+				"siteKey": "abc"
+			},
+			"response": {
+				"status": "SUCCESS",
+				"data": {
+					"siteKey": "abc"
+				}
+			}
+		},
+		{
+			"input": {
+				"siteKey": ""
+			},
+			"success": true,
+			"output": {
+				"siteKey": ""
+			},
+			"response": {
+				"status": "SUCCESS",
+				"data": {
+					"siteKey": ""
+				}
+			}
+		},
+		{
+			"input": {
+				"siteKey": "5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM"
+			},
+			"success": true,
+			"output": {
+				"siteKey": "5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM"
+			},
+			"response": {
+				"status": "SUCCESS",
+				"data": {
+					"siteKey": "5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM"
+				}
+			}
+		},
+		{
+			"input": {
+				"siteKey": "unicode é中😀"
+			},
+			"success": true,
+			"output": {
+				"siteKey": "unicode é中😀"
+			},
+			"response": {
+				"status": "SUCCESS",
+				"data": {
+					"siteKey": "unicode é中😀"
+				}
+			}
+		},
+		{
+			"input": {
+				"siteKey": "abc",
+				"extra": 1,
+				"nested": {
+					"a": [
+						1,
+						2
+					]
+				}
+			},
+			"success": true,
+			"output": {
+				"siteKey": "abc"
+			},
+			"response": {
+				"status": "SUCCESS",
+				"data": {
+					"siteKey": "abc"
+				}
+			}
+		},
+		{
+			"input": {
+				"extra": "abc",
+				"siteKey": "def"
+			},
+			"success": true,
+			"output": {
+				"siteKey": "def"
+			},
+			"response": {
+				"status": "SUCCESS",
+				"data": {
+					"siteKey": "def"
+				}
+			}
+		},
+		{
+			"input": {},
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "string",
+					"received": "undefined",
+					"path": [
+						"siteKey"
+					],
+					"message": "Required"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"siteKey\"\n    ],\n    \"message\": \"Required\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"string\",\"received\":\"undefined\",\"path\":[\"siteKey\"],\"message\":\"Required\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": {
+				"sitekey": "abc"
+			},
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "string",
+					"received": "undefined",
+					"path": [
+						"siteKey"
+					],
+					"message": "Required"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"undefined\",\n    \"path\": [\n      \"siteKey\"\n    ],\n    \"message\": \"Required\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"string\",\"received\":\"undefined\",\"path\":[\"siteKey\"],\"message\":\"Required\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": {
+				"siteKey": null
+			},
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "string",
+					"received": "null",
+					"path": [
+						"siteKey"
+					],
+					"message": "Expected string, received null"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"null\",\n    \"path\": [\n      \"siteKey\"\n    ],\n    \"message\": \"Expected string, received null\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"string\",\"received\":\"null\",\"path\":[\"siteKey\"],\"message\":\"Expected string, received null\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": {
+				"siteKey": 1
+			},
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "string",
+					"received": "number",
+					"path": [
+						"siteKey"
+					],
+					"message": "Expected string, received number"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"number\",\n    \"path\": [\n      \"siteKey\"\n    ],\n    \"message\": \"Expected string, received number\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"string\",\"received\":\"number\",\"path\":[\"siteKey\"],\"message\":\"Expected string, received number\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": {
+				"siteKey": 1.5
+			},
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "string",
+					"received": "number",
+					"path": [
+						"siteKey"
+					],
+					"message": "Expected string, received number"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"number\",\n    \"path\": [\n      \"siteKey\"\n    ],\n    \"message\": \"Expected string, received number\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"string\",\"received\":\"number\",\"path\":[\"siteKey\"],\"message\":\"Expected string, received number\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": {
+				"siteKey": true
+			},
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "string",
+					"received": "boolean",
+					"path": [
+						"siteKey"
+					],
+					"message": "Expected string, received boolean"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"boolean\",\n    \"path\": [\n      \"siteKey\"\n    ],\n    \"message\": \"Expected string, received boolean\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"string\",\"received\":\"boolean\",\"path\":[\"siteKey\"],\"message\":\"Expected string, received boolean\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": {
+				"siteKey": false
+			},
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "string",
+					"received": "boolean",
+					"path": [
+						"siteKey"
+					],
+					"message": "Expected string, received boolean"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"boolean\",\n    \"path\": [\n      \"siteKey\"\n    ],\n    \"message\": \"Expected string, received boolean\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"string\",\"received\":\"boolean\",\"path\":[\"siteKey\"],\"message\":\"Expected string, received boolean\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": {
+				"siteKey": []
+			},
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "string",
+					"received": "array",
+					"path": [
+						"siteKey"
+					],
+					"message": "Expected string, received array"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"array\",\n    \"path\": [\n      \"siteKey\"\n    ],\n    \"message\": \"Expected string, received array\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"string\",\"received\":\"array\",\"path\":[\"siteKey\"],\"message\":\"Expected string, received array\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": {
+				"siteKey": [
+					"abc"
+				]
+			},
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "string",
+					"received": "array",
+					"path": [
+						"siteKey"
+					],
+					"message": "Expected string, received array"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"array\",\n    \"path\": [\n      \"siteKey\"\n    ],\n    \"message\": \"Expected string, received array\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"string\",\"received\":\"array\",\"path\":[\"siteKey\"],\"message\":\"Expected string, received array\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": {
+				"siteKey": {}
+			},
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "string",
+					"received": "object",
+					"path": [
+						"siteKey"
+					],
+					"message": "Expected string, received object"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"string\",\n    \"received\": \"object\",\n    \"path\": [\n      \"siteKey\"\n    ],\n    \"message\": \"Expected string, received object\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"string\",\"received\":\"object\",\"path\":[\"siteKey\"],\"message\":\"Expected string, received object\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "object",
+					"received": "undefined",
+					"path": [],
+					"message": "Required"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"undefined\",\n    \"path\": [],\n    \"message\": \"Required\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"object\",\"received\":\"undefined\",\"path\":[],\"message\":\"Required\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": null,
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "object",
+					"received": "null",
+					"path": [],
+					"message": "Expected object, received null"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"null\",\n    \"path\": [],\n    \"message\": \"Expected object, received null\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"object\",\"received\":\"null\",\"path\":[],\"message\":\"Expected object, received null\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": [],
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "object",
+					"received": "array",
+					"path": [],
+					"message": "Expected object, received array"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"array\",\n    \"path\": [],\n    \"message\": \"Expected object, received array\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"object\",\"received\":\"array\",\"path\":[],\"message\":\"Expected object, received array\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": [
+				{
+					"siteKey": "abc"
+				}
+			],
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "object",
+					"received": "array",
+					"path": [],
+					"message": "Expected object, received array"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"array\",\n    \"path\": [],\n    \"message\": \"Expected object, received array\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"object\",\"received\":\"array\",\"path\":[],\"message\":\"Expected object, received array\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": "abc",
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "object",
+					"received": "string",
+					"path": [],
+					"message": "Expected object, received string"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"string\",\n    \"path\": [],\n    \"message\": \"Expected object, received string\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"object\",\"received\":\"string\",\"path\":[],\"message\":\"Expected object, received string\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": "",
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "object",
+					"received": "string",
+					"path": [],
+					"message": "Expected object, received string"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"string\",\n    \"path\": [],\n    \"message\": \"Expected object, received string\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"object\",\"received\":\"string\",\"path\":[],\"message\":\"Expected object, received string\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": 0,
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "object",
+					"received": "number",
+					"path": [],
+					"message": "Expected object, received number"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"number\",\n    \"path\": [],\n    \"message\": \"Expected object, received number\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"object\",\"received\":\"number\",\"path\":[],\"message\":\"Expected object, received number\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": -1,
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "object",
+					"received": "number",
+					"path": [],
+					"message": "Expected object, received number"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"number\",\n    \"path\": [],\n    \"message\": \"Expected object, received number\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"object\",\"received\":\"number\",\"path\":[],\"message\":\"Expected object, received number\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": true,
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "object",
+					"received": "boolean",
+					"path": [],
+					"message": "Expected object, received boolean"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"boolean\",\n    \"path\": [],\n    \"message\": \"Expected object, received boolean\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"object\",\"received\":\"boolean\",\"path\":[],\"message\":\"Expected object, received boolean\"}],\"name\":\"ZodError\"}"
+		},
+		{
+			"input": false,
+			"success": false,
+			"issues": [
+				{
+					"code": "invalid_type",
+					"expected": "object",
+					"received": "boolean",
+					"path": [],
+					"message": "Expected object, received boolean"
+				}
+			],
+			"message": "[\n  {\n    \"code\": \"invalid_type\",\n    \"expected\": \"object\",\n    \"received\": \"boolean\",\n    \"path\": [],\n    \"message\": \"Expected object, received boolean\"\n  }\n]",
+			"errorJson": "{\"issues\":[{\"code\":\"invalid_type\",\"expected\":\"object\",\"received\":\"boolean\",\"path\":[],\"message\":\"Expected object, received boolean\"}],\"name\":\"ZodError\"}"
+		}
+	],
+	"noArgs": {
+		"schemaIsUndefined": true,
+		"response": {
+			"status": "SUCCESS"
+		},
+		"json": "{\"status\":\"SUCCESS\"}"
+	},
+	"throwing": {
+		"message": "boom"
+	},
+	"routes": {
+		"keys": [
+			"/without",
+			"/with",
+			"/throwing"
+		]
+	},
+	"limits": [
+		{
+			"limits": {
+				"verify": {
+					"windowMs": 1000,
+					"limit": 5
+				},
+				"submit": {
+					"windowMs": 60000,
+					"limit": 100
+				}
+			},
+			"keys": [
+				"verify",
+				"submit"
+			],
+			"json": "{\"verify\":{\"windowMs\":1000,\"limit\":5},\"submit\":{\"windowMs\":60000,\"limit\":100}}"
+		},
+		{
+			"limits": {
+				"0": {
+					"windowMs": 3000,
+					"limit": 7
+				},
+				"2": {
+					"windowMs": 2000,
+					"limit": 6
+				},
+				"10": {
+					"windowMs": 1000,
+					"limit": 5
+				}
+			},
+			"keys": [
+				"0",
+				"2",
+				"10"
+			],
+			"json": "{\"0\":{\"windowMs\":3000,\"limit\":7},\"2\":{\"windowMs\":2000,\"limit\":6},\"10\":{\"windowMs\":1000,\"limit\":5}}"
+		},
+		{
+			"limits": {
+				"1": {
+					"windowMs": 1,
+					"limit": 1
+				},
+				"/v1/b": {
+					"windowMs": 10000,
+					"limit": 5
+				},
+				"/v1/a": {
+					"windowMs": 0,
+					"limit": 0
+				},
+				"01": {
+					"windowMs": 2,
+					"limit": 2
+				}
+			},
+			"keys": [
+				"1",
+				"/v1/b",
+				"/v1/a",
+				"01"
+			],
+			"json": "{\"1\":{\"windowMs\":1,\"limit\":1},\"/v1/b\":{\"windowMs\":10000,\"limit\":5},\"/v1/a\":{\"windowMs\":0,\"limit\":0},\"01\":{\"windowMs\":2,\"limit\":2}}"
+		}
+	]
+}

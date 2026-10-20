@@ -22,7 +22,9 @@
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
-		"test:watch": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest watch --config ./vite.test.config.ts"
+		"test:watch": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest watch --config ./vite.test.config.ts",
+		"test:cargo": "cargo test -p prosopo-api-route",
+		"equivalence": "tsx rust/equivalence/generate.ts && cargo test -p prosopo-api-route equivalence"
 	},
 	"dependencies": {
 		"@prosopo/logger": "workspace:*",
@@ -33,6 +35,7 @@
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",
 		"del-cli": "6.0.0",
+		"tsx": "4.20.3",
 		"typescript": "5.6.2",
 		"vite": "8.1.5",
 		"vitest": "4.1.11"

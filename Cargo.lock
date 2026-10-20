@@ -760,6 +760,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "prosopo-api-route"
+version = "0.0.1"
+dependencies = [
+ "indexmap",
+ "prosopo-logger",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "prosopo-captcha-severity"
 version = "0.0.1"
 dependencies = [

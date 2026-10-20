@@ -1008,6 +1008,9 @@ importers:
       del-cli:
         specifier: 6.0.0
         version: 6.0.0
+      tsx:
+        specifier: 4.20.3
+        version: 4.20.3
       typescript:
         specifier: 5.6.2
         version: 5.6.2
