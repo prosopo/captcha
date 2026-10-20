@@ -102,8 +102,8 @@ const buildContext = (overrides: {
 		headers: { "user-agent": overrides.userAgent },
 		ja4: "ja4",
 		sessionId: "session",
-		// The floors need a signal the client could not have written into a
-		// header; the carrier bit is the one available at issue time.
+		// The floors need a device signal; the carrier bit is the one
+		// available at issue time.
 		ipInfo: {
 			isValid: true,
 			isMobile: overrides.carrierNetwork ?? true,
@@ -267,7 +267,7 @@ describe("the floors need corroboration", () => {
 		});
 	});
 
-	it("does not ease a mobile User-Agent with nothing behind it", async () => {
+	it("does not ease a platform claim with nothing behind it", async () => {
 		await issue({
 			userAgent: IPHONE_UA,
 			carrierNetwork: false,

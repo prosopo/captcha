@@ -144,7 +144,7 @@ describe("deriveMobileVerdict", () => {
 			const both = deriveMobileVerdict({ carrierNetwork: true, tcpMss: 1400 });
 			const one = deriveMobileVerdict({ carrierNetwork: true });
 			expect(both.score).toBe(one.score);
-			// Both are still reported, so the pair can be told from either alone.
+			// Both are still reported, so the pair can be told from either alone
 			expect(both.evidence).toEqual(["carrierNetwork+tunnelledMss"]);
 		});
 

@@ -71,9 +71,8 @@ export const issuePuzzleChallenge = async ({
 			webView: sessionRecord.webView,
 		}),
 	});
-	// The ladder ceiling runs off `isMobile` alone, one rung either way. The
-	// floors below are a far larger loosening, so they want a signal the
-	// client could not simply have written into a header — see `corroborated`.
+	// The ladder ceiling runs off `isMobile`; the floors below want a device
+	// signal behind it. See `corroborated`.
 	const easeForTouch = mobileVerdict.isMobile && mobileVerdict.corroborated;
 
 	// Overrides a routing machine asked for, persisted on the session.
