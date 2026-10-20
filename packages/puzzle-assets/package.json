@@ -28,7 +28,9 @@
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"preview": "tsx scripts/preview.ts",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"typecheck": "tsc --project tsconfig.types.json",
+		"test:cargo": "cargo test -p prosopo-puzzle-assets",
+		"equivalence": "tsx rust/equivalence/generate.ts && cargo test -p prosopo-puzzle-assets equivalence"
 	},
 	"repository": {
 		"type": "git",

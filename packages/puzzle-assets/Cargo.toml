@@ -1,0 +1,26 @@
+[package]
+name = "prosopo-puzzle-assets"
+version = "0.0.1"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "rust/lib.rs"
+
+[dependencies]
+base64 = "0.22"
+getrandom = "0.3"
+libm = "0.2"
+png = "0.17"
+webp = { version = "0.3", default-features = false }
+
+[dev-dependencies]
+hex = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
