@@ -429,10 +429,6 @@ export class PowCaptchaManager extends CaptchaManager {
 		// updatePowCaptchaRecordResult triggers centralStreamer.streamPowUpdate(),
 		// which reads back the full record.
 		const recordUpdates: Partial<PoWCaptchaRecord> = { ...behavioralUpdates };
-		// Reduce the proof to the part a sightings aggregation can use. The
-		// routing machine validates the proof's *values* independently
-		// (postPowFingerprintProofGateRule); this only keeps what survives
-		// structural verification, and stores nothing when it does not.
 		const fingerprintSummary = summariseFingerprintProof(fingerprintProof);
 		if (fingerprintSummary) {
 			recordUpdates.fingerprintSummary = fingerprintSummary;

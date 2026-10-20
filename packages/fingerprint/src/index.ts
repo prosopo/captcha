@@ -59,12 +59,31 @@ const loadComponents = (): Promise<UnknownComponents> => {
 	return componentsCache;
 };
 
+/**
+ * Components the visitorId must not be derived from.
+ *
+ * `deviceBucket` digests components the run already produces, so folding it
+ * into the visitorId would add no entropy while changing every existing
+ * visitorId — and the account address is a pure function of the visitorId, so
+ * every account on record would rotate and its sighting history would be
+ * orphaned. The proof still commits to it, and it is disclosed, which is the
+ * point of collecting it.
+ */
+const NON_IDENTITY_SOURCES: readonly string[] = ["deviceBucket"];
+
+const forIdentity = (components: UnknownComponents): UnknownComponents =>
+	Object.fromEntries(
+		Object.entries(components).filter(
+			([key]) => !NON_IDENTITY_SOURCES.includes(key),
+		),
+	) as UnknownComponents;
+
 export const getFingerprint = async (): Promise<string> => {
 	const [{ hashComponents }, components] = await Promise.all([
 		FingerprintJSImport(),
 		loadComponents(),
 	]);
-	return hashComponents(components);
+	return hashComponents(forIdentity(components));
 };
 
 /**

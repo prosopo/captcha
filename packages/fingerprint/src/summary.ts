@@ -56,6 +56,13 @@ const GROUP_KEYS = [
 export interface FingerprintSummary {
 	root: string;
 	groupHash: string;
+	/**
+	 * The disclosed `deviceBucket` digest, carried through only because its
+	 * disclosure hashed to `root` — so it cannot be presented independently of
+	 * the identity the same commitment produced. Absent for a client that did
+	 * not disclose it.
+	 */
+	bucketId?: string;
 	colorDepth?: number;
 	hardwareConcurrency?: number;
 	disclosed?: FingerprintDisclosedValues;
@@ -148,9 +155,12 @@ export const summariseFingerprintProof = (
 		if (typeof value === "boolean") disclosed[key] = value;
 	}
 
+	const bucket = byKey.get("deviceBucket");
+
 	return {
 		root: proof.root,
 		groupHash: hexHash(groupInput),
+		...(typeof bucket === "string" && bucket !== "" && { bucketId: bucket }),
 		...(asNumber(byKey.get("colorDepth")) !== undefined && {
 			colorDepth: asNumber(byKey.get("colorDepth")),
 		}),

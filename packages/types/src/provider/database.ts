@@ -724,14 +724,6 @@ export type Session = {
 // PoWCaptchaStored = PoWCaptchaUser (minus requestedAtTimestamp) + StoredCaptcha
 // Note: challenge uses PowChallengeIdSchema for runtime validation
 // The PoWCaptchaStored interface enforces the PoWChallengeId template literal type at compile time
-/**
- * What is kept from a verified proof of fingerprint. The proof itself is not
- * stored — its Merkle paths are large and spent once verified. See
- * `summariseFingerprintProof` in @prosopo/fingerprint for what each field is
- * for; in short, `root` is 1:1 with the account address by construction, and a
- * `groupHash` carrying several `(colorDepth, hardwareConcurrency)` pairs is a
- * client redrawing an identity a real device cannot change.
- */
 export interface FingerprintDisclosedValuesStored {
 	timezone?: string;
 	languages?: string;
@@ -744,6 +736,7 @@ export interface FingerprintDisclosedValuesStored {
 export interface FingerprintSummaryStored {
 	root: string;
 	groupHash: string;
+	bucketId?: string;
 	colorDepth?: number;
 	hardwareConcurrency?: number;
 	disclosed?: FingerprintDisclosedValuesStored;
@@ -761,6 +754,7 @@ export const FingerprintDisclosedValuesSchema = object({
 export const FingerprintSummarySchema = object({
 	root: string(),
 	groupHash: string(),
+	bucketId: string().optional(),
 	colorDepth: number().optional(),
 	hardwareConcurrency: number().optional(),
 	disclosed: FingerprintDisclosedValuesSchema.optional(),
@@ -826,7 +820,6 @@ export type PendingImageCaptchaRequest = {
 export interface PoWCaptchaStored
 	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
 		StoredCaptcha {
-	// Only ever present on PoW: the proof arrives with the solution submit.
 	fingerprintSummary?: FingerprintSummaryStored;
 }
 
