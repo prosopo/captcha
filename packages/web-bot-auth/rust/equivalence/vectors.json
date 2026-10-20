@@ -1,0 +1,7860 @@
+{
+	"decodeBase64": [
+		{
+			"input": "",
+			"result": {
+				"ok": ""
+			}
+		},
+		{
+			"input": "   ",
+			"result": {
+				"ok": ""
+			}
+		},
+		{
+			"input": "AQID",
+			"result": {
+				"ok": "010203"
+			}
+		},
+		{
+			"input": "AQI",
+			"result": {
+				"ok": "0102"
+			}
+		},
+		{
+			"input": "AQ",
+			"result": {
+				"ok": "01"
+			}
+		},
+		{
+			"input": "A",
+			"result": {
+				"error": "The string to be decoded is not correctly encoded."
+			}
+		},
+		{
+			"input": "AQ==",
+			"result": {
+				"ok": "01"
+			}
+		},
+		{
+			"input": "AQ=",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AQ= =",
+			"result": {
+				"ok": "01"
+			}
+		},
+		{
+			"input": "A Q I D",
+			"result": {
+				"ok": "010203"
+			}
+		},
+		{
+			"input": "\tAQ\nID\r\f",
+			"result": {
+				"ok": "010203"
+			}
+		},
+		{
+			"input": "AR==",
+			"result": {
+				"ok": "01"
+			}
+		},
+		{
+			"input": "AQ=D",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AQ===",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "====",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "==",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AQIDBA",
+			"result": {
+				"ok": "01020304"
+			}
+		},
+		{
+			"input": "AQIDB",
+			"result": {
+				"error": "The string to be decoded is not correctly encoded."
+			}
+		},
+		{
+			"input": "AQIDBA==",
+			"result": {
+				"ok": "01020304"
+			}
+		},
+		{
+			"input": "AQIDBA=",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "é",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AQ ID",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AQ\u000bID",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "-_-_",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "+/+/",
+			"result": {
+				"ok": "fbffbf"
+			}
+		},
+		{
+			"input": "not_valid_base64!!!",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "////",
+			"result": {
+				"ok": "ffffff"
+			}
+		},
+		{
+			"input": "AAAA",
+			"result": {
+				"ok": "000000"
+			}
+		},
+		{
+			"input": "AB",
+			"result": {
+				"ok": "00"
+			}
+		},
+		{
+			"input": "ABC",
+			"result": {
+				"ok": "0010"
+			}
+		},
+		{
+			"input": "A===",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AB=C",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "ABC=",
+			"result": {
+				"ok": "0010"
+			}
+		},
+		{
+			"input": "ABCD=",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "ABCD==",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "=ABC",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "YWJj\u0000",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AQID ",
+			"result": {
+				"error": "Invalid character"
+			}
+		}
+	],
+	"decodeBase64Url": [
+		{
+			"input": "",
+			"result": {
+				"ok": ""
+			}
+		},
+		{
+			"input": "   ",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AQID",
+			"result": {
+				"ok": "010203"
+			}
+		},
+		{
+			"input": "AQI",
+			"result": {
+				"ok": "0102"
+			}
+		},
+		{
+			"input": "AQ",
+			"result": {
+				"ok": "01"
+			}
+		},
+		{
+			"input": "A",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AQ==",
+			"result": {
+				"ok": "01"
+			}
+		},
+		{
+			"input": "AQ=",
+			"result": {
+				"ok": "01"
+			}
+		},
+		{
+			"input": "AQ= =",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "A Q I D",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "\tAQ\nID\r\f",
+			"result": {
+				"ok": "010203"
+			}
+		},
+		{
+			"input": "AR==",
+			"result": {
+				"ok": "01"
+			}
+		},
+		{
+			"input": "AQ=D",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AQ===",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "====",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "==",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AQIDBA",
+			"result": {
+				"ok": "01020304"
+			}
+		},
+		{
+			"input": "AQIDB",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AQIDBA==",
+			"result": {
+				"ok": "01020304"
+			}
+		},
+		{
+			"input": "AQIDBA=",
+			"result": {
+				"ok": "01020304"
+			}
+		},
+		{
+			"input": "é",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AQ ID",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AQ\u000bID",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "-_-_",
+			"result": {
+				"ok": "fbffbf"
+			}
+		},
+		{
+			"input": "+/+/",
+			"result": {
+				"ok": "fbffbf"
+			}
+		},
+		{
+			"input": "not_valid_base64!!!",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "////",
+			"result": {
+				"ok": "ffffff"
+			}
+		},
+		{
+			"input": "AAAA",
+			"result": {
+				"ok": "000000"
+			}
+		},
+		{
+			"input": "AB",
+			"result": {
+				"ok": "00"
+			}
+		},
+		{
+			"input": "ABC",
+			"result": {
+				"ok": "0010"
+			}
+		},
+		{
+			"input": "A===",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AB=C",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "ABC=",
+			"result": {
+				"ok": "0010"
+			}
+		},
+		{
+			"input": "ABCD=",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "ABCD==",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "=ABC",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "YWJj\u0000",
+			"result": {
+				"error": "Invalid character"
+			}
+		},
+		{
+			"input": "AQID ",
+			"result": {
+				"error": "Invalid character"
+			}
+		}
+	],
+	"parseSignatureInput": [
+		{
+			"header": "sig1=(\"@authority\" \"signature-agent\");created=1735689600;expires=1735693200;keyid=\"abc\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority",
+					"signature-agent"
+				],
+				"params": [
+					[
+						"created",
+						{
+							"type": "number",
+							"value": 1735689600
+						}
+					],
+					[
+						"expires",
+						{
+							"type": "number",
+							"value": 1735693200
+						}
+					],
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "abc"
+						}
+					],
+					[
+						"alg",
+						{
+							"type": "string",
+							"value": "ed25519"
+						}
+					],
+					[
+						"tag",
+						{
+							"type": "string",
+							"value": "web-bot-auth"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\" \"signature-agent\");created=1735689600;expires=1735693200;keyid=\"abc\";alg=\"ed25519\";tag=\"web-bot-auth\""
+			}
+		},
+		{
+			"header": "garbage",
+			"result": null
+		},
+		{
+			"header": "",
+			"result": null
+		},
+		{
+			"header": "   ",
+			"result": null
+		},
+		{
+			"header": ",,,",
+			"result": null
+		},
+		{
+			"header": "=",
+			"result": null
+		},
+		{
+			"header": "sig1=",
+			"result": null
+		},
+		{
+			"header": "sig1=\"not-a-list\"",
+			"result": null
+		},
+		{
+			"header": "sig1=(\"@authority\");keyid=\"k\";alg=ed25519",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k"
+						}
+					],
+					[
+						"alg",
+						{
+							"type": "string",
+							"value": "ed25519"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");keyid=\"k\";alg=ed25519"
+			}
+		},
+		{
+			"header": "sig1=();keyid=\"k\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k"
+						}
+					]
+				],
+				"serialisedValue": "();keyid=\"k\""
+			}
+		},
+		{
+			"header": "sig1=()",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [],
+				"params": [],
+				"serialisedValue": "()"
+			}
+		},
+		{
+			"header": "sig1=(",
+			"result": null
+		},
+		{
+			"header": "sig1=(\"@authority\"",
+			"result": null
+		},
+		{
+			"header": "sig1=(\"a\" \"b\";x=1 c);keyid=\"k\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"a",
+					"b",
+					"c"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k"
+						}
+					]
+				],
+				"serialisedValue": "(\"a\" \"b\";x=1 c);keyid=\"k\""
+			}
+		},
+		{
+			"header": "sig1=( \"a\"   \"b\" )",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"a",
+					"b"
+				],
+				"params": [],
+				"serialisedValue": "( \"a\"   \"b\" )"
+			}
+		},
+		{
+			"header": "sig1=(\"a\"\"b\")",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"a"
+				],
+				"params": [],
+				"serialisedValue": "(\"a\"\"b\")"
+			}
+		},
+		{
+			"header": "sig1=(\"a\\\"b\" \"c\")",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"a\\",
+					"c"
+				],
+				"params": [],
+				"serialisedValue": "(\"a\\\"b\" \"c\")"
+			}
+		},
+		{
+			"header": "sig1=(\"a\\\\b\")",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"a\\b"
+				],
+				"params": [],
+				"serialisedValue": "(\"a\\\\b\")"
+			}
+		},
+		{
+			"header": "sig1=(tok1 tok2 \"q\")",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"tok1",
+					"tok2",
+					"q"
+				],
+				"params": [],
+				"serialisedValue": "(tok1 tok2 \"q\")"
+			}
+		},
+		{
+			"header": "sig1=(\"unterminated)",
+			"result": null
+		},
+		{
+			"header": "sig1=(\"a\" \"b);x=\"1\"",
+			"result": null
+		},
+		{
+			"header": "sig1=(\"a\tb\")",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"a\tb"
+				],
+				"params": [],
+				"serialisedValue": "(\"a\tb\")"
+			}
+		},
+		{
+			"header": "sig1=( \"a\"　\"b\"﻿)",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"a",
+					"b"
+				],
+				"params": [],
+				"serialisedValue": "( \"a\"　\"b\"﻿)"
+			}
+		},
+		{
+			"header": "  sig1 = (\"@authority\") ; keyid = \"k\" ; alg = \"ed25519\"  ",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k"
+						}
+					],
+					[
+						"alg",
+						{
+							"type": "string",
+							"value": "ed25519"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\") ; keyid = \"k\" ; alg = \"ed25519\""
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");keyid=\"k;with;semis\";tag=\"a,b\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k;with;semis"
+						}
+					],
+					[
+						"tag",
+						{
+							"type": "string",
+							"value": "a,b"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");keyid=\"k;with;semis\";tag=\"a,b\""
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");keyid=\"k\", sig2=(\"x\");keyid=\"other\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");keyid=\"k\""
+			}
+		},
+		{
+			"header": "sig2=(\"x\");keyid=\"other\", sig1=(\"@authority\")",
+			"result": {
+				"label": "sig2",
+				"coveredComponents": [
+					"x"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "other"
+						}
+					]
+				],
+				"serialisedValue": "(\"x\");keyid=\"other\""
+			}
+		},
+		{
+			"header": ", sig1=(\"@authority\");keyid=\"k\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");keyid=\"k\""
+			}
+		},
+		{
+			"header": "\"quoted\"=(\"a\")",
+			"result": {
+				"label": "\"quoted\"",
+				"coveredComponents": [
+					"a"
+				],
+				"params": [],
+				"serialisedValue": "(\"a\")"
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");created=-5;expires=1.5;n=007;m=-0;big=123456789012345678901234567890",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"created",
+						{
+							"type": "number",
+							"value": -5
+						}
+					],
+					[
+						"expires",
+						{
+							"type": "number",
+							"value": 1.5
+						}
+					],
+					[
+						"n",
+						{
+							"type": "number",
+							"value": 7
+						}
+					],
+					[
+						"m",
+						{
+							"type": "number",
+							"value": 0
+						}
+					],
+					[
+						"big",
+						{
+							"type": "number",
+							"value": 1.2345678901234568e+29
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");created=-5;expires=1.5;n=007;m=-0;big=123456789012345678901234567890"
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");huge=9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"huge",
+						{
+							"type": "number",
+							"value": "Infinity"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");huge=9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");neg=-;dot=1.;lead=.5;exp=1e5;plus=+1",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"neg",
+						{
+							"type": "string",
+							"value": "-"
+						}
+					],
+					[
+						"dot",
+						{
+							"type": "string",
+							"value": "1."
+						}
+					],
+					[
+						"lead",
+						{
+							"type": "string",
+							"value": ".5"
+						}
+					],
+					[
+						"exp",
+						{
+							"type": "string",
+							"value": "1e5"
+						}
+					],
+					[
+						"plus",
+						{
+							"type": "string",
+							"value": "+1"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");neg=-;dot=1.;lead=.5;exp=1e5;plus=+1"
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");b1=?1;b0=?0;bare;empty=;flag",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"b1",
+						{
+							"type": "boolean",
+							"value": true
+						}
+					],
+					[
+						"b0",
+						{
+							"type": "boolean",
+							"value": false
+						}
+					],
+					[
+						"bare",
+						{
+							"type": "boolean",
+							"value": true
+						}
+					],
+					[
+						"empty",
+						{
+							"type": "boolean",
+							"value": true
+						}
+					],
+					[
+						"flag",
+						{
+							"type": "boolean",
+							"value": true
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");b1=?1;b0=?0;bare;empty=;flag"
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");bytes=:AQID:;emptybytes=::;colon=:",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"bytes",
+						{
+							"type": "bytes",
+							"value": "010203"
+						}
+					],
+					[
+						"emptybytes",
+						{
+							"type": "bytes",
+							"value": ""
+						}
+					],
+					[
+						"colon",
+						{
+							"type": "bytes",
+							"value": ""
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");bytes=:AQID:;emptybytes=::;colon=:"
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");bad=:!!!:",
+			"result": null
+		},
+		{
+			"header": "sig1=(\"@authority\");q=\"unterminated",
+			"result": null
+		},
+		{
+			"header": "sig1=(\"@authority\");q=\"",
+			"result": null
+		},
+		{
+			"header": "sig1=(\"@authority\");esc=\"a\\\"b\\\\c\\d\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"esc",
+						{
+							"type": "string",
+							"value": "a\"b\\cd"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");esc=\"a\\\"b\\\\c\\d\""
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");esc=\"trailing\\\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"esc",
+						{
+							"type": "string",
+							"value": "trailing\\"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");esc=\"trailing\\\""
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");dup=1;other=2;dup=\"three\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"dup",
+						{
+							"type": "string",
+							"value": "three"
+						}
+					],
+					[
+						"other",
+						{
+							"type": "number",
+							"value": 2
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");dup=1;other=2;dup=\"three\""
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");2=b;1=a;x=c;0=z;01=y;4294967295=big;4294967294=max",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"0",
+						{
+							"type": "string",
+							"value": "z"
+						}
+					],
+					[
+						"1",
+						{
+							"type": "string",
+							"value": "a"
+						}
+					],
+					[
+						"2",
+						{
+							"type": "string",
+							"value": "b"
+						}
+					],
+					[
+						"4294967294",
+						{
+							"type": "string",
+							"value": "max"
+						}
+					],
+					[
+						"x",
+						{
+							"type": "string",
+							"value": "c"
+						}
+					],
+					[
+						"01",
+						{
+							"type": "string",
+							"value": "y"
+						}
+					],
+					[
+						"4294967295",
+						{
+							"type": "string",
+							"value": "big"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");2=b;1=a;x=c;0=z;01=y;4294967295=big;4294967294=max"
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");__proto__=\"str\";keyid=\"k\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");__proto__=\"str\";keyid=\"k\""
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");__proto__=:AQID:;keyid=\"k\";0=a;2=b;5=c;-0=d;1.5=e;NaN=f;Infinity=g;01=h",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"0",
+						{
+							"type": "string",
+							"value": "a"
+						}
+					],
+					[
+						"2",
+						{
+							"type": "string",
+							"value": "b"
+						}
+					],
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k"
+						}
+					],
+					[
+						"01",
+						{
+							"type": "string",
+							"value": "h"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");__proto__=:AQID:;keyid=\"k\";0=a;2=b;5=c;-0=d;1.5=e;NaN=f;Infinity=g;01=h"
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");__proto__=:AQID:;length=1",
+			"result": null
+		},
+		{
+			"header": "sig1=(\"@authority\");__proto__=:AQID:;byteOffset=1",
+			"result": null
+		},
+		{
+			"header": "sig1=(\"@authority\");__proto__=:AQID:;constructor=1;toString=2",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"constructor",
+						{
+							"type": "number",
+							"value": 1
+						}
+					],
+					[
+						"toString",
+						{
+							"type": "number",
+							"value": 2
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");__proto__=:AQID:;constructor=1;toString=2"
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");constructor=1;hasOwnProperty=x",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"constructor",
+						{
+							"type": "number",
+							"value": 1
+						}
+					],
+					[
+						"hasOwnProperty",
+						{
+							"type": "string",
+							"value": "x"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");constructor=1;hasOwnProperty=x"
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");a=\"x=y\";b=c=d",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"a",
+						{
+							"type": "string",
+							"value": "x=y"
+						}
+					],
+					[
+						"b",
+						{
+							"type": "string",
+							"value": "c=d"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");a=\"x=y\";b=c=d"
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");;;keyid=\"k\";;",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");;;keyid=\"k\";;"
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\") trailing;keyid=\"k\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\") trailing;keyid=\"k\""
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\")x;keyid=\"k\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\")x;keyid=\"k\""
+			}
+		},
+		{
+			"header": "sig1=(\"a)b\");keyid=\"k\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"a)b"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k"
+						}
+					]
+				],
+				"serialisedValue": "(\"a)b\");keyid=\"k\""
+			}
+		},
+		{
+			"header": "sig1=(\"a\" (nested));keyid=\"k\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"a",
+					"(nested"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k"
+						}
+					]
+				],
+				"serialisedValue": "(\"a\" (nested));keyid=\"k\""
+			}
+		},
+		{
+			"header": "sig1=:AQID:",
+			"result": null
+		},
+		{
+			"header": "sig1=token;keyid=k",
+			"result": null
+		},
+		{
+			"header": "sig1=(\"@authority\");tag=\"web-bot-auth\";alg=ED25519",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"tag",
+						{
+							"type": "string",
+							"value": "web-bot-auth"
+						}
+					],
+					[
+						"alg",
+						{
+							"type": "string",
+							"value": "ED25519"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");tag=\"web-bot-auth\";alg=ED25519"
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");keyid=\"ключ\";tag=\"веб\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "ключ"
+						}
+					],
+					[
+						"tag",
+						{
+							"type": "string",
+							"value": "веб"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");keyid=\"ключ\";tag=\"веб\""
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");keyid=\"k\\é\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "ké"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");keyid=\"k\\é\""
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");keyid=\"a\\\nb\"",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "a\\\nb"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");keyid=\"a\\\nb\""
+			}
+		},
+		{
+			"header": "ünicode=(\"@authority\");keyid=\"k\"",
+			"result": {
+				"label": "ünicode",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"keyid",
+						{
+							"type": "string",
+							"value": "k"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");keyid=\"k\""
+			}
+		},
+		{
+			"header": "sig1=(\"@authority\");x=1e3;y=0x10;z=Infinity",
+			"result": {
+				"label": "sig1",
+				"coveredComponents": [
+					"@authority"
+				],
+				"params": [
+					[
+						"x",
+						{
+							"type": "string",
+							"value": "1e3"
+						}
+					],
+					[
+						"y",
+						{
+							"type": "string",
+							"value": "0x10"
+						}
+					],
+					[
+						"z",
+						{
+							"type": "string",
+							"value": "Infinity"
+						}
+					]
+				],
+				"serialisedValue": "(\"@authority\");x=1e3;y=0x10;z=Infinity"
+			}
+		}
+	],
+	"parseSignature": [
+		{
+			"header": "sig1=:AQID:",
+			"label": "sig1",
+			"result": "010203"
+		},
+		{
+			"header": "sig1=:AQID:",
+			"label": "sig2",
+			"result": null
+		},
+		{
+			"header": "sig1=\"AQID\"",
+			"label": "sig1",
+			"result": null
+		},
+		{
+			"header": "sig1=:not_valid_base64!!!:",
+			"label": "sig1",
+			"result": null
+		},
+		{
+			"header": "sig1=::",
+			"label": "sig1",
+			"result": ""
+		},
+		{
+			"header": "sig1=:",
+			"label": "sig1",
+			"result": ""
+		},
+		{
+			"header": "sig1= :AQID: ",
+			"label": "sig1",
+			"result": "010203"
+		},
+		{
+			"header": "sig1=:AQID:;param=1",
+			"label": "sig1",
+			"result": null
+		},
+		{
+			"header": "sig1=:AQ ID:",
+			"label": "sig1",
+			"result": "010203"
+		},
+		{
+			"header": "sig1=:AQ==:",
+			"label": "sig1",
+			"result": "01"
+		},
+		{
+			"header": "sig1=:AQ=:",
+			"label": "sig1",
+			"result": null
+		},
+		{
+			"header": "sig1=:AQID:, sig2=:BBBB:",
+			"label": "sig2",
+			"result": null
+		},
+		{
+			"header": "sig2=:BBBB:, sig1=:AQID:",
+			"label": "sig2",
+			"result": "041041"
+		},
+		{
+			"header": "",
+			"label": "sig1",
+			"result": null
+		},
+		{
+			"header": "garbage",
+			"label": "sig1",
+			"result": null
+		},
+		{
+			"header": " sig1 =:AQID:",
+			"label": "sig1",
+			"result": "010203"
+		},
+		{
+			"header": "sig1=:-_-_:",
+			"label": "sig1",
+			"result": null
+		},
+		{
+			"header": "sig1=\":,:\"",
+			"label": "sig1",
+			"result": null
+		},
+		{
+			"header": ":AQID:",
+			"label": "",
+			"result": null
+		},
+		{
+			"header": "=:AQID:",
+			"label": "",
+			"result": "010203"
+		},
+		{
+			"header": "SIG1=:AQID:",
+			"label": "sig1",
+			"result": null
+		}
+	],
+	"parseSignatureAgentHeader": [
+		{
+			"header": "\"https://chatgpt.com\"",
+			"result": {
+				"ok": "https://chatgpt.com"
+			}
+		},
+		{
+			"header": "g=\"https://agent.bot.goog\"",
+			"result": {
+				"ok": "https://agent.bot.goog"
+			}
+		},
+		{
+			"header": "  \"https://chatgpt.com\"  ",
+			"result": {
+				"ok": "https://chatgpt.com"
+			}
+		},
+		{
+			"header": "\"https://CHATGPT.com/\"",
+			"result": {
+				"ok": "https://chatgpt.com"
+			}
+		},
+		{
+			"header": "\"HTTPS://chatgpt.com\"",
+			"result": {
+				"ok": null
+			}
+		},
+		{
+			"header": "\"https://chatgpt.com/path/\"",
+			"result": {
+				"ok": "https://chatgpt.com/path"
+			}
+		},
+		{
+			"header": "\"https://chatgpt.com/path\"",
+			"result": {
+				"ok": "https://chatgpt.com/path"
+			}
+		},
+		{
+			"header": "\"https://chatgpt.com/?q=1\"",
+			"result": {
+				"ok": "https://chatgpt.com/?q=1"
+			}
+		},
+		{
+			"header": "\"https://chatgpt.com/#frag\"",
+			"result": {
+				"ok": "https://chatgpt.com/#frag"
+			}
+		},
+		{
+			"header": "\"https://chatgpt.com:443/\"",
+			"result": {
+				"ok": "https://chatgpt.com"
+			}
+		},
+		{
+			"header": "\"https://chatgpt.com:8443/\"",
+			"result": {
+				"ok": "https://chatgpt.com:8443"
+			}
+		},
+		{
+			"header": "\"http://chatgpt.com:80\"",
+			"result": {
+				"ok": "http://chatgpt.com"
+			}
+		},
+		{
+			"header": "\"https://user:pass@chatgpt.com\"",
+			"result": {
+				"ok": "https://user:pass@chatgpt.com"
+			}
+		},
+		{
+			"header": "\"https://ÉXAMPLE.com\"",
+			"result": {
+				"ok": "https://xn--xample-9ua.com"
+			}
+		},
+		{
+			"header": "\"https://xn--nxasmq6b.com\"",
+			"result": {
+				"ok": "https://xn--nxasmq6b.com"
+			}
+		},
+		{
+			"header": "\"https://[::1]:8080/\"",
+			"result": {
+				"ok": "https://[::1]:8080"
+			}
+		},
+		{
+			"header": "\"https://0x7f.1/\"",
+			"result": {
+				"ok": "https://127.0.0.1"
+			}
+		},
+		{
+			"header": "\"https://exa mple.com\"",
+			"result": {
+				"error": "Invalid URL"
+			}
+		},
+		{
+			"header": "\"https://[::1\"",
+			"result": {
+				"error": "Invalid URL"
+			}
+		},
+		{
+			"header": "\"http://a:99999\"",
+			"result": {
+				"error": "Invalid URL"
+			}
+		},
+		{
+			"header": "\"https://\"",
+			"result": {
+				"ok": null
+			}
+		},
+		{
+			"header": "\"http://\"",
+			"result": {
+				"ok": null
+			}
+		},
+		{
+			"header": "\"ftp://example.com\"",
+			"result": {
+				"ok": null
+			}
+		},
+		{
+			"header": "\"https://a\"b\"",
+			"result": {
+				"ok": null
+			}
+		},
+		{
+			"header": "\"https://a.com",
+			"result": {
+				"ok": null
+			}
+		},
+		{
+			"header": "https://a.com",
+			"result": {
+				"ok": null
+			}
+		},
+		{
+			"header": "",
+			"result": {
+				"ok": null
+			}
+		},
+		{
+			"header": "g=\"https://agent.bot.goog\", o=\"https://chatgpt.com\"",
+			"result": {
+				"ok": "https://agent.bot.goog"
+			}
+		},
+		{
+			"header": "  g_1-x=\"https://agent.bot.goog\";param",
+			"result": {
+				"ok": "https://agent.bot.goog"
+			}
+		},
+		{
+			"header": "1g=\"https://agent.bot.goog\"",
+			"result": {
+				"ok": null
+			}
+		},
+		{
+			"header": "g =\"https://agent.bot.goog\"",
+			"result": {
+				"ok": null
+			}
+		},
+		{
+			"header": "g=\"https://agent.bot.goog",
+			"result": {
+				"ok": null
+			}
+		},
+		{
+			"header": "g=\"ftp://agent.bot.goog\"",
+			"result": {
+				"ok": null
+			}
+		},
+		{
+			"header": "g=\"https://exa mple.com\"",
+			"result": {
+				"error": "Invalid URL"
+			}
+		},
+		{
+			"header": "g=\"https://\"",
+			"result": {
+				"ok": null
+			}
+		},
+		{
+			"header": " g=\"https://agent.bot.goog\"",
+			"result": {
+				"ok": "https://agent.bot.goog"
+			}
+		},
+		{
+			"header": "\"https://chatgpt.com\" ",
+			"result": {
+				"ok": "https://chatgpt.com"
+			}
+		},
+		{
+			"header": "\"https://chatgpt.com/a/b/\"",
+			"result": {
+				"ok": "https://chatgpt.com/a/b"
+			}
+		},
+		{
+			"header": "\"https://chatgpt.com//\"",
+			"result": {
+				"ok": "https://chatgpt.com/"
+			}
+		},
+		{
+			"header": "\"https://chat\tgpt.com\"",
+			"result": {
+				"ok": "https://chatgpt.com"
+			}
+		},
+		{
+			"header": "\"https://chatgpt.com\n\"",
+			"result": {
+				"ok": "https://chatgpt.com"
+			}
+		},
+		{
+			"header": "\"https://%41.com\"",
+			"result": {
+				"ok": "https://a.com"
+			}
+		},
+		{
+			"header": "\"https://a..com/\"",
+			"result": {
+				"ok": "https://a..com"
+			}
+		},
+		{
+			"header": "\"http://chatgpt.com.\"",
+			"result": {
+				"ok": "http://chatgpt.com."
+			}
+		}
+	],
+	"normaliseSignatureAgentUrl": [
+		{
+			"input": "https://chatgpt.com",
+			"result": {
+				"ok": "https://chatgpt.com"
+			}
+		},
+		{
+			"input": "https://chatgpt.com/",
+			"result": {
+				"ok": "https://chatgpt.com"
+			}
+		},
+		{
+			"input": "HTTPS://CHATGPT.COM/A/",
+			"result": {
+				"ok": "https://chatgpt.com/A"
+			}
+		},
+		{
+			"input": "foo://ABC/",
+			"result": {
+				"ok": "foo://abc"
+			}
+		},
+		{
+			"input": "foo://ABC",
+			"result": {
+				"ok": "foo://abc"
+			}
+		},
+		{
+			"input": "foo://h%C3%A9/",
+			"result": {
+				"ok": "foo://h%c3%a9"
+			}
+		},
+		{
+			"input": "foo:/x",
+			"result": {
+				"ok": "foo:/x"
+			}
+		},
+		{
+			"input": "mailto:X",
+			"result": {
+				"ok": "mailto:X"
+			}
+		},
+		{
+			"input": "mailto:x/",
+			"result": {
+				"ok": "mailto:x"
+			}
+		},
+		{
+			"input": "file:///tmp/",
+			"result": {
+				"ok": "file:///tmp"
+			}
+		},
+		{
+			"input": "https://a.com/?x",
+			"result": {
+				"ok": "https://a.com/?x"
+			}
+		},
+		{
+			"input": "https://a.com/#",
+			"result": {
+				"ok": "https://a.com/#"
+			}
+		},
+		{
+			"input": "not a url",
+			"result": {
+				"error": "Invalid URL"
+			}
+		},
+		{
+			"input": "",
+			"result": {
+				"error": "Invalid URL"
+			}
+		},
+		{
+			"input": "https://a.com//",
+			"result": {
+				"ok": "https://a.com/"
+			}
+		},
+		{
+			"input": "https://[0:0::1]/",
+			"result": {
+				"ok": "https://[::1]"
+			}
+		},
+		{
+			"input": "  https://trim.com/  ",
+			"result": {
+				"ok": "https://trim.com"
+			}
+		},
+		{
+			"input": "https://a.com:443",
+			"result": {
+				"ok": "https://a.com"
+			}
+		}
+	],
+	"buildSignatureBase": [
+		{
+			"covered": [
+				"@authority",
+				"signature-agent"
+			],
+			"authority": "example.com",
+			"signatureAgent": "\"https://chatgpt.com\"",
+			"params": "(\"@authority\" \"signature-agent\");created=1735689600;expires=1735693200;keyid=\"abc\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+			"result": {
+				"ok": "\"@authority\": example.com\n\"signature-agent\": \"https://chatgpt.com\"\n\"@signature-params\": (\"@authority\" \"signature-agent\");created=1735689600;expires=1735693200;keyid=\"abc\";alg=\"ed25519\";tag=\"web-bot-auth\""
+			}
+		},
+		{
+			"covered": [
+				"signature-agent",
+				"@authority"
+			],
+			"authority": "example.com",
+			"signatureAgent": "g=\"https://agent.bot.goog\"",
+			"params": "(\"signature-agent\" \"@authority\");keyid=\"k\"",
+			"result": {
+				"ok": "\"signature-agent\": g=\"https://agent.bot.goog\"\n\"@authority\": example.com\n\"@signature-params\": (\"signature-agent\" \"@authority\");keyid=\"k\""
+			}
+		},
+		{
+			"covered": [],
+			"authority": "x",
+			"signatureAgent": "y",
+			"params": "()",
+			"result": {
+				"ok": "\"@signature-params\": ()"
+			}
+		},
+		{
+			"covered": [
+				"@authority",
+				"@authority"
+			],
+			"authority": "a:8080",
+			"signatureAgent": "",
+			"params": "",
+			"result": {
+				"ok": "\"@authority\": a:8080\n\"@authority\": a:8080\n\"@signature-params\": "
+			}
+		},
+		{
+			"covered": [
+				"@method"
+			],
+			"authority": "example.com",
+			"signatureAgent": "\"\"",
+			"params": "()",
+			"result": {
+				"error": "unsupported covered component \"@method\" for Web Bot Auth"
+			}
+		},
+		{
+			"covered": [
+				"@authority",
+				"Signature-Agent"
+			],
+			"authority": "example.com",
+			"signatureAgent": "x",
+			"params": "()",
+			"result": {
+				"error": "unsupported covered component \"Signature-Agent\" for Web Bot Auth"
+			}
+		},
+		{
+			"covered": [
+				""
+			],
+			"authority": "example.com",
+			"signatureAgent": "x",
+			"params": "()",
+			"result": {
+				"error": "unsupported covered component \"\" for Web Bot Auth"
+			}
+		}
+	],
+	"resolveJwks": [
+		{
+			"name": "signer https://signer.example.com",
+			"signerUrl": "https://signer.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://signer.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "signer https://signer.example.com/",
+			"signerUrl": "https://signer.example.com/",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://signer.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "signer https://signer.example.com/sub/path?q=1#f",
+			"signerUrl": "https://signer.example.com/sub/path?q=1#f",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://signer.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "signer https://SIGNER.Example.COM",
+			"signerUrl": "https://SIGNER.Example.COM",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://signer.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "signer https://signer.example.com:8443",
+			"signerUrl": "https://signer.example.com:8443",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://signer.example.com:8443/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "signer http://signer.example.com",
+			"signerUrl": "http://signer.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer must be https: http://signer.example.com"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer https://127.0.0.1",
+			"signerUrl": "https://127.0.0.1",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer host not allowed: 127.0.0.1"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer https://10.0.0.5:6379",
+			"signerUrl": "https://10.0.0.5:6379",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer host not allowed: 10.0.0.5"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer https://169.254.169.254",
+			"signerUrl": "https://169.254.169.254",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer host not allowed: 169.254.169.254"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer https://0x7f.1",
+			"signerUrl": "https://0x7f.1",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer host not allowed: 127.0.0.1"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer https://2130706433",
+			"signerUrl": "https://2130706433",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer host not allowed: 127.0.0.1"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer https://[::1]",
+			"signerUrl": "https://[::1]",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer host not allowed: [::1]"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer https://[fe80::1]:443",
+			"signerUrl": "https://[fe80::1]:443",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer host not allowed: [fe80::1]"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer https://localhost",
+			"signerUrl": "https://localhost",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer host not allowed: localhost"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer https://LOCALHOST",
+			"signerUrl": "https://LOCALHOST",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer host not allowed: localhost"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer https://redis.localhost",
+			"signerUrl": "https://redis.localhost",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer host not allowed: redis.localhost"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer https://intranet",
+			"signerUrl": "https://intranet",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer host not allowed: intranet"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer https://1.2.3",
+			"signerUrl": "https://1.2.3",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer host not allowed: 1.2.0.3"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer https://example.com.",
+			"signerUrl": "https://example.com.",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://example.com./.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "signer ftp://example.com",
+			"signerUrl": "ftp://example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer must be https: ftp://example.com"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer file:///etc",
+			"signerUrl": "file:///etc",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer must be https: null"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer foo://example.com",
+			"signerUrl": "foo://example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "signer must be https: null"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer not a url",
+			"signerUrl": "not a url",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "Invalid URL"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer ",
+			"signerUrl": "",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "Invalid URL"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer mailto:x",
+			"signerUrl": "mailto:x",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "Invalid URL"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "signer https://user:pw@signer.example.com",
+			"signerUrl": "https://user:pw@signer.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://user:pw@signer.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "local signer http://localhost:1234",
+			"signerUrl": "http://localhost:1234",
+			"options": {
+				"allowLocalSigners": true
+			},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"http://localhost:1234/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "local signer https://127.0.0.1",
+			"signerUrl": "https://127.0.0.1",
+			"options": {
+				"allowLocalSigners": true
+			},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://127.0.0.1/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "local signer foo://x",
+			"signerUrl": "foo://x",
+			"options": {
+				"allowLocalSigners": true
+			},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"foo://x/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "local signer not a url",
+			"signerUrl": "not a url",
+			"options": {
+				"allowLocalSigners": true
+			},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "Invalid URL"
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "status 404",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 404,
+				"headers": [],
+				"chunks": [
+					"nope"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "JWKS fetch 404 at https://s.example.com/.well-known/http-message-signatures-directory"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "status 500",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 500,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "JWKS fetch 500 at https://s.example.com/.well-known/http-message-signatures-directory"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "status 299 is ok",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 299,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "fetch throws",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "throw",
+				"message": "fetch failed"
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767225600001
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "fetch failed"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767225600001,
+					"result": {
+						"error": "fetch failed"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "hang times out",
+			"signerUrl": "https://s.example.com",
+			"options": {
+				"timeoutMs": 10
+			},
+			"response": {
+				"kind": "hang"
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "The operation was aborted due to timeout"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "content-length 65536",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"content-length",
+						"65536"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "content-length 65537",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"content-length",
+						"65537"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "JWKS body too large: 65537 bytes"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "content-length 1e6",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"content-length",
+						"1e6"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "JWKS body too large: 1000000 bytes"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "content-length 0x20000",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"content-length",
+						"0x20000"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "JWKS body too large: 131072 bytes"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "content-length  70000 ",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"content-length",
+						" 70000 "
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "JWKS body too large: 70000 bytes"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "content-length abc",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"content-length",
+						"abc"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "content-length ",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"content-length",
+						""
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "content-length -1",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"content-length",
+						"-1"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "content-length Infinity",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"content-length",
+						"Infinity"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "JWKS body too large: Infinity bytes"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "content-length 1.5e5",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"content-length",
+						"1.5e5"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "JWKS body too large: 150000 bytes"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "content-length 70000, 70000",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"content-length",
+						"70000, 70000"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "content-length 0b1",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"content-length",
+						"0b1"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body exactly at the cap",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[],\"pad\":\"",
+					{
+						"repeat": "x",
+						"times": 65516
+					},
+					"\"}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": []
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body one byte over the cap, in chunks",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[],\"pad\":\"",
+					{
+						"repeat": "x",
+						"times": 65517
+					},
+					"\"}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "JWKS body exceeds 65536 bytes"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body ",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					""
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "SyntaxError"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body null",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"null"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "Cannot read properties of null (reading 'keys')"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body []",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"[]"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": []
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body 5",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"5"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": []
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body \"keys\"",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"\"keys\""
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": []
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body {}",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": []
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body {\"keys\":null}",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":null}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": []
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body {\"keys\":{}}",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":{}}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": []
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body {\"keys\":\"abc\"}",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":\"abc\"}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": []
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body {\"keys\":[]}",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": []
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body {\"keys\":[1,null,\"x\",{\"kid\":\"a\"}]}",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[1,null,\"x\",{\"kid\":\"a\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							1,
+							null,
+							"x",
+							{
+								"kid": "a"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body {\"keys\":[{\"kid\":\"a\"}],\"keys\":[{\"kid\":\"b\"",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kid\":\"a\"}],\"keys\":[{\"kid\":\"b\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kid": "b"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body ﻿{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"﻿{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body  \n\t{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\"",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					" \n\t{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}\r\n "
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body {bad json}",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{bad json}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "SyntaxError"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body {\"keys\":[]} trailing",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[]} trailing"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "SyntaxError"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body {\"keys\":[{\"kid\":\"\\u00e9\",\"n\":1e300}]}",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kid\":\"\\u00e9\",\"n\":1e300}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kid": "é",
+								"n": 1e+300
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "body {\"keys\":[{\"big\":12345678901234567890,\"f\"",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"big\":12345678901234567890,\"f\":1.5,\"neg\":-0}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"big": 12345678901234567000,
+								"f": 1.5,
+								"neg": 0
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "null body",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": null
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"error": "SyntaxError"
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "invalid utf-8 is replaced",
+			"signerUrl": "https://s.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kid\":\"",
+					{
+						"hex": "ff80c3"
+					},
+					"\"},{\"kid\":\"",
+					{
+						"hex": "e282"
+					},
+					"\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kid": "���"
+							},
+							{
+								"kid": "�"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://s.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "default ttl",
+			"signerUrl": "https://ttl.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767229199999,
+				1767229200000,
+				1767229200001
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767229199999,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": []
+				},
+				{
+					"nowMs": 1767229200000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767229200001,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "max-age=60",
+			"signerUrl": "https://ttl.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"cache-control",
+						"max-age=60"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767225659999,
+				1767225660000,
+				1767225660001
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767225659999,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": []
+				},
+				{
+					"nowMs": 1767225660000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767225660001,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "public, MAX-AGE=10",
+			"signerUrl": "https://ttl.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"cache-control",
+						"public, MAX-AGE=10"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767225609999,
+				1767225610000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767225609999,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": []
+				},
+				{
+					"nowMs": 1767225610000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "max-age=0",
+			"signerUrl": "https://ttl.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"cache-control",
+						"max-age=0"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "max-age= without digits",
+			"signerUrl": "https://ttl.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"cache-control",
+						"max-age=, max-age=5"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767225604999,
+				1767225605000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767225604999,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": []
+				},
+				{
+					"nowMs": 1767225605000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "s-maxage only",
+			"signerUrl": "https://ttl.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"cache-control",
+						"s-maxage=5"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767225605000,
+				1767229200000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767225605000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": []
+				},
+				{
+					"nowMs": 1767229200000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "max-age=007",
+			"signerUrl": "https://ttl.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"cache-control",
+						"max-age=007"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767225606999,
+				1767225607000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767225606999,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": []
+				},
+				{
+					"nowMs": 1767225607000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "huge max-age",
+			"signerUrl": "https://ttl.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"cache-control",
+						"max-age=9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767311999999,
+				1767312000000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767311999999,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": []
+				},
+				{
+					"nowMs": 1767312000000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "max-age capped",
+			"signerUrl": "https://ttl.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"cache-control",
+						"max-age=999999999"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767312001000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767312001000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "ttlMs overrides",
+			"signerUrl": "https://ttl.example.com",
+			"options": {
+				"ttlMs": 100000
+			},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [
+					[
+						"cache-control",
+						"max-age=60"
+					]
+				],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767225660000,
+				1767225700000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767225660000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": []
+				},
+				{
+					"nowMs": 1767225700000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "ttlMs 0",
+			"signerUrl": "https://ttl.example.com",
+			"options": {
+				"ttlMs": 0
+			},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767225600000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "ttlMs negative",
+			"signerUrl": "https://ttl.example.com",
+			"options": {
+				"ttlMs": -5
+			},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767225599990
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767225599990,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": []
+				}
+			]
+		},
+		{
+			"name": "ttlMs above cap",
+			"signerUrl": "https://ttl.example.com",
+			"options": {
+				"ttlMs": 172800000
+			},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767312000000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767312000000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				}
+			]
+		},
+		{
+			"name": "clock going backwards keeps cache",
+			"signerUrl": "https://ttl.example.com",
+			"options": {},
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"k\",\"x\":\"AAAA\"}]}"
+				]
+			},
+			"stepTimesMs": [
+				1767225600000,
+				1767222000000
+			],
+			"steps": [
+				{
+					"nowMs": 1767225600000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": [
+						"https://ttl.example.com/.well-known/http-message-signatures-directory"
+					]
+				},
+				{
+					"nowMs": 1767222000000,
+					"result": {
+						"ok": [
+							{
+								"kty": "OKP",
+								"crv": "Ed25519",
+								"kid": "k",
+								"x": "AAAA"
+							}
+						]
+					},
+					"fetchedUrls": []
+				}
+			]
+		}
+	],
+	"ed25519Sign": [
+		{
+			"seed": "1f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8",
+			"message": "",
+			"publicKey": "0bd36a5d7c258719386b7f307da3904675e3fddf499818d175097a423d3bdccf",
+			"signature": "5c42328cd11de365fb7180c790c3b06d691cdd5bae66d0091f0d842314499a4ced04cb5b0188179a9389697d22bedd9dd1692b3b35c874f58730fffc48662b0c"
+		},
+		{
+			"seed": "1f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8",
+			"message": "abc",
+			"publicKey": "0bd36a5d7c258719386b7f307da3904675e3fddf499818d175097a423d3bdccf",
+			"signature": "dd8961a294260ea783f1f4dd3a3b6caec66ab92cb624c3559667a427d10f92e76ad6abe7e590ae77be105dcea299db828bd9c51dad09ed8b4619f22290e83602"
+		},
+		{
+			"seed": "1f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8",
+			"message": "\"@authority\": example.com\n\"signature-agent\": \"https://chatgpt.com\"\n\"@signature-params\": (\"@authority\" \"signature-agent\");created=1;expires=2",
+			"publicKey": "0bd36a5d7c258719386b7f307da3904675e3fddf499818d175097a423d3bdccf",
+			"signature": "0ec375d7c4f3193e5c021d38b68b8b39d7014880d71f052bcca60f87c50fd6b5ac3ebf53f8bafac64094b823b45fa36ec3345f66ab8e5afca416b6167ab16706"
+		},
+		{
+			"seed": "1f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8",
+			"message": "ünïcödé ✓",
+			"publicKey": "0bd36a5d7c258719386b7f307da3904675e3fddf499818d175097a423d3bdccf",
+			"signature": "9515ff118bcedb786478ddbff16c2ac73d1cb01581478c3593be8f61a1839af41d7f4898847434c944f9c021957ead1030923f2f5b272fc06cc4f1197cf1eb0c"
+		},
+		{
+			"seed": "3e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb02091017",
+			"message": "",
+			"publicKey": "6044828b3cfb8abe33c70986a951ffbb4eaefd8764fcc053f96fd5d2bee46e89",
+			"signature": "ccd9099b7b3f636656567fdf291e2ae1d80ce2b385e2b891544e93513e00e19a751448dc33db2683efc696a7ad366cf46cb8c2e5c3efeeab6d0c0e2995fadb05"
+		},
+		{
+			"seed": "3e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb02091017",
+			"message": "abc",
+			"publicKey": "6044828b3cfb8abe33c70986a951ffbb4eaefd8764fcc053f96fd5d2bee46e89",
+			"signature": "65034fc84cc2e831bd421bb8ea475ea7e69423f274e4055deb2426ced87f6398fea9a61a03ecaaaa916a052f822e51a30c415a8ff54868ddb2569e779040060a"
+		},
+		{
+			"seed": "3e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb02091017",
+			"message": "\"@authority\": example.com\n\"signature-agent\": \"https://chatgpt.com\"\n\"@signature-params\": (\"@authority\" \"signature-agent\");created=1;expires=2",
+			"publicKey": "6044828b3cfb8abe33c70986a951ffbb4eaefd8764fcc053f96fd5d2bee46e89",
+			"signature": "9cf1bdced1a011b246dbea3eed1aebb63a43490d07bd323b45f32c7e856fc4a6687ec270d68cfafaa6adf8560be35b2d8db998ea8da1005df6bc97f1dfcf1d01"
+		},
+		{
+			"seed": "3e454c535a61686f767d848b9299a0a7aeb5bcc3cad1d8dfe6edf4fb02091017",
+			"message": "ünïcödé ✓",
+			"publicKey": "6044828b3cfb8abe33c70986a951ffbb4eaefd8764fcc053f96fd5d2bee46e89",
+			"signature": "4111db765060026a9c2274c6ce0800f6e675795335a7108048c12f387da65b7368b8d3fea38cdb19473236ebc05385ba74a07cd84b0ea1b5c6e84448074a240a"
+		},
+		{
+			"seed": "5d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f36",
+			"message": "",
+			"publicKey": "8b731a63dd9e407580a54b8e940b6f68d07284d35941a2d03c82cc6df0a6c184",
+			"signature": "362f0025a1971692aaa83680d1811d06d90cc7864a3956ffdf4a60c521f680256f30694a74f39bcc2d8f8a426aceef525767acf4133818e6bba280be55363103"
+		},
+		{
+			"seed": "5d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f36",
+			"message": "abc",
+			"publicKey": "8b731a63dd9e407580a54b8e940b6f68d07284d35941a2d03c82cc6df0a6c184",
+			"signature": "85cff8f9d20e65dd8e4e6e16fcb74885b17645267b9599349a6ada86fb6e90ce3aa95aeb4d465a5e447daad16a6069dc7cbf3de5b94112975bdafd882968d50c"
+		},
+		{
+			"seed": "5d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f36",
+			"message": "\"@authority\": example.com\n\"signature-agent\": \"https://chatgpt.com\"\n\"@signature-params\": (\"@authority\" \"signature-agent\");created=1;expires=2",
+			"publicKey": "8b731a63dd9e407580a54b8e940b6f68d07284d35941a2d03c82cc6df0a6c184",
+			"signature": "34b03a0c4f748e383cade42f2b5bbe1edeb58f559d0113e02946e0754df0c5e1747e398a0c917fa40d4e9816ca5d8b5167f03f701605e1efb1cc14ff10926f0c"
+		},
+		{
+			"seed": "5d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0f7fe050c131a21282f36",
+			"message": "ünïcödé ✓",
+			"publicKey": "8b731a63dd9e407580a54b8e940b6f68d07284d35941a2d03c82cc6df0a6c184",
+			"signature": "f2b5e82ae8cd1865437e06274b490b3f6ac72b696628fd2917873b97ee03d75ec7d5947ebeb3e0256cdeef5173401000a75296b511688cf0b597efb5f06f2605"
+		}
+	],
+	"ed25519Verify": [
+		{
+			"name": "valid",
+			"signature": "a46628d786eb030f3e2099fd77c8e86febbfcda68a177787a88264a3634999748cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": true
+		},
+		{
+			"name": "wrong message",
+			"signature": "a46628d786eb030f3e2099fd77c8e86febbfcda68a177787a88264a3634999748cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f74206175746821",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "wrong key",
+			"signature": "a46628d786eb030f3e2099fd77c8e86febbfcda68a177787a88264a3634999748cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "8374bfc7653a3514931ed9fa5a5b3e0693b1dee256e1f2740e20f1c9ba325d98",
+			"valid": false
+		},
+		{
+			"name": "flipped byte 0",
+			"signature": "a56628d786eb030f3e2099fd77c8e86febbfcda68a177787a88264a3634999748cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "flipped byte 31",
+			"signature": "a46628d786eb030f3e2099fd77c8e86febbfcda68a177787a88264a3634999758cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "flipped byte 32",
+			"signature": "a46628d786eb030f3e2099fd77c8e86febbfcda68a177787a88264a3634999748dd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "flipped byte 63",
+			"signature": "a46628d786eb030f3e2099fd77c8e86febbfcda68a177787a88264a3634999748cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60e",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "s + L (non-canonical s)",
+			"signature": "a46628d786eb030f3e2099fd77c8e86febbfcda68a177787a88264a36349997479a4636feb494ba1e7ea4a5138c7de930ccfed630e3384ab94e12c101bfeb61f",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "short signature",
+			"signature": "a46628d786eb030f3e2099fd77c8e86febbfcda68a177787a88264a3634999748cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb6",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "empty signature",
+			"signature": "",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "long signature",
+			"signature": "a46628d786eb030f3e2099fd77c8e86febbfcda68a177787a88264a3634999748cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f00",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "identity R, s=0, torsion A #0",
+			"signature": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0100000000000000000000000000000000000000000000000000000000000000",
+			"valid": true
+		},
+		{
+			"name": "R = sB, torsion A #0",
+			"signature": "c4c1227d7fff941a976049ecefad7b663fa5121d769cbbd79a53d344e4773e98efcdab9078563412000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0100000000000000000000000000000000000000000000000000000000000000",
+			"valid": true
+		},
+		{
+			"name": "torsion R #0, s=0, identity A",
+			"signature": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0100000000000000000000000000000000000000000000000000000000000000",
+			"valid": true
+		},
+		{
+			"name": "valid signature with torsion added to R #0",
+			"signature": "a46628d786eb030f3e2099fd77c8e86febbfcda68a177787a88264a3634999748cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": true
+		},
+		{
+			"name": "identity R, s=0, torsion A #1",
+			"signature": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a",
+			"valid": true
+		},
+		{
+			"name": "R = sB, torsion A #1",
+			"signature": "c4c1227d7fff941a976049ecefad7b663fa5121d769cbbd79a53d344e4773e98efcdab9078563412000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a",
+			"valid": true
+		},
+		{
+			"name": "torsion R #1, s=0, identity A",
+			"signature": "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a0000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0100000000000000000000000000000000000000000000000000000000000000",
+			"valid": true
+		},
+		{
+			"name": "valid signature with torsion added to R #1",
+			"signature": "4ffcde5f3de95a8d24e146bc6d8581ead83702fe762e19aa2dbb21d71e8098868cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "identity R, s=0, torsion A #2",
+			"signature": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0000000000000000000000000000000000000000000000000000000000000080",
+			"valid": true
+		},
+		{
+			"name": "R = sB, torsion A #2",
+			"signature": "c4c1227d7fff941a976049ecefad7b663fa5121d769cbbd79a53d344e4773e98efcdab9078563412000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0000000000000000000000000000000000000000000000000000000000000080",
+			"valid": true
+		},
+		{
+			"name": "torsion R #2, s=0, identity A",
+			"signature": "00000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0100000000000000000000000000000000000000000000000000000000000000",
+			"valid": true
+		},
+		{
+			"name": "valid signature with torsion added to R #2",
+			"signature": "349cb252cd09e424a9b322801392c399723cbb8c042601b66dc286f2509bc2748cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "identity R, s=0, torsion A #3",
+			"signature": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05",
+			"valid": true
+		},
+		{
+			"name": "R = sB, torsion A #3",
+			"signature": "c4c1227d7fff941a976049ecefad7b663fa5121d769cbbd79a53d344e4773e98efcdab9078563412000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05",
+			"valid": true
+		},
+		{
+			"name": "torsion R #3, s=0, identity A",
+			"signature": "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc050000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0100000000000000000000000000000000000000000000000000000000000000",
+			"valid": true
+		},
+		{
+			"name": "valid signature with torsion added to R #3",
+			"signature": "746fdc988d0535d95dbd34bedc2a0245e35a147e2e3023fc22a015544c93c5478cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "identity R, s=0, torsion A #4",
+			"signature": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+			"valid": true
+		},
+		{
+			"name": "R = sB, torsion A #4",
+			"signature": "c4c1227d7fff941a976049ecefad7b663fa5121d769cbbd79a53d344e4773e98efcdab9078563412000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+			"valid": true
+		},
+		{
+			"name": "torsion R #4, s=0, identity A",
+			"signature": "ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f0000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0100000000000000000000000000000000000000000000000000000000000000",
+			"valid": true
+		},
+		{
+			"name": "valid signature with torsion added to R #4",
+			"signature": "4999d7287914fcf0c1df6602883717901440325975e88878577d9b5c9cb6668b8cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "identity R, s=0, torsion A #5",
+			"signature": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85",
+			"valid": true
+		},
+		{
+			"name": "R = sB, torsion A #5",
+			"signature": "c4c1227d7fff941a976049ecefad7b663fa5121d769cbbd79a53d344e4773e98efcdab9078563412000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85",
+			"valid": true
+		},
+		{
+			"name": "torsion R #5, s=0, identity A",
+			"signature": "26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc850000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0100000000000000000000000000000000000000000000000000000000000000",
+			"valid": true
+		},
+		{
+			"name": "valid signature with torsion added to R #5",
+			"signature": "9e0321a0c216a572db1eb943927a7e1527c8fd0189d1e655d244de28e17f67798cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "identity R, s=0, torsion A #6",
+			"signature": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0000000000000000000000000000000000000000000000000000000000000000",
+			"valid": true
+		},
+		{
+			"name": "R = sB, torsion A #6",
+			"signature": "c4c1227d7fff941a976049ecefad7b663fa5121d769cbbd79a53d344e4773e98efcdab9078563412000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0000000000000000000000000000000000000000000000000000000000000000",
+			"valid": true
+		},
+		{
+			"name": "torsion R #6, s=0, identity A",
+			"signature": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0100000000000000000000000000000000000000000000000000000000000000",
+			"valid": true
+		},
+		{
+			"name": "valid signature with torsion added to R #6",
+			"signature": "b9634dad32f61bdb564cdd7fec6d3c668dc34473fbd9fe49923d790daf643d8b8cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "identity R, s=0, torsion A #7",
+			"signature": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa",
+			"valid": true
+		},
+		{
+			"name": "R = sB, torsion A #7",
+			"signature": "c4c1227d7fff941a976049ecefad7b663fa5121d769cbbd79a53d344e4773e98efcdab9078563412000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa",
+			"valid": true
+		},
+		{
+			"name": "torsion R #7, s=0, identity A",
+			"signature": "c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa0000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0100000000000000000000000000000000000000000000000000000000000000",
+			"valid": true
+		},
+		{
+			"name": "valid signature with torsion added to R #7",
+			"signature": "7990236772faca26a242cb4123d5fdba1ca5eb81d1cfdc03dd5feaabb36c3ab88cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		},
+		{
+			"name": "non-canonical identity A",
+			"signature": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "eeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f",
+			"valid": true
+		},
+		{
+			"name": "non-canonical identity R",
+			"signature": "eeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f0000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0100000000000000000000000000000000000000000000000000000000000000",
+			"valid": true
+		},
+		{
+			"name": "x=0 with sign bit set (A)",
+			"signature": "01000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+			"message": "77656220626f742061757468",
+			"publicKey": "0100000000000000000000000000000000000000000000000000000000000080",
+			"valid": true
+		},
+		{
+			"name": "A not on curve",
+			"signature": "a46628d786eb030f3e2099fd77c8e86febbfcda68a177787a88264a3634999748cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "0200000000000000000000000000000000000000000000000000000000000000",
+			"valid": false
+		},
+		{
+			"name": "R not on curve",
+			"signature": "02000000000000000000000000000000000000000000000000000000000000008cd06d12d1e63849114e53ae59cdff7e0ccfed630e3384ab94e12c101bfeb60f",
+			"message": "77656220626f742061757468",
+			"publicKey": "2c12e708dfc87a21bb9ade5a7aebb9b71e560525d835d22d00ade08d6bde3e8c",
+			"valid": false
+		}
+	],
+	"verifyWebBotAuth": [
+		{
+			"name": "valid bare-string agent",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "valid dictionary agent, components reversed",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "g=\"https://agent.bot.goog\"",
+				"signature-input": "sig1=(\"signature-agent\" \"@authority\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:dXLfoigWzXRfEwmjRKw8wojPUthy/k/wlBOnn8cxDGsWmmvUbVz8PSNCP91DNaWIp3A6eGr6l8ChboegP3ICCQ==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://agent.bot.goog",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://agent.bot.goog/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "valid with unquoted alg token",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=ed25519;tag=\"web-bot-auth\"",
+				"signature": "sig1=:TfIzfQip1ZRxJHq+y+674QLZO6BHd2kZrvQoOhAC+SN/ZljaIxFTNCFZpb8HZVNW3re1Xu797v7B8/WnV+V7Aw==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "valid without alg",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:K8voUTmk/Y6jElx5TRbkj4XrWisb32nmxR/+dmAJBejdmdjshCFOz/gThPPvO7mAh1FZqaMuwMqp6krgU7/+Dg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "valid with extra params",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\";nonce=\"abc\";x",
+				"signature": "sig1=:94SCCWSWW15pl6UTC73epNcZ6cxEHlaYHY0kyaUrvSMaqjSqlmlVB7YbjYzI+e0Oj8SzopmPQZ8NpLqUP/XeDA==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "valid with uppercase agent host",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://SIGNER.example.com/\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:KGVpLkUEX1TQy0j1gxgsFgKMe110hwVO2xSVncyC1zJUXc0nXhPsXmmzxoRwF/1TYYczDTJc0YGKLDpwQK4JDA==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "valid with port in authority",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com:8443/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:+R+J11t5eenU/A7416W/gcNYkj9OIJLrPaGCx3CXFDbByVPVIk1upRUwoWmC+ly7XFrGlMtf/LD41L6fNQcwAQ==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "valid with default port in url",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com:443/x",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "uppercase url host signed lowercase",
+			"nowMs": 1767225600000,
+			"url": "https://TARGET.example.com/x",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "valid with label sig2",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig2=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig2=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "valid with created at skew limit",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225605;expires=1767225665;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:CuxkTp+7YBnKxdQx/5cJnek3AJ1SjkG9pppZZTWAMvU/S3PydxDsmWpM8dKpd2QvkmUM0bFKF/iXLkHEBohWAA==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "valid expiring now",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225600;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:XoO/P+sWbe6VjGhQPTDYQD2LPUPnSrd9nt+CcASw5APM2SyksEG815+wqx80U5wW09jSmQ9PyoRBG6bWyq7AAg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "valid 24h window",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225500;expires=1767311900;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:aRl+zzwCS8ICXePviVuOQPph1KGiE2kruescK7FeSziwCc4gRnSpUo9A/ZdfwJIrhCuqqN0ljGVwcG0iIHaFBw==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "validity just over 24h",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225500;expires=1767311901;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:mjjiIh9/MdOkLW4fhpm6ze86mRGBrDgQJJAHuf0m+EWK7ThfQdGkNMYrOyFGS8z0Rzvuu0rg3/+h9sW+Y5FqCQ==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "validity-too-long"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "fractional times",
+			"nowMs": 1767225600700,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600.5;expires=1767225600.75;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:Ip7awsXBgHCAlD66upcfHWVeG3Hli2uRW+T3f+JF6HFwVSVjgO7Q5hSkv8DMlw/BUCLk6Hhjmi5MWkcSTV9pAA==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "fractional expired",
+			"nowMs": 1767225600751,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600.5;expires=1767225600.75;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:Ip7awsXBgHCAlD66upcfHWVeG3Hli2uRW+T3f+JF6HFwVSVjgO7Q5hSkv8DMlw/BUCLk6Hhjmi5MWkcSTV9pAA==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "expired"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "infinite times",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999;expires=9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:mfJzpBIi9SWVklbiakq5QqQdDEzFkoqkU1RYjzoYrL7IR3OJekFvvv63IpfPMezivvIGnPEOInxDTpsPtYEwAg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "not-yet-valid"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "tampered signature",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:PLjZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "bad-signature"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "tampered authority",
+			"nowMs": 1767225600000,
+			"url": "https://evil.example.com/api",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "bad-signature"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "signed with a different key",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w8R94zkLx02wNluMRGYcAj4j+beQlrGY8lEhkTRTLB3VOH9cbq5AtT71mAI0xjUzaej5vXm3ummYH3upKbiGBw==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "bad-signature"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "wrong key published under kid",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"J1eHvGStYlY80M-oklr07ymAoYk4ZIutnKCOZp4bI8o\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "bad-signature"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "no matching kid",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"other\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "no-matching-key"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "second key matches",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"other\",\"x\":\"J1eHvGStYlY80M-oklr07ymAoYk4ZIutnKCOZp4bI8o\"},{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "first of duplicate kids is wrong",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"J1eHvGStYlY80M-oklr07ymAoYk4ZIutnKCOZp4bI8o\"},{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "bad-signature"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "null jwk before match throws",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[null,{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"error": "Cannot read properties of null (reading 'kid')"
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "null jwk after match",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"},null]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "non-object jwks entries",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[1,\"x\",[],true,{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "rsa key",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"RSA\",\"kid\":\"test-key-1\",\"n\":\"abc\",\"e\":\"AQAB\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "malformed-key"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "wrong curve",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"X25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "malformed-key"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "missing x",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"test-key-1\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "malformed-key"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "numeric x",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"kid\":\"test-key-1\",\"x\":5}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "malformed-key"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "short x",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWA\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "malformed-key"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "invalid base64url x",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"!!!\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "malformed-key"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "padded base64url x",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY=\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "plain base64 x",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY=\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "numeric kid does not match",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"5\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:VA3SDeLdjNIFpo12ptzzdtglBgQrPFX8okSUXntksaC6f8N25X1BSJyndsFr2Do4HICCeXiiHQUhPNcE9qaQDw==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":5,\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "no-matching-key"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "jwks 500",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 500,
+				"headers": [],
+				"chunks": [
+					"x"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "jwks-fetch-failed"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "jwks throws",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "throw",
+				"message": "boom"
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "jwks-fetch-failed"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "jwks invalid json",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{nope"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "jwks-fetch-failed"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "jwks null",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"null"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "jwks-fetch-failed"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "jwks without keys",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "no-matching-key"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "http signer refused",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"http://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:Q5JadaRGPnhIyLi+Fk8Qq1nfNtl2uZ8/n284bCpTJX8tdLETtSVhbdgq/I9gQpLavtFZ6OtzKoj2j33+Y0MqDA==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "jwks-fetch-failed"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "localhost signer refused",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://localhost\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:xe38RgPQV3m1HYevuDc+7UFIYXzTWDHkaF+89D/R5HT09Kqqvr2ODnCl5HRgxp/vObt/KEcezx4jFpwCbvOIAw==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "jwks-fetch-failed"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "localhost signer allowed",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"http://localhost:1234\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:6ftW6FPTFl69ty+wgLTZ5LLcGR6l0VkKQkamtglBFMkkD4sLYcI8WFlvxlj06ZJtG3zSUPTbcQ5u2CPexxv+BQ==:"
+			},
+			"allowLocalSigners": true,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "http://localhost:1234",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"http://localhost:1234/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "agent with path",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com/bots/\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:UYGADduzFQsRSm+saGPNMGHsxWOFc+MvWPVE1izZYvJHe23rZN+VmtH93SDWQ+pfDDLWflrT2j8aHZ+X8eSMDQ==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com/bots",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "unsupported alg",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"rsa-pss-sha512\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:Q6ITCVy59POYrLWS0MS8xrY5NzocuxhLjyCsQ7OdUeJFZChlRB+VEcdzvSN+gkbRiz0qsCsg4aY2vk8erkS9Bg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "unsupported-alg"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "boolean alg",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg;tag=\"web-bot-auth\"",
+				"signature": "sig1=:T0Y63yiFfvUVzwOj1DAfMjdyEss6KOgLFYnAWKiwvCpcezmYZHn5oXLpLisqt8Lejk281c2H/Rx9qbmr+fcXAQ==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "unsupported-alg"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "uppercase alg",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ED25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:2KXA/4P9E6H2gdUGX408pFepSbVP/V9+i6GZeSfpjRBJajVhLxJMAA2tKob4jiJHiYbpJC2e5W0vLJ/1mi7vCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "unsupported-alg"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "missing keyid",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:/GcHluq4y6OA91PiFgCmNqzdQuQFwzhwwmLVvQZYBQ8Msdqdc/JtPU903rTs2Nked2K5JTqWZ0B59qqa5gr4Cw==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "missing-keyid"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "empty keyid",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:rrYUsHpkUS7NcTp9QY/XrpTfX2dxyCkz1x7OUWyoiKghXlgFMxpDycT01XMQYAbtVR54623DDppUxwDfbDrKCw==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "missing-keyid"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "numeric keyid",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=5;alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:MN6K49jXfuRmijVc5Xb90rYA+wpQq2XvwTuFUK4heqDHZN2gAa/eAGfl4xOsUuL+31Hbfu8VlZ0FRIU9fT7+DA==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "missing-keyid"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "token keyid",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=test-key-1;alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:cmFP6AHdnPyi3WaOozPxU3LPVc0rGwle+WEEX2sKw2i+iuWSdt6TpTTkEixt2oegXb5Lpm3aCnnog7xZlX7JBw==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "expired",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225480;expires=1767225540;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:prFC3EPM5EhJ2hnuGshdS4VkZawyeMVAeO6q+PibH77FZqMTikTZjNow/JgOqpiredawlcGwhsnmNXOZHDNvDQ==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "expired"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "expired by a second",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225599;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:VE38HBpDVFV1edSE++NDARUU9b+9nQ9JgcBrIEdsiXjJYFNBXzr12R9dj22O4n7LXMxt9C1u9R9pEeRBZQNWDw==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "expired"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "not yet valid",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225606;expires=1767225666;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:oCkeVR9lVr/FGYcXNYyUbNs5RAdVWOEY0Wv2HPoR6WWspz+nE7Ve2Xz3qxSBMUaAZ+okm/4K3gl+52639SNcBg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "not-yet-valid"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "missing created",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:pJ3g9j6M+z+MezNsZCyceaQsgKJupaVjWwtvc00WrY0syIiufdPKj1LVSlr8HgXLYmi7tTdKVcB3LiMjxEYUCw==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "missing-created-or-expires"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "missing expires",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:6smo530Aecau3SNEhUY6CFR3juUtWYbf0Han2CUeJFYoOABr7lZtthSRx5v5c7AR3kTpHi/XbGu5H9i+H1sxAA==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "missing-created-or-expires"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "string created",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=\"1767225600\";expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:Uz+HUdZafuR9Rezoj+m2yE75F+znalELME4EbVvdvP237rhEPzGMn52Iyb1OBw4XQfRpZG3WM3Bz85W42rffDw==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "missing-created-or-expires"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "boolean expires",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=?1;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:i+j+raYm/xBYr0QcFCHgME92rmS47QTlZdLgbaIwyGtRHuWJGkfQVXwwRtEgWQF7ey6gVan/gZnllDSJLQaiAg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "missing-created-or-expires"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "missing tag",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\"",
+				"signature": "sig1=:5WAdhE0pIfdEczLKQfZ0zpp3gdE6ISGpXGfqBLsLB6Tgoh9ZkNLVt/Xq4bTqE2jph7c94mDuT50nqIpzJbUZAw==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "wrong-tag"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "token tag",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=web-bot-auth",
+				"signature": "sig1=:mi5H6oG7pdnKQlS5Y2HbqvKU0VZxN03iUV4emhrZ3scjvVJusDvSYiNqDxX4AzbxcqXTMGbJe+q3CzbOm1kRCw==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "wrong tag",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"other\"",
+				"signature": "sig1=:RET6Sgadm4UtEjrjHEA7ON4iWa+hfhzS5W5V/YcS1mEXrgM4AygpDGMZQZsZWlXZ9x3484l6sWqZr2Fn4SWWCA==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "wrong-tag"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "expired and wrong tag",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225540;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"x\"",
+				"signature": "sig1=:hFQnFyD3Th0gofdmeZda73uhdY1gX0vGZLowPUlEh/PFNw1qqmOxn+8jwdyVR3AN1lAybU50bECHKaY6wfhKDA==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "wrong-tag"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "bad alg and wrong tag",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"x\";tag=\"x\"",
+				"signature": "sig1=:Bh91FyA4kzjn8itOBt844Fz4QpH5n7rI//X+7XwwOD6DGSM+lwVauCvkThmaqf6GlM02XUkkex8X0/upjBahAg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "unsupported-alg"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "proto bytes param",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\";__proto__=:AQID:",
+				"signature": "sig1=:TC0oGhShc2rPFUSseqhGLxmy8VH6Fcr33rrSDtMqTDJkWoR16cqv/DiCYmE8K4VNvl5w8aYDqHHh9EtC1+ElAw==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "proto bytes then length",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\";__proto__=:AQID:;length=3",
+				"signature": "sig1=:NLRmwvziWTwR7E9050nVXzZKUWEu0abqyjazUBgK4QoyZyTBOPG7WTQosIzE3pxXlchvd7JeBgB6ad8xBxM2DQ==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "unparseable-signature-input"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "signature label mismatch",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig2=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "unparseable-signature"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "signature not base64",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:!!!:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "unparseable-signature"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "empty signature bytes",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=::"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "bad-signature"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "colon-only signature",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "bad-signature"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "signature quoted",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=\"abc\""
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "unparseable-signature"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "unsupported component",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"@method\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:yAHjMaqs039vUoUP2LH+foU+TyDcaHpCViuykoqONDX0bN/dmTAkiqKX9RM4qryZQs7uDjY/cwaBXfKm8cjrCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "bad-signature"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "no covered components",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=();created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:x0FvtEN4TIozGbZ9uJ7N+EIs6vgmJO2zpGr83IL5DXusN6ZxenunSc88F8wxXFV6gi6wXY7Fsb/QIWmWDgOeCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "unparseable url",
+			"nowMs": 1767225600000,
+			"url": "not a url",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "bad-signature"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "non-special url",
+			"nowMs": 1767225600000,
+			"url": "foo://target.example.com/x",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": true,
+					"signerUrl": "https://signer.example.com",
+					"keyid": "test-key-1"
+				}
+			},
+			"fetchedUrls": [
+				"https://signer.example.com/.well-known/http-message-signatures-directory"
+			]
+		},
+		{
+			"name": "unparseable signature input",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "garbage",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "unparseable-signature-input"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "signature input not a list",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=\"x\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "unparseable-signature-input"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "unparseable signature agent",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "https://signer.example.com",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:OgLQUQmJ77EQt9lVRFykV2m7SILR1jIcgqFbJk90lO8bi47M+0vbbYapzFyd+7F4KM8beBqynt373g+M8L7GBg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "unparseable-signature-agent"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "signature agent ftp",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"ftp://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:U953cca/eqAqodewcylgE+ptX6aElDWoHkdhfRv1b4c0+RujUkAYUUer0KkJw3/ELl4FInTCPxV5eOjfCgLUDA==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "unparseable-signature-agent"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "signature agent invalid url throws",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://exa mple.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:Itxq5pJBxa8arvFq+WYKOB5NBRGVAL+Bp0L4tI60QJip5rIuVVsgOAHSEm/vWwoUO2CZRsEHCktITOIFfDveCQ==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"error": "Invalid URL"
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "missing signature-agent",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "no-signature-headers"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "missing signature-input",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature": "sig1=:w7jZMhDe6TeF8VfzUSk/WyvRS8SiVEFql8jTlHG19cA2sSiMtHOnzB2TS2dIEeEql1OyE90OD1qJgnjA0kfJCg==:"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "no-signature-headers"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "missing signature",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\""
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "no-signature-headers"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "empty signature header",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/api/thing",
+			"headers": {
+				"signature-agent": "\"https://signer.example.com\"",
+				"signature-input": "sig1=(\"@authority\" \"signature-agent\");created=1767225600;expires=1767225660;keyid=\"test-key-1\";alg=\"ed25519\";tag=\"web-bot-auth\"",
+				"signature": ""
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[{\"kty\":\"OKP\",\"crv\":\"Ed25519\",\"alg\":\"EdDSA\",\"kid\":\"test-key-1\",\"x\":\"siEsjjVfqZoNk7XREdrKbkLlgIfNuSkIfgaKkyHnWNY\"}]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "no-signature-headers"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "unsigned",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/",
+			"headers": {},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "no-signature-headers"
+				}
+			},
+			"fetchedUrls": []
+		},
+		{
+			"name": "uppercase header names are not found",
+			"nowMs": 1767225600000,
+			"url": "https://target.example.com/",
+			"headers": {
+				"Signature-Agent": "\"https://signer.example.com\"",
+				"Signature-Input": "x",
+				"Signature": "y"
+			},
+			"allowLocalSigners": false,
+			"response": {
+				"kind": "response",
+				"status": 200,
+				"headers": [],
+				"chunks": [
+					"{\"keys\":[]}"
+				]
+			},
+			"result": {
+				"ok": {
+					"verified": false,
+					"reason": "no-signature-headers"
+				}
+			},
+			"fetchedUrls": []
+		}
+	]
+}

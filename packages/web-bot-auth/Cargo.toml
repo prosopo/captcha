@@ -1,0 +1,29 @@
+[package]
+name = "prosopo-web-bot-auth"
+version = "0.0.1"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "rust/lib.rs"
+
+[dependencies]
+curve25519-dalek = { version = "4.1", features = ["digest"] }
+http = "1.1"
+indexmap = "2.6"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+serde_json = "1.0"
+sha2 = "0.10"
+tokio = { version = "1.40", features = ["time"] }
+url = "2.5"
+
+[dev-dependencies]
+ed25519-dalek = "2.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["float_roundtrip"] }
+tokio = { version = "1.40", features = ["macros", "rt", "time", "test-util"] }

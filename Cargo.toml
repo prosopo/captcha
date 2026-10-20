@@ -4,6 +4,7 @@ members = [
 	"packages/captcha-severity",
 	"packages/logger",
 	"packages/puzzle-assets",
+	"packages/web-bot-auth",
 ]
 exclude = [
 	"packages/native-ja4",
