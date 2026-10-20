@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { ProviderApi } from "@prosopo/api";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
@@ -122,7 +122,13 @@ export const withTimeout = async <T>(
 	let timeoutId: NodeJS.Timeout | undefined;
 	const timeoutPromise = new Promise<never>((_, reject) => {
 		timeoutId = setTimeout(() => {
-			reject(new ProsopoEnvError("API.UNKNOWN"));
+			reject(
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "FRIC-1",
+					message: "Unknown API error",
+				}),
+			);
 		}, ms);
 	});
 
@@ -149,7 +155,7 @@ const customDetectBot: BotDetectionFunction = async (
 	switchToImage?: boolean,
 ): Promise<BotDetectionFunctionResult> => {
 	if (!config.account.address) {
-		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+		throw new ProsopoError({ code: "SITE_KEY_MISSING", errorSite: "FRIC-2" });
 	}
 
 	const ipMode = pickIpMode(config);

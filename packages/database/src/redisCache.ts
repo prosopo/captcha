@@ -415,7 +415,7 @@ export class RedisWriteQueue {
 	 * the wrapper, network-glitch retries, or browser-tab races. The
 	 * original session has been consumed and soft-deleted by the
 	 * preceding `/captcha/pow`, so the follow-up gets
-	 * `CAPTCHA.NO_SESSION_FOUND` and the user sees an inline error → FAQ.
+	 * `NO_SESSION_FOUND` and the user sees an inline error → FAQ.
 	 *
 	 * This mapping lets `isValidRequest` resolve the original sessionId
 	 * forward to the live escalation session and proceed normally.

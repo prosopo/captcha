@@ -153,9 +153,7 @@ describe("what the grid renders", () => {
 	test("refuses to render an item with no hash", () => {
 		// Without a hash a tile can never be reported as selected, so the
 		// challenge is unanswerable and the fault belongs upstream.
-		expect(() => render({ items: [item("")] })).toThrow(
-			"CAPTCHA.MISSING_ITEM_HASH",
-		);
+		expect(() => render({ items: [item("")] })).toThrow("missing item hash");
 	});
 });
 

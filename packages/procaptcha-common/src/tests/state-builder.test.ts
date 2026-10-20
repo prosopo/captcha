@@ -106,7 +106,11 @@ describe("state/builder", () => {
 			const onStateUpdate = vi.fn();
 			const updateState = buildUpdateState(state, onStateUpdate);
 
-			const errorObj = { message: "Test error", key: "test" };
+			const errorObj = {
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:PROV-1",
+				message: "Test error",
+			};
 			updateState({ error: errorObj });
 
 			expect(state.error).toEqual(errorObj);
@@ -174,7 +178,11 @@ describe("state/builder", () => {
 
 		it("should handle error state update", () => {
 			const { state, update } = createProcaptchaState();
-			const errorObj = { message: "Test error", key: "testKey" };
+			const errorObj = {
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:PROV-1",
+				message: "Test error",
+			};
 
 			update({ error: errorObj });
 

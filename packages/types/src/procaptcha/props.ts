@@ -134,7 +134,7 @@ export interface ProcaptchaProps {
 	// escalation so the user doesn't have to click the checkbox a second time.
 	autoStart?: boolean;
 	// Called by the inner widget when the provider returns
-	// CAPTCHA.NO_SESSION_FOUND on the challenge fetch. The frictionless
+	// NO_SESSION_FOUND on the challenge fetch. The frictionless
 	// wrapper re-runs the frictionless flow to mint a new sessionId and
 	// re-mounts the widget in place. Coords are the checkbox click position
 	// the user already made — preserved so the retried submit still carries

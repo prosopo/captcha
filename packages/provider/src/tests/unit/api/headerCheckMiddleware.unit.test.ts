@@ -109,7 +109,6 @@ describe("headerCheckMiddleware", () => {
 
 		expect(validateAddressModule.validateSiteKey).toHaveBeenCalledWith(
 			"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-			mockLogger,
 		);
 	});
 
@@ -124,8 +123,6 @@ describe("headerCheckMiddleware", () => {
 
 		expect(validateAddressModule.validateAddr).toHaveBeenCalledWith(
 			"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
-			undefined,
-			mockLogger,
 		);
 	});
 

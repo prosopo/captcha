@@ -1,4 +1,3 @@
-import { ProsopoEnvError } from "@prosopo/common";
 import { buildDataset } from "@prosopo/datasets";
 import { CaptchaTypes, type Dataset, type DatasetRaw } from "@prosopo/types";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
@@ -40,11 +39,12 @@ describe("providerValidateDataset", () => {
 				minSolvedCaptchas,
 				minUnsolvedCaptchas,
 			),
-		).rejects.toThrow(
-			new ProsopoEnvError("DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED", {
-				context: { failedFuncName: "providerValidateDataset" },
-			}),
-		);
+		).rejects.toMatchObject({
+			code: "DATASET_INVALID",
+			errorId: "DATASET_INVALID:PROV-55",
+			message:
+				"Number of captchas in dataset is less than configured number of captchas",
+		});
 	});
 
 	it("should throw an error if solved captchas count is less than configured", async () => {
@@ -60,11 +60,12 @@ describe("providerValidateDataset", () => {
 				minSolvedCaptchas,
 				minUnsolvedCaptchas,
 			),
-		).rejects.toThrow(
-			new ProsopoEnvError("DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED", {
-				context: { failedFuncName: "providerValidateDataset" },
-			}),
-		);
+		).rejects.toMatchObject({
+			code: "DATASET_INVALID",
+			errorId: "DATASET_INVALID:PROV-56",
+			message:
+				"Number of solutions in dataset is less than configured number of solutions",
+		});
 	});
 
 	it("should throw an error if unsolved captchas count is less than configured", async () => {
@@ -80,11 +81,12 @@ describe("providerValidateDataset", () => {
 				minSolvedCaptchas,
 				minUnsolvedCaptchas,
 			),
-		).rejects.toThrow(
-			new ProsopoEnvError("DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED", {
-				context: { failedFuncName: "providerValidateDataset" },
-			}),
-		);
+		).rejects.toMatchObject({
+			code: "DATASET_INVALID",
+			errorId: "DATASET_INVALID:PROV-55",
+			message:
+				"Number of captchas in dataset is less than configured number of captchas",
+		});
 	});
 
 	it("should throw an error if every captcha is solved but unsolved captchas are required", async () => {
@@ -96,11 +98,14 @@ describe("providerValidateDataset", () => {
 			],
 		} as unknown as DatasetRaw;
 
-		await expect(providerValidateDataset(datasetRaw, 1, 1)).rejects.toThrow(
-			new ProsopoEnvError("DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED", {
-				context: { failedFuncName: "providerValidateDataset" },
-			}),
-		);
+		await expect(
+			providerValidateDataset(datasetRaw, 1, 1),
+		).rejects.toMatchObject({
+			code: "DATASET_INVALID",
+			errorId: "DATASET_INVALID:PROV-57",
+			message:
+				"Number of captchas in dataset is less than configured number of captchas",
+		});
 		expect(buildDataset).not.toHaveBeenCalled();
 	});
 
@@ -123,15 +128,11 @@ describe("providerValidateDataset", () => {
 				minSolvedCaptchas,
 				minUnsolvedCaptchas,
 			),
-		).rejects.toThrow(
-			new ProsopoEnvError("DATASET.DATASET_ID_UNDEFINED", {
-				context: {
-					failedFuncName: "providerValidateDataset",
-					datasetId: undefined,
-					datasetContentId: undefined,
-				},
-			}),
-		);
+		).rejects.toMatchObject({
+			code: "DATASET_INVALID",
+			errorId: "DATASET_INVALID:PROV-58",
+			message: "Dataset id undefined",
+		});
 	});
 
 	it("should return the dataset if validation is successful", async () => {

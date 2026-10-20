@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
 import {
 	type IPInfoResponse,
@@ -188,8 +188,10 @@ describe("publicRouter", () => {
 					msg: "Error getting provider details",
 				}));
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { code: 500 },
+					new ProsopoError({
+						code: "UNEXPECTED",
+						errorSite: "PROV-1",
+						message: "BadRequest",
 					}),
 				);
 			}
@@ -238,8 +240,10 @@ describe("publicRouter", () => {
 					msg: "Error getting provider details",
 				}));
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { code: 500 },
+					new ProsopoError({
+						code: "UNEXPECTED",
+						errorSite: "PROV-1",
+						message: "BadRequest",
 					}),
 				);
 			}
@@ -252,12 +256,12 @@ describe("publicRouter", () => {
 			expect.any(Function), // Logger function
 		);
 
-		// Verify next was called with ProsopoApiError
-		expect(mockNext).toHaveBeenCalledWith(expect.any(ProsopoApiError));
+		// Verify next was called with ProsopoError
+		expect(mockNext).toHaveBeenCalledWith(expect.any(ProsopoError));
 
 		// @ts-ignore
-		const error = mockNext.mock.calls[0][0] as ProsopoApiError;
-		expect(error).toBeInstanceOf(ProsopoApiError);
+		const error = mockNext.mock.calls[0][0] as ProsopoError;
+		expect(error).toBeInstanceOf(ProsopoError);
 	});
 
 	it("should register error handler middleware", () => {

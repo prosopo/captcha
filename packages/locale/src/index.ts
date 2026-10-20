@@ -63,5 +63,5 @@ export type {
 	TranslateFn,
 	TranslateOptions,
 } from "./types.js";
-export { localiseErrorMessage } from "./errorMessage.js";
-export type { KeyedErrorMessage } from "./errorMessage.js";
+export { FALLBACK_ERROR_TEXT, localiseError } from "./errorMessage.js";
+export type { DisplayedError } from "./errorMessage.js";

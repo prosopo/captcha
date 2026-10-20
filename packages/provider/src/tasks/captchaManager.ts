@@ -548,7 +548,7 @@ export class CaptchaManager {
 				// puzzle from postPow. Real-world widgets and dapps that
 				// don't fully wire `onEscalate` keep calling /captcha/*
 				// with the original sessionId — without this fallback they
-				// see CAPTCHA.NO_SESSION_FOUND and the user lands on the
+				// see NO_SESSION_FOUND and the user lands on the
 				// FAQ page.
 				const escalationSessionId =
 					await this.writeQueue.getCachedSessionEscalation(sessionId);

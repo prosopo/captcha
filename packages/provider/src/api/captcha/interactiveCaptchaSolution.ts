@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { PuzzleCaptchaSolutionResponse } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
@@ -67,10 +67,12 @@ export const interactiveSolutionHandler =
 			parsed = spec.parse(req.body);
 		} catch (err) {
 			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: summariseRequestBody(req) },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-21",
+					message: "Error parsing captcha",
+					cause: err,
+					context: { body: summariseRequestBody(req) },
 				}),
 			);
 		}
@@ -96,10 +98,10 @@ export const interactiveSolutionHandler =
 
 			if (!clientRecord) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "SITE_KEY_NOT_REGISTERED",
+						errorSite: "PROV-22",
+						context: { siteKey: dapp },
 					}),
 				);
 			}
@@ -127,14 +129,12 @@ export const interactiveSolutionHandler =
 				msg: `Error in ${spec.label} captcha solution submission`,
 			}));
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: {
-						code: 500,
-						siteKey: req.body.dapp,
-						error: err,
-					},
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "PROV-23",
+					message: "BadRequest",
+					cause: err,
+					context: { siteKey: req.body.dapp },
 				}),
 			);
 		}

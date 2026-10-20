@@ -12,11 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	createTranslator,
-	loadI18next,
-	localiseErrorMessage,
-} from "@prosopo/locale";
+import { createTranslator, loadI18next, localiseError } from "@prosopo/locale";
 import {
 	type CheckboxProps,
 	type ClickCoords,
@@ -202,7 +198,7 @@ export const mountProcaptchaAudioWidget = (
 		}
 		loading = false;
 		returnToCheckbox();
-		if ("CAPTCHA.NO_SESSION_FOUND" !== store.state.error.key) {
+		if (store.state.error.code !== "NO_SESSION_FOUND") {
 			return;
 		}
 		// An internal recovery signal, not something the user should read: hold
@@ -277,7 +273,7 @@ export const mountProcaptchaAudioWidget = (
 		theme,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",
 		error: store.state.error
-			? localiseErrorMessage(translator.i18n, store.state.error)
+			? localiseError(translator.i18n, store.state.error)
 			: undefined,
 		loadingText: translator.t("WIDGET.CHECKING", {
 			defaultValue: "Checking that you are human",

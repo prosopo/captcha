@@ -13,8 +13,7 @@
 // limitations under the License.
 
 import { hexToU8a } from "@polkadot/util";
-import { ProsopoApiError, ProsopoBaseError } from "@prosopo/common";
-import { type TranslationKey, isTranslationKey } from "@prosopo/locale";
+import { ProsopoError, isProsopoError, toPublicError } from "@prosopo/common";
 import type { ApiJsonError, KeyringPair } from "@prosopo/types";
 import type {
 	JWT,
@@ -75,54 +74,48 @@ export const authMiddleware = (
 				return;
 			}
 
-			unauthorized(req, res, "API.UNAUTHORIZED");
+			unauthorized(res);
 			return;
 		} catch (err) {
-			req.logger.error(() => ({ err, msg: "Auth Middleware Error" }));
-			// The thrown value can carry request context, stack or config, so
-			// only its translation key goes back to the caller.
-			unauthorized(req, res, translationKeyOf(err));
+			req.logger.debug(() => ({ err, msg: "Auth Middleware Error" }));
+			unauthorized(res, err);
 			return;
 		}
 	};
 };
 
-const translationKeyOf = (err: unknown): TranslationKey =>
-	err instanceof ProsopoBaseError &&
-	err.translationKey !== undefined &&
-	isTranslationKey(err.translationKey)
-		? err.translationKey
-		: "API.UNAUTHORIZED";
-
-const unauthorized = (
-	req: Request,
-	res: Response,
-	key: TranslationKey,
-): void => {
+// The thrown value can carry request context, stack or config, so anything
+// but an UNAUTHORIZED error is reported as a plain UNAUTHORIZED.
+const unauthorized = (res: Response, cause?: unknown): void => {
+	const error = isProsopoError(cause, "UNAUTHORIZED")
+		? cause
+		: new ProsopoError({ code: "UNAUTHORIZED", errorSite: "APIX-8", cause });
 	const body: { error: ApiJsonError } = {
-		error: {
-			code: 401,
-			key,
-			message: req.i18n ? req.i18n.t(key) : key,
-		},
+		error: toPublicError(error, "BACKEND_ERROR"),
 	};
-	res.status(401).json(body);
+	res.status(error.status).json(body);
 };
 
 const extractJWT = (req: Request) => {
 	const authHeader = req.headers.Authorization || req.headers.authorization;
 
 	if (!authHeader || typeof authHeader !== "string") {
-		throw new ProsopoApiError("GENERAL.MISSING_AUTH_HEADER", {
-			context: { error: "Missing Authorization header", code: 401 },
+		throw new ProsopoError({
+			code: "UNAUTHORIZED",
+			errorSite: "APIX-3",
+			message: "Missing authorization header",
+			context: { error: "Missing Authorization header" },
 		});
 	}
 
 	const jwt = authHeader.replace("Bearer ", "");
 
 	if (!jwt) {
-		throw new ProsopoApiError("GENERAL.INVALID_JWT", {
-			context: { error: "Missing JWT", code: 400 },
+		throw new ProsopoError({
+			code: "UNAUTHORIZED",
+			errorSite: "APIX-4",
+			message: "Invalid JWT",
+			context: { error: "Missing JWT" },
 		});
 	}
 
@@ -137,10 +130,12 @@ export const verifySignature = (
 	const u8Sig = hexToU8a(signature);
 
 	if (!pair.verify(message, u8Sig, pair.publicKey)) {
-		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
+		throw new ProsopoError({
+			code: "UNAUTHORIZED",
+			errorSite: "APIX-5",
+			message: "Invalid signature",
 			context: {
 				error: "Signature verification failed",
-				code: 401,
 				account: pair.address,
 				message,
 				signature,

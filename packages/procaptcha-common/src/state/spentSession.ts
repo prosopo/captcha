@@ -15,7 +15,7 @@
 /**
  * Remembers the frictionless sessionId already exchanged for a challenge. The
  * provider consumes a session when it issues a challenge against it, so asking
- * again with the same id is a guaranteed CAPTCHA.NO_SESSION_FOUND. The id
+ * again with the same id is a guaranteed NO_SESSION_FOUND. The id
  * lives on `frictionlessState`, which a manager's reset does not own, so every
  * path that re-enters `start()` would otherwise re-send it.
  */

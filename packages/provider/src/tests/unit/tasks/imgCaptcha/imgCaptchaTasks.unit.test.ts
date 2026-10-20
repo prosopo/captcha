@@ -13,7 +13,6 @@
 // limitations under the License.
 
 import { u8aToHex } from "@polkadot/util";
-import { ProsopoEnvError } from "@prosopo/common";
 import {
 	compareCaptchaSolutions,
 	computePendingRequestHash,
@@ -281,16 +280,11 @@ describe("ImgCaptchaManager", () => {
 
 			await expect(
 				imgCaptchaManager.getCaptchaWithProof(datasetId, solved, size),
-			).rejects.toThrow(
-				new ProsopoEnvError("DATABASE.CAPTCHA_GET_FAILED", {
-					context: {
-						failedFuncName: "getCaptchaWithProof",
-						datasetId,
-						solved,
-						size,
-					},
-				}),
-			);
+			).rejects.toMatchObject({
+				code: "DB_QUERY_FAILED",
+				errorId: "DB_QUERY_FAILED:PROV-59",
+				message: "Failed to get captcha",
+			});
 		});
 
 		it("should getCaptchaWithProof of specific size", async () => {
@@ -364,15 +358,11 @@ describe("ImgCaptchaManager", () => {
 					{ solved: { count: 1 }, unsolved: { count: 1 } },
 					0.8,
 				),
-			).rejects.toThrow(
-				new ProsopoEnvError("DATABASE.DATASET_GET_FAILED", {
-					context: {
-						failedFuncName: "getRandomCaptchasAndRequestHash",
-						dataset: null,
-						datasetId,
-					},
-				}),
-			);
+			).rejects.toMatchObject({
+				code: "DB_QUERY_FAILED",
+				errorId: "DB_QUERY_FAILED:PROV-60",
+				message: "Failed to get dataset",
+			});
 		});
 	});
 
@@ -415,14 +405,11 @@ describe("ImgCaptchaManager", () => {
 
 		await expect(
 			imgCaptchaManager.validateReceivedCaptchasAgainstStoredCaptchas(captchas),
-		).rejects.toThrow(
-			new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_ID", {
-				context: {
-					failedFuncName: "validateReceivedCaptchasAgainstStoredCaptchas",
-					captchas,
-				},
-			}),
-		);
+		).rejects.toMatchObject({
+			code: "INVALID_DATA",
+			errorId: "INVALID_DATA:PROV-66",
+			message: "Invalid captcha id",
+		});
 	});
 
 	it("should validate dapp user solution request is pending", async () => {
@@ -931,14 +918,11 @@ describe("ImgCaptchaManager", () => {
 
 		await expect(
 			imgCaptchaManager.getDappUserCommitmentById(commitmentId),
-		).rejects.toThrow(
-			new ProsopoEnvError("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", {
-				context: {
-					failedFuncName: "getDappUserCommitmentById",
-					commitmentId: commitmentId,
-				},
-			}),
-		);
+		).rejects.toMatchObject({
+			code: "SOLUTION_NOT_FOUND",
+			errorId: "SOLUTION_NOT_FOUND:PROV-68",
+			message: "Dapp user solution not found",
+		});
 	});
 
 	// Regression seen in production: image captchas produced

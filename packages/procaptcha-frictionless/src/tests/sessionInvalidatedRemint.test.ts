@@ -122,7 +122,7 @@ const lastMount = () => {
 	return mount;
 };
 
-/** The inner widget reporting `CAPTCHA.NO_SESSION_FOUND` on its challenge fetch. */
+/** The inner widget reporting `NO_SESSION_FOUND` on its challenge fetch. */
 const reportSessionInvalidated = async (): Promise<void> => {
 	const { onSessionInvalidated } = lastMount().props;
 	onSessionInvalidated?.(120, 340);
@@ -158,7 +158,7 @@ afterEach(() => {
 });
 
 // Production, 2026-09-07: the widget re-sent an already-consumed sessionId to
-// /captcha/image, the provider answered 400 CAPTCHA.NO_SESSION_FOUND, and the
+// /captcha/image, the provider answered 400 NO_SESSION_FOUND, and the
 // user was left staring at a checkbox reading "No session found" with nothing
 // behind it. The outer recovery guard was one-shot per widget lifetime and the
 // inner widget always returns through this handler, so the second failure was

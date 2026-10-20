@@ -24,9 +24,9 @@ type TargetCatalogue = typeof import("./locales/en/target.json");
  * The catalogue is split into i18next namespaces so the browser downloads only
  * what it renders. Keys keep their section prefix (`WIDGET.`, `TARGET.`), so a
  * key reads the same whichever namespace holds it:
- * - `widget`: the widget's own text and the errors it shows (WIDGET, API,
- *   CAPTCHA, GENERAL, ACCOUNT, DEVELOPER). The only namespace the browser
- *   fetches.
+ * - `widget`: the widget's own text and the errors it shows (WIDGET, ERRORS,
+ *   API, CAPTCHA, GENERAL, ACCOUNT, DEVELOPER). The only namespace the browser
+ *   fetches. ERRORS is keyed by error code.
  * - `target`: image labels. The provider translates these into the challenge.
  * - `translation` (i18next's default): server-only text (DATABASE, DATASET,
  *   CONTRACT, CONFIG, PORTAL, CLI, FS).

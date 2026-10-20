@@ -17,12 +17,6 @@
 			"path": "../../dev/config/tsconfig.json"
 		},
 		{
-			"path": "../locale"
-		},
-		{
-			"path": "../logger"
-		},
-		{
 			"path": "../types"
 		}
 	]

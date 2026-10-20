@@ -11,10 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { flatten } from "@prosopo/util";
 import { describe, expect, test } from "vitest";
-import { localiseErrorMessage } from "../errorMessage.js";
+import { FALLBACK_ERROR_TEXT, localiseError } from "../errorMessage.js";
 import de from "../locales/de/widget.json" with { type: "json" };
+import en from "../locales/en/widget.json" with { type: "json" };
 import type { Ti18n, TranslateOptions } from "../types.js";
 
 // Same lookup order as the browser instance in i18nFrontend.ts: the active
@@ -39,59 +43,66 @@ const i18nIn = (
 
 const germanI18n = (): Ti18n => i18nIn(de);
 
-describe("localiseErrorMessage", () => {
-	test("translates a catalogue key into the widget's language, not the server's", () => {
-		const i18n = germanI18n();
+describe("localiseError", () => {
+	test("translates the code into the widget's language", () => {
 		expect(
-			localiseErrorMessage(i18n, {
+			localiseError(germanI18n(), {
+				code: "SITE_KEY_INVALID",
+				errorId: "SITE_KEY_INVALID:PROV-31",
 				message: "Invalid site key",
-				key: "API.INVALID_SITE_KEY",
 			}),
-		).toBe("Ungültiger Site-Schlüssel");
+		).toBe("Ungültiger Site-Schlüssel (SITE_KEY_INVALID:PROV-31)");
 	});
 
-	test("keeps the server message when the key is not in the catalogue", () => {
-		const i18n = germanI18n();
+	test("translates the origin of a hidden error and keeps its errorId", () => {
 		expect(
-			localiseErrorMessage(i18n, {
-				message: "upstream timed out",
-				key: "API.NOT_A_REAL_KEY",
+			localiseError(germanI18n(), {
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:PROV-12",
 			}),
-		).toBe("upstream timed out");
+		).toBe("Interner Serverfehler (BACKEND_ERROR:PROV-12)");
 	});
 
-	test("keeps the server message for a key outside the widget namespace", () => {
-		// The browser has no text for server-only keys, so the provider's
-		// already-translated message is the best there is.
-		const i18n = germanI18n();
+	test("keeps the provider's message for a code the catalogue lacks", () => {
 		expect(
-			localiseErrorMessage(i18n, {
-				message: "Datenbankfehler",
-				key: "DATABASE.UNKNOWN",
+			localiseError(germanI18n(), {
+				code: "DOMAIN_LIMIT_REACHED",
+				errorId: "DOMAIN_LIMIT_REACHED:PORT-3",
+				message: "Domain limit reached",
 			}),
-		).toBe("Datenbankfehler");
+		).toBe("Domain limit reached (DOMAIN_LIMIT_REACHED:PORT-3)");
 	});
 
-	test("keeps the server message when there is no key", () => {
-		const i18n = germanI18n();
-		expect(localiseErrorMessage(i18n, { message: "Invalid site key" })).toBe(
-			"Invalid site key",
+	test("falls back to generic text when there is no message", () => {
+		expect(
+			localiseError(germanI18n(), { code: "NOPE", errorId: "NOPE:X-1" }),
+		).toBe(`${FALLBACK_ERROR_TEXT} (NOPE:X-1)`);
+	});
+
+	test("keeps the provider's message until i18n is initialised", () => {
+		const error = {
+			code: "SITE_KEY_INVALID",
+			errorId: "SITE_KEY_INVALID:PROV-31",
+			message: "Invalid site key",
+		};
+		expect(localiseError(i18nIn(de, false), error)).toBe(
+			"Invalid site key (SITE_KEY_INVALID:PROV-31)",
+		);
+		expect(localiseError(undefined, error)).toBe(
+			"Invalid site key (SITE_KEY_INVALID:PROV-31)",
 		);
 	});
+});
 
-	test("keeps the server message until i18n is initialised", () => {
-		const i18n = i18nIn(de, false);
-		expect(
-			localiseErrorMessage(i18n, {
-				message: "Invalid site key",
-				key: "API.INVALID_SITE_KEY",
-			}),
-		).toBe("Invalid site key");
-		expect(
-			localiseErrorMessage(undefined, {
-				message: "Invalid site key",
-				key: "API.INVALID_SITE_KEY",
-			}),
-		).toBe("Invalid site key");
+describe("the ERRORS catalogue", () => {
+	test("every locale translates every error the English catalogue has", () => {
+		const localesDir = fileURLToPath(new URL("../locales/", import.meta.url));
+		const codes = Object.keys(en.ERRORS).sort();
+		for (const locale of readdirSync(localesDir)) {
+			const catalogue: { ERRORS?: Record<string, string> } = JSON.parse(
+				readFileSync(join(localesDir, locale, "widget.json"), "utf8"),
+			);
+			expect(Object.keys(catalogue.ERRORS ?? {}).sort(), locale).toEqual(codes);
+		}
 	});
 });
