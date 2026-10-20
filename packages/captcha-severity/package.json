@@ -21,7 +21,9 @@
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"typecheck": "tsc --project tsconfig.types.json",
+		"test:cargo": "cargo test -p prosopo-captcha-severity",
+		"equivalence": "tsx rust/equivalence/generate.ts && cargo test -p prosopo-captcha-severity equivalence"
 	},
 	"type": "module",
 	"sideEffects": false,
@@ -31,6 +33,7 @@
 		"@types/node": "22.10.2",
 		"del-cli": "6.0.0",
 		"tslib": "2.7.0",
+		"tsx": "4.20.3",
 		"typescript": "5.6.2",
 		"vite": "8.1.5",
 		"vitest": "4.1.11"

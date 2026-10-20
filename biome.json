@@ -28,6 +28,7 @@
 			"./packages/provider/src/tasks/detection/decodeSimd.js",
 			"./packages/provider/fixtures/detector-pool/*",
 			"./packages/native-*/index.js",
+			"./packages/*/rust/equivalence/vectors.json",
 			"./packages/native-*/index.d.ts"
 		]
 	},

@@ -202,3 +202,6 @@ id_ed25519*
 # catch them. `accounts/ssh/id_ecdsa_prosopo.pub` is tracked on purpose -- it is
 # what gets deployed into authorized_keys.
 !*.pub
+
+# Cargo workspace build output (see /Cargo.toml).
+/target

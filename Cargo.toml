@@ -1,0 +1,23 @@
+[workspace]
+resolver = "2"
+members = [
+	"packages/captcha-severity",
+]
+exclude = [
+	"packages/native-ja4",
+	"packages/native-merkle",
+	"packages/native-puzzle",
+]
+
+[workspace.package]
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "symbols"
+
+[profile.dev.package."*"]
+debug = false
