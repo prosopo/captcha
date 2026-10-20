@@ -204,6 +204,11 @@ export const ERROR_CODES = {
 		public: true,
 	},
 	SITE_NOT_FOUND: { message: "Site not found", status: 404, public: true },
+	PROTECT_INSTANCE_NOT_FOUND: {
+		message: "Protect instance not found",
+		status: 404,
+		public: true,
+	},
 	FEATURE_NOT_ENABLED: {
 		message: "Feature not enabled",
 		status: 403,
