@@ -71,6 +71,10 @@ export const issuePuzzleChallenge = async ({
 			webView: sessionRecord.webView,
 		}),
 	});
+	// The ladder ceiling runs off `isMobile` alone, one rung either way. The
+	// floors below are a far larger loosening, so they want a signal the
+	// client could not simply have written into a header — see `corroborated`.
+	const easeForTouch = mobileVerdict.isMobile && mobileVerdict.corroborated;
 
 	// Overrides a routing machine asked for, persisted on the session.
 	// The router runs only where the live trafficFilter verdict did
@@ -85,7 +89,7 @@ export const issuePuzzleChallenge = async ({
 	// place a per-device floor can cover all of them. See
 	// TOUCH_MIN_TOLERANCE_PX.
 	const tolerance =
-		mobileVerdict.isMobile && requestedTolerance !== undefined
+		easeForTouch && requestedTolerance !== undefined
 			? easeToleranceForTouch(requestedTolerance)
 			: requestedTolerance;
 
@@ -109,9 +113,7 @@ export const issuePuzzleChallenge = async ({
 		routedPuzzleSettings,
 	);
 	const effectivePieceSize = samplePuzzlePieceSize(
-		mobileVerdict.isMobile
-			? easePieceScaleForTouch(pieceScaleRange)
-			: pieceScaleRange,
+		easeForTouch ? easePieceScaleForTouch(pieceScaleRange) : pieceScaleRange,
 	);
 	const challenge = await tasks.puzzleCaptchaManager.getPuzzleCaptchaChallenge(
 		user,
@@ -194,6 +196,7 @@ export const issuePuzzleChallenge = async ({
 			// So the floors above can be calibrated against observed solve
 			// rate per device class.
 			mobileScore: mobileVerdict.score,
+			mobileCorroborated: mobileVerdict.corroborated ? 1 : 0,
 		},
 		response: {
 			[ApiParams.status]: "ok",

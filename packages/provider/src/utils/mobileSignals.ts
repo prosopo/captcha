@@ -34,6 +34,16 @@ export interface MobileSignals {
 
 export interface MobileVerdict {
 	isMobile: boolean;
+	/**
+	 * True when something other than a plaintext request header said mobile.
+	 *
+	 * A User-Agent or a client hint costs nothing to write, and WebKit sends no
+	 * client hints, so a claim of iOS has nothing to contradict it. That is
+	 * enough to pick the milder ladder, which is one rung either way. It is not
+	 * enough to earn the render floors, which are a large loosening of the
+	 * challenge and are the thing a solver would claim a phone to get.
+	 */
+	corroborated: boolean;
 	score: number;
 	/** Which signals contributed, for logging and calibration. */
 	evidence: string[];
@@ -62,9 +72,12 @@ export const MOBILE_SIGNAL_WEIGHTS = {
 	touchCapability: 2,
 	pointerCapability: -3,
 	touchEvents: 2,
-	carrierNetwork: 1,
-	tunnelledMss: 1,
 	webView: 1,
+	// `carrierNetwork` and `tunnelledMss` share this. Both describe the
+	// network rather than the device, and the second largely follows from the
+	// first — a carrier IP is why the MSS is 1400 — so scoring them separately
+	// would count one fact twice. Both are still listed in `evidence`.
+	network: 1,
 } as const;
 
 export const MOBILE_SCORE_THRESHOLD = 3;
@@ -79,10 +92,22 @@ const readHeader = (
 
 export const deriveMobileVerdict = (signals: MobileSignals): MobileVerdict => {
 	let score = 0;
+	let corroborated = false;
 	const evidence: string[] = [];
-	const vote = (name: keyof typeof MOBILE_SIGNAL_WEIGHTS): void => {
+	const vote = (
+		name: keyof typeof MOBILE_SIGNAL_WEIGHTS,
+		evidenceName: string = name,
+	): void => {
 		score += MOBILE_SIGNAL_WEIGHTS[name];
-		evidence.push(name);
+		evidence.push(evidenceName);
+	};
+	// Same as `vote`, for a signal that is not a plaintext request header.
+	const voteCorroborating = (
+		name: keyof typeof MOBILE_SIGNAL_WEIGHTS,
+		evidenceName: string = name,
+	): void => {
+		vote(name, evidenceName);
+		corroborated = true;
 	};
 
 	const userAgent = signals.userAgent ?? "";
@@ -111,30 +136,39 @@ export const deriveMobileVerdict = (signals: MobileSignals): MobileVerdict => {
 	}
 
 	if (signals.deviceCapability === "mobile") {
-		vote("touchCapability");
+		voteCorroborating("touchCapability");
 	} else if (signals.deviceCapability === "desktop") {
 		vote("pointerCapability");
 	}
 
 	if (signals.touchEventCount !== undefined && signals.touchEventCount > 0) {
-		vote("touchEvents");
-	}
-
-	if (signals.carrierNetwork === true) {
-		vote("carrierNetwork");
-	}
-
-	if (
-		signals.tcpMss !== undefined &&
-		signals.tcpMss >= TUNNELLED_MSS_MIN &&
-		signals.tcpMss <= TUNNELLED_MSS_MAX
-	) {
-		vote("tunnelledMss");
+		voteCorroborating("touchEvents");
 	}
 
 	if (signals.webView === true) {
-		vote("webView");
+		voteCorroborating("webView");
 	}
 
-	return { isMobile: score >= MOBILE_SCORE_THRESHOLD, score, evidence };
+	const onCarrier = signals.carrierNetwork === true;
+	const tunnelled =
+		signals.tcpMss !== undefined &&
+		signals.tcpMss >= TUNNELLED_MSS_MIN &&
+		signals.tcpMss <= TUNNELLED_MSS_MAX;
+	if (onCarrier || tunnelled) {
+		voteCorroborating(
+			"network",
+			onCarrier && tunnelled
+				? "carrierNetwork+tunnelledMss"
+				: onCarrier
+					? "carrierNetwork"
+					: "tunnelledMss",
+		);
+	}
+
+	return {
+		isMobile: score >= MOBILE_SCORE_THRESHOLD,
+		corroborated,
+		score,
+		evidence,
+	};
 };

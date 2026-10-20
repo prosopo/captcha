@@ -76,6 +76,7 @@ const buildContext = (overrides: {
 	sessionPuzzle?: IPuzzleSettings;
 	sessionPuzzleTolerance?: number;
 	trafficVerdict?: RequestTimeTrafficVerdict;
+	carrierNetwork?: boolean;
 }): ChallengeIssueContext => ({
 	tasks: buildTasks(),
 	user: "user",
@@ -101,6 +102,12 @@ const buildContext = (overrides: {
 		headers: { "user-agent": overrides.userAgent },
 		ja4: "ja4",
 		sessionId: "session",
+		// The floors need a signal the client could not have written into a
+		// header; the carrier bit is the one available at issue time.
+		ipInfo: {
+			isValid: true,
+			isMobile: overrides.carrierNetwork ?? true,
+		} as never,
 	},
 });
 
@@ -235,5 +242,50 @@ describe("per-device puzzle floors at issuance", () => {
 	it("reports the mobile score so the floors can be calibrated", async () => {
 		const issued = await issue({ userAgent: IPHONE_UA });
 		expect(issued.logData.mobileScore).toBeGreaterThan(0);
+	});
+});
+
+describe("the floors need corroboration", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		getPuzzleCaptchaChallenge = vi.fn().mockResolvedValue({
+			challenge: "challenge",
+			requestedAtTimestamp: 0,
+			targetX: 10,
+			targetY: 10,
+			originX: 0,
+			originY: 0,
+			tolerance: 5,
+			providerSignature: "sig",
+		});
+		renderPuzzleImagesMock.mockResolvedValue({
+			background: "bg",
+			piece: "piece",
+			pieceSize: 30,
+			backgroundSeed: "seed",
+			renderSeed: "seed",
+		});
+	});
+
+	it("does not ease a mobile User-Agent with nothing behind it", async () => {
+		await issue({
+			userAgent: IPHONE_UA,
+			carrierNetwork: false,
+			sitePuzzleTolerance: 5,
+			sitePuzzle: { pieceScale: { min: 0.1, max: 0.1 } },
+		});
+		expect(servedTolerance()).toBe(5);
+		expect(servedPieceSize()).toBe(Math.round(DEFAULT_GEOMETRY.width * 0.1));
+	});
+
+	it("eases the same request once the network corroborates it", async () => {
+		await issue({
+			userAgent: IPHONE_UA,
+			carrierNetwork: true,
+			sitePuzzleTolerance: 5,
+			sitePuzzle: { pieceScale: { min: 0.1, max: 0.1 } },
+		});
+		expect(servedTolerance()).toBe(TOUCH_MIN_TOLERANCE_PX);
+		expect(servedPieceSize()).toBe(TOUCH_MIN_PIECE_PX);
 	});
 });
