@@ -30,7 +30,6 @@
 		"cli": "pnpm --filter @prosopo/cli run cli",
 		"deploy_dapp": "pnpm --filter @prosopo/scripts run cli deploy_dapp --logLevel=debug --update_env",
 		"setup": "pnpm --filter @prosopo/scripts run setup",
-		"bench:verify": "pnpm --filter @prosopo/scripts run bench:verify",
 		"setup:all": "pnpm run setup",
 		"start:provider": "pnpm --filter @prosopo/cli run start",
 		"start:provider:admin": "pnpm --filter @prosopo/cli run start:admin",

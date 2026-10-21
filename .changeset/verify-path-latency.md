@@ -3,7 +3,6 @@
 "@prosopo/database": patch
 "@prosopo/ipinfo": patch
 "@prosopo/env": patch
-"@prosopo/scripts": patch
 ---
 
 Server-side verify (what siteverify calls) now does far less waiting. A PoW verify used to make about 19 database and ip-lookup calls one after another; it now makes about 6, and a rejected verify about 3. Changes:
@@ -16,4 +15,3 @@ Server-side verify (what siteverify calls) now does far less waiting. A PoW veri
 - Client records are cached for 30 seconds and the cache is cleared by every client-record write in the process.
 - Successful ip lookups are cached for 10 minutes, so an address is not looked up twice in one verify, or again at verify after the challenge looked it up.
 
-`pnpm bench:verify` benchmarks the verify route locally against Mongo, Redis and a stub ipapi sidecar behind toxiproxy. It reports latency, calls per verify and how many calls happen one after another, and checks them against a committed budget. `--watch` rebuilds and reruns on every source change.
