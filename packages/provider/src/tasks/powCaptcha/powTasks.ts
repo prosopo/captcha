@@ -1205,9 +1205,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			);
 		}
 
-		// The verdict does not depend on these writes, and the claim above has
-		// already made the token single-use, so they finish after the response.
-		// A failure costs this verify's audit and score data, nothing more.
+		// Not awaited: the claim above already made the token single-use.
 		Promise.all(writePromises).catch((err) => {
 			logger.error(() => ({
 				msg: "Failed to record the outcome of a PoW verification",
