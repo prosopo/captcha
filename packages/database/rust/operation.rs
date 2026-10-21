@@ -105,11 +105,13 @@ pub enum Operation {
         filter: Document,
         many: bool,
     },
+    /// `findOneAndUpdate`, returning the document as it was (`new: false`).
     FindAndModify {
         collection: String,
         query: Document,
         update: Document,
-        upsert: bool,
+        /// Sent only when given.
+        upsert: Option<bool>,
     },
     Insert {
         collection: String,
@@ -214,10 +216,16 @@ impl Operation {
                 update,
                 upsert,
             } => {
-                let mut out: Document = doc! { "findAndModify": collection, "query": query.clone(), "update": update.clone() };
-                if *upsert {
-                    out.insert("upsert", true);
+                let mut out: Document = doc! {
+                    "findAndModify": collection,
+                    "query": query.clone(),
+                    "update": update.clone(),
+                    "new": false,
+                };
+                if let Some(upsert) = upsert {
+                    out.insert("upsert", *upsert);
                 }
+                out.insert("remove", false);
                 out
             }
             Operation::Command(command) => command.clone(),

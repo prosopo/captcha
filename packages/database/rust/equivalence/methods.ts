@@ -356,6 +356,86 @@ await record("challenges", "count by email", "countCommitmentsByNormalisedEmail"
 await record("challenges", "count by an empty email", "countCommitmentsByNormalisedEmail", ["dapp", ""]);
 await record("challenges", "count by email for another dapp", "countCommitmentsByNormalisedEmail", ["other", "ab@b.c"]);
 
+// Group 4: image commitments, user solutions and pending image requests.
+const requestHash = (n: number): string => hex(0xaa00 + n);
+await record("image", "store a pending request", "storePendingImageCommitment", ["user20", requestHash(1), "0xsalt1", new Date(1_710_000_120_000), new Date(1_710_000_000_000), ip4, 0.8, "session-20", ipInfo]);
+await record("image", "store a pending request without extras", "storePendingImageCommitment", ["user21", requestHash(2), "0xsalt2", new Date(1_710_000_120_000), new Date(1_710_000_000_000), ip6, 1]);
+await record("image", "store a pending request with a non-hex hash", "storePendingImageCommitment", ["user22", "nope", "0xsalt", new Date(0), new Date(0), ip4, 1]);
+await record("image", "store a pending request again", "storePendingImageCommitment", ["user20", requestHash(1), "0xsalt1b", new Date(1_710_000_130_000), new Date(1_710_000_000_000), ip4, 0.5]);
+await record("image", "a pending request", "getPendingImageCommitment", [requestHash(1)]);
+await record("image", "a missing pending request", "getPendingImageCommitment", [requestHash(99)]);
+await record("image", "a pending request with a non-hex hash", "getPendingImageCommitment", ["nope"]);
+await record("image", "consume a pending request", "updatePendingImageCommitmentStatus", [requestHash(1)]);
+await record("image", "consume a pending request again", "updatePendingImageCommitmentStatus", [requestHash(1)]);
+await record("image", "consume a pending request with a non-hex hash", "updatePendingImageCommitmentStatus", ["nope"]);
+await record("image", "a consumed pending request", "getPendingImageCommitment", [requestHash(1)]);
+const commitment = (n: number, extra: Record<string, unknown> = {}) => ({
+	id: hex(0xc000 + n),
+	userAccount: `user${n}`,
+	dappAccount: "dapp",
+	datasetId,
+	providerAccount: "provider",
+	result: { status: "Pending" },
+	userSignature: `0xusersig${n}`,
+	ipAddress: n % 2 === 0 ? ip4 : ip6,
+	headers,
+	ja4: "ja4",
+	userSubmitted: true,
+	serverChecked: false,
+	requestedAtTimestamp: new Date(1_710_000_000_000 + n),
+	pending: false,
+	salt: `0xsalt${n}`,
+	requestHash: requestHash(n),
+	deadlineTimestamp: new Date(1_710_000_200_000),
+	threshold: 0.8,
+	sessionId: `session-${n}`,
+	ipInfo,
+	unknownField: "stripped by zod",
+	...extra,
+});
+const solutions = (n: number) => [
+	{ captchaId: hex(0x100), captchaContentId: hex(0x200), salt: `0xsol${n}a`, solution: [hex(0x300)] },
+	{ captchaId: hex(0x101), captchaContentId: hex(0x201), salt: `0xsol${n}b`, solution: [hex(0x301), hex(0x401)], inputMethods: ["pointer", "keyboard"] },
+];
+await record("image", "store a solution", "storeUserImageCaptchaSolution", [solutions(30), commitment(30)]);
+await record("image", "store a solution with everything", "storeUserImageCaptchaSolution", [
+	solutions(31),
+	commitment(31, {
+		providedIp: ip6,
+		metadata: { email: "a@b.c", emailNormalised: "ab@b.c" },
+		clientMetaData: { hp: "", clientSessionId: "client-31" },
+		coords: [[[1, 2]], [[3, 4]]],
+		inputMethods: [["pointer"], ["keyboard"]],
+		deviceCapability: "touch",
+		behavioralDataPacked: { c1: [1, [2, 3]], c2: [], c3: ["x"], d: "dev" },
+		label: "human",
+	}),
+]);
+await record("image", "store a commitment without solutions", "storeUserImageCaptchaSolution", [[], commitment(32)]);
+await record("image", "store the same solution again", "storeUserImageCaptchaSolution", [solutions(30), commitment(30, { serverChecked: true })]);
+await record("image", "a commitment by id", "getDappUserCommitmentById", [hex(0xc000 + 31)]);
+await record("image", "a missing commitment", "getDappUserCommitmentById", [hex(0xc0ff)]);
+await record("image", "commitments by account", "getDappUserCommitmentByAccount", ["user30", "dapp"]);
+await record("image", "no commitments by account", "getDappUserCommitmentByAccount", ["nobody", "dapp"]);
+await record("image", "solutions by captcha", "getAllDappUserSolutions", [[hex(0x100), hex(0x1ff)]]);
+await record("image", "a solution by commitment", "getDappUserSolutionById", [hex(0xc000 + 30)]);
+await record("image", "a missing solution by commitment", "getDappUserSolutionById", [hex(0xc0ff)]);
+await record("image", "approve a commitment", "approveDappUserCommitment", [hex(0xc000 + 30), [[[5, 6]]]]);
+await record("image", "approve a commitment without coordinates", "approveDappUserCommitment", [hex(0xc000 + 32)]);
+await record("image", "disapprove a commitment", "disapproveDappUserCommitment", [hex(0xc000 + 31), "CAPTCHA.INVALID_SOLUTION", [[[7, 8]]]]);
+await record("image", "disapprove a commitment without a reason", "disapproveDappUserCommitment", [hex(0xc000 + 32)]);
+await record("image", "patch a commitment", "updateDappUserCommitment", [hex(0xc000 + 30), { providedIp: ip4, metadata: { email: "x@y.z", emailNormalised: "x@y.z" } }]);
+await record("image", "mark a fresh commitment checked", "markDappUserCommitmentsChecked", [[hex(0xc000 + 31)]]);
+await record("image", "patch a commitment's flags", "updateDappUserCommitment", [hex(0xc000 + 31), { userSubmitted: true, serverChecked: true, result: { status: "Disapproved", reason: "CAPTCHA.INVALID_SOLUTION" } }]);
+await record("image", "checked commitments", "getCheckedDappUserCommitments", []);
+await record("image", "unstored commitments", "getUnstoredDappUserCommitments", []);
+await record("image", "unstored commitments, a page", "getUnstoredDappUserCommitments", [1]);
+await record("image", "mark commitments stored", "markDappUserCommitmentsStored", [[hex(0xc000 + 30), hex(0xc000 + 32)], new Date(1_710_000_060_123)]);
+await record("image", "mark commitments checked", "markDappUserCommitmentsChecked", [[hex(0xc000 + 30), hex(0xc000 + 32)]]);
+await record("image", "mark commitments checked again", "markDappUserCommitmentsChecked", [[hex(0xc000 + 30)]]);
+await record("image", "flag solutions processed", "flagProcessedDappUserSolutions", [[hex(0x100), hex(0x101)]]);
+await record("image", "flag commitments processed", "flagProcessedDappUserCommitments", [[hex(0xc000 + 30), hex(0xc000 + 30), hex(0xc000 + 31)]]);
+
 await connection.db?.dropDatabase();
 await db.close();
 

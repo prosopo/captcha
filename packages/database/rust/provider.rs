@@ -274,6 +274,9 @@ impl ProviderDatabase {
     }
 
     pub(crate) async fn run(&self, operation: Operation) -> Result<Reply, ProsopoError> {
+        if let Some(nothing) = Self::not_sent(&operation) {
+            return Ok(nothing);
+        }
         self.executor.run(operation).await.map_err(|error| {
             db_error(
                 "DATABASE.QUERY_ERROR",
@@ -281,6 +284,24 @@ impl ProviderDatabase {
                 Some(&self.logger),
             )
         })
+    }
+
+    /// An update cast to nothing, which mongoose does not send: an `updateOne` or `updateMany`
+    /// statement left empty, or a `findOneAndUpdate` left empty, which finds nothing either.
+    fn not_sent(operation: &Operation) -> Option<Reply> {
+        match operation {
+            Operation::Update { statements, .. }
+                if statements.len() == 1 && matches!(&statements[0].u, Bson::Document(update) if update.is_empty()) =>
+            {
+                Some(Reply::Update {
+                    matched: 0,
+                    modified: 0,
+                    upserted: 0,
+                })
+            }
+            Operation::FindAndModify { update, .. } if update.is_empty() => Some(Reply::Value(None)),
+            _ => None,
+        }
     }
 
     pub(crate) async fn find(&self, operation: Operation) -> Result<Vec<Document>, ProsopoError> {

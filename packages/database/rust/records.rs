@@ -216,3 +216,215 @@ pub struct ChallengeRecord {
     #[serde(default)]
     pub icon_order_events: Option<Vec<PointerEvent>>,
 }
+
+/// `StoredCaptchaMetadata`.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StoredMetadata {
+    #[serde(default)]
+    pub email: Option<String>,
+    #[serde(default)]
+    pub email_normalised: Option<String>,
+}
+
+/// `UserCommitment`: an image captcha commitment as the provider records it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct UserCommitment {
+    pub user_account: String,
+    pub dapp_account: String,
+    pub dataset_id: String,
+    pub provider_account: String,
+    pub id: String,
+    pub result: StoredResult,
+    pub user_signature: String,
+    pub ip_address: CompositeIpAddress,
+    pub provided_ip: Option<CompositeIpAddress>,
+    pub metadata: Option<StoredMetadata>,
+    pub client_meta_data: Option<ClientMetaData>,
+    pub headers: Document,
+    pub ja4: String,
+    pub user_submitted: bool,
+    pub server_checked: bool,
+    pub ip_info: Option<Bson>,
+    pub parsed_user_agent_info: Option<Bson>,
+    pub stored_at_timestamp: Option<DateTime>,
+    pub requested_at_timestamp: DateTime,
+    pub submitted_at_timestamp: Option<DateTime>,
+    pub verified_at_timestamp: Option<DateTime>,
+    pub failed_at_timestamp: Option<DateTime>,
+    pub last_updated_timestamp: Option<DateTime>,
+    pub pending_stage: Option<bool>,
+    pub session_id: Option<String>,
+    pub coords: Option<Vec<Vec<Vec<f64>>>>,
+    pub input_methods: Option<Vec<Vec<prosopo_types::datasets::InputMethod>>>,
+    pub pending: bool,
+    pub salt: String,
+    pub request_hash: String,
+    pub deadline_timestamp: DateTime,
+    pub threshold: f64,
+    pub device_capability: Option<String>,
+    pub behavioral_data_packed: Option<Bson>,
+    pub label: Option<prosopo_types::stored::CaptchaLabel>,
+    pub label_reason: Option<String>,
+    pub labelled_by: Option<String>,
+    pub labelled_at: Option<DateTime>,
+}
+
+fn put<T: Into<Bson>>(out: &mut Document, key: &str, value: Option<T>) {
+    if let Some(value) = value {
+        out.insert(key, value.into());
+    }
+}
+
+pub(crate) fn coords_bson(coords: &[Vec<Vec<f64>>]) -> Bson {
+    use prosopo_types_database::number::js_number;
+    Bson::Array(
+        coords
+            .iter()
+            .map(|path| Bson::Array(path.iter().map(|point| Bson::Array(point.iter().map(|n| js_number(*n)).collect())).collect()))
+            .collect(),
+    )
+}
+
+impl UserCommitment {
+    /// As `UserCommitmentSchema.parse` returns it: the declared fields in schema order, the
+    /// absent ones left out.
+    pub fn to_document(&self) -> Document {
+        use prosopo_types_database::number::js_number;
+        let mut out: Document = Document::new();
+        out.insert("userAccount", self.user_account.as_str());
+        out.insert("dappAccount", self.dapp_account.as_str());
+        out.insert("datasetId", self.dataset_id.as_str());
+        out.insert("providerAccount", self.provider_account.as_str());
+        out.insert("id", self.id.as_str());
+        out.insert("result", self.result.to_document());
+        out.insert("userSignature", self.user_signature.as_str());
+        out.insert("ipAddress", self.ip_address.to_document());
+        put(&mut out, "providedIp", self.provided_ip.map(|ip| ip.to_document()));
+        put(
+            &mut out,
+            "metadata",
+            self.metadata.as_ref().map(|metadata| {
+                let mut fields: Document = Document::new();
+                put(&mut fields, "email", metadata.email.as_deref());
+                put(&mut fields, "emailNormalised", metadata.email_normalised.as_deref());
+                fields
+            }),
+        );
+        put(
+            &mut out,
+            "clientMetaData",
+            self.client_meta_data.as_ref().map(|meta| {
+                let mut fields: Document = Document::new();
+                put(&mut fields, "hp", meta.hp.as_deref());
+                put(&mut fields, "clientSessionId", meta.client_session_id.as_deref());
+                fields
+            }),
+        );
+        out.insert("headers", self.headers.clone());
+        out.insert("ja4", self.ja4.as_str());
+        out.insert("userSubmitted", self.user_submitted);
+        out.insert("serverChecked", self.server_checked);
+        put(&mut out, "ipInfo", self.ip_info.clone());
+        put(&mut out, "parsedUserAgentInfo", self.parsed_user_agent_info.clone());
+        put(&mut out, "storedAtTimestamp", self.stored_at_timestamp);
+        out.insert("requestedAtTimestamp", self.requested_at_timestamp);
+        put(&mut out, "submittedAtTimestamp", self.submitted_at_timestamp);
+        put(&mut out, "verifiedAtTimestamp", self.verified_at_timestamp);
+        put(&mut out, "failedAtTimestamp", self.failed_at_timestamp);
+        put(&mut out, "lastUpdatedTimestamp", self.last_updated_timestamp);
+        put(&mut out, "pendingStage", self.pending_stage);
+        put(&mut out, "sessionId", self.session_id.as_deref());
+        put(&mut out, "coords", self.coords.as_deref().map(coords_bson));
+        put(
+            &mut out,
+            "inputMethods",
+            self.input_methods.as_ref().map(|rows| {
+                Bson::Array(
+                    rows.iter()
+                        .map(|row| Bson::Array(row.iter().map(|method| Bson::from(method.as_str())).collect()))
+                        .collect(),
+                )
+            }),
+        );
+        out.insert("pending", self.pending);
+        out.insert("salt", self.salt.as_str());
+        out.insert("requestHash", self.request_hash.as_str());
+        out.insert("deadlineTimestamp", self.deadline_timestamp);
+        out.insert("threshold", js_number(self.threshold));
+        put(&mut out, "deviceCapability", self.device_capability.as_deref());
+        put(&mut out, "behavioralDataPacked", self.behavioral_data_packed.clone());
+        put(&mut out, "label", self.label.map(|label| label.as_str()));
+        put(&mut out, "labelReason", self.label_reason.as_deref());
+        put(&mut out, "labelledBy", self.labelled_by.as_deref());
+        put(&mut out, "labelledAt", self.labelled_at);
+        out
+    }
+}
+
+/// `PendingImageCaptchaRequest`: what `getPendingImageCommitment` returns.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PendingImageCaptchaRequest {
+    pub dapp_account: String,
+    pub pending: bool,
+    pub salt: String,
+    pub request_hash: String,
+    pub deadline_timestamp: DateTime,
+    pub requested_at_timestamp: DateTime,
+    pub ip_address: CompositeIpAddress,
+    #[serde(default)]
+    pub session_id: Option<String>,
+    pub threshold: f64,
+}
+
+/// A commitment as the verify path's projection returns it.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommitmentRecord {
+    pub id: String,
+    pub result: StoredResult,
+    #[serde(default)]
+    pub server_checked: Option<bool>,
+    pub requested_at_timestamp: DateTime,
+    #[serde(default)]
+    pub submitted_at_timestamp: Option<DateTime>,
+    #[serde(default)]
+    pub verified_at_timestamp: Option<DateTime>,
+    #[serde(default)]
+    pub failed_at_timestamp: Option<DateTime>,
+    pub ip_address: CompositeIpAddress,
+    #[serde(default)]
+    pub session_id: Option<String>,
+    pub user_account: String,
+    pub dapp_account: String,
+    #[serde(default)]
+    pub headers: Option<Bson>,
+    #[serde(default)]
+    pub ip_info: Option<Bson>,
+    #[serde(default)]
+    pub behavioral_data_packed: Option<Bson>,
+    #[serde(default)]
+    pub device_capability: Option<String>,
+    #[serde(default)]
+    pub coords: Option<Vec<Vec<Vec<f64>>>>,
+    #[serde(default)]
+    pub client_meta_data: Option<ClientMetaData>,
+}
+
+/// A user's solution to one captcha of a commitment.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserSolutionRecord {
+    pub captcha_id: String,
+    pub captcha_content_id: String,
+    pub salt: String,
+    #[serde(default)]
+    pub solution: Vec<String>,
+    pub processed: bool,
+    #[serde(default)]
+    pub checked: Option<bool>,
+    pub commitment_id: String,
+    #[serde(default)]
+    pub created_at: Option<DateTime>,
+}

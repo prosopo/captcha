@@ -26,7 +26,8 @@
 use crate::challenges::{Coords, Interactive, InteractiveAnswer, NewChallenge};
 use crate::operation::{Executor, Operation, Reply, ReplyFuture};
 use crate::provider::ProviderDatabase;
-use crate::records::{CompositeIpAddress, IpHalf, StoredResult};
+use crate::records::{CompositeIpAddress, IpHalf, StoredResult, UserCommitment};
+use prosopo_types::api_types::CaptchaSolution;
 use crate::source::Source;
 use bson::oid::ObjectId;
 use bson::{Bson, DateTime, Document};
@@ -253,6 +254,30 @@ fn same_error(error: &ProsopoError, ts: &Value) -> Option<String> {
     }
 }
 
+/// Raw documents. A live run's upserts get ids of their own from mongod, so there the top-level
+/// `_id` is left out of the comparison; the replay compares it too.
+fn check_documents(scenario: &Value, actual: Result<Vec<Document>, ProsopoError>, live: bool) -> Option<String> {
+    let strip = |documents: Vec<Document>| -> Vec<Document> {
+        documents
+            .into_iter()
+            .map(|mut document| {
+                if live {
+                    document.remove("_id");
+                }
+                document
+            })
+            .collect()
+    };
+    match (actual, scenario.get("error")) {
+        (Ok(documents), None) => {
+            let expected: Vec<Document> = strip(ts_result(scenario));
+            let documents: Vec<Document> = strip(documents);
+            (documents != expected).then(|| format!("documents\n      rust {documents:?}\n      ts   {expected:?}"))
+        }
+        (actual, _) => check(scenario, actual),
+    }
+}
+
 /// A unit result, which the TS records as null.
 fn check_unit(scenario: &Value, actual: Result<(), ProsopoError>) -> Option<String> {
     match (actual, scenario.get("error")) {
@@ -348,8 +373,20 @@ fn date(value: Option<&Bson>) -> Option<DateTime> {
     value.map(|value| *value.as_datetime().expect("a date"))
 }
 
+/// A document argument, with each recorded bigint as the Decimal128 a Rust `IpHalf` writes.
 fn document(value: &Bson) -> Document {
-    value.as_document().expect("a document").clone()
+    fn translate(value: &Bson) -> Bson {
+        match value {
+            Bson::Document(fields) if fields.contains_key("$bigint") => ip_half(value).to_bson(),
+            Bson::Document(fields) => Bson::Document(fields.iter().map(|(k, v)| (k.clone(), translate(v))).collect()),
+            Bson::Array(items) => Bson::Array(items.iter().map(translate).collect()),
+            other => other.clone(),
+        }
+    }
+    match translate(value) {
+        Bson::Document(document) => document,
+        other => panic!("not a document: {other}"),
+    }
 }
 
 fn new_challenge<'a>(
@@ -383,7 +420,7 @@ fn interactive(method: &str) -> Option<Interactive> {
     }
 }
 
-async fn run_challenge_scenario(db: &ProviderDatabase, scenario: &Value) -> Option<Option<String>> {
+async fn run_challenge_scenario(db: &ProviderDatabase, scenario: &Value, live: bool) -> Option<Option<String>> {
     let b: Vec<Bson> = bson_args(scenario);
     let method: &str = scenario["method"].as_str().expect("method");
     let outcome: Option<String> = match method {
@@ -417,9 +454,10 @@ async fn run_challenge_scenario(db: &ProviderDatabase, scenario: &Value) -> Opti
             .await,
         ),
         "updatePowCaptchaRecord" => check_unit(scenario, db.update_pow_captcha_record(bson_str(&b[0]), &document(&b[1])).await),
-        "getUnstoredDappUserPoWCommitments" => check(
+        "getUnstoredDappUserPoWCommitments" => check_documents(
             scenario,
             db.get_unstored_dapp_user_pow_commitments(given(&b, 0).map(bson_f64), given(&b, 1)).await,
+            live,
         ),
         "markDappUserPoWCommitmentsStored" => check_unit(
             scenario,
@@ -489,12 +527,126 @@ async fn run_challenge_scenario(db: &ProviderDatabase, scenario: &Value) -> Opti
     Some(outcome)
 }
 
+fn opt_str(fields: &Document, key: &str) -> Option<String> {
+    fields.get_str(key).ok().map(str::to_string)
+}
+
+fn opt_date(fields: &Document, key: &str) -> Option<DateTime> {
+    fields.get_datetime(key).ok().copied()
+}
+
+/// A `UserCommitment` from the TS object the generator passed.
+fn user_commitment(value: &Bson) -> UserCommitment {
+    let f: &Document = value.as_document().expect("a commitment");
+    UserCommitment {
+        user_account: f.get_str("userAccount").expect("user").to_string(),
+        dapp_account: f.get_str("dappAccount").expect("dapp").to_string(),
+        dataset_id: f.get_str("datasetId").expect("dataset").to_string(),
+        provider_account: f.get_str("providerAccount").expect("provider").to_string(),
+        id: f.get_str("id").expect("id").to_string(),
+        result: stored_result(f.get("result").expect("result")),
+        user_signature: f.get_str("userSignature").expect("signature").to_string(),
+        ip_address: ip_address(f.get("ipAddress").expect("ip")),
+        provided_ip: f.get("providedIp").map(ip_address),
+        metadata: f.get("metadata").map(|m| bson::deserialize_from_bson(m.clone()).expect("metadata")),
+        client_meta_data: f.get("clientMetaData").map(|m| bson::deserialize_from_bson(m.clone()).expect("client metadata")),
+        headers: f.get_document("headers").expect("headers").clone(),
+        ja4: f.get_str("ja4").expect("ja4").to_string(),
+        user_submitted: f.get_bool("userSubmitted").expect("submitted"),
+        server_checked: f.get_bool("serverChecked").expect("checked"),
+        ip_info: f.get("ipInfo").cloned(),
+        parsed_user_agent_info: f.get("parsedUserAgentInfo").cloned(),
+        stored_at_timestamp: opt_date(f, "storedAtTimestamp"),
+        requested_at_timestamp: *f.get_datetime("requestedAtTimestamp").expect("requested"),
+        submitted_at_timestamp: opt_date(f, "submittedAtTimestamp"),
+        verified_at_timestamp: opt_date(f, "verifiedAtTimestamp"),
+        failed_at_timestamp: opt_date(f, "failedAtTimestamp"),
+        last_updated_timestamp: opt_date(f, "lastUpdatedTimestamp"),
+        pending_stage: f.get_bool("pendingStage").ok(),
+        session_id: opt_str(f, "sessionId"),
+        coords: coords(f.get("coords")),
+        input_methods: f.get("inputMethods").map(|m| bson::deserialize_from_bson(m.clone()).expect("input methods")),
+        pending: f.get_bool("pending").expect("pending"),
+        salt: f.get_str("salt").expect("salt").to_string(),
+        request_hash: f.get_str("requestHash").expect("hash").to_string(),
+        deadline_timestamp: *f.get_datetime("deadlineTimestamp").expect("deadline"),
+        threshold: bson_f64(f.get("threshold").expect("threshold")),
+        device_capability: opt_str(f, "deviceCapability"),
+        behavioral_data_packed: f.get("behavioralDataPacked").cloned(),
+        label: f.get_str("label").ok().map(|label| label.parse().expect("a label")),
+        label_reason: opt_str(f, "labelReason"),
+        labelled_by: opt_str(f, "labelledBy"),
+        labelled_at: opt_date(f, "labelledAt"),
+    }
+}
+
+async fn run_image_scenario(db: &ProviderDatabase, scenario: &Value, live: bool) -> Option<Option<String>> {
+    let b: Vec<Bson> = bson_args(scenario);
+    let method: &str = scenario["method"].as_str().expect("method");
+    let outcome: Option<String> = match method {
+        "storePendingImageCommitment" => check_unit(
+            scenario,
+            db.store_pending_image_commitment(
+                bson_str(&b[0]),
+                bson_str(&b[1]),
+                bson_str(&b[2]),
+                *b[3].as_datetime().expect("deadline"),
+                *b[4].as_datetime().expect("requested"),
+                &ip_address(&b[5]),
+                bson_f64(&b[6]),
+                given(&b, 7).map(bson_str),
+                given(&b, 8),
+            )
+            .await,
+        ),
+        "getPendingImageCommitment" => check(scenario, db.get_pending_image_commitment(bson_str(&b[0])).await),
+        "updatePendingImageCommitmentStatus" => check(scenario, db.update_pending_image_commitment_status(bson_str(&b[0])).await),
+        "storeUserImageCaptchaSolution" => {
+            let solutions: Vec<CaptchaSolution> = bson::deserialize_from_bson(b[0].clone()).expect("solutions");
+            check_unit(scenario, db.store_user_image_captcha_solution(&solutions, &user_commitment(&b[1])).await)
+        }
+        "getDappUserCommitmentById" => check(scenario, db.get_dapp_user_commitment_by_id(bson_str(&b[0])).await),
+        "getDappUserCommitmentByAccount" => {
+            check(scenario, db.get_dapp_user_commitment_by_account(bson_str(&b[0]), bson_str(&b[1])).await)
+        }
+        "getAllDappUserSolutions" => check(scenario, db.get_all_dapp_user_solutions(&bson_strings(&b[0])).await),
+        "getDappUserSolutionById" => check(scenario, db.get_dapp_user_solution_by_id(bson_str(&b[0])).await),
+        "approveDappUserCommitment" => {
+            check_unit(scenario, db.approve_dapp_user_commitment(bson_str(&b[0]), coords(given(&b, 1)).as_ref()).await)
+        }
+        "disapproveDappUserCommitment" => check_unit(
+            scenario,
+            db.disapprove_dapp_user_commitment(bson_str(&b[0]), given(&b, 1).map(bson_str), coords(given(&b, 2)).as_ref()).await,
+        ),
+        "updateDappUserCommitment" => check_unit(scenario, db.update_dapp_user_commitment(bson_str(&b[0]), &document(&b[1])).await),
+        "getCheckedDappUserCommitments" => check_documents(scenario, db.get_checked_dapp_user_commitments().await, live),
+        "getUnstoredDappUserCommitments" => check_documents(
+            scenario,
+            db.get_unstored_dapp_user_commitments(given(&b, 0).map(bson_f64), given(&b, 1)).await,
+            live,
+        ),
+        "markDappUserCommitmentsStored" => {
+            check_unit(scenario, db.mark_dapp_user_commitments_stored(&bson_strings(&b[0]), date(given(&b, 1))).await)
+        }
+        "markDappUserCommitmentsChecked" => check(scenario, db.mark_dapp_user_commitments_checked(&bson_strings(&b[0])).await),
+        "flagProcessedDappUserSolutions" => check_unit(scenario, db.flag_processed_dapp_user_solutions(&bson_strings(&b[0])).await),
+        "flagProcessedDappUserCommitments" => {
+            check_unit(scenario, db.flag_processed_dapp_user_commitments(&bson_strings(&b[0])).await)
+        }
+        _ => return None,
+    };
+    Some(outcome)
+}
+
 fn bson_strings(value: &Bson) -> Vec<String> {
     value.as_array().expect("an array").iter().map(|item| bson_str(item).to_string()).collect()
 }
 
-async fn run_scenario(db: &ProviderDatabase, scenario: &Value) -> Option<String> {
-    if let Some(outcome) = run_challenge_scenario(db, scenario).await {
+async fn run_scenario(db: &ProviderDatabase, scenario: &Value, live: bool) -> Option<String> {
+    if let Some(outcome) = run_challenge_scenario(db, scenario, live).await {
+        return outcome;
+    }
+    if let Some(outcome) = run_image_scenario(db, scenario, live).await {
         return outcome;
     }
     let a: Vec<Value> = args(scenario);
@@ -546,7 +698,7 @@ async fn methods_send_the_commands_the_ts_sends_and_return_what_it_returns() {
         let source: Arc<ReplaySource> = Arc::new(ReplaySource::new(now, scenario));
         let db: ProviderDatabase = ProviderDatabase::new(executor.clone(), source.clone(), get_logger(LogLevel::Error, "test"));
         let name: &str = scenario["name"].as_str().expect("name");
-        if let Some(problem) = run_scenario(&db, scenario).await {
+        if let Some(problem) = run_scenario(&db, scenario, false).await {
             failures.push(format!("{name}: {problem}"));
         }
         for mismatch in executor.mismatches.lock().expect("lock").iter() {
@@ -615,7 +767,7 @@ async fn methods_do_on_a_real_database_what_the_ts_did() {
         let source: Arc<ReplaySource> = Arc::new(ReplaySource::new(now, scenario));
         let db: ProviderDatabase = ProviderDatabase::new(executor.clone(), source, get_logger(LogLevel::Error, "test"));
         let sampled: bool = sampled(scenario);
-        if let Some(problem) = run_scenario(&db, scenario).await {
+        if let Some(problem) = run_scenario(&db, scenario, true).await {
             let same_outcome: bool = !problem.starts_with("rust failed") && !problem.starts_with("rust returned");
             if !(sampled && same_outcome) {
                 failures.push(format!("{name}: {problem}"));

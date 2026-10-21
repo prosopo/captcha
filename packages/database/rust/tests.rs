@@ -280,3 +280,34 @@ mod rust_only {
         }
     }
 }
+
+mod commitment_input_methods {
+    use bson::{doc, Bson, Document};
+    use prosopo_types_database::document::{build, Issue};
+    use prosopo_types_database::provider::USER_COMMITMENT_RECORD;
+    use prosopo_types_database::schema::FreshIds;
+
+    fn input_method_issues(input: Document) -> (Document, Vec<Issue>) {
+        let (document, issues): (Document, Vec<Issue>) = build(&USER_COMMITMENT_RECORD, &input, &mut FreshIds);
+        (document, issues.into_iter().filter(|issue| issue.path.starts_with("inputMethods")).collect())
+    }
+
+    #[test]
+    fn stores_input_methods_in_the_shape_of_the_coordinates() {
+        let (document, issues) = input_method_issues(doc! { "inputMethods": [["keyboard"], ["pointer"]] });
+        assert_eq!(issues, Vec::new());
+        assert_eq!(document.get("inputMethods"), Some(&Bson::from(vec![vec!["keyboard"], vec!["pointer"]])));
+    }
+
+    #[test]
+    fn refuses_to_store_an_unknown_input_method() {
+        let (_, issues) = input_method_issues(doc! { "inputMethods": [["voice"]] });
+        assert!(!issues.is_empty());
+    }
+
+    #[test]
+    fn leaves_input_methods_out_of_a_commitment_that_has_none() {
+        let (document, _) = input_method_issues(Document::new());
+        assert!(!document.contains_key("inputMethods"));
+    }
+}

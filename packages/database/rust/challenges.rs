@@ -16,7 +16,7 @@
 
 use crate::operation::{Operation, Reply, UpdateStatement};
 use crate::provider::{collections, db_error, decode, ProviderDatabase};
-use crate::records::{ChallengeRecord, CompositeIpAddress, StoredIconTarget, StoredResult};
+use crate::records::{coords_bson, ChallengeRecord, CompositeIpAddress, StoredIconTarget, StoredResult};
 use crate::source::SourceIds;
 use bson::{doc, Bson, DateTime, Document};
 use prosopo_common::{ErrorClass, ErrorContext, ErrorOptions, ErrorSource, ProsopoError};
@@ -122,18 +122,6 @@ fn optional(value: Option<&str>) -> Bson {
     value.map(Bson::from).unwrap_or(Bson::Undefined)
 }
 
-fn coords_bson(coords: &Coords) -> Bson {
-    Bson::Array(
-        coords
-            .iter()
-            .map(|path| {
-                Bson::Array(
-                    path.iter().map(|point| Bson::Array(point.iter().map(|n| js_number(*n)).collect())).collect(),
-                )
-            })
-            .collect(),
-    )
-}
 
 fn check_coords(coords: Option<&Coords>) -> Result<(), ProsopoError> {
     match coords {
