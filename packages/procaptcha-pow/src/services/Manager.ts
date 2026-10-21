@@ -14,12 +14,13 @@
 
 import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	FINGERPRINT_DISCLOSURE_KEYS,
 	encodeFingerprintProof,
 	getFingerprintProof,
 } from "@prosopo/fingerprint";
+import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	buildClientMetaData,
@@ -134,7 +135,9 @@ export const Manager = (
 
 	const getAccount = () => {
 		if (!state.account) {
-			throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+			throw new ProsopoError({
+				code: "ACCOUNT_NOT_FOUND",
+				errorSite: "POW-1",
 				context: { error: "Account not loaded" },
 			});
 		}
@@ -144,7 +147,7 @@ export const Manager = (
 
 	const getDappAccount = () => {
 		if (!state.dappAccount) {
-			throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+			throw new ProsopoError({ code: "SITE_KEY_MISSING", errorSite: "POW-2" });
 		}
 
 		const dappAccount: string = state.dappAccount;
@@ -237,7 +240,9 @@ export const Manager = (
 
 				// check if account has been provided in config (doesn't matter in web2 mode)
 				if (!config.web2 && !config.userAccountAddress) {
-					throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+					throw new ProsopoError({
+						code: "ACCOUNT_NOT_FOUND",
+						errorSite: "POW-3",
 						context: {
 							error: "Account address has not been set for web3 mode",
 						},
@@ -260,7 +265,12 @@ export const Manager = (
 				const providerUrl = getRandomProviderResponse.provider.url;
 				previousProviderUrl = providerUrl;
 
-				const providerApi = new ProviderApi(providerUrl, getDappAccount());
+				const providerApi = new ProviderApi(
+					providerUrl,
+					getDappAccount(),
+					undefined,
+					widgetLanguageHeaders(getConfig().language),
+				);
 
 				// Non-blocking check (timeoutMs=0): only attach SIMD readings if
 				// the benchmark prefetched by the catcher has already resolved.
@@ -280,10 +290,7 @@ export const Manager = (
 				if (challenge.error) {
 					updateState({
 						loading: false,
-						error: {
-							message: challenge.error.message,
-							key: challenge.error.key || "API.UNKNOWN_ERROR",
-						},
+						error: challenge.error,
 					});
 				} else {
 					const solution = await solvePoW(
@@ -306,7 +313,10 @@ export const Manager = (
 					const signer = user.extension?.signer;
 
 					if (!signer || !signer.signRaw) {
-						throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
+						throw new ProsopoError({
+							code: "CONFIG_INVALID",
+							errorSite: "POW-4",
+							message: "Can't find the keyringpair for {{address}}",
 							context: {
 								error:
 									"Signer is not defined, cannot sign message to prove account ownership",

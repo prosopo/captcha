@@ -74,6 +74,8 @@ type IpMode = ReturnType<typeof pickIpMode>;
  */
 const mocks = vi.hoisted(() => {
 	const providerApiConstructions: { url: string; siteKey: string }[] = [];
+	const providerApiHeaders: (Readonly<Record<string, string>> | undefined)[] =
+		[];
 	const getPuzzleCaptchaChallenge =
 		vi.fn<
 			(
@@ -103,8 +105,14 @@ const mocks = vi.hoisted(() => {
 	class ProviderApiMock {
 		public getPuzzleCaptchaChallenge = getPuzzleCaptchaChallenge;
 		public submitPuzzleCaptchaSolution = submitPuzzleCaptchaSolution;
-		constructor(url: string, siteKey: string) {
+		constructor(
+			url: string,
+			siteKey: string,
+			_timeoutMs?: number,
+			defaultHeaders?: Readonly<Record<string, string>>,
+		) {
 			providerApiConstructions.push({ url, siteKey });
+			providerApiHeaders.push(defaultHeaders);
 		}
 	}
 
@@ -127,6 +135,7 @@ const mocks = vi.hoisted(() => {
 
 	return {
 		providerApiConstructions,
+		providerApiHeaders,
 		getPuzzleCaptchaChallenge,
 		submitPuzzleCaptchaSolution,
 		ProviderApiMock,
@@ -258,6 +267,7 @@ const signRaw = signRawMock;
 beforeEach(() => {
 	vi.clearAllMocks();
 	mocks.providerApiConstructions.length = 0;
+	mocks.providerApiHeaders.length = 0;
 	signRaw.mockResolvedValue({ id: 1, signature: "0xuser-signature" });
 	mocks.getAccount.mockResolvedValue(account(signRaw));
 	mocks.extensionLoader.mockResolvedValue(mocks.ExtensionMock);
@@ -318,6 +328,22 @@ describe("start: getting to a challenge", () => {
 		const harness = build({ initialState: { attemptCount: 2 } });
 		await harness.manager.start();
 		expect(lastUpdate(harness, "attemptCount")).toBe(3);
+	});
+
+	test("sends the site's language to the provider", async () => {
+		vi.stubGlobal("navigator", { languages: ["de"] });
+		const harness = build({ configInput: config({ language: "tr" }) });
+		await harness.manager.start();
+		vi.unstubAllGlobals();
+		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr" }]);
+	});
+
+	test("sends the browser's languages when the site set none", async () => {
+		vi.stubGlobal("navigator", { languages: ["tr-TR", "en"] });
+		const harness = build();
+		await harness.manager.start();
+		vi.unstubAllGlobals();
+		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr-TR,en" }]);
 	});
 
 	test("asks the provider named by the frictionless state, when there is one", async () => {
@@ -409,7 +435,7 @@ describe("start: getting to a challenge", () => {
 
 // The provider consumes a frictionless session the moment it issues a
 // challenge against it, so a second challenge fetch on the same id can only
-// come back CAPTCHA.NO_SESSION_FOUND. The manager has to recognise its own
+// come back NO_SESSION_FOUND. The manager has to recognise its own
 // spent id rather than spend a round trip discovering it again.
 describe("start: a session that has already bought a challenge", () => {
 	test("short-circuits instead of re-requesting on the spent id", async () => {
@@ -419,9 +445,10 @@ describe("start: a session that has already bought a challenge", () => {
 		await harness.manager.start();
 		await harness.manager.start();
 		expect(mocks.getPuzzleCaptchaChallenge).toHaveBeenCalledTimes(1);
-		expect(lastUpdate(harness, "error")).toEqual({
+		expect(lastUpdate(harness, "error")).toMatchObject({
+			code: "NO_SESSION_FOUND",
+			errorId: "NO_SESSION_FOUND:PUZZ-6",
 			message: "No session found",
-			key: "CAPTCHA.NO_SESSION_FOUND",
 		});
 		expect(lastUpdate(harness, "loading")).toBe(false);
 	});
@@ -447,7 +474,12 @@ describe("start: a session that has already bought a challenge", () => {
 	test("counts the id as spent when the provider answers with an error", async () => {
 		mocks.getPuzzleCaptchaChallenge.mockResolvedValue({
 			...challengeResponse(),
-			error: { message: "nope", key: "API.BAD_REQUEST", code: 400 },
+			error: {
+				code: "INVALID_REQUEST",
+				errorId: "INVALID_REQUEST:PROV-1",
+				status: 400,
+				message: "nope",
+			},
 		});
 		const harness = build({
 			frictionlessState: frictionless({ sessionId: "session-1" }),
@@ -471,36 +503,53 @@ describe("start: when the provider will not issue a challenge", () => {
 		mocks.getPuzzleCaptchaChallenge.mockResolvedValue(
 			challengeResponse({
 				error: {
+					code: "NO_SESSION_FOUND",
+					errorId: "NO_SESSION_FOUND:PROV-1",
+					status: 400,
 					message: "no session",
-					key: "CAPTCHA.NO_SESSION_FOUND",
-					code: 400,
 				},
 			}),
 		);
 		const harness = build();
 		await harness.manager.start();
-		expect(lastUpdate(harness, "error")).toEqual({
+		expect(lastUpdate(harness, "error")).toMatchObject({
+			code: "NO_SESSION_FOUND",
+			errorId: "NO_SESSION_FOUND:PROV-1",
 			message: "no session",
-			key: "CAPTCHA.NO_SESSION_FOUND",
 		});
 		expect(lastUpdate(harness, "loading")).toBe(false);
 	});
 
-	test("labels an error the provider left unkeyed", async () => {
+	test("passes a hidden provider error through with its errorId", async () => {
 		mocks.getPuzzleCaptchaChallenge.mockResolvedValue(
-			challengeResponse({ error: { message: "something broke", code: 500 } }),
+			challengeResponse({
+				error: {
+					code: "BACKEND_ERROR",
+					errorId: "BACKEND_ERROR:PROV-1",
+					status: 500,
+					message: "something broke",
+				},
+			}),
 		);
 		const harness = build();
 		await harness.manager.start();
-		expect(lastUpdate(harness, "error")).toEqual({
+		expect(lastUpdate(harness, "error")).toMatchObject({
+			code: "BACKEND_ERROR",
+			errorId: "BACKEND_ERROR:PROV-1",
 			message: "something broke",
-			key: "API.UNKNOWN_ERROR",
 		});
 	});
 
 	test("keeps no challenge, so a submit afterwards cannot pretend one exists", async () => {
 		mocks.getPuzzleCaptchaChallenge.mockResolvedValue(
-			challengeResponse({ error: { message: "no session", code: 400 } }),
+			challengeResponse({
+				error: {
+					code: "BACKEND_ERROR",
+					errorId: "BACKEND_ERROR:PROV-1",
+					status: 400,
+					message: "no session",
+				},
+			}),
 		);
 		const harness = build();
 		await expect(harness.manager.start()).resolves.toBeUndefined();

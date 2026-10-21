@@ -12,11 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	createTranslator,
-	loadI18next,
-	localiseErrorMessage,
-} from "@prosopo/locale";
+import { createTranslator, loadI18next, localiseError } from "@prosopo/locale";
 import { Manager } from "@prosopo/procaptcha";
 import {
 	type CheckboxProps,
@@ -179,7 +175,7 @@ export const mountProcaptchaImageWidget = (
 			return;
 		}
 		loading = false;
-		if ("CAPTCHA.NO_SESSION_FOUND" !== store.state.error.key) {
+		if (store.state.error.code !== "NO_SESSION_FOUND") {
 			return;
 		}
 		// Suppressed only when something is actually going to re-mint: this is
@@ -221,7 +217,7 @@ export const mountProcaptchaImageWidget = (
 		checked: store.state.isHuman,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",
 		error: store.state.error
-			? localiseErrorMessage(translator.i18n, store.state.error)
+			? localiseError(translator.i18n, store.state.error)
 			: undefined,
 		notice: store.state.answeredIncorrectly
 			? translator.t("WIDGET.PUZZLE.RETRY")

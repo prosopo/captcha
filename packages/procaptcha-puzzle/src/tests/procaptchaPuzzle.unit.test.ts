@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
 import type { ProcaptchaProps } from "@prosopo/types";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { ProcaptchaPuzzleHandle } from "../components/procaptchaWidget.js";
@@ -55,7 +54,6 @@ let widget: ProcaptchaPuzzleHandle | undefined;
 const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps => ({
 	config: config(),
 	callbacks: {},
-	i18n: undefined as unknown as Ti18n,
 	...overrides,
 });
 

@@ -126,6 +126,8 @@ describe("apiRegisterSiteKeyEndpoint", () => {
 
 		const registerPromise = registerSiteKey(db, record);
 
-		await expect(registerPromise).rejects.toThrowError("API.INVALID_SITE_KEY");
+		await expect(registerPromise).rejects.toMatchObject({
+			code: "SITE_KEY_INVALID",
+		});
 	});
 });

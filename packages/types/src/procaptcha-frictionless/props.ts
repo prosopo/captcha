@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import type { Ti18n } from "@prosopo/locale";
 import type { ProcaptchaClientConfigOutput } from "../config/config.js";
 import type {
 	BehavioralData,
@@ -84,6 +85,7 @@ export type BotDetectionFunction = (
  * The props for the Procaptcha Frictionless component.
  */
 export interface ProcaptchaFrictionlessProps extends ProcaptchaProps {
+	i18n: Ti18n;
 	restart: FrictionlessRestart;
 	detectBot?: BotDetectionFunction;
 	detectBotConfig?: ProcaptchaClientConfigOutput;

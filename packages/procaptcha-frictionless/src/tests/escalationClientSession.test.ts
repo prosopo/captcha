@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import { createUntranslatedI18n } from "@prosopo/locale";
 import {
 	type BotDetectionFunction,
 	CaptchaType,
@@ -84,12 +84,12 @@ const config = (): ProcaptchaClientConfigOutput =>
 		clientSessionId: CLIENT_SESSION_ID,
 	}) as unknown as ProcaptchaClientConfigOutput;
 
-const i18nStub = {
+const i18nStub = createUntranslatedI18n({
 	isInitialized: true,
 	language: "en",
 	t: (key: string) => key,
 	changeLanguage: vi.fn(),
-} as unknown as Ti18n;
+});
 
 // Minimal shape of what customDetectBot resolves to; only the fields the
 // wrapper reads on the happy path need to be present.

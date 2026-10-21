@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Language, TargetKey } from "@prosopo/locale";
 import type { Address4, Address6 } from "ip-address";
 import {
 	type ZodDefault,
@@ -69,10 +70,17 @@ import type {
 	RequestHashSignature,
 } from "../procaptcha/index.js";
 
+/**
+ * An error as a client receives it. `code` is what the widget branches on and
+ * translates; `errorId` (`<CODE>:<SITE>`) is what a user quotes to support. A
+ * non-public error carries only `BACKEND_ERROR` and its errorId.
+ */
 export type ApiJsonError = {
-	message: string;
-	key?: string;
-	code: number;
+	code: string;
+	errorId: string;
+	status: number;
+	/** English, for public errors only. */
+	message?: string;
 	data?: Record<string, unknown>;
 };
 
@@ -367,8 +375,23 @@ export const CaptchaRequestBody = object({
 export type CaptchaRequestBodyType = zInfer<typeof CaptchaRequestBody>;
 export type CaptchaRequestBodyTypeOutput = output<typeof CaptchaRequestBody>;
 
+/**
+ * A captcha as sent to the widget. `target` is already in the request's
+ * language. The widget does not download image labels, so the provider also
+ * sends the label's key and English text, for logs and crash reports. Both are
+ * optional because older providers do not send them.
+ */
+export interface ChallengeCaptcha extends Captcha {
+	/** The label's catalogue key (`owl` for `TARGET.owl`), when it has one. */
+	targetKey?: TargetKey;
+	/** The label in English. */
+	targetEn?: string;
+}
+
 export interface CaptchaResponseBody extends ApiResponse {
-	[ApiParams.captchas]: Captcha[];
+	[ApiParams.captchas]: ChallengeCaptcha[];
+	/** The language `target` was translated into. */
+	[ApiParams.language]?: Language;
 	[ApiParams.requestHash]: string;
 	[ApiParams.timestamp]: string;
 	[ApiParams.signature]: {

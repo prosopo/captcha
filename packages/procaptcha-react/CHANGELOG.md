@@ -1,5 +1,67 @@
 # @prosopo/procaptcha-react
 
+## 2.14.6
+### Patch Changes
+
+- b6e9459: The colon after the "Select all …" prompt is added by the widget again, rather than being part of each translation. Every language's `WIDGET.SELECT_ALL` no longer ends with a colon, and the widget renders it as `<prompt>: <target>`. A locale test now fails if a translation brings its own colon back.
+- Updated dependencies [b6e9459]
+- Updated dependencies [a5c953d]
+  - @prosopo/locale@3.11.1
+  - @prosopo/widget-skeleton@2.10.2
+  - @prosopo/common@3.2.3
+  - @prosopo/procaptcha@2.11.32
+  - @prosopo/types@5.16.3
+  - @prosopo/procaptcha-common@2.21.5
+  - @prosopo/util@3.3.15
+
+## 2.14.5
+### Patch Changes
+
+- Updated dependencies [49e9385]
+- Updated dependencies [03df637]
+  - @prosopo/locale@3.11.0
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+  - @prosopo/procaptcha@2.11.31
+  - @prosopo/procaptcha-common@2.21.4
+
+## 2.14.4
+### Patch Changes
+
+- Updated dependencies [e841741]
+  - @prosopo/locale@3.10.1
+  - @prosopo/common@3.2.1
+  - @prosopo/procaptcha@2.11.30
+  - @prosopo/types@5.16.1
+  - @prosopo/procaptcha-common@2.21.3
+
+## 2.14.3
+### Patch Changes
+
+- eb99b3d: Fill in the missing and wrong translations across all 32 widget languages and add a generic Chinese (`zh`) catalogue.
+  
+  - Image labels that had been machine-translated wrongly (for example Hungarian "camel" as "cow", Thai "rhinoceros" as "gibbon") or left as hyphenated keys ("hot-air-balloon") now read as proper words.
+  - Turkish, Ukrainian, Malay, Indonesian, Javanese, Azerbaijani, Finnish, Romanian, Thai and Malayalam were largely rewritten. Corrupted Serbian characters were fixed.
+  - The "Select all …" prompt now ends with its own colon in each language (" :" in French, "：" in Chinese and Japanese), so the widget no longer appends an English colon.
+  - `Languages.chinese` is now `zh`. The existing `zh-CN` catalogue is still available as `Languages.chineseChina`.
+  - A new `locales` CI check fails a PR whose catalogues have missing or extra keys, empty or untranslated values (audio captcha strings excepted), the wrong script, or broken characters.
+- Updated dependencies [eb99b3d]
+- Updated dependencies [f3f7243]
+- Updated dependencies [cbb6a10]
+- Updated dependencies [4961a7e]
+- Updated dependencies [b351896]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [1634139]
+  - @prosopo/locale@3.10.0
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/procaptcha@2.11.29
+  - @prosopo/procaptcha-common@2.21.2
+
 ## 2.14.2
 ### Patch Changes
 

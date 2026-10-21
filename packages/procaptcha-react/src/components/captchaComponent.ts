@@ -310,8 +310,6 @@ export const mountCaptchaComponent = (
 
 		const t = props.translator.t;
 		targetLabel.textContent = `${currentCaptcha().target} `;
-		// `:` then a non-breaking space, matching the `&nbsp;` the JSX carried
-		// between the label and the target word.
 		promptText.textContent = `${t("WIDGET.SELECT_ALL")}:\u00a0`;
 		promptText.appendChild(targetLabel);
 		hintText.textContent = t("WIDGET.IF_NONE_CLICK_NEXT");

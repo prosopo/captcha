@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { RedisWriteQueue } from "@prosopo/database";
-import type { TranslationKey } from "@prosopo/locale";
+import type { TranslateFn, TranslationKey } from "@prosopo/locale";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	ApiParams,
@@ -547,7 +547,7 @@ export class CaptchaManager {
 				// puzzle from postPow. Real-world widgets and dapps that
 				// don't fully wire `onEscalate` keep calling /captcha/*
 				// with the original sessionId — without this fallback they
-				// see CAPTCHA.NO_SESSION_FOUND and the user lands on the
+				// see NO_SESSION_FOUND and the user lands on the
 				// FAQ page.
 				const escalationSessionId =
 					await this.writeQueue.getCachedSessionEscalation(sessionId);
@@ -813,7 +813,7 @@ export class CaptchaManager {
 	getVerificationResponse(
 		verified: boolean,
 		clientRecord: ClientRecord,
-		translateFn: (key: string) => string,
+		translateFn: TranslateFn,
 		score?: number,
 		reason?: string,
 		sessionId?: string,

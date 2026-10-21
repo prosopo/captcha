@@ -81,6 +81,8 @@ export const MIN_DECOY_HOLE_DARKEN_MARGIN = 0.04;
  */
 export const MAX_AUTO_ESCALATION_LEVEL = 3;
 
+export const MAX_STALE_PAYLOAD_LEVEL = 1;
+
 /**
  * Highest level reachable by automatic escalation on a touch device.
  *
@@ -89,6 +91,35 @@ export const MAX_AUTO_ESCALATION_LEVEL = 3;
  * accuracy of a fingertip as it does of a mouse.
  */
 export const MAX_AUTO_ESCALATION_LEVEL_TOUCH = 2;
+
+/**
+ * Loosest placement target a touch device is ever asked for, in px.
+ *
+ * The ceiling above bounds the LADDER, which leaves the site's own
+ * `puzzleTolerance`, a traffic-filter override and a routing machine's
+ * override untouched. This is applied as a floor at the point of issue, after
+ * every override has resolved, so it covers all four at once.
+ *
+ * A starting point, like the ladder above.
+ */
+export const TOUCH_MIN_TOLERANCE_PX = 12;
+
+/**
+ * Smallest puzzle piece served to a touch device, as a fraction of background
+ * width — a 60px piece against the 300px-wide container. Below this the piece
+ * is hidden by the finger dragging it. Also a starting point.
+ */
+export const TOUCH_MIN_PIECE_SCALE = 0.2;
+
+export const easeToleranceForTouch = (tolerance: number): number =>
+	Math.max(tolerance, TOUCH_MIN_TOLERANCE_PX);
+
+export const easePieceScaleForTouch = (
+	range: PuzzleDifficultyRange,
+): PuzzleDifficultyRange => ({
+	min: Math.max(range.min, TOUCH_MIN_PIECE_SCALE),
+	max: Math.max(range.max, TOUCH_MIN_PIECE_SCALE),
+});
 
 /**
  * Image rounds per difficulty step.

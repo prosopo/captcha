@@ -14,11 +14,8 @@
 
 import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
-import {
-	ProsopoDatasetError,
-	ProsopoEnvError,
-	ProsopoError,
-} from "@prosopo/common";
+import { ProsopoError, toPublicError } from "@prosopo/common";
+import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	buildClientMetaData,
@@ -99,7 +96,7 @@ export function Manager(
 	// The sessionId this manager has already exchanged for a challenge. The
 	// provider consumes a session the moment it issues a challenge against it
 	// (`checkAndRemoveSession`), so asking for a second challenge with the same
-	// id is a guaranteed 400 CAPTCHA.NO_SESSION_FOUND. `defaultState()` doesn't
+	// id is a guaranteed 400 NO_SESSION_FOUND. `defaultState()` doesn't
 	// clear `sessionId` and `buildUpdateState` skips `undefined`, so a stale id
 	// survives `resetState()` — any path that re-enters `start()` (a
 	// providerRetry after a late failure, a `procaptcha:execute` event, a
@@ -215,10 +212,13 @@ export function Manager(
 				if (state.sessionId && state.sessionId === spentSessionId) {
 					updateState({
 						loading: false,
-						error: {
-							message: "No session found",
-							key: "CAPTCHA.NO_SESSION_FOUND",
-						},
+						error: toPublicError(
+							new ProsopoError({
+								code: "NO_SESSION_FOUND",
+								errorSite: "PCAP-18",
+							}),
+							"FRONTEND_ERROR",
+						),
 					});
 					events.onError(new Error("No session found"));
 					return;
@@ -246,15 +246,16 @@ export function Manager(
 				if (challenge.error) {
 					updateState({
 						loading: false,
-						error: {
-							message: challenge.error.message,
-							key: challenge.error.key || "API.UNKNOWN_ERROR",
-						},
+						error: challenge.error,
 					});
 					events.onError(new Error(challenge.error?.message));
 				} else {
 					if (challenge.captchas.length <= 0) {
-						throw new ProsopoDatasetError("DEVELOPER.PROVIDER_NO_CAPTCHA");
+						throw new ProsopoError({
+							code: "RECORD_NOT_FOUND",
+							errorSite: "PCAP-1",
+							message: "No captchas returned from provider",
+						});
 					}
 
 					// setup timeout, taking the timeout from the individual captcha or the global default
@@ -296,7 +297,10 @@ export function Manager(
 				clearTimeout();
 
 				if (!state.challenge) {
-					throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
+					throw new ProsopoError({
+						code: "RECORD_NOT_FOUND",
+						errorSite: "PCAP-2",
+						message: "No captcha found",
 						context: { error: "Cannot submit, no Captcha found in state" },
 					});
 				}
@@ -345,7 +349,10 @@ export function Manager(
 
 				const first = at(challenge.captchas, 0);
 				if (!first.datasetId) {
-					throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_ID", {
+					throw new ProsopoError({
+						code: "INVALID_DATA",
+						errorSite: "PCAP-3",
+						message: "Invalid captcha id",
 						context: { error: "No datasetId set for challenge" },
 					});
 				}
@@ -353,13 +360,19 @@ export function Manager(
 				const captchaApi = state.captchaApi;
 
 				if (!captchaApi) {
-					throw new ProsopoError("CAPTCHA.INVALID_TOKEN", {
+					throw new ProsopoError({
+						code: "INVALID_REQUEST",
+						errorSite: "PCAP-4",
+						message: "Invalid token",
 						context: { error: "No Captcha API found in state" },
 					});
 				}
 
 				if (!signer || !signer.signRaw) {
-					throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
+					throw new ProsopoError({
+						code: "CONFIG_INVALID",
+						errorSite: "PCAP-5",
+						message: "Can't find the keyringpair for {{address}}",
 						context: {
 							error:
 								"Signer is not defined, cannot sign message to prove account ownership",
@@ -525,12 +538,18 @@ export function Manager(
 		inputMethod: InputMethod = InputMethod.pointer,
 	) => {
 		if (!state.challenge) {
-			throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
+			throw new ProsopoError({
+				code: "RECORD_NOT_FOUND",
+				errorSite: "PCAP-6",
+				message: "No captcha found",
 				context: { error: "Cannot select, no Captcha found in state" },
 			});
 		}
 		if (state.index >= state.challenge.captchas.length || state.index < 0) {
-			throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
+			throw new ProsopoError({
+				code: "RECORD_NOT_FOUND",
+				errorSite: "PCAP-7",
+				message: "No captcha found",
 				context: {
 					error: "Cannot select, index is out of range for this Captcha",
 				},
@@ -555,12 +574,18 @@ export function Manager(
 	 */
 	const nextRound = () => {
 		if (!state.challenge) {
-			throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
+			throw new ProsopoError({
+				code: "RECORD_NOT_FOUND",
+				errorSite: "PCAP-8",
+				message: "No captcha found",
 				context: { error: "Cannot select, no Captcha found in state" },
 			});
 		}
 		if (state.index + 1 >= state.challenge.captchas.length) {
-			throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
+			throw new ProsopoError({
+				code: "RECORD_NOT_FOUND",
+				errorSite: "PCAP-9",
+				message: "No captcha found",
 				context: {
 					error: "Cannot select, index is out of range for this Captcha",
 				},
@@ -577,9 +602,20 @@ export function Manager(
 		const config = getConfig();
 		const siteKey = config.account.address;
 		if (!siteKey) {
-			throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+			throw new ProsopoError({
+				code: "SITE_KEY_MISSING",
+				errorSite: "PCAP-10",
+			});
 		}
-		return { providerApi: new ProviderApi(providerUrl, siteKey), siteKey };
+		return {
+			providerApi: new ProviderApi(
+				providerUrl,
+				siteKey,
+				undefined,
+				widgetLanguageHeaders(config.language),
+			),
+			siteKey,
+		};
 	};
 
 	const clearTimeout = () => {
@@ -622,7 +658,9 @@ export function Manager(
 		const config = getConfig();
 		// check if account has been provided in config (doesn't matter in web2 mode)
 		if (!config.web2 && !config.userAccountAddress) {
-			throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+			throw new ProsopoError({
+				code: "ACCOUNT_NOT_FOUND",
+				errorSite: "PCAP-11",
 				context: { error: "Account address has not been set for web3 mode" },
 			});
 		}
@@ -647,7 +685,9 @@ export function Manager(
 
 	const getAccount = () => {
 		if (!state.account) {
-			throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+			throw new ProsopoError({
+				code: "ACCOUNT_NOT_FOUND",
+				errorSite: "PCAP-12",
 				context: { error: "Account not loaded" },
 			});
 		}
@@ -657,7 +697,10 @@ export function Manager(
 
 	const getDappAccount = () => {
 		if (!state.dappAccount) {
-			throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+			throw new ProsopoError({
+				code: "SITE_KEY_MISSING",
+				errorSite: "PCAP-13",
+			});
 		}
 
 		const dappAccount: string = state.dappAccount;
@@ -666,7 +709,10 @@ export function Manager(
 
 	const getExtension = (account: Account) => {
 		if (!account.extension) {
-			throw new ProsopoEnvError("ACCOUNT.NO_POLKADOT_EXTENSION", {
+			throw new ProsopoError({
+				code: "WALLET_NOT_FOUND",
+				errorSite: "PCAP-14",
+				message: "Polkadot extension not found",
 				context: { error: "Extension not loaded" },
 			});
 		}

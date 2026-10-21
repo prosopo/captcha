@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
 import { type ProviderDetails, PublicApiPaths } from "@prosopo/types";
 import { version } from "@prosopo/util";
@@ -125,8 +125,10 @@ export function publicRouter(env: ProviderEnvironment): Router {
 				msg: "Error getting provider details",
 			}));
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 500 },
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "PROV-34",
+					message: "BadRequest",
 				}),
 			);
 		}

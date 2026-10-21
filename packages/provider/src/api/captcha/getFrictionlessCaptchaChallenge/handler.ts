@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaType,
@@ -50,6 +50,7 @@ import {
 	normalizeHeadersForMatching,
 } from "../../blacklistRequestInspector.js";
 import { buildDnsEventUrl } from "../../dnsEventUrl.js";
+import { errorCodeForReason } from "../../errorCodeForReason.js";
 import {
 	recordBotScore,
 	recordDetectorTriggered,
@@ -231,20 +232,21 @@ export default (
 					msg: "Token has already been used",
 				}));
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { code: 400, siteKey: dapp, user },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "INVALID_REQUEST",
+						errorSite: "PROV-5",
+						message: "BadRequest",
+						context: { siteKey: dapp, user },
 					}),
 				);
 			}
 
 			if (!clientRecord) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "SITE_KEY_NOT_REGISTERED",
+						errorSite: "PROV-6",
+						context: { siteKey: dapp },
 					}),
 				);
 			}
@@ -259,6 +261,41 @@ export default (
 				clientRecord.settings,
 			);
 			tasks.frictionlessManager.setAllowedCaptchaTypes(allowedCaptchaTypes);
+
+			// Web Bot Auth (RFC 9421): if the request carries a valid Ed25519
+			// signature and the signer's JWKS at /.well-known/http-message-
+			// signatures-directory verifies it, promote the canonical signer
+			// URL onto the userScope so `webBotAuthAgent` access rules can
+			// match on the verified identity. Unsigned traffic falls through
+			// with webBotAuthAgent=undefined and hits the normal detector
+			// stack.
+			const webBotAuth = await verifyWebBotAuth(
+				{
+					method: req.method,
+					url: `https://${req.headers.host ?? ""}${req.originalUrl ?? req.url}`,
+					headers: flatten(req.headers),
+				},
+				{
+					allowLocalSigners:
+						process.env.NODE_ENV === "test" ||
+						process.env.NODE_ENV === "development",
+				},
+			);
+			if (
+				!webBotAuth.verified &&
+				webBotAuth.reason !== "no-signature-headers"
+			) {
+				req.logger.info(() => ({
+					msg: "Web Bot Auth signature rejected",
+					data: {
+						reason: webBotAuth.reason,
+						signatureAgent: req.headers["signature-agent"],
+					},
+				}));
+			}
+			const verifiedSignerUrl = webBotAuth.verified
+				? webBotAuth.signerUrl
+				: undefined;
 
 			if (dedup) {
 				// A reused session must still honour an active user access policy
@@ -300,6 +337,7 @@ export default (
 					undefined,
 					dedupCountryCode,
 					dedupAsn,
+					verifiedSignerUrl,
 				);
 				// Skip deferToVerify policies — they enforce at verify time
 				// only; using them here to invalidate a dedup session would
@@ -313,9 +351,12 @@ export default (
 						normalizeHeadersForMatching(req.headers),
 					)
 				).find((p) => !p.deferToVerify);
+				// A request that now matches an Allow rule gets a fresh authenticated
+				// session instead of its old challenge.
 				const dedupConflictsWithPolicy =
 					dedupAccessPolicy !== undefined &&
 					(dedupAccessPolicy.type === AccessPolicyType.Block ||
+						dedupAccessPolicy.type === AccessPolicyType.Allow ||
 						(dedupAccessPolicy.captchaType !== undefined &&
 							dedupAccessPolicy.captchaType !== dedup.captchaType));
 
@@ -357,9 +398,11 @@ export default (
 									dedupUserAgent,
 									dedup.session.webView,
 									{
+										headers: dedupFlatHeaders,
 										...(typeof dedupIsMobile === "boolean" && {
-											isMobile: dedupIsMobile,
+											carrierNetwork: dedupIsMobile,
 										}),
+										...(req.tcpMss !== undefined && { tcpMss: req.tcpMss }),
 									},
 								),
 								// Session-derived, like `score` and `webView` above:
@@ -606,47 +649,6 @@ export default (
 				),
 			);
 
-			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
-				shortCircuitInput,
-				res,
-			);
-			if (shortCircuitResponse) return shortCircuitResponse;
-
-			// This provider has no bundles to assign, so no client could have run
-			// detection — serve a real PoW challenge.
-			const emptyPoolResponse = await runEmptyDetectorPoolPowFallback(
-				shortCircuitInput,
-				res,
-			);
-			if (emptyPoolResponse) return emptyPoolResponse;
-
-			const lScore = tasks.frictionlessManager.checkLangRules(
-				req.headers["accept-language"] || "",
-			);
-
-			// Web Bot Auth (RFC 9421): if the request carries a valid Ed25519
-			// signature and the signer's JWKS at /.well-known/http-message-
-			// signatures-directory verifies it, promote the canonical signer
-			// URL onto the userScope so `webBotAuthAgent` access rules can
-			// match on the verified identity. Unsigned traffic falls through
-			// with webBotAuthAgent=undefined and hits the normal detector
-			// stack.
-			const verified = await verifyWebBotAuth(
-				{
-					method: req.method,
-					url: `https://${req.headers.host ?? ""}${req.originalUrl ?? req.url}`,
-					headers: flatten(req.headers),
-				},
-				{
-					allowLocalSigners:
-						process.env.NODE_ENV === "test" ||
-						process.env.NODE_ENV === "development",
-				},
-			);
-			const verifiedSignerUrl = verified.verified
-				? verified.signerUrl
-				: undefined;
-
 			const userScope = getRequestUserScope(
 				flatten(req.headers),
 				req.ja4,
@@ -658,30 +660,13 @@ export default (
 				asn,
 				verifiedSignerUrl,
 			);
-
-			// Fan out the three independent post-shortcircuit awaits:
-			// payload decrypt (CPU-bound crypto), validation (cheap
-			// async), and the Redis-backed access-policy lookup. None of
-			// them depends on the others' outputs — running them in
-			// series previously added up to ~50-80ms on the hot path.
-			const [decryptedPayload, validation, accessPolicies] = await Promise.all([
-				tasks.frictionlessManager.decryptPayload(
-					token,
-					headHash,
-					detectorSessionId,
-				),
-				tasks.frictionlessManager.isValidRequest(
-					clientRecord,
-					CaptchaType.frictionless,
-					env,
-				),
+			const lookupAccessPolicies = () =>
 				tasks.frictionlessManager.getPrioritisedAccessPolicies(
 					userAccessRulesStorage,
 					dapp,
 					userScope,
 					normalizeHeadersForMatching(req.headers),
-				),
-			]);
+				);
 
 			// Authenticated fast-path. Fires when any non-deferToVerify Allow
 			// rule matches the userScope — the qualifier can be a verified
@@ -699,29 +684,30 @@ export default (
 			// A Block or Restrict policy on the same match set always wins
 			// (severity outranks Allow) so an operator who wrote both
 			// "allow /24" and "block 10.0.0.5" gets what they asked for.
-			// getPrioritisedAccessPolicies returns policies in matched-order,
-			// so the presence of a blocking policy short-circuits the check.
-			const blockingPolicy = accessPolicies.find(
-				(p) =>
-					!p.deferToVerify &&
-					(p.type === AccessPolicyType.Block ||
-						p.type === AccessPolicyType.Restrict),
-			);
-			const allowingPolicy = blockingPolicy
-				? undefined
-				: accessPolicies.find(
-						(p) => !p.deferToVerify && p.type === AccessPolicyType.Allow,
-					);
-			if (allowingPolicy) {
+			const respondIfAllowed = async (
+				accessPolicies: Awaited<ReturnType<typeof lookupAccessPolicies>>,
+			) => {
+				const blockingPolicy = accessPolicies.find(
+					(p) =>
+						!p.deferToVerify &&
+						(p.type === AccessPolicyType.Block ||
+							p.type === AccessPolicyType.Restrict),
+				);
+				const allowingPolicy = blockingPolicy
+					? undefined
+					: accessPolicies.find(
+							(p) => !p.deferToVerify && p.type === AccessPolicyType.Allow,
+						);
+				if (!allowingPolicy) return null;
 				const authenticatedSession =
 					await tasks.frictionlessManager.createAuthenticatedSession(
-						token,
+						sessionToken,
 						ipAddress,
-						// May be empty string when the Allow was matched by IP /
-						// JA4 / UA instead of webBotAuthAgent. The session field
-						// stays unset in that case so verify-side observability
+						// Undefined when the Allow was matched by IP / JA4 / UA
+						// instead of webBotAuthAgent. The session field stays
+						// unset in that case so verify-side observability
 						// distinguishes "verified signer" from "trusted IP".
-						verifiedSignerUrl ?? "",
+						verifiedSignerUrl,
 						dapp,
 						userSitekeyIpHash,
 						flatHeaders,
@@ -749,7 +735,96 @@ export default (
 					dns_url: buildDnsEventUrl(authenticatedSession.sessionId),
 					...(verifiedSignerUrl && { agent: verifiedSignerUrl }),
 				});
+			};
+
+			// A verified agent's identity is all its rules need, so they are
+			// settled before a configured captcha type or an empty detector pool
+			// can hand it a challenge. Unsigned traffic skips this lookup.
+			const signerAccessPolicies = verifiedSignerUrl
+				? await lookupAccessPolicies()
+				: undefined;
+			if (signerAccessPolicies) {
+				const signerBlockPolicy = signerAccessPolicies.find(
+					(p) => !p.deferToVerify && p.type === AccessPolicyType.Block,
+				);
+				if (signerBlockPolicy) {
+					tasks.frictionlessManager.setSessionParams({
+						token: sessionToken,
+						score: 0,
+						threshold: 0,
+						scoreComponents: { baseScore: 0 },
+						ipAddress,
+						webView: false,
+						iFrame: false,
+						decryptedHeadHash: "",
+						siteKey: dapp,
+						ipInfo: req.ipInfo,
+						headers: flatHeaders,
+						mode: sessionMode,
+					});
+					const blockOutcome = await handleAccessPolicy(
+						{
+							tasks,
+							clientRecord,
+							userAccessPolicy: signerBlockPolicy,
+							baseBotScore: 0,
+							botScore: 0,
+							scoreComponents: { baseScore: 0 },
+							userSitekeyIpHash,
+							dapp,
+							ipInfo: req.ipInfo,
+							flatHeaders,
+							logger: req.logger,
+							userScope,
+						},
+						res,
+					);
+					if (blockOutcome.handled) return blockOutcome.response;
+				}
+				const allowedSignerResponse =
+					await respondIfAllowed(signerAccessPolicies);
+				if (allowedSignerResponse) return allowedSignerResponse;
 			}
+
+			const shortCircuitResponse = await runConfiguredCaptchaTypeShortCircuit(
+				shortCircuitInput,
+				res,
+			);
+			if (shortCircuitResponse) return shortCircuitResponse;
+
+			// This provider has no bundles to assign, so no client could have run
+			// detection — serve a real PoW challenge.
+			const emptyPoolResponse = await runEmptyDetectorPoolPowFallback(
+				shortCircuitInput,
+				res,
+			);
+			if (emptyPoolResponse) return emptyPoolResponse;
+
+			const lScore = tasks.frictionlessManager.checkLangRules(
+				req.headers["accept-language"] || "",
+			);
+
+			// Fan out the three independent post-shortcircuit awaits:
+			// payload decrypt (CPU-bound crypto), validation (cheap
+			// async), and the Redis-backed access-policy lookup. None of
+			// them depends on the others' outputs — running them in
+			// series previously added up to ~50-80ms on the hot path.
+			const [decryptedPayload, validation, accessPolicies] = await Promise.all([
+				tasks.frictionlessManager.decryptPayload(
+					token,
+					headHash,
+					detectorSessionId,
+				),
+				tasks.frictionlessManager.isValidRequest(
+					clientRecord,
+					CaptchaType.frictionless,
+					env,
+				),
+				signerAccessPolicies ?? lookupAccessPolicies(),
+			]);
+
+			const allowedResponse = await respondIfAllowed(accessPolicies);
+			if (allowedResponse) return allowedResponse;
 
 			const {
 				baseBotScore: rawBaseBotScore,
@@ -808,10 +883,10 @@ export default (
 
 			if (!valid) {
 				return next(
-					new ProsopoApiError(reason || "API.BAD_REQUEST", {
-						context: { code: 400, siteKey: dapp, user },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: errorCodeForReason(reason),
+						errorSite: "PROV-80",
+						context: { siteKey: dapp, user },
 					}),
 				);
 			}
@@ -892,7 +967,11 @@ export default (
 				baseImageRounds: env.config.captchas.solved.count,
 				puzzleMaxDifficulty: clientRecord.settings.puzzleMaxDifficulty,
 				platform: derivePlatform(requestUserAgent, webView, {
-					...(typeof ipInfoMobile === "boolean" && { isMobile: ipInfoMobile }),
+					headers: flatHeaders,
+					...(typeof ipInfoMobile === "boolean" && {
+						carrierNetwork: ipInfoMobile,
+					}),
+					...(req.tcpMss !== undefined && { tcpMss: req.tcpMss }),
 				}),
 				// Straight from the payload this request arrived with — the
 				// session record is written from the same value.
@@ -1015,10 +1094,11 @@ export default (
 				msg: "Error in frictionless captcha challenge",
 			}));
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: err },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-7",
+					message: "BadRequest",
+					cause: err,
 				}),
 			);
 		}

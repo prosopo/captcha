@@ -1,5 +1,70 @@
 # @prosopo/locale
 
+## 3.11.1
+### Patch Changes
+
+- b6e9459: The colon after the "Select all …" prompt is added by the widget again, rather than being part of each translation. Every language's `WIDGET.SELECT_ALL` no longer ends with a colon, and the widget renders it as `<prompt>: <target>`. A locale test now fails if a translation brings its own colon back.
+  - @prosopo/util@3.3.15
+
+## 3.11.0
+### Minor Changes
+
+- 03df637: `@prosopo/locale` now exports `createUntranslatedI18n()`: a complete i18n instance with no catalogues, where `t` gives back the default value or the key. The tests use it in place of hand-made fakes that were cast to the i18n type. Those casts let a fake miss a method the code calls (as happened with `exists`) and still compile; now a missing method is a type error.
+  
+  `handleErrors` now only asks for the request and response fields it actually uses, so its tests can pass plain objects. It is still an Express error handler.
+  
+  The `i18n` prop on the image, audio, PoW and puzzle widgets is now typed as optional. The widgets already started their own i18n when none was passed; the type said it was required, so the tests had to cast `undefined` to pass nothing. The frictionless widget still requires it, because it reads from it straight away.
+
+### Patch Changes
+
+- 49e9385: The audio captcha's text (play button, instructions, error messages and so on) is now translated into all 92 languages. Before this it showed in English everywhere. The catalogue test had a special exemption for these strings, so nothing flagged it. That exemption is gone: any string left in English now fails the test, unless it is on the short list of words that really are the same in that language (brand names, loanwords, "OK").
+  
+  Some Filipino animal and object names and two Filipino/Scots error messages were on that list without being real loanwords. They are now translated too.
+  
+  Every translation still needs checking by a native speaker.
+
+## 3.10.1
+### Patch Changes
+
+- e841741: Browser apps that bundle `@prosopo/locale` (such as the portal) build again. The server catalogue lookup imported `existsSync` by name from `fs`, which browser bundlers replace with an empty module, so the build failed. It now reaches `fs` only when the server starts i18next.
+
+## 3.10.0
+### Minor Changes
+
+- eb99b3d: Fill in the missing and wrong translations across all 32 widget languages and add a generic Chinese (`zh`) catalogue.
+  
+  - Image labels that had been machine-translated wrongly (for example Hungarian "camel" as "cow", Thai "rhinoceros" as "gibbon") or left as hyphenated keys ("hot-air-balloon") now read as proper words.
+  - Turkish, Ukrainian, Malay, Indonesian, Javanese, Azerbaijani, Finnish, Romanian, Thai and Malayalam were largely rewritten. Corrupted Serbian characters were fixed.
+  - The "Select all …" prompt now ends with its own colon in each language (" :" in French, "：" in Chinese and Japanese), so the widget no longer appends an English colon.
+  - `Languages.chinese` is now `zh`. The existing `zh-CN` catalogue is still available as `Languages.chineseChina`.
+  - A new `locales` CI check fails a PR whose catalogues have missing or extra keys, empty or untranslated values (audio captcha strings excepted), the wrong script, or broken characters.
+- f3f7243: Add translations for 58 more languages, so the widget, image labels and error messages are translated for nearly every language Chrome and Firefox ship: Afrikaans, Albanian, Amharic, Aragonese, Armenian, Assamese, Asturian, Basque, Belarusian, Bengali, Bosnian, Bulgarian, Burmese, Catalan, Croatian, Danish, Esperanto, Estonian, Filipino, Frisian, Galician, Georgian, Gujarati, Hebrew, Icelandic, Interlingua, Irish, Kannada, Kazakh, Khmer, Kyrgyz, Lao, Latvian, Lithuanian, Macedonian, Marathi, Mongolian, Nepali, Norwegian Nynorsk, Occitan, Odia, Persian, Punjabi, Romansh, Scots, Scottish Gaelic, Sinhala, Slovak, Slovenian, Swahili, Tajik, Tamil, Telugu, Urdu, Uzbek, Welsh, Xhosa and Zulu. They were drafted without a native speaker and need review. Nynorsk (`nn`) now gets its own catalogue instead of Bokmål's, and the old codes `iw` (Hebrew) and `tl` (Filipino, as Firefox sends it) are matched.
+- f8eddf7: Image challenges now send each label's key (`targetKey`) and English text (`targetEn`) beside the translated `target`, and say which `language` they were translated into. Error responses add `messageEn` when the widget has no text of its own for the error's key. All new fields are additive. New `englishText(key)` in `@prosopo/locale`.
+- aec7857: Type-check translation keys on the server and every language file.
+  
+  - `req.t` and `req.i18n.t` only accept keys from the English catalogue, so a typo fails to compile.
+  - New `TargetKey`, `targetKeys` and `isTargetKey` for image labels. An image label with no translation now shows the English label (and logs a warning) instead of the raw `TARGET.<label>` key.
+  - Every language file must have the English file's keys, checked by `typecheck`.
+  - `@prosopo/server` returns the key instead of `undefined` for its status text when i18next is not initialised.
+  - Removed the last `@ts-ignore` in `@prosopo/locale`.
+- 6b11b15: The widget now tells the provider which language to use, so the challenge text comes back in the user's language.
+  
+  - The widget sends its language in a `Prosopo-Lang` header on every provider request. It uses the site's `data-language` if set, otherwise the browser's languages. The browser's own `Accept-Language` is left untouched, so bot detection still sees the real value.
+  - `data-language` may list several codes (`"xx, tr"`). The first one we support wins. If none are supported, the widget uses the browser's language instead of English.
+  - The provider picks `?lng=`, then `Prosopo-Lang`, then `Accept-Language`, then English.
+  - A variant uses its parent's catalogue (`zh-SG` → `zh`, `pt-PT` → `pt`). Traditional Chinese (`zh-TW`, `zh-HK`, `zh-Hant`) skips the Simplified `zh` catalogue and moves on to the reader's next language. `nb`/`nn` map to `no`, `in` to `id` and `jw` to `jv`.
+  - The widget no longer reads or writes an `i18next` cookie or local storage key on the host site.
+  - `ApiClient`/`ProviderApi` take optional default headers as a 4th constructor argument.
+- f8eddf7: Split each language's catalogue into `widget.json`, `target.json` and `translation.json`. The widget bundles English and downloads only the active language's `widget.json`. The provider loads all three. Server i18n now finishes loading every file before it reports ready. Removed two broken, unused scripts (`findUnused`, `testImport`) and the dependencies only they used.
+
+### Patch Changes
+
+- cbb6a10: Add `BROWSER_UI_LANGUAGES`, the list of every language Chrome and Firefox ship their interface in, with each one's layout direction. A test checks each direction against `getLanguageDirection`, so a browser language the right-to-left lists miss fails CI.
+- 4961a7e: Fix server translations when `@prosopo/locale` is loaded with `require`. The CommonJS build looked for its catalogues in `dist/cjs/locales`, which does not exist, so every string came back as its key. It now finds them in `dist/locales`.
+- b351896: Document why the widget keeps its own small translation look-up instead of i18next: measured again, i18next core is 14.1 KB gzipped against 1.8 KB, on a render path of about 21 KB, for plural and context features the widget does not use.
+- 0bd0230: The widget bundle no longer contains the English image labels and server error strings. `ProsopoError` used to check message keys against every English catalogue, which pulled all of them into the widget. It now asks the i18n instance it was given (`exists`). The server-only key helpers (`isTranslationKey`, `isTargetKey`, `englishText`) moved to their own module.
+- 1634139: `getLanguageDirection` now knows every right-to-left language and script in CLDR 48, not just ten languages, including ones we have no translation for yet (Hebrew, Persian, Urdu, Pashto, Kurdish and so on). It also reads script subtags (`pa-Arab` is right to left, `az-Latn` left to right), regions whose usual script is Arabic (`pa-PK`, `uz-AF`), and old codes such as `iw` for Hebrew. Where the browser has `Intl.Locale` text info, a language it says is right to left is laid out that way too, so languages added to CLDR later work without a code change. The language e2e test now also checks that an Arabic widget, chosen by the browser or by `data-language`, is laid out right to left.
+
 ## 3.9.1
 ### Patch Changes
 

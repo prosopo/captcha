@@ -14,7 +14,8 @@
 
 import { VERIFY_FORWARDED_HEADER } from "@prosopo/api";
 import { handleErrors, verifySignature } from "@prosopo/api-express-router";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
+import type { I18nLookup } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
@@ -40,7 +41,6 @@ import express, {
 	type Response,
 	type Router,
 } from "express";
-import type { TFunction } from "i18next";
 import type { AudioCaptchaManager } from "../tasks/audioCaptcha/audioTasks.js";
 import type { IconOrderCaptchaManager } from "../tasks/iconOrderCaptcha/iconOrderTasks.js";
 import type { PuzzleCaptchaManager } from "../tasks/puzzleCaptcha/puzzleTasks.js";
@@ -87,7 +87,7 @@ const VERIFY_PATH_TYPE: Partial<Record<ClientApiPaths, CaptchaType>> = {
 };
 
 // Decodes a hex-encoded ProcaptchaToken, mapping an undecodable token to a
-// client 400 (CAPTCHA.PARSE_ERROR) instead of letting the failure fall through
+// client 400 (INVALID_REQUEST) instead of letting the failure fall through
 // to the endpoint's generic 500 handler. A token that is well-formed hex but
 // not a decodable ProcaptchaToken struct is bad client input, not a server
 // fault: the verify endpoints are unauthenticated, so any caller can trigger
@@ -96,7 +96,7 @@ const VERIFY_PATH_TYPE: Partial<Record<ClientApiPaths, CaptchaType>> = {
 // forwarding a 400 error to `next` (callers must `return` when null).
 const decodeTokenOr400 = (
 	token: string,
-	i18n: { t: TFunction },
+	i18n: I18nLookup,
 	logger: Logger,
 	next: NextFunction,
 ): ReturnType<typeof decodeProcaptchaOutput> | null => {
@@ -104,10 +104,11 @@ const decodeTokenOr400 = (
 		return decodeProcaptchaOutput(token);
 	} catch (error) {
 		next(
-			new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-				context: { code: 400, error },
-				i18n,
-				logger,
+			new ProsopoError({
+				code: "INVALID_REQUEST",
+				errorSite: "PROV-37",
+				message: "Error parsing captcha",
+				cause: error,
 			}),
 		);
 		return null;
@@ -122,15 +123,17 @@ const dappSignatureError = (
 	message: string,
 	pair: KeyringPair,
 	req: Request,
-): ProsopoApiError | undefined => {
+): ProsopoError | undefined => {
 	try {
 		verifySignature(signature, message, pair);
 		return undefined;
 	} catch {
-		return new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
-			context: { code: 400, siteKey: pair.address },
-			i18n: req.i18n,
-			logger: req.logger,
+		return new ProsopoError({
+			code: "UNAUTHORIZED",
+			errorSite: "PROV-38",
+			message: "Invalid signature",
+			status: 400,
+			context: { siteKey: pair.address },
 		});
 	}
 };
@@ -181,10 +184,12 @@ const interactiveVerifyHandler =
 			parsed = ServerPuzzleCaptchaVerifyRequestBody.parse(req.body);
 		} catch (err) {
 			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: summariseRequestBody(req) },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-39",
+					message: "Error parsing captcha",
+					cause: err,
+					context: { body: summariseRequestBody(req) },
 				}),
 			);
 		}
@@ -242,10 +247,10 @@ const interactiveVerifyHandler =
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 			if (!clientRecord) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "SITE_KEY_NOT_REGISTERED",
+						errorSite: "PROV-40",
+						context: { siteKey: dapp },
 					}),
 				);
 			}
@@ -320,10 +325,11 @@ const interactiveVerifyHandler =
 				data: { body: summariseRequestBody(req) },
 			}));
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 500, error: err },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "PROV-41",
+					message: "BadRequest",
+					cause: err,
 				}),
 			);
 		}
@@ -410,10 +416,12 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				parsed = VerifySolutionBody.parse(req.body);
 			} catch (err) {
 				return next(
-					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-						context: { code: 400, error: err, body: summariseRequestBody(req) },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "INVALID_REQUEST",
+						errorSite: "PROV-42",
+						message: "Error parsing captcha",
+						cause: err,
+						context: { body: summariseRequestBody(req) },
 					}),
 				);
 			}
@@ -477,10 +485,10 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				const clientRecord = await tasks.db.getClientRecord(dapp);
 				if (!clientRecord) {
 					return next(
-						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-							context: { code: 400, siteKey: dapp, user },
-							i18n: req.i18n,
-							logger: req.logger,
+						new ProsopoError({
+							code: "SITE_KEY_NOT_REGISTERED",
+							errorSite: "PROV-43",
+							context: { siteKey: dapp, user },
 						}),
 					);
 				}
@@ -549,10 +557,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					data: { body: summariseRequestBody(req) },
 				}));
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { code: 500, siteKey: req.body.dapp, user: req.body.user },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "UNEXPECTED",
+						errorSite: "PROV-44",
+						message: "BadRequest",
+						context: { siteKey: req.body.dapp, user: req.body.user },
 					}),
 				);
 			}
@@ -588,10 +597,12 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				parsed = ServerPowCaptchaVerifyRequestBody.parse(req.body);
 			} catch (err) {
 				return next(
-					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-						context: { code: 400, error: err, body: summariseRequestBody(req) },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "INVALID_REQUEST",
+						errorSite: "PROV-45",
+						message: "Error parsing captcha",
+						cause: err,
+						context: { body: summariseRequestBody(req) },
 					}),
 				);
 			}
@@ -649,10 +660,10 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				const clientRecord = await tasks.db.getClientRecord(dapp);
 				if (!clientRecord) {
 					return next(
-						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-							context: { code: 400, siteKey: dapp },
-							i18n: req.i18n,
-							logger: req.logger,
+						new ProsopoError({
+							code: "SITE_KEY_NOT_REGISTERED",
+							errorSite: "PROV-46",
+							context: { siteKey: dapp },
 						}),
 					);
 				}
@@ -727,10 +738,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					data: { body: summariseRequestBody(req) },
 				}));
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { code: 500, error: err },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "UNEXPECTED",
+						errorSite: "PROV-47",
+						message: "BadRequest",
+						cause: err,
 					}),
 				);
 			}
@@ -795,10 +807,12 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				parsed = VerifySolutionBody.parse(req.body);
 			} catch (err) {
 				return next(
-					new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-						context: { code: 400, error: err, body: summariseRequestBody(req) },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "INVALID_REQUEST",
+						errorSite: "PROV-48",
+						message: "Error parsing captcha",
+						cause: err,
+						context: { body: summariseRequestBody(req) },
 					}),
 				);
 			}
@@ -845,10 +859,10 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 				const clientRecord = await tasks.db.getClientRecord(dapp);
 				if (!clientRecord) {
 					return next(
-						new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-							context: { code: 400, siteKey: dapp, user },
-							i18n: req.i18n,
-							logger: req.logger,
+						new ProsopoError({
+							code: "SITE_KEY_NOT_REGISTERED",
+							errorSite: "PROV-49",
+							context: { siteKey: dapp, user },
 						}),
 					);
 				}
@@ -899,10 +913,11 @@ export function prosopoVerifyRouter(env: ProviderEnvironment): Router {
 					data: { body: summariseRequestBody(req) },
 				}));
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { code: 500, siteKey: req.body.dapp, user: req.body.user },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "UNEXPECTED",
+						errorSite: "PROV-50",
+						message: "BadRequest",
+						context: { siteKey: req.body.dapp, user: req.body.user },
 					}),
 				);
 			}

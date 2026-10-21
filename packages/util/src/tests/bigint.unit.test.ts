@@ -28,20 +28,25 @@ describe("stringifyBigInts", () => {
 	});
 
 	test("converts bigint fields inside an object", () => {
-		const obj: Record<string, unknown> = { a: 1n, b: "x" };
-		stringifyBigInts(obj);
-		expect(obj).toEqual({ a: "1", b: "x" });
+		expect(stringifyBigInts({ a: 1n, b: "x" })).toEqual({ a: "1", b: "x" });
 	});
 
 	test("converts bigint elements inside an array", () => {
-		const arr: unknown[] = [1n, 2, "y"];
-		stringifyBigInts(arr);
-		expect(arr).toEqual(["1", 2, "y"]);
+		expect(stringifyBigInts([1n, 2, "y"])).toEqual(["1", 2, "y"]);
 	});
 
 	test("recursively converts nested bigints", () => {
-		const nested: Record<string, unknown> = { inner: { val: 99n } };
-		stringifyBigInts(nested);
-		expect(nested).toEqual({ inner: { val: "99" } });
+		expect(stringifyBigInts({ inner: { val: 99n } })).toEqual({
+			inner: { val: "99" },
+		});
+	});
+
+	test("leaves frozen input untouched", () => {
+		const frozen: Readonly<Record<string, unknown>> = Object.freeze({
+			list: Object.freeze([1n]),
+			n: 2n,
+		});
+		expect(stringifyBigInts(frozen)).toEqual({ list: ["1"], n: "2" });
+		expect(frozen.n).toBe(2n);
 	});
 });

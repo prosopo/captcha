@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "தவறான முகவரியைக் குறியாக்க முடியவில்லை",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "captcha தீர்வு உறுதிமொழி இல்லை",
+		"SIGNER_UNDEFINED": "கையொப்பமிடுபவர் வரையறுக்கப்படவில்லை",
+		"CANNOT_FIND_KEYPAIR": "விசை இணையைக் கண்டறிய முடியவில்லை",
+		"INVALID_DATA_FORMAT": "தவறான தரவு வடிவம்"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "அறியப்படாத சூழல் கோரப்பட்டது",
+		"INVALID_CAPTCHA_NUMBER": "captcha அமைப்புகளைச் சரியாக உள்ளமைக்கவும்",
+		"INVALID_LOG_LEVEL": "தவறான பதிவு நிலை",
+		"INVALID_PACKAGE_DIR": "தவறான தொகுப்புக் கோப்பகம்"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "தரவுத்தொகுப்பைப் பாகுபடுத்துவதில் பிழை",
+		"SOLUTION_PARSE_ERROR": "தரவுத்தொகுப்பைச் செயலாக்குவதில் பிழை",
+		"HASH_ERROR": "தரவுத்தொகுப்பை ஹாஷ் செய்வதில் பிழை",
+		"DATASET_ID_UNDEFINED": "தரவுத்தொகுப்பு ID வரையறுக்கப்படவில்லை",
+		"NOT_ENOUGH_LABELS": "போதுமான லேபிள்கள் இல்லை",
+		"NOT_ENOUGH_IMAGES": "போதுமான படங்கள் இல்லை",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "தரவுத்தொகுப்பில் உள்ள captcha-க்களின் எண்ணிக்கை உள்ளமைத்த எண்ணிக்கையைவிடக் குறைவு",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "தரவுத்தொகுப்பில் உள்ள தீர்வுகளின் எண்ணிக்கை உள்ளமைத்த எண்ணிக்கையைவிடக் குறைவு",
+		"DUPLICATE_IMAGE": "நகல் படம் கண்டறியப்பட்டது",
+		"MERKLE_ERROR": "மெர்க்கல் மரத்தை உருவாக்குவதில் பிழை"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "தரவுத்தள இயந்திரத்தை இறக்குமதி செய்ய முடியவில்லை",
+		"DATABASE_UNDEFINED": "தரவுத்தளக் கிளையன்ட் இணைக்கப்படவில்லை",
+		"DATABASE_HOST_UNDEFINED": "தரவுத்தள ஹோஸ்ட் முகவரி வரையறுக்கப்படவில்லை",
+		"DATASET_LOAD_FAILED": "தரவுத்தொகுப்பை ஏற்றுவது தோல்வியடைந்தது",
+		"DATASET_GET_FAILED": "தரவுத்தொகுப்பைப் பெற முடியவில்லை",
+		"CAPTCHA_GET_FAILED": "captcha-வைப் பெற முடியவில்லை",
+		"CAPTCHA_UPDATE_FAILED": "captcha-வைப் புதுப்பிக்க முடியவில்லை",
+		"IMAGE_GET_FAILED": "படத்தைப் பெற முடியவில்லை",
+		"PENDING_RECORD_NOT_FOUND": "நிலுவையிலுள்ள பதிவு எதுவும் கிடைக்கவில்லை",
+		"INVALID_HASH": "தவறான ஹாஷ்",
+		"SOLUTION_GET_FAILED": "தீர்வைப் பெற முடியவில்லை",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "தேவையான எண்ணிக்கையில் தீர்வுகள் கொண்ட தரவுத்தொகுப்புகள் எதுவும் கிடைக்கவில்லை",
+		"SOLUTION_APPROVE_FAILED": "தீர்வை அங்கீகரிக்க முடியவில்லை",
+		"SOLUTION_FLAG_FAILED": "தீர்வைச் செயலாக்கப்பட்டதாகக் குறிக்க முடியவில்லை",
+		"TABLES_UNDEFINED": "அட்டவணைகள் வரையறுக்கப்படவில்லை",
+		"CONNECTION_UNDEFINED": "இணைப்பு வரையறுக்கப்படவில்லை",
+		"COMMITMENT_FLAG_FAILED": "உறுதிமொழியைச் செயலாக்கப்பட்டதாகக் குறிக்க முடியவில்லை",
+		"UNKNOWN": "அறியப்படாத தரவுத்தளப் பிழை",
+		"QUERY_ERROR": "தரவுத்தள வினவல் தோல்வியடைந்தது",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "அணுகல் விதிகளுக்கான Redis இணைப்பு வரையறுக்கப்படவில்லை",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "பயனர் அணுகல் விதிகள் சேமிப்பகம் வரையறுக்கப்படவில்லை",
+		"SESSION_STORE_FAILED": "அமர்வைச் சேமிக்க முடியவில்லை",
+		"SESSION_CHECK_REMOVE_FAILED": "அமர்வைச் சரிபார்த்து நீக்க முடியவில்லை",
+		"SESSION_GET_FAILED": "அமர்வைப் பெற முடியவில்லை"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "உரிமையாளர் பயனரை மாற்ற முடியாது",
+		"CANNOT_DELETE_OWN_USER": "உங்கள் சொந்தக் கணக்கை நீக்க முடியாது",
+		"CANNOT_DELETE_LAST_USER": "கடைசிப் பயனரை நீக்க முடியாது",
+		"USER_ALREADY_EXISTS": "பயனர் ஏற்கெனவே உள்ளார்",
+		"NO_SUGGESTIONS_FOUND": "பரிந்துரைகள் எதுவும் கிடைக்கவில்லை",
+		"CANNOT_DEACTIVATE_LAST_SITE": "கடைசியாகச் செயலிலுள்ள தளத்தை முடக்க முடியாது",
+		"DUPLICATE_SITE_NAME": "இந்தப் பெயரில் ஒரு தளம் ஏற்கெனவே உள்ளது",
+		"INVALID_SITE_NAME": "தளப் பெயரில் எழுத்துகள், எண்கள், இணைப்புக்கோடுகள், அடிக்கோடுகள் மட்டுமே இருக்கலாம்"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "தவறான அளவுரு"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "கோப்பு கிடைக்கவில்லை",
+		"FILE_ALREADY_EXISTS": "கோப்பு ஏற்கெனவே உள்ளது",
+		"INVALID_DIR_FORMAT": "தவறான கோப்பக வடிவம்"
+	}
+}

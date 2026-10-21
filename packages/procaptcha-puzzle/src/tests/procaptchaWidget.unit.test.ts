@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import { createUntranslatedI18n } from "@prosopo/locale";
 import type { Component } from "@prosopo/procaptcha-common";
 import {
 	type GetPuzzleCaptchaResponse,
@@ -140,13 +140,12 @@ let widget: ProcaptchaPuzzleHandle | undefined;
 
 const i18nStub = (
 	language: string,
-	changeLanguage: Mock<(l: string) => void>,
-) => ({ language, changeLanguage }) as unknown as Ti18n;
+	changeLanguage: Mock<(l: string) => Promise<unknown>>,
+) => createUntranslatedI18n({ language, changeLanguage });
 
 const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps => ({
 	config: config(),
 	callbacks: {},
-	i18n: undefined as unknown as Ti18n,
 	...overrides,
 });
 
@@ -312,7 +311,7 @@ describe("language", () => {
 	});
 
 	test("an injected i18n on another language is switched over", () => {
-		const changeLanguage = vi.fn<(l: string) => void>();
+		const changeLanguage = vi.fn<(l: string) => Promise<unknown>>();
 		render(
 			props({
 				config: config({ language: "fr" }),
@@ -324,7 +323,7 @@ describe("language", () => {
 	});
 
 	test("an injected i18n already on that language is left alone", () => {
-		const changeLanguage = vi.fn<(l: string) => void>();
+		const changeLanguage = vi.fn<(l: string) => Promise<unknown>>();
 		render(
 			props({
 				config: config({ language: "fr" }),
@@ -509,7 +508,7 @@ describe("finishing the drag", () => {
 
 	// The provider consumes a frictionless session when it issues the puzzle,
 	// so re-requesting on the same sessionId can only return
-	// CAPTCHA.NO_SESSION_FOUND. The widget must hand back to the wrapper for a
+	// NO_SESSION_FOUND. The widget must hand back to the wrapper for a
 	// re-mint instead of making that request.
 	test("a rejected solution on a frictionless session re-mints rather than re-requesting", async () => {
 		mocks.submitSolution.mockResolvedValue(false);
@@ -842,17 +841,19 @@ describe("invisible mode", () => {
 
 describe("an invalidated session", () => {
 	const invalidate = async (
-		key = "CAPTCHA.NO_SESSION_FOUND",
+		code = "NO_SESSION_FOUND",
 		message = "session gone",
 	): Promise<void> => {
-		mocks.constructions[0]?.updateState({ error: { message, key } });
+		mocks.constructions[0]?.updateState({
+			error: { code, errorId: `${code}:PROV-1`, message },
+		});
 		await settle();
 	};
 
 	test("the error is shown on the checkbox and the puzzle is torn down", async () => {
 		render(props());
 		await click();
-		await invalidate("API.UNKNOWN_ERROR", "something broke");
+		await invalidate("BACKEND_ERROR", "something broke");
 		expect(mounted.container.textContent).toContain("something broke");
 		expect(canvas()).toBeNull();
 		expect(spinner()).toBeNull();
@@ -870,8 +871,8 @@ describe("an invalidated session", () => {
 		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
 		render(props({ onSessionInvalidated }));
 		await click();
-		await invalidate("CAPTCHA.NO_SESSION_FOUND", "gone");
-		await invalidate("CAPTCHA.NO_SESSION_FOUND", "gone again");
+		await invalidate("NO_SESSION_FOUND", "gone");
+		await invalidate("NO_SESSION_FOUND", "gone again");
 		expect(onSessionInvalidated).toHaveBeenCalledTimes(1);
 	});
 

@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n, TranslateOptions } from "@prosopo/locale";
+import {
+	type Ti18n,
+	type TranslateOptions,
+	createUntranslatedI18n,
+} from "@prosopo/locale";
 import type { Component } from "@prosopo/procaptcha-common";
 import {
 	type GetIconOrderCaptchaResponse,
@@ -135,14 +139,14 @@ let widget: ProcaptchaIconOrderHandle | undefined;
 
 const i18nStub = (
 	language: string,
-	changeLanguage: Mock<(l: string) => void>,
-) => ({ language, changeLanguage }) as unknown as Ti18n;
+	changeLanguage: Mock<(l: string) => Promise<unknown>>,
+) => createUntranslatedI18n({ language, changeLanguage });
 
 // Stands in for the shared i18n instance after the widget's own language (de)
 // has loaded; lookups follow i18nFrontend.ts: catalogue, then defaultValue.
 const germanI18n = (): Ti18n => {
 	const catalogue: Record<string, string> = {
-		"API.INVALID_SITE_KEY": "Ungültiger Site-Schlüssel",
+		"ERRORS.SITE_KEY_INVALID": "Ungültiger Site-Schlüssel",
 	};
 	return {
 		language: "de",
@@ -150,6 +154,7 @@ const germanI18n = (): Ti18n => {
 		t: (key: string, options?: TranslateOptions): string =>
 			catalogue[key] ?? options?.defaultValue ?? key,
 		changeLanguage: async (): Promise<void> => undefined,
+		exists: (): boolean => false,
 		hasLoadedNamespace: (): boolean => true,
 		on: (): void => undefined,
 		off: (): void => undefined,
@@ -159,7 +164,6 @@ const germanI18n = (): Ti18n => {
 const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps => ({
 	config: config(),
 	callbacks: {},
-	i18n: undefined as unknown as Ti18n,
 	...overrides,
 });
 
@@ -327,7 +331,7 @@ describe("language", () => {
 	});
 
 	test("an injected i18n on another language is switched over", () => {
-		const changeLanguage = vi.fn<(l: string) => void>();
+		const changeLanguage = vi.fn<(l: string) => Promise<unknown>>();
 		render(
 			props({
 				config: config({ language: "fr" }),
@@ -339,7 +343,7 @@ describe("language", () => {
 	});
 
 	test("an injected i18n already on that language is left alone", () => {
-		const changeLanguage = vi.fn<(l: string) => void>();
+		const changeLanguage = vi.fn<(l: string) => Promise<unknown>>();
 		render(
 			props({
 				config: config({ language: "fr" }),
@@ -670,17 +674,19 @@ describe("invisible mode", () => {
 
 describe("an invalidated session", () => {
 	const invalidate = async (
-		key = "CAPTCHA.NO_SESSION_FOUND",
+		code = "NO_SESSION_FOUND",
 		message = "session gone",
 	): Promise<void> => {
-		mocks.constructions[0]?.updateState({ error: { message, key } });
+		mocks.constructions[0]?.updateState({
+			error: { code, errorId: `${code}:PROV-1`, message },
+		});
 		await settle();
 	};
 
 	test("the error is shown on the checkbox and the icon-order is torn down", async () => {
 		render(props());
 		await click();
-		await invalidate("API.UNKNOWN_ERROR", "something broke");
+		await invalidate("BACKEND_ERROR", "something broke");
 		expect(mounted.container.textContent).toContain("something broke");
 		expect(canvas()).toBeNull();
 		expect(spinner()).toBeNull();
@@ -698,8 +704,8 @@ describe("an invalidated session", () => {
 		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
 		render(props({ onSessionInvalidated }));
 		await click();
-		await invalidate("CAPTCHA.NO_SESSION_FOUND", "gone");
-		await invalidate("CAPTCHA.NO_SESSION_FOUND", "gone again");
+		await invalidate("NO_SESSION_FOUND", "gone");
+		await invalidate("NO_SESSION_FOUND", "gone again");
 		expect(onSessionInvalidated).toHaveBeenCalledTimes(1);
 	});
 
@@ -741,7 +747,7 @@ describe("an invalidated session", () => {
 	test("the error is shown in the widget's language, not the provider's", async () => {
 		mocks.translatorI18n.current = germanI18n();
 		render(props());
-		await invalidate("API.INVALID_SITE_KEY", "Invalid site key");
+		await invalidate("SITE_KEY_INVALID", "Invalid site key");
 		expect(mounted.container.textContent).toContain(
 			"Ungültiger Site-Schlüssel",
 		);

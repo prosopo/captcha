@@ -224,10 +224,10 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 			country: (): string | undefined => undefined,
 		};
 
-		// The authenticated fast path sits *after* the empty-detector-pool PoW
-		// fallback, so an empty pool would short-circuit every request to PoW
-		// and the Allow rule would never be consulted. Point at the committed
-		// throwaway fixture the CI job uses for the same reason.
+		// An Allow matched by anything but a signature is only consulted after
+		// the empty-detector-pool PoW fallback, so an empty pool would
+		// short-circuit those requests to PoW. Point at the committed throwaway
+		// fixture the CI job uses for the same reason.
 		process.env.PROSOPO_DETECTOR_POOL_DIR = join(
 			dirname(fileURLToPath(import.meta.url)),
 			"../../../fixtures/detector-pool",
@@ -266,13 +266,15 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 		getVerdictCache().clear();
 	});
 
-	const registerSite = async (): Promise<[string, string]> => {
+	const registerSite = async (
+		captchaType: CaptchaType = CaptchaType.frictionless,
+	): Promise<[string, string]> => {
 		const [mnemonic, siteKey] = await generateMnemonic();
 		await tasks.clientTaskManager.registerSiteKey(
 			siteKey,
 			Tier.Professional,
 			ClientSettingsSchema.parse({
-				captchaType: CaptchaType.frictionless,
+				captchaType,
 				domains: ["localhost", "example.com"],
 			}),
 		);
@@ -306,11 +308,12 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 			userAgent: string;
 			extraHeaders?: Record<string, string>;
 			clientSessionId?: string;
+			token?: string;
 		},
 	): Promise<{ status: number; body: FrictionlessResponse }> => {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
 			[ApiParams.dapp]: siteKey,
-			[ApiParams.token]: randomAsHex(16),
+			[ApiParams.token]: options.token ?? randomAsHex(16),
 			[ApiParams.user]: options.userId,
 			[ApiParams.headHash]: randomAsHex(16),
 			...(options.clientSessionId && {
@@ -387,20 +390,26 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 		return (await response.json()) as VerifyResponse;
 	};
 
-	const allowRule = async (
+	const insertRule = async (
+		type: AccessPolicyType,
 		siteKey: string,
 		fields: Record<string, unknown>,
 	): Promise<void> => {
 		await accessRulesStorage.insertRules([
 			{
 				rule: accessRuleInput.parse({
-					type: AccessPolicyType.Allow,
+					type,
 					clientId: siteKey,
 					...fields,
 				}),
 			},
 		]);
 	};
+
+	const allowRule = (
+		siteKey: string,
+		fields: Record<string, unknown>,
+	): Promise<void> => insertRule(AccessPolicyType.Allow, siteKey, fields);
 
 	describe("frictionless entry", () => {
 		it("mints an authenticated session for a request a verified Web Bot Auth signer is allowed on", async () => {
@@ -526,6 +535,85 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 
 			expect(status).toBe(200);
 			expect(body.captchaType).not.toBe(CaptchaType.authenticated);
+		});
+
+		it("lets an allowed signer through on a site configured for a fixed captcha type", async () => {
+			const [, siteKey] = await registerSite(CaptchaType.pow);
+			const [, userId] = await generateMnemonic();
+			await allowRule(siteKey, { webBotAuthAgent: signerUrl });
+
+			const signed = await frictionless(siteKey, {
+				userId,
+				ip: "203.0.113.14",
+				userAgent: "IntegrationAgent/1.0",
+				extraHeaders: signedHeaders(),
+			});
+			expect(signed.body.captchaType).toBe(CaptchaType.authenticated);
+
+			const [, otherUserId] = await generateMnemonic();
+			const unsigned = await frictionless(siteKey, {
+				userId: otherUserId,
+				ip: "203.0.113.15",
+				userAgent: "IntegrationAgent/1.0",
+			});
+			expect(unsigned.body.captchaType).toBe(CaptchaType.pow);
+		});
+
+		it("blocks a signer with a Block rule on a site configured for a fixed captcha type", async () => {
+			const [, siteKey] = await registerSite(CaptchaType.pow);
+			const [, userId] = await generateMnemonic();
+			await allowRule(siteKey, { webBotAuthAgent: signerUrl });
+			await insertRule(AccessPolicyType.Block, siteKey, {
+				webBotAuthAgent: signerUrl,
+			});
+
+			const { status, body } = await frictionless(siteKey, {
+				userId,
+				ip: "203.0.113.16",
+				userAgent: "IntegrationAgent/1.0",
+				extraHeaders: signedHeaders(),
+			});
+
+			expect(status).toBe(401);
+			expect(body.captchaType).toBeUndefined();
+		});
+
+		it("mints an authenticated session when the client sent no detector token", async () => {
+			const [, siteKey] = await registerSite();
+			const [, userId] = await generateMnemonic();
+			await allowRule(siteKey, { webBotAuthAgent: signerUrl });
+
+			const { status, body } = await frictionless(siteKey, {
+				userId,
+				ip: "203.0.113.17",
+				userAgent: "IntegrationAgent/1.0",
+				extraHeaders: signedHeaders(),
+				token: "",
+			});
+
+			expect(status).toBe(200);
+			expect(body.captchaType).toBe(CaptchaType.authenticated);
+		});
+
+		it("swaps a returning agent's challenge session for an authenticated one once it signs", async () => {
+			const [, siteKey] = await registerSite();
+			const [, userId] = await generateMnemonic();
+			await allowRule(siteKey, { webBotAuthAgent: signerUrl });
+			const visit = {
+				userId,
+				ip: "203.0.113.18",
+				userAgent: "IntegrationAgent/1.0",
+			};
+
+			const unsigned = await frictionless(siteKey, visit);
+			expect(unsigned.body.captchaType).not.toBe(CaptchaType.authenticated);
+
+			const signed = await frictionless(siteKey, {
+				...visit,
+				extraHeaders: signedHeaders(),
+			});
+			expect(signed.body.captchaType).toBe(CaptchaType.authenticated);
+			expect(signed.body.sessionId).not.toBe(unsigned.body.sessionId);
 		});
 
 		it("does not mint an authenticated session when no Allow rule matches", async () => {
@@ -674,6 +762,60 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 				userId,
 				sessionId,
 				{ ip: AGENT_IP, clientSessionId: "render-session-a" },
+			);
+			expect(result).toEqual({ verified: true, status: "API.USER_VERIFIED" });
+		});
+
+		it("gives a returning agent a new session rather than the one it spent", async () => {
+			const { siteKey, siteKeyMnemonic, userId, sessionId } =
+				await mintSession();
+			const first = await authenticatedVerify(
+				siteKey,
+				siteKeyMnemonic,
+				userId,
+				sessionId,
+				{ ip: AGENT_IP },
+			);
+			expect(first.verified).toBe(true);
+
+			const userAgent = `TrustedPartnerAgent/${randomAsHex(4)}`;
+			await allowRule(siteKey, { userAgent });
+			const { body } = await frictionless(siteKey, {
+				userId,
+				ip: AGENT_IP,
+				userAgent,
+			});
+			expect(body.captchaType).toBe(CaptchaType.authenticated);
+			expect(body.sessionId).not.toBe(sessionId);
+
+			const second = await authenticatedVerify(
+				siteKey,
+				siteKeyMnemonic,
+				userId,
+				body.sessionId,
+				{ ip: AGENT_IP },
+			);
+			expect(second).toEqual({ verified: true, status: "API.USER_VERIFIED" });
+		});
+
+		it("verifies a plain IPv4 against a session that captured it IPv4-mapped", async () => {
+			const [siteKeyMnemonic, siteKey] = await registerSite();
+			const [, userId] = await generateMnemonic();
+			const userAgent = `TrustedPartnerAgent/${randomAsHex(4)}`;
+			await allowRule(siteKey, { userAgent });
+			const { body } = await frictionless(siteKey, {
+				userId,
+				ip: "::ffff:203.0.113.21",
+				userAgent,
+			});
+			expect(body.captchaType).toBe(CaptchaType.authenticated);
+
+			const result = await authenticatedVerify(
+				siteKey,
+				siteKeyMnemonic,
+				userId,
+				body.sessionId,
+				{ ip: "203.0.113.21" },
 			);
 			expect(result).toEqual({ verified: true, status: "API.USER_VERIFIED" });
 		});

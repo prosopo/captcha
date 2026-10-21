@@ -11,6 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import {
+	easePieceScaleForTouch,
+	easeToleranceForTouch,
+} from "@prosopo/captcha-severity";
 import { DEFAULT_GEOMETRY } from "@prosopo/puzzle-assets";
 import {
 	ApiParams,
@@ -21,9 +25,11 @@ import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import {
 	renderPuzzleImages,
-	resolvePuzzlePieceSize,
+	resolvePuzzlePieceScaleRange,
 	resolvePuzzleRenderSettings,
+	samplePuzzlePieceSize,
 } from "../../tasks/puzzle/puzzleRenderer.js";
+import { deriveMobileVerdict } from "../../utils/mobileSignals.js";
 import { isPuzzleImageSwitchAvailable } from "./getFrictionlessCaptchaChallenge/constants.js";
 import {
 	type ChallengeIssueContext,
@@ -32,7 +38,8 @@ import {
 } from "./interactiveCaptchaChallenge.js";
 import { buildPuzzleMaintenanceResponse } from "./maintenanceModeResponses.js";
 
-const issuePuzzleChallenge = async ({
+/** Exported for unit testing only; the default export is the entry point. */
+export const issuePuzzleChallenge = async ({
 	tasks,
 	user,
 	dapp,
@@ -47,15 +54,43 @@ const issuePuzzleChallenge = async ({
 	const challengeVerdict =
 		trafficVerdict.kind === "challenge" ? trafficVerdict : undefined;
 
+	// Is the user dragging with a finger? Re-derived from the live request
+	// rather than read off the session, so the UA and the client hints come
+	// from the connection actually being served. The behavioural signals only
+	// exist after a solve, so they are not available here.
+	const mobileVerdict = deriveMobileVerdict({
+		userAgent: provenance.headers["user-agent"],
+		headers: provenance.headers,
+		...(provenance.ipInfo?.isValid && {
+			carrierNetwork: provenance.ipInfo.isMobile,
+		}),
+		...(sessionRecord?.tcpMss !== undefined && {
+			tcpMss: sessionRecord.tcpMss,
+		}),
+		...(sessionRecord?.webView !== undefined && {
+			webView: sessionRecord.webView,
+		}),
+	});
+	// The ladder ceiling runs off `isMobile`; the floors below want a device
+	// signal behind it. See `corroborated`.
+	const easeForTouch = mobileVerdict.isMobile && mobileVerdict.corroborated;
+
 	// Overrides a routing machine asked for, persisted on the session.
 	// The router runs only where the live trafficFilter verdict did
 	// NOT match (it evaluates after the request-time filter), so in
 	// practice these are mutually exclusive; the live verdict wins if
 	// both are somehow present.
-	const tolerance =
+	const requestedTolerance =
 		challengeVerdict?.puzzleTolerance ??
 		sessionRecord?.puzzleTolerance ??
 		clientSettings?.settings?.puzzleTolerance;
+	// The last point every source of difficulty is known, and so the only
+	// place a per-device floor can cover all of them. See
+	// TOUCH_MIN_TOLERANCE_PX.
+	const tolerance =
+		easeForTouch && requestedTolerance !== undefined
+			? easeToleranceForTouch(requestedTolerance)
+			: requestedTolerance;
 
 	// Resolve per-render puzzle tunables the same way as tolerance:
 	// asset defaults <- clientSettings.puzzle <- trafficFilter category
@@ -70,10 +105,14 @@ const issuePuzzleChallenge = async ({
 	// Piece size is drawn per-challenge from the effective scale
 	// range so a solver can't hard-code the expected silhouette
 	// scale. Uses the same layered client / traffic-filter override
-	// order as the render settings above.
-	const effectivePieceSize = resolvePuzzlePieceSize(
+	// order as the render settings above, then the same per-device
+	// floor as the tolerance.
+	const pieceScaleRange = resolvePuzzlePieceScaleRange(
 		clientSettings?.settings?.puzzle,
 		routedPuzzleSettings,
+	);
+	const effectivePieceSize = samplePuzzlePieceSize(
+		easeForTouch ? easePieceScaleForTouch(pieceScaleRange) : pieceScaleRange,
 	);
 	const challenge = await tasks.puzzleCaptchaManager.getPuzzleCaptchaChallenge(
 		user,
@@ -150,7 +189,14 @@ const issuePuzzleChallenge = async ({
 		});
 
 	return {
-		logData: { tolerance: challenge.tolerance },
+		logData: {
+			tolerance: challenge.tolerance,
+			pieceSize: images.pieceSize,
+			// So the floors above can be calibrated against observed solve
+			// rate per device class.
+			mobileScore: mobileVerdict.score,
+			mobileCorroborated: mobileVerdict.corroborated ? 1 : 0,
+		},
 		response: {
 			[ApiParams.status]: "ok",
 			[ApiParams.challenge]: challenge.challenge,

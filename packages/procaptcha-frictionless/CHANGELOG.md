@@ -1,5 +1,96 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.21.5
+### Patch Changes
+
+- 3c5d196: Make the Web Bot Auth agent pass work end to end. Driving a signing agent through the demo site turned up six things that stopped an allowed agent getting through, or let a blocked one past:
+  
+  - A site set to a fixed captcha type (PoW, image, puzzle, icon order), or a provider with no detector bundles, served its challenge before the signature was checked. A verified agent's Allow and Block rules are now applied first.
+  - An agent with an existing challenge session for the same user, IP and site got that session back. A matching Allow rule now replaces it with a fresh authenticated session.
+  - An agent whose page sent no detector token failed with "Failed to store session". The session now gets a generated token, the way the other no-detector paths do.
+  - A provider that sees clients as IPv4-mapped IPv6 (`::ffff:1.2.3.4`) rejected every verify, because the site forwards the plain `1.2.3.4`. The IP check now treats the two as the same address.
+  - Deleting or filtering access rules by `webBotAuthAgent` sent Redis an unescaped URL, which is a query syntax error, so nothing was deleted. Removing an Agent Trust rule in the portal left it in force.
+  - The widget issued the token at page load and never refreshed it. In invisible mode it drew the badge and fired the callback before the user did anything; it now draws nothing and issues the token on execute(). In both modes the pass now expires and renews like a solved PoW, so an agent that takes more than three minutes to fill a form no longer fails with "not recent".
+  
+  Rejected signatures are now logged with the reason.
+- Updated dependencies [b6e9459]
+- Updated dependencies [a5c953d]
+  - @prosopo/locale@3.11.1
+  - @prosopo/procaptcha-react@2.14.6
+  - @prosopo/widget-skeleton@2.10.2
+  - @prosopo/common@3.2.3
+  - @prosopo/procaptcha-audio@0.2.6
+  - @prosopo/procaptcha-icon-order@0.2.6
+  - @prosopo/procaptcha-pow@2.13.15
+  - @prosopo/procaptcha-puzzle@2.17.5
+  - @prosopo/types@5.16.3
+  - @prosopo/procaptcha-common@2.21.5
+  - @prosopo/api@4.7.3
+
+## 2.21.4
+### Patch Changes
+
+- Updated dependencies [49e9385]
+- Updated dependencies [03df637]
+  - @prosopo/locale@3.11.0
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+  - @prosopo/procaptcha-audio@0.2.5
+  - @prosopo/procaptcha-icon-order@0.2.5
+  - @prosopo/procaptcha-pow@2.13.14
+  - @prosopo/procaptcha-puzzle@2.17.4
+  - @prosopo/procaptcha-react@2.14.5
+  - @prosopo/api@4.7.2
+  - @prosopo/procaptcha-common@2.21.4
+
+## 2.21.3
+### Patch Changes
+
+- Updated dependencies [e841741]
+  - @prosopo/locale@3.10.1
+  - @prosopo/common@3.2.1
+  - @prosopo/procaptcha-audio@0.2.4
+  - @prosopo/procaptcha-icon-order@0.2.4
+  - @prosopo/procaptcha-pow@2.13.13
+  - @prosopo/procaptcha-puzzle@2.17.3
+  - @prosopo/procaptcha-react@2.14.4
+  - @prosopo/types@5.16.1
+  - @prosopo/api@4.7.1
+  - @prosopo/procaptcha-common@2.21.3
+
+## 2.21.2
+### Patch Changes
+
+- 6b11b15: The widget now tells the provider which language to use, so the challenge text comes back in the user's language.
+  
+  - The widget sends its language in a `Prosopo-Lang` header on every provider request. It uses the site's `data-language` if set, otherwise the browser's languages. The browser's own `Accept-Language` is left untouched, so bot detection still sees the real value.
+  - `data-language` may list several codes (`"xx, tr"`). The first one we support wins. If none are supported, the widget uses the browser's language instead of English.
+  - The provider picks `?lng=`, then `Prosopo-Lang`, then `Accept-Language`, then English.
+  - A variant uses its parent's catalogue (`zh-SG` → `zh`, `pt-PT` → `pt`). Traditional Chinese (`zh-TW`, `zh-HK`, `zh-Hant`) skips the Simplified `zh` catalogue and moves on to the reader's next language. `nb`/`nn` map to `no`, `in` to `id` and `jw` to `jv`.
+  - The widget no longer reads or writes an `i18next` cookie or local storage key on the host site.
+  - `ApiClient`/`ProviderApi` take optional default headers as a 4th constructor argument.
+- Updated dependencies [eb99b3d]
+- Updated dependencies [f3f7243]
+- Updated dependencies [cbb6a10]
+- Updated dependencies [4961a7e]
+- Updated dependencies [b351896]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [1634139]
+  - @prosopo/locale@3.10.0
+  - @prosopo/procaptcha-react@2.14.3
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/api@4.7.0
+  - @prosopo/procaptcha-audio@0.2.3
+  - @prosopo/procaptcha-icon-order@0.2.3
+  - @prosopo/procaptcha-pow@2.13.12
+  - @prosopo/procaptcha-puzzle@2.17.2
+  - @prosopo/procaptcha-common@2.21.2
+
 ## 2.21.1
 ### Patch Changes
 

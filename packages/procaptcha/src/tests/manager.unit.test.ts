@@ -74,9 +74,17 @@ import {
  */
 const mocks = vi.hoisted(() => {
 	const providerApiConstructions: { url: string; siteKey: string }[] = [];
+	const providerApiHeaders: (Readonly<Record<string, string>> | undefined)[] =
+		[];
 	class ProviderApiMock {
-		constructor(url: string, siteKey: string) {
+		constructor(
+			url: string,
+			siteKey: string,
+			_timeoutMs?: number,
+			defaultHeaders?: Readonly<Record<string, string>>,
+		) {
 			providerApiConstructions.push({ url, siteKey });
+			providerApiHeaders.push(defaultHeaders);
 		}
 	}
 
@@ -144,6 +152,7 @@ const mocks = vi.hoisted(() => {
 
 	return {
 		providerApiConstructions,
+		providerApiHeaders,
 		ProviderApiMock,
 		getAccount,
 		ExtensionMock,
@@ -296,6 +305,7 @@ const wasUpdated = (harness: Harness, key: keyof ProcaptchaState): boolean =>
 beforeEach(() => {
 	vi.clearAllMocks();
 	mocks.providerApiConstructions.length = 0;
+	mocks.providerApiHeaders.length = 0;
 	mocks.captchaApiConstructions.length = 0;
 	mocks.extensionLoader.mockResolvedValue(mocks.ExtensionMock);
 	mocks.getAccount.mockResolvedValue(account(signRawMock));
@@ -364,6 +374,22 @@ describe("start", () => {
 		});
 		await harness.manager.start();
 		expect(lastUpdate(harness, "sessionId")).toBe("session-1");
+	});
+
+	test("sends the site's language to the provider", async () => {
+		vi.stubGlobal("navigator", { languages: ["de"] });
+		const harness = build({ configInput: config({ language: "tr" }) });
+		await harness.manager.start();
+		vi.unstubAllGlobals();
+		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr" }]);
+	});
+
+	test("sends the browser's languages when the site set none", async () => {
+		vi.stubGlobal("navigator", { languages: ["tr-TR", "en"] });
+		const harness = build();
+		await harness.manager.start();
+		vi.unstubAllGlobals();
+		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr-TR,en" }]);
 	});
 
 	test("carries the frictionless provider through instead of picking one", async () => {
@@ -479,7 +505,7 @@ describe("start", () => {
 
 	// The provider consumes a session the moment it issues a challenge for it,
 	// so a second challenge fetch on the same id is a guaranteed 400
-	// CAPTCHA.NO_SESSION_FOUND. Production saw the widget do exactly that —
+	// NO_SESSION_FOUND. Production saw the widget do exactly that —
 	// /captcha/image 200 followed 2-6s later by /captcha/image 400 on the same
 	// sessionId — and the user was left on a dead "No session found" checkbox.
 	test("does not ask for a second challenge on a session it already spent", async () => {
@@ -503,9 +529,10 @@ describe("start", () => {
 
 		await harness.manager.start();
 
-		expect(lastUpdate(harness, "error")).toEqual({
+		expect(lastUpdate(harness, "error")).toMatchObject({
+			code: "NO_SESSION_FOUND",
+			errorId: "NO_SESSION_FOUND:PCAP-18",
 			message: "No session found",
-			key: "CAPTCHA.NO_SESSION_FOUND",
 		});
 		expect(harness.events.onError).toHaveBeenCalledTimes(1);
 	});
@@ -541,28 +568,42 @@ describe("start", () => {
 		const harness = build();
 		mocks.getCaptchaChallenge.mockResolvedValue(
 			challengeResponse({
-				error: { message: "no dataset", key: "API.BAD_REQUEST", code: 400 },
+				error: {
+					code: "INVALID_REQUEST",
+					errorId: "INVALID_REQUEST:PROV-1",
+					status: 400,
+					message: "no dataset",
+				},
 			}),
 		);
 		await harness.manager.start();
-		expect(lastUpdate(harness, "error")).toEqual({
+		expect(lastUpdate(harness, "error")).toMatchObject({
+			code: "INVALID_REQUEST",
+			errorId: "INVALID_REQUEST:PROV-1",
 			message: "no dataset",
-			key: "API.BAD_REQUEST",
 		});
 		expect(lastUpdate(harness, "loading")).toBe(false);
 		expect(wasUpdated(harness, "showModal")).toBe(false);
 		expect(harness.events.onError).toHaveBeenCalledTimes(1);
 	});
 
-	test("falls back to a generic key when the error carries none", async () => {
+	test("passes a hidden provider error through with its errorId", async () => {
 		const harness = build();
 		mocks.getCaptchaChallenge.mockResolvedValue(
-			challengeResponse({ error: { message: "boom", code: 500 } }),
+			challengeResponse({
+				error: {
+					code: "BACKEND_ERROR",
+					errorId: "BACKEND_ERROR:PROV-1",
+					status: 500,
+					message: "boom",
+				},
+			}),
 		);
 		await harness.manager.start();
-		expect(lastUpdate(harness, "error")).toEqual({
+		expect(lastUpdate(harness, "error")).toMatchObject({
+			code: "BACKEND_ERROR",
+			errorId: "BACKEND_ERROR:PROV-1",
 			message: "boom",
-			key: "API.UNKNOWN_ERROR",
 		});
 	});
 

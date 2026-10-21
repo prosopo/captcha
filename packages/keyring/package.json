@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/keyring",
-	"version": "2.10.4",
+	"version": "2.10.8",
 	"description": "Keypair generator for Prosopo",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",

@@ -12,11 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	createTranslator,
-	loadI18next,
-	localiseErrorMessage,
-} from "@prosopo/locale";
+import { createTranslator, loadI18next, localiseError } from "@prosopo/locale";
 import {
 	type CheckboxProps,
 	type Component,
@@ -147,7 +143,7 @@ export const mountProcaptchaPuzzleWidget = (
 		// A frictionless session is single-use: the provider consumed it when it
 		// issued the current puzzle, so asking `manager.start()` for a
 		// replacement on the same sessionId can only ever come back
-		// CAPTCHA.NO_SESSION_FOUND — a wasted round trip that surfaces an error
+		// NO_SESSION_FOUND — a wasted round trip that surfaces an error
 		// on the checkbox before the wrapper recovers. Go straight to the
 		// re-mint instead; the wrapper mints a new session and re-mounts us with
 		// `autoStart`, so a fresh puzzle appears in place.
@@ -256,7 +252,7 @@ export const mountProcaptchaPuzzleWidget = (
 		puzzlePhase = "checkbox";
 		challengeData = null;
 		showRetry = false;
-		if ("CAPTCHA.NO_SESSION_FOUND" !== store.state.error.key) {
+		if (store.state.error.code !== "NO_SESSION_FOUND") {
 			return;
 		}
 		// Suppressed only when something is actually going to re-mint: this is
@@ -315,7 +311,7 @@ export const mountProcaptchaPuzzleWidget = (
 		theme: "light" === config.theme ? lightTheme : darkTheme,
 		labelText: translator.isReady() ? translator.t("WIDGET.I_AM_HUMAN") : "",
 		error: store.state.error
-			? localiseErrorMessage(translator.i18n, store.state.error)
+			? localiseError(translator.i18n, store.state.error)
 			: undefined,
 		loadingText: translator.t("WIDGET.CHECKING", {
 			defaultValue: "Checking that you are human",
