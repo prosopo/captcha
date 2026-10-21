@@ -19,6 +19,7 @@ pub mod api_params;
 pub mod api_types;
 pub mod captcha_type;
 pub mod client;
+pub mod config;
 pub mod datasets;
 pub mod decision_machine;
 mod js_regex;
@@ -60,6 +61,8 @@ pub use wire_enum::UnknownEnumValue;
 
 #[cfg(test)]
 mod api_equivalence;
+#[cfg(test)]
+mod config_equivalence;
 #[cfg(test)]
 mod datasets_equivalence;
 #[cfg(test)]
