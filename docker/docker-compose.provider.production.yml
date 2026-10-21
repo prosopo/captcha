@@ -1,0 +1,4 @@
+# Overlay: production-only overrides for docker-compose.provider.yml. Empty for now;
+# per-env values come from ../.env.*.${NODE_ENV}. Use with:
+#   docker compose -f docker-compose.provider.yml -f docker-compose.provider.production.yml up -d
+services: {}

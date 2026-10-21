@@ -1,9 +1,8 @@
+# provider-mock stack. Layer an env overlay on top (keep overlays beside this file):
+#   docker compose -f docker-compose.provider-mock.yml -f docker-compose.provider-mock.<production|staging>.yml up -d
 services:
     provider1:
         container_name: provider1
-        profiles:
-            - production
-            - staging
         image: prosopo/provider-mock:dev
         labels:
             - "vector.provider=true" # enable logging as a provider
@@ -53,9 +52,6 @@ services:
                 max-file: '1'
     caddy:
         container_name: caddy
-        profiles:
-            - production
-            - staging
         image: prosopo/caddy:${CADDY_IMAGE}
         env_file:
             - ../.env.${NODE_ENV}

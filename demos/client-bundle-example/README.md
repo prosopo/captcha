@@ -13,7 +13,7 @@ Run these commands from the root of the [captcha](https://github.com/prosopo/cap
 ./install_cert.sh && \
 cp dev/scripts/env.development dev/scripts/.env.development && \
 cp dev/scripts/env.development packages/procaptcha-bundle/.env.development && \
-docker compose --file ./docker/docker-compose.development.yml up -d && \
+docker compose --file ./docker/docker-compose.test.yml up -d && \
 pnpm install && \
 pnpm run build:all && \
 pnpm run setup:all && \

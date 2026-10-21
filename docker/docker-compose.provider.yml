@@ -1,9 +1,11 @@
+# Base provider stack. Always layer an env overlay on top, plus any optional ones:
+#   docker compose -f docker-compose.provider.yml -f docker-compose.provider.<production|staging|development>.yml up -d
+#   ... -f docker-compose.provider.tcp-probe.yml   # optional eBPF sidecar
+# Later files override earlier ones. Relative paths in every overlay resolve
+# against this directory, so keep the overlays beside this file.
 services:
   provider1:
     container_name: provider1
-    profiles:
-      - production
-      - staging
     image: prosopo/provider:${COMPOSE_PROVIDER_IMAGE_VERSION}
     labels:
       - "vector.provider=true" # enable logging as a provider
@@ -60,9 +62,6 @@ services:
       - 208.67.222.222
   provider2:
     container_name: provider2
-    profiles:
-      - production
-      - staging
     image: prosopo/provider:${COMPOSE_PROVIDER_PREVIOUS_IMAGE_VERSION}
     labels:
       - "vector.provider=true" # enable logging as a provider
@@ -103,9 +102,6 @@ services:
       - 208.67.222.222
   database:
     container_name: database
-    profiles:
-      - production
-      - staging
     image: mongo:6.0.28
     command: mongod --wiredTigerCacheSizeGB 2.0
     deploy:
@@ -145,9 +141,6 @@ services:
       - 208.67.222.222
   caddy:
     container_name: caddy
-    profiles:
-      - production
-      - staging
     image: prosopo/caddy:${CADDY_IMAGE}
     env_file:
       - ../.env.1.${NODE_ENV}
@@ -164,7 +157,7 @@ services:
       - ./provider.Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
-      # Shared with the tcp-probe sidecar (`tcp-probe` profile). Chaddy's
+      # Shared with the tcp-probe sidecar (docker-compose.provider.tcp-probe.yml). Chaddy's
       # `tcp_probe_socket` directive dials the sidecar's Unix socket
       # here to look up raw TCP handshake signals for the current
       # request and forward them as `X-TLS-*` headers. If the socket
@@ -201,68 +194,6 @@ services:
       - 8.8.8.8
       - 1.1.1.1
       - 208.67.222.222
-  # eBPF sidecar that captures raw TCP handshake data (SYN / SYN-ACK / ACK)
-  # off the WAN interface and serves per-request lookups over a Unix socket.
-  # Chaddy (adjacent `caddy` service) reads that socket at accept() time and
-  # forwards the raw fields (`X-TLS-Syn-Ns`, `X-TLS-Observed-Ttl`, `X-TLS-Tcp-*`)
-  # onto the reverse-proxy request; the provider persists them onto the Session
-  # record. Nothing here is on by default: this service sits behind the
-  # `tcp-probe` profile so `docker compose --profile production` (which is
-  # what ansible sets today) does not pull or start it. Enable per host by
-  # appending `--profile tcp-probe` to the compose command AND publishing
-  # `prosopo/tcp-probe:${TCP_PROBE_IMAGE}` to Docker Hub — currently only
-  # built locally under `protect/tcp-probe`. See `deploy/DEPLOY.md` there
-  # for the bumblebee-side reference deployment; the same wire protocol
-  # (12-byte req, 80- or 104-byte reply) and image are reused here.
-  #
-  # `network_mode: host` is mandatory: XDP/TC hooks attach to real host
-  # interfaces, and the container-network veth wouldn't see the outside
-  # traffic. Caps are the minimum needed to load BPF programs and attach
-  # them; the probe never modifies traffic (XDP_PASS / TC_ACT_PIPE) so a
-  # crash cannot black-hole requests — worst case is the socket disappears
-  # and chaddy silently degrades to the pre-sidecar header set.
-  tcp-probe:
-    container_name: tcp-probe
-    profiles:
-      - tcp-probe
-    # Pinned, not `:latest`. The probe's reply is a bare fixed-size struct
-    # with no version in it, so the tag is the only thing that says which
-    # layout a host is serving — and publishing `:latest` would change that
-    # on every pronode at the next pull, with nobody running a deploy. Set
-    # TCP_PROBE_IMAGE explicitly to move a host. 0.1.1 serves the 80-byte
-    # record; chaddy reads that and the 104-byte one (prosopo/chaddy#17).
-    image: prosopo/tcp-probe:${TCP_PROBE_IMAGE:-0.1.1}
-    network_mode: host
-    cap_add:
-      - BPF
-      - NET_ADMIN
-      - SYS_RESOURCE
-      - PERFMON
-    labels:
-      - "vector.tcp-probe=true"
-      - "vector.docker=true"
-    volumes:
-      # Host-side socket dir; caddy mounts the same path read-only so both
-      # containers see the same inode. Docker will create the dir if it
-      # doesn't exist yet.
-      - /var/run/tcp-probe:/var/run/tcp-probe
-    command:
-      - "--iface"
-      # Each pronode's WAN NIC name is different (contabo/hetzner/etc.);
-      # ansible sets TCP_PROBE_IFACE per-host in .env.1.$NODE_ENV.
-      - "${TCP_PROBE_IFACE}"
-      - "--port"
-      - "443"
-      - "--format"
-      - "jsonl"
-      - "--lookup-socket"
-      - "/var/run/tcp-probe/lookup.sock"
-    restart: unless-stopped
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '100m'
-        max-file: '1'
   redis-stack:
     container_name: redis-stack
     # unlike "redis/redis-stack-server" this image includes Insights
@@ -287,9 +218,6 @@ services:
         max-file: '1'
   vector:
     container_name: vector
-    profiles:
-      - production
-      - staging
     image: prosopo/vector:${VECTOR_IMAGE}
     env_file:
       - ../.env.1.${NODE_ENV}
@@ -363,9 +291,6 @@ services:
     # DNS observation sidecar. Caddy fronts TLS for *.t.{CADDY_DOMAIN}
     # and reverse-proxies HTTP to this container — see provider.Caddyfile.
     container_name: dns
-    profiles:
-      - production
-      - staging
     image: prosopo/dns:${DNS_VERSION?DNS_VERSION must be set}
     cap_add:
       - NET_BIND_SERVICE
