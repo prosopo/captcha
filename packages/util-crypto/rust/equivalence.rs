@@ -36,7 +36,7 @@ use crate::hashing::{
     blake2_as_hex, blake2_as_u8a, hex_hash, hex_hash_array, pbkdf2_encode, sha256_as_u8a,
     sha512_as_u8a,
 };
-use crate::js::{json_stringify_number, json_stringify_string, JoinValue, JsonValue};
+use crate::js::{json_stringify, JoinValue};
 use crate::jwt::{jwt_verify_at, sr25519_jwt_issue_at, JwtIssueOptions, JwtVerifyOptions};
 use crate::key::{key_extract_path, key_extract_suri, key_from_path, DeriveJunction, KeypairType};
 use crate::keystore::{
@@ -1582,29 +1582,6 @@ struct JwtVerifyCase {
     max_lifetime_seconds: Option<f64>,
     #[serde(flatten)]
     outcome: Outcome<JwtVerifyJson>,
-}
-
-/// `JSON.stringify` of a parsed JSON value.
-fn json_stringify(value: &JsonValue) -> String {
-    match value {
-        JsonValue::Null => "null".to_string(),
-        JsonValue::Bool(b) => b.to_string(),
-        JsonValue::Number(n) => json_stringify_number(*n),
-        JsonValue::String(s) => json_stringify_string(s),
-        JsonValue::Array(items) => {
-            let inner: Vec<String> = items.iter().map(json_stringify).collect();
-            format!("[{}]", inner.join(","))
-        }
-        JsonValue::Object(entries) => {
-            let inner: Vec<String> = entries
-                .iter()
-                .map(|(k, v): &(String, JsonValue)| {
-                    format!("{}:{}", json_stringify_string(k), json_stringify(v))
-                })
-                .collect();
-            format!("{{{}}}", inner.join(","))
-        }
-    }
 }
 
 #[test]

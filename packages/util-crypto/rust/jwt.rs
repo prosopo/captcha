@@ -17,7 +17,7 @@
 
 use crate::base::{base64_url_decode, base64_url_encode};
 use crate::error::{err, Result};
-use crate::js::{json_parse, json_stringify_number, json_stringify_string, JsonValue};
+use crate::js::{array_index, json_parse, json_stringify_number, json_stringify_string, JsonValue};
 use crate::key::KeypairType;
 use crate::sr25519::{sign_raw, sr25519_verify};
 use crate::u8a::{hex_to_u8a, u8a_to_hex, u8a_to_string};
@@ -66,12 +66,6 @@ pub fn now_millis() -> f64 {
 
 fn is_truthy(value: Option<f64>) -> Option<f64> {
     value.filter(|v| *v != 0.0 && !v.is_nan())
-}
-
-/// Whether `key` is an array index, which JavaScript orders before other keys.
-fn array_index(key: &str) -> Option<u32> {
-    let index = key.parse::<u32>().ok()?;
-    (index.to_string() == key && index != u32::MAX).then_some(index)
 }
 
 fn set(entries: &mut Vec<(String, String)>, key: &str, value: String) {

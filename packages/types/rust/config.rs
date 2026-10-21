@@ -16,6 +16,7 @@
 //! cli parses the provider's configuration with. The widget's `ProcaptchaConfigSchema` and
 //! the SDK's `ProsopoServerConfigSchema` have no Rust caller and stay TS.
 
+use crate::wire_enum::wire_enum;
 use crate::provider_api::{
     api_path_rate_limits_schema, prosopo_captcha_count_config_schema, DEFAULT_SOLVED_COUNT,
     DEFAULT_UNSOLVED_COUNT, PROVIDER_DEFAULT_RATE_LIMITS,
@@ -49,14 +50,22 @@ pub fn frictionless_penalties_schema() -> Schema {
 
 pub const LOG_LEVELS: [&str; 7] = ["trace", "debug", "info", "warn", "error", "fatal", "log"];
 pub const DATABASE_TYPES: [&str; 5] = ["mongo", "mongoMemory", "provider", "client", "captcha"];
-pub const ENVIRONMENT_TYPES: [&str; 3] = ["development", "staging", "production"];
+
+wire_enum! {
+    /// `EnvironmentTypes`.
+    pub enum EnvironmentTypes {
+        Development: "development" = "development",
+        Staging: "staging" = "staging",
+        Production: "production" = "production",
+    }
+}
 
 pub fn database_types_schema() -> Schema {
     string_enum(&DATABASE_TYPES)
 }
 
 pub fn environment_types_schema() -> Schema {
-    string_enum(&ENVIRONMENT_TYPES)
+    string_enum(&EnvironmentTypes::ALL.map(EnvironmentTypes::as_str))
 }
 
 /// `DatabaseConfigSchema`: per environment; only the environments present are checked.

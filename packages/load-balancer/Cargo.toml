@@ -1,0 +1,27 @@
+[package]
+name = "prosopo-load-balancer"
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "rust/lib.rs"
+
+[dependencies]
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+prosopo-common = { path = "../common" }
+prosopo-types = { path = "../types" }
+prosopo-util-crypto = { path = "../util-crypto" }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }
+tokio = { version = "1", features = ["time"] }
+url = "2.5"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros", "time", "test-util"] }

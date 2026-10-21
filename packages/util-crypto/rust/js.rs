@@ -148,6 +148,41 @@ impl JsonValue {
     }
 }
 
+/// Whether `key` is an array index, which JavaScript enumerates before an object's other keys.
+pub fn array_index(key: &str) -> Option<u32> {
+    let index = key.parse::<u32>().ok()?;
+    (index.to_string() == key && index != u32::MAX).then_some(index)
+}
+
+/// An object's entries in JavaScript's enumeration order: array indices ascending, then the
+/// other keys in insertion order.
+pub fn js_entry_order<T>(entries: &[(String, T)]) -> Vec<&(String, T)> {
+    let mut ordered: Vec<&(String, T)> = entries.iter().collect();
+    ordered.sort_by_key(|(key, _)| array_index(key).map_or((1, 0), |index| (0, index)));
+    ordered
+}
+
+/// `JSON.stringify(value)` for a parsed JSON value.
+pub fn json_stringify(value: &JsonValue) -> String {
+    match value {
+        JsonValue::Null => "null".to_string(),
+        JsonValue::Bool(b) => b.to_string(),
+        JsonValue::Number(n) => json_stringify_number(*n),
+        JsonValue::String(s) => json_stringify_string(s),
+        JsonValue::Array(items) => {
+            let inner: Vec<String> = items.iter().map(json_stringify).collect();
+            format!("[{}]", inner.join(","))
+        }
+        JsonValue::Object(entries) => {
+            let inner: Vec<String> = js_entry_order(entries)
+                .into_iter()
+                .map(|(k, v)| format!("{}:{}", json_stringify_string(k), json_stringify(v)))
+                .collect();
+            format!("{{{}}}", inner.join(","))
+        }
+    }
+}
+
 /// `JSON.parse(text)`; the error message is not meant to match V8's.
 pub fn json_parse(text: &str) -> Result<JsonValue> {
     let mut parser = Parser {
