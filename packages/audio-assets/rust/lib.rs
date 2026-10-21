@@ -50,7 +50,9 @@ pub enum AudioAssetsError {
     Prng(PuzzleAssetsError),
     InvalidTypedArrayLength(f64),
     /// `ERR_OUT_OF_RANGE` from a `Buffer#writeUInt32LE` header field.
-    OutOfRange { received: u64 },
+    OutOfRange {
+        received: u64,
+    },
 }
 
 /// Node's `addNumericalSeparator`, which it applies past 2^32.

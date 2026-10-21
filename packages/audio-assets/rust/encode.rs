@@ -30,7 +30,8 @@ const INT16_SCALE: f64 = 32767.0;
 
 /// `Buffer#writeUInt32LE`, which rejects values past the field's width.
 fn put_u32(out: &mut [u8], value: u64, offset: usize) -> Result<(), AudioAssetsError> {
-    let value = u32::try_from(value).map_err(|_| AudioAssetsError::OutOfRange { received: value })?;
+    let value =
+        u32::try_from(value).map_err(|_| AudioAssetsError::OutOfRange { received: value })?;
     out[offset..offset + 4].copy_from_slice(&value.to_le_bytes());
     Ok(())
 }

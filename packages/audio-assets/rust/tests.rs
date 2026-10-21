@@ -20,9 +20,9 @@ use std::f64::consts::PI;
 use base64::Engine;
 
 use crate::{
-    add_noise_bed, create_prng, create_seed, encode_wav, random_voice, render_audio_challenge,
-    rms, synthesise_utterance, to_data_uri, AudioBuffer, AudioRenderSettings,
-    RenderedAudioChallenge, ANSWER_ALPHABET, DEFAULT_RENDER_SETTINGS, DIGITS, SAMPLE_RATE,
+    add_noise_bed, create_prng, create_seed, encode_wav, random_voice, render_audio_challenge, rms,
+    synthesise_utterance, to_data_uri, AudioBuffer, AudioRenderSettings, RenderedAudioChallenge,
+    ANSWER_ALPHABET, DEFAULT_RENDER_SETTINGS, DIGITS, SAMPLE_RATE,
 };
 
 fn clean_settings() -> AudioRenderSettings {
@@ -44,7 +44,12 @@ fn read_u16(wav: &[u8], offset: usize) -> u16 {
 }
 
 fn read_u32(wav: &[u8], offset: usize) -> u32 {
-    u32::from_le_bytes([wav[offset], wav[offset + 1], wav[offset + 2], wav[offset + 3]])
+    u32::from_le_bytes([
+        wav[offset],
+        wav[offset + 1],
+        wav[offset + 2],
+        wav[offset + 3],
+    ])
 }
 
 fn decode_wav(wav: &[u8]) -> Vec<f32> {
@@ -349,9 +354,13 @@ mod errors {
 
     #[test]
     fn short_seed_is_rejected_with_the_prng_message() {
-        let error = render_audio_challenge_with_seed(&DEFAULT_RENDER_SETTINGS, SAMPLE_RATE, &[0; 15])
-            .expect_err("short seed");
-        assert_eq!(error, AudioAssetsError::Prng(PuzzleAssetsError::SeedTooShort { len: 15 }));
+        let error =
+            render_audio_challenge_with_seed(&DEFAULT_RENDER_SETTINGS, SAMPLE_RATE, &[0; 15])
+                .expect_err("short seed");
+        assert_eq!(
+            error,
+            AudioAssetsError::Prng(PuzzleAssetsError::SeedTooShort { len: 15 })
+        );
         assert_eq!(
             error.to_string(),
             "puzzle-assets: seed must be at least 16 bytes, got 15"

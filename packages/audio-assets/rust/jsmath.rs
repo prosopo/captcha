@@ -16,7 +16,21 @@
 //! Lengths and sample positions stay `f64` through the pipeline, as they are
 //! in the TS, so NaN and negative settings behave the same way.
 
-pub(crate) use crate::fdlibm::{cos, exp, pow, tanh};
+pub(crate) use crate::fdlibm::{cos, exp, tanh};
+
+/// `Math.pow` as V8 13.6 (Node 24) computes it: JS's `NaN` cases, `x * x` for a square, and
+/// otherwise the system libm `pow`, which is also what `f64::powf` calls. The same function
+/// as in `prosopo-puzzle-assets`, whose vectors exercise every branch; this crate only ever
+/// raises 10 to a power.
+pub(crate) fn pow(x: f64, y: f64) -> f64 {
+    if y.is_nan() || (y.is_infinite() && x.abs() == 1.0) {
+        return f64::NAN;
+    }
+    if y == 2.0 {
+        return x * x;
+    }
+    x.powf(y)
+}
 
 /// `Math.round`: ties go towards +Infinity.
 pub(crate) fn round(x: f64) -> f64 {

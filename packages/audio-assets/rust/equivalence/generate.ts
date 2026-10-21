@@ -39,6 +39,11 @@ import type {
 	Utterance,
 } from "../../src/types.js";
 
+// Math.pow and the synthesiser's maths are V8 behaviour, and production runs Node 24.
+if (!process.version.startsWith("v24.")) {
+	throw new Error(`generate.ts must run on Node 24 (the production runtime), not ${process.version}`);
+}
+
 // Floats travel as the hex of their IEEE-754 bits, big-endian, so the Rust side
 // compares bit patterns rather than trusting a decimal round trip.
 const bits = (value: number): string => {

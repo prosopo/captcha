@@ -210,7 +210,11 @@ fn is_blendable(previous: &Phoneme, current: &Phoneme) -> bool {
         && current.excitation != Excitation::Silence
 }
 
-fn build_frames(phonemes: &[Phoneme], voice: &Voice, sample_rate: f64) -> (Vec<Frame>, Vec<Segment>) {
+fn build_frames(
+    phonemes: &[Phoneme],
+    voice: &Voice,
+    sample_rate: f64,
+) -> (Vec<Frame>, Vec<Segment>) {
     let mut frames: Vec<Frame> = Vec::new();
     let mut segments: Vec<Segment> = Vec::new();
 
@@ -337,7 +341,11 @@ pub fn synthesise_utterance(
     let (frames, segments) = build_frames(utterance.phonemes, voice, rate);
     let mut out = vec![0.0_f32; frames.len()];
 
-    let mut formant_filters = [Resonator::new(rate), Resonator::new(rate), Resonator::new(rate)];
+    let mut formant_filters = [
+        Resonator::new(rate),
+        Resonator::new(rate),
+        Resonator::new(rate),
+    ];
     let mut noise_filter = Resonator::new(rate);
     let mut glottis = GlottalSource::new(rate);
     let mut radiation = Radiation { previous: 0.0 };
@@ -354,7 +362,11 @@ pub fn synthesise_utterance(
             continue;
         }
 
-        let progress = if frames.len() > 1 { n as f64 / last } else { 0.0 };
+        let progress = if frames.len() > 1 {
+            n as f64 / last
+        } else {
+            0.0
+        };
         let f0 = lerp(f0_start, f0_end, progress) * (1.0 + jitter_depth * (prng.next() - 0.5));
 
         let mut sample = 0.0_f64;
