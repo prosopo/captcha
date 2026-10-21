@@ -48,7 +48,7 @@
 		"cron-parser": "5.10.1",
 		"dotenv": "16.4.5",
 		"yargs": "18.2.0",
-		"zod": "3.23.8"
+		"zod": "4.6.7"
 	},
 	"devDependencies": {
 		"@polkadot-api/substrate-client": "0.7.0",

@@ -38,7 +38,7 @@
 		"cli-progress": "3.12.0",
 		"sharp": "0.35.5",
 		"yargs": "18.2.0",
-		"zod": "3.23.8"
+		"zod": "4.6.7"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",

@@ -44,7 +44,7 @@
 		"@prosopo/util-crypto": "workspace:*",
 		"ip-address": "10.7.2",
 		"scale-ts": "1.6.1",
-		"zod": "3.23.8"
+		"zod": "4.6.7"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
