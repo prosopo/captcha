@@ -7,6 +7,7 @@ members = [
 	"packages/web-bot-auth",
 	"packages/api-route",
 	"packages/util",
+	"packages/dotenv",
 ]
 exclude = [
 	"packages/native-ja4",
