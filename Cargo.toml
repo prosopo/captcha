@@ -6,6 +6,7 @@ members = [
 	"packages/puzzle-assets",
 	"packages/web-bot-auth",
 	"packages/api-route",
+	"packages/audio-assets",
 	"packages/util",
 	"packages/util-crypto",
 	"packages/dotenv",

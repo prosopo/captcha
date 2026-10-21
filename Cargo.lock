@@ -1167,6 +1167,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "prosopo-audio-assets"
+version = "6.0.0"
+dependencies = [
+ "base64 0.22.1",
+ "hex",
+ "libm",
+ "prosopo-puzzle-assets",
+ "serde",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
 name = "prosopo-captcha-severity"
 version = "6.0.0"
 dependencies = [
