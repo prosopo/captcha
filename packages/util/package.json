@@ -41,26 +41,26 @@
 	"types": "dist/index.d.ts",
 	"dependencies": {
 		"@noble/hashes": "2.4.0",
-		"ip-address": "10.7.2",
+		"ip-address": "10.7.4",
 		"lodash": "4.18.1",
 		"seedrandom": "3.0.5",
 		"url": "0.11.4"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
-		"@types/lodash": "4.17.25",
+		"@types/lodash": "4.17.26",
 		"@types/node": "22.10.2",
 		"@types/seedrandom": "3.0.8",
-		"@vitest/coverage-v8": "4.1.11",
+		"@vitest/coverage-v8": "5.0.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"dotenv": "16.4.5",
+		"dotenv": "18.0.7",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "8.1.5",
-		"vitest": "4.1.11"
+		"vite": "8.1.6",
+		"vitest": "5.0.4"
 	},
 	"repository": {
 		"type": "git",
