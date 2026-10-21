@@ -379,9 +379,31 @@ generated vectors through the WASM from Node.
 **Shared wire types.** Rust is the source of truth. Request and response bodies,
 enums, constants and route paths that the widget uses are defined in Rust, and
 their TypeScript (types, plus zod schemas where the widget validates at runtime)
-is generated and committed. The generator is chosen when `types` lands, and
-written down here; `ts-rs` for the types is the starting candidate. A test fails
-if the committed TypeScript is out of date with the Rust.
+is generated and committed. A test fails if the committed TypeScript is out of
+date with the Rust.
+
+How, decided now that `types` has landed:
+
+- *Schemas*: the zod is generated from the Rust schema tree itself
+  (`prosopo_api_route::schema`), not from a second description. Every node has
+  a direct zod spelling (`object`, `string().max(n)`, `optional().default(x)`,
+  ...). Only the closures cannot be printed: regex tests, refinements,
+  transforms and preprocessors. Each of those is given its TS source text next
+  to the Rust closure (for example `regex_js("/^[^\\u0000-\\u001f]*$/", ...)`),
+  and the generator emits that text. `z.infer` then gives the TS types for
+  free.
+- *Enums and constants*: `wire_enum!` already records each TS member name, so
+  the generator emits TS `enum`s with the same names and values, and `as const`
+  objects for `ApiParams`, `INPUT_LIMITS`, the timeouts and the route paths.
+- *Interfaces without a schema* (the response bodies): `ts-rs` derives on the
+  Rust structs, with `JsNumber` mapped to `number`.
+- *Proof*: before any hand-written TS is replaced, every `types` generator runs
+  against the generated module in place of the hand-written one, and the
+  committed vectors must not change. Only then does `packages/types` re-export
+  the generated files instead of its own, one module at a time, with
+  `build:tsc` of every dependent package as the gate.
+- *Order*: after the types-database port, so the generator is written once,
+  against a stable set of schemas.
 
 ## 6. The private repo (captcha-private)
 
