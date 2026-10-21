@@ -58,7 +58,6 @@
 			"dependsOn": [
 				"@prosopo/cli#bundle",
 				"@prosopo/client-example-server#bundle",
-				"@prosopo/provider-mock#bundle",
 				"@prosopo/locale#build"
 			],
 			"cache": false

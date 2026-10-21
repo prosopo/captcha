@@ -31,7 +31,6 @@
 
 variable "PROVIDER_VERSION" { default = "dev" }
 variable "CLIENT_EXAMPLE_SERVER_VERSION" { default = "dev" }
-variable "PROVIDER_MOCK_VERSION" { default = "dev" }
 variable "CADDY_VERSION" { default = "dev" }
 variable "VECTOR_VERSION" { default = "dev" }
 
@@ -48,7 +47,7 @@ function "tag" {
 }
 
 group "default" {
-  targets = ["provider", "client-example-server", "provider-mock", "caddy", "vector"]
+  targets = ["provider", "client-example-server", "caddy", "vector"]
 }
 
 target "_common" {
@@ -75,13 +74,6 @@ target "client-example-server" {
   context    = "."
   dockerfile = "demos/client-example-server/Dockerfile"
   tags       = tag("prosopo/client-example-server", CLIENT_EXAMPLE_SERVER_VERSION)
-}
-
-target "provider-mock" {
-  inherits   = ["_common"]
-  context    = "."
-  dockerfile = "demos/provider-mock/Dockerfile"
-  tags       = tag("prosopo/provider-mock", PROVIDER_MOCK_VERSION)
 }
 
 # caddy and vector have no owning source package: they layer config onto an
