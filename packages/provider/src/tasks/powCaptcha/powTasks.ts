@@ -815,11 +815,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			failReason = "API.CLIENT_SESSION_MISMATCH";
 		}
 
-		// These reads need only the challenge record, not the outcome of the
-		// checks between here and where each is awaited, so they run alongside
-		// those checks instead of after them. Once a check has failed, nothing
-		// they feed can change the verdict and the score is not returned, so a
-		// rejected verify skips them.
+		// Run alongside the checks below; skipped once a check has already failed.
 		const sessionRecordRead =
 			challengeRecord.sessionId && !failResult
 				? this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
@@ -835,8 +831,7 @@ export class PowCaptchaManager extends CaptchaManager {
 			ip && !failResult
 				? env.ipInfoService.lookup(ip)
 				: Promise.resolve(undefined);
-		// Each is awaited below; this only stops a throw in between from
-		// turning a rejection into an unhandled one.
+		// Avoids an unhandled rejection if a check throws before these are awaited.
 		for (const read of [
 			sessionRecordRead,
 			enrichedDnsEventRead,

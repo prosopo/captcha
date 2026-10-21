@@ -547,8 +547,7 @@ export abstract class InteractiveCaptchaManager<
 			return notVerifiedResponse;
 		}
 
-		// Read once: the hard-block check needs its head hash and the checks
-		// further down need the rest.
+		// Read before the hard-block check, which needs its head hash.
 		const sessionRecord = challengeRecord.sessionId
 			? await this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
 			: undefined;

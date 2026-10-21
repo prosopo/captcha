@@ -835,10 +835,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 			failStatus = ResultReason.CLIENT_SESSION_MISMATCH;
 		}
 
-		// Read once: the hard-block check needs its head hash and the checks
-		// further down need the rest. Walker fills simdReadings / dnsEvent /
-		// entropy fields from the origin when this is an escalation record.
-		// See CaptchaManager.getSessionRecordWithOriginFallback.
+		// Read before the hard-block check, which needs its head hash.
 		const sessionRecord = solution.sessionId
 			? await this.getSessionRecordWithOriginFallback(solution.sessionId)
 			: undefined;
