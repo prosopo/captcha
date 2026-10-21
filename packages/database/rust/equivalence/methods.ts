@@ -79,6 +79,7 @@ const createConnection = mongoose.createConnection.bind(mongoose);
 const { ProviderDatabase } = await import("../../src/databases/provider.js");
 const { MongoDatabase } = await import("../../src/base/mongo.js");
 const { getLogger } = await import("@prosopo/logger");
+const { ClientSettingsSchema } = await import("@prosopo/types");
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 const toJson = (value: unknown): Json => JSON.parse(EJSON.stringify(value, { relaxed: false })) as Json;
@@ -178,14 +179,16 @@ const describeError = (error: unknown): Json => {
 };
 
 // Runs one call: the commands it sends and what it returns are recorded under `name`.
-const record = async (group: string, name: string, method: string, args: unknown[]): Promise<void> => {
+const record = async (group: string, name: string, method: string, args: unknown[]): Promise<unknown> => {
 	commands = [];
 	drawn = [];
 	const idStart: number = (mongoose.mongo.ObjectId as unknown as ObjectIdStatics).index;
 	const scenario: Scenario = { group, name, method, args: toJson(toRecordable(args)), random: [], commands: [], idStart };
+	let result: unknown;
 	try {
-		const result: unknown = await (db as unknown as Record<string, (...a: unknown[]) => Promise<unknown>>)[method](...args);
-		scenario.result = toJson(result === undefined ? null : result);
+		result = await (db as unknown as Record<string, (...a: unknown[]) => Promise<unknown>>)[method](...args);
+		const plain: unknown = result instanceof mongoose.Document ? result.toObject() : result;
+		scenario.result = toJson(plain === undefined ? null : plain);
 	} catch (error) {
 		scenario.error = describeError(error);
 	}
@@ -193,6 +196,7 @@ const record = async (group: string, name: string, method: string, args: unknown
 	scenario.commands = [...commands];
 	scenario.random = drawn;
 	scenarios.push(scenario);
+	return result;
 };
 
 // A change made straight on the database between calls, recorded so a live test can make it too.
@@ -525,6 +529,89 @@ await record("sessions", "consume a session", "checkAndRemoveSession", ["session
 await record("sessions", "consume a session again", "checkAndRemoveSession", ["session-s1"]);
 await record("sessions", "consume a missing session", "checkAndRemoveSession", ["session-none"]);
 await record("sessions", "a consumed session by hash", "getSessionByuserSitekeyIpHash", ["hash-1"]);
+
+const taskId = await record("scheduler", "create a task status", "createScheduledTaskStatus", ["StoreCommitmentsExternal", "Running"]);
+await record("scheduler", "create another task status", "createScheduledTaskStatus", ["GetClientList", "Completed"]);
+await record("scheduler", "a task status", "getScheduledTaskStatus", [taskId, "Running"]);
+await record("scheduler", "a task status in another status", "getScheduledTaskStatus", [taskId, "Completed"]);
+await record("scheduler", "the last task status", "getLastScheduledTaskStatus", ["StoreCommitmentsExternal"]);
+await record("scheduler", "the last task status in a status", "getLastScheduledTaskStatus", ["StoreCommitmentsExternal", "Completed"]);
+await record("scheduler", "complete a task", "updateScheduledTaskStatus", [taskId, "Completed", { data: { processed: 3, z: [1, "a"] } }]);
+await record("scheduler", "fail a task", "updateScheduledTaskStatus", [taskId, "Failed", { error: "boom" }]);
+await record("scheduler", "update a task without a result", "updateScheduledTaskStatus", [taskId, "Completed"]);
+await record("scheduler", "the completed task", "getScheduledTaskStatus", [taskId, "Completed"]);
+await record("scheduler", "clean up completed tasks", "cleanupScheduledTaskStatus", ["Completed"]);
+await record("scheduler", "no last task status", "getLastScheduledTaskStatus", ["StoreCommitmentsExternal"]);
+
+const settings = ClientSettingsSchema.parse({ domains: ["default.example"] });
+const customSettings = ClientSettingsSchema.parse({ captchaType: "pow", domains: ["example.com"], powDifficulty: 5, frictionlessThreshold: 0.75 });
+await record("clients", "update client records", "updateClientRecords", [
+	[
+		{ account: "client1", settings, tier: "free" },
+		{ account: "client2", settings: customSettings, tier: "professional", extra: "dropped" },
+		{ account: "", settings, tier: "free" },
+		{ settings, tier: "free" },
+		{ account: "client3", tier: "enterprise" },
+	],
+]);
+await record("clients", "update client records again", "updateClientRecords", [[{ account: "client1", settings: customSettings, tier: "enterprise" }]]);
+await record("clients", "update no client records", "updateClientRecords", [[{ account: "", settings, tier: "free" }]]);
+await record("clients", "update an empty list of client records", "updateClientRecords", [[]]);
+await record("clients", "all client records", "getAllClientRecords", []);
+await record("clients", "a client record", "getClientRecord", ["client2"]);
+await record("clients", "a client record without settings", "getClientRecord", ["client3"]);
+await record("clients", "a missing client record", "getClientRecord", ["nobody"]);
+await record("clients", "remove client records", "removeClientRecords", [["client3", "nobody"]]);
+await record("clients", "remove no client records", "removeClientRecords", [[]]);
+
+const artifact = (extra: Record<string, unknown> = {}) => ({
+	scope: "global",
+	runtime: "node",
+	source: "export default () => ({ decision: 'allow' })",
+	createdAt: new Date(0),
+	updatedAt: new Date(0),
+	...extra,
+});
+await record("decisionMachines", "upsert a global artifact", "upsertDecisionMachineArtifact", [artifact()]);
+await record("decisionMachines", "upsert a dapp artifact", "upsertDecisionMachineArtifact", [artifact({ scope: "dapp", dappAccount: "dapp1", kind: "decision", language: "ts", name: "dm", version: "1.0.0", captchaType: "puzzle" })]);
+await record("decisionMachines", "upsert the global artifact again", "upsertDecisionMachineArtifact", [artifact({ source: "changed", name: "renamed" })]);
+await record("decisionMachines", "the global artifact", "getDecisionMachineArtifact", ["global"]);
+await record("decisionMachines", "the dapp artifact of a kind", "getDecisionMachineArtifact", ["dapp", "dapp1", "decision"]);
+await record("decisionMachines", "a missing artifact", "getDecisionMachineArtifact", ["dapp", "dapp2"]);
+await record("decisionMachines", "all artifacts", "getAllDecisionMachineArtifacts", []);
+const firstArtifactId = "65ec87bca1b2c3d4e5f00001";
+await setup("decisionMachines", "an artifact with a known id", () =>
+	connection.collection("decisionmachines").insertOne({
+		_id: new mongoose.Types.ObjectId(firstArtifactId),
+		scope: "dapp",
+		dappAccount: "dapp-fixed",
+		kind: "routing",
+		runtime: "node",
+		source: "fixed",
+		createdAt: new Date(1_000),
+		updatedAt: new Date(2_000),
+		__v: 0,
+	}),
+);
+await record("decisionMachines", "an artifact by id", "getDecisionMachineArtifactById", [firstArtifactId]);
+await record("decisionMachines", "a missing artifact by id", "getDecisionMachineArtifactById", ["65ec87bca1b2c3d4e5ffffff"]);
+await record("decisionMachines", "an artifact by a malformed id", "getDecisionMachineArtifactById", ["nope"]);
+await record("decisionMachines", "remove an artifact", "removeDecisionMachineArtifact", [firstArtifactId]);
+await record("decisionMachines", "remove it again", "removeDecisionMachineArtifact", [firstArtifactId]);
+await record("decisionMachines", "remove an artifact by a malformed id", "removeDecisionMachineArtifact", ["nope"]);
+await record("decisionMachines", "remove all artifacts", "removeAllDecisionMachineArtifacts", []);
+await record("decisionMachines", "remove all artifacts again", "removeAllDecisionMachineArtifacts", []);
+
+await record("spam", "add spam domains", "bulkUpdateSpamEmailDomains", [[{ filter: { domain: "spam.com" }, update: { domain: "spam.com" } }, { filter: { domain: "junk.co.uk" }, update: { domain: "junk.co.uk" } }], true]);
+await record("spam", "rename a spam domain without upserting", "bulkUpdateSpamEmailDomains", [[{ filter: { domain: "junk.co.uk" }, update: { domain: "junk.org" } }, { filter: { domain: "absent.com" }, update: { domain: "absent.com" } }], false]);
+await record("spam", "update no spam domains", "bulkUpdateSpamEmailDomains", [[], true]);
+await record("spam", "a spam domain", "getSpamEmailDomain", ["spam.com"]);
+await record("spam", "a subdomain of a spam domain", "getSpamEmailDomain", ["mail.eu.spam.com"]);
+await record("spam", "a deep subdomain of a spam domain", "getSpamEmailDomain", ["a.b.c.d.e.f.spam.com"]);
+await record("spam", "a clean domain", "getSpamEmailDomain", ["example.com"]);
+await record("spam", "a renamed spam domain", "getSpamEmailDomain", ["junk.org"]);
+await record("spam", "not a domain", "getSpamEmailDomain", ["localhost"]);
+await record("spam", "an empty domain", "getSpamEmailDomain", [""]);
 
 await connection.db?.dropDatabase();
 await db.close();

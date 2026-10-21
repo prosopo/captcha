@@ -28,7 +28,9 @@ use crate::mongo::MongoError;
 use crate::operation::{Executor, Operation, Reply, ReplyFuture};
 use crate::provider::ProviderDatabase;
 use crate::records::{CompositeIpAddress, IpHalf, StoredResult, UserCommitment};
+use crate::clients::{ClientRecord, DecisionMachineArtifact, SpamEmailDomainUpdate};
 use crate::session::{DnsObservation, Session};
+use prosopo_types_database::scheduled_task::ScheduledTaskResult;
 use prosopo_types::api_types::CaptchaSolution;
 use crate::source::Source;
 use bson::oid::ObjectId;
@@ -702,6 +704,102 @@ async fn run_session_scenario(db: &ProviderDatabase, scenario: &Value, live: boo
     Some(outcome)
 }
 
+/// As [`check`], each side first passed through `normalise`.
+fn check_normalised<T: DeserializeOwned + PartialEq + Debug>(scenario: &Value, actual: Result<T, ProsopoError>, normalise: impl Fn(T) -> T) -> Option<String> {
+    match (actual, scenario.get("error")) {
+        (Ok(value), None) => {
+            let value: T = normalise(value);
+            let expected: T = normalise(ts_result(scenario));
+            (value != expected).then(|| format!("result\n      rust {value:?}\n      ts   {expected:?}"))
+        }
+        (actual, _) => check(scenario, actual),
+    }
+}
+
+fn decode_arg<T: DeserializeOwned>(value: &Bson) -> T {
+    bson::deserialize_from_document(document(value)).expect("an argument of the type")
+}
+
+/// An artifact a live run upserted has an id mongod gave it; there the ids are not compared.
+fn artifact_ids(live: bool) -> impl Fn(Option<DecisionMachineArtifact>) -> Option<DecisionMachineArtifact> {
+    move |artifact| artifact.map(|artifact| DecisionMachineArtifact { id: if live { None } else { artifact.id }, ..artifact })
+}
+
+async fn run_admin_scenario(db: &ProviderDatabase, scenario: &Value, live: bool) -> Option<Option<String>> {
+    let b: Vec<Bson> = bson_args(scenario);
+    let method: &str = scenario["method"].as_str().expect("method");
+    let parse = |value: &Bson| bson_str(value).to_string();
+    let outcome: Option<String> = match method {
+        "createScheduledTaskStatus" => check(
+            scenario,
+            db.create_scheduled_task_status(parse(&b[0]).parse().expect("a task"), parse(&b[1]).parse().expect("a status")).await,
+        ),
+        "getScheduledTaskStatus" => check(
+            scenario,
+            db.get_scheduled_task_status(b[0].as_object_id().expect("an id"), parse(&b[1]).parse().expect("a status")).await,
+        ),
+        "getLastScheduledTaskStatus" => check(
+            scenario,
+            db.get_last_scheduled_task_status(
+                parse(&b[0]).parse().expect("a task"),
+                given(&b, 1).map(|status| bson_str(status).parse().expect("a status")),
+            )
+            .await,
+        ),
+        "updateScheduledTaskStatus" => {
+            let result: Option<ScheduledTaskResult> = given(&b, 2).map(decode_arg);
+            check_unit(
+                scenario,
+                db.update_scheduled_task_status(b[0].as_object_id().expect("an id"), parse(&b[1]).parse().expect("a status"), result.as_ref())
+                    .await,
+            )
+        }
+        "cleanupScheduledTaskStatus" => check_unit(scenario, db.cleanup_scheduled_task_status(parse(&b[0]).parse().expect("a status")).await),
+        "updateClientRecords" => {
+            let records: Vec<ClientRecord> = b[0].as_array().expect("records").iter().map(decode_arg).collect();
+            check_unit(scenario, db.update_client_records(&records).await)
+        }
+        "removeClientRecords" => check_unit(scenario, db.remove_client_records(&bson_strings(&b[0])).await),
+        "getAllClientRecords" => check(scenario, db.get_all_client_records().await),
+        "getClientRecord" => check(scenario, db.get_client_record(bson_str(&b[0])).await),
+        "upsertDecisionMachineArtifact" => check_unit(scenario, db.upsert_decision_machine_artifact(&decode_arg(&b[0])).await),
+        "getDecisionMachineArtifact" => check_normalised(
+            scenario,
+            db.get_decision_machine_artifact(
+                parse(&b[0]).parse().expect("a scope"),
+                given(&b, 1).map(bson_str),
+                given(&b, 2).map(|kind| bson_str(kind).parse().expect("a kind")),
+            )
+            .await,
+            artifact_ids(live),
+        ),
+        "getAllDecisionMachineArtifacts" => check_normalised(scenario, db.get_all_decision_machine_artifacts().await, |artifacts: Vec<DecisionMachineArtifact>| {
+            artifacts.into_iter().filter_map(|artifact| artifact_ids(live)(Some(artifact))).collect()
+        }),
+        "getDecisionMachineArtifactById" => check(scenario, db.get_decision_machine_artifact_by_id(bson_str(&b[0])).await),
+        "removeDecisionMachineArtifact" => check(scenario, db.remove_decision_machine_artifact(bson_str(&b[0])).await),
+        "removeAllDecisionMachineArtifacts" => check(scenario, db.remove_all_decision_machine_artifacts().await.map(|n| n as i64)),
+        "bulkUpdateSpamEmailDomains" => {
+            let domains: Vec<SpamEmailDomainUpdate> = b[0]
+                .as_array()
+                .expect("domains")
+                .iter()
+                .map(|entry| {
+                    let entry: &Document = entry.as_document().expect("an entry");
+                    SpamEmailDomainUpdate {
+                        filter: entry.get_document("filter").and_then(|filter| filter.get_str("domain")).expect("a filter").to_string(),
+                        update: entry.get_document("update").and_then(|update| update.get_str("domain")).expect("an update").to_string(),
+                    }
+                })
+                .collect();
+            check_unit(scenario, db.bulk_update_spam_email_domains(&domains, b[1].as_bool().expect("upsert")).await)
+        }
+        "getSpamEmailDomain" => check(scenario, db.get_spam_email_domain(bson_str(&b[0])).await),
+        _ => return None,
+    };
+    Some(outcome)
+}
+
 fn bson_strings(value: &Bson) -> Vec<String> {
     value.as_array().expect("an array").iter().map(|item| bson_str(item).to_string()).collect()
 }
@@ -714,6 +812,9 @@ async fn run_scenario(db: &ProviderDatabase, scenario: &Value, live: bool) -> Op
         return outcome;
     }
     if let Some(outcome) = run_session_scenario(db, scenario, live).await {
+        return outcome;
+    }
+    if let Some(outcome) = run_admin_scenario(db, scenario, live).await {
         return outcome;
     }
     let a: Vec<Value> = args(scenario);

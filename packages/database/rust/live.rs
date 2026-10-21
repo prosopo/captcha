@@ -1200,3 +1200,187 @@ mod provided_ip_pipeline_cast {
         live.finish().await;
     }
 }
+
+/// projectionContracts.integration.test.ts: every field each projected read's consumer reads
+/// survives the projection.
+mod projection_contracts {
+    use super::*;
+    use crate::clients::ClientRecord;
+    use crate::records::ChallengeRecord;
+    use prosopo_types_database::provider::CLIENT_RECORD;
+
+    fn valid_ip_info() -> Document {
+        doc! {
+            "ip": "203.0.113.1",
+            "isValid": true,
+            "isVPN": false,
+            "isTor": false,
+            "isProxy": false,
+            "isDatacenter": false,
+            "isAbuser": false,
+            "isMobile": false,
+            "isSatellite": false,
+            "isCrawler": false,
+            "countryCode": "GB",
+            "asnNumber": 64500,
+            "abuserScore": 0,
+            "companyAbuserScore": 0,
+        }
+    }
+
+    fn bdp() -> Document {
+        doc! {
+            "c1": [{ "x": 100, "y": 100, "timestamp": 1_787_000_000_000_i64, "velocity": 0 }],
+            "c2": [],
+            "c3": [{
+                "x": 200, "y": 200, "timestamp": 1_787_000_000_500_i64, "eventType": "click", "button": 0,
+                "targetElement": "IMG", "ctrlKey": false, "shiftKey": false, "altKey": false,
+            }],
+            "d": "desktop",
+        }
+    }
+
+    fn record(kind: &str, challenge: &str, extra: Document) -> Document {
+        let now: DateTime = DateTime::now();
+        with(
+            doc! {
+                "challenge": challenge,
+                "userAccount": format!("user-{kind}"),
+                "dappAccount": format!("dapp-{kind}"),
+                "requestedAtTimestamp": now,
+                "submittedAtTimestamp": now,
+                "ipAddress": ip(1),
+                "headers": { "host": "example.com", "user-agent": "Mozilla/5.0" },
+                "ja4": format!("ja4-{kind}"),
+                "result": { "status": "Approved" },
+                "providerSignature": format!("sig-{kind}"),
+                "sessionId": format!("session-{kind}"),
+                "ipInfo": valid_ip_info(),
+                "deviceCapability": "desktop",
+                "behavioralDataPacked": bdp(),
+                "serverChecked": false,
+                "userSubmitted": true,
+                "coords": [[[100, 100]]],
+                "clientMetaData": { "clientSessionId": format!("bumblebee-{kind}-contract") },
+            },
+            extra,
+        )
+    }
+
+    /// The fields every challenge consumer reads.
+    fn missing_common(record: &ChallengeRecord) -> Vec<&'static str> {
+        [
+            ("behavioralDataPacked", record.behavioral_data_packed.is_some()),
+            ("clientMetaData", record.client_meta_data.is_some()),
+            ("coords", record.coords.is_some()),
+            ("deviceCapability", record.device_capability.is_some()),
+            ("headers", record.headers.is_some()),
+            ("ipInfo", record.ip_info.is_some()),
+            ("serverChecked", record.server_checked.is_some()),
+            ("sessionId", record.session_id.is_some()),
+            ("submittedAtTimestamp", record.submitted_at_timestamp.is_some()),
+        ]
+        .into_iter()
+        .filter(|(_, present)| !present)
+        .map(|(name, _)| name)
+        .collect()
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn get_pow_captcha_record_by_challenge_returns_every_field_its_consumer_reads() {
+        let live: Live = Live::new("contract-pow").await;
+        let challenge: &str = "1___2___pow-projection-contract";
+        live.create(&POW_CAPTCHA_RECORD, collections::POW_CAPTCHA, record("pow", challenge, doc! { "difficulty": 4 })).await;
+        let got: ChallengeRecord = live.db.get_pow_captcha_record_by_challenge(challenge).await.expect("reads").expect("exists");
+        let mut missing: Vec<&str> = missing_common(&got);
+        if got.difficulty.is_none() {
+            missing.push("difficulty");
+        }
+        assert_eq!(missing, Vec::<&str>::new());
+        live.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn get_puzzle_captcha_record_by_challenge_returns_every_field_its_consumer_reads() {
+        let live: Live = Live::new("contract-puzzle").await;
+        let challenge: &str = "1___2___puzzle-projection-contract";
+        let extra: Document = doc! {
+            "targetX": 100, "targetY": 100, "originX": 0, "originY": 0, "tolerance": 10,
+            "puzzleEvents": [{ "x": 10, "y": 10, "t": 1_787_000_000_000_i64 }, { "x": 100, "y": 100, "t": 1_787_000_000_500_i64 }],
+        };
+        live.create(&PUZZLE_CAPTCHA_RECORD, collections::PUZZLE_CAPTCHA, record("puzzle", challenge, extra)).await;
+        let got: ChallengeRecord = live
+            .db
+            .get_interactive_captcha_record_by_challenge(Interactive::Puzzle, challenge)
+            .await
+            .expect("reads")
+            .expect("exists");
+        let mut missing: Vec<&str> = missing_common(&got);
+        for (name, present) in [
+            ("puzzleEvents", got.puzzle_events.is_some()),
+            ("targetX", got.target_x.is_some()),
+            ("targetY", got.target_y.is_some()),
+            ("tolerance", got.tolerance.is_some()),
+            ("userSubmitted", got.user_submitted.is_some()),
+        ] {
+            if !present {
+                missing.push(name);
+            }
+        }
+        assert_eq!(missing, Vec::<&str>::new());
+        live.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn get_audio_captcha_record_by_challenge_returns_every_field_its_consumer_reads() {
+        let live: Live = Live::new("contract-audio").await;
+        let challenge: &str = "1___2___audio-projection-contract";
+        let extra: Document = doc! {
+            "answer": "96475", "submittedAnswer": "96475", "replays": 1,
+            "audioEvents": [{ "kind": "play", "t": 1_787_000_000_000_i64 }],
+        };
+        live.create(&AUDIO_CAPTCHA_RECORD, collections::AUDIO_CAPTCHA, record("audio", challenge, extra)).await;
+        let got: ChallengeRecord = live
+            .db
+            .get_interactive_captcha_record_by_challenge(Interactive::Audio, challenge)
+            .await
+            .expect("reads")
+            .expect("exists");
+        let mut missing: Vec<&str> = missing_common(&got);
+        for (name, present) in [
+            ("answer", got.answer.is_some()),
+            ("audioEvents", got.audio_events.is_some()),
+            ("replays", got.replays.is_some()),
+            ("userSubmitted", got.user_submitted.is_some()),
+        ] {
+            if !present {
+                missing.push(name);
+            }
+        }
+        assert_eq!(missing, Vec::<&str>::new());
+        live.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn get_client_record_returns_every_field_its_consumer_reads() {
+        let live: Live = Live::new("contract-client").await;
+        live.create(
+            &CLIENT_RECORD,
+            collections::CLIENT,
+            doc! {
+                "account": "client-projection-contract",
+                "tier": "free",
+                "settings": { "domains": ["example.com"], "frictionlessThreshold": 0.5, "powDifficulty": 4, "captchaType": "image" },
+            },
+        )
+        .await;
+        let got: ClientRecord = live.db.get_client_record("client-projection-contract").await.expect("reads").expect("exists");
+        assert_eq!(got.account.as_deref(), Some("client-projection-contract"));
+        assert!(got.settings.is_some());
+        live.finish().await;
+    }
+}

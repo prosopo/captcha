@@ -16,12 +16,14 @@
 //! the central captcha store and the portal's client database.
 
 pub mod challenges;
+pub mod clients;
 pub mod image;
 pub mod mongo;
 pub mod operation;
 pub mod options;
 pub mod provider;
 pub mod records;
+pub mod scheduler;
 pub mod session;
 pub mod source;
 

@@ -311,3 +311,42 @@ mod commitment_input_methods {
         assert!(!document.contains_key("inputMethods"));
     }
 }
+
+mod captcha_label {
+    use prosopo_types::stored::CaptchaLabel;
+    use prosopo_types_database::provider::{POW_CAPTCHA_RECORD, USER_COMMITMENT_RECORD};
+    use prosopo_types_database::schema::{Kind, Path, Schema};
+
+    fn path<'a>(schema: &'a Schema, name: &str) -> &'a Path {
+        schema.path(name).unwrap_or_else(|| panic!("{name} is declared"))
+    }
+
+    #[test]
+    fn accepts_every_label_and_refuses_an_unknown_one() {
+        for label in CaptchaLabel::ALL {
+            assert_eq!(label.as_str().parse::<CaptchaLabel>().ok(), Some(label));
+        }
+        assert!("definitely-not-a-label".parse::<CaptchaLabel>().is_err());
+    }
+
+    #[test]
+    fn record_schemas_declare_the_label_paths_with_their_types() {
+        for schema in [&*POW_CAPTCHA_RECORD, &*USER_COMMITMENT_RECORD] {
+            for (name, kind) in [("label", Kind::String), ("labelReason", Kind::String), ("labelledBy", Kind::String), ("labelledAt", Kind::Date)] {
+                let declared: &Path = path(schema, name);
+                assert!(std::mem::discriminant(&declared.kind) == std::mem::discriminant(&kind), "{name}");
+                assert!(!declared.required, "{name} is optional");
+            }
+        }
+    }
+
+    #[test]
+    fn the_label_path_is_constrained_to_the_labels() {
+        for schema in [&*POW_CAPTCHA_RECORD, &*USER_COMMITMENT_RECORD] {
+            let values: &[String] = path(schema, "label").enum_values.as_deref().expect("an enum");
+            for label in CaptchaLabel::ALL {
+                assert!(values.iter().any(|value| value == label.as_str()), "{}", label.as_str());
+            }
+        }
+    }
+}
