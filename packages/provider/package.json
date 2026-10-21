@@ -32,6 +32,7 @@
 		"@prosopo/database": "workspace:*",
 		"@prosopo/datasets": "workspace:*",
 		"@prosopo/env": "workspace:*",
+		"@prosopo/fingerprint": "workspace:*",
 		"@prosopo/icon-order-assets": "workspace:*",
 		"@prosopo/ipinfo": "workspace:*",
 		"@prosopo/keyring": "workspace:*",

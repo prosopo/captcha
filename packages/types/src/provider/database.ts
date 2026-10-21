@@ -789,6 +789,74 @@ export type Session = {
 // PoWCaptchaStored = PoWCaptchaUser (minus requestedAtTimestamp) + StoredCaptcha
 // Note: challenge uses PowChallengeIdSchema for runtime validation
 // The PoWCaptchaStored interface enforces the PoWChallengeId template literal type at compile time
+/**
+ * The disclosed values that are fixed by the installation and the host, kept
+ * individually alongside `groupHash`, which is a hash of exactly these.
+ *
+ * `groupHash` alone is enough to group by, but it is one-way: a cohort could be
+ * counted and never described, so "which timezone is this concentrated in?"
+ * would be unanswerable after the fact. Keeping the values costs about 170
+ * bytes a record against a whole proof's ~7.8KB, and the hash stays
+ * precomputed so it can carry an index.
+ *
+ * `languages` is a nested array in the component set and is stored as canonical
+ * JSON, so it is one indexable scalar rather than an array path.
+ */
+export interface FingerprintDisclosedValuesStored {
+	timezone?: string;
+	languages?: string;
+	architecture?: number;
+	cookiesEnabled?: boolean;
+	sessionStorage?: boolean;
+	localStorage?: boolean;
+}
+
+/**
+ * What is worth keeping from a verified fingerprint proof.
+ *
+ * The proof itself is not persisted: each disclosure carries a full Merkle
+ * path, which is large and of no use once the proof has been checked.
+ *
+ *   root      the commitment to the whole component set. Both this and the
+ *             account address are functions of that one set, so one root
+ *             belongs to one address and vice versa.
+ *   groupHash a hash of the disclosed values in `disclosed`.
+ *   bucketId  the disclosed `deviceBucket` digest, an opaque hash of the device
+ *             traits that do not change between sessions. Carried through only
+ *             because its disclosure hashed to `root`, so it cannot be
+ *             presented independently of the identity the same commitment
+ *             produced. Absent for a client that did not disclose it.
+ *   colorDepth / hardwareConcurrency
+ *             disclosed values kept per record, so a cohort can be described
+ *             rather than only counted.
+ */
+export interface FingerprintSummaryStored {
+	root: string;
+	groupHash: string;
+	bucketId?: string;
+	colorDepth?: number;
+	hardwareConcurrency?: number;
+	disclosed?: FingerprintDisclosedValuesStored;
+}
+
+export const FingerprintDisclosedValuesSchema = object({
+	timezone: string().optional(),
+	languages: string().optional(),
+	architecture: number().optional(),
+	cookiesEnabled: boolean().optional(),
+	sessionStorage: boolean().optional(),
+	localStorage: boolean().optional(),
+});
+
+export const FingerprintSummarySchema = object({
+	root: string(),
+	groupHash: string(),
+	bucketId: string().optional(),
+	colorDepth: number().optional(),
+	hardwareConcurrency: number().optional(),
+	disclosed: FingerprintDisclosedValuesSchema.optional(),
+});
+
 export const PoWCaptchaStoredSchema = object({
 	// From PoWCaptchaUser (extends PoWCaptcha)
 	challenge: PowChallengeIdSchema,
@@ -826,6 +894,7 @@ export const PoWCaptchaStoredSchema = object({
 	clickEvents: array(object({}).catchall(any())).optional(),
 	deviceCapability: string().optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
+	fingerprintSummary: FingerprintSummarySchema.optional(),
 	// Internal ML labelling (see StoredCaptcha.label)
 	label: CaptchaLabelSchema.optional(),
 	labelReason: string().optional(),
@@ -847,7 +916,9 @@ export type PendingImageCaptchaRequest = {
 
 export interface PoWCaptchaStored
 	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
-		StoredCaptcha {}
+		StoredCaptcha {
+	fingerprintSummary?: FingerprintSummaryStored;
+}
 
 /**
  * Everything needed to reproduce a served puzzle exactly, for the portal's

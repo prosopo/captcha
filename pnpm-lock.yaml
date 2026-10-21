@@ -2677,6 +2677,9 @@ importers:
       '@prosopo/env':
         specifier: workspace:*
         version: link:../env
+      '@prosopo/fingerprint':
+        specifier: workspace:*
+        version: link:../fingerprint
       '@prosopo/icon-order-assets':
         specifier: workspace:*
         version: link:../icon-order-assets
