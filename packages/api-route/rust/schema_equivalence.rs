@@ -21,6 +21,7 @@ use crate::schema::{
     literal, native_enum, number, object, preprocess, record, record_with_keys, string,
     string_enum, tuple, undefined, union, Data, IssueData, Schema,
 };
+use crate::validation::ValidationError;
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
 use std::collections::BTreeMap;
@@ -358,4 +359,52 @@ fn record_and_passthrough_output_follow_js_key_order() {
         .map(|object| object.keys().cloned().collect())
         .unwrap_or_default();
     assert_eq!(keys, ["2", "10", "a", "b"]);
+}
+
+/// A `ValidationError` (what a 400 body is built from) keeps each issue's params in zod's
+/// order, with zod's `code`, `path` and `message`. A `ValidationIssue` always writes `code`
+/// first and `path`, `message` last, where zod sometimes does not (`validation` before
+/// `code`, `message` before `path`): those positions are best-effort.
+#[test]
+fn validation_errors_keep_zod_issue_param_order() {
+    let without_path_and_message = |issue: &Value| -> (Value, Value, Value) {
+        let mut issue: Map<String, Value> = issue.as_object().expect("an issue").clone();
+        let fixed: Value = json!([
+            issue.shift_remove("code"),
+            issue.shift_remove("path"),
+            issue.shift_remove("message"),
+        ]);
+        (Value::Object(issue), fixed, Value::Null)
+    };
+    let vectors: Vectors = serde_json::from_str(VECTORS).expect("schema-vectors.json parses");
+    let schemas: BTreeMap<&'static str, Schema> = battery();
+    let mut checked: usize = 0;
+    for vector in &vectors.vectors {
+        let Expected::Issues { issues: expected } = &vector.result else {
+            continue;
+        };
+        let error: ValidationError = schemas[vector.schema.as_str()]
+            .validate(vector.input.value.as_ref())
+            .expect_err("zod rejected it");
+        let issues: Value = serde_json::to_value(&error.issues).expect("serialises");
+        let (actual, expected): (&Vec<Value>, &Vec<Value>) = (
+            issues.as_array().expect("issues"),
+            expected.as_array().expect("issues"),
+        );
+        assert_eq!(actual.len(), expected.len());
+        for (actual, expected) in actual.iter().zip(expected) {
+            let (actual, actual_path, actual_message) = without_path_and_message(actual);
+            let (expected, expected_path, expected_message) = without_path_and_message(expected);
+            assert!(
+                same_json(&actual, &expected)
+                    && actual_path == expected_path
+                    && actual_message == expected_message,
+                "{} {:?}: got {issues}, zod gave {expected}",
+                vector.schema,
+                vector.input.value
+            );
+            checked += 1;
+        }
+    }
+    assert!(checked > 3_000, "{checked}");
 }

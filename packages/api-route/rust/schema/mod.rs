@@ -851,10 +851,10 @@ impl Schema {
 /// a param.
 fn validation_issue(mut issue: Map<String, Value>) -> ValidationIssue {
     let code: String = issue
-        .remove("code")
+        .shift_remove("code")
         .and_then(|code| code.as_str().map(str::to_string))
         .unwrap_or_default();
-    let path: Vec<PathSegment> = match issue.remove("path") {
+    let path: Vec<PathSegment> = match issue.shift_remove("path") {
         Some(Value::Array(segments)) => segments
             .into_iter()
             .map(|segment| match segment {
@@ -866,7 +866,7 @@ fn validation_issue(mut issue: Map<String, Value>) -> ValidationIssue {
         _ => Vec::new(),
     };
     let message: String = issue
-        .remove("message")
+        .shift_remove("message")
         .and_then(|message| message.as_str().map(str::to_string))
         .unwrap_or_default();
     ValidationIssue {
