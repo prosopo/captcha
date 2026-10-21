@@ -15,6 +15,10 @@
 //! The enums, counter keys and output schemas of decisionMachine/index.ts.
 
 use crate::captcha_type::CaptchaType;
+use crate::settings::{
+    icon_order_settings_schema, icon_order_tolerance_field_schema, puzzle_settings_schema,
+    puzzle_tolerance_field_schema,
+};
 use crate::wire_enum::wire_enum;
 use prosopo_api_route::schema::{
     array, literal, number, object, string, string_enum, union, Schema,
@@ -208,4 +212,32 @@ pub fn encode_counter_key(dapp_account: &str, spec: &CounterSpec, value: &str) -
         spec.dimension,
         spec.window
     )
+}
+
+/// `RoutingMachineOutputSchema`: what a routing machine may decide.
+pub fn routing_machine_output_schema() -> Schema {
+    object(vec![
+        (
+            "captchaType",
+            literal_union(&[
+                CaptchaType::Pow,
+                CaptchaType::Image,
+                CaptchaType::Puzzle,
+                CaptchaType::IconOrder,
+            ]),
+        ),
+        ("solvedImagesCount", number().int().positive().optional()),
+        ("powDifficulty", number().positive().optional()),
+        ("reason", string().optional()),
+        (
+            "puzzleTolerance",
+            puzzle_tolerance_field_schema().optional(),
+        ),
+        ("puzzle", puzzle_settings_schema().optional()),
+        (
+            "iconOrderTolerance",
+            icon_order_tolerance_field_schema().optional(),
+        ),
+        ("iconOrder", icon_order_settings_schema().optional()),
+    ])
 }

@@ -764,3 +764,65 @@ mod counters {
         assert!(!accepts(value));
     }
 }
+
+/// The `RoutingMachineOutputSchema` cases of src/decisionMachine/counters.test.ts.
+mod routing_machine_output {
+    use crate::decision_machine::routing_machine_output_schema;
+    use serde_json::{json, Value};
+
+    fn accepts(value: Value) -> bool {
+        routing_machine_output_schema()
+            .safe_parse(Some(&value))
+            .is_ok()
+    }
+
+    #[test]
+    fn accepts_a_bare_captcha_type() {
+        assert!(accepts(json!({ "captchaType": "image" })));
+    }
+
+    #[test]
+    fn rejects_frictionless_which_is_not_a_routable_outcome() {
+        assert!(!accepts(json!({ "captchaType": "frictionless" })));
+    }
+
+    #[test]
+    fn requires_a_positive_integer_image_count() {
+        assert!(!accepts(
+            json!({ "captchaType": "image", "solvedImagesCount": 0 })
+        ));
+        assert!(!accepts(
+            json!({ "captchaType": "image", "solvedImagesCount": 1.5 })
+        ));
+        assert!(accepts(
+            json!({ "captchaType": "image", "solvedImagesCount": 3 })
+        ));
+    }
+
+    #[test]
+    fn requires_a_positive_pow_difficulty_but_allows_a_fractional_one() {
+        assert!(!accepts(
+            json!({ "captchaType": "pow", "powDifficulty": 0 })
+        ));
+        assert!(accepts(
+            json!({ "captchaType": "pow", "powDifficulty": 4.5 })
+        ));
+    }
+
+    #[test]
+    fn carries_a_free_form_reason() {
+        assert!(accepts(
+            json!({ "captchaType": "pow", "reason": "escalated on ip rate" })
+        ));
+    }
+
+    #[test]
+    fn rejects_a_non_string_reason() {
+        assert!(!accepts(json!({ "captchaType": "pow", "reason": 1 })));
+    }
+
+    #[test]
+    fn requires_a_captcha_type() {
+        assert!(!accepts(json!({})));
+    }
+}

@@ -20,9 +20,13 @@ pub mod captcha_type;
 pub mod client;
 pub mod datasets;
 pub mod decision_machine;
+mod js_regex;
+pub mod number;
 pub mod reasons;
 pub mod sanitise;
 mod scale;
+pub mod settings;
+pub mod settings_types;
 pub mod timeouts;
 pub mod token;
 mod wire_enum;
@@ -39,6 +43,7 @@ pub use datasets::{
     pow_challenge_id_schema, CaptchaItemTypes, CaptchaStates, CaptchaStatus, CaptchaTypes,
     DappPayee, GovernanceStatus, InputMethod, StoredStatusNames, POW_SEPARATOR,
 };
+pub use number::{js_math_round, JsNumber};
 pub use reasons::{
     is_blocking_captcha_result, CaptchaResult, FrictionlessReason, ResultReason,
     NO_MEASUREMENT_REASONS,
@@ -52,6 +57,10 @@ pub use wire_enum::UnknownEnumValue;
 
 #[cfg(test)]
 mod equivalence;
+#[cfg(test)]
+mod settings_equivalence;
+#[cfg(test)]
+mod settings_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
