@@ -133,6 +133,16 @@ pub struct CaptchaSolution {
     pub input_methods: Option<Vec<InputMethod>>,
 }
 
+/// `SolutionRecord`: a dataset's stored solution to one captcha.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SolutionRecord {
+    #[serde(flatten)]
+    pub solution: CaptchaSolution,
+    pub dataset_id: String,
+    pub dataset_content_id: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TimestampSignature {
     pub timestamp: String,

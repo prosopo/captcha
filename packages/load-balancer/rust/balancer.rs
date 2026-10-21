@@ -16,7 +16,7 @@
 //! development provider, or Prosopo's hosted list.
 
 use crate::error::{thrown, LoadBalancerError, Result};
-use crate::js::{js_trim, locale_compare};
+use crate::js::js_trim;
 use crate::overrides::{
     get_development_provider_url, strip_trailing_slash, DEVELOPMENT_PROVIDER_URL_ENV,
     PROVIDER_LIST_ENV,
@@ -24,6 +24,7 @@ use crate::overrides::{
 use prosopo_common::{ErrorClass, ErrorContext, ErrorOptions, ErrorSource, ProsopoError};
 use prosopo_types::config::EnvironmentTypes;
 use prosopo_types::js_math_round;
+use prosopo_util_crypto::locale_compare;
 use prosopo_util_crypto::{js_entry_order, json_parse, json_stringify, JsonValue};
 use serde::{Deserialize, Serialize};
 use std::future::Future;

@@ -13,9 +13,10 @@
 // limitations under the License.
 
 //! JavaScript value semantics that leak into outputs: `Number#toString`,
-//! `JSON.parse`, `JSON.stringify` of strings and `Array#join`.
+//! `JSON.parse`, `JSON.stringify` of strings, `Array#join` and string ordering.
 
 use crate::error::{err, Result};
+use std::cmp::Ordering;
 
 /// `Number.prototype.toString()` for a double (also what `JSON.stringify`
 /// prints for finite numbers).
@@ -453,6 +454,37 @@ pub fn js_join(items: &[JoinValue], separator: &str) -> String {
         })
         .collect::<Vec<String>>()
         .join(separator)
+}
+
+/// How `Array.prototype.sort()` without a comparator orders two strings: by UTF-16 code
+/// unit, which differs from code point order once a character is outside the BMP.
+pub fn code_unit_cmp(a: &str, b: &str) -> Ordering {
+    a.encode_utf16().cmp(b.encode_utf16())
+}
+
+/// Printable ASCII in the order Node 24's default ICU collation puts it, letters case-folded.
+const ICU_ASCII_ORDER: &str =
+    " _-,;:!?.'\"()[]{}@*/\\&#%`^+<=>|~$0123456789abcdefghijklmnopqrstuvwxyz";
+
+fn primary_weight(c: char) -> u32 {
+    match ICU_ASCII_ORDER.find(c.to_ascii_lowercase()) {
+        Some(index) => index as u32,
+        None => ICU_ASCII_ORDER.len() as u32 + c as u32,
+    }
+}
+
+/// `a.localeCompare(b)` under Node's default collation. Exact for printable ASCII: the
+/// characters compare by `ICU_ASCII_ORDER`, and strings equal but for case put lowercase
+/// first at the first difference. Other characters sort after printable ASCII by code point.
+pub fn locale_compare(a: &str, b: &str) -> Ordering {
+    a.chars()
+        .map(primary_weight)
+        .cmp(b.chars().map(primary_weight))
+        .then_with(|| {
+            a.chars()
+                .map(|c| c.is_ascii_uppercase())
+                .cmp(b.chars().map(|c| c.is_ascii_uppercase()))
+        })
 }
 
 #[cfg(test)]

@@ -50,7 +50,10 @@ pub use hashing::{
     blake2_as_hex, blake2_as_u8a, hex_hash, hex_hash_array, pbkdf2_encode, sha256_as_u8a,
     sha512_as_u8a, sha_as_u8a, HEX_HASH_BIT_LENGTH,
 };
-pub use js::{array_index, js_entry_order, json_parse, json_stringify, JoinValue, JsonValue};
+pub use js::{
+    array_index, code_unit_cmp, js_entry_order, json_parse, json_stringify, locale_compare,
+    JoinValue, JsonValue,
+};
 pub use jwt::{
     jwt_verify, jwt_verify_at, sr25519_jwt_issue, sr25519_jwt_issue_at, Jwt, JwtIssueOptions,
     JwtVerifyOptions, JwtVerifyResult,

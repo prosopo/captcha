@@ -14,8 +14,6 @@
 
 //! The JS string semantics the provider list relies on.
 
-use std::cmp::Ordering;
-
 fn is_js_whitespace(c: char) -> bool {
     matches!(
         c,
@@ -36,29 +34,4 @@ fn is_js_whitespace(c: char) -> bool {
 /// `String.prototype.trim`.
 pub(crate) fn js_trim(value: &str) -> &str {
     value.trim_matches(is_js_whitespace)
-}
-
-/// Printable ASCII in the order Node 24's default ICU collation puts it, letters case-folded.
-const ICU_ASCII_ORDER: &str =
-    " _-,;:!?.'\"()[]{}@*/\\&#%`^+<=>|~$0123456789abcdefghijklmnopqrstuvwxyz";
-
-fn primary_weight(c: char) -> u32 {
-    match ICU_ASCII_ORDER.find(c.to_ascii_lowercase()) {
-        Some(index) => index as u32,
-        None => ICU_ASCII_ORDER.len() as u32 + c as u32,
-    }
-}
-
-/// `a.localeCompare(b)` under Node's default collation. Exact for printable ASCII: the
-/// characters compare by `ICU_ASCII_ORDER`, and strings equal but for case put lowercase
-/// first at the first difference. Other characters sort after printable ASCII by code point.
-pub(crate) fn locale_compare(a: &str, b: &str) -> Ordering {
-    a.chars()
-        .map(primary_weight)
-        .cmp(b.chars().map(primary_weight))
-        .then_with(|| {
-            a.chars()
-                .map(|c| c.is_ascii_uppercase())
-                .cmp(b.chars().map(|c| c.is_ascii_uppercase()))
-        })
 }

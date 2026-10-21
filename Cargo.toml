@@ -19,6 +19,7 @@ members = [
 	"packages/load-balancer",
 	"packages/api",
 	"packages/locale",
+	"packages/datasets",
 ]
 exclude = [
 	"packages/native-ja4",

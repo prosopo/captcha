@@ -114,7 +114,7 @@ pub fn number_to_string(x: f64) -> String {
 }
 
 /// `parseInt(s, radix)` for radix 10 or 16.
-pub(crate) fn parse_int(s: &str, radix: u32) -> f64 {
+pub fn parse_int(s: &str, radix: u32) -> f64 {
     let s = s.trim_start_matches(is_whitespace);
     let (negative, s) = match s.as_bytes().first() {
         Some(b'-') => (true, &s[1..]),

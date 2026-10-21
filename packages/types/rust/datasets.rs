@@ -267,7 +267,7 @@ pub struct MaybeLabelledItem {
 /// The output of `SelectAllCaptchaSchema` (`S = String`, hashed solutions) and of the raw and
 /// numeric variants (`S = JsNumber`, tile indexes).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", bound(deserialize = "S: Deserialize<'de>"))]
 pub struct SelectAllCaptcha<S> {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub captcha_id: Option<String>,
@@ -305,15 +305,17 @@ pub struct LabelsContainer {
     pub labels: Vec<String>,
 }
 
-/// The output of `DatasetSchema` and `DatasetWithNumericSolutionSchema`.
+/// The output of `DatasetSchema` and `DatasetWithNumericSolutionSchema` (`S = JsNumber`), and
+/// the TS `DatasetRaw` interface once `parseCaptchaDataset` has hashed the solutions
+/// (`S = String`) or before it has (`S = SolutionEntry`).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DatasetRaw {
+#[serde(rename_all = "camelCase", bound(deserialize = "S: Deserialize<'de>"))]
+pub struct DatasetRaw<S = JsNumber> {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dataset_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dataset_content_id: Option<String>,
-    pub captchas: Vec<SelectAllCaptcha<JsNumber>>,
+    pub captchas: Vec<SelectAllCaptcha<S>>,
     pub format: CaptchaTypes,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub solution_tree: Option<Vec<Vec<String>>>,
@@ -337,6 +339,26 @@ pub struct DatasetWithIds {
     pub solution_tree: Option<Vec<Vec<String>>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub content_tree: Option<Vec<Vec<String>>>,
+}
+
+/// One entry of a solution: an item hash, or a tile index not yet matched to its item.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum SolutionEntry {
+    Hash(String),
+    Index(JsNumber),
+}
+
+impl From<String> for SolutionEntry {
+    fn from(hash: String) -> SolutionEntry {
+        SolutionEntry::Hash(hash)
+    }
+}
+
+impl From<JsNumber> for SolutionEntry {
+    fn from(index: JsNumber) -> SolutionEntry {
+        SolutionEntry::Index(index)
+    }
 }
 
 /// A captcha's correct (or unlabelled) items: hashes, or tile indexes before hashing.

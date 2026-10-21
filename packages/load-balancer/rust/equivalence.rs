@@ -14,10 +14,10 @@
 
 //! Replays rust/equivalence/vectors.json, recorded from the TS by generate.ts.
 
-use crate::js::locale_compare;
 use crate::*;
 use prosopo_types::config::EnvironmentTypes;
 use prosopo_util_crypto::json_parse;
+use prosopo_util_crypto::locale_compare;
 use serde_json::{json, Value};
 use std::sync::{Arc, Mutex};
 
