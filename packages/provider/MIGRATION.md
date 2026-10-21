@@ -2,9 +2,16 @@
 
 The goal is a standalone Rust provider service. When it is finished, no TypeScript
 runs on the server, and the Node process that serves provider traffic has been
-switched off. Client-side code (procaptcha\*, widget-skeleton, \*-react, \*-bundle,
-detector, fingerprint, account) stays TypeScript. The one exception is WASM: see §5.
-The private repo (captcha-private, the parent of this one) is in scope: see §6.
+switched off.
+
+**Scope rule (owner):** everything in the captcha repo that is not frontend gets
+ported. The workspace is `packages/*`, `dev/*`, `demos/*` and `integration/*`, and
+§1 inventories all four. A package stays TypeScript only with evidence that it is
+frontend: a DOM or browser-API import, or a browser runtime. "Not part of the
+provider" is not a reason. Client-side code (procaptcha\*, widget-skeleton,
+\*-react, \*-bundle, detector, fingerprint, account) stays TypeScript, with the
+evidence in §2. The one exception is WASM: see §5. The private repo
+(captcha-private, the parent of this one) is in scope: see §6.
 
 Progress, failures and blocked items go in `/MIGRATION-LOG.md` at the repo root.
 This file is the plan; that file is the record.
@@ -103,6 +110,9 @@ Deps lists internal `@prosopo/*` runtime dependencies.
 | 25 | api-express-router | 8 | 574 | 9 | 2,026 | api-route, common, logger, env, locale, types, util, util-crypto |
 | 26 | provider | 140 (+3 obfuscated .js) | 27,008 | 140 | 48,580 | everything above, plus native-ja4/merkle/puzzle |
 | 27 | cli | 20 | 1,713 | 3 | 382 | api, common, logger, dotenv, env, keyring, locale, provider, types, util |
+| 28 | datasets-fs | 17 | 1,900 | 3 | 421 | common, logger, types, util, util-crypto (plus sharp, bcrypt, yargs) |
+| 29 | server | 4 | 491 | 6 | 1,513 | api, common, logger, keyring, locale, load-balancer, types, util |
+| 30 | demos/client-example-server | 6 | 774 | 5 | 1,852 | common, database, logger, dotenv, keyring, server, types, util (plus express, mongoose, jsonwebtoken) |
 
 Server-side total, not counting ofLen: ≈ 70k src lines and ≈ 96k test lines.
 
@@ -111,21 +121,39 @@ Server-side total, not counting ofLen: ≈ 70k src lines and ≈ 96k test lines.
 - *Added:* `puzzle-assets`, `audio-assets` and `icon-order-assets`. The
   provider renders puzzle backgrounds, audio challenges and icon grids on the
   server with these packages.
+- *Added by the owner's scope correction (2026-10-21):* `server`, `datasets-fs`
+  and `demos/client-example-server` (rows 28–30). The first version of this
+  plan left them out as "not part of the provider", which is not a reason
+  under the scope rule. None of them has a DOM or browser-API import. `server`
+  is the verify SDK customers run on their back ends: it signs with `Keyring`
+  and calls the provider through `ProviderApi` and `findProvider`, and its
+  tests start a `node:http` server. `datasets-fs` is a Node CLI (`node:fs`,
+  `node:os`, sharp, bcrypt, yargs). `client-example-server` is an express and
+  mongoose back end that verifies tokens with `server`.
 - *Already Rust:* `native-ja4`, `native-merkle` and `native-puzzle`. They are
   listed so the cut-over accounts for them.
-- *Dropped, client-side:*
-  - `detector`: loaded by `procaptcha-frictionless/src/detectorLoader.ts`. No
-    server package imports it.
-  - `fingerprint`: depended on only by `account` and `procaptcha-pow`.
-  - `account`: depended on only by `procaptcha-common`.
-- *Dropped, server-side but not the provider:*
-  - `server` is `@prosopo/server`, the Node SDK that *customers* run on their
-    own back ends to verify tokens. Only `demos/client-example-server` depends
-    on it. Rewriting it in Rust would break every Node integrator, and the
-    provider never loads it.
-  - `datasets-fs` is an offline dataset-building CLI. Nothing depends on it,
-    and it never serves traffic.
-  - `dev/*`, `demos/*` and `integration/*` are tooling and demos.
+- *Deleted (owner):* `demos/provider-mock`. Nothing depended on it, no CI
+  workflow ran it, and it had not changed since a release bump. Its removal
+  drops the published `prosopo/provider-mock` docker image (MIGRATION-LOG.md).
+
+**The rest of the workspace.** Every member outside rows 1–30, with the
+decision and the evidence for it.
+
+| Member | Decision | Evidence |
+|---|---|---|
+| detector | keep-as-TS | `detect(…, container: HTMLElement \| undefined, …)` (src/index.d.ts) does shadow-DOM work in the widget. Shipped prebuilt, loaded by `procaptcha-frictionless/src/detectorLoader.ts`. |
+| fingerprint | keep-as-TS | Wraps `@prosopo/fingerprintjs` (dynamic `import("@prosopo/fingerprintjs")`), which reads `window.screen`, `document` and `navigator`. |
+| fingerprintjs | keep-as-TS | Browser fingerprinting sources: `window.screen.colorDepth` (sources/color_depth.ts), local storage, fullscreen APIs. |
+| account | keep-as-TS | Depends on `@polkadot/extension-dapp` and `@polkadot/extension-inject`; `web3Enable` (extension/ExtensionWeb3.ts) talks to browser wallet extensions. |
+| procaptcha\*, widget-skeleton, procaptcha-react | keep-as-TS | The widget. Owner decision 1. |
+| procaptcha-wrapper | keep-as-TS | `render(element: HTMLElement)` and `window.procaptcha.render` (src/render/). |
+| procaptcha-bundle | keep-as-TS | The widget bundle; its tests run under jsdom. |
+| demos/client-bundle-example | keep-as-TS, unchanged | Owner ruling. A static page that loads the widget bundle. |
+| demos/cypress-shared | keep-as-TS | Cypress e2e specs that drive the widget in a browser (`cy.document()`, cypress/support/visual.ts). Frontend test tooling. Flagged for the owner: this is my reading of the rule, not a ruling. |
+| demos/android-webview, demos/ios-webview | none | Kotlin and Swift apps that host the widget in a webview. No TypeScript to port. |
+| integration/* | keep-as-TS | Owner ruling. `procaptcha-integration-build-config` is shared Vite build config for the Vue, Svelte and React wrappers (`integration/frameworks/*`, not workspace members), so frontend build tooling. |
+| dev/data | none | JSON fixtures only (`captchas.json`, `database_accounts.json`). |
+| dev/config, dev/scripts, dev/lint, dev/workspace, dev/prosoponator-bot | port, **last** | Node tooling, so in scope by the rule. But `dev/config` (rollup, vite, webpack, esbuild config) and `dev/workspace`/`dev/lint` are what build and check the TypeScript that is still live, and every port is verified by `build:tsc` of the packages it touches. Porting them while TS packages still need building would break the gate the other ports depend on. They are ported in phase 7 (§3), after the TS they build is gone. `dev/scripts` also imports `@prosopo/provider`, `cli` and `env`, so it has to move at the TS provider's cut-over at the latest. `dev/prosoponator-bot` is a GitHub Actions bot (`@actions/core`, `@actions/github`), not build tooling, but it is grouped here because it is repo tooling with no provider callers; it can move earlier if the owner prefers. |
 
 ## 2. Decision per package
 
@@ -159,8 +187,12 @@ Server-side total, not counting ofLen: ≈ 70k src lines and ≈ 96k test lines.
 | provider | port | The service itself. Ported in the endpoint order in §3. |
 | cli | port | `clap` takes over from yargs. The binary `prosopo-provider` *is* the service entry point (start, ensure_indexes, store_captchas, …). |
 | native-ja4 / native-merkle / native-puzzle | fold into rlibs | Already Rust. Each napi wrapper is deleted when its only Node caller, the TS provider, is ported (§0). |
-| server, datasets-fs | keep-as-TS | Not part of the provider (see §1). |
-| detector, fingerprint, account | keep-as-TS (client-side) | See §1. |
+| datasets-fs | port | A clap CLI over the datasets crate. sharp's resize and re-encode become the `image` crate; bcrypt becomes the `bcrypt` crate. Dataset JSON it writes is read by the provider, so it is byte-identical (§0); re-encoded image bytes are best-effort (§4.7). |
+| server | port | The verify SDK becomes a Rust crate, `prosopo-server`, on the ported api, keyring and load-balancer crates. It is about to back the verify API, so it has to be Rust. The npm package `@prosopo/server` is a published SDK that customers install; it keeps being published on the plain JS 6.0.0 line (§0) until the owner decides how Node integrators are served afterwards (MIGRATION-LOG.md). |
+| demos/client-example-server | port | axum in place of express, the `mongodb` driver in place of mongoose (§4.4), `jsonwebtoken` crate for its session JWTs, verifying through `prosopo-server`. The `prosopo/client-example-server` image is built from it, so the Dockerfile change is a deployment change for a human (§3). |
+| demos/provider-mock | delete | Owner ruling (§1). |
+| detector, fingerprint, fingerprintjs, account, procaptcha-wrapper, procaptcha-bundle | keep-as-TS (client-side) | Browser APIs; evidence in §1. |
+| dev/\* | port, last | Builds the live TS; phase 7 (§3). |
 
 ## 3. Strangler-fig order
 
@@ -218,6 +250,12 @@ mongoose, and the other way round, before its endpoint takes traffic.
    implementations disagreeing). Then the Node containers are removed, the TS
    server packages are deleted, and the native-\* napi wrappers become rlibs.
 
+7. **dev/\* tooling.** Only once no TypeScript server package is left to build:
+   dev/config, dev/workspace, dev/lint and dev/scripts are ported (or deleted
+   where they only built TS that no longer exists). Whatever still builds the
+   client TS (procaptcha\*, the WASM bundles) keeps the parts of dev/config it
+   needs; that split is decided then, with the owner.
+
 **Rollback.** At any phase, remove the path from `@rust` (or set its weight to
 0) and reload Caddy. Since both implementations read and write the same
 records, in-flight challenges minted by Rust can still be solved on Node, so
@@ -253,11 +291,22 @@ in Rust until phase 6 is complete.**
    randomised, so equivalence is shown by *cross*-verification (TS-signed
    verified in Rust and vice versa) plus deterministic derivation vectors
    (mnemonic → mini-secret → public key → SS58, and `//hard` / `/soft`
-   paths), all byte-identical. The owner also requires SS58 derivation and
-   verification to be proven against keys and signatures *already in the
-   database*. That needs an exported sample of stored records (public key,
-   SS58 address, signed payload, signature); the sample is checked in as a
-   fixture and verified by a cargo test.
+   paths), all byte-identical. No production data is used: the vectors are
+   *generated* by running the TypeScript, like every other package's.
+   - *Deterministic, compared byte for byte:* public keys from seeds,
+     mnemonics (with and without a password) and secret URIs with hard and
+     soft paths; SS58 addresses for every prefix the codebase uses; the hashes.
+   - *Randomised, never byte-compared:* sr25519 signing draws a fresh nonce,
+     so the same key and message sign differently each call. Signatures are
+     proven by cross-verification with real randomness in both directions:
+     Rust verifies signatures the TS made, and the TS verifies signatures Rust
+     made. Messages include empty and very long ones, and the fixture also
+     carries signatures that must fail (wrong key, wrong message, a flipped
+     bit, a wrong signing context, truncated). The util-crypto and keyring
+     vectors additionally replay recorded TS randomness to match bytes; that
+     checks the transcript construction, but it is not the proof of
+     signature compatibility, because production signing does not replay
+     anything.
 4. **mongoose has no Rust equivalent.** The behaviour we rely on without
    writing it down:
    - Implicit pluralised collection names (`powcaptchas`, `usercommitments`, …).
