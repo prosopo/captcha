@@ -12,6 +12,7 @@ members = [
 	"packages/util-crypto",
 	"packages/dotenv",
 	"packages/redis-client",
+	"packages/common",
 	"packages/locale",
 ]
 exclude = [

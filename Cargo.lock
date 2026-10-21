@@ -1358,6 +1358,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "prosopo-common"
+version = "6.0.0"
+dependencies = [
+ "prosopo-locale",
+ "prosopo-logger",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "prosopo-dotenv"
 version = "6.0.0"
 dependencies = [
