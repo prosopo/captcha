@@ -94,6 +94,7 @@ import {
 	evaluateEmailSpamRules,
 	normaliseEmailForMatching,
 } from "../spam/evaluateEmailSpamRules.js";
+import { BackgroundWrites } from "./backgroundWrites.js";
 import {
 	checkPowSignature,
 	isCoordsAllZero,
@@ -119,6 +120,8 @@ export type VerifyPowCaptchaSolutionResult = {
 };
 
 const DEFAULT_POW_DIFFICULTY = 4;
+
+const verifyOutcomeWrites = new BackgroundWrites(500);
 
 export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
@@ -815,11 +818,10 @@ export class PowCaptchaManager extends CaptchaManager {
 			failReason = "API.CLIENT_SESSION_MISMATCH";
 		}
 
-		// Run alongside the checks below; skipped once a check has already failed.
-		const sessionRecordRead =
-			challengeRecord.sessionId && !failResult
-				? this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
-				: Promise.resolve(undefined);
+		// Run alongside the checks below.
+		const sessionRecordRead = challengeRecord.sessionId
+			? this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
+			: Promise.resolve(undefined);
 		const enrichedDnsEventRead = sessionRecordRead.then((sessionRecord) =>
 			enrichDnsEvent(
 				sessionRecord?.dnsEvent,
@@ -1205,8 +1207,8 @@ export class PowCaptchaManager extends CaptchaManager {
 			);
 		}
 
-		// Not awaited: the claim above already made the token single-use.
-		Promise.all(writePromises).catch((err) => {
+		// Backgrounded up to a cap; the claim above already made the token single-use.
+		await verifyOutcomeWrites.add(Promise.all(writePromises), (err) => {
 			logger.error(() => ({
 				msg: "Failed to record the outcome of a PoW verification",
 				err,

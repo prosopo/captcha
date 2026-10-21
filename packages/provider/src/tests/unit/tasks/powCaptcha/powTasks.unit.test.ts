@@ -3138,7 +3138,7 @@ module.exports = (input) => {
 				expect(db.getSpamEmailDomain).not.toHaveBeenCalled();
 			});
 
-			it("does not read the session or look up the ip once recency has failed", async () => {
+			it("reads the session but does not look up the ip once recency has failed", async () => {
 				const dappAccount = "dappAccount";
 				const userAccount = "testUserAccount";
 				const challenge: PoWChallengeId = `${Date.now()}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
@@ -3166,7 +3166,9 @@ module.exports = (input) => {
 				);
 
 				expect(result.reason).toBe("API.TIMESTAMP_TOO_OLD");
-				expect(db.getSessionRecordBySessionId).not.toHaveBeenCalled();
+				expect(db.getSessionRecordBySessionId).toHaveBeenCalledWith(
+					"session-abc",
+				);
 				expect(mockEnv.ipInfoService.lookup).not.toHaveBeenCalled();
 			});
 
