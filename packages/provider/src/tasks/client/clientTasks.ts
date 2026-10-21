@@ -521,6 +521,8 @@ export class ClientTaskManager {
 				context: { id, message: "Decision machine not found" },
 			});
 		}
+		invalidateAllDecisionMachineArtifactCaches();
+		invalidateDecisionMachineScriptCache();
 		return {
 			success,
 			deletedId: id,
@@ -533,6 +535,8 @@ export class ClientTaskManager {
 	}> {
 		const deletedCount =
 			await this.providerDB.removeAllDecisionMachineArtifacts();
+		invalidateAllDecisionMachineArtifactCaches();
+		invalidateDecisionMachineScriptCache();
 		return {
 			success: true,
 			deletedCount,

@@ -22,3 +22,5 @@ export type { FetchFn, IpapiBackendConfig } from "./backends/ipapi.js";
 export { MaxMindBackend } from "./backends/maxmind.js";
 export type { MaxMindBackendConfig, OpenReader } from "./backends/maxmind.js";
 export type { IIpInfoService, IpInfoServiceConfig } from "./types.js";
+export { DEFAULT_LOOKUP_CACHE, LookupCache } from "./lookupCache.js";
+export type { LookupCacheConfig } from "./lookupCache.js";

@@ -40,6 +40,7 @@ vi.mock("@prosopo/database", () => ({
 }));
 
 vi.mock("@prosopo/ipinfo", () => ({
+	DEFAULT_LOOKUP_CACHE: { ttlMs: 0, maxEntries: 0 },
 	IpInfoService: vi.fn().mockImplementation(function () {
 		return { initialize: mockIpInfoInit };
 	}),
