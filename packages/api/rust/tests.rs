@@ -13,9 +13,9 @@
 // limitations under the License.
 
 //! Ports of the server-side cases in src/tests/*.unit.test.ts, one test each. Not ported,
-//! because the code they cover stays TS in the widget or the server SDK: `postWithHeaders`
-//! (only the widget's frictionless call uses it), and every `ProviderApi` method but
-//! `forwardVerify` and `registerSiteKey`. "A caller's own abort signal still works alongside
+//! because the code they cover stays TS in the widget: `postWithHeaders` (only the widget's
+//! frictionless call uses it), and every `ProviderApi` method but `forwardVerify`,
+//! `registerSiteKey` and the server SDK's verify calls. "A caller's own abort signal still works alongside
 //! the timeout" has no counterpart: a Rust caller cancels by dropping the future.
 
 use crate::*;
@@ -641,6 +641,132 @@ mod forward_verify {
             .await
             .expect("responds");
         assert_eq!(stub.body(), forwarded);
+    }
+}
+
+mod verify {
+    use super::*;
+    use prosopo_types::JsNumber;
+
+    fn api(stub: &Stub) -> ProviderApi {
+        ProviderApi::new(BASE_URL, SITE_KEY, stub.options(Vec::new()))
+    }
+
+    fn request<'a>(ip: Option<&'a str>, email: Option<&'a str>) -> VerifyRequest<'a> {
+        VerifyRequest {
+            token: "token",
+            dapp_signature: "0xsig",
+            user: USER,
+            ip,
+            email,
+            client_session_id: None,
+        }
+    }
+
+    fn url(path: ClientApiPaths) -> String {
+        format!("{BASE_URL}{}", path.as_str())
+    }
+
+    #[tokio::test]
+    async fn dapp_user_posts_the_token_signature_and_ip() {
+        let stub = Stub::new();
+        api(&stub)
+            .verify_dapp_user(&request(Some("1.2.3.4"), None), None)
+            .await
+            .expect("responds");
+        assert_eq!(
+            stub.last().url,
+            url(ClientApiPaths::VerifyImageCaptchaSolutionDapp)
+        );
+        assert_eq!(
+            stub.body(),
+            json!({ "token": "token", "dappSignature": "0xsig", "ip": "1.2.3.4" })
+        );
+    }
+
+    #[tokio::test]
+    async fn dapp_user_includes_max_verified_time_and_email_when_given() {
+        let stub = Stub::new();
+        api(&stub)
+            .verify_dapp_user(
+                &request(Some("1.2.3.4"), Some("user@example.com")),
+                Some(JsNumber::from(60_000.0)),
+            )
+            .await
+            .expect("responds");
+        assert_eq!(stub.body()["maxVerifiedTime"], json!(60_000));
+        assert_eq!(stub.body()["email"], json!("user@example.com"));
+    }
+
+    #[tokio::test]
+    async fn a_zero_max_verified_time_is_dropped_so_the_provider_applies_its_default() {
+        let stub = Stub::new();
+        api(&stub)
+            .verify_dapp_user(&request(None, None), Some(JsNumber::from(0.0)))
+            .await
+            .expect("responds");
+        assert!(stub.body().get("maxVerifiedTime").is_none());
+    }
+
+    #[tokio::test]
+    async fn an_omitted_ip_is_sent_as_undefined_rather_than_a_placeholder() {
+        let stub = Stub::new();
+        api(&stub)
+            .verify_dapp_user(&request(None, None), None)
+            .await
+            .expect("responds");
+        assert!(stub.body().get("ip").is_none());
+    }
+
+    #[tokio::test]
+    async fn verifies_a_puzzle_token_with_the_email_only_when_supplied() {
+        let stub = Stub::new();
+        api(&stub)
+            .submit_puzzle_captcha_verify(&request(Some("1.2.3.4"), None))
+            .await
+            .expect("responds");
+        assert_eq!(
+            stub.last().url,
+            url(ClientApiPaths::VerifyPuzzleCaptchaSolution)
+        );
+        assert!(stub.body().get("email").is_none());
+        api(&stub)
+            .submit_puzzle_captcha_verify(&request(Some("1.2.3.4"), Some("user@example.com")))
+            .await
+            .expect("responds");
+        assert_eq!(stub.body()["email"], json!("user@example.com"));
+    }
+
+    #[tokio::test]
+    async fn pow_posts_the_token_and_signature() {
+        let stub = Stub::new();
+        api(&stub)
+            .submit_pow_captcha_verify(&request(Some("1.2.3.4"), None))
+            .await
+            .expect("responds");
+        assert_eq!(
+            stub.last().url,
+            url(ClientApiPaths::VerifyPowCaptchaSolution)
+        );
+        assert_eq!(
+            stub.body(),
+            json!({ "token": "token", "dappSignature": "0xsig", "ip": "1.2.3.4" })
+        );
+    }
+
+    #[tokio::test]
+    async fn pow_adds_the_email_only_when_one_is_supplied() {
+        let stub = Stub::new();
+        api(&stub)
+            .submit_pow_captcha_verify(&request(None, None))
+            .await
+            .expect("responds");
+        assert!(stub.body().get("email").is_none());
+        api(&stub)
+            .submit_pow_captcha_verify(&request(None, Some("user@example.com")))
+            .await
+            .expect("responds");
+        assert_eq!(stub.body()["email"], json!("user@example.com"));
     }
 }
 

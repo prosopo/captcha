@@ -57,7 +57,10 @@ type CallSpec =
 	| { op: "fetch"; input: string; init?: Init }
 	| { op: "post"; input: string; body?: Json; init?: Init }
 	| { op: "forwardVerify"; path: string; body: Json; user: string }
-	| { op: "registerSiteKey"; siteKey: string; tier: string; settings: Json; jwt: string };
+	| { op: "registerSiteKey"; siteKey: string; tier: string; settings: Json; jwt: string }
+	| { op: VerifyOp; token: string; signature: string; user: string; maxVerifiedTime?: number; ip?: string; email?: string; clientSessionId?: string };
+type VerifyOp = "verifyDappUser" | "submitPowCaptchaVerify" | "submitPuzzleCaptchaVerify" | "submitIconOrderCaptchaVerify" | "submitAudioCaptchaVerify" | "submitAuthenticatedCaptchaVerify";
+const VERIFY_OPS: VerifyOp[] = ["verifyDappUser", "submitPowCaptchaVerify", "submitPuzzleCaptchaVerify", "submitIconOrderCaptchaVerify", "submitAudioCaptchaVerify", "submitAuthenticatedCaptchaVerify"];
 type ResponseSpec = { status: number; statusText: string; contentType?: string; body: string } | { networkError: string };
 
 const ok = (body: Json): ResponseSpec => ({ status: 200, statusText: "OK", contentType: "application/json", body: JSON.stringify(body) });
@@ -113,6 +116,14 @@ const SCENARIOS: { label: string; client: ClientSpec; call: CallSpec; response: 
 	{ label: "forward verify to a hostname", client: { kind: "providerApi", baseUrl: "pronode2.prosopo.io", account: "5site" }, call: { op: "forwardVerify", path: ClientApiPaths.VerifyPowCaptchaSolution, body: {}, user: "5user" }, response: ok({}) },
 	{ label: "register site key", client: providerApi, call: { op: "registerSiteKey", siteKey: "5new", tier: "professional", settings, jwt: "a.b.c" }, response: ok({ status: "ok" }) },
 	{ label: "register site key 401", client: providerApi, call: { op: "registerSiteKey", siteKey: "5new", tier: "free", settings, jwt: "a.b.c" }, response: { status: 401, statusText: "Unauthorized", contentType: "text/plain", body: "Unauthorized" } },
+	...VERIFY_OPS.flatMap((op: VerifyOp) => [
+		{ label: `${op} with everything`, client: providerApi, call: { op, token: "tok", signature: "0xsig", user: "5user", maxVerifiedTime: 60000, ip: "1.2.3.4", email: "a@b.c", clientSessionId: "sess" }, response: ok({ status: "ok", verified: true, score: 0.25 }) },
+		{ label: `${op} with nothing optional`, client: providerApi, call: { op, token: "tok", signature: "0xsig", user: "5user" }, response: ok({ status: "ok", verified: false }) },
+		{ label: `${op} with falsy optionals`, client: providerApi, call: { op, token: "tok", signature: "0xsig", user: "5user", maxVerifiedTime: 0, ip: "", email: "", clientSessionId: "" }, response: ok({ verified: true }) },
+		{ label: `${op} with a fractional max verified time`, client: providerApi, call: { op, token: "tok", signature: "0xsig", user: "5user", maxVerifiedTime: 1.5, ip: "::1" }, response: ok({ verified: true }) },
+		{ label: `${op} error`, client: providerApi, call: { op, token: "tok", signature: "0xsig", user: "5user", ip: "1.2.3.4" }, response: { status: 400, statusText: "Bad Request", contentType: "application/json", body: '{"error":{"message":"bad","code":400}}' } },
+		{ label: `${op} network failure`, client: { ...providerApi, defaultHeaders: { "X-D": "d" } }, call: { op, token: "tok", signature: "0xsig", user: "5user" }, response: { networkError: "fetch failed" } },
+	]),
 ];
 
 const recorded: Json[] = [];
@@ -148,6 +159,8 @@ for (const scenario of SCENARIOS) {
 			const client = new ProviderApi(spec.baseUrl, spec.account ?? "", spec.timeoutMs, spec.defaultHeaders);
 			if (call.op === "forwardVerify") result = await client.forwardVerify(call.path as ClientApiPaths, call.body as object, call.user);
 			else if (call.op === "registerSiteKey") result = await client.registerSiteKey(call.siteKey, call.tier as Tier, call.settings as never, call.jwt);
+			else if (call.op === "verifyDappUser") result = await client.verifyDappUser(call.token as never, call.signature, call.user, call.maxVerifiedTime, call.ip, call.email, call.clientSessionId);
+			else if (call.op !== "fetch" && call.op !== "post" && call.op !== "forwardVerify") result = await client[call.op](call.token, call.signature, call.user, call.ip, call.email, call.clientSessionId);
 		}
 		outcome = { result: result as Json };
 	} catch (e) {

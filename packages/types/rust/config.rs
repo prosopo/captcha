@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! The server-side config schemas of config/config.ts and config/frictionless.ts, which the
-//! cli parses the provider's configuration with. The widget's `ProcaptchaConfigSchema` and
-//! the SDK's `ProsopoServerConfigSchema` have no Rust caller and stay TS.
+//! The server-side config schemas of config/config.ts and config/frictionless.ts: the
+//! provider's configuration, which the cli parses, and the server SDK's. The widget's
+//! `ProcaptchaConfigSchema` has no Rust caller and stays TS.
 
-use crate::wire_enum::wire_enum;
 use crate::provider_api::{
     api_path_rate_limits_schema, prosopo_captcha_count_config_schema, DEFAULT_SOLVED_COUNT,
     DEFAULT_UNSOLVED_COUNT, PROVIDER_DEFAULT_RATE_LIMITS,
 };
+use crate::timeouts::*;
+use crate::wire_enum::wire_enum;
 use prosopo_api_route::schema::{
-    array, number, object, record, record_with_keys, string, string_enum, Schema,
+    array, boolean, number, object, record, record_with_keys, string, string_enum, Schema,
 };
 use serde_json::{json, Map, Value};
 
@@ -155,6 +156,158 @@ pub fn prosopo_captcha_solution_config_schema() -> Schema {
 /// `IpApiServiceSpec`.
 pub fn ip_api_service_schema() -> Schema {
     object(vec![("apiKey", string()), ("baseUrl", string().url())])
+}
+
+/// `ProsopoClientConfigSchema`.
+pub fn prosopo_client_config_schema() -> Schema {
+    prosopo_basic_config_schema().merge(&object(vec![
+        ("userAccountAddress", string().optional()),
+        ("web2", boolean().optional().default(true)),
+        (
+            "solutionThreshold",
+            number().positive().max(100.0).optional().default(80),
+        ),
+        ("dappName", string().optional().default("ProsopoClientDapp")),
+        ("serverUrl", string().optional()),
+    ]))
+}
+
+fn timeout(default: u64) -> Schema {
+    number().positive().optional().default(default)
+}
+
+/// The defaults the TS passes to each `.default()`. The pow one names `challengeTimeout`,
+/// not `verifiedTimeout`, so parsing it strips that and fills `verifiedTimeout` in.
+fn default_captcha_timeouts() -> Value {
+    json!({
+        "image": {
+            "challengeTimeout": DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
+            "solutionTimeout": DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
+            "verifiedTimeout": DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT,
+            "cachedTimeout": DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
+        },
+        "pow": {
+            "challengeTimeout": DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+            "solutionTimeout": DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+            "cachedTimeout": DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
+        },
+        "puzzle": {
+            "verifiedTimeout": DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT,
+            "solutionTimeout": DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT,
+            "cachedTimeout": DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT,
+        },
+        "audio": {
+            "verifiedTimeout": DEFAULT_AUDIO_CAPTCHA_VERIFIED_TIMEOUT,
+            "solutionTimeout": DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT,
+            "cachedTimeout": DEFAULT_AUDIO_CAPTCHA_CACHED_TIMEOUT,
+        },
+        "iconOrder": {
+            "verifiedTimeout": DEFAULT_ICON_ORDER_CAPTCHA_VERIFIED_TIMEOUT,
+            "solutionTimeout": DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT,
+            "cachedTimeout": DEFAULT_ICON_ORDER_CAPTCHA_CACHED_TIMEOUT,
+        },
+        "contract": { "maxVerifiedTime": DEFAULT_MAX_VERIFIED_TIME_CONTRACT },
+    })
+}
+
+/// `CaptchaTimeoutSchema`.
+pub fn captcha_timeout_schema() -> Schema {
+    let defaults: Value = default_captcha_timeouts();
+    let verified_solution_cached = |kind: &str, verified: u64, solution: u64, cached: u64| {
+        object(vec![
+            ("verifiedTimeout", timeout(verified)),
+            ("solutionTimeout", timeout(solution)),
+            ("cachedTimeout", timeout(cached)),
+        ])
+        .default(defaults[kind].clone())
+    };
+    object(vec![
+        (
+            "image",
+            object(vec![
+                ("challengeTimeout", timeout(DEFAULT_IMAGE_CAPTCHA_TIMEOUT)),
+                (
+                    "solutionTimeout",
+                    timeout(DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT),
+                ),
+                (
+                    "verifiedTimeout",
+                    timeout(DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT),
+                ),
+                (
+                    "cachedTimeout",
+                    timeout(DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED),
+                ),
+            ])
+            .default(defaults["image"].clone()),
+        ),
+        (
+            "pow",
+            verified_solution_cached(
+                "pow",
+                DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+                DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+                DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
+            ),
+        ),
+        (
+            "puzzle",
+            verified_solution_cached(
+                "puzzle",
+                DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT,
+                DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT,
+                DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT,
+            ),
+        ),
+        (
+            "audio",
+            verified_solution_cached(
+                "audio",
+                DEFAULT_AUDIO_CAPTCHA_VERIFIED_TIMEOUT,
+                DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT,
+                DEFAULT_AUDIO_CAPTCHA_CACHED_TIMEOUT,
+            ),
+        ),
+        (
+            "iconOrder",
+            verified_solution_cached(
+                "iconOrder",
+                DEFAULT_ICON_ORDER_CAPTCHA_VERIFIED_TIMEOUT,
+                DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT,
+                DEFAULT_ICON_ORDER_CAPTCHA_CACHED_TIMEOUT,
+            ),
+        ),
+        (
+            "contract",
+            object(vec![(
+                "maxVerifiedTime",
+                timeout(DEFAULT_MAX_VERIFIED_TIME_CONTRACT),
+            )])
+            .default(defaults["contract"].clone()),
+        ),
+    ])
+    .default(defaults)
+}
+
+/// `ProsopoServerConfigSchema`: the server SDK's configuration.
+pub fn prosopo_server_config_schema() -> Schema {
+    prosopo_client_config_schema().merge(&object(vec![
+        ("serverUrl", string().url().optional()),
+        (
+            "timeouts",
+            captcha_timeout_schema()
+                .optional()
+                .default(default_captcha_timeouts()),
+        ),
+        (
+            "providerRequestTimeoutMs",
+            number()
+                .int()
+                .positive()
+                .optional()
+                .default(DEFAULT_PROVIDER_REQUEST_TIMEOUT_MS),
+        ),
+    ]))
 }
 
 fn schedule() -> Schema {
@@ -359,4 +512,60 @@ pub struct CaptchaSolutionConfig {
     pub required_number_of_solutions: crate::JsNumber,
     pub solution_winning_percentage: crate::JsNumber,
     pub captcha_block_recency: crate::JsNumber,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImageCaptchaTimeouts {
+    pub challenge_timeout: crate::JsNumber,
+    pub solution_timeout: crate::JsNumber,
+    pub verified_timeout: crate::JsNumber,
+    pub cached_timeout: crate::JsNumber,
+}
+
+/// The timeouts of every captcha type but image.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaptchaTimeouts {
+    pub verified_timeout: crate::JsNumber,
+    pub solution_timeout: crate::JsNumber,
+    pub cached_timeout: crate::JsNumber,
+}
+
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ContractTimeouts {
+    pub max_verified_time: crate::JsNumber,
+}
+
+/// `CaptchaTimeoutOutput`.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaptchaTimeoutConfig {
+    pub image: ImageCaptchaTimeouts,
+    pub pow: CaptchaTimeouts,
+    pub puzzle: CaptchaTimeouts,
+    pub audio: CaptchaTimeouts,
+    pub icon_order: CaptchaTimeouts,
+    pub contract: ContractTimeouts,
+}
+
+/// `ProsopoServerConfigOutput`.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProsopoServerConfig {
+    pub log_level: String,
+    pub default_environment: String,
+    pub account: AccountConfig,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub database: Option<indexmap::IndexMap<String, DatabaseConfig>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub user_account_address: Option<String>,
+    pub web2: bool,
+    pub solution_threshold: crate::JsNumber,
+    pub dapp_name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub server_url: Option<String>,
+    pub timeouts: CaptchaTimeoutConfig,
+    pub provider_request_timeout_ms: crate::JsNumber,
 }

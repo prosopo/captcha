@@ -1594,6 +1594,1710 @@
 			],
 			"error": "HTTP error! status: 401 (Unauthorized) for URL: https://provider.prosopo.io/v1/prosopo/provider/admin/sitekey/register",
 			"name": "HttpError"
+		},
+		{
+			"label": "verifyDappUser with everything",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "verifyDappUser",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 60000,
+				"ip": "1.2.3.4",
+				"email": "a@b.c",
+				"clientSessionId": "sess"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"status\":\"ok\",\"verified\":true,\"score\":0.25}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/image/dapp/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"1.2.3.4\",\"maxVerifiedTime\":60000,\"email\":\"a@b.c\",\"clientSessionId\":\"sess\"}"
+				}
+			],
+			"result": {
+				"status": "ok",
+				"verified": true,
+				"score": 0.25
+			}
+		},
+		{
+			"label": "verifyDappUser with nothing optional",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "verifyDappUser",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"status\":\"ok\",\"verified\":false}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/image/dapp/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\"}"
+				}
+			],
+			"result": {
+				"status": "ok",
+				"verified": false
+			}
+		},
+		{
+			"label": "verifyDappUser with falsy optionals",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "verifyDappUser",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 0,
+				"ip": "",
+				"email": "",
+				"clientSessionId": ""
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"verified\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/image/dapp/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"\"}"
+				}
+			],
+			"result": {
+				"verified": true
+			}
+		},
+		{
+			"label": "verifyDappUser with a fractional max verified time",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "verifyDappUser",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 1.5,
+				"ip": "::1"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"verified\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/image/dapp/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"::1\",\"maxVerifiedTime\":1.5}"
+				}
+			],
+			"result": {
+				"verified": true
+			}
+		},
+		{
+			"label": "verifyDappUser error",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "verifyDappUser",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"ip": "1.2.3.4"
+			},
+			"response": {
+				"status": 400,
+				"statusText": "Bad Request",
+				"contentType": "application/json",
+				"body": "{\"error\":{\"message\":\"bad\",\"code\":400}}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/image/dapp/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"1.2.3.4\"}"
+				}
+			],
+			"result": {
+				"error": {
+					"message": "bad",
+					"code": 400
+				}
+			}
+		},
+		{
+			"label": "verifyDappUser network failure",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site",
+				"defaultHeaders": {
+					"X-D": "d"
+				}
+			},
+			"call": {
+				"op": "verifyDappUser",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user"
+			},
+			"response": {
+				"networkError": "fetch failed"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/image/dapp/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"X-D",
+							"d"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\"}"
+				}
+			],
+			"error": "fetch failed",
+			"name": "TypeError"
+		},
+		{
+			"label": "submitPowCaptchaVerify with everything",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitPowCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 60000,
+				"ip": "1.2.3.4",
+				"email": "a@b.c",
+				"clientSessionId": "sess"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"status\":\"ok\",\"verified\":true,\"score\":0.25}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/pow/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"1.2.3.4\",\"email\":\"a@b.c\",\"clientSessionId\":\"sess\"}"
+				}
+			],
+			"result": {
+				"status": "ok",
+				"verified": true,
+				"score": 0.25
+			}
+		},
+		{
+			"label": "submitPowCaptchaVerify with nothing optional",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitPowCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"status\":\"ok\",\"verified\":false}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/pow/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\"}"
+				}
+			],
+			"result": {
+				"status": "ok",
+				"verified": false
+			}
+		},
+		{
+			"label": "submitPowCaptchaVerify with falsy optionals",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitPowCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 0,
+				"ip": "",
+				"email": "",
+				"clientSessionId": ""
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"verified\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/pow/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"\"}"
+				}
+			],
+			"result": {
+				"verified": true
+			}
+		},
+		{
+			"label": "submitPowCaptchaVerify with a fractional max verified time",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitPowCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 1.5,
+				"ip": "::1"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"verified\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/pow/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"::1\"}"
+				}
+			],
+			"result": {
+				"verified": true
+			}
+		},
+		{
+			"label": "submitPowCaptchaVerify error",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitPowCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"ip": "1.2.3.4"
+			},
+			"response": {
+				"status": 400,
+				"statusText": "Bad Request",
+				"contentType": "application/json",
+				"body": "{\"error\":{\"message\":\"bad\",\"code\":400}}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/pow/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"1.2.3.4\"}"
+				}
+			],
+			"result": {
+				"error": {
+					"message": "bad",
+					"code": 400
+				}
+			}
+		},
+		{
+			"label": "submitPowCaptchaVerify network failure",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site",
+				"defaultHeaders": {
+					"X-D": "d"
+				}
+			},
+			"call": {
+				"op": "submitPowCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user"
+			},
+			"response": {
+				"networkError": "fetch failed"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/pow/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"X-D",
+							"d"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\"}"
+				}
+			],
+			"error": "fetch failed",
+			"name": "TypeError"
+		},
+		{
+			"label": "submitPuzzleCaptchaVerify with everything",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitPuzzleCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 60000,
+				"ip": "1.2.3.4",
+				"email": "a@b.c",
+				"clientSessionId": "sess"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"status\":\"ok\",\"verified\":true,\"score\":0.25}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/puzzle/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"1.2.3.4\",\"email\":\"a@b.c\",\"clientSessionId\":\"sess\"}"
+				}
+			],
+			"result": {
+				"status": "ok",
+				"verified": true,
+				"score": 0.25
+			}
+		},
+		{
+			"label": "submitPuzzleCaptchaVerify with nothing optional",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitPuzzleCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"status\":\"ok\",\"verified\":false}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/puzzle/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\"}"
+				}
+			],
+			"result": {
+				"status": "ok",
+				"verified": false
+			}
+		},
+		{
+			"label": "submitPuzzleCaptchaVerify with falsy optionals",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitPuzzleCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 0,
+				"ip": "",
+				"email": "",
+				"clientSessionId": ""
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"verified\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/puzzle/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"\"}"
+				}
+			],
+			"result": {
+				"verified": true
+			}
+		},
+		{
+			"label": "submitPuzzleCaptchaVerify with a fractional max verified time",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitPuzzleCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 1.5,
+				"ip": "::1"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"verified\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/puzzle/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"::1\"}"
+				}
+			],
+			"result": {
+				"verified": true
+			}
+		},
+		{
+			"label": "submitPuzzleCaptchaVerify error",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitPuzzleCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"ip": "1.2.3.4"
+			},
+			"response": {
+				"status": 400,
+				"statusText": "Bad Request",
+				"contentType": "application/json",
+				"body": "{\"error\":{\"message\":\"bad\",\"code\":400}}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/puzzle/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"1.2.3.4\"}"
+				}
+			],
+			"result": {
+				"error": {
+					"message": "bad",
+					"code": 400
+				}
+			}
+		},
+		{
+			"label": "submitPuzzleCaptchaVerify network failure",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site",
+				"defaultHeaders": {
+					"X-D": "d"
+				}
+			},
+			"call": {
+				"op": "submitPuzzleCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user"
+			},
+			"response": {
+				"networkError": "fetch failed"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/puzzle/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"X-D",
+							"d"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\"}"
+				}
+			],
+			"error": "fetch failed",
+			"name": "TypeError"
+		},
+		{
+			"label": "submitIconOrderCaptchaVerify with everything",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitIconOrderCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 60000,
+				"ip": "1.2.3.4",
+				"email": "a@b.c",
+				"clientSessionId": "sess"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"status\":\"ok\",\"verified\":true,\"score\":0.25}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/icon-order/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"1.2.3.4\",\"email\":\"a@b.c\",\"clientSessionId\":\"sess\"}"
+				}
+			],
+			"result": {
+				"status": "ok",
+				"verified": true,
+				"score": 0.25
+			}
+		},
+		{
+			"label": "submitIconOrderCaptchaVerify with nothing optional",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitIconOrderCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"status\":\"ok\",\"verified\":false}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/icon-order/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\"}"
+				}
+			],
+			"result": {
+				"status": "ok",
+				"verified": false
+			}
+		},
+		{
+			"label": "submitIconOrderCaptchaVerify with falsy optionals",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitIconOrderCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 0,
+				"ip": "",
+				"email": "",
+				"clientSessionId": ""
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"verified\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/icon-order/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"\"}"
+				}
+			],
+			"result": {
+				"verified": true
+			}
+		},
+		{
+			"label": "submitIconOrderCaptchaVerify with a fractional max verified time",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitIconOrderCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 1.5,
+				"ip": "::1"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"verified\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/icon-order/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"::1\"}"
+				}
+			],
+			"result": {
+				"verified": true
+			}
+		},
+		{
+			"label": "submitIconOrderCaptchaVerify error",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitIconOrderCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"ip": "1.2.3.4"
+			},
+			"response": {
+				"status": 400,
+				"statusText": "Bad Request",
+				"contentType": "application/json",
+				"body": "{\"error\":{\"message\":\"bad\",\"code\":400}}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/icon-order/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"1.2.3.4\"}"
+				}
+			],
+			"result": {
+				"error": {
+					"message": "bad",
+					"code": 400
+				}
+			}
+		},
+		{
+			"label": "submitIconOrderCaptchaVerify network failure",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site",
+				"defaultHeaders": {
+					"X-D": "d"
+				}
+			},
+			"call": {
+				"op": "submitIconOrderCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user"
+			},
+			"response": {
+				"networkError": "fetch failed"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/icon-order/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"X-D",
+							"d"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\"}"
+				}
+			],
+			"error": "fetch failed",
+			"name": "TypeError"
+		},
+		{
+			"label": "submitAudioCaptchaVerify with everything",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitAudioCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 60000,
+				"ip": "1.2.3.4",
+				"email": "a@b.c",
+				"clientSessionId": "sess"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"status\":\"ok\",\"verified\":true,\"score\":0.25}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/audio/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"1.2.3.4\",\"email\":\"a@b.c\",\"clientSessionId\":\"sess\"}"
+				}
+			],
+			"result": {
+				"status": "ok",
+				"verified": true,
+				"score": 0.25
+			}
+		},
+		{
+			"label": "submitAudioCaptchaVerify with nothing optional",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitAudioCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"status\":\"ok\",\"verified\":false}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/audio/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\"}"
+				}
+			],
+			"result": {
+				"status": "ok",
+				"verified": false
+			}
+		},
+		{
+			"label": "submitAudioCaptchaVerify with falsy optionals",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitAudioCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 0,
+				"ip": "",
+				"email": "",
+				"clientSessionId": ""
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"verified\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/audio/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"\"}"
+				}
+			],
+			"result": {
+				"verified": true
+			}
+		},
+		{
+			"label": "submitAudioCaptchaVerify with a fractional max verified time",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitAudioCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 1.5,
+				"ip": "::1"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"verified\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/audio/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"::1\"}"
+				}
+			],
+			"result": {
+				"verified": true
+			}
+		},
+		{
+			"label": "submitAudioCaptchaVerify error",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitAudioCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"ip": "1.2.3.4"
+			},
+			"response": {
+				"status": 400,
+				"statusText": "Bad Request",
+				"contentType": "application/json",
+				"body": "{\"error\":{\"message\":\"bad\",\"code\":400}}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/audio/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"1.2.3.4\"}"
+				}
+			],
+			"result": {
+				"error": {
+					"message": "bad",
+					"code": 400
+				}
+			}
+		},
+		{
+			"label": "submitAudioCaptchaVerify network failure",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site",
+				"defaultHeaders": {
+					"X-D": "d"
+				}
+			},
+			"call": {
+				"op": "submitAudioCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user"
+			},
+			"response": {
+				"networkError": "fetch failed"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/audio/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"X-D",
+							"d"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\"}"
+				}
+			],
+			"error": "fetch failed",
+			"name": "TypeError"
+		},
+		{
+			"label": "submitAuthenticatedCaptchaVerify with everything",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitAuthenticatedCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 60000,
+				"ip": "1.2.3.4",
+				"email": "a@b.c",
+				"clientSessionId": "sess"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"status\":\"ok\",\"verified\":true,\"score\":0.25}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/authenticated/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"1.2.3.4\",\"email\":\"a@b.c\",\"clientSessionId\":\"sess\"}"
+				}
+			],
+			"result": {
+				"status": "ok",
+				"verified": true,
+				"score": 0.25
+			}
+		},
+		{
+			"label": "submitAuthenticatedCaptchaVerify with nothing optional",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitAuthenticatedCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"status\":\"ok\",\"verified\":false}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/authenticated/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\"}"
+				}
+			],
+			"result": {
+				"status": "ok",
+				"verified": false
+			}
+		},
+		{
+			"label": "submitAuthenticatedCaptchaVerify with falsy optionals",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitAuthenticatedCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 0,
+				"ip": "",
+				"email": "",
+				"clientSessionId": ""
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"verified\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/authenticated/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"\"}"
+				}
+			],
+			"result": {
+				"verified": true
+			}
+		},
+		{
+			"label": "submitAuthenticatedCaptchaVerify with a fractional max verified time",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitAuthenticatedCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"maxVerifiedTime": 1.5,
+				"ip": "::1"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"verified\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/authenticated/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"::1\"}"
+				}
+			],
+			"result": {
+				"verified": true
+			}
+		},
+		{
+			"label": "submitAuthenticatedCaptchaVerify error",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "submitAuthenticatedCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user",
+				"ip": "1.2.3.4"
+			},
+			"response": {
+				"status": 400,
+				"statusText": "Bad Request",
+				"contentType": "application/json",
+				"body": "{\"error\":{\"message\":\"bad\",\"code\":400}}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/authenticated/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\",\"ip\":\"1.2.3.4\"}"
+				}
+			],
+			"result": {
+				"error": {
+					"message": "bad",
+					"code": 400
+				}
+			}
+		},
+		{
+			"label": "submitAuthenticatedCaptchaVerify network failure",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site",
+				"defaultHeaders": {
+					"X-D": "d"
+				}
+			},
+			"call": {
+				"op": "submitAuthenticatedCaptchaVerify",
+				"token": "tok",
+				"signature": "0xsig",
+				"user": "5user"
+			},
+			"response": {
+				"networkError": "fetch failed"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/authenticated/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"X-D",
+							"d"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						]
+					],
+					"body": "{\"token\":\"tok\",\"dappSignature\":\"0xsig\"}"
+				}
+			],
+			"error": "fetch failed",
+			"name": "TypeError"
 		}
 	]
 }

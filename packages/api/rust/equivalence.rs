@@ -19,6 +19,7 @@ use crate::*;
 use prosopo_types::client::Tier;
 use prosopo_types::provider_api::ClientApiPaths;
 use prosopo_types::settings_types::UserSettings;
+use prosopo_types::JsNumber;
 use serde_json::{json, Value};
 use std::sync::{Arc, Mutex};
 
@@ -142,6 +143,37 @@ async fn run(
                     text(field(call, "jwt")),
                 )
                 .await
+        }
+        ("providerApi", op) => {
+            let optional = |key: &str| call.get(key).and_then(Value::as_str);
+            let request: VerifyRequest = VerifyRequest {
+                token: text(field(call, "token")),
+                dapp_signature: text(field(call, "signature")),
+                user: text(field(call, "user")),
+                ip: optional("ip"),
+                email: optional("email"),
+                client_session_id: optional("clientSessionId"),
+            };
+            let api: ProviderApi = ProviderApi::new(base_url, account, options);
+            match op {
+                "verifyDappUser" => {
+                    let max_verified_time: Option<JsNumber> = call
+                        .get("maxVerifiedTime")
+                        .and_then(Value::as_f64)
+                        .map(JsNumber::from);
+                    api.verify_dapp_user(&request, max_verified_time).await
+                }
+                "submitPowCaptchaVerify" => api.submit_pow_captcha_verify(&request).await,
+                "submitPuzzleCaptchaVerify" => api.submit_puzzle_captcha_verify(&request).await,
+                "submitIconOrderCaptchaVerify" => {
+                    api.submit_icon_order_captcha_verify(&request).await
+                }
+                "submitAudioCaptchaVerify" => api.submit_audio_captcha_verify(&request).await,
+                "submitAuthenticatedCaptchaVerify" => {
+                    api.submit_authenticated_captcha_verify(&request).await
+                }
+                op => panic!("no providerApi {op} call"),
+            }
         }
         (kind, op) => panic!("no {kind} {op} call"),
     }

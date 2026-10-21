@@ -90,6 +90,26 @@ const full: { [key: string]: Json } = {
 	dnsServers: ["1.1.1.1"],
 };
 
+const clientFull: { [key: string]: Json } = {
+	logLevel: "warn",
+	defaultEnvironment: "development",
+	account: { address: "5C7b", secret: "//Alice" },
+	userAccountAddress: "5Dapp",
+	web2: false,
+	solutionThreshold: 50,
+	dappName: "dapp",
+	serverUrl: "https://site.example",
+};
+
+const timeoutsFull: { [key: string]: Json } = {
+	image: { challengeTimeout: 1, solutionTimeout: 2, verifiedTimeout: 3, cachedTimeout: 4 },
+	pow: { verifiedTimeout: 5, solutionTimeout: 6, cachedTimeout: 7 },
+	puzzle: { verifiedTimeout: 8, solutionTimeout: 9, cachedTimeout: 10 },
+	audio: { verifiedTimeout: 11, solutionTimeout: 12, cachedTimeout: 13 },
+	iconOrder: { verifiedTimeout: 14, solutionTimeout: 15, cachedTimeout: 16 },
+	contract: { maxVerifiedTime: 17 },
+};
+
 const SCHEMAS: [string, ZodTypeAny, Json[]][] = [
 	["frictionlessPenalties", frictionless.FrictionlessPenalties, [{}, { PENALTY_WEBVIEW: 0 }, ...variants({ PENALTY_OLD_TIMESTAMP: 1, PENALTY_ACCESS_RULE: 2, PENALTY_UNVERIFIED_HOST: 3, PENALTY_WEBVIEW: 4 })]],
 	["databaseTypes", config.DatabaseTypes, ["mongo", "mongoMemory", "provider", "client", "captcha", "postgres"]],
@@ -101,6 +121,33 @@ const SCHEMAS: [string, ZodTypeAny, Json[]][] = [
 	["prosopoApiConfig", config.ProsopoApiConfigSchema, [{ baseURL: "http://localhost" }, { baseURL: "not a url" }, { baseURL: "https://x", port: "80" }]],
 	["prosopoCaptchaSolutionConfig", config.ProsopoCaptchaSolutionConfigSchema, [...variants({ requiredNumberOfSolutions: 3, solutionWinningPercentage: 80, captchaBlockRecency: 10 }), { requiredNumberOfSolutions: 1, solutionWinningPercentage: 101, captchaBlockRecency: 1 }]],
 	["ipApiService", config.IpApiServiceSpec, variants({ apiKey: "k", baseUrl: "https://x" })],
+	["prosopoClientConfig", config.ProsopoClientConfigSchema, [{ account: {} }, ...variants(clientFull), { account: {}, solutionThreshold: 101 }, { account: {}, solutionThreshold: 0 }]],
+	[
+		"captchaTimeout",
+		config.CaptchaTimeoutSchema,
+		[
+			...variants(timeoutsFull),
+			{ pow: {} },
+			{ pow: { challengeTimeout: 1 } },
+			{ image: { challengeTimeout: -1 } },
+			{ contract: { maxVerifiedTime: 0 } },
+			{ iconOrder: { verifiedTimeout: 1.5 } },
+		],
+	],
+	[
+		"prosopoServerConfig",
+		config.ProsopoServerConfigSchema,
+		[
+			{ account: {} },
+			...variants({ ...clientFull, timeouts: timeoutsFull, providerRequestTimeoutMs: 2500 }),
+			{ account: {}, serverUrl: "not a url" },
+			{ account: {}, serverUrl: "http://localhost:9228" },
+			{ account: {}, providerRequestTimeoutMs: 1.5 },
+			{ account: {}, providerRequestTimeoutMs: 0 },
+			{ account: {}, timeouts: {} },
+			{ account: {}, timeouts: { pow: { cachedTimeout: 1 } } },
+		],
+	],
 	[
 		"prosopoConfig",
 		config.ProsopoConfigSchema,

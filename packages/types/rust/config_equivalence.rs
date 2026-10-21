@@ -91,6 +91,9 @@ fn schemas() -> BTreeMap<&'static str, Schema> {
         ),
         ("ipApiService", ip_api_service_schema()),
         ("prosopoConfig", prosopo_config_schema()),
+        ("prosopoClientConfig", prosopo_client_config_schema()),
+        ("captchaTimeout", captcha_timeout_schema()),
+        ("prosopoServerConfig", prosopo_server_config_schema()),
     ])
 }
 
@@ -106,6 +109,8 @@ fn typed_round_trip(schema: &str, value: &Value) -> Option<Option<Value>> {
         "prosopoCaptchaSolutionConfig" => round_trip::<CaptchaSolutionConfig>(value),
         "ipApiService" => round_trip::<IpApiService>(value),
         "prosopoConfig" => round_trip::<ProsopoConfig>(value),
+        "captchaTimeout" => round_trip::<CaptchaTimeoutConfig>(value),
+        "prosopoServerConfig" => round_trip::<ProsopoServerConfig>(value),
         _ => return None,
     };
     Some(round_tripped)

@@ -19,7 +19,7 @@
 mod client;
 mod http;
 
-pub use client::{ApiClient, ProviderApi, VERIFY_FORWARDED_HEADER};
+pub use client::{ApiClient, ProviderApi, VerifyRequest, VERIFY_FORWARDED_HEADER};
 pub use http::{
     ApiError, ClientOptions, Headers, HttpClient, HttpError, HttpRequest, HttpResponse,
     RequestOptions, ReqwestTransport, Transport, TransportFuture,

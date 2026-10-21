@@ -13,13 +13,16 @@
 // limitations under the License.
 
 //! api/apiClient.ts and ProviderApi.ts, server side: the calls one provider makes to
-//! another, and the one the CLI makes to register a site key. The widget's calls stay TS.
+//! another, the one the CLI makes to register a site key, and the server SDK's verify calls.
+//! The widget's calls stay TS.
 
 use crate::http::{ApiError, ClientOptions, Headers, HttpClient, RequestOptions};
 use prosopo_types::api_types::RegisterSitekeyBody;
 use prosopo_types::client::Tier;
 use prosopo_types::provider_api::{AdminApiPaths, ClientApiPaths};
 use prosopo_types::settings_types::UserSettings;
+use prosopo_types::JsNumber;
+use serde::Serialize;
 use serde_json::Value;
 
 /// Set on a forwarded verify request so the provider receiving it does not forward it again.
@@ -58,6 +61,47 @@ impl ApiClient {
 
 fn header(name: &str, value: &str) -> (String, String) {
     (name.to_string(), value.to_string())
+}
+
+/// What a site owner's server sends to verify a token: the TS body, whose `ip` is dropped
+/// when undefined and whose other optional fields are dropped when falsy.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct VerifyRequest<'a> {
+    pub token: &'a str,
+    pub dapp_signature: &'a str,
+    pub user: &'a str,
+    pub ip: Option<&'a str>,
+    pub email: Option<&'a str>,
+    pub client_session_id: Option<&'a str>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct VerifyBody<'a> {
+    token: &'a str,
+    dapp_signature: &'a str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ip: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max_verified_time: Option<JsNumber>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    email: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    client_session_id: Option<&'a str>,
+}
+
+impl<'a> VerifyBody<'a> {
+    fn new(request: &VerifyRequest<'a>, max_verified_time: Option<JsNumber>) -> VerifyBody<'a> {
+        VerifyBody {
+            token: request.token,
+            dapp_signature: request.dapp_signature,
+            ip: request.ip,
+            max_verified_time: max_verified_time
+                .filter(|time: &JsNumber| time.get() != 0.0 && !time.get().is_nan()),
+            email: request.email.filter(|email: &&str| !email.is_empty()),
+            client_session_id: request.client_session_id.filter(|id: &&str| !id.is_empty()),
+        }
+    }
 }
 
 /// `ProviderApi`, for the calls the provider and the CLI make. `account` is the site key.
@@ -130,6 +174,97 @@ impl ProviderApi {
                     headers: Some(headers),
                 },
             )
+            .await
+    }
+
+    async fn post_verify(
+        &self,
+        path: ClientApiPaths,
+        body: &VerifyBody<'_>,
+        user: &str,
+    ) -> Result<Value, ApiError> {
+        let headers: Headers = vec![
+            header("Prosopo-Site-Key", &self.client.account),
+            header("Prosopo-User", user),
+        ];
+        self.client
+            .http
+            .post(
+                path.as_str(),
+                Some(body),
+                RequestOptions {
+                    method: None,
+                    headers: Some(headers),
+                },
+            )
+            .await
+    }
+
+    /// `verifyDappUser`: verifies an image captcha token.
+    pub async fn verify_dapp_user(
+        &self,
+        request: &VerifyRequest<'_>,
+        max_verified_time: Option<JsNumber>,
+    ) -> Result<Value, ApiError> {
+        self.post_verify(
+            ClientApiPaths::VerifyImageCaptchaSolutionDapp,
+            &VerifyBody::new(request, max_verified_time),
+            request.user,
+        )
+        .await
+    }
+
+    /// `submitPowCaptchaVerify`.
+    pub async fn submit_pow_captcha_verify(
+        &self,
+        request: &VerifyRequest<'_>,
+    ) -> Result<Value, ApiError> {
+        self.submit_verify(ClientApiPaths::VerifyPowCaptchaSolution, request)
+            .await
+    }
+
+    /// `submitPuzzleCaptchaVerify`.
+    pub async fn submit_puzzle_captcha_verify(
+        &self,
+        request: &VerifyRequest<'_>,
+    ) -> Result<Value, ApiError> {
+        self.submit_verify(ClientApiPaths::VerifyPuzzleCaptchaSolution, request)
+            .await
+    }
+
+    /// `submitIconOrderCaptchaVerify`.
+    pub async fn submit_icon_order_captcha_verify(
+        &self,
+        request: &VerifyRequest<'_>,
+    ) -> Result<Value, ApiError> {
+        self.submit_verify(ClientApiPaths::VerifyIconOrderCaptchaSolution, request)
+            .await
+    }
+
+    /// `submitAudioCaptchaVerify`.
+    pub async fn submit_audio_captcha_verify(
+        &self,
+        request: &VerifyRequest<'_>,
+    ) -> Result<Value, ApiError> {
+        self.submit_verify(ClientApiPaths::VerifyAudioCaptchaSolution, request)
+            .await
+    }
+
+    /// `submitAuthenticatedCaptchaVerify`: verifies a Web Bot Auth session token.
+    pub async fn submit_authenticated_captcha_verify(
+        &self,
+        request: &VerifyRequest<'_>,
+    ) -> Result<Value, ApiError> {
+        self.submit_verify(ClientApiPaths::VerifyAuthenticatedSession, request)
+            .await
+    }
+
+    async fn submit_verify(
+        &self,
+        path: ClientApiPaths,
+        request: &VerifyRequest<'_>,
+    ) -> Result<Value, ApiError> {
+        self.post_verify(path, &VerifyBody::new(request, None), request.user)
             .await
     }
 }
