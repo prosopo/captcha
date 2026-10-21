@@ -497,3 +497,225 @@ mod redis_index {
         );
     }
 }
+
+/// The integration cases again, against a real Redis Stack where the TS runs them:
+/// `redis://localhost:6379` with password `root` (docker/redis/redis-stack.docker-compose.yml).
+/// Run with `cargo test -p prosopo-redis-client -- --ignored`.
+mod live {
+    use super::*;
+    use crate::RedisClient;
+    use redis::AsyncCommands;
+
+    const NEEDS_REDIS: &str = "needs Redis Stack at redis://localhost:6379 (password root)";
+
+    async fn client() -> RedisClient {
+        let (logger, _sink): (Logger, Arc<CaptureSink>) = recording_logger();
+        connect_to_redis(RedisOptions {
+            url: Some("redis://localhost:6379".to_string()),
+            password: Some("root".to_string()),
+            logger,
+        })
+        .expect("options are valid")
+        .get_client()
+        .await
+        .expect("connects")
+    }
+
+    /// A name no other test uses, dropped again by [`drop_index`].
+    fn unique(name: &str) -> String {
+        let nanos: u128 = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("after the epoch")
+            .as_nanos();
+        format!("rust-live-{name}:{nanos}")
+    }
+
+    async fn drop_index(redis: &mut RedisClient, name: &str) {
+        let _ = delete_redis_index(redis, name).await;
+    }
+
+    /// A RESP2 flat `[key, value, ...]` array or a RESP3 map, as key-value pairs.
+    fn pairs(value: redis::Value) -> Vec<(String, redis::Value)> {
+        let key =
+            |value: redis::Value| redis::from_redis_value::<String>(value).unwrap_or_default();
+        match value {
+            redis::Value::Array(items) => items
+                .chunks(2)
+                .map(|pair| {
+                    (
+                        key(pair[0].clone()),
+                        pair.get(1).cloned().unwrap_or(redis::Value::Nil),
+                    )
+                })
+                .collect(),
+            redis::Value::Map(entries) => entries.into_iter().map(|(k, v)| (key(k), v)).collect(),
+            other => panic!("expected pairs, got {other:?}"),
+        }
+    }
+
+    fn get(pairs: &[(String, redis::Value)], key: &str) -> redis::Value {
+        pairs
+            .iter()
+            .find(|(name, _)| name == key)
+            .map(|(_, value)| value.clone())
+            .unwrap_or_else(|| panic!("no {key} in {pairs:?}"))
+    }
+
+    /// `FT.INFO name`: the key type and the attribute names.
+    async fn info(redis: &mut RedisClient, name: &str) -> (String, Vec<String>) {
+        let reply: redis::Value = redis::cmd("FT.INFO")
+            .arg(name)
+            .query_async(redis)
+            .await
+            .expect("FT.INFO");
+        let info: Vec<(String, redis::Value)> = pairs(reply);
+        let definition: Vec<(String, redis::Value)> = pairs(get(&info, "index_definition"));
+        let key_type: String =
+            redis::from_redis_value(get(&definition, "key_type")).expect("a key type");
+        let attributes: Vec<String> = match get(&info, "attributes") {
+            redis::Value::Array(attributes) => attributes
+                .into_iter()
+                .map(|attribute| {
+                    redis::from_redis_value(get(&pairs(attribute), "attribute"))
+                        .expect("an attribute name")
+                })
+                .collect(),
+            other => panic!("expected attributes, got {other:?}"),
+        };
+        (key_type, attributes)
+    }
+
+    #[tokio::test]
+    #[ignore = "needs Redis Stack at redis://localhost:6379 (password root)"]
+    async fn creates_new_index() {
+        let _ = NEEDS_REDIS;
+        let mut redis: RedisClient = client().await;
+        let index: RedisIndex = tag_index(&unique("create"));
+        create_redis_index(&mut redis, &index)
+            .await
+            .expect("create");
+        assert!(redis
+            .ft_list()
+            .await
+            .expect("FT._LIST")
+            .contains(&index.name));
+        drop_index(&mut redis, &index.name).await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs Redis Stack at redis://localhost:6379 (password root)"]
+    async fn does_not_re_create_existing_index_when_no_changes_declared() {
+        let mut redis: RedisClient = client().await;
+        let index: RedisIndex = tag_index(&unique("unchanged"));
+        create_redis_index(&mut redis, &index)
+            .await
+            .expect("create");
+        let _: () = redis::cmd("FT.ALTER")
+            .arg(&index.name)
+            .arg("SCHEMA")
+            .arg("ADD")
+            .arg("anotherField")
+            .arg("TAG")
+            .query_async(&mut redis)
+            .await
+            .expect("FT.ALTER");
+        create_redis_index(&mut redis, &index)
+            .await
+            .expect("re-create");
+        assert_eq!(
+            info(&mut redis, &index.name).await.1.len(),
+            2,
+            "kept the altered index"
+        );
+        drop_index(&mut redis, &index.name).await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs Redis Stack at redis://localhost:6379 (password root)"]
+    async fn re_creates_existing_index_when_schema_changes_made() {
+        let mut redis: RedisClient = client().await;
+        let mut index: RedisIndex = tag_index(&unique("schema"));
+        create_redis_index(&mut redis, &index)
+            .await
+            .expect("create");
+        index.schema.insert("newField", SchemaFieldType::Tag);
+        create_redis_index(&mut redis, &index)
+            .await
+            .expect("re-create");
+        assert_eq!(
+            info(&mut redis, &index.name).await.1,
+            vec!["tagField".to_string(), "newField".to_string()]
+        );
+        drop_index(&mut redis, &index.name).await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs Redis Stack at redis://localhost:6379 (password root)"]
+    async fn re_creates_existing_index_when_option_changes_made() {
+        let mut redis: RedisClient = client().await;
+        let mut index: RedisIndex = tag_index(&unique("options"));
+        create_redis_index(&mut redis, &index)
+            .await
+            .expect("create");
+        assert_eq!(
+            info(&mut redis, &index.name).await.0,
+            "HASH",
+            "RediSearch's default"
+        );
+        index.options = CreateOptions {
+            on: Some(IndexDataType::Json),
+            ..CreateOptions::default()
+        };
+        create_redis_index(&mut redis, &index)
+            .await
+            .expect("re-create");
+        assert_eq!(info(&mut redis, &index.name).await.0, "JSON");
+        drop_index(&mut redis, &index.name).await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs Redis Stack at redis://localhost:6379 (password root)"]
+    async fn delete_drops_the_index_and_forgets_its_hash() {
+        let mut redis: RedisClient = client().await;
+        let index: RedisIndex = tag_index(&unique("delete"));
+        create_redis_index(&mut redis, &index)
+            .await
+            .expect("create");
+        let stored: Option<String> = IndexCommands::hget(&mut redis, INDEX_HASHES_KEY, &index.name)
+            .await
+            .expect("hget");
+        assert!(stored.is_some());
+        delete_redis_index(&mut redis, &index.name)
+            .await
+            .expect("delete");
+        assert!(!redis
+            .ft_list()
+            .await
+            .expect("FT._LIST")
+            .contains(&index.name));
+        let forgotten: Option<String> =
+            IndexCommands::hget(&mut redis, INDEX_HASHES_KEY, &index.name)
+                .await
+                .expect("hget");
+        assert_eq!(forgotten, None);
+    }
+
+    #[tokio::test]
+    #[ignore = "needs Redis Stack at redis://localhost:6379 (password root)"]
+    async fn the_stored_index_hash_is_the_one_the_ts_stores() {
+        let mut redis: RedisClient = client().await;
+        let index: RedisIndex = tag_index(&unique("hash"));
+        create_redis_index(&mut redis, &index)
+            .await
+            .expect("create");
+        let stored: Option<String> = AsyncCommands::hget(&mut redis, INDEX_HASHES_KEY, &index.name)
+            .await
+            .expect("hget");
+        assert_eq!(
+            stored,
+            Some(crate::index::create_index_hash(&index)),
+            "the hash _index_hashes holds"
+        );
+        drop_index(&mut redis, &index.name).await;
+    }
+}
