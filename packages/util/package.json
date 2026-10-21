@@ -41,14 +41,14 @@
 	"types": "dist/index.d.ts",
 	"dependencies": {
 		"@noble/hashes": "2.4.0",
-		"ip-address": "10.7.2",
+		"ip-address": "10.7.4",
 		"lodash": "4.18.1",
 		"seedrandom": "3.0.5",
 		"url": "0.11.4"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
-		"@types/lodash": "4.17.25",
+		"@types/lodash": "4.17.26",
 		"@types/node": "22.10.2",
 		"@types/seedrandom": "3.0.8",
 		"@vitest/coverage-v8": "4.1.11",

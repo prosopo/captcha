@@ -48,7 +48,7 @@
 		"make-dir": "5.1.0",
 		"mongodb": "7.7.0",
 		"mongodb-memory-server": "10.3.0",
-		"mongoose": "9.10.3"
+		"mongoose": "9.11.2"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
