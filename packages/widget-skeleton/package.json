@@ -42,7 +42,7 @@
 		"@prosopo/config": "workspace:*",
 		"@types/jsdom": "30.0.0",
 		"@types/node": "22.10.2",
-		"@vitest/browser-playwright": "4.1.11",
+		"@vitest/browser-playwright": "5.0.4",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
