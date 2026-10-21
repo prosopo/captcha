@@ -33,8 +33,8 @@ importers:
         specifier: 22.5.5
         version: 22.5.5
       '@vitest/spy':
-        specifier: 4.1.11
-        version: 4.1.11
+        specifier: 5.0.4
+        version: 5.0.4
       concurrently:
         specifier: 9.0.1
         version: 9.0.1
@@ -2787,8 +2787,8 @@ importers:
         specifier: 4.1.11
         version: 4.1.11(@vitest/browser@4.1.11)(vitest@4.1.11)
       '@vitest/spy':
-        specifier: 4.1.11
-        version: 4.1.11
+        specifier: 5.0.4
+        version: 5.0.4
       concurrently:
         specifier: 9.0.1
         version: 9.0.1
@@ -6535,6 +6535,9 @@ packages:
 
   '@vitest/spy@4.1.11':
     resolution: {integrity: sha512-apNa/prQy2qCeywhnixOHPRCgGNhvg7T4Dapfl1GahLp/R+uhBm5cPyFoNVyqsNd2h1nJxL6BqqdIjiABL60YA==}
+
+  '@vitest/spy@5.0.4':
+    resolution: {integrity: sha512-MZKk/gSkm2q+ICobMxCpH1mA+cCAWm8WV7UhxlqGjq/sJ3AGc1BqFOs5CRVXxH78wQtme9q/NAAgBquj4AcyMw==}
 
   '@vitest/utils@4.1.10':
     resolution: {integrity: sha512-fy9am/HWxbaGt/Sawrp90vt6Y6jQwf1RX77cz3uwoJwJVMli/e1IEwRPnMNJ7vKfPTwo0diXifkpPvwH9v7nGA==}
@@ -14551,6 +14554,8 @@ snapshots:
   '@vitest/spy@4.1.10': {}
 
   '@vitest/spy@4.1.11': {}
+
+  '@vitest/spy@5.0.4': {}
 
   '@vitest/utils@4.1.10':
     dependencies:
