@@ -14,7 +14,9 @@ path = "rust/lib.rs"
 
 [dependencies]
 bson = { version = "3.1", features = ["serde"] }
+prosopo-api-route = { path = "../api-route" }
 prosopo-locale = { path = "../locale" }
+prosopo-logger = { path = "../logger" }
 prosopo-types = { path = "../types" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }

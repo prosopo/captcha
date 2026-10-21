@@ -2433,7 +2433,9 @@ version = "6.0.0"
 dependencies = [
  "bson",
  "hex",
+ "prosopo-api-route",
  "prosopo-locale",
+ "prosopo-logger",
  "prosopo-types",
  "serde",
  "serde_json",

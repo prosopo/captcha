@@ -34,6 +34,7 @@ use crate::provider::{
     USER_COMMITMENT_RECORD, USER_SOLUTION_RECORD,
 };
 use crate::schema::{DefaultTiming, Ids, Kind, Path, Schema};
+use crate::update::{cast_filter, cast_update, UpdateMethod};
 use bson::oid::ObjectId;
 use bson::{Bson, DateTime, Document};
 use serde_json::{json, Map, Value};
@@ -434,4 +435,102 @@ fn the_session_projection_is_the_ts_one() {
     let vectors: Value = vectors();
     let expected: Vec<String> = vectors["sessionProjection"].as_object().expect("projection").keys().cloned().collect();
     assert_eq!(SESSION_PROJECTION_FIELDS.to_vec(), expected);
+}
+
+fn input_document(value: &Value, what: &str) -> Document {
+    match Bson::try_from(value.clone()).unwrap_or_else(|error| panic!("{what}: {error}")) {
+        Bson::Document(document) => document,
+        other => panic!("{what} is not a document: {other:?}"),
+    }
+}
+
+/// What the Rust would put on the wire for one update: the cast filter and update, nothing (an
+/// update cast to empty, which mongoose does not send), or a refusal.
+enum Wire {
+    Sent(Document),
+    NotSent,
+    Refused(String),
+}
+
+fn rust_update(schema: &Schema, method: &str, upsert: bool, filter: &Document, update: &Document, ids: &mut dyn Ids) -> Wire {
+    let filter_cast: Document = match cast_filter(schema, filter, upsert, ids) {
+        Ok(cast) => cast,
+        Err(error) => return Wire::Refused(error.to_string()),
+    };
+    let update_method: UpdateMethod = match method {
+        "updateOne" => UpdateMethod::UpdateOne,
+        "updateMany" => UpdateMethod::UpdateMany,
+        "bulkWrite" => UpdateMethod::BulkWriteUpdateOne,
+        "findOneAndUpdate" => UpdateMethod::FindOneAndUpdate,
+        other => panic!("no method {other}"),
+    };
+    let update_cast: Document = match cast_update(schema, update_method, update, &filter_cast, upsert, ids) {
+        Ok(cast) => cast,
+        Err(error) => return Wire::Refused(error.to_string()),
+    };
+    if update_cast.is_empty() {
+        return if method == "bulkWrite" { Wire::Refused("Update document requires atomic operators".into()) } else { Wire::NotSent };
+    }
+    let mut statement: Document = Document::new();
+    statement.insert("q", filter_cast);
+    statement.insert("u", update_cast);
+    Wire::Sent(statement)
+}
+
+/// mongoose applies an IP half's setter to an equality but not to an operand such as `$lte`, so a
+/// JS bigint there cannot be cast and the query throws. The vectors hand the Rust a bigint as the
+/// Decimal128 it is stored as (the Rust has no bigint: an IP half is that Decimal128), which casts.
+/// No caller is affected: the one range query on IP halves (captchaSearch in captcha-private)
+/// builds the Decimal128 itself. Logged as a DEVIATION; only this exact refusal is accepted here.
+fn is_bigint_operand_on_an_ip_half(outcome: &Value) -> bool {
+    outcome["error"].as_str().is_some_and(|error| {
+        error.starts_with("CastError: Cast to Decimal128 failed for value")
+            && error.contains("n\" (type bigint) at path \"ipAddress.")
+    })
+}
+
+#[test]
+fn updates_are_the_filters_and_updates_mongoose_sends() {
+    let vectors: Value = vectors();
+    let mut failures: Vec<String> = Vec::new();
+    let mut checked: usize = 0;
+    let mut bigint_operands: usize = 0;
+    for (name, model) in vectors["models"].as_object().expect("models") {
+        let schema: &Schema = schema_for(name);
+        for (index, vector) in model["updates"].as_array().expect("updates").iter().enumerate() {
+            let method: &str = vector["method"].as_str().expect("method");
+            let upsert: bool = vector["upsert"].as_bool().expect("upsert");
+            let filter: Document = input_document(&vector["filter"], "filter");
+            let update: Document = input_document(&vector["update"], "update");
+            let mut ids: ReplayIds = ReplayIds::new(&vectors);
+            let actual: Wire = rust_update(schema, method, upsert, &filter, &update, &mut ids);
+            let outcome: &Value = &vector["outcome"];
+            checked += 1;
+            let label: String = format!("{name} update #{index} ({method}, upsert {upsert})");
+            match (actual, outcome) {
+                (Wire::Sent(sent), outcome) if outcome.get("sent").is_some() => {
+                    let expected: Document = from_hex(outcome["sent"]["hex"].as_str().expect("hex"));
+                    if to_bytes(&sent) != to_bytes(&expected) {
+                        let difference: Option<String> =
+                            document_difference(&Bson::Document(sent.clone()), &Bson::Document(expected), "");
+                        failures.push(format!("{label}: {}", difference.unwrap_or_else(|| "bytes differ".into())));
+                    }
+                }
+                (Wire::NotSent, outcome) if outcome.get("notSent").is_some() => {}
+                (Wire::Refused(_), outcome) if outcome.get("error").is_some() => {}
+                (Wire::Sent(_), outcome) if is_bigint_operand_on_an_ip_half(outcome) => bigint_operands += 1,
+                (Wire::Sent(sent), outcome) => failures.push(format!("{label}: rust sent {}, mongoose {outcome}", extended_json(&sent))),
+                (Wire::NotSent, outcome) => failures.push(format!("{label}: rust sent nothing, mongoose {outcome}")),
+                (Wire::Refused(why), outcome) => failures.push(format!("{label}: rust refused ({why}), mongoose {outcome}")),
+            }
+        }
+    }
+    assert!(checked > 1500, "only {checked} updates");
+    assert!(bigint_operands <= 6, "{bigint_operands} bigint operands");
+    assert!(
+        failures.is_empty(),
+        "{} of {checked} differ:\n{}",
+        failures.len(),
+        failures.iter().take(14).cloned().collect::<Vec<String>>().join("\n")
+    );
 }

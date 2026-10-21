@@ -29,7 +29,10 @@
 
 use crate::number::{as_js_number, decimal128_from_integer, js_number};
 use crate::schema::{join, number, DefaultTiming, Field, Ids, Kind, Node, Path, Schema};
-use bson::{Bson, Document};
+use bson::oid::ObjectId;
+use bson::{Bson, DateTime, Document};
+use prosopo_api_route::schema::string_to_number;
+use prosopo_logger::number_to_js_string;
 use std::fmt;
 use std::sync::LazyLock;
 
@@ -108,7 +111,7 @@ pub fn construct(schema: &Schema, input: &Document, prefix: &str, ids: &mut dyn 
     construct_with(schema, input, prefix, false, ids, issues)
 }
 
-static VERSION_KEY: LazyLock<Path> = LazyLock::new(number);
+pub(crate) static VERSION_KEY: LazyLock<Path> = LazyLock::new(number);
 
 fn construct_with(
     schema: &Schema,
@@ -132,12 +135,17 @@ fn construct_with(
             _ => top_level(schema, key),
         };
         match target {
-            Some(TopLevel::Nested(children)) => {
-                if let Bson::Document(given) = value {
+            Some(TopLevel::Nested(children)) => match value {
+                Bson::Document(given) => {
                     document.insert(key, set_nested(children, given, &full, ids, issues));
                     apply_defaults_to_nested(schema, &mut document, key, prefix, ids, issues);
                 }
-            }
+                Bson::Undefined | Bson::Null => {
+                    document.insert(key, value.clone());
+                }
+                _ => {}
+            },
+            Some(TopLevel::Path(_)) if matches!(value, Bson::Undefined) && holds_value(document.get(key)) => {}
             Some(TopLevel::Path(leaf)) => {
                 if let Some(cast) = cast(&leaf.kind, value, &full, ids, issues) {
                     document.insert(key, cast);
@@ -223,6 +231,11 @@ fn set_nested(fields: &[Field], given: &Document, path: &str, ids: &mut dyn Ids,
     out
 }
 
+/// Whether a key holds something other than JS `undefined`.
+fn holds_value(value: Option<&Bson>) -> bool {
+    !matches!(value, None | Some(Bson::Undefined))
+}
+
 /// `applyDefaults`, for one timing: each path's default where the path holds nothing yet.
 fn apply_defaults(
     schema: &Schema,
@@ -241,7 +254,7 @@ fn apply_defaults(
             continue;
         };
         let last: &str = pieces[pieces.len() - 1];
-        if parent.contains_key(last) {
+        if holds_value(parent.get(last)) {
             continue;
         }
         if let Some(value) = default_for(leaf, &join(prefix, &path), ids, issues) {
@@ -270,7 +283,7 @@ fn apply_defaults_to_nested(
             continue;
         };
         let last: &str = pieces[pieces.len() - 1];
-        if parent.contains_key(last) {
+        if holds_value(parent.get(last)) {
             continue;
         }
         if let Some(value) = default_for(leaf, &join(prefix, &path), ids, issues) {
@@ -308,28 +321,34 @@ fn cast_issue(issues: &mut Vec<Issue>, path: &str, kind: &str) -> Option<Bson> {
 
 /// A given value cast to the path's type, or `None` (with an issue) if mongoose cannot cast it.
 pub(crate) fn cast(kind: &Kind, value: &Bson, path: &str, ids: &mut dyn Ids, issues: &mut Vec<Issue>) -> Option<Bson> {
-    if matches!(value, Bson::Null) {
-        return Some(Bson::Null);
+    if matches!(value, Bson::Null | Bson::Undefined) {
+        return Some(value.clone());
     }
     match kind {
-        Kind::String => match value {
-            Bson::String(_) => Some(value.clone()),
-            _ => cast_issue(issues, path, "String"),
+        Kind::String => match cast_string(value) {
+            Some(text) => Some(Bson::String(text)),
+            None => cast_issue(issues, path, "String"),
         },
-        Kind::Number => match as_js_number(value) {
-            Some(number) if !number.is_nan() => Some(js_number(number)),
-            _ => cast_issue(issues, path, "Number"),
+        Kind::Number => match cast_number(value) {
+            Some(Some(number)) => Some(js_number(number)),
+            Some(None) => Some(Bson::Null),
+            None => cast_issue(issues, path, "Number"),
         },
-        Kind::Boolean => match value {
-            Bson::Boolean(_) => Some(value.clone()),
-            _ => cast_issue(issues, path, "Boolean"),
+        Kind::Boolean => match cast_boolean(value) {
+            Some(flag) => Some(Bson::Boolean(flag)),
+            None => cast_issue(issues, path, "Boolean"),
         },
-        Kind::Date => match value {
-            Bson::DateTime(_) => Some(value.clone()),
-            _ => cast_issue(issues, path, "date"),
+        Kind::Date => match cast_date(value) {
+            Some(Some(date)) => Some(Bson::DateTime(date)),
+            Some(None) => Some(Bson::Null),
+            None => cast_issue(issues, path, "date"),
         },
         Kind::ObjectId => match value {
             Bson::ObjectId(_) => Some(value.clone()),
+            Bson::String(text) if text.len() == 24 => match ObjectId::parse_str(text) {
+                Ok(id) => Some(Bson::ObjectId(id)),
+                Err(_) => cast_issue(issues, path, "ObjectId"),
+            },
             _ => cast_issue(issues, path, "ObjectId"),
         },
         Kind::Mixed => Some(mixed(value)),
@@ -394,6 +413,60 @@ pub(crate) fn cast(kind: &Kind, value: &Bson, path: &str, ids: &mut dyn Ids, iss
     }
 }
 
+/// `castString`: what `value.toString()` gives for the primitives a typed record can hold.
+fn cast_string(value: &Bson) -> Option<String> {
+    match value {
+        Bson::String(text) => Some(text.clone()),
+        Bson::Boolean(flag) => Some(flag.to_string()),
+        Bson::ObjectId(id) => Some(id.to_hex()),
+        Bson::Decimal128(decimal) => Some(decimal.to_string()),
+        number => as_js_number(number).map(number_to_js_string),
+    }
+}
+
+/// `castNumber`: `Number(...)` of a string or a boolean, `""` as null; `None` if NaN.
+fn cast_number(value: &Bson) -> Option<Option<f64>> {
+    let number: f64 = match value {
+        Bson::String(text) if text.is_empty() => return Some(None),
+        Bson::String(text) => string_to_number(text),
+        Bson::Boolean(flag) => f64::from(u8::from(*flag)),
+        other => as_js_number(other)?,
+    };
+    (!number.is_nan()).then_some(Some(number))
+}
+
+/// `castBoolean`: `true`, `"true"`, `1`, `"1"`, `"yes"` and their opposites.
+fn cast_boolean(value: &Bson) -> Option<bool> {
+    match value {
+        Bson::Boolean(flag) => Some(*flag),
+        Bson::String(text) => match text.as_str() {
+            "true" | "1" | "yes" => Some(true),
+            "false" | "0" | "no" => Some(false),
+            _ => None,
+        },
+        number => match as_js_number(number)? {
+            n if n == 1.0 => Some(true),
+            n if n == 0.0 => Some(false),
+            _ => None,
+        },
+    }
+}
+
+/// `castDate`: a date, or a number of milliseconds within the JS date range (`""` is null). A
+/// boolean throws; date strings are not parsed (no typed record carries one).
+fn cast_date(value: &Bson) -> Option<Option<DateTime>> {
+    const MAX_TIME: f64 = 8.64e15;
+    match value {
+        Bson::DateTime(date) => Some(Some(*date)),
+        Bson::String(text) if text.is_empty() => Some(None),
+        Bson::Boolean(_) => None,
+        number => {
+            let millis: f64 = as_js_number(number)?;
+            (millis.is_finite() && millis.abs() <= MAX_TIME).then(|| Some(DateTime::from_millis(millis.trunc() as i64)))
+        }
+    }
+}
+
 /// A Mixed value as JS holds it: every number a JS number.
 pub(crate) fn mixed(value: &Bson) -> Bson {
     match value {
@@ -418,7 +491,7 @@ fn lookup<'a>(document: &'a Document, path: &str) -> Option<&'a Bson> {
 
 fn satisfies_required(kind: &Kind, value: Option<&Bson>) -> bool {
     match (kind, value) {
-        (_, None | Some(Bson::Null)) => false,
+        (_, None | Some(Bson::Null | Bson::Undefined)) => false,
         (Kind::String, Some(Bson::String(text))) => !text.is_empty(),
         (Kind::String, Some(_)) => false,
         _ => true,
@@ -510,6 +583,7 @@ fn minimize_with(fields: &[Field], schema: Option<&Schema>, document: Document) 
             None => schema.and_then(|schema| schema.path(&key)),
         };
         let kept: Option<Bson> = match (field, leaf.map(|leaf| &leaf.kind), value) {
+            (_, _, Bson::Undefined) => None,
             (Some(Node::Nested(children)), _, Bson::Document(inner)) => non_empty(minimize_with(children, None, inner)),
             (_, Some(Kind::Map(sub)), Bson::Document(entries)) => Some(Bson::Document(
                 entries
@@ -539,7 +613,7 @@ fn minimize_with(fields: &[Field], schema: Option<&Schema>, document: Document) 
     out
 }
 
-fn minimize_schema(schema: &Schema, document: Document) -> Document {
+pub(crate) fn minimize_schema(schema: &Schema, document: Document) -> Document {
     minimize_with(&schema.fields, Some(schema), document)
 }
 
@@ -550,6 +624,7 @@ fn non_empty(document: Document) -> Option<Bson> {
 /// A value outside any declared subdocument (a Mixed value, an array of primitives).
 fn minimize_value(value: Bson) -> Option<Bson> {
     match value {
+        Bson::Undefined => None,
         Bson::Document(inner) => non_empty(minimize_plain(inner)),
         Bson::Array(items) => Some(Bson::Array(items.into_iter().map(minimize_element).collect())),
         other => Some(other),
@@ -565,6 +640,7 @@ fn minimize_plain(document: Document) -> Document {
 
 fn minimize_element(value: Bson) -> Bson {
     match value {
+        Bson::Undefined => Bson::Null,
         Bson::Document(inner) => Bson::Document(minimize_plain(inner)),
         Bson::Array(items) => Bson::Array(items.into_iter().map(minimize_element).collect()),
         other => other,

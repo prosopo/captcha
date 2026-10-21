@@ -94,6 +94,8 @@ pub struct Path {
     /// `expires`, in seconds: a TTL index on the path.
     pub expires: Option<i64>,
     pub unique: bool,
+    /// Set once on insert, never by an update: the timestamps' `createdAt`.
+    pub immutable: bool,
 }
 
 impl Path {
@@ -107,6 +109,7 @@ impl Path {
             max: None,
             expires: None,
             unique: false,
+            immutable: false,
         }
     }
 
@@ -363,7 +366,11 @@ static ID_PATH: LazyLock<Path> = LazyLock::new(|| Path {
     default: Default::FunctionBeforeSetters(|ids| Bson::ObjectId(ids.object_id())),
     ..object_id()
 });
-static TIMESTAMP_PATH: LazyLock<Path> = LazyLock::new(date);
+static CREATED_AT_PATH: LazyLock<Path> = LazyLock::new(|| Path {
+    immutable: true,
+    ..date()
+});
+static UPDATED_AT_PATH: LazyLock<Path> = LazyLock::new(date);
 
 impl Schema {
     pub fn new(fields: Vec<Field>) -> Schema {
@@ -423,8 +430,8 @@ impl Schema {
             out.push(("_id".to_string(), &ID_PATH));
         }
         if self.timestamps {
-            out.push(("createdAt".to_string(), &TIMESTAMP_PATH));
-            out.push(("updatedAt".to_string(), &TIMESTAMP_PATH));
+            out.push(("createdAt".to_string(), &CREATED_AT_PATH));
+            out.push(("updatedAt".to_string(), &UPDATED_AT_PATH));
         }
         out
     }
