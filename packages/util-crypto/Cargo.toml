@@ -1,0 +1,33 @@
+[package]
+name = "prosopo-util-crypto"
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "rust/lib.rs"
+
+[dependencies]
+bip39 = { version = "2.2", default-features = false, features = ["std"] }
+blake2b_simd = "1.0"
+bs58 = "0.5"
+crypto_secretbox = "0.1"
+curve25519-dalek = "4.1"
+getrandom = "0.2"
+k256 = { version = "0.13", default-features = false, features = ["arithmetic", "std"] }
+merlin = "3.0"
+pbkdf2 = { version = "0.12", default-features = false }
+rand_core = { version = "0.6", features = ["getrandom"] }
+regex = "1.11"
+schnorrkel = "0.11"
+scrypt = { version = "0.11", default-features = false }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+hmac = "0.12"
+unicode-normalization = "0.1"
