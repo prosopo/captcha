@@ -55,3 +55,17 @@ pub fn decimal128_from_integer(value: i128) -> Decimal128 {
 pub fn to_bson_document<T: Serialize>(value: &T) -> bson::error::Result<Document> {
     Ok(Document::try_from(bson::serialize_to_raw_document_buf(value)?)?)
 }
+
+/// A JSON value as a JS object literal holds it, in BSON: every number a JS number.
+pub fn json_to_bson(value: &serde_json::Value) -> Bson {
+    match value {
+        serde_json::Value::Null => Bson::Null,
+        serde_json::Value::Bool(flag) => Bson::Boolean(*flag),
+        serde_json::Value::Number(number) => js_number(number.as_f64().unwrap_or(f64::NAN)),
+        serde_json::Value::String(text) => Bson::String(text.clone()),
+        serde_json::Value::Array(items) => Bson::Array(items.iter().map(json_to_bson).collect()),
+        serde_json::Value::Object(entries) => {
+            Bson::Document(entries.iter().map(|(key, entry)| (key.clone(), json_to_bson(entry))).collect())
+        }
+    }
+}

@@ -16,11 +16,16 @@
 //! the central captcha store and the portal's client database.
 
 pub mod mongo;
+pub mod operation;
 pub mod options;
+pub mod provider;
+pub mod source;
 
 pub use mongo::{build_url, mask_credentials, MongoConnectionTimeouts, MongoDatabase, MongoError};
 
 #[cfg(test)]
 mod equivalence;
+#[cfg(test)]
+mod methods;
 #[cfg(test)]
 mod tests;

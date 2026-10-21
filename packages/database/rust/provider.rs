@@ -1,0 +1,601 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+//! `ProviderDatabase` (src/databases/provider.ts): the provider's own records. Each method sends
+//! the commands mongoose sends for it and reads the replies as the TS reads them.
+
+use crate::operation::{Executor, Operation, Reply, UpdateStatement};
+use crate::source::{Source, SourceIds};
+use bson::{doc, Bson, Document};
+use prosopo_common::{ErrorClass, ErrorContext, ErrorOptions, ErrorSource, ProsopoError};
+use prosopo_logger::Logger;
+use prosopo_types::datasets::{dataset_with_ids_and_tree_schema, CaptchaItem, CaptchaStates};
+use prosopo_types_database::number::{js_number, json_to_bson};
+use prosopo_types_database::provider::{CAPTCHA_RECORD, DATASET_RECORD, SOLUTION_RECORD};
+use prosopo_types_database::schema::Schema;
+use prosopo_types_database::update::{cast_filter, cast_update, UpdateMethod};
+use prosopo_util_crypto::u8a::is_hex;
+use serde::de::DeserializeOwned;
+use serde::Deserialize;
+use serde_json::{json, Value};
+use std::sync::Arc;
+
+/// The collections, as mongoose names them after the models.
+pub mod collections {
+    pub const CAPTCHA: &str = "captchas";
+    pub const POW_CAPTCHA: &str = "powcaptchas";
+    pub const PUZZLE_CAPTCHA: &str = "puzzlecaptchas";
+    pub const AUDIO_CAPTCHA: &str = "audiocaptchas";
+    pub const ICON_ORDER_CAPTCHA: &str = "iconordercaptchas";
+    pub const DATASET: &str = "datasets";
+    pub const SOLUTION: &str = "solutions";
+    pub const COMMITMENT: &str = "usercommitments";
+    pub const USER_SOLUTION: &str = "usersolutions";
+    pub const SCHEDULER: &str = "schedulers";
+    pub const CLIENT: &str = "clients";
+    pub const SESSION: &str = "sessions";
+    pub const DECISION_MACHINE: &str = "decisionmachines";
+    pub const SPAM_EMAIL_DOMAIN: &str = "spamemaildomains";
+}
+
+/// A stored solution (`SolutionRecord`), as the dataset reads return it.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StoredSolution {
+    pub captcha_id: String,
+    pub captcha_content_id: String,
+    pub dataset_id: String,
+    pub dataset_content_id: String,
+    pub salt: String,
+    pub solution: Vec<String>,
+}
+
+/// A stored captcha (`CaptchaRecordSchema`).
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StoredCaptcha {
+    pub captcha_id: String,
+    pub captcha_content_id: String,
+    #[serde(rename = "assetURI", default)]
+    pub asset_uri: Option<String>,
+    pub dataset_id: String,
+    pub dataset_content_id: String,
+    pub solved: bool,
+    pub target: String,
+    pub salt: String,
+    #[serde(default)]
+    pub random_key: Option<f64>,
+    pub items: Vec<CaptchaItem>,
+}
+
+/// What `getRandomCaptcha` projects: no salt, no solved flag.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SampledCaptcha {
+    pub dataset_id: String,
+    pub dataset_content_id: String,
+    pub captcha_id: String,
+    pub captcha_content_id: String,
+    pub items: Vec<CaptchaItem>,
+    pub target: String,
+}
+
+/// What `getCaptchaById` projects.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaptchaItems {
+    pub captcha_id: String,
+    pub dataset_id: String,
+    pub items: Vec<CaptchaItem>,
+}
+
+/// A stored dataset (`DatasetRecordSchema`), as `getDatasetDetails` returns it.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StoredDataset {
+    pub dataset_id: String,
+    pub dataset_content_id: String,
+    pub format: String,
+    pub content_tree: Vec<Vec<String>>,
+    pub solution_tree: Vec<Vec<String>>,
+}
+
+/// One captcha of [`DatasetWithCaptchas`]: its solution only when it is solved.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DatasetCaptcha {
+    pub captcha_id: String,
+    pub captcha_content_id: String,
+    pub solved: bool,
+    pub salt: String,
+    pub items: Vec<CaptchaItem>,
+    pub target: String,
+    pub solution: Vec<String>,
+}
+
+/// What `getDataset` assembles from the dataset, its captchas and their solutions.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DatasetWithCaptchas {
+    pub dataset_id: String,
+    pub dataset_content_id: String,
+    pub format: String,
+    pub content_tree: Vec<Vec<String>>,
+    pub solution_tree: Vec<Vec<String>>,
+    pub captchas: Vec<DatasetCaptcha>,
+}
+
+/// What `getRandomSolvedCaptchasFromSingleDataset` projects.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SampledSolution {
+    pub captcha_id: String,
+    pub captcha_content_id: String,
+    pub solution: Vec<String>,
+}
+
+pub struct ProviderDatabase {
+    executor: Arc<dyn Executor>,
+    source: Arc<dyn Source>,
+    logger: Logger,
+}
+
+fn db_error(key: &str, context: ErrorContext, logger: Option<&Logger>) -> ProsopoError {
+    ProsopoError::new(
+        ErrorClass::Db,
+        ErrorSource::key(key),
+        ErrorOptions {
+            context: Some(context),
+            logger,
+            ..ErrorOptions::default()
+        },
+    )
+}
+
+fn decode<T: DeserializeOwned>(document: Document) -> Option<T> {
+    bson::deserialize_from_document(document).ok()
+}
+
+fn without_id(mut document: Document) -> Document {
+    document.remove("_id");
+    document
+}
+
+impl ProviderDatabase {
+    pub fn new(executor: Arc<dyn Executor>, source: Arc<dyn Source>, logger: Logger) -> ProviderDatabase {
+        ProviderDatabase {
+            executor,
+            source,
+            logger,
+        }
+    }
+
+    async fn run(&self, operation: Operation) -> Result<Reply, ProsopoError> {
+        self.executor.run(operation).await.map_err(|error| {
+            db_error(
+                "DATABASE.QUERY_ERROR",
+                ErrorContext::new().with("error", error.to_string()),
+                Some(&self.logger),
+            )
+        })
+    }
+
+    async fn find(&self, operation: Operation) -> Result<Vec<Document>, ProsopoError> {
+        Ok(self.run(operation).await?.documents())
+    }
+
+    /// The filter as mongoose casts it for `schema`.
+    fn filter(&self, schema: &Schema, filter: Document) -> Document {
+        cast_filter(schema, &filter, false, &mut SourceIds(self.source.as_ref())).unwrap_or(filter)
+    }
+
+    /// One statement of an update, cast as mongoose casts it for `method`.
+    fn statement(
+        &self,
+        schema: &Schema,
+        method: UpdateMethod,
+        filter: Document,
+        update: Document,
+        upsert: bool,
+    ) -> Result<UpdateStatement, String> {
+        let mut ids: SourceIds = SourceIds(self.source.as_ref());
+        let q: Document = cast_filter(schema, &filter, upsert, &mut ids).map_err(|error| error.to_string())?;
+        let u: Document = cast_update(schema, method, &update, &q, upsert, &mut ids).map_err(|error| error.to_string())?;
+        let statement: UpdateStatement = UpdateStatement::one(q, u).upsert(upsert);
+        Ok(if method == UpdateMethod::UpdateMany { statement.many() } else { statement })
+    }
+
+    /// `storeDataset`: the dataset, its captchas (each given a `randomKey` on first insert) and
+    /// the solutions of the solved ones, each upserted.
+    pub async fn store_dataset(&self, dataset: &Value) -> Result<(), ProsopoError> {
+        let failed = |error: String| {
+            db_error(
+                "DATABASE.DATASET_LOAD_FAILED",
+                ErrorContext::new().with("failedFuncName", "storeDataset").with("error", error),
+                Some(&self.logger),
+            )
+        };
+        let parsed: Value = dataset_with_ids_and_tree_schema()
+            .validate(Some(dataset))
+            .map_err(|error| failed(error.to_string()))?;
+        let dataset_id: Value = parsed["datasetId"].clone();
+        let dataset_content_id: Value = parsed.get("datasetContentId").cloned().unwrap_or(Value::Null);
+        let field = |value: &Value| -> Bson {
+            if value.is_null() {
+                Bson::Undefined
+            } else {
+                json_to_bson(value)
+            }
+        };
+        let dataset_doc: Document = doc! {
+            "datasetId": field(&dataset_id),
+            "datasetContentId": field(&dataset_content_id),
+            "format": field(&parsed["format"]),
+            "contentTree": field(&parsed["contentTree"]),
+            "solutionTree": field(&parsed["solutionTree"]),
+        };
+        let statement: UpdateStatement = self
+            .statement(
+                &DATASET_RECORD,
+                UpdateMethod::UpdateOne,
+                doc! { "datasetId": field(&dataset_id) },
+                doc! { "$set": dataset_doc },
+                true,
+            )
+            .map_err(failed)?;
+        let load_failed = |error: ProsopoError| failed(error.to_string());
+        self.run(Operation::update(collections::DATASET, vec![statement])).await.map_err(load_failed)?;
+
+        let captchas: Vec<Value> = parsed["captchas"].as_array().cloned().unwrap_or_default();
+        let mut captcha_statements: Vec<UpdateStatement> = Vec::new();
+        for (index, captcha) in captchas.iter().enumerate() {
+            let mut captcha_doc: Document = Document::new();
+            for (key, value) in captcha.as_object().into_iter().flatten() {
+                if key != "solution" {
+                    captcha_doc.insert(key, json_to_bson(value));
+                }
+            }
+            captcha_doc.insert("datasetId", field(&dataset_id));
+            captcha_doc.insert("datasetContentId", field(&dataset_content_id));
+            captcha_doc.insert("index", Bson::Int32(index as i32));
+            let solved: bool = captcha["solution"].as_array().is_some_and(|solution| !solution.is_empty());
+            captcha_doc.insert("solved", solved);
+            let random_key: f64 = self.source.random();
+            captcha_statements.push(
+                self.statement(
+                    &CAPTCHA_RECORD,
+                    UpdateMethod::BulkWriteUpdateOne,
+                    doc! { "captchaId": field(&captcha["captchaId"]) },
+                    doc! { "$set": captcha_doc, "$setOnInsert": { "randomKey": random_key } },
+                    true,
+                )
+                .map_err(failed)?,
+            );
+        }
+        if !captcha_statements.is_empty() {
+            self.run(Operation::update(collections::CAPTCHA, captcha_statements)).await.map_err(load_failed)?;
+        }
+
+        let mut solution_statements: Vec<UpdateStatement> = Vec::new();
+        for captcha in captchas.iter().filter(|captcha| captcha["solution"].as_array().is_some_and(|s| !s.is_empty())) {
+            let solution_doc: Document = doc! {
+                "captchaId": field(&captcha["captchaId"]),
+                "captchaContentId": field(&captcha["captchaContentId"]),
+                "solution": field(&captcha["solution"]),
+                "salt": field(&captcha["salt"]),
+                "datasetId": field(&dataset_id),
+                "datasetContentId": field(&dataset_content_id),
+            };
+            solution_statements.push(
+                self.statement(
+                    &SOLUTION_RECORD,
+                    UpdateMethod::BulkWriteUpdateOne,
+                    doc! { "captchaId": field(&captcha["captchaId"]) },
+                    doc! { "$set": solution_doc },
+                    true,
+                )
+                .map_err(failed)?,
+            );
+        }
+        if !solution_statements.is_empty() {
+            self.run(Operation::update(collections::SOLUTION, solution_statements)).await.map_err(load_failed)?;
+        }
+        Ok(())
+    }
+
+    /// `getSolutions`.
+    pub async fn get_solutions(&self, dataset_id: &str) -> Result<Vec<StoredSolution>, ProsopoError> {
+        let filter: Document = self.filter(&SOLUTION_RECORD, doc! { "datasetId": dataset_id });
+        let documents: Vec<Document> = self.find(Operation::find(collections::SOLUTION, filter)).await?;
+        Ok(documents.into_iter().filter_map(decode).collect())
+    }
+
+    /// `getSolutionByCaptchaId`.
+    pub async fn get_solution_by_captcha_id(&self, captcha_id: &str) -> Result<Option<StoredSolution>, ProsopoError> {
+        let filter: Document = self.filter(&SOLUTION_RECORD, doc! { "captchaId": captcha_id });
+        let documents: Vec<Document> = self.find(Operation::find(collections::SOLUTION, filter).with_limit(1)).await?;
+        Ok(documents.into_iter().next().and_then(decode))
+    }
+
+    /// `getDataset`: the dataset with every captcha, each with its solution if it is solved.
+    pub async fn get_dataset(&self, dataset_id: &str) -> Result<DatasetWithCaptchas, ProsopoError> {
+        let filter: Document = self.filter(&DATASET_RECORD, doc! { "datasetId": dataset_id });
+        let found: Option<Document> = self
+            .find(Operation::find(collections::DATASET, filter.clone()).with_limit(1))
+            .await?
+            .into_iter()
+            .next();
+        let Some(dataset) = found else {
+            return Err(db_error(
+                "DATABASE.DATASET_GET_FAILED",
+                ErrorContext::new().with("failedFuncName", "getDataset").with("datasetId", dataset_id),
+                None,
+            ));
+        };
+        let captchas: Vec<Document> = self.find(Operation::find(collections::CAPTCHA, filter.clone())).await?;
+        let solutions: Vec<Document> = self.find(Operation::find(collections::SOLUTION, filter)).await?;
+        let mut solutions_by_captcha: Vec<(String, Vec<String>)> = Vec::new();
+        for solution in solutions.into_iter().filter_map(decode::<StoredSolution>) {
+            solutions_by_captcha.retain(|(id, _)| *id != solution.captcha_id);
+            solutions_by_captcha.push((solution.captcha_id, solution.solution));
+        }
+        let tree = |key: &str| -> Vec<Vec<String>> {
+            dataset
+                .get_array(key)
+                .ok()
+                .map(|rows| {
+                    rows.iter()
+                        .filter_map(|row| row.as_array())
+                        .map(|row| row.iter().filter_map(|item| item.as_str().map(str::to_string)).collect())
+                        .collect()
+                })
+                .unwrap_or_default()
+        };
+        let captchas: Vec<DatasetCaptcha> = captchas
+            .into_iter()
+            .filter_map(decode::<StoredCaptcha>)
+            .map(|captcha| {
+                let solution: Vec<String> = if captcha.solved {
+                    solutions_by_captcha
+                        .iter()
+                        .find(|(id, _)| *id == captcha.captcha_id)
+                        .map(|(_, solution)| solution.clone())
+                        .unwrap_or_default()
+                } else {
+                    Vec::new()
+                };
+                DatasetCaptcha {
+                    captcha_id: captcha.captcha_id,
+                    captcha_content_id: captcha.captcha_content_id,
+                    solved: captcha.solved,
+                    salt: captcha.salt,
+                    items: captcha.items,
+                    target: captcha.target,
+                    solution,
+                }
+            })
+            .collect();
+        Ok(DatasetWithCaptchas {
+            dataset_id: dataset_id.to_string(),
+            dataset_content_id: dataset.get_str("datasetContentId").unwrap_or_default().to_string(),
+            format: dataset.get_str("format").unwrap_or_default().to_string(),
+            content_tree: tree("contentTree"),
+            solution_tree: tree("solutionTree"),
+            captchas,
+        })
+    }
+
+    fn invalid_hash(&self, func: &str, key: &str, value: &str) -> ProsopoError {
+        db_error(
+            "DATABASE.INVALID_HASH",
+            ErrorContext::new().with("failedFuncName", func).with(key, value),
+            None,
+        )
+    }
+
+    /// `getRandomCaptcha`: up to `size` captchas from a random point of the `randomKey` index,
+    /// wrapping round to its start, or by `$sample` for captchas stored before `randomKey`.
+    pub async fn get_random_captcha(
+        &self,
+        solved: bool,
+        dataset_id: &str,
+        size: Option<f64>,
+    ) -> Result<Vec<SampledCaptcha>, ProsopoError> {
+        if !is_hex(dataset_id) {
+            return Err(self.invalid_hash("getRandomCaptcha", "datasetId", dataset_id));
+        }
+        let sample_size: i64 = match size {
+            Some(size) if size != 0.0 && !size.is_nan() => size.trunc().abs() as i64,
+            _ => 1,
+        };
+        let projection: Document = doc! {
+            "_id": 0,
+            "datasetId": 1,
+            "datasetContentId": 1,
+            "captchaId": 1,
+            "captchaContentId": 1,
+            "items": 1,
+            "target": 1,
+        };
+        let pivot: f64 = self.source.random();
+        let range = |op: &str| -> Operation {
+            let filter: Document = self.filter(
+                &CAPTCHA_RECORD,
+                doc! { "datasetId": dataset_id, "solved": solved, "randomKey": { op: pivot } },
+            );
+            Operation::find(collections::CAPTCHA, filter)
+                .with_projection(projection.clone())
+                .with_sort(doc! { "randomKey": 1 })
+        };
+        let mut documents: Vec<Document> = self.find(range("$gte").with_limit(sample_size)).await?;
+        if (documents.len() as i64) < sample_size {
+            let rest: i64 = sample_size - documents.len() as i64;
+            documents.extend(self.find(range("$lt").with_limit(rest)).await?);
+        }
+        if documents.is_empty() {
+            let base: Document = self.filter(&CAPTCHA_RECORD, doc! { "datasetId": dataset_id, "solved": solved });
+            let fallback: Vec<Document> = self
+                .find(Operation::aggregate(
+                    collections::CAPTCHA,
+                    vec![
+                        doc! { "$match": base },
+                        doc! { "$sample": { "size": js_number(sample_size as f64) } },
+                        doc! { "$project": projection.clone() },
+                    ],
+                ))
+                .await?;
+            if !fallback.is_empty() {
+                return Ok(fallback.into_iter().map(without_id).filter_map(decode).collect());
+            }
+        }
+        if !documents.is_empty() {
+            return Ok(documents.into_iter().filter_map(decode).collect());
+        }
+        let mut context: ErrorContext = ErrorContext::new()
+            .with("failedFuncName", "getRandomCaptcha")
+            .with("solved", solved)
+            .with("datasetId", dataset_id);
+        if let Some(size) = size {
+            context = context.with("size", size);
+        }
+        Err(db_error("DATABASE.CAPTCHA_GET_FAILED", context, None))
+    }
+
+    /// `getCaptchaById`.
+    pub async fn get_captcha_by_id(&self, captcha_ids: &[String]) -> Result<Vec<CaptchaItems>, ProsopoError> {
+        let filter: Document = self.filter(&CAPTCHA_RECORD, doc! { "captchaId": { "$in": captcha_ids } });
+        let documents: Vec<Document> = self
+            .find(
+                Operation::find(collections::CAPTCHA, filter)
+                    .with_projection(doc! { "_id": 0, "captchaId": 1, "datasetId": 1, "items": 1 }),
+            )
+            .await?;
+        if documents.is_empty() {
+            return Err(db_error(
+                "DATABASE.CAPTCHA_GET_FAILED",
+                ErrorContext::new().with("failedFuncName", "getCaptchaById").with("captchaId", json!(captcha_ids)),
+                None,
+            ));
+        }
+        Ok(documents.into_iter().map(without_id).filter_map(decode).collect())
+    }
+
+    /// `removeCaptchas`.
+    pub async fn remove_captchas(&self, captcha_ids: &[String]) -> Result<(), ProsopoError> {
+        let filter: Document = self.filter(&CAPTCHA_RECORD, doc! { "captchaId": { "$in": captcha_ids } });
+        self.run(Operation::Delete {
+            collection: collections::CAPTCHA.to_string(),
+            filter,
+            many: true,
+        })
+        .await?;
+        Ok(())
+    }
+
+    /// `getMostRecentDatasetId`: the last dataset inserted, by `_id`.
+    pub async fn get_most_recent_dataset_id(&self) -> Result<Option<String>, ProsopoError> {
+        let documents: Vec<Document> = self
+            .find(
+                Operation::find(collections::DATASET, Document::new())
+                    .with_sort(doc! { "_id": -1 })
+                    .with_limit(1),
+            )
+            .await?;
+        Ok(documents.first().and_then(|dataset| dataset.get_str("datasetId").ok()).map(str::to_string))
+    }
+
+    /// `getDatasetDetails`.
+    pub async fn get_dataset_details(&self, dataset_id: &str) -> Result<StoredDataset, ProsopoError> {
+        if !is_hex(dataset_id) {
+            return Err(self.invalid_hash("getDatasetDetails", "datasetId", dataset_id));
+        }
+        let filter: Document = self.filter(&DATASET_RECORD, doc! { "datasetId": dataset_id });
+        let found: Option<Document> =
+            self.find(Operation::find(collections::DATASET, filter).with_limit(1)).await?.into_iter().next();
+        found.and_then(decode).ok_or_else(|| {
+            db_error(
+                "DATABASE.DATASET_GET_FAILED",
+                ErrorContext::new().with("failedFuncName", "getDatasetDetails").with("datasetId", dataset_id),
+                None,
+            )
+        })
+    }
+
+    /// `getAllCaptchasByDatasetId`: the solved captchas, or for any other state the unsolved.
+    pub async fn get_all_captchas_by_dataset_id(
+        &self,
+        dataset_id: &str,
+        state: Option<CaptchaStates>,
+    ) -> Result<Vec<StoredCaptcha>, ProsopoError> {
+        let filter: Document = self.filter(
+            &CAPTCHA_RECORD,
+            doc! { "datasetId": dataset_id, "solved": state == Some(CaptchaStates::Solved) },
+        );
+        let documents: Vec<Document> = self.find(Operation::find(collections::CAPTCHA, filter)).await?;
+        Ok(documents.into_iter().map(without_id).filter_map(decode).collect())
+    }
+
+    /// `getDatasetIdWithSolvedCaptchasOfSizeN`: a random dataset with at least that many solutions.
+    pub async fn get_dataset_id_with_solved_captchas_of_size_n(&self, count: f64) -> Result<String, ProsopoError> {
+        let documents: Vec<Document> = self
+            .find(Operation::aggregate(
+                collections::SOLUTION,
+                vec![
+                    doc! { "$match": {} },
+                    doc! { "$group": { "_id": "$datasetId", "count": { "$sum": 1 } } },
+                    doc! { "$match": { "count": { "$gte": js_number(count) } } },
+                    doc! { "$sample": { "size": 1 } },
+                ],
+            ))
+            .await?;
+        documents
+            .first()
+            .and_then(|group| group.get_str("_id").ok())
+            .map(str::to_string)
+            .ok_or_else(|| db_error("DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED", ErrorContext::new(), None))
+    }
+
+    /// `getRandomSolvedCaptchasFromSingleDataset`.
+    pub async fn get_random_solved_captchas_from_single_dataset(
+        &self,
+        dataset_id: &str,
+        size: f64,
+    ) -> Result<Vec<SampledSolution>, ProsopoError> {
+        if !is_hex(dataset_id) {
+            return Err(self.invalid_hash("getRandomSolvedCaptchasFromSingleDataset", "datasetId", dataset_id));
+        }
+        let sample_size: i64 = if size != 0.0 && !size.is_nan() { size.trunc().abs() as i64 } else { 1 };
+        let documents: Vec<Document> = self
+            .find(Operation::aggregate(
+                collections::SOLUTION,
+                vec![
+                    doc! { "$match": { "datasetId": dataset_id } },
+                    doc! { "$sample": { "size": js_number(sample_size as f64) } },
+                    doc! { "$project": { "captchaId": 1, "captchaContentId": 1, "solution": 1 } },
+                ],
+            ))
+            .await?;
+        if documents.is_empty() {
+            return Err(db_error(
+                "DATABASE.SOLUTION_GET_FAILED",
+                ErrorContext::new()
+                    .with("failedFuncName", "getRandomSolvedCaptchasFromSingleDataset")
+                    .with("datasetId", dataset_id)
+                    .with("size", size),
+                None,
+            ));
+        }
+        Ok(documents.into_iter().filter_map(decode).collect())
+    }
+}

@@ -15,12 +15,12 @@
 //! The client schemas (src/types/client.ts): the site settings stored on a provider's client
 //! record, and the portal's user and account documents a provider reads.
 
-use crate::number::js_number;
+use crate::number::{js_number, json_to_bson};
 use crate::schema::{
     array, boolean, date, document_array, field, map_of, mixed, nested, number, string, subdocument, Field, Kind,
     Schema,
 };
-use bson::{Bson, Document};
+use bson::Bson;
 use prosopo_types::captcha_type::CaptchaType;
 use prosopo_types::settings::{
     frictionless_threshold_default, frictionless_types_default, TrafficFilterAction,
@@ -31,22 +31,8 @@ use prosopo_types::settings::{
     PUZZLE_MAX_DIFFICULTY_MAX, REQUIRE_ALL_CONDITIONS_DEFAULT, TRAFFIC_FILTER_ABUSER_SCORE_THRESHOLD_DEFAULT,
 };
 use prosopo_types::timeouts::{DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT, DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT};
-use serde_json::Value;
 use std::sync::LazyLock;
 
-/// A JSON value as a JS object literal holds it, in BSON.
-fn json_to_bson(value: &Value) -> Bson {
-    match value {
-        Value::Null => Bson::Null,
-        Value::Bool(flag) => Bson::Boolean(*flag),
-        Value::Number(number) => js_number(number.as_f64().unwrap_or(f64::NAN)),
-        Value::String(text) => Bson::String(text.clone()),
-        Value::Array(items) => Bson::Array(items.iter().map(json_to_bson).collect()),
-        Value::Object(entries) => {
-            Bson::Document(entries.iter().map(|(key, entry)| (key.clone(), json_to_bson(entry))).collect::<Document>())
-        }
-    }
-}
 
 fn country_override_actions() -> Vec<Field> {
     vec![

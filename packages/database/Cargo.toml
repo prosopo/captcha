@@ -15,12 +15,19 @@ path = "rust/lib.rs"
 [dependencies]
 bson = { version = "3.1", features = ["serde"] }
 form_urlencoded = "1.2"
+getrandom = "0.3"
 mongodb = { version = "3.9", default-features = false, features = ["compat-3-3-0", "bson-3", "rustls-tls", "dns-resolver"] }
 prosopo-common = { path = "../common" }
 prosopo-logger = { path = "../logger" }
+prosopo-types = { path = "../types" }
+prosopo-types-database = { path = "../types-database" }
+prosopo-util-crypto = { path = "../util-crypto" }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
 tokio = { version = "1", features = ["sync", "time"] }
 url = "2.5"
 
 [dev-dependencies]
+bson = { version = "3.1", features = ["serde", "serde_json-1"] }
+hex = "0.4"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time"] }
