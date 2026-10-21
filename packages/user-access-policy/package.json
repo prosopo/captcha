@@ -39,7 +39,8 @@
 		"typecheck": "tsc --project tsconfig.types.json",
 		"test:unit": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=unit pnpm exec vitest run --config ./vite.test.config.ts",
 		"test:integration": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=integration pnpm exec vitest run --config ./vite.test.config.ts",
-		"test": "pnpm run test:unit && pnpm run test:integration"
+		"test": "pnpm run test:unit && pnpm run test:integration",
+		"equivalence": "pnpm --workspace-root exec tsx packages/user-access-policy/rust/equivalence/generate.ts && cargo test -p prosopo-user-access-policy -- --include-ignored"
 	},
 	"dependencies": {
 		"@prosopo/api": "workspace:*",

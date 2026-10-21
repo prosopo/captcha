@@ -25,6 +25,15 @@ const V4_BITS: u32 = 32;
 const V6_GROUPS: usize = 8;
 const V6_BITS: u32 = 128;
 
+/// The bits after the first `mask` of a `width`-bit address.
+fn host_bits(mask: u32, width: u32) -> u128 {
+    match width.saturating_sub(mask) {
+        0 => 0,
+        128 => u128::MAX,
+        host => (1u128 << host) - 1,
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Address4 {
     address: String,
@@ -152,6 +161,16 @@ impl Address4 {
 
     pub fn big_int(&self) -> u128 {
         u128::from(u32::from_be_bytes(self.octets))
+    }
+
+    /// `startAddress().bigInt()`: the first address of the subnet.
+    pub fn start_address_big_int(&self) -> u128 {
+        self.big_int() & !host_bits(self.subnet_mask, V4_BITS)
+    }
+
+    /// `endAddress().bigInt()`: the last address of the subnet.
+    pub fn end_address_big_int(&self) -> u128 {
+        self.big_int() | host_bits(self.subnet_mask, V4_BITS)
     }
 
     pub fn to_group6(&self) -> String {
@@ -344,6 +363,16 @@ impl Address6 {
         self.groups
             .iter()
             .fold(0u128, |acc, g| (acc << 16) | u128::from(*g))
+    }
+
+    /// `startAddress().bigInt()`: the first address of the subnet.
+    pub fn start_address_big_int(&self) -> u128 {
+        self.big_int() & !host_bits(self.subnet_mask, V6_BITS)
+    }
+
+    /// `endAddress().bigInt()`: the last address of the subnet.
+    pub fn end_address_big_int(&self) -> u128 {
+        self.big_int() | host_bits(self.subnet_mask, V6_BITS)
     }
 
     pub fn canonical_form(&self) -> String {

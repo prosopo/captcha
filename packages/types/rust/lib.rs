@@ -24,6 +24,7 @@ pub mod datasets;
 pub mod decision_machine;
 pub mod ipapi;
 pub mod keyring;
+pub mod matched_access_rule;
 mod js_regex;
 pub mod number;
 pub mod provider_api;
@@ -49,6 +50,7 @@ pub use datasets::{
     pow_challenge_id_schema, CaptchaItemTypes, CaptchaStates, CaptchaStatus, CaptchaTypes,
     DappPayee, GovernanceStatus, InputMethod, StoredStatusNames, POW_SEPARATOR,
 };
+pub use matched_access_rule::{AccessPolicyType, MatchedAccessRule, MatchedRuleCondition};
 pub use number::{js_math_round, JsNumber};
 pub use reasons::{
     is_blocking_captcha_result, CaptchaResult, FrictionlessReason, ResultReason,

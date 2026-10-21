@@ -469,6 +469,16 @@ and `wiki` submodules, and deployment config (§3).
 | job-definitions | `getCompositeIpAddress`, `getIpAddressFromComposite` | ipinfo job, anomaly detectors, UAP rule formatting |
 | aws-serverless-api | `getCompositeIpAddress` | one integration test |
 
+The private repo also imports `@prosopo/user-access-policy` directly, and keeps
+doing so after the provider moves: job-definitions pushes rules with
+`AccessRulesApiClient` and computes `makeAccessRuleHash`,
+`transformAccessRuleIntoRecord` and `transformAccessRuleRecordIntoRule`;
+database-private builds its rules model on `accessRuleMongooseSchema`; the portal
+and types-private use the enums, field lists and header helpers. So the TS
+user-access-policy package cannot be deleted with the provider. The rule hash is a
+Redis key the Rust also computes, so it exists twice until those jobs either move
+to Rust or take the hash from a WASM build (§5 rule).
+
 Both functions convert between an IP address and the composite form stored
 in Mongo (`type` plus `lower`/`upper` 64-bit halves of the address), so their
 output is a stored record and must be byte-identical (§0).

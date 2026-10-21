@@ -31,7 +31,9 @@ impl fmt::Display for UnknownEnumValue {
 impl std::error::Error for UnknownEnumValue {}
 
 /// Each variant is written `Variant: "tsKey" = "value"`: the TS member name (kept for the
-/// generated TypeScript) and the string value, which serde uses.
+/// generated TypeScript) and the string value, which serde uses. Exported so a crate that
+/// owns a TS enum (user-access-policy, for one) defines it the same way.
+#[macro_export]
 macro_rules! wire_enum {
     (
         $(#[$meta:meta])*
@@ -73,13 +75,13 @@ macro_rules! wire_enum {
         }
 
         impl std::str::FromStr for $name {
-            type Err = $crate::wire_enum::UnknownEnumValue;
+            type Err = $crate::UnknownEnumValue;
 
-            fn from_str(value: &str) -> Result<$name, Self::Err> {
+            fn from_str(value: &str) -> ::std::result::Result<$name, Self::Err> {
                 $name::ALL
                     .into_iter()
                     .find(|variant| variant.as_str() == value)
-                    .ok_or_else(|| $crate::wire_enum::UnknownEnumValue {
+                    .ok_or_else(|| $crate::UnknownEnumValue {
                         enum_name: stringify!($name),
                         value: value.to_string(),
                     })

@@ -1,0 +1,36 @@
+[package]
+name = "prosopo-user-access-policy"
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "rust/lib.rs"
+
+[dependencies]
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+hex = "0.4"
+md-5 = "0.10"
+num-bigint = "0.4"
+num-traits = "0.2"
+prosopo-api-route = { path = "../api-route" }
+prosopo-logger = { path = "../logger" }
+prosopo-redis-client = { path = "../redis-client" }
+prosopo-types = { path = "../types" }
+prosopo-util = { path = "../util" }
+prosopo-util-crypto = { path = "../util-crypto" }
+prosopo-web-bot-auth = { path = "../web-bot-auth" }
+redis = { version = "1.7", default-features = false, features = ["aio", "tokio-comp", "connection-manager"] }
+regex = "1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }
+sha2 = "0.10"
+tokio = { version = "1", features = ["rt", "time", "macros"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "time"] }
