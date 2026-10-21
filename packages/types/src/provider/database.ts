@@ -790,12 +790,17 @@ export type Session = {
 // Note: challenge uses PowChallengeIdSchema for runtime validation
 // The PoWCaptchaStored interface enforces the PoWChallengeId template literal type at compile time
 /**
- * What is kept from a verified proof of fingerprint. The proof itself is not
- * stored — its Merkle paths are large and spent once verified. See
- * `summariseFingerprintProof` in @prosopo/fingerprint for what each field is
- * for; in short, `root` is 1:1 with the account address by construction, and a
- * `groupHash` carrying several `(colorDepth, hardwareConcurrency)` pairs is a
- * client redrawing an identity a real device cannot change.
+ * The disclosed values that are fixed by the installation and the host, kept
+ * individually alongside `groupHash`, which is a hash of exactly these.
+ *
+ * `groupHash` alone is enough to group by, but it is one-way: a cohort could be
+ * counted and never described, so "which timezone is this concentrated in?"
+ * would be unanswerable after the fact. Keeping the values costs about 170
+ * bytes a record against a whole proof's ~7.8KB, and the hash stays
+ * precomputed so it can carry an index.
+ *
+ * `languages` is a nested array in the component set and is stored as canonical
+ * JSON, so it is one indexable scalar rather than an array path.
  */
 export interface FingerprintDisclosedValuesStored {
 	timezone?: string;
@@ -806,9 +811,29 @@ export interface FingerprintDisclosedValuesStored {
 	localStorage?: boolean;
 }
 
+/**
+ * What is worth keeping from a verified fingerprint proof.
+ *
+ * The proof itself is not persisted: each disclosure carries a full Merkle
+ * path, which is large and of no use once the proof has been checked.
+ *
+ *   root      the commitment to the whole component set. Both this and the
+ *             account address are functions of that one set, so one root
+ *             belongs to one address and vice versa.
+ *   groupHash a hash of the disclosed values in `disclosed`.
+ *   bucketId  the disclosed `deviceBucket` digest, an opaque hash of the device
+ *             traits that do not change between sessions. Carried through only
+ *             because its disclosure hashed to `root`, so it cannot be
+ *             presented independently of the identity the same commitment
+ *             produced. Absent for a client that did not disclose it.
+ *   colorDepth / hardwareConcurrency
+ *             disclosed values kept per record, so a cohort can be described
+ *             rather than only counted.
+ */
 export interface FingerprintSummaryStored {
 	root: string;
 	groupHash: string;
+	bucketId?: string;
 	colorDepth?: number;
 	hardwareConcurrency?: number;
 	disclosed?: FingerprintDisclosedValuesStored;
@@ -826,6 +851,7 @@ export const FingerprintDisclosedValuesSchema = object({
 export const FingerprintSummarySchema = object({
 	root: string(),
 	groupHash: string(),
+	bucketId: string().optional(),
 	colorDepth: number().optional(),
 	hardwareConcurrency: number().optional(),
 	disclosed: FingerprintDisclosedValuesSchema.optional(),
@@ -891,7 +917,6 @@ export type PendingImageCaptchaRequest = {
 export interface PoWCaptchaStored
 	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
 		StoredCaptcha {
-	// Only ever present on PoW: the proof arrives with the solution submit.
 	fingerprintSummary?: FingerprintSummaryStored;
 }
 

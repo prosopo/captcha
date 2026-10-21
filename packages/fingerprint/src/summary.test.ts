@@ -23,7 +23,6 @@ import { summariseFingerprintProof } from "./summary.js";
 
 const HEX_HASH = /^0x[0-9a-f]{64}$/;
 
-/** A component set shaped like a real one, with every disclosed key present. */
 const components = (
 	overrides: Record<string, unknown> = {},
 ): UnknownComponents => {
@@ -36,7 +35,9 @@ const components = (
 		hardwareConcurrency: 8,
 		languages: [["en-GB"], ["en"]],
 		architecture: 255,
-		// Undisclosed, but committed to — so it moves the root and nothing else.
+		platform: "MacIntel",
+		screenResolution: [1920, 1080],
+		deviceBucket: "a1b2c3d4e5f60718293a4b5c6d7e8f90",
 		audio: 124.04347527516074,
 		...overrides,
 	};
@@ -65,10 +66,7 @@ describe("summariseFingerprintProof", () => {
 		expect(summary?.hardwareConcurrency).toBe(8);
 	});
 
-	it("holds the group hash steady while the redrawn pair moves", () => {
-		// This is the whole point: an anti-detect build redraws colorDepth and
-		// hardwareConcurrency per launch but cannot move the install-stable six,
-		// so one group has to carry several pairs.
+	it("holds the group hash steady when only colorDepth and cores differ", () => {
 		const a = summarise({ colorDepth: 24, hardwareConcurrency: 8 });
 		const b = summarise({ colorDepth: 30, hardwareConcurrency: 10 });
 
@@ -77,9 +75,7 @@ describe("summariseFingerprintProof", () => {
 		expect(a?.hardwareConcurrency).not.toBe(b?.hardwareConcurrency);
 	});
 
-	it("keeps the install-stable values beside their hash", () => {
-		// The hash is one-way, so a cohort could otherwise be counted but never
-		// described. `languages` is a nested array and is stored as canonical JSON.
+	it("keeps the grouped values beside their hash", () => {
 		const summary = summarise();
 
 		expect(summary?.disclosed).toStrictEqual({
@@ -101,7 +97,7 @@ describe("summariseFingerprintProof", () => {
 		expect(summary?.disclosed?.cookiesEnabled).toBe(true);
 	});
 
-	it("moves the group hash when an install-stable value differs", () => {
+	it("moves the group hash when a grouped value differs", () => {
 		const a = summarise({ timezone: "Europe/London" });
 		const b = summarise({ timezone: "America/New_York" });
 
@@ -109,14 +105,88 @@ describe("summariseFingerprintProof", () => {
 	});
 
 	it("gives a fresh root when only an undisclosed component changed", () => {
-		// `audio` is committed to but never disclosed. A root that moves while
-		// every disclosed value holds is what a per-launch reseed looks like.
 		const a = summarise({ audio: 1 });
 		const b = summarise({ audio: 2 });
 
 		expect(a?.root).not.toBe(b?.root);
 		expect(a?.groupHash).toBe(b?.groupHash);
 		expect(a?.colorDepth).toBe(b?.colorDepth);
+	});
+
+	it("carries the bucketId from the proven disclosure", () => {
+		const summary = summarise();
+
+		expect(summary?.bucketId).toBe("a1b2c3d4e5f60718293a4b5c6d7e8f90");
+	});
+
+	it("reveals nothing but the digest — no platform, screen or fonts", () => {
+		// The privacy property: the verifier never receives the inputs.
+		const encoded = encodeFingerprintProof(
+			buildFingerprintProofFromComponents(
+				components(),
+				FINGERPRINT_DISCLOSURE_KEYS,
+			),
+		);
+		expect(encoded).not.toContain("MacIntel");
+		expect(encoded).not.toContain("1920");
+		expect(summariseFingerprintProof(encoded)?.bucketId).toBeDefined();
+	});
+
+	it("holds the bucketId steady when only the exit region moves", () => {
+		// timezone and languages follow the presented region, so they are kept out
+		// of the bucket: one device must not group differently per region.
+		const a = summarise({
+			timezone: "Europe/London",
+			languages: [["en-GB"], ["en"]],
+		});
+		const b = summarise({
+			timezone: "Asia/Tokyo",
+			languages: [["ja-JP"], ["ja"]],
+		});
+
+		expect(a?.bucketId).toBe(b?.bucketId);
+		expect(a?.groupHash).not.toBe(b?.groupHash);
+	});
+
+	it("moves the bucketId when the device digest differs", () => {
+		const a = summarise({ deviceBucket: "a".repeat(32) });
+		const b = summarise({ deviceBucket: "b".repeat(32) });
+
+		expect(a?.bucketId).not.toBe(b?.bucketId);
+	});
+
+	it("keeps the bucketId while the account-bearing root churns", () => {
+		// The signal this exists for: audio is undisclosed, so reseeding it mints
+		// a fresh identity under an unchanged device.
+		const a = summarise({ audio: 1 });
+		const b = summarise({ audio: 2 });
+
+		expect(a?.root).not.toBe(b?.root);
+		expect(a?.bucketId).toBe(b?.bucketId);
+	});
+
+	it("refuses a bucketId built on a tampered disclosure", () => {
+		const proof = buildFingerprintProofFromComponents(
+			components(),
+			FINGERPRINT_DISCLOSURE_KEYS,
+		);
+		const tampered = JSON.parse(JSON.stringify(proof));
+		tampered.disclosures.find(
+			(d: { key: string }) => d.key === "deviceBucket",
+		).value = "f".repeat(32);
+
+		expect(summariseFingerprintProof(JSON.stringify(tampered))).toBeUndefined();
+	});
+
+	it("omits the bucketId when the client did not disclose one", () => {
+		const proof = buildFingerprintProofFromComponents(components(), [
+			"timezone",
+			"languages",
+		]);
+		const summary = summariseFingerprintProof(encodeFingerprintProof(proof));
+
+		expect(summary).toBeDefined();
+		expect(summary?.bucketId).toBeUndefined();
 	});
 
 	it("returns undefined for an absent proof", () => {
@@ -136,7 +206,6 @@ describe("summariseFingerprintProof", () => {
 			FINGERPRINT_DISCLOSURE_KEYS,
 		);
 		const tampered = JSON.parse(JSON.stringify(proof));
-		// Claim more cores than the committed leaf proves.
 		const target = tampered.disclosures.find(
 			(d: { key: string }) => d.key === "hardwareConcurrency",
 		);

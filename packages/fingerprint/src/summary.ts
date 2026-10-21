@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type {
+	FingerprintDisclosedValuesStored,
+	FingerprintSummaryStored,
+} from "@prosopo/types";
 import { hexHash } from "@prosopo/util-crypto";
 import {
 	type FingerprintProof,
@@ -19,13 +23,12 @@ import {
 } from "./proof.js";
 
 /**
- * The disclosed keys a device cannot change between sessions. They are fixed by
- * the installation and the host, so a hash over them names a population cohort
- * that survives a client redrawing the rest of its identity.
+ * The disclosed keys that are fixed by the installation and the host. A hash
+ * over them names a cohort of devices.
  *
- * Deliberately excludes `colorDepth` and `hardwareConcurrency`: those two are
- * the ones an anti-detect build redraws per launch, and they are kept separate
- * below so a reader can see the pair move underneath one stable group.
+ * `colorDepth` and `hardwareConcurrency` are disclosed too but kept out of the
+ * hash and stored beside it, so that the values can be read per cohort rather
+ * than only folded into it.
  */
 const GROUP_KEYS = [
 	"cookiesEnabled",
@@ -36,52 +39,8 @@ const GROUP_KEYS = [
 	"architecture",
 ] as const;
 
-/**
- * What is worth keeping from a proof once it has been checked.
- *
- * The proof itself is not persisted — each disclosure carries a full Merkle
- * path, which is large and of no use after verification. This is the part a
- * sightings aggregation needs:
- *
- *   root      the commitment to the whole component set. Both this and the
- *             account address are functions of that one set, so they are 1:1 by
- *             construction — a root arriving with a second address, or an
- *             address with a second root, cannot happen honestly.
- *   groupHash the install-stable cohort (see GROUP_KEYS).
- *   colorDepth / hardwareConcurrency
- *             the two disclosed values that move. A real device reports one
- *             pair, forever; one group carrying several pairs is several
- *             machines or one client redrawing its identity.
- */
-export interface FingerprintSummary {
-	root: string;
-	groupHash: string;
-	colorDepth?: number;
-	hardwareConcurrency?: number;
-	disclosed?: FingerprintDisclosedValues;
-}
-
-/**
- * The install-stable disclosed values, kept individually alongside the hash of
- * them.
- *
- * `groupHash` alone is enough to bucket by, but it is one-way: a cohort could be
- * counted and never described, so "which timezone is this concentrated in?"
- * would be unanswerable after the fact. Keeping the values costs about 170 bytes
- * a record against a stored proof's ~7.8KB, and the hash stays precomputed so it
- * can carry an index.
- *
- * `languages` is a nested array in the component set and is stored as canonical
- * JSON, so it is one indexable scalar rather than an array path.
- */
-export interface FingerprintDisclosedValues {
-	timezone?: string;
-	languages?: string;
-	architecture?: number;
-	cookiesEnabled?: boolean;
-	sessionStorage?: boolean;
-	localStorage?: boolean;
-}
+export type FingerprintSummary = FingerprintSummaryStored;
+export type FingerprintDisclosedValues = FingerprintDisclosedValuesStored;
 
 const asNumber = (value: unknown): number | undefined =>
 	typeof value === "number" && Number.isFinite(value) ? value : undefined;
@@ -93,8 +52,9 @@ const asNumber = (value: unknown): number | undefined =>
  * Structural verification is not optional here: an unverified disclosure is a
  * client-asserted value with a decorative Merkle path beside it, and storing
  * one would put a forgeable field into an aggregation that reads as
- * tamper-evident. Value *bounding* is a separate concern and stays in the
- * routing machine's validator — this only refuses what does not hash together.
+ * tamper-evident. Whether the values are *plausible* is a separate concern and
+ * stays in the routing machine's validator; this only refuses what does not
+ * hash together.
  */
 export const summariseFingerprintProof = (
 	encoded: string | undefined,
@@ -148,15 +108,16 @@ export const summariseFingerprintProof = (
 		if (typeof value === "boolean") disclosed[key] = value;
 	}
 
+	const bucketId = byKey.get("deviceBucket");
+	const colorDepth = asNumber(byKey.get("colorDepth"));
+	const hardwareConcurrency = asNumber(byKey.get("hardwareConcurrency"));
+
 	return {
 		root: proof.root,
 		groupHash: hexHash(groupInput),
-		...(asNumber(byKey.get("colorDepth")) !== undefined && {
-			colorDepth: asNumber(byKey.get("colorDepth")),
-		}),
-		...(asNumber(byKey.get("hardwareConcurrency")) !== undefined && {
-			hardwareConcurrency: asNumber(byKey.get("hardwareConcurrency")),
-		}),
+		...(typeof bucketId === "string" && bucketId !== "" && { bucketId }),
+		...(colorDepth !== undefined && { colorDepth }),
+		...(hardwareConcurrency !== undefined && { hardwareConcurrency }),
 		...(Object.keys(disclosed).length > 0 && { disclosed }),
 	};
 };
