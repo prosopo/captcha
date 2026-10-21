@@ -301,19 +301,30 @@ pub fn preprocess(
     Schema::new(Node::Preprocess(Arc::new(transform), schema))
 }
 
-/// `custom(check, { message })`: any value, rejected with a fatal issue when `check` fails.
-pub fn custom(
+/// `custom(check)`: any value, rejected with a fatal issue when `check` fails.
+pub fn custom(check: impl Fn(&Data) -> bool + Send + Sync + 'static) -> Schema {
+    custom_issue(check, None)
+}
+
+/// `custom(check, { message })`.
+pub fn custom_with_message(
     check: impl Fn(&Data) -> bool + Send + Sync + 'static,
     message: impl Into<String>,
 ) -> Schema {
-    let message: String = message.into();
+    custom_issue(check, Some(message.into()))
+}
+
+fn custom_issue(
+    check: impl Fn(&Data) -> bool + Send + Sync + 'static,
+    message: Option<String>,
+) -> Schema {
     any().super_refine(move |value, ctx| {
         if !check(value) {
-            ctx.add_issue(
-                IssueData::code("custom")
-                    .with("message", message.clone())
-                    .fatal(),
-            );
+            let issue: IssueData = match &message {
+                Some(message) => IssueData::code("custom").with("message", message.clone()),
+                None => IssueData::code("custom"),
+            };
+            ctx.add_issue(issue.fatal());
         }
     })
 }

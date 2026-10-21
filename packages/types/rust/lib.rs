@@ -15,17 +15,44 @@
 //! Rust port of `@prosopo/types`, built up module by module. Rust is the source of truth for
 //! the wire types the widget shares (MIGRATION.md §5).
 
+pub mod api_params;
 pub mod captcha_type;
+pub mod client;
+pub mod datasets;
+pub mod decision_machine;
+pub mod reasons;
+pub mod sanitise;
 mod scale;
+pub mod timeouts;
 pub mod token;
+mod wire_enum;
 
-pub use captcha_type::{CaptchaType, UnknownCaptchaType};
+pub use api_params::ApiParams;
+pub use captcha_type::{
+    captcha_type_schema, selectable_captcha_type_schema, CaptchaType, UnknownCaptchaType,
+};
+pub use client::{
+    get_test_site_key_mode, mode_schema, BlockRuleType, ModeEnum, ScheduledTaskNames,
+    ScheduledTaskStatus, TestSiteKeyMode, Tier, ALWAYS_FAIL_SITE_KEY, ALWAYS_PASS_SITE_KEY,
+};
+pub use datasets::{
+    pow_challenge_id_schema, CaptchaItemTypes, CaptchaStates, CaptchaStatus, CaptchaTypes,
+    DappPayee, GovernanceStatus, InputMethod, StoredStatusNames, POW_SEPARATOR,
+};
+pub use reasons::{
+    is_blocking_captcha_result, CaptchaResult, FrictionlessReason, ResultReason,
+    NO_MEASUREMENT_REASONS,
+};
+pub use sanitise::{bounded_array, bounded_string, safe_line, safe_text, InputLimits};
 pub use token::{
     decode_procaptcha_output, encode_procaptcha_output, is_procaptcha_token, OutputSignatures,
     ProcaptchaOutput, SignatureTypes, TokenDecodeError,
 };
+pub use wire_enum::UnknownEnumValue;
 
 #[cfg(test)]
 mod equivalence;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod wire_equivalence;

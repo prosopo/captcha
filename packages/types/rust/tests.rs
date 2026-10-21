@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Port of src/procaptcha/token.test.ts. `ProcaptchaOutputSchema.safeParse` is serde
-//! deserialisation here.
+//! Ports of the TS test files, one module each. In the token tests
+//! `ProcaptchaOutputSchema.safeParse` is serde deserialisation.
 
 use crate::scale::Writer;
 use crate::{
@@ -327,5 +327,440 @@ mod procaptcha_output_schema {
     #[test]
     fn rejects_an_unknown_captcha_type() {
         assert!(!parses(with("captchaType", json!("nope"))));
+    }
+}
+
+/// Port of src/api/sanitise.test.ts.
+mod sanitise {
+    use crate::{bounded_array, bounded_string, safe_line, safe_text, InputLimits};
+    use prosopo_api_route::schema::{number, Data};
+    use serde_json::{json, Map, Value};
+
+    fn accepts(schema: &prosopo_api_route::schema::Schema, value: Value) -> bool {
+        schema.safe_parse(Some(&value)).is_ok()
+    }
+
+    fn issues(schema: &prosopo_api_route::schema::Schema, value: Value) -> Vec<Map<String, Value>> {
+        schema.safe_parse(Some(&value)).expect_err("rejected")
+    }
+
+    #[test]
+    fn orders_the_limits_from_identifier_sized_up_to_token_sized() {
+        const {
+            assert!(InputLimits::ID < InputLimits::EMAIL);
+            assert!(InputLimits::EMAIL < InputLimits::URL);
+            assert!(InputLimits::URL < InputLimits::TEXT);
+            assert!(InputLimits::TEXT < InputLimits::LONG_TEXT);
+            assert!(InputLimits::LONG_TEXT < InputLimits::TOKEN);
+        }
+    }
+
+    #[test]
+    fn keeps_every_limit_positive() {
+        for (_, limit) in InputLimits::ENTRIES {
+            assert!(limit > 0);
+        }
+    }
+
+    #[test]
+    fn bounded_string_accepts_an_empty_string() {
+        assert!(accepts(&bounded_string(InputLimits::TEXT), json!("")));
+    }
+
+    #[test]
+    fn bounded_string_accepts_a_string_at_the_limit() {
+        assert!(accepts(&bounded_string(4), json!("abcd")));
+    }
+
+    #[test]
+    fn bounded_string_rejects_a_string_one_over_the_limit() {
+        assert!(!accepts(&bounded_string(4), json!("abcde")));
+    }
+
+    #[test]
+    fn bounded_string_defaults_to_the_text_limit() {
+        let schema = bounded_string(InputLimits::TEXT);
+        assert!(accepts(&schema, json!("a".repeat(InputLimits::TEXT))));
+        assert!(!accepts(&schema, json!("a".repeat(InputLimits::TEXT + 1))));
+    }
+
+    #[test]
+    fn bounded_string_does_not_police_the_character_set() {
+        assert!(accepts(
+            &bounded_string(InputLimits::TEXT),
+            json!("a\u{0}b")
+        ));
+    }
+
+    #[test]
+    fn bounded_string_rejects_a_non_string() {
+        let schema = bounded_string(InputLimits::TEXT);
+        assert!(!accepts(&schema, json!(1)));
+        assert!(!accepts(&schema, json!({ "$gt": "" })));
+    }
+
+    #[test]
+    fn bounded_string_stays_chainable() {
+        assert!(!accepts(&bounded_string(4).min(2.0), json!("a")));
+    }
+
+    #[test]
+    fn safe_text_accepts_ordinary_text() {
+        assert!(accepts(&safe_text(InputLimits::TEXT), json!("hello world")));
+    }
+
+    #[test]
+    fn safe_text_accepts_tabs_and_line_breaks() {
+        assert!(accepts(
+            &safe_text(InputLimits::TEXT),
+            json!("a\tb\nc\r\nd")
+        ));
+    }
+
+    #[test]
+    fn safe_text_rejects_control_characters() {
+        for value in [
+            "a\u{0}b", "a\u{8}b", "a\u{b}b", "a\u{c}b", "a\u{e}b", "a\u{1b}b", "a\u{7f}b",
+        ] {
+            assert!(
+                !accepts(&safe_text(InputLimits::TEXT), json!(value)),
+                "{value:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn safe_text_accepts_c1_characters() {
+        assert!(accepts(&safe_text(InputLimits::TEXT), json!("a\u{85}b")));
+    }
+
+    #[test]
+    fn safe_text_accepts_non_latin_text_and_emoji() {
+        assert!(accepts(
+            &safe_text(InputLimits::TEXT),
+            json!("日本語 — ok ✅")
+        ));
+    }
+
+    #[test]
+    fn safe_text_enforces_its_length_limit() {
+        assert!(!accepts(&safe_text(3), json!("abcd")));
+    }
+
+    #[test]
+    fn safe_text_reports_a_control_character_with_a_readable_message() {
+        let issues = issues(&safe_text(InputLimits::TEXT), json!("a\u{0}b"));
+        assert_eq!(issues[0]["message"], "must not contain control characters");
+    }
+
+    #[test]
+    fn safe_line_accepts_a_single_line() {
+        assert!(accepts(&safe_line(InputLimits::NAME), json!("A Name")));
+    }
+
+    #[test]
+    fn safe_line_rejects_what_could_inject_a_header() {
+        for value in ["a\nb", "a\rb", "a\tb", "a\u{0}b"] {
+            assert!(
+                !accepts(&safe_line(InputLimits::NAME), json!(value)),
+                "{value:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn safe_line_defaults_to_the_name_limit() {
+        let schema = safe_line(InputLimits::NAME);
+        assert!(accepts(&schema, json!("a".repeat(InputLimits::NAME))));
+        assert!(!accepts(&schema, json!("a".repeat(InputLimits::NAME + 1))));
+    }
+
+    #[test]
+    fn safe_line_accepts_an_empty_string() {
+        assert!(accepts(&safe_line(InputLimits::NAME), json!("")));
+    }
+
+    #[test]
+    fn safe_line_reports_a_line_break_with_a_readable_message() {
+        let issues = issues(&safe_line(InputLimits::NAME), json!("a\nb"));
+        assert_eq!(
+            issues[0]["message"],
+            "must not contain control characters or line breaks"
+        );
+    }
+
+    #[test]
+    fn bounded_array_accepts_arrays_up_to_the_cap() {
+        let schema = bounded_array(number(), 3);
+        let parse = |value: Value| -> Data { schema.safe_parse(Some(&value)).expect("valid") };
+        assert_eq!(parse(json!([1, 2, 3])), Some(json!([1, 2, 3])));
+        assert_eq!(parse(json!([])), Some(json!([])));
+    }
+
+    #[test]
+    fn bounded_array_rejects_an_over_long_array_with_a_single_issue() {
+        let issues = issues(
+            &bounded_array(number(), 3),
+            json!(["a", "b", "c", "d", "e"]),
+        );
+        assert_eq!(issues.len(), 1);
+        assert_eq!(
+            issues[0]["message"],
+            "Array must contain at most 3 element(s)"
+        );
+    }
+
+    #[test]
+    fn bounded_array_reports_element_issues_within_the_cap() {
+        let issues = issues(&bounded_array(number(), 3), json!([1, "b"]));
+        assert_eq!(issues[0]["path"], json!([1]));
+    }
+
+    #[test]
+    fn bounded_array_reports_a_non_array_as_a_type_error() {
+        let issues = issues(&bounded_array(number(), 3), json!("nope"));
+        assert_eq!(issues[0]["code"], "invalid_type");
+    }
+}
+
+/// Port of src/client/testSiteKeys.test.ts.
+mod test_site_keys {
+    use crate::{
+        get_test_site_key_mode, TestSiteKeyMode, ALWAYS_FAIL_SITE_KEY, ALWAYS_PASS_SITE_KEY,
+    };
+
+    #[test]
+    fn are_distinct() {
+        assert_ne!(ALWAYS_PASS_SITE_KEY, ALWAYS_FAIL_SITE_KEY);
+    }
+
+    #[test]
+    fn are_48_character_ss58_addresses() {
+        assert_eq!(ALWAYS_PASS_SITE_KEY.len(), 48);
+        assert_eq!(ALWAYS_FAIL_SITE_KEY.len(), 48);
+    }
+
+    #[test]
+    fn forces_a_pass_for_the_always_pass_key() {
+        assert_eq!(
+            get_test_site_key_mode(ALWAYS_PASS_SITE_KEY),
+            Some(TestSiteKeyMode::Pass)
+        );
+    }
+
+    #[test]
+    fn forces_a_fail_for_the_always_fail_key() {
+        assert_eq!(
+            get_test_site_key_mode(ALWAYS_FAIL_SITE_KEY),
+            Some(TestSiteKeyMode::Fail)
+        );
+    }
+
+    #[test]
+    fn returns_none_for_a_normal_site_key() {
+        assert_eq!(
+            get_test_site_key_mode("5C7bfXYwachNuvmasEFtWi9BMS41uBvo6KpYHVSQmad4nWzw"),
+            None
+        );
+    }
+
+    #[test]
+    fn returns_none_for_an_empty_site_key() {
+        assert_eq!(get_test_site_key_mode(""), None);
+    }
+
+    #[test]
+    fn matches_exactly_not_by_prefix() {
+        assert_eq!(get_test_site_key_mode(&ALWAYS_PASS_SITE_KEY[..47]), None);
+        assert_eq!(
+            get_test_site_key_mode(&format!("{ALWAYS_PASS_SITE_KEY}x")),
+            None
+        );
+    }
+
+    #[test]
+    fn is_case_sensitive() {
+        assert_eq!(
+            get_test_site_key_mode(&ALWAYS_PASS_SITE_KEY.to_lowercase()),
+            None
+        );
+    }
+}
+
+/// Port of the counter cases of src/decisionMachine/counters.test.ts; the
+/// `RoutingMachineOutputSchema` cases land with the settings schemas.
+mod counters {
+    use crate::decision_machine::{
+        counter_spec_schema, encode_counter_key, CounterCaptchaType, CounterDimension, CounterKind,
+        CounterSpec, CounterWindow,
+    };
+    use crate::CaptchaType;
+    use serde_json::{json, Value};
+    use std::collections::HashSet;
+
+    const SPEC: CounterSpec = CounterSpec {
+        kind: CounterKind::Served,
+        captcha_type: CounterCaptchaType::Type(CaptchaType::Pow),
+        dimension: CounterDimension::Ip,
+        window: CounterWindow::OneHour,
+    };
+
+    fn spec_json() -> Value {
+        json!({ "kind": "served", "captchaType": "pow", "dimension": "ip", "window": "1h" })
+    }
+
+    fn accepts(value: Value) -> bool {
+        counter_spec_schema().safe_parse(Some(&value)).is_ok()
+    }
+
+    #[test]
+    fn has_a_duration_for_every_window() {
+        for window in CounterWindow::ALL {
+            assert!(window.seconds() > 0);
+        }
+    }
+
+    #[test]
+    fn orders_the_windows_from_shortest_to_longest() {
+        let seconds: Vec<u64> = CounterWindow::ALL.map(CounterWindow::seconds).to_vec();
+        let mut sorted: Vec<u64> = seconds.clone();
+        sorted.sort_unstable();
+        assert_eq!(seconds, sorted);
+    }
+
+    #[test]
+    fn matches_the_durations_the_window_names_claim() {
+        assert_eq!(CounterWindow::OneMinute.seconds(), 60);
+        assert_eq!(CounterWindow::TenMinutes.seconds(), 10 * 60);
+        assert_eq!(CounterWindow::OneHour.seconds(), 60 * 60);
+        assert_eq!(CounterWindow::OneDay.seconds(), 24 * 60 * 60);
+    }
+
+    #[test]
+    fn builds_a_colon_separated_redis_key() {
+        assert_eq!(
+            encode_counter_key("dapp", &SPEC, "1.2.3.4"),
+            "cnt:dapp:served:pow:ip:1.2.3.4:1h"
+        );
+    }
+
+    #[test]
+    fn puts_the_window_last() {
+        assert!(encode_counter_key("dapp", &SPEC, "v").ends_with(":1h"));
+    }
+
+    #[test]
+    fn distinguishes_kinds_dimensions_and_dapps() {
+        let base: String = encode_counter_key("d", &SPEC, "v");
+        let solved = CounterSpec {
+            kind: CounterKind::Solved,
+            ..SPEC
+        };
+        let peer = CounterSpec {
+            dimension: CounterDimension::PeerIp,
+            ..SPEC
+        };
+        assert_ne!(base, encode_counter_key("d", &solved, "v"));
+        assert_ne!(base, encode_counter_key("d", &peer, "v"));
+        assert_ne!(
+            encode_counter_key("a", &SPEC, "v"),
+            encode_counter_key("b", &SPEC, "v")
+        );
+    }
+
+    #[test]
+    fn encodes_the_wildcard_captcha_type_verbatim() {
+        let any = CounterSpec {
+            captcha_type: CounterCaptchaType::Any,
+            ..SPEC
+        };
+        assert_eq!(
+            encode_counter_key("d", &any, "v"),
+            "cnt:d:served:any:ip:v:1h"
+        );
+    }
+
+    #[test]
+    fn produces_a_distinct_key_for_every_window() {
+        let keys: HashSet<String> = CounterWindow::ALL
+            .iter()
+            .map(|window| {
+                encode_counter_key(
+                    "d",
+                    &CounterSpec {
+                        window: *window,
+                        ..SPEC
+                    },
+                    "v",
+                )
+            })
+            .collect();
+        assert_eq!(keys.len(), CounterWindow::ALL.len());
+    }
+
+    #[test]
+    fn passes_an_empty_value_straight_through() {
+        assert_eq!(
+            encode_counter_key("d", &SPEC, ""),
+            "cnt:d:served:pow:ip::1h"
+        );
+    }
+
+    #[test]
+    fn does_not_escape_colons_in_the_value() {
+        assert_eq!(
+            encode_counter_key("d", &SPEC, "::1"),
+            "cnt:d:served:pow:ip:::1:1h"
+        );
+    }
+
+    #[test]
+    fn accepts_a_well_formed_spec() {
+        assert!(accepts(spec_json()));
+    }
+
+    #[test]
+    fn accepts_every_declared_kind_dimension_and_window() {
+        for kind in CounterKind::ALL {
+            for dimension in CounterDimension::ALL {
+                for window in CounterWindow::ALL {
+                    let mut value: Value = spec_json();
+                    value["kind"] = json!(kind.as_str());
+                    value["dimension"] = json!(dimension.as_str());
+                    value["window"] = json!(window.as_str());
+                    assert!(accepts(value));
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn accepts_each_challengeable_captcha_type_and_the_wildcard() {
+        for captcha_type in ["pow", "image", "puzzle", "any"] {
+            let mut value: Value = spec_json();
+            value["captchaType"] = json!(captcha_type);
+            assert!(accepts(value), "{captcha_type}");
+        }
+    }
+
+    #[test]
+    fn rejects_the_frictionless_type() {
+        let mut value: Value = spec_json();
+        value["captchaType"] = json!("frictionless");
+        assert!(!accepts(value));
+    }
+
+    #[test]
+    fn rejects_an_unknown_window() {
+        let mut value: Value = spec_json();
+        value["window"] = json!("2h");
+        assert!(!accepts(value));
+    }
+
+    #[test]
+    fn rejects_a_missing_field() {
+        let mut value: Value = spec_json();
+        value.as_object_mut().expect("object").remove("kind");
+        assert!(!accepts(value));
     }
 }

@@ -24,7 +24,7 @@
 		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts --mode $NODE_ENV",
 		"test:cargo": "cargo test -p prosopo-types",
-		"equivalence": "tsx rust/equivalence/generate.ts && cargo test -p prosopo-types equivalence"
+		"equivalence": "tsx rust/equivalence/generate.ts && tsx rust/equivalence/generate-wire.ts && cargo test -p prosopo-types equivalence"
 	},
 	"repository": {
 		"type": "git",

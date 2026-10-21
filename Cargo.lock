@@ -1452,6 +1452,7 @@ dependencies = [
 name = "prosopo-types"
 version = "6.0.0"
 dependencies = [
+ "prosopo-api-route",
  "prosopo-util-crypto",
  "serde",
  "serde_json",

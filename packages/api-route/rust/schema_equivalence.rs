@@ -17,8 +17,8 @@
 //! must give the same parsed output (same keys, same order) or the same issues.
 
 use crate::schema::{
-    any, array, boolean, coerce_number, coerce_string, custom, literal, native_enum, number,
-    object, preprocess, record, record_with_keys, string, string_enum, tuple, union, Data,
+    any, array, boolean, coerce_number, coerce_string, custom_with_message, literal, native_enum,
+    number, object, preprocess, record, record_with_keys, string, string_enum, tuple, union, Data,
     IssueData, Schema,
 };
 use serde::Deserialize;
@@ -232,7 +232,7 @@ fn battery() -> BTreeMap<&'static str, Schema> {
     );
     schemas.insert(
         "boundedArray",
-        custom(
+        custom_with_message(
             |value: &Data| match value {
                 Some(Value::Array(items)) => items.len() <= 2,
                 _ => true,

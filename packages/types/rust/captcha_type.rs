@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use prosopo_api_route::schema::{native_enum, Data, Schema};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::fmt;
 use std::str::FromStr;
 
@@ -41,6 +43,17 @@ impl CaptchaType {
         CaptchaType::Audio,
         CaptchaType::IconOrder,
         CaptchaType::Authenticated,
+    ];
+
+    /// The TS member names, in declaration order.
+    pub const TS_KEYS: [&'static str; 7] = [
+        "image",
+        "pow",
+        "frictionless",
+        "puzzle",
+        "audio",
+        "iconOrder",
+        "authenticated",
     ];
 
     pub fn as_str(self) -> &'static str {
@@ -99,4 +112,17 @@ impl FromStr for CaptchaType {
             .find(|captcha_type| captcha_type.as_str() == value)
             .ok_or_else(|| UnknownCaptchaType(value.to_string()))
     }
+}
+
+/// `CaptchaTypeSchema`.
+pub fn captcha_type_schema() -> Schema {
+    native_enum(&CaptchaType::ALL.map(CaptchaType::as_str))
+}
+
+/// `SelectableCaptchaTypeSchema`.
+pub fn selectable_captcha_type_schema() -> Schema {
+    captcha_type_schema().refine(
+        |value: &Data| value.as_ref().and_then(Value::as_str) != Some(CaptchaType::Audio.as_str()),
+        Some("audio is only served as an accessibility alternative".to_string()),
+    )
 }
