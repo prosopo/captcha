@@ -1,5 +1,10 @@
 # @prosopo/fingerprint
 
+## 2.8.1
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+
 ## 2.8.0
 ### Minor Changes
 

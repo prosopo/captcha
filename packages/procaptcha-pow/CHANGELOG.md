@@ -1,5 +1,16 @@
 # @prosopo/procaptcha-pow
 
+## 2.13.17
+### Patch Changes
+
+- Updated dependencies [49892fc]
+  - @prosopo/locale@3.12.1
+  - @prosopo/types@5.17.1
+  - @prosopo/api@4.7.5
+  - @prosopo/common@3.3.0
+  - @prosopo/fingerprint@2.8.1
+  - @prosopo/procaptcha-common@2.21.7
+
 ## 2.13.16
 ### Patch Changes
 

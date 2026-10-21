@@ -1,5 +1,11 @@
 # @prosopo/types
 
+## 5.17.1
+### Patch Changes
+
+- Updated dependencies [49892fc]
+  - @prosopo/locale@3.12.1
+
 ## 5.17.0
 ### Minor Changes
 
