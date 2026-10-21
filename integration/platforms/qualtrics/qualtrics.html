@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <meta name="referrer" content="no-referrer">
+    <title>Security Check</title>
+    <script type="module" id="procaptcha-script" src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --page: #f4f3f8;
+            --card: #ffffff;
+            --text: #1d1b29;
+            --muted: #615d75;
+            --border: #e4e2ee;
+            --accent: #5b3fd6;
+            --accent-text: #ffffff;
+            --error: #b42318;
+            --error-bg: #fef3f2;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --page: #121019;
+                --card: #1c1a26;
+                --text: #f2f1f7;
+                --muted: #a9a5bd;
+                --border: #2e2b3d;
+                --accent: #8b74ff;
+                --accent-text: #121019;
+                --error: #fda29b;
+                --error-bg: #2b1513;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 24px;
+            background: var(--page);
+            color: var(--text);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.5;
+        }
+
+        main {
+            width: 100%;
+            max-width: 440px;
+            padding: 40px 32px 32px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(29, 27, 41, 0.08);
+            text-align: center;
+        }
+
+        .icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 16px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: color-mix(in srgb, var(--accent) 12%, transparent);
+            color: var(--accent);
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 1.5rem;
+            font-weight: 650;
+            letter-spacing: -0.01em;
+        }
+
+        p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        #procaptcha-container {
+            display: flex;
+            justify-content: center;
+            min-height: 80px;
+            margin: 28px 0 0;
+        }
+
+        #status {
+            min-height: 1.5em;
+            margin-top: 16px;
+            font-size: 0.95rem;
+        }
+
+        #continue {
+            display: none;
+            margin-top: 16px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            background: var(--accent);
+            color: var(--accent-text);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        #continue:focus-visible {
+            outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+            outline-offset: 2px;
+        }
+
+        .error {
+            margin-top: 24px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: var(--error-bg);
+            color: var(--error);
+            font-size: 0.95rem;
+        }
+
+        footer {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        footer a {
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="icon" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+            </svg>
+        </div>
+        <h1>Security Check</h1>
+        <p>Please confirm you're a person before starting the survey.</p>
+        <div id="procaptcha-container"></div>
+        <p id="status" role="status" aria-live="polite"></p>
+        <a id="continue" target="_top">Continue to the survey</a>
+    </main>
+    <footer>Protected by <a href="https://prosopo.io" target="_blank" rel="noopener">Prosopo</a></footer>
+
+    <script>
+        const ALLOWED_SURVEY_HOST_SUFFIX = ".qualtrics.com";
+        const ALLOWED_SURVEY_PATH = /^\/jfe\/form\/SV_[A-Za-z0-9]+\/?$/;
+
+        const container = document.getElementById("procaptcha-container");
+        const status = document.getElementById("status");
+        const continueLink = document.getElementById("continue");
+
+        function showError(message) {
+            container.remove();
+            status.remove();
+            const error = document.createElement("p");
+            error.className = "error";
+            error.textContent = message;
+            document.querySelector("main").appendChild(error);
+        }
+
+        function readSurveyUrl(value) {
+            if (!value) return null;
+            try {
+                const url = new URL(value);
+                const isQualtricsSurvey =
+                    url.protocol === "https:" &&
+                    url.hostname.endsWith(ALLOWED_SURVEY_HOST_SUFFIX) &&
+                    ALLOWED_SURVEY_PATH.test(url.pathname);
+                return isQualtricsSurvey ? url : null;
+            } catch {
+                return null;
+            }
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const siteKey = params.get("sitekey");
+        const surveyUrl = readSurveyUrl(params.get("survey"));
+
+        function startSurvey(token) {
+            surveyUrl.searchParams.set("procaptcha_token", token);
+            continueLink.href = surveyUrl.toString();
+            continueLink.style.display = "inline-block";
+            status.textContent = "Thanks. Taking you to the survey…";
+            window.location.assign(surveyUrl.toString());
+        }
+
+        function resetCheck() {
+            continueLink.style.display = "none";
+            status.textContent = "The check expired. Please try again.";
+        }
+
+        if (window.top !== window.self) {
+            showError("This page can't be shown inside another page. Please open the survey link directly.");
+        } else if (!siteKey || !surveyUrl) {
+            showError("This security check link is incomplete. Please contact the person who sent you the survey.");
+        } else {
+            const renderCheck = () =>
+                window.procaptcha.render(container, {
+                    siteKey,
+                    theme: window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+                    callback: startSurvey,
+                    "expired-callback": resetCheck,
+                    "error-callback": () => {
+                        status.textContent = "Something went wrong. Please refresh the page and try again.";
+                    },
+                });
+
+            if (window.procaptcha) {
+                renderCheck();
+            } else {
+                document.getElementById("procaptcha-script").addEventListener("load", renderCheck);
+            }
+        }
+    </script>
+</body>
+</html>
