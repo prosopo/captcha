@@ -17,6 +17,7 @@ members = [
 	"packages/ipinfo",
 	"packages/keyring",
 	"packages/load-balancer",
+	"packages/api",
 	"packages/locale",
 ]
 exclude = [

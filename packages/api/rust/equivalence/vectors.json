@@ -1,0 +1,1599 @@
+{
+	"scenarios": [
+		{
+			"label": "get",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/status"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"registered\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/status",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"result": {
+				"registered": true
+			}
+		},
+		{
+			"label": "get with a prefix",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io",
+				"prefix": "/v1"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/status"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/status",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "get with an empty path",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": ""
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "get passes init through",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/status",
+				"init": {
+					"headers": {
+						"X-Test": "1"
+					}
+				}
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/status",
+					"method": "GET",
+					"headers": [
+						[
+							"X-Test",
+							"1"
+						]
+					],
+					"body": null
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "get with a method",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/thing",
+				"init": {
+					"method": "DELETE"
+				}
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/thing",
+					"method": "DELETE",
+					"headers": [],
+					"body": null
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "get with default headers",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io",
+				"defaultHeaders": {
+					"Accept-Language": "fr",
+					"X-A": "default"
+				}
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s",
+				"init": {
+					"headers": {
+						"X-A": "call",
+						"X-B": "2"
+					}
+				}
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [
+						[
+							"Accept-Language",
+							"fr"
+						],
+						[
+							"X-A",
+							"call"
+						],
+						[
+							"X-B",
+							"2"
+						]
+					],
+					"body": null
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "get with default headers and no init",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io",
+				"defaultHeaders": {
+					"Accept-Language": "fr"
+				}
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [
+						[
+							"Accept-Language",
+							"fr"
+						]
+					],
+					"body": null
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "502 text",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s"
+			},
+			"response": {
+				"status": 502,
+				"statusText": "Bad Gateway",
+				"contentType": "text/plain",
+				"body": "gateway down"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"error": "HTTP error! status: 502 (Bad Gateway) for URL: https://provider.prosopo.io/s",
+			"name": "HttpError"
+		},
+		{
+			"label": "429 json",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s"
+			},
+			"response": {
+				"status": 429,
+				"statusText": "Too Many Requests",
+				"contentType": "application/json",
+				"body": "{\"error\":{\"message\":\"rate limited\"}}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"result": {
+				"error": {
+					"message": "rate limited"
+				}
+			}
+		},
+		{
+			"label": "400 text",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s"
+			},
+			"response": {
+				"status": 400,
+				"statusText": "Bad Request",
+				"contentType": "text/plain",
+				"body": "{\"error\":\"bad request\"}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"result": {
+				"error": "bad request"
+			}
+		},
+		{
+			"label": "500 no content type",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s"
+			},
+			"response": {
+				"status": 500,
+				"statusText": "Internal Server Error",
+				"body": ""
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"error": "HTTP error! status: 500 (Internal Server Error) for URL: https://provider.prosopo.io/s",
+			"name": "HttpError"
+		},
+		{
+			"label": "500 json with charset",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s"
+			},
+			"response": {
+				"status": 500,
+				"statusText": "Internal Server Error",
+				"contentType": "application/json; charset=utf-8",
+				"body": "{\"status\":\"error\"}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"result": {
+				"status": "error"
+			}
+		},
+		{
+			"label": "500 json uppercase",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s"
+			},
+			"response": {
+				"status": 500,
+				"statusText": "Internal Server Error",
+				"contentType": "Application/JSON",
+				"body": "{\"status\":\"error\"}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"error": "HTTP error! status: 500 (Internal Server Error) for URL: https://provider.prosopo.io/s",
+			"name": "HttpError"
+		},
+		{
+			"label": "301 text",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s"
+			},
+			"response": {
+				"status": 299,
+				"statusText": "Odd",
+				"contentType": "text/html",
+				"body": "{\"ok\":1}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"result": {
+				"ok": 1
+			}
+		},
+		{
+			"label": "300 text",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s"
+			},
+			"response": {
+				"status": 300,
+				"statusText": "Multiple Choices",
+				"contentType": "text/html",
+				"body": "{\"ok\":1}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"error": "HTTP error! status: 300 (Multiple Choices) for URL: https://provider.prosopo.io/s",
+			"name": "HttpError"
+		},
+		{
+			"label": "network failure",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s"
+			},
+			"response": {
+				"networkError": "fetch failed"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"error": "fetch failed",
+			"name": "TypeError"
+		},
+		{
+			"label": "not json",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "<html>not json</html>"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"error": "Unexpected token '<', \"<html>not \"... is not valid JSON",
+			"name": "SyntaxError"
+		},
+		{
+			"label": "empty 200",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": ""
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"error": "Unexpected end of JSON input",
+			"name": "SyntaxError"
+		},
+		{
+			"label": "200 json with a byte order mark",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "﻿{\"ok\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"label": "200 json without a content type",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/s"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"body": "[1,2]"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/s",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"result": [
+				1,
+				2
+			]
+		},
+		{
+			"label": "post",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "post",
+				"input": "/solve",
+				"body": {
+					"nonce": 1
+				}
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"verified\":true}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/solve",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						]
+					],
+					"body": "{\"nonce\":1}"
+				}
+			],
+			"result": {
+				"verified": true
+			}
+		},
+		{
+			"label": "post merges headers",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "post",
+				"input": "/solve",
+				"body": {},
+				"init": {
+					"headers": {
+						"Prosopo-Site-Key": "key"
+					}
+				}
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/solve",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"key"
+						]
+					],
+					"body": "{}"
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "post overrides the content type",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "post",
+				"input": "/solve",
+				"body": {},
+				"init": {
+					"headers": {
+						"Content-Type": "text/*"
+					}
+				}
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/solve",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"text/*"
+						]
+					],
+					"body": "{}"
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "post with a differently cased content type",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "post",
+				"input": "/solve",
+				"body": {},
+				"init": {
+					"headers": {
+						"content-type": "text/*"
+					}
+				}
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/solve",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"content-type",
+							"text/*"
+						]
+					],
+					"body": "{}"
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "post with a method",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "post",
+				"input": "/solve",
+				"body": {
+					"a": 1
+				},
+				"init": {
+					"method": "PUT"
+				}
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/solve",
+					"method": "PUT",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						]
+					],
+					"body": "{\"a\":1}"
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "post without a body",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "post",
+				"input": "/solve"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/solve",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						]
+					],
+					"body": null
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "post a null body",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "post",
+				"input": "/solve",
+				"body": null
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/solve",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						]
+					],
+					"body": "null"
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "post an empty array",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "post",
+				"input": "/events",
+				"body": []
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/events",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						]
+					],
+					"body": "[]"
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "post nested",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "post",
+				"input": "/x",
+				"body": {
+					"s": "é\u0001\"",
+					"n": [
+						0.5,
+						-2,
+						1e-7,
+						12345678901234
+					],
+					"o": {
+						"b": true,
+						"z": null
+					}
+				}
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/x",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						]
+					],
+					"body": "{\"s\":\"é\\u0001\\\"\",\"n\":[0.5,-2,1e-7,12345678901234],\"o\":{\"b\":true,\"z\":null}}"
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "post with default headers",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io",
+				"defaultHeaders": {
+					"Accept-Language": "de",
+					"Content-Type": "text/plain"
+				}
+			},
+			"call": {
+				"op": "post",
+				"input": "/x",
+				"body": {},
+				"init": {
+					"headers": {
+						"Accept-Language": "en"
+					}
+				}
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/x",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"text/plain"
+						],
+						[
+							"Accept-Language",
+							"en"
+						]
+					],
+					"body": "{}"
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "post 503 empty",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "post",
+				"input": "/solve",
+				"body": {}
+			},
+			"response": {
+				"status": 503,
+				"statusText": "Service Unavailable",
+				"body": "nope"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/solve",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						]
+					],
+					"body": "{}"
+				}
+			],
+			"error": "HTTP error! status: 503 (Service Unavailable) for URL: https://provider.prosopo.io/solve",
+			"name": "HttpError"
+		},
+		{
+			"label": "post 400 json",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "post",
+				"input": "/solve",
+				"body": {}
+			},
+			"response": {
+				"status": 400,
+				"statusText": "Bad Request",
+				"contentType": "application/json",
+				"body": "{\"error\":\"bad\"}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/solve",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						]
+					],
+					"body": "{}"
+				}
+			],
+			"result": {
+				"error": "bad"
+			}
+		},
+		{
+			"label": "post network failure",
+			"client": {
+				"kind": "base",
+				"baseUrl": "https://provider.prosopo.io"
+			},
+			"call": {
+				"op": "post",
+				"input": "/solve",
+				"body": {}
+			},
+			"response": {
+				"networkError": "fetch failed"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/solve",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						]
+					],
+					"body": "{}"
+				}
+			],
+			"error": "fetch failed",
+			"name": "TypeError"
+		},
+		{
+			"label": "api client keeps its protocol",
+			"client": {
+				"kind": "apiClient",
+				"baseUrl": "http://provider.prosopo.io",
+				"account": "5a"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/x"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "http://provider.prosopo.io/x",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "api client assumes https",
+			"client": {
+				"kind": "apiClient",
+				"baseUrl": "provider.prosopo.io",
+				"account": "5a"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/x"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/x",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "api client with an empty url",
+			"client": {
+				"kind": "apiClient",
+				"baseUrl": "",
+				"account": "5a"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/x"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https:///x",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "api client with httpish host",
+			"client": {
+				"kind": "apiClient",
+				"baseUrl": "httpbin.org",
+				"account": "5a"
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/x"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "httpbin.org/x",
+					"method": "GET",
+					"headers": [],
+					"body": null
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "api client default headers",
+			"client": {
+				"kind": "apiClient",
+				"baseUrl": "https://p",
+				"account": "5a",
+				"defaultHeaders": {
+					"Accept-Language": "fr"
+				}
+			},
+			"call": {
+				"op": "fetch",
+				"input": "/x"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://p/x",
+					"method": "GET",
+					"headers": [
+						[
+							"Accept-Language",
+							"fr"
+						]
+					],
+					"body": null
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "forward verify",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "forwardVerify",
+				"path": "/v1/prosopo/provider/client/pow/verify",
+				"body": {
+					"token": "t",
+					"dappSignature": "0xs",
+					"ip": "1.2.3.4",
+					"nested": {
+						"a": [
+							1,
+							"b"
+						]
+					}
+				},
+				"user": "5user"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"status\":\"ok\",\"verified\":true,\"score\":0.5}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/pow/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						],
+						[
+							"prosopo-verify-forwarded",
+							"true"
+						]
+					],
+					"body": "{\"token\":\"t\",\"dappSignature\":\"0xs\",\"ip\":\"1.2.3.4\",\"nested\":{\"a\":[1,\"b\"]}}"
+				}
+			],
+			"result": {
+				"status": "ok",
+				"verified": true,
+				"score": 0.5
+			}
+		},
+		{
+			"label": "forward verify json error",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "forwardVerify",
+				"path": "/v1/prosopo/provider/client/pow/verify",
+				"body": {},
+				"user": "5user"
+			},
+			"response": {
+				"status": 500,
+				"statusText": "Internal Server Error",
+				"contentType": "application/json",
+				"body": "{\"status\":\"error\",\"error\":{\"message\":\"x\",\"code\":500}}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/pow/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						],
+						[
+							"prosopo-verify-forwarded",
+							"true"
+						]
+					],
+					"body": "{}"
+				}
+			],
+			"result": {
+				"status": "error",
+				"error": {
+					"message": "x",
+					"code": 500
+				}
+			}
+		},
+		{
+			"label": "forward verify text error",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "forwardVerify",
+				"path": "/v1/prosopo/provider/client/puzzle/verify",
+				"body": {},
+				"user": "5user"
+			},
+			"response": {
+				"status": 502,
+				"statusText": "Bad Gateway",
+				"contentType": "text/html",
+				"body": "<html>"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/puzzle/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						],
+						[
+							"prosopo-verify-forwarded",
+							"true"
+						]
+					],
+					"body": "{}"
+				}
+			],
+			"error": "HTTP error! status: 502 (Bad Gateway) for URL: https://provider.prosopo.io/v1/prosopo/provider/client/puzzle/verify",
+			"name": "HttpError"
+		},
+		{
+			"label": "forward verify with default headers",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site",
+				"defaultHeaders": {
+					"Prosopo-User": "default",
+					"X-D": "d"
+				}
+			},
+			"call": {
+				"op": "forwardVerify",
+				"path": "/v1/prosopo/provider/client/pow/verify",
+				"body": {},
+				"user": "5user"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/client/pow/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						],
+						[
+							"X-D",
+							"d"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"prosopo-verify-forwarded",
+							"true"
+						]
+					],
+					"body": "{}"
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "forward verify to a hostname",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "pronode2.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "forwardVerify",
+				"path": "/v1/prosopo/provider/client/pow/verify",
+				"body": {},
+				"user": "5user"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{}"
+			},
+			"requests": [
+				{
+					"url": "https://pronode2.prosopo.io/v1/prosopo/provider/client/pow/verify",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Prosopo-User",
+							"5user"
+						],
+						[
+							"prosopo-verify-forwarded",
+							"true"
+						]
+					],
+					"body": "{}"
+				}
+			],
+			"result": {}
+		},
+		{
+			"label": "register site key",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "registerSiteKey",
+				"siteKey": "5new",
+				"tier": "professional",
+				"settings": {
+					"captchaType": "pow",
+					"domains": [
+						"example.com"
+					],
+					"verifiedTimeout": 120000,
+					"solutionTimeout": 60000,
+					"frictionlessThreshold": {
+						"frictionlessPuzzleThreshold": 0.5,
+						"frictionlessImageThreshold": 1
+					},
+					"frictionlessTypes": {
+						"image": true,
+						"puzzle": true,
+						"iconOrder": true
+					},
+					"powDifficulty": 4,
+					"imageThreshold": 0.8,
+					"imageMaxRounds": 32,
+					"imageMinRounds": 2,
+					"puzzleTolerance": 15,
+					"puzzleMaxDifficulty": 3,
+					"iconOrderTolerance": 0.75,
+					"disallowWebView": false
+				},
+				"jwt": "a.b.c"
+			},
+			"response": {
+				"status": 200,
+				"statusText": "OK",
+				"contentType": "application/json",
+				"body": "{\"status\":\"ok\"}"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/admin/sitekey/register",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Authorization",
+							"Bearer a.b.c"
+						]
+					],
+					"body": "{\"siteKey\":\"5new\",\"tier\":\"professional\",\"settings\":{\"captchaType\":\"pow\",\"domains\":[\"example.com\"],\"verifiedTimeout\":120000,\"solutionTimeout\":60000,\"frictionlessThreshold\":{\"frictionlessPuzzleThreshold\":0.5,\"frictionlessImageThreshold\":1},\"frictionlessTypes\":{\"image\":true,\"puzzle\":true,\"iconOrder\":true},\"powDifficulty\":4,\"imageThreshold\":0.8,\"imageMaxRounds\":32,\"imageMinRounds\":2,\"puzzleTolerance\":15,\"puzzleMaxDifficulty\":3,\"iconOrderTolerance\":0.75,\"disallowWebView\":false}}"
+				}
+			],
+			"result": {
+				"status": "ok"
+			}
+		},
+		{
+			"label": "register site key 401",
+			"client": {
+				"kind": "providerApi",
+				"baseUrl": "https://provider.prosopo.io",
+				"account": "5site"
+			},
+			"call": {
+				"op": "registerSiteKey",
+				"siteKey": "5new",
+				"tier": "free",
+				"settings": {
+					"captchaType": "pow",
+					"domains": [
+						"example.com"
+					],
+					"verifiedTimeout": 120000,
+					"solutionTimeout": 60000,
+					"frictionlessThreshold": {
+						"frictionlessPuzzleThreshold": 0.5,
+						"frictionlessImageThreshold": 1
+					},
+					"frictionlessTypes": {
+						"image": true,
+						"puzzle": true,
+						"iconOrder": true
+					},
+					"powDifficulty": 4,
+					"imageThreshold": 0.8,
+					"imageMaxRounds": 32,
+					"imageMinRounds": 2,
+					"puzzleTolerance": 15,
+					"puzzleMaxDifficulty": 3,
+					"iconOrderTolerance": 0.75,
+					"disallowWebView": false
+				},
+				"jwt": "a.b.c"
+			},
+			"response": {
+				"status": 401,
+				"statusText": "Unauthorized",
+				"contentType": "text/plain",
+				"body": "Unauthorized"
+			},
+			"requests": [
+				{
+					"url": "https://provider.prosopo.io/v1/prosopo/provider/admin/sitekey/register",
+					"method": "POST",
+					"headers": [
+						[
+							"Content-Type",
+							"application/json"
+						],
+						[
+							"Prosopo-Site-Key",
+							"5site"
+						],
+						[
+							"Authorization",
+							"Bearer a.b.c"
+						]
+					],
+					"body": "{\"siteKey\":\"5new\",\"tier\":\"free\",\"settings\":{\"captchaType\":\"pow\",\"domains\":[\"example.com\"],\"verifiedTimeout\":120000,\"solutionTimeout\":60000,\"frictionlessThreshold\":{\"frictionlessPuzzleThreshold\":0.5,\"frictionlessImageThreshold\":1},\"frictionlessTypes\":{\"image\":true,\"puzzle\":true,\"iconOrder\":true},\"powDifficulty\":4,\"imageThreshold\":0.8,\"imageMaxRounds\":32,\"imageMinRounds\":2,\"puzzleTolerance\":15,\"puzzleMaxDifficulty\":3,\"iconOrderTolerance\":0.75,\"disallowWebView\":false}}"
+				}
+			],
+			"error": "HTTP error! status: 401 (Unauthorized) for URL: https://provider.prosopo.io/v1/prosopo/provider/admin/sitekey/register",
+			"name": "HttpError"
+		}
+	]
+}
