@@ -57,7 +57,7 @@
 		"@prosopo/util": "workspace:*",
 		"@typegoose/auto-increment": "5.0.1",
 		"cors": "2.8.6",
-		"express": "4.22.2",
+		"express": "5.3.0",
 		"jsonwebtoken": "9.0.3",
 		"mongodb-memory-server": "10.3.0",
 		"mongoose": "9.10.3",
@@ -66,7 +66,7 @@
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
 		"@types/cors": "2.8.19",
-		"@types/express": "4.17.25",
+		"@types/express": "5.0.6",
 		"@types/jsonwebtoken": "9.0.10",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",

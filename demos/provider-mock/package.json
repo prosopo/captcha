@@ -41,14 +41,14 @@
 		"@prosopo/types": "workspace:*",
 		"@prosopo/types-database": "workspace:*",
 		"cors": "2.8.6",
-		"express": "4.22.2",
+		"express": "5.3.0",
 		"express-rate-limit": "7.4.0",
 		"mongoose": "9.10.3"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
 		"@types/cors": "2.8.19",
-		"@types/express": "4.17.25",
+		"@types/express": "5.0.6",
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "4.1.11",
 		"concurrently": "9.0.1",
