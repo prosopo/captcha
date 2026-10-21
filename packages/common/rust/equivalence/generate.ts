@@ -39,6 +39,11 @@ import {
 	unwrapError,
 } from "../../src/error.js";
 
+// The vectors are what Node 24, the production runtime, produces.
+if (!process.version.startsWith("v24.")) {
+	throw new Error(`this generator must run on Node 24 (the production runtime), not ${process.version}`);
+}
+
 const FIXED_NOW = 1_700_000_000_123;
 const LOGGER_SCOPE = "common-equivalence";
 

@@ -27,6 +27,11 @@ import {
 	encodeProcaptchaOutput,
 } from "../../src/procaptcha/token.js";
 
+// The vectors are what Node 24, the production runtime, produces.
+if (!process.version.startsWith("v24.")) {
+	throw new Error(`this generator must run on Node 24 (the production runtime), not ${process.version}`);
+}
+
 type EncodeVector = { output: ProcaptchaOutput; token: string };
 
 type DecodeResult = { ok: string } | { error: "malformed" | "schema" };

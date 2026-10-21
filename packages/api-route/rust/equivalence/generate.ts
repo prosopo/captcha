@@ -24,6 +24,11 @@ import type { ApiEndpoint } from "../../src/endpoint/apiEndpoint.js";
 import type { ApiEndpointResponse } from "../../src/endpoint/apiEndpointResponse.js";
 import { ApiEndpointResponseStatus } from "../../src/endpoint/apiEndpointResponseStatus.js";
 
+// The vectors are what Node 24, the production runtime, produces.
+if (!process.version.startsWith("v24.")) {
+	throw new Error(`this generator must run on Node 24 (the production runtime), not ${process.version}`);
+}
+
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
 // JSON has no `undefined`, so an absent request body travels as a missing `input`.

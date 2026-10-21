@@ -96,6 +96,11 @@ import { mnemonicToSeedSync } from "../../src/mnemonic/bip39.js";
 import { naclSecretbox, naclSecretboxOpen } from "../../src/nacl/tweetnacl.js";
 import type { ScryptParams } from "../../src/scrypt/types.js";
 
+// The vectors are what Node 24, the production runtime, produces.
+if (!process.version.startsWith("v24.")) {
+	throw new Error(`this generator must run on Node 24 (the production runtime), not ${process.version}`);
+}
+
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
 type Case = { [key: string]: Json };
 type Outcome = { result: Json } | { error: string };

@@ -27,6 +27,11 @@ import { accessRulesRedisIndex } from "../../../user-access-policy/src/redis/red
 import { redactRedisUrl } from "../../src/redisClient.js";
 import type { RedisIndex } from "../../src/redisIndex.js";
 
+// The vectors are what Node 24, the production runtime, produces.
+if (!process.version.startsWith("v24.")) {
+	throw new Error(`this generator must run on Node 24 (the production runtime), not ${process.version}`);
+}
+
 type CommandParser = Parameters<typeof CreateCommand.parseCommand>[0];
 type ArgsParser = CommandParser & { redisArgs: ReadonlyArray<string | Buffer> };
 type ArgsParserConstructor = new () => ArgsParser;

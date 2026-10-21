@@ -27,6 +27,11 @@ import {
 	setGlobalDirectives,
 } from "../../src/index.js";
 
+// The vectors are what Node 24, the production runtime, produces.
+if (!process.version.startsWith("v24.")) {
+	throw new Error(`this generator must run on Node 24 (the production runtime), not ${process.version}`);
+}
+
 // JSON cannot carry bigint, -0 or a key order JS would not preserve, so those
 // travel as tagged objects that both sides decode.
 type Encoded =

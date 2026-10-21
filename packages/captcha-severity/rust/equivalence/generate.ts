@@ -31,6 +31,11 @@ import {
 	severityToPuzzleDifficulty,
 } from "../../src/index.js";
 
+// The vectors are what Node 24, the production runtime, produces.
+if (!process.version.startsWith("v24.")) {
+	throw new Error(`this generator must run on Node 24 (the production runtime), not ${process.version}`);
+}
+
 // JSON cannot carry NaN, the infinities, -0 or undefined, and those are the
 // edge cases worth pinning, so they travel as strings and null.
 type EncodedNumber = number | "NaN" | "Infinity" | "-Infinity" | "-0" | null;

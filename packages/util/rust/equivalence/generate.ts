@@ -38,6 +38,11 @@ import {
 import { flatten } from "../../src/util.js";
 import { verifyRecency } from "../../src/verifyRecency.js";
 
+// The vectors are what Node 24, the production runtime, produces.
+if (!process.version.startsWith("v24.")) {
+	throw new Error(`this generator must run on Node 24 (the production runtime), not ${process.version}`);
+}
+
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
 // JSON cannot carry NaN or the infinities, so they travel as strings.
