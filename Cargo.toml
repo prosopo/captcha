@@ -8,6 +8,7 @@ members = [
 	"packages/api-route",
 	"packages/util",
 	"packages/dotenv",
+	"packages/locale",
 ]
 exclude = [
 	"packages/native-ja4",
