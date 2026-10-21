@@ -1368,6 +1368,7 @@ version = "6.0.0"
 dependencies = [
  "prosopo-locale",
  "prosopo-logger",
+ "prosopo-types",
  "serde",
  "serde_json",
  "tokio",
@@ -1454,6 +1455,7 @@ dependencies = [
 name = "prosopo-types"
 version = "6.0.0"
 dependencies = [
+ "hex",
  "indexmap",
  "prosopo-api-route",
  "prosopo-util-crypto",
@@ -1461,6 +1463,7 @@ dependencies = [
  "regress",
  "serde",
  "serde_json",
+ "sha2",
  "unicode-ident",
 ]
 

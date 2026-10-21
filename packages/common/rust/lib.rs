@@ -24,7 +24,8 @@ mod unwrap;
 pub use batches::{chunk_into_batches, execute_batches_sequentially};
 pub use context::{ContextValue, ErrorContext, ThrownError, ZodLikeError, MAX_REPORTED_ISSUES};
 pub use error::{ErrorClass, ErrorOptions, ErrorSource, ProsopoError};
-pub use unwrap::{status_message, unwrap_error, ApiErrorMessage, ApiJsonError, UnwrappedError};
+pub use prosopo_types::{ApiErrorMessage, ApiJsonError};
+pub use unwrap::{status_message, unwrap_error, UnwrappedError};
 
 #[cfg(test)]
 mod equivalence;

@@ -16,12 +16,14 @@
 //! the wire types the widget shares (MIGRATION.md §5).
 
 pub mod api_params;
+pub mod api_types;
 pub mod captcha_type;
 pub mod client;
 pub mod datasets;
 pub mod decision_machine;
 mod js_regex;
 pub mod number;
+pub mod provider_api;
 pub mod reasons;
 pub mod sanitise;
 mod scale;
@@ -32,6 +34,7 @@ pub mod token;
 mod wire_enum;
 
 pub use api_params::ApiParams;
+pub use api_types::{ApiErrorMessage, ApiJsonError, ApiResponse};
 pub use captcha_type::{
     captcha_type_schema, selectable_captcha_type_schema, CaptchaType, UnknownCaptchaType,
 };
@@ -55,6 +58,8 @@ pub use token::{
 };
 pub use wire_enum::UnknownEnumValue;
 
+#[cfg(test)]
+mod api_equivalence;
 #[cfg(test)]
 mod equivalence;
 #[cfg(test)]

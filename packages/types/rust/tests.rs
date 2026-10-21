@@ -826,3 +826,273 @@ mod routing_machine_output {
         assert!(!accepts(json!({})));
     }
 }
+
+/// Port of src/provider/api.test.ts.
+mod provider_api_cases {
+    use crate::provider_api::{captcha_solution_body, provider_details_schema};
+    use serde_json::{json, Value};
+
+    fn redis() -> Value {
+        json!([{ "actor": "General", "isReady": true, "awaitingTimeSeconds": 0 }])
+    }
+
+    #[test]
+    fn provider_details_accept_a_host() {
+        let parsed: Value = provider_details_schema()
+            .safe_parse(Some(&json!({
+                "version": "1.0.0",
+                "message": "Provider online",
+                "host": "provider.example.com",
+                "redis": redis(),
+            })))
+            .expect("valid")
+            .expect("defined");
+        assert_eq!(parsed["host"], "provider.example.com");
+    }
+
+    #[test]
+    fn provider_details_accept_a_payload_without_a_host() {
+        let parsed: Value = provider_details_schema()
+            .safe_parse(Some(
+                &json!({ "version": "1.0.0", "message": "Provider online", "redis": redis() }),
+            ))
+            .expect("valid")
+            .expect("defined");
+        assert!(parsed.get("host").is_none());
+    }
+
+    #[test]
+    fn provider_details_reject_a_non_string_host() {
+        assert!(provider_details_schema()
+            .safe_parse(Some(&json!({
+                "version": "1.0.0",
+                "message": "Provider online",
+                "host": 1,
+                "redis": redis(),
+            })))
+            .is_err());
+    }
+
+    fn body(input_methods: Option<Value>) -> Value {
+        let mut captcha: Value = json!({
+            "captchaId": "id",
+            "captchaContentId": "cid",
+            "solution": ["0xa"],
+            "salt": "0x00",
+        });
+        if let Some(input_methods) = input_methods {
+            captcha["inputMethods"] = input_methods;
+        }
+        json!({
+            "user": "user",
+            "dapp": "dapp",
+            "captchas": [captcha],
+            "requestHash": "hash",
+            "timestamp": "1",
+            "signature": { "user": { "timestamp": "sig" }, "provider": { "requestHash": "sig" } },
+        })
+    }
+
+    #[test]
+    fn accepts_a_submission_without_input_methods() {
+        assert!(captcha_solution_body()
+            .safe_parse(Some(&body(None)))
+            .is_ok());
+    }
+
+    #[test]
+    fn keeps_the_input_methods_the_widget_sends() {
+        let parsed: Value = captcha_solution_body()
+            .safe_parse(Some(&body(Some(json!(["pointer", "keyboard"])))))
+            .expect("valid")
+            .expect("defined");
+        assert_eq!(
+            parsed["captchas"][0]["inputMethods"],
+            json!(["pointer", "keyboard"])
+        );
+    }
+
+    #[test]
+    fn rejects_an_unknown_input_method() {
+        assert!(captcha_solution_body()
+            .safe_parse(Some(&body(Some(json!(["stylus"])))))
+            .is_err());
+    }
+
+    #[test]
+    fn bounds_how_many_input_methods_one_captcha_may_carry() {
+        let too_many: Value = json!(vec!["pointer"; 10_000]);
+        assert!(captcha_solution_body()
+            .safe_parse(Some(&body(Some(too_many))))
+            .is_err());
+    }
+}
+
+/// Port of src/provider/requestArrayLimits.test.ts.
+mod request_array_limits {
+    use crate::provider_api::{
+        captcha_request_body, captcha_solution_body, submit_audio_captcha_solution_body,
+        submit_icon_order_captcha_solution_body, submit_puzzle_captcha_solution_body,
+        MAX_ICON_CLICKS,
+    };
+    use prosopo_api_route::schema::Schema;
+    use serde_json::{json, Map, Value};
+
+    const USER: &str = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
+    const DAPP: &str = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+
+    fn challenge() -> String {
+        format!("1700000000000___{USER}___{DAPP}___1")
+    }
+
+    fn signature() -> Value {
+        json!({ "user": { "timestamp": "0x01" }, "provider": { "challenge": "0x02" } })
+    }
+
+    fn puzzle_body(events: Value) -> Value {
+        json!({
+            "challenge": challenge(), "finalX": 1, "finalY": 1, "puzzleEvents": events,
+            "signature": signature(), "user": USER, "dapp": DAPP,
+        })
+    }
+
+    fn icon_order_body(clicks: Value, events: Value) -> Value {
+        json!({
+            "challenge": challenge(), "clicks": clicks, "iconOrderEvents": events,
+            "signature": signature(), "user": USER, "dapp": DAPP,
+        })
+    }
+
+    fn audio_body(events: Value) -> Value {
+        json!({
+            "challenge": challenge(), "answer": "12345", "audioEvents": events,
+            "signature": signature(), "user": USER, "dapp": DAPP,
+        })
+    }
+
+    fn captcha(solution: Vec<String>) -> Value {
+        json!({ "captchaId": "0x01", "captchaContentId": "0x02", "solution": solution, "salt": "0x03" })
+    }
+
+    fn solution_body(captchas: Vec<Value>) -> Value {
+        json!({
+            "user": USER, "dapp": DAPP, "captchas": captchas, "requestHash": "0x04",
+            "timestamp": "1700000000000",
+            "signature": { "user": { "timestamp": "0x01" }, "provider": { "requestHash": "0x02" } },
+        })
+    }
+
+    fn events(count: usize) -> Value {
+        Value::Array(
+            (0..count)
+                .map(|i| json!({ "x": i, "y": i, "t": 1_700_000_000_000_u64 + i as u64 }))
+                .collect(),
+        )
+    }
+
+    fn issues(schema: &Schema, value: &Value) -> Vec<Map<String, Value>> {
+        schema.safe_parse(Some(value)).err().unwrap_or_default()
+    }
+
+    #[test]
+    fn caps_puzzle_events_at_10000() {
+        let schema: Schema = submit_puzzle_captcha_solution_body();
+        assert!(schema
+            .safe_parse(Some(&puzzle_body(events(10_000))))
+            .is_ok());
+        let issues = issues(&schema, &puzzle_body(events(10_001)));
+        assert_eq!(issues[0]["path"], json!(["puzzleEvents"]));
+    }
+
+    #[test]
+    fn rejects_a_huge_array_of_invalid_puzzle_events_with_one_issue() {
+        let schema: Schema = submit_puzzle_captcha_solution_body();
+        assert_eq!(
+            issues(&schema, &puzzle_body(json!(vec![Value::Null; 150_000]))).len(),
+            1
+        );
+    }
+
+    #[test]
+    fn caps_icon_order_events_at_10000() {
+        let schema: Schema = submit_icon_order_captcha_solution_body();
+        assert!(schema
+            .safe_parse(Some(&icon_order_body(json!([]), events(10_000))))
+            .is_ok());
+        let issues = issues(&schema, &icon_order_body(json!([]), events(10_001)));
+        assert_eq!(issues[0]["path"], json!(["iconOrderEvents"]));
+    }
+
+    #[test]
+    fn caps_audio_events_at_512() {
+        let schema: Schema = submit_audio_captcha_solution_body();
+        let event: Value = json!({ "kind": "key", "t": 1 });
+        assert!(schema
+            .safe_parse(Some(&audio_body(json!(vec![event.clone(); 512]))))
+            .is_ok());
+        let issues = issues(&schema, &audio_body(json!(vec![event; 513])));
+        assert_eq!(issues[0]["path"], json!(["audioEvents"]));
+    }
+
+    #[test]
+    fn rejects_a_huge_array_of_invalid_audio_events_with_one_issue() {
+        let schema: Schema = submit_audio_captcha_solution_body();
+        assert_eq!(
+            issues(&schema, &audio_body(json!(vec![Value::Null; 150_000]))).len(),
+            1
+        );
+    }
+
+    #[test]
+    fn caps_icon_order_clicks() {
+        let schema: Schema = submit_icon_order_captcha_solution_body();
+        let click: Value = json!({ "x": 1, "y": 1 });
+        assert!(schema
+            .safe_parse(Some(&icon_order_body(
+                json!(vec![click.clone(); MAX_ICON_CLICKS]),
+                json!([])
+            )))
+            .is_ok());
+        let issues = issues(
+            &schema,
+            &icon_order_body(json!(vec![click; MAX_ICON_CLICKS + 1]), json!([])),
+        );
+        assert_eq!(issues[0]["path"], json!(["clicks"]));
+    }
+
+    #[test]
+    fn caps_captchas_at_256() {
+        let schema: Schema = captcha_solution_body();
+        let within: Vec<Value> = vec![captcha(vec!["0x05".to_string()]); 256];
+        assert!(schema
+            .safe_parse(Some(&solution_body(within.clone())))
+            .is_ok());
+        let mut over: Vec<Value> = within;
+        over.push(captcha(vec!["0x05".to_string()]));
+        assert_eq!(issues(&schema, &solution_body(over)).len(), 1);
+    }
+
+    #[test]
+    fn caps_each_captchas_solution_at_64_tiles() {
+        let schema: Schema = captcha_solution_body();
+        let tiles = |n: usize| (0..n).map(|i| format!("0x{i}")).collect::<Vec<String>>();
+        assert!(schema
+            .safe_parse(Some(&solution_body(vec![captcha(tiles(64))])))
+            .is_ok());
+        let issues = issues(&schema, &solution_body(vec![captcha(tiles(65))]));
+        assert_eq!(issues[0]["path"], json!(["captchas", 0, "solution"]));
+    }
+
+    #[test]
+    fn caps_a_byte_array_dataset_id_at_64_and_still_accepts_a_string() {
+        let schema: Schema = captcha_request_body();
+        let body =
+            |dataset_id: Value| json!({ "user": USER, "dapp": DAPP, "datasetId": dataset_id });
+        assert!(schema.safe_parse(Some(&body(json!(vec![1; 32])))).is_ok());
+        assert!(schema.safe_parse(Some(&body(json!("0xabc")))).is_ok());
+        assert!(schema.safe_parse(Some(&body(json!(vec![1; 65])))).is_err());
+        let huge = issues(&schema, &body(json!(vec!["x"; 150_000])));
+        assert!(!huge.is_empty());
+        assert!(serde_json::to_string(&huge).expect("serialises").len() < 2_000);
+    }
+}

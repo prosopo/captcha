@@ -18,36 +18,12 @@
 use crate::context::{own_value, status_code, ThrownError, ZodLikeError};
 use crate::error::{translate_message, UntranslatedLookup};
 use prosopo_locale::{english_text, is_translation_key, is_widget_translation_key, I18nLookup};
-use serde::{Deserialize, Serialize};
+use prosopo_types::{ApiErrorMessage, ApiJsonError};
 use serde_json::Value;
 
 const UNKNOWN_KEY: &str = "API.UNKNOWN";
 const INVALID_BODY_KEY: &str = "API.INVALID_BODY";
 const DEFAULT_CODE: u16 = 400;
-
-/// A validation error has always sent its (bounded) issue list as `message`.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum ApiErrorMessage {
-    Text(String),
-    Issues(Vec<Value>),
-}
-
-/// The `error` of an API response body (`ApiJsonError` in @prosopo/types), with its keys in
-/// the order the TS builds them.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ApiJsonError {
-    pub code: u16,
-    /// In the request's language.
-    pub message: ApiErrorMessage,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub key: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub data: Option<Value>,
-    /// `key`'s English text, only sent when the widget has no text of its own for `key`.
-    #[serde(rename = "messageEn", default, skip_serializing_if = "Option::is_none")]
-    pub message_en: Option<String>,
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnwrappedError {

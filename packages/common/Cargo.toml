@@ -15,8 +15,9 @@ path = "rust/lib.rs"
 [dependencies]
 prosopo-locale = { path = "../locale" }
 prosopo-logger = { path = "../logger" }
-serde = { version = "1.0", features = ["derive"] }
+prosopo-types = { path = "../types" }
 serde_json = { version = "1.0", features = ["preserve_order"] }
 
 [dev-dependencies]
+serde = { version = "1.0", features = ["derive"] }
 tokio = { version = "1", features = ["rt", "macros"] }
