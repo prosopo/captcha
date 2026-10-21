@@ -15,7 +15,9 @@
 //! The image captcha records: commitments, the user's solutions and pending requests
 //! (provider.ts).
 
+use crate::captcha::StoredKind;
 use crate::challenges::{is_blocking, Coords};
+use crate::streamer::MarkStored;
 use crate::operation::{Operation, Reply, UpdateStatement};
 use crate::provider::{collections, db_error, decode, ProviderDatabase};
 use crate::records::{
@@ -117,6 +119,9 @@ impl ProviderDatabase {
             );
         }
         self.run(Operation::update(collections::USER_SOLUTION, statements)).await?;
+        let mark_stored: MarkStored =
+            self.mark_stored_callback(collections::COMMITMENT, &USER_COMMITMENT_RECORD, doc! { "id": commit.id.as_str() }, false, false);
+        self.stream_record(StoredKind::Commitment, record.to_document(), mark_stored);
         Ok(())
     }
 
@@ -268,6 +273,10 @@ impl ProviderDatabase {
         })
         .await
         .map_err(|error| failed(error.to_string()))?;
+        let read: Operation =
+            Operation::find(collections::COMMITMENT, self.filter(&USER_COMMITMENT_RECORD, doc! { "id": id })).with_limit(1);
+        let mark_stored: MarkStored = self.mark_stored_callback(collections::COMMITMENT, &USER_COMMITMENT_RECORD, doc! { "id": id }, true, true);
+        self.stream_update(StoredKind::Commitment, read, mark_stored);
         Ok(())
     }
 

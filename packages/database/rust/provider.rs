@@ -15,9 +15,11 @@
 //! `ProviderDatabase` (src/databases/provider.ts): the provider's own records. Each method sends
 //! the commands mongoose sends for it and reads the replies as the TS reads them.
 
+use crate::captcha::StoredKind;
 use crate::operation::{Executor, Operation, Reply, UpdateStatement};
 use crate::source::{Source, SourceIds};
-use bson::{doc, Bson, Document};
+use crate::streamer::{CentralDbStreamer, FetchRecord, MarkStored};
+use bson::{doc, Bson, DateTime, Document};
 use prosopo_common::{ErrorClass, ErrorContext, ErrorOptions, ErrorSource, ProsopoError};
 use prosopo_logger::{LogRecord, Logger};
 use prosopo_types::datasets::{dataset_with_ids_and_tree_schema, CaptchaItem, CaptchaStates};
@@ -30,7 +32,7 @@ use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 /// The collections, as mongoose names them after the models.
 pub mod collections {
@@ -151,6 +153,7 @@ pub struct ProviderDatabase {
     source: Arc<dyn Source>,
     logger: Logger,
     indexes_ensured: AtomicBool,
+    streamer: RwLock<Option<Arc<CentralDbStreamer>>>,
 }
 
 /// `PROVIDER_TABLES`: each collection and the schema of its records, in the TS order.
@@ -216,6 +219,7 @@ impl ProviderDatabase {
             source,
             logger,
             indexes_ensured: AtomicBool::new(false),
+            streamer: RwLock::new(None),
         }
     }
 
@@ -263,6 +267,75 @@ impl ProviderDatabase {
             }
         }
         self.indexes_ensured.store(true, Ordering::SeqCst);
+    }
+
+    /// `setCentralDbStreamer`: from now on, each record written is also sent to the central
+    /// database.
+    pub fn set_central_db_streamer(&self, streamer: Arc<CentralDbStreamer>) {
+        *self.streamer.write().expect("lock") = Some(streamer);
+    }
+
+    pub fn has_central_db_streamer(&self) -> bool {
+        self.streamer.read().expect("lock").is_some()
+    }
+
+    pub fn central_db_streamer(&self) -> Option<Arc<CentralDbStreamer>> {
+        self.streamer.read().expect("lock").clone()
+    }
+
+    /// Sends a record just written, then marks it stored.
+    pub(crate) fn stream_record(&self, kind: StoredKind, record: Document, mark_stored: MarkStored) {
+        if let Some(streamer) = self.central_db_streamer() {
+            streamer.stream_record(kind, record, Some(mark_stored));
+        }
+    }
+
+    /// Reads a record just changed with `read`, sends it, then marks it stored.
+    pub(crate) fn stream_update(&self, kind: StoredKind, read: Operation, mark_stored: MarkStored) {
+        if let Some(streamer) = self.central_db_streamer() {
+            let executor: Arc<dyn Executor> = self.executor.clone();
+            let logger: Logger = self.logger.clone();
+            let fetch: FetchRecord = Box::pin(async move {
+                let reply: Reply = executor
+                    .run(read)
+                    .await
+                    .map_err(|error| db_error("DATABASE.QUERY_ERROR", ErrorContext::new().with("error", error.to_string()), Some(&logger)))?;
+                Ok(reply.documents().into_iter().next())
+            });
+            streamer.stream_update(kind, fetch, Some(mark_stored));
+        }
+    }
+
+    /// The callback that marks the record `filter` names stored once the central write lands.
+    /// `guarded` leaves a record changed since the copy that was sent for the next sweep;
+    /// `clear_pending` takes it off the sweep.
+    pub(crate) fn mark_stored_callback(
+        &self,
+        collection: &'static str,
+        schema: &'static Schema,
+        filter: Document,
+        guarded: bool,
+        clear_pending: bool,
+    ) -> MarkStored {
+        let executor: Arc<dyn Executor> = self.executor.clone();
+        let source: Arc<dyn Source> = self.source.clone();
+        Box::new(move |stored_at: DateTime| {
+            Box::pin(async move {
+                let mut filter: Document = filter;
+                if guarded {
+                    filter.insert("lastUpdatedTimestamp", doc! { "$lte": stored_at });
+                }
+                let mut update: Document = doc! { "$set": { "storedAtTimestamp": stored_at } };
+                if clear_pending {
+                    update.insert("$unset", doc! { "pendingStage": 1 });
+                }
+                let mut ids: SourceIds = SourceIds(source.as_ref());
+                let q: Document = cast_filter(schema, &filter, false, &mut ids).map_err(|error| error.to_string())?;
+                let u: Document = cast_update(schema, UpdateMethod::UpdateOne, &update, &q, false, &mut ids).map_err(|error| error.to_string())?;
+                executor.run(Operation::update(collection, vec![UpdateStatement::one(q, u)])).await.map_err(|error| error.to_string())?;
+                Ok(())
+            })
+        })
     }
 
     pub(crate) fn source(&self) -> &dyn Source {

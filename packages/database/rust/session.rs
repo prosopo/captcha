@@ -14,10 +14,12 @@
 
 //! Frictionless sessions (provider.ts).
 
+use crate::captcha::StoredKind;
 use crate::operation::{Operation, Reply, UpdateStatement};
 use crate::provider::{collections, db_error, decode, ProviderDatabase};
 use crate::records::{CompositeIpAddress, StoredResult};
 use crate::source::SourceIds;
+use crate::streamer::MarkStored;
 use bson::{doc, Bson, DateTime, Document};
 use prosopo_common::{ErrorContext, ProsopoError};
 use prosopo_logger::LogRecord;
@@ -188,7 +190,8 @@ impl ProviderDatabase {
         db_error(key, context, Some(self.logger()))
     }
 
-    async fn insert_session(&self, session: &Session) -> Result<(), String> {
+    /// Inserts the session as `Model.create` does; the session as given, for the streamer.
+    async fn insert_session(&self, session: &Session) -> Result<Document, String> {
         let input: Document = session.to_document()?;
         let document: Document = create(&SESSION_RECORD, &input, &mut SourceIds(self.source())).map_err(|error| error.to_string())?;
         self.run(Operation::Insert {
@@ -197,7 +200,7 @@ impl ProviderDatabase {
         })
         .await
         .map_err(|error| error.to_string())?;
-        Ok(())
+        Ok(input)
     }
 
     /// `storeSessionRecord`: stamped `lastUpdatedTimestamp` (its creation time unless given) and
@@ -206,12 +209,18 @@ impl ProviderDatabase {
         let mut record: Session = session.clone();
         record.last_updated_timestamp = Some(session.last_updated_timestamp.unwrap_or(session.created_at));
         record.pending_stage = Some(true);
-        self.insert_session(&record).await.map_err(|error| {
+        let document: Document = self.insert_session(&record).await.map_err(|error| {
             self.session_error(
                 "DATABASE.SESSION_STORE_FAILED",
                 ErrorContext::new().with("error", error).with("sessionId", session.session_id.as_str()),
             )
-        })
+        })?;
+        self.stream_record(StoredKind::Session, document, self.mark_session_stored(&session.session_id, true));
+        Ok(())
+    }
+
+    fn mark_session_stored(&self, session_id: &str, clear_pending: bool) -> MarkStored {
+        self.mark_stored_callback(collections::SESSION, &SESSION_RECORD, doc! { "sessionId": session_id }, true, clear_pending)
     }
 
     /// `storeBlockedSession`: the session of a request refused at the door, `blocked` and
@@ -223,13 +232,14 @@ impl ProviderDatabase {
         record.deleted = Some(true);
         record.stored_at_timestamp = Some(session.stored_at_timestamp.unwrap_or(session.created_at));
         record.last_updated_timestamp = Some(session.last_updated_timestamp.unwrap_or(session.created_at));
-        if let Err(error) = self.insert_session(&record).await {
-            self.logger().warn(|| {
+        match self.insert_session(&record).await {
+            Ok(document) => self.stream_record(StoredKind::Session, document, self.mark_session_stored(&session.session_id, false)),
+            Err(error) => self.logger().warn(|| {
                 LogRecord::msg("Failed to persist blocked session record").with_err(error).with_data(serde_json::json!({
                     "sessionId": session.session_id,
                     "siteKey": session.site_key,
                 }))
-            });
+            }),
         }
     }
 
@@ -314,8 +324,9 @@ impl ProviderDatabase {
         ))
     }
 
-    /// `updateSessionRecord`: the fields given, as a `$set`.
-    pub async fn update_session_record(&self, session_id: &str, updates: &Document) -> Result<(), ProsopoError> {
+    /// `updateSessionRecord`: the fields given, as a `$set`, and with `stream_to_central` the
+    /// session as it then is sent to the central database.
+    pub async fn update_session_record(&self, session_id: &str, updates: &Document, stream_to_central: bool) -> Result<(), ProsopoError> {
         let mut set: Document = updates.clone();
         set.insert("lastUpdatedTimestamp", self.source().now());
         set.insert("pendingStage", true);
@@ -327,6 +338,10 @@ impl ProviderDatabase {
             false,
         );
         self.update_session(session_id, statement, "DATABASE.SESSION_GET_FAILED").await?;
+        if stream_to_central {
+            let read: Operation = Operation::find(collections::SESSION, self.filter(&SESSION_RECORD, doc! { "sessionId": session_id })).with_limit(1);
+            self.stream_update(StoredKind::Session, read, self.mark_session_stored(session_id, true));
+        }
         Ok(())
     }
 

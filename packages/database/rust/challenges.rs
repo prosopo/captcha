@@ -17,7 +17,9 @@
 use crate::operation::{Operation, Reply, UpdateStatement};
 use crate::provider::{collections, db_error, decode, ProviderDatabase};
 use crate::records::{coords_bson, ChallengeRecord, CompositeIpAddress, StoredIconTarget, StoredResult};
+use crate::captcha::StoredKind;
 use crate::source::SourceIds;
+use crate::streamer::MarkStored;
 use bson::{doc, Bson, DateTime, Document};
 use prosopo_common::{ErrorClass, ErrorContext, ErrorOptions, ErrorSource, ProsopoError};
 use prosopo_types::captcha_type::CaptchaType;
@@ -56,6 +58,14 @@ impl Interactive {
             Interactive::Puzzle => &PUZZLE_CAPTCHA_RECORD,
             Interactive::IconOrder => &ICON_ORDER_CAPTCHA_RECORD,
             Interactive::Audio => &AUDIO_CAPTCHA_RECORD,
+        }
+    }
+
+    fn stored_kind(self) -> StoredKind {
+        match self {
+            Interactive::Puzzle => StoredKind::Puzzle,
+            Interactive::IconOrder => StoredKind::IconOrder,
+            Interactive::Audio => StoredKind::Audio,
         }
     }
 
@@ -241,13 +251,41 @@ impl ProviderDatabase {
             "sessionId": optional(new.session_id),
             "ipInfo": new.ip_info.cloned().unwrap_or(Bson::Undefined),
         };
-        self.create_record(&POW_CAPTCHA_RECORD, collections::POW_CAPTCHA, record, new.challenge).await
+        self.create_record(&POW_CAPTCHA_RECORD, collections::POW_CAPTCHA, record.clone(), new.challenge).await?;
+        self.stream_record(StoredKind::Pow, record, self.mark_challenge_stored(collections::POW_CAPTCHA, &POW_CAPTCHA_RECORD, new.challenge));
+        Ok(())
+    }
+
+    /// Clears `pendingStage` once the copy sent is current, as each challenge record's stream
+    /// does.
+    fn mark_challenge_stored(&self, collection: &'static str, schema: &'static Schema, challenge: &str) -> MarkStored {
+        self.mark_stored_callback(collection, schema, doc! { "challenge": challenge }, true, true)
+    }
+
+    fn find_challenge_operation(&self, collection: &str, schema: &Schema, challenge: &str, projection: Document) -> Operation {
+        let filter: Document = self.filter(schema, doc! { "challenge": challenge });
+        Operation::find(collection, filter).with_projection(projection).with_limit(1)
+    }
+
+    fn stream_pow_update(&self, challenge: &str) {
+        let read: Operation = self.find_challenge_operation(collections::POW_CAPTCHA, &POW_CAPTCHA_RECORD, challenge, challenge_projection(true));
+        self.stream_update(StoredKind::Pow, read, self.mark_challenge_stored(collections::POW_CAPTCHA, &POW_CAPTCHA_RECORD, challenge));
+    }
+
+    fn interactive_read(&self, kind: Interactive, challenge: &str) -> Operation {
+        let mut projection: Document = challenge_projection(false);
+        projection.extend(kind.answer_projection());
+        self.find_challenge_operation(kind.collection(), kind.schema(), challenge, projection)
+    }
+
+    fn stream_interactive_update(&self, kind: Interactive, challenge: &str) {
+        let read: Operation = self.interactive_read(kind, challenge);
+        self.stream_update(kind.stored_kind(), read, self.mark_challenge_stored(kind.collection(), kind.schema(), challenge));
     }
 
     async fn find_challenge(&self, collection: &str, schema: &Schema, challenge: &str, projection: Document) -> Result<Option<ChallengeRecord>, ProsopoError> {
-        let filter: Document = self.filter(schema, doc! { "challenge": challenge });
         let found: Option<Document> = self
-            .find(Operation::find(collection, filter).with_projection(projection).with_limit(1))
+            .find(self.find_challenge_operation(collection, schema, challenge, projection))
             .await
             .map_err(|error| db_error("DATABASE.CAPTCHA_GET_FAILED", ErrorContext::new().with("error", error.to_string()), Some(self.logger())))?
             .into_iter()
@@ -293,7 +331,9 @@ impl ProviderDatabase {
         }
         let filter: Document = self.filter(&POW_CAPTCHA_RECORD, doc! { "challenge": challenge });
         let statement: UpdateStatement = UpdateStatement::pipeline(filter, vec![doc! { "$set": set_stage }]);
-        self.expect_match(collections::POW_CAPTCHA, statement, challenge).await
+        self.expect_match(collections::POW_CAPTCHA, statement, challenge).await?;
+        self.stream_pow_update(challenge);
+        Ok(())
     }
 
     /// Runs a result update, failing as the TS does when nothing matched.
@@ -319,6 +359,7 @@ impl ProviderDatabase {
             .map_err(|error| self.update_failed(ErrorContext::new().with("error", error)))?
             .no_upsert();
         self.run(Operation::update(collections::POW_CAPTCHA, vec![statement])).await?;
+        self.stream_pow_update(challenge);
         Ok(())
     }
 
@@ -350,7 +391,9 @@ impl ProviderDatabase {
                 Interactive::IconOrder
             }
         };
-        self.create_record(kind.schema(), kind.collection(), record, new.challenge).await
+        self.create_record(kind.schema(), kind.collection(), record.clone(), new.challenge).await?;
+        self.stream_record(kind.stored_kind(), record, self.mark_challenge_stored(kind.collection(), kind.schema(), new.challenge));
+        Ok(())
     }
 
     /// `getPuzzleCaptchaRecordByChallenge` and the audio and icon-order reads.
@@ -359,9 +402,13 @@ impl ProviderDatabase {
         kind: Interactive,
         challenge: &str,
     ) -> Result<Option<ChallengeRecord>, ProsopoError> {
-        let mut projection: Document = challenge_projection(false);
-        projection.extend(kind.answer_projection());
-        self.find_challenge(kind.collection(), kind.schema(), challenge, projection).await
+        let found: Option<Document> = self
+            .find(self.interactive_read(kind, challenge))
+            .await
+            .map_err(|error| db_error("DATABASE.CAPTCHA_GET_FAILED", ErrorContext::new().with("error", error.to_string()), Some(self.logger())))?
+            .into_iter()
+            .next();
+        Ok(found.and_then(decode))
     }
 
     /// `claimIconOrderCaptchaSubmission` and `claimAudioCaptchaSubmission`: true only for the
@@ -420,7 +467,9 @@ impl ProviderDatabase {
         let statement: UpdateStatement = self
             .statement(kind.schema(), UpdateMethod::UpdateOne, doc! { "challenge": challenge }, doc! { "$set": set_stage }, false)
             .map_err(|error| self.update_failed(ErrorContext::new().with("error", error)))?;
-        self.expect_match(kind.collection(), statement, challenge).await
+        self.expect_match(kind.collection(), statement, challenge).await?;
+        self.stream_interactive_update(kind, challenge);
+        Ok(())
     }
 
     /// `updatePuzzleCaptchaRecord` and the audio and icon-order ones: the given fields, with the
@@ -447,6 +496,7 @@ impl ProviderDatabase {
             .statement(kind.schema(), UpdateMethod::UpdateOne, doc! { "challenge": challenge }, doc! { "$set": set }, false)
             .map_err(|error| self.update_failed(ErrorContext::new().with("error", error)))?;
         self.run(Operation::update(kind.collection(), vec![statement])).await?;
+        self.stream_interactive_update(kind, challenge);
         Ok(())
     }
 
@@ -469,7 +519,11 @@ impl ProviderDatabase {
             )
             .map_err(|error| self.update_failed(ErrorContext::new().with("error", error)))?;
         let reply: Reply = self.run(Operation::update(kind.collection(), vec![statement])).await?;
-        Ok(!matches!(reply, Reply::Update { modified: 0, .. }))
+        if matches!(reply, Reply::Update { modified: 0, .. }) {
+            return Ok(false);
+        }
+        self.stream_interactive_update(kind, challenge);
+        Ok(true)
     }
 
     /// `countCommitmentsByNormalisedEmail`: server-checked records of the dapp with this

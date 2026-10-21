@@ -69,17 +69,25 @@ const resetIds = (): void => {
 	statics.PROCESS_UNIQUE = PROCESS_UNIQUE;
 };
 
-// Every connection the database opens reports the commands it sends.
+// Every connection a database opens reports the commands it sends, those to the central
+// database marked as such.
+const CENTRAL_DB_NAME = "prosopo-equivalence-database-central";
 const createConnection = mongoose.createConnection.bind(mongoose);
 (mongoose as unknown as { createConnection: unknown }).createConnection = (
 	uri: string,
 	options: mongoose.ConnectOptions,
-): mongoose.Connection => createConnection(uri, { ...options, monitorCommands: true });
+): mongoose.Connection => {
+	const opened: mongoose.Connection = createConnection(uri, { ...options, monitorCommands: true });
+	monitor(opened.getClient(), options.dbName === CENTRAL_DB_NAME);
+	return opened;
+};
 
 const { ProviderDatabase } = await import("../../src/databases/provider.js");
 const { MongoDatabase } = await import("../../src/base/mongo.js");
 const { getLogger } = await import("@prosopo/logger");
 const { ClientSettingsSchema } = await import("@prosopo/types");
+const { CaptchaDatabase } = await import("../../src/databases/captcha.js");
+const { CentralDbStreamer } = await import("../../src/databases/centralDbStreamer.js");
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 const toJson = (value: unknown): Json => JSON.parse(EJSON.stringify(value, { relaxed: false })) as Json;
@@ -98,48 +106,53 @@ const RELEVANT: Record<string, string[]> = {
 	createIndexes: ["createIndexes", "indexes"],
 };
 
-type Command = { name: string; hex: string; json: Json; reply?: { hex: string; json: Json } };
+type Command = { central?: true; name: string; hex: string; json: Json; reply?: { hex: string; json: Json } };
 let commands: Command[] = [];
 const pending = new Map<number, Command>();
 // The parts of a reply the methods read: the documents a cursor returns, and the counts.
 const REPLY_FIELDS: string[] = ["cursor", "n", "nModified", "upserted", "value", "lastErrorObject", "writeErrors", "writeConcernError"];
+function monitor(client: mongoose.mongo.MongoClient, central: boolean): void {
+	client.on("commandStarted", (event) => {
+		const fields: string[] | undefined = RELEVANT[event.commandName];
+		if (!fields) return;
+		const kept: Record<string, unknown> = {};
+		for (const field of fields) {
+			if (field in event.command) kept[field] = (event.command as Record<string, unknown>)[field];
+		}
+		try {
+			// As the driver serialises a command: an undefined value goes on the wire as null.
+			const bytes: Uint8Array = BSON.serialize(kept, { ignoreUndefined: false });
+			const command: Command = {
+				...(central ? { central: true } : {}),
+				name: event.commandName,
+				hex: Buffer.from(bytes).toString("hex"),
+				json: toJson(BSON.deserialize(bytes, { promoteValues: false })),
+			};
+			commands.push(command);
+			pending.set(event.requestId, command);
+		} catch (error) {
+			commands.push({ name: event.commandName, hex: "", json: { unrecordable: String(error) } });
+		}
+	});
+	client.on("commandSucceeded", (event) => {
+		const command: Command | undefined = pending.get(event.requestId);
+		if (!command) return;
+		pending.delete(event.requestId);
+		const reply: Record<string, unknown> = {};
+		for (const field of REPLY_FIELDS) {
+			if (field in (event.reply as Record<string, unknown>)) reply[field] = (event.reply as Record<string, unknown>)[field];
+		}
+		const bytes: Uint8Array = BSON.serialize(reply);
+		command.reply = { hex: Buffer.from(bytes).toString("hex"), json: toJson(BSON.deserialize(bytes, { promoteValues: false })) };
+	});
+}
 const silent = getLogger("error", "equivalence");
 const db = new ProviderDatabase({ mongo: { url: MONGO_URL, dbname: DB_NAME }, logger: silent });
 await MongoDatabase.prototype.connect.call(db);
 const connection = db.getConnection();
-connection.getClient().on("commandStarted", (event) => {
-	const fields: string[] | undefined = RELEVANT[event.commandName];
-	if (!fields) return;
-	const kept: Record<string, unknown> = {};
-	for (const field of fields) {
-		if (field in event.command) kept[field] = (event.command as Record<string, unknown>)[field];
-	}
-	try {
-		// As the driver serialises a command: an undefined value goes on the wire as null.
-		const bytes: Uint8Array = BSON.serialize(kept, { ignoreUndefined: false });
-		const command: Command = {
-			name: event.commandName,
-			hex: Buffer.from(bytes).toString("hex"),
-			json: toJson(BSON.deserialize(bytes, { promoteValues: false })),
-		};
-		commands.push(command);
-		pending.set(event.requestId, command);
-	} catch (error) {
-		commands.push({ name: event.commandName, hex: "", json: { unrecordable: String(error) } });
-	}
-});
-connection.getClient().on("commandSucceeded", (event) => {
-	const command: Command | undefined = pending.get(event.requestId);
-	if (!command) return;
-	pending.delete(event.requestId);
-	const reply: Record<string, unknown> = {};
-	for (const field of REPLY_FIELDS) {
-		if (field in (event.reply as Record<string, unknown>)) reply[field] = (event.reply as Record<string, unknown>)[field];
-	}
-	const bytes: Uint8Array = BSON.serialize(reply);
-	command.reply = { hex: Buffer.from(bytes).toString("hex"), json: toJson(BSON.deserialize(bytes, { promoteValues: false })) };
-});
+
 await connection.db?.dropDatabase();
+await connection.getClient().db(CENTRAL_DB_NAME).dropDatabase();
 resetIds();
 
 let collectionNames: Record<string, string> = {};
@@ -179,25 +192,27 @@ const describeError = (error: unknown): Json => {
 };
 
 // Runs one call: the commands it sends and what it returns are recorded under `name`.
-const record = async (group: string, name: string, method: string, args: unknown[]): Promise<unknown> => {
+const recordOn = async (target: object, settleMs: number, group: string, name: string, method: string, args: unknown[]): Promise<unknown> => {
+	if (process.env.EQUIVALENCE_PROGRESS) process.stderr.write(`${group}: ${name}\n`);
 	commands = [];
 	drawn = [];
 	const idStart: number = (mongoose.mongo.ObjectId as unknown as ObjectIdStatics).index;
 	const scenario: Scenario = { group, name, method, args: toJson(toRecordable(args)), random: [], commands: [], idStart };
 	let result: unknown;
 	try {
-		result = await (db as unknown as Record<string, (...a: unknown[]) => Promise<unknown>>)[method](...args);
+		result = await (target as Record<string, (...a: unknown[]) => Promise<unknown>>)[method](...args);
 		const plain: unknown = result instanceof mongoose.Document ? result.toObject() : result;
 		scenario.result = toJson(plain === undefined ? null : plain);
 	} catch (error) {
 		scenario.error = describeError(error);
 	}
-	await new Promise<void>((resolve) => setTimeout(resolve, 20));
+	await new Promise<void>((resolve) => setTimeout(resolve, settleMs));
 	scenario.commands = [...commands];
 	scenario.random = drawn;
 	scenarios.push(scenario);
 	return result;
 };
+const record = (group: string, name: string, method: string, args: unknown[]): Promise<unknown> => recordOn(db, 20, group, name, method, args);
 
 // A change made straight on the database between calls, recorded so a live test can make it too.
 const setup = async (group: string, name: string, change: () => Promise<unknown>): Promise<void> => {
@@ -613,7 +628,65 @@ await record("spam", "a renamed spam domain", "getSpamEmailDomain", ["junk.org"]
 await record("spam", "not a domain", "getSpamEmailDomain", ["localhost"]);
 await record("spam", "an empty domain", "getSpamEmailDomain", [""]);
 
+// The central database: the sweep's batch upserts and reads, then the streamer.
+const central = new CaptchaDatabase(MONGO_URL, CENTRAL_DB_NAME, undefined, silent);
+// The driver draws `Math.random()` for its own ends on the central database's fresh connections;
+// `CaptchaDatabase` itself draws none.
+const recordCentral = async (name: string, method: string, args: unknown[]): Promise<unknown> => {
+	const result: unknown = await recordOn(central, 50, "central", name, method, args);
+	(scenarios[scenarios.length - 1] as Scenario).random = [];
+	return result;
+};
+const tables = db.getTables();
+const leanSessions = await tables.session.find({}).sort({ _id: 1 }).limit(3).lean();
+const leanCommitments = await tables.commitment.find({}).sort({ _id: 1 }).limit(3).lean();
+const leanPow = await tables.powcaptcha.find({}).sort({ _id: 1 }).limit(3).lean();
+const leanPuzzle = await tables.puzzlecaptcha.find({}).sort({ _id: 1 }).limit(2).lean();
+const leanIconOrder = await tables.iconordercaptcha.find({}).sort({ _id: 1 }).limit(2).lean();
+const leanAudio = await tables.audiocaptcha.find({}).sort({ _id: 1 }).limit(2).lean();
+await setup("central", "a commitment whose provided IP a pipeline wrote as a Long", () =>
+	tables.commitment.updateOne(
+		{ id: hex(0xc000 + 31) },
+		[{ $set: { providedIp: { lower: BigInt("0xB496D250E5C58459"), upper: BigInt("0xB496D250E5C58459"), type: "v6" } } }],
+		{ updatePipeline: true },
+	),
+);
+const poisoned = await tables.commitment.find({ id: hex(0xc000 + 31) }).lean();
+await recordCentral("save every kind of record", "saveCaptchas", [leanSessions, leanCommitments, leanPow, leanPuzzle, leanIconOrder, leanAudio]);
+await recordCentral("save them again", "saveCaptchas", [leanSessions, leanCommitments, leanPow, leanPuzzle, leanIconOrder, leanAudio]);
+await recordCentral("save a commitment with a Long provided IP", "saveCaptchas", [[], poisoned, []]);
+await recordCentral("save nothing", "saveCaptchas", [[], [], []]);
+await recordCentral("read the records", "getCaptchas", []);
+await recordCentral("read the records of a dapp, a page", "getCaptchas", [{ dappAccount: "dapp" }, 2]);
+await recordCentral("read with a filter that cannot cast", "getCaptchas", [{ requestedAtTimestamp: "not a date" }, 1]);
+
+// The streamer: each method's local write, then the record streamed to the central database and
+// the local record marked stored.
+db.setCentralDbStreamer(new CentralDbStreamer(`${MONGO_URL}/${CENTRAL_DB_NAME}`, silent));
+const stream = (name: string, method: string, args: unknown[]): Promise<unknown> => recordOn(db, 300, "streaming", name, method, args);
+await stream("store a PoW record", "storePowCaptchaRecord", [challenge(50), components(50), 4, "0xsig50", ip4, headers, "ja4", "session-50", false, false, undefined, ipInfo]);
+await stream("approve a PoW record", "updatePowCaptchaRecordResult", [challenge(50), result("Approved"), true, true, "0xusersig", [[[1, 2]]]]);
+await stream("patch a PoW record", "updatePowCaptchaRecord", [challenge(50), { serverChecked: true }]);
+await stream("patch a missing PoW record", "updatePowCaptchaRecord", ["missing", { serverChecked: true }]);
+await stream("store a puzzle record", "storePuzzleCaptchaRecord", [challenge(51), components(51), 120.5, 40, 10, 12, 15, "0xsig", ip6, headers, "ja4", "session-51", ipInfo]);
+await stream("approve a puzzle record", "updatePuzzleCaptchaRecordResult", [challenge(51), result("Approved"), true, true, "0xusersig", [[[1, 2]]]]);
+await stream("patch a puzzle record", "updatePuzzleCaptchaRecord", [challenge(51), { userSubmitted: true }]);
+await stream("store a puzzle record to check", "storePuzzleCaptchaRecord", [challenge(57), components(57), 120.5, 40, 10, 12, 15, "0xsig", ip4, headers, "ja4"]);
+await stream("mark a puzzle record checked", "markPuzzleCaptchaRecordChecked", [challenge(57)]);
+await stream("mark a puzzle record checked again", "markPuzzleCaptchaRecordChecked", [challenge(57)]);
+await stream("store an audio record", "storeAudioCaptchaRecord", [challenge(52), components(52), "524815", "0xsig", ip4, headers, "ja4"]);
+await stream("store an icon-order record", "storeIconOrderCaptchaRecord", [challenge(53), components(53), [{ x: 10, y: 20.5, size: 32, kind: "star" }], 0.75, "0xsig", ip4, headers, "ja4"]);
+await stream("store an image solution", "storeUserImageCaptchaSolution", [solutions(54), commitment(54)]);
+await stream("approve a commitment", "approveDappUserCommitment", [hex(0xc000 + 54), [[[5, 6]]]]);
+await stream("disapprove a commitment", "disapproveDappUserCommitment", [hex(0xc000 + 54), "CAPTCHA.INVALID_SOLUTION"]);
+await stream("store a session", "storeSessionRecord", [session(55)]);
+await stream("store a blocked session", "storeBlockedSession", [session(56)]);
+await stream("patch a session and stream it", "updateSessionRecord", ["session-s55", { score: 0.9 }, true]);
+await stream("patch a session without streaming it", "updateSessionRecord", ["session-s55", { score: 0.1 }, false]);
+await stream("patch a missing session and stream it", "updateSessionRecord", ["session-none", { score: 0.9 }, true]);
+
 await connection.db?.dropDatabase();
+await connection.getClient().db(CENTRAL_DB_NAME).dropDatabase();
 await db.close();
 
 writeFileSync(
@@ -621,3 +694,5 @@ writeFileSync(
 	`${JSON.stringify({ nowMs: NOW_MS, collections: collectionNames, scenarios })}\n`,
 );
 console.log(`wrote methods.json (${scenarios.length} scenarios, ${scenarios.reduce((n, s) => n + s.commands.length, 0)} commands)`);
+// The streamer keeps its central connection open for the life of the process.
+process.exit(0);

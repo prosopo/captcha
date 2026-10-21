@@ -28,7 +28,9 @@ use crate::mongo::MongoError;
 use crate::operation::{Executor, Operation, Reply, ReplyFuture};
 use crate::provider::ProviderDatabase;
 use crate::records::{CompositeIpAddress, IpHalf, StoredResult, UserCommitment};
+use crate::captcha::{CaptchaBatch, CaptchaDatabase, CaptchaRecords};
 use crate::clients::{ClientRecord, DecisionMachineArtifact, SpamEmailDomainUpdate};
+use crate::streamer::CentralDbStreamer;
 use crate::session::{DnsObservation, Session};
 use prosopo_types_database::scheduled_task::ScheduledTaskResult;
 use prosopo_types::api_types::CaptchaSolution;
@@ -107,14 +109,28 @@ struct ReplayExecutor {
     expected: Mutex<VecDeque<Recorded>>,
     mismatches: Mutex<Vec<String>>,
     unordered: bool,
+    /// The central database's index creation, which mongoose runs alongside the writes and so
+    /// lands in whichever scenario is running: answered, and kept to compare as a set.
+    indexes: Option<Mutex<Vec<String>>>,
+}
+
+/// Whether a recorded command went to the central database.
+fn is_central(command: &Value) -> bool {
+    command["central"].as_bool().unwrap_or(false)
+}
+
+/// A command whose place in the recording is a matter of timing: the central index creation.
+fn is_timed(command: &Value) -> bool {
+    is_central(command) && command["name"] == "createIndexes"
 }
 
 impl ReplayExecutor {
-    fn new(scenario: &Value) -> ReplayExecutor {
+    fn new(scenario: &Value, central: bool) -> ReplayExecutor {
         let expected: VecDeque<Recorded> = scenario["commands"]
             .as_array()
             .expect("commands")
             .iter()
+            .filter(|command| is_central(command) == central && !is_timed(command))
             .map(|command| Recorded {
                 command: from_hex(command["hex"].as_str().expect("hex")),
                 reply: command["reply"]["hex"].as_str().map(from_hex).unwrap_or_default(),
@@ -124,6 +140,7 @@ impl ReplayExecutor {
             expected: Mutex::new(expected),
             mismatches: Mutex::new(Vec::new()),
             unordered: scenario["unordered"].as_bool().unwrap_or(false),
+            indexes: central.then(|| Mutex::new(Vec::new())),
         }
     }
 
@@ -135,6 +152,10 @@ impl ReplayExecutor {
 impl Executor for ReplayExecutor {
     fn run(&self, operation: Operation) -> ReplyFuture<'_> {
         let sent: Document = operation.command();
+        if let (Some(indexes), true) = (&self.indexes, sent.contains_key("createIndexes")) {
+            indexes.lock().expect("lock").push(to_hex(&sent));
+            return Box::pin(async move { Ok(Reply::Value(None)) });
+        }
         let next: Option<Recorded> = {
             let mut expected = self.expected.lock().expect("lock");
             if self.unordered {
@@ -682,7 +703,7 @@ async fn run_session_scenario(db: &ProviderDatabase, scenario: &Value, live: boo
         "getSessionByuserSitekeyIpHash" => check(scenario, db.get_session_by_user_sitekey_ip_hash(bson_str(&b[0])).await),
         "checkAndRemoveSession" => check(scenario, db.check_and_remove_session(bson_str(&b[0])).await),
         "claimSessionServerCheck" => check(scenario, db.claim_session_server_check(bson_str(&b[0])).await),
-        "updateSessionRecord" => check_unit(scenario, db.update_session_record(bson_str(&b[0]), &document(&b[1])).await),
+        "updateSessionRecord" => check_unit(scenario, db.update_session_record(bson_str(&b[0]), &document(&b[1]), given(&b, 2).and_then(Bson::as_bool).unwrap_or(false)).await),
         "recordSessionSimdReadingsIfAbsent" => check_unit(
             scenario,
             db.record_session_simd_readings_if_absent(bson_str(&b[0]), &b[1], bson_str(&b[2]).parse().expect("a stage")).await,
@@ -800,6 +821,58 @@ async fn run_admin_scenario(db: &ProviderDatabase, scenario: &Value, live: bool)
     Some(outcome)
 }
 
+fn documents(value: Option<&Bson>) -> Vec<Document> {
+    value
+        .and_then(Bson::as_array)
+        .map(|items| items.iter().map(|item| item.as_document().cloned().expect("a record")).collect())
+        .unwrap_or_default()
+}
+
+async fn run_central_scenario(central: &CaptchaDatabase, scenario: &Value, live: bool) -> Option<String> {
+    let b: Vec<Bson> = bson_args(scenario);
+    match scenario["method"].as_str().expect("method") {
+        "saveCaptchas" => {
+            let batch: CaptchaBatch = CaptchaBatch {
+                sessions: documents(b.first()),
+                commitments: documents(b.get(1)),
+                pow: documents(b.get(2)),
+                puzzle: documents(b.get(3)),
+                icon_order: documents(b.get(4)),
+                audio: documents(b.get(5)),
+            };
+            check_unit(scenario, central.save_captchas(&batch).await)
+        }
+        "getCaptchas" => {
+            let filter: Document = given(&b, 0).map(document).unwrap_or_default();
+            let as_ts = |records: CaptchaRecords| -> CaptchaRecords {
+                let each = |documents: Vec<Document>| -> Vec<Document> {
+                    documents
+                        .into_iter()
+                        .map(|mut document| {
+                            if live {
+                                document.remove("_id");
+                            }
+                            match as_js(Bson::Document(document)) {
+                                Bson::Document(document) => document,
+                                _ => unreachable!(),
+                            }
+                        })
+                        .collect()
+                };
+                CaptchaRecords {
+                    user_commitment_records: each(records.user_commitment_records),
+                    pow_captcha_records: each(records.pow_captcha_records),
+                    puzzle_captcha_records: each(records.puzzle_captcha_records),
+                    audio_captcha_records: each(records.audio_captcha_records),
+                    icon_order_captcha_records: each(records.icon_order_captcha_records),
+                }
+            };
+            check_normalised(scenario, central.get_captchas(&filter, given(&b, 1).map(bson_f64)).await, as_ts)
+        }
+        other => Some(format!("no central method {other}")),
+    }
+}
+
 fn bson_strings(value: &Bson) -> Vec<String> {
     value.as_array().expect("an array").iter().map(|item| bson_str(item).to_string()).collect()
 }
@@ -855,30 +928,91 @@ async fn run_scenario(db: &ProviderDatabase, scenario: &Value, live: bool) -> Op
     }
 }
 
+/// The databases one scenario runs against: the provider's, and the central one its streamer
+/// and the sweep write to.
+struct Databases {
+    provider: ProviderDatabase,
+    central: Arc<CaptchaDatabase>,
+    streamer: Arc<CentralDbStreamer>,
+}
+
+impl Databases {
+    fn new(local: Arc<dyn Executor>, central: Arc<dyn Executor>, source: Arc<ReplaySource>) -> Databases {
+        let provider: ProviderDatabase = ProviderDatabase::new(local, source.clone(), get_logger(LogLevel::Error, "test"));
+        let central_db = || CaptchaDatabase::with_executor(central.clone(), source.clone(), get_logger(LogLevel::Error, "test"));
+        let streamer: Arc<CentralDbStreamer> = Arc::new(CentralDbStreamer::new(central_db(), get_logger(LogLevel::Error, "test")));
+        Databases {
+            provider,
+            central: Arc::new(central_db()),
+            streamer,
+        }
+    }
+
+    /// The scenario's call, on the database its group names, with every record it streams sent.
+    async fn run(&self, scenario: &Value, live: bool) -> Option<String> {
+        match scenario["group"].as_str() {
+            Some("central") => run_central_scenario(&self.central, scenario, live).await,
+            Some("streaming") => {
+                self.provider.set_central_db_streamer(self.streamer.clone());
+                let outcome: Option<String> = run_scenario(&self.provider, scenario, live).await;
+                self.streamer.idle().await;
+                outcome
+            }
+            _ => run_scenario(&self.provider, scenario, live).await,
+        }
+    }
+}
+
+fn central_indexes_of_the_ts(scenarios: &[Value]) -> Vec<String> {
+    let mut indexes: Vec<String> = scenarios
+        .iter()
+        .flat_map(|scenario| scenario["commands"].as_array().expect("commands").iter())
+        .filter(|command| is_timed(command))
+        .map(|command| to_hex(&from_hex(command["hex"].as_str().expect("hex"))))
+        .collect();
+    indexes.sort();
+    indexes.dedup();
+    indexes
+}
+
 #[tokio::test]
 async fn methods_send_the_commands_the_ts_sends_and_return_what_it_returns() {
     let methods: Value = methods();
     let now: DateTime = DateTime::from_millis(methods["nowMs"].as_i64().expect("nowMs"));
     let mut failures: Vec<String> = Vec::new();
     let scenarios: &Vec<Value> = methods["scenarios"].as_array().expect("scenarios");
+    let mut central_indexes: Vec<String> = Vec::new();
     for scenario in scenarios.iter().filter(|scenario| scenario["method"] != "__setup") {
-        let executor: Arc<ReplayExecutor> = Arc::new(ReplayExecutor::new(scenario));
+        let local: Arc<ReplayExecutor> = Arc::new(ReplayExecutor::new(scenario, false));
+        let central: Arc<ReplayExecutor> = Arc::new(ReplayExecutor::new(scenario, true));
         let source: Arc<ReplaySource> = Arc::new(ReplaySource::new(now, scenario));
-        let db: ProviderDatabase = ProviderDatabase::new(executor.clone(), source.clone(), get_logger(LogLevel::Error, "test"));
+        let databases: Databases = Databases::new(local.clone(), central.clone(), source.clone());
         let name: &str = scenario["name"].as_str().expect("name");
-        if let Some(problem) = run_scenario(&db, scenario, false).await {
+        if let Some(problem) = databases.run(scenario, false).await {
             failures.push(format!("{name}: {problem}"));
         }
-        for mismatch in executor.mismatches.lock().expect("lock").iter() {
-            failures.push(format!("{name}: {mismatch}"));
+        for (label, executor) in [("", &local), ("central: ", &central)] {
+            for mismatch in executor.mismatches.lock().expect("lock").iter() {
+                failures.push(format!("{name}: {label}{mismatch}"));
+            }
+            if executor.left_over() > 0 {
+                failures.push(format!("{name}: {label}the TS sent {} more commands", executor.left_over()));
+            }
         }
-        if executor.left_over() > 0 {
-            failures.push(format!("{name}: the TS sent {} more commands", executor.left_over()));
-        }
+        central_indexes.extend(central.indexes.as_ref().expect("central").lock().expect("lock").iter().cloned());
         let unused: usize = source.random.lock().expect("lock").len();
         if unused > 0 {
             failures.push(format!("{name}: the TS drew {unused} more random numbers"));
         }
+    }
+    central_indexes.sort();
+    central_indexes.dedup();
+    if central_indexes != central_indexes_of_the_ts(scenarios) {
+        failures.push(format!(
+            "the central indexes differ: rust created {}, the ts {}",
+            central_indexes.len(),
+            central_indexes_of_the_ts(scenarios).len()
+        ));
     }
     assert!(scenarios.len() >= 30, "only {} scenarios", scenarios.len());
     assert!(failures.is_empty(), "{} problems:\n{}", failures.len(), failures.join("\n"));
@@ -911,12 +1045,14 @@ impl Executor for RecordingExecutor {
 async fn methods_do_on_a_real_database_what_the_ts_did() {
     use crate::mongo::{MongoConnectionTimeouts, MongoDatabase};
     let url: String = std::env::var("PROSOPO_TEST_MONGO_URL").expect("PROSOPO_TEST_MONGO_URL");
-    let mongo: MongoDatabase =
-        MongoDatabase::new(&url, Some("prosopo-test-database-methods"), None, None, MongoConnectionTimeouts::default())
-            .expect("a valid URL");
+    let open = |name: &str| MongoDatabase::new(&url, Some(name), None, None, MongoConnectionTimeouts::default()).expect("a valid URL");
+    let (mongo, central_mongo): (MongoDatabase, MongoDatabase) = (open("prosopo-test-database-methods"), open("prosopo-test-database-central"));
     mongo.connect().await.expect("connects");
+    central_mongo.connect().await.expect("connects");
     let database = mongo.database().await.expect("open");
+    let central_database = central_mongo.database().await.expect("open");
     database.drop().await.expect("drops");
+    central_database.drop().await.expect("drops");
     let methods: Value = methods();
     let now: DateTime = DateTime::from_millis(methods["nowMs"].as_i64().expect("nowMs"));
     let mut failures: Vec<String> = Vec::new();
@@ -924,41 +1060,56 @@ async fn methods_do_on_a_real_database_what_the_ts_did() {
         let name: &str = scenario["name"].as_str().expect("name");
         if scenario["method"] == "__setup" {
             for command in scenario["commands"].as_array().expect("commands") {
-                database.run_command(from_hex(command["hex"].as_str().expect("hex"))).await.expect("setup runs");
+                let target = if is_central(command) { &central_database } else { &database };
+                target.run_command(from_hex(command["hex"].as_str().expect("hex"))).await.expect("setup runs");
             }
             continue;
         }
-        let executor: Arc<RecordingExecutor> = Arc::new(RecordingExecutor {
-            inner: crate::operation::DriverExecutor::new(database.clone()),
-            sent: Mutex::new(Vec::new()),
-        });
+        let recording = |on: &mongodb::Database| {
+            Arc::new(RecordingExecutor {
+                inner: crate::operation::DriverExecutor::new(on.clone()),
+                sent: Mutex::new(Vec::new()),
+            })
+        };
+        let (local, central): (Arc<RecordingExecutor>, Arc<RecordingExecutor>) = (recording(&database), recording(&central_database));
         let source: Arc<ReplaySource> = Arc::new(ReplaySource::new(now, scenario));
-        let db: ProviderDatabase = ProviderDatabase::new(executor.clone(), source, get_logger(LogLevel::Error, "test"));
+        let databases: Databases = Databases::new(local.clone(), central.clone(), source);
         let sampled: bool = sampled(scenario);
-        if let Some(problem) = run_scenario(&db, scenario, true).await {
+        if let Some(problem) = databases.run(scenario, true).await {
             let same_outcome: bool = !problem.starts_with("rust failed") && !problem.starts_with("rust returned");
             if !(sampled && same_outcome) {
                 failures.push(format!("{name}: {problem}"));
             }
         }
-        let sent: Vec<Document> = executor.sent.lock().expect("lock").clone();
-        let expected: Vec<Document> = scenario["commands"]
-            .as_array()
-            .expect("commands")
-            .iter()
-            .map(|command| from_hex(command["hex"].as_str().expect("hex")))
-            .collect();
-        let mut sent_hex: Vec<String> = sent.iter().map(|command| to_hex(&normalise(command))).collect();
-        let mut expected_hex: Vec<String> = expected.iter().map(|command| to_hex(&normalise(command))).collect();
-        if scenario["unordered"].as_bool().unwrap_or(false) {
-            sent_hex.sort();
-            expected_hex.sort();
-        }
-        if sent_hex != expected_hex {
-            failures.push(format!("{name}: sent {} commands that differ from the TS's {}", sent.len(), expected.len()));
+        for (to_central, executor) in [(false, &local), (true, &central)] {
+            let mut sent_hex: Vec<String> = executor
+                .sent
+                .lock()
+                .expect("lock")
+                .iter()
+                .filter(|command| !(to_central && command.contains_key("createIndexes")))
+                .map(|command| to_hex(&normalise(command)))
+                .collect();
+            let mut expected_hex: Vec<String> = scenario["commands"]
+                .as_array()
+                .expect("commands")
+                .iter()
+                .filter(|command| is_central(command) == to_central && !is_timed(command))
+                .map(|command| to_hex(&normalise(&from_hex(command["hex"].as_str().expect("hex")))))
+                .collect();
+            if scenario["unordered"].as_bool().unwrap_or(false) {
+                sent_hex.sort();
+                expected_hex.sort();
+            }
+            if sent_hex != expected_hex {
+                let label: &str = if to_central { "central" } else { "provider" };
+                failures.push(format!("{name}: sent {} {label} commands that differ from the TS's {}", sent_hex.len(), expected_hex.len()));
+            }
         }
     }
     database.drop().await.expect("drops");
+    central_database.drop().await.expect("drops");
     mongo.close().await;
+    central_mongo.close().await;
     assert!(failures.is_empty(), "{} problems:\n{}", failures.len(), failures.join("\n"));
 }

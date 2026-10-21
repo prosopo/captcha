@@ -507,7 +507,7 @@ mod commitment_upsert {
     use prosopo_types::datasets::CaptchaStatus;
     use prosopo_types::stored::IpAddressType;
 
-    fn record(id: &str) -> UserCommitment {
+    pub(super) fn record(id: &str) -> UserCommitment {
         UserCommitment {
             user_account: "userTest".to_string(),
             dapp_account: "dappTest".to_string(),
@@ -1382,5 +1382,262 @@ mod projection_contracts {
         assert_eq!(got.account.as_deref(), Some("client-projection-contract"));
         assert!(got.settings.is_some());
         live.finish().await;
+    }
+}
+
+/// The central database, for saveCaptchasSessionUpsert, puzzleCentralStreaming,
+/// centralStreamingEnrichment and the sweep case of providedIpPipelineCast.
+mod central_database {
+    use super::*;
+    use crate::captcha::{CaptchaBatch, CaptchaDatabase, StoredKind};
+    use crate::operation::DriverExecutor;
+    use crate::operation::Executor;
+    use crate::streamer::{CentralDbStreamer, MarkStored};
+    use bson::Bson;
+    use std::sync::Mutex;
+
+    struct Central {
+        mongo: Arc<MongoDatabase>,
+        database: Arc<CaptchaDatabase>,
+        streamer: Arc<CentralDbStreamer>,
+    }
+
+    impl Central {
+        async fn new(name: &str) -> Central {
+            let url: String = std::env::var("PROSOPO_TEST_MONGO_URL").expect("PROSOPO_TEST_MONGO_URL");
+            let open = || {
+                MongoDatabase::new(&url, Some(&format!("prosopo-test-central-{name}")), None, None, MongoConnectionTimeouts::default())
+                    .expect("a valid URL")
+            };
+            let mongo: MongoDatabase = open();
+            mongo.connect().await.expect("connects");
+            mongo.database().await.expect("open").drop().await.expect("drops");
+            let logger = || get_logger(LogLevel::Error, "test");
+            Central {
+                mongo: Arc::new(mongo),
+                database: Arc::new(CaptchaDatabase::new(open(), Arc::new(SystemSource), logger())),
+                streamer: Arc::new(CentralDbStreamer::new(CaptchaDatabase::new(open(), Arc::new(SystemSource), logger()), logger())),
+            }
+        }
+
+        async fn find(&self, kind: StoredKind, filter: Document) -> Vec<Document> {
+            let executor: DriverExecutor = DriverExecutor::new(self.mongo.database().await.expect("open"));
+            executor.run(Operation::find(kind.collection(), filter)).await.expect("reads").documents()
+        }
+
+        async fn finish(self) {
+            self.mongo.database().await.expect("open").drop().await.expect("drops");
+            self.mongo.close().await;
+        }
+    }
+
+    fn session(session_id: &str, score: f64) -> Document {
+        doc! {
+            "sessionId": session_id,
+            "createdAt": DateTime::now(),
+            "token": "tok",
+            "score": score,
+            "threshold": 0.5,
+            "scoreComponents": { "baseScore": score },
+            "ipAddress": ip(16_843_009),
+            "captchaType": "pow",
+            "userSitekeyIpHash": "hash-abc",
+            "webView": false,
+            "iFrame": false,
+            "decryptedHeadHash": "head-hash",
+            "siteKey": "site-key-1",
+            "headers": { "user-agent": "test" },
+        }
+    }
+
+    fn sessions(records: Vec<Document>) -> CaptchaBatch {
+        CaptchaBatch {
+            sessions: records,
+            ..CaptchaBatch::default()
+        }
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn the_same_session_saved_by_successive_sweeps_is_one_document() {
+        let central: Central = Central::new("session-repeat").await;
+        for score in [0.1, 0.2, 0.3] {
+            central.database.save_captchas(&sessions(vec![session("session-upsert-repeat", score)])).await.expect("saves");
+        }
+        let found: Vec<Document> = central.find(StoredKind::Session, doc! { "sessionId": "session-upsert-repeat" }).await;
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].get_f64("score").ok(), Some(0.3));
+        central.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn distinct_sessions_each_get_their_own_document() {
+        let central: Central = Central::new("session-distinct").await;
+        let ids: [&str; 3] = ["session-a", "session-b", "session-c"];
+        let records: Vec<Document> = ids.iter().enumerate().map(|(i, id)| session(id, 0.1 * (i as f64 + 1.0))).collect();
+        central.database.save_captchas(&sessions(records)).await.expect("saves");
+        for id in ids {
+            assert_eq!(central.find(StoredKind::Session, doc! { "sessionId": id }).await.len(), 1, "{id}");
+        }
+        central.finish().await;
+    }
+
+    fn puzzle(challenge: &str, extra: Document) -> Document {
+        with(
+            doc! {
+                "challenge": challenge,
+                "userAccount": "userTest",
+                "dappAccount": "dappTest",
+                "requestedAtTimestamp": DateTime::parse_rfc3339_str("2026-06-10T07:30:00Z").expect("a date"),
+                "lastUpdatedTimestamp": DateTime::parse_rfc3339_str("2026-06-10T07:30:05Z").expect("a date"),
+                "ipAddress": ip(3_405_803_783),
+                "headers": { "host": "pronode-test.local" },
+                "ja4": "t13d1516h2_test_abcdef",
+                "result": { "status": "Pending" },
+                "userSubmitted": false,
+                "serverChecked": false,
+                "targetX": 100,
+                "targetY": 200,
+                "originX": 50,
+                "originY": 150,
+                "tolerance": 10,
+                "providerSignature": "0xproviderSig",
+                "sessionId": "pronode-test-session-puzzle-1",
+                "ipInfo": { "ip": "203.0.113.7", "isValid": true, "countryCode": "GB", "asnNumber": 64500, "abuserScore": 0.01 },
+            },
+            extra,
+        )
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn a_streamed_puzzle_record_lands_in_the_central_puzzle_collection() {
+        let central: Central = Central::new("puzzle-record").await;
+        let record: Document = puzzle("1___puzzle___e2e-1", Document::new());
+        central.streamer.stream_record(StoredKind::Puzzle, record.clone(), None);
+        central.streamer.idle().await;
+        let stored: Document = central.find(StoredKind::Puzzle, doc! { "challenge": "1___puzzle___e2e-1" }).await.remove(0);
+        for field in ["challenge", "userAccount", "dappAccount", "sessionId"] {
+            assert_eq!(stored.get(field), record.get(field), "{field}");
+        }
+        assert_eq!(stored.get_i32("targetX").ok(), Some(100));
+        assert_eq!(stored.get_i32("tolerance").ok(), Some(10));
+        assert_eq!(stored.get_document("result").and_then(|result| result.get_str("status")).ok(), Some("Pending"));
+        assert_eq!(stored.get("ipInfo"), record.get("ipInfo"));
+        central.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn a_streamed_puzzle_record_is_marked_stored_at_its_last_update() {
+        let central: Central = Central::new("puzzle-mark").await;
+        let marked: Arc<Mutex<Option<DateTime>>> = Arc::new(Mutex::new(None));
+        let seen: Arc<Mutex<Option<DateTime>>> = marked.clone();
+        let mark_stored: MarkStored = Box::new(move |at: DateTime| {
+            Box::pin(async move {
+                *seen.lock().expect("lock") = Some(at);
+                Ok(())
+            })
+        });
+        central.streamer.stream_record(StoredKind::Puzzle, puzzle("2___puzzle___e2e-2", Document::new()), Some(mark_stored));
+        central.streamer.idle().await;
+        assert_eq!(*marked.lock().expect("lock"), Some(DateTime::parse_rfc3339_str("2026-06-10T07:30:05Z").expect("a date")));
+        central.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn streaming_the_same_puzzle_again_replaces_its_fields() {
+        let central: Central = Central::new("puzzle-again").await;
+        let challenge: &str = "3___puzzle___e2e-upsert";
+        central.streamer.stream_record(StoredKind::Puzzle, puzzle(challenge, Document::new()), None);
+        central.streamer.idle().await;
+        let second: Document = puzzle(
+            challenge,
+            doc! {
+                "result": { "status": "Approved" },
+                "userSubmitted": true,
+                "serverChecked": true,
+                "lastUpdatedTimestamp": DateTime::parse_rfc3339_str("2026-06-10T07:30:10Z").expect("a date"),
+            },
+        );
+        central.streamer.stream_record(StoredKind::Puzzle, second, None);
+        central.streamer.idle().await;
+        let found: Vec<Document> = central.find(StoredKind::Puzzle, doc! { "challenge": challenge }).await;
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].get_document("result").and_then(|result| result.get_str("status")).ok(), Some("Approved"));
+        assert_eq!(found[0].get_bool("userSubmitted").ok(), Some(true));
+        assert_eq!(found[0].get_bool("serverChecked").ok(), Some(true));
+        central.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn a_puzzle_update_fetches_the_record_and_streams_it() {
+        let central: Central = Central::new("puzzle-update").await;
+        let challenge: &str = "4___puzzle___e2e-update";
+        let record: Document = puzzle(challenge, doc! { "result": { "status": "Approved" }, "userSubmitted": true });
+        central.streamer.stream_update(StoredKind::Puzzle, Box::pin(async move { Ok(Some(record)) }), None);
+        central.streamer.idle().await;
+        let stored: Document = central.find(StoredKind::Puzzle, doc! { "challenge": challenge }).await.remove(0);
+        assert_eq!(stored.get_bool("userSubmitted").ok(), Some(true));
+        assert_eq!(stored.get_document("result").and_then(|result| result.get_str("status")).ok(), Some("Approved"));
+        central.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn a_streamed_commitment_keeps_its_enrichment_on_the_central_document() {
+        let central: Central = Central::new("enrichment").await;
+        let ip_info: Bson = Bson::Document(doc! { "ip": "203.0.113.7", "isValid": true, "isVPN": false, "countryCode": "GB", "asnNumber": 64500 });
+        let user_agent: Bson = Bson::Document(doc! {
+            "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+            "browser": { "name": "Chrome", "version": "148.0.0.0", "major": "148" },
+            "cpu": { "architecture": "amd64" },
+            "device": {},
+            "engine": { "name": "Blink", "version": "148.0.0.0" },
+            "os": { "name": "Windows", "version": "10" },
+        });
+        let mut commitment = super::commitment_upsert::record("commitment-enrichment-roundtrip");
+        commitment.provided_ip = Some(commitment.ip_address);
+        commitment.session_id = Some("pronode-test-session-1".to_string());
+        commitment.ip_info = Some(ip_info.clone());
+        commitment.parsed_user_agent_info = Some(user_agent.clone());
+        central.streamer.stream_record(StoredKind::Commitment, commitment.to_document(), None);
+        central.streamer.idle().await;
+        let stored: Document = central.find(StoredKind::Commitment, doc! { "id": "commitment-enrichment-roundtrip" }).await.remove(0);
+        assert_eq!(stored.get("ipInfo"), Some(&ip_info));
+        assert_eq!(stored.get("parsedUserAgentInfo"), Some(&user_agent));
+        let declared: Vec<String> =
+            prosopo_types_database::captcha::STORED_USER_COMMITMENT_RECORD.paths().into_iter().map(|(name, _)| name).collect();
+        for path in ["ipInfo", "parsedUserAgentInfo", "sessionId", "providedIp"] {
+            assert!(stored.contains_key(path), "{path} was stripped on the way to the central database");
+            assert!(
+                declared.iter().any(|name| name == path || name.starts_with(&format!("{path}."))),
+                "the central commitment schema does not declare {path}"
+            );
+        }
+        central.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn the_sweep_repairs_a_provided_ip_a_pipeline_wrote_as_a_long() {
+        let central: Central = Central::new("long-ip").await;
+        let half: i64 = 0xB496_D250_E5C5_8459_u64 as i64;
+        let mut poisoned: Document = super::commitment_upsert::record("commitment-pipeline-v6-sweep").to_document();
+        poisoned.insert("providedIp", doc! { "lower": Bson::Int64(half), "upper": Bson::Int64(half), "type": "v6" });
+        let batch: CaptchaBatch = CaptchaBatch {
+            commitments: vec![poisoned],
+            ..CaptchaBatch::default()
+        };
+        central.database.save_captchas(&batch).await.expect("saves");
+        let stored: Document = central.find(StoredKind::Commitment, doc! { "id": "commitment-pipeline-v6-sweep" }).await.remove(0);
+        let provided: &Document = stored.get_document("providedIp").expect("providedIp");
+        let expected: Bson = crate::records::IpHalf(0xB496_D250_E5C5_8459).to_bson();
+        assert_eq!(provided.get("lower"), Some(&expected));
+        assert_eq!(provided.get("upper"), Some(&expected));
+        central.finish().await;
     }
 }

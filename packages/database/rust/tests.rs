@@ -350,3 +350,324 @@ mod captcha_label {
         }
     }
 }
+
+/// centralDbStreamer.unit.test.ts, against a central database that answers every write.
+mod central_db_streamer {
+    use crate::captcha::{CaptchaDatabase, StoredKind};
+    use crate::mongo::MongoError;
+    use crate::operation::{Executor, Operation, Reply, ReplyFuture};
+    use crate::source::SystemSource;
+    use crate::streamer::{CentralDbStreamer, FetchRecord, MarkStored};
+    use bson::{doc, DateTime, Document};
+    use prosopo_common::{ErrorClass, ErrorOptions, ErrorSource, ProsopoError};
+    use prosopo_logger::{get_logger_with_runtime, ConsoleMethod, DirectiveStore, LogLevel, LogRuntime, Sink, SystemClock};
+    use std::sync::{Arc, Mutex};
+
+    #[derive(Default)]
+    struct Lines(Mutex<Vec<(ConsoleMethod, String)>>);
+
+    impl Sink for Lines {
+        fn write(&self, method: ConsoleMethod, line: &str) {
+            self.0.lock().expect("lock").push((method, line.to_string()));
+        }
+    }
+
+    impl Lines {
+        fn errors(&self) -> usize {
+            self.0.lock().expect("lock").iter().filter(|(method, _)| *method == ConsoleMethod::Error).count()
+        }
+    }
+
+    /// The central database: keeps each command, and fails the writes it is told to.
+    #[derive(Default)]
+    struct Central {
+        sent: Mutex<Vec<Document>>,
+        fail_writes: Mutex<bool>,
+    }
+
+    impl Executor for Central {
+        fn run(&self, operation: Operation) -> ReplyFuture<'_> {
+            let command: Document = operation.command();
+            self.sent.lock().expect("lock").push(command.clone());
+            let fail: bool = command.contains_key("update") && *self.fail_writes.lock().expect("lock");
+            Box::pin(async move {
+                if fail {
+                    Err(MongoError::Unavailable("write failed".to_string()))
+                } else {
+                    Ok(Reply::Update { matched: 0, modified: 0, upserted: 1 })
+                }
+            })
+        }
+    }
+
+    impl Central {
+        fn updates(&self) -> Vec<Document> {
+            self.sent
+                .lock()
+                .expect("lock")
+                .iter()
+                .filter(|command| command.contains_key("update"))
+                .map(|command| command.get_array("updates").expect("updates")[0].as_document().expect("a statement").clone())
+                .collect()
+        }
+
+        fn index_commands(&self) -> usize {
+            self.sent.lock().expect("lock").iter().filter(|command| command.contains_key("createIndexes")).count()
+        }
+    }
+
+    struct Fixture {
+        streamer: Arc<CentralDbStreamer>,
+        central: Arc<Central>,
+        lines: Arc<Lines>,
+        marked: Arc<Mutex<Vec<DateTime>>>,
+    }
+
+    fn fixture() -> Fixture {
+        let central: Arc<Central> = Arc::new(Central::default());
+        let lines: Arc<Lines> = Arc::new(Lines::default());
+        let runtime = || LogRuntime {
+            sink: lines.clone(),
+            clock: Arc::new(SystemClock),
+            directives: Arc::new(DirectiveStore::new("")),
+        };
+        let database: CaptchaDatabase =
+            CaptchaDatabase::with_executor(central.clone(), Arc::new(SystemSource), get_logger_with_runtime(LogLevel::Info, "central", runtime()));
+        Fixture {
+            streamer: Arc::new(CentralDbStreamer::new(database, get_logger_with_runtime(LogLevel::Info, "streamer", runtime()))),
+            central,
+            lines,
+            marked: Arc::new(Mutex::new(Vec::new())),
+        }
+    }
+
+    impl Fixture {
+        fn mark_stored(&self) -> MarkStored {
+            let marked: Arc<Mutex<Vec<DateTime>>> = self.marked.clone();
+            Box::new(move |at: DateTime| {
+                Box::pin(async move {
+                    marked.lock().expect("lock").push(at);
+                    Ok(())
+                })
+            })
+        }
+
+        fn marked(&self) -> Vec<DateTime> {
+            self.marked.lock().expect("lock").clone()
+        }
+    }
+
+    fn at(rfc3339: &str) -> DateTime {
+        DateTime::parse_rfc3339_str(rfc3339).expect("a date")
+    }
+
+    fn challenge_record(challenge: &str) -> Document {
+        doc! {
+            "challenge": challenge,
+            "userAccount": "user1",
+            "dappAccount": "dapp1",
+            "requestedAtTimestamp": at("2026-01-01T00:00:00Z"),
+            "lastUpdatedTimestamp": at("2026-01-01T01:00:00Z"),
+            "result": { "status": "Pending" },
+        }
+    }
+
+    fn fetched(record: Option<Document>) -> FetchRecord {
+        Box::pin(async move { Ok(record) })
+    }
+
+    fn fetch_failing() -> FetchRecord {
+        Box::pin(async move {
+            Err(ProsopoError::new(
+                ErrorClass::Db,
+                ErrorSource::message("fetch failed"),
+                ErrorOptions {
+                    silent: true,
+                    ..ErrorOptions::default()
+                },
+            ))
+        })
+    }
+
+    /// The stream's write: upserting the record by its key, with the record as the `$set`.
+    fn assert_upserted(update: &Document, key: &str, value: &str) {
+        assert_eq!(update.get_document("q").expect("q").get_str(key).ok(), Some(value));
+        assert_eq!(update.get_bool("upsert").ok(), Some(true));
+        assert_eq!(update.get_document("u").expect("u").get_document("$set").expect("$set").get_str(key).ok(), Some(value));
+    }
+
+    async fn streams_a_record_by_its_key_and_marks_it_stored_at_its_own_time(kind: StoredKind) {
+        let fixture: Fixture = fixture();
+        fixture.streamer.stream_record(kind, challenge_record("123___user___dapp___1"), Some(fixture.mark_stored()));
+        fixture.streamer.idle().await;
+        let updates: Vec<Document> = fixture.central.updates();
+        assert_eq!(updates.len(), 1);
+        assert_upserted(&updates[0], "challenge", "123___user___dapp___1");
+        assert_eq!(fixture.marked(), vec![at("2026-01-01T01:00:00Z")]);
+    }
+
+    #[tokio::test]
+    async fn upserts_a_pow_record_and_marks_it_stored_at_the_record_time() {
+        streams_a_record_by_its_key_and_marks_it_stored_at_its_own_time(StoredKind::Pow).await;
+    }
+
+    #[tokio::test]
+    async fn upserts_a_puzzle_record_and_marks_it_stored_at_the_record_time() {
+        streams_a_record_by_its_key_and_marks_it_stored_at_its_own_time(StoredKind::Puzzle).await;
+    }
+
+    async fn strips_the_id(kind: StoredKind) {
+        let fixture: Fixture = fixture();
+        let mut record: Document = challenge_record("c");
+        record.insert("_id", "should-be-removed");
+        fixture.streamer.stream_record(kind, record, None);
+        fixture.streamer.idle().await;
+        let update: Document = fixture.central.updates().remove(0);
+        assert!(!update.get_document("u").expect("u").get_document("$set").expect("$set").contains_key("_id"));
+    }
+
+    #[tokio::test]
+    async fn strips_the_id_of_a_pow_record_before_upserting() {
+        strips_the_id(StoredKind::Pow).await;
+    }
+
+    #[tokio::test]
+    async fn strips_the_id_of_a_puzzle_record_before_upserting() {
+        strips_the_id(StoredKind::Puzzle).await;
+    }
+
+    async fn logs_a_failed_write_and_does_not_mark(kind: StoredKind) {
+        let fixture: Fixture = fixture();
+        *fixture.central.fail_writes.lock().expect("lock") = true;
+        fixture.streamer.stream_record(kind, challenge_record("c"), Some(fixture.mark_stored()));
+        fixture.streamer.idle().await;
+        assert_eq!(fixture.marked(), Vec::<DateTime>::new());
+        assert!(fixture.lines.errors() > 0);
+    }
+
+    #[tokio::test]
+    async fn a_failed_pow_write_is_logged_not_thrown() {
+        logs_a_failed_write_and_does_not_mark(StoredKind::Pow).await;
+    }
+
+    #[tokio::test]
+    async fn a_failed_puzzle_write_is_logged_not_thrown() {
+        logs_a_failed_write_and_does_not_mark(StoredKind::Puzzle).await;
+    }
+
+    #[tokio::test]
+    async fn streams_without_a_mark_stored_callback() {
+        let fixture: Fixture = fixture();
+        fixture.streamer.stream_record(StoredKind::Pow, challenge_record("c"), None);
+        fixture.streamer.idle().await;
+        assert_eq!(fixture.central.updates().len(), 1);
+    }
+
+    async fn falls_back_to_the_request_time(kind: StoredKind) {
+        let fixture: Fixture = fixture();
+        let mut record: Document = challenge_record("c");
+        record.remove("lastUpdatedTimestamp");
+        record.insert("requestedAtTimestamp", at("2026-02-01T00:00:00Z"));
+        fixture.streamer.stream_record(kind, record, Some(fixture.mark_stored()));
+        fixture.streamer.idle().await;
+        assert_eq!(fixture.marked(), vec![at("2026-02-01T00:00:00Z")]);
+    }
+
+    #[tokio::test]
+    async fn a_pow_record_without_a_last_update_is_marked_at_its_request_time() {
+        falls_back_to_the_request_time(StoredKind::Pow).await;
+    }
+
+    #[tokio::test]
+    async fn a_puzzle_record_without_a_last_update_is_marked_at_its_request_time() {
+        falls_back_to_the_request_time(StoredKind::Puzzle).await;
+    }
+
+    async fn fetches_then_streams(kind: StoredKind) {
+        let fixture: Fixture = fixture();
+        let record: Document = doc! { "challenge": "test-challenge", "lastUpdatedTimestamp": at("2026-03-01T00:00:00Z") };
+        fixture.streamer.stream_update(kind, fetched(Some(record)), Some(fixture.mark_stored()));
+        fixture.streamer.idle().await;
+        assert_upserted(&fixture.central.updates()[0], "challenge", "test-challenge");
+        assert_eq!(fixture.marked(), vec![at("2026-03-01T00:00:00Z")]);
+    }
+
+    #[tokio::test]
+    async fn a_pow_update_fetches_the_full_record_then_streams_it() {
+        fetches_then_streams(StoredKind::Pow).await;
+    }
+
+    #[tokio::test]
+    async fn a_puzzle_update_fetches_the_full_record_then_streams_it() {
+        fetches_then_streams(StoredKind::Puzzle).await;
+    }
+
+    async fn sends_nothing_for_a_missing_record(kind: StoredKind) {
+        let fixture: Fixture = fixture();
+        fixture.streamer.stream_update(kind, fetched(None), None);
+        fixture.streamer.idle().await;
+        assert_eq!(fixture.central.updates().len(), 0);
+    }
+
+    #[tokio::test]
+    async fn a_pow_update_sends_nothing_when_the_record_is_gone() {
+        sends_nothing_for_a_missing_record(StoredKind::Pow).await;
+    }
+
+    #[tokio::test]
+    async fn a_puzzle_update_sends_nothing_when_the_record_is_gone() {
+        sends_nothing_for_a_missing_record(StoredKind::Puzzle).await;
+    }
+
+    async fn logs_a_failed_fetch(kind: StoredKind) {
+        let fixture: Fixture = fixture();
+        fixture.streamer.stream_update(kind, fetch_failing(), None);
+        fixture.streamer.idle().await;
+        assert!(fixture.lines.errors() > 0);
+        assert_eq!(fixture.central.updates().len(), 0);
+    }
+
+    #[tokio::test]
+    async fn a_pow_update_logs_a_failed_fetch() {
+        logs_a_failed_fetch(StoredKind::Pow).await;
+    }
+
+    #[tokio::test]
+    async fn a_puzzle_update_logs_a_failed_fetch() {
+        logs_a_failed_fetch(StoredKind::Puzzle).await;
+    }
+
+    #[tokio::test]
+    async fn upserts_an_image_record_by_its_id() {
+        let fixture: Fixture = fixture();
+        let record: Document = doc! { "id": "commitment-123", "lastUpdatedTimestamp": at("2026-01-15T00:00:00Z") };
+        fixture.streamer.stream_record(StoredKind::Commitment, record.clone(), Some(fixture.mark_stored()));
+        fixture.streamer.stream_update(StoredKind::Commitment, fetched(Some(record)), Some(fixture.mark_stored()));
+        fixture.streamer.idle().await;
+        for update in fixture.central.updates() {
+            assert_upserted(&update, "id", "commitment-123");
+        }
+        assert_eq!(fixture.marked(), vec![at("2026-01-15T00:00:00Z"); 2]);
+    }
+
+    #[tokio::test]
+    async fn upserts_a_session_by_its_id_marked_at_its_creation() {
+        let fixture: Fixture = fixture();
+        let record: Document = doc! { "sessionId": "session-abc", "createdAt": at("2026-01-20T00:00:00Z"), "score": 0.8, "threshold": 0.5 };
+        fixture.streamer.stream_record(StoredKind::Session, record, Some(fixture.mark_stored()));
+        fixture.streamer.idle().await;
+        assert_upserted(&fixture.central.updates()[0], "sessionId", "session-abc");
+        assert_eq!(fixture.marked(), vec![at("2026-01-20T00:00:00Z")]);
+    }
+
+    #[tokio::test]
+    async fn connects_once_for_several_records() {
+        let fixture: Fixture = fixture();
+        fixture.streamer.stream_record(StoredKind::Pow, challenge_record("c1"), None);
+        fixture.streamer.stream_record(StoredKind::Pow, challenge_record("c1"), None);
+        fixture.streamer.idle().await;
+        let indexes: usize = StoredKind::ALL.iter().map(|kind| kind.schema().indexes().len()).sum();
+        assert_eq!(fixture.central.index_commands(), indexes, "one connection's index creation");
+        assert_eq!(fixture.central.updates().len(), 2);
+    }
+}

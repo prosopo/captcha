@@ -25,7 +25,7 @@ prosopo-util = { path = "../util" }
 prosopo-util-crypto = { path = "../util-crypto" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
-tokio = { version = "1", features = ["sync", "time"] }
+tokio = { version = "1", features = ["rt", "sync", "time"] }
 url = "2.5"
 
 [dev-dependencies]
