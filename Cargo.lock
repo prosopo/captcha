@@ -1331,9 +1331,12 @@ version = "6.0.0"
 dependencies = [
  "indexmap",
  "prosopo-logger",
+ "regex",
+ "ryu-js",
  "serde",
  "serde_json",
  "tokio",
+ "url",
 ]
 
 [[package]]

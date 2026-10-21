@@ -20,6 +20,7 @@ mod endpoint;
 mod limits;
 mod response;
 mod routes;
+pub mod schema;
 mod status;
 mod validation;
 
@@ -37,6 +38,8 @@ pub use validation::{parsed_type, PathSegment, Validate, ValidationError, Valida
 mod compile_fail;
 #[cfg(test)]
 mod equivalence;
+#[cfg(test)]
+mod schema_equivalence;
 #[cfg(test)]
 mod test_endpoints;
 #[cfg(test)]

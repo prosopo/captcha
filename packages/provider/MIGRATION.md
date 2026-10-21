@@ -300,26 +300,36 @@ in Rust until phase 6 is complete.**
    written by Rust is read back by mongoose and the other way round, and the
    raw BSON is compared byte for byte. Every model gets this treatment, so
    it's the largest single piece of work.
-5. **zod has no Rust equivalent either. Decision: lean on the type system,
-   per case.** There are about 40 request schemas using `preprocess` /
-   `coerce` / `transform` / `superRefine`, plus the `boundedString` /
-   `safeText` sanitisers.
-   - *Shape only* (objects, primitives, enums, optional fields): plain serde
-     derives. serde already rejects a wrong shape, so no validation layer.
-   - *coerce / preprocess / transform* (string → number, string → Date,
-     trimming): a `deserialize_with` on the field, so the struct only ever
-     holds the target type.
-   - *refine / superRefine / boundedString / safeText*: a newtype whose
-     constructor is the only way to build it (`BoundedString<N>`,
-     `SafeText`). Once a request has deserialised, its content constraints
-     hold. This is validation at construction, not a separate pass.
+5. **zod: a Rust replacement for JSON input, the type system for everything
+   else. Decided per case.** There are about 40 request schemas using `preprocess`
+   / `coerce` / `transform` / `superRefine`, plus the `boundedString` /
+   `safeText` sanitisers, `ClientSettingsSchema` and `ProsopoConfigSchema` with
+   ~140 defaults between them.
+   - *Anything parsed from JSON or the environment* (request bodies, stored
+     settings defaults, config): `prosopo_api_route::schema`, a small library
+     with zod 3.23's semantics. It makes the same accept/reject decision,
+     produces the same output (unknown keys stripped, defaults and coercions
+     applied, keys in schema order) and the same issues. serde then types the
+     validated output. Bare serde derives were tried first and rejected,
+     because they accept a different set of inputs: `null` for an optional
+     field (serde: `None`, zod: rejected), a JSON array where an object is
+     expected (serde: positional fields, zod: rejected), and serde stops at the
+     first error where zod reports every issue. For request bodies the
+     accepted set is a security property, and `ClientSettingsSchema.parse({})`
+     output is stored, so both have to match exactly. The library is proven
+     against zod by its own vectors (49+ schemas × 75 inputs), and each ported
+     schema gets vectors of its own.
+   - *In-memory shapes* (the `SessionSchema` / `CompositeIpAddressSchema` family
+     over Mongo documents, `date()`, `bigint()`, `map()`): plain serde structs.
+     The value is built by Rust code, so the types already guarantee what the
+     schema checked, and no runtime layer is kept.
    - *Sanitisers that change stored text*: the output feeds a stored record,
      so it is byte-identical (§0) and gets equivalence vectors.
 
-   400 bodies keep zod's issue structure (`api-route`'s `ValidationIssue`
-   already does). Their message wording is best-effort (§0), not reproduced
-   word for word. Schemas the widget also uses are generated as TypeScript
-   from the Rust (§5), not kept twice.
+   400 bodies keep zod's issue structure and wording, which the library
+   reproduces; any wording that differs is still only best-effort (§0).
+   Schemas the widget also uses are generated as TypeScript from the Rust
+   (§5), not kept twice.
 6. **Hashes that must not change.**
    - The UAP rule key is md5 of `JSON.stringify` over sorted entries, following
      JS number and key-ordering rules. Existing Redis keys and the rule hashes

@@ -24,7 +24,7 @@
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
 		"test:watch": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest watch --config ./vite.test.config.ts",
 		"test:cargo": "cargo test -p prosopo-api-route",
-		"equivalence": "tsx rust/equivalence/generate.ts && cargo test -p prosopo-api-route equivalence"
+		"equivalence": "tsx rust/equivalence/generate.ts && tsx rust/equivalence/generate-schema.ts && cargo test -p prosopo-api-route equivalence"
 	},
 	"dependencies": {
 		"@prosopo/logger": "workspace:*",
