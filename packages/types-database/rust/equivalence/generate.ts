@@ -496,7 +496,7 @@ for (const [name, schema] of MODELS) {
 		const collection = Model.collection as unknown as { insertOne: (doc: object, options: object) => Promise<unknown> };
 		const insertOne = collection.insertOne.bind(collection);
 		collection.insertOne = (sent: object, options: object): Promise<unknown> => {
-			sentBytes = toHex(mongoose.mongo.BSON.serialize(sent));
+			sentBytes = toHex(mongoose.mongo.BSON.serialize(sent, { ignoreUndefined: false }));
 			return insertOne(sent, options);
 		};
 		try {
@@ -536,7 +536,7 @@ for (const [name, schema] of MODELS) {
 					captured.name === "findAndModify"
 						? { q: command.query, u: command.update }
 						: { q: (command.updates as Record<string, unknown>[])[0]?.q, u: (command.updates as Record<string, unknown>[])[0]?.u };
-				updates.push({ ...recorded, outcome: { sent: { hex: toHex(mongoose.mongo.BSON.serialize(statement)) } } });
+				updates.push({ ...recorded, outcome: { sent: { hex: toHex(mongoose.mongo.BSON.serialize(statement, { ignoreUndefined: false })) } } });
 			} else if (thrown) {
 				updates.push({ ...recorded, outcome: { error: thrown } });
 			} else {

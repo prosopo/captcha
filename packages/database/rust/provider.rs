@@ -19,16 +19,17 @@ use crate::operation::{Executor, Operation, Reply, UpdateStatement};
 use crate::source::{Source, SourceIds};
 use bson::{doc, Bson, Document};
 use prosopo_common::{ErrorClass, ErrorContext, ErrorOptions, ErrorSource, ProsopoError};
-use prosopo_logger::Logger;
+use prosopo_logger::{LogRecord, Logger};
 use prosopo_types::datasets::{dataset_with_ids_and_tree_schema, CaptchaItem, CaptchaStates};
 use prosopo_types_database::number::{js_number, json_to_bson};
 use prosopo_types_database::provider::{CAPTCHA_RECORD, DATASET_RECORD, SOLUTION_RECORD};
-use prosopo_types_database::schema::Schema;
+use prosopo_types_database::schema::{Index, Schema};
 use prosopo_types_database::update::{cast_filter, cast_update, UpdateMethod};
 use prosopo_util_crypto::u8a::is_hex;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde_json::{json, Value};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
 /// The collections, as mongoose names them after the models.
@@ -149,9 +150,45 @@ pub struct ProviderDatabase {
     executor: Arc<dyn Executor>,
     source: Arc<dyn Source>,
     logger: Logger,
+    indexes_ensured: AtomicBool,
 }
 
-fn db_error(key: &str, context: ErrorContext, logger: Option<&Logger>) -> ProsopoError {
+/// `PROVIDER_TABLES`: each collection and the schema of its records, in the TS order.
+pub fn provider_tables() -> [(&'static str, &'static Schema); 14] {
+    use prosopo_types_database::provider::*;
+    [
+        (collections::CAPTCHA, &CAPTCHA_RECORD),
+        (collections::POW_CAPTCHA, &POW_CAPTCHA_RECORD),
+        (collections::PUZZLE_CAPTCHA, &PUZZLE_CAPTCHA_RECORD),
+        (collections::AUDIO_CAPTCHA, &AUDIO_CAPTCHA_RECORD),
+        (collections::ICON_ORDER_CAPTCHA, &ICON_ORDER_CAPTCHA_RECORD),
+        (collections::DATASET, &DATASET_RECORD),
+        (collections::SOLUTION, &SOLUTION_RECORD),
+        (collections::COMMITMENT, &USER_COMMITMENT_RECORD),
+        (collections::USER_SOLUTION, &USER_SOLUTION_RECORD),
+        (collections::SCHEDULER, &SCHEDULED_TASK_RECORD),
+        (collections::CLIENT, &CLIENT_RECORD),
+        (collections::SESSION, &SESSION_RECORD),
+        (collections::DECISION_MACHINE, &DECISION_MACHINE_ARTIFACT_RECORD),
+        (collections::SPAM_EMAIL_DOMAIN, &SPAM_EMAIL_DOMAIN_RECORD),
+    ]
+}
+
+/// The `createIndexes` command mongoose sends for one index: its options as declared (with the
+/// name if one is given), then the driver's name if not, then the key.
+pub fn create_index_command(collection: &str, index: &Index) -> Document {
+    let mut spec: Document = index.options.to_document();
+    if !spec.contains_key("name") {
+        spec.insert("name", index.name());
+    }
+    spec.insert(
+        "key",
+        index.keys.iter().map(|(key, direction)| (key.clone(), Bson::Int32(*direction))).collect::<Document>(),
+    );
+    doc! { "createIndexes": collection, "indexes": [spec] }
+}
+
+pub(crate) fn db_error(key: &str, context: ErrorContext, logger: Option<&Logger>) -> ProsopoError {
     ProsopoError::new(
         ErrorClass::Db,
         ErrorSource::key(key),
@@ -163,7 +200,7 @@ fn db_error(key: &str, context: ErrorContext, logger: Option<&Logger>) -> Prosop
     )
 }
 
-fn decode<T: DeserializeOwned>(document: Document) -> Option<T> {
+pub(crate) fn decode<T: DeserializeOwned>(document: Document) -> Option<T> {
     bson::deserialize_from_document(document).ok()
 }
 
@@ -178,10 +215,65 @@ impl ProviderDatabase {
             executor,
             source,
             logger,
+            indexes_ensured: AtomicBool::new(false),
         }
     }
 
-    async fn run(&self, operation: Operation) -> Result<Reply, ProsopoError> {
+    /// Connects `mongo` and indexes it as mongoose's autoIndex does when the TS loads its tables.
+    pub async fn connect(mongo: &crate::mongo::MongoDatabase, source: Arc<dyn Source>, logger: Logger) -> Result<ProviderDatabase, crate::mongo::MongoError> {
+        mongo.connect().await?;
+        let database = mongo.database().await.map_err(|error| crate::mongo::MongoError::Unavailable(error.to_string()))?;
+        let provider: ProviderDatabase =
+            ProviderDatabase::new(Arc::new(crate::operation::DriverExecutor::new(database)), source, logger);
+        provider.auto_index().await;
+        Ok(provider)
+    }
+
+    /// mongoose's autoIndex: every declared index created (an existing one is left as it is). A
+    /// collection whose indexes fail is logged and the rest carry on.
+    pub async fn auto_index(&self) {
+        for (collection, schema) in provider_tables() {
+            for index in schema.indexes() {
+                if let Err(error) = self.executor.run(Operation::Command(create_index_command(collection, &index))).await {
+                    self.logger.error(|| LogRecord::msg(format!("Error creating index on {collection}")).with_err(error.to_string()));
+                    break;
+                }
+            }
+        }
+    }
+
+    /// `ensureIndexes`, once: every collection's indexes dropped and created again from its
+    /// schema, so an index changed in the schema changes in the database. A collection that fails
+    /// is logged and the rest carry on. The TS does the collections concurrently, these go one at
+    /// a time.
+    pub async fn ensure_indexes(&self) {
+        if self.indexes_ensured.load(Ordering::SeqCst) {
+            return;
+        }
+        for (collection, schema) in provider_tables() {
+            let mut commands: Vec<Document> = vec![doc! { "dropIndexes": collection, "index": "*" }];
+            commands.extend(schema.indexes().iter().map(|index| create_index_command(collection, index)));
+            for command in commands {
+                if let Err(error) = self.executor.run(Operation::Command(command)).await {
+                    self.logger.warn(|| {
+                        LogRecord::msg(format!("Error creating indexes for collection {collection}")).with_err(error.to_string())
+                    });
+                    break;
+                }
+            }
+        }
+        self.indexes_ensured.store(true, Ordering::SeqCst);
+    }
+
+    pub(crate) fn source(&self) -> &dyn Source {
+        self.source.as_ref()
+    }
+
+    pub(crate) fn logger(&self) -> &Logger {
+        &self.logger
+    }
+
+    pub(crate) async fn run(&self, operation: Operation) -> Result<Reply, ProsopoError> {
         self.executor.run(operation).await.map_err(|error| {
             db_error(
                 "DATABASE.QUERY_ERROR",
@@ -191,17 +283,17 @@ impl ProviderDatabase {
         })
     }
 
-    async fn find(&self, operation: Operation) -> Result<Vec<Document>, ProsopoError> {
+    pub(crate) async fn find(&self, operation: Operation) -> Result<Vec<Document>, ProsopoError> {
         Ok(self.run(operation).await?.documents())
     }
 
     /// The filter as mongoose casts it for `schema`.
-    fn filter(&self, schema: &Schema, filter: Document) -> Document {
+    pub(crate) fn filter(&self, schema: &Schema, filter: Document) -> Document {
         cast_filter(schema, &filter, false, &mut SourceIds(self.source.as_ref())).unwrap_or(filter)
     }
 
     /// One statement of an update, cast as mongoose casts it for `method`.
-    fn statement(
+    pub(crate) fn statement(
         &self,
         schema: &Schema,
         method: UpdateMethod,

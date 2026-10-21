@@ -23,14 +23,17 @@
 //! lexicographic order whatever order they are sent in, so that order cannot reach a stored
 //! document. Every value is compared byte for byte.
 
+use crate::challenges::{Coords, Interactive, InteractiveAnswer, NewChallenge};
 use crate::operation::{Executor, Operation, Reply, ReplyFuture};
 use crate::provider::ProviderDatabase;
+use crate::records::{CompositeIpAddress, IpHalf, StoredResult};
 use crate::source::Source;
 use bson::oid::ObjectId;
 use bson::{Bson, DateTime, Document};
 use prosopo_common::ProsopoError;
 use prosopo_logger::{get_logger, LogLevel};
-use prosopo_types::datasets::CaptchaStates;
+use prosopo_types::datasets::{CaptchaStates, PoWChallengeComponents};
+use prosopo_types::JsNumber;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 use std::collections::VecDeque;
@@ -93,10 +96,12 @@ struct Recorded {
     reply: Document,
 }
 
-/// Answers each command with the reply mongod gave the TS, noting any command that differs.
+/// Answers each command with the reply mongod gave the TS, noting any command that differs. In an
+/// unordered scenario a command may match any recorded one not yet matched.
 struct ReplayExecutor {
     expected: Mutex<VecDeque<Recorded>>,
     mismatches: Mutex<Vec<String>>,
+    unordered: bool,
 }
 
 impl ReplayExecutor {
@@ -113,6 +118,7 @@ impl ReplayExecutor {
         ReplayExecutor {
             expected: Mutex::new(expected),
             mismatches: Mutex::new(Vec::new()),
+            unordered: scenario["unordered"].as_bool().unwrap_or(false),
         }
     }
 
@@ -124,7 +130,18 @@ impl ReplayExecutor {
 impl Executor for ReplayExecutor {
     fn run(&self, operation: Operation) -> ReplyFuture<'_> {
         let sent: Document = operation.command();
-        let next: Option<Recorded> = self.expected.lock().expect("lock").pop_front();
+        let next: Option<Recorded> = {
+            let mut expected = self.expected.lock().expect("lock");
+            if self.unordered {
+                let wanted: String = to_hex(&normalise(&sent));
+                match expected.iter().position(|recorded| to_hex(&normalise(&recorded.command)) == wanted) {
+                    Some(index) => expected.remove(index),
+                    None => expected.pop_front(),
+                }
+            } else {
+                expected.pop_front()
+            }
+        };
         let reply: Reply = match next {
             Some(recorded) => {
                 let (rust, ts): (Document, Document) = (normalise(&sent), normalise(&recorded.command));
@@ -149,10 +166,24 @@ impl Executor for ReplayExecutor {
     }
 }
 
-/// The TS's time and random numbers.
+/// The TS's time, random numbers and new ids: the pinned time, fixed process bytes and the
+/// counter where the call began.
 struct ReplaySource {
     now: DateTime,
     random: Mutex<VecDeque<f64>>,
+    counter: Mutex<u32>,
+}
+
+impl ReplaySource {
+    fn new(now: DateTime, scenario: &Value) -> ReplaySource {
+        ReplaySource {
+            now,
+            random: Mutex::new(
+                scenario["random"].as_array().expect("random").iter().map(|n| n.as_f64().expect("number")).collect(),
+            ),
+            counter: Mutex::new(scenario["idStart"].as_u64().unwrap_or(0) as u32),
+        }
+    }
 }
 
 impl Source for ReplaySource {
@@ -165,7 +196,13 @@ impl Source for ReplaySource {
     }
 
     fn object_id(&self) -> ObjectId {
-        ObjectId::new()
+        let mut counter = self.counter.lock().expect("lock");
+        *counter += 1;
+        let mut bytes: [u8; 12] = [0; 12];
+        bytes[..4].copy_from_slice(&((self.now.timestamp_millis() / 1000) as u32).to_be_bytes());
+        bytes[4..9].copy_from_slice(&[0xa1, 0xb2, 0xc3, 0xd4, 0xe5]);
+        bytes[9..].copy_from_slice(&counter.to_be_bytes()[1..]);
+        ObjectId::from_bytes(bytes)
     }
 }
 
@@ -200,13 +237,19 @@ fn check<T: DeserializeOwned + PartialEq + Debug>(scenario: &Value, actual: Resu
             let expected: T = ts_result(scenario);
             (value != expected).then(|| format!("result\n      rust {value:?}\n      ts   {expected:?}"))
         }
-        (Err(error), Some(ts)) => {
-            let key: Option<&str> = error.translation_key();
-            (Some(ts["translationKey"].as_str().unwrap_or("")) != key)
-                .then(|| format!("error {key:?}, ts {}", ts["translationKey"]))
-        }
+        (Err(error), Some(ts)) => same_error(&error, ts),
         (Ok(value), Some(ts)) => Some(format!("rust returned {value:?}, ts failed with {ts}")),
         (Err(error), None) => Some(format!("rust failed with {error:?}, ts returned {}", scenario["result"])),
+    }
+}
+
+/// The same translation key, or with none on either side, the same message.
+fn same_error(error: &ProsopoError, ts: &Value) -> Option<String> {
+    let ts_key: Option<&str> = ts["translationKey"].as_str();
+    match (error.translation_key(), ts_key) {
+        (None, None) => (Some(error.message()) != ts["message"].as_str())
+            .then(|| format!("message {:?}, ts {}", error.message(), ts["message"])),
+        (key, ts_key) => (key != ts_key).then(|| format!("error {key:?}, ts {ts_key:?}")),
     }
 }
 
@@ -214,8 +257,7 @@ fn check<T: DeserializeOwned + PartialEq + Debug>(scenario: &Value, actual: Resu
 fn check_unit(scenario: &Value, actual: Result<(), ProsopoError>) -> Option<String> {
     match (actual, scenario.get("error")) {
         (Ok(()), None) => None,
-        (Err(error), Some(ts)) => (Some(ts["translationKey"].as_str().unwrap_or("")) != error.translation_key())
-            .then(|| format!("error {:?}, ts {}", error.translation_key(), ts["translationKey"])),
+        (Err(error), Some(ts)) => same_error(&error, ts),
         (Ok(()), Some(ts)) => Some(format!("rust succeeded, ts failed with {ts}")),
         (Err(error), None) => Some(format!("rust failed with {error:?}")),
     }
@@ -225,9 +267,246 @@ fn optional_number(value: &Value) -> Option<f64> {
     value.as_f64()
 }
 
+/// The arguments as BSON, from their canonical extended JSON.
+fn bson_args(scenario: &Value) -> Vec<Bson> {
+    scenario["args"]
+        .as_array()
+        .expect("args")
+        .iter()
+        .map(|arg| Bson::try_from(arg.clone()).expect("extended JSON"))
+        .collect()
+}
+
+fn given(args: &[Bson], index: usize) -> Option<&Bson> {
+    args.get(index).filter(|value| !matches!(value, Bson::Undefined | Bson::Null))
+}
+
+fn bson_str(value: &Bson) -> &str {
+    value.as_str().expect("a string")
+}
+
+fn bson_f64(value: &Bson) -> f64 {
+    match value {
+        Bson::Int32(n) => f64::from(*n),
+        Bson::Int64(n) => *n as f64,
+        Bson::Double(n) => *n,
+        other => panic!("not a number: {other}"),
+    }
+}
+
+fn ip_half(value: &Bson) -> IpHalf {
+    match value {
+        Bson::Document(tagged) => IpHalf(tagged.get_str("$bigint").expect("a bigint").parse().expect("u64")),
+        other => IpHalf::from_bson(other).expect("an IP half"),
+    }
+}
+
+fn ip_address(value: &Bson) -> CompositeIpAddress {
+    let fields: &Document = value.as_document().expect("an address");
+    CompositeIpAddress {
+        lower: ip_half(fields.get("lower").expect("lower")),
+        upper: fields.get("upper").map(ip_half),
+        ip_type: fields.get_str("type").expect("type").parse().expect("v4 or v6"),
+    }
+}
+
+fn components(value: &Bson) -> PoWChallengeComponents {
+    let fields: &Document = value.as_document().expect("components");
+    PoWChallengeComponents {
+        requested_at_timestamp: JsNumber(bson_f64(fields.get("requestedAtTimestamp").expect("timestamp"))),
+        user_account: fields.get_str("userAccount").expect("user").to_string(),
+        dapp_account: fields.get_str("dappAccount").expect("dapp").to_string(),
+    }
+}
+
+fn stored_result(value: &Bson) -> StoredResult {
+    let fields: &Document = value.as_document().expect("a result");
+    StoredResult::new(
+        fields.get_str("status").expect("status").parse().expect("a status"),
+        fields.get_str("reason").ok(),
+    )
+}
+
+fn coords(value: Option<&Bson>) -> Option<Coords> {
+    value.map(|value| {
+        value
+            .as_array()
+            .expect("coords")
+            .iter()
+            .map(|path| {
+                path.as_array()
+                    .expect("a path")
+                    .iter()
+                    .map(|point| point.as_array().expect("a point").iter().map(bson_f64).collect())
+                    .collect()
+            })
+            .collect()
+    })
+}
+
+fn date(value: Option<&Bson>) -> Option<DateTime> {
+    value.map(|value| *value.as_datetime().expect("a date"))
+}
+
+fn document(value: &Bson) -> Document {
+    value.as_document().expect("a document").clone()
+}
+
+fn new_challenge<'a>(
+    args: &'a [Bson],
+    parts: &'a PoWChallengeComponents,
+    address: &'a CompositeIpAddress,
+    headers: &'a Document,
+    at: usize,
+) -> NewChallenge<'a> {
+    NewChallenge {
+        challenge: bson_str(&args[0]),
+        components: parts,
+        provider_signature: bson_str(&args[at]),
+        ip_address: address,
+        headers,
+        ja4: bson_str(&args[at + 3]),
+        session_id: given(args, at + 4).map(bson_str),
+        ip_info: None,
+    }
+}
+
+fn interactive(method: &str) -> Option<Interactive> {
+    if method.contains("Puzzle") {
+        Some(Interactive::Puzzle)
+    } else if method.contains("IconOrder") {
+        Some(Interactive::IconOrder)
+    } else if method.contains("Audio") {
+        Some(Interactive::Audio)
+    } else {
+        None
+    }
+}
+
+async fn run_challenge_scenario(db: &ProviderDatabase, scenario: &Value) -> Option<Option<String>> {
+    let b: Vec<Bson> = bson_args(scenario);
+    let method: &str = scenario["method"].as_str().expect("method");
+    let outcome: Option<String> = match method {
+        "storePowCaptchaRecord" => {
+            let (parts, address, headers) = (components(&b[1]), ip_address(&b[4]), document(&b[5]));
+            let mut new: NewChallenge = new_challenge(&b, &parts, &address, &headers, 3);
+            new.ip_info = given(&b, 11);
+            check_unit(
+                scenario,
+                db.store_pow_captcha_record(
+                    &new,
+                    bson_f64(&b[2]),
+                    given(&b, 8).and_then(Bson::as_bool).unwrap_or(false),
+                    given(&b, 9).and_then(Bson::as_bool).unwrap_or(false),
+                    given(&b, 10).map(bson_str),
+                )
+                .await,
+            )
+        }
+        "getPowCaptchaRecordByChallenge" => check(scenario, db.get_pow_captcha_record_by_challenge(bson_str(&b[0])).await),
+        "updatePowCaptchaRecordResult" => check_unit(
+            scenario,
+            db.update_pow_captcha_record_result(
+                bson_str(&b[0]),
+                &stored_result(&b[1]),
+                given(&b, 2).and_then(Bson::as_bool).unwrap_or(false),
+                given(&b, 3).and_then(Bson::as_bool).unwrap_or(false),
+                given(&b, 4).map(bson_str),
+                coords(given(&b, 5)).as_ref(),
+            )
+            .await,
+        ),
+        "updatePowCaptchaRecord" => check_unit(scenario, db.update_pow_captcha_record(bson_str(&b[0]), &document(&b[1])).await),
+        "getUnstoredDappUserPoWCommitments" => check(
+            scenario,
+            db.get_unstored_dapp_user_pow_commitments(given(&b, 0).map(bson_f64), given(&b, 1)).await,
+        ),
+        "markDappUserPoWCommitmentsStored" => check_unit(
+            scenario,
+            db.mark_dapp_user_pow_commitments_stored(&bson_strings(&b[0]), date(given(&b, 1))).await,
+        ),
+        "markDappUserPoWCommitmentsChecked" => check(scenario, db.mark_dapp_user_pow_commitments_checked(&bson_strings(&b[0])).await),
+        "countCommitmentsByNormalisedEmail" => check(
+            scenario,
+            db.count_commitments_by_normalised_email(bson_str(&b[0]), bson_str(&b[1])).await,
+        ),
+        method if method.starts_with("store") => {
+            let kind: Interactive = interactive(method)?;
+            let (answer, at): (InteractiveAnswer, usize) = match kind {
+                Interactive::Puzzle => (
+                    InteractiveAnswer::Puzzle {
+                        target_x: bson_f64(&b[2]),
+                        target_y: bson_f64(&b[3]),
+                        origin_x: bson_f64(&b[4]),
+                        origin_y: bson_f64(&b[5]),
+                        tolerance: bson_f64(&b[6]),
+                    },
+                    7,
+                ),
+                Interactive::Audio => (InteractiveAnswer::Audio { answer: bson_str(&b[2]).to_string() }, 3),
+                Interactive::IconOrder => (
+                    InteractiveAnswer::IconOrder {
+                        targets: bson::deserialize_from_bson(b[2].clone()).expect("targets"),
+                        tolerance: bson_f64(&b[3]),
+                    },
+                    4,
+                ),
+            };
+            let (parts, address, headers) = (components(&b[1]), ip_address(&b[at + 1]), document(&b[at + 2]));
+            let mut new: NewChallenge = new_challenge(&b, &parts, &address, &headers, at);
+            new.ip_info = given(&b, at + 5);
+            check_unit(scenario, db.store_interactive_captcha_record(&new, &answer).await)
+        }
+        method if method.starts_with("get") && method.ends_with("CaptchaRecordByChallenge") => {
+            check(scenario, db.get_interactive_captcha_record_by_challenge(interactive(method)?, bson_str(&b[0])).await)
+        }
+        method if method.starts_with("claim") => {
+            check(scenario, db.claim_interactive_captcha_submission(interactive(method)?, bson_str(&b[0])).await)
+        }
+        method if method.ends_with("CaptchaRecordResult") => check_unit(
+            scenario,
+            db.update_interactive_captcha_record_result(
+                interactive(method)?,
+                bson_str(&b[0]),
+                &stored_result(&b[1]),
+                given(&b, 2).and_then(Bson::as_bool).unwrap_or(false),
+                given(&b, 3).and_then(Bson::as_bool).unwrap_or(false),
+                given(&b, 4).map(bson_str),
+                coords(given(&b, 5)).as_ref(),
+                date(given(&b, 6)),
+            )
+            .await,
+        ),
+        method if method.starts_with("update") && method.ends_with("CaptchaRecord") => check_unit(
+            scenario,
+            db.update_interactive_captcha_record(interactive(method)?, bson_str(&b[0]), &document(&b[1])).await,
+        ),
+        method if method.starts_with("mark") && method.ends_with("RecordChecked") => {
+            check(scenario, db.mark_interactive_captcha_record_checked(interactive(method)?, bson_str(&b[0])).await)
+        }
+        _ => return None,
+    };
+    Some(outcome)
+}
+
+fn bson_strings(value: &Bson) -> Vec<String> {
+    value.as_array().expect("an array").iter().map(|item| bson_str(item).to_string()).collect()
+}
+
 async fn run_scenario(db: &ProviderDatabase, scenario: &Value) -> Option<String> {
+    if let Some(outcome) = run_challenge_scenario(db, scenario).await {
+        return outcome;
+    }
     let a: Vec<Value> = args(scenario);
     match scenario["method"].as_str().expect("method") {
+        "autoIndexed" => {
+            db.auto_index().await;
+            check_unit(scenario, Ok(()))
+        }
+        "ensureIndexes" => {
+            db.ensure_indexes().await;
+            check_unit(scenario, Ok(()))
+        }
         "storeDataset" => check_unit(scenario, db.store_dataset(&a[0]).await),
         "getSolutions" => check(scenario, db.get_solutions(&string(&a[0])).await),
         "getSolutionByCaptchaId" => check(scenario, db.get_solution_by_captcha_id(&string(&a[0])).await),
@@ -264,12 +543,7 @@ async fn methods_send_the_commands_the_ts_sends_and_return_what_it_returns() {
     let scenarios: &Vec<Value> = methods["scenarios"].as_array().expect("scenarios");
     for scenario in scenarios.iter().filter(|scenario| scenario["method"] != "__setup") {
         let executor: Arc<ReplayExecutor> = Arc::new(ReplayExecutor::new(scenario));
-        let source: Arc<ReplaySource> = Arc::new(ReplaySource {
-            now,
-            random: Mutex::new(
-                scenario["random"].as_array().expect("random").iter().map(|n| n.as_f64().expect("number")).collect(),
-            ),
-        });
+        let source: Arc<ReplaySource> = Arc::new(ReplaySource::new(now, scenario));
         let db: ProviderDatabase = ProviderDatabase::new(executor.clone(), source.clone(), get_logger(LogLevel::Error, "test"));
         let name: &str = scenario["name"].as_str().expect("name");
         if let Some(problem) = run_scenario(&db, scenario).await {
@@ -338,12 +612,7 @@ async fn methods_do_on_a_real_database_what_the_ts_did() {
             inner: crate::operation::DriverExecutor::new(database.clone()),
             sent: Mutex::new(Vec::new()),
         });
-        let source: Arc<ReplaySource> = Arc::new(ReplaySource {
-            now,
-            random: Mutex::new(
-                scenario["random"].as_array().expect("random").iter().map(|n| n.as_f64().expect("number")).collect(),
-            ),
-        });
+        let source: Arc<ReplaySource> = Arc::new(ReplaySource::new(now, scenario));
         let db: ProviderDatabase = ProviderDatabase::new(executor.clone(), source, get_logger(LogLevel::Error, "test"));
         let sampled: bool = sampled(scenario);
         if let Some(problem) = run_scenario(&db, scenario).await {
@@ -359,8 +628,12 @@ async fn methods_do_on_a_real_database_what_the_ts_did() {
             .iter()
             .map(|command| from_hex(command["hex"].as_str().expect("hex")))
             .collect();
-        let sent_hex: Vec<String> = sent.iter().map(|command| to_hex(&normalise(command))).collect();
-        let expected_hex: Vec<String> = expected.iter().map(|command| to_hex(&normalise(command))).collect();
+        let mut sent_hex: Vec<String> = sent.iter().map(|command| to_hex(&normalise(command))).collect();
+        let mut expected_hex: Vec<String> = expected.iter().map(|command| to_hex(&normalise(command))).collect();
+        if scenario["unordered"].as_bool().unwrap_or(false) {
+            sent_hex.sort();
+            expected_hex.sort();
+        }
         if sent_hex != expected_hex {
             failures.push(format!("{name}: sent {} commands that differ from the TS's {}", sent.len(), expected.len()));
         }

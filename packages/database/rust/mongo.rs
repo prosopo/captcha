@@ -44,6 +44,8 @@ pub enum MongoError {
     Driver(mongodb::error::Error),
     /// An operation outlived [`SOCKET_TIMEOUT_MS`].
     Timeout,
+    /// The connection is not open.
+    Unavailable(String),
 }
 
 impl fmt::Display for MongoError {
@@ -52,6 +54,7 @@ impl fmt::Display for MongoError {
             MongoError::InvalidUrl(error) => write!(f, "Invalid URL: {error}"),
             MongoError::Driver(error) => write!(f, "{error}"),
             MongoError::Timeout => write!(f, "operation exceeded {SOCKET_TIMEOUT_MS} ms"),
+            MongoError::Unavailable(why) => write!(f, "{why}"),
         }
     }
 }

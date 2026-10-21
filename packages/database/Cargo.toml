@@ -21,6 +21,7 @@ prosopo-common = { path = "../common" }
 prosopo-logger = { path = "../logger" }
 prosopo-types = { path = "../types" }
 prosopo-types-database = { path = "../types-database" }
+prosopo-util = { path = "../util" }
 prosopo-util-crypto = { path = "../util-crypto" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }

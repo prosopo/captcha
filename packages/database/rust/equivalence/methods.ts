@@ -59,6 +59,16 @@ Math.random = (): number => {
 	return value;
 };
 
+// New ids come from the pinned time, fixed process bytes and a counter reset before each call,
+// so the Rust can mint the same ones.
+const PROCESS_UNIQUE = Uint8Array.from([0xa1, 0xb2, 0xc3, 0xd4, 0xe5]);
+type ObjectIdStatics = { index: number; PROCESS_UNIQUE: Uint8Array | null };
+const resetIds = (): void => {
+	const statics = mongoose.mongo.ObjectId as unknown as ObjectIdStatics;
+	statics.index = 0;
+	statics.PROCESS_UNIQUE = PROCESS_UNIQUE;
+};
+
 // Every connection the database opens reports the commands it sends.
 const createConnection = mongoose.createConnection.bind(mongoose);
 (mongoose as unknown as { createConnection: unknown }).createConnection = (
@@ -83,6 +93,8 @@ const RELEVANT: Record<string, string[]> = {
 	findAndModify: ["findAndModify", "query", "update", "new", "upsert", "fields", "remove"],
 	count: ["count", "query"],
 	getMore: ["getMore", "collection"],
+	dropIndexes: ["dropIndexes", "index"],
+	createIndexes: ["createIndexes", "indexes"],
 };
 
 type Command = { name: string; hex: string; json: Json; reply?: { hex: string; json: Json } };
@@ -93,7 +105,6 @@ const REPLY_FIELDS: string[] = ["cursor", "n", "nModified", "upserted", "value",
 const silent = getLogger("error", "equivalence");
 const db = new ProviderDatabase({ mongo: { url: MONGO_URL, dbname: DB_NAME }, logger: silent });
 await MongoDatabase.prototype.connect.call(db);
-db.loadTables();
 const connection = db.getConnection();
 connection.getClient().on("commandStarted", (event) => {
 	const fields: string[] | undefined = RELEVANT[event.commandName];
@@ -103,7 +114,8 @@ connection.getClient().on("commandStarted", (event) => {
 		if (field in event.command) kept[field] = (event.command as Record<string, unknown>)[field];
 	}
 	try {
-		const bytes: Uint8Array = BSON.serialize(kept);
+		// As the driver serialises a command: an undefined value goes on the wire as null.
+		const bytes: Uint8Array = BSON.serialize(kept, { ignoreUndefined: false });
 		const command: Command = {
 			name: event.commandName,
 			hex: Buffer.from(bytes).toString("hex"),
@@ -127,12 +139,32 @@ connection.getClient().on("commandSucceeded", (event) => {
 	command.reply = { hex: Buffer.from(bytes).toString("hex"), json: toJson(BSON.deserialize(bytes, { promoteValues: false })) };
 });
 await connection.db?.dropDatabase();
+resetIds();
 
-const collectionNames: Record<string, string> = Object.fromEntries(
-	Object.entries(db.getTables()).map(([table, model]) => [table, (model as mongoose.Model<unknown>).collection.name]),
-);
+let collectionNames: Record<string, string> = {};
 
-type Scenario = { group: string; name: string; method: string; args: Json; random: number[]; commands: Command[]; result?: Json; error?: Json };
+// A bigint argument (an IP half) is recorded as its decimal string, which the Rust reads as one.
+const toRecordable = (value: unknown): unknown => {
+	if (typeof value === "bigint") return { $bigint: value.toString() };
+	if (value === undefined) return { $undefined: true };
+	if (Array.isArray(value)) return value.map(toRecordable);
+	if (value && typeof value === "object" && Object.getPrototypeOf(value) === Object.prototype) {
+		return Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, toRecordable(inner)]));
+	}
+	return value;
+};
+
+type Scenario = {
+	group: string;
+	name: string;
+	method: string;
+	args: Json;
+	random: number[];
+	commands: Command[];
+	idStart?: number;
+	result?: Json;
+	error?: Json;
+};
 const scenarios: Scenario[] = [];
 
 const describeError = (error: unknown): Json => {
@@ -149,7 +181,8 @@ const describeError = (error: unknown): Json => {
 const record = async (group: string, name: string, method: string, args: unknown[]): Promise<void> => {
 	commands = [];
 	drawn = [];
-	const scenario: Scenario = { group, name, method, args: toJson(args), random: [], commands: [] };
+	const idStart: number = (mongoose.mongo.ObjectId as unknown as ObjectIdStatics).index;
+	const scenario: Scenario = { group, name, method, args: toJson(toRecordable(args)), random: [], commands: [], idStart };
 	try {
 		const result: unknown = await (db as unknown as Record<string, (...a: unknown[]) => Promise<unknown>>)[method](...args);
 		scenario.result = toJson(result === undefined ? null : result);
@@ -191,6 +224,22 @@ const dataset = {
 		...(i < 4 ? { solution: [hex(0x300 + i)] } : {}),
 	})),
 };
+
+// Loading the tables compiles the models, and mongoose's autoIndex then creates every declared
+// index, as it does at every provider start. The models are done concurrently, so the order of
+// these commands is not fixed: these scenarios are marked unordered.
+(db as unknown as { autoIndexed: () => Promise<void> }).autoIndexed = async (): Promise<void> => {
+	db.loadTables();
+	await Promise.all(Object.values(db.getTables()).map((model) => (model as mongoose.Model<unknown>).init()));
+};
+await record("indexes", "load the tables", "autoIndexed", []);
+(scenarios[scenarios.length - 1] as Scenario & { unordered?: boolean }).unordered = true;
+collectionNames = Object.fromEntries(
+	Object.entries(db.getTables()).map(([table, model]) => [table, (model as mongoose.Model<unknown>).collection.name]),
+);
+// ensureIndexes drops them all and creates them again.
+await record("indexes", "ensure indexes", "ensureIndexes", []);
+(scenarios[scenarios.length - 1] as Scenario & { unordered?: boolean }).unordered = true;
 
 // Group 1: datasets, captchas and solutions.
 await record("datasets", "store a dataset", "storeDataset", [dataset]);
@@ -240,6 +289,72 @@ await setup("datasets", "captchas without random keys", () =>
 	db.getTables().captcha.collection.updateMany({}, { $unset: { randomKey: "" } }),
 );
 await record("datasets", "random captchas without random keys", "getRandomCaptcha", [true, datasetId, 2]);
+
+// Group 3: PoW, puzzle, audio and icon-order challenge records.
+const ip4 = { lower: 3232235777n, type: "v4" };
+const ip6 = { lower: 2n ** 63n + 7n, upper: 42n, type: "v6" };
+const headers = { "user-agent": "Mozilla/5.0", accept: "*/*", "1": "integer-like key", z: "last" };
+const ipInfo = { isValid: true, ip: "192.168.1.1", countryCode: "GB", isVPN: false, asn: 1234, score: 0.25, providerType: "residential" };
+const ipInfoError = { isValid: false, error: "lookup failed", ip: "10.0.0.1" };
+const components = (n: number) => ({ requestedAtTimestamp: 1_700_000_000_000 + n, userAccount: `user${n}`, dappAccount: "dapp" });
+const challenge = (n: number): string => `${1_700_000_000_000 + n}___user${n}___dapp___nonce${n}`;
+const result = (status: string, reason?: string) => (reason ? { status, reason } : { status });
+await record("challenges", "store a PoW record", "storePowCaptchaRecord", [challenge(1), components(1), 4, "0xprovidersig", ip4, headers, "t13d1516h2_8daaf6152771_02713d6af862", "session-1", false, false, undefined, ipInfo]);
+await record("challenges", "store a PoW record with every flag", "storePowCaptchaRecord", [challenge(2), components(2), 8.5, "0xsig2", ip6, {}, "ja4", undefined, true, true, "0xusersig", ipInfoError]);
+await record("challenges", "store a PoW record without extras", "storePowCaptchaRecord", [challenge(3), components(3), 1, "0xsig3", ip4, headers, "ja4"]);
+await record("challenges", "store a PoW record twice", "storePowCaptchaRecord", [challenge(3), components(3), 1, "0xsig3", ip4, headers, "ja4"]);
+await record("challenges", "a PoW record", "getPowCaptchaRecordByChallenge", [challenge(1)]);
+await record("challenges", "a missing PoW record", "getPowCaptchaRecordByChallenge", ["missing"]);
+await record("challenges", "approve a PoW record with unsafe coordinates", "updatePowCaptchaRecordResult", [challenge(1), result("Approved"), true, true, "0xusersig", [[[1, 2], [3.5, 4]]]]);
+await record("challenges", "approve a PoW record", "updatePowCaptchaRecordResult", [challenge(1), result("Approved"), true, true, "0xusersig", [[[1, 2], [3, 4]]]]);
+await record("challenges", "disapprove a PoW record", "updatePowCaptchaRecordResult", [challenge(2), result("Disapproved", "CAPTCHA.INVALID_TIMESTAMP"), false, true]);
+await record("challenges", "update a missing PoW record", "updatePowCaptchaRecordResult", ["missing", result("Approved"), false, false]);
+// A wrong solution still blocks a PoW, unlike the other types.
+await record("challenges", "disapprove a PoW record as a wrong solution", "updatePowCaptchaRecordResult", [challenge(3), result("Disapproved", "CAPTCHA.INVALID_SOLUTION"), false, true]);
+await record("challenges", "a PoW record after its result", "getPowCaptchaRecordByChallenge", [challenge(1)]);
+await record("challenges", "patch a PoW record", "updatePowCaptchaRecord", [challenge(3), { serverChecked: true, ipInfo, coords: [[[5, 6]]] }]);
+await record("challenges", "unstored PoW records", "getUnstoredDappUserPoWCommitments", []);
+await record("challenges", "unstored PoW records, a page", "getUnstoredDappUserPoWCommitments", [1]);
+await record("challenges", "unstored PoW records after an id", "getUnstoredDappUserPoWCommitments", [10, new mongoose.Types.ObjectId("000000000000000000000000")]);
+await record("challenges", "mark PoW records stored", "markDappUserPoWCommitmentsStored", [[challenge(1), challenge(3)], new Date(1_710_000_060_123)]);
+await record("challenges", "mark PoW records checked", "markDappUserPoWCommitmentsChecked", [[challenge(2), challenge(3)]]);
+await record("challenges", "mark PoW records checked again", "markDappUserPoWCommitmentsChecked", [[challenge(2)]]);
+for (const [kind, store, get, claim, update, patch, check] of [
+	["puzzle", "storePuzzleCaptchaRecord", "getPuzzleCaptchaRecordByChallenge", null, "updatePuzzleCaptchaRecordResult", "updatePuzzleCaptchaRecord", "markPuzzleCaptchaRecordChecked"],
+	["audio", "storeAudioCaptchaRecord", "getAudioCaptchaRecordByChallenge", "claimAudioCaptchaSubmission", "updateAudioCaptchaRecordResult", "updateAudioCaptchaRecord", "markAudioCaptchaRecordChecked"],
+	["iconOrder", "storeIconOrderCaptchaRecord", "getIconOrderCaptchaRecordByChallenge", "claimIconOrderCaptchaSubmission", "updateIconOrderCaptchaRecordResult", "updateIconOrderCaptchaRecord", "markIconOrderCaptchaRecordChecked"],
+] as const) {
+	const extra = (n: number): unknown[] =>
+		kind === "puzzle"
+			? [120.5 + n, 40, 10, 12, 15]
+			: kind === "audio"
+				? [`${n}4815`]
+				: [[{ x: 10, y: 20.5, size: 32, kind: "star" }, { x: 100, y: 50, size: 28, kind: "moon" }], 0.75];
+	await record(kind, `store a ${kind} record`, store, [challenge(10), components(10), ...extra(10), "0xsig", ip6, headers, "ja4", "session-10", ipInfo]);
+	await record(kind, `store a ${kind} record without extras`, store, [challenge(11), components(11), ...extra(11), "0xsig", ip4, {}, "ja4"]);
+	await record(kind, `a ${kind} record`, get, [challenge(10)]);
+	await record(kind, `a missing ${kind} record`, get, ["missing"]);
+	if (claim) {
+		await record(kind, `claim a ${kind} submission`, claim, [challenge(10)]);
+		await record(kind, `claim a ${kind} submission again`, claim, [challenge(10)]);
+	}
+	await record(kind, `approve a ${kind} record`, update, [challenge(10), result("Approved"), true, true, "0xusersig", [[[1, 2]]]]);
+	await record(kind, `disapprove a ${kind} record at a given time`, update, [challenge(11), result("Disapproved", "CAPTCHA.INVALID_SOLUTION"), false, true, undefined, undefined, new Date(1_700_000_123_456)]);
+	await record(kind, `update a missing ${kind} record`, update, ["missing", result("Approved"), false, false]);
+	await record(kind, `patch a ${kind} record`, patch, [challenge(11), { serverChecked: true, userSubmitted: true, result: result("Disapproved") }]);
+	await record(kind, `patch a ${kind} record lightly`, patch, [challenge(10), { ipInfo: ipInfoError }]);
+	await record(kind, `store a ${kind} record to check`, store, [challenge(12), components(12), ...extra(12), "0xsig", ip4, headers, "ja4"]);
+	await record(kind, `mark a fresh ${kind} record checked`, check, [challenge(12)]);
+	await record(kind, `mark a ${kind} record checked`, check, [challenge(11)]);
+	await record(kind, `mark a ${kind} record checked again`, check, [challenge(11)]);
+	await record(kind, `a ${kind} record after its updates`, get, [challenge(11)]);
+}
+await setup("challenges", "a verified record with an email", () =>
+	db.getTables().powcaptcha.collection.updateOne({ challenge: challenge(2) }, { $set: { metadata: { email: "a@b.c", emailNormalised: "ab@b.c" } } }),
+);
+await record("challenges", "count by email", "countCommitmentsByNormalisedEmail", ["dapp", "ab@b.c"]);
+await record("challenges", "count by an empty email", "countCommitmentsByNormalisedEmail", ["dapp", ""]);
+await record("challenges", "count by email for another dapp", "countCommitmentsByNormalisedEmail", ["other", "ab@b.c"]);
 
 await connection.db?.dropDatabase();
 await db.close();

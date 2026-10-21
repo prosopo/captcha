@@ -15,16 +15,20 @@
 //! `@prosopo/database` on the official mongodb driver: the connection, the provider's database,
 //! the central captcha store and the portal's client database.
 
+pub mod challenges;
 pub mod mongo;
 pub mod operation;
 pub mod options;
 pub mod provider;
+pub mod records;
 pub mod source;
 
 pub use mongo::{build_url, mask_credentials, MongoConnectionTimeouts, MongoDatabase, MongoError};
 
 #[cfg(test)]
 mod equivalence;
+#[cfg(test)]
+mod live;
 #[cfg(test)]
 mod methods;
 #[cfg(test)]

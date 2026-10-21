@@ -2233,6 +2233,7 @@ dependencies = [
  "prosopo-logger",
  "prosopo-types",
  "prosopo-types-database",
+ "prosopo-util",
  "prosopo-util-crypto",
  "serde",
  "serde_json",

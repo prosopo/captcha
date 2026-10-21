@@ -30,7 +30,8 @@ pub struct UpdateStatement {
     pub q: Document,
     /// An update document, or a pipeline (`[{ $set: ... }]`).
     pub u: Bson,
-    pub upsert: bool,
+    /// Sent only when given, as mongoose sends it: `{ upsert: false }` is sent as such.
+    pub upsert: Option<bool>,
     pub multi: bool,
 }
 
@@ -39,7 +40,7 @@ impl UpdateStatement {
         UpdateStatement {
             q,
             u: Bson::Document(u),
-            upsert: false,
+            upsert: None,
             multi: false,
         }
     }
@@ -48,13 +49,19 @@ impl UpdateStatement {
         UpdateStatement {
             q,
             u: Bson::Array(stages.into_iter().map(Bson::Document).collect()),
-            upsert: false,
+            upsert: None,
             multi: false,
         }
     }
 
     pub fn upsert(mut self, upsert: bool) -> UpdateStatement {
-        self.upsert = upsert;
+        self.upsert = upsert.then_some(true);
+        self
+    }
+
+    /// `{ upsert: false }` passed explicitly, which mongoose sends.
+    pub fn no_upsert(mut self) -> UpdateStatement {
+        self.upsert = Some(false);
         self
     }
 
@@ -65,8 +72,8 @@ impl UpdateStatement {
 
     fn to_document(&self) -> Document {
         let mut out: Document = doc! { "q": self.q.clone(), "u": self.u.clone() };
-        if self.upsert {
-            out.insert("upsert", true);
+        if let Some(upsert) = self.upsert {
+            out.insert("upsert", upsert);
         }
         if self.multi {
             out.insert("multi", true);
@@ -104,6 +111,12 @@ pub enum Operation {
         update: Document,
         upsert: bool,
     },
+    Insert {
+        collection: String,
+        documents: Vec<Document>,
+    },
+    /// An administrative command whose reply nothing reads (`dropIndexes`, `createIndexes`).
+    Command(Document),
 }
 
 impl Operation {
@@ -207,11 +220,16 @@ impl Operation {
                 }
                 out
             }
+            Operation::Command(command) => command.clone(),
+            Operation::Insert { collection, documents } => doc! {
+                "insert": collection,
+                "documents": documents.iter().cloned().map(Bson::Document).collect::<Vec<Bson>>(),
+            },
         }
     }
 
     fn is_retryable_write(&self) -> bool {
-        matches!(self, Operation::Update { .. } | Operation::Delete { .. })
+        matches!(self, Operation::Update { .. } | Operation::Delete { .. } | Operation::Insert { .. })
     }
 }
 
@@ -221,6 +239,7 @@ pub enum Reply {
     Documents(Vec<Document>),
     Update { matched: u64, modified: u64, upserted: u64 },
     Delete { deleted: u64 },
+    Insert { inserted: u64 },
     Value(Option<Document>),
 }
 
@@ -260,6 +279,8 @@ impl Reply {
                 }
             }
             Operation::Delete { .. } => Reply::Delete { deleted: count("n") },
+            Operation::Insert { .. } => Reply::Insert { inserted: count("n") },
+            Operation::Command(_) => Reply::Value(None),
             Operation::FindAndModify { .. } => Reply::Value(reply.get_document("value").ok().cloned()),
         }
     }
@@ -316,12 +337,27 @@ impl DriverExecutor {
     }
 }
 
+/// mongod's `NamespaceNotFound`: the collection does not exist.
+const NAMESPACE_NOT_FOUND: i32 = 26;
+
+fn command_code(error: &mongodb::error::Error) -> Option<i32> {
+    match error.kind.as_ref() {
+        mongodb::error::ErrorKind::Command(command) => Some(command.code),
+        _ => None,
+    }
+}
+
 impl Executor for DriverExecutor {
-    /// An update or a delete is retried once on an error the server marks retryable, as the TS
-    /// driver's retryable writes do; every write the methods make is idempotent.
+    /// An update, a delete or an insert is retried once on an error the server marks retryable,
+    /// as the TS driver's retryable writes do; every update and delete the methods make is
+    /// idempotent, and an insert carries its `_id`, so a retried one cannot land twice.
     fn run(&self, operation: Operation) -> ReplyFuture<'_> {
         Box::pin(async move {
+            let drops_indexes: bool = matches!(&operation, Operation::Command(command) if command.contains_key("dropIndexes"));
             match self.run_once(&operation).await {
+                Err(MongoError::Driver(error)) if drops_indexes && command_code(&error) == Some(NAMESPACE_NOT_FOUND) => {
+                    Ok(Reply::Value(None))
+                }
                 Err(MongoError::Driver(error))
                     if operation.is_retryable_write() && error.contains_label("RetryableWriteError") =>
                 {
