@@ -372,8 +372,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.7
-        version: 16.4.7
+        specifier: 18.0.7
+        version: 18.0.7
       npm-run-all:
         specifier: 4.1.5
         version: 4.1.5
@@ -627,8 +627,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.7
-        version: 16.4.7
+        specifier: 18.0.7
+        version: 18.0.7
       npm-run-all:
         specifier: 4.1.5
         version: 4.1.5
@@ -699,8 +699,8 @@ importers:
         specifier: workspace:*
         version: link:../workspace
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       fast-glob:
         specifier: 3.3.3
         version: 3.3.3
@@ -770,8 +770,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       typescript:
         specifier: 5.6.2
         version: 5.6.2
@@ -865,8 +865,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       npm-run-all:
         specifier: 4.1.5
         version: 4.1.5
@@ -956,8 +956,8 @@ importers:
         specifier: workspace:*
         version: link:../util-crypto
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       express:
         specifier: 4.22.2
         version: 4.22.2(supports-color@8.1.1)
@@ -1040,8 +1040,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       tslib:
         specifier: 2.7.0
         version: 2.7.0
@@ -1124,8 +1124,8 @@ importers:
         specifier: 5.10.1
         version: 5.10.1
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       yargs:
         specifier: 18.2.0
         version: 18.2.0
@@ -1206,8 +1206,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       npm-run-all:
         specifier: 4.1.5
         version: 4.1.5
@@ -1340,8 +1340,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       npm-run-all:
         specifier: 4.1.5
         version: 4.1.5
@@ -1422,8 +1422,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       npm-run-all:
         specifier: 4.1.5
         version: 4.1.5
@@ -1449,8 +1449,8 @@ importers:
         specifier: workspace:*
         version: link:../types
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
     devDependencies:
       '@prosopo/config':
         specifier: workspace:*
@@ -1492,8 +1492,8 @@ importers:
         specifier: workspace:*
         version: link:../logger
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
     devDependencies:
       '@prosopo/config':
         specifier: workspace:*
@@ -1618,8 +1618,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.7
-        version: 16.4.7
+        specifier: 18.0.7
+        version: 18.0.7
       npm-run-all:
         specifier: 4.1.5
         version: 4.1.5
@@ -1709,8 +1709,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       tslib:
         specifier: 2.7.0
         version: 2.7.0
@@ -1782,8 +1782,8 @@ importers:
         specifier: workspace:*
         version: link:../util-crypto
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
     devDependencies:
       '@prosopo/config':
         specifier: workspace:*
@@ -1844,8 +1844,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 17.2.1
-        version: 17.2.1
+        specifier: 18.0.7
+        version: 18.0.7
       npm-run-all:
         specifier: 4.1.5
         version: 4.1.5
@@ -1899,8 +1899,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       express:
         specifier: 4.22.2
         version: 4.22.2(supports-color@8.1.1)
@@ -1945,8 +1945,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       jsdom:
         specifier: 25.0.0
         version: 25.0.0(supports-color@8.1.1)
@@ -2036,8 +2036,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       jsdom:
         specifier: 26.1.0
         version: 26.1.0(supports-color@8.1.1)
@@ -2151,8 +2151,8 @@ importers:
         specifier: workspace:*
         version: link:../widget-skeleton
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       jsdom:
         specifier: 25.0.0
         version: 25.0.0(supports-color@8.1.1)
@@ -2240,8 +2240,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       jsdom:
         specifier: 25.0.0
         version: 25.0.0(supports-color@8.1.1)
@@ -2300,8 +2300,8 @@ importers:
         specifier: workspace:*
         version: link:../widget-skeleton
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
     devDependencies:
       '@prosopo/config':
         specifier: workspace:*
@@ -2627,8 +2627,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 17.3.1
-        version: 17.3.1
+        specifier: 18.0.7
+        version: 18.0.7
       jsdom:
         specifier: 25.0.0
         version: 25.0.0(supports-color@8.1.1)
@@ -2799,8 +2799,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       esbuild:
         specifier: 0.28.2
         version: 0.28.2
@@ -2848,8 +2848,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       tslib:
         specifier: 2.7.0
         version: 2.7.0
@@ -2894,8 +2894,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       npm-run-all:
         specifier: 4.1.5
         version: 4.1.5
@@ -3192,8 +3192,8 @@ importers:
         specifier: 1.0.4
         version: 1.0.4
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       ip-address:
         specifier: 10.7.2
         version: 10.7.2
@@ -3278,8 +3278,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
       npm-run-all:
         specifier: 4.1.5
         version: 4.1.5
@@ -3320,8 +3320,8 @@ importers:
         specifier: 2.4.0
         version: 2.4.0
       dotenv:
-        specifier: 16.4.5
-        version: 16.4.5
+        specifier: 18.0.7
+        version: 18.0.7
     devDependencies:
       '@prosopo/config':
         specifier: workspace:*
@@ -3412,8 +3412,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       dotenv:
-        specifier: 16.4.7
-        version: 16.4.7
+        specifier: 18.0.7
+        version: 18.0.7
       jsdom:
         specifier: 25.0.0
         version: 25.0.0(supports-color@8.1.1)
@@ -7573,21 +7573,10 @@ packages:
   dot-case@3.0.4:
     resolution: {integrity: sha512-Kv5nKlh6yRrdrGvxeJ2e5y2eRUpkUosIW4A2AS38zwSz27zu7ufDwQPi5Jhs3XAlGNetl3bmnGhQsMtkKJnj3w==}
 
-  dotenv@16.4.5:
-    resolution: {integrity: sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==}
+  dotenv@18.0.7:
+    resolution: {integrity: sha512-QEvMEF8ca3GNZJJnAbOgxpj5ULhBvnMcURp+XKrtvqFNPgjBvYoswQ0Jl2cO7JzCjxZjJhr9ZuIEhlrRxMft/Q==}
     engines: {node: '>=12'}
-
-  dotenv@16.4.7:
-    resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
-    engines: {node: '>=12'}
-
-  dotenv@17.2.1:
-    resolution: {integrity: sha512-kQhDYKZecqnM0fCnzI5eIv5L4cAe/iRI+HqMbO/hbRdTAeXDG+M9FjipUxNfbARuEg4iHIbhnhs78BCHNbSxEQ==}
-    engines: {node: '>=12'}
-
-  dotenv@17.3.1:
-    resolution: {integrity: sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==}
-    engines: {node: '>=12'}
+    hasBin: true
 
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
@@ -15738,13 +15727,7 @@ snapshots:
       no-case: 3.0.4
       tslib: 2.7.0
 
-  dotenv@16.4.5: {}
-
-  dotenv@16.4.7: {}
-
-  dotenv@17.2.1: {}
-
-  dotenv@17.3.1: {}
+  dotenv@18.0.7: {}
 
   dunder-proto@1.0.1:
     dependencies:

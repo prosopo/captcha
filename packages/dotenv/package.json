@@ -29,7 +29,7 @@
 	"type": "module",
 	"dependencies": {
 		"@prosopo/logger": "workspace:*",
-		"dotenv": "16.4.5"
+		"dotenv": "18.0.7"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
