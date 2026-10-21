@@ -24,6 +24,7 @@ mod fetch_with_etag;
 mod hex;
 mod ip;
 mod js;
+mod seeded;
 mod solver_service;
 mod url;
 mod util;
@@ -31,6 +32,8 @@ mod verify_recency;
 
 #[cfg(test)]
 mod equivalence;
+#[cfg(test)]
+mod seeded_equivalence;
 
 pub use crate::at::{at, at_f64, at_optional, at_str, resolve_at_index, AtOptions};
 pub use crate::cache_file::{
@@ -55,6 +58,7 @@ pub use crate::fetch_with_etag::{
 pub use crate::hex::{embed_data, extract_data, u8a_to_hex, u8a_to_hex_with};
 pub use crate::ip::{get_ip_address, get_ip_address_from_big_int, Address4, Address6, IpAddress};
 pub use crate::js::{number_to_string, parse_int};
+pub use crate::seeded::{Rng, SeedRandom, SeededLodash};
 pub use crate::solver_service::{hash_meets_difficulty, solve_pow, target_for_difficulty};
 pub use crate::url::{
     build_domain_suffix_candidates, decode_google_translate_host, is_protect_deployment, parse_url,

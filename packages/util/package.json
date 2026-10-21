@@ -17,7 +17,7 @@
 		"cli": "node ./dist/js/cli.js",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
 		"test:cargo": "cargo test -p prosopo-util",
-		"equivalence": "tsx rust/equivalence/generate.ts && cargo test -p prosopo-util equivalence"
+		"equivalence": "tsx rust/equivalence/generate.ts && tsx rust/equivalence/generate-seeded.ts && cargo test -p prosopo-util equivalence"
 	},
 	"main": "dist/index.js",
 	"type": "module",
