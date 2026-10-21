@@ -6,6 +6,8 @@
     <meta name="robots" content="noindex">
     <meta name="referrer" content="no-referrer">
     <title>Security Check</title>
+    <!-- Served from the same origin as this page, and the bundle changes on every release, so an integrity hash can't be pinned. -->
+    <!-- nosemgrep: html.security.audit.missing-integrity.missing-integrity -->
     <script type="module" id="procaptcha-script" src="https://js.prosopo.io/js/procaptcha.bundle.js" async defer></script>
     <style>
         :root {
