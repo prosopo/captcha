@@ -12,12 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { ErrorCode } from "@prosopo/common";
+import type { WidgetError } from "@prosopo/types";
+
 export type FrictionlessGuardOutcome =
 	| { kind: "pass" }
-	| { kind: "error"; message: string; key?: string; retryable: boolean };
+	| {
+			kind: "error";
+			message: string;
+			error?: WidgetError;
+			retryable: boolean;
+	  };
 
 /**
- * Error keys that describe the caller's situation rather than the provider's
+ * Error codes that describe the caller's situation rather than the provider's
  * health, so re-rolling onto another provider would return the same answer.
  *
  * Two groups. Integration faults (site key, origin, captcha type) need the
@@ -29,25 +37,25 @@ export type FrictionlessGuardOutcome =
  * Anything outside this list is treated as the provider failing, not the
  * caller: see {@link evaluateFrictionlessResult}.
  */
-const TERMINAL_ERROR_KEYS: ReadonlySet<string> = new Set([
-	"API.SITE_KEY_NOT_REGISTERED",
-	"API.INVALID_SITE_KEY",
-	"API.UNAUTHORIZED_ORIGIN_URL",
-	"API.INCORRECT_CAPTCHA_TYPE",
-	"API.ACCESS_POLICY_BLOCK",
-	"API.ABUSER_BLOCKED",
-	"API.CRAWLER_BLOCKED",
-	"API.DATACENTER_BLOCKED",
-	"API.DISALLOWED_WEBVIEW",
-	"API.MOBILE_BLOCKED",
-	"API.PROXY_BLOCKED",
-	"API.SATELLITE_BLOCKED",
-	"API.TOR_BLOCKED",
-	"API.VPN_BLOCKED",
-	"API.FORBIDDEN",
-	"API.UNAUTHORIZED",
+const TERMINAL_ERROR_CODES: ReadonlySet<string> = new Set<ErrorCode>([
+	"SITE_KEY_NOT_REGISTERED",
+	"SITE_KEY_INVALID",
+	"ORIGIN_NOT_ALLOWED",
+	"INCORRECT_CAPTCHA_TYPE",
+	"ACCESS_POLICY_BLOCK",
+	"ABUSER_BLOCKED",
+	"CRAWLER_BLOCKED",
+	"DATACENTER_BLOCKED",
+	"DISALLOWED_WEBVIEW",
+	"MOBILE_BLOCKED",
+	"PROXY_BLOCKED",
+	"SATELLITE_BLOCKED",
+	"TOR_BLOCKED",
+	"VPN_BLOCKED",
+	"FORBIDDEN",
+	"UNAUTHORIZED",
 	// carries its own ten-second restart in ProcaptchaFrictionless
-	"CAPTCHA.NO_SESSION_FOUND",
+	"NO_SESSION_FOUND",
 ]);
 
 // Fields the guard reads off the `/frictionless` result. Kept minimal
@@ -55,7 +63,7 @@ const TERMINAL_ERROR_KEYS: ReadonlySet<string> = new Set([
 // without pulling in the full widget config surface.
 export type FrictionlessGuardInput = {
 	captchaType?: string;
-	error?: { message?: string; key?: string };
+	error?: Partial<WidgetError>;
 };
 
 const MISSING_CAPTCHA_TYPE_MESSAGE =
@@ -65,7 +73,7 @@ const MISSING_CAPTCHA_TYPE_MESSAGE =
  * Decide whether a `/frictionless` response is safe to mount an inner widget
  * against.
  *
- * `result.error?.message` catches the well-formed error shape emitted when
+ * `result.error?.code` catches the well-formed error shape emitted when
  * the provider surfaces a normal captcha error. A response with no
  * `captchaType` is the other failure mode: request-time short-circuits
  * (access-policy hard-block, decision-machine autoBan, domain / header
@@ -82,19 +90,19 @@ const MISSING_CAPTCHA_TYPE_MESSAGE =
 export const evaluateFrictionlessResult = (
 	result: FrictionlessGuardInput,
 ): FrictionlessGuardOutcome => {
-	if (result.error?.message) {
-		const key = result.error.key;
+	const code = result.error?.code;
+	if (code) {
+		const errorId = result.error?.errorId ?? code;
+		const message = result.error?.message;
 		return {
 			kind: "error",
-			message: result.error.message,
-			...(key !== undefined && { key }),
-			// A key we do not recognise means the provider failed in a way it
-			// has no vocabulary for — API.BAD_REQUEST is what an unhandled throw
-			// inside a handler serialises to. That is worth trying another
-			// provider for. Retrying is gated on having a key at all: the
-			// bare-string errors handled below are hard blocks, and re-rolling
-			// those would hammer the fleet for traffic already refused.
-			retryable: key !== undefined && !TERMINAL_ERROR_KEYS.has(key),
+			message: message ?? errorId,
+			error: { code, errorId, ...(message !== undefined && { message }) },
+			// An unhandled throw inside a handler reaches us as BACKEND_ERROR: the
+			// provider failed, so another provider is worth trying. Bare-string
+			// errors (handled below) carry no code; they are hard blocks, and
+			// re-rolling those would hammer the fleet for traffic already refused.
+			retryable: !TERMINAL_ERROR_CODES.has(code),
 		};
 	}
 	if (!result.captchaType) {

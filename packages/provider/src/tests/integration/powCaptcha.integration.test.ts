@@ -566,7 +566,7 @@ describe("PoW Integration Tests", () => {
 
 		expect(challengeBody).toHaveProperty("error");
 		expect(challengeBody.error?.message).toBe("Incorrect CAPTCHA type");
-		expect(challengeBody.error?.code).toBe(400);
+		expect(challengeBody.error?.status).toBe(400);
 	});
 	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
 		const userPair = getPair(dummyUserAccount.seed, undefined, "sr25519");
@@ -592,6 +592,6 @@ describe("PoW Integration Tests", () => {
 
 		expect(challengeBody).toHaveProperty("error");
 		expect(challengeBody.error?.message).toBe("Incorrect CAPTCHA type");
-		expect(challengeBody.error?.code).toBe(400);
+		expect(challengeBody.error?.status).toBe(400);
 	});
 });

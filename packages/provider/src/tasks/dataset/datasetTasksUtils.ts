@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { buildDataset } from "@prosopo/datasets";
 import type { DatasetRaw } from "@prosopo/types";
 
@@ -22,7 +22,11 @@ export const providerValidateDataset = async (
 ) => {
 	// Check that the number of captchas in the dataset is greater or equal to min number of solved captchas
 	if (datasetRaw.captchas.length < minSolvedCaptchas + minUnsolvedCaptchas) {
-		throw new ProsopoEnvError("DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED", {
+		throw new ProsopoError({
+			code: "DATASET_INVALID",
+			errorSite: "PROV-55",
+			message:
+				"Number of captchas in dataset is less than configured number of captchas",
 			context: { failedFuncName: providerValidateDataset.name },
 		});
 	}
@@ -33,14 +37,22 @@ export const providerValidateDataset = async (
 
 	// Check enough solved captchas
 	if (solutions < minSolvedCaptchas) {
-		throw new ProsopoEnvError("DATASET.SOLUTIONS_COUNT_LESS_THAN_CONFIGURED", {
+		throw new ProsopoError({
+			code: "DATASET_INVALID",
+			errorSite: "PROV-56",
+			message:
+				"Number of solutions in dataset is less than configured number of solutions",
 			context: { failedFuncName: providerValidateDataset.name },
 		});
 	}
 
 	// Check enough unsolved captchas
 	if (datasetRaw.captchas.length - solutions < minUnsolvedCaptchas) {
-		throw new ProsopoEnvError("DATASET.CAPTCHAS_COUNT_LESS_THAN_CONFIGURED", {
+		throw new ProsopoError({
+			code: "DATASET_INVALID",
+			errorSite: "PROV-57",
+			message:
+				"Number of captchas in dataset is less than configured number of captchas",
 			context: { failedFuncName: providerValidateDataset.name },
 		});
 	}
@@ -49,7 +61,10 @@ export const providerValidateDataset = async (
 
 	// Check DSetID and DSetContentID are defined
 	if (!dataset.datasetId || !dataset.datasetContentId) {
-		throw new ProsopoEnvError("DATASET.DATASET_ID_UNDEFINED", {
+		throw new ProsopoError({
+			code: "DATASET_INVALID",
+			errorSite: "PROV-58",
+			message: "Dataset id undefined",
 			context: {
 				failedFuncName: providerValidateDataset.name,
 				datasetId: dataset.datasetId,

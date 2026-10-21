@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { ProsopoEnvError, ProsopoError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { lodash } from "@prosopo/util/lodash";
 import { boolean, object, string, type infer as zInfer } from "zod";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
@@ -34,10 +34,10 @@ export class OutputCliCommand<
 	}
 
 	public override getArgSchema(): T {
-		throw new ProsopoError("DEVELOPER.METHOD_NOT_IMPLEMENTED");
+		throw new ProsopoError({ code: "NOT_IMPLEMENTED", errorSite: "DSFS-21" });
 	}
 	public override getDescription(): string {
-		throw new ProsopoError("DEVELOPER.METHOD_NOT_IMPLEMENTED");
+		throw new ProsopoError({ code: "NOT_IMPLEMENTED", errorSite: "DSFS-22" });
 	}
 	public override getOptions() {
 		return lodash().merge(super.getOptions(), {
@@ -64,12 +64,11 @@ export class OutputCliCommand<
 		// output must not exist, unless overwrite is true
 		if (this.outputExists()) {
 			if (!args.overwrite) {
-				throw new ProsopoEnvError(
-					new Error(`output path already exists: ${args.output}`),
-					{
-						translationKey: "FS.FILE_ALREADY_EXISTS",
-					},
-				);
+				throw new ProsopoError({
+					code: "FILE_ERROR",
+					errorSite: "DSFS-23",
+					message: `output path already exists: ${args.output}`,
+				});
 			}
 		}
 	}

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { sha256 } from "@noble/hashes/sha2.js";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { signatureVerify } from "@prosopo/util-crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -159,7 +159,7 @@ describe("checkPowSignature", () => {
 		);
 	});
 
-	it("should throw ProsopoApiError for invalid signature", () => {
+	it("should throw ProsopoError for invalid signature", () => {
 		vi.mocked(signatureVerify).mockReturnValue({
 			isValid: false,
 			// biome-ignore lint/suspicious/noExplicitAny: tests
@@ -167,21 +167,22 @@ describe("checkPowSignature", () => {
 
 		expect(() =>
 			checkPowSignature(validMessage, validSignature, validAddress),
-		).toThrow(ProsopoApiError);
+		).toThrow(ProsopoError);
 
 		try {
 			checkPowSignature(validMessage, validSignature, validAddress);
 		} catch (error) {
-			expect(error).toBeInstanceOf(ProsopoApiError);
-			expect((error as ProsopoApiError).context).toEqual({
+			expect(error).toBeInstanceOf(ProsopoError);
+			expect((error as ProsopoError).context).toEqual({
 				ERROR: "Signature is invalid for this message: undefined",
 				failedFuncName: "checkPowSignature",
 				address: validAddress,
 				message: validMessage,
 				signature: validSignature,
 				signatureType: undefined,
-				code: 500,
 			});
+			expect((error as ProsopoError).errorId).toBe("UNAUTHORIZED:PROV-75");
+			expect((error as ProsopoError).status).toBe(401);
 		}
 	});
 
@@ -199,7 +200,7 @@ describe("checkPowSignature", () => {
 				validAddress,
 				signatureType,
 			),
-		).toThrow(ProsopoApiError);
+		).toThrow(ProsopoError);
 
 		try {
 			checkPowSignature(
@@ -209,10 +210,10 @@ describe("checkPowSignature", () => {
 				signatureType,
 			);
 		} catch (error) {
-			expect((error as ProsopoApiError).context?.ERROR).toBe(
+			expect((error as ProsopoError).context?.ERROR).toBe(
 				`Signature is invalid for this message: ${signatureType}`,
 			);
-			expect((error as ProsopoApiError).context?.signatureType).toBe(
+			expect((error as ProsopoError).context?.signatureType).toBe(
 				signatureType,
 			);
 		}
@@ -328,7 +329,7 @@ describe("checkPowSignature", () => {
 		try {
 			checkPowSignature(customMessage, customSignature, customAddress, "ecdsa");
 		} catch (error) {
-			const apiError = error as ProsopoApiError;
+			const apiError = error as ProsopoError;
 			expect(apiError.context?.failedFuncName).toBe("checkPowSignature");
 			expect(apiError.context?.address).toBe(customAddress);
 			expect(apiError.context?.message).toBe(customMessage);

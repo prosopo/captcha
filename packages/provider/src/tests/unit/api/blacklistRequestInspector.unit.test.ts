@@ -868,17 +868,21 @@ describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
 		);
 
 		expect(status).toHaveBeenCalledWith(403);
-		// Structured object so the widget's `result.error?.message` extractor
-		// renders `Forbidden: <requestId>` instead of falling through to
-		// "Cannot load CAPTCHA". requestId gives support a handle to trace
-		// the blocked session back to the matching rule.
+		// requestId gives support a handle to trace the blocked session back
+		// to the matching rule.
 		expect(json).toHaveBeenCalledWith({
-			error: { message: "Forbidden: test-request-id", code: 403 },
+			error: {
+				code: "FORBIDDEN",
+				errorId: "FORBIDDEN:PROV-84",
+				status: 403,
+				message: "Forbidden",
+				data: { requestId: "test-request-id" },
+			},
 		});
 		expect(next).not.toHaveBeenCalled();
 	});
 
-	it("replaces the generic Forbidden with the rule's translated messageKey", async () => {
+	it("replaces the generic Forbidden with the rule's error code", async () => {
 		const inspector = new BlacklistRequestInspector(
 			{
 				findRules: vi.fn().mockResolvedValue([
@@ -906,15 +910,17 @@ describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
 		expect(status).toHaveBeenCalledWith(403);
 		expect(json).toHaveBeenCalledWith({
 			error: {
-				message: `translated(${ResultReason.TOO_MANY_LOCALHOST}): test-request-id`,
-				code: 403,
-				key: ResultReason.TOO_MANY_LOCALHOST,
+				code: "TOO_MANY_LOCALHOST",
+				errorId: "TOO_MANY_LOCALHOST:PROV-84",
+				status: 403,
+				message: "Too many CAPTCHA requests from localhost for this site key",
+				data: { requestId: "test-request-id" },
 			},
 		});
 		expect(next).not.toHaveBeenCalled();
 	});
 
-	it("sends a messageKey that has no catalogue entry untranslated", async () => {
+	it("falls back to FORBIDDEN for a messageKey that is not an error code, without translating", async () => {
 		const inspector = new BlacklistRequestInspector(
 			{
 				findRules: vi.fn().mockResolvedValue([
@@ -938,9 +944,11 @@ describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
 		expect(t).not.toHaveBeenCalled();
 		expect(json).toHaveBeenCalledWith({
 			error: {
-				message: `${ResultReason.EMAIL_INVALID}: test-request-id`,
-				code: 403,
-				key: ResultReason.EMAIL_INVALID,
+				code: "FORBIDDEN",
+				errorId: "FORBIDDEN:PROV-84",
+				status: 403,
+				message: "Forbidden",
+				data: { requestId: "test-request-id" },
 			},
 		});
 	});
@@ -959,7 +967,13 @@ describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
 		await inspector.abortRequestForBlockedUsers(buildRequest({}), res, vi.fn());
 
 		expect(json).toHaveBeenCalledWith({
-			error: { message: "Forbidden: test-request-id", code: 403 },
+			error: {
+				code: "FORBIDDEN",
+				errorId: "FORBIDDEN:PROV-84",
+				status: 403,
+				message: "Forbidden",
+				data: { requestId: "test-request-id" },
+			},
 		});
 	});
 

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { RedisWriteQueue } from "@prosopo/database";
 import type { Logger } from "@prosopo/logger";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
@@ -715,9 +715,10 @@ export class PowCaptchaManager extends CaptchaManager {
 		}
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
-			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
+			throw new ProsopoError({
+				code: "INVALID_SOLUTION",
+				errorSite: "PROV-73",
 				context: {
-					code: 400,
 					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
 					challenge,
 				},
@@ -733,7 +734,10 @@ export class PowCaptchaManager extends CaptchaManager {
 		const challengeDappAccount = challengeRecord.dappAccount;
 
 		if (dappAccount !== challengeDappAccount) {
-			throw new ProsopoEnvError("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", {
+			throw new ProsopoError({
+				code: "SOLUTION_NOT_FOUND",
+				errorSite: "PROV-74",
+				message: "Dapp user solution not found",
 				context: {
 					failedFuncName: this.serverVerifyPowCaptchaSolution.name,
 					dappAccount,

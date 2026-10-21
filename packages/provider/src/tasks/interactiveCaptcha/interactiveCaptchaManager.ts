@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiParams,
@@ -476,9 +476,10 @@ export abstract class InteractiveCaptchaManager<
 		notVerifiedResponse.sessionId = challengeRecord.sessionId;
 
 		if (challengeRecord.result.status !== CaptchaStatus.approved) {
-			throw new ProsopoApiError("CAPTCHA.INVALID_SOLUTION", {
+			throw new ProsopoError({
+				code: "INVALID_SOLUTION",
+				errorSite: "PROV-71",
 				context: {
-					code: 400,
 					failedFuncName: this.serverVerifyInteractiveCaptchaSolution.name,
 					challenge,
 				},
@@ -490,7 +491,10 @@ export abstract class InteractiveCaptchaManager<
 		const challengeDappAccount = challengeRecord.dappAccount;
 
 		if (dappAccount !== challengeDappAccount) {
-			throw new ProsopoEnvError("CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", {
+			throw new ProsopoError({
+				code: "SOLUTION_NOT_FOUND",
+				errorSite: "PROV-72",
+				message: "Dapp user solution not found",
 				context: {
 					failedFuncName: this.serverVerifyInteractiveCaptchaSolution.name,
 					dappAccount,

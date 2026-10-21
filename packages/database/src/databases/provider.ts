@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { isHex } from "@polkadot/util/is";
-import { ProsopoDBError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import {
 	type RedisConnection,
@@ -326,9 +326,11 @@ export class ProviderDatabase
 
 	getTables(): Tables<TableNames> {
 		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.TABLES_UNDEFINED", {
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "DBSE-5",
+				message: "Tables undefined",
 				context: { failedFuncName: this.getTables.name },
-				logger: this.logger,
 			});
 		}
 		return this.tables;
@@ -336,9 +338,11 @@ export class ProviderDatabase
 
 	public getRedisAccessRulesConnection(): RedisConnection {
 		if (null === this.redisAccessRulesConnection) {
-			throw new ProsopoDBError(
-				"DATABASE.REDIS_ACCESS_RULES_CONNECTION_UNDEFINED",
-			);
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "DBSE-6",
+				message: "Redis access rules connection undefined",
+			});
 		}
 
 		return this.redisAccessRulesConnection;
@@ -346,9 +350,11 @@ export class ProviderDatabase
 
 	public getRedisConnection(): RedisConnection {
 		if (null === this.redisConnection) {
-			throw new ProsopoDBError(
-				"DATABASE.REDIS_ACCESS_RULES_CONNECTION_UNDEFINED",
-			);
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "DBSE-7",
+				message: "Redis access rules connection undefined",
+			});
 		}
 
 		return this.redisConnection;
@@ -394,7 +400,11 @@ export class ProviderDatabase
 
 	public getUserAccessRulesStorage(): AccessRulesStorage {
 		if (null === this.userAccessRulesStorage) {
-			throw new ProsopoDBError("DATABASE.USER_ACCESS_RULES_STORAGE_UNDEFINED");
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "DBSE-8",
+				message: "User access rules storage undefined",
+			});
 		}
 
 		return this.userAccessRulesStorage;
@@ -502,9 +512,12 @@ export class ProviderDatabase
 				msg: "Dataset stored in database",
 			}));
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.DATASET_LOAD_FAILED", {
-				context: { failedFuncName: this.storeDataset.name, error: err },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-9",
+				message: "Data set load failed",
+				cause: err,
+				context: { failedFuncName: this.storeDataset.name },
 			});
 		}
 	}
@@ -580,7 +593,10 @@ export class ProviderDatabase
 				}),
 			};
 		}
-		throw new ProsopoDBError("DATABASE.DATASET_GET_FAILED", {
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-10",
+			message: "Failed to get dataset",
 			context: { failedFuncName: this.getDataset.name, datasetId },
 		});
 	}
@@ -597,7 +613,10 @@ export class ProviderDatabase
 		size?: number,
 	): Promise<Captcha[] | undefined> {
 		if (!isHex(datasetId)) {
-			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DBSE-11",
+				message: "Invalid hash",
 				context: { failedFuncName: this.getRandomCaptcha.name, datasetId },
 			});
 		}
@@ -663,7 +682,10 @@ export class ProviderDatabase
 			return docs;
 		}
 
-		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-12",
+			message: "Failed to get captcha",
 			context: {
 				failedFuncName: this.getRandomCaptcha.name,
 				solved,
@@ -696,7 +718,10 @@ export class ProviderDatabase
 			return docs.map(({ _id, ...keepAttrs }) => keepAttrs);
 		}
 
-		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-13",
+			message: "Failed to get captcha",
 			context: { failedFuncName: this.getCaptchaById.name, captchaId },
 		});
 	}
@@ -708,7 +733,10 @@ export class ProviderDatabase
 	 */
 	async updateCaptcha(captcha: Captcha, datasetId: Hash): Promise<void> {
 		if (!isHex(datasetId)) {
-			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DBSE-14",
+				message: "Invalid hash",
 				context: { failedFuncName: this.updateCaptcha.name, datasetId },
 			});
 		}
@@ -720,8 +748,12 @@ export class ProviderDatabase
 				{ upsert: false },
 			);
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: { failedFuncName: this.getDatasetDetails.name, error: err },
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-15",
+				message: "Failed to update captcha",
+				cause: err,
+				context: { failedFuncName: this.getDatasetDetails.name },
 			});
 		}
 	}
@@ -756,7 +788,10 @@ export class ProviderDatabase
 
 	async getDatasetDetails(datasetId: Hash): Promise<DatasetBase> {
 		if (!isHex(datasetId)) {
-			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DBSE-16",
+				message: "Invalid hash",
 				context: { failedFuncName: this.getDatasetDetails.name, datasetId },
 			});
 		}
@@ -770,11 +805,11 @@ export class ProviderDatabase
 			return doc;
 		}
 
-		throw new ProsopoDBError("DATABASE.DATASET_GET_FAILED", {
-			context: {
-				failedFuncName: this.getDatasetDetails.name,
-				datasetId,
-			},
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-17",
+			message: "Failed to get dataset",
+			context: { failedFuncName: this.getDatasetDetails.name, datasetId },
 		});
 	}
 
@@ -917,15 +952,12 @@ export class ProviderDatabase
 						.then(() => {}),
 			);
 		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: {
-					error,
-					challenge,
-					userSubmitted,
-					serverChecked,
-					ipInfo,
-				},
-				logger: this.logger,
+			const err = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-18",
+				message: "Failed to update captcha",
+				cause: error,
+				context: { challenge, userSubmitted, serverChecked, ipInfo },
 			});
 			this.logger.error(() => ({
 				err: error,
@@ -944,9 +976,11 @@ export class ProviderDatabase
 		challenge: string,
 	): Promise<PoWCaptchaRecord | null> {
 		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-19",
+				message: "Database client is not connected",
 				context: { failedFuncName: this.getPowCaptchaRecordByChallenge.name },
-				logger: this.logger,
 			});
 		}
 
@@ -996,9 +1030,12 @@ export class ProviderDatabase
 			}));
 			return null;
 		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
-				context: { error, challenge },
-				logger: this.logger,
+			const err = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-20",
+				message: "Failed to get captcha",
+				cause: error,
+				context: { challenge },
 			});
 			this.logger.error(() => ({
 				err: err,
@@ -1063,12 +1100,11 @@ export class ProviderDatabase
 				{ updatePipeline: true },
 			);
 			if (updateResult.matchedCount === 0) {
-				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
-					context: {
-						challenge,
-						...setStage,
-					},
-					logger: this.logger,
+				const err = new ProsopoError({
+					code: "DB_QUERY_FAILED",
+					errorSite: "DBSE-21",
+					message: "Failed to get captcha",
+					context: { challenge, ...setStage },
 				});
 				this.logger.info(() => ({
 					err: err,
@@ -1097,13 +1133,12 @@ export class ProviderDatabase
 						.then(() => {}),
 			);
 		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: {
-					error,
-					challenge,
-					...setStage,
-				},
-				logger: this.logger,
+			const err = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-22",
+				message: "Failed to update captcha",
+				cause: error,
+				context: { challenge, ...setStage },
 			});
 			this.logger.error(() => ({
 				err: err,
@@ -1260,13 +1295,12 @@ export class ProviderDatabase
 				this.markInteractiveRecordStored(collection, challenge),
 			);
 		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: {
-					error,
-					challenge,
-					ipInfo,
-				},
-				logger: this.logger,
+			const err = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-23",
+				message: "Failed to update captcha",
+				cause: error,
+				context: { challenge, ipInfo },
 			});
 			this.logger.error(() => ({
 				err: error,
@@ -1410,9 +1444,11 @@ export class ProviderDatabase
 		failedFuncName: string,
 	): Promise<T | null> {
 		if (!this.tables) {
-			throw new ProsopoDBError("DATABASE.DATABASE_UNDEFINED", {
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-24",
+				message: "Database client is not connected",
 				context: { failedFuncName },
-				logger: this.logger,
 			});
 		}
 
@@ -1461,9 +1497,12 @@ export class ProviderDatabase
 			}));
 			return null;
 		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
-				context: { error, challenge },
-				logger: this.logger,
+			const err = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-25",
+				message: "Failed to get captcha",
+				cause: error,
+				context: { challenge },
 			});
 			this.logger.error(() => ({
 				err: err,
@@ -1533,9 +1572,12 @@ export class ProviderDatabase
 			}));
 			return won;
 		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: { error, challenge },
-				logger: this.logger,
+			const err = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-26",
+				message: "Failed to update captcha",
+				cause: error,
+				context: { challenge },
 			});
 			this.logger.error(() => ({
 				err: err,
@@ -1608,12 +1650,11 @@ export class ProviderDatabase
 				{ $set: setStage },
 			);
 			if (updateResult.matchedCount === 0) {
-				const err = new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED", {
-					context: {
-						challenge,
-						...setStage,
-					},
-					logger: this.logger,
+				const err = new ProsopoError({
+					code: "DB_QUERY_FAILED",
+					errorSite: "DBSE-27",
+					message: "Failed to get captcha",
+					context: { challenge, ...setStage },
 				});
 				this.logger.info(() => ({
 					err: err,
@@ -1630,13 +1671,12 @@ export class ProviderDatabase
 			}));
 			this.streamInteractiveUpdate(collection, challenge);
 		} catch (error) {
-			const err = new ProsopoDBError("DATABASE.CAPTCHA_UPDATE_FAILED", {
-				context: {
-					error,
-					challenge,
-					...setStage,
-				},
-				logger: this.logger,
+			const err = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-28",
+				message: "Failed to update captcha",
+				cause: error,
+				context: { challenge, ...setStage },
 			});
 			this.logger.error(() => ({
 				err: err,
@@ -2124,9 +2164,12 @@ export class ProviderDatabase
 						.then(() => {}),
 			);
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SESSION_STORE_FAILED", {
-				context: { error: err, sessionId: sessionRecord.sessionId },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-29",
+				message: "Failed to store session",
+				cause: err,
+				context: { sessionId: sessionRecord.sessionId },
 			});
 		}
 	}
@@ -2237,9 +2280,12 @@ export class ProviderDatabase
 				.lean<SessionRecord>();
 			return session || undefined;
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SESSION_CHECK_REMOVE_FAILED", {
-				context: { error: err, sessionId },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-30",
+				message: "Failed to check and remove session",
+				cause: err,
+				context: { sessionId },
 			});
 		}
 	}
@@ -2258,9 +2304,12 @@ export class ProviderDatabase
 			);
 			return result.modifiedCount > 0;
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
-				context: { error: err, sessionId },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-31",
+				message: "Failed to get session",
+				cause: err,
+				context: { sessionId },
 			});
 		}
 	}
@@ -2310,9 +2359,12 @@ export class ProviderDatabase
 					.catch(() => {});
 			}
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
-				context: { error: err, sessionId },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-32",
+				message: "Failed to get session",
+				cause: err,
+				context: { sessionId },
 			});
 		}
 	}
@@ -2345,9 +2397,12 @@ export class ProviderDatabase
 				{ updatePipeline: true },
 			);
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
-				context: { error: err, sessionId, stage },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-33",
+				message: "Failed to get session",
+				cause: err,
+				context: { sessionId, stage },
 			});
 		}
 	}
@@ -2398,9 +2453,12 @@ export class ProviderDatabase
 			);
 			return result.matchedCount > 0;
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
-				context: { error: err, sessionId },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-34",
+				message: "Failed to get session",
+				cause: err,
+				context: { sessionId },
 			});
 		}
 	}
@@ -2430,9 +2488,12 @@ export class ProviderDatabase
 				.lean<SessionRecord>();
 			return session || undefined;
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SESSION_GET_FAILED", {
-				context: { error: err, userSitekeyIpHash },
-				logger: this.logger,
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-35",
+				message: "Failed to get session",
+				cause: err,
+				context: { userSitekeyIpHash },
 			});
 		}
 	}
@@ -2506,7 +2567,10 @@ export class ProviderDatabase
 		ipInfo?: IPInfoResponse,
 	): Promise<void> {
 		if (!isHex(requestHash)) {
-			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DBSE-36",
+				message: "Invalid hash",
 				context: {
 					failedFuncName: this.storePendingImageCommitment.name,
 					requestHash,
@@ -2560,7 +2624,10 @@ export class ProviderDatabase
 		requestHash: string,
 	): Promise<PendingImageCaptchaRequest> {
 		if (!isHex(requestHash)) {
-			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DBSE-37",
+				message: "Invalid hash",
 				context: {
 					failedFuncName: this.getPendingImageCommitment.name,
 					requestHash,
@@ -2589,7 +2656,10 @@ export class ProviderDatabase
 			};
 		}
 
-		throw new ProsopoDBError("DATABASE.PENDING_RECORD_NOT_FOUND", {
+		throw new ProsopoError({
+			code: "RECORD_NOT_FOUND",
+			errorSite: "DBSE-38",
+			message: "No pending record found",
 			context: {
 				failedFuncName: this.getPendingImageCommitment.name,
 				requestHash,
@@ -2604,7 +2674,10 @@ export class ProviderDatabase
 		requestHash: string,
 	): Promise<boolean> {
 		if (!isHex(requestHash)) {
-			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DBSE-39",
+				message: "Invalid hash",
 				context: {
 					failedFuncName: this.updatePendingImageCommitmentStatus.name,
 					requestHash,
@@ -2644,7 +2717,11 @@ export class ProviderDatabase
 			return docs.map(({ _id, ...keepAttrs }) => keepAttrs);
 		}
 
-		throw new ProsopoDBError("DATABASE.CAPTCHA_GET_FAILED");
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-40",
+			message: "Failed to get captcha",
+		});
 	}
 
 	/**
@@ -2670,7 +2747,11 @@ export class ProviderDatabase
 			) as UserSolutionRecord[];
 		}
 
-		throw new ProsopoDBError("DATABASE.SOLUTION_GET_FAILED");
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-41",
+			message: "Failed to get solution",
+		});
 	}
 
 	async getDatasetIdWithSolvedCaptchasOfSizeN(
@@ -2702,7 +2783,11 @@ export class ProviderDatabase
 			return docs[0]._id;
 		}
 
-		throw new ProsopoDBError("DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED");
+		throw new ProsopoError({
+			code: "DATASET_INVALID",
+			errorSite: "DBSE-42",
+			message: "No datasets found with required number of solutions",
+		});
 	}
 
 	async getRandomSolvedCaptchasFromSingleDataset(
@@ -2710,7 +2795,10 @@ export class ProviderDatabase
 		size: number,
 	): Promise<CaptchaSolution[]> {
 		if (!isHex(datasetId)) {
-			throw new ProsopoDBError("DATABASE.INVALID_HASH", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DBSE-43",
+				message: "Invalid hash",
 				context: {
 					failedFuncName: this.getRandomSolvedCaptchasFromSingleDataset.name,
 					datasetId,
@@ -2736,7 +2824,10 @@ export class ProviderDatabase
 			return docs as CaptchaSolution[];
 		}
 
-		throw new ProsopoDBError("DATABASE.SOLUTION_GET_FAILED", {
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-44",
+			message: "Failed to get solution",
 			context: {
 				failedFuncName: this.getRandomSolvedCaptchasFromSingleDataset.name,
 				datasetId,
@@ -2763,7 +2854,10 @@ export class ProviderDatabase
 			return doc as unknown as UserSolutionRecord;
 		}
 
-		throw new ProsopoDBError("DATABASE.SOLUTION_GET_FAILED", {
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DBSE-45",
+			message: "Failed to get solution",
 			context: { failedFuncName: this.getCaptchaById.name, commitmentId },
 		});
 	}
@@ -2887,8 +2981,12 @@ export class ProviderDatabase
 						.then(() => {}),
 			);
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SOLUTION_APPROVE_FAILED", {
-				context: { error: err, commitmentId },
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-46",
+				message: "Failed to approve solution",
+				cause: err,
+				context: { commitmentId },
 			});
 		}
 	}
@@ -2949,8 +3047,12 @@ export class ProviderDatabase
 						.then(() => {}),
 			);
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SOLUTION_APPROVE_FAILED", {
-				context: { error: err, commitmentId },
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-47",
+				message: "Failed to approve solution",
+				cause: err,
+				context: { commitmentId },
 			});
 		}
 	}
@@ -2969,8 +3071,12 @@ export class ProviderDatabase
 				)
 				.lean();
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.SOLUTION_FLAG_FAILED", {
-				context: { error: err, captchaIds },
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-48",
+				message: "Failed to flag solution as processed",
+				cause: err,
+				context: { captchaIds },
 			});
 		}
 	}
@@ -2990,8 +3096,12 @@ export class ProviderDatabase
 				)
 				.lean();
 		} catch (err) {
-			throw new ProsopoDBError("DATABASE.COMMITMENT_FLAG_FAILED", {
-				context: { error: err, commitmentIds },
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-49",
+				message: "Failed to flag commitment as processed",
+				cause: err,
+				context: { commitmentIds },
 			});
 		}
 	}
@@ -3292,7 +3402,10 @@ export class ProviderDatabase
 		domain: string,
 	): Promise<SpamEmailDomainRecord | null> {
 		if (!this.tables?.spamEmailDomain) {
-			throw new ProsopoDBError("DATABASE.DATABASE_IMPORT_FAILED", {
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-50",
+				message: "Failed to import database engine",
 				context: { failedFuncName: this.getSpamEmailDomain.name },
 			});
 		}
@@ -3316,7 +3429,10 @@ export class ProviderDatabase
 		upsert: boolean,
 	): Promise<void> {
 		if (!this.tables?.spamEmailDomain) {
-			throw new ProsopoDBError("DATABASE.DATABASE_IMPORT_FAILED", {
+			throw new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "DBSE-51",
+				message: "Failed to import database engine",
 				context: { failedFuncName: this.bulkUpdateSpamEmailDomains.name },
 			});
 		}

@@ -14,7 +14,7 @@
 
 import { randomUUID } from "node:crypto";
 import { captchaPolicySeverity } from "@prosopo/captcha-severity";
-import { isTranslationKey } from "@prosopo/locale";
+import { ProsopoError, toPublicError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiPrefix,
@@ -44,6 +44,7 @@ import {
 } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../compositeIpAddress.js";
+import { errorCodeForReason } from "./errorCodeForReason.js";
 import {
 	HardBlockVerdictCache,
 	hardBlockCacheKey,
@@ -555,25 +556,15 @@ export class BlacklistRequestInspector {
 			// (blocked IP / JA4 / user / country / ASN), a request with no IP, or
 			// a fail-closed middleware error - is a 403 Forbidden, not a 401
 			// Unauthorized: the client isn't lacking credentials, it is denied
-			// access. Body must be a structured `{ message, code }` object
-			// (not a plain string) so the widget's `result.error?.message`
-			// extractor picks it up — a plain string falls through to the
-			// generic "Cannot load CAPTCHA" fallback. Surfacing the
-			// requestId lets support quote it back on tickets.
-			const { messageKey } = blockOutcome;
-			// The EMAIL_* reasons have no catalogue entry; i18next used to echo
-			// such keys back, so they are sent untranslated.
-			const reason = !messageKey
-				? "Forbidden"
-				: isTranslationKey(messageKey)
-					? request.i18n.t(messageKey)
-					: messageKey;
-			res.status(403).json({
-				error: {
-					message: `${reason}: ${request.requestId ?? "unknown"}`,
-					code: 403,
-					...(messageKey && { key: messageKey }),
-				},
+			// access. The requestId lets support find the request from a ticket.
+			const error = new ProsopoError({
+				code: errorCodeForReason(blockOutcome.messageKey, "FORBIDDEN"),
+				errorSite: "PROV-84",
+				status: 403,
+				data: { requestId: request.requestId ?? "unknown" },
+			});
+			res.status(error.status).json({
+				error: toPublicError(error, "BACKEND_ERROR"),
 			});
 			return;
 		}

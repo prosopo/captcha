@@ -109,7 +109,7 @@ const i18nStub = (
 let translatorI18n: Ti18n | undefined;
 const germanI18n = (): Ti18n => {
 	const catalogue: Record<string, string> = {
-		"API.INVALID_SITE_KEY": "Ungültiger Site-Schlüssel",
+		"ERRORS.SITE_KEY_INVALID": "Ungültiger Site-Schlüssel",
 	};
 	return {
 		language: "de",
@@ -265,7 +265,11 @@ describe("what the widget renders", () => {
 	test("the checkbox shows the current error", async () => {
 		render(props());
 		await setState({
-			error: { message: "no session", key: "API.UNKNOWN_ERROR" },
+			error: {
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:PROV-1",
+				message: "no session",
+			},
 		});
 		expect(mounted.container.textContent).toContain("no session");
 	});
@@ -274,7 +278,11 @@ describe("what the widget renders", () => {
 		translatorI18n = germanI18n();
 		render(props());
 		await setState({
-			error: { message: "Invalid site key", key: "API.INVALID_SITE_KEY" },
+			error: {
+				code: "SITE_KEY_INVALID",
+				errorId: "SITE_KEY_INVALID:PROV-1",
+				message: "Invalid site key",
+			},
 		});
 		expect(mounted.container.textContent).toContain(
 			"Ungültiger Site-Schlüssel",
@@ -477,15 +485,17 @@ describe("the invisible-mode execute event", () => {
 });
 
 describe("an invalidated session", () => {
-	const fail = async (key: string): Promise<void> => {
-		await setState({ error: { message: "boom", key } });
+	const fail = async (code: string): Promise<void> => {
+		await setState({
+			error: { code, errorId: `${code}:PROV-1`, message: "boom" },
+		});
 	};
 
 	test("is handed to the recovery-aware parent, with the original click", async () => {
 		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
 		render(props({ onSessionInvalidated }));
 		click({ clientX: 9, clientY: 8 });
-		await fail("CAPTCHA.NO_SESSION_FOUND");
+		await fail("NO_SESSION_FOUND");
 		expect(onSessionInvalidated).toHaveBeenCalledWith(9, 8);
 	});
 
@@ -498,9 +508,9 @@ describe("an invalidated session", () => {
 				frictionlessState: frictionless({ restart }),
 			}),
 		);
-		await fail("CAPTCHA.NO_SESSION_FOUND");
+		await fail("NO_SESSION_FOUND");
 		await setState({ error: undefined });
-		await fail("CAPTCHA.NO_SESSION_FOUND");
+		await fail("NO_SESSION_FOUND");
 		expect(onSessionInvalidated).toHaveBeenCalledTimes(1);
 		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 150));
 		expect(restart).toHaveBeenCalledTimes(1);
@@ -509,7 +519,7 @@ describe("an invalidated session", () => {
 	test("without a recovery-aware parent the frictionless session restarts", async () => {
 		const restart = vi.fn<() => void>();
 		render(props({ frictionlessState: frictionless({ restart }) }));
-		await fail("CAPTCHA.NO_SESSION_FOUND");
+		await fail("NO_SESSION_FOUND");
 		expect(restart).not.toHaveBeenCalled();
 		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 150));
 		expect(restart).toHaveBeenCalledTimes(1);
@@ -524,14 +534,14 @@ describe("an invalidated session", () => {
 				frictionlessState: frictionless({ restart }),
 			}),
 		);
-		await fail("API.UNKNOWN_ERROR");
+		await fail("BACKEND_ERROR");
 		expect(onSessionInvalidated).not.toHaveBeenCalled();
 		expect(restart).not.toHaveBeenCalled();
 	});
 
 	test("an error with nowhere to escalate to is simply shown", async () => {
 		render(props());
-		await expect(fail("CAPTCHA.NO_SESSION_FOUND")).resolves.toBeUndefined();
+		await expect(fail("NO_SESSION_FOUND")).resolves.toBeUndefined();
 	});
 });
 

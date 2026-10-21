@@ -11,28 +11,34 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 import { isWidgetTranslationKey } from "./translationKey.js";
 import type { Ti18n } from "./types.js";
 
-export interface KeyedErrorMessage {
-	message: string;
-	key?: string;
+/** What the widget shows for a failure: a provider's error body, or its own. */
+export interface DisplayedError {
+	code: string;
+	errorId: string;
+	message?: string;
 }
 
+export const FALLBACK_ERROR_TEXT = "Something went wrong";
+
 /**
- * The provider translates error messages into the request's Accept-Language,
- * which is the browser's language rather than the widget's. Re-translating the
- * error key on the client shows the error in the language the widget renders
- * in. Free text and keys outside the widget namespace (which the browser has no
- * text for) keep the server's message.
+ * The widget translates errors by code (`ERRORS.<CODE>`) in its own language;
+ * the provider sends English only. A code the catalogue does not know keeps the
+ * provider's English message. The errorId is always shown so a user's report
+ * names the exact place that failed.
  */
-export const localiseErrorMessage = (
+export const localiseError = (
 	i18n: Ti18n | undefined,
-	error: KeyedErrorMessage,
+	error: DisplayedError,
 ): string => {
-	const { key, message } = error;
-	if (!key || !isWidgetTranslationKey(key) || !i18n?.isInitialized) {
-		return message;
-	}
-	return i18n.t(key, { defaultValue: message });
+	const key = `ERRORS.${error.code}`;
+	const fallback = error.message ?? FALLBACK_ERROR_TEXT;
+	const text =
+		i18n?.isInitialized && isWidgetTranslationKey(key)
+			? i18n.t(key, { defaultValue: fallback })
+			: fallback;
+	return `${text} (${error.errorId})`;
 };

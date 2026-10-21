@@ -14,6 +14,8 @@
 
 import { timingSafeEqual } from "node:crypto";
 import { BlockList, isIPv4, isIPv6 } from "node:net";
+import { sendProsopoError } from "@prosopo/api-express-router";
+import { ProsopoError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
 import {
 	AdminApiPaths,
@@ -504,7 +506,12 @@ export const metricsHandler = (env: ProviderEnvironment): RequestHandler => {
 	return async (req: Request, res: Response) => {
 		const access = metricsAccess(req);
 		if (access !== 200) {
-			res.status(access).send(access === 401 ? "Unauthorized" : "Forbidden");
+			sendProsopoError(
+				res,
+				access === 401
+					? new ProsopoError({ code: "UNAUTHORIZED", errorSite: "PROV-91" })
+					: new ProsopoError({ code: "FORBIDDEN", errorSite: "PROV-92" }),
+			);
 			return;
 		}
 		const m = getMetrics();

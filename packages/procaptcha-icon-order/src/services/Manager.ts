@@ -14,7 +14,7 @@
 
 import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError, toPublicError } from "@prosopo/common";
 import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
@@ -121,7 +121,9 @@ export const Manager = (
 
 	const getAccount = () => {
 		if (!state.account) {
-			throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+			throw new ProsopoError({
+				code: "ACCOUNT_NOT_FOUND",
+				errorSite: "ICON-1",
 				context: { error: "Account not loaded" },
 			});
 		}
@@ -131,7 +133,7 @@ export const Manager = (
 
 	const getDappAccount = () => {
 		if (!state.dappAccount) {
-			throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+			throw new ProsopoError({ code: "SITE_KEY_MISSING", errorSite: "ICON-2" });
 		}
 
 		const dappAccount: string = state.dappAccount;
@@ -214,7 +216,9 @@ export const Manager = (
 				await sleep(100);
 
 				if (!config.web2 && !config.userAccountAddress) {
-					throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+					throw new ProsopoError({
+						code: "ACCOUNT_NOT_FOUND",
+						errorSite: "ICON-3",
 						context: {
 							error: "Account address has not been set for web3 mode",
 						},
@@ -250,10 +254,13 @@ export const Manager = (
 				if (spentSession.isSpent(challengeSessionId)) {
 					updateState({
 						loading: false,
-						error: {
-							message: "No session found",
-							key: "CAPTCHA.NO_SESSION_FOUND",
-						},
+						error: toPublicError(
+							new ProsopoError({
+								code: "NO_SESSION_FOUND",
+								errorSite: "ICON-6",
+							}),
+							"FRONTEND_ERROR",
+						),
 					});
 					events.onError(new Error("No session found"));
 					return;
@@ -277,10 +284,7 @@ export const Manager = (
 				if (challenge.error) {
 					updateState({
 						loading: false,
-						error: {
-							message: challenge.error.message,
-							key: challenge.error.key || "API.UNKNOWN_ERROR",
-						},
+						error: challenge.error,
 					});
 					return;
 				}
@@ -319,7 +323,9 @@ export const Manager = (
 			!storedProviderUrl ||
 			!storedUser
 		) {
-			throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+			throw new ProsopoError({
+				code: "ACCOUNT_NOT_FOUND",
+				errorSite: "ICON-4",
 				context: { error: "No challenge data available. Call start() first." },
 			});
 		}
@@ -336,7 +342,10 @@ export const Manager = (
 			const signer = user.extension?.signer;
 
 			if (!signer || !signer.signRaw) {
-				throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
+				throw new ProsopoError({
+					code: "CONFIG_INVALID",
+					errorSite: "ICON-5",
+					message: "Can't find the keyringpair for {{address}}",
 					context: {
 						error:
 							"Signer is not defined, cannot sign message to prove account ownership",

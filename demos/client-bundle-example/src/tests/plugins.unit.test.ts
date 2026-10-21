@@ -505,6 +505,51 @@ describe("formFillerInjector", () => {
 	});
 });
 
+describe("formFillerInjector with the language picker", () => {
+	const demoUrl = "https://staging.demo.prosopo.io/frictionless-implicit.html";
+	const fillPage = async (): Promise<JSDOM> => {
+		const withLanguage = getHandler(languageInjector())(
+			page(
+				`<form><input type="text" id="name"><select id="plan"><option value="">Pick</option><option value="pro">Pro</option></select></form>${slotMarkup("language")}`,
+			),
+			ctx("src/frictionless-implicit.html"),
+		);
+		const dom = new JSDOM(
+			getHandler(formFillerInjector())(
+				withLanguage,
+				ctx("src/frictionless-implicit.html"),
+			),
+			{ url: demoUrl, runScripts: "dangerously" },
+		);
+		await new Promise<void>((resolve: () => void) => {
+			dom.window.addEventListener("load", () => resolve());
+		});
+		dom.window.document.getElementById("form-filler-button")?.click();
+		return dom;
+	};
+	const fieldValue = (dom: JSDOM, id: string): string | undefined => {
+		const element = dom.window.document.getElementById(id);
+		return element instanceof dom.window.HTMLSelectElement ||
+			element instanceof dom.window.HTMLInputElement
+			? element.value
+			: undefined;
+	};
+
+	it("leaves the browser-default language alone when filling the form", async () => {
+		const dom = await fillPage();
+
+		expect(fieldValue(dom, "language-select")).toBe("");
+		expect(dom.window.location.href).toBe(demoUrl);
+	});
+
+	it("still fills the form's own fields", async () => {
+		const dom = await fillPage();
+
+		expect(fieldValue(dom, "name")).toBe("John Doe");
+		expect(fieldValue(dom, "plan")).toBe("pro");
+	});
+});
+
 const runScripts = (body: string, url: string): JSDOM =>
 	new JSDOM(`<!DOCTYPE html><html><body>${body}</body></html>`, {
 		url,

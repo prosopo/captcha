@@ -12,180 +12,253 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoApiError, ProsopoEnvError } from "@prosopo/common";
-import { loadI18next } from "@prosopo/locale";
-import type { NextFunction, Request } from "express";
-import { describe, expect, it, vi } from "vitest";
+import { ProsopoError } from "@prosopo/common";
+import { type Logger, getLogger } from "@prosopo/logger";
+import type { NextFunction } from "express";
+import { type Mock, describe, expect, it, vi } from "vitest";
 import { ZodError } from "zod";
 import { handleErrors } from "../../errorHandler.js";
+import {
+	type ErrorResponse,
+	logUnhandledError,
+	sendProsopoError,
+} from "../../errorResponse.js";
 
-describe("handleErrors", async () => {
-	const i18n = await loadI18next(true);
-	await i18n.changeLanguage("en");
+const mockResponse = () => {
+	const response = {
+		status: vi.fn<ErrorResponse["status"]>(),
+		json: vi.fn<ErrorResponse["json"]>(),
+	};
+	response.status.mockReturnValue(response);
+	return response;
+};
 
-	it("should handle ProsopoApiError", async () => {
-		const mockRequest: Pick<Request, "i18n"> = { i18n };
-		const mockResponse = {
-			set: vi.fn().mockReturnThis(),
-			status: vi.fn().mockReturnThis(),
-			send: vi.fn(),
-			end: vi.fn(),
-			statusMessage: "",
-		} satisfies Parameters<typeof handleErrors>[2];
-		const mockNext: NextFunction = vi.fn();
+const spiedLogger = () => {
+	const logger: Logger = getLogger("debug", "errorHandler.test");
+	return {
+		logger,
+		error: vi.spyOn(logger, "error").mockImplementation(() => undefined),
+		debug: vi.spyOn(logger, "debug").mockImplementation(() => undefined),
+	};
+};
 
-		const error = new ProsopoApiError("CONTRACT.INVALID_DATA_FORMAT", {
-			context: { code: 400 },
-			i18n,
+const next: NextFunction = vi.fn();
+
+describe("handleErrors", () => {
+	it("sends a public error's code, message and errorId", () => {
+		const response = mockResponse();
+		const error = new ProsopoError({
+			code: "SITE_KEY_INVALID",
+			errorSite: "APIX-1",
+			context: { siteKey: "secret" },
 		});
-		console.log(error);
 
-		handleErrors(error, mockRequest, mockResponse, mockNext);
+		handleErrors(error, {}, response, next);
 
-		expect(mockResponse.set).toHaveBeenCalledWith(
-			"content-type",
-			"application/json",
-		);
-		expect(mockResponse.send).toHaveBeenCalledWith({
+		expect(response.status).toHaveBeenCalledWith(400);
+		expect(response.json).toHaveBeenCalledWith({
 			error: {
-				code: 400,
-				key: "CONTRACT.INVALID_DATA_FORMAT",
-				message: "Invalid data format",
-				messageEn: "Invalid data format",
+				code: "SITE_KEY_INVALID",
+				errorId: "SITE_KEY_INVALID:APIX-1",
+				status: 400,
+				message: "Invalid site key",
 			},
 		});
-		expect(mockResponse.status).toHaveBeenCalledWith(400);
-		expect(mockResponse.end).toHaveBeenCalled();
 	});
 
-	it("should not return SyntaxError", async () => {
-		const mockRequest: Pick<Request, "i18n"> = { i18n };
-		const mockResponse = {
-			set: vi.fn().mockReturnThis(),
-			status: vi.fn().mockReturnThis(),
-			send: vi.fn(),
-			end: vi.fn(),
-			statusMessage: "",
-		} satisfies Parameters<typeof handleErrors>[2];
-		const mockNext: NextFunction = vi.fn();
+	it("hides a non-public error behind the backend origin", () => {
+		const response = mockResponse();
+		const error = new ProsopoError({
+			code: "UNEXPECTED",
+			errorSite: "APIX-1",
+			cause: new ProsopoError({
+				code: "SERVICE_NOT_READY",
+				errorSite: "APIX-2",
+			}),
+		});
 
-		const message = "Unknown API error";
-		const error = new SyntaxError(message);
+		handleErrors(error, {}, response, next);
 
-		handleErrors(error, mockRequest, mockResponse, mockNext);
-
-		expect(mockResponse.set).toHaveBeenCalledWith(
-			"content-type",
-			"application/json",
-		);
-		expect(mockResponse.status).toHaveBeenCalledWith(400);
-		expect(mockResponse.send).toHaveBeenCalledWith({
+		expect(response.status).toHaveBeenCalledWith(500);
+		expect(response.json).toHaveBeenCalledWith({
 			error: {
-				message,
-				key: "API.UNKNOWN",
-				code: 400,
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:APIX-1",
+				status: 500,
 			},
 		});
-		expect(mockResponse.end).toHaveBeenCalled();
 	});
 
-	it("should handle ZodError", () => {
-		const mockRequest: Pick<Request, "i18n"> = { i18n };
-		const mockResponse = {
-			set: vi.fn().mockReturnThis(),
-			status: vi.fn().mockReturnThis(),
-			send: vi.fn(),
-			end: vi.fn(),
-			statusMessage: "",
-		} satisfies Parameters<typeof handleErrors>[2];
-		const mockNext: NextFunction = vi.fn();
+	it("turns a SyntaxError into an invalid request", () => {
+		const response = mockResponse();
 
-		const zodError = {
+		handleErrors(new SyntaxError("Unexpected token"), {}, response, next);
+
+		expect(response.status).toHaveBeenCalledWith(400);
+		expect(response.json).toHaveBeenCalledWith({
+			error: {
+				code: "INVALID_REQUEST",
+				errorId: "INVALID_REQUEST:APIX-7",
+				status: 400,
+				message: "Invalid request",
+			},
+		});
+	});
+
+	it("reports a ZodError's issues as data", () => {
+		const response = mockResponse();
+		const issue = {
 			code: "custom" as const,
 			message: "Invalid input",
 			path: ["some", "variable"],
 		};
-		const error = new ZodError([zodError]);
 
-		handleErrors(error, mockRequest, mockResponse, mockNext);
+		handleErrors(new ZodError([issue]), {}, response, next);
 
-		expect(mockResponse.set).toHaveBeenCalledWith(
-			"content-type",
-			"application/json",
-		);
-		expect(mockResponse.status).toHaveBeenCalledWith(400);
-		expect(mockResponse.send).toHaveBeenCalledWith({
-			error: { code: 400, key: "API.INVALID_BODY", message: [zodError] },
-		});
-		expect(mockResponse.end).toHaveBeenCalled();
-	});
-
-	it("should unwrap nested ProsopoBaseError", async () => {
-		const mockRequest: Pick<Request, "i18n"> = { i18n };
-		const mockResponse = {
-			set: vi.fn().mockReturnThis(),
-			status: vi.fn().mockReturnThis(),
-			send: vi.fn(),
-			end: vi.fn(),
-			statusMessage: "",
-		} satisfies Parameters<typeof handleErrors>[2];
-		const mockNext: NextFunction = vi.fn();
-
-		const envError = new ProsopoEnvError("GENERAL.ENVIRONMENT_NOT_READY", {
-			i18n,
-		});
-		const apiError = new ProsopoApiError(envError);
-
-		handleErrors(apiError, mockRequest, mockResponse, mockNext);
-
-		expect(mockResponse.set).toHaveBeenCalledWith(
-			"content-type",
-			"application/json",
-		);
-		expect(mockResponse.status).toHaveBeenCalledWith(500);
-		expect(mockResponse.send).toHaveBeenCalledWith({
+		expect(response.status).toHaveBeenCalledWith(400);
+		expect(response.json).toHaveBeenCalledWith({
 			error: {
-				code: 500,
-				key: "GENERAL.ENVIRONMENT_NOT_READY",
-				message: "Environment not ready",
+				code: "INVALID_REQUEST",
+				errorId: "INVALID_REQUEST:APIX-7",
+				status: 400,
+				message: "Invalid request",
+				data: { issueCount: 1, issues: [issue] },
 			},
 		});
-		expect(mockResponse.end).toHaveBeenCalled();
 	});
 
-	it("should unwrap nested ProsopoBaseErrors but not an Error that is nested inside them", async () => {
-		const mockRequest: Pick<Request, "i18n"> = { i18n };
-		const mockResponse = {
-			set: vi.fn().mockReturnThis(),
-			status: vi.fn().mockReturnThis(),
-			send: vi.fn(),
-			end: vi.fn(),
-			statusMessage: "",
-		} satisfies Parameters<typeof handleErrors>[2];
-		const mockNext: NextFunction = vi.fn();
-		const code = 400;
-		const key = "API.UNKNOWN";
+	it("never sends an unknown error's message", () => {
+		const response = mockResponse();
 
-		const error = new Error("Some error");
-		const apiError = new ProsopoApiError(key, {
-			context: { code, error },
-			i18n,
-		});
+		handleErrors(new Error("password=hunter2"), {}, response, next);
 
-		handleErrors(apiError, mockRequest, mockResponse, mockNext);
+		expect(JSON.stringify(response.json.mock.calls)).not.toContain("hunter2");
+		expect(response.status).toHaveBeenCalledWith(500);
+	});
 
-		expect(mockResponse.set).toHaveBeenCalledWith(
-			"content-type",
-			"application/json",
+	it("logs through the request logger", () => {
+		const response = mockResponse();
+		const { logger, error } = spiedLogger();
+
+		handleErrors(new Error("boom"), { logger }, response, next);
+
+		expect(error).toHaveBeenCalledOnce();
+	});
+});
+
+describe("logUnhandledError", () => {
+	it("logs a 5xx error at error level with the errorId", () => {
+		const { logger, error, debug } = spiedLogger();
+		const err = new ProsopoError({ code: "UNEXPECTED", errorSite: "APIX-1" });
+
+		logUnhandledError(logger, err);
+
+		expect(debug).not.toHaveBeenCalled();
+		const record = error.mock.calls[0]?.[0]?.();
+		expect(record?.msg).toBe("UNEXPECTED:APIX-1");
+	});
+
+	it("logs a 4xx error at debug level", () => {
+		const { logger, error, debug } = spiedLogger();
+
+		logUnhandledError(
+			logger,
+			new ProsopoError({ code: "FORBIDDEN", errorSite: "APIX-1" }),
 		);
-		expect(mockResponse.status).toHaveBeenCalledWith(code);
-		expect(mockResponse.send).toHaveBeenCalledWith({
+
+		expect(error).not.toHaveBeenCalled();
+		expect(debug).toHaveBeenCalledOnce();
+	});
+
+	it("tolerates a missing logger", () => {
+		expect(() =>
+			logUnhandledError(
+				undefined,
+				new ProsopoError({ code: "UNEXPECTED", errorSite: "APIX-1" }),
+			),
+		).not.toThrow();
+	});
+});
+
+interface MockChainableResponse {
+	status: Mock<(code: number) => MockChainableResponse>;
+	json: Mock<(body: unknown) => MockChainableResponse>;
+}
+
+const mockChainableResponse = (): MockChainableResponse => {
+	const response: MockChainableResponse = {
+		status: vi.fn<(code: number) => MockChainableResponse>(),
+		json: vi.fn<(body: unknown) => MockChainableResponse>(),
+	};
+	response.status.mockReturnValue(response);
+	response.json.mockReturnValue(response);
+	return response;
+};
+
+describe("sendProsopoError", () => {
+	it("answers with the code's status and the public body", () => {
+		const response = mockChainableResponse();
+
+		sendProsopoError(
+			response,
+			new ProsopoError({ code: "UNAUTHORIZED", errorSite: "APIX-1" }),
+		);
+
+		expect(response.status).toHaveBeenCalledWith(401);
+		expect(response.json).toHaveBeenCalledWith({
 			error: {
-				code,
-				key,
-				message: "Unknown API error",
+				code: "UNAUTHORIZED",
+				errorId: "UNAUTHORIZED:APIX-1",
+				status: 401,
+				message: "Unauthorized",
 			},
 		});
-		expect(mockResponse.end).toHaveBeenCalled();
+	});
+
+	it("honours a status override", () => {
+		const response = mockChainableResponse();
+
+		sendProsopoError(
+			response,
+			new ProsopoError({
+				code: "ACCESS_POLICY_BLOCK",
+				errorSite: "APIX-1",
+				status: 401,
+			}),
+		);
+
+		expect(response.status).toHaveBeenCalledWith(401);
+	});
+
+	it("hides a non-public error behind BACKEND_ERROR", () => {
+		const response = mockChainableResponse();
+
+		sendProsopoError(
+			response,
+			new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "APIX-1",
+				context: { query: "secret" },
+			}),
+		);
+
+		expect(response.json).toHaveBeenCalledWith({
+			error: {
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:APIX-1",
+				status: 500,
+			},
+		});
+	});
+
+	it("returns what json returns, so a handler can return the response", () => {
+		const response = mockChainableResponse();
+
+		expect(
+			sendProsopoError(
+				response,
+				new ProsopoError({ code: "FORBIDDEN", errorSite: "APIX-1" }),
+			),
+		).toBe(response);
 	});
 });

@@ -22,7 +22,7 @@ import {
 	createServer,
 } from "node:http";
 import type { AddressInfo } from "node:net";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { Keyring } from "@prosopo/keyring";
 import * as loadBalancerModule from "@prosopo/load-balancer";
 import {
@@ -146,9 +146,9 @@ describe("ProsopoServer against a stalled provider", () => {
 			const elapsed = Date.now() - started;
 
 			expect(outcome.response).toBeUndefined();
-			expect(outcome.error).toBeInstanceOf(ProsopoApiError);
-			if (outcome.error instanceof ProsopoApiError) {
-				expect(outcome.error.context?.code).toBe(504);
+			expect(outcome.error).toBeInstanceOf(ProsopoError);
+			if (outcome.error instanceof ProsopoError) {
+				expect(outcome.error.status).toBe(504);
 			}
 			expect(elapsed).toBeGreaterThanOrEqual(TIMEOUT_MS / 2);
 			expect(elapsed).toBeLessThan(5_000);

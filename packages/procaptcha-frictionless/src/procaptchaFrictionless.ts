@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { loadI18next, localiseErrorMessage } from "@prosopo/locale";
+import { ProsopoError, toPublicError } from "@prosopo/common";
+import { loadI18next, localiseError } from "@prosopo/locale";
 import {
 	type CheckboxProps,
 	type Component,
@@ -43,6 +44,7 @@ import {
 	type ProcaptchaStartEventDetail,
 	type ReloadOptions,
 	StartModeEnum,
+	type WidgetError,
 } from "@prosopo/types";
 import { darkTheme, lightTheme } from "@prosopo/widget-skeleton";
 import { mountAuthenticatedBadge } from "./authenticatedBadge.js";
@@ -56,7 +58,8 @@ import {
 	normaliseRetryCoords,
 } from "./sessionInvalidatedRecovery.js";
 
-const NO_SESSION_FOUND_KEY = "CAPTCHA.NO_SESSION_FOUND";
+const frontendError = (error: ProsopoError): WidgetError =>
+	toPublicError(error, "FRONTEND_ERROR");
 
 const MAX_PRESS_HOLD_MS = 1000;
 
@@ -273,7 +276,7 @@ export const mountProcaptchaFrictionless = (
 	const cannotLoadText = (): string =>
 		i18n.isInitialized ? i18n.t("WIDGET.CANNOT_LOAD") : "Cannot load CAPTCHA";
 
-	const fallOverWithStyle = (errorMessage?: string, errorKey?: string) => {
+	const fallOverWithStyle = (error?: WidgetError) => {
 		// We could always re-render here after a period but this will result in
 		// never-ending requests to Providers when settings are incorrect, or the
 		// user is not human. We need to selectively re-render for events like
@@ -284,16 +287,14 @@ export const mountProcaptchaFrictionless = (
 		// one, and we are already minting it. Leave the checkbox in its loading
 		// state and re-mint behind it, rather than parking a support code on a
 		// widget that is about to start working again.
-		if ("CAPTCHA.NO_SESSION_FOUND" === errorKey) {
+		if (error?.code === "NO_SESSION_FOUND") {
 			restartComponentTimeout();
 			renderPlaceholder(config.mode, undefined, true);
 			return;
 		}
 		renderPlaceholder(
 			config.mode,
-			errorMessage
-				? localiseErrorMessage(i18n, { message: errorMessage, key: errorKey })
-				: cannotLoadText(),
+			error ? localiseError(i18n, error) : cannotLoadText(),
 			false,
 		);
 	};
@@ -332,7 +333,7 @@ export const mountProcaptchaFrictionless = (
 			// Idempotent per escalation session — see `escalatedSessionIds`.
 			// Without this a re-run of the PoW widget's `submit()` mounts a
 			// second widget against the session the first one already spent,
-			// which the provider answers with 400 CAPTCHA.NO_SESSION_FOUND.
+			// which the provider answers with 400 NO_SESSION_FOUND.
 			if (escalatedSessionIds.has(newSessionId)) return;
 			escalatedSessionIds.add(newSessionId);
 			void renderForCaptchaType(
@@ -375,11 +376,11 @@ export const mountProcaptchaFrictionless = (
 			// Budget spent. Surface the error on the checkbox and let
 			// `fallOverWithStyle`'s NO_SESSION_FOUND branch schedule the
 			// 10-second full restart, so the user always has a way back.
-			const message = i18n.isInitialized
-				? i18n.t(NO_SESSION_FOUND_KEY)
-				: "No session found";
-			events.onError(new Error(message));
-			fallOverWithStyle(message, NO_SESSION_FOUND_KEY);
+			const error = frontendError(
+				new ProsopoError({ code: "NO_SESSION_FOUND", errorSite: "FRIC-3" }),
+			);
+			events.onError(new Error(localiseError(i18n, error)));
+			fallOverWithStyle(error);
 		};
 
 		// The widget wants a replacement challenge — the user pressed reload, or
@@ -521,11 +522,11 @@ export const mountProcaptchaFrictionless = (
 		// would otherwise fail later with a cryptic provider-selection error.
 		// Surface a clear, non-retrying message instead.
 		if (!isSecureBrowserContext()) {
-			const errorMessage = i18n.isInitialized
-				? i18n.t("WIDGET.INSECURE_CONTEXT")
-				: "Procaptcha requires a secure (HTTPS) connection";
-			events.onError(new Error(errorMessage));
-			fallOverWithStyle(errorMessage, "WIDGET.INSECURE_CONTEXT");
+			const error = frontendError(
+				new ProsopoError({ code: "INSECURE_CONTEXT", errorSite: "FRIC-4" }),
+			);
+			events.onError(new Error(localiseError(i18n, error)));
+			fallOverWithStyle(error);
 			return;
 		}
 
@@ -562,7 +563,7 @@ export const mountProcaptchaFrictionless = (
 						errorMessage: guard.message,
 					};
 					events.onError(new Error(guard.message));
-					fallOverWithStyle(guard.message, guard.key);
+					fallOverWithStyle(guard.error);
 					return;
 				}
 

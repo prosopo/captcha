@@ -10,7 +10,7 @@ Each language has one file per i18next namespace (`NAMESPACES` in
 
 | File | Sections | Loaded by |
 | --- | --- | --- |
-| `widget.json` | WIDGET, API, CAPTCHA, GENERAL, ACCOUNT, DEVELOPER | widget and provider |
+| `widget.json` | WIDGET, API, CAPTCHA, GENERAL, ACCOUNT, DEVELOPER, ERRORS | widget and provider |
 | `target.json` | TARGET (image labels) | provider |
 | `translation.json` | DATABASE, DATASET, CONTRACT, CONFIG, PORTAL, CLI, FS | provider |
 
@@ -25,17 +25,19 @@ Each language has one file per i18next namespace (`NAMESPACES` in
   `target.json`. Each captcha in the image challenge carries the translated
   `target`, its `targetKey` and its English `targetEn`, and the response names
   its `language` (`packages/provider/src/api/captcha/localiseTarget.ts`).
-- Provider errors carry their key. The widget re-translates keys it has
-  (`isWidgetTranslationKey`) and shows the provider's message for the rest. For
-  those, the provider also sends `messageEn` (`unwrapError` in
-  `packages/common/src/error.ts`), so the widget has English for every string
-  it shows. The bundle build copies `widget.json` whole, rather than stripping
-  keys its code never names (`packages/procaptcha-bundle/vite.config.ts`).
+- Errors are translated by code, never by the provider. A ProsopoError
+  (`packages/common/src/error.ts`) reaches the widget as `{code, errorId,
+  message?}`; `localiseError` (`src/errorMessage.ts`) shows
+  `ERRORS.<code>` in the widget's language, else the English `message`, else
+  "Something went wrong", followed by the errorId. A non-public error arrives
+  as BACKEND_ERROR or FRONTEND_ERROR, so it has text too. Every `ERRORS` key
+  must be an `ErrorCode` (`packages/common/src/tests/error.unit.test.ts`). The
+  bundle build copies `widget.json` whole, rather than stripping keys its code
+  never names (`packages/procaptcha-bundle/vite.config.ts`).
 - `englishText(key)`, `isTranslationKey` and `isTargetKey`
   (`src/serverTranslationKeys.ts`) import every English catalogue, so only
   server code calls them. They read English whatever language i18next is in.
-  Code that also runs in the widget, such as `ProsopoError`'s message
-  translation, asks the i18n instance instead (`canTranslate`, which uses
+  Code that also runs in the widget asks the i18n instance instead (`canTranslate`, which uses
   `exists`). That keeps `target.json` and `translation.json` out of the widget
   bundle.
 - A section moves between files by moving it in every language. The tests in

@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { CaptchaSolution } from "@prosopo/types";
 import { describe, expect, it } from "vitest";
 import { buildTreeAndGetCommitmentId } from "../../../../tasks/imgCaptcha/imgCaptchaTasksUtils.js";
@@ -59,6 +59,6 @@ describe("buildTreeAndGetCommitmentId", () => {
 	it("throws CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST when passed no solutions", () => {
 		// The native module rejects empty input; the wrapper surfaces the same
 		// commitment-missing error the JS impl used to throw.
-		expect(() => buildTreeAndGetCommitmentId([])).toThrow(ProsopoEnvError);
+		expect(() => buildTreeAndGetCommitmentId([])).toThrow(ProsopoError);
 	});
 });
