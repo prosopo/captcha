@@ -879,7 +879,7 @@ dependencies = [
 
 [[package]]
 name = "prosopo-api-route"
-version = "0.0.1"
+version = "6.0.0"
 dependencies = [
  "indexmap",
  "prosopo-logger",
@@ -890,7 +890,7 @@ dependencies = [
 
 [[package]]
 name = "prosopo-captcha-severity"
-version = "0.0.1"
+version = "6.0.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -898,7 +898,7 @@ dependencies = [
 
 [[package]]
 name = "prosopo-dotenv"
-version = "0.0.1"
+version = "6.0.0"
 dependencies = [
  "fancy-regex",
  "indexmap",
@@ -910,7 +910,7 @@ dependencies = [
 
 [[package]]
 name = "prosopo-logger"
-version = "0.0.1"
+version = "6.0.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -918,7 +918,7 @@ dependencies = [
 
 [[package]]
 name = "prosopo-puzzle-assets"
-version = "0.0.1"
+version = "6.0.0"
 dependencies = [
  "base64 0.22.1",
  "getrandom 0.3.4",
@@ -933,7 +933,7 @@ dependencies = [
 
 [[package]]
 name = "prosopo-util"
-version = "0.0.1"
+version = "6.0.0"
 dependencies = [
  "base64 0.22.1",
  "futures-util",
@@ -951,7 +951,7 @@ dependencies = [
 
 [[package]]
 name = "prosopo-web-bot-auth"
-version = "0.0.1"
+version = "6.0.0"
 dependencies = [
  "curve25519-dalek",
  "ed25519-dalek",
