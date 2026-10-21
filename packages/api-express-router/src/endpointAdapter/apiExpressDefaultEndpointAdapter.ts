@@ -13,15 +13,12 @@
 // limitations under the License.
 
 import type { ApiEndpoint } from "@prosopo/api-route";
-import {
-	ProsopoApiError,
-	ProsopoBaseError,
-	unwrapError,
-} from "@prosopo/common";
+import { ProsopoError, isProsopoError } from "@prosopo/common";
 import type { LogLevel } from "@prosopo/logger";
 import { stringifyBigInts } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { ZodType } from "zod";
+import { sendErrorResponse } from "../errorResponse.js";
 import type { ApiExpressEndpointAdapter } from "./apiExpressEndpointAdapter.js";
 
 class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
@@ -41,8 +38,11 @@ class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 			args = endpoint.getRequestArgsSchema()?.parse(request.body);
 		} catch (error) {
 			return next(
-				new ProsopoApiError("API.PARSE_ERROR", {
-					context: { code: 400, error: error },
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "APIX-1",
+					message: "Error parsing request",
+					cause: error,
 				}),
 			);
 		}
@@ -58,33 +58,17 @@ class ApiExpressDefaultEndpointAdapter implements ApiExpressEndpointAdapter {
 
 			response.json(responseObject);
 		} catch (error) {
-			request.logger.error(() => ({
-				err: error,
-			}));
-
-			// Errors that already carry an explicit HTTP status code (e.g. a 400
-			// admin auth/validation error) should surface that code with the
-			// standard `{ error: ... }` JSON envelope. Everything else — base
-			// errors without a status code, or non-Prosopo errors — is treated as
-			// an unexpected failure and mapped to this adapter's configured
-			// errorStatusCode. In both cases the envelope is produced by
-			// `unwrapError` so the message/key stay consistent and localised.
-			const responseError =
-				error instanceof ProsopoApiError ||
-				(error instanceof ProsopoBaseError &&
-					typeof error.context?.code === "number")
-					? error
-					: new ProsopoApiError("API.UNKNOWN", {
-							context: { code: this.errorStatusCode },
-							silent: true,
-						});
-
-			const { code, statusMessage, jsonError } = unwrapError(
-				responseError,
-				request.i18n,
-			);
-			response.statusMessage = statusMessage;
-			response.status(code).json({ error: jsonError });
+			// An error that is not a ProsopoError was not anticipated by the
+			// endpoint, so it is reported with this adapter's status.
+			const responseError = isProsopoError(error)
+				? error
+				: new ProsopoError({
+						code: "UNEXPECTED",
+						errorSite: "APIX-2",
+						cause: error,
+						status: this.errorStatusCode,
+					});
+			sendErrorResponse(responseError, "APIX-6", response, request.logger);
 		}
 	}
 }

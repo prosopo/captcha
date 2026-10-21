@@ -11,16 +11,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+import type { Ti18n } from "@prosopo/locale";
 import type { ProcaptchaClientConfigOutput } from "../config/config.js";
 import type {
 	BehavioralData,
 	ClickEventPoint,
 	MouseMovementPoint,
 	PackedBehavioralData,
+	ScrollEventPoint,
 	TouchEventPoint,
 } from "../procaptcha/behavioral.js";
 import type { Account } from "../procaptcha/manager.js";
-import type { ProcaptchaProps } from "../procaptcha/props.js";
+import type {
+	FrictionlessRestart,
+	ProcaptchaProps,
+} from "../procaptcha/props.js";
 import type {
 	GetFrictionlessCaptchaResponse,
 	ProviderSelectRetryContext,
@@ -49,6 +54,12 @@ export type BotDetectionFunctionResult = GetFrictionlessCaptchaResponse & {
 		getData: () => ClickEventPoint[];
 		clear: () => void;
 	};
+	behaviorCollector4?: {
+		start: () => void;
+		stop: () => void;
+		getData: () => ScrollEventPoint[];
+		clear: () => void;
+	};
 	deviceCapability?: string;
 	encryptBehavioralData?: (data: string) => Promise<string>;
 	packBehavioralData?: (data: BehavioralData) => PackedBehavioralData;
@@ -63,13 +74,19 @@ export type BotDetectionFunction = (
 	// detection can re-select a random provider instead of re-using the
 	// DNS-routed one that just failed. Absent on the initial attempt.
 	retryContext?: ProviderSelectRetryContext,
+	// The sessionId the user refreshed away from, when this run replaces a
+	// challenge they asked to swap. Forwarded to the provider as `refreshOf`.
+	refreshOf?: string,
+	// The user asked for the replacement to be an image challenge.
+	switchToImage?: boolean,
 ) => Promise<BotDetectionFunctionResult>;
 
 /**
  * The props for the Procaptcha Frictionless component.
  */
 export interface ProcaptchaFrictionlessProps extends ProcaptchaProps {
-	restart: () => void;
+	i18n: Ti18n;
+	restart: FrictionlessRestart;
 	detectBot?: BotDetectionFunction;
 	detectBotConfig?: ProcaptchaClientConfigOutput;
 }

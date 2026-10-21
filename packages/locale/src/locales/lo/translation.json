@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "ເຂົ້າລະຫັດທີ່ຢູ່ທີ່ບໍ່ຖືກຕ້ອງບໍ່ສຳເລັດ",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "ບໍ່ມີຄຳໝັ້ນສັນຍາຄຳຕອບ captcha",
+		"SIGNER_UNDEFINED": "ບໍ່ໄດ້ກຳນົດຜູ້ລົງລາຍເຊັນ",
+		"CANNOT_FIND_KEYPAIR": "ບໍ່ພົບຄູ່ກະແຈ",
+		"INVALID_DATA_FORMAT": "ຮູບແບບຂໍ້ມູນບໍ່ຖືກຕ້ອງ"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "ຮ້ອງຂໍສະພາບແວດລ້ອມທີ່ບໍ່ຮູ້ຈັກ",
+		"INVALID_CAPTCHA_NUMBER": "ກະລຸນາຕັ້ງຄ່າ captcha ໃຫ້ຖືກຕ້ອງ",
+		"INVALID_LOG_LEVEL": "ລະດັບບັນທຶກບໍ່ຖືກຕ້ອງ",
+		"INVALID_PACKAGE_DIR": "ໂຟນເດີແພັກເກດບໍ່ຖືກຕ້ອງ"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "ເກີດຂໍ້ຜິດພາດໃນການແຍກວິເຄາະຊຸດຂໍ້ມູນ",
+		"SOLUTION_PARSE_ERROR": "ເກີດຂໍ້ຜິດພາດໃນການປະມວນຜົນຊຸດຂໍ້ມູນ",
+		"HASH_ERROR": "ເກີດຂໍ້ຜິດພາດໃນການ hash ຊຸດຂໍ້ມູນ",
+		"DATASET_ID_UNDEFINED": "ບໍ່ໄດ້ກຳນົດ ID ຊຸດຂໍ້ມູນ",
+		"NOT_ENOUGH_LABELS": "ປ້າຍກຳກັບບໍ່ພຽງພໍ",
+		"NOT_ENOUGH_IMAGES": "ຮູບພາບບໍ່ພຽງພໍ",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "ຈຳນວນ captcha ໃນຊຸດຂໍ້ມູນໜ້ອຍກວ່າຈຳນວນທີ່ກຳນົດໄວ້",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "ຈຳນວນຄຳຕອບໃນຊຸດຂໍ້ມູນໜ້ອຍກວ່າຈຳນວນທີ່ກຳນົດໄວ້",
+		"DUPLICATE_IMAGE": "ກວດພົບຮູບພາບຊ້ຳກັນ",
+		"MERKLE_ERROR": "ເກີດຂໍ້ຜິດພາດໃນການສ້າງຕົ້ນໄມ້ Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "ນຳເຂົ້າເຄື່ອງຈັກຖານຂໍ້ມູນບໍ່ສຳເລັດ",
+		"DATABASE_UNDEFINED": "ໄຄລເອັນຖານຂໍ້ມູນບໍ່ໄດ້ເຊື່ອມຕໍ່",
+		"DATABASE_HOST_UNDEFINED": "ບໍ່ໄດ້ກຳນົດທີ່ຢູ່ໂຮສຖານຂໍ້ມູນ",
+		"DATASET_LOAD_FAILED": "ໂຫຼດຊຸດຂໍ້ມູນບໍ່ສຳເລັດ",
+		"DATASET_GET_FAILED": "ດຶງຊຸດຂໍ້ມູນບໍ່ສຳເລັດ",
+		"CAPTCHA_GET_FAILED": "ດຶງ captcha ບໍ່ສຳເລັດ",
+		"CAPTCHA_UPDATE_FAILED": "ອັບເດດ captcha ບໍ່ສຳເລັດ",
+		"IMAGE_GET_FAILED": "ດຶງຮູບພາບບໍ່ສຳເລັດ",
+		"PENDING_RECORD_NOT_FOUND": "ບໍ່ພົບບັນທຶກທີ່ລໍຖ້າ",
+		"INVALID_HASH": "hash ບໍ່ຖືກຕ້ອງ",
+		"SOLUTION_GET_FAILED": "ດຶງຄຳຕອບບໍ່ສຳເລັດ",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "ບໍ່ພົບຊຸດຂໍ້ມູນທີ່ມີຈຳນວນຄຳຕອບຕາມທີ່ຕ້ອງການ",
+		"SOLUTION_APPROVE_FAILED": "ອະນຸມັດຄຳຕອບບໍ່ສຳເລັດ",
+		"SOLUTION_FLAG_FAILED": "ໝາຍຄຳຕອບວ່າປະມວນຜົນແລ້ວບໍ່ສຳເລັດ",
+		"TABLES_UNDEFINED": "ບໍ່ໄດ້ກຳນົດຕາຕະລາງ",
+		"CONNECTION_UNDEFINED": "ບໍ່ໄດ້ກຳນົດການເຊື່ອມຕໍ່",
+		"COMMITMENT_FLAG_FAILED": "ໝາຍຄຳໝັ້ນສັນຍາວ່າປະມວນຜົນແລ້ວບໍ່ສຳເລັດ",
+		"UNKNOWN": "ຂໍ້ຜິດພາດຖານຂໍ້ມູນທີ່ບໍ່ຮູ້ຈັກ",
+		"QUERY_ERROR": "ຄຳຖາມຖານຂໍ້ມູນບໍ່ສຳເລັດ",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "ບໍ່ໄດ້ກຳນົດການເຊື່ອມຕໍ່ Redis ຂອງກົດການເຂົ້າເຖິງ",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "ບໍ່ໄດ້ກຳນົດບ່ອນເກັບກົດການເຂົ້າເຖິງຂອງຜູ້ໃຊ້",
+		"SESSION_STORE_FAILED": "ບັນທຶກເຊດຊັນບໍ່ສຳເລັດ",
+		"SESSION_CHECK_REMOVE_FAILED": "ກວດສອບ ແລະ ລຶບເຊດຊັນບໍ່ສຳເລັດ",
+		"SESSION_GET_FAILED": "ດຶງເຊດຊັນບໍ່ສຳເລັດ"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "ບໍ່ສາມາດແກ້ໄຂຜູ້ໃຊ້ທີ່ເປັນເຈົ້າຂອງໄດ້",
+		"CANNOT_DELETE_OWN_USER": "ບໍ່ສາມາດລຶບບັນຊີຂອງທ່ານເອງໄດ້",
+		"CANNOT_DELETE_LAST_USER": "ບໍ່ສາມາດລຶບຜູ້ໃຊ້ຄົນສຸດທ້າຍໄດ້",
+		"USER_ALREADY_EXISTS": "ຜູ້ໃຊ້ມີຢູ່ແລ້ວ",
+		"NO_SUGGESTIONS_FOUND": "ບໍ່ພົບຄຳແນະນຳ",
+		"CANNOT_DEACTIVATE_LAST_SITE": "ບໍ່ສາມາດປິດໃຊ້ງານເວັບໄຊທີ່ເຮັດວຽກຢູ່ອັນສຸດທ້າຍໄດ້",
+		"DUPLICATE_SITE_NAME": "ເວັບໄຊທີ່ມີຊື່ນີ້ມີຢູ່ແລ້ວ",
+		"INVALID_SITE_NAME": "ຊື່ເວັບໄຊສາມາດມີໄດ້ສະເພາະຕົວອັກສອນ, ຕົວເລກ, ຂີດຕໍ່ ແລະ ຂີດກ້ອງເທົ່ານັ້ນ"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "ພາລາມິເຕີບໍ່ຖືກຕ້ອງ"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "ບໍ່ພົບໄຟລ໌",
+		"FILE_ALREADY_EXISTS": "ໄຟລ໌ມີຢູ່ແລ້ວ",
+		"INVALID_DIR_FORMAT": "ຮູບແບບໂຟນເດີບໍ່ຖືກຕ້ອງ"
+	}
+}

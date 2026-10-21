@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import { type Ti18n, createUntranslatedI18n } from "@prosopo/locale";
 import type { Manager as ManagerType } from "@prosopo/procaptcha";
 import {
+	InputMethod,
 	ModeEnum,
 	type ProcaptchaProps,
 	type ProcaptchaState,
@@ -40,6 +41,7 @@ const submit = vi.fn<ManagerApi["submit"]>(() => Promise.resolve());
 const select = vi.fn<ManagerApi["select"]>();
 const nextRound = vi.fn<ManagerApi["nextRound"]>();
 const reload = vi.fn<ManagerApi["reload"]>(() => Promise.resolve());
+const dispose = vi.fn<ManagerApi["dispose"]>();
 
 let update: ProcaptchaStateUpdateFn | undefined;
 let readHoneypot: (() => string | undefined) | undefined;
@@ -50,7 +52,7 @@ vi.mock("@prosopo/procaptcha", () => ({
 		managerArgs.push(args);
 		update = args[2];
 		readHoneypot = args[5];
-		return { start, cancel, submit, select, nextRound, reload };
+		return { start, cancel, submit, select, nextRound, reload, dispose };
 	},
 }));
 
@@ -80,13 +82,12 @@ let mounted: Mounted;
 let widget: ProcaptchaWidgetHandle | undefined;
 
 const i18n = (language: string): Ti18n =>
-	({ language, changeLanguage }) as unknown as Ti18n;
+	createUntranslatedI18n({ language, changeLanguage });
 
 const render = (overrides: Partial<ProcaptchaProps> = {}): void => {
 	widget = mountProcaptchaImageWidget(mounted.container, {
 		config: config(),
 		callbacks: {},
-		i18n: undefined as unknown as Ti18n,
 		...overrides,
 	});
 };
@@ -256,7 +257,20 @@ describe("clicking the checkbox", () => {
 	test("starts the challenge where the user clicked", () => {
 		render();
 		fire(checkbox(), "click", { clientX: 11, clientY: 22 });
-		expect(start).toHaveBeenCalledWith(11, 22);
+		expect(start).toHaveBeenCalledWith(11, 22, InputMethod.pointer);
+	});
+
+	test("starts from Enter as a keyboard activation at (0, 0)", () => {
+		render();
+		fire(checkbox(), "keydown", { key: "Enter" });
+		expect(start).toHaveBeenCalledWith(0, 0, InputMethod.keyboard);
+	});
+
+	test("starts from Space as a keyboard activation at (0, 0)", () => {
+		// Space toggles a checkbox through a click whose press count is 0.
+		render();
+		fire(checkbox(), "click", { detail: 0 });
+		expect(start).toHaveBeenCalledWith(0, 0, InputMethod.keyboard);
 	});
 
 	test("ignores a synthetic click", () => {
@@ -386,7 +400,7 @@ describe("the challenge", () => {
 		const image = document.querySelector(`${SURFACE_SELECTOR} img`);
 		if (!image) throw new Error("expected a captcha image");
 		fire(image, "click", { clientX: 3, clientY: 4 });
-		expect(select).toHaveBeenCalledWith("hash-1", 3, 4);
+		expect(select).toHaveBeenCalledWith("hash-1", 3, 4, InputMethod.pointer);
 	});
 
 	test("wires cancel to the manager", async () => {
@@ -417,17 +431,76 @@ describe("the challenge", () => {
 	});
 });
 
+describe("the audio alternative", () => {
+	const AUDIO_ALTERNATIVE = `${SURFACE_SELECTOR} [data-cy="prosopo-audio-alternative"]`;
+	const onRequestAudioAlternative = vi.fn<() => void>();
+
+	const withChallenge = async (
+		overrides: Partial<ProcaptchaProps>,
+	): Promise<void> => {
+		render(overrides);
+		await setState({ showModal: true, ...openChallenge() });
+	};
+
+	test("is not offered unless the site turned it on", async () => {
+		await withChallenge({ onRequestAudioAlternative });
+		expect(document.querySelector(AUDIO_ALTERNATIVE)).toBeNull();
+	});
+
+	test("is offered, translated, when the site turned it on", async () => {
+		await withChallenge({
+			audioAlternativeAvailable: true,
+			onRequestAudioAlternative,
+		});
+		expect(document.querySelector(AUDIO_ALTERNATIVE)?.textContent).toBe(
+			"WIDGET.AUDIO_ALTERNATIVE",
+		);
+	});
+
+	test("hands the request to the wrapper", async () => {
+		await withChallenge({
+			audioAlternativeAvailable: true,
+			onRequestAudioAlternative,
+		});
+		const control = document.querySelector(AUDIO_ALTERNATIVE);
+		if (!control) throw new Error("expected the audio alternative");
+		fire(control, "click");
+		expect(onRequestAudioAlternative).toHaveBeenCalledTimes(1);
+	});
+
+	test("is offered in invisible mode too", async () => {
+		await withChallenge({
+			config: config({ mode: ModeEnum.invisible }),
+			audioAlternativeAvailable: true,
+			onRequestAudioAlternative,
+		});
+		expect(document.querySelector(AUDIO_ALTERNATIVE)).not.toBeNull();
+	});
+});
+
 describe("recovering from an error", () => {
 	test("stops the spinner so the user can try again", async () => {
 		render();
 		fire(checkbox(), "click");
-		await setState({ error: { message: "boom", key: "CAPTCHA.UNKNOWN" } });
+		await setState({
+			error: {
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:PROV-1",
+				message: "boom",
+			},
+		});
 		expect(spinner()).toBeNull();
 	});
 
 	test("shows the error text against the checkbox", async () => {
 		render();
-		await setState({ error: { message: "boom", key: "CAPTCHA.UNKNOWN" } });
+		await setState({
+			error: {
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:PROV-1",
+				message: "boom",
+			},
+		});
 		expect(mounted.container.textContent).toContain("boom");
 	});
 
@@ -436,7 +509,11 @@ describe("recovering from an error", () => {
 		render({ onSessionInvalidated });
 		fire(checkbox(), "click", { clientX: 7, clientY: 8 });
 		await setState({
-			error: { message: "gone", key: "CAPTCHA.NO_SESSION_FOUND" },
+			error: {
+				code: "NO_SESSION_FOUND",
+				errorId: "NO_SESSION_FOUND:PROV-1",
+				message: "gone",
+			},
 		});
 		// The coords of the click the user already made, so the retry still
 		// reports where the user actually entered the flow.
@@ -447,10 +524,18 @@ describe("recovering from an error", () => {
 		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
 		render({ onSessionInvalidated });
 		await setState({
-			error: { message: "gone", key: "CAPTCHA.NO_SESSION_FOUND" },
+			error: {
+				code: "NO_SESSION_FOUND",
+				errorId: "NO_SESSION_FOUND:PROV-1",
+				message: "gone",
+			},
 		});
 		await setState({
-			error: { message: "gone again", key: "CAPTCHA.NO_SESSION_FOUND" },
+			error: {
+				code: "NO_SESSION_FOUND",
+				errorId: "NO_SESSION_FOUND:PROV-1",
+				message: "gone again",
+			},
 		});
 		expect(onSessionInvalidated).toHaveBeenCalledTimes(1);
 	});
@@ -459,7 +544,11 @@ describe("recovering from an error", () => {
 		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
 		render({ onSessionInvalidated });
 		await setState({
-			error: { message: "gone", key: "CAPTCHA.NO_SESSION_FOUND" },
+			error: {
+				code: "NO_SESSION_FOUND",
+				errorId: "NO_SESSION_FOUND:PROV-1",
+				message: "gone",
+			},
 		});
 		expect(onSessionInvalidated).toHaveBeenCalledWith(undefined, undefined);
 	});
@@ -468,7 +557,11 @@ describe("recovering from an error", () => {
 		const restart = vi.fn<() => void>();
 		render({ frictionlessState: frictionless({ restart }) });
 		await setState({
-			error: { message: "gone", key: "CAPTCHA.NO_SESSION_FOUND" },
+			error: {
+				code: "NO_SESSION_FOUND",
+				errorId: "NO_SESSION_FOUND:PROV-1",
+				message: "gone",
+			},
 		});
 		expect(restart).not.toHaveBeenCalled();
 		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 150));
@@ -478,9 +571,43 @@ describe("recovering from an error", () => {
 	test("leaves an ordinary error to the host, restarting nothing", async () => {
 		const restart = vi.fn<() => void>();
 		render({ frictionlessState: frictionless({ restart }) });
-		await setState({ error: { message: "boom", key: "CAPTCHA.UNKNOWN" } });
+		await setState({
+			error: {
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:PROV-1",
+				message: "boom",
+			},
+		});
 		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 150));
 		expect(restart).not.toHaveBeenCalled();
+	});
+});
+
+describe("after a wrong answer", () => {
+	const notice = (): Element | null =>
+		mounted.container.querySelector('[role="alert"]');
+
+	test("tells the user and leaves the checkbox usable", async () => {
+		render();
+		await setState({ answeredIncorrectly: true });
+		expect(notice()?.textContent).toBe("WIDGET.PUZZLE.RETRY");
+		expect(checkbox().disabled).toBe(false);
+	});
+
+	test("carries the notice across a frictionless restart", () => {
+		render({ startShowRetry: true });
+		expect(notice()?.textContent).toBe("WIDGET.PUZZLE.RETRY");
+	});
+
+	test("shows nothing on an ordinary mount", () => {
+		render();
+		expect(notice()).toBeNull();
+	});
+
+	test("drops the notice once the manager clears it", async () => {
+		render({ startShowRetry: true });
+		await setState({ answeredIncorrectly: false });
+		expect(notice()).toBeNull();
 	});
 });
 
@@ -508,7 +635,11 @@ describe("starting without a click", () => {
 			onSessionInvalidated,
 		});
 		await setState({
-			error: { message: "gone", key: "CAPTCHA.NO_SESSION_FOUND" },
+			error: {
+				code: "NO_SESSION_FOUND",
+				errorId: "NO_SESSION_FOUND:PROV-1",
+				message: "gone",
+			},
 		});
 		expect(onSessionInvalidated).toHaveBeenCalledWith(5, 6);
 	});
@@ -625,7 +756,7 @@ describe("the manager itself", () => {
 		await setState({ isHuman: true });
 		expect(managerArgs).toHaveLength(1);
 		fire(checkbox(), "click", { clientX: 9, clientY: 9 });
-		expect(start).toHaveBeenCalledWith(9, 9);
+		expect(start).toHaveBeenCalledWith(9, 9, InputMethod.pointer);
 	});
 
 	test("is given the frictionless state so it can reuse the session", () => {
@@ -649,10 +780,11 @@ describe("the manager itself", () => {
 		// Under frictionless the wrapper is the only thing that can mint the
 		// session a replacement challenge needs, so the manager must ask it
 		// rather than reloading itself.
-		const onReload = vi.fn<(x?: number, y?: number) => void>();
+		const onReload = vi.fn<NonNullable<ProcaptchaProps["onReload"]>>();
 		render({ onReload });
 		managerArgs[0]?.[6]?.(120, 340);
-		expect(onReload).toHaveBeenCalledWith(120, 340);
+		// Marked as a refresh so the provider can count it.
+		expect(onReload).toHaveBeenCalledWith(120, 340, { refresh: true });
 	});
 
 	test("keeps reload to itself when no wrapper offered to handle it", () => {
@@ -660,5 +792,15 @@ describe("the manager itself", () => {
 		// to re-mint the challenge with — the modal would just close.
 		render();
 		expect(managerArgs[0]?.[6]).toBeUndefined();
+	});
+});
+
+describe("destroy", () => {
+	test("disposes the manager so its expiry timers cannot outlive the widget", () => {
+		render();
+		expect(dispose).not.toHaveBeenCalled();
+		widget?.destroy();
+		widget = undefined;
+		expect(dispose).toHaveBeenCalledTimes(1);
 	});
 });

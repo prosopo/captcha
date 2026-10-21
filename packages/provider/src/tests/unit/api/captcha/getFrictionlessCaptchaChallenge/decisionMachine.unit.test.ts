@@ -103,7 +103,7 @@ const buildHandle = (uaHeader = "ua", prosopoUser = "uid") => {
 		headers: { "user-agent": uaHeader, "prosopo-user": prosopoUser },
 		logger: { info: vi.fn() },
 		requestId: "rid",
-		i18n: { t: (s: string) => s },
+		i18n: { t: (s: string): string => s, exists: (): boolean => false },
 	};
 	const res = {
 		json: vi.fn().mockReturnValue("done"),

@@ -292,6 +292,70 @@ describe("the error state", () => {
 		expect(label().textContent).toBe("I am human");
 		expect(box().disabled).toBe(false);
 	});
+
+	test("announces the error through a live region that was there from mount", () => {
+		render();
+		const region = mounted.container.querySelector('[aria-live="polite"]');
+		expect(region?.textContent).toBe("");
+		render({ error: "Cannot load CAPTCHA" });
+		expect(mounted.container.querySelector('[aria-live="polite"]')).toBe(
+			region,
+		);
+		expect(region?.textContent).toBe("Cannot load CAPTCHA");
+		render({ error: undefined });
+		expect(region?.textContent).toBe("");
+	});
+
+	test("takes its live region with it on destroy", () => {
+		render({ error: "Cannot load CAPTCHA" });
+		checkbox?.destroy();
+		checkbox = undefined;
+		expect(mounted.container.querySelector("[aria-live]")).toBeNull();
+	});
+});
+
+describe("the retry notice", () => {
+	const NOTICE = "Incorrect, try again";
+
+	test("replaces the label with the notice", () => {
+		render({ notice: NOTICE });
+		expect(label().textContent).toBe(NOTICE);
+	});
+
+	test("announces the notice to assistive tech", () => {
+		render({ notice: NOTICE });
+		expect(label().querySelector('[role="alert"]')?.textContent).toBe(NOTICE);
+	});
+
+	test("paints the notice in the theme's error colour", () => {
+		render({ notice: NOTICE });
+		expect(
+			label().querySelector<HTMLElement>('[role="alert"]')?.style.color,
+		).toBe(asRgb(lightTheme.palette.error.main));
+	});
+
+	test("keeps the box enabled so the user can try again", () => {
+		render({ notice: NOTICE });
+		expect(box().disabled).toBe(false);
+		fire(box(), "click");
+		expect(onChange).toHaveBeenCalledTimes(1);
+	});
+
+	test("keeps the accessible name of the box", () => {
+		render({ notice: NOTICE });
+		expect(box().getAttribute("aria-label")).toBe("I am human");
+	});
+
+	test("gives way to an error", () => {
+		render({ notice: NOTICE, error: "Cannot load CAPTCHA" });
+		expect(label().textContent).toBe("Cannot load CAPTCHA");
+	});
+
+	test("puts the label back once cleared", () => {
+		render({ notice: NOTICE });
+		render({ notice: undefined });
+		expect(label().textContent).toBe("I am human");
+	});
 });
 
 describe("theming", () => {

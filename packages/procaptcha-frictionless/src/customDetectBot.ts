@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import { ProviderApi } from "@prosopo/api";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
+import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	getProcaptchaRandomActiveProvider,
@@ -121,7 +122,13 @@ export const withTimeout = async <T>(
 	let timeoutId: NodeJS.Timeout | undefined;
 	const timeoutPromise = new Promise<never>((_, reject) => {
 		timeoutId = setTimeout(() => {
-			reject(new ProsopoEnvError("API.UNKNOWN"));
+			reject(
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "FRIC-1",
+					message: "Unknown API error",
+				}),
+			);
 		}, ms);
 	});
 
@@ -144,9 +151,11 @@ const customDetectBot: BotDetectionFunction = async (
 	container: HTMLElement | undefined,
 	restartFn: () => void,
 	retryContext?: ProviderSelectRetryContext,
+	refreshOf?: string,
+	switchToImage?: boolean,
 ): Promise<BotDetectionFunctionResult> => {
 	if (!config.account.address) {
-		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+		throw new ProsopoError({ code: "SITE_KEY_MISSING", errorSite: "FRIC-2" });
 	}
 
 	const ipMode = pickIpMode(config);
@@ -212,6 +221,8 @@ const customDetectBot: BotDetectionFunction = async (
 	const providerApi = new ProviderApi(
 		provider.provider.url,
 		config.account.address,
+		undefined,
+		widgetLanguageHeaders(config.language),
 	);
 
 	// Ask the provider for a per-session detector bundle. The detector lives ONLY
@@ -287,6 +298,8 @@ const customDetectBot: BotDetectionFunction = async (
 				fallbackUrl,
 				fallbackIframeUrl,
 				clientSessionId,
+				refreshOf,
+				switchToImage,
 			),
 			10000,
 		);
@@ -312,6 +325,7 @@ const customDetectBot: BotDetectionFunction = async (
 			error: captcha.error,
 			hp: captcha.hp,
 			agent: captcha.agent,
+			audioAlternativeAvailable: captcha.audioAlternativeAvailable,
 		};
 	}
 
@@ -344,6 +358,8 @@ const customDetectBot: BotDetectionFunction = async (
 		currentUrl,
 		iframeUrl,
 		clientSessionId,
+		refreshOf,
+		switchToImage,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher
@@ -377,10 +393,12 @@ const customDetectBot: BotDetectionFunction = async (
 		error: captcha.error,
 		hp: captcha.hp,
 		agent: captcha.agent,
+		audioAlternativeAvailable: captcha.audioAlternativeAvailable,
 		// Map specific trackers to generic behavioral collectors
 		behaviorCollector1: detectionResult.mouseTracker,
 		behaviorCollector2: detectionResult.touchTracker,
 		behaviorCollector3: detectionResult.clickTracker,
+		behaviorCollector4: detectionResult.scrollTracker,
 		deviceCapability: detectionResult.hasTouchSupport,
 		encryptBehavioralData: detectionResult.encryptBehavioralData,
 		packBehavioralData: detectionResult.packBehavioralData,

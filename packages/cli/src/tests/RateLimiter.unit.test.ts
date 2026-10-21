@@ -129,6 +129,9 @@ describe("RateLimiter.getRateLimitConfig", () => {
 			ClientApiPaths.GetPuzzleCaptchaChallenge,
 			ClientApiPaths.SubmitPuzzleCaptchaSolution,
 			ClientApiPaths.VerifyPuzzleCaptchaSolution,
+			ClientApiPaths.GetIconOrderCaptchaChallenge,
+			ClientApiPaths.SubmitIconOrderCaptchaSolution,
+			ClientApiPaths.VerifyIconOrderCaptchaSolution,
 		];
 		for (const route of expected) {
 			expect(cfg).toHaveProperty(route);

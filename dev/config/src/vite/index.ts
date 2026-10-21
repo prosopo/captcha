@@ -28,3 +28,4 @@ export { default as VitePluginModifyExportsFiles } from "./vite-plugin-modify-ex
 export { copyAssetsPlugin } from "./CopyAssetsPlugin.js";
 export type { CopyAssetEntry } from "./CopyAssetsPlugin.js";
 export { nodejsPolarsNativeFilePlugin } from "./NodejsPolarsNativeFilePlugin.js";
+export { buildToken } from "./buildToken.js";

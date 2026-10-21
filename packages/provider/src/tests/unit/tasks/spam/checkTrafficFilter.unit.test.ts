@@ -23,6 +23,7 @@ import {
 	type TrafficFilterMatch,
 	checkTrafficFilter,
 	resolveChallengePolicy,
+	resolvePadBytes,
 } from "../../../../tasks/spam/checkTrafficFilter.js";
 
 const baseInfo = (overrides: Partial<IPInfoResult> = {}): IPInfoResult => ({
@@ -485,7 +486,7 @@ describe("checkTrafficFilter", () => {
 			const missing = checkTrafficFilter(
 				baseInfo({
 					isDatacenter: true,
-					datacenterName: "iCloud Private Relay",
+					datacenterName: "Amazon AWS",
 				}),
 				allBlocked,
 			);
@@ -497,7 +498,7 @@ describe("checkTrafficFilter", () => {
 			const empty = checkTrafficFilter(
 				baseInfo({
 					isDatacenter: true,
-					datacenterName: "iCloud Private Relay",
+					datacenterName: "Amazon AWS",
 				}),
 				{ ...allBlocked, datacenterNameAllowlist: [] },
 			);
@@ -675,6 +676,98 @@ describe("checkTrafficFilter", () => {
 				],
 			);
 			expect(result).toMatchObject({ isBlocked: false });
+		});
+	});
+
+	describe("iCloud Private Relay", () => {
+		it.each([
+			["datacenterName", { datacenterName: "iCloud Private Relay" }],
+			["providerName", { providerName: "iCloud Private Relay" }],
+		])(
+			"passes the datacenter rule with no allowlist configured (%s)",
+			(_, name) => {
+				const result = checkTrafficFilter(
+					baseInfo({ isDatacenter: true, ...name }),
+					allBlocked,
+				);
+				expect(result).toEqual({ isBlocked: false, matches: [] });
+			},
+		);
+
+		it("is not challenged when the datacenter rule challenges", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					datacenterName: "iCloud Private Relay",
+				}),
+				{
+					datacenter: {
+						action: TrafficFilterAction.Challenge,
+						captchaType: CaptchaType.image,
+					},
+				},
+			);
+			expect(result.matches).toEqual([]);
+		});
+
+		it("is blocked when the operator names it in the denylist", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					datacenterName: "iCloud Private Relay",
+				}),
+				{ ...allBlocked, datacenterNameDenylist: ["icloud private relay"] },
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.DATACENTER_BLOCKED",
+			});
+		});
+
+		it.each([
+			["every category blocked", allBlocked],
+			["only the submit-time default abuser rule", { abuser: block }],
+		])("is not checked against the abuser rule (%s)", (_, filter) => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					isAbuser: true,
+					abuserScore: 0.003,
+					datacenterName: "iCloud Private Relay",
+				}),
+				{ ...filter, abuserScoreThreshold: 0 },
+			);
+			expect(result).toEqual({ isBlocked: false, matches: [] });
+		});
+
+		it("does not let a relay name on an IP without the datacenter flag skip the abuser rule", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isAbuser: true,
+					abuserScore: 1,
+					providerName: "iCloud Private Relay",
+				}),
+				allBlocked,
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.ABUSER_BLOCKED",
+			});
+		});
+
+		it("is still blocked by a higher-precedence VPN flag", () => {
+			const result = checkTrafficFilter(
+				baseInfo({
+					isDatacenter: true,
+					isVPN: true,
+					datacenterName: "iCloud Private Relay",
+				}),
+				allBlocked,
+			);
+			expect(result).toMatchObject({
+				isBlocked: true,
+				reason: "API.VPN_BLOCKED",
+			});
 		});
 	});
 
@@ -1210,5 +1303,70 @@ describe("resolveChallengePolicy", () => {
 		]);
 		expect(resolved?.captchaType).toBeUndefined();
 		expect(resolved?.powDifficulty).toBe(7);
+	});
+});
+
+describe("resolvePadBytes", () => {
+	const match = (
+		category: TrafficFilterMatch["category"],
+		policy: TrafficFilterMatch["policy"],
+	): TrafficFilterMatch => ({ category, policy });
+
+	it("is undefined when nothing matched, or when no matched policy sets it", () => {
+		expect(resolvePadBytes([])).toBeUndefined();
+		expect(
+			resolvePadBytes([
+				match("vpn", {
+					action: TrafficFilterAction.Challenge,
+					powDifficulty: 9,
+				}),
+			]),
+		).toBeUndefined();
+	});
+
+	it("reads padBytes off a challenge policy", () => {
+		expect(
+			resolvePadBytes([
+				match("proxy", {
+					action: TrafficFilterAction.Challenge,
+					padBytes: 4096,
+				}),
+			]),
+		).toBe(4096);
+	});
+
+	it("reads padBytes off a blocked policy too", () => {
+		// A blocked category is still handed a deferred challenge at request
+		// time, so padding it burns the caller's bandwidth on the way to the
+		// verify-time rejection. Ignoring block here would make the setting
+		// do nothing for the categories operators most want to tarpit.
+		expect(
+			resolvePadBytes([
+				match("proxy", { action: TrafficFilterAction.Block, padBytes: 65536 }),
+			]),
+		).toBe(65536);
+	});
+
+	it("takes the largest padBytes when several categories match", () => {
+		// Several matches only arise from the DNS extras, where the resolver
+		// and DNS peer are evaluated alongside the connection IP.
+		expect(
+			resolvePadBytes([
+				match("proxy", { action: TrafficFilterAction.Block, padBytes: 1024 }),
+				match("datacenter", {
+					action: TrafficFilterAction.Challenge,
+					padBytes: 8192,
+				}),
+				match("abuser", { action: TrafficFilterAction.Block }),
+			]),
+		).toBe(8192);
+	});
+
+	it("treats an explicit zero as configured, not absent", () => {
+		expect(
+			resolvePadBytes([
+				match("proxy", { action: TrafficFilterAction.Block, padBytes: 0 }),
+			]),
+		).toBe(0);
 	});
 });

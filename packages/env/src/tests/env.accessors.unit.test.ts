@@ -193,7 +193,7 @@ describe("Environment accessors", () => {
 		env.pair = undefined;
 
 		await expect(env.getSigner()).rejects.toMatchObject({
-			translationKey: "CONTRACT.SIGNER_UNDEFINED",
+			errorId: "CONFIG_INVALID:ENV-1",
 		});
 	});
 
@@ -204,7 +204,7 @@ describe("Environment accessors", () => {
 		});
 
 		await expect(env.getSigner()).rejects.toMatchObject({
-			translationKey: "CONTRACT.SIGNER_UNDEFINED",
+			errorId: "CONFIG_INVALID:ENV-2",
 		});
 	});
 
@@ -256,7 +256,7 @@ describe("Environment.importDatabase", () => {
 		});
 
 		await expect(buildEnv().importDatabase()).rejects.toMatchObject({
-			translationKey: "DATABASE.DATABASE_IMPORT_FAILED",
+			errorId: "DB_QUERY_FAILED:ENV-7",
 		});
 	});
 
@@ -387,7 +387,7 @@ describe("Environment.isReady", () => {
 		mockIpInfoInit.mockRejectedValue(new Error("maxmind missing"));
 
 		await expect(buildEnv().isReady()).rejects.toMatchObject({
-			translationKey: "GENERAL.ENVIRONMENT_NOT_READY",
+			errorId: "SERVICE_NOT_READY:ENV-6",
 		});
 	});
 

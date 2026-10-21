@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Couldnae encode address that's no valid",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha solution commitment disnae exist",
+		"SIGNER_UNDEFINED": "Signer no defined",
+		"CANNOT_FIND_KEYPAIR": "Cannae find keypair",
+		"INVALID_DATA_FORMAT": "Data format no valid"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Unkent environment askit for",
+		"INVALID_CAPTCHA_NUMBER": "Please set up the captchas configuration richt",
+		"INVALID_LOG_LEVEL": "Log level no valid",
+		"INVALID_PACKAGE_DIR": "Package directory no valid"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Error parsin dataset",
+		"SOLUTION_PARSE_ERROR": "Error processin dataset",
+		"HASH_ERROR": "Error hashin dataset",
+		"DATASET_ID_UNDEFINED": "Dataset ID no defined",
+		"NOT_ENOUGH_LABELS": "No eneuch labels",
+		"NOT_ENOUGH_IMAGES": "No eneuch picters",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Nummer o captchas in dataset is less nor the configured nummer",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Nummer o solutions in dataset is less nor the configured nummer",
+		"DUPLICATE_IMAGE": "Dooble picter fund",
+		"MERKLE_ERROR": "Error biggin Merkle tree"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Couldnae import database engine",
+		"DATABASE_UNDEFINED": "Database client no connectit",
+		"DATABASE_HOST_UNDEFINED": "Database host address no defined",
+		"DATASET_LOAD_FAILED": "Dataset lade failt",
+		"DATASET_GET_FAILED": "Couldnae get dataset",
+		"CAPTCHA_GET_FAILED": "Couldnae get captchas",
+		"CAPTCHA_UPDATE_FAILED": "Couldnae update captchas",
+		"IMAGE_GET_FAILED": "Couldnae get picter",
+		"PENDING_RECORD_NOT_FOUND": "Nae pending records fund",
+		"INVALID_HASH": "Hash no valid",
+		"SOLUTION_GET_FAILED": "Couldnae get solution",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nae datasets fund wi the needit nummer o solutions",
+		"SOLUTION_APPROVE_FAILED": "Couldnae approve solution",
+		"SOLUTION_FLAG_FAILED": "Couldnae flag solution as processed",
+		"TABLES_UNDEFINED": "Tables no defined",
+		"CONNECTION_UNDEFINED": "Connection no defined",
+		"COMMITMENT_FLAG_FAILED": "Couldnae flag commitment as processed",
+		"UNKNOWN": "Unkent database error",
+		"QUERY_ERROR": "Database query failt",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Access rules Redis connection no defined",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Uiser access rules store no defined",
+		"SESSION_STORE_FAILED": "Couldnae store session",
+		"SESSION_CHECK_REMOVE_FAILED": "Couldnae check an remove session",
+		"SESSION_GET_FAILED": "Couldnae get session"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Cannae chynge the awner uiser",
+		"CANNOT_DELETE_OWN_USER": "Cannae delete yer ain accoont",
+		"CANNOT_DELETE_LAST_USER": "Cannae delete the last uiser",
+		"USER_ALREADY_EXISTS": "Uiser awready exists",
+		"NO_SUGGESTIONS_FOUND": "Nae suggestions fund",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Cannae deactivate the last active site",
+		"DUPLICATE_SITE_NAME": "A site wi this name awready exists",
+		"INVALID_SITE_NAME": "Site name can anely hae letters, nummers, unnerscores an hyphens"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Parameter no valid"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "File no fund",
+		"FILE_ALREADY_EXISTS": "File awready exists",
+		"INVALID_DIR_FORMAT": "Directory format no valid"
+	}
+}

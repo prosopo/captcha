@@ -19,6 +19,7 @@ import {
 	FrictionlessPenalties,
 	type KeyringPair,
 	type ProsopoConfigOutput,
+	type Session,
 	SessionSchema,
 	imageMaxRoundsDefault,
 } from "@prosopo/types";
@@ -27,7 +28,7 @@ import {
 	type AccessPolicy,
 	AccessPolicyType,
 } from "@prosopo/user-access-policy";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import { getCompositeIpAddress } from "../../../../compositeIpAddress.js";
 import { FrictionlessManager } from "../../../../tasks/frictionless/frictionlessTasks.js";
 
@@ -40,6 +41,7 @@ describe("Frictionless Task Manager", () => {
 	beforeEach(() => {
 		db = {
 			storeSessionRecord: vi.fn(),
+			claimSessionServerCheck: vi.fn().mockResolvedValue(true),
 		} as unknown as IProviderDatabase;
 
 		pair = {
@@ -486,6 +488,40 @@ describe("Frictionless Task Manager", () => {
 			expect(response).toHaveProperty("status", "ok");
 		});
 
+		it("offers the audio alternative only on a visual challenge of an opted-in site", async () => {
+			vi.mocked(db.storeSessionRecord).mockResolvedValue(undefined);
+			const sessionParams = {
+				token: "mockToken123",
+				score: 0.5,
+				threshold: 0.7,
+				scoreComponents: { baseScore: 0.5 },
+				ipAddress: getCompositeIpAddress("127.0.0.1"),
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				siteKey: "mockSiteKey",
+			};
+
+			frictionlessTaskManager.setSessionParams(sessionParams);
+			frictionlessTaskManager.setAudioAlternativeEnabled(true);
+			const image = await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+			frictionlessTaskManager.setSessionParams(sessionParams);
+			const pow = await frictionlessTaskManager.sendPowCaptcha({
+				powDifficulty: undefined,
+			});
+			frictionlessTaskManager.setSessionParams(sessionParams);
+			frictionlessTaskManager.setAudioAlternativeEnabled(false);
+			const imageOff = await frictionlessTaskManager.sendImageCaptcha({
+				solvedImagesCount: 0,
+			});
+
+			expect(image).toHaveProperty("audioAlternativeAvailable", true);
+			expect(pow).not.toHaveProperty("audioAlternativeAvailable");
+			expect(imageOff).not.toHaveProperty("audioAlternativeAvailable");
+		});
+
 		it("should throw when sendPuzzleCaptcha is called without session params", async () => {
 			await expect(frictionlessTaskManager.sendPuzzleCaptcha()).rejects.toThrow(
 				/Session parameters must be set/,
@@ -512,10 +548,6 @@ describe("Frictionless Task Manager", () => {
 				getCachedSession: vi.fn().mockResolvedValue(null),
 				getCachedSessionByHash: vi.fn().mockResolvedValue(null),
 				invalidateCachedSession: vi.fn().mockResolvedValue(undefined),
-				queueSessionRecord: vi.fn().mockResolvedValue(true),
-				drainSessionRecords: vi.fn().mockResolvedValue([]),
-				startPeriodicFlush: vi.fn(),
-				stopPeriodicFlush: vi.fn(),
 				isReady: vi.fn().mockReturnValue(true),
 			};
 
@@ -555,10 +587,6 @@ describe("Frictionless Task Manager", () => {
 				getCachedSession: vi.fn().mockResolvedValue(null),
 				getCachedSessionByHash: vi.fn().mockResolvedValue(null),
 				invalidateCachedSession: vi.fn().mockResolvedValue(undefined),
-				queueSessionRecord: vi.fn().mockResolvedValue(true),
-				drainSessionRecords: vi.fn().mockResolvedValue([]),
-				startPeriodicFlush: vi.fn(),
-				stopPeriodicFlush: vi.fn(),
 				isReady: vi.fn().mockReturnValue(true),
 			};
 
@@ -611,6 +639,146 @@ describe("Frictionless Task Manager", () => {
 
 			expect(response).toHaveProperty("captchaType", CaptchaType.pow);
 			expect(db.storeSessionRecord).toHaveBeenCalledOnce();
+		});
+	});
+
+	describe("verifyAuthenticatedSession", () => {
+		const SESSION_ID = "authenticated-session";
+		const SESSION_IP = "203.0.113.7";
+
+		const authenticatedSession = (overrides: Partial<Session> = {}): Session =>
+			SessionSchema.parse({
+				sessionId: SESSION_ID,
+				createdAt: new Date(),
+				token: "token",
+				score: 0,
+				threshold: 0.5,
+				scoreComponents: { baseScore: 0 },
+				ipAddress: getCompositeIpAddress(SESSION_IP),
+				captchaType: CaptchaType.authenticated,
+				webView: false,
+				iFrame: false,
+				decryptedHeadHash: "",
+				headers: {},
+				...overrides,
+			});
+
+		let getSession: Mock<IProviderDatabase["getSessionRecordBySessionId"]>;
+		let updateSession: Mock<IProviderDatabase["updateSessionRecord"]>;
+
+		const withSession = (session: Session | undefined): void => {
+			getSession.mockResolvedValue(session);
+		};
+
+		beforeEach(() => {
+			getSession = vi.fn<IProviderDatabase["getSessionRecordBySessionId"]>();
+			updateSession = vi
+				.fn<IProviderDatabase["updateSessionRecord"]>()
+				.mockResolvedValue(undefined);
+			db.getSessionRecordBySessionId = getSession;
+			db.updateSessionRecord = updateSession;
+		});
+
+		it("verifies once and marks the session server-checked", async () => {
+			withSession(authenticatedSession());
+			const result = await frictionlessTaskManager.verifyAuthenticatedSession(
+				SESSION_ID,
+				SESSION_IP,
+				undefined,
+			);
+			expect(result).toEqual({ verified: true, status: "API.USER_VERIFIED" });
+			expect(db.claimSessionServerCheck).toHaveBeenCalledWith(SESSION_ID);
+		});
+
+		it("requires the operator to forward the user's IP", async () => {
+			withSession(authenticatedSession());
+			const result = await frictionlessTaskManager.verifyAuthenticatedSession(
+				SESSION_ID,
+				undefined,
+				undefined,
+			);
+			expect(result).toEqual({
+				verified: false,
+				status: "API.AUTHENTICATED_IP_REQUIRED",
+			});
+			expect(getSession).not.toHaveBeenCalled();
+		});
+
+		it.each<[string, Session | undefined, string, string | undefined, string]>([
+			[
+				"an unknown session",
+				undefined,
+				SESSION_IP,
+				undefined,
+				"API.USER_NOT_VERIFIED_NO_SOLUTION",
+			],
+			[
+				"a session minted for another captcha type",
+				authenticatedSession({ captchaType: CaptchaType.pow }),
+				SESSION_IP,
+				undefined,
+				"API.INCORRECT_CAPTCHA_TYPE",
+			],
+			[
+				"a replayed token",
+				authenticatedSession({ serverChecked: true }),
+				SESSION_IP,
+				undefined,
+				"API.USER_ALREADY_VERIFIED",
+			],
+			[
+				"a token presented from another IP",
+				authenticatedSession(),
+				"198.51.100.1",
+				undefined,
+				"API.AUTHENTICATED_IP_MISMATCH",
+			],
+			[
+				"a token from another client session",
+				authenticatedSession({
+					clientMetaData: { clientSessionId: "recorded" },
+				}),
+				SESSION_IP,
+				"expected",
+				"API.CLIENT_SESSION_MISMATCH",
+			],
+			[
+				"a site expecting correlation when none was recorded",
+				authenticatedSession(),
+				SESSION_IP,
+				"expected",
+				"API.CLIENT_SESSION_MISMATCH",
+			],
+		])(
+			"rejects %s without marking it checked",
+			async (
+				_name: string,
+				session: Session | undefined,
+				ip: string,
+				clientSessionId: string | undefined,
+				status: string,
+			) => {
+				withSession(session);
+				const result = await frictionlessTaskManager.verifyAuthenticatedSession(
+					SESSION_ID,
+					ip,
+					clientSessionId,
+				);
+				expect(result).toEqual({ verified: false, status });
+				expect(updateSession).not.toHaveBeenCalled();
+			},
+		);
+
+		it("accepts a matching client session", async () => {
+			withSession(
+				authenticatedSession({ clientMetaData: { clientSessionId: "abc" } }),
+			);
+			const result = await frictionlessTaskManager.verifyAuthenticatedSession(
+				SESSION_ID,
+				SESSION_IP,
+				"abc",
+			);
+			expect(result.verified).toBe(true);
 		});
 	});
 });

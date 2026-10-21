@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Չհաջողվեց կոդավորել անվավեր հասցեն",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha-ի լուծման պարտավորությունը գոյություն չունի",
+		"SIGNER_UNDEFINED": "Ստորագրողը սահմանված չէ",
+		"CANNOT_FIND_KEYPAIR": "Չի գտնվում բանալիների զույգը",
+		"INVALID_DATA_FORMAT": "Տվյալների անվավեր ձևաչափ"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Պահանջվել է անհայտ միջավայր",
+		"INVALID_CAPTCHA_NUMBER": "Ճիշտ կարգավորեք captcha-ների կազմաձևումները",
+		"INVALID_LOG_LEVEL": "Մատյանի անվավեր մակարդակ",
+		"INVALID_PACKAGE_DIR": "Փաթեթի անվավեր թղթապանակ"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Սխալ տվյալների հավաքածուն վերլուծելիս",
+		"SOLUTION_PARSE_ERROR": "Սխալ տվյալների հավաքածուն վերլուծելիս",
+		"HASH_ERROR": "Սխալ տվյալների հավաքածուի հեշը հաշվելիս",
+		"DATASET_ID_UNDEFINED": "Տվյալների հավաքածուի ID-ն սահմանված չէ",
+		"NOT_ENOUGH_LABELS": "Պիտակները բավարար չեն",
+		"NOT_ENOUGH_IMAGES": "Պատկերները բավարար չեն",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Տվյալների հավաքածուում captcha-ների քանակը փոքր է կազմաձևված քանակից",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Տվյալների հավաքածուում լուծումների քանակը փոքր է կազմաձևված քանակից",
+		"DUPLICATE_IMAGE": "հայտնաբերվել է կրկնվող պատկեր",
+		"MERKLE_ERROR": "Սխալ Մերքլի ծառը ստեղծելիս"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Չհաջողվեց ներմուծել տվյալների բազայի շարժիչը",
+		"DATABASE_UNDEFINED": "Տվյալների բազայի կլիենտը միացված չէ",
+		"DATABASE_HOST_UNDEFINED": "Տվյալների բազայի հոսթի հասցեն սահմանված չէ",
+		"DATASET_LOAD_FAILED": "Տվյալների հավաքածուի բեռնումը ձախողվեց",
+		"DATASET_GET_FAILED": "Չհաջողվեց ստանալ տվյալների հավաքածուն",
+		"CAPTCHA_GET_FAILED": "Չհաջողվեց ստանալ captcha-ն",
+		"CAPTCHA_UPDATE_FAILED": "Չհաջողվեց թարմացնել captcha-ն",
+		"IMAGE_GET_FAILED": "Չհաջողվեց ստանալ պատկերը",
+		"PENDING_RECORD_NOT_FOUND": "Սպասող գրառում չի գտնվել",
+		"INVALID_HASH": "Անվավեր հեշ",
+		"SOLUTION_GET_FAILED": "Չհաջողվեց ստանալ լուծումը",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Պահանջվող քանակով լուծումներով տվյալների հավաքածուներ չեն գտնվել",
+		"SOLUTION_APPROVE_FAILED": "Չհաջողվեց հաստատել լուծումը",
+		"SOLUTION_FLAG_FAILED": "Չհաջողվեց լուծումը նշել որպես մշակված",
+		"TABLES_UNDEFINED": "Աղյուսակները սահմանված չեն",
+		"CONNECTION_UNDEFINED": "Կապը սահմանված չէ",
+		"COMMITMENT_FLAG_FAILED": "Չհաջողվեց պարտավորությունը նշել որպես մշակված",
+		"UNKNOWN": "Տվյալների բազայի անհայտ սխալ",
+		"QUERY_ERROR": "Տվյալների բազայի հարցումը ձախողվեց",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis-ի մուտքի կանոնների կապը սահմանված չէ",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Օգտատերերի մուտքի կանոնների պահոցը սահմանված չէ",
+		"SESSION_STORE_FAILED": "Չհաջողվեց պահպանել աշխատաշրջանը",
+		"SESSION_CHECK_REMOVE_FAILED": "Չհաջողվեց ստուգել և հեռացնել աշխատաշրջանը",
+		"SESSION_GET_FAILED": "Չհաջողվեց ստանալ աշխատաշրջանը"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Հնարավոր չէ փոփոխել սեփականատեր օգտատիրոջը",
+		"CANNOT_DELETE_OWN_USER": "Հնարավոր չէ ջնջել ձեր սեփական հաշիվը",
+		"CANNOT_DELETE_LAST_USER": "Հնարավոր չէ ջնջել վերջին օգտատիրոջը",
+		"USER_ALREADY_EXISTS": "Օգտատերն արդեն գոյություն ունի",
+		"NO_SUGGESTIONS_FOUND": "Առաջարկներ չեն գտնվել",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Հնարավոր չէ ապաակտիվացնել վերջին ակտիվ կայքը",
+		"DUPLICATE_SITE_NAME": "Այս անունով կայք արդեն գոյություն ունի",
+		"INVALID_SITE_NAME": "Կայքի անունը կարող է պարունակել միայն տառեր, թվեր, գծիկներ և ընդգծման նշաններ"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Անվավեր պարամետր"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Ֆայլը չի գտնվել",
+		"FILE_ALREADY_EXISTS": "Ֆայլն արդեն գոյություն ունի",
+		"INVALID_DIR_FORMAT": "Թղթապանակի անվավեր ձևաչափ"
+	}
+}

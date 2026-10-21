@@ -19,10 +19,10 @@ let i18nInstance: Ti18n;
 /**
  * How long to wait for i18next to report `loaded` before giving up on it.
  *
- * Resolution is driven by an event, and events are not guaranteed: a backend
- * that never answers (http backend against a dead CDN, fs backend against a
- * missing locales dir) leaves the listener armed and the promise pending for
- * the lifetime of the process. `cli.ts` calls loadI18next(true).then(...) with
+ * Resolution is driven by an event, and events are not guaranteed: a catalogue
+ * that never arrives (the widget's fetch against a dead CDN, the fs backend
+ * against a missing locales dir) leaves the listener armed and the promise
+ * pending for the lifetime of the process. `cli.ts` calls loadI18next(true).then(...) with
  * nothing to time it out, so a pending promise there is a silent boot hang with
  * no log line to explain it.
  */
@@ -97,8 +97,8 @@ async function loadI18next(backend: boolean, lng?: string): Promise<Ti18n> {
 			import("./i18nBackend.js")
 				.then(({ default: initializeI18n }) => {
 					if (!i18nInstance) {
-						// pass the resolver into the i18n init fn, which fires it on the first
-						// "loaded" event
+						// pass the resolver into the i18n init fn, which fires it once
+						// every namespace has been read
 						i18nInstance = initializeI18n(done);
 					} else {
 						// we've already initialised i18n so just return it
