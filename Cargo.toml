@@ -13,6 +13,7 @@ members = [
 	"packages/dotenv",
 	"packages/redis-client",
 	"packages/common",
+	"packages/types",
 	"packages/locale",
 ]
 exclude = [
