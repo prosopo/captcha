@@ -29,6 +29,7 @@ use crate::operation::{Executor, Operation, Reply, ReplyFuture};
 use crate::provider::ProviderDatabase;
 use crate::records::{CompositeIpAddress, IpHalf, StoredResult, UserCommitment};
 use crate::captcha::{CaptchaBatch, CaptchaDatabase, CaptchaRecords};
+use crate::client::ClientDatabase;
 use crate::clients::{ClientRecord, DecisionMachineArtifact, SpamEmailDomainUpdate};
 use crate::streamer::CentralDbStreamer;
 use crate::session::{DnsObservation, Session};
@@ -109,28 +110,46 @@ struct ReplayExecutor {
     expected: Mutex<VecDeque<Recorded>>,
     mismatches: Mutex<Vec<String>>,
     unordered: bool,
-    /// The central database's index creation, which mongoose runs alongside the writes and so
-    /// lands in whichever scenario is running: answered, and kept to compare as a set.
+    /// The index creation of the databases mongoose indexes alongside their reads and writes,
+    /// which lands in whichever scenario is running: answered, and kept to compare as a set.
     indexes: Option<Mutex<Vec<String>>>,
 }
 
-/// Whether a recorded command went to the central database.
-fn is_central(command: &Value) -> bool {
-    command["central"].as_bool().unwrap_or(false)
+/// The databases a scenario's commands go to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Target {
+    Provider,
+    Central,
+    Client,
 }
 
-/// A command whose place in the recording is a matter of timing: the central index creation.
+impl Target {
+    const ALL: [Target; 3] = [Target::Provider, Target::Central, Target::Client];
+
+    fn of(command: &Value) -> Target {
+        if command["central"].as_bool().unwrap_or(false) {
+            Target::Central
+        } else if command["client"].as_bool().unwrap_or(false) {
+            Target::Client
+        } else {
+            Target::Provider
+        }
+    }
+}
+
+/// A command whose place in the recording is a matter of timing: the index creation mongoose
+/// runs on the central and client databases alongside their reads and writes.
 fn is_timed(command: &Value) -> bool {
-    is_central(command) && command["name"] == "createIndexes"
+    Target::of(command) != Target::Provider && command["name"] == "createIndexes"
 }
 
 impl ReplayExecutor {
-    fn new(scenario: &Value, central: bool) -> ReplayExecutor {
+    fn new(scenario: &Value, target: Target) -> ReplayExecutor {
         let expected: VecDeque<Recorded> = scenario["commands"]
             .as_array()
             .expect("commands")
             .iter()
-            .filter(|command| is_central(command) == central && !is_timed(command))
+            .filter(|command| Target::of(command) == target && !is_timed(command))
             .map(|command| Recorded {
                 command: from_hex(command["hex"].as_str().expect("hex")),
                 reply: command["reply"]["hex"].as_str().map(from_hex).unwrap_or_default(),
@@ -140,7 +159,7 @@ impl ReplayExecutor {
             expected: Mutex::new(expected),
             mismatches: Mutex::new(Vec::new()),
             unordered: scenario["unordered"].as_bool().unwrap_or(false),
-            indexes: central.then(|| Mutex::new(Vec::new())),
+            indexes: (target != Target::Provider).then(|| Mutex::new(Vec::new())),
         }
     }
 
@@ -934,10 +953,12 @@ struct Databases {
     provider: ProviderDatabase,
     central: Arc<CaptchaDatabase>,
     streamer: Arc<CentralDbStreamer>,
+    client: ClientDatabase,
 }
 
 impl Databases {
-    fn new(local: Arc<dyn Executor>, central: Arc<dyn Executor>, source: Arc<ReplaySource>) -> Databases {
+    fn new(executors: [Arc<dyn Executor>; 3], source: Arc<ReplaySource>) -> Databases {
+        let [local, central, client] = executors;
         let provider: ProviderDatabase = ProviderDatabase::new(local, source.clone(), get_logger(LogLevel::Error, "test"));
         let central_db = || CaptchaDatabase::with_executor(central.clone(), source.clone(), get_logger(LogLevel::Error, "test"));
         let streamer: Arc<CentralDbStreamer> = Arc::new(CentralDbStreamer::new(central_db(), get_logger(LogLevel::Error, "test")));
@@ -945,6 +966,7 @@ impl Databases {
             provider,
             central: Arc::new(central_db()),
             streamer,
+            client: ClientDatabase::with_executor(client, source.clone(), get_logger(LogLevel::Error, "test")),
         }
     }
 
@@ -952,6 +974,10 @@ impl Databases {
     async fn run(&self, scenario: &Value, live: bool) -> Option<String> {
         match scenario["group"].as_str() {
             Some("central") => run_central_scenario(&self.central, scenario, live).await,
+            Some("client") => {
+                let since: f64 = bson_f64(&bson_args(scenario)[0]);
+                check(scenario, self.client.get_updated_clients(since).await)
+            }
             Some("streaming") => {
                 self.provider.set_central_db_streamer(self.streamer.clone());
                 let outcome: Option<String> = run_scenario(&self.provider, scenario, live).await;
@@ -983,23 +1009,24 @@ async fn methods_send_the_commands_the_ts_sends_and_return_what_it_returns() {
     let scenarios: &Vec<Value> = methods["scenarios"].as_array().expect("scenarios");
     let mut central_indexes: Vec<String> = Vec::new();
     for scenario in scenarios.iter().filter(|scenario| scenario["method"] != "__setup") {
-        let local: Arc<ReplayExecutor> = Arc::new(ReplayExecutor::new(scenario, false));
-        let central: Arc<ReplayExecutor> = Arc::new(ReplayExecutor::new(scenario, true));
+        let executors: [Arc<ReplayExecutor>; 3] = Target::ALL.map(|target| Arc::new(ReplayExecutor::new(scenario, target)));
         let source: Arc<ReplaySource> = Arc::new(ReplaySource::new(now, scenario));
-        let databases: Databases = Databases::new(local.clone(), central.clone(), source.clone());
+        let databases: Databases = Databases::new(executors.clone().map(|executor| executor as Arc<dyn Executor>), source.clone());
         let name: &str = scenario["name"].as_str().expect("name");
         if let Some(problem) = databases.run(scenario, false).await {
             failures.push(format!("{name}: {problem}"));
         }
-        for (label, executor) in [("", &local), ("central: ", &central)] {
+        for (target, executor) in Target::ALL.iter().zip(executors.iter()) {
             for mismatch in executor.mismatches.lock().expect("lock").iter() {
-                failures.push(format!("{name}: {label}{mismatch}"));
+                failures.push(format!("{name}: {target:?}: {mismatch}"));
             }
             if executor.left_over() > 0 {
-                failures.push(format!("{name}: {label}the TS sent {} more commands", executor.left_over()));
+                failures.push(format!("{name}: {target:?}: the TS sent {} more commands", executor.left_over()));
+            }
+            if let Some(indexes) = &executor.indexes {
+                central_indexes.extend(indexes.lock().expect("lock").iter().cloned());
             }
         }
-        central_indexes.extend(central.indexes.as_ref().expect("central").lock().expect("lock").iter().cloned());
         let unused: usize = source.random.lock().expect("lock").len();
         if unused > 0 {
             failures.push(format!("{name}: the TS drew {unused} more random numbers"));
@@ -1009,7 +1036,7 @@ async fn methods_send_the_commands_the_ts_sends_and_return_what_it_returns() {
     central_indexes.dedup();
     if central_indexes != central_indexes_of_the_ts(scenarios) {
         failures.push(format!(
-            "the central indexes differ: rust created {}, the ts {}",
+            "the central and client indexes differ: rust created {}, the ts {}",
             central_indexes.len(),
             central_indexes_of_the_ts(scenarios).len()
         ));
@@ -1046,13 +1073,14 @@ async fn methods_do_on_a_real_database_what_the_ts_did() {
     use crate::mongo::{MongoConnectionTimeouts, MongoDatabase};
     let url: String = std::env::var("PROSOPO_TEST_MONGO_URL").expect("PROSOPO_TEST_MONGO_URL");
     let open = |name: &str| MongoDatabase::new(&url, Some(name), None, None, MongoConnectionTimeouts::default()).expect("a valid URL");
-    let (mongo, central_mongo): (MongoDatabase, MongoDatabase) = (open("prosopo-test-database-methods"), open("prosopo-test-database-central"));
-    mongo.connect().await.expect("connects");
-    central_mongo.connect().await.expect("connects");
-    let database = mongo.database().await.expect("open");
-    let central_database = central_mongo.database().await.expect("open");
-    database.drop().await.expect("drops");
-    central_database.drop().await.expect("drops");
+    let mongos: [MongoDatabase; 3] = ["methods", "central", "client"].map(|name| open(&format!("prosopo-test-database-{name}")));
+    let mut databases_of: Vec<mongodb::Database> = Vec::new();
+    for mongo in &mongos {
+        mongo.connect().await.expect("connects");
+        let database: mongodb::Database = mongo.database().await.expect("open");
+        database.drop().await.expect("drops");
+        databases_of.push(database);
+    }
     let methods: Value = methods();
     let now: DateTime = DateTime::from_millis(methods["nowMs"].as_i64().expect("nowMs"));
     let mut failures: Vec<String> = Vec::new();
@@ -1060,20 +1088,23 @@ async fn methods_do_on_a_real_database_what_the_ts_did() {
         let name: &str = scenario["name"].as_str().expect("name");
         if scenario["method"] == "__setup" {
             for command in scenario["commands"].as_array().expect("commands") {
-                let target = if is_central(command) { &central_database } else { &database };
-                target.run_command(from_hex(command["hex"].as_str().expect("hex"))).await.expect("setup runs");
+                let target: usize = Target::ALL.iter().position(|target| *target == Target::of(command)).expect("a target");
+                databases_of[target].run_command(from_hex(command["hex"].as_str().expect("hex"))).await.expect("setup runs");
             }
             continue;
         }
-        let recording = |on: &mongodb::Database| {
-            Arc::new(RecordingExecutor {
-                inner: crate::operation::DriverExecutor::new(on.clone()),
-                sent: Mutex::new(Vec::new()),
+        let recording: Vec<Arc<RecordingExecutor>> = databases_of
+            .iter()
+            .map(|on| {
+                Arc::new(RecordingExecutor {
+                    inner: crate::operation::DriverExecutor::new(on.clone()),
+                    sent: Mutex::new(Vec::new()),
+                })
             })
-        };
-        let (local, central): (Arc<RecordingExecutor>, Arc<RecordingExecutor>) = (recording(&database), recording(&central_database));
+            .collect();
         let source: Arc<ReplaySource> = Arc::new(ReplaySource::new(now, scenario));
-        let databases: Databases = Databases::new(local.clone(), central.clone(), source);
+        let executors: [Arc<dyn Executor>; 3] = [0, 1, 2].map(|index| recording[index].clone() as Arc<dyn Executor>);
+        let databases: Databases = Databases::new(executors, source);
         let sampled: bool = sampled(scenario);
         if let Some(problem) = databases.run(scenario, true).await {
             let same_outcome: bool = !problem.starts_with("rust failed") && !problem.starts_with("rust returned");
@@ -1081,20 +1112,20 @@ async fn methods_do_on_a_real_database_what_the_ts_did() {
                 failures.push(format!("{name}: {problem}"));
             }
         }
-        for (to_central, executor) in [(false, &local), (true, &central)] {
+        for (target, executor) in Target::ALL.iter().zip(recording.iter()) {
             let mut sent_hex: Vec<String> = executor
                 .sent
                 .lock()
                 .expect("lock")
                 .iter()
-                .filter(|command| !(to_central && command.contains_key("createIndexes")))
+                .filter(|command| !(*target != Target::Provider && command.contains_key("createIndexes")))
                 .map(|command| to_hex(&normalise(command)))
                 .collect();
             let mut expected_hex: Vec<String> = scenario["commands"]
                 .as_array()
                 .expect("commands")
                 .iter()
-                .filter(|command| is_central(command) == to_central && !is_timed(command))
+                .filter(|command| Target::of(command) == *target && !is_timed(command))
                 .map(|command| to_hex(&normalise(&from_hex(command["hex"].as_str().expect("hex")))))
                 .collect();
             if scenario["unordered"].as_bool().unwrap_or(false) {
@@ -1102,14 +1133,13 @@ async fn methods_do_on_a_real_database_what_the_ts_did() {
                 expected_hex.sort();
             }
             if sent_hex != expected_hex {
-                let label: &str = if to_central { "central" } else { "provider" };
-                failures.push(format!("{name}: sent {} {label} commands that differ from the TS's {}", sent_hex.len(), expected_hex.len()));
+                failures.push(format!("{name}: sent {} {target:?} commands that differ from the TS's {}", sent_hex.len(), expected_hex.len()));
             }
         }
     }
-    database.drop().await.expect("drops");
-    central_database.drop().await.expect("drops");
-    mongo.close().await;
-    central_mongo.close().await;
+    for (mongo, database) in mongos.iter().zip(databases_of.iter()) {
+        database.drop().await.expect("drops");
+        mongo.close().await;
+    }
     assert!(failures.is_empty(), "{} problems:\n{}", failures.len(), failures.join("\n"));
 }

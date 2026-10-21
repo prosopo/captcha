@@ -72,13 +72,14 @@ const resetIds = (): void => {
 // Every connection a database opens reports the commands it sends, those to the central
 // database marked as such.
 const CENTRAL_DB_NAME = "prosopo-equivalence-database-central";
+const CLIENT_DB_NAME = "prosopo-equivalence-database-client";
 const createConnection = mongoose.createConnection.bind(mongoose);
 (mongoose as unknown as { createConnection: unknown }).createConnection = (
 	uri: string,
 	options: mongoose.ConnectOptions,
 ): mongoose.Connection => {
 	const opened: mongoose.Connection = createConnection(uri, { ...options, monitorCommands: true });
-	monitor(opened.getClient(), options.dbName === CENTRAL_DB_NAME);
+	monitor(opened.getClient(), options.dbName === CENTRAL_DB_NAME ? "central" : options.dbName === CLIENT_DB_NAME ? "client" : "provider");
 	return opened;
 };
 
@@ -88,6 +89,7 @@ const { getLogger } = await import("@prosopo/logger");
 const { ClientSettingsSchema } = await import("@prosopo/types");
 const { CaptchaDatabase } = await import("../../src/databases/captcha.js");
 const { CentralDbStreamer } = await import("../../src/databases/centralDbStreamer.js");
+const { ClientDatabase } = await import("../../src/databases/client.js");
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 const toJson = (value: unknown): Json => JSON.parse(EJSON.stringify(value, { relaxed: false })) as Json;
@@ -106,12 +108,12 @@ const RELEVANT: Record<string, string[]> = {
 	createIndexes: ["createIndexes", "indexes"],
 };
 
-type Command = { central?: true; name: string; hex: string; json: Json; reply?: { hex: string; json: Json } };
+type Command = { central?: true; client?: true; name: string; hex: string; json: Json; reply?: { hex: string; json: Json } };
 let commands: Command[] = [];
 const pending = new Map<number, Command>();
 // The parts of a reply the methods read: the documents a cursor returns, and the counts.
 const REPLY_FIELDS: string[] = ["cursor", "n", "nModified", "upserted", "value", "lastErrorObject", "writeErrors", "writeConcernError"];
-function monitor(client: mongoose.mongo.MongoClient, central: boolean): void {
+function monitor(client: mongoose.mongo.MongoClient, database: "provider" | "central" | "client"): void {
 	client.on("commandStarted", (event) => {
 		const fields: string[] | undefined = RELEVANT[event.commandName];
 		if (!fields) return;
@@ -123,7 +125,7 @@ function monitor(client: mongoose.mongo.MongoClient, central: boolean): void {
 			// As the driver serialises a command: an undefined value goes on the wire as null.
 			const bytes: Uint8Array = BSON.serialize(kept, { ignoreUndefined: false });
 			const command: Command = {
-				...(central ? { central: true } : {}),
+				...(database === "central" ? { central: true } : database === "client" ? { client: true } : {}),
 				name: event.commandName,
 				hex: Buffer.from(bytes).toString("hex"),
 				json: toJson(BSON.deserialize(bytes, { promoteValues: false })),
@@ -153,6 +155,7 @@ const connection = db.getConnection();
 
 await connection.db?.dropDatabase();
 await connection.getClient().db(CENTRAL_DB_NAME).dropDatabase();
+await connection.getClient().db(CLIENT_DB_NAME).dropDatabase();
 resetIds();
 
 let collectionNames: Record<string, string> = {};
@@ -660,6 +663,43 @@ await recordCentral("read the records", "getCaptchas", []);
 await recordCentral("read the records of a dapp, a page", "getCaptchas", [{ dappAccount: "dapp" }, 2]);
 await recordCentral("read with a filter that cannot cast", "getCaptchas", [{ requestedAtTimestamp: "not a date" }, 1]);
 
+// The portal's accounts, read for the sites that changed.
+const clients = new ClientDatabase(MONGO_URL, CLIENT_DB_NAME, undefined, silent);
+await clients.connect();
+const accountSettings = (domain: string) => ({ domains: [domain], powDifficulty: 4, captchaType: "pow", frictionlessThreshold: { image: 0.5, puzzle: 0.7 } });
+await setup("client", "accounts", () =>
+	clients.tables.accounts.insertMany([
+		{
+			signupEmail: "two@example.com",
+			tier: "professional",
+			users: [{ email: "two@example.com", status: "active" }],
+			sites: [
+				{ name: "a", siteKey: "siteKeyA", secretKey: "sa", settings: accountSettings("a.example.com"), createdAt: 1, updatedAt: 500, active: true },
+				{ name: "b", siteKey: "siteKeyB", secretKey: "sb", settings: accountSettings("b.example.com"), createdAt: 1, updatedAt: 100, active: true },
+				{ name: "never stamped", siteKey: "siteKeyC", secretKey: "sc", settings: accountSettings("c.example.com"), createdAt: 1, active: true },
+				{ name: "no key", secretKey: "sd", settings: accountSettings("d.example.com"), createdAt: 1, updatedAt: 900, active: true },
+				{ name: "no settings", siteKey: "siteKeyE", secretKey: "se", createdAt: 1, updatedAt: 900, active: true },
+			],
+		},
+		{
+			signupEmail: "inactive@example.com",
+			tier: "free",
+			users: [{ email: "inactive@example.com", status: "pending" }],
+			sites: [{ name: "x", siteKey: "siteKeyX", secretKey: "sx", settings: accountSettings("x.example.com"), createdAt: 1, updatedAt: 900, active: true }],
+		},
+		{ signupEmail: "nosites@example.com", tier: "enterprise", users: [{ email: "nosites@example.com", status: "active" }] },
+	]),
+);
+await clients.close();
+const recordClients = async (name: string, method: string, args: unknown[]): Promise<unknown> => {
+	const result: unknown = await recordOn(clients, 50, "client", name, method, args);
+	(scenarios[scenarios.length - 1] as Scenario).random = [];
+	return result;
+};
+await recordClients("sites changed since 0", "getUpdatedClients", [0]);
+await recordClients("sites changed since 200", "getUpdatedClients", [200]);
+await recordClients("sites changed since 1000", "getUpdatedClients", [1000]);
+
 // The streamer: each method's local write, then the record streamed to the central database and
 // the local record marked stored.
 db.setCentralDbStreamer(new CentralDbStreamer(`${MONGO_URL}/${CENTRAL_DB_NAME}`, silent));
@@ -687,6 +727,7 @@ await stream("patch a missing session and stream it", "updateSessionRecord", ["s
 
 await connection.db?.dropDatabase();
 await connection.getClient().db(CENTRAL_DB_NAME).dropDatabase();
+await connection.getClient().db(CLIENT_DB_NAME).dropDatabase();
 await db.close();
 
 writeFileSync(

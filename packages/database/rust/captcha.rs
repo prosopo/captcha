@@ -14,12 +14,13 @@
 
 //! The central database every provider sends its captcha records to (captcha.ts).
 
+use crate::connection::{raw_error, ManagedConnection, Target};
 use crate::mongo::MongoDatabase;
-use crate::operation::{DriverExecutor, Executor, Operation, Reply, UpdateStatement};
+use crate::operation::{Executor, Operation, Reply, UpdateStatement};
 use crate::provider::{collections, create_index_command, db_error};
 use crate::source::{Source, SourceIds};
 use bson::{doc, Document};
-use prosopo_common::{ErrorClass, ErrorContext, ErrorOptions, ErrorSource, ProsopoError};
+use prosopo_common::{ErrorContext, ProsopoError};
 use prosopo_logger::{LogRecord, Logger};
 use prosopo_types_database::captcha::{
     STORED_AUDIO_CAPTCHA_RECORD, STORED_ICON_ORDER_CAPTCHA_RECORD, STORED_POW_CAPTCHA_RECORD, STORED_PUZZLE_CAPTCHA_RECORD,
@@ -106,44 +107,29 @@ pub struct CaptchaRecords {
     pub icon_order_captcha_records: Vec<Document>,
 }
 
-enum Connection {
-    Mongo(MongoDatabase),
-    /// Already connected, as a test's executor is.
-    Fixed(Arc<dyn Executor>),
-}
-
 pub struct CaptchaDatabase {
-    connection: Connection,
-    open: AtomicBool,
+    connection: ManagedConnection,
     source: Arc<dyn Source>,
     logger: Logger,
     indexes_ensured: AtomicBool,
 }
 
-fn raw_error(error: impl std::fmt::Display) -> ProsopoError {
-    ProsopoError::new(
-        ErrorClass::Db,
-        ErrorSource::message(error.to_string()),
-        ErrorOptions {
-            silent: true,
-            ..ErrorOptions::default()
-        },
-    )
+fn central_tables() -> Vec<(&'static str, &'static Schema)> {
+    StoredKind::ALL.iter().map(|kind| (kind.collection(), kind.schema())).collect()
 }
 
 impl CaptchaDatabase {
     pub fn new(mongo: MongoDatabase, source: Arc<dyn Source>, logger: Logger) -> CaptchaDatabase {
-        CaptchaDatabase::with_connection(Connection::Mongo(mongo), source, logger)
+        CaptchaDatabase::with_target(Target::Mongo(mongo), source, logger)
     }
 
     pub fn with_executor(executor: Arc<dyn Executor>, source: Arc<dyn Source>, logger: Logger) -> CaptchaDatabase {
-        CaptchaDatabase::with_connection(Connection::Fixed(executor), source, logger)
+        CaptchaDatabase::with_target(Target::Fixed(executor), source, logger)
     }
 
-    fn with_connection(connection: Connection, source: Arc<dyn Source>, logger: Logger) -> CaptchaDatabase {
+    fn with_target(target: Target, source: Arc<dyn Source>, logger: Logger) -> CaptchaDatabase {
         CaptchaDatabase {
-            connection,
-            open: AtomicBool::new(false),
+            connection: ManagedConnection::new(target, central_tables()),
             source,
             logger,
             indexes_ensured: AtomicBool::new(false),
@@ -155,55 +141,21 @@ impl CaptchaDatabase {
     }
 
     pub fn connected(&self) -> bool {
-        self.open.load(Ordering::SeqCst)
-            && match &self.connection {
-                Connection::Mongo(mongo) => mongo.connected(),
-                Connection::Fixed(_) => true,
-            }
+        self.connection.connected()
     }
 
     /// Opens the connection unless it is open, and on a new one indexes the collections as
     /// mongoose's autoIndex does when the TS loads its models on it.
     pub async fn connect(&self) -> Result<(), ProsopoError> {
-        let fresh: bool = !self.connected();
-        if let Connection::Mongo(mongo) = &self.connection {
-            mongo.connect().await.map_err(raw_error)?;
-        }
-        self.open.store(true, Ordering::SeqCst);
-        if fresh {
-            self.auto_index().await;
-        }
-        Ok(())
+        self.connection.connect(&self.logger).await
     }
 
     pub async fn close(&self) {
-        if let Connection::Mongo(mongo) = &self.connection {
-            mongo.close().await;
-        }
-        self.open.store(false, Ordering::SeqCst);
+        self.connection.close().await;
     }
 
     async fn executor(&self) -> Result<Arc<dyn Executor>, ProsopoError> {
-        match &self.connection {
-            Connection::Mongo(mongo) => Ok(Arc::new(DriverExecutor::new(mongo.database().await?))),
-            Connection::Fixed(executor) => Ok(executor.clone()),
-        }
-    }
-
-    async fn auto_index(&self) {
-        let Ok(executor) = self.executor().await else {
-            return;
-        };
-        for kind in StoredKind::ALL {
-            for index in kind.schema().indexes() {
-                if let Err(error) = executor.run(Operation::Command(create_index_command(kind.collection(), &index))).await {
-                    self.logger.warn(|| {
-                        LogRecord::msg(format!("Error creating indexes for collection {}", kind.collection())).with_err(error.to_string())
-                    });
-                    break;
-                }
-            }
-        }
+        self.connection.executor().await
     }
 
     /// `ensureIndexes`: each collection's indexes dropped and created again, once.
@@ -212,10 +164,8 @@ impl CaptchaDatabase {
             return;
         }
         if !self.connected() {
-            for kind in StoredKind::ALL {
-                self.logger.info(|| {
-                    LogRecord::msg(format!("Skipping index creation for collection {} as not connected", kind.collection()))
-                });
+            for (collection, _) in self.connection.tables() {
+                self.logger.info(|| LogRecord::msg(format!("Skipping index creation for collection {collection} as not connected")));
             }
         } else if let Ok(executor) = self.executor().await {
             for kind in StoredKind::ALL {

@@ -1,0 +1,666 @@
+{
+	"nowMs": 1710000060123,
+	"cases": [
+		{
+			"name": "cache a session",
+			"method": "cacheSession",
+			"args": [
+				"s1",
+				{
+					"2": "and in numeric order",
+					"10": "integer-like keys come first",
+					"sessionId": "s1",
+					"createdAt": "2023-11-14T22:13:20.123Z",
+					"score": 0.30000000000000004,
+					"threshold": 1e+21,
+					"tiny": 5e-7,
+					"negativeZero": 0,
+					"big": 1700000000000000000,
+					"ipAddress": {
+						"lower": "__bigint__:3232235777",
+						"upper": "__bigint__:18446744073709551615",
+						"type": "v6"
+					},
+					"headers": {
+						"user-agent": "Mozilla/5.0",
+						"accept-language": "en-GB,en;q=0.9"
+					},
+					"text": "quote \" backslash \\ newline \n tab \t control \u0001 line separator   emoji 😀",
+					"nothing": null,
+					"flags": [
+						true,
+						false,
+						0,
+						-1.5
+					],
+					"nested": {
+						"deeper": {
+							"deepest": [
+								{
+									"a": 1
+								},
+								[]
+							]
+						}
+					}
+				}
+			],
+			"before": {},
+			"sent": [
+				{
+					"command": "SET",
+					"args": [
+						"cache:session:s1",
+						"{\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.30000000000000004,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"user-agent\":\"Mozilla/5.0\",\"accept-language\":\"en-GB,en;q=0.9\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}}}",
+						"EX",
+						"86400"
+					]
+				}
+			],
+			"result": true
+		},
+		{
+			"name": "cache a session for a minute",
+			"method": "cacheSession",
+			"args": [
+				"s2",
+				{
+					"sessionId": "s2"
+				},
+				60
+			],
+			"before": {
+				"cache:session:s1": "{\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.30000000000000004,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"user-agent\":\"Mozilla/5.0\",\"accept-language\":\"en-GB,en;q=0.9\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}}}"
+			},
+			"sent": [
+				{
+					"command": "SET",
+					"args": [
+						"cache:session:s2",
+						"{\"sessionId\":\"s2\"}",
+						"EX",
+						"60"
+					]
+				}
+			],
+			"result": true
+		},
+		{
+			"name": "read a cached session",
+			"method": "getCachedSession",
+			"args": [
+				"s1"
+			],
+			"before": {
+				"cache:session:s1": "{\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.30000000000000004,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"user-agent\":\"Mozilla/5.0\",\"accept-language\":\"en-GB,en;q=0.9\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}}}",
+				"cache:session:s2": "{\"sessionId\":\"s2\"}"
+			},
+			"sent": [
+				{
+					"command": "GET",
+					"args": [
+						"cache:session:s1"
+					]
+				}
+			],
+			"result": {
+				"2": "and in numeric order",
+				"10": "integer-like keys come first",
+				"sessionId": "s1",
+				"createdAt": "2023-11-14T22:13:20.123Z",
+				"score": 0.30000000000000004,
+				"threshold": 1e+21,
+				"tiny": 5e-7,
+				"negativeZero": 0,
+				"big": 1700000000000000000,
+				"ipAddress": {
+					"lower": "__bigint__:3232235777",
+					"upper": "__bigint__:18446744073709551615",
+					"type": "v6"
+				},
+				"headers": {
+					"user-agent": "Mozilla/5.0",
+					"accept-language": "en-GB,en;q=0.9"
+				},
+				"text": "quote \" backslash \\ newline \n tab \t control \u0001 line separator   emoji 😀",
+				"nothing": null,
+				"flags": [
+					true,
+					false,
+					0,
+					-1.5
+				],
+				"nested": {
+					"deeper": {
+						"deepest": [
+							{
+								"a": 1
+							},
+							[]
+						]
+					}
+				}
+			}
+		},
+		{
+			"name": "read a missing session",
+			"method": "getCachedSession",
+			"args": [
+				"missing"
+			],
+			"before": {
+				"cache:session:s1": "{\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.30000000000000004,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"user-agent\":\"Mozilla/5.0\",\"accept-language\":\"en-GB,en;q=0.9\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}}}",
+				"cache:session:s2": "{\"sessionId\":\"s2\"}"
+			},
+			"sent": [
+				{
+					"command": "GET",
+					"args": [
+						"cache:session:missing"
+					]
+				}
+			],
+			"result": null
+		},
+		{
+			"name": "patch a session",
+			"method": "patchCachedSession",
+			"args": [
+				"s1",
+				{
+					"1": "new integer-like key",
+					"score": 0.75,
+					"headers": {
+						"origin": "https://example.com"
+					},
+					"newField": [
+						1,
+						2
+					]
+				}
+			],
+			"before": {
+				"cache:session:s1": "{\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.30000000000000004,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"user-agent\":\"Mozilla/5.0\",\"accept-language\":\"en-GB,en;q=0.9\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}}}",
+				"cache:session:s2": "{\"sessionId\":\"s2\"}"
+			},
+			"sent": [
+				{
+					"command": "GET",
+					"args": [
+						"cache:session:s1"
+					]
+				},
+				{
+					"command": "EVAL",
+					"args": [
+						"\nif redis.call(\"GET\", KEYS[1]) ~= ARGV[1] then return 0 end\nredis.call(\"SET\", KEYS[1], ARGV[2], \"EX\", ARGV[3])\nreturn 1\n",
+						"1",
+						"cache:session:s1",
+						"{\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.30000000000000004,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"user-agent\":\"Mozilla/5.0\",\"accept-language\":\"en-GB,en;q=0.9\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}}}",
+						"{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}",
+						"86400"
+					]
+				}
+			],
+			"result": true
+		},
+		{
+			"name": "patch a session for a minute",
+			"method": "patchCachedSession",
+			"args": [
+				"s2",
+				{
+					"blocked": true
+				},
+				60
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}",
+				"cache:session:s2": "{\"sessionId\":\"s2\"}"
+			},
+			"sent": [
+				{
+					"command": "GET",
+					"args": [
+						"cache:session:s2"
+					]
+				},
+				{
+					"command": "EVAL",
+					"args": [
+						"\nif redis.call(\"GET\", KEYS[1]) ~= ARGV[1] then return 0 end\nredis.call(\"SET\", KEYS[1], ARGV[2], \"EX\", ARGV[3])\nreturn 1\n",
+						"1",
+						"cache:session:s2",
+						"{\"sessionId\":\"s2\"}",
+						"{\"sessionId\":\"s2\",\"blocked\":true,\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}",
+						"60"
+					]
+				}
+			],
+			"result": true
+		},
+		{
+			"name": "patch a missing session",
+			"method": "patchCachedSession",
+			"args": [
+				"missing",
+				{
+					"score": 1
+				}
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}",
+				"cache:session:s2": "{\"sessionId\":\"s2\",\"blocked\":true,\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}"
+			},
+			"sent": [
+				{
+					"command": "GET",
+					"args": [
+						"cache:session:missing"
+					]
+				}
+			],
+			"result": false
+		},
+		{
+			"name": "attach SIMD readings",
+			"method": "patchCachedSimdReadingsIfAbsent",
+			"args": [
+				"s1",
+				{
+					"v": 1,
+					"r": [
+						0.5,
+						2
+					]
+				},
+				"frictionless"
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}",
+				"cache:session:s2": "{\"sessionId\":\"s2\",\"blocked\":true,\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}"
+			},
+			"sent": [
+				{
+					"command": "GET",
+					"args": [
+						"cache:session:s1"
+					]
+				},
+				{
+					"command": "EVAL",
+					"args": [
+						"\nif redis.call(\"GET\", KEYS[1]) ~= ARGV[1] then return 0 end\nredis.call(\"SET\", KEYS[1], ARGV[2], \"EX\", ARGV[3])\nreturn 1\n",
+						"1",
+						"cache:session:s1",
+						"{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}",
+						"{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\",\"simdReadings\":{\"v\":1,\"r\":[0.5,2]},\"simdReadingsStage\":\"frictionless\"}",
+						"86400"
+					]
+				}
+			],
+			"result": true
+		},
+		{
+			"name": "attach SIMD readings again",
+			"method": "patchCachedSimdReadingsIfAbsent",
+			"args": [
+				"s1",
+				{
+					"v": 2
+				},
+				"challenge"
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\",\"simdReadings\":{\"v\":1,\"r\":[0.5,2]},\"simdReadingsStage\":\"frictionless\"}",
+				"cache:session:s2": "{\"sessionId\":\"s2\",\"blocked\":true,\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}"
+			},
+			"sent": [
+				{
+					"command": "GET",
+					"args": [
+						"cache:session:s1"
+					]
+				}
+			],
+			"result": false
+		},
+		{
+			"name": "attach SIMD readings to a missing session",
+			"method": "patchCachedSimdReadingsIfAbsent",
+			"args": [
+				"missing",
+				{
+					"v": 1
+				},
+				"submit"
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\",\"simdReadings\":{\"v\":1,\"r\":[0.5,2]},\"simdReadingsStage\":\"frictionless\"}",
+				"cache:session:s2": "{\"sessionId\":\"s2\",\"blocked\":true,\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}"
+			},
+			"sent": [
+				{
+					"command": "GET",
+					"args": [
+						"cache:session:missing"
+					]
+				}
+			],
+			"result": false
+		},
+		{
+			"name": "read the patched session",
+			"method": "getCachedSession",
+			"args": [
+				"s1"
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\",\"simdReadings\":{\"v\":1,\"r\":[0.5,2]},\"simdReadingsStage\":\"frictionless\"}",
+				"cache:session:s2": "{\"sessionId\":\"s2\",\"blocked\":true,\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}"
+			},
+			"sent": [
+				{
+					"command": "GET",
+					"args": [
+						"cache:session:s1"
+					]
+				}
+			],
+			"result": {
+				"1": "new integer-like key",
+				"2": "and in numeric order",
+				"10": "integer-like keys come first",
+				"sessionId": "s1",
+				"createdAt": "2023-11-14T22:13:20.123Z",
+				"score": 0.75,
+				"threshold": 1e+21,
+				"tiny": 5e-7,
+				"negativeZero": 0,
+				"big": 1700000000000000000,
+				"ipAddress": {
+					"lower": "__bigint__:3232235777",
+					"upper": "__bigint__:18446744073709551615",
+					"type": "v6"
+				},
+				"headers": {
+					"origin": "https://example.com"
+				},
+				"text": "quote \" backslash \\ newline \n tab \t control \u0001 line separator   emoji 😀",
+				"nothing": null,
+				"flags": [
+					true,
+					false,
+					0,
+					-1.5
+				],
+				"nested": {
+					"deeper": {
+						"deepest": [
+							{
+								"a": 1
+							},
+							[]
+						]
+					}
+				},
+				"newField": [
+					1,
+					2
+				],
+				"lastUpdatedTimestamp": "2024-03-09T16:01:00.123Z",
+				"simdReadings": {
+					"v": 1,
+					"r": [
+						0.5,
+						2
+					]
+				},
+				"simdReadingsStage": "frictionless"
+			}
+		},
+		{
+			"name": "cache a session by hash",
+			"method": "cacheSessionByHash",
+			"args": [
+				"hash-1",
+				"s1"
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\",\"simdReadings\":{\"v\":1,\"r\":[0.5,2]},\"simdReadingsStage\":\"frictionless\"}",
+				"cache:session:s2": "{\"sessionId\":\"s2\",\"blocked\":true,\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}"
+			},
+			"sent": [
+				{
+					"command": "SET",
+					"args": [
+						"cache:session:hash:hash-1",
+						"s1",
+						"EX",
+						"3600"
+					]
+				}
+			],
+			"result": true
+		},
+		{
+			"name": "read a session by hash",
+			"method": "getCachedSessionByHash",
+			"args": [
+				"hash-1"
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\",\"simdReadings\":{\"v\":1,\"r\":[0.5,2]},\"simdReadingsStage\":\"frictionless\"}",
+				"cache:session:s2": "{\"sessionId\":\"s2\",\"blocked\":true,\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}",
+				"cache:session:hash:hash-1": "s1"
+			},
+			"sent": [
+				{
+					"command": "GET",
+					"args": [
+						"cache:session:hash:hash-1"
+					]
+				}
+			],
+			"result": "s1"
+		},
+		{
+			"name": "cache a detector bundle",
+			"method": "cacheDetectorBundle",
+			"args": [
+				"detector-1",
+				"bundle-7"
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\",\"simdReadings\":{\"v\":1,\"r\":[0.5,2]},\"simdReadingsStage\":\"frictionless\"}",
+				"cache:session:s2": "{\"sessionId\":\"s2\",\"blocked\":true,\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}",
+				"cache:session:hash:hash-1": "s1"
+			},
+			"sent": [
+				{
+					"command": "SET",
+					"args": [
+						"cache:detector:detector-1",
+						"bundle-7",
+						"EX",
+						"600"
+					]
+				}
+			],
+			"result": true
+		},
+		{
+			"name": "read a detector bundle",
+			"method": "getDetectorBundle",
+			"args": [
+				"detector-1"
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\",\"simdReadings\":{\"v\":1,\"r\":[0.5,2]},\"simdReadingsStage\":\"frictionless\"}",
+				"cache:session:s2": "{\"sessionId\":\"s2\",\"blocked\":true,\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}",
+				"cache:session:hash:hash-1": "s1",
+				"cache:detector:detector-1": "bundle-7"
+			},
+			"sent": [
+				{
+					"command": "GET",
+					"args": [
+						"cache:detector:detector-1"
+					]
+				}
+			],
+			"result": "bundle-7"
+		},
+		{
+			"name": "cache an escalation",
+			"method": "cacheSessionEscalation",
+			"args": [
+				"origin-1",
+				"escalated-1"
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\",\"simdReadings\":{\"v\":1,\"r\":[0.5,2]},\"simdReadingsStage\":\"frictionless\"}",
+				"cache:session:s2": "{\"sessionId\":\"s2\",\"blocked\":true,\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}",
+				"cache:session:hash:hash-1": "s1",
+				"cache:detector:detector-1": "bundle-7"
+			},
+			"sent": [
+				{
+					"command": "SET",
+					"args": [
+						"cache:session:escalation:origin-1",
+						"escalated-1",
+						"EX",
+						"600"
+					]
+				}
+			],
+			"result": true
+		},
+		{
+			"name": "read an escalation",
+			"method": "getCachedSessionEscalation",
+			"args": [
+				"origin-1"
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\",\"simdReadings\":{\"v\":1,\"r\":[0.5,2]},\"simdReadingsStage\":\"frictionless\"}",
+				"cache:session:s2": "{\"sessionId\":\"s2\",\"blocked\":true,\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}",
+				"cache:session:hash:hash-1": "s1",
+				"cache:detector:detector-1": "bundle-7",
+				"cache:session:escalation:origin-1": "escalated-1"
+			},
+			"sent": [
+				{
+					"command": "GET",
+					"args": [
+						"cache:session:escalation:origin-1"
+					]
+				}
+			],
+			"result": "escalated-1"
+		},
+		{
+			"name": "invalidate an escalation",
+			"method": "invalidateCachedSessionEscalation",
+			"args": [
+				"origin-1"
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\",\"simdReadings\":{\"v\":1,\"r\":[0.5,2]},\"simdReadingsStage\":\"frictionless\"}",
+				"cache:session:s2": "{\"sessionId\":\"s2\",\"blocked\":true,\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}",
+				"cache:session:hash:hash-1": "s1",
+				"cache:detector:detector-1": "bundle-7",
+				"cache:session:escalation:origin-1": "escalated-1"
+			},
+			"sent": [
+				{
+					"command": "DEL",
+					"args": [
+						"cache:session:escalation:origin-1"
+					]
+				}
+			],
+			"result": null
+		},
+		{
+			"name": "invalidate a session",
+			"method": "invalidateCachedSession",
+			"args": [
+				"s2"
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\",\"simdReadings\":{\"v\":1,\"r\":[0.5,2]},\"simdReadingsStage\":\"frictionless\"}",
+				"cache:session:s2": "{\"sessionId\":\"s2\",\"blocked\":true,\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}",
+				"cache:session:hash:hash-1": "s1",
+				"cache:detector:detector-1": "bundle-7"
+			},
+			"sent": [
+				{
+					"command": "DEL",
+					"args": [
+						"cache:session:s2"
+					]
+				}
+			],
+			"result": null
+		},
+		{
+			"name": "invalidate a session by hash",
+			"method": "invalidateCachedSessionByHash",
+			"args": [
+				"hash-1"
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\",\"simdReadings\":{\"v\":1,\"r\":[0.5,2]},\"simdReadingsStage\":\"frictionless\"}",
+				"cache:session:hash:hash-1": "s1",
+				"cache:detector:detector-1": "bundle-7"
+			},
+			"sent": [
+				{
+					"command": "DEL",
+					"args": [
+						"cache:session:hash:hash-1"
+					]
+				}
+			],
+			"result": null
+		},
+		{
+			"name": "attach SIMD readings over a falsy value",
+			"method": "patchCachedSimdReadingsIfAbsent",
+			"args": [
+				"falsy",
+				{
+					"v": 1
+				},
+				"submit"
+			],
+			"before": {
+				"cache:session:s1": "{\"1\":\"new integer-like key\",\"2\":\"and in numeric order\",\"10\":\"integer-like keys come first\",\"sessionId\":\"s1\",\"createdAt\":\"2023-11-14T22:13:20.123Z\",\"score\":0.75,\"threshold\":1e+21,\"tiny\":5e-7,\"negativeZero\":0,\"big\":1700000000000000000,\"ipAddress\":{\"lower\":\"__bigint__:3232235777\",\"upper\":\"__bigint__:18446744073709551615\",\"type\":\"v6\"},\"headers\":{\"origin\":\"https://example.com\"},\"text\":\"quote \\\" backslash \\\\ newline \\n tab \\t control \\u0001 line separator   emoji 😀\",\"nothing\":null,\"flags\":[true,false,0,-1.5],\"nested\":{\"deeper\":{\"deepest\":[{\"a\":1},[]]}},\"newField\":[1,2],\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\",\"simdReadings\":{\"v\":1,\"r\":[0.5,2]},\"simdReadingsStage\":\"frictionless\"}",
+				"cache:detector:detector-1": "bundle-7",
+				"cache:session:falsy": "{\"sessionId\":\"falsy\",\"simdReadings\":0}"
+			},
+			"sent": [
+				{
+					"command": "GET",
+					"args": [
+						"cache:session:falsy"
+					]
+				},
+				{
+					"command": "EVAL",
+					"args": [
+						"\nif redis.call(\"GET\", KEYS[1]) ~= ARGV[1] then return 0 end\nredis.call(\"SET\", KEYS[1], ARGV[2], \"EX\", ARGV[3])\nreturn 1\n",
+						"1",
+						"cache:session:falsy",
+						"{\"sessionId\":\"falsy\",\"simdReadings\":0}",
+						"{\"sessionId\":\"falsy\",\"simdReadings\":{\"v\":1},\"simdReadingsStage\":\"submit\",\"lastUpdatedTimestamp\":\"2024-03-09T16:01:00.123Z\"}",
+						"86400"
+					]
+				}
+			],
+			"result": true
+		}
+	]
+}

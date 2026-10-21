@@ -158,6 +158,15 @@ impl Progress {
 }
 
 impl<C: Clone> RedisConnection<C> {
+    /// A connection to a client that is already connected, ready at once.
+    pub fn ready(client: C) -> RedisConnection<C> {
+        let clock: Arc<dyn Clock> = Arc::new(SystemClock);
+        let state: Arc<Progress> = Arc::new(Progress::new(clock.clone(), clock.now_ms()));
+        state.finish();
+        let (_, outcome) = watch::channel::<Outcome<C>>(Some(Ok(client)));
+        RedisConnection { state, outcome }
+    }
+
     pub fn is_ready(&self) -> bool {
         self.state.ready.load(Ordering::Acquire)
     }

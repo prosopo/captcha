@@ -554,6 +554,43 @@ for (const [name, schema] of MODELS) {
 	}
 	models[name] = { schema: describe(schema), vectors, updates, declaredIndexes, serverIndexes };
 }
+// Filters on a path inside a document array, as `{ "sites.updatedAt": ... }`, cast as mongoose
+// casts a query's conditions. Drawn after everything else, so the vectors above keep their draws.
+type SubpathFilter = { model: string; filter: Json; outcome: { cast: Json } | { error: string } };
+const subpathFilters: SubpathFilter[] = [];
+for (const [name, schema] of MODELS) {
+	const Model = connection.model(name);
+	for (const [arrayPath, arrayType] of Object.entries(schema.paths)) {
+		const inner = (arrayType as unknown as { $isMongooseDocumentArray?: boolean; schema?: Schema }).$isMongooseDocumentArray
+			? (arrayType as unknown as { schema: Schema }).schema
+			: undefined;
+		if (!inner) continue;
+		for (const [leaf, leafType] of Object.entries(inner.paths)) {
+			if (leaf.includes("$*") || ["Embedded", "Array", "Map", "Mixed"].includes(leafType.instance)) continue;
+			const value: unknown = valueFor(leafType, 1);
+			for (const filter of [
+				{ [`${arrayPath}.${leaf}`]: value },
+				{ [`${arrayPath}.${leaf}`]: { $gt: value } },
+				{ [`${arrayPath}.0.${leaf}`]: value },
+				{ $or: [{ [`${arrayPath}.${leaf}`]: { $exists: false } }, { [`${arrayPath}.${leaf}`]: { $in: [value] } }] },
+			]) {
+				const recorded = toJson(toRustInput(filter));
+				try {
+					const query = Model.find(filter);
+					query.cast(Model);
+					subpathFilters.push({
+						model: name,
+						filter: recorded,
+						outcome: { cast: { hex: toHex(mongoose.mongo.BSON.serialize(query.getFilter(), { ignoreUndefined: false })) } },
+					});
+				} catch (error) {
+					subpathFilters.push({ model: name, filter: recorded, outcome: { error: error instanceof Error ? error.name : String(error) } });
+				}
+			}
+		}
+	}
+}
+
 await db.dropDatabase();
 await connection.close();
 
@@ -564,9 +601,10 @@ const out = {
 	processUnique: toHex(PROCESS_UNIQUE),
 	sessionProjection: JSON.parse(EJSON.stringify(schemas.SESSION_PROJECTION, { relaxed: false })) as Json,
 	models,
+	subpathFilters,
 };
 writeFileSync(fileURLToPath(new URL("./vectors.json", import.meta.url)), `${JSON.stringify(out)}\n`);
 const counts: string = Object.entries(models)
 	.map(([name, { vectors, updates }]) => `${name}: ${vectors.filter((v) => "errors" in v.outcome).length} invalid / ${vectors.length}, ${updates.filter((u) => "error" in u.outcome).length} refused, ${updates.filter((u) => "notSent" in u.outcome).length} not sent / ${updates.length} updates`)
 	.join(", ");
-console.log(`wrote vectors.json (${counts})`);
+console.log(`wrote vectors.json (${counts}; ${subpathFilters.length} document-array filters)`);

@@ -534,3 +534,29 @@ fn updates_are_the_filters_and_updates_mongoose_sends() {
         failures.iter().take(14).cloned().collect::<Vec<String>>().join("\n")
     );
 }
+
+#[test]
+fn filters_inside_a_document_array_are_cast_as_mongoose_casts_them() {
+    let vectors: Value = vectors();
+    let mut failures: Vec<String> = Vec::new();
+    let filters: &Vec<Value> = vectors["subpathFilters"].as_array().expect("subpathFilters");
+    for (index, vector) in filters.iter().enumerate() {
+        let model: &str = vector["model"].as_str().expect("model");
+        let filter: Document = input_document(&vector["filter"], "filter");
+        let mut ids: ReplayIds = ReplayIds::new(&vectors);
+        let cast = cast_filter(schema_for(model), &filter, false, &mut ids);
+        let label: String = format!("{model} filter #{index} {}", extended_json(&filter));
+        match (cast, vector["outcome"].get("cast")) {
+            (Ok(cast), Some(expected)) => {
+                let expected: Document = from_hex(expected["hex"].as_str().expect("hex"));
+                if to_bytes(&cast) != to_bytes(&expected) {
+                    failures.push(format!("{label}: rust {}, mongoose {}", extended_json(&cast), extended_json(&expected)));
+                }
+            }
+            (Err(_), None) => {}
+            (cast, _) => failures.push(format!("{label}: rust {cast:?}, mongoose {}", vector["outcome"])),
+        }
+    }
+    assert!(filters.len() >= 100, "only {} filters", filters.len());
+    assert!(failures.is_empty(), "{} of {} differ:\n{}", failures.len(), filters.len(), failures.join("\n"));
+}

@@ -20,6 +20,8 @@ use crate::operation::{Executor, Operation, Reply, UpdateStatement};
 use crate::source::{Source, SourceIds};
 use crate::streamer::{CentralDbStreamer, FetchRecord, MarkStored};
 use bson::{doc, Bson, DateTime, Document};
+use prosopo_redis_client::{connect_to_redis, setup_redis_index, RedisConnection, RedisOptions};
+use prosopo_user_access_policy::redis::{access_rules_redis_index, RedisAccessRulesStorage};
 use prosopo_common::{ErrorClass, ErrorContext, ErrorOptions, ErrorSource, ProsopoError};
 use prosopo_logger::{LogRecord, Logger};
 use prosopo_types::datasets::{dataset_with_ids_and_tree_schema, CaptchaItem, CaptchaStates};
@@ -154,6 +156,25 @@ pub struct ProviderDatabase {
     logger: Logger,
     indexes_ensured: AtomicBool,
     streamer: RwLock<Option<Arc<CentralDbStreamer>>>,
+    redis: RwLock<Option<ProviderRedis>>,
+}
+
+/// `ProviderDatabaseOptions.redis`.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct RedisSettings {
+    pub url: Option<String>,
+    pub password: Option<String>,
+    /// The access rules index's name, when not the default.
+    pub index_name: Option<String>,
+}
+
+/// The provider's Redis: the connection, the same connection once the access rules index is
+/// set up on it, and the access rules kept there.
+#[derive(Clone)]
+struct ProviderRedis {
+    connection: RedisConnection,
+    access_rules: RedisConnection,
+    storage: RedisAccessRulesStorage,
 }
 
 /// `PROVIDER_TABLES`: each collection and the schema of its records, in the TS order.
@@ -220,6 +241,7 @@ impl ProviderDatabase {
             logger,
             indexes_ensured: AtomicBool::new(false),
             streamer: RwLock::new(None),
+            redis: RwLock::new(None),
         }
     }
 
@@ -267,6 +289,50 @@ impl ProviderDatabase {
             }
         }
         self.indexes_ensured.store(true, Ordering::SeqCst);
+    }
+
+    /// `setupRedis`, which the TS runs as the last step of `connect`: connects in the
+    /// background, sets up the access rules index once connected, and keeps the access rules
+    /// there. Must be called within a tokio runtime.
+    pub fn setup_redis(&self, settings: &RedisSettings) -> Result<(), ProsopoError> {
+        let connection: RedisConnection = connect_to_redis(RedisOptions {
+            url: settings.url.clone(),
+            password: settings.password.clone(),
+            logger: self.logger.clone(),
+        })
+        .map_err(|error| ProsopoError::new(ErrorClass::Db, ErrorSource::message(error.to_string()), ErrorOptions::default()))?;
+        let mut index = access_rules_redis_index();
+        if let Some(name) = settings.index_name.as_ref().filter(|name| !name.is_empty()) {
+            index.name = name.clone();
+        }
+        let access_rules: RedisConnection = setup_redis_index(&connection, index, &self.logger);
+        let storage: RedisAccessRulesStorage = RedisAccessRulesStorage::new(access_rules.clone(), self.logger.clone());
+        *self.redis.write().expect("lock") = Some(ProviderRedis { connection, access_rules, storage });
+        Ok(())
+    }
+
+    fn redis_part<T>(&self, part: impl FnOnce(&ProviderRedis) -> T, key: &str) -> Result<T, ProsopoError> {
+        self.redis
+            .read()
+            .expect("lock")
+            .as_ref()
+            .map(part)
+            .ok_or_else(|| ProsopoError::new(ErrorClass::Db, ErrorSource::key(key), ErrorOptions::default()))
+    }
+
+    /// `getRedisConnection`.
+    pub fn get_redis_connection(&self) -> Result<RedisConnection, ProsopoError> {
+        self.redis_part(|redis| redis.connection.clone(), "DATABASE.REDIS_ACCESS_RULES_CONNECTION_UNDEFINED")
+    }
+
+    /// `getRedisAccessRulesConnection`.
+    pub fn get_redis_access_rules_connection(&self) -> Result<RedisConnection, ProsopoError> {
+        self.redis_part(|redis| redis.access_rules.clone(), "DATABASE.REDIS_ACCESS_RULES_CONNECTION_UNDEFINED")
+    }
+
+    /// `getUserAccessRulesStorage`.
+    pub fn get_user_access_rules_storage(&self) -> Result<RedisAccessRulesStorage, ProsopoError> {
+        self.redis_part(|redis| redis.storage.clone(), "DATABASE.USER_ACCESS_RULES_STORAGE_UNDEFINED")
     }
 
     /// `setCentralDbStreamer`: from now on, each record written is also sent to the central

@@ -17,13 +17,16 @@
 
 pub mod captcha;
 pub mod challenges;
+pub mod client;
 pub mod clients;
+mod connection;
 pub mod image;
 pub mod mongo;
 pub mod operation;
 pub mod options;
 pub mod provider;
 pub mod records;
+pub mod redis_cache;
 pub mod scheduler;
 pub mod session;
 pub mod source;
@@ -37,5 +40,7 @@ mod equivalence;
 mod live;
 #[cfg(test)]
 mod methods;
+#[cfg(test)]
+mod redis_tests;
 #[cfg(test)]
 mod tests;

@@ -19,10 +19,13 @@ getrandom = "0.3"
 mongodb = { version = "3.9", default-features = false, features = ["compat-3-3-0", "bson-3", "rustls-tls", "dns-resolver"] }
 prosopo-common = { path = "../common" }
 prosopo-logger = { path = "../logger" }
+prosopo-redis-client = { path = "../redis-client" }
 prosopo-types = { path = "../types" }
 prosopo-types-database = { path = "../types-database" }
+prosopo-user-access-policy = { path = "../user-access-policy" }
 prosopo-util = { path = "../util" }
 prosopo-util-crypto = { path = "../util-crypto" }
+redis = { version = "1.7", default-features = false, features = ["aio"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
 tokio = { version = "1", features = ["rt", "sync", "time"] }

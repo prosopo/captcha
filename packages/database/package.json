@@ -23,7 +23,7 @@
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
 		"typecheck": "tsc --project tsconfig.types.json",
-		"equivalence": "tsx rust/equivalence/generate.ts && tsx rust/equivalence/methods.ts && cargo test -p prosopo-database equivalence methods"
+		"equivalence": "tsx rust/equivalence/generate.ts && tsx rust/equivalence/methods.ts && tsx rust/equivalence/redis.ts && cargo test -p prosopo-database -- equivalence methods redis_tests"
 	},
 	"repository": {
 		"type": "git",

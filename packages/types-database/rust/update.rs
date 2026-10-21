@@ -75,6 +75,13 @@ enum Target<'a> {
     Unknown,
 }
 
+/// An element of an array named in a path: an index, `$`, or an array filter's `$[...]`. A
+/// path through a document array may name one, or go straight to the elements' field as a
+/// query on every element does.
+fn is_array_position(segment: &str) -> bool {
+    segment == "$" || (segment.starts_with("$[") && segment.ends_with(']')) || (!segment.is_empty() && segment.bytes().all(|b| b.is_ascii_digit()))
+}
+
 fn resolve<'a>(schema: &'a Schema, path: &str) -> Target<'a> {
     if let Some(leaf) = schema.path(path) {
         return Target::Leaf(leaf);
@@ -87,9 +94,13 @@ fn resolve<'a>(schema: &'a Schema, path: &str) -> Target<'a> {
         if let Some(rest) = path.strip_prefix(&start) {
             return match &leaf.kind {
                 Kind::Subdocument(sub) => resolve(sub, rest),
-                Kind::DocumentArray(sub) | Kind::Map(sub) => match rest.split_once('.') {
+                Kind::DocumentArray(sub) => match rest.split_once('.') {
+                    Some((position, deeper)) if is_array_position(position) => resolve(sub, deeper),
+                    None if is_array_position(rest) => Target::Unknown,
+                    _ => resolve(sub, rest),
+                },
+                Kind::Map(sub) => match rest.split_once('.') {
                     Some((_, deeper)) => resolve(sub, deeper),
-                    None if matches!(leaf.kind, Kind::Map(_)) => Target::Unknown,
                     None => Target::Unknown,
                 },
                 Kind::Mixed => Target::Unknown,

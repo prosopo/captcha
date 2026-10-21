@@ -1641,3 +1641,159 @@ mod central_database {
         central.finish().await;
     }
 }
+
+/// getUpdatedClients.integration.test.ts.
+mod updated_clients {
+    use super::*;
+    use crate::client::{ClientDatabase, ACCOUNTS};
+    use crate::clients::ClientRecord;
+    use crate::operation::{DriverExecutor, Executor};
+    use bson::Bson;
+    use prosopo_types::client::Tier;
+    use prosopo_types_database::client::ACCOUNT;
+
+    struct Portal {
+        mongo: MongoDatabase,
+        clients: ClientDatabase,
+    }
+
+    impl Portal {
+        async fn new(name: &str) -> Portal {
+            let url: String = std::env::var("PROSOPO_TEST_MONGO_URL").expect("PROSOPO_TEST_MONGO_URL");
+            let open = || {
+                MongoDatabase::new(&url, Some(&format!("prosopo-test-portal-{name}")), None, None, MongoConnectionTimeouts::default())
+                    .expect("a valid URL")
+            };
+            let mongo: MongoDatabase = open();
+            mongo.connect().await.expect("connects");
+            mongo.database().await.expect("open").drop().await.expect("drops");
+            Portal {
+                mongo,
+                clients: ClientDatabase::new(open(), Arc::new(SystemSource), get_logger(LogLevel::Error, "test")),
+            }
+        }
+
+        async fn account(&self, input: Document) {
+            let document: Document = create(&ACCOUNT, &input, &mut SourceIds(&SystemSource)).expect("a valid account");
+            let executor: DriverExecutor = DriverExecutor::new(self.mongo.database().await.expect("open"));
+            executor
+                .run(Operation::Insert {
+                    collection: ACCOUNTS.to_string(),
+                    documents: vec![document],
+                })
+                .await
+                .expect("inserts");
+        }
+
+        async fn finish(self) {
+            self.mongo.database().await.expect("open").drop().await.expect("drops");
+            self.mongo.close().await;
+        }
+    }
+
+    fn site(name: &str, site_key: &str, domain: &str, updated_at: i64) -> Document {
+        doc! {
+            "name": name,
+            "siteKey": site_key,
+            "secretKey": format!("secret-{name}"),
+            "settings": { "domains": [domain], "powDifficulty": 4, "captchaType": "pow" },
+            "createdAt": 1,
+            "updatedAt": updated_at,
+            "active": true,
+        }
+    }
+
+    fn account(email: &str, tier: &str, status: &str, sites: Vec<Document>) -> Document {
+        doc! { "signupEmail": email, "tier": tier, "users": [{ "email": email, "status": status }], "sites": sites }
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn returns_one_record_per_site_not_one_per_account() {
+        let portal: Portal = Portal::new("per-site").await;
+        portal
+            .account(account(
+                "two-sites@example.com",
+                "professional",
+                "active",
+                vec![site("a", "siteKeyA", "a.example.com", 500), site("b", "siteKeyB", "b.example.com", 500)],
+            ))
+            .await;
+        let records: Vec<ClientRecord> = portal.clients.get_updated_clients(100.0).await.expect("reads");
+        let mut accounts: Vec<&str> = records.iter().filter_map(|record| record.account.as_deref()).collect();
+        accounts.sort();
+        assert_eq!(accounts, vec!["siteKeyA", "siteKeyB"]);
+        assert!(records.iter().all(|record| record.tier == Tier::Professional));
+        let a: &ClientRecord = records.iter().find(|record| record.account.as_deref() == Some("siteKeyA")).expect("site a");
+        let domains: Vec<&str> = a.settings.as_ref().expect("settings").get_array("domains").expect("domains").iter().filter_map(Bson::as_str).collect();
+        assert_eq!(domains, vec!["a.example.com"]);
+        portal.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn carries_only_the_sites_newer_than_the_cutoff() {
+        let portal: Portal = Portal::new("cutoff").await;
+        portal
+            .account(account(
+                "mixed@example.com",
+                "free",
+                "active",
+                vec![site("stale", "staleKey", "stale.example.com", 100), site("fresh", "freshKey", "fresh.example.com", 900)],
+            ))
+            .await;
+        let records: Vec<ClientRecord> = portal.clients.get_updated_clients(500.0).await.expect("reads");
+        let accounts: Vec<&str> = records.iter().filter_map(|record| record.account.as_deref()).collect();
+        assert_eq!(accounts, vec!["freshKey"]);
+        portal.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn skips_accounts_with_no_active_user() {
+        let portal: Portal = Portal::new("inactive").await;
+        portal
+            .account(account("inactive@example.com", "free", "pending", vec![site("x", "inactiveKey", "x.example.com", 900)]))
+            .await;
+        assert_eq!(portal.clients.get_updated_clients(100.0).await.expect("reads"), Vec::new());
+        portal.finish().await;
+    }
+
+}
+
+mod central_indexes {
+    use super::*;
+    use crate::captcha::{CaptchaDatabase, StoredKind};
+    use std::collections::BTreeSet;
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn ensure_indexes_leaves_each_central_collection_with_its_declared_indexes() {
+        let url: String = std::env::var("PROSOPO_TEST_MONGO_URL").expect("PROSOPO_TEST_MONGO_URL");
+        let open = || MongoDatabase::new(&url, Some("prosopo-test-central-indexes"), None, None, MongoConnectionTimeouts::default()).expect("a valid URL");
+        let mongo: MongoDatabase = open();
+        mongo.connect().await.expect("connects");
+        mongo.database().await.expect("open").drop().await.expect("drops");
+        let central: CaptchaDatabase = CaptchaDatabase::new(open(), Arc::new(SystemSource), get_logger(LogLevel::Error, "test"));
+        central.connect().await.expect("connects");
+        central.ensure_indexes().await;
+        for kind in StoredKind::ALL {
+            let names: BTreeSet<String> = mongo
+                .database()
+                .await
+                .expect("open")
+                .collection::<Document>(kind.collection())
+                .list_index_names()
+                .await
+                .expect("lists")
+                .into_iter()
+                .collect();
+            let mut declared: BTreeSet<String> = kind.schema().indexes().iter().map(|index| index.name()).collect();
+            declared.insert("_id_".to_string());
+            assert_eq!(names, declared, "{}", kind.collection());
+        }
+        central.close().await;
+        mongo.database().await.expect("open").drop().await.expect("drops");
+        mongo.close().await;
+    }
+}

@@ -719,3 +719,15 @@ mod live {
         drop_index(&mut redis, &index.name).await;
     }
 }
+
+mod ready_connection {
+    use crate::RedisConnection;
+
+    #[tokio::test]
+    async fn hands_out_the_client_it_was_given_at_once() {
+        let connection: RedisConnection<u32> = RedisConnection::ready(7);
+        assert!(connection.is_ready());
+        assert_eq!(connection.get_client().await.ok(), Some(7));
+        assert_eq!(connection.clone().get_client().await.ok(), Some(7));
+    }
+}
