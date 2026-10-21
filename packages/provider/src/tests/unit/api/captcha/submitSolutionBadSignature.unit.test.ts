@@ -114,7 +114,7 @@ beforeAll(async () => {
 	const app = express();
 	app.use(express.json());
 	app.use((req: Request, _res: Response, next: NextFunction) => {
-		req.i18n = { t: i18n.t };
+		req.i18n = i18n;
 		req.logger = logger;
 		next();
 	});
@@ -214,18 +214,18 @@ const routes: Route[] = ["image", "pow", "puzzle"];
 describe("solution submit routes reject a bad signature as a client error", () => {
 	for (const route of routes) {
 		for (const [label, bad] of badSignatures) {
-			it(`${route}: user signature ${label} -> 400`, async () => {
+			it(`${route}: user signature ${label} -> 401`, async () => {
 				const signatures = { ...validSignatures(route), user: bad };
 				const { status, text } = await post(route, signatures);
-				expect(status).toBe(400);
-				expect(text).toContain("GENERAL.INVALID_SIGNATURE");
+				expect(status).toBe(401);
+				expect(text).toContain("UNAUTHORIZED");
 			});
 
-			it(`${route}: provider signature ${label} -> 400`, async () => {
+			it(`${route}: provider signature ${label} -> 401`, async () => {
 				const signatures = { ...validSignatures(route), provider: bad };
 				const { status, text } = await post(route, signatures);
-				expect(status).toBe(400);
-				expect(text).toContain("GENERAL.INVALID_SIGNATURE");
+				expect(status).toBe(401);
+				expect(text).toContain("UNAUTHORIZED");
 			});
 		}
 

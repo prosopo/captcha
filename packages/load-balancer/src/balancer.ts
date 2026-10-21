@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { EnvironmentTypes } from "@prosopo/types";
 import { getDevelopmentProviderUrl } from "./developmentProviderUrl.js";
 import { readProviderListOverride } from "./providerUrlOverride.js";
@@ -161,7 +161,10 @@ export const getLoadBalancerUrl = (environment: EnvironmentTypes): string => {
 	if (environment === "staging") {
 		return "https://provider-list.prosopo.io/staging.json";
 	}
-	throw new ProsopoEnvError("CONFIG.UNKNOWN_ENVIRONMENT", {
+	throw new ProsopoError({
+		code: "CONFIG_INVALID",
+		errorSite: "LBAL-1",
+		message: "Unknown environment requested",
 		context: { environment },
 	});
 };

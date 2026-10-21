@@ -19,7 +19,7 @@
  * component appended (including anything it portalled into light DOM) and drop
  * every listener it registered. Nothing reconciles for us, so a component that
  * forgets to clean up leaks across the frictionless restart path — which
- * remounts the whole widget on a `CAPTCHA.NO_SESSION_FOUND`.
+ * remounts the whole widget on a `NO_SESSION_FOUND`.
  */
 export interface Component<P = void> {
 	update(props: P): void;

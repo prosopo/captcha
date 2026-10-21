@@ -70,17 +70,17 @@ import type {
 	RequestHashSignature,
 } from "../procaptcha/index.js";
 
+/**
+ * An error as a client receives it. `code` is what the widget branches on and
+ * translates; `errorId` (`<CODE>:<SITE>`) is what a user quotes to support. A
+ * non-public error carries only `BACKEND_ERROR` and its errorId.
+ */
 export type ApiJsonError = {
-	/** In the request's language. */
-	message: string;
-	key?: string;
-	/**
-	 * `key`'s text in English, for logs and crash reports. Only sent when
-	 * `key` is not in the widget's own catalogue; otherwise the widget looks
-	 * the English up itself.
-	 */
-	messageEn?: string;
-	code: number;
+	code: string;
+	errorId: string;
+	status: number;
+	/** English, for public errors only. */
+	message?: string;
 	data?: Record<string, unknown>;
 };
 

@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	DataSchema,
 	type Item,
@@ -90,21 +90,19 @@ export abstract class Generate<
 		// if specified, check files exist
 		const labelledMapFile: string | undefined = args.labelled;
 		if (labelledMapFile && !fs.existsSync(labelledMapFile)) {
-			throw new ProsopoDatasetError(
-				new Error(`labelled map file does not exist: ${labelledMapFile}`),
-				{
-					translationKey: "FS.FILE_NOT_FOUND",
-				},
-			);
+			throw new ProsopoError({
+				code: "FILE_ERROR",
+				errorSite: "DSFS-3",
+				message: `labelled map file does not exist: ${labelledMapFile}`,
+			});
 		}
 		const unlabelledMapFile: string | undefined = args.unlabelled;
 		if (unlabelledMapFile && !fs.existsSync(unlabelledMapFile)) {
-			throw new ProsopoDatasetError(
-				new Error(`unlabelled map file does not exist: ${unlabelledMapFile}`),
-				{
-					translationKey: "FS.FILE_NOT_FOUND",
-				},
-			);
+			throw new ProsopoError({
+				code: "FILE_ERROR",
+				errorSite: "DSFS-4",
+				message: `unlabelled map file does not exist: ${unlabelledMapFile}`,
+			});
 		}
 		this.labelledMapFile = labelledMapFile || "";
 		this.unlabelledMapFile = unlabelledMapFile || "";
@@ -208,7 +206,10 @@ const addAllUnique = (all: Set<string>, entries: Item[], dataType: string) => {
 
 const addUnique = (all: Set<string>, entry: Item, dataType: string) => {
 	if (all.has(entry.data)) {
-		throw new ProsopoDatasetError("DATASET.DUPLICATE_IMAGE", {
+		throw new ProsopoError({
+			code: "DATASET_INVALID",
+			errorSite: "DSFS-5",
+			message: "duplicate image detected",
 			context: {
 				error: `Duplicate data entry in ${dataType} data: ${JSON.stringify(entry)}`,
 			},

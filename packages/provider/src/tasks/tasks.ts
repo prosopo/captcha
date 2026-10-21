@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { CentralDbStreamer, ProviderDatabase } from "@prosopo/database";
 import { RedisWriteQueue } from "@prosopo/database";
 import { type Logger, getLogger, parseLogLevel } from "@prosopo/logger";
@@ -66,7 +66,10 @@ export class Tasks {
 		this.logger =
 			logger || getLogger(parseLogLevel(env.config.logLevel), "Tasks");
 		if (!env.pair) {
-			throw new ProsopoEnvError("DEVELOPER.MISSING_PROVIDER_PAIR", {
+			throw new ProsopoError({
+				code: "CONFIG_INVALID",
+				errorSite: "PROV-76",
+				message: "Missing provider pair",
 				context: { failedFuncName: "Tasks.constructor" },
 			});
 		}

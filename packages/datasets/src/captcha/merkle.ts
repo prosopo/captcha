@@ -48,11 +48,11 @@ export class CaptchaMerkleTree {
 
 	getRoot() {
 		if (this.root === undefined) {
-			throw new ProsopoError("DATASET.MERKLE_ERROR", {
-				context: {
-					error: "root undefined",
-					failedFuncName: this.getRoot.name,
-				},
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "DSET-10",
+				message: "Error creating merkle tree",
+				context: { error: "root undefined", failedFuncName: this.getRoot.name },
 			});
 		}
 		return this.root;
@@ -67,7 +67,10 @@ export class CaptchaMerkleTree {
 	 */
 	hydrateFromLayers(layers: MerkleLayer[]): void {
 		if (layers.length === 0) {
-			throw new ProsopoError("DATASET.MERKLE_ERROR", {
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "DSET-11",
+				message: "Error creating merkle tree",
 				context: {
 					error: "cannot hydrate from empty layers",
 					failedFuncName: this.hydrateFromLayers.name,
@@ -112,7 +115,10 @@ export class CaptchaMerkleTree {
 		while (leafIndex < numLeaves) {
 			const leftChild = leaves[leafIndex];
 			if (leftChild === undefined) {
-				throw new ProsopoError("DEVELOPER.GENERAL", {
+				throw new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "DSET-12",
+					message: "General Dev Error, see context",
 					context: { error: "leftChild undefined" },
 				});
 			}
@@ -139,11 +145,11 @@ export class CaptchaMerkleTree {
 
 	proof(leafHash: MerkleLeaf): MerkleProof {
 		if (!at(this.layers, 0).includes(leafHash)) {
-			throw new ProsopoError("DATASET.MERKLE_ERROR", {
-				context: {
-					error: "leaf not in tree",
-					failedFuncName: this.proof.name,
-				},
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "DSET-13",
+				message: "Error creating merkle tree",
+				context: { error: "leaf not in tree", failedFuncName: this.proof.name },
 			});
 		}
 		const proofTree: MerkleProofLayer[] = [];
@@ -151,7 +157,10 @@ export class CaptchaMerkleTree {
 		while (layerNum < this.layers.length - 1) {
 			const layer = this.layers[layerNum];
 			if (layer === undefined) {
-				throw new ProsopoError("DATASET.MERKLE_ERROR", {
+				throw new ProsopoError({
+					code: "DATASET_INVALID",
+					errorSite: "DSET-14",
+					message: "Error creating merkle tree",
 					context: {
 						error: "layer undefined",
 						failedFuncName: this.proof.name,

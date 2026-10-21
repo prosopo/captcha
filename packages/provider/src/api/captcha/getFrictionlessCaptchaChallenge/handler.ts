@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaType,
@@ -50,6 +50,7 @@ import {
 	normalizeHeadersForMatching,
 } from "../../blacklistRequestInspector.js";
 import { buildDnsEventUrl } from "../../dnsEventUrl.js";
+import { errorCodeForReason } from "../../errorCodeForReason.js";
 import {
 	recordBotScore,
 	recordDetectorTriggered,
@@ -231,20 +232,21 @@ export default (
 					msg: "Token has already been used",
 				}));
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { code: 400, siteKey: dapp, user },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "INVALID_REQUEST",
+						errorSite: "PROV-5",
+						message: "BadRequest",
+						context: { siteKey: dapp, user },
 					}),
 				);
 			}
 
 			if (!clientRecord) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "SITE_KEY_NOT_REGISTERED",
+						errorSite: "PROV-6",
+						context: { siteKey: dapp },
 					}),
 				);
 			}
@@ -881,10 +883,10 @@ export default (
 
 			if (!valid) {
 				return next(
-					new ProsopoApiError(reason || "API.BAD_REQUEST", {
-						context: { code: 400, siteKey: dapp, user },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: errorCodeForReason(reason),
+						errorSite: "PROV-80",
+						context: { siteKey: dapp, user },
 					}),
 				);
 			}
@@ -1092,10 +1094,11 @@ export default (
 				msg: "Error in frictionless captcha challenge",
 			}));
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 400, error: err },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-7",
+					message: "BadRequest",
+					cause: err,
 				}),
 			);
 		}

@@ -107,7 +107,7 @@ describe("Environment.isReady — maintenance mode startup tolerance", () => {
 
 		const env = buildEnv();
 		await expect(env.isReady()).rejects.toMatchObject({
-			translationKey: "GENERAL.ENVIRONMENT_NOT_READY",
+			errorId: "SERVICE_NOT_READY:ENV-6",
 		});
 	});
 

@@ -18,7 +18,7 @@ import { Teardown } from "../dom/component.js";
 /**
  * Nothing reconciles for us, so `Teardown` is the only thing standing between
  * the frictionless restart path — which remounts the whole widget on a
- * `CAPTCHA.NO_SESSION_FOUND` — and a listener leak that grows per restart.
+ * `NO_SESSION_FOUND` — and a listener leak that grows per restart.
  */
 
 describe("Teardown", () => {

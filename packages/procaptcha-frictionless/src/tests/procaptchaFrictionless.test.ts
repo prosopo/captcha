@@ -266,8 +266,9 @@ describe("the loading placeholder", () => {
 					Promise.resolve(
 						detection(CaptchaType.image, {
 							error: {
+								code: "SITE_KEY_NOT_REGISTERED",
+								errorId: "SITE_KEY_NOT_REGISTERED:PROV-1",
 								message: "site key not registered",
-								key: "API.SITE_KEY_NOT_REGISTERED",
 							},
 						} as Partial<BotDetectionFunctionResult>),
 					),
@@ -290,13 +291,16 @@ describe("the loading placeholder", () => {
 					Promise.resolve(
 						detection(CaptchaType.image, {
 							error: {
+								code: "SITE_KEY_INVALID",
+								errorId: "SITE_KEY_INVALID:PROV-1",
 								message: "Invalid site key",
-								key: "API.INVALID_SITE_KEY",
 							},
 						} as Partial<BotDetectionFunctionResult>),
 					),
 				{
-					i18n: i18n({ "API.INVALID_SITE_KEY": "Ungültiger Site-Schlüssel" }),
+					i18n: i18n({
+						"ERRORS.SITE_KEY_INVALID": "Ungültiger Site-Schlüssel",
+					}),
 				},
 			),
 		);
@@ -313,7 +317,11 @@ describe("the loading placeholder", () => {
 			.fn<BotDetectionFunction>()
 			.mockResolvedValueOnce(
 				detection(CaptchaType.image, {
-					error: { message: "no capacity", key: "API.UNKNOWN_ERROR" },
+					error: {
+						code: "BACKEND_ERROR",
+						errorId: "BACKEND_ERROR:PROV-1",
+						message: "no capacity",
+					},
 				} as Partial<BotDetectionFunctionResult>),
 			)
 			.mockResolvedValue(detection(CaptchaType.image));

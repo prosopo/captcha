@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockGetMaintenanceMode } = vi.hoisted(() => ({
@@ -68,11 +68,11 @@ describe("checkSpamEmail handler", () => {
 
 		expect(res.json).not.toHaveBeenCalled();
 		expect(next).toHaveBeenCalledTimes(1);
-		const err = next.mock.calls[0]?.[0] as ProsopoApiError;
-		expect(err).toBeInstanceOf(ProsopoApiError);
-		expect(err.context?.code).toBe(400);
+		const err = next.mock.calls[0]?.[0] as ProsopoError;
+		expect(err).toBeInstanceOf(ProsopoError);
+		expect(err.status).toBe(400);
 		// Guard against regressing to the outer 500 catch.
-		expect(err.context?.code).not.toBe(500);
+		expect(err.status).not.toBe(500);
 	});
 
 	it("accepts a valid body and proceeds past parsing (maintenance short-circuit)", async () => {

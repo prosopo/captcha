@@ -31,10 +31,6 @@
 	},
 	"author": "Prosopo Limited",
 	"license": "Apache-2.0",
-	"dependencies": {
-		"@prosopo/locale": "workspace:*",
-		"@prosopo/logger": "workspace:*"
-	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
 		"@types/node": "22.10.2",

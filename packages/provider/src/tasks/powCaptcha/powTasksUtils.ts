@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { sha256 } from "@noble/hashes/sha2.js";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { hashMeetsDifficulty } from "@prosopo/util";
 import { isSignatureValid } from "../signatureCheck.js";
 
@@ -34,9 +34,11 @@ export const checkPowSignature = (
 	signatureType?: string,
 ): void => {
 	if (!isSignatureValid(message, signature, address)) {
-		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
+		throw new ProsopoError({
+			code: "UNAUTHORIZED",
+			errorSite: "PROV-75",
+			message: "Invalid signature",
 			context: {
-				code: 400,
 				ERROR: `Signature is invalid for this message: ${signatureType}`,
 				failedFuncName: checkPowSignature.name,
 				address,

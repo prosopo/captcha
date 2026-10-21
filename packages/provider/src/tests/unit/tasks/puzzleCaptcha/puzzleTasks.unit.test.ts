@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { stringToHex, u8aToHex } from "@polkadot/util";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	CaptchaStatus,
 	CaptchaType,
@@ -784,7 +784,7 @@ describe("PuzzleCaptchaManager", () => {
 					1000,
 					mockEnv,
 				),
-			).rejects.toBeInstanceOf(ProsopoApiError);
+			).rejects.toBeInstanceOf(ProsopoError);
 		});
 
 		it("returns verified:false when the solution has already been server-checked", async () => {

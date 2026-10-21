@@ -40,6 +40,7 @@ const widgetSections: readonly string[] = [
 	"GENERAL",
 	"ACCOUNT",
 	"DEVELOPER",
+	"ERRORS",
 ];
 
 describe("getLeafFieldPath", () => {

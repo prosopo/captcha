@@ -552,16 +552,18 @@ describe("start: the challenge request", () => {
 		mocks.getPowCaptchaChallenge.mockResolvedValue(
 			challengeResponse({
 				error: {
+					code: "NO_SESSION_FOUND",
+					errorId: "NO_SESSION_FOUND:PROV-1",
+					status: 400,
 					message: "no session",
-					key: "CAPTCHA.NO_SESSION_FOUND",
-					code: 400,
 				},
 			}),
 		);
 		await harness.manager.start();
-		expect(lastUpdate(harness, "error")).toEqual({
+		expect(lastUpdate(harness, "error")).toMatchObject({
+			code: "NO_SESSION_FOUND",
+			errorId: "NO_SESSION_FOUND:PROV-1",
 			message: "no session",
-			key: "CAPTCHA.NO_SESSION_FOUND",
 		});
 		expect(lastUpdate(harness, "loading")).toBe(false);
 		expect(mocks.solvePoW).not.toHaveBeenCalled();
@@ -570,17 +572,25 @@ describe("start: the challenge request", () => {
 		expect(harness.events.onHuman).not.toHaveBeenCalled();
 	});
 
-	test("an error with no key is still reported under a known key", async () => {
+	test("a hidden provider error is reported with its errorId", async () => {
 		// The widget switches on the key; an undefined one would fall through
 		// every branch that handles a specific failure.
 		const harness = build();
 		mocks.getPowCaptchaChallenge.mockResolvedValue(
-			challengeResponse({ error: { message: "boom", code: 500 } }),
+			challengeResponse({
+				error: {
+					code: "BACKEND_ERROR",
+					errorId: "BACKEND_ERROR:PROV-1",
+					status: 500,
+					message: "boom",
+				},
+			}),
 		);
 		await harness.manager.start();
-		expect(lastUpdate(harness, "error")).toEqual({
+		expect(lastUpdate(harness, "error")).toMatchObject({
+			code: "BACKEND_ERROR",
+			errorId: "BACKEND_ERROR:PROV-1",
 			message: "boom",
-			key: "API.UNKNOWN_ERROR",
 		});
 	});
 });
