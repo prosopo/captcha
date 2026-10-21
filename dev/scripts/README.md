@@ -18,7 +18,7 @@ git clone https://github.com/prosopo/captcha
 cd captcha
 pnpm install
 pnpm run build:all
-docker compose --file docker/docker-compose.development.yml up -d
+docker compose --file docker/docker-compose.test.yml up -d
 cp demos/client-example-server/env.development demos/client-example-server/.env.development
 cp demos/client-example/env.development demos/client-example/.env.development
 cp dev/scripts/env.development .env.development
@@ -46,7 +46,7 @@ pnpm run start:demo
 #### 1. Start Containers
 
 ```bash
-docker compose --file ./docker/docker-compose.development.yml up -d
+docker compose --file ./docker/docker-compose.test.yml up -d
 ```
 
 #### 2. Install Dependencies
