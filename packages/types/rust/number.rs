@@ -53,8 +53,14 @@ impl fmt::Display for JsNumber {
     }
 }
 
+/// As `JSON.stringify` writes the number, or, for BSON (a serializer that is not human
+/// readable), as js-bson does, which keeps `-0` a double.
 impl Serialize for JsNumber {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let negative_zero: bool = self.0 == 0.0 && self.0.is_sign_negative();
+        if negative_zero && !serializer.is_human_readable() {
+            return serializer.serialize_f64(self.0);
+        }
         match self.as_int32() {
             Some(value) => serializer.serialize_i32(value),
             None => serializer.serialize_f64(self.0),

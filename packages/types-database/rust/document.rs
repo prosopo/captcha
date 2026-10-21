@@ -1,0 +1,572 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+//! What `Model.create(input)` does in mongoose 9.10, step for step, so a record the Rust
+//! writes has the bytes mongoose would have written: the key order, the defaults, the
+//! subdocument ids and the BSON number types.
+//!
+//! Building a document (the `Document` constructor, also used for every subdocument):
+//! 1. an empty object for every nested path, in the order its first leaf is declared;
+//! 2. defaults that apply before setters: plain values, a plain array's `[]`, `_id`;
+//! 3. the given values, top-level keys in schema order. A given nested path is rebuilt from the
+//!    given keys in schema order, then filled with every default under it;
+//! 4. the top-level keys put back in schema order;
+//! 5. defaults that apply after setters, appended: function defaults, a document array's `[]`.
+//!
+//! Saving it: validation, then the timestamps, then empty objects removed (`minimize`, not
+//! inside arrays), then `__v: 0` appended. mongod then moves `_id` to the front.
+
+use crate::number::{as_js_number, decimal128_from_integer, js_number};
+use crate::schema::{join, number, DefaultTiming, Field, Ids, Kind, Node, Path, Schema};
+use bson::{Bson, Document};
+use std::fmt;
+use std::sync::LazyLock;
+
+/// A validation failure, as mongoose names it in `ValidationError.errors`: the path and the
+/// validator's kind (`required`, `enum`, `min`, `max`), or the type a cast failed for.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Issue {
+    pub path: String,
+    pub kind: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ValidationError {
+    pub issues: Vec<Issue>,
+}
+
+impl fmt::Display for ValidationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let paths: Vec<String> = self.issues.iter().map(|issue| format!("{} ({})", issue.path, issue.kind)).collect();
+        write!(f, "validation failed: {}", paths.join(", "))
+    }
+}
+
+impl std::error::Error for ValidationError {}
+
+/// `new Model(input)` and `validateSync()`: the document as built, and every issue, sorted by
+/// path.
+pub fn build(schema: &Schema, input: &Document, ids: &mut dyn Ids) -> (Document, Vec<Issue>) {
+    let mut issues: Vec<Issue> = Vec::new();
+    let document: Document = construct_model(schema, input, ids, &mut issues);
+    validate(schema, &document, "", &mut issues);
+    issues.sort();
+    (document, issues)
+}
+
+/// `Model.create(input)`: the document mongoose hands the driver, or why it refused.
+pub fn create(schema: &Schema, input: &Document, ids: &mut dyn Ids) -> Result<Document, ValidationError> {
+    let (mut document, issues): (Document, Vec<Issue>) = build(schema, input, ids);
+    if !issues.is_empty() {
+        return Err(ValidationError { issues });
+    }
+    if schema.timestamps {
+        let created: Bson = match document.get("createdAt") {
+            Some(Bson::DateTime(given)) => Bson::DateTime(*given),
+            _ => Bson::DateTime(ids.now()),
+        };
+        document.insert("createdAt", created.clone());
+        document.insert("updatedAt", created);
+    }
+    let mut sent: Document = minimize_schema(schema, document);
+    sent.insert("__v", 0);
+    Ok(sent)
+}
+
+/// The document as mongod stores an insert: `_id` moved to the front.
+pub fn stored(mut document: Document) -> Document {
+    match document.remove("_id") {
+        Some(id) => {
+            let mut out: Document = Document::new();
+            out.insert("_id", id);
+            out.extend(document);
+            out
+        }
+        None => document,
+    }
+}
+
+/// A top-level document: a model's schema also has the version key, `__v`, as a Number path
+/// after everything else, so a given `__v` takes that place (and `save` then overwrites it).
+fn construct_model(schema: &Schema, input: &Document, ids: &mut dyn Ids, issues: &mut Vec<Issue>) -> Document {
+    construct_with(schema, input, "", true, ids, issues)
+}
+
+/// The `Document` constructor for a subdocument: steps 1 to 5 of the module docs.
+pub fn construct(schema: &Schema, input: &Document, prefix: &str, ids: &mut dyn Ids, issues: &mut Vec<Issue>) -> Document {
+    construct_with(schema, input, prefix, false, ids, issues)
+}
+
+static VERSION_KEY: LazyLock<Path> = LazyLock::new(number);
+
+fn construct_with(
+    schema: &Schema,
+    input: &Document,
+    prefix: &str,
+    model: bool,
+    ids: &mut dyn Ids,
+    issues: &mut Vec<Issue>,
+) -> Document {
+    let mut tree_keys: Vec<&str> = schema.tree_keys();
+    if model {
+        tree_keys.push("__v");
+    }
+    let mut document: Document = skeleton(&schema.fields);
+    apply_defaults(schema, &mut document, DefaultTiming::Before, prefix, ids, issues);
+    for key in keys_in_schema_order(&tree_keys, input) {
+        let value: &Bson = &input[key];
+        let full: String = join(prefix, key);
+        let target: Option<TopLevel> = match key {
+            "__v" if model => Some(TopLevel::Path(&VERSION_KEY)),
+            _ => top_level(schema, key),
+        };
+        match target {
+            Some(TopLevel::Nested(children)) => {
+                if let Bson::Document(given) = value {
+                    document.insert(key, set_nested(children, given, &full, ids, issues));
+                    apply_defaults_to_nested(schema, &mut document, key, prefix, ids, issues);
+                }
+            }
+            Some(TopLevel::Path(leaf)) => {
+                if let Some(cast) = cast(&leaf.kind, value, &full, ids, issues) {
+                    document.insert(key, cast);
+                }
+            }
+            None => {}
+        }
+    }
+    let mut ordered: Document = Document::new();
+    for key in tree_keys {
+        if let Some(value) = document.remove(key) {
+            ordered.insert(key, value);
+        }
+    }
+    ordered.extend(document);
+    apply_defaults(schema, &mut ordered, DefaultTiming::After, prefix, ids, issues);
+    ordered
+}
+
+enum TopLevel<'a> {
+    Nested(&'a [Field]),
+    Path(&'a Path),
+}
+
+fn top_level<'a>(schema: &'a Schema, key: &str) -> Option<TopLevel<'a>> {
+    match schema.fields.iter().find(|field| field.name == key) {
+        Some(Field {
+            node: Node::Nested(children),
+            ..
+        }) => Some(TopLevel::Nested(children)),
+        Some(Field { node: Node::Path(leaf), .. }) => Some(TopLevel::Path(leaf)),
+        None => schema.paths().into_iter().find(|(path, _)| path == key).map(|(_, leaf)| leaf).map(TopLevel::Path),
+    }
+}
+
+/// `$__buildDoc`.
+fn skeleton(fields: &[Field]) -> Document {
+    let mut out: Document = Document::new();
+    for field in fields {
+        if let Node::Nested(children) = &field.node {
+            out.insert(field.name, skeleton(children));
+        }
+    }
+    out
+}
+
+/// `getKeysInSchemaOrder`: the given keys the schema knows, in its order, then the rest.
+fn keys_in_schema_order<'a>(schema_keys: &[&str], given: &'a Document) -> Vec<&'a str> {
+    let mut out: Vec<&'a str> = Vec::new();
+    for key in schema_keys {
+        if let Some(given_key) = given.keys().find(|given_key| given_key.as_str() == *key) {
+            out.push(given_key.as_str());
+        }
+    }
+    for key in given.keys() {
+        if !schema_keys.contains(&key.as_str()) {
+            out.push(key.as_str());
+        }
+    }
+    out
+}
+
+/// A given nested path, rebuilt from the given keys in schema order. Undeclared keys go.
+fn set_nested(fields: &[Field], given: &Document, path: &str, ids: &mut dyn Ids, issues: &mut Vec<Issue>) -> Document {
+    let names: Vec<&str> = fields.iter().map(|field| field.name).collect();
+    let mut out: Document = Document::new();
+    for key in keys_in_schema_order(&names, given) {
+        let full: String = join(path, key);
+        match fields.iter().find(|field| field.name == key).map(|field| &field.node) {
+            Some(Node::Nested(children)) => {
+                if let Bson::Document(inner) = &given[key] {
+                    out.insert(key, set_nested(children, inner, &full, ids, issues));
+                }
+            }
+            Some(Node::Path(leaf)) => {
+                if let Some(cast) = cast(&leaf.kind, &given[key], &full, ids, issues) {
+                    out.insert(key, cast);
+                }
+            }
+            None => {}
+        }
+    }
+    out
+}
+
+/// `applyDefaults`, for one timing: each path's default where the path holds nothing yet.
+fn apply_defaults(
+    schema: &Schema,
+    document: &mut Document,
+    timing: DefaultTiming,
+    prefix: &str,
+    ids: &mut dyn Ids,
+    issues: &mut Vec<Issue>,
+) {
+    for (path, leaf) in schema.paths() {
+        if leaf.timing() != timing {
+            continue;
+        }
+        let pieces: Vec<&str> = path.split('.').collect();
+        let Some(parent) = descend(document, &pieces[..pieces.len() - 1], false) else {
+            continue;
+        };
+        let last: &str = pieces[pieces.len() - 1];
+        if parent.contains_key(last) {
+            continue;
+        }
+        if let Some(value) = default_for(leaf, &join(prefix, &path), ids, issues) {
+            parent.insert(last, value);
+        }
+    }
+}
+
+/// `$applyDefaultsToNested`: every default under the given top-level nested path, whatever its
+/// timing, creating the objects on the way.
+fn apply_defaults_to_nested(
+    schema: &Schema,
+    document: &mut Document,
+    nested: &str,
+    prefix: &str,
+    ids: &mut dyn Ids,
+    issues: &mut Vec<Issue>,
+) {
+    let start: String = format!("{nested}.");
+    for (path, leaf) in schema.paths() {
+        if !path.starts_with(&start) || leaf.timing() == DefaultTiming::None {
+            continue;
+        }
+        let pieces: Vec<&str> = path.split('.').collect();
+        let Some(parent) = descend(document, &pieces[..pieces.len() - 1], true) else {
+            continue;
+        };
+        let last: &str = pieces[pieces.len() - 1];
+        if parent.contains_key(last) {
+            continue;
+        }
+        if let Some(value) = default_for(leaf, &join(prefix, &path), ids, issues) {
+            parent.insert(last, value);
+        }
+    }
+}
+
+fn descend<'a>(document: &'a mut Document, pieces: &[&str], create: bool) -> Option<&'a mut Document> {
+    let mut cursor: &'a mut Document = document;
+    for piece in pieces {
+        if create && !matches!(cursor.get(*piece), Some(Bson::Document(_))) {
+            cursor.insert(*piece, Document::new());
+        }
+        cursor = match cursor.get_mut(*piece) {
+            Some(Bson::Document(inner)) => inner,
+            _ => return None,
+        };
+    }
+    Some(cursor)
+}
+
+fn default_for(leaf: &Path, path: &str, ids: &mut dyn Ids, issues: &mut Vec<Issue>) -> Option<Bson> {
+    let value: Bson = leaf.default_value_for(ids)?;
+    cast(&leaf.kind, &value, path, ids, issues)
+}
+
+fn cast_issue(issues: &mut Vec<Issue>, path: &str, kind: &str) -> Option<Bson> {
+    issues.push(Issue {
+        path: path.to_string(),
+        kind: kind.to_string(),
+    });
+    None
+}
+
+/// A given value cast to the path's type, or `None` (with an issue) if mongoose cannot cast it.
+pub(crate) fn cast(kind: &Kind, value: &Bson, path: &str, ids: &mut dyn Ids, issues: &mut Vec<Issue>) -> Option<Bson> {
+    if matches!(value, Bson::Null) {
+        return Some(Bson::Null);
+    }
+    match kind {
+        Kind::String => match value {
+            Bson::String(_) => Some(value.clone()),
+            _ => cast_issue(issues, path, "String"),
+        },
+        Kind::Number => match as_js_number(value) {
+            Some(number) if !number.is_nan() => Some(js_number(number)),
+            _ => cast_issue(issues, path, "Number"),
+        },
+        Kind::Boolean => match value {
+            Bson::Boolean(_) => Some(value.clone()),
+            _ => cast_issue(issues, path, "Boolean"),
+        },
+        Kind::Date => match value {
+            Bson::DateTime(_) => Some(value.clone()),
+            _ => cast_issue(issues, path, "date"),
+        },
+        Kind::ObjectId => match value {
+            Bson::ObjectId(_) => Some(value.clone()),
+            _ => cast_issue(issues, path, "ObjectId"),
+        },
+        Kind::Mixed => Some(mixed(value)),
+        Kind::IpHalf => match value {
+            Bson::Decimal128(_) => Some(value.clone()),
+            Bson::Int64(long) => Some(Bson::Decimal128(decimal128_from_integer(i128::from(*long as u64)))),
+            Bson::String(text) => match text.parse::<i128>() {
+                Ok(integer) if text.bytes().all(|b| b.is_ascii_digit() || b == b'-') => {
+                    Some(Bson::Decimal128(decimal128_from_integer(integer)))
+                }
+                _ => cast_issue(issues, path, "Decimal128"),
+            },
+            Bson::Int32(_) | Bson::Double(_) => match as_js_number(value) {
+                Some(number) if number.fract() == 0.0 && number.abs() < 1e30 => {
+                    Some(Bson::Decimal128(decimal128_from_integer(number as i128)))
+                }
+                _ => cast_issue(issues, path, "Decimal128"),
+            },
+            _ => cast_issue(issues, path, "Decimal128"),
+        },
+        Kind::Array(element) => {
+            let items: Vec<Bson> = match value {
+                Bson::Array(items) => items.clone(),
+                single => vec![single.clone()],
+            };
+            let mut out: Vec<Bson> = Vec::with_capacity(items.len());
+            for (index, item) in items.iter().enumerate() {
+                out.push(cast(element, item, &join(path, &index.to_string()), ids, issues)?);
+            }
+            Some(Bson::Array(out))
+        }
+        Kind::DocumentArray(schema) => {
+            let Bson::Array(items) = value else {
+                return cast_issue(issues, path, "DocumentArray");
+            };
+            let mut out: Vec<Bson> = Vec::with_capacity(items.len());
+            for (index, item) in items.iter().enumerate() {
+                let Bson::Document(given) = item else {
+                    return cast_issue(issues, path, "DocumentArray");
+                };
+                out.push(Bson::Document(construct(schema, given, &join(path, &index.to_string()), ids, issues)));
+            }
+            Some(Bson::Array(out))
+        }
+        Kind::Subdocument(schema) => match value {
+            Bson::Document(given) => Some(Bson::Document(construct(schema, given, path, ids, issues))),
+            _ => cast_issue(issues, path, "Embedded"),
+        },
+        Kind::Map(schema) => {
+            let Bson::Document(entries) = value else {
+                return cast_issue(issues, path, "Map");
+            };
+            let mut out: Document = Document::new();
+            for (key, entry) in entries {
+                let Bson::Document(given) = entry else {
+                    return cast_issue(issues, path, "Map");
+                };
+                out.insert(key, construct(schema, given, &join(path, key), ids, issues));
+            }
+            Some(Bson::Document(out))
+        }
+    }
+}
+
+/// A Mixed value as JS holds it: every number a JS number.
+pub(crate) fn mixed(value: &Bson) -> Bson {
+    match value {
+        Bson::Int32(_) | Bson::Int64(_) | Bson::Double(_) => js_number(as_js_number(value).unwrap_or(f64::NAN)),
+        Bson::Array(items) => Bson::Array(items.iter().map(mixed).collect()),
+        Bson::Document(entries) => Bson::Document(entries.iter().map(|(key, entry)| (key.clone(), mixed(entry))).collect()),
+        other => other.clone(),
+    }
+}
+
+fn lookup<'a>(document: &'a Document, path: &str) -> Option<&'a Bson> {
+    let mut cursor: &Document = document;
+    let pieces: Vec<&str> = path.split('.').collect();
+    for piece in &pieces[..pieces.len() - 1] {
+        cursor = match cursor.get(*piece) {
+            Some(Bson::Document(inner)) => inner,
+            _ => return None,
+        };
+    }
+    cursor.get(pieces[pieces.len() - 1])
+}
+
+fn satisfies_required(kind: &Kind, value: Option<&Bson>) -> bool {
+    match (kind, value) {
+        (_, None | Some(Bson::Null)) => false,
+        (Kind::String, Some(Bson::String(text))) => !text.is_empty(),
+        (Kind::String, Some(_)) => false,
+        _ => true,
+    }
+}
+
+/// `$validate`: per path, the first validator that fails (required, then enum or the bounds),
+/// then each subdocument's own paths.
+pub fn validate(schema: &Schema, document: &Document, prefix: &str, issues: &mut Vec<Issue>) {
+    for (path, leaf) in schema.paths() {
+        let full: String = join(prefix, &path);
+        let value: Option<&Bson> = lookup(document, &path);
+        let push = |issues: &mut Vec<Issue>, kind: &str| {
+            issues.push(Issue {
+                path: full.clone(),
+                kind: kind.to_string(),
+            })
+        };
+        if leaf.required && !satisfies_required(&leaf.kind, value) {
+            push(issues, "required");
+            continue;
+        }
+        match (&leaf.kind, value) {
+            (Kind::String, Some(Bson::String(text))) => {
+                if let Some(values) = &leaf.enum_values {
+                    if !values.iter().any(|allowed| allowed == text) {
+                        push(issues, "enum");
+                    }
+                }
+            }
+            (Kind::Number, Some(number)) => {
+                if let Some(number) = as_js_number(number) {
+                    if leaf.min.is_some_and(|min| number < min) {
+                        push(issues, "min");
+                    } else if leaf.max.is_some_and(|max| number > max) {
+                        push(issues, "max");
+                    }
+                }
+            }
+            (Kind::Array(element), Some(Bson::Array(items))) => {
+                if let Some(values) = &leaf.enum_values {
+                    validate_element_enum(element, items, values, &full, issues);
+                }
+            }
+            (Kind::Subdocument(sub), Some(Bson::Document(inner))) => validate(sub, inner, &full, issues),
+            (Kind::DocumentArray(sub), Some(Bson::Array(items))) => {
+                for (index, item) in items.iter().enumerate() {
+                    if let Bson::Document(inner) = item {
+                        validate(sub, inner, &join(&full, &index.to_string()), issues);
+                    }
+                }
+            }
+            (Kind::Map(sub), Some(Bson::Document(entries))) => {
+                for (key, entry) in entries {
+                    if let Bson::Document(inner) = entry {
+                        validate(sub, inner, &join(&full, key), issues);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+/// An enum on an array's strings applies to each one, at any depth (`inputMethods.0.1`).
+fn validate_element_enum(element: &Kind, items: &[Bson], values: &[String], path: &str, issues: &mut Vec<Issue>) {
+    for (index, item) in items.iter().enumerate() {
+        let at: String = join(path, &index.to_string());
+        match (element, item) {
+            (Kind::Array(inner), Bson::Array(nested)) => validate_element_enum(inner, nested, values, &at, issues),
+            (Kind::String, Bson::String(text)) if !values.iter().any(|allowed| allowed == text) => issues.push(Issue {
+                path: at,
+                kind: "enum".to_string(),
+            }),
+            _ => {}
+        }
+    }
+}
+
+/// mongoose's `minimize`, as `toObject` applies it: an object left empty is removed, but an
+/// array element is kept however empty, and so is a Map. Objects inside arrays are minimized.
+fn minimize_with(fields: &[Field], schema: Option<&Schema>, document: Document) -> Document {
+    let mut out: Document = Document::new();
+    for (key, value) in document {
+        let field: Option<&Node> = fields.iter().find(|field| field.name == key).map(|field| &field.node);
+        let leaf: Option<&Path> = match field {
+            Some(Node::Path(leaf)) => Some(leaf),
+            Some(Node::Nested(_)) => None,
+            None => schema.and_then(|schema| schema.path(&key)),
+        };
+        let kept: Option<Bson> = match (field, leaf.map(|leaf| &leaf.kind), value) {
+            (Some(Node::Nested(children)), _, Bson::Document(inner)) => non_empty(minimize_with(children, None, inner)),
+            (_, Some(Kind::Map(sub)), Bson::Document(entries)) => Some(Bson::Document(
+                entries
+                    .into_iter()
+                    .map(|(name, entry)| match entry {
+                        Bson::Document(inner) => (name, Bson::Document(minimize_schema(sub, inner))),
+                        other => (name, other),
+                    })
+                    .collect(),
+            )),
+            (_, Some(Kind::Subdocument(sub)), Bson::Document(inner)) => non_empty(minimize_schema(sub, inner)),
+            (_, Some(Kind::DocumentArray(sub)), Bson::Array(items)) => Some(Bson::Array(
+                items
+                    .into_iter()
+                    .map(|item| match item {
+                        Bson::Document(inner) => Bson::Document(minimize_schema(sub, inner)),
+                        other => other,
+                    })
+                    .collect(),
+            )),
+            (_, _, other) => minimize_value(other),
+        };
+        if let Some(value) = kept {
+            out.insert(key, value);
+        }
+    }
+    out
+}
+
+fn minimize_schema(schema: &Schema, document: Document) -> Document {
+    minimize_with(&schema.fields, Some(schema), document)
+}
+
+fn non_empty(document: Document) -> Option<Bson> {
+    (!document.is_empty()).then_some(Bson::Document(document))
+}
+
+/// A value outside any declared subdocument (a Mixed value, an array of primitives).
+fn minimize_value(value: Bson) -> Option<Bson> {
+    match value {
+        Bson::Document(inner) => non_empty(minimize_plain(inner)),
+        Bson::Array(items) => Some(Bson::Array(items.into_iter().map(minimize_element).collect())),
+        other => Some(other),
+    }
+}
+
+fn minimize_plain(document: Document) -> Document {
+    document
+        .into_iter()
+        .filter_map(|(key, value)| minimize_value(value).map(|value| (key, value)))
+        .collect()
+}
+
+fn minimize_element(value: Bson) -> Bson {
+    match value {
+        Bson::Document(inner) => Bson::Document(minimize_plain(inner)),
+        Bson::Array(items) => Bson::Array(items.into_iter().map(minimize_element).collect()),
+        other => other,
+    }
+}

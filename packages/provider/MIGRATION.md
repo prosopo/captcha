@@ -332,10 +332,31 @@ in Rust until phase 6 is complete.**
      becomes the only constructor of an `IpHalf` newtype, so an
      un-normalised value cannot be written. That value is a stored record,
      so it is byte-identical (§0).
-   - *Defaults, including function defaults*: an explicit constructor or
-     `Default` impl per model. Not `#[serde(default)]` on read, because
-     mongoose applies defaults on write and old documents must read back
-     unchanged.
+   - *Defaults, key order and everything else `Model.create` decides*: a
+     static declaration of each schema, field for field as the TS declares
+     it, read by one function that builds the document the way mongoose's
+     `Document` constructor does (`prosopo_types_database::document`). The
+     first plan said an explicit constructor or `Default` per model; that
+     cannot produce mongoose's bytes, because the stored key order depends on
+     the input. Measured against mongoose 9.10.3 and mongod: the top-level
+     keys are re-sorted into schema order, then function defaults (and a
+     document array's `[]`) are appended after that sort, so `frictionlessTypes`
+     sits in schema position when given and at the end when defaulted; a nested
+     path that is not given keeps its child objects first (`spamFilter` is
+     stored as `{ emailRules, enabled }`); a given `__v` is a path of its own
+     and fixes where `__v: 0` lands. A struct has one field order. The
+     declaration carries no query or connection logic, so it is not an ODM:
+     the typed records stay serde structs, and the declaration only decides
+     their bytes. Not `#[serde(default)]` on read, because mongoose applies
+     defaults on write and old documents must read back unchanged.
+   - *BSON numbers*: js-bson 7 writes a JS number as int32 when it is an
+     integer in the int32 range other than `-0`, and as a double otherwise
+     (including `2^31` and millisecond timestamps). `JsNumber` serialises that
+     way for BSON. It tells BSON from JSON by `is_human_readable()`, which only
+     bson's raw serializer (the one the driver uses) reports as false, so
+     documents for the database are built with
+     `prosopo_types_database::number::to_bson_document`, never
+     `bson::serialize_to_document`.
    - *Schema validators* (`required`, `enum`): dropped where the type already
      guarantees them (a non-`Option` field, a Rust enum). `min`/`max`/`match`
      stay as explicit checks in the newtype constructor.
@@ -344,11 +365,14 @@ in Rust until phase 6 is complete.**
      spec makes `ensureIndexes` drop and rebuild the index in production.
    - *`.lean()` reads*: what serde gives anyway.
 
-   Each model is checked by round-trip tests against a real mongod (via
-   `mongodb-memory-server`, which is already a dev dependency): a document
-   written by Rust is read back by mongoose and the other way round, and the
-   raw BSON is compared byte for byte. Every model gets this treatment, so
-   it's the largest single piece of work.
+   Each model is checked against a real mongod: the generator runs mongoose
+   on seeded random inputs and records the bytes it sends and the bytes mongod
+   stores, and the Rust must produce the same bytes. A document the Rust
+   writes is then byte-identical to one mongoose wrote, so mongoose reads it
+   back as its own. The other direction, Rust reading what mongoose wrote
+   into typed records, is tested with the typed records in the database
+   port. Every model gets this treatment, so it's the largest single piece of
+   work.
 5. **zod: a Rust replacement for JSON input, the type system for everything
    else. Decided per case.** There are about 40 request schemas using `preprocess`
    / `coerce` / `transform` / `superRefine`, plus the `boundedString` /

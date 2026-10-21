@@ -33,6 +33,7 @@ pub mod sanitise;
 mod scale;
 pub mod settings;
 pub mod settings_types;
+pub mod stored;
 pub mod timeouts;
 pub mod token;
 mod wire_enum;

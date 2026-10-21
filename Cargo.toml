@@ -23,6 +23,7 @@ members = [
 	"packages/user-access-policy",
 	"packages/server",
 	"packages/datasets-fs",
+	"packages/types-database",
 ]
 exclude = [
 	"packages/native-ja4",
