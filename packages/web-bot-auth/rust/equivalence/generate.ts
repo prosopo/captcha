@@ -35,6 +35,11 @@ import {
 } from "../../src/structuredFields.js";
 import { verifyWebBotAuth } from "../../src/verify.js";
 
+// URL parsing and serialisation come from Node's bundled URL parser, and production runs Node 24.
+if (!process.version.startsWith("v24.")) {
+	throw new Error(`generate.ts must run on Node 24 (the production runtime), not ${process.version}`);
+}
+
 type Outcome<T> = { ok: T } | { error: string };
 
 const errorText = (error: unknown): string => {

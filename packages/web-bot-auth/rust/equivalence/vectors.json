@@ -1962,7 +1962,7 @@
 		{
 			"input": "foo:/x",
 			"result": {
-				"ok": "foo:/x"
+				"ok": "foo:///x"
 			}
 		},
 		{

@@ -40,12 +40,20 @@ impl std::error::Error for InvalidUrl {}
 /// rules.
 pub fn normalise_signature_agent_url(raw: &str) -> Result<String, InvalidUrl> {
     let mut url: Url = Url::parse(raw).map_err(|_| InvalidUrl)?;
-    if let Some(host) = url.host_str() {
-        let lowered: String = host.to_lowercase();
-        if lowered != host {
-            // Mirrors the JS `hostname` setter, which ignores values it cannot apply.
-            let _ = url.set_host(Some(&lowered));
+    match url.host_str() {
+        Some(host) => {
+            let lowered: String = host.to_lowercase();
+            if lowered != host {
+                // Mirrors the JS `hostname` setter, which ignores values it cannot apply.
+                let _ = url.set_host(Some(&lowered));
+            }
         }
+        // `hostname = ""` on a hostless URL without an opaque path gives it an empty host, so
+        // Node 24 serialises `foo:/x` as `foo:///x`.
+        None if !url.cannot_be_a_base() => {
+            let _ = url.set_host(Some(""));
+        }
+        None => {}
     }
     if url.path() == "/" {
         url.set_path("");
