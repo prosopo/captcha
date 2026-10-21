@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoError } from "@prosopo/common";
+import { ProsopoError, isProsopoError, isSevereError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaSolutionBody,
@@ -126,6 +126,7 @@ export default (env: ProviderEnvironment) =>
 			};
 			return res.json(returnValue);
 		} catch (err) {
+			if (isProsopoError(err) && !isSevereError(err)) return next(err);
 			req.logger.error(() => ({
 				err,
 				body: summariseRequestBody(req),

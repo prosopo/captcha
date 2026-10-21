@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoError } from "@prosopo/common";
+import { ProsopoError, isProsopoError, isSevereError } from "@prosopo/common";
 import type { PuzzleCaptchaSolutionResponse } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
@@ -123,6 +123,7 @@ export const interactiveSolutionHandler =
 			};
 			return res.json(response);
 		} catch (err) {
+			if (isProsopoError(err) && !isSevereError(err)) return next(err);
 			req.logger.error(() => ({
 				err,
 				body: summariseRequestBody(req),
