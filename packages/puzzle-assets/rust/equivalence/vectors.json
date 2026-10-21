@@ -1069,7 +1069,7 @@
 			[
 				"3fd827766c400000",
 				"4003333333333333",
-				"3fb8b19e32f6c49e"
+				"3fb8b19e32f6c49f"
 			],
 			[
 				"3fe0317aa8c00000",
@@ -1174,7 +1174,7 @@
 			[
 				"3fdcd04f60c00000",
 				"4003333333333333",
-				"3fc2dac39cff13ea"
+				"3fc2dac39cff13e9"
 			],
 			[
 				"3feac246dba00000",
@@ -1264,7 +1264,7 @@
 			[
 				"3fd8bf44ba6a56ee",
 				"4003333333333333",
-				"3fba2c83a3e6566c"
+				"3fba2c83a3e6566d"
 			],
 			[
 				"3fdc50ca1dd50935",
@@ -1289,7 +1289,7 @@
 			[
 				"3fe54b6fd5bfe92b",
 				"4003333333333333",
-				"3fd814adba3e0bd8"
+				"3fd814adba3e0bd9"
 			],
 			[
 				"3fe714328775424e",
@@ -1314,7 +1314,7 @@
 			[
 				"3fee373d4e4aa6dd",
 				"4003333333333333",
-				"3febe23d4bf8981c"
+				"3febe23d4bf8981b"
 			],
 			[
 				"3ff0000000000000",
@@ -1374,7 +1374,7 @@
 			[
 				"3fe498378ea00000",
 				"3fdaaaaaaaaaaaab",
-				"3feaa1c10cc43e1c"
+				"3feaa1c10cc43e1d"
 			],
 			[
 				"3fc4cbd41e800000",
@@ -1439,7 +1439,7 @@
 			[
 				"3f9f053dd4000000",
 				"3fdaaaaaaaaaaaab",
-				"3fcdd0b4717d5c32"
+				"3fcdd0b4717d5c33"
 			],
 			[
 				"3fe5b42f85600000",
@@ -1504,7 +1504,7 @@
 			[
 				"3fe994a0f9e00000",
 				"3fdaaaaaaaaaaaab",
-				"3fed26501b891488"
+				"3fed26501b891489"
 			],
 			[
 				"3fe350578d800000",
@@ -1554,7 +1554,7 @@
 			[
 				"3fd8bf44ba6a56ee",
 				"3fdaaaaaaaaaaaab",
-				"3fe589cace43ff0e"
+				"3fe589cace43ff0f"
 			],
 			[
 				"3fdc50ca1dd50935",
@@ -1574,7 +1574,7 @@
 			[
 				"3fe382ad240a9007",
 				"3fdaaaaaaaaaaaab",
-				"3fea09d992902860"
+				"3fea09d99290285f"
 			],
 			[
 				"3fe54b6fd5bfe92b",
@@ -1739,7 +1739,7 @@
 			[
 				"3fd92cdebe000000",
 				"3fdd1745d1745d17",
-				"3fe4f080a30436c4"
+				"3fe4f080a30436c3"
 			],
 			[
 				"3fcd17bd73800000",
@@ -1759,7 +1759,7 @@
 			[
 				"3fe2b39310200000",
 				"3fdd1745d1745d17",
-				"3fe9115b1b7b95ae"
+				"3fe9115b1b7b95ad"
 			],
 			[
 				"3fd7940723000000",
@@ -1809,7 +1809,7 @@
 			[
 				"3fe269a003000000",
 				"3fdd1745d1745d17",
-				"3fe8e41bca699998"
+				"3fe8e41bca699997"
 			],
 			[
 				"3faab1232f514a03",
@@ -1844,7 +1844,7 @@
 			[
 				"3fd8bf44ba6a56ee",
 				"3fdd1745d1745d17",
-				"3fe4c6df3216b314"
+				"3fe4c6df3216b315"
 			],
 			[
 				"3fdc50ca1dd50935",
@@ -1864,7 +1864,7 @@
 			[
 				"3fe382ad240a9007",
 				"3fdd1745d1745d17",
-				"3fe98e1533521a96"
+				"3fe98e1533521a97"
 			],
 			[
 				"3fe54b6fd5bfe92b",
@@ -1879,7 +1879,7 @@
 			[
 				"3fe8dcf5392a9b71",
 				"3fdd1745d1745d17",
-				"3fec883a4aea497c"
+				"3fec883a4aea497b"
 			],
 			[
 				"3feaa5b7eadff495",
@@ -2189,6 +2189,51 @@
 			[
 				"3ff0000000000000",
 				"4000000000000000",
+				"3ff0000000000000"
+			],
+			[
+				"40bc325c64000000",
+				"4000000000000000",
+				"4188d870f0c34038"
+			],
+			[
+				"c119d3d2f4000000",
+				"4000000000000000",
+				"4244d873c8a069c4"
+			],
+			[
+				"40cbf923f4000000",
+				"4000000000000000",
+				"41a87400636da504"
+			],
+			[
+				"4096ff0814000000",
+				"4000000000000000",
+				"4140869ba440ca0c"
+			],
+			[
+				"c0ff186c7ff00000",
+				"4000000000000000",
+				"420e3764dc10c994"
+			],
+			[
+				"3ff0000000000000",
+				"7ff8000000000000",
+				"7ff8000000000000"
+			],
+			[
+				"3ff0000000000000",
+				"7ff0000000000000",
+				"7ff8000000000000"
+			],
+			[
+				"bff0000000000000",
+				"fff0000000000000",
+				"7ff8000000000000"
+			],
+			[
+				"7ff8000000000000",
+				"0000000000000000",
 				"3ff0000000000000"
 			]
 		],
@@ -6557,7 +6602,7 @@
 			],
 			"luminanceA": "3fc44592da04289f",
 			"contrast": "400245ed9a1056f4",
-			"worstCase": "3ffd82c32cf8c2aa",
+			"worstCase": "3ffd82c32cf8c2ac",
 			"simulatedA": [
 				[
 					"4069000000000000",
@@ -6629,8 +6674,8 @@
 				240,
 				38
 			],
-			"luminanceA": "3fca7e8673edaa74",
-			"contrast": "4008ddafa1701f83",
+			"luminanceA": "3fca7e8673edaa75",
+			"contrast": "4008ddafa1701f81",
 			"worstCase": "40048d8bc66a3181",
 			"simulatedA": [
 				[
@@ -6890,7 +6935,7 @@
 			],
 			"luminanceA": "3fde010d62062f14",
 			"contrast": "3ff7b4eb82333e21",
-			"worstCase": "3ff524b84e6f9aab",
+			"worstCase": "3ff524b84e6f9aaa",
 			"simulatedA": [
 				[
 					"406a400000000000",
@@ -6963,7 +7008,7 @@
 				235
 			],
 			"luminanceA": "3fa7be4a47d44dae",
-			"contrast": "4017d527f1f8f7d8",
+			"contrast": "4017d527f1f8f7da",
 			"worstCase": "4014a9f48e4cfecc",
 			"simulatedA": [
 				[
@@ -7037,7 +7082,7 @@
 				199
 			],
 			"luminanceA": "3f9ff8944788f561",
-			"contrast": "4022115d68850647",
+			"contrast": "4022115d68850646",
 			"worstCase": "401f68a8fabc7650",
 			"simulatedA": [
 				[
@@ -7075,7 +7120,7 @@
 			],
 			"luminanceA": "3fd12aa1a278ff06",
 			"contrast": "3ff944d08ddfa2c1",
-			"worstCase": "3ff57c5ef6739681",
+			"worstCase": "3ff57c5ef6739680",
 			"simulatedA": [
 				[
 					"406dc00000000000",
@@ -7110,8 +7155,8 @@
 				139,
 				7
 			],
-			"luminanceA": "3fd27d0f0f9d14ba",
-			"contrast": "3ff7110d7df1afbe",
+			"luminanceA": "3fd27d0f0f9d14bb",
+			"contrast": "3ff7110d7df1afbf",
 			"worstCase": "3ff69ced0862a8b0",
 			"simulatedA": [
 				[
@@ -7258,8 +7303,8 @@
 				88,
 				11
 			],
-			"luminanceA": "3fe93df1c442a3d4",
-			"contrast": "401bec05722469be",
+			"luminanceA": "3fe93df1c442a3d3",
+			"contrast": "401bec05722469bd",
 			"worstCase": "4019eb74004054f1",
 			"simulatedA": [
 				[
@@ -7334,7 +7379,7 @@
 			],
 			"luminanceA": "3fb0dda60f04ad1f",
 			"contrast": "3ff995691d1682e2",
-			"worstCase": "3ff733a1544a17ca",
+			"worstCase": "3ff733a1544a17cc",
 			"simulatedA": [
 				[
 					"4040800000000000",
@@ -7556,7 +7601,7 @@
 			],
 			"luminanceA": "3fb6c4b523f14612",
 			"contrast": "40171730088e4baa",
-			"worstCase": "40168f65107202ed",
+			"worstCase": "40168f65107202ee",
 			"simulatedA": [
 				[
 					"4042800000000000",
@@ -7741,7 +7786,7 @@
 			],
 			"luminanceA": "3f9fffe45549926b",
 			"contrast": "3ffe931a2a5704ac",
-			"worstCase": "3ffcb536a637e5df",
+			"worstCase": "3ffcb536a637e5e0",
 			"simulatedA": [
 				[
 					"4057000000000000",
@@ -7887,8 +7932,8 @@
 				82,
 				15
 			],
-			"luminanceA": "3fc78bb7c5493418",
-			"contrast": "3ff535c233672f2c",
+			"luminanceA": "3fc78bb7c5493419",
+			"contrast": "3ff535c233672f2d",
 			"worstCase": "3ff47425dcbd8d9f",
 			"simulatedA": [
 				[
@@ -7926,7 +7971,7 @@
 			],
 			"luminanceA": "3fdcaff9f01105cc",
 			"contrast": "3ff0c23106cb2ead",
-			"worstCase": "3ff0988f2e111c0c",
+			"worstCase": "3ff0988f2e111c0b",
 			"simulatedA": [
 				[
 					"4037000000000000",
@@ -8035,8 +8080,8 @@
 				54,
 				245
 			],
-			"luminanceA": "3fe06ef7c61e5034",
-			"contrast": "400faa6ee1f7045f",
+			"luminanceA": "3fe06ef7c61e5033",
+			"contrast": "400faa6ee1f7045d",
 			"worstCase": "4002bc857e54b93c",
 			"simulatedA": [
 				[
@@ -8072,7 +8117,7 @@
 				160,
 				78
 			],
-			"luminanceA": "3f85630bb3817439",
+			"luminanceA": "3f85630bb3817438",
 			"contrast": "4018ec41fe72374f",
 			"worstCase": "40174f10fb81f8c1",
 			"simulatedA": [
@@ -8405,8 +8450,8 @@
 				174,
 				216
 			],
-			"luminanceA": "3fc20f2450af439a",
-			"contrast": "40013b59e38d5749",
+			"luminanceA": "3fc20f2450af439b",
+			"contrast": "40013b59e38d5748",
 			"worstCase": "400032da58c9487a",
 			"simulatedA": [
 				[
@@ -8497,7 +8542,7 @@
 					"40651c4bc3dee000"
 				]
 			],
-			"best": "3ff2aa076ef910f3"
+			"best": "3ff2aa076ef910f4"
 		},
 		{
 			"colours": [
@@ -8750,7 +8795,7 @@
 					"40584566ebcf8000"
 				]
 			],
-			"best": "3ff8cc6209cffd4f"
+			"best": "3ff8cc6209cffd4c"
 		},
 		{
 			"colours": [
@@ -9037,7 +9082,7 @@
 					"40329c5de80b0000"
 				]
 			],
-			"best": "4004c2fb8e02af04"
+			"best": "4004c2fb8e02af02"
 		},
 		{
 			"colours": [

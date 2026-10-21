@@ -55,7 +55,20 @@ pub(crate) fn min(a: f64, b: f64) -> f64 {
     }
 }
 
-pub(crate) use crate::fdlibm::{exp, pow};
+pub(crate) use crate::fdlibm::exp;
+
+/// `Math.pow` as V8 13.6 (Node 24) computes it: JS's `NaN` cases, `x * x` for a square, and
+/// otherwise the system libm `pow`, which is also what `f64::powf` calls. The Rust image
+/// must therefore use the same glibc as the Node one (see MIGRATION-LOG.md, Node 24).
+pub(crate) fn pow(x: f64, y: f64) -> f64 {
+    if y.is_nan() || (y.is_infinite() && x.abs() == 1.0) {
+        return f64::NAN;
+    }
+    if y == 2.0 {
+        return x * x;
+    }
+    x.powf(y)
+}
 
 /// V8's `Math.hypot`: normalise by the largest magnitude, then a Kahan sum.
 /// Not the C `hypot`, which rounds differently.

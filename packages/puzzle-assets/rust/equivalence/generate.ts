@@ -37,6 +37,11 @@ import type {
 	RgbaImage,
 } from "../../src/types.js";
 
+// Math.pow and the pixels built on it are V8 behaviour, and production runs Node 24.
+if (!process.version.startsWith("v24.")) {
+	throw new Error(`generate.ts must run on Node 24 (the production runtime), not ${process.version}`);
+}
+
 // Floats travel as the hex of their IEEE-754 bits, big-endian, so the Rust side
 // compares bit patterns rather than trusting a decimal round trip.
 const bits = (value: number): string => {
@@ -239,6 +244,22 @@ const mathVectors = (): MathVectors => {
 			const x = (channel / 255 + 0.055) / 1.055;
 			pow.push([bits(x), bits(y), bits(x ** y)]);
 		}
+	}
+	// Squares where glibc's pow and x * x round differently (V8 13.6 returns x * x), and the
+	// cases where JS's pow is NaN but C's is 1.
+	const edges: [number, number][] = [
+		[7218.360900878906, 2],
+		[-423156.73828125, 2],
+		[14322.280883789063, 2],
+		[1471.7578887939453, 2],
+		[-127366.78123474121, 2],
+		[1, Number.NaN],
+		[1, Number.POSITIVE_INFINITY],
+		[-1, Number.NEGATIVE_INFINITY],
+		[Number.NaN, 0],
+	];
+	for (const [x, y] of edges) {
+		pow.push([bits(x), bits(y), bits(x ** y)]);
 	}
 	const hypot: [string, string, string][] = [];
 	for (let i = 0; i < 200; i++) {
