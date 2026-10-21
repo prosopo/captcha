@@ -16,7 +16,8 @@
 //! the commands mongoose sends for it and reads the replies as the TS reads them.
 
 use crate::captcha::StoredKind;
-use crate::operation::{Executor, Operation, Reply, UpdateStatement};
+use crate::mongo::MongoDatabase;
+use crate::operation::{Executor, MongoExecutor, Operation, Reply, UpdateStatement};
 use crate::source::{Source, SourceIds};
 use crate::streamer::{CentralDbStreamer, FetchRecord, MarkStored};
 use bson::{doc, Bson, DateTime, Document};
@@ -157,6 +158,9 @@ pub struct ProviderDatabase {
     indexes_ensured: AtomicBool,
     streamer: RwLock<Option<Arc<CentralDbStreamer>>>,
     redis: RwLock<Option<ProviderRedis>>,
+    /// The connection [`Self::connect`] opens, when the database has one of its own.
+    mongo: Option<Arc<MongoDatabase>>,
+    redis_settings: Option<RedisSettings>,
 }
 
 /// `ProviderDatabaseOptions.redis`.
@@ -242,17 +246,48 @@ impl ProviderDatabase {
             indexes_ensured: AtomicBool::new(false),
             streamer: RwLock::new(None),
             redis: RwLock::new(None),
+            mongo: None,
+            redis_settings: None,
         }
     }
 
-    /// Connects `mongo` and indexes it as mongoose's autoIndex does when the TS loads its tables.
-    pub async fn connect(mongo: &crate::mongo::MongoDatabase, source: Arc<dyn Source>, logger: Logger) -> Result<ProviderDatabase, crate::mongo::MongoError> {
-        mongo.connect().await?;
-        let database = mongo.database().await.map_err(|error| crate::mongo::MongoError::Unavailable(error.to_string()))?;
-        let provider: ProviderDatabase =
-            ProviderDatabase::new(Arc::new(crate::operation::DriverExecutor::new(database)), source, logger);
-        provider.auto_index().await;
-        Ok(provider)
+    /// `new ProviderDatabase(options)`: the database on `mongo`, not yet connected, with the
+    /// Redis [`Self::connect`] sets up, if any.
+    pub fn with_mongo(mongo: Arc<MongoDatabase>, redis: Option<RedisSettings>, source: Arc<dyn Source>, logger: Logger) -> ProviderDatabase {
+        ProviderDatabase {
+            mongo: Some(mongo.clone()),
+            redis_settings: redis,
+            ..ProviderDatabase::new(Arc::new(MongoExecutor::new(mongo)), source, logger)
+        }
+    }
+
+    pub fn mongo(&self) -> Option<&Arc<MongoDatabase>> {
+        self.mongo.as_ref()
+    }
+
+    pub fn redis_settings(&self) -> Option<&RedisSettings> {
+        self.redis_settings.as_ref()
+    }
+
+    /// Whether the connection is open. A database on a fixed executor always is.
+    pub fn connected(&self) -> bool {
+        self.mongo.as_ref().is_none_or(|mongo| mongo.connected())
+    }
+
+    /// `connect`: opens the connection, indexes the collections as mongoose's autoIndex does
+    /// when the TS loads its models, and sets up Redis.
+    pub async fn connect(&self) -> Result<(), ProsopoError> {
+        if let Some(mongo) = &self.mongo {
+            mongo
+                .connect()
+                .await
+                .map_err(|error| ProsopoError::new(ErrorClass::Db, ErrorSource::message(error.to_string()), ErrorOptions { silent: true, ..ErrorOptions::default() }))?;
+        }
+        self.auto_index().await;
+        if let Some(settings) = &self.redis_settings {
+            self.setup_redis(settings)?;
+        }
+        Ok(())
     }
 
     /// mongoose's autoIndex: every declared index created (an existing one is left as it is). A

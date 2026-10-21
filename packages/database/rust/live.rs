@@ -33,19 +33,21 @@ use std::sync::Arc;
 const CONCURRENCY: usize = 8;
 
 struct Live {
-    mongo: MongoDatabase,
+    mongo: Arc<MongoDatabase>,
     db: Arc<ProviderDatabase>,
 }
 
 impl Live {
     async fn new(name: &str) -> Live {
         let url: String = std::env::var("PROSOPO_TEST_MONGO_URL").expect("PROSOPO_TEST_MONGO_URL");
-        let mongo: MongoDatabase = MongoDatabase::new(&url, Some(&format!("prosopo-test-{name}")), None, None, MongoConnectionTimeouts::default())
-            .expect("a valid URL");
+        let mongo: Arc<MongoDatabase> = Arc::new(
+            MongoDatabase::new(&url, Some(&format!("prosopo-test-{name}")), None, None, MongoConnectionTimeouts::default())
+                .expect("a valid URL"),
+        );
         mongo.connect().await.expect("connects");
         mongo.database().await.expect("open").drop().await.expect("drops");
-        let db: ProviderDatabase =
-            ProviderDatabase::connect(&mongo, Arc::new(SystemSource), get_logger(LogLevel::Error, "test")).await.expect("connects");
+        let db: ProviderDatabase = ProviderDatabase::with_mongo(mongo.clone(), None, Arc::new(SystemSource), get_logger(LogLevel::Error, "test"));
+        db.connect().await.expect("connects");
         Live { mongo, db: Arc::new(db) }
     }
 

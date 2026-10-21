@@ -397,3 +397,25 @@ impl Executor for DriverExecutor {
         })
     }
 }
+
+/// Runs operations on whatever connection `mongo` has open when they run, so a database can be
+/// set up before it is connected, as the TS sets up its models. Before then, or after it is
+/// closed, an operation fails as unavailable.
+pub struct MongoExecutor {
+    mongo: std::sync::Arc<crate::mongo::MongoDatabase>,
+}
+
+impl MongoExecutor {
+    pub fn new(mongo: std::sync::Arc<crate::mongo::MongoDatabase>) -> MongoExecutor {
+        MongoExecutor { mongo }
+    }
+}
+
+impl Executor for MongoExecutor {
+    fn run(&self, operation: Operation) -> ReplyFuture<'_> {
+        Box::pin(async move {
+            let database: Database = self.mongo.database().await.map_err(|error| MongoError::Unavailable(error.message().to_string()))?;
+            DriverExecutor::new(database).run(operation).await
+        })
+    }
+}

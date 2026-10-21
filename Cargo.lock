@@ -2296,6 +2296,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "prosopo-env"
+version = "6.0.0"
+dependencies = [
+ "bson",
+ "prosopo-common",
+ "prosopo-database",
+ "prosopo-ipinfo",
+ "prosopo-keyring",
+ "prosopo-logger",
+ "prosopo-types",
+ "prosopo-util-crypto",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "prosopo-icon-order-assets"
 version = "6.0.0"
 dependencies = [
