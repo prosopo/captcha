@@ -109,6 +109,7 @@ import type {
 	CentralDbStreamer,
 	MarkStoredCallback,
 } from "./centralDbStreamer.js";
+import { clientRecordCache } from "./clientRecordCache.js";
 
 const TWENTY_FOUR_HOURS_IN_MS = 24 * 60 * 60 * 1000;
 const MAX_DOMAIN_SUFFIX_CANDIDATES = 5;
@@ -3239,7 +3240,11 @@ export class ProviderDatabase
 			await this.logger.debug(() => ({ msg: "No client updates to apply" }));
 			return;
 		}
-		await this.tables?.client.bulkWrite(ops);
+		try {
+			await this.tables?.client.bulkWrite(ops);
+		} finally {
+			clientRecordCache.clear();
+		}
 	}
 
 	/**
@@ -3249,9 +3254,13 @@ export class ProviderDatabase
 		if (!accounts || accounts.length === 0) {
 			return;
 		}
-		await this.tables?.client.deleteMany({
-			account: { $in: accounts },
-		});
+		try {
+			await this.tables?.client.deleteMany({
+				account: { $in: accounts },
+			});
+		} finally {
+			clientRecordCache.clear();
+		}
 	}
 
 	/**
@@ -3266,6 +3275,9 @@ export class ProviderDatabase
 	 * @description Get a client record
 	 */
 	async getClientRecord(account: string): Promise<ClientRecord | undefined> {
+		const cacheKey = `${this.url}|${account}`;
+		const cached = clientRecordCache.get(cacheKey);
+		if (cached) return cached;
 		const filter: Pick<ClientRecord, "account"> = { account };
 		const doc = await this.tables?.client
 			.findOne(filter, {
@@ -3274,7 +3286,9 @@ export class ProviderDatabase
 				tier: 1,
 			})
 			.lean<ClientRecord>();
-		return doc ? doc : undefined;
+		if (!doc) return undefined;
+		clientRecordCache.set(cacheKey, doc);
+		return doc;
 	}
 
 	/**
