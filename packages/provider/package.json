@@ -53,7 +53,7 @@
 		"cron": "3.1.7",
 		"express": "4.22.2",
 		"express-rate-limit": "7.4.0",
-		"geolib": "3.3.14",
+		"geolib": "4.0.0",
 		"i18next": "26.4.2",
 		"ip-address": "10.7.2",
 		"mongoose": "9.10.3",
