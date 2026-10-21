@@ -15,6 +15,8 @@
 //! The JavaScript conversions zod applies: `Number(x)` for `coerce.number()`, `String(x)` for
 //! `coerce.string()`, number formatting in messages, and the order JS enumerates keys in.
 
+use num_bigint::BigInt;
+use num_traits::{FromPrimitive, Zero};
 use serde_json::{Map, Value};
 
 pub(crate) fn number_to_js_string(value: f64) -> String {
@@ -187,5 +189,57 @@ pub(crate) fn strictly_equal(a: Option<&Value>, b: Option<&Value>) -> bool {
         (Some(Value::Number(a)), Some(Value::Number(b))) => a.as_f64() == b.as_f64(),
         (Some(Value::String(a)), Some(Value::String(b))) => a == b,
         _ => false,
+    }
+}
+
+/// `StringToBigInt`: surrounding whitespace is ignored, an empty string is zero, and the rest
+/// must be a signed decimal integer or an unsigned `0x`/`0o`/`0b` literal.
+fn string_to_bigint(input: &str) -> Option<BigInt> {
+    let text: &str = js_trim(input);
+    if text.is_empty() {
+        return Some(BigInt::zero());
+    }
+    let radix_literal = |prefix: [&str; 2], radix: u32| {
+        prefix
+            .iter()
+            .find_map(|prefix| text.strip_prefix(prefix))
+            .map(|digits| (digits, radix))
+    };
+    if let Some((digits, radix)) = radix_literal(["0x", "0X"], 16)
+        .or_else(|| radix_literal(["0o", "0O"], 8))
+        .or_else(|| radix_literal(["0b", "0B"], 2))
+    {
+        let valid: bool = !digits.is_empty() && digits.chars().all(|c| c.is_digit(radix));
+        return valid
+            .then(|| BigInt::parse_bytes(digits.as_bytes(), radix))
+            .flatten();
+    }
+    let (negative, digits): (bool, &str) = match text.as_bytes()[0] {
+        b'-' => (true, &text[1..]),
+        b'+' => (false, &text[1..]),
+        _ => (false, text),
+    };
+    if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let magnitude: BigInt = BigInt::parse_bytes(digits.as_bytes(), 10)?;
+    Some(if negative { -magnitude } else { magnitude })
+}
+
+/// `BigInt(value)`, or `None` where it throws: on `undefined` and `null`, a number that is
+/// not an integer, and text that is not an integer literal. Objects and arrays go through
+/// their string form, so `[]` is zero and `[5]` is five.
+pub(crate) fn js_to_bigint(value: Option<&Value>) -> Option<BigInt> {
+    match value? {
+        Value::Null => None,
+        Value::Bool(flag) => Some(BigInt::from(u8::from(*flag))),
+        Value::Number(number) => {
+            let value: f64 = number.as_f64()?;
+            (value.is_finite() && value.fract() == 0.0)
+                .then(|| BigInt::from_f64(value))
+                .flatten()
+        }
+        Value::String(text) => string_to_bigint(text),
+        other => string_to_bigint(&to_js_string(Some(other))),
     }
 }

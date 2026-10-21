@@ -14,6 +14,8 @@ path = "rust/lib.rs"
 
 [dependencies]
 indexmap = "2.14"
+num-bigint = "0.4"
+num-traits = "0.2"
 prosopo-logger = { path = "../logger" }
 regex = "1.13"
 ryu-js = "1.0"

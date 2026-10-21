@@ -1362,6 +1362,8 @@ name = "prosopo-api-route"
 version = "6.0.0"
 dependencies = [
  "indexmap",
+ "num-bigint",
+ "num-traits",
  "prosopo-logger",
  "regex",
  "ryu-js",

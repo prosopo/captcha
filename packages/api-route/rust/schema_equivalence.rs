@@ -17,9 +17,9 @@
 //! must give the same parsed output (same keys, same order) or the same issues.
 
 use crate::schema::{
-    any, array, boolean, coerce_number, coerce_string, custom_with_message, literal, native_enum,
-    number, object, preprocess, record, record_with_keys, string, string_enum, tuple, undefined,
-    union, Data, IssueData, Schema,
+    any, array, bigint, boolean, coerce_bigint, coerce_number, coerce_string, custom_with_message,
+    literal, native_enum, number, object, preprocess, record, record_with_keys, string,
+    string_enum, tuple, undefined, union, Data, IssueData, Schema,
 };
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
@@ -55,6 +55,10 @@ enum Expected {
     OkUndefined {
         #[serde(rename = "okUndefined")]
         _ok_undefined: bool,
+    },
+    /// zod 3.23 threw out of `safeParse` (only `coerce.bigint()` does).
+    Throws {
+        throws: String,
     },
     Issues {
         issues: Value,
@@ -101,6 +105,16 @@ fn battery() -> BTreeMap<&'static str, Schema> {
     schemas.insert("coerceDefault", coerce_number().optional().default(42));
     schemas.insert("coerceString", coerce_string());
     schemas.insert("bool", boolean());
+    schemas.insert("bigint", bigint());
+    schemas.insert("coerceBigint", coerce_bigint());
+    schemas.insert("coerceBigintOptional", coerce_bigint().optional());
+    schemas.insert(
+        "objectWithBigint",
+        object(vec![
+            ("n", coerce_bigint().optional()),
+            ("s", string().optional()),
+        ]),
+    );
     schemas.insert("literalString", literal("dns"));
     schemas.insert("literalNumber", literal(3));
     schemas.insert("stringEnum", string_enum(&["a", "b"]));
@@ -288,6 +302,11 @@ fn every_schema_matches_zod() {
         let matches: bool = match (&actual, &vector.result) {
             (Ok(Some(value)), Expected::Ok { ok }) => same_json(value, ok),
             (Ok(None), Expected::OkUndefined { .. }) => true,
+            (Err(issues), Expected::Throws { .. }) => {
+                issues.len() == 1
+                    && issues[0].get("code") == Some(&Value::from("invalid_type"))
+                    && issues[0].get("expected") == Some(&Value::from("bigint"))
+            }
             (Err(issues), Expected::Issues { issues: expected }) => {
                 let issues: Value =
                     Value::Array(issues.iter().cloned().map(Value::Object).collect());

@@ -22,14 +22,20 @@ import { type ZodTypeAny, z } from "zod";
 
 // The vectors are what Node 24, the production runtime, produces.
 if (!process.version.startsWith("v24.")) {
-	throw new Error(`this generator must run on Node 24 (the production runtime), not ${process.version}`);
+	throw new Error(
+		`this generator must run on Node 24 (the production runtime), not ${process.version}`,
+	);
 }
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
 type Input = { value?: Json };
 
-type Result = { ok: Json } | { okUndefined: true } | { issues: Json };
+type Result =
+	| { ok: Json }
+	| { okUndefined: true }
+	| { issues: Json }
+	| { throws: string };
 
 type Vector = { schema: string; input: Input; result: Result };
 
@@ -49,7 +55,9 @@ const SCHEMAS: Record<string, ZodTypeAny> = {
 	strLength: z.string().length(3),
 	email: z.string().email(),
 	url: z.string().url(),
-	regex: z.string().regex(/^[^\u0000-\u001f\u007f]*$/, "must not contain control characters"),
+	regex: z
+		.string()
+		.regex(/^[^\u0000-\u001f\u007f]*$/, "must not contain control characters"),
 	startsWith: z.string().startsWith("0x"),
 	endsWith: z.string().endsWith(".js"),
 	includes: z.string().includes("ab"),
@@ -95,7 +103,10 @@ const SCHEMAS: Record<string, ZodTypeAny> = {
 	union: z.union([z.string().max(3), z.array(z.number()).max(2)]),
 	unionDirty: z.union([z.string().min(5), z.number()]),
 	unionTwoDirty: z.union([z.string().min(5), z.string().max(2)]),
-	transformDirty: z.string().min(3).transform((s: string): number => s.length),
+	transformDirty: z
+		.string()
+		.min(3)
+		.transform((s: string): number => s.length),
 	intersection: z.object({ a: z.string() }).and(z.object({ b: z.number() })),
 	optional: z.string().optional(),
 	nullable: z.string().nullable(),
@@ -107,14 +118,21 @@ const SCHEMAS: Record<string, ZodTypeAny> = {
 	refineNoMessage: z.number().refine((n: number): boolean => n > 0),
 	superRefine: z
 		.object({ a: z.number(), b: z.number() })
-		.superRefine((value: { a: number; b: number }, ctx: z.RefinementCtx): void => {
-			if (value.a > value.b) {
-				ctx.addIssue({ code: z.ZodIssueCode.custom, message: "a>b", path: ["a"] });
-			}
-		}),
+		.superRefine(
+			(value: { a: number; b: number }, ctx: z.RefinementCtx): void => {
+				if (value.a > value.b) {
+					ctx.addIssue({
+						code: z.ZodIssueCode.custom,
+						message: "a>b",
+						path: ["a"],
+					});
+				}
+			},
+		),
 	transform: z.string().transform((s: string): number => s.length),
 	preprocess: z.preprocess(
-		(value: unknown): unknown => (typeof value === "number" ? { n: value } : value),
+		(value: unknown): unknown =>
+			typeof value === "number" ? { n: value } : value,
 		z.object({ n: z.number() }),
 	),
 	boundedArray: z
@@ -126,8 +144,17 @@ const SCHEMAS: Record<string, ZodTypeAny> = {
 	any: z.any(),
 	undefinedOnly: z.undefined(),
 	stringOrUndefined: z.union([z.string(), z.undefined()]),
-	objectWithUndefinedUnion: z.object({ id: z.union([z.string(), z.undefined()]) }),
+	objectWithUndefinedUnion: z.object({
+		id: z.union([z.string(), z.undefined()]),
+	}),
 	arrayOfOptional: z.array(z.string().optional()),
+	bigint: z.bigint(),
+	coerceBigint: z.coerce.bigint(),
+	coerceBigintOptional: z.coerce.bigint().optional(),
+	objectWithBigint: z.object({
+		n: z.coerce.bigint().optional(),
+		s: z.string().optional(),
+	}),
 };
 
 const VALUES: Json[] = [
@@ -205,17 +232,62 @@ const VALUES: Json[] = [
 	{ b: "s", d: true, e: 3 },
 	{ __proto__: 1 } as Json,
 	{ a: "x", b: "two", d: "no", e: "no" },
+	"-5",
+	"+5",
+	"-0",
+	"0b101",
+	"0B11",
+	"0o17",
+	"0O8",
+	"-0x1",
+	"0x",
+	"1_000",
+	" \n12\t",
+	"\u00a012\u2028",
+	"340282366920938463463374607431768211455",
+	"-340282366920938463463374607431768211456",
+	"1.0",
+	"0x1G",
+	9007199254740993,
+	-1e21,
+	1e300,
+	{ n: "12" },
+	{ n: 7 },
+	{ n: null },
+	{ n: "x" },
+	{ s: "a" },
+	[" 9 "],
+	[1, 2],
 ];
 
-const INPUTS: Input[] = [{}, ...VALUES.map((value: Json): Input => ({ value }))];
+const INPUTS: Input[] = [
+	{},
+	...VALUES.map((value: Json): Input => ({ value })),
+];
+
+// A bigint is written as its decimal string, the form the Rust schema outputs.
+const toJson = (value: unknown): Json =>
+	JSON.parse(
+		JSON.stringify(value, (_key: string, v: unknown): unknown =>
+			typeof v === "bigint" ? v.toString() : v,
+		),
+	) as Json;
 
 const result = (schema: ZodTypeAny, input: Input): Result => {
-	const parsed = "value" in input ? schema.safeParse(input.value) : schema.safeParse(undefined);
+	let parsed: ReturnType<ZodTypeAny["safeParse"]>;
+	try {
+		parsed =
+			"value" in input
+				? schema.safeParse(input.value)
+				: schema.safeParse(undefined);
+	} catch (e) {
+		return { throws: (e as Error).name };
+	}
 	if (!parsed.success) {
-		return { issues: JSON.parse(JSON.stringify(parsed.error.issues)) as Json };
+		return { issues: toJson(parsed.error.issues) };
 	}
 	if (parsed.data === undefined) return { okUndefined: true };
-	return { ok: JSON.parse(JSON.stringify(parsed.data)) as Json };
+	return { ok: toJson(parsed.data) };
 };
 
 const vectors: Vector[] = [];
@@ -226,5 +298,8 @@ for (const [name, schema] of Object.entries(SCHEMAS)) {
 }
 
 const output = fileURLToPath(new URL("./schema-vectors.json", import.meta.url));
-writeFileSync(output, `${JSON.stringify({ schemas: Object.keys(SCHEMAS), vectors }, null, "\t")}\n`);
+writeFileSync(
+	output,
+	`${JSON.stringify({ schemas: Object.keys(SCHEMAS), vectors }, null, "\t")}\n`,
+);
 process.stdout.write(`wrote ${vectors.length} schema vectors\n`);

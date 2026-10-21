@@ -23,7 +23,10 @@ mod js;
 pub use issue::IssueData;
 
 use crate::validation::{PathSegment, ValidationError, ValidationIssue};
-use js::{js_keys, js_ordered, js_trim, number_value, strictly_equal, to_js_number, to_js_string};
+use js::{
+    js_keys, js_ordered, js_to_bigint, js_trim, number_value, strictly_equal, to_js_number,
+    to_js_string,
+};
 use serde_json::{Map, Value};
 use std::sync::Arc;
 
@@ -172,6 +175,9 @@ enum Node {
         coerce: bool,
     },
     Boolean,
+    BigInt {
+        coerce: bool,
+    },
     Undefined,
     Any,
     Literal(Value),
@@ -229,6 +235,19 @@ pub fn coerce_string() -> Schema {
         checks: Vec::new(),
         coerce: true,
     })
+}
+
+/// `bigint()`. JSON has no bigints, so only the coercing form accepts anything; a parsed
+/// bigint is output as its decimal string, which serde then reads as a big integer.
+pub fn bigint() -> Schema {
+    Schema::new(Node::BigInt { coerce: false })
+}
+
+/// `coerce.bigint()`: `BigInt(input)`. zod 3.23 lets the `SyntaxError`, `RangeError` or
+/// `TypeError` that `BigInt` throws escape `safeParse`; here the input fails with the
+/// `invalid_type` issue zod 3.24 reports instead.
+pub fn coerce_bigint() -> Schema {
+    Schema::new(Node::BigInt { coerce: true })
 }
 
 pub fn boolean() -> Schema {
@@ -692,6 +711,10 @@ impl Schema {
             Node::Undefined => match data {
                 None => Outcome::valid(None),
                 other => invalid_type(issues, path, "undefined", other.as_ref()),
+            },
+            Node::BigInt { coerce } => match coerce.then(|| js_to_bigint(data.as_ref())).flatten() {
+                Some(value) => Outcome::valid(Some(Value::String(value.to_string()))),
+                None => invalid_type(issues, path, "bigint", data.as_ref()),
             },
             Node::Any => Outcome::valid(data),
             Node::Literal(expected) => {
