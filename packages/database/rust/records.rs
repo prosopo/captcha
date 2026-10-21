@@ -24,7 +24,7 @@ use prosopo_types::datasets::CaptchaStatus;
 use prosopo_types::stored::IpAddressType;
 use prosopo_types_database::number::decimal128_from_integer;
 use serde::de::Error as _;
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// One 64-bit half of an IP address, stored as a Decimal128.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -79,6 +79,12 @@ impl CompositeIpAddress {
     }
 }
 
+impl Serialize for CompositeIpAddress {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.to_document().serialize(serializer)
+    }
+}
+
 /// A stored `result`. Its reason is any string: decision machines write their own.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct StoredResult {
@@ -108,6 +114,12 @@ impl StoredResult {
             out.insert("error", error.as_str());
         }
         out
+    }
+}
+
+impl Serialize for StoredResult {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.to_document().serialize(serializer)
     }
 }
 

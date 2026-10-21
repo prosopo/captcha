@@ -259,8 +259,16 @@ impl Reply {
         }
     }
 
-    /// The reply of `operation`'s command, from the fields mongod returns.
-    pub fn from_command_reply(operation: &Operation, reply: &Document) -> Reply {
+    /// The reply of `operation`'s command, from the fields mongod returns, or the first write
+    /// that failed in it.
+    pub fn from_command_reply(operation: &Operation, reply: &Document) -> Result<Reply, MongoError> {
+        if let Some(error) = write_failure(reply) {
+            return Err(error);
+        }
+        Ok(Reply::parse(operation, reply))
+    }
+
+    fn parse(operation: &Operation, reply: &Document) -> Reply {
         let count = |key: &str| -> u64 {
             match reply.get(key) {
                 Some(Bson::Int32(n)) => *n as u64,
@@ -294,6 +302,19 @@ impl Reply {
     }
 }
 
+fn write_failure(reply: &Document) -> Option<MongoError> {
+    let failure: &Document = reply
+        .get_array("writeErrors")
+        .ok()
+        .and_then(|errors| errors.first())
+        .and_then(Bson::as_document)
+        .or_else(|| reply.get_document("writeConcernError").ok())?;
+    Some(MongoError::Write {
+        code: failure.get_i32("code").unwrap_or(0),
+        message: failure.get_str("errmsg").unwrap_or_default().to_string(),
+    })
+}
+
 pub type ReplyFuture<'a> = Pin<Box<dyn Future<Output = Result<Reply, MongoError>> + Send + 'a>>;
 
 pub trait Executor: Send + Sync {
@@ -325,7 +346,7 @@ impl DriverExecutor {
             command.insert("cursor", Document::new());
         }
         let reply: Document = self.run_command(command).await?;
-        let mut parsed: Reply = Reply::from_command_reply(operation, &reply);
+        let mut parsed: Reply = Reply::from_command_reply(operation, &reply)?;
         if let Reply::Documents(documents) = &mut parsed {
             let mut cursor: Document = reply.get_document("cursor").cloned().unwrap_or_default();
             while let Some(id) = cursor.get_i64("id").ok().filter(|id| *id != 0) {

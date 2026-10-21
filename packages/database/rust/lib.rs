@@ -22,6 +22,7 @@ pub mod operation;
 pub mod options;
 pub mod provider;
 pub mod records;
+pub mod session;
 pub mod source;
 
 pub use mongo::{build_url, mask_credentials, MongoConnectionTimeouts, MongoDatabase, MongoError};

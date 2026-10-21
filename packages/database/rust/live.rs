@@ -753,3 +753,450 @@ mod dapp_user_commitment_projection {
         live.finish().await;
     }
 }
+
+mod session_record_projection {
+    use super::*;
+    use crate::session::Session;
+    use prosopo_types::captcha_type::CaptchaType;
+    use prosopo_types::stored::IpAddressType;
+    use prosopo_types_database::projection::SESSION_PROJECTION_FIELDS;
+    use prosopo_types_database::provider::SESSION_RECORD;
+    use prosopo_types_database::schema::Default as PathDefault;
+
+    fn base(session_id: &str, token: &str, score: f64, captcha_type: &str) -> Document {
+        doc! {
+            "sessionId": session_id,
+            "createdAt": DateTime::now(),
+            "token": token,
+            "score": score,
+            "threshold": 0.5,
+            "scoreComponents": { "baseScore": score },
+            "ipAddress": ip(16_843_009),
+            "captchaType": captcha_type,
+            "webView": false,
+            "iFrame": false,
+        }
+    }
+
+    async fn read(live: &Live, session_id: &str) -> Session {
+        live.db.get_session_record_by_session_id(session_id).await.expect("reads").expect("the session is returned")
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn round_trips_every_field_build_escalation_forwards_into_create_session() {
+        let live: Live = Live::new("session-roundtrip").await;
+        let session_id: &str = "session-projection-roundtrip";
+        live.create(
+            &SESSION_RECORD,
+            collections::SESSION,
+            with(
+                base(session_id, "tok-roundtrip", 0.42, "pow"),
+                doc! {
+                    "scoreComponents": { "baseScore": 0.42, "lScore": 0.1 },
+                    "solvedImagesCount": 3,
+                    "userSitekeyIpHash": "hash-abc",
+                    "webView": true,
+                    "decryptedHeadHash": "head-hash-xyz",
+                    "siteKey": "site-key-1",
+                    "reason": "user-passed",
+                    "currentUrl": "https://example.com/checkout",
+                    "iframeUrl": "https://widget.example.com/embed",
+                    "headers": {
+                        "user-agent": "Mozilla/5.0",
+                        "accept-language": "en-GB",
+                        "x-tls-clienthello": "AAAAAAAAAAAAAA==".repeat(200),
+                    },
+                },
+            ),
+        )
+        .await;
+        let got: Session = read(&live, session_id).await;
+        assert_eq!(got.token, "tok-roundtrip");
+        assert_eq!(got.score, 0.42);
+        assert_eq!(got.threshold, 0.5);
+        assert_eq!(got.ip_address.ip_type, IpAddressType::V4);
+        assert_eq!(got.ip_address.lower.0, 16_843_009);
+        assert_eq!(got.site_key.as_deref(), Some("site-key-1"));
+        assert_eq!(got.solved_images_count, Some(3.0));
+        assert_eq!(got.user_sitekey_ip_hash.as_deref(), Some("hash-abc"));
+        assert_eq!(got.score_components.base_score, 0.42);
+        assert!(got.web_view);
+        assert!(!got.i_frame);
+        assert_eq!(got.decrypted_head_hash, "head-hash-xyz");
+        assert_eq!(got.reason.as_deref(), Some("user-passed"));
+        assert_eq!(got.current_url.as_deref(), Some("https://example.com/checkout"));
+        assert_eq!(got.iframe_url.as_deref(), Some("https://widget.example.com/embed"));
+        let headers: &Document = got.headers.as_ref().expect("headers");
+        assert_eq!(headers.get_str("user-agent").ok(), Some("Mozilla/5.0"));
+        assert_eq!(headers.get_str("accept-language").ok(), Some("en-GB"));
+        assert!(!headers.contains_key("x-tls-clienthello"));
+        live.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn a_session_read_by_id_can_be_re_persisted_as_a_new_escalation_session() {
+        let live: Live = Live::new("session-escalation").await;
+        live.create(
+            &SESSION_RECORD,
+            collections::SESSION,
+            with(
+                base("session-escalation-origin", "tok-escalation", 0.6, "pow"),
+                doc! { "decryptedHeadHash": "head-escalation", "siteKey": "site-key-escalation" },
+            ),
+        )
+        .await;
+        let origin: Session = read(&live, "session-escalation-origin").await;
+        let escalation: Session = Session {
+            session_id: "session-escalation-new".to_string(),
+            created_at: DateTime::now(),
+            captcha_type: CaptchaType::Image,
+            ..origin
+        };
+        live.db.store_session_record(&escalation).await.expect("stores");
+        live.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn returns_bundle_id_so_the_bundle_can_be_resolved() {
+        let live: Live = Live::new("session-bundle").await;
+        live.create(
+            &SESSION_RECORD,
+            collections::SESSION,
+            with(base("session-bundleid-roundtrip", "tok-bundleid", 0.1, "pow"), doc! { "bundleId": "bundle-42" }),
+        )
+        .await;
+        assert_eq!(read(&live, "session-bundleid-roundtrip").await.bundle_id.as_deref(), Some("bundle-42"));
+        live.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn returns_origin_session_id_so_the_escalation_fallback_knows_where_to_walk() {
+        let live: Live = Live::new("session-origin").await;
+        live.create(&SESSION_RECORD, collections::SESSION, base("session-origin-for-chain", "tok-origin", 0.4, "pow")).await;
+        live.create(
+            &SESSION_RECORD,
+            collections::SESSION,
+            with(
+                base("session-escalation-with-origin", "tok-escalation", 0.4, "puzzle"),
+                doc! { "isEscalation": true, "originSessionId": "session-origin-for-chain" },
+            ),
+        )
+        .await;
+        let got: Session = read(&live, "session-escalation-with-origin").await;
+        assert_eq!(got.origin_session_id.as_deref(), Some("session-origin-for-chain"));
+        assert_eq!(got.is_escalation, Some(true));
+        live.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn returns_refresh_count_and_created_at_so_a_refresh_can_extend_its_chain() {
+        let live: Live = Live::new("session-refresh").await;
+        let created_at: DateTime = DateTime::parse_rfc3339_str("2026-09-28T12:00:00Z").expect("a date");
+        live.create(
+            &SESSION_RECORD,
+            collections::SESSION,
+            with(
+                base("session-refreshed", "tok-refreshed", 0.4, "puzzle"),
+                doc! { "createdAt": created_at, "refreshOf": "session-before", "refreshCount": 2, "refreshedAfterMs": 4000 },
+            ),
+        )
+        .await;
+        let got: Session = read(&live, "session-refreshed").await;
+        assert_eq!(got.refresh_count, Some(2.0));
+        assert_eq!(got.created_at, created_at);
+        live.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn returns_tcp_probe_fields_so_decide_rules_can_match_tcp_fingerprints() {
+        let live: Live = Live::new("session-tcp").await;
+        live.create(
+            &SESSION_RECORD,
+            collections::SESSION,
+            with(
+                base("session-tcp-probe-roundtrip", "tok-tcp-probe", 0.1, "pow"),
+                doc! {
+                    "tcpOptsFlags": 19,
+                    "tcpOptsOrder": 786,
+                    "observedTtl": 52,
+                    "synNs": 1_700_000_000_000_000_000.0,
+                    "synackNs": 1_700_000_000_000_500_000.0,
+                    "ackNs": 1_700_000_000_000_800_000.0,
+                    "tcpMss": 1460,
+                    "tcpWscale": 7,
+                    "tcpWindow": 65535,
+                },
+            ),
+        )
+        .await;
+        let got: Session = read(&live, "session-tcp-probe-roundtrip").await;
+        assert_eq!(got.tcp_opts_flags, Some(19.0));
+        assert_eq!(got.tcp_opts_order, Some(786.0));
+        assert_eq!(got.observed_ttl, Some(52.0));
+        assert_eq!(got.syn_ns, Some(1_700_000_000_000_000_000.0));
+        assert_eq!(got.synack_ns, Some(1_700_000_000_000_500_000.0));
+        assert_eq!(got.ack_ns, Some(1_700_000_000_000_800_000.0));
+        assert_eq!(got.tcp_mss, Some(1460.0));
+        assert_eq!(got.tcp_wscale, Some(7.0));
+        assert_eq!(got.tcp_window, Some(65535.0));
+        live.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn every_required_session_field_is_included_in_the_projection() {
+        let required: Vec<String> = SESSION_RECORD
+            .paths()
+            .into_iter()
+            .filter(|(_, path)| path.required && matches!(path.default, PathDefault::None))
+            .map(|(name, _)| name)
+            .collect();
+        for name in ["token", "score", "threshold"] {
+            assert!(required.iter().any(|path| path == name), "{name} is required");
+        }
+        for path in &required {
+            let top: &str = path.split('.').next().unwrap_or(path);
+            assert!(SESSION_PROJECTION_FIELDS.contains(&top), "required Session field '{top}' is missing from the projection");
+        }
+        let live: Live = Live::new("session-required").await;
+        live.create(&SESSION_RECORD, collections::SESSION, base("session-required-fields", "tok-required", 0.1, "pow")).await;
+        read(&live, "session-required-fields").await;
+        live.finish().await;
+    }
+}
+
+/// ipInfoPersistence.integration.test.ts: a record's `ipInfo` comes back as it was given.
+mod ip_info_persistence {
+    use super::*;
+    use prosopo_types_database::provider::SESSION_RECORD;
+
+    fn valid_ip_info() -> Document {
+        doc! {
+            "ip": "1.1.1.1",
+            "isValid": true,
+            "isVPN": true,
+            "isTor": false,
+            "isProxy": true,
+            "isDatacenter": true,
+            "isAbuser": true,
+            "isMobile": false,
+            "isSatellite": false,
+            "isCrawler": false,
+            "countryCode": "DE",
+            "asnNumber": 12345,
+            "abuserScore": 0.7,
+            "companyAbuserScore": 0.4,
+        }
+    }
+
+    fn error_ip_info() -> Document {
+        doc! { "ip": "127.0.0.1", "isValid": false, "error": "Non-routable IP address" }
+    }
+
+    fn pow(challenge: &str, lower: i64, ip_info: Option<Document>) -> Document {
+        let mut record: Document = doc! {
+            "challenge": challenge,
+            "userAccount": "user1",
+            "dappAccount": "dapp1",
+            "requestedAtTimestamp": DateTime::now(),
+            "ipAddress": ip(lower),
+            "headers": { "host": "example.com" },
+            "ja4": "ja4-1",
+            "result": { "status": "Pending" },
+            "userSubmitted": false,
+            "serverChecked": false,
+            "difficulty": 4,
+            "providerSignature": "sig-1",
+        };
+        if let Some(ip_info) = ip_info {
+            record.insert("ipInfo", ip_info);
+        }
+        record
+    }
+
+    fn session(session_id: &str, lower: i64, ip_info: Document) -> Document {
+        doc! {
+            "sessionId": session_id,
+            "createdAt": DateTime::now(),
+            "token": "tok-1",
+            "score": 0.5,
+            "threshold": 0.5,
+            "scoreComponents": { "baseScore": 0.5 },
+            "ipAddress": ip(lower),
+            "captchaType": "frictionless",
+            "webView": false,
+            "iFrame": false,
+            "decryptedHeadHash": "",
+            "siteKey": "dapp1",
+            "ipInfo": ip_info,
+        }
+    }
+
+    async fn stored_ip_info(live: &Live, collection: &str, filter: Document) -> Document {
+        let found: Vec<Document> = live.db.find(Operation::find(collection, filter)).await.expect("reads");
+        found.first().expect("the record").get_document("ipInfo").expect("ipInfo").clone()
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn persists_the_ip_info_of_every_record_kind() {
+        let live: Live = Live::new("ip-info").await;
+        live.create(&POW_CAPTCHA_RECORD, collections::POW_CAPTCHA, pow("1___2___challenge-pow-valid", 16_843_009, Some(valid_ip_info())))
+            .await;
+        live.create(&POW_CAPTCHA_RECORD, collections::POW_CAPTCHA, pow("1___2___challenge-pow-error", 2_130_706_433, Some(error_ip_info())))
+            .await;
+        let mut puzzle: Document = pow("1___2___challenge-puzzle-valid", 16_843_009, Some(valid_ip_info()));
+        puzzle.remove("difficulty");
+        puzzle.extend(doc! { "targetX": 100, "targetY": 100, "originX": 0, "originY": 0, "tolerance": 10 });
+        live.create(&PUZZLE_CAPTCHA_RECORD, collections::PUZZLE_CAPTCHA, puzzle).await;
+        live.create(
+            &USER_COMMITMENT_RECORD,
+            collections::COMMITMENT,
+            doc! {
+                "id": "commitment-valid",
+                "userAccount": "user4",
+                "dappAccount": "dapp1",
+                "providerAccount": "provider1",
+                "datasetId": "dataset1",
+                "result": { "status": "Pending" },
+                "userSignature": "sig",
+                "ipAddress": ip(16_843_009),
+                "headers": { "host": "example.com" },
+                "ja4": "ja4-4",
+                "userSubmitted": true,
+                "serverChecked": false,
+                "requestedAtTimestamp": DateTime::now(),
+                "pending": false,
+                "salt": "salt",
+                "requestHash": "0xabcdef",
+                "deadlineTimestamp": DateTime::from_millis(DateTime::now().timestamp_millis() + 60_000),
+                "threshold": 0.5,
+                "ipInfo": valid_ip_info(),
+            },
+        )
+        .await;
+        live.create(&SESSION_RECORD, collections::SESSION, session("session-valid", 16_843_009, valid_ip_info())).await;
+        live.create(&SESSION_RECORD, collections::SESSION, session("session-error", 2_130_706_433, error_ip_info())).await;
+
+        let cases: [(&str, Document, Document); 6] = [
+            (collections::POW_CAPTCHA, doc! { "challenge": "1___2___challenge-pow-valid" }, valid_ip_info()),
+            (collections::POW_CAPTCHA, doc! { "challenge": "1___2___challenge-pow-error" }, error_ip_info()),
+            (collections::PUZZLE_CAPTCHA, doc! { "challenge": "1___2___challenge-puzzle-valid" }, valid_ip_info()),
+            (collections::COMMITMENT, doc! { "id": "commitment-valid" }, valid_ip_info()),
+            (collections::SESSION, doc! { "sessionId": "session-valid" }, valid_ip_info()),
+            (collections::SESSION, doc! { "sessionId": "session-error" }, error_ip_info()),
+        ];
+        for (collection, filter, expected) in cases {
+            assert_eq!(stored_ip_info(&live, collection, filter.clone()).await, expected, "{collection} {filter}");
+        }
+        live.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn the_backfill_query_matches_records_missing_ip_info() {
+        let live: Live = Live::new("ip-info-backfill").await;
+        live.create(&POW_CAPTCHA_RECORD, collections::POW_CAPTCHA, pow("1___2___challenge-pow-with-info", 16_843_010, Some(valid_ip_info())))
+            .await;
+        live.create(&POW_CAPTCHA_RECORD, collections::POW_CAPTCHA, pow("1___2___challenge-pow-no-info", 16_843_011, None)).await;
+        let missing: Vec<Document> = live
+            .db
+            .find(Operation::find(collections::POW_CAPTCHA, doc! { "ipInfo": { "$exists": false } }))
+            .await
+            .expect("reads");
+        let challenges: Vec<&str> = missing.iter().filter_map(|record| record.get_str("challenge").ok()).collect();
+        assert!(challenges.contains(&"1___2___challenge-pow-no-info"));
+        assert!(!challenges.contains(&"1___2___challenge-pow-with-info"));
+        live.finish().await;
+    }
+}
+
+/// providedIpPipelineCast.integration.test.ts, the cases on the provider's own collection.
+mod provided_ip_pipeline_cast {
+    use super::*;
+    use crate::operation::UpdateStatement;
+    use bson::Bson;
+
+    const IP_V6_LOWER_UNSAFE: u64 = 0xB496_D250_E5C5_8459;
+
+    async fn seed(live: &Live, id: &str) {
+        live.create(
+            &USER_COMMITMENT_RECORD,
+            collections::COMMITMENT,
+            doc! {
+                "id": id,
+                "userAccount": "userTest",
+                "dappAccount": "dappTest",
+                "providerAccount": "providerTest",
+                "datasetId": "datasetTest",
+                "result": { "status": "Pending" },
+                "userSignature": "0xsig",
+                "ipAddress": ip(16_909_060),
+                "headers": { "host": "pronode-test.local" },
+                "ja4": "ja4-test",
+                "userSubmitted": false,
+                "serverChecked": false,
+                "requestedAtTimestamp": DateTime::now(),
+                "pending": false,
+                "salt": "salt",
+                "requestHash": "0xreqhash",
+                "deadlineTimestamp": DateTime::from_millis(DateTime::now().timestamp_millis() + 60_000),
+                "threshold": 0.5,
+            },
+        )
+        .await;
+    }
+
+    fn provided_ip() -> Document {
+        let half: Bson = Bson::Int64(IP_V6_LOWER_UNSAFE as i64);
+        doc! { "lower": half.clone(), "upper": half, "type": "v6" }
+    }
+
+    async fn stored_provided_ip(live: &Live, id: &str) -> Document {
+        let found: Vec<Document> = live.db.find(Operation::find(collections::COMMITMENT, doc! { "id": id })).await.expect("reads");
+        found.first().expect("the commitment").get_document("providedIp").expect("providedIp").clone()
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn writes_provided_ip_halves_as_decimal128_through_update_dapp_user_commitment() {
+        let live: Live = Live::new("provided-ip").await;
+        seed(&live, "commitment-pipeline-v6").await;
+        live.db
+            .update_dapp_user_commitment("commitment-pipeline-v6", &doc! { "providedIp": provided_ip() })
+            .await
+            .expect("updates");
+        let stored: Document = stored_provided_ip(&live, "commitment-pipeline-v6").await;
+        assert_eq!(stored.get_str("type").ok(), Some("v6"));
+        let expected: Bson = crate::records::IpHalf(IP_V6_LOWER_UNSAFE).to_bson();
+        assert_eq!(stored.get("lower"), Some(&expected));
+        assert_eq!(stored.get("upper"), Some(&expected));
+        live.finish().await;
+    }
+
+    #[tokio::test]
+    #[ignore = "needs a mongod at PROSOPO_TEST_MONGO_URL"]
+    async fn the_pipeline_form_of_the_same_write_stores_a_long() {
+        let live: Live = Live::new("provided-ip-control").await;
+        seed(&live, "commitment-pipeline-v6-negative-control").await;
+        live.db
+            .run(Operation::update(
+                collections::COMMITMENT,
+                vec![UpdateStatement::pipeline(
+                    doc! { "id": "commitment-pipeline-v6-negative-control" },
+                    vec![doc! { "$set": { "providedIp": provided_ip() } }],
+                )],
+            ))
+            .await
+            .expect("updates");
+        let stored: Document = stored_provided_ip(&live, "commitment-pipeline-v6-negative-control").await;
+        assert!(matches!(stored.get("lower"), Some(Bson::Int64(_))));
+        live.finish().await;
+    }
+}

@@ -24,9 +24,11 @@
 //! document. Every value is compared byte for byte.
 
 use crate::challenges::{Coords, Interactive, InteractiveAnswer, NewChallenge};
+use crate::mongo::MongoError;
 use crate::operation::{Executor, Operation, Reply, ReplyFuture};
 use crate::provider::ProviderDatabase;
 use crate::records::{CompositeIpAddress, IpHalf, StoredResult, UserCommitment};
+use crate::session::{DnsObservation, Session};
 use prosopo_types::api_types::CaptchaSolution;
 use crate::source::Source;
 use bson::oid::ObjectId;
@@ -143,7 +145,7 @@ impl Executor for ReplayExecutor {
                 expected.pop_front()
             }
         };
-        let reply: Reply = match next {
+        let reply: Result<Reply, MongoError> = match next {
             Some(recorded) => {
                 let (rust, ts): (Document, Document) = (normalise(&sent), normalise(&recorded.command));
                 if to_hex(&rust) != to_hex(&ts) {
@@ -160,10 +162,10 @@ impl Executor for ReplayExecutor {
                     .lock()
                     .expect("lock")
                     .push(format!("sent {} after the TS stopped", Bson::Document(sent).into_canonical_extjson()));
-                Reply::Documents(Vec::new())
+                Ok(Reply::Documents(Vec::new()))
             }
         };
-        Box::pin(async move { Ok(reply) })
+        Box::pin(async move { reply })
     }
 }
 
@@ -254,24 +256,37 @@ fn same_error(error: &ProsopoError, ts: &Value) -> Option<String> {
     }
 }
 
-/// Raw documents. A live run's upserts get ids of their own from mongod, so there the top-level
-/// `_id` is left out of the comparison; the replay compares it too.
+/// A number as the JS number the TS holds: its recorded result says `$numberLong` for a whole
+/// number past int32 that mongod holds as a double.
+fn as_js(value: Bson) -> Bson {
+    match value {
+        Bson::Int32(n) => Bson::Double(f64::from(n)),
+        Bson::Int64(n) => Bson::Double(n as f64),
+        Bson::Array(items) => Bson::Array(items.into_iter().map(as_js).collect()),
+        Bson::Document(fields) => Bson::Document(fields.into_iter().map(|(key, value)| (key, as_js(value))).collect()),
+        other => other,
+    }
+}
+
+/// Raw documents, their numbers compared as JS numbers. A live run's upserts get ids of their
+/// own from mongod, so there the top-level `_id` is left out of the comparison; the replay
+/// compares it too.
 fn check_documents(scenario: &Value, actual: Result<Vec<Document>, ProsopoError>, live: bool) -> Option<String> {
-    let strip = |documents: Vec<Document>| -> Vec<Document> {
+    let strip = |documents: Vec<Document>| -> Vec<Bson> {
         documents
             .into_iter()
             .map(|mut document| {
                 if live {
                     document.remove("_id");
                 }
-                document
+                as_js(Bson::Document(document))
             })
             .collect()
     };
     match (actual, scenario.get("error")) {
         (Ok(documents), None) => {
-            let expected: Vec<Document> = strip(ts_result(scenario));
-            let documents: Vec<Document> = strip(documents);
+            let expected: Vec<Bson> = strip(ts_result(scenario));
+            let documents: Vec<Bson> = strip(documents);
             (documents != expected).then(|| format!("documents\n      rust {documents:?}\n      ts   {expected:?}"))
         }
         (actual, _) => check(scenario, actual),
@@ -638,6 +653,55 @@ async fn run_image_scenario(db: &ProviderDatabase, scenario: &Value, live: bool)
     Some(outcome)
 }
 
+fn session(value: &Bson) -> Session {
+    bson::deserialize_from_document(document(value)).expect("a session")
+}
+
+fn dns_observation(value: &Bson) -> DnsObservation {
+    let fields: &Document = value.as_document().expect("an observation");
+    DnsObservation {
+        resolver_ip: fields.get_str("resolverIp").ok().map(str::to_string),
+        peer_ip: fields.get_str("peerIp").ok().map(str::to_string),
+        path_valid: fields.get_bool("pathValid").ok(),
+    }
+}
+
+async fn run_session_scenario(db: &ProviderDatabase, scenario: &Value, live: bool) -> Option<Option<String>> {
+    let b: Vec<Bson> = bson_args(scenario);
+    let method: &str = scenario["method"].as_str().expect("method");
+    let outcome: Option<String> = match method {
+        "storeSessionRecord" => check_unit(scenario, db.store_session_record(&session(&b[0])).await),
+        "storeBlockedSession" => {
+            db.store_blocked_session(&session(&b[0])).await;
+            check_unit(scenario, Ok(()))
+        }
+        "getSessionRecordBySessionId" => check(scenario, db.get_session_record_by_session_id(bson_str(&b[0])).await),
+        "getSessionRecordByToken" => check(scenario, db.get_session_record_by_token(bson_str(&b[0])).await),
+        "getSessionByuserSitekeyIpHash" => check(scenario, db.get_session_by_user_sitekey_ip_hash(bson_str(&b[0])).await),
+        "checkAndRemoveSession" => check(scenario, db.check_and_remove_session(bson_str(&b[0])).await),
+        "claimSessionServerCheck" => check(scenario, db.claim_session_server_check(bson_str(&b[0])).await),
+        "updateSessionRecord" => check_unit(scenario, db.update_session_record(bson_str(&b[0]), &document(&b[1])).await),
+        "recordSessionSimdReadingsIfAbsent" => check_unit(
+            scenario,
+            db.record_session_simd_readings_if_absent(bson_str(&b[0]), &b[1], bson_str(&b[2]).parse().expect("a stage")).await,
+        ),
+        "mergeSessionDnsEvent" => check(
+            scenario,
+            db.merge_session_dns_event(bson_str(&b[0]), &dns_observation(&b[1]), *b[2].as_datetime().expect("a date")).await,
+        ),
+        "getUnstoredSessionRecords" => check_documents(
+            scenario,
+            db.get_unstored_session_records(given(&b, 0).map(bson_f64), given(&b, 1)).await,
+            live,
+        ),
+        "markSessionRecordsStored" => {
+            check_unit(scenario, db.mark_session_records_stored(&bson_strings(&b[0]), date(given(&b, 1))).await)
+        }
+        _ => return None,
+    };
+    Some(outcome)
+}
+
 fn bson_strings(value: &Bson) -> Vec<String> {
     value.as_array().expect("an array").iter().map(|item| bson_str(item).to_string()).collect()
 }
@@ -647,6 +711,9 @@ async fn run_scenario(db: &ProviderDatabase, scenario: &Value, live: bool) -> Op
         return outcome;
     }
     if let Some(outcome) = run_image_scenario(db, scenario, live).await {
+        return outcome;
+    }
+    if let Some(outcome) = run_session_scenario(db, scenario, live).await {
         return outcome;
     }
     let a: Vec<Value> = args(scenario);

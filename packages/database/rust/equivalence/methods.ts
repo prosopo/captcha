@@ -101,7 +101,7 @@ type Command = { name: string; hex: string; json: Json; reply?: { hex: string; j
 let commands: Command[] = [];
 const pending = new Map<number, Command>();
 // The parts of a reply the methods read: the documents a cursor returns, and the counts.
-const REPLY_FIELDS: string[] = ["cursor", "n", "nModified", "upserted", "value", "lastErrorObject"];
+const REPLY_FIELDS: string[] = ["cursor", "n", "nModified", "upserted", "value", "lastErrorObject", "writeErrors", "writeConcernError"];
 const silent = getLogger("error", "equivalence");
 const db = new ProviderDatabase({ mongo: { url: MONGO_URL, dbname: DB_NAME }, logger: silent });
 await MongoDatabase.prototype.connect.call(db);
@@ -435,6 +435,96 @@ await record("image", "mark commitments checked", "markDappUserCommitmentsChecke
 await record("image", "mark commitments checked again", "markDappUserCommitmentsChecked", [[hex(0xc000 + 30)]]);
 await record("image", "flag solutions processed", "flagProcessedDappUserSolutions", [[hex(0x100), hex(0x101)]]);
 await record("image", "flag commitments processed", "flagProcessedDappUserCommitments", [[hex(0xc000 + 30), hex(0xc000 + 30), hex(0xc000 + 31)]]);
+
+const session = (n: number, extra: Record<string, unknown> = {}) => ({
+	sessionId: `session-s${n}`,
+	createdAt: new Date(1_710_000_000_000 + n),
+	token: `token-${n}`,
+	score: 0.5,
+	threshold: 0.8,
+	scoreComponents: { baseScore: 0.5, triggeredDetectors: [1, 2.5] },
+	ipAddress: n % 2 === 0 ? ip4 : ip6,
+	captchaType: "pow",
+	webView: false,
+	iFrame: true,
+	decryptedHeadHash: `head-${n}`,
+	userSitekeyIpHash: `hash-${n}`,
+	siteKey: "sitekey",
+	headers,
+	ipInfo,
+	unknownField: "stripped by mongoose",
+	...extra,
+});
+await record("sessions", "store a session", "storeSessionRecord", [session(1)]);
+await record("sessions", "store a session with everything", "storeSessionRecord", [
+	session(2, {
+		mode: "invisible",
+		solvedImagesCount: 2,
+		powDifficulty: 4,
+		puzzleTolerance: 3.5,
+		puzzle: { z: 1, a: [2, 3] },
+		iconOrderTolerance: 10,
+		iconOrder: { size: 4 },
+		puzzleLevel: 1,
+		lastUpdatedTimestamp: new Date(1_710_000_000_500),
+		isEscalation: true,
+		originSessionId: "session-s1",
+		refreshOf: "session-s0",
+		refreshCount: 2,
+		refreshedAfterMs: 1234,
+		bundleId: "bundle",
+		currentUrl: "https://example.com/page",
+		iframeUrl: "https://protect.example.com/",
+		isProtect: true,
+		reason: "someReason",
+		ruleType: ["ja4Hash"],
+		matchedRule: { type: "block", description: "rule" },
+		result: { status: "Approved" },
+		userSubmitted: false,
+		serverChecked: false,
+		agent: true,
+		webBotAuthAgent: "https://chatgpt.com",
+		simdReadings: { v: 1, r: [1.5, 2] },
+		simdReadingsStage: "frictionless",
+		d: { em: "a@b.c", n: 3 },
+		tcpToChelloUs: 100,
+		synNs: 1_700_000_000_000_000,
+		observedTtl: 64,
+		tcpOptsKinds: [2, 4, 8, 1, 3],
+		tcpTsval: 4_294_967_295,
+		dnsEvent: { resolverIp: "1.1.1.1", receivedAt: new Date(1_710_000_000_900) },
+		clientMetaData: { hp: "", clientSessionId: "client-2" },
+	}),
+]);
+await record("sessions", "store a session with no token", "storeSessionRecord", [session(3, { token: "" })]);
+await record("sessions", "store a session twice", "storeSessionRecord", [session(1)]);
+await record("sessions", "store a blocked session", "storeBlockedSession", [session(4, { blocked: false, ruleHash: "rule", ruleDescription: "why" })]);
+await record("sessions", "store a blocked session already stored", "storeBlockedSession", [session(5, { storedAtTimestamp: new Date(1_710_000_000_000), lastUpdatedTimestamp: new Date(1_710_000_000_001) })]);
+await record("sessions", "store a blocked session that fails", "storeBlockedSession", [session(4)]);
+await record("sessions", "a session by id", "getSessionRecordBySessionId", ["session-s2"]);
+await record("sessions", "a missing session by id", "getSessionRecordBySessionId", ["session-none"]);
+await record("sessions", "a session by token", "getSessionRecordByToken", ["token-2"]);
+await record("sessions", "a missing session by token", "getSessionRecordByToken", ["token-none"]);
+await record("sessions", "a session by hash", "getSessionByuserSitekeyIpHash", ["hash-1"]);
+await record("sessions", "a deleted session by hash", "getSessionByuserSitekeyIpHash", ["hash-4"]);
+await record("sessions", "claim a session", "claimSessionServerCheck", ["session-s1"]);
+await record("sessions", "claim a session again", "claimSessionServerCheck", ["session-s1"]);
+await record("sessions", "claim a missing session", "claimSessionServerCheck", ["session-none"]);
+await record("sessions", "patch a session", "updateSessionRecord", ["session-s2", { score: 0.25, result: { status: "Disapproved", reason: "CAPTCHA.INVALID_SOLUTION" }, ipAddress: ip6, solvedImagesCount: "3" }]);
+await record("sessions", "patch a session with a bad value", "updateSessionRecord", ["session-s2", { score: "high" }]);
+await record("sessions", "record SIMD readings", "recordSessionSimdReadingsIfAbsent", ["session-s1", { v: 2, r: [0.5] }, "challenge"]);
+await record("sessions", "record SIMD readings again", "recordSessionSimdReadingsIfAbsent", ["session-s1", { v: 3 }, "submit"]);
+await record("sessions", "merge a DNS event", "mergeSessionDnsEvent", ["session-s1", { resolverIp: "8.8.8.8" }, new Date(1_710_000_001_000)]);
+await record("sessions", "merge another DNS event", "mergeSessionDnsEvent", ["session-s1", { peerIp: "9.9.9.9", pathValid: false }, new Date(1_710_000_002_000)]);
+await record("sessions", "merge an empty DNS event", "mergeSessionDnsEvent", ["session-s2", {}, new Date(1_710_000_003_000)]);
+await record("sessions", "merge a DNS event into a missing session", "mergeSessionDnsEvent", ["session-none", { pathValid: true }, new Date(1_710_000_003_000)]);
+await record("sessions", "unstored sessions", "getUnstoredSessionRecords", []);
+await record("sessions", "unstored sessions, a page", "getUnstoredSessionRecords", [1]);
+await record("sessions", "mark sessions stored", "markSessionRecordsStored", [["session-s1", "session-s2"], new Date(1_710_000_060_123)]);
+await record("sessions", "consume a session", "checkAndRemoveSession", ["session-s1"]);
+await record("sessions", "consume a session again", "checkAndRemoveSession", ["session-s1"]);
+await record("sessions", "consume a missing session", "checkAndRemoveSession", ["session-none"]);
+await record("sessions", "a consumed session by hash", "getSessionByuserSitekeyIpHash", ["hash-1"]);
 
 await connection.db?.dropDatabase();
 await db.close();

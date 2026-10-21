@@ -46,6 +46,9 @@ pub enum MongoError {
     Timeout,
     /// The connection is not open.
     Unavailable(String),
+    /// The command ran but a write in it failed (a reply's `writeErrors` or
+    /// `writeConcernError`), which the driver reports as a failed operation.
+    Write { code: i32, message: String },
 }
 
 impl fmt::Display for MongoError {
@@ -55,6 +58,7 @@ impl fmt::Display for MongoError {
             MongoError::Driver(error) => write!(f, "{error}"),
             MongoError::Timeout => write!(f, "operation exceeded {SOCKET_TIMEOUT_MS} ms"),
             MongoError::Unavailable(why) => write!(f, "{why}"),
+            MongoError::Write { message, .. } => write!(f, "{message}"),
         }
     }
 }
