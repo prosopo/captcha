@@ -1,0 +1,35 @@
+[package]
+name = "prosopo-api-router"
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "rust/lib.rs"
+
+[dependencies]
+axum = { version = "0.8", default-features = false, features = ["http1", "json", "tokio", "query"] }
+http = "1"
+hyper = { version = "1", features = ["http1", "server"] }
+indexmap = "2"
+prosopo-api-route = { path = "../api-route" }
+prosopo-common = { path = "../common" }
+prosopo-keyring = { path = "../keyring" }
+prosopo-locale = { path = "../locale" }
+prosopo-logger = { path = "../logger" }
+prosopo-types = { path = "../types" }
+prosopo-util-crypto = { path = "../util-crypto" }
+serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
+tokio = { version = "1", features = ["rt", "sync", "time"] }
+uuid = { version = "1", features = ["v4"] }
+
+[dev-dependencies]
+http-body-util = "0.1"
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time"] }
+tower = { version = "0.5", features = ["util"] }

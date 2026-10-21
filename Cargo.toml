@@ -26,6 +26,7 @@ members = [
 	"packages/types-database",
 	"packages/database",
 	"packages/env",
+	"packages/api-express-router",
 ]
 exclude = [
 	"packages/native-ja4",
