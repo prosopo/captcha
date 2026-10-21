@@ -17,7 +17,6 @@ import {
 	encodeFingerprintProof,
 } from "@prosopo/fingerprint";
 import { summariseFingerprintProof } from "@prosopo/fingerprint/summary";
-import type { UnknownComponents } from "@prosopo/fingerprintjs";
 import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
@@ -47,8 +46,15 @@ import {
 const DAPP = "5GCPkfsBFFVeaHJuLXWFX5Ry82QwGCh3rY2QCL2orPe6n94q";
 const BUCKET = "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f";
 
+/**
+ * Structurally what fingerprintjs reports, rather than its `UnknownComponents`:
+ * the provider does not depend on @prosopo/fingerprintjs, only on the
+ * @prosopo/fingerprint wrapper around it.
+ */
+type Components = Record<string, { value: unknown; duration: number }>;
+
 /** What fingerprintjs reports. `bucket` omitted stands in for an older client. */
-const components = (bucket?: string): UnknownComponents => ({
+const components = (bucket?: string): Components => ({
 	colorDepth: { value: 24, duration: 1 },
 	cookiesEnabled: { value: true, duration: 1 },
 	sessionStorage: { value: true, duration: 1 },
