@@ -24,7 +24,9 @@
 		"typecheck": "tsc --project tsconfig.types.json",
 		"test:integration": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=integration pnpm exec vitest run --config ./vite.test.config.ts",
 		"test:unit": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=unit pnpm exec vitest run --config ./vite.test.config.ts",
-		"test": "pnpm run test:unit && pnpm run test:integration"
+		"test": "pnpm run test:unit && pnpm run test:integration",
+		"test:cargo": "cargo test -p prosopo-redis-client",
+		"equivalence": "tsx rust/equivalence/generate.ts && cargo test -p prosopo-redis-client equivalence"
 	},
 	"repository": {
 		"type": "git",

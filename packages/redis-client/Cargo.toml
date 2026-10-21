@@ -1,0 +1,28 @@
+[package]
+name = "prosopo-redis-client"
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "rust/lib.rs"
+
+[dependencies]
+prosopo-logger = { path = "../logger" }
+redis = { version = "1.7", default-features = false, features = ["aio", "tokio-comp", "connection-manager", "tokio-rustls-comp", "tls-rustls-webpki-roots"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order", "raw_value"] }
+ryu-js = "1.0"
+sha2 = "0.10"
+hex = "0.4"
+tokio = { version = "1", features = ["rt", "sync", "time", "macros"] }
+url = "2.5"
+fastrand = "2.3"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }

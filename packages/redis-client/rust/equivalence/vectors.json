@@ -1,0 +1,1450 @@
+{
+	"indexes": [
+		{
+			"label": "user-access-policy accessRulesRedisIndex",
+			"json": "{\"name\":\"index:user-access-rules\",\"schema\":{\"clientId\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"userId\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"ja4Hash\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"headersHash\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"userAgentHash\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"headHash\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"coords\":{\"type\":\"TAG\",\"INDEXMISSING\":true,\"SEPARATOR\":\"|\"},\"countryCode\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"asn\":{\"type\":\"NUMERIC\",\"INDEXMISSING\":true},\"os\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"browser\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"headerMatch\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"headerName\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"headerValue\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"headerOperator\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"webBotAuthAgent\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"numericIpMaskMin\":{\"type\":\"NUMERIC\",\"INDEXMISSING\":true},\"numericIpMaskMax\":{\"type\":\"NUMERIC\",\"INDEXMISSING\":true},\"numericIp\":{\"type\":\"NUMERIC\",\"INDEXMISSING\":true},\"groupId\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"type\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"deferToVerify\":{\"type\":\"TAG\",\"INDEXMISSING\":true}},\"options\":{\"ON\":\"HASH\",\"PREFIX\":[\"uar:\"]}}",
+			"hash": "307752cbe2d708646962bced56d045fea16afea7b734f1d0f0cc7b65580cacd8",
+			"createArgs": [
+				"FT.CREATE",
+				"index:user-access-rules",
+				"ON",
+				"HASH",
+				"PREFIX",
+				"1",
+				"uar:",
+				"SCHEMA",
+				"clientId",
+				"TAG",
+				"INDEXMISSING",
+				"userId",
+				"TAG",
+				"INDEXMISSING",
+				"ja4Hash",
+				"TAG",
+				"INDEXMISSING",
+				"headersHash",
+				"TAG",
+				"INDEXMISSING",
+				"userAgentHash",
+				"TAG",
+				"INDEXMISSING",
+				"headHash",
+				"TAG",
+				"INDEXMISSING",
+				"coords",
+				"TAG",
+				"INDEXMISSING",
+				"SEPARATOR",
+				"|",
+				"countryCode",
+				"TAG",
+				"INDEXMISSING",
+				"asn",
+				"NUMERIC",
+				"INDEXMISSING",
+				"os",
+				"TAG",
+				"INDEXMISSING",
+				"browser",
+				"TAG",
+				"INDEXMISSING",
+				"headerMatch",
+				"TAG",
+				"INDEXMISSING",
+				"headerName",
+				"TAG",
+				"INDEXMISSING",
+				"headerValue",
+				"TAG",
+				"INDEXMISSING",
+				"headerOperator",
+				"TAG",
+				"INDEXMISSING",
+				"webBotAuthAgent",
+				"TAG",
+				"INDEXMISSING",
+				"numericIpMaskMin",
+				"NUMERIC",
+				"INDEXMISSING",
+				"numericIpMaskMax",
+				"NUMERIC",
+				"INDEXMISSING",
+				"numericIp",
+				"NUMERIC",
+				"INDEXMISSING",
+				"groupId",
+				"TAG",
+				"INDEXMISSING",
+				"type",
+				"TAG",
+				"INDEXMISSING",
+				"deferToVerify",
+				"TAG",
+				"INDEXMISSING"
+			]
+		},
+		{
+			"label": "user-access-policy index renamed like database/provider.ts",
+			"json": "{\"name\":\"index:custom-access-rules\",\"schema\":{\"clientId\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"userId\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"ja4Hash\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"headersHash\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"userAgentHash\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"headHash\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"coords\":{\"type\":\"TAG\",\"INDEXMISSING\":true,\"SEPARATOR\":\"|\"},\"countryCode\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"asn\":{\"type\":\"NUMERIC\",\"INDEXMISSING\":true},\"os\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"browser\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"headerMatch\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"headerName\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"headerValue\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"headerOperator\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"webBotAuthAgent\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"numericIpMaskMin\":{\"type\":\"NUMERIC\",\"INDEXMISSING\":true},\"numericIpMaskMax\":{\"type\":\"NUMERIC\",\"INDEXMISSING\":true},\"numericIp\":{\"type\":\"NUMERIC\",\"INDEXMISSING\":true},\"groupId\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"type\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"deferToVerify\":{\"type\":\"TAG\",\"INDEXMISSING\":true}},\"options\":{\"ON\":\"HASH\",\"PREFIX\":[\"uar:\"]}}",
+			"hash": "7136fe0bbf409d0ea6576f1ff9041b2adc25b440e9d9abf2949908fa8d1d0a9e",
+			"createArgs": [
+				"FT.CREATE",
+				"index:custom-access-rules",
+				"ON",
+				"HASH",
+				"PREFIX",
+				"1",
+				"uar:",
+				"SCHEMA",
+				"clientId",
+				"TAG",
+				"INDEXMISSING",
+				"userId",
+				"TAG",
+				"INDEXMISSING",
+				"ja4Hash",
+				"TAG",
+				"INDEXMISSING",
+				"headersHash",
+				"TAG",
+				"INDEXMISSING",
+				"userAgentHash",
+				"TAG",
+				"INDEXMISSING",
+				"headHash",
+				"TAG",
+				"INDEXMISSING",
+				"coords",
+				"TAG",
+				"INDEXMISSING",
+				"SEPARATOR",
+				"|",
+				"countryCode",
+				"TAG",
+				"INDEXMISSING",
+				"asn",
+				"NUMERIC",
+				"INDEXMISSING",
+				"os",
+				"TAG",
+				"INDEXMISSING",
+				"browser",
+				"TAG",
+				"INDEXMISSING",
+				"headerMatch",
+				"TAG",
+				"INDEXMISSING",
+				"headerName",
+				"TAG",
+				"INDEXMISSING",
+				"headerValue",
+				"TAG",
+				"INDEXMISSING",
+				"headerOperator",
+				"TAG",
+				"INDEXMISSING",
+				"webBotAuthAgent",
+				"TAG",
+				"INDEXMISSING",
+				"numericIpMaskMin",
+				"NUMERIC",
+				"INDEXMISSING",
+				"numericIpMaskMax",
+				"NUMERIC",
+				"INDEXMISSING",
+				"numericIp",
+				"NUMERIC",
+				"INDEXMISSING",
+				"groupId",
+				"TAG",
+				"INDEXMISSING",
+				"type",
+				"TAG",
+				"INDEXMISSING",
+				"deferToVerify",
+				"TAG",
+				"INDEXMISSING"
+			]
+		},
+		{
+			"label": "empty",
+			"json": "{\"name\":\"probe\",\"schema\":{},\"options\":{}}",
+			"hash": "e2e03e535cb45ca3fafc336be52ddc8dfcf92d7bc592bb599e073a6c264ae20a",
+			"createArgs": [
+				"FT.CREATE",
+				"probe",
+				"SCHEMA"
+			]
+		},
+		{
+			"label": "shorthand tag (TS integration test)",
+			"json": "{\"name\":\"test-index:0\",\"schema\":{\"tagField\":\"TAG\"},\"options\":{}}",
+			"hash": "0a1541667a09196d30804fb514b4aa3ce2fe41448d6da34865891c2eefb13376",
+			"createArgs": [
+				"FT.CREATE",
+				"test-index:0",
+				"SCHEMA",
+				"tagField",
+				"TAG"
+			]
+		},
+		{
+			"label": "shorthand tag plus a second tag",
+			"json": "{\"name\":\"test-index:2\",\"schema\":{\"tagField\":\"TAG\",\"newField\":\"TAG\"},\"options\":{}}",
+			"hash": "0f0802be7941b4d34119eb7296cf6468947ba9438bf5a27874733eb7d73f68c8",
+			"createArgs": [
+				"FT.CREATE",
+				"test-index:2",
+				"SCHEMA",
+				"tagField",
+				"TAG",
+				"newField",
+				"TAG"
+			]
+		},
+		{
+			"label": "shorthand tag ON HASH",
+			"json": "{\"name\":\"test-index:3\",\"schema\":{\"tagField\":\"TAG\"},\"options\":{\"ON\":\"HASH\"}}",
+			"hash": "65abeccd4b50e997507b4f9de7ac9cf84293bb49ba155db2a6fdeb6709c0d604",
+			"createArgs": [
+				"FT.CREATE",
+				"test-index:3",
+				"ON",
+				"HASH",
+				"SCHEMA",
+				"tagField",
+				"TAG"
+			]
+		},
+		{
+			"label": "every shorthand type",
+			"json": "{\"name\":\"idx:shorthand\",\"schema\":{\"t\":\"TEXT\",\"n\":\"NUMERIC\",\"g\":\"GEO\",\"tg\":\"TAG\",\"gs\":\"GEOSHAPE\"},\"options\":{}}",
+			"hash": "6c8963d9dbe4e03e9271ba409c454734460b0a9a0a8046e9050c7fa9326c3dde",
+			"createArgs": [
+				"FT.CREATE",
+				"idx:shorthand",
+				"SCHEMA",
+				"t",
+				"TEXT",
+				"n",
+				"NUMERIC",
+				"g",
+				"GEO",
+				"tg",
+				"TAG",
+				"gs",
+				"GEOSHAPE"
+			]
+		},
+		{
+			"label": "tag options",
+			"json": "{\"name\":\"idx:tag\",\"schema\":{\"plain\":{\"type\":\"TAG\"},\"missing\":{\"type\":\"TAG\",\"INDEXMISSING\":true},\"sep\":{\"type\":\"TAG\",\"INDEXMISSING\":true,\"SEPARATOR\":\"|\"},\"emptySep\":{\"type\":\"TAG\",\"SEPARATOR\":\"\"},\"all\":{\"type\":\"TAG\",\"AS\":\"allAlias\",\"INDEXMISSING\":true,\"SEPARATOR\":\";\",\"CASESENSITIVE\":true,\"WITHSUFFIXTRIE\":true,\"INDEXEMPTY\":true,\"SORTABLE\":true,\"NOINDEX\":true},\"unf\":{\"type\":\"TAG\",\"SORTABLE\":\"UNF\"},\"falses\":{\"type\":\"TAG\",\"INDEXMISSING\":false,\"CASESENSITIVE\":false,\"WITHSUFFIXTRIE\":false,\"INDEXEMPTY\":false,\"SORTABLE\":false,\"NOINDEX\":false},\"emptyAlias\":{\"type\":\"TAG\",\"AS\":\"\"}},\"options\":{}}",
+			"hash": "8d9f2ca0873077b4854adb775211a574e77b6fa4ce3b59454a81e97ddca35196",
+			"createArgs": [
+				"FT.CREATE",
+				"idx:tag",
+				"SCHEMA",
+				"plain",
+				"TAG",
+				"missing",
+				"TAG",
+				"INDEXMISSING",
+				"sep",
+				"TAG",
+				"INDEXMISSING",
+				"SEPARATOR",
+				"|",
+				"emptySep",
+				"TAG",
+				"all",
+				"AS",
+				"allAlias",
+				"TAG",
+				"INDEXMISSING",
+				"SEPARATOR",
+				";",
+				"CASESENSITIVE",
+				"WITHSUFFIXTRIE",
+				"INDEXEMPTY",
+				"SORTABLE",
+				"NOINDEX",
+				"unf",
+				"TAG",
+				"SORTABLE",
+				"UNF",
+				"falses",
+				"TAG",
+				"emptyAlias",
+				"TAG"
+			]
+		},
+		{
+			"label": "numeric and geo options",
+			"json": "{\"name\":\"idx:numeric\",\"schema\":{\"n\":{\"type\":\"NUMERIC\"},\"nMissing\":{\"type\":\"NUMERIC\",\"INDEXMISSING\":true},\"nAll\":{\"type\":\"NUMERIC\",\"AS\":\"nAlias\",\"INDEXMISSING\":true,\"SORTABLE\":true,\"NOINDEX\":true},\"nUnf\":{\"type\":\"NUMERIC\",\"SORTABLE\":\"UNF\"},\"g\":{\"type\":\"GEO\",\"INDEXMISSING\":true,\"SORTABLE\":true},\"gFalse\":{\"type\":\"GEO\",\"INDEXMISSING\":false,\"NOINDEX\":false}},\"options\":{}}",
+			"hash": "b23a694f3332e4e5639fd656dc0bbc5f438a9af9db8163c330d3cc073dfd6143",
+			"createArgs": [
+				"FT.CREATE",
+				"idx:numeric",
+				"SCHEMA",
+				"n",
+				"NUMERIC",
+				"nMissing",
+				"NUMERIC",
+				"INDEXMISSING",
+				"nAll",
+				"AS",
+				"nAlias",
+				"NUMERIC",
+				"INDEXMISSING",
+				"SORTABLE",
+				"NOINDEX",
+				"nUnf",
+				"NUMERIC",
+				"SORTABLE",
+				"UNF",
+				"g",
+				"GEO",
+				"INDEXMISSING",
+				"SORTABLE",
+				"gFalse",
+				"GEO"
+			]
+		},
+		{
+			"label": "text options",
+			"json": "{\"name\":\"idx:text\",\"schema\":{\"t\":{\"type\":\"TEXT\"},\"tAll\":{\"type\":\"TEXT\",\"AS\":\"tAlias\",\"INDEXMISSING\":true,\"NOSTEM\":true,\"WEIGHT\":2,\"PHONETIC\":\"dm:en\",\"WITHSUFFIXTRIE\":true,\"INDEXEMPTY\":true,\"SORTABLE\":\"UNF\",\"NOINDEX\":true},\"w0\":{\"type\":\"TEXT\",\"WEIGHT\":0},\"w15\":{\"type\":\"TEXT\",\"WEIGHT\":1.5},\"wTenth\":{\"type\":\"TEXT\",\"WEIGHT\":0.1},\"wSmall\":{\"type\":\"TEXT\",\"WEIGHT\":0.000001},\"wTiny\":{\"type\":\"TEXT\",\"WEIGHT\":1e-7},\"wBig\":{\"type\":\"TEXT\",\"WEIGHT\":1e+21},\"wBigInt\":{\"type\":\"TEXT\",\"WEIGHT\":123456789012345680000},\"wNeg\":{\"type\":\"TEXT\",\"WEIGHT\":-2.5},\"wNegZero\":{\"type\":\"TEXT\",\"WEIGHT\":0},\"wMin\":{\"type\":\"TEXT\",\"WEIGHT\":5e-324},\"wMax\":{\"type\":\"TEXT\",\"WEIGHT\":1.7976931348623157e+308},\"wThird\":{\"type\":\"TEXT\",\"WEIGHT\":0.3333333333333333},\"fr\":{\"type\":\"TEXT\",\"PHONETIC\":\"dm:fr\",\"NOSTEM\":false},\"pt\":{\"type\":\"TEXT\",\"PHONETIC\":\"dm:pt\"},\"es\":{\"type\":\"TEXT\",\"PHONETIC\":\"dm:es\"}},\"options\":{}}",
+			"hash": "670b8ea73964de0f1985249fcc6ef503c80ae09dbf48ea513f029a145e51bb59",
+			"createArgs": [
+				"FT.CREATE",
+				"idx:text",
+				"SCHEMA",
+				"t",
+				"TEXT",
+				"tAll",
+				"AS",
+				"tAlias",
+				"TEXT",
+				"INDEXMISSING",
+				"NOSTEM",
+				"WEIGHT",
+				"2",
+				"PHONETIC",
+				"dm:en",
+				"WITHSUFFIXTRIE",
+				"INDEXEMPTY",
+				"SORTABLE",
+				"UNF",
+				"NOINDEX",
+				"w0",
+				"TEXT",
+				"WEIGHT",
+				"0",
+				"w15",
+				"TEXT",
+				"WEIGHT",
+				"1.5",
+				"wTenth",
+				"TEXT",
+				"WEIGHT",
+				"0.1",
+				"wSmall",
+				"TEXT",
+				"WEIGHT",
+				"0.000001",
+				"wTiny",
+				"TEXT",
+				"WEIGHT",
+				"1e-7",
+				"wBig",
+				"TEXT",
+				"WEIGHT",
+				"1e+21",
+				"wBigInt",
+				"TEXT",
+				"WEIGHT",
+				"123456789012345680000",
+				"wNeg",
+				"TEXT",
+				"WEIGHT",
+				"-2.5",
+				"wNegZero",
+				"TEXT",
+				"WEIGHT",
+				"0",
+				"wMin",
+				"TEXT",
+				"WEIGHT",
+				"5e-324",
+				"wMax",
+				"TEXT",
+				"WEIGHT",
+				"1.7976931348623157e+308",
+				"wThird",
+				"TEXT",
+				"WEIGHT",
+				"0.3333333333333333",
+				"fr",
+				"TEXT",
+				"PHONETIC",
+				"dm:fr",
+				"pt",
+				"TEXT",
+				"PHONETIC",
+				"dm:pt",
+				"es",
+				"TEXT",
+				"PHONETIC",
+				"dm:es"
+			]
+		},
+		{
+			"label": "geoshape options",
+			"json": "{\"name\":\"idx:geoshape\",\"schema\":{\"a\":{\"type\":\"GEOSHAPE\"},\"b\":{\"type\":\"GEOSHAPE\",\"AS\":\"bAlias\",\"COORD_SYSTEM\":\"SPHERICAL\"},\"c\":{\"type\":\"GEOSHAPE\",\"COORD_SYSTEM\":\"FLAT\",\"INDEXMISSING\":true}},\"options\":{}}",
+			"hash": "b6b44e11f3852f4d2f520743c97c1b315060a6e78693e1dffe9b31fa56372c2d",
+			"createArgs": [
+				"FT.CREATE",
+				"idx:geoshape",
+				"SCHEMA",
+				"a",
+				"GEOSHAPE",
+				"b",
+				"AS",
+				"bAlias",
+				"GEOSHAPE",
+				"COORD_SYSTEM",
+				"SPHERICAL",
+				"c",
+				"GEOSHAPE",
+				"COORD_SYSTEM",
+				"FLAT",
+				"INDEXMISSING"
+			]
+		},
+		{
+			"label": "multiple definitions per field",
+			"json": "{\"name\":\"idx:multi\",\"schema\":{\"sku\":[{\"type\":\"TEXT\",\"AS\":\"sku_text\"},{\"type\":\"TAG\",\"AS\":\"sku_tag\",\"SORTABLE\":true}],\"one\":[\"TAG\"],\"none\":[]},\"options\":{}}",
+			"hash": "32144285aaf4eed3cf4fe48ab04f74cbe8e48ccc7a71e024e40f89085c886fdf",
+			"createArgs": [
+				"FT.CREATE",
+				"idx:multi",
+				"SCHEMA",
+				"sku",
+				"AS",
+				"sku_text",
+				"TEXT",
+				"sku",
+				"AS",
+				"sku_tag",
+				"TAG",
+				"SORTABLE",
+				"one",
+				"TAG"
+			]
+		},
+		{
+			"label": "integer-like keys are ordered first by JS",
+			"json": "{\"name\":\"idx:keys\",\"schema\":{\"2\":\"TAG\",\"10\":\"TAG\",\"4294967294\":\"TAG\",\"b\":\"TAG\",\"a\":\"NUMERIC\",\"01\":\"TAG\",\"4294967295\":\"TAG\",\"-1\":\"TAG\",\"1.5\":\"TAG\"},\"options\":{}}",
+			"hash": "4dbd3fba6d31c314dce2ac0015a0cdc19af5460f31500b9f85af01fa4a60544f",
+			"createArgs": [
+				"FT.CREATE",
+				"idx:keys",
+				"SCHEMA",
+				"2",
+				"TAG",
+				"10",
+				"TAG",
+				"4294967294",
+				"TAG",
+				"b",
+				"TAG",
+				"a",
+				"NUMERIC",
+				"01",
+				"TAG",
+				"4294967295",
+				"TAG",
+				"-1",
+				"TAG",
+				"1.5",
+				"TAG"
+			]
+		},
+		{
+			"label": "strings needing JSON escapes",
+			"json": "{\"name\":\"idx:\\\"quoted\\\"\\\\back\\nline\\ttab\\u0001\\u001f é ✓ 😀  \",\"schema\":{\"f\\\"q\":{\"type\":\"TAG\",\"SEPARATOR\":\"\\\\\",\"AS\":\"a\\u0000b\"},\"ü-ñ\":{\"type\":\"TAG\",\"SEPARATOR\":\"\\n\"}},\"options\":{\"FILTER\":\"@x==\\\"\\\\\\\"y\\\\\\\"\\\"\"}}",
+			"hash": "043ac37b27a71aaf58697e05197e38020a3b6e9497a559d35c9c59ae973fe1f9",
+			"createArgs": [
+				"FT.CREATE",
+				"idx:\"quoted\"\\back\nline\ttab\u0001\u001f é ✓ 😀  ",
+				"FILTER",
+				"@x==\"\\\"y\\\"\"",
+				"SCHEMA",
+				"f\"q",
+				"AS",
+				"a\u0000b",
+				"TAG",
+				"SEPARATOR",
+				"\\",
+				"ü-ñ",
+				"TAG",
+				"SEPARATOR",
+				"\n"
+			]
+		},
+		{
+			"label": "every create option",
+			"json": "{\"name\":\"idx:options\",\"schema\":{\"f\":\"TAG\"},\"options\":{\"ON\":\"JSON\",\"PREFIX\":[\"a:\",\"b:\"],\"FILTER\":\"@f!=''\",\"LANGUAGE\":\"German\",\"LANGUAGE_FIELD\":\"@lang\",\"SCORE\":0.5,\"SCORE_FIELD\":\"@score\",\"MAXTEXTFIELDS\":true,\"TEMPORARY\":300,\"NOOFFSETS\":true,\"NOHL\":true,\"NOFIELDS\":true,\"NOFREQS\":true,\"SKIPINITIALSCAN\":true,\"STOPWORDS\":[\"a\",\"the\"]}}",
+			"hash": "89c9bccc8feba41cbc64e161a8e71f1d307a57967a252e5e49d8028b81bc842a",
+			"createArgs": [
+				"FT.CREATE",
+				"idx:options",
+				"ON",
+				"JSON",
+				"PREFIX",
+				"2",
+				"a:",
+				"b:",
+				"FILTER",
+				"@f!=''",
+				"LANGUAGE",
+				"German",
+				"LANGUAGE_FIELD",
+				"@lang",
+				"SCORE",
+				"0.5",
+				"SCORE_FIELD",
+				"@score",
+				"MAXTEXTFIELDS",
+				"TEMPORARY",
+				"300",
+				"NOOFFSETS",
+				"NOHL",
+				"NOFIELDS",
+				"NOFREQS",
+				"SKIPINITIALSCAN",
+				"STOPWORDS",
+				"2",
+				"a",
+				"the",
+				"SCHEMA",
+				"f",
+				"TAG"
+			]
+		},
+		{
+			"label": "falsy create options",
+			"json": "{\"name\":\"idx:options-falsy\",\"schema\":{\"f\":\"TAG\"},\"options\":{\"FILTER\":\"\",\"LANGUAGE_FIELD\":\"\",\"SCORE\":0,\"SCORE_FIELD\":\"\",\"MAXTEXTFIELDS\":false,\"TEMPORARY\":0,\"NOOFFSETS\":false,\"NOHL\":false,\"NOFIELDS\":false,\"NOFREQS\":false,\"SKIPINITIALSCAN\":false,\"STOPWORDS\":[]}}",
+			"hash": "4923c35c4cdbf7b61c6f8dccae6dfb9fcdc0ff3ef080f0e9126ffdae4f3b631e",
+			"createArgs": [
+				"FT.CREATE",
+				"idx:options-falsy",
+				"SCORE",
+				"0",
+				"STOPWORDS",
+				"0",
+				"SCHEMA",
+				"f",
+				"TAG"
+			]
+		},
+		{
+			"label": "single-string prefix and stopwords",
+			"json": "{\"name\":\"idx:variadic\",\"schema\":{\"f\":\"TAG\"},\"options\":{\"ON\":\"HASH\",\"PREFIX\":\"only:\",\"STOPWORDS\":\"stop\",\"SCORE\":1,\"TEMPORARY\":1.5}}",
+			"hash": "71f7816446e0e6b6da3b4b088a48db113c22152521340cb151dc4761b898e18b",
+			"createArgs": [
+				"FT.CREATE",
+				"idx:variadic",
+				"ON",
+				"HASH",
+				"PREFIX",
+				"1",
+				"only:",
+				"SCORE",
+				"1",
+				"TEMPORARY",
+				"1.5",
+				"STOPWORDS",
+				"1",
+				"stop",
+				"SCHEMA",
+				"f",
+				"TAG"
+			]
+		},
+		{
+			"label": "empty prefix list and empty prefix string",
+			"json": "{\"name\":\"idx:empty-prefix\",\"schema\":{\"f\":\"TAG\"},\"options\":{\"PREFIX\":[],\"STOPWORDS\":\"\"}}",
+			"hash": "ab22c3837419d98cd8e7157f1e0395e92832967291cf2ca5dacb3738cbb252a9",
+			"createArgs": [
+				"FT.CREATE",
+				"idx:empty-prefix",
+				"PREFIX",
+				"0",
+				"STOPWORDS",
+				"1",
+				"",
+				"SCHEMA",
+				"f",
+				"TAG"
+			]
+		},
+		{
+			"label": "prefix list with an empty entry",
+			"json": "{\"name\":\"idx:prefix-entry\",\"schema\":{\"f\":\"TAG\"},\"options\":{\"PREFIX\":[\"\",\"x:\"]}}",
+			"hash": "e406b4ab4f0d31fd629458073b827a245a2af2993daf080d2a3f01dc9a626201",
+			"createArgs": [
+				"FT.CREATE",
+				"idx:prefix-entry",
+				"PREFIX",
+				"2",
+				"",
+				"x:",
+				"SCHEMA",
+				"f",
+				"TAG"
+			]
+		}
+	],
+	"redact": [
+		{
+			"input": "redis://default:hunter2@redis.internal:6379",
+			"output": "redis://redacted:redacted@redis.internal:6379"
+		},
+		{
+			"input": "rediss://:hunter2@redis.internal:6380/2",
+			"output": "rediss://:redacted@redis.internal:6380/2"
+		},
+		{
+			"input": "redis://redis.internal:6379",
+			"output": "redis://redis.internal:6379"
+		},
+		{
+			"input": "redis://localhost",
+			"output": "redis://localhost"
+		},
+		{
+			"input": "not a url with hunter2",
+			"output": "[unparseable redis url]"
+		},
+		{
+			"input": null,
+			"output": null
+		},
+		{
+			"input": "",
+			"output": "[unparseable redis url]"
+		},
+		{
+			"input": "redis://user@host",
+			"output": "redis://redacted@host"
+		},
+		{
+			"input": "redis://:@host",
+			"output": "redis://host"
+		},
+		{
+			"input": "redis://user:@host:1",
+			"output": "redis://redacted@host:1"
+		},
+		{
+			"input": "REDIS://User:Pass@HOST:6379/0",
+			"output": "redis://redacted:redacted@HOST:6379/0"
+		},
+		{
+			"input": "redis://us%20er:p%40ss@host",
+			"output": "redis://redacted:redacted@host"
+		},
+		{
+			"input": "redis://user:pa ss@host",
+			"output": "redis://redacted:redacted@host"
+		},
+		{
+			"input": "redis://user:p@ss@host",
+			"output": "redis://redacted:redacted@host"
+		},
+		{
+			"input": "redis://[::1]:6379",
+			"output": "redis://[::1]:6379"
+		},
+		{
+			"input": "redis://u:p@[2001:db8::1]:6379/3",
+			"output": "redis://redacted:redacted@[2001:db8::1]:6379/3"
+		},
+		{
+			"input": "redis://host:6379/2?x=1#frag",
+			"output": "redis://host:6379/2?x=1#frag"
+		},
+		{
+			"input": "redis://host/",
+			"output": "redis://host/"
+		},
+		{
+			"input": "redis://host:99999",
+			"output": "[unparseable redis url]"
+		},
+		{
+			"input": "redis://ho st",
+			"output": "[unparseable redis url]"
+		},
+		{
+			"input": "redis://hôst.example",
+			"output": "redis://h%C3%B4st.example"
+		},
+		{
+			"input": "redis://u:p@host?protocol=3",
+			"output": "redis://redacted:redacted@host?protocol=3"
+		},
+		{
+			"input": "unix:///tmp/redis.sock",
+			"output": "unix:///tmp/redis.sock"
+		},
+		{
+			"input": "unix://user:secret@/tmp/redis.sock?db=2",
+			"output": "[unparseable redis url]"
+		},
+		{
+			"input": "http://user:secret@example.com",
+			"output": "http://redacted:redacted@example.com/"
+		},
+		{
+			"input": "https://example.com",
+			"output": "https://example.com/"
+		},
+		{
+			"input": "redis:host",
+			"output": "redis:host"
+		},
+		{
+			"input": "redis:/host",
+			"output": "redis:/host"
+		},
+		{
+			"input": "redis:///path",
+			"output": "redis:///path"
+		},
+		{
+			"input": "redis://@host",
+			"output": "redis://host"
+		},
+		{
+			"input": "   redis://u:p@host   ",
+			"output": "redis://redacted:redacted@host"
+		},
+		{
+			"input": "redis://u:p@host:0",
+			"output": "redis://redacted:redacted@host:0"
+		},
+		{
+			"input": "redis://u:p@host:00006379",
+			"output": "redis://redacted:redacted@host:6379"
+		},
+		{
+			"input": "redis://u:%zz@host",
+			"output": "redis://redacted:redacted@host"
+		}
+	],
+	"clientOptions": [
+		{
+			"url": null,
+			"password": null,
+			"result": {
+				"host": null,
+				"port": null,
+				"path": null,
+				"tls": null,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": null,
+			"password": "root",
+			"result": {
+				"host": null,
+				"port": null,
+				"path": null,
+				"tls": null,
+				"database": null,
+				"username": null,
+				"password": "root"
+			}
+		},
+		{
+			"url": "",
+			"password": "root",
+			"result": {
+				"host": null,
+				"port": null,
+				"path": null,
+				"tls": null,
+				"database": null,
+				"username": null,
+				"password": "root"
+			}
+		},
+		{
+			"url": "",
+			"password": null,
+			"result": {
+				"host": null,
+				"port": null,
+				"path": null,
+				"tls": null,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://localhost:6379",
+			"password": "root",
+			"result": {
+				"host": "localhost",
+				"port": 6379,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": "root"
+			}
+		},
+		{
+			"url": "redis://localhost:6379",
+			"password": null,
+			"result": {
+				"host": "localhost",
+				"port": 6379,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://localhost:6379",
+			"password": "",
+			"result": {
+				"host": "localhost",
+				"port": 6379,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://:root@localhost:6379",
+			"password": null,
+			"result": {
+				"host": "localhost",
+				"port": 6379,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": "root"
+			}
+		},
+		{
+			"url": "redis://:fromurl@localhost:6379",
+			"password": "fromoption",
+			"result": {
+				"host": "localhost",
+				"port": 6379,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": "fromurl"
+			}
+		},
+		{
+			"url": "redis://user@localhost:6379",
+			"password": "fromoption",
+			"result": {
+				"host": "localhost",
+				"port": 6379,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": "user",
+				"password": null
+			}
+		},
+		{
+			"url": "redis://user:pass@localhost",
+			"password": "fromoption",
+			"result": {
+				"host": "localhost",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": "user",
+				"password": "pass"
+			}
+		},
+		{
+			"url": "redis://us%20er:p%40ss%2Fw@localhost",
+			"password": null,
+			"result": {
+				"host": "localhost",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": "us er",
+				"password": "p@ss/w"
+			}
+		},
+		{
+			"url": "redis://user:pa ss@localhost",
+			"password": null,
+			"result": {
+				"host": "localhost",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": "user",
+				"password": "pa ss"
+			}
+		},
+		{
+			"url": "redis://u:%E2%9C%93@localhost",
+			"password": null,
+			"result": {
+				"host": "localhost",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": "u",
+				"password": "✓"
+			}
+		},
+		{
+			"url": "redis://u:%zz@localhost",
+			"password": null,
+			"result": {
+				"error": "URIError: URI malformed"
+			}
+		},
+		{
+			"url": "redis://u:%E0%A4%A@localhost",
+			"password": null,
+			"result": {
+				"error": "URIError: URI malformed"
+			}
+		},
+		{
+			"url": "redis://u:%FF@localhost",
+			"password": null,
+			"result": {
+				"error": "URIError: URI malformed"
+			}
+		},
+		{
+			"url": "rediss://:secret@redis.internal:6380/2",
+			"password": null,
+			"result": {
+				"host": "redis.internal",
+				"port": 6380,
+				"path": null,
+				"tls": true,
+				"database": 2,
+				"username": null,
+				"password": "secret"
+			}
+		},
+		{
+			"url": "redis://redis.internal",
+			"password": null,
+			"result": {
+				"host": "redis.internal",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "REDIS://HOST.Example:1/1",
+			"password": null,
+			"result": {
+				"host": "HOST.Example",
+				"port": 1,
+				"path": null,
+				"tls": false,
+				"database": 1,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://[::1]:6380",
+			"password": null,
+			"result": {
+				"host": "::1",
+				"port": 6380,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://[2001:DB8::1]",
+			"password": null,
+			"result": {
+				"host": "2001:db8::1",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://[::ffff:1.2.3.4]",
+			"password": null,
+			"result": {
+				"host": "::ffff:102:304",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://127.0.0.1:6379/0",
+			"password": null,
+			"result": {
+				"host": "127.0.0.1",
+				"port": 6379,
+				"path": null,
+				"tls": false,
+				"database": 0,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host/15",
+			"password": null,
+			"result": {
+				"host": "host",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": 15,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host/02",
+			"password": null,
+			"result": {
+				"host": "host",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": 2,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host/2.5",
+			"password": null,
+			"result": {
+				"host": "host",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": 2.5,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host/-1",
+			"password": null,
+			"result": {
+				"host": "host",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": -1,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host/1e1",
+			"password": null,
+			"result": {
+				"host": "host",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": 10,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host/0x10",
+			"password": null,
+			"result": {
+				"host": "host",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": 16,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host/0b11",
+			"password": null,
+			"result": {
+				"host": "host",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": 3,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host/0o17",
+			"password": null,
+			"result": {
+				"host": "host",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": 15,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host/Infinity",
+			"password": null,
+			"result": {
+				"host": "host",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": "Infinity",
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host/abc",
+			"password": null,
+			"result": {
+				"error": "TypeError: Invalid pathname"
+			}
+		},
+		{
+			"url": "redis://host/1/2",
+			"password": null,
+			"result": {
+				"error": "TypeError: Invalid pathname"
+			}
+		},
+		{
+			"url": "redis://host/",
+			"password": null,
+			"result": {
+				"host": "host",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host?db=3",
+			"password": null,
+			"result": {
+				"host": "host",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host:0",
+			"password": null,
+			"result": {
+				"host": "host",
+				"port": 0,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host:00006379",
+			"password": null,
+			"result": {
+				"host": "host",
+				"port": 6379,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host:65535",
+			"password": null,
+			"result": {
+				"host": "host",
+				"port": 65535,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://host:65536",
+			"password": null,
+			"result": {
+				"error": "TypeError: Invalid URL"
+			}
+		},
+		{
+			"url": "redis://hôst",
+			"password": null,
+			"result": {
+				"host": "h%C3%B4st",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis://ho%20st",
+			"password": null,
+			"result": {
+				"host": "ho%20st",
+				"port": null,
+				"path": null,
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "redis:host",
+			"password": null,
+			"result": {
+				"error": "TypeError: Invalid pathname"
+			}
+		},
+		{
+			"url": "redis:///nohost",
+			"password": null,
+			"result": {
+				"error": "TypeError: Invalid pathname"
+			}
+		},
+		{
+			"url": "http://localhost:6379",
+			"password": null,
+			"result": {
+				"error": "TypeError: Protocol - http: - is not a valid Redis protocol. Expected redis: or rediss:"
+			}
+		},
+		{
+			"url": "not a url",
+			"password": null,
+			"result": {
+				"error": "TypeError: Invalid URL"
+			}
+		},
+		{
+			"url": "unix:///tmp/redis.sock",
+			"password": null,
+			"result": {
+				"host": null,
+				"port": null,
+				"path": "/tmp/redis.sock",
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "unix:///tmp/redis.sock",
+			"password": "fromoption",
+			"result": {
+				"host": null,
+				"port": null,
+				"path": "/tmp/redis.sock",
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": "fromoption"
+			}
+		},
+		{
+			"url": "unix://user:secret@/tmp/redis.sock?db=2",
+			"password": null,
+			"result": {
+				"host": null,
+				"port": null,
+				"path": "/tmp/redis.sock",
+				"tls": false,
+				"database": 2,
+				"username": "user",
+				"password": "secret"
+			}
+		},
+		{
+			"url": "unix://:secret@/var/run/redis%20x.sock",
+			"password": null,
+			"result": {
+				"host": null,
+				"port": null,
+				"path": "/var/run/redis x.sock",
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": "secret"
+			}
+		},
+		{
+			"url": "unix:///tmp/redis.sock?db=",
+			"password": null,
+			"result": {
+				"host": null,
+				"port": null,
+				"path": "/tmp/redis.sock",
+				"tls": false,
+				"database": 0,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "unix:///tmp/redis.sock?db=+4",
+			"password": null,
+			"result": {
+				"host": null,
+				"port": null,
+				"path": "/tmp/redis.sock",
+				"tls": false,
+				"database": 4,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "unix:///tmp/redis.sock?db=x",
+			"password": null,
+			"result": {
+				"error": "TypeError: Invalid db query parameter"
+			}
+		},
+		{
+			"url": "unix:///tmp/redis.sock?a=1&db=5&db=6",
+			"password": null,
+			"result": {
+				"host": null,
+				"port": null,
+				"path": "/tmp/redis.sock",
+				"tls": false,
+				"database": 5,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "unix:///tmp/redis.sock?db=%33",
+			"password": null,
+			"result": {
+				"host": null,
+				"port": null,
+				"path": "/tmp/redis.sock",
+				"tls": false,
+				"database": 3,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "unix:///tmp/redis.sock#frag",
+			"password": null,
+			"result": {
+				"host": null,
+				"port": null,
+				"path": "/tmp/redis.sock",
+				"tls": false,
+				"database": null,
+				"username": null,
+				"password": null
+			}
+		},
+		{
+			"url": "unix:///",
+			"password": null,
+			"result": {
+				"error": "TypeError: Invalid unix URL"
+			}
+		},
+		{
+			"url": "unix://relative.sock",
+			"password": null,
+			"result": {
+				"error": "TypeError: Invalid unix URL"
+			}
+		},
+		{
+			"url": "unix://u@/tmp/s.sock",
+			"password": null,
+			"result": {
+				"host": null,
+				"port": null,
+				"path": "/tmp/s.sock",
+				"tls": false,
+				"database": null,
+				"username": "u",
+				"password": null
+			}
+		}
+	]
+}
