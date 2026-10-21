@@ -30,10 +30,19 @@ export type Jwk = {
 	[key: string]: unknown;
 };
 
-export type JwksFetch = (url: string) => Promise<Response>;
+export type JwksFetch = (url: string, init?: RequestInit) => Promise<Response>;
 
 const DIRECTORY_PATH = "/.well-known/http-message-signatures-directory";
 const DEFAULT_TTL_MS = 60 * 60 * 1000;
+// The signer chooses the cache-control header, so it does not get to pin a
+// key set in memory indefinitely.
+const MAX_TTL_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_TIMEOUT_MS = 3000;
+// A key directory holds a handful of JWKs; anything bigger is not one.
+const MAX_BODY_BYTES = 64 * 1024;
+// Every unsigned-but-headered request can name a fresh signer URL, so the
+// cache must not grow with attacker input.
+const MAX_CACHE_ENTRIES = 1000;
 
 type CacheEntry = { keys: Jwk[]; expiresAt: number };
 
@@ -50,6 +59,77 @@ export type JwksResolverOptions = {
 	fetch?: JwksFetch;
 	// Overrides the cache-control / default TTL. In milliseconds.
 	ttlMs?: number;
+	// Abort the directory fetch after this long. In milliseconds.
+	timeoutMs?: number;
+	// Permit http:// and local signer hosts. Only for tests and local
+	// development, where the JWKS is served from a throwaway localhost origin.
+	allowLocalSigners?: boolean;
+};
+
+const isIpLiteral = (hostname: string): boolean =>
+	hostname.startsWith("[") || /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+
+// The signer URL is taken from a request header, so without this any client
+// could make the provider fetch from inside its own network. Signers are
+// public HTTPS origins with DNS names. Names that resolve to private
+// addresses are not caught here.
+const assertFetchableSigner = (url: URL): void => {
+	if (url.protocol !== "https:") {
+		throw new Error(`signer must be https: ${url.origin}`);
+	}
+	const hostname = url.hostname.toLowerCase();
+	if (
+		isIpLiteral(hostname) ||
+		hostname === "localhost" ||
+		hostname.endsWith(".localhost") ||
+		!hostname.includes(".")
+	) {
+		throw new Error(`signer host not allowed: ${hostname}`);
+	}
+};
+
+const readCappedText = async (response: Response): Promise<string> => {
+	const declared = Number(response.headers.get("content-length"));
+	if (declared > MAX_BODY_BYTES) {
+		throw new Error(`JWKS body too large: ${declared} bytes`);
+	}
+	if (!response.body) return "";
+	const reader = response.body.getReader();
+	const chunks: Uint8Array[] = [];
+	let total = 0;
+	for (;;) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		total += value.byteLength;
+		if (total > MAX_BODY_BYTES) {
+			await reader.cancel();
+			throw new Error(`JWKS body exceeds ${MAX_BODY_BYTES} bytes`);
+		}
+		chunks.push(value);
+	}
+	const bytes = new Uint8Array(total);
+	let offset = 0;
+	for (const chunk of chunks) {
+		bytes.set(chunk, offset);
+		offset += chunk.byteLength;
+	}
+	return new TextDecoder().decode(bytes);
+};
+
+const remember = (signerUrl: string, entry: CacheEntry): void => {
+	cache.delete(signerUrl);
+	if (cache.size >= MAX_CACHE_ENTRIES) {
+		const now = Date.now();
+		for (const [key, value] of cache) {
+			if (value.expiresAt <= now) cache.delete(key);
+		}
+	}
+	while (cache.size >= MAX_CACHE_ENTRIES) {
+		const oldest = cache.keys().next();
+		if (oldest.done) break;
+		cache.delete(oldest.value);
+	}
+	cache.set(signerUrl, entry);
 };
 
 export const resolveJwksFromSignatureAgent = async (
@@ -61,27 +141,32 @@ export const resolveJwksFromSignatureAgent = async (
 	if (cached && cached.expiresAt > now) return cached.keys;
 
 	const fetchImpl = options.fetch ?? fetch;
-	const directoryUrl = new URL(DIRECTORY_PATH, `${signerUrl}/`).toString();
-	const response = await fetchImpl(directoryUrl);
+	const directoryUrl = new URL(DIRECTORY_PATH, `${signerUrl}/`);
+	if (!options.allowLocalSigners) assertFetchableSigner(directoryUrl);
+	const response = await fetchImpl(directoryUrl.toString(), {
+		signal: AbortSignal.timeout(options.timeoutMs ?? DEFAULT_TIMEOUT_MS),
+		redirect: "error",
+	});
 	if (!response.ok) {
 		throw new Error(`JWKS fetch ${response.status} at ${directoryUrl}`);
 	}
 
-	const body = (await response.json()) as { keys?: Jwk[] };
+	const body = JSON.parse(await readCappedText(response)) as { keys?: Jwk[] };
 	const keys = Array.isArray(body.keys) ? body.keys : [];
 
-	const ttl =
+	const ttl = Math.min(
 		options.ttlMs ??
-		parseMaxAge(response.headers.get("cache-control")) ??
-		DEFAULT_TTL_MS;
+			parseMaxAge(response.headers.get("cache-control")) ??
+			DEFAULT_TTL_MS,
+		MAX_TTL_MS,
+	);
 
-	cache.set(signerUrl, { keys, expiresAt: now + ttl });
+	remember(signerUrl, { keys, expiresAt: now + ttl });
 	return keys;
 };
 
-// Test / long-running-process escape hatch — resets the in-memory cache so
-// tests don't leak state between suites and operators can force a refresh
-// after publishing a rotated key.
+export const jwksCacheSize = (): number => cache.size;
+
 export const clearJwksCache = (): void => {
 	cache.clear();
 };

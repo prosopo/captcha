@@ -153,6 +153,7 @@ const sidebar = (page: DemoPage | undefined, prefix: string): string => {
 		<nav class="demo-segmented" aria-label="Mode">${modes}</nav>
 	</div>
 	${slotMarkup("placement")}
+	${slotMarkup("language")}
 	<details class="demo-advanced"${advancedOpen}>
 		<summary>Advanced</summary>
 		<div class="demo-group">
@@ -211,16 +212,22 @@ const layoutClose = (page: DemoPage | undefined): string => `
 </aside>
 </div>`;
 
-// Placement is a query parameter, so carry it across when moving between pages.
-const keepPlacementScript = `
+// Placement and language are query parameters, so carry them across when
+// moving between pages.
+export const keepQueryScript = `
 <script>
 	(function () {
-		var placement = new URLSearchParams(window.location.search).get("placement");
-		if (!placement) return;
+		var query = new URLSearchParams(window.location.search);
+		var kept = ["placement", "language"].filter(function (name) {
+			return query.get(name);
+		});
+		if (kept.length === 0) return;
 		var links = document.querySelectorAll("a[data-demo-nav]");
 		for (var i = 0; i < links.length; i++) {
 			var url = new URL(links[i].getAttribute("href"), window.location.href);
-			url.searchParams.set("placement", placement);
+			for (var j = 0; j < kept.length; j++) {
+				url.searchParams.set(kept[j], query.get(kept[j]));
+			}
 			links[i].setAttribute("href", url.toString());
 		}
 	})();
@@ -248,7 +255,7 @@ export default function layoutInjector(): Plugin {
 					)
 					.replace(
 						"</body>",
-						() => `${layoutClose(page)}${keepPlacementScript}\n</body>`,
+						() => `${layoutClose(page)}${keepQueryScript}\n</body>`,
 					);
 			},
 		},

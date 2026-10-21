@@ -46,6 +46,11 @@ export interface CheckboxProps {
 	onChange: CheckboxChangeHandler;
 	labelText: string;
 	error?: string;
+	/**
+	 * Shown in place of the label like `error`, but the box stays enabled:
+	 * it reports something the user can fix by trying again.
+	 */
+	notice?: string;
 	loading: boolean;
 	/** Name for the spinner that stands in for the box while it is working. */
 	loadingText?: string;
@@ -76,7 +81,9 @@ const generateNames = (): CheckboxNames => ({
 });
 
 const FAQ_LINK = process.env.PROSOPO_DOCS_URL
-	? `${new URL(`${process.env.PROSOPO_DOCS_URL}/en/basics/faq/`).href}/`
+	? new URL(
+			`${process.env.PROSOPO_DOCS_URL.replace(/\/+$/, "")}/en/basics/faq/`,
+		).href
 	: "https://docs.prosopo.io/en/basics/faq/";
 
 /**
@@ -270,6 +277,20 @@ export const mountCheckbox = (
 
 	const label = createElement("label", { className: names.label });
 
+	// The error replaces the label in place, which a screen reader does not
+	// notice; a live region that exists from mount gets it announced.
+	const announcer = createElement("span", {
+		attributes: { "aria-live": "polite", "aria-atomic": "true" },
+		style: {
+			position: "absolute",
+			width: "1px",
+			height: "1px",
+			overflow: "hidden",
+			clip: "rect(0 0 0 0)",
+			whiteSpace: "nowrap",
+		},
+	});
+
 	const applyBoxStyle = () => {
 		const { theme, checked } = props;
 		// White (token) tick painted directly onto the box so the checked state is
@@ -356,6 +377,10 @@ export const mountCheckbox = (
 
 	const renderLabel = () => {
 		clearElement(label);
+		const announcement = props.error ?? "";
+		if (announcer.textContent !== announcement) {
+			announcer.textContent = announcement;
+		}
 		if (undefined !== props.error) {
 			// The error text carries a support code, so it has to be selectable —
 			// the label's `user-select: none` is overridden for this state only.
@@ -372,6 +397,16 @@ export const mountCheckbox = (
 			return;
 		}
 		applyStyles(label, { userSelect: undefined, cursor: undefined });
+		if (undefined !== props.notice) {
+			label.appendChild(
+				createElement("span", {
+					attributes: { role: "alert" },
+					style: { color: props.theme.palette.error.main },
+					text: props.notice,
+				}),
+			);
+			return;
+		}
 		label.textContent = props.labelText;
 	};
 
@@ -428,6 +463,7 @@ export const mountCheckbox = (
 
 	render();
 	container.appendChild(root);
+	container.appendChild(announcer);
 
 	return {
 		update: (nextProps: CheckboxProps) => {
@@ -449,6 +485,7 @@ export const mountCheckbox = (
 		destroy: () => {
 			teardown.run();
 			root.parentNode?.removeChild(root);
+			announcer.remove();
 		},
 	};
 };

@@ -72,4 +72,7 @@ export const accessRuleMongooseSchema: SchemaDefinition<AccessRuleRecord> = {
 	...policyScopeSchema,
 	...userScopeSchema,
 	ruleGroupId: { type: String, required: false },
+	// `default: undefined` stops mongoose stamping an empty array on every
+	// rule, which would read as "has exclusions" to anything checking presence.
+	excludedClientIds: { type: [String], required: false, default: undefined },
 } satisfies Keys<AccessRuleRecord>;

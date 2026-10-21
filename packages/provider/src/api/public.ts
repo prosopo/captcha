@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
 import { type ProviderDetails, PublicApiPaths } from "@prosopo/types";
 import { version } from "@prosopo/util";
@@ -73,7 +73,7 @@ export function publicRouter(env: ProviderEnvironment): Router {
 
 	// Prometheus metrics endpoint. Lives in the public router so it runs before
 	// rate-limiting, auth and blocking middleware — scrapes are never throttled
-	// or blocked. Vector scrapes this over the internal docker network.
+	// or blocked. `metricsAccess` limits it to internal callers or token holders.
 	if (metricsEnabled()) {
 		router.get(PublicApiPaths.Metrics, metricsHandler(env));
 	}
@@ -125,8 +125,10 @@ export function publicRouter(env: ProviderEnvironment): Router {
 				msg: "Error getting provider details",
 			}));
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: { code: 500 },
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "PROV-34",
+					message: "BadRequest",
 				}),
 			);
 		}

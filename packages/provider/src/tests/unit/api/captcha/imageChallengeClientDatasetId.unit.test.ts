@@ -14,7 +14,7 @@
 
 import type { AddressInfo } from "node:net";
 import { handleErrors } from "@prosopo/api-express-router";
-import { ProsopoDBError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { Keyring } from "@prosopo/keyring";
 import { getLogger } from "@prosopo/logger";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -36,6 +36,12 @@ import {
 	it,
 	vi,
 } from "vitest";
+
+declare module "@prosopo/common" {
+	interface ErrorSites {
+		"DBSE-17": true;
+	}
+}
 
 type TasksStub = {
 	db: {
@@ -87,7 +93,7 @@ beforeAll(async () => {
 	const app = express();
 	app.use(express.json());
 	app.use((req: Request, _res: Response, next: NextFunction) => {
-		req.i18n = { t: i18n.t };
+		req.i18n = i18n;
 		req.logger = logger;
 		next();
 	});
@@ -116,9 +122,10 @@ beforeEach(() => {
 				if (datasetId === KNOWN_DATASET) {
 					return { datasetId };
 				}
-				throw new ProsopoDBError("DATABASE.DATASET_GET_FAILED", {
+				throw new ProsopoError({
+					code: "RECORD_NOT_FOUND",
+					errorSite: "DBSE-17",
 					context: { datasetId },
-					silent: true,
 				});
 			}),
 		},
@@ -140,7 +147,7 @@ describe("image challenge with a client-supplied datasetId", () => {
 	it("rejects a well-formed but unknown datasetId with 400", async () => {
 		const { status, text } = await post(UNKNOWN_DATASET);
 		expect(status).toBe(400);
-		expect(text).toContain("DATABASE.DATASET_GET_FAILED");
+		expect(text).toContain("INVALID_REQUEST");
 		expect(text).not.toContain(UNKNOWN_DATASET);
 	});
 

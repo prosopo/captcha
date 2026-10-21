@@ -12,23 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { type Languages, isLanguage } from "@prosopo/locale";
+import { type Language, resolveLanguageList } from "@prosopo/locale";
 import type {
 	ProcaptchaClientConfigInput,
 	ProcaptchaRenderOptions,
 } from "@prosopo/types";
 
 /**
- * Prioritizes language selection from:
- * 1. renderOptions.language
- * 2. element's data-language attribute
- * 3. Defaults to 'en'
- *
- * Validates the language against currently supported languages
- *
- * @param renderOptions
- * @param element
- * @param config
+ * Sets config.language from the site's choice, if it made one we support.
+ * See resolveLanguage.
  */
 export const setLanguage = (
 	renderOptions: ProcaptchaRenderOptions | undefined,
@@ -42,28 +34,50 @@ export const setLanguage = (
 	}
 };
 
-// Resolves the site-owner language before an i18n singleton has been created,
-// so the widget can boot i18n with the correct language on first init instead
-// of having to run a post-mount changeLanguage() effect. Returning `undefined`
-// preserves the existing "fall back to browser detection" behaviour.
+const requestedLanguage = (
+	renderOptions: ProcaptchaRenderOptions | undefined,
+	element: Element,
+): string | null | undefined =>
+	renderOptions?.language || element.getAttribute("data-language");
+
+/** resolveLanguage without the console error, for callers other than the widget. */
+export const siteLanguage = (
+	renderOptions: ProcaptchaRenderOptions | undefined,
+	element: Element,
+): Language | undefined =>
+	resolveLanguageList(requestedLanguage(renderOptions, element));
+
+/**
+ * The site owner's language: renderOptions.language, else the element's
+ * `data-language`. Either may list several codes in Accept-Language form
+ * (`"xx, tr-TR, de"`); the first one with a catalogue wins, regional tags
+ * falling back to their parent (`pt-PT` to `pt`, `nb` to `no`).
+ *
+ * `undefined` means the site did not choose, or chose only languages we do
+ * not have: the widget then uses the browser's languages, then English. So
+ * the order is attribute, browser, English.
+ *
+ * Resolved before i18n is created, so the widget boots in the right language
+ * instead of flashing the browser's first.
+ */
 export const resolveLanguage = (
 	renderOptions: ProcaptchaRenderOptions | undefined,
 	element: Element,
-): string | undefined => {
-	const languageAttribute =
-		renderOptions?.language || element.getAttribute("data-language");
+): Language | undefined => {
+	const requested: string | null | undefined = requestedLanguage(
+		renderOptions,
+		element,
+	);
 
-	if (!languageAttribute) {
+	if (!requested) {
 		return undefined;
 	}
 
-	return validateLanguage(languageAttribute);
-};
-
-const validateLanguage = (languageAttribute: string | typeof Languages) => {
-	if (typeof languageAttribute === "string" && isLanguage(languageAttribute)) {
-		return languageAttribute;
+	const resolved = resolveLanguageList(requested);
+	if (!resolved) {
+		console.error(
+			`Unsupported language attribute: ${requested}; using the browser's language`,
+		);
 	}
-	console.error(`Invalid language attribute: ${languageAttribute}`);
-	return "en";
+	return resolved;
 };

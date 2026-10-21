@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Nepavyko užkoduoti netinkamo adreso",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha sprendimo įsipareigojimas neegzistuoja",
+		"SIGNER_UNDEFINED": "Pasirašantysis neapibrėžtas",
+		"CANNOT_FIND_KEYPAIR": "Nepavyksta rasti raktų poros",
+		"INVALID_DATA_FORMAT": "Netinkamas duomenų formatas"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Paprašyta nežinomos aplinkos",
+		"INVALID_CAPTCHA_NUMBER": "Tinkamai sukonfigūruokite captcha nustatymus",
+		"INVALID_LOG_LEVEL": "Netinkamas žurnalo lygis",
+		"INVALID_PACKAGE_DIR": "Netinkamas paketo katalogas"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Klaida analizuojant duomenų rinkinį",
+		"SOLUTION_PARSE_ERROR": "Klaida analizuojant duomenų rinkinį",
+		"HASH_ERROR": "Klaida skaičiuojant duomenų rinkinio maišą",
+		"DATASET_ID_UNDEFINED": "Duomenų rinkinio ID neapibrėžtas",
+		"NOT_ENOUGH_LABELS": "Nepakanka žymų",
+		"NOT_ENOUGH_IMAGES": "Nepakanka vaizdų",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Captcha skaičius duomenų rinkinyje mažesnis nei sukonfigūruotas captcha skaičius",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Sprendimų skaičius duomenų rinkinyje mažesnis nei sukonfigūruotas sprendimų skaičius",
+		"DUPLICATE_IMAGE": "aptiktas pasikartojantis vaizdas",
+		"MERKLE_ERROR": "Klaida kuriant Merkle medį"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Nepavyko importuoti duomenų bazės variklio",
+		"DATABASE_UNDEFINED": "Duomenų bazės klientas neprijungtas",
+		"DATABASE_HOST_UNDEFINED": "Duomenų bazės serverio adresas neapibrėžtas",
+		"DATASET_LOAD_FAILED": "Nepavyko įkelti duomenų rinkinio",
+		"DATASET_GET_FAILED": "Nepavyko gauti duomenų rinkinio",
+		"CAPTCHA_GET_FAILED": "Nepavyko gauti captcha",
+		"CAPTCHA_UPDATE_FAILED": "Nepavyko atnaujinti captcha",
+		"IMAGE_GET_FAILED": "Nepavyko gauti vaizdo",
+		"PENDING_RECORD_NOT_FOUND": "Laukiančio įrašo nerasta",
+		"INVALID_HASH": "Netinkama maiša",
+		"SOLUTION_GET_FAILED": "Nepavyko gauti sprendimo",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nerasta duomenų rinkinių su reikiamu sprendimų skaičiumi",
+		"SOLUTION_APPROVE_FAILED": "Nepavyko patvirtinti sprendimo",
+		"SOLUTION_FLAG_FAILED": "Nepavyko pažymėti sprendimo kaip apdoroto",
+		"TABLES_UNDEFINED": "Lentelės neapibrėžtos",
+		"CONNECTION_UNDEFINED": "Ryšys neapibrėžtas",
+		"COMMITMENT_FLAG_FAILED": "Nepavyko pažymėti įsipareigojimo kaip apdoroto",
+		"UNKNOWN": "Nežinoma duomenų bazės klaida",
+		"QUERY_ERROR": "Duomenų bazės užklausa nepavyko",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis ryšys prieigos taisyklėms neapibrėžtas",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Naudotojų prieigos taisyklių saugykla neapibrėžta",
+		"SESSION_STORE_FAILED": "Nepavyko išsaugoti sesijos",
+		"SESSION_CHECK_REMOVE_FAILED": "Nepavyko patikrinti ir pašalinti sesijos",
+		"SESSION_GET_FAILED": "Nepavyko gauti sesijos"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Savininko naudotojo keisti negalima",
+		"CANNOT_DELETE_OWN_USER": "Negalite ištrinti savo paskyros",
+		"CANNOT_DELETE_LAST_USER": "Paskutinio naudotojo ištrinti negalima",
+		"USER_ALREADY_EXISTS": "Naudotojas jau egzistuoja",
+		"NO_SUGGESTIONS_FOUND": "Pasiūlymų nerasta",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Paskutinės aktyvios svetainės išjungti negalima",
+		"DUPLICATE_SITE_NAME": "Svetainė tokiu pavadinimu jau egzistuoja",
+		"INVALID_SITE_NAME": "Svetainės pavadinime gali būti tik raidės, skaičiai, brūkšneliai ir pabraukimo ženklai"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Netinkamas parametras"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Failas nerastas",
+		"FILE_ALREADY_EXISTS": "Failas jau egzistuoja",
+		"INVALID_DIR_FORMAT": "Netinkamas katalogo formatas"
+	}
+}

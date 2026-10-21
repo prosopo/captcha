@@ -36,12 +36,14 @@ import {
 	ClientSettingsSchema,
 	DatabaseTypes,
 	type ImageVerificationResponse,
+	InputMethod,
 	type KeyringPair,
 	ProsopoConfigSchema,
 	Tier,
 	type VerifySolutionBodyTypeInput,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
+import type { UserCommitmentRecord } from "@prosopo/types-database";
 import { embedData } from "@prosopo/util";
 import { randomAsHex } from "@prosopo/util-crypto";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
@@ -221,6 +223,13 @@ describe("Image Captcha Integration Tests", () => {
 
 		return (await response.json()) as CaptchaSolutionResponse;
 	};
+
+	const storedCommitment = (solution: CaptchaSolutionBodyType) =>
+		env
+			.getDb()
+			.getTables()
+			.commitment.findOne({ id: getCommitmentId(solution) })
+			.lean<UserCommitmentRecord>();
 
 	/**
 	 * The commitment ID the provider stored for a solution. The widget derives
@@ -479,6 +488,53 @@ describe("Image Captcha Integration Tests", () => {
 			expect(data).toHaveProperty("captchas");
 		});
 
+		it("sends each label in the request's language with its key and English text", async () => {
+			// Every label in the mock dataset, as the tr and en catalogues have it.
+			const labels: Record<string, { tr: string; en: string }> = {
+				bird: { tr: "kuş", en: "bird" },
+				bus: { tr: "otobüs", en: "bus" },
+				car: { tr: "araba", en: "car" },
+				cat: { tr: "kedi", en: "cat" },
+				deer: { tr: "geyik", en: "deer" },
+				dog: { tr: "köpek", en: "dog" },
+				horse: { tr: "at", en: "horse" },
+				plane: { tr: "uçak", en: "plane" },
+				train: { tr: "tren", en: "train" },
+			};
+			const body: CaptchaRequestBodyType = {
+				[ApiParams.dapp]: dappAccount,
+				[ApiParams.user]: userAccount,
+				[ApiParams.datasetId]: solutions.datasetId,
+			};
+			const response = await fetch(
+				`${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`,
+				{
+					method: "POST",
+					body: JSON.stringify(body),
+					headers: {
+						"Content-Type": "application/json",
+						Origin: "https://localhost",
+						"Prosopo-Site-Key": dappAccount,
+						"Prosopo-User": userAccount,
+						"Prosopo-Lang": "tr-TR",
+						"Accept-Language": "de",
+					},
+				},
+			);
+			expect(response.status).toBe(200);
+
+			const data = (await response.json()) as CaptchaResponseBody;
+			expect(data.language).toBe("tr");
+			expect(data.captchas.length).toBeGreaterThan(0);
+			for (const captcha of data.captchas) {
+				const key: string | undefined = captcha.targetKey;
+				const expected = key === undefined ? undefined : labels[key];
+				expect(expected).toBeDefined();
+				expect(captcha.target).toBe(expected?.tr);
+				expect(captcha.targetEn).toBe(expected?.en);
+			}
+		});
+
 		it("should not supply an image captcha challenge to a Dapp User if the site key is not registered", async () => {
 			const origin = "https://localhost";
 			const [_mnemonic, unregisteredAccount] = await generateMnemonic();
@@ -580,9 +636,9 @@ describe("Image Captcha Integration Tests", () => {
 			const data = (await response.json()) as CaptchaResponseBody;
 			expect(data).toHaveProperty("error");
 			expect(data.error?.message).toBe("Incorrect CAPTCHA type");
-			expect(data.error?.code).toBe(400);
+			expect(data.error?.status).toBe(400);
 		});
-		it("should return a translated error if the captcha type is set to pow and the language is set to es", async () => {
+		it("should return the error code and English message whatever the language when the captcha type is pow", async () => {
 			const origin = "https://localhost";
 			const getImageCaptchaURL = `${baseUrl}${ClientApiPaths.GetImageCaptchaChallenge}`;
 			await registerSiteKeyInDb(env, dappAccount, CaptchaType.pow);
@@ -606,8 +662,9 @@ describe("Image Captcha Integration Tests", () => {
 			expect(response.status).toBe(400);
 			const data = (await response.json()) as CaptchaResponseBody;
 			expect(data).toHaveProperty("error");
-			expect(data.error?.message).toBe("Tipo de CAPTCHA incorrecto");
-			expect(data.error?.code).toBe(400);
+			expect(data.error?.code).toBe("INCORRECT_CAPTCHA_TYPE");
+			expect(data.error?.message).toBe("Incorrect CAPTCHA type");
+			expect(data.error?.status).toBe(400);
 		});
 	});
 	it("should return an error if the captcha type is set to frictionless and no sessionID is sent", async () => {
@@ -634,7 +691,7 @@ describe("Image Captcha Integration Tests", () => {
 		const data = (await response.json()) as CaptchaResponseBody;
 		expect(data).toHaveProperty("error");
 		expect(data.error?.message).toBe("Incorrect CAPTCHA type");
-		expect(data.error?.code).toBe(400);
+		expect(data.error?.status).toBe(400);
 	});
 
 	describe("SubmitImageCaptchaSolution", () => {
@@ -657,6 +714,60 @@ describe("Image Captcha Integration Tests", () => {
 			);
 
 			expect(res.status).toBe("You correctly answered the captchas");
+		});
+
+		it("stores how each selection was made with the commitment", async () => {
+			const { pair, userAccount } = getUser();
+			const challenge = await requestChallenge(dappAccount, userAccount);
+			const built = buildSolution(
+				challenge,
+				dappAccount,
+				userAccount,
+				pair,
+				"correct",
+			);
+			// buildSolution embeds two positions in every captcha's salt.
+			const solution: CaptchaSolutionBodyType = {
+				...built,
+				[ApiParams.captchas]: built[ApiParams.captchas].map((captcha) => ({
+					...captcha,
+					inputMethods: [InputMethod.pointer, InputMethod.keyboard],
+				})),
+			};
+
+			const res = await submitSolution(solution, dappAccount, userAccount);
+			expect(res.verified).toBe(true);
+
+			const commitment = await storedCommitment(solution);
+			const stored = commitment?.inputMethods ?? [];
+			expect(stored.flat()).toEqual(
+				solution[ApiParams.captchas].flatMap(() => [
+					InputMethod.pointer,
+					InputMethod.keyboard,
+				]),
+			);
+			expect(stored.map((list) => list.length)).toEqual(
+				commitment?.coords?.map((list) => list.length),
+			);
+		});
+
+		it("stores no input methods for a widget that does not send them", async () => {
+			const { pair, userAccount } = getUser();
+			const challenge = await requestChallenge(dappAccount, userAccount);
+			const solution = buildSolution(
+				challenge,
+				dappAccount,
+				userAccount,
+				pair,
+				"correct",
+			);
+
+			const res = await submitSolution(solution, dappAccount, userAccount);
+			expect(res.verified).toBe(true);
+
+			const commitment = await storedCommitment(solution);
+			expect(commitment).not.toBeNull();
+			expect(commitment?.inputMethods).toBeUndefined();
 		});
 
 		it("should mark an incorrectly completed image captcha as disapproved, and the dapp should verify the challenge as disapproved", async () => {

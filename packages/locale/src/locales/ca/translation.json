@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "No s'ha pogut codificar una adreça no vàlida",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "El compromís de la solució del captcha no existeix",
+		"SIGNER_UNDEFINED": "Signant no definit",
+		"CANNOT_FIND_KEYPAIR": "No es troba el parell de claus",
+		"INVALID_DATA_FORMAT": "Format de dades no vàlid"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "S'ha sol·licitat un entorn desconegut",
+		"INVALID_CAPTCHA_NUMBER": "Configureu correctament els captchas",
+		"INVALID_LOG_LEVEL": "Nivell de registre no vàlid",
+		"INVALID_PACKAGE_DIR": "Directori del paquet no vàlid"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Error en analitzar el conjunt de dades",
+		"SOLUTION_PARSE_ERROR": "Error en analitzar el conjunt de dades",
+		"HASH_ERROR": "Error en calcular el hash del conjunt de dades",
+		"DATASET_ID_UNDEFINED": "Identificador del conjunt de dades no definit",
+		"NOT_ENOUGH_LABELS": "No hi ha prou etiquetes",
+		"NOT_ENOUGH_IMAGES": "No hi ha prou imatges",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "El nombre de captchas del conjunt de dades és inferior al nombre de captchas configurat",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "El nombre de solucions del conjunt de dades és inferior al nombre de solucions configurat",
+		"DUPLICATE_IMAGE": "s'ha detectat una imatge duplicada",
+		"MERKLE_ERROR": "Error en crear l'arbre de Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "No s'ha pogut importar el motor de base de dades",
+		"DATABASE_UNDEFINED": "El client de la base de dades no està connectat",
+		"DATABASE_HOST_UNDEFINED": "L'adreça de l'amfitrió de la base de dades no està definida",
+		"DATASET_LOAD_FAILED": "La càrrega del conjunt de dades ha fallat",
+		"DATASET_GET_FAILED": "No s'ha pogut obtenir el conjunt de dades",
+		"CAPTCHA_GET_FAILED": "No s'ha pogut obtenir el captcha",
+		"CAPTCHA_UPDATE_FAILED": "No s'ha pogut actualitzar el captcha",
+		"IMAGE_GET_FAILED": "No s'ha pogut obtenir la imatge",
+		"PENDING_RECORD_NOT_FOUND": "No s'ha trobat cap registre pendent",
+		"INVALID_HASH": "Hash no vàlid",
+		"SOLUTION_GET_FAILED": "No s'ha pogut obtenir la solució",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "No s'ha trobat cap conjunt de dades amb el nombre de solucions necessari",
+		"SOLUTION_APPROVE_FAILED": "No s'ha pogut aprovar la solució",
+		"SOLUTION_FLAG_FAILED": "No s'ha pogut marcar la solució com a processada",
+		"TABLES_UNDEFINED": "Taules no definides",
+		"CONNECTION_UNDEFINED": "Connexió no definida",
+		"COMMITMENT_FLAG_FAILED": "No s'ha pogut marcar el compromís com a processat",
+		"UNKNOWN": "Error desconegut de la base de dades",
+		"QUERY_ERROR": "La consulta a la base de dades ha fallat",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "La connexió de Redis per a les regles d'accés no està definida",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "L'emmagatzematge de les regles d'accés dels usuaris no està definit",
+		"SESSION_STORE_FAILED": "No s'ha pogut desar la sessió",
+		"SESSION_CHECK_REMOVE_FAILED": "No s'ha pogut comprovar i eliminar la sessió",
+		"SESSION_GET_FAILED": "No s'ha pogut obtenir la sessió"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "No es pot modificar l'usuari propietari",
+		"CANNOT_DELETE_OWN_USER": "No podeu suprimir el vostre propi compte",
+		"CANNOT_DELETE_LAST_USER": "No es pot suprimir l'últim usuari",
+		"USER_ALREADY_EXISTS": "L'usuari ja existeix",
+		"NO_SUGGESTIONS_FOUND": "No s'ha trobat cap suggeriment",
+		"CANNOT_DEACTIVATE_LAST_SITE": "No es pot desactivar l'últim lloc actiu",
+		"DUPLICATE_SITE_NAME": "Ja existeix un lloc amb aquest nom",
+		"INVALID_SITE_NAME": "El nom del lloc només pot contenir lletres, números, guions i guions baixos"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Paràmetre no vàlid"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "No s'ha trobat el fitxer",
+		"FILE_ALREADY_EXISTS": "El fitxer ja existeix",
+		"INVALID_DIR_FORMAT": "Format de directori no vàlid"
+	}
+}
