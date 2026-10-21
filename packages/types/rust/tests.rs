@@ -17,8 +17,9 @@
 
 use crate::scale::Writer;
 use crate::{
-    decode_procaptcha_output, encode_procaptcha_output, is_procaptcha_token, CaptchaType,
-    OutputSignatures, ProcaptchaOutput, SignatureTypes, TokenDecodeError,
+    decode_procaptcha_output, encode_procaptcha_output, is_procaptcha_token,
+    procaptcha_token_codec_v1_enc, CaptchaType, OutputSignatures, ProcaptchaOutput, SignatureTypes,
+    TokenDecodeError,
 };
 use prosopo_util_crypto::u8a::u8a_to_hex;
 use serde_json::{json, Value};
@@ -66,26 +67,6 @@ fn full() -> ProcaptchaOutput {
 
 fn round_trip(output: &ProcaptchaOutput) -> ProcaptchaOutput {
     decode_procaptcha_output(&encode_procaptcha_output(output)).expect("decodes")
-}
-
-/// `ProcaptchaTokenCodecV1.enc`: the v2 layout without the trailing `captchaType`.
-fn encode_v1(output: &ProcaptchaOutput) -> String {
-    let mut writer: Writer = Writer::default();
-    let optional = |writer: &mut Writer, value: &Option<String>| {
-        writer.option(value.as_deref(), Writer::str);
-    };
-    optional(&mut writer, &output.commitment_id);
-    optional(&mut writer, &output.provider_url);
-    writer.str(&output.dapp);
-    writer.str(&output.user);
-    optional(&mut writer, &output.challenge);
-    writer.option(output.nonce, Writer::u32);
-    writer.str(&output.timestamp);
-    optional(&mut writer, &output.signature.provider.challenge);
-    optional(&mut writer, &output.signature.provider.request_hash);
-    optional(&mut writer, &output.signature.user.timestamp);
-    optional(&mut writer, &output.signature.user.request_hash);
-    u8a_to_hex(&writer.into_bytes())
 }
 
 mod procaptcha_token_spec {
@@ -205,7 +186,7 @@ mod decode {
     #[test]
     fn falls_back_to_the_v1_layout_for_a_legacy_token() {
         assert_eq!(
-            decode_procaptcha_output(&encode_v1(&minimal())),
+            decode_procaptcha_output(&procaptcha_token_codec_v1_enc(&minimal())),
             Ok(minimal())
         );
     }
@@ -224,7 +205,7 @@ mod decode {
             ..minimal()
         };
         let decoded: ProcaptchaOutput =
-            decode_procaptcha_output(&encode_v1(&legacy)).expect("decodes");
+            decode_procaptcha_output(&procaptcha_token_codec_v1_enc(&legacy)).expect("decodes");
         assert_eq!(decoded.captcha_type, None);
     }
 

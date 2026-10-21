@@ -21,6 +21,7 @@ mod issue;
 mod js;
 
 pub use issue::IssueData;
+pub use js::string_to_number;
 
 use crate::validation::{PathSegment, ValidationError, ValidationIssue};
 use js::{
@@ -712,10 +713,12 @@ impl Schema {
                 None => Outcome::valid(None),
                 other => invalid_type(issues, path, "undefined", other.as_ref()),
             },
-            Node::BigInt { coerce } => match coerce.then(|| js_to_bigint(data.as_ref())).flatten() {
-                Some(value) => Outcome::valid(Some(Value::String(value.to_string()))),
-                None => invalid_type(issues, path, "bigint", data.as_ref()),
-            },
+            Node::BigInt { coerce } => {
+                match coerce.then(|| js_to_bigint(data.as_ref())).flatten() {
+                    Some(value) => Outcome::valid(Some(Value::String(value.to_string()))),
+                    None => invalid_type(issues, path, "bigint", data.as_ref()),
+                }
+            }
             Node::Any => Outcome::valid(data),
             Node::Literal(expected) => {
                 if strictly_equal(data.as_ref(), Some(expected)) {

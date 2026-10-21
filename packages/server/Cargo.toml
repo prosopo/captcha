@@ -1,0 +1,30 @@
+[package]
+name = "prosopo-server"
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "rust/lib.rs"
+
+[dependencies]
+prosopo-api = { path = "../api" }
+prosopo-api-route = { path = "../api-route" }
+prosopo-common = { path = "../common" }
+prosopo-keyring = { path = "../keyring" }
+prosopo-load-balancer = { path = "../load-balancer" }
+prosopo-locale = { path = "../locale" }
+prosopo-logger = { path = "../logger" }
+prosopo-types = { path = "../types" }
+prosopo-util = { path = "../util" }
+prosopo-util-crypto = { path = "../util-crypto" }
+serde_json = { version = "1.0", features = ["preserve_order"] }
+url = "2.5"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros", "time", "net", "io-util"] }

@@ -555,7 +555,7 @@ pub struct CaptchaTimeoutConfig {
 #[serde(rename_all = "camelCase")]
 pub struct ProsopoServerConfig {
     pub log_level: String,
-    pub default_environment: String,
+    pub default_environment: EnvironmentTypes,
     pub account: AccountConfig,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub database: Option<indexmap::IndexMap<String, DatabaseConfig>>,

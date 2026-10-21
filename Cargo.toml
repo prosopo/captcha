@@ -21,6 +21,7 @@ members = [
 	"packages/locale",
 	"packages/datasets",
 	"packages/user-access-policy",
+	"packages/server",
 ]
 exclude = [
 	"packages/native-ja4",

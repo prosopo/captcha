@@ -162,22 +162,60 @@ fn write_optional_str(writer: &mut Writer, value: Option<&str>) {
     writer.option(value, Writer::str);
 }
 
+type SignatureParts<'a> = [Option<&'a str>; 4];
+
+fn write_v1_layout(writer: &mut Writer, output: &ProcaptchaOutput, signature: SignatureParts<'_>) {
+    write_optional_str(writer, output.commitment_id.as_deref());
+    write_optional_str(writer, output.provider_url.as_deref());
+    writer.str(&output.dapp);
+    writer.str(&output.user);
+    write_optional_str(writer, output.challenge.as_deref());
+    writer.option(output.nonce, Writer::u32);
+    writer.str(&output.timestamp);
+    for part in signature {
+        write_optional_str(writer, part);
+    }
+}
+
+fn raw_signature(signature: &OutputSignatures) -> SignatureParts<'_> {
+    [
+        signature.provider.challenge.as_deref(),
+        signature.provider.request_hash.as_deref(),
+        signature.user.timestamp.as_deref(),
+        signature.user.request_hash.as_deref(),
+    ]
+}
+
 /// `encodeProcaptchaOutput`, always in the v2 layout. An empty signature part is encoded as
 /// absent.
 pub fn encode_procaptcha_output(output: &ProcaptchaOutput) -> String {
-    let mut writer: Writer = Writer::default();
-    write_optional_str(&mut writer, output.commitment_id.as_deref());
-    write_optional_str(&mut writer, output.provider_url.as_deref());
-    writer.str(&output.dapp);
-    writer.str(&output.user);
-    write_optional_str(&mut writer, output.challenge.as_deref());
-    writer.option(output.nonce, Writer::u32);
-    writer.str(&output.timestamp);
     let signature: &OutputSignatures = &output.signature;
-    write_optional_str(&mut writer, non_empty(&signature.provider.challenge));
-    write_optional_str(&mut writer, non_empty(&signature.provider.request_hash));
-    write_optional_str(&mut writer, non_empty(&signature.user.timestamp));
-    write_optional_str(&mut writer, non_empty(&signature.user.request_hash));
+    let mut writer: Writer = Writer::default();
+    write_v1_layout(
+        &mut writer,
+        output,
+        [
+            non_empty(&signature.provider.challenge),
+            non_empty(&signature.provider.request_hash),
+            non_empty(&signature.user.timestamp),
+            non_empty(&signature.user.request_hash),
+        ],
+    );
     write_optional_str(&mut writer, output.captcha_type.map(CaptchaType::as_str));
+    u8a_to_hex(&writer.into_bytes())
+}
+
+/// `ProcaptchaTokenCodec.enc`: the v2 layout, with any `captchaType` text.
+pub fn procaptcha_token_codec_enc(output: &ProcaptchaOutput, captcha_type: Option<&str>) -> String {
+    let mut writer: Writer = Writer::default();
+    write_v1_layout(&mut writer, output, raw_signature(&output.signature));
+    write_optional_str(&mut writer, captcha_type);
+    u8a_to_hex(&writer.into_bytes())
+}
+
+/// `ProcaptchaTokenCodecV1.enc`: the layout before `captchaType`, as older bundles mint it.
+pub fn procaptcha_token_codec_v1_enc(output: &ProcaptchaOutput) -> String {
+    let mut writer: Writer = Writer::default();
+    write_v1_layout(&mut writer, output, raw_signature(&output.signature));
     u8a_to_hex(&writer.into_bytes())
 }

@@ -75,7 +75,7 @@ fn is_decimal_literal(s: &str) -> bool {
 }
 
 /// `Number(string)`.
-pub(crate) fn string_to_number(input: &str) -> f64 {
+pub fn string_to_number(input: &str) -> f64 {
     let s: &str = js_trim(input);
     if s.is_empty() {
         return 0.0;

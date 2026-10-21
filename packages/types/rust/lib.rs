@@ -23,9 +23,9 @@ pub mod config;
 pub mod datasets;
 pub mod decision_machine;
 pub mod ipapi;
+mod js_regex;
 pub mod keyring;
 pub mod matched_access_rule;
-mod js_regex;
 pub mod number;
 pub mod provider_api;
 pub mod reasons;
@@ -58,8 +58,9 @@ pub use reasons::{
 };
 pub use sanitise::{bounded_array, bounded_string, safe_line, safe_text, InputLimits};
 pub use token::{
-    decode_procaptcha_output, encode_procaptcha_output, is_procaptcha_token, OutputSignatures,
-    ProcaptchaOutput, SignatureTypes, TokenDecodeError,
+    decode_procaptcha_output, encode_procaptcha_output, is_procaptcha_token,
+    procaptcha_token_codec_enc, procaptcha_token_codec_v1_enc, OutputSignatures, ProcaptchaOutput,
+    SignatureTypes, TokenDecodeError,
 };
 pub use wire_enum::UnknownEnumValue;
 
