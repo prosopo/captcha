@@ -40,7 +40,7 @@
 	"license": "Apache-2.0",
 	"dependencies": {
 		"@prosopo/util": "workspace:*",
-		"i18next": "26.4.4",
+		"i18next": "26.4.5",
 		"i18next-fs-backend": "2.6.8",
 		"i18next-http-middleware": "3.9.9"
 	},
@@ -51,8 +51,8 @@
 		"@vitest/coverage-v8": "5.0.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"dotenv": "18.0.7",
-		"express": "4.22.2",
+		"dotenv": "18.0.8",
+		"express": "4.22.3",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
