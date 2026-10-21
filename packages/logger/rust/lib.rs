@@ -26,6 +26,7 @@ pub use directives::{
     Directives,
 };
 pub use error::{ErrorObject, ErrorProperty, LogErr};
+pub use js::{js_key_order, json_stringify};
 pub use level::{parse_log_level, LogLevel, UnknownLogLevel};
 pub use logger::{
     get_logger, get_logger_with_runtime, Clock, ConsoleMethod, Format, FormatNotImplemented,
