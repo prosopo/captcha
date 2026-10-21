@@ -339,7 +339,10 @@ describe("Web Bot Auth authenticated flow (integration)", () => {
 		);
 		return {
 			status: response.status,
-			body: response.status === 200 ? await response.json() : {},
+			body:
+				response.status === 200
+					? ((await response.json()) as FrictionlessResponse)
+					: {},
 		};
 	};
 

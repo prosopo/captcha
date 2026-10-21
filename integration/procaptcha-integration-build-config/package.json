@@ -27,16 +27,16 @@
 	},
 	"dependencies": {
 		"deepmerge": "4.3.1",
-		"vite": "8.1.5",
-		"vite-plugin-dts": "5.1.1"
+		"vite": "8.1.6",
+		"vite-plugin-dts": "5.1.2"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "4.1.11",
+		"@vitest/coverage-v8": "5.0.4",
 		"del-cli": "6.0.0",
 		"typescript": "5.6.2",
-		"vitest": "4.1.11"
+		"vitest": "5.0.4"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

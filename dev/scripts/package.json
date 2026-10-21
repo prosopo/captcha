@@ -44,7 +44,7 @@
 		"@prosopo/util": "workspace:*",
 		"@prosopo/util-crypto": "workspace:*",
 		"@prosopo/workspace": "workspace:*",
-		"dotenv": "16.4.5",
+		"dotenv": "18.0.7",
 		"fast-glob": "3.3.3",
 		"fs-extra": "11.4.1",
 		"yargs": "18.2.0"
@@ -54,15 +54,15 @@
 		"@types/fs-extra": "11.0.4",
 		"@types/node": "22.10.2",
 		"@types/yargs": "17.0.35",
-		"@vitest/coverage-v8": "4.1.11",
+		"@vitest/coverage-v8": "5.0.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "8.1.5",
-		"vitest": "4.1.11"
+		"vite": "8.1.6",
+		"vitest": "5.0.4"
 	},
 	"repository": {
 		"type": "git",
