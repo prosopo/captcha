@@ -1,0 +1,5477 @@
+{
+	"uri": [
+		{
+			"suri": "bottom drive obey lake curtain smoke basket hold race lonely fit walk",
+			"type": null,
+			"result": {
+				"publicKey": "0x46ebddef8cd9bb167dc30878d7113b7e168e6f0646beffd77d69d39bad76b47a",
+				"address": "5DfhGyQdFobKM8NsWvEeAKk5EQQgYe9AydgJ7rMB6E1EqRzV",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x28b0ae221c6bb06856b287f60d7ea0d98552ea5a16db16956849aa371db3eb51fd190cce74df356432b410bd64682309d6dedb27c76845daf388557cbac3ca34"
+			},
+			"random": [
+				"0xa9d293769535cfad814a85e526faded5"
+			]
+		},
+		{
+			"suri": "bottom drive obey lake curtain smoke basket hold race lonely fit walk//Alice",
+			"type": null,
+			"result": {
+				"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011"
+			},
+			"random": [
+				"0xd66f97f3bfafa18547cc5f1589291102",
+				"0x3c2c89918eb268c732318d297ebe4e83"
+			]
+		},
+		{
+			"suri": "//Alice",
+			"type": null,
+			"result": {
+				"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011"
+			},
+			"random": [
+				"0xa0c7d7b2cf9576938098d5a602fa19bf",
+				"0x500cf8f1b08037534de47f624fdc0090"
+			]
+		},
+		{
+			"suri": "//Alice//stash",
+			"type": null,
+			"result": {
+				"publicKey": "0xbe5ddb1579b72e84524fc29e78609e3caf42e85aa118ebfe0b0ad404b5bdd25f",
+				"address": "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0xe8da6c9d810e020f5e3c7f5af2dea314cbeaa0d72bc6421e92c0808a0c584a6046ab28e97c3ffc77fe12b5a4d37e8cd4afbfebbf2391ffc7cb07c0f38c023efd"
+			},
+			"random": [
+				"0xdd6008c5a4d91c759b4fbc5f9634897a",
+				"0xc3c1bbbdba82d7364a5abdc7b8860dd1",
+				"0x82f9aaf5594494052cbbf7a3f42cce44"
+			]
+		},
+		{
+			"suri": "//Alice/soft",
+			"type": null,
+			"result": {
+				"publicKey": "0x02cfd83074aefc9955af4034d19b3780d47a52e158ababec8ec012b2295f1c5b",
+				"address": "5C8PhJPLE54x23RjmqBcEEnALryCDWdTJM5xLaoL9W8XEpnt",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				}
+			},
+			"random": [
+				"0x29cf34ac9c1565d5184aac5042e8b3b9",
+				"0xf9125660ed57d69c81e3d04f20404922",
+				"0x92ac079191834598ef0e1305c963285f8f2ff828547ea9b60b25ea3d0677c521",
+				"0x7ba450bf7e09b65c7477325fd4b2aad6",
+				"0xdb073316c69ccbbffcdd68632066ae7b"
+			]
+		},
+		{
+			"suri": "bottom drive obey lake curtain smoke basket hold race lonely fit walk/Alice",
+			"type": null,
+			"result": {
+				"publicKey": "0xd6c71059dbbe9ad2b0ed3f289738b800836eb425544ce694825285b958ca755e",
+				"address": "5GvKEoc787uDV8etY1AM8vF385edu2iyqD1WfCjDugzLUiAL",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				}
+			},
+			"random": [
+				"0xbe739ffa12117b683d322e060eab46c4",
+				"0x0d088b2aa08bdc248da70234aae311bef7aa581b6f0ba22f53baf11a29692b41",
+				"0x54e29d6f6d4f81b2aabd37c4a728148d",
+				"0xb730d94c6e2bbe9f68160fbe3e23e4e4"
+			]
+		},
+		{
+			"suri": "bottom drive obey lake curtain smoke basket hold race lonely fit walk///pass",
+			"type": null,
+			"result": {
+				"publicKey": "0xd2c17365533f3712b148e382c533b1093bc5b7e7814689a439869a0f527a1e71",
+				"address": "5Gq3Nyzs515npxw2mp4d5t6wdzyo2TW7ThAXFhBtsVVaDYYk",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x803fbe607e80d3b8b403bf1a89b648e402fe87cbd51a57b89df90420af2ae77ee8f91b53b4cd7d1efbb0ff274c26faf783fdd71683fb6c65e6e33bddcf4d1055"
+			},
+			"random": [
+				"0x11335c9093edbe491556118fe524f274"
+			]
+		},
+		{
+			"suri": "bottom drive obey lake curtain smoke basket hold race lonely fit walk//Alice///pass",
+			"type": null,
+			"result": {
+				"publicKey": "0x9afe27621bf95bd1b6260cf8033a24094730895cb0bd549bd6332520a4538c21",
+				"address": "5FZvjLtLT92ScYnizqXvCcGdf9fHEi1LvnMNm61bHaxvPdqg",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0xb868fe9d93d18042ae510e2bbbcb6dba52a13283402a608283be1d27dc76c45ba96bfde354ad56eae00681bf712f058d9f4ff38bbd2a7c228bedc9eb9c8bdcf4"
+			},
+			"random": [
+				"0x9e593497d7d78ec6415f05807412ef79",
+				"0x85acde47848372454a9d762e2ea84c2b"
+			]
+		},
+		{
+			"suri": "bottom drive obey lake curtain smoke basket hold race lonely fit walk///",
+			"type": null,
+			"result": {
+				"publicKey": "0x46ebddef8cd9bb167dc30878d7113b7e168e6f0646beffd77d69d39bad76b47a",
+				"address": "5DfhGyQdFobKM8NsWvEeAKk5EQQgYe9AydgJ7rMB6E1EqRzV",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x28b0ae221c6bb06856b287f60d7ea0d98552ea5a16db16956849aa371db3eb51fd190cce74df356432b410bd64682309d6dedb27c76845daf388557cbac3ca34"
+			},
+			"random": [
+				"0xeb8aabb43aed4e017665df49df8afd10"
+			]
+		},
+		{
+			"suri": "//1",
+			"type": null,
+			"result": {
+				"publicKey": "0xb606fc73f57f03cdb4c932d475ab426043e429cecc2ffff0d2672b0df8398c48",
+				"address": "5GBNeWRhZc2jXu7D55rBimKYDk8PGk8itRYFTPfC8RJLKG5o",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x80e62d7fd4692036d40060d605383f322770e5840397e04196e356bb80e37e54440546ae5da95d1919e41651a10b1d79da64a275f65d94c9e203898718bc82c6"
+			},
+			"random": [
+				"0x4fd9f73bf4ec24ff6554cbd30f486869",
+				"0x20fbfa86a5b74f2a822f0f9d4e697fbb"
+			]
+		},
+		{
+			"suri": "//0",
+			"type": null,
+			"result": {
+				"publicKey": "0x2afba9278e30ccf6a6ceb3a8b6e336b70068f045c666f2e7f4f9cc5f47db8972",
+				"address": "5D34dL5prEUaGNQtPPZ3yN5Y6BnkfXunKXXz6fo7ZJbLwRRH",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0xc0b84ba2bff479eb05544c10c781171216812f8728f60a8edb156814246ee86e7be7c693358d9636a65442b6b7d904ed458914c9eb4da42df1bd4743d2ffa7f5"
+			},
+			"random": [
+				"0xab856b9474b3451e09a5bee553d3aaef",
+				"0x39b3c39c78fc94ba5d99bc8bd102afd5"
+			]
+		},
+		{
+			"suri": "//18446744073709551616",
+			"type": null,
+			"result": {
+				"publicKey": "0xa8bedb219e3336d832fb41b3839cd09c2e5ba0fe8f37c78c466aa38dffe53d18",
+				"address": "5FsxbdTHtNSLE5HCLzzGVB2oEzxZB6QJuakiHSoTNWEXD1qj",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x28442c35f9a57ed071af93eae7cf05742f2f0061a9b8325a91cff529192ec86ea49c67d4be789a31b86ecb4dfe5664e4bc5b2879625f33fc605d1cf4b0da7ad7"
+			},
+			"random": [
+				"0x66bc3be5504e34be4325fdc4f91a6ab7",
+				"0x32f2be84ba7c6f023b3aa3b39a4defe8"
+			]
+		},
+		{
+			"suri": "/1",
+			"type": null,
+			"error": "Unable to match provided value to a secret URI",
+			"random": []
+		},
+		{
+			"suri": "//longlonglonglonglonglonglonglonglonglong",
+			"type": null,
+			"result": {
+				"publicKey": "0xd8b976719452015829478988598a7fa125ff1b770ec533af1845c0df8d494b57",
+				"address": "5GxsJ1sF2jSBD5eLMXjtodeXj2Lrf6p7xjwTcXYwncXkkQGn",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0xc0ad46a7e17de5f4af8ecc8470ffc62c366c12fe585be87dde532cb92e4c8654caaae6126a08986fbf1f0e52149ba41552b6cb6e0926db9729c3ca5b9f7a05d1"
+			},
+			"random": [
+				"0xa4e953e59d11af0e4b3d29612cc11634",
+				"0xb38ab3f824a6a14704773aaf4ae2d733"
+			]
+		},
+		{
+			"suri": "//",
+			"type": null,
+			"error": "Unable to match provided value to a secret URI",
+			"random": []
+		},
+		{
+			"suri": "///pass",
+			"type": null,
+			"result": {
+				"publicKey": "0xd2c17365533f3712b148e382c533b1093bc5b7e7814689a439869a0f527a1e71",
+				"address": "5Gq3Nyzs515npxw2mp4d5t6wdzyo2TW7ThAXFhBtsVVaDYYk",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x803fbe607e80d3b8b403bf1a89b648e402fe87cbd51a57b89df90420af2ae77ee8f91b53b4cd7d1efbb0ff274c26faf783fdd71683fb6c65e6e33bddcf4d1055"
+			},
+			"random": [
+				"0x5721dcad0d1594d77b13f299dc33e9a9"
+			]
+		},
+		{
+			"suri": "hello",
+			"type": null,
+			"result": {
+				"publicKey": "0x4601b7e165275058a12c2e0e470d4679265c99c1217f6068096fd016aca6d743",
+				"address": "5DeVigjtT7cbbrhXVbqsfXwyvK8mBZL1U2ak5j1YK1Aa7kUV",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x90d920b9dc89e9cdbf3317a9308655e0e6706e3ce4d7b64875bb743c63032373f67dd517fae33832ea50ae01aa880a10417e9fc39ce219cd09394ac5a237ac23"
+			},
+			"random": [
+				"0xc96e9818b3a714ac26599e043ce16c13"
+			]
+		},
+		{
+			"suri": "hello world",
+			"type": null,
+			"result": {
+				"publicKey": "0x26b3c185bf7649d2dba45586f3c9adf93fb7f4c9dc8fea7a72c796a3f5c06f15",
+				"address": "5CwT5L4i1DbHEc16wEpA1xhr4x8cCERt4J4NxeE44V8LRBHK",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x2887c97c42ce35b49de569ccf42d3fd9e05143c1d2c0e2e01244ca1fee9b8966ba620c9c608338c7948812d4587910f0aeef20153ceee92365d01ad3a7a15f99"
+			},
+			"random": [
+				"0x6ae42d1e2c97bc475a83fa4b69db8534"
+			]
+		},
+		{
+			"suri": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			"type": null,
+			"result": {
+				"publicKey": "0xa81ee4409afd33ac96d9804570096a450f27541b61b02eb55b0799d7ba46cf45",
+				"address": "5Fs95WP4obcN43kzqHeM6W53VAMSjuXp9g7T1cWBpLjDN99i",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x80a86df78c8efb52b07b96d85abff80f6252e077d410ee0113ef51341152b547b6a8339a7ca37bf299977d956df61c32761f8d05b6a6d8b5d63dff9190d72c18"
+			},
+			"random": [
+				"0x97116aae4a25af0dd5fc7b21db3cc388"
+			]
+		},
+		{
+			"suri": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			"type": null,
+			"error": "specified phrase is not a valid mnemonic and is invalid as a raw seed at > 32 bytes",
+			"random": []
+		},
+		{
+			"suri": "Alice",
+			"type": null,
+			"result": {
+				"publicKey": "0x787d6f7e9572e21656f61d3d897c343c80c81b774b1d76e5c8c72552b7ccbc25",
+				"address": "5Engs9f8Gk6JqvVWz3kFyJ8Kqkgx7pLi8C1UTcr7EZ855qBQ",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x78a9a10ebcc357073f44e3bbeca6de5cea7367e66b9142317803ab0043a93b54da9390185836bc0fb8a1520864ca617273ae80266136ec807f1438af53b25ac6"
+			},
+			"random": [
+				"0x5efed997674df0292d7b6765ab1243b2"
+			]
+		},
+		{
+			"suri": "Alice//stash",
+			"type": null,
+			"result": {
+				"publicKey": "0x907c38a2570ae431ce9671a09b5ffd36b450fa17997ddcb6bb2514c7956e0070",
+				"address": "5FL9etD5yyJu6t8hoheo2EAXmCGskrfAnGBEmU5EbBisknE2",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x080f0e651ced398d75fb2ab9d0ec8d242045340453f97e42086060e4be929c4f3737c2212b82ee584deb76ee6fdb61dac87b5a4c0b4f3ed72daf6bfbfdebae75"
+			},
+			"random": [
+				"0x15255a7081dfab2df151c9f99e0e9c22",
+				"0x75c80911c1750a543c73750213a4f86a"
+			]
+		},
+		{
+			"suri": "Alice/soft",
+			"type": null,
+			"result": {
+				"publicKey": "0x9a3c7e59bf4ba66a8991ac1fb2fca62b23ebfc7c705c0ccaa79aac5e9986396a",
+				"address": "5FYwCevWU1ZGicNL5atm68brTPKDqwECffqYj362CvGhsdcg",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				}
+			},
+			"random": [
+				"0x353014a83a0ecf02482ac5e6a6876db4",
+				"0x26f163e40d7704e311289439a3ee059b059c143a5626d0e7fbead470f6eee2d8",
+				"0x5696af5b59d51ebde9e5e8b921d74027",
+				"0xeb472bd9e2f192e86e2efdc8c1d389cf"
+			]
+		},
+		{
+			"suri": "0x0101010101010101010101010101010101010101010101010101010101010101",
+			"type": null,
+			"result": {
+				"publicKey": "0x189dac29296d31814dc8c56cf3d36a0543372bba7538fa322a4aebfebc39e056",
+				"address": "5CcyqxXnJucaCnQQvvUg5EPzj1uoNAxACZvzArHw5aVDvgNH",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x58e86efb75fa4e2c410f46e16de9f6acae1a1703528651b69bc176c088bef36eb17a2a2cf3d4a41a8e4e18cc45c8656d558eceddb0adb46bfa088a5f53bed252"
+			},
+			"random": [
+				"0x6c7ce3f45fd096569dc106f74b2090ba"
+			]
+		},
+		{
+			"suri": "0x0101010101010101010101010101010101010101010101010101010101010101//Alice",
+			"type": null,
+			"result": {
+				"publicKey": "0xc427e9d4ac8f076f6febdb3a6449de97578fb29fa42278f6358b60ac49276c31",
+				"address": "5GVu6iN3fAT3D3GdRu8ZQSm4m3x2bR6ZpnkmEtksoXBLHZoF",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x502ee0467041517cd80b627c0b4b28b2e3d07eec54d5c7b63c0fe8672de408774851a55e20eaa14ca4d2364a9d0f2b8de9ce3d75040a6edeaa41e1f38a7c9b1b"
+			},
+			"random": [
+				"0xf5ff267b9781e8f700c38f98030b06f2",
+				"0xa5c0f1ae7908523d31b32f8a61483075"
+			]
+		},
+		{
+			"suri": "0xababababababababababababababababababababababababababababababab",
+			"type": null,
+			"error": "specified phrase is not a valid mnemonic and is invalid as a raw seed at > 32 bytes",
+			"random": []
+		},
+		{
+			"suri": "0xababababababababababababababab",
+			"type": null,
+			"result": {
+				"publicKey": "0xa037682c7342df246d794b85724f680ab060be2271979a673cc81d87a030cf0d",
+				"address": "5FgmygGudvK7v6YBAwfCkboLBi4T4G3Lyi6GUpHKU7J586jt",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x90b73e9c7a1afbdad0f0f82d826e437390af028d0c6c585e1873145d39605054faa45b97e49dc2b6eb6c95a74d7a93132c3eb10c6d2a68eeddac2c7466dae887"
+			},
+			"random": [
+				"0xc4ac6ba5a90a72459670e0153a5ab8bc"
+			]
+		},
+		{
+			"suri": "0x00",
+			"type": null,
+			"result": {
+				"publicKey": "0x70761c59d087bd912abb8a2c690046401c44c73d2aa283f1559d6fab98715d1a",
+				"address": "5EcAJjD8W6gYwkMz2tEuhuMMVUuukZXi459XFKFwkR5KxDe6",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x2895f753c51148afd2dd6f3435205cd38dfb54c639af37a17e14373a907bd24f04f519e665b0383060c064bb7cf9d59c4460fbf5f53478394dad469abef74fd0"
+			},
+			"random": [
+				"0xc07c13b90b8fb3e07f53d9bb171b1616"
+			]
+		},
+		{
+			"suri": "bottom drive obey lake curtain smoke basket hold race lonely fit walk extra",
+			"type": null,
+			"error": "specified phrase is not a valid mnemonic and is invalid as a raw seed at > 32 bytes",
+			"random": []
+		},
+		{
+			"suri": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon",
+			"type": null,
+			"error": "Invalid bip39 mnemonic specified",
+			"random": []
+		},
+		{
+			"suri": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+			"type": null,
+			"result": {
+				"publicKey": "0x66933bd1f37070ef87bd1198af3dacceb095237f803f3d32b173e6b425ed7972",
+				"address": "5EPCUjPxiHAcNooYipQFWr9NmmXJKpNG5RhcntXwbtUySrgH",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x701936e0e7d812861f173d366507a35056421839bda656a94ebf9eb70b1d666b14a2ddb1ef1df4adba49f3a4d8c0f6205117907265f09a53ccf07a4e8616dfd8"
+			},
+			"random": [
+				"0x90e83a2849b3deba3c380274a7be2362"
+			]
+		},
+		{
+			"suri": "BOTTOM DRIVE OBEY LAKE CURTAIN SMOKE BASKET HOLD RACE LONELY FIT WALK",
+			"type": null,
+			"error": "Invalid bip39 mnemonic specified",
+			"random": []
+		},
+		{
+			"suri": "response theme trim churn ketchup skin improve lyrics average welcome gallery gaze ahead ill wise",
+			"type": null,
+			"result": {
+				"publicKey": "0x2a6ede077f08e113ed16b9892e5b4331ddf347c2085e7ca5c583a18c78dc3765",
+				"address": "5D2LoWppdgfMf6DzDdZtBASe5tDmhX1TzWmYkWmst1qVqSJe",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x4012a8a4891d3b6b35d0732581bebd4d02a83a287ddbb1fa8636f37437930a5d24883a19c2228381bbae716a9f6d84999fe9300cc09e8043b005d396b08138d7"
+			},
+			"random": [
+				"0x20f5198d082180d3b2b54958c2b3df4d"
+			]
+		},
+		{
+			"suri": "sister where into field trend exclude muscle edge measure spread siren expose teach bright game cage usual husband debate veteran scatter rocket water arctic",
+			"type": null,
+			"result": {
+				"publicKey": "0xc206359190c59a50d135effcbf87adbf41cf231ebad96c2c79c0e297f2d3d74b",
+				"address": "5GT6zT5KQtWHBSZ2Zr3mmFfs3242mhb2KcjeqZUzcKmeTPxz",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0xe09ae72e4eb2c7752b81796a9cd76d9a0f7d4145a74554c14125848b0b8fe556e16ed3a33591bba70443387154b4daef12c179acd1db5bc160cd73e98c665640"
+			},
+			"random": [
+				"0x7f2f5093147cf7516c9d13e9ffbb571a"
+			]
+		},
+		{
+			"suri": "sister where into field trend exclude muscle edge measure spread siren expose teach bright game cage usual husband debate veteran scatter rocket water arctic//hard/soft",
+			"type": null,
+			"result": {
+				"publicKey": "0xca30a0a4f3c3379f6661924f6b57fff4fa01bd2a742aaffffb9528283ecf8763",
+				"address": "5GdoyX2hRbBue7ZHQ67S11m2jg5Xe1ibmyW9brQBt88Cn5qF",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				}
+			},
+			"random": [
+				"0x0301fe271a653d60c77cb4e7e0701f70",
+				"0xffefd2ebe6ade5b9d802943a380be418",
+				"0xb0cd3249cc822bebf4c68f07bbcf6d201c748a54728bdaaa0ba66157ea7a2108",
+				"0x43687448047278189d4a843cf48a3ae8",
+				"0x6bc6a38f90823902aea32d32a15e2a46"
+			]
+		},
+		{
+			"suri": "",
+			"type": null,
+			"error": "Unable to match provided value to a secret URI",
+			"random": []
+		},
+		{
+			"suri": " ",
+			"type": null,
+			"error": "Unable to match provided value to a secret URI",
+			"random": []
+		},
+		{
+			"suri": "a  b",
+			"type": null,
+			"error": "Unable to match provided value to a secret URI",
+			"random": []
+		},
+		{
+			"suri": "é",
+			"type": null,
+			"error": "Unable to match provided value to a secret URI",
+			"random": []
+		},
+		{
+			"suri": "hello//",
+			"type": null,
+			"error": "Unable to match provided value to a secret URI",
+			"random": []
+		},
+		{
+			"suri": "hello///",
+			"type": null,
+			"result": {
+				"publicKey": "0x4601b7e165275058a12c2e0e470d4679265c99c1217f6068096fd016aca6d743",
+				"address": "5DeVigjtT7cbbrhXVbqsfXwyvK8mBZL1U2ak5j1YK1Aa7kUV",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x90d920b9dc89e9cdbf3317a9308655e0e6706e3ce4d7b64875bb743c63032373f67dd517fae33832ea50ae01aa880a10417e9fc39ce219cd09394ac5a237ac23"
+			},
+			"random": [
+				"0x5b70de14927066f11967cc2cd336f0c3"
+			]
+		},
+		{
+			"suri": "bottom drive obey lake curtain smoke basket hold race lonely fit walk",
+			"type": "ethereum",
+			"error": "Not implemented - Prosopo Keyring supports sr25519 only",
+			"random": []
+		},
+		{
+			"suri": "0x0101010101010101010101010101010101010101010101010101010101010101",
+			"type": "ethereum",
+			"error": "Not Implemented",
+			"random": []
+		},
+		{
+			"suri": "bottom drive obey lake curtain smoke basket hold race lonely fit walk",
+			"type": "ed25519",
+			"error": "Not Implemented",
+			"random": []
+		},
+		{
+			"suri": "0x0101010101010101010101010101010101010101010101010101010101010101",
+			"type": "ed25519",
+			"error": "Not Implemented",
+			"random": []
+		},
+		{
+			"suri": "hello",
+			"type": "ecdsa",
+			"error": "Not Implemented",
+			"random": []
+		},
+		{
+			"suri": "hello",
+			"type": "sr25519",
+			"result": {
+				"publicKey": "0x4601b7e165275058a12c2e0e470d4679265c99c1217f6068096fd016aca6d743",
+				"address": "5DeVigjtT7cbbrhXVbqsfXwyvK8mBZL1U2ak5j1YK1Aa7kUV",
+				"isLocked": false,
+				"meta": {
+					"name": "uri"
+				},
+				"secretKey": "0x90d920b9dc89e9cdbf3317a9308655e0e6706e3ce4d7b64875bb743c63032373f67dd517fae33832ea50ae01aa880a10417e9fc39ce219cd09394ac5a237ac23"
+			},
+			"random": [
+				"0xc5ba754fb039535c0126e66895ea2a1c"
+			]
+		}
+	],
+	"json": [
+		{
+			"label": "alice",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": true,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unable to decode using the supplied passphrase",
+				"random": []
+			},
+			"reencode": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"isLocked": false
+				},
+				"random": [
+					"0x5b257f9ec84cf135d8be88f0d79099dfea6d9511cd36dc4e5dd35e5c44f2e655",
+					"0x400ea83b7ebbc06dd9b5a498791024030efe899188ac35ae"
+				]
+			}
+		},
+		{
+			"label": "alice encrypted",
+			"input": {
+				"encoded": "YKtd6EOdClSLV0DPBncBBkYdvwEWEgMUd0cLp/Eir48AgAAAAQAAAAgAAACdRlB//2iGGbhdY+beiKvl3C7DEQKDk/uDox2TDfObOqHd6hUwOcAnR/DEsUfWpG/wCfToEg224XvaoIV1AFmbq08/0RIJwpdMPWki6wD3gBsBR8aBXR2WWP5GAJvI0JeK25v4niHrRobeyBQK0gOOZDXyxY+KRUE5NwtOBZ8fGhqSYDCNtF+RP6akwiu0XQD+ixSQb+6nHqT7lA0o",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"scrypt",
+						"xsalsa20-poly1305"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": true,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"error": "Password required to decode encrypted data",
+					"random": []
+				},
+				{
+					"error": "Password required to decode encrypted data",
+					"random": []
+				},
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				}
+			],
+			"toJson": {
+				"result": {
+					"encoded": "+Ouffay2d2PQwzfH9gnBt4vmW0QPVZiDCLJRIEPXwH0AgAAAAQAAAAgAAACZXuC8eQskpLuBS30kLD8fbNr6QmSBfMreMED23qtuTscJUvOVQ8jQ4ezLcs/Ejgd7zZ3CKXbslXUUaSZUOecch6T2A0KNsX6JejDAeOyTmsb1O2EL3/M8GH5ZP+fGVLMj5JyiCMEEgg3xH5/q3V+Dbvng0uL2gVnaxwRU+81WKD/P0TnMq1xqHhpD8F7WM0a+j7E/4WwQqX0XtogU",
+					"encoding": {
+						"content": [
+							"pkcs8",
+							"sr25519"
+						],
+						"type": [
+							"scrypt",
+							"xsalsa20-poly1305"
+						],
+						"version": "3"
+					},
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": [
+					"0xf8eb9f7dacb67763d0c337c7f609c1b78be65b440f55988308b2512043d7c07d",
+					"0x995ee0bc790b24a4bb814b7d242c3f1f6cdafa4264817cca"
+				]
+			},
+			"reencode": {
+				"error": "Password required to decode encrypted data",
+				"random": []
+			}
+		},
+		{
+			"label": "generation 2 seed",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIAICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICoSMDIQAaT+5IwboaSOjNQ3gqhIXWNaqRz7gsu0d/DBxXa8QDHA==",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5CfCr47V5Dte6bwxNBE8K9oNnQd9fiay6aDEEkgYtFv7w4Fq",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"result": {
+					"publicKey": "0x1a4fee48c1ba1a48e8cd43782a8485d635aa91cfb82cbb477f0c1c576bc4031c",
+					"address": "5CfCr47V5Dte6bwxNBE8K9oNnQd9fiay6aDEEkgYtFv7w4Fq",
+					"isLocked": true,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"result": {
+						"publicKey": "0x1a4fee48c1ba1a48e8cd43782a8485d635aa91cfb82cbb477f0c1c576bc4031c",
+						"secretKey": "0xa83c626bc9c38c8c201878ebb1d5b0b50ac40e8986c78793db1d4ef369fca14e67bdb50c138aad8fe3e6539e54f54e10f9a32399529a732be3d2243b867f6acc",
+						"isLocked": false
+					},
+					"random": [
+						"0xa9311b89247a04b49be381c3095a3a37"
+					]
+				},
+				{
+					"result": {
+						"publicKey": "0x1a4fee48c1ba1a48e8cd43782a8485d635aa91cfb82cbb477f0c1c576bc4031c",
+						"secretKey": "0xa83c626bc9c38c8c201878ebb1d5b0b50ac40e8986c78793db1d4ef369fca14e67bdb50c138aad8fe3e6539e54f54e10f9a32399529a732be3d2243b867f6acc",
+						"isLocked": false
+					},
+					"random": [
+						"0x15cf9a9c7ff6417a630f3f7eca8b54e8"
+					]
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unable to decode using the supplied passphrase",
+				"random": []
+			},
+			"reencode": {
+				"result": {
+					"publicKey": "0x1a4fee48c1ba1a48e8cd43782a8485d635aa91cfb82cbb477f0c1c576bc4031c",
+					"isLocked": false
+				},
+				"random": [
+					"0x03e8b7e75808e4ab5a03e7bdf8d32d9e",
+					"0x0f85944385929be5e2fda7bdc5604f9c126ef086489875becefe7f832b2c7e83",
+					"0x729a2a30572a609d0d647a926804cf3d9959e56ebfecbc43"
+				]
+			}
+		},
+		{
+			"label": "hex address",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": true,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unable to decode using the supplied passphrase",
+				"random": []
+			},
+			"reencode": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"isLocked": false
+				},
+				"random": [
+					"0x378c5857f551ae9b05bdb71b0aba911143cdf034b24e18073d51166eaefa39c4",
+					"0x51d21f0301385a8e3b736bdb48372b3f0036ced0e6ec3d7e"
+				]
+			}
+		},
+		{
+			"label": "hex encoded",
+			"input": {
+				"encoded": "0x3053020101300506032b65700422042098319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011a123032100d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": true,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unable to decode using the supplied passphrase",
+				"random": []
+			},
+			"reencode": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"isLocked": false
+				},
+				"random": [
+					"0xbedbbcce2cdcde154e21503789644e533c1e2b1960cc5eee866b169aba56aab6",
+					"0xdc31e2c9bb972704a5fbf21845105c9823ac1cb1e101ce25"
+				]
+			}
+		},
+		{
+			"label": "empty encoded",
+			"input": {
+				"encoded": "",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": true,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"error": "Invalid encoding header found in body",
+					"random": []
+				},
+				{
+					"error": "Invalid encoding header found in body",
+					"random": []
+				},
+				{
+					"error": "bad nonce size",
+					"random": []
+				},
+				{
+					"error": "bad nonce size",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "bad nonce size",
+				"random": []
+			},
+			"reencode": {
+				"error": "Invalid encoding header found in body",
+				"random": []
+			}
+		},
+		{
+			"label": "single encoding type",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": "none",
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": true,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unable to decode using the supplied passphrase",
+				"random": []
+			},
+			"reencode": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"isLocked": false
+				},
+				"random": [
+					"0x7a7dd4ab7eb2fa0b25ff6ab619bb47fe7069f1e4befb59b4e04aba4c40aeebfc",
+					"0xff9b129d06e4b07eb457e197386bb44d82b988ffec0bec1c"
+				]
+			}
+		},
+		{
+			"label": "v3 not pkcs8",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"none",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"error": "Unable to decode non-pkcs8 type, [none,sr25519] found}",
+				"random": []
+			},
+			"unlock": [
+				{
+					"error": "Unable to decode non-pkcs8 type, [none,sr25519] found}",
+					"random": []
+				},
+				{
+					"error": "Unable to decode non-pkcs8 type, [none,sr25519] found}",
+					"random": []
+				},
+				{
+					"error": "Unable to decode non-pkcs8 type, [none,sr25519] found}",
+					"random": []
+				},
+				{
+					"error": "Unable to decode non-pkcs8 type, [none,sr25519] found}",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unable to decode non-pkcs8 type, [none,sr25519] found}",
+				"random": []
+			},
+			"reencode": {
+				"error": "Unable to decode non-pkcs8 type, [none,sr25519] found}",
+				"random": []
+			}
+		},
+		{
+			"label": "v3 empty content",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"error": "Unable to decode non-pkcs8 type, [] found}",
+				"random": []
+			},
+			"unlock": [
+				{
+					"error": "Unable to decode non-pkcs8 type, [] found}",
+					"random": []
+				},
+				{
+					"error": "Unable to decode non-pkcs8 type, [] found}",
+					"random": []
+				},
+				{
+					"error": "Unable to decode non-pkcs8 type, [] found}",
+					"random": []
+				},
+				{
+					"error": "Unable to decode non-pkcs8 type, [] found}",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unable to decode non-pkcs8 type, [] found}",
+				"random": []
+			},
+			"reencode": {
+				"error": "Unable to decode non-pkcs8 type, [] found}",
+				"random": []
+			}
+		},
+		{
+			"label": "no crypto type",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"error": "cryptoType is undefined",
+				"random": []
+			},
+			"unlock": [
+				{
+					"error": "cryptoType is undefined",
+					"random": []
+				},
+				{
+					"error": "cryptoType is undefined",
+					"random": []
+				},
+				{
+					"error": "cryptoType is undefined",
+					"random": []
+				},
+				{
+					"error": "cryptoType is undefined",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "cryptoType is undefined",
+				"random": []
+			},
+			"reencode": {
+				"error": "cryptoType is undefined",
+				"random": []
+			}
+		},
+		{
+			"label": "empty crypto type",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						""
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"error": "cryptoType is undefined",
+				"random": []
+			},
+			"unlock": [
+				{
+					"error": "cryptoType is undefined",
+					"random": []
+				},
+				{
+					"error": "cryptoType is undefined",
+					"random": []
+				},
+				{
+					"error": "cryptoType is undefined",
+					"random": []
+				},
+				{
+					"error": "cryptoType is undefined",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "cryptoType is undefined",
+				"random": []
+			},
+			"reencode": {
+				"error": "cryptoType is undefined",
+				"random": []
+			}
+		},
+		{
+			"label": "ed25519",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"ed25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"error": "Unknown crypto type ed25519",
+				"random": []
+			},
+			"unlock": [
+				{
+					"error": "Unknown crypto type ed25519",
+					"random": []
+				},
+				{
+					"error": "Unknown crypto type ed25519",
+					"random": []
+				},
+				{
+					"error": "Unknown crypto type ed25519",
+					"random": []
+				},
+				{
+					"error": "Unknown crypto type ed25519",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unknown crypto type ed25519",
+				"random": []
+			},
+			"reencode": {
+				"error": "Unknown crypto type ed25519",
+				"random": []
+			}
+		},
+		{
+			"label": "v0 ed25519",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"ed25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "0"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": true,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unable to decode using the supplied passphrase",
+				"random": []
+			},
+			"reencode": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"isLocked": false
+				},
+				"random": [
+					"0x2cff064f6966c1d3c8b7e2f8d3f1a483f0251deef9d1fd7b0c2469c99541d138",
+					"0x839ba3b1f6ea4ae39ffb20d70fecc03255c8c44de4633c85"
+				]
+			}
+		},
+		{
+			"label": "v2 not pkcs8",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"none",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "2"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": true,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unable to decode using the supplied passphrase",
+				"random": []
+			},
+			"reencode": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"isLocked": false
+				},
+				"random": [
+					"0x0017f93ba8c90191060d05777e03a0789a2ae5e23890289eec8c26c5cdddb766",
+					"0x51e6c475ef34b2fe45a6195f53637687637d9953e9ce0362"
+				]
+			}
+		},
+		{
+			"label": "bad header",
+			"input": {
+				"encoded": "AFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": true,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"error": "Invalid encoding header found in body",
+					"random": []
+				},
+				{
+					"error": "Invalid encoding header found in body",
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unable to decode using the supplied passphrase",
+				"random": []
+			},
+			"reencode": {
+				"error": "Invalid encoding header found in body",
+				"random": []
+			}
+		},
+		{
+			"label": "bad divider",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBEAIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": true,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"error": "Invalid encoding divider found in body",
+					"random": []
+				},
+				{
+					"error": "Invalid encoding divider found in body",
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unable to decode using the supplied passphrase",
+				"random": []
+			},
+			"reencode": {
+				"error": "Invalid encoding divider found in body",
+				"random": []
+			}
+		},
+		{
+			"label": "truncated",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": true,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"result": {
+						"publicKey": "0xd43593c715",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"result": {
+						"publicKey": "0xd43593c715",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unable to decode using the supplied passphrase",
+				"random": []
+			},
+			"reencode": {
+				"result": {
+					"publicKey": "0xd43593c715",
+					"isLocked": false
+				},
+				"random": [
+					"0x21957fd1f760c53f240bd503440d39de830721681f15ac709bddebc24edf91c0",
+					"0x4ccd62f5e95c4a29a3367aa156f711e14c78da2116d6f0ed"
+				]
+			}
+		},
+		{
+			"label": "bad address",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "not-an-address",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"error": "Decoding not-an-address: Invalid base58 character \"-\" (0x2d) at index 3",
+				"random": []
+			},
+			"unlock": [
+				{
+					"error": "Decoding not-an-address: Invalid base58 character \"-\" (0x2d) at index 3",
+					"random": []
+				},
+				{
+					"error": "Decoding not-an-address: Invalid base58 character \"-\" (0x2d) at index 3",
+					"random": []
+				},
+				{
+					"error": "Decoding not-an-address: Invalid base58 character \"-\" (0x2d) at index 3",
+					"random": []
+				},
+				{
+					"error": "Decoding not-an-address: Invalid base58 character \"-\" (0x2d) at index 3",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Decoding not-an-address: Invalid base58 character \"-\" (0x2d) at index 3",
+				"random": []
+			},
+			"reencode": {
+				"error": "Decoding not-an-address: Invalid base58 character \"-\" (0x2d) at index 3",
+				"random": []
+			}
+		},
+		{
+			"label": "bad checksum",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQQ",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"error": "Decoding 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQQ: Invalid decoded address checksum",
+				"random": []
+			},
+			"unlock": [
+				{
+					"error": "Decoding 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQQ: Invalid decoded address checksum",
+					"random": []
+				},
+				{
+					"error": "Decoding 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQQ: Invalid decoded address checksum",
+					"random": []
+				},
+				{
+					"error": "Decoding 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQQ: Invalid decoded address checksum",
+					"random": []
+				},
+				{
+					"error": "Decoding 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQQ: Invalid decoded address checksum",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Decoding 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQQ: Invalid decoded address checksum",
+				"random": []
+			},
+			"reencode": {
+				"error": "Decoding 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQQ: Invalid decoded address checksum",
+				"random": []
+			}
+		},
+		{
+			"label": "bad checksum ignored",
+			"input": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQQ",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": true,
+			"created": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": true,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unable to decode using the supplied passphrase",
+				"random": []
+			},
+			"reencode": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"isLocked": false
+				},
+				"random": [
+					"0xe89e37b79889de0083f8a802228726dad847192af6042a7b0b08a5f6e6e5bb1c",
+					"0xb4dfa09bd286ffc7eba00b0e45fbe409eda1783c78780d58"
+				]
+			}
+		},
+		{
+			"label": "address of another key",
+			"input": {
+				"encoded": "YKtd6EOdClSLV0DPBncBBkYdvwEWEgMUd0cLp/Eir48AgAAAAQAAAAgAAACdRlB//2iGGbhdY+beiKvl3C7DEQKDk/uDox2TDfObOqHd6hUwOcAnR/DEsUfWpG/wCfToEg224XvaoIV1AFmbq08/0RIJwpdMPWki6wD3gBsBR8aBXR2WWP5GAJvI0JeK25v4niHrRobeyBQK0gOOZDXyxY+KRUE5NwtOBZ8fGhqSYDCNtF+RP6akwiu0XQD+ixSQb+6nHqT7lA0o",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"scrypt",
+						"xsalsa20-poly1305"
+					],
+					"version": "3"
+				},
+				"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"result": {
+					"publicKey": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+					"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+					"isLocked": true,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"error": "Password required to decode encrypted data",
+					"random": []
+				},
+				{
+					"error": "Password required to decode encrypted data",
+					"random": []
+				},
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				}
+			],
+			"toJson": {
+				"result": {
+					"encoded": "TMec7p8TER7jvmC+wGoSwsIqPOx2idV84v5DAnv93J4AgAAAAQAAAAgAAAA2Q5MyedPNzEvFlK3+jtQl43swWTUH4eBdpjQG40pXn0pHLKwYEuvcPRjsWWDWel1/X8L2MxoX1dgXJPV/Z+DvTBjq2X972ZzLKT60lzrMP9Y22X/q37QzC2bJz7c5sYjnDfRnN2IDnDu/Vtvm48P9mMVwutHzXQz0hUgT/rJ97CVZZRkcyW3LbfQExquY1vOy3shSKQmTf88DI4qb",
+					"encoding": {
+						"content": [
+							"pkcs8",
+							"sr25519"
+						],
+						"type": [
+							"scrypt",
+							"xsalsa20-poly1305"
+						],
+						"version": "3"
+					},
+					"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				"random": [
+					"0x4cc79cee9f13111ee3be60bec06a12c2c22a3cec7689d57ce2fe43027bfddc9e",
+					"0x3643933279d3cdcc4bc594adfe8ed425e37b30593507e1e0"
+				]
+			},
+			"reencode": {
+				"error": "Password required to decode encrypted data",
+				"random": []
+			}
+		},
+		{
+			"label": "no meta",
+			"input": {
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				}
+			},
+			"ignoreChecksum": false,
+			"created": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": true,
+					"meta": {}
+				},
+				"random": []
+			},
+			"unlock": [
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011",
+						"isLocked": false
+					},
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				},
+				{
+					"error": "Unable to decode using the supplied passphrase",
+					"random": []
+				}
+			],
+			"toJson": {
+				"error": "Unable to decode using the supplied passphrase",
+				"random": []
+			},
+			"reencode": {
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"isLocked": false
+				},
+				"random": [
+					"0xf0e9e50be508cd98ef678781153b33550f0e84b8f282fa8cf1128af282b6dac0",
+					"0x7e1a340472efeacdfa5d0fb5a343ed6c4af15d469153f5ff"
+				]
+			}
+		}
+	],
+	"ops": [
+		{
+			"label": "alice test pair",
+			"state": {
+				"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"isLocked": false,
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"signs": [
+				{
+					"message": "hello",
+					"withType": false,
+					"result": "0x06c3fcdc34cbc983af8f25b1a306a7cc4762b491664df8891e24f96d052d09236bbf1edee33a0ba0f35bb57be775e1356927819694123dfe9d0dba3432320588",
+					"random": [
+						"0x116683e39a29494a60d24e8f0b9e0fef591827e0557609365cfce70ac5fbd9f4",
+						"0x9639d1456464f57a677a4e5cceeb9db8",
+						"0x2cca14d92b584d0b7e6e754f4a0e7181"
+					]
+				},
+				{
+					"message": "hello",
+					"withType": true,
+					"result": "0x018ed3811d960bfe52ff0f47d33d719f1b948cabdb70cf7cb3e221a2c833d82e053f124d376065ae51e42e24dee2bc2d449e7c8454c8d4a1d73178fe8ab9ba2c80",
+					"random": [
+						"0x486ae0640274d1c866ac505a6448de45675e0c7e7383f84cf6597e0b3e2b993d",
+						"0x72aadf4cf09896786ba65c93c9588239",
+						"0x334ee3810ed2e9d0d37434b2288ea605"
+					]
+				},
+				{
+					"message": "0x1234",
+					"withType": false,
+					"result": "0x5411258ed4bfd2677b3ec2fbfa792cdae3f9ac4c4f4ffbf596f9e6886f10702c3f6e5c9c816bbd00dcf9e79ad32c672111bbc5e306f05c9788e42f5327055b86",
+					"random": [
+						"0x09d33eb8daac4b21caf9fe9f89eda3962e1dfce6c703c16b300278c3309186c3",
+						"0x4dabd07748517299c6542396ff4a2cbb",
+						"0xbd4c6c9ba123954ca26264c828f75f95"
+					]
+				},
+				{
+					"message": "0x1234",
+					"withType": true,
+					"result": "0x01d847b974d46415e6ea6f6f687482384c40519048b537ceeb681c04a3aa8065529121e866f8d0f9bd1f215706d0940263f47841203c6f573224bf84a253d25680",
+					"random": [
+						"0xc5f7b105ecac949c6e4118ad13ed0df8835479b10d626ecf08f22d024f8336a5",
+						"0x16c1dabce8c60a6487d28d62e0e1177e",
+						"0x054758d038b474ccad97d81976c40fe0"
+					]
+				},
+				{
+					"message": "",
+					"withType": false,
+					"result": "0x9e788b8f13208766fcef2920423cea77aab62da62d692a434079c6326a77dd248baf33c655aa215080bac53094032d6925b15571d2a6e8182eb5a5d16f24e98e",
+					"random": [
+						"0xe42399083a012fcd8be926eb219be7c080d2fad93436bb4cfd3820d2cda6f353",
+						"0xf61287e0a0f2b7a1e808a328fd25247d",
+						"0x84999515d102bdcf51d27fce52f5ca04"
+					]
+				},
+				{
+					"message": "",
+					"withType": true,
+					"result": "0x01669759470cfd8be80f4c65193ef6d8505d0af77bec7b349b30fe8fe80592d75abff953964d2d6fb2f56b176ab3e5a2082345738d8fdbc94c521b4fdfe052528a",
+					"random": [
+						"0xda07eee955b419dfe3a2167e3dec439ec40819b86f2bfc5941fe7fe09d4e62fe",
+						"0x518de6c73f3b879dbf137a869e73a51a",
+						"0xf223bd11f29d5634b670919ba1c54a23"
+					]
+				},
+				{
+					"message": "0x",
+					"withType": false,
+					"result": "0xb8f4a0ea368f3ef2b7007662b55764f4c0ac064276953678e4d4df5204ad245eab8e32c09a5450884854f8023ae8f491710692b152faa7a15b2b2bbde5322388",
+					"random": [
+						"0x9a17126fa3ce94ba4512c92195f8d4edbabb31c36c30bc1b52ef461a5583201b",
+						"0x30214fcb4ac84ac0e82dfa8261adfbf3",
+						"0xf581abf7aa3e0df640dc3e977b36bdef"
+					]
+				},
+				{
+					"message": "0x",
+					"withType": true,
+					"result": "0x01b07350daa3dec3bc89105c9e27c3458da481de1e0ca9412da2c67babd5b3ce110169b2ae945e787a4e80eb3709692d043f905504fea5e1b18f8504a0dd965382",
+					"random": [
+						"0x16d8c98218b58fe5519aec42f7ee809b48d9f7d7fdc3b47e6279216bcdf37329",
+						"0xdfa8685728adf2a8cfed6785576e5cda",
+						"0xcd3801b3c5bbbd9ad5d8b113f7f657fb"
+					]
+				},
+				{
+					"message": [
+						1,
+						2,
+						3
+					],
+					"withType": false,
+					"result": "0x20237f160b22e0fe91577679f66a7efa240906774b24b4bd0e87c92b67d26165c69b4bdd424df3b2399eae4b8cc4e51e2d5a1e95f757ef2cee2e5fee7c2c3580",
+					"random": [
+						"0xb2013d5802993455f78daa0ea6a62fc1fb90d6ad6514a10bcb37c122d461d169",
+						"0x7f6fd92537e7367683dd2f7f4e2d7175",
+						"0x96569aebc0c4b484db30dd79531d3720"
+					]
+				},
+				{
+					"message": [
+						1,
+						2,
+						3
+					],
+					"withType": true,
+					"result": "0x012e19be2969b8b7132c31ae9025857efee758338095f3552bad07eeb1baebf278660bf8cb56ac17ac4e53d4afc7c809d0bd443d6ca4f66ed3e66a2ec01cc9638f",
+					"random": [
+						"0xb3143a955bc4c2a14eb099ee19d25313216ef614f64070bc972a60b50744b870",
+						"0xbb3abb49c38aaa0d03502f0c77f65988",
+						"0x3268f2555e1c336440149d5168a582f5"
+					]
+				},
+				{
+					"message": [],
+					"withType": false,
+					"result": "0x1e7b8d295e80cab3d60fc1ab21b870fa3c9b06c11cc3a65a2b5f0a4351057b4295078ed1e06ba38fec191b0f5c0dc114dad9518f29ea3cb93b67c18b9b794883",
+					"random": [
+						"0x1d74aea1a24aeb16708df714ee193d37f1753e96233b4e8dd20035f1f8a5dae4",
+						"0xb4ad0380cef2b1656298d0a0adecb0f5",
+						"0x93936c4aeca081f8d8615f4dd0b0e3e2"
+					]
+				},
+				{
+					"message": [],
+					"withType": true,
+					"result": "0x0154c4b7f4a0d5793dd9654fa6cc7ed45bcb2151172d2057242ecfc3890a858d10a4ef9a56fe631c5c0cd11bff48b22a82587b31c937d337531cc04dc8c326e08e",
+					"random": [
+						"0x2195bea7b4dbf6402bb09ca176b18bc791773322ecac3a945227685a93afe033",
+						"0x0d741e99ff8cd422506cef97ded40277",
+						"0xdf955e29ea558ff42e0828f292ca7dee"
+					]
+				}
+			],
+			"verifies": [
+				{
+					"message": "hello",
+					"signature": "0x06c3fcdc34cbc983af8f25b1a306a7cc4762b491664df8891e24f96d052d09236bbf1edee33a0ba0f35bb57be775e1356927819694123dfe9d0dba3432320588",
+					"signer": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"result": true,
+					"random": [
+						"0x9d567e0abbafca9d3660069e9d3415bf"
+					]
+				},
+				{
+					"message": "hello",
+					"signature": "0x06c3fcdc34cbc983af8f25b1a306a7cc4762b491664df8891e24f96d052d09236bbf1edee33a0ba0f35bb57be775e1356927819694123dfe9d0dba3432320588",
+					"signer": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"result": false,
+					"random": []
+				},
+				{
+					"message": "hello",
+					"signature": "0x06c3fcdc34cbc983af8f25b1a306a7cc4762b491664df8891e24f96d052d09236bbf1edee33a0ba0f35bb57be775e1356927819694123dfe9d0dba3432320588",
+					"signer": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+					"result": false,
+					"random": [
+						"0xfd9000eed26cb4950317748728cece07",
+						"0x5d6bcafb3e5924439092a9cd33f4b4e9"
+					]
+				},
+				{
+					"message": "hellO",
+					"signature": "0x06c3fcdc34cbc983af8f25b1a306a7cc4762b491664df8891e24f96d052d09236bbf1edee33a0ba0f35bb57be775e1356927819694123dfe9d0dba3432320588",
+					"signer": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"result": false,
+					"random": [
+						"0xaa5949e0652cd92ef01e87d98508c7b1",
+						"0x0ffb3a04ff3b29dd47f82f9c822909cf"
+					]
+				},
+				{
+					"message": "hello",
+					"signature": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+					"signer": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"result": false,
+					"random": []
+				},
+				{
+					"message": "hello",
+					"signature": "0x00",
+					"signer": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"error": "Invalid signature length, expected [64..66] bytes, found 1",
+					"random": []
+				},
+				{
+					"message": "hello",
+					"signature": "0x06c3fcdc34cbc983af8f25b1a306a7cc4762b491664df8891e24f96d052d09236bbf1edee33a0ba0f35bb57be775e1356927819694123dfe9d0dba3432320588",
+					"signer": "not-an-address",
+					"result": false,
+					"random": []
+				},
+				{
+					"message": "0x1234",
+					"signature": "0x5411258ed4bfd2677b3ec2fbfa792cdae3f9ac4c4f4ffbf596f9e6886f10702c3f6e5c9c816bbd00dcf9e79ad32c672111bbc5e306f05c9788e42f5327055b86",
+					"signer": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"result": true,
+					"random": [
+						"0x1a9da0cda4adf8b5d81ec27d5fda6ba3"
+					]
+				},
+				{
+					"message": "0x1234",
+					"signature": "0x01d847b974d46415e6ea6f6f687482384c40519048b537ceeb681c04a3aa8065529121e866f8d0f9bd1f215706d0940263f47841203c6f573224bf84a253d25680",
+					"signer": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"result": true,
+					"random": [
+						"0xe140efdfb28ea19dbaab0ed583b8af28"
+					]
+				}
+			],
+			"vrfs": [
+				{
+					"message": "hello",
+					"context": null,
+					"extra": null,
+					"signed": {
+						"result": "0x58a8317fb9739abbd942d0627dac50f5a7dfbc2a0c592670e20e84298df9e154a40e851a3b7cd901983c798a2d4a8142efb850605994728c564f4484d314b709470b6fca340eadda7ba971523782866eef17ecef381a36436a0180fb6d766c04",
+						"random": [
+							"0x78057b992ff56fe8843a84eea773c83051d439502affecb413e2933c69436024",
+							"0xbd584977e793c7eea77126b22c7283c3",
+							"0x09e7d930a8ea7970b98f23c3fb1af34e"
+						]
+					},
+					"verified": {
+						"result": true,
+						"random": [
+							"0x0788c9e68f26cc2b4450b60ad7f85456"
+						]
+					},
+					"tampered": {
+						"result": false,
+						"random": [
+							"0x4cb7840f6bf6e6f8e6a0f143a9905e9b"
+						]
+					}
+				},
+				{
+					"message": "hello",
+					"context": "ctx",
+					"extra": null,
+					"signed": {
+						"result": "0x64264aced99d0ef67b7a0b9c56963ab4d63e6c2b05cd04e3602948be7c61fd166a035e31b3074be2ec8231e0a3f7d893be36220d6f6db151baf9d1d04ec7d20949452cae303991a3a87de1074999523f32d846b70bb749589c696859b3ae1c08",
+						"random": [
+							"0x38fff037e4b5dcd292490c438509656ca6578ec4ade1c328c32de33e52cb33c6",
+							"0xf52eb3464f1c623e2237d2eed2ff91d7",
+							"0x356be10b257e1393a4c4c0e4262a0c07"
+						]
+					},
+					"verified": {
+						"result": true,
+						"random": [
+							"0x3c82f156166debfbb4126f9ff6613524"
+						]
+					},
+					"tampered": {
+						"result": false,
+						"random": [
+							"0xb7342245b30fe4a34f2f153cb94eb6dd"
+						]
+					}
+				},
+				{
+					"message": "hello",
+					"context": "ctx",
+					"extra": "extra",
+					"signed": {
+						"result": "0x64264aced99d0ef67b7a0b9c56963ab4d63e6c2b05cd04e3602948be7c61fd1615c079edd9469dbef7f78a5a803da55d2f24b3c65e0eddb903f9de66dc049d0cfce219a1d6480546c3240deaff4be8625ec62abcc1d8da35ce4fef892be3b90f",
+						"random": [
+							"0x3bbae71057036f3603905d85564879bd0ea8cd80d655a9a74c9ff2c8af4d9fd1",
+							"0x6605ca72878649ca9b4c645c94e1e02a",
+							"0xcabada6603c7f3385478d21780de4102"
+						]
+					},
+					"verified": {
+						"result": true,
+						"random": [
+							"0x6bc014919e6ae2bce90aee397a1fa996"
+						]
+					},
+					"tampered": {
+						"result": false,
+						"random": [
+							"0xb3aa09095dcd0d4b3320a84410c18973"
+						]
+					}
+				},
+				{
+					"message": "0x1234",
+					"context": "0xabcd",
+					"extra": "0x",
+					"signed": {
+						"result": "0x6ea86837a892057d904856bbaac06dfe5f3bcbb34cba6340193985d247b5b942f8660393ec145d6f39780d63c39c4432f6374808f1e3d43a9d5225114a7ed50e728bf83c62d49bc6e181c105ff9aa600addd7a83d2d31923fe6126adcfb7e10c",
+						"random": [
+							"0x862a02a7f7532a3fb15928ebc51b14de4f97c4113f85de9bc1d69eb38bb44cac",
+							"0xc71d6e56c64e2a81b3470d1327b8c146",
+							"0x0a6319af3cb81a41fd66f030e30b0dcb"
+						]
+					},
+					"verified": {
+						"result": true,
+						"random": [
+							"0x7cf5d76ebd3fd52904812d880246af88"
+						]
+					},
+					"tampered": {
+						"result": false,
+						"random": [
+							"0x7e8b4d723802b9fe99198cc93aa59feb"
+						]
+					}
+				}
+			],
+			"jwts": [
+				{
+					"options": null,
+					"claims": null,
+					"issued": {
+						"result": "eyJhbGciOiJzcjI1NTE5IiwidHlwIjoiSldUIn0.eyJzdWIiOiIweGQ0MzU5M2M3MTVmZGQzMWM2MTE0MWFiZDA0YTk5ZmQ2ODIyYzg1NTg4NTRjY2RlMzlhNTY4NGU3YTU2ZGEyN2QiLCJpYXQiOjE3NTAwMDAwMDAsIm5iZiI6MTc1MDAwMDAwMCwiZXhwIjoxNzUwMDAwMzAwfQ.XkPU2KpsYslZ5_ioH2FTYtwupiiHBiMARNuvwGwkJS0txCrndodWaIHMCzC_IaULv_XZR9EXDehtGNkgqdpkjw",
+						"random": [
+							"0x81bba1cf2c195e55a46683c4e39149514a96d6d1affd8dfbe5deae9b90011efa",
+							"0x62aee8cb89094b607745cd9ad4069930",
+							"0xf0b3040533ee626bbec7d4bfca21576a"
+						]
+					},
+					"verified": {
+						"result": {
+							"isValid": true,
+							"crypto": "sr25519",
+							"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+							"isWrapped": false,
+							"payload": {
+								"sub": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+								"iat": 1750000000,
+								"nbf": 1750000000,
+								"exp": 1750000300
+							}
+						},
+						"random": [
+							"0xaa7d9787dd980bc2137328759e69870c",
+							"0x4092d97de7dd78d084c69078a8c6c59e"
+						]
+					}
+				},
+				{
+					"options": {
+						"expiresIn": 60
+					},
+					"claims": {
+						"sub": "user"
+					},
+					"issued": {
+						"result": "eyJhbGciOiJzcjI1NTE5IiwidHlwIjoiSldUIn0.eyJzdWIiOiIweGQ0MzU5M2M3MTVmZGQzMWM2MTE0MWFiZDA0YTk5ZmQ2ODIyYzg1NTg4NTRjY2RlMzlhNTY4NGU3YTU2ZGEyN2QiLCJpYXQiOjE3NTAwMDAwMDAsIm5iZiI6MTc1MDAwMDAwMCwiZXhwIjoxNzUwMDAwMDYwfQ.JniF6vgPdgDT_5uKHS4Wxrsn_mBA3K7cqjtTmK1uGTWsy_OdQ4F8jT7Biqz33I0dwM4BuIm2N2y71HrmdXM2gw",
+						"random": [
+							"0x553dcc370f8ad94ceeb11a368743d3cae6be6a1c0a88f4e4b00d46dac0b2a64e",
+							"0x6e47c2f70592d374700d1d3d8ab21dff",
+							"0x124dee1483c1c4aee3804540bf72b525"
+						]
+					},
+					"verified": {
+						"result": {
+							"isValid": true,
+							"crypto": "sr25519",
+							"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+							"isWrapped": false,
+							"payload": {
+								"sub": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+								"iat": 1750000000,
+								"nbf": 1750000000,
+								"exp": 1750000060
+							}
+						},
+						"random": [
+							"0xa7bfec1898692c08022c65cc5af9346e",
+							"0x7c0d98af23db20e3eb7de1ab4163aee6"
+						]
+					}
+				},
+				{
+					"options": {
+						"notBefore": 1750000010.123
+					},
+					"claims": {
+						"a": "1",
+						"b": "2"
+					},
+					"issued": {
+						"result": "eyJhbGciOiJzcjI1NTE5IiwidHlwIjoiSldUIn0.eyJhIjoiMSIsImIiOiIyIiwic3ViIjoiMHhkNDM1OTNjNzE1ZmRkMzFjNjExNDFhYmQwNGE5OWZkNjgyMmM4NTU4ODU0Y2NkZTM5YTU2ODRlN2E1NmRhMjdkIiwiaWF0IjoxNzUwMDAwMDAwLCJuYmYiOjE3NTAwMDAwMTAsImV4cCI6MTc1MDAwMDMwMH0.8EJNkRowfpXPfUNHOCUU1kcCd_SjF3O_Q4foiqL-6XdRWyp4WAJLtXlXgEWr2LgKrCMj5L5qRo7_J4bkjTxkiA",
+						"random": [
+							"0x3f2fc72bbda9dfebed14e12b6803ccd2bef1c3b629644b92eb375207b7467b7e",
+							"0x233a6c1a4b8633479aa3c641c03e9744",
+							"0x46e4954380c2b63c04163e78950ab93f"
+						]
+					},
+					"verified": {
+						"result": {
+							"isValid": false,
+							"error": "JWT not valid yet",
+							"crypto": "sr25519",
+							"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+							"isWrapped": false
+						},
+						"random": []
+					}
+				}
+			],
+			"exports": [
+				{
+					"passphrase": null,
+					"encodePkcs8": {
+						"result": "0x3053020101300506032b65700422042098319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011a123032100d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"random": []
+					},
+					"toJson": {
+						"result": {
+							"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+							"encoding": {
+								"content": [
+									"pkcs8",
+									"sr25519"
+								],
+								"type": [
+									"none"
+								],
+								"version": "3"
+							},
+							"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+							"meta": {
+								"isTesting": true,
+								"name": "alice"
+							}
+						},
+						"random": []
+					}
+				},
+				{
+					"passphrase": "",
+					"encodePkcs8": {
+						"result": "0x3053020101300506032b65700422042098319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011a123032100d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"random": []
+					},
+					"toJson": {
+						"result": {
+							"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+							"encoding": {
+								"content": [
+									"pkcs8",
+									"sr25519"
+								],
+								"type": [
+									"none"
+								],
+								"version": "3"
+							},
+							"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+							"meta": {
+								"isTesting": true,
+								"name": "alice"
+							}
+						},
+						"random": []
+					}
+				},
+				{
+					"passphrase": "testing",
+					"encodePkcs8": {
+						"result": "0x109b9ec43f359d8aac2ab004d6b55adfab04bb744ad9ae6acc1c8e0b1510d0630080000001000000080000007a27ba1c38cf38a3aab80214cf25e7c9dc90512634ad883c4edc1c67aca93b3e8a5bd5fb06843f00b050c18b37ecf7954f74f1a405c2e652aeb32d52aa61ce698b3783f9a4918ce7d633173cee72c1f1bccd6482ded680c250090e35038eb393ffc9f1cf59fd598b4d831923880b5c399634919140db9f1850443d63af7544b2a76bea1402efae6b49e55276f87e46928304c5d26dd085627b7f3723af",
+						"random": [
+							"0x109b9ec43f359d8aac2ab004d6b55adfab04bb744ad9ae6acc1c8e0b1510d063",
+							"0x7a27ba1c38cf38a3aab80214cf25e7c9dc90512634ad883c"
+						]
+					},
+					"toJson": {
+						"result": {
+							"encoded": "5NcqtjHcU8uq9UNjQoM04c/aCJK0iLYyDzIrraGh3cYAgAAAAQAAAAgAAADrYdxkWj9Fo3R6leR05kZy7HbHS1G7aAlobgBQK4jJUjskuZZ4UPPEvC6UICcDggMm1LnWVEvZi2N2XxBmBJoKHn2g2t6BuG2IrY/Hvezz7Eh7Lq7Ni47IAWu7tJYQ6T8MNXo+YL45n50GOnFE//0dySY8MfoOqnnnBd9p4Kgki8G9QZ/OIkfgqW+moAh4gZXk+cXuQrOR1V9GxGxK",
+							"encoding": {
+								"content": [
+									"pkcs8",
+									"sr25519"
+								],
+								"type": [
+									"scrypt",
+									"xsalsa20-poly1305"
+								],
+								"version": "3"
+							},
+							"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+							"meta": {
+								"isTesting": true,
+								"name": "alice"
+							}
+						},
+						"random": [
+							"0xe4d72ab631dc53cbaaf54363428334e1cfda0892b488b6320f322bada1a1ddc6",
+							"0xeb61dc645a3f45a3747a95e474e64672ec76c74b51bb6809"
+						]
+					}
+				}
+			],
+			"derives": [
+				{
+					"suri": "//hard",
+					"result": {
+						"publicKey": "0x86c6150a4a76a01fc50b87e5472ca393c89bbd055fafa062117cd181713e737b",
+						"address": "5F7R7hrxyMiZNNz6fWJ2Dtitbq5r4GTbz5gcreDDQzbFvkE1",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						},
+						"secretKey": "0x103b1ec5d887e5c4eea4853db339ee3d836cc724a8dcf60dee9aba1386bf6951e0563d603ee4e9851faff6a7bf1c9b9de90768d72d04844679f1594cc24beefd"
+					},
+					"random": [
+						"0xcc5ae8337b79d26af0c7169ce998ed4c"
+					]
+				},
+				{
+					"suri": "//hard//deeper",
+					"result": {
+						"publicKey": "0xd64614aea5f274e081907bb1727391b4a4918c21d473ab1cd99d413dcd929334",
+						"address": "5GuevUev1uxVmt7Xfg3EBTSakf4rvLdkZhjfU6GC4h8qDQ9H",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						},
+						"secretKey": "0x485b3bb34c2d938f849d407936d0b4ebf3f742b08987134824319b21b1b6cb70421d2b4735a43d642c3ccdd151eed5bf1c524e86efcc96c741f4c0a494abe090"
+					},
+					"random": [
+						"0xa6012d3b2514cbfa5a1b43cdd404f561",
+						"0x5e20186b8725739068ad43fab0838e79"
+					]
+				},
+				{
+					"suri": "/soft",
+					"result": {
+						"publicKey": "0x02cfd83074aefc9955af4034d19b3780d47a52e158ababec8ec012b2295f1c5b",
+						"address": "5C8PhJPLE54x23RjmqBcEEnALryCDWdTJM5xLaoL9W8XEpnt",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						}
+					},
+					"random": [
+						"0x1325eee512a5303a4b9e8d531279950eee15e44b36f43c8ce26bc3c03c939719",
+						"0x5e23340884e4e8d3bc2140a76135d8d9",
+						"0x48a9e8ec18c9d056ff42fa1bdebda851"
+					]
+				},
+				{
+					"suri": "//1",
+					"result": {
+						"publicKey": "0x70cd06e4c5d36fd8fe158e7b5e102937d4859d45933f39074ae784a67bf65426",
+						"address": "5Ecc8G1JPhegXjCruhX2xk8PcSycis136rASEKSv558XvTZu",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						},
+						"secretKey": "0xc0357e4b76de38fd39b503a8c02ad24600331279c38d53e920d42a9413d8394312ab372d58537dd3e23a5ad6f684ee804fe18b3cad90bcafbfc7afc4f60a52b1"
+					},
+					"random": [
+						"0xea2475a107ae8b358b93d8de2b8ebee7"
+					]
+				},
+				{
+					"suri": "",
+					"result": {
+						"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						},
+						"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011"
+					},
+					"random": []
+				},
+				{
+					"suri": "garbage",
+					"error": "Re-constructed path \"\" does not match input",
+					"random": []
+				}
+			],
+			"afterLock": {
+				"isLocked": false,
+				"sign": {
+					"result": "0x1661727106868154742d724a563cd5f035b283ccd3279df349197dd17d2db50a6cf26977aca0e998072d3a7080627f7d64c4ec79f8b2f5cb29f8fcc18e40588b",
+					"random": [
+						"0x7a4874bd83a2dd11fdc58bf5e67d233c0b614235ce8f311e912a56d48bca9635",
+						"0x2ae24d42194d616b796138ee080040a0",
+						"0x0a0cd31c02bc7e1450de2094bb3a858a"
+					]
+				},
+				"derive": {
+					"result": "5FmvaVbEfhBYfNw4GxTHnV82Df5nTLeJv2VEehXXc4JbuQCS",
+					"random": [
+						"0xb7141470b6395922b4e6ba2745f59a82"
+					]
+				},
+				"jwtIssue": {
+					"result": "eyJhbGciOiJzcjI1NTE5IiwidHlwIjoiSldUIn0.eyJzdWIiOiIweGQ0MzU5M2M3MTVmZGQzMWM2MTE0MWFiZDA0YTk5ZmQ2ODIyYzg1NTg4NTRjY2RlMzlhNTY4NGU3YTU2ZGEyN2QiLCJpYXQiOjE3NTAwMDAwMDAsIm5iZiI6MTc1MDAwMDAwMCwiZXhwIjoxNzUwMDAwMzAwfQ.ULGT3lzJTk7a8ZdNJys4OGnZJgniBA2n8CZK_2I79CVbSkVU2JJ-EHNY02u438IM5tdd-zIeXqvzwlNZb4U7jw",
+					"random": [
+						"0x5ab730396cf82d7371613a980bb4c7e03ae499ef46a5cbe1bb8cc90562127296",
+						"0x407a215c2cda3f0a488c49ab3708c1f5",
+						"0x68ae82d1cb1ae547d765b1f5819d0b93"
+					]
+				},
+				"vrfSign": {
+					"result": "0x58a8317fb9739abbd942d0627dac50f5a7dfbc2a0c592670e20e84298df9e154ce262cc028ce42716364154f2a3f3dc2c45f857092d6820a8f36188db4a4d309e6156dfe96c0b970fccaceac186e9f3eb65e625d61c5300ac840aaabae272b0f",
+					"random": [
+						"0xebc3a66f340b9de2b8383375c65e237b454ba7a8da73eca786f7008c622d3f86",
+						"0xfb662f191f15d3f9af39d51e97ff3c28",
+						"0xbd7e09fb68afa67d6f9716d8bbb0a8a6"
+					]
+				},
+				"unlock": {
+					"error": "No encrypted data available to decode",
+					"random": []
+				},
+				"toJson": {
+					"result": {
+						"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+						"encoding": {
+							"content": [
+								"pkcs8",
+								"sr25519"
+							],
+							"type": [
+								"none"
+							],
+							"version": "3"
+						},
+						"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+						"meta": {
+							"isTesting": true,
+							"name": "alice"
+						}
+					},
+					"random": []
+				}
+			},
+			"meta": {
+				"isTesting": true,
+				"name": "renamed",
+				"extra": 1,
+				"more": [
+					1,
+					2
+				]
+			}
+		},
+		{
+			"label": "uri //Bob",
+			"state": {
+				"publicKey": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+				"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+				"isLocked": false,
+				"meta": {}
+			},
+			"signs": [
+				{
+					"message": "hello",
+					"withType": false,
+					"result": "0xb8f5854b647506e6cbcd713008233b622831fba1eff8dc6397b51839eef7ed1ee793c9c641f5f9a632d0d96cfd6d04327f08d99edddf78f97fe0884ce22fcf89",
+					"random": [
+						"0xb5cca7080eb4471b176b1d8fb9de56138b76f6ba14afa153bcaf4d0598b31136",
+						"0x5d0431afcf6f5e830913365e6517cbaa",
+						"0x9863c4ccdc2a5e9b7df3e860232776a3"
+					]
+				},
+				{
+					"message": "hello",
+					"withType": true,
+					"result": "0x011659faef0d60fe58852e09706281f27959b035aad72bfc73c54e4df7bd932074e0318dc085a8b12cd42915146e39424a6cf7cb8d5d5ec396de5e4f7adc5da28f",
+					"random": [
+						"0xec2362308749fa5d1b615dc73ebeb6b65f394f2fd50bad3df4d809274a3d9c2a",
+						"0xf0d9b9a3b37793528594e7cbf6773068",
+						"0x9b9a135d5c9766df4901597c867adb8c"
+					]
+				},
+				{
+					"message": "0x1234",
+					"withType": false,
+					"result": "0xdacf656a1459b932fadd5159f31cb1ce14f231c086232453d7f918e0c55e8a689daacec72c7930bfd41bf5b14b267c83892b5c83599b4d321ffad4af8fa9f180",
+					"random": [
+						"0xb07cd9730b2574a44e7bbe4eb6f4a57a53d067cf15132337f7a97c0022be6788",
+						"0x1ec287ecb022ab3366210f33338e2440",
+						"0x0d5faa6d41f853566a56238803658cb2"
+					]
+				},
+				{
+					"message": "0x1234",
+					"withType": true,
+					"result": "0x01c0bec28d29f083060ca9fda65df84271677fe011d85411e91ca4a662ddde3c61068e3ec6f727341da7e1b176ca737e66f9e2415f0378fd354d58d4bbfefdd28d",
+					"random": [
+						"0xd19e51dd3703a08f83b683d1de1b24cf1051c16f928f3ef8760ae52ab27cd170",
+						"0xcec0f6883454e7343be6c55c8c8b80df",
+						"0x5b0ba8692f03ec31cc9d7afe0d6498aa"
+					]
+				},
+				{
+					"message": "",
+					"withType": false,
+					"result": "0xd28e157314360d47313e392695680f2a4809d713ed11a0994c637a28bb4faa63cd8619f54d1823ebe0599e1ee1a58133e4fb4f666d9d0988c875926020b52086",
+					"random": [
+						"0x76b4597c34387cd31d1903b23754ba3f85c987aa878521e584c8200740af4287",
+						"0x70d0d65e43b5f88daa4a4d4ed82b98b8",
+						"0x077d790da0057e4cd9d6734751bcc985"
+					]
+				},
+				{
+					"message": "",
+					"withType": true,
+					"result": "0x01363e8c4b295d50be4831f94adf103385b1ca614baf7c05a8ce782a486439f34a5e341b267562e8697d3d0ee3ffd81ae07b94f2b530e8e9055d8aa5cefc3cf88d",
+					"random": [
+						"0x4e00d28669804ab0720eaed92e9e06625e7e3c393d4cf8512382ca04aeffe7f7",
+						"0x64aeb81f18994905be5a2df7b597a160",
+						"0xbc1903709e2d1b91842f419aa68c6eae"
+					]
+				},
+				{
+					"message": "0x",
+					"withType": false,
+					"result": "0x40105101dd9374e0a8426d18896433a68d96116ce40c0c629736c89d861bf80323af915a39c793c15f733a4b2682350f50c24d0a128844f18f7f4d13f4273386",
+					"random": [
+						"0x6f811d57dd41cece52b33a9be2f38e521f1038abb988015f683ece9d7b87a2e5",
+						"0x7c9b1f29078015d503e3fe052600a041",
+						"0x4dbc442e6647d60caf6fb9960fcc8c3b"
+					]
+				},
+				{
+					"message": "0x",
+					"withType": true,
+					"result": "0x01742460fae333db4f7165338373348e410cc66d08bd9001a92857937d53488a553c94b60a7ed4050d7ca80eeb798a00f9e0c907350e6f63c48c968565222a9e80",
+					"random": [
+						"0x9c213d40ceceb0e94625bfe1cc56f2e71f63d94d9a5636d3baf068739da13e65",
+						"0x27e182804acdd50ce56bb3c064dc261a",
+						"0xe6ca08f8cb35b8d41c1305626d4806a0"
+					]
+				},
+				{
+					"message": [
+						1,
+						2,
+						3
+					],
+					"withType": false,
+					"result": "0x2202cbd35a719f83d45232ed7b98b91786708a8177521e29f6700974fcc2e43568926a7ff0e37a810635dca374cf56a69848fb44d5699c7f983ccf19b97bda8b",
+					"random": [
+						"0x6114e1c3837ee9be34f54335a5a1eba920ec6aed4cc48178de411525ab16dda7",
+						"0xdceeb0ba4472ba7e06c0f3da65bbfd04",
+						"0x487cebad35332af01e2448d3368f4fd2"
+					]
+				},
+				{
+					"message": [
+						1,
+						2,
+						3
+					],
+					"withType": true,
+					"result": "0x0148682ef37689c1f45a614acb50a91807b196c52e28fae47dc661722b254e905af16a8e8e146208968fca6107a6ff88eeff86da0bca9d3b008c17ab6093b8c08d",
+					"random": [
+						"0x6345294a99658c035bacdbb8124b1635016639fb8cdfa5730dab5403169e1c98",
+						"0x979dd32364987ad4891d8836b35d03fb",
+						"0x1a384cd3143529016fee546364d4047e"
+					]
+				},
+				{
+					"message": [],
+					"withType": false,
+					"result": "0x2462e2d01f05d17bc3aecfbe66bbc7290e731bdc5932624af03aba1f404deb644ffdfaa816c95b108b774f9381739a6e92331df7fc887a0234298af84a88bb87",
+					"random": [
+						"0x8eb7949fb297a45df34769e46a77eaf13e173a55455b723bf2d01370af694184",
+						"0x104fa83af3f15bd332a153669bbd1b4e",
+						"0x8660577547eb2ed5c615bfcbcd11cd62"
+					]
+				},
+				{
+					"message": [],
+					"withType": true,
+					"result": "0x01fce8a54242e25645012fefb700fa17a4160c00e69ff914bb7493b56d62b95b6fefedf5cbcf301ec4047d0ae20608e2cc39fb6864d1c01c10fe2f1c8964957186",
+					"random": [
+						"0x51a738a6fc2950470fcecbc91b815f2bfe22c8ff88aad034edc0ae85f7552cf9",
+						"0x8c3b1bb2e2af70b3df5115f665a5a6e9",
+						"0xe4592bb9380b4d3a4bcb6773f7dd7b9d"
+					]
+				}
+			],
+			"verifies": [
+				{
+					"message": "hello",
+					"signature": "0xb8f5854b647506e6cbcd713008233b622831fba1eff8dc6397b51839eef7ed1ee793c9c641f5f9a632d0d96cfd6d04327f08d99edddf78f97fe0884ce22fcf89",
+					"signer": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+					"result": true,
+					"random": [
+						"0x1a7c72fb3cee61d7a2a777ed0c27fcdc"
+					]
+				},
+				{
+					"message": "hello",
+					"signature": "0xb8f5854b647506e6cbcd713008233b622831fba1eff8dc6397b51839eef7ed1ee793c9c641f5f9a632d0d96cfd6d04327f08d99edddf78f97fe0884ce22fcf89",
+					"signer": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+					"result": false,
+					"random": []
+				},
+				{
+					"message": "hello",
+					"signature": "0xb8f5854b647506e6cbcd713008233b622831fba1eff8dc6397b51839eef7ed1ee793c9c641f5f9a632d0d96cfd6d04327f08d99edddf78f97fe0884ce22fcf89",
+					"signer": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+					"result": true,
+					"random": [
+						"0xa3b9ea4d5600bde1ec1c654bec76dae1"
+					]
+				},
+				{
+					"message": "hellO",
+					"signature": "0xb8f5854b647506e6cbcd713008233b622831fba1eff8dc6397b51839eef7ed1ee793c9c641f5f9a632d0d96cfd6d04327f08d99edddf78f97fe0884ce22fcf89",
+					"signer": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+					"result": false,
+					"random": [
+						"0xb4ef60e5672dd8dc13f2836ede70ee25",
+						"0x197fbd6f08752a046cffdece91eb5efd"
+					]
+				},
+				{
+					"message": "hello",
+					"signature": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+					"signer": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+					"result": false,
+					"random": []
+				},
+				{
+					"message": "hello",
+					"signature": "0x00",
+					"signer": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+					"error": "Invalid signature length, expected [64..66] bytes, found 1",
+					"random": []
+				},
+				{
+					"message": "hello",
+					"signature": "0xb8f5854b647506e6cbcd713008233b622831fba1eff8dc6397b51839eef7ed1ee793c9c641f5f9a632d0d96cfd6d04327f08d99edddf78f97fe0884ce22fcf89",
+					"signer": "not-an-address",
+					"result": false,
+					"random": []
+				},
+				{
+					"message": "0x1234",
+					"signature": "0xdacf656a1459b932fadd5159f31cb1ce14f231c086232453d7f918e0c55e8a689daacec72c7930bfd41bf5b14b267c83892b5c83599b4d321ffad4af8fa9f180",
+					"signer": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+					"result": true,
+					"random": [
+						"0x850947348ea9d9f839367164c2029af8"
+					]
+				},
+				{
+					"message": "0x1234",
+					"signature": "0x01c0bec28d29f083060ca9fda65df84271677fe011d85411e91ca4a662ddde3c61068e3ec6f727341da7e1b176ca737e66f9e2415f0378fd354d58d4bbfefdd28d",
+					"signer": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+					"result": true,
+					"random": [
+						"0x3250a170c90083c2f9cba69e6801a38f"
+					]
+				}
+			],
+			"vrfs": [
+				{
+					"message": "hello",
+					"context": null,
+					"extra": null,
+					"signed": {
+						"result": "0xe0f34442f72f1517b0a3bc5ea9bf9ad97c1f97da6cfd0a62667fcc6d07f01d7d353118972344aea7e0eb933715d03bfeba0dfec1ef7fa84a5a77157b27031806115f05d4e4bd02ba05e05058f11026af7eb5eb5488182ab414e1f0ed62dbde07",
+						"random": [
+							"0x40d180405f3be22928a6da95e73a26ad23bdb805d0bde87c7471eb19b37c8673",
+							"0xe2945f892e274e216b00dabaefa19610",
+							"0x042a4c01b25b0b6f27af99b5a20ab4d9"
+						]
+					},
+					"verified": {
+						"result": true,
+						"random": [
+							"0xa4d42caaafcd93d298242775c38dcc8b"
+						]
+					},
+					"tampered": {
+						"result": false,
+						"random": [
+							"0xfdd6274f97852eb23ec05739f0ce4f19"
+						]
+					}
+				},
+				{
+					"message": "hello",
+					"context": "ctx",
+					"extra": null,
+					"signed": {
+						"result": "0x4843752b32fe21008ac33dc31fa05004171293a4aafc7d29e062a5c147357002e36ebf2ea9f5729dffc416ca4ce2788926774763bcd79938c10bb62fdc12b50ba7afc9f468b860a146e7945aa451dcb659585d913c5877e67e12d0c579f1d20f",
+						"random": [
+							"0xf8032b0c8a99eb698e1b3a336ca312e7720d4648a75821062dc13fd962baf569",
+							"0x011579c58ea393a9495a7122a680aafb",
+							"0x8a5e74d91467ee6bd8eebd94ee9976c4"
+						]
+					},
+					"verified": {
+						"result": true,
+						"random": [
+							"0x198ce93d06e8c9db884e45e7220327ec"
+						]
+					},
+					"tampered": {
+						"result": false,
+						"random": [
+							"0x8ea66cc8d82f958cfd345271ad27ead4"
+						]
+					}
+				},
+				{
+					"message": "hello",
+					"context": "ctx",
+					"extra": "extra",
+					"signed": {
+						"result": "0x4843752b32fe21008ac33dc31fa05004171293a4aafc7d29e062a5c147357002947d6d3f2272a78f60667ecc01c3489a8dfff87739e31b16f31e075ae0a0e7049ac9d92cc7bcdfaf450ceb255100ff0eb2c2aebefee77b4da044284f63170a02",
+						"random": [
+							"0xa0b688881bba96ab8dfc0feb4d223bfe063be27e5b6473ffebfe4a83a1856a00",
+							"0x973a1eb8579c39e51273afe640d4b0c2",
+							"0xb64d88001370d420c97a046237a3fd8a"
+						]
+					},
+					"verified": {
+						"result": true,
+						"random": [
+							"0x093b8610939a2dc193df2b2c38963912"
+						]
+					},
+					"tampered": {
+						"result": false,
+						"random": [
+							"0xcb58e48618e7ea4e95b4f87002d6e2c5"
+						]
+					}
+				},
+				{
+					"message": "0x1234",
+					"context": "0xabcd",
+					"extra": "0x",
+					"signed": {
+						"result": "0xde9f5f57292cdcad483fa06c5439097fe718026ead48e7481b1d0d7945a6c46087384df02d9dd20b647a50dfcc734607a595d8737fc92e4e62ba7ef479403308c15e8be99ff7df91a8bb04b1cfecd680883dc14b6af48d49861ba067513d3b09",
+						"random": [
+							"0x157f77852e6c1f3abe4cc4c628b2e6e27d9189e17fcda526f9fcc24a41c30ab8",
+							"0x096133317b96cc51bcf8272ffd14ef0e",
+							"0x18e713c23339ac071694999fe6e1e974"
+						]
+					},
+					"verified": {
+						"result": true,
+						"random": [
+							"0xe0763c778917b6aa8a1c7a8c3b34757d"
+						]
+					},
+					"tampered": {
+						"result": false,
+						"random": [
+							"0x1e8ef9f29d416afc7070131f97f623ae"
+						]
+					}
+				}
+			],
+			"jwts": [
+				{
+					"options": null,
+					"claims": null,
+					"issued": {
+						"result": "eyJhbGciOiJzcjI1NTE5IiwidHlwIjoiSldUIn0.eyJzdWIiOiIweDhlYWYwNDE1MTY4NzczNjMyNmM5ZmVhMTdlMjVmYzUyODc2MTM2OTNjOTEyOTA5Y2IyMjZhYTQ3OTRmMjZhNDgiLCJpYXQiOjE3NTAwMDAwMDAsIm5iZiI6MTc1MDAwMDAwMCwiZXhwIjoxNzUwMDAwMzAwfQ.4jeO1qWV_eCdrFAxREAt69f8x5WukF14R1rQBd2uKgYyWjJqUVFRlYDu1YOeTdAGrMNxXh1Vzwei2mz1Y8lWjw",
+						"random": [
+							"0x1b78121d1b04dc30fa5a650b97d8b7eee1181b763f52b290bc90a8b497103d94",
+							"0xdc9023209757684e7c2544e637f944f5",
+							"0x39c39958ac57c4af7e3d9494f35be495"
+						]
+					},
+					"verified": {
+						"result": {
+							"isValid": true,
+							"crypto": "sr25519",
+							"publicKey": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+							"isWrapped": false,
+							"payload": {
+								"sub": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+								"iat": 1750000000,
+								"nbf": 1750000000,
+								"exp": 1750000300
+							}
+						},
+						"random": [
+							"0xd9a88b8694bdbdad05d42b20a289068b",
+							"0x3d2dbd8912dffc55d6ad9cccdac25994"
+						]
+					}
+				},
+				{
+					"options": {
+						"expiresIn": 60
+					},
+					"claims": {
+						"sub": "user"
+					},
+					"issued": {
+						"result": "eyJhbGciOiJzcjI1NTE5IiwidHlwIjoiSldUIn0.eyJzdWIiOiIweDhlYWYwNDE1MTY4NzczNjMyNmM5ZmVhMTdlMjVmYzUyODc2MTM2OTNjOTEyOTA5Y2IyMjZhYTQ3OTRmMjZhNDgiLCJpYXQiOjE3NTAwMDAwMDAsIm5iZiI6MTc1MDAwMDAwMCwiZXhwIjoxNzUwMDAwMDYwfQ.6rlNrLwy4aZ5v1Y609HLfaKqduZ5T7Cfi5Rt3BEwL3Yrg0UN_fnpUtrpytaNr364FqqNMYrtM8QAZ47YB5rdiQ",
+						"random": [
+							"0xe99d53d20f4e27cb6270fd12eb0038e3fc7eacff7d94c5018aff971f713b442c",
+							"0xa1cb733c84c03aeadd32b6fa62250723",
+							"0x6e54fb8061fe95a0ec9b7cd9b5400f33"
+						]
+					},
+					"verified": {
+						"result": {
+							"isValid": true,
+							"crypto": "sr25519",
+							"publicKey": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+							"isWrapped": false,
+							"payload": {
+								"sub": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+								"iat": 1750000000,
+								"nbf": 1750000000,
+								"exp": 1750000060
+							}
+						},
+						"random": [
+							"0x3dab4485d0e296ad70f93fdc28b257f9",
+							"0x04e3d438ccf0e6ebf31fa5540b3a1a83"
+						]
+					}
+				},
+				{
+					"options": {
+						"notBefore": 1750000010.123
+					},
+					"claims": {
+						"a": "1",
+						"b": "2"
+					},
+					"issued": {
+						"result": "eyJhbGciOiJzcjI1NTE5IiwidHlwIjoiSldUIn0.eyJhIjoiMSIsImIiOiIyIiwic3ViIjoiMHg4ZWFmMDQxNTE2ODc3MzYzMjZjOWZlYTE3ZTI1ZmM1Mjg3NjEzNjkzYzkxMjkwOWNiMjI2YWE0Nzk0ZjI2YTQ4IiwiaWF0IjoxNzUwMDAwMDAwLCJuYmYiOjE3NTAwMDAwMTAsImV4cCI6MTc1MDAwMDMwMH0.xqblnTukM7YjwLLXINSH6JORqXgDeUCVNDi7BttUoRBdB-VCfsTMkWb5HtVU25haLLkYCJwntT4YHp2gnQ-2gw",
+						"random": [
+							"0xcff206a1a0d98d1b1616132e639158e048b20021bb3a31145400af013a1968e5",
+							"0xfec3419648eb6109545381d85e4bdb5d",
+							"0x430735065e631a79886e8b88409f16e3"
+						]
+					},
+					"verified": {
+						"result": {
+							"isValid": false,
+							"error": "JWT not valid yet",
+							"crypto": "sr25519",
+							"publicKey": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+							"isWrapped": false
+						},
+						"random": []
+					}
+				}
+			],
+			"exports": [
+				{
+					"passphrase": null,
+					"encodePkcs8": {
+						"result": "0x3053020101300506032b657004220420081ff694633e255136bdb456c20a5fc8fed21f8b964c11bb17ff534ce80ebd5941ae88f85d0c1bfc37be41c904e1dfc01de8c8067b0d6d5df25dd1ac0894a325a1230321008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+						"random": [
+							"0x4341d17f57bec3dd5900800d63b96cc4",
+							"0xc4d1bf161d12596f96e391a8a64f3e70"
+						]
+					},
+					"toJson": {
+						"result": {
+							"encoded": "MFMCAQEwBQYDK2VwBCIEIAgf9pRjPiVRNr20VsIKX8j+0h+LlkwRuxf/U0zoDr1ZQa6I+F0MG/w3vkHJBOHfwB3oyAZ7DW1d8l3RrAiUoyWhIwMhAI6vBBUWh3NjJsn+oX4l/FKHYTaTyRKQnLImqkeU8mpI",
+							"encoding": {
+								"content": [
+									"pkcs8",
+									"sr25519"
+								],
+								"type": [
+									"none"
+								],
+								"version": "3"
+							},
+							"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+							"meta": {}
+						},
+						"random": [
+							"0x5fe3bfdd96064801e16c284b4ab55979",
+							"0x21ba39376323f095f2090a677259ba8d"
+						]
+					}
+				},
+				{
+					"passphrase": "",
+					"encodePkcs8": {
+						"result": "0x3053020101300506032b657004220420081ff694633e255136bdb456c20a5fc8fed21f8b964c11bb17ff534ce80ebd5941ae88f85d0c1bfc37be41c904e1dfc01de8c8067b0d6d5df25dd1ac0894a325a1230321008eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+						"random": [
+							"0xaf2c9cafb8d438a228b7be22d04fb943",
+							"0x9c607622d252c25c4a28d203ef4cd4fd"
+						]
+					},
+					"toJson": {
+						"result": {
+							"encoded": "MFMCAQEwBQYDK2VwBCIEIAgf9pRjPiVRNr20VsIKX8j+0h+LlkwRuxf/U0zoDr1ZQa6I+F0MG/w3vkHJBOHfwB3oyAZ7DW1d8l3RrAiUoyWhIwMhAI6vBBUWh3NjJsn+oX4l/FKHYTaTyRKQnLImqkeU8mpI",
+							"encoding": {
+								"content": [
+									"pkcs8",
+									"sr25519"
+								],
+								"type": [
+									"none"
+								],
+								"version": "3"
+							},
+							"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+							"meta": {}
+						},
+						"random": [
+							"0x6ef9568ab391c4bd3532eb8ed7ab223b",
+							"0x584779247f292d9e3530daade024dfed"
+						]
+					}
+				},
+				{
+					"passphrase": "testing",
+					"encodePkcs8": {
+						"result": "0xc63cd254bd9a897b66b6ec51d7325ab16f1b057b3febadb41bf134a9cd4df812008000000100000008000000a37227fd0512f8dad248d179d29c48fa661faef5362b8d50cfb74bda21898399891dbcf15f56f96d0131d681f5da87de5da35653783cc382e227ac9ac2311541501c669b93affb25f6ff24bbc042ac96885f876346be3b2ff2bf5aa8f5b0b7c91f22aeca86300b4f62743b88ae32fe0d6798d8484fc9bf914459e5644c970e2dd9b83cad11b619803fda07743f4c9592396d9e85239e9e5c9369559933",
+						"random": [
+							"0xcdea3381310a92d860b7c967c1c97f78",
+							"0x1438363ca4bfba575b8f2913958c60b3",
+							"0xc63cd254bd9a897b66b6ec51d7325ab16f1b057b3febadb41bf134a9cd4df812",
+							"0xa37227fd0512f8dad248d179d29c48fa661faef5362b8d50"
+						]
+					},
+					"toJson": {
+						"result": {
+							"encoded": "j42aW2YWxqKosR2u4Y0OLk+VMTV27P26A2ctmLfLvk8AgAAAAQAAAAgAAADTMK5xPfv4F9pgFllQ1s21DX8RiOHFIQTKddn922Efb89073ruFKQp8Aed1AIKdaGxJBL/a4mZGKx2JYC2elwRkwd6mFMatFDCq56V0Zdx4h26kh3lw0kAUbH48Xv9hbUWpRNbGrZbgUyJ7j+2pzP25dEv+8FCqX0Uygk2BYQ3RGdeUqitbw+AYVkEgNy8cUjV64JNUlMJeGJ1npUm",
+							"encoding": {
+								"content": [
+									"pkcs8",
+									"sr25519"
+								],
+								"type": [
+									"scrypt",
+									"xsalsa20-poly1305"
+								],
+								"version": "3"
+							},
+							"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+							"meta": {}
+						},
+						"random": [
+							"0x1d6275dd0786b112f82ec00b9a374a56",
+							"0x13c9c29d0c8ba07c62fc02dcffd2e6da",
+							"0x8f8d9a5b6616c6a2a8b11daee18d0e2e4f95313576ecfdba03672d98b7cbbe4f",
+							"0xd330ae713dfbf817da60165950d6cdb50d7f1188e1c52104"
+						]
+					}
+				}
+			],
+			"derives": [
+				{
+					"suri": "//hard",
+					"result": {
+						"publicKey": "0x2a706da0209af24780e246b72104bbed9c79fb74ad100e8570c3e98a073b5d1a",
+						"address": "5D2MGQgUs5yKMRcNyRJcpABHLiQKzTdQHehzUojJtTWiyWfq",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						},
+						"secretKey": "0x707f6cbcb2662bdd456d9ec409123c58e47f36f1782b35ad43f45cec6bbc1c6f4985de812013379f8aa92675290bcecc90cf6302cd160f89603ffda6f5b8baab"
+					},
+					"random": [
+						"0xcb4f921071504c7ff115d6e500353b5f",
+						"0xa1e415f9811fa170435a9a850448ec83",
+						"0x60cb75f8a9a4fb57f6d33103995d2328"
+					]
+				},
+				{
+					"suri": "//hard//deeper",
+					"result": {
+						"publicKey": "0x94e7e6db5966b94bf8f2c1adc9636e143d002122c4f4ad956bb00dc1d8deb432",
+						"address": "5FRwqHXdAd4B9PeekVHhdietm6ekTRFmEgQUvVsCCbc7eM6q",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						},
+						"secretKey": "0x607cfd6c094859f234229e8ec3d20185c5d04858c6114ab0085d1554b142b46666ad3707bc27dd407da85da8b62140e2f2663e8054f41f39eaa573998ffa8bb2"
+					},
+					"random": [
+						"0x7e96214ef39f6b89edd8ebb4591379db",
+						"0xd693a866e205c5b36cd2686b8cda4359",
+						"0xd515ca09087600bdf662c2e6f7472420",
+						"0x7379a5d2ccc7638d71ba72115d691b0b"
+					]
+				},
+				{
+					"suri": "/soft",
+					"result": {
+						"publicKey": "0x3e942c3ae1c726d1bd59bacc3654969143bbc7143a72b0b7194002afb1ad1d36",
+						"address": "5DUkqpVPduPrtphzaV3dbheRtas5FbvYyF1fFYetpD8M3bvG",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						}
+					},
+					"random": [
+						"0xb626e7d418fdf9d8a8579d091fddf95f",
+						"0x4a144598c74263226c8982cbf6efc53e",
+						"0xf24d44656374b234dd9683c1fa1ba5a620fca9a23204810a571c7d32407502cc",
+						"0x14c09bb6343dd6ce69bc838177cb9d4f",
+						"0x97a1bfdde7f81d208fcfe500cbb85f7d"
+					]
+				},
+				{
+					"suri": "//1",
+					"result": {
+						"publicKey": "0xb0fcee8ae518c44e9deeeb4ae5a0b8539fcbf03044feda682762f682c3daac7d",
+						"address": "5G4mRPYAih1p3RrLtYwvgghZxM66qLAdgj9dJWfFBCKMigzG",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						},
+						"secretKey": "0x18fa758c4bf34b69f9b50289c7d027d22f2ff52421ac1afe86353c4a1949d27745bd524ad9ac03843e48649fef2eb3eabc743c3dbfd33dc4ce1bbfa6d0075d30"
+					},
+					"random": [
+						"0x7035bace9b837419312ad8cc0a1d6575",
+						"0x3e71ce123b5ca51aa1468b65a4552c1f",
+						"0xf4a1c22886d07f6ec319b47d45cf15c8"
+					]
+				},
+				{
+					"suri": "",
+					"result": {
+						"publicKey": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+						"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						},
+						"secretKey": "0x081ff694633e255136bdb456c20a5fc8fed21f8b964c11bb17ff534ce80ebd5941ae88f85d0c1bfc37be41c904e1dfc01de8c8067b0d6d5df25dd1ac0894a325"
+					},
+					"random": [
+						"0xf3c8301714c435426760a74b56ec9ade",
+						"0x7082f74c6e6c8b1e5f08e2e807b16e3a"
+					]
+				},
+				{
+					"suri": "garbage",
+					"error": "Re-constructed path \"\" does not match input",
+					"random": [
+						"0xd9b1359c4a17fc635edac6764acda7b9",
+						"0xe295765b98e1bce3f2aacc7431f223db"
+					]
+				}
+			],
+			"afterLock": {
+				"isLocked": true,
+				"sign": {
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				"derive": {
+					"error": "Cannot derive on a locked keypair",
+					"random": []
+				},
+				"jwtIssue": {
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				"vrfSign": {
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				"unlock": {
+					"error": "No encrypted data available to decode",
+					"random": []
+				},
+				"toJson": {
+					"result": {
+						"encoded": "MFMCAQEwBQYDK2VwBCIEIKEjAyEAjq8EFRaHc2Mmyf6hfiX8UodhNpPJEpCcsiaqR5Tyakg=",
+						"encoding": {
+							"content": [
+								"pkcs8",
+								"sr25519"
+							],
+							"type": [
+								"none"
+							],
+							"version": "3"
+						},
+						"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+						"meta": {}
+					},
+					"random": []
+				}
+			},
+			"meta": {
+				"name": "renamed",
+				"extra": 1,
+				"more": [
+					1,
+					2
+				]
+			}
+		},
+		{
+			"label": "seed",
+			"state": {
+				"publicKey": "0x6a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+				"address": "EyPZqnqp5EDhERSPsmpVw61JcMpfqaYz8vSHew58SBT9tji",
+				"isLocked": false,
+				"meta": {}
+			},
+			"signs": [
+				{
+					"message": "hello",
+					"withType": false,
+					"result": "0x38fc9a3ebddc85c78ec1a4ffb656ec52be22519eaef97afd2a0065293840406029363f1b457674de2db00267c3ca8e6dde170070bd13f92b3b016743ced4d082",
+					"random": [
+						"0x08321f0562c1cf25cc39a62a1178ff23521b8ec9e5181e3305b6c8d305a00d9e",
+						"0x8364a96d7d6e9ba40d116b1f48a431cd",
+						"0xdab1fe96049e5ac5da81357a8568f66f"
+					]
+				},
+				{
+					"message": "hello",
+					"withType": true,
+					"result": "0x018a7cb719ff2bdbcd8761c88f82e8583ed7b4fb37a1ab36a9658709f59a1fb80b526204cd416906c12be9e76a7601cce9aac48547550ee93ecb7691d4519ef78f",
+					"random": [
+						"0xb61443a48023558f316972dc34ef37d2c889218d1fc66aaffe519d0300f41d57",
+						"0x93ec7eb31dadf43571bc25ab8c4096ac",
+						"0x28f6614e1a5ffb5e30e82db5f911a4b6"
+					]
+				},
+				{
+					"message": "0x1234",
+					"withType": false,
+					"result": "0x5400763b297d97e3342c07c65c7fae9d50c17b0e237bd754a58acb918b3e722b79a03299af2c523877cc600f95a57a657b3b7852b9bfc3a3eacc198e3efd8a8d",
+					"random": [
+						"0x7de9d4c475948f402ccbd405bdeb088731309a608a0323a2fe69afde0df6bb9c",
+						"0xf59b94eea5ca785176bb1050eaa65386",
+						"0xd2397c3b87d901744019b0008b9829fe"
+					]
+				},
+				{
+					"message": "0x1234",
+					"withType": true,
+					"result": "0x01d0920457ba0eed5ab589d1a0c5e406f7c9773637b8b57f5a0d93a86ed0a8e4146b7a1822060024b3704a06387826ef8a5a006d6d69c86157b53d6c7234bd3b8c",
+					"random": [
+						"0xc3964991a1e9d79fd3ff6440e5dcc0821b87f8a5fac0abfc553ff5cc0d5d6de3",
+						"0x49388eccb9fe256d9528a260466246ad",
+						"0x3c04d3bb1b43100a860a62340e9260e7"
+					]
+				},
+				{
+					"message": "",
+					"withType": false,
+					"result": "0xea317b9038d11a019e82206c6b3ccfce6f004bfc1d02104583adde4089898b1ae13e41f2db3acf3029564d994949a2418236e270a44a25d34204bd4ca7c3d585",
+					"random": [
+						"0x9b46bab1c48c46b40d7086974813fa88a415b7f4e36b69ed685e8bcdf9ce319e",
+						"0x01fa694fcbcf9388498ab52d48878062",
+						"0xe45db996977ed96d65bf060a1b95491e"
+					]
+				},
+				{
+					"message": "",
+					"withType": true,
+					"result": "0x01181ebcc5c3f346675191a3da0333b3b5e8a66b35b217378c371874705dd5980f0ec38b8fcae27e11f11ae4750486c8c56d08a671080c936a7c8b6bbb3aafe689",
+					"random": [
+						"0x615e7f51c60beb811d92cee67ecefb7268411fa9c48137a01221669f29085366",
+						"0x23cfd62355b9c872c9c6b713c8e9c1f6",
+						"0x9d130b2753394d99776e6cffb28a01cf"
+					]
+				},
+				{
+					"message": "0x",
+					"withType": false,
+					"result": "0x74452398fb83b78da683b1a1821320cb32bd33df2784dd1aa656f536d9ec3553cb28d89a7a52185cb82e689071697d14b73d07bf3f447eb573b5ec372a6c0288",
+					"random": [
+						"0x4f6a1bfcd3be8f4a0a7f1de8083e3e229063f2285c4597e56507689e3304a50e",
+						"0x03db49147f64cd91e34bc5273e163b59",
+						"0x3668822afd246a3fc6c3bac8d67accaf"
+					]
+				},
+				{
+					"message": "0x",
+					"withType": true,
+					"result": "0x01ae54defa386910ad41d058686343485a365ee04e1c1bb7af9e2660a26c36510fc5ebeea3efa8d4290c73a64ef102d1c930c27221968aeeeb3b06712bb5285b84",
+					"random": [
+						"0xfefb75c170453b5ef87bdbfaf65b4bcc860618192aacda916378d64f9b9302a9",
+						"0xb86923fc0d4194ec17ceb36332155f91",
+						"0x75572d935002415449a1c1cad06bc979"
+					]
+				},
+				{
+					"message": [
+						1,
+						2,
+						3
+					],
+					"withType": false,
+					"result": "0xb62b98e92ca78634b780113aaf3a49183b821d4763d2bf891a40a5b2e1dd3e7036d1b5f7df38792ac18c15a977a05c8ab5dbdd3028c2e7635b7e238b88aafe82",
+					"random": [
+						"0x977fa174ea82d2fc1b167c982524a4afe74374618ec0953422dfbdd89cabc05f",
+						"0x407908bd3bb0ba6ed04977dff93afa91",
+						"0x755155dcd064821d6da7ae79f9906a82"
+					]
+				},
+				{
+					"message": [
+						1,
+						2,
+						3
+					],
+					"withType": true,
+					"result": "0x018013443c8487fc28853386c5618ce9c57241835961c22f5df8fcf9a7f50c6666392a7320a413ece3a7d1eac4c45e60dc82c4f8bd73cda99b95e1cc08bb6ee582",
+					"random": [
+						"0xb43bd44fce626623fd29ec62e857c8b8b4856879868b2c8f61d62c32d71aa024",
+						"0x12c8adacfb0f1d191664edc05114f3c8",
+						"0xf7f8bdfbc8d56d9b01cb5e0178b3865b"
+					]
+				},
+				{
+					"message": [],
+					"withType": false,
+					"result": "0xbae7785f850e221fb7ed8ec8b075ddd3b9f35cbdcedd064741391b3b24025164efddc7e78af2923a71ce41f255cf0f13d18c0f7093014e3c914ddc96bdf5f686",
+					"random": [
+						"0xf3356436ad6d97afb4993c80ce84a4102b90b5550fe0b07ee5bdc8e946e685f6",
+						"0xd6229f80834da16f72a3206fdbd6681e",
+						"0xa676cd616cb03fe76de35b16ab180667"
+					]
+				},
+				{
+					"message": [],
+					"withType": true,
+					"result": "0x013a0f2b9ee689ee3ffa17a2386cf0002ba6f8ae2df9e2fc89dd15d381f7557d6d79c9d9dff2a3d87b4f1593eb39330258d4cd64e1be63a1fd0b1613220f681882",
+					"random": [
+						"0xa49a372a3f4a9cf8a902adbbac5d14c1e9fdb33cb7d7c39c7011e1d15ccb6ae1",
+						"0xfdcb3285a9b15c55a951d4e08ea0c8ef",
+						"0xd46fb0306a65ff0593ec88ebd7506cc0"
+					]
+				}
+			],
+			"verifies": [
+				{
+					"message": "hello",
+					"signature": "0x38fc9a3ebddc85c78ec1a4ffb656ec52be22519eaef97afd2a0065293840406029363f1b457674de2db00267c3ca8e6dde170070bd13f92b3b016743ced4d082",
+					"signer": "0x6a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+					"result": true,
+					"random": [
+						"0x370105e3bdce2b70fc108f9df2cc3048"
+					]
+				},
+				{
+					"message": "hello",
+					"signature": "0x38fc9a3ebddc85c78ec1a4ffb656ec52be22519eaef97afd2a0065293840406029363f1b457674de2db00267c3ca8e6dde170070bd13f92b3b016743ced4d082",
+					"signer": "EyPZqnqp5EDhERSPsmpVw61JcMpfqaYz8vSHew58SBT9tji",
+					"result": false,
+					"random": []
+				},
+				{
+					"message": "hello",
+					"signature": "0x38fc9a3ebddc85c78ec1a4ffb656ec52be22519eaef97afd2a0065293840406029363f1b457674de2db00267c3ca8e6dde170070bd13f92b3b016743ced4d082",
+					"signer": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+					"result": false,
+					"random": [
+						"0xffab35db2d84158b99b96b71eeee6d99",
+						"0x981bdc312a4089065a080ea5c0366192"
+					]
+				},
+				{
+					"message": "hellO",
+					"signature": "0x38fc9a3ebddc85c78ec1a4ffb656ec52be22519eaef97afd2a0065293840406029363f1b457674de2db00267c3ca8e6dde170070bd13f92b3b016743ced4d082",
+					"signer": "0x6a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+					"result": false,
+					"random": [
+						"0x3b448af4d850f70d359c30786335240d",
+						"0x58bbda706fcbbf2e07126fb2ad3ea6c0"
+					]
+				},
+				{
+					"message": "hello",
+					"signature": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+					"signer": "0x6a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+					"result": false,
+					"random": []
+				},
+				{
+					"message": "hello",
+					"signature": "0x00",
+					"signer": "0x6a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+					"error": "Invalid signature length, expected [64..66] bytes, found 1",
+					"random": []
+				},
+				{
+					"message": "hello",
+					"signature": "0x38fc9a3ebddc85c78ec1a4ffb656ec52be22519eaef97afd2a0065293840406029363f1b457674de2db00267c3ca8e6dde170070bd13f92b3b016743ced4d082",
+					"signer": "not-an-address",
+					"result": false,
+					"random": []
+				},
+				{
+					"message": "0x1234",
+					"signature": "0x5400763b297d97e3342c07c65c7fae9d50c17b0e237bd754a58acb918b3e722b79a03299af2c523877cc600f95a57a657b3b7852b9bfc3a3eacc198e3efd8a8d",
+					"signer": "0x6a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+					"result": true,
+					"random": [
+						"0xcc9d615838f8db71678a4ae8a6b35e09"
+					]
+				},
+				{
+					"message": "0x1234",
+					"signature": "0x01d0920457ba0eed5ab589d1a0c5e406f7c9773637b8b57f5a0d93a86ed0a8e4146b7a1822060024b3704a06387826ef8a5a006d6d69c86157b53d6c7234bd3b8c",
+					"signer": "0x6a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+					"result": true,
+					"random": [
+						"0xf7d40c3eb8b22c16ab4cbc62518be21b"
+					]
+				}
+			],
+			"vrfs": [
+				{
+					"message": "hello",
+					"context": null,
+					"extra": null,
+					"signed": {
+						"result": "0xe45f6b90639dad3c6a7365ee4a07e7ee6ec7a35b3a8bdb118534b31d1aae8907b1bca57248d5438616a4e16f33895fa1a276a4f0778a2ce04e1560fba1897a0c09aad7babbdebd336c901c0dae7f7e2190ff763dacb08cd362207a225600860d",
+						"random": [
+							"0x264cc3379ca951c39fd42571dec2af7be3d33f940b658f820b2f5f68499941d0",
+							"0x6178eab99c9e0b5226bf5ff9a29a6c1b",
+							"0xfbe5a71dc0f679724a93a8d868be08fa"
+						]
+					},
+					"verified": {
+						"result": true,
+						"random": [
+							"0xcb600b91c7ac5f7d91959c08641cc3e7"
+						]
+					},
+					"tampered": {
+						"result": false,
+						"random": [
+							"0x72a04655c6ca6d0079a1a258b1acec1f"
+						]
+					}
+				},
+				{
+					"message": "hello",
+					"context": "ctx",
+					"extra": null,
+					"signed": {
+						"result": "0xb8ee0d633747afd38a5ac82d01c48d9b4ec47c7c1b6b6e5147eb7c2b5a40900efb92dcae2872b9019cd376f48869a6d03bc88b5da6561b3cc7e5fd77b2b1de031bd255ed20da46fb5dc480736ceb6f3d9dba599293b5621face0c1726cfb3e0e",
+						"random": [
+							"0x9a66749e2be3f227d946d519b1b61129095718938b547fc5abee1fb03a161bdc",
+							"0x159f1ce868139a63488151ca0981d1cd",
+							"0x4f51e30e551ed31444c7754c2d46a671"
+						]
+					},
+					"verified": {
+						"result": true,
+						"random": [
+							"0xe55a021a0f62bbf79a0b6325e3572ddf"
+						]
+					},
+					"tampered": {
+						"result": false,
+						"random": [
+							"0xa36a6f07c15fc25a0d06789467759493"
+						]
+					}
+				},
+				{
+					"message": "hello",
+					"context": "ctx",
+					"extra": "extra",
+					"signed": {
+						"result": "0xb8ee0d633747afd38a5ac82d01c48d9b4ec47c7c1b6b6e5147eb7c2b5a40900e5e4ad3bb382fb326bb956ca3a0d0ef0260ef6afa3202025b6f50ea3ac2a0fb05cfbec1fdd95e0e8b9e7f1e192550f17006a90f26eb5d6f08c001819cd310fb02",
+						"random": [
+							"0x3b8675fc9f47a41ebd864ddef0ae03c7b715d54a83f058afee8dc06b0eb0b17a",
+							"0x24117a2087078769c471cd54305d8430",
+							"0x62792b08f51be9a72550fcfa18f73aad"
+						]
+					},
+					"verified": {
+						"result": true,
+						"random": [
+							"0xd2c359b614edbdcfce3b50de77816a29"
+						]
+					},
+					"tampered": {
+						"result": false,
+						"random": [
+							"0x99f6d89f7bae11deedb7066a8fa11636"
+						]
+					}
+				},
+				{
+					"message": "0x1234",
+					"context": "0xabcd",
+					"extra": "0x",
+					"signed": {
+						"result": "0xc8cbcc04f806266de538803fa0c4b314c65315bb98f70011ec382e71213039280c3e51d22b020e770935ea946b71eb908f3612b93e03b5be3bed40e641513d0f3a3987ae4a6b9a44e0f0d40540b9a5c743876ad6f6fa37df44be53f20ed44503",
+						"random": [
+							"0x736fa323b92eded168ad689ff0754bf867a2f89bb8eadc3e44a23a28f6bda550",
+							"0x20a4bad029e74ef7982be4833c273889",
+							"0xec3cb73eb87097e2ab63502c8a4ab0d1"
+						]
+					},
+					"verified": {
+						"result": true,
+						"random": [
+							"0x8904f25aae3765e53650731c21365623"
+						]
+					},
+					"tampered": {
+						"result": false,
+						"random": [
+							"0x4c82fe0edb8db95bb7bd9b8bad0df155"
+						]
+					}
+				}
+			],
+			"jwts": [
+				{
+					"options": null,
+					"claims": null,
+					"issued": {
+						"result": "eyJhbGciOiJzcjI1NTE5IiwidHlwIjoiSldUIn0.eyJzdWIiOiIweDZhMTBiZTAyOWQxZWQyODM0NDY1ODcxNDVhNGY4ODUyMjU0ODliNDkwNDI0YTAzMjhkY2NlMmE0OGFlNmZlNjEiLCJpYXQiOjE3NTAwMDAwMDAsIm5iZiI6MTc1MDAwMDAwMCwiZXhwIjoxNzUwMDAwMzAwfQ.cELWIuAeSnKqIyztEzJSQLui8eIZCnVDFRmSlAef4wtlp_DogWeyjuu7mpPyIaQ7xfNa7f3DbaAlgkyaD8dRhg",
+						"random": [
+							"0xede2ac547edb701c0d20b48ae4a0d46c53d750942f28ebe792fb792c782bfb98",
+							"0x115d308ee3222468ff9406d1cd942517",
+							"0x029ba108c6b31eaa626f376982970e02"
+						]
+					},
+					"verified": {
+						"result": {
+							"isValid": true,
+							"crypto": "sr25519",
+							"publicKey": "0x6a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+							"isWrapped": false,
+							"payload": {
+								"sub": "0x6a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+								"iat": 1750000000,
+								"nbf": 1750000000,
+								"exp": 1750000300
+							}
+						},
+						"random": [
+							"0xd4e44e4ed2967282d1af71192a1b6ebd",
+							"0xdfe6602a7eb74e318e4728bcc312a13d"
+						]
+					}
+				},
+				{
+					"options": {
+						"expiresIn": 60
+					},
+					"claims": {
+						"sub": "user"
+					},
+					"issued": {
+						"result": "eyJhbGciOiJzcjI1NTE5IiwidHlwIjoiSldUIn0.eyJzdWIiOiIweDZhMTBiZTAyOWQxZWQyODM0NDY1ODcxNDVhNGY4ODUyMjU0ODliNDkwNDI0YTAzMjhkY2NlMmE0OGFlNmZlNjEiLCJpYXQiOjE3NTAwMDAwMDAsIm5iZiI6MTc1MDAwMDAwMCwiZXhwIjoxNzUwMDAwMDYwfQ.ZEK-TE2UJZzpGzKaSu6t6nUha-0MlEUF1jIkFzxxFzaAuIF6qr6Dcxg1DPS94R5V_boJRK4tkhYHmwVHJGMOhw",
+						"random": [
+							"0xbfb82375f32b40212429bc1ce0b89c957cb399a855fce4ba2738a24f158440bd",
+							"0xf4b08b467bb5d41a118454f8559cd678",
+							"0xee35f3af50c1a1c7f8b61add6e3d1784"
+						]
+					},
+					"verified": {
+						"result": {
+							"isValid": true,
+							"crypto": "sr25519",
+							"publicKey": "0x6a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+							"isWrapped": false,
+							"payload": {
+								"sub": "0x6a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+								"iat": 1750000000,
+								"nbf": 1750000000,
+								"exp": 1750000060
+							}
+						},
+						"random": [
+							"0xf204e15e065626efb6b34603f8a5df24",
+							"0x8157e7bd52d9b4c0894d160d14740bc0"
+						]
+					}
+				},
+				{
+					"options": {
+						"notBefore": 1750000010.123
+					},
+					"claims": {
+						"a": "1",
+						"b": "2"
+					},
+					"issued": {
+						"result": "eyJhbGciOiJzcjI1NTE5IiwidHlwIjoiSldUIn0.eyJhIjoiMSIsImIiOiIyIiwic3ViIjoiMHg2YTEwYmUwMjlkMWVkMjgzNDQ2NTg3MTQ1YTRmODg1MjI1NDg5YjQ5MDQyNGEwMzI4ZGNjZTJhNDhhZTZmZTYxIiwiaWF0IjoxNzUwMDAwMDAwLCJuYmYiOjE3NTAwMDAwMTAsImV4cCI6MTc1MDAwMDMwMH0.qLTQvTIKbttLaLt2vfBP80Swh0MORrU4QrTLbqH5wH_b2HQGkhf5MwHZqdMgoA-FLU-Wr6QeGu-WL0wEq8WTjA",
+						"random": [
+							"0x1a6dc0d3d6c36e6d7c4918ec15c989b9d833d123d6f4d9d78dfdead3f13accf0",
+							"0xee70b4cc7fc77ee9c745b707910755af",
+							"0x70aef203acfabb19c5e4213211c84c21"
+						]
+					},
+					"verified": {
+						"result": {
+							"isValid": false,
+							"error": "JWT not valid yet",
+							"crypto": "sr25519",
+							"publicKey": "0x6a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+							"isWrapped": false
+						},
+						"random": []
+					}
+				}
+			],
+			"exports": [
+				{
+					"passphrase": null,
+					"encodePkcs8": {
+						"result": "0x3053020101300506032b657004220420388fe3ab30c0aabf54acd276f3d8bbbc2b7ca4a9495d204f255bacf578c74c460c31a3d19b8cbca95546532a40d376b8b01b59e2d5c843a6e58a93e15cd09165a1230321006a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+						"random": [
+							"0x26ed5d7547983dfcb0426352e467fbb0"
+						]
+					},
+					"toJson": {
+						"result": {
+							"encoded": "MFMCAQEwBQYDK2VwBCIEIDiP46swwKq/VKzSdvPYu7wrfKSpSV0gTyVbrPV4x0xGDDGj0ZuMvKlVRlMqQNN2uLAbWeLVyEOm5YqT4VzQkWWhIwMhAGoQvgKdHtKDRGWHFFpPiFIlSJtJBCSgMo3M4qSK5v5h",
+							"encoding": {
+								"content": [
+									"pkcs8",
+									"sr25519"
+								],
+								"type": [
+									"none"
+								],
+								"version": "3"
+							},
+							"address": "EyPZqnqp5EDhERSPsmpVw61JcMpfqaYz8vSHew58SBT9tji",
+							"meta": {}
+						},
+						"random": [
+							"0x585ba5e8c6e66b75559d1a29cadb8a1d"
+						]
+					}
+				},
+				{
+					"passphrase": "",
+					"encodePkcs8": {
+						"result": "0x3053020101300506032b657004220420388fe3ab30c0aabf54acd276f3d8bbbc2b7ca4a9495d204f255bacf578c74c460c31a3d19b8cbca95546532a40d376b8b01b59e2d5c843a6e58a93e15cd09165a1230321006a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+						"random": [
+							"0x249c6a463ed3c77fb1dfb4ea6042d0f8"
+						]
+					},
+					"toJson": {
+						"result": {
+							"encoded": "MFMCAQEwBQYDK2VwBCIEIDiP46swwKq/VKzSdvPYu7wrfKSpSV0gTyVbrPV4x0xGDDGj0ZuMvKlVRlMqQNN2uLAbWeLVyEOm5YqT4VzQkWWhIwMhAGoQvgKdHtKDRGWHFFpPiFIlSJtJBCSgMo3M4qSK5v5h",
+							"encoding": {
+								"content": [
+									"pkcs8",
+									"sr25519"
+								],
+								"type": [
+									"none"
+								],
+								"version": "3"
+							},
+							"address": "EyPZqnqp5EDhERSPsmpVw61JcMpfqaYz8vSHew58SBT9tji",
+							"meta": {}
+						},
+						"random": [
+							"0x640b72ad2e5f1ece5888f68e28e5a173"
+						]
+					}
+				},
+				{
+					"passphrase": "testing",
+					"encodePkcs8": {
+						"result": "0xa44613a70afd7af5732fd95a478fe0465650f738f34b4f3e45fb579d8a8ad7c90080000001000000080000007042cde4171489d683f88a3b970eff199423a519375c1304d0fb51936f9af12de8090549e56506496f804649c419276b2fcd2aac5954d69a2bbd36765d548a9df78d532b8a4b2fb4ef7e850347898b40379e7d11564f28dba12de6b4614b72cbb30bca8889e51bcdef82de9a2a348f64bb34731fdc97c2303ec73e931e0b98b52cd9b35d8f495a00879720c1b263bdaf74bb320555441f439f91fd5b5f",
+						"random": [
+							"0xb17b5279489c489887d73c1fc81d6f12",
+							"0xa44613a70afd7af5732fd95a478fe0465650f738f34b4f3e45fb579d8a8ad7c9",
+							"0x7042cde4171489d683f88a3b970eff199423a519375c1304"
+						]
+					},
+					"toJson": {
+						"result": {
+							"encoded": "mi14sTYFkLNbRGYUq+EDMJSI117dqwdths3++odRjcUAgAAAAQAAAAgAAAAKpGmbsk5foqUXg+ZkSvwvvIWffYE5zJScbN+6f+W+1aHxAP17D8T8Nc95t67lt2IceOVEZ4nyzUNfxyY3C0GbnvC2Y9/RyOyCnHtd7g940W6PubzpV9OzM2NB1DSBM1pU5dXQaq+bbxVDKTdtYoqVrh0/RdtzUogZXJ0j8iztQ/Jf9cFZsg9/LNggEOHE7vMoUW+Vj987F0x8eAYQ",
+							"encoding": {
+								"content": [
+									"pkcs8",
+									"sr25519"
+								],
+								"type": [
+									"scrypt",
+									"xsalsa20-poly1305"
+								],
+								"version": "3"
+							},
+							"address": "EyPZqnqp5EDhERSPsmpVw61JcMpfqaYz8vSHew58SBT9tji",
+							"meta": {}
+						},
+						"random": [
+							"0x5f7dfc51bdbf9d931357a72e4637e731",
+							"0x9a2d78b1360590b35b446614abe103309488d75eddab076d86cdfefa87518dc5",
+							"0x0aa4699bb24e5fa2a51783e6644afc2fbc859f7d8139cc94"
+						]
+					}
+				}
+			],
+			"derives": [
+				{
+					"suri": "//hard",
+					"result": {
+						"publicKey": "0x48e3f66abafa6880f8f8970e4595b5e932902fbce4e66f4938915bbb5b9e157c",
+						"address": "EDtgex29kcCWBrwh7bYZdjNnLjNwUfwpLNuoyLRR18okinN",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						},
+						"secretKey": "0xc08f0084454bebc13e2c2e6033707f02ee51408cca1a52d54934a0d3d9948d72ab9f17f79cb38c89893352a8a2b0401f48860e0a697d01f3288b97e22671fb42"
+					},
+					"random": [
+						"0x0ed1c639656247c24e808e1c27e918e4",
+						"0xad82263914627046f81f48588d89716d"
+					]
+				},
+				{
+					"suri": "//hard//deeper",
+					"result": {
+						"publicKey": "0x707eeb5b4a1d6722e64e38492c929999babe87841807ced71d46f52a7857643b",
+						"address": "F7pap9faSetfG287uFkicaVKp1WjTvQufJ33cVxeErGka68",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						},
+						"secretKey": "0xe07b163474a20820485e62d00defb0ab309a0b81fdefa1547320319b9b1a8c7ff61bfb8c7ee8f5c9517c24935ad731ff8327b42bbfdd6bc8127fd3698e8fd914"
+					},
+					"random": [
+						"0xdecdc282aed243eee999bd1bf5b8707b",
+						"0x2f40c69c9a07d4a39b2c3976e7043231",
+						"0x88d9291936460bb52e822fbc2d1afa86"
+					]
+				},
+				{
+					"suri": "/soft",
+					"result": {
+						"publicKey": "0x78766d7d979e5575dc091a0196a496c63c18df10c367282a3b803590018dbd5a",
+						"address": "FJGSixiGfsPoWzjVXqXj3BTo5mkipSZYrNMmhxnCnSUpYrK",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						}
+					},
+					"random": [
+						"0x4d28ad47c351f870e8f1f33218338ff5",
+						"0x2d0883c129e69a8b6f545f297c53f0cdbb644d948d711c2373ca1fb1ba92c954",
+						"0x9f934d700bbfe3a388cbcd3fed0c13ae",
+						"0xeaf9074681bc542eb1f8d099187a7caf"
+					]
+				},
+				{
+					"suri": "//1",
+					"result": {
+						"publicKey": "0x7cfc60e96eb546499b9b3c7dbd281fd38d068ea2d2244d8d87214740f0cce76b",
+						"address": "FQCRkdyNDcPSvYwzf4v3U8YvJspn8i79TMnPN9qpCvbsnJq",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						},
+						"secretKey": "0xb0af881dfa0de64eb341980deff8198e28bfc146452a81ec27f351b78336857b7dc845ad78e275893ef4c3357b0fde5214d6fcc4a5be1b0a12d5b4b9dc40e2f9"
+					},
+					"random": [
+						"0x8f91e85e04b7b3b5cbaa0051a8bad909",
+						"0x0191daa14d64d547b35bf365ecf43d16"
+					]
+				},
+				{
+					"suri": "",
+					"result": {
+						"publicKey": "0x6a10be029d1ed283446587145a4f885225489b490424a0328dcce2a48ae6fe61",
+						"address": "EyPZqnqp5EDhERSPsmpVw61JcMpfqaYz8vSHew58SBT9tji",
+						"isLocked": false,
+						"meta": {
+							"name": "derived"
+						},
+						"secretKey": "0x388fe3ab30c0aabf54acd276f3d8bbbc2b7ca4a9495d204f255bacf578c74c460c31a3d19b8cbca95546532a40d376b8b01b59e2d5c843a6e58a93e15cd09165"
+					},
+					"random": [
+						"0x85abf81fdb5a022dc43e1e9371ba1405"
+					]
+				},
+				{
+					"suri": "garbage",
+					"error": "Re-constructed path \"\" does not match input",
+					"random": [
+						"0x69d2932f2233f468720eda86d3320203"
+					]
+				}
+			],
+			"afterLock": {
+				"isLocked": true,
+				"sign": {
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				"derive": {
+					"error": "Cannot derive on a locked keypair",
+					"random": []
+				},
+				"jwtIssue": {
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				"vrfSign": {
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				"unlock": {
+					"error": "No encrypted data available to decode",
+					"random": []
+				},
+				"toJson": {
+					"result": {
+						"encoded": "MFMCAQEwBQYDK2VwBCIEIKEjAyEAahC+Ap0e0oNEZYcUWk+IUiVIm0kEJKAyjczipIrm/mE=",
+						"encoding": {
+							"content": [
+								"pkcs8",
+								"sr25519"
+							],
+							"type": [
+								"none"
+							],
+							"version": "3"
+						},
+						"address": "EyPZqnqp5EDhERSPsmpVw61JcMpfqaYz8vSHew58SBT9tji",
+						"meta": {}
+					},
+					"random": []
+				}
+			},
+			"meta": {
+				"name": "renamed",
+				"extra": 1,
+				"more": [
+					1,
+					2
+				]
+			}
+		},
+		{
+			"label": "all-zero secret",
+			"state": {
+				"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"isLocked": true,
+				"meta": {}
+			},
+			"signs": [
+				{
+					"message": "hello",
+					"withType": false,
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				{
+					"message": "hello",
+					"withType": true,
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				{
+					"message": "0x1234",
+					"withType": false,
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				{
+					"message": "0x1234",
+					"withType": true,
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				{
+					"message": "",
+					"withType": false,
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				{
+					"message": "",
+					"withType": true,
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				{
+					"message": "0x",
+					"withType": false,
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				{
+					"message": "0x",
+					"withType": true,
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				{
+					"message": [
+						1,
+						2,
+						3
+					],
+					"withType": false,
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				{
+					"message": [
+						1,
+						2,
+						3
+					],
+					"withType": true,
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				{
+					"message": [],
+					"withType": false,
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				{
+					"message": [],
+					"withType": true,
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				}
+			],
+			"verifies": [
+				{
+					"message": "hello",
+					"signature": "0x",
+					"signer": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"error": "Invalid signature length, expected [64..66] bytes, found 0",
+					"random": []
+				},
+				{
+					"message": "hello",
+					"signature": "0x",
+					"signer": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"error": "Invalid signature length, expected [64..66] bytes, found 0",
+					"random": []
+				},
+				{
+					"message": "hello",
+					"signature": "0x",
+					"signer": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+					"error": "Invalid signature length, expected [64..66] bytes, found 0",
+					"random": []
+				},
+				{
+					"message": "hellO",
+					"signature": "0x",
+					"signer": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"error": "Invalid signature length, expected [64..66] bytes, found 0",
+					"random": []
+				},
+				{
+					"message": "hello",
+					"signature": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+					"signer": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"result": false,
+					"random": []
+				},
+				{
+					"message": "hello",
+					"signature": "0x00",
+					"signer": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"error": "Invalid signature length, expected [64..66] bytes, found 1",
+					"random": []
+				},
+				{
+					"message": "hello",
+					"signature": "0x",
+					"signer": "not-an-address",
+					"error": "Invalid signature length, expected [64..66] bytes, found 0",
+					"random": []
+				},
+				{
+					"message": "0x1234",
+					"signature": "0x",
+					"signer": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"error": "Invalid signature length, expected [64..66] bytes, found 0",
+					"random": []
+				},
+				{
+					"message": "0x1234",
+					"signature": "0x",
+					"signer": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"error": "Invalid signature length, expected [64..66] bytes, found 0",
+					"random": []
+				}
+			],
+			"vrfs": [
+				{
+					"message": "hello",
+					"context": null,
+					"extra": null,
+					"signed": {
+						"error": "Cannot sign with a locked key pair",
+						"random": []
+					},
+					"verified": {
+						"error": "Invalid vrfSign output length, expected 96 bytes",
+						"random": []
+					},
+					"tampered": {
+						"error": "Invalid vrfSign output length, expected 96 bytes",
+						"random": []
+					}
+				},
+				{
+					"message": "hello",
+					"context": "ctx",
+					"extra": null,
+					"signed": {
+						"error": "Cannot sign with a locked key pair",
+						"random": []
+					},
+					"verified": {
+						"error": "Invalid vrfSign output length, expected 96 bytes",
+						"random": []
+					},
+					"tampered": {
+						"error": "Invalid vrfSign output length, expected 96 bytes",
+						"random": []
+					}
+				},
+				{
+					"message": "hello",
+					"context": "ctx",
+					"extra": "extra",
+					"signed": {
+						"error": "Cannot sign with a locked key pair",
+						"random": []
+					},
+					"verified": {
+						"error": "Invalid vrfSign output length, expected 96 bytes",
+						"random": []
+					},
+					"tampered": {
+						"error": "Invalid vrfSign output length, expected 96 bytes",
+						"random": []
+					}
+				},
+				{
+					"message": "0x1234",
+					"context": "0xabcd",
+					"extra": "0x",
+					"signed": {
+						"error": "Cannot sign with a locked key pair",
+						"random": []
+					},
+					"verified": {
+						"error": "Invalid vrfSign output length, expected 96 bytes",
+						"random": []
+					},
+					"tampered": {
+						"error": "Invalid vrfSign output length, expected 96 bytes",
+						"random": []
+					}
+				}
+			],
+			"jwts": [
+				{
+					"options": null,
+					"claims": null,
+					"issued": {
+						"error": "Cannot sign with a locked key pair",
+						"random": []
+					},
+					"verified": {
+						"error": "Invalid JWT format (expected 3 parts)",
+						"random": []
+					}
+				},
+				{
+					"options": {
+						"expiresIn": 60
+					},
+					"claims": {
+						"sub": "user"
+					},
+					"issued": {
+						"error": "Cannot sign with a locked key pair",
+						"random": []
+					},
+					"verified": {
+						"error": "Invalid JWT format (expected 3 parts)",
+						"random": []
+					}
+				},
+				{
+					"options": {
+						"notBefore": 1750000010.123
+					},
+					"claims": {
+						"a": "1",
+						"b": "2"
+					},
+					"issued": {
+						"error": "Cannot sign with a locked key pair",
+						"random": []
+					},
+					"verified": {
+						"error": "Invalid JWT format (expected 3 parts)",
+						"random": []
+					}
+				}
+			],
+			"exports": [
+				{
+					"passphrase": null,
+					"encodePkcs8": {
+						"result": "0x3053020101300506032b65700422042000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a123032100d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"random": []
+					},
+					"toJson": {
+						"result": {
+							"encoded": "MFMCAQEwBQYDK2VwBCIEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAChIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+							"encoding": {
+								"content": [
+									"pkcs8",
+									"sr25519"
+								],
+								"type": [
+									"none"
+								],
+								"version": "3"
+							},
+							"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+							"meta": {}
+						},
+						"random": []
+					}
+				},
+				{
+					"passphrase": "",
+					"encodePkcs8": {
+						"result": "0x3053020101300506032b65700422042000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a123032100d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+						"random": []
+					},
+					"toJson": {
+						"result": {
+							"encoded": "MFMCAQEwBQYDK2VwBCIEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAChIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+							"encoding": {
+								"content": [
+									"pkcs8",
+									"sr25519"
+								],
+								"type": [
+									"none"
+								],
+								"version": "3"
+							},
+							"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+							"meta": {}
+						},
+						"random": []
+					}
+				},
+				{
+					"passphrase": "testing",
+					"encodePkcs8": {
+						"result": "0x504c8fd33d5bed036a76ad9dca3e6f289dfb6d0fc943fa49eafd17883302d6200080000001000000080000009f45282a2bdc44a21ee8671d557426a6dcabeea3126b30953acd9db0948c4428141b0e775d7fa565dec50ccd9a5f622bd52836934d9707ab20e5b845fe810e5bfe05eb3cc0fbb3503493e7ee95f1f84c4f48af3522f8f3ef5f5e07d45b588b8b678c85b1e67cbd844f5d03f83c3726353d1222d8767ad2292db44c899229fa66756451e8c45d462e94b65524716258a429ed393723bf276c193aeb1fff",
+						"random": [
+							"0x504c8fd33d5bed036a76ad9dca3e6f289dfb6d0fc943fa49eafd17883302d620",
+							"0x9f45282a2bdc44a21ee8671d557426a6dcabeea3126b3095"
+						]
+					},
+					"toJson": {
+						"result": {
+							"encoded": "LDToFD494pgs/iMiowO/i/0EbS25RulO/XyyHQi8BDgAgAAAAQAAAAgAAAC/r2qFPqBV71e052a3lDtJils876Faym0LztzgBwD/HHXti2clvTix5yFGsTIvGM7SxcLIUSUxFUkghB93PxfjblTLilv81N11VUs+S5VdSqa08rPCf/mpp/+q9sfksoEMynI6Pw0NXpIC891dY5TDxPiaS9OhI1b2G64lfL7G6VaVPyCrJLyVJGzbAnS6xgYuGeVz+Z1UHIxoJ7P3",
+							"encoding": {
+								"content": [
+									"pkcs8",
+									"sr25519"
+								],
+								"type": [
+									"scrypt",
+									"xsalsa20-poly1305"
+								],
+								"version": "3"
+							},
+							"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+							"meta": {}
+						},
+						"random": [
+							"0x2c34e8143e3de2982cfe2322a303bf8bfd046d2db946e94efd7cb21d08bc0438",
+							"0xbfaf6a853ea055ef57b4e766b7943b498a5b3cefa15aca6d"
+						]
+					}
+				}
+			],
+			"derives": [
+				{
+					"suri": "//hard",
+					"error": "Cannot derive on a locked keypair",
+					"random": []
+				},
+				{
+					"suri": "//hard//deeper",
+					"error": "Cannot derive on a locked keypair",
+					"random": []
+				},
+				{
+					"suri": "/soft",
+					"error": "Cannot derive on a locked keypair",
+					"random": []
+				},
+				{
+					"suri": "//1",
+					"error": "Cannot derive on a locked keypair",
+					"random": []
+				},
+				{
+					"suri": "",
+					"error": "Cannot derive on a locked keypair",
+					"random": []
+				},
+				{
+					"suri": "garbage",
+					"error": "Cannot derive on a locked keypair",
+					"random": []
+				}
+			],
+			"afterLock": {
+				"isLocked": true,
+				"sign": {
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				"derive": {
+					"error": "Cannot derive on a locked keypair",
+					"random": []
+				},
+				"jwtIssue": {
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				"vrfSign": {
+					"error": "Cannot sign with a locked key pair",
+					"random": []
+				},
+				"unlock": {
+					"error": "No encrypted data available to decode",
+					"random": []
+				},
+				"toJson": {
+					"result": {
+						"encoded": "MFMCAQEwBQYDK2VwBCIEIKEjAyEA1DWTxxX90xxhFBq9BKmf1oIshViFTM3jmlaE56Vton0=",
+						"encoding": {
+							"content": [
+								"pkcs8",
+								"sr25519"
+							],
+							"type": [
+								"none"
+							],
+							"version": "3"
+						},
+						"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+						"meta": {}
+					},
+					"random": []
+				}
+			},
+			"meta": {
+				"name": "renamed",
+				"extra": 1,
+				"more": [
+					1,
+					2
+				]
+			}
+		}
+	],
+	"decodes": [
+		{
+			"encoded": "0xfa0f5c047422bdc35f86394796bd90b891e55bb80c5fc547e2335fb9403579a6008000000100000008000000bca959991f4db002082ad2d48baadd8383c56cd37b5b579c39e60cf06de96f1fab0a8a47c8398d1b0eb2835d7bfd2c0a689e0397e4530c334c580263abbe10b0bbcf32d8e647c80041f1be410c80e877dc8f517e8953691933be84ade4286084b0d45f3021cd58fd1982119d9487027e365e3bdc05ab224c68aaf56727b7d712e7201567447dfd06557c91484349ef7dd23241199a1de0b16edf33f487",
+			"passphrase": "testing",
+			"result": {
+				"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011"
+			},
+			"random": []
+		},
+		{
+			"encoded": "0xfa0f5c047422bdc35f86394796bd90b891e55bb80c5fc547e2335fb9403579a6008000000100000008000000bca959991f4db002082ad2d48baadd8383c56cd37b5b579c39e60cf06de96f1fab0a8a47c8398d1b0eb2835d7bfd2c0a689e0397e4530c334c580263abbe10b0bbcf32d8e647c80041f1be410c80e877dc8f517e8953691933be84ade4286084b0d45f3021cd58fd1982119d9487027e365e3bdc05ab224c68aaf56727b7d712e7201567447dfd06557c91484349ef7dd23241199a1de0b16edf33f487",
+			"passphrase": "wrong",
+			"error": "Unable to decode using the supplied passphrase",
+			"random": []
+		},
+		{
+			"encoded": "0xfa0f5c047422bdc35f86394796bd90b891e55bb80c5fc547e2335fb9403579a6008000000100000008000000bca959991f4db002082ad2d48baadd8383c56cd37b5b579c39e60cf06de96f1fab0a8a47c8398d1b0eb2835d7bfd2c0a689e0397e4530c334c580263abbe10b0bbcf32d8e647c80041f1be410c80e877dc8f517e8953691933be84ade4286084b0d45f3021cd58fd1982119d9487027e365e3bdc05ab224c68aaf56727b7d712e7201567447dfd06557c91484349ef7dd23241199a1de0b16edf33f487",
+			"passphrase": null,
+			"error": "Password required to decode encrypted data",
+			"random": []
+		},
+		{
+			"encoded": "0x3053020101300506032b65700422042098319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011a123032100d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+			"passphrase": "",
+			"error": "Password required to decode encrypted data",
+			"random": []
+		},
+		{
+			"encoded": "0x3053020101300506032b65700422042098319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011a123032100d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+			"passphrase": "wrong",
+			"error": "Invalid injected scrypt params found",
+			"random": []
+		},
+		{
+			"encoded": "0x3053020101300506032b65700422042098319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011a123032100d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+			"passphrase": null,
+			"error": "Password required to decode encrypted data",
+			"random": []
+		},
+		{
+			"encoded": "0x8d3cf30be0373f1622b1fbf7f9654d8ec8c4c679c984643be043d1d2196800db008000000100000008000000f60141b3b9109ee2c5509134fcde103e6ec665737b24dde7fa6f2f98cf3f1c75e054e2c7f91dc80f595e18e1e1a0dd4209d6eaeda04403374157fdc8eb0b05f70568b3fdb3cdb05c31f8bab3de2607d3c2f44ba59c074a8c348bc46c2f8a800ffe9aedd1c7064d2c930b3f328c5df4eb2d5821e30aa7524ef1e082e5d847ef2d6881743727a63b97456c86699aaa3d29134b9fe973972763a37f41a4c7",
+			"passphrase": "0x1234",
+			"result": {
+				"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"secretKey": "0x98319d4ff8a9508c4bb0cf0b5a78d760a0b2082c02775e6e82370816fedfff48925a225d97aa00682d6a59b95b18780c10d7032336e88f3442b42361f4a66011"
+			},
+			"random": []
+		},
+		{
+			"encoded": "0x8d3cf30be0373f1622b1fbf7f9654d8ec8c4c679c984643be043d1d2196800db008000000100000008000000f60141b3b9109ee2c5509134fcde103e6ec665737b24dde7fa6f2f98cf3f1c75e054e2c7f91dc80f595e18e1e1a0dd4209d6eaeda04403374157fdc8eb0b05f70568b3fdb3cdb05c31f8bab3de2607d3c2f44ba59c074a8c348bc46c2f8a800ffe9aedd1c7064d2c930b3f328c5df4eb2d5821e30aa7524ef1e082e5d847ef2d6881743727a63b97456c86699aaa3d29134b9fe973972763a37f41a4c7",
+			"passphrase": "wrong",
+			"error": "Unable to decode using the supplied passphrase",
+			"random": []
+		},
+		{
+			"encoded": "0x8d3cf30be0373f1622b1fbf7f9654d8ec8c4c679c984643be043d1d2196800db008000000100000008000000f60141b3b9109ee2c5509134fcde103e6ec665737b24dde7fa6f2f98cf3f1c75e054e2c7f91dc80f595e18e1e1a0dd4209d6eaeda04403374157fdc8eb0b05f70568b3fdb3cdb05c31f8bab3de2607d3c2f44ba59c074a8c348bc46c2f8a800ffe9aedd1c7064d2c930b3f328c5df4eb2d5821e30aa7524ef1e082e5d847ef2d6881743727a63b97456c86699aaa3d29134b9fe973972763a37f41a4c7",
+			"passphrase": null,
+			"error": "Password required to decode encrypted data",
+			"random": []
+		}
+	],
+	"ss58": {
+		"before": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+		"after": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+		"encodes": [
+			{
+				"configured": null,
+				"explicit": null,
+				"result": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"random": []
+			},
+			{
+				"configured": 0,
+				"explicit": null,
+				"result": "15oF4uVJwmo4TdGW7VfQxNLavjCXviqxT9S1MgbjMNHr6Sp5",
+				"random": []
+			},
+			{
+				"configured": 2,
+				"explicit": 5,
+				"result": "ajYMsCKsEAhEvHpeA4XqsfiA9v1CdzZPrCfS6pEfeGHW9j8",
+				"random": []
+			},
+			{
+				"configured": 16384,
+				"explicit": null,
+				"error": "Out of range ss58Format specified",
+				"random": []
+			},
+			{
+				"configured": 46,
+				"explicit": null,
+				"error": "Out of range ss58Format specified",
+				"random": []
+			},
+			{
+				"configured": null,
+				"explicit": 47,
+				"error": "Out of range ss58Format specified",
+				"random": []
+			}
+		]
+	},
+	"keyringTypes": [
+		{
+			"type": null,
+			"result": "sr25519",
+			"random": []
+		},
+		{
+			"type": "sr25519",
+			"result": "sr25519",
+			"random": []
+		},
+		{
+			"type": "ed25519",
+			"error": "Expected a keyring type of either 'sr25519', found 'ed25519",
+			"random": []
+		},
+		{
+			"type": "ecdsa",
+			"error": "Expected a keyring type of either 'sr25519', found 'ecdsa",
+			"random": []
+		},
+		{
+			"type": "ethereum",
+			"error": "Expected a keyring type of either 'sr25519', found 'ethereum",
+			"random": []
+		}
+	],
+	"pairs": {
+		"order": [
+			[
+				"0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+				"0x90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22"
+			],
+			[
+				"0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+				"0x90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22"
+			],
+			[
+				"0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"0x90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22"
+			],
+			[
+				"0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"0x90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22",
+				"0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48"
+			],
+			[
+				"0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"0x90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22",
+				"0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48"
+			]
+		],
+		"gets": [
+			{
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": false,
+					"meta": {
+						"name": "again"
+					}
+				},
+				"random": []
+			},
+			{
+				"address": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": false,
+					"meta": {
+						"name": "again"
+					}
+				},
+				"random": []
+			},
+			{
+				"address": "0xD43593C715FDD31C61141ABD04A99FD6822C8558854CCDE39A5684E7A56DA27D",
+				"result": {
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": false,
+					"meta": {
+						"name": "again"
+					}
+				},
+				"random": []
+			},
+			{
+				"address": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+				"result": {
+					"publicKey": "0x90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22",
+					"address": "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y",
+					"isLocked": false,
+					"meta": {}
+				},
+				"random": []
+			},
+			{
+				"address": "5CCbw7fDPPgdL2poR4w9mDsUCzUA7AzRhoFDxgu21cibdUmW",
+				"error": "Unable to retrieve keypair '5CCbw7fDPPgdL2poR4w9mDsUCzUA7AzRhoFDxgu21cibdUmW'",
+				"random": []
+			},
+			{
+				"address": "0x0606060606060606060606060606060606060606060606060606060606060606",
+				"error": "Unable to retrieve keypair '0x0606060606060606060606060606060606060606060606060606060606060606'",
+				"random": []
+			},
+			{
+				"address": "0xABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABABAB",
+				"error": "Unable to retrieve keypair '0xabababababababababababababababababababababababababababababababab'",
+				"random": []
+			},
+			{
+				"address": "not-an-address",
+				"error": "Decoding not-an-address: Invalid base58 character \"-\" (0x2d) at index 3",
+				"random": []
+			},
+			{
+				"address": "",
+				"error": "Invalid empty address passed",
+				"random": []
+			},
+			{
+				"address": "0x",
+				"error": "Unable to retrieve keypair '0x'",
+				"random": []
+			}
+		],
+		"byteGets": [
+			{
+				"bytes": [
+					144,
+					181,
+					171,
+					32,
+					92,
+					105,
+					116,
+					201,
+					234,
+					132,
+					27,
+					230,
+					136,
+					134,
+					70,
+					51,
+					220,
+					156,
+					168,
+					163,
+					87,
+					132,
+					62,
+					234,
+					207,
+					35,
+					20,
+					100,
+					153,
+					101,
+					254,
+					34
+				],
+				"result": {
+					"publicKey": "0x90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22",
+					"address": "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y",
+					"isLocked": false,
+					"meta": {}
+				},
+				"random": []
+			},
+			{
+				"bytes": [
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6,
+					6
+				],
+				"error": "Unable to retrieve keypair '0x0606060606060606060606060606060606060606060606060606060606060606'",
+				"random": []
+			},
+			{
+				"bytes": [],
+				"error": "Unable to retrieve keypair '0x'",
+				"random": []
+			}
+		],
+		"name": "again"
+	},
+	"getPair": [
+		{
+			"label": "mnemonic",
+			"secret": "bottom drive obey lake curtain smoke basket hold race lonely fit walk",
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"result": {
+				"publicKey": "0x46ebddef8cd9bb167dc30878d7113b7e168e6f0646beffd77d69d39bad76b47a",
+				"address": "5DfhGyQdFobKM8NsWvEeAKk5EQQgYe9AydgJ7rMB6E1EqRzV",
+				"isLocked": false,
+				"meta": {}
+			}
+		},
+		{
+			"label": "hex seed",
+			"secret": "0x0101010101010101010101010101010101010101010101010101010101010101",
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"result": {
+				"publicKey": "0x189dac29296d31814dc8c56cf3d36a0543372bba7538fa322a4aebfebc39e056",
+				"address": "5CcyqxXnJucaCnQQvvUg5EPzj1uoNAxACZvzArHw5aVDvgNH",
+				"isLocked": false,
+				"meta": {}
+			}
+		},
+		{
+			"label": "short hex seed",
+			"secret": "0x0102",
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"error": "Expected a seed of 32 bytes, found 2"
+		},
+		{
+			"label": "suri",
+			"secret": "bottom drive obey lake curtain smoke basket hold race lonely fit walk//Alice",
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"result": {
+				"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"isLocked": false,
+				"meta": {}
+			}
+		},
+		{
+			"label": "bare path",
+			"secret": "//Alice",
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"result": {
+				"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"isLocked": false,
+				"meta": {}
+			}
+		},
+		{
+			"label": "mnemonic and path",
+			"secret": "bottom drive obey lake curtain smoke basket hold race lonely fit walk//1",
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"result": {
+				"publicKey": "0xb606fc73f57f03cdb4c932d475ab426043e429cecc2ffff0d2672b0df8398c48",
+				"address": "5GBNeWRhZc2jXu7D55rBimKYDk8PGk8itRYFTPfC8RJLKG5o",
+				"isLocked": false,
+				"meta": {}
+			}
+		},
+		{
+			"label": "json text",
+			"secret": "{\"encoded\":\"MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9\",\"encoding\":{\"content\":[\"pkcs8\",\"sr25519\"],\"type\":[\"none\"],\"version\":\"3\"},\"address\":\"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY\",\"meta\":{\"isTesting\":true,\"name\":\"alice\"}}",
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"result": {
+				"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"isLocked": true,
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			}
+		},
+		{
+			"label": "json object",
+			"secret": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"sr25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"json": true,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"result": {
+				"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"isLocked": true,
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			}
+		},
+		{
+			"label": "json text ed25519",
+			"secret": "{\"encoded\":\"MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9\",\"encoding\":{\"content\":[\"pkcs8\",\"ed25519\"],\"type\":[\"none\"],\"version\":\"3\"},\"address\":\"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY\",\"meta\":{\"isTesting\":true,\"name\":\"alice\"}}",
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"envError": {
+				"message": "GENERAL.MISSING_SECRET_KEY",
+				"translationKey": "GENERAL.MISSING_SECRET_KEY",
+				"hasCause": true
+			}
+		},
+		{
+			"label": "json text unknown type",
+			"secret": "{\"encoded\":\"MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9\",\"encoding\":{\"content\":[\"pkcs8\",\"foo\"],\"type\":[\"none\"],\"version\":\"3\"},\"address\":\"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY\",\"meta\":{\"isTesting\":true,\"name\":\"alice\"}}",
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"envError": {
+				"message": "GENERAL.MISSING_SECRET_KEY",
+				"translationKey": "GENERAL.MISSING_SECRET_KEY",
+				"hasCause": true
+			}
+		},
+		{
+			"label": "json text no type",
+			"secret": "{\"encoded\":\"MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9\",\"encoding\":{\"content\":[\"pkcs8\"],\"type\":[\"none\"],\"version\":\"3\"},\"address\":\"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY\",\"meta\":{\"isTesting\":true,\"name\":\"alice\"}}",
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"envError": {
+				"message": "GENERAL.MISSING_SECRET_KEY",
+				"translationKey": "GENERAL.MISSING_SECRET_KEY",
+				"hasCause": true
+			}
+		},
+		{
+			"label": "json object ed25519",
+			"secret": {
+				"encoded": "MFMCAQEwBQYDK2VwBCIEIJgxnU/4qVCMS7DPC1p412CgsggsAndeboI3CBb+3/9IkloiXZeqAGgtalm5Wxh4DBDXAyM26I80QrQjYfSmYBGhIwMhANQ1k8cV/dMcYRQavQSpn9aCLIVYhUzN45pWhOelbaJ9",
+				"encoding": {
+					"content": [
+						"pkcs8",
+						"ed25519"
+					],
+					"type": [
+						"none"
+					],
+					"version": "3"
+				},
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"meta": {
+					"isTesting": true,
+					"name": "alice"
+				}
+			},
+			"json": true,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"error": "Unknown crypto type ed25519"
+		},
+		{
+			"label": "json without encoding",
+			"secret": "{\"address\":\"x\"}",
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"envError": {
+				"message": "GENERAL.MISSING_SECRET_KEY",
+				"translationKey": "GENERAL.MISSING_SECRET_KEY",
+				"hasCause": true
+			}
+		},
+		{
+			"label": "json number",
+			"secret": "5",
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"envError": {
+				"message": "GENERAL.MISSING_SECRET_KEY",
+				"translationKey": "GENERAL.MISSING_SECRET_KEY",
+				"hasCause": true
+			}
+		},
+		{
+			"label": "not a secret",
+			"secret": "this is not a secret",
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"envError": {
+				"message": "GENERAL.MISSING_SECRET_KEY",
+				"translationKey": "GENERAL.MISSING_SECRET_KEY",
+				"hasCause": true
+			}
+		},
+		{
+			"label": "empty",
+			"secret": "",
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"envError": {
+				"message": "GENERAL.MISSING_SECRET_KEY",
+				"translationKey": "GENERAL.MISSING_SECRET_KEY",
+				"hasCause": false
+			}
+		},
+		{
+			"label": "nothing",
+			"secret": null,
+			"json": false,
+			"account": null,
+			"type": null,
+			"ss58": null,
+			"envError": {
+				"message": "GENERAL.MISSING_SECRET_KEY",
+				"translationKey": "GENERAL.MISSING_SECRET_KEY",
+				"hasCause": false
+			}
+		},
+		{
+			"label": "address",
+			"account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"secret": null,
+			"json": false,
+			"type": null,
+			"ss58": null,
+			"result": {
+				"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"isLocked": true,
+				"meta": {}
+			}
+		},
+		{
+			"label": "public key",
+			"account": [
+				212,
+				53,
+				147,
+				199,
+				21,
+				253,
+				211,
+				28,
+				97,
+				20,
+				26,
+				189,
+				4,
+				169,
+				159,
+				214,
+				130,
+				44,
+				133,
+				88,
+				133,
+				76,
+				205,
+				227,
+				154,
+				86,
+				132,
+				231,
+				165,
+				109,
+				162,
+				125
+			],
+			"secret": null,
+			"json": false,
+			"type": null,
+			"ss58": null,
+			"result": {
+				"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"isLocked": true,
+				"meta": {}
+			}
+		},
+		{
+			"label": "empty public key",
+			"account": [],
+			"secret": null,
+			"json": false,
+			"type": null,
+			"ss58": null,
+			"error": "Expected a valid key to convert, with length 1, 2, 4, 8, 32, 33"
+		},
+		{
+			"label": "hex account",
+			"account": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+			"secret": null,
+			"json": false,
+			"type": null,
+			"ss58": null,
+			"result": {
+				"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"isLocked": true,
+				"meta": {}
+			}
+		},
+		{
+			"label": "bad account",
+			"account": "not-an-address",
+			"secret": null,
+			"json": false,
+			"type": null,
+			"ss58": null,
+			"error": "Decoding not-an-address: Invalid base58 character \"-\" (0x2d) at index 3"
+		},
+		{
+			"label": "empty secret and address",
+			"secret": "",
+			"account": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"json": false,
+			"type": null,
+			"ss58": null,
+			"result": {
+				"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+				"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+				"isLocked": true,
+				"meta": {}
+			}
+		},
+		{
+			"label": "empty secret and empty account",
+			"secret": "",
+			"account": "",
+			"json": false,
+			"type": null,
+			"ss58": null,
+			"envError": {
+				"message": "GENERAL.MISSING_SECRET_KEY",
+				"translationKey": "GENERAL.MISSING_SECRET_KEY",
+				"hasCause": false
+			}
+		},
+		{
+			"label": "secret wins over account",
+			"secret": "bottom drive obey lake curtain smoke basket hold race lonely fit walk",
+			"account": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+			"json": false,
+			"type": null,
+			"ss58": null,
+			"result": {
+				"publicKey": "0x46ebddef8cd9bb167dc30878d7113b7e168e6f0646beffd77d69d39bad76b47a",
+				"address": "5DfhGyQdFobKM8NsWvEeAKk5EQQgYe9AydgJ7rMB6E1EqRzV",
+				"isLocked": false,
+				"meta": {}
+			}
+		},
+		{
+			"label": "ss58 2",
+			"secret": "bottom drive obey lake curtain smoke basket hold race lonely fit walk",
+			"ss58": 2,
+			"json": false,
+			"account": null,
+			"type": null,
+			"result": {
+				"publicKey": "0x46ebddef8cd9bb167dc30878d7113b7e168e6f0646beffd77d69d39bad76b47a",
+				"address": "EBJwHkVtAcF6nCKHd3h4H75NzgvMJxMS1X3WWd8a2DjaQx9",
+				"isLocked": false,
+				"meta": {}
+			}
+		},
+		{
+			"label": "ss58 0",
+			"secret": "bottom drive obey lake curtain smoke basket hold race lonely fit walk",
+			"ss58": 0,
+			"json": false,
+			"account": null,
+			"type": null,
+			"result": {
+				"publicKey": "0x46ebddef8cd9bb167dc30878d7113b7e168e6f0646beffd77d69d39bad76b47a",
+				"address": "5DfhGyQdFobKM8NsWvEeAKk5EQQgYe9AydgJ7rMB6E1EqRzV",
+				"isLocked": false,
+				"meta": {}
+			}
+		},
+		{
+			"label": "ss58 out of range",
+			"secret": "bottom drive obey lake curtain smoke basket hold race lonely fit walk",
+			"ss58": 16384,
+			"json": false,
+			"account": null,
+			"type": null,
+			"error": "Out of range ss58Format specified"
+		},
+		{
+			"label": "ed25519",
+			"secret": "bottom drive obey lake curtain smoke basket hold race lonely fit walk",
+			"type": "ed25519",
+			"json": false,
+			"account": null,
+			"ss58": null,
+			"error": "Expected a keyring type of either 'sr25519', found 'ed25519"
+		},
+		{
+			"label": "explicit sr25519",
+			"secret": "bottom drive obey lake curtain smoke basket hold race lonely fit walk",
+			"type": "sr25519",
+			"json": false,
+			"account": null,
+			"ss58": null,
+			"result": {
+				"publicKey": "0x46ebddef8cd9bb167dc30878d7113b7e168e6f0646beffd77d69d39bad76b47a",
+				"address": "5DfhGyQdFobKM8NsWvEeAKk5EQQgYe9AydgJ7rMB6E1EqRzV",
+				"isLocked": false,
+				"meta": {}
+			}
+		}
+	],
+	"testing": [
+		{
+			"options": {
+				"type": "sr25519"
+			},
+			"isDerived": true,
+			"pairs": [
+				{
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				{
+					"publicKey": "0xbe5ddb1579b72e84524fc29e78609e3caf42e85aa118ebfe0b0ad404b5bdd25f",
+					"address": "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "alice_stash"
+					}
+				},
+				{
+					"publicKey": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+					"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "bob"
+					}
+				},
+				{
+					"publicKey": "0xfe65717dad0447d715f660a0a58411de509b42e6efb8375f562f58a554d5860e",
+					"address": "5HpG9w8EBLe5XCrbczpwq5TSXvedjrBGCwqxK1iQ7qUsSWFc",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "bob_stash"
+					}
+				},
+				{
+					"publicKey": "0x90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22",
+					"address": "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "charlie"
+					}
+				},
+				{
+					"publicKey": "0x306721211d5404bd9da88e0204360a1a9ab8b87c66c1bc2fcdd37f3c2222cc20",
+					"address": "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "dave"
+					}
+				},
+				{
+					"publicKey": "0xe659a7a1628cdd93febc04a4e0646ea20e9f5f0ce097d9a05290d4a9e054df4e",
+					"address": "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "eve"
+					}
+				},
+				{
+					"publicKey": "0x1cbd2d43530a44705ad088af313e18f80b53ef16b36177cd4b77b846f2a5f07c",
+					"address": "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "ferdie"
+					}
+				}
+			]
+		},
+		{
+			"options": {
+				"ss58Format": 2,
+				"type": "sr25519"
+			},
+			"isDerived": true,
+			"pairs": [
+				{
+					"publicKey": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"address": "HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				{
+					"publicKey": "0xbe5ddb1579b72e84524fc29e78609e3caf42e85aa118ebfe0b0ad404b5bdd25f",
+					"address": "GsvVmjr1CBHwQHw84pPHMDxgNY3iBLz6Qn7qS3CH8qPhrHz",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "alice_stash"
+					}
+				},
+				{
+					"publicKey": "0x8eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f26a48",
+					"address": "FoQJpPyadYccjavVdTWxpxU7rUEaYhfLCPwXgkfD6Zat9QP",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "bob"
+					}
+				},
+				{
+					"publicKey": "0xfe65717dad0447d715f660a0a58411de509b42e6efb8375f562f58a554d5860e",
+					"address": "JKspFU6ohf1Grg3Phdzj2pSgWvsYWzSfKghhfzMbdhNBWs5",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "bob_stash"
+					}
+				},
+				{
+					"publicKey": "0x90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22",
+					"address": "Fr4NzY1udSFFLzb2R3qxVQkwz9cZraWkyfH4h3mVVk7BK7P",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "charlie"
+					}
+				},
+				{
+					"publicKey": "0x306721211d5404bd9da88e0204360a1a9ab8b87c66c1bc2fcdd37f3c2222cc20",
+					"address": "DfnTB4z7eUvYRqcGtTpFsLC69o6tvBSC1pEv8vWPZFtCkaK",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "dave"
+					}
+				},
+				{
+					"publicKey": "0xe659a7a1628cdd93febc04a4e0646ea20e9f5f0ce097d9a05290d4a9e054df4e",
+					"address": "HnMAUz7r2G8G3hB27SYNyit5aJmh2a5P4eMdDtACtMFDbam",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "eve"
+					}
+				},
+				{
+					"publicKey": "0x1cbd2d43530a44705ad088af313e18f80b53ef16b36177cd4b77b846f2a5f07c",
+					"address": "DE14BzQ1bDXWPKeLoAqdLAm1GpyAWaWF1knF74cEZeomTBM",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "ferdie"
+					}
+				}
+			]
+		},
+		{
+			"options": {
+				"type": "sr25519"
+			},
+			"isDerived": false,
+			"pairs": [
+				{
+					"publicKey": "0x787d6f7e9572e21656f61d3d897c343c80c81b774b1d76e5c8c72552b7ccbc25",
+					"address": "5Engs9f8Gk6JqvVWz3kFyJ8Kqkgx7pLi8C1UTcr7EZ855qBQ",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "alice"
+					}
+				},
+				{
+					"publicKey": "0x907c38a2570ae431ce9671a09b5ffd36b450fa17997ddcb6bb2514c7956e0070",
+					"address": "5FL9etD5yyJu6t8hoheo2EAXmCGskrfAnGBEmU5EbBisknE2",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "alice_stash"
+					}
+				},
+				{
+					"publicKey": "0x82c8cee554334c184f2ba41cb817de39714664ed84b50e9399975d62ccd12651",
+					"address": "5F2BjZfKxL8zanpVpZmR6X113qfT2UwpkShZ9TS3gpXBMUj5",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "bob"
+					}
+				},
+				{
+					"publicKey": "0x10c2d0f0f6583bf65d469dd4d6f82281b1862183f2fe42f817b6c1dbb332f411",
+					"address": "5CSgVi9qGVRBoKUiZwT42vpMGGL8E2RhRZhStUDdNHiy8S6b",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "bob_stash"
+					}
+				},
+				{
+					"publicKey": "0xbe474805641ae5304c6641b146c734cbef2d1c081643c800e53d511bb9a55244",
+					"address": "5GNC8WMfNJdhwGM1mR2oc9iN3LEjr3BoFgEKY5sY67TrxXad",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "charlie"
+					}
+				},
+				{
+					"publicKey": "0x4a67357aec46ebd652a0d8bffd114b450e53772db0f7f9a7b25908938c066647",
+					"address": "5DkG4SMax23F3TicXWkFT8YLSmcUNMpxLkGnJn5uqKFvevj1",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "dave"
+					}
+				},
+				{
+					"publicKey": "0xe6161d9229cc3cb327c83526f5078e9e5c72695fdaefa209444ef5a8fc24524b",
+					"address": "5HGPSVVgwprQ4wquBgMZx3AAWAjK6X1UYxHX88dKK6YZHmPG",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "eve"
+					}
+				},
+				{
+					"publicKey": "0x361b4b5729e1433c5581ce7dc1389ab37a42b54697f18b5bbf7cdd259078f974",
+					"address": "5DHeYuw9o8Gxaa87fWCwADgHZMGBCfPHEvdGf6Jd8LhoDppZ",
+					"isLocked": false,
+					"meta": {
+						"isTesting": true,
+						"name": "ferdie"
+					}
+				}
+			]
+		}
+	]
+}

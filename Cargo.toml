@@ -15,6 +15,7 @@ members = [
 	"packages/common",
 	"packages/types",
 	"packages/ipinfo",
+	"packages/keyring",
 	"packages/locale",
 ]
 exclude = [
@@ -36,3 +37,10 @@ strip = "symbols"
 
 [profile.dev.package."*"]
 debug = false
+
+# Keystores use scrypt with production parameters, which takes seconds per call unoptimised.
+[profile.dev.package.scrypt]
+opt-level = 3
+
+[profile.dev.package.salsa20]
+opt-level = 3

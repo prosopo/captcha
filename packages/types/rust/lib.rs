@@ -23,6 +23,7 @@ pub mod config;
 pub mod datasets;
 pub mod decision_machine;
 pub mod ipapi;
+pub mod keyring;
 mod js_regex;
 pub mod number;
 pub mod provider_api;

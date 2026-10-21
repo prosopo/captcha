@@ -1,0 +1,21 @@
+[package]
+name = "prosopo-keyring"
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "rust/lib.rs"
+
+[dependencies]
+prosopo-common = { path = "../common" }
+prosopo-logger = { path = "../logger" }
+prosopo-types = { path = "../types" }
+prosopo-util-crypto = { path = "../util-crypto" }
+rand_core = { version = "0.6", features = ["getrandom"] }
+serde_json = { version = "1.0", features = ["preserve_order"] }

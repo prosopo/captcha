@@ -1436,6 +1436,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "prosopo-keyring"
+version = "6.0.0"
+dependencies = [
+ "prosopo-common",
+ "prosopo-logger",
+ "prosopo-types",
+ "prosopo-util-crypto",
+ "rand_core 0.6.4",
+ "serde_json",
+]
+
+[[package]]
 name = "prosopo-locale"
 version = "6.0.0"
 dependencies = [
