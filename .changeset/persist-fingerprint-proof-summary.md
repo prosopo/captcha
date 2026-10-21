@@ -26,6 +26,20 @@ function of the visitorId, so folding a new component in would rotate every
 account on record and orphan its sighting history. `forIdentity` drops it before
 hashing, and there is a test asserting the visitorId does not move.
 
+The summary reaches the decision machines as well as the database. It is
+computed once, at the provider boundary, and handed to both, so the machine and
+the stored record cannot disagree about what a proof disclosed, and a 7.8KB
+proof is parsed and Merkle-checked once per submission instead of twice. Rules
+read it as `input.raw.fingerprintSummary`.
+
+There is also a new counter dimension, `deviceBucket`. One bucket on its own
+says nothing, so counting is the whole point: a rule can now ask how much
+traffic a kind of device has produced in a window, which no per-request field
+can answer. The solve hook writes the counter whenever a proof disclosed a
+bucket, and a rule naming the dimension on a request that disclosed none is
+skipped rather than read as zero, so an `lte` clause does not match every
+client that proved nothing.
+
 The proof itself is still not stored. Each disclosure carries a full Merkle path,
 which is large and spent once verified: at current traffic, retaining proofs
 would add roughly 70GB over the collection's one-month TTL against under 3GB for

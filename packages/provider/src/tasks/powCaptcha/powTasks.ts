@@ -15,7 +15,6 @@
 import { stringToHex, u8aToHex } from "@polkadot/util";
 import { ProsopoError } from "@prosopo/common";
 import type { RedisWriteQueue } from "@prosopo/database";
-import { summariseFingerprintProof } from "@prosopo/fingerprint/summary";
 import type { Logger } from "@prosopo/logger";
 import type { KeyringPair, ProsopoConfigOutput } from "@prosopo/types";
 import {
@@ -30,6 +29,7 @@ import {
 	CaptchaStatus,
 	type ClientMetaData,
 	type DecisionMachineBehavioralDataPacked,
+	type FingerprintSummaryStored,
 	FrictionlessReason,
 	type IIPValidationRules,
 	type IPAddress,
@@ -209,7 +209,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		salt?: string,
 		simdReadings?: string,
 		clientMetaData?: ClientMetaData,
-		fingerprintProof?: string,
+		fingerprintSummary?: FingerprintSummaryStored,
 	): Promise<VerifyPowCaptchaSolutionResult> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -366,6 +366,8 @@ export class PowCaptchaManager extends CaptchaManager {
 					CaptchaType.pow,
 					ipAddress.address,
 					userAccount,
+					undefined,
+					fingerprintSummary?.bucketId,
 				),
 			);
 		}
@@ -438,14 +440,8 @@ export class PowCaptchaManager extends CaptchaManager {
 		// updatePowCaptchaRecordResult triggers centralStreamer.streamPowUpdate(),
 		// which reads back the full record.
 		const recordUpdates: Partial<PoWCaptchaRecord> = { ...behavioralUpdates };
-		const fingerprintSummary = summariseFingerprintProof(fingerprintProof);
 		if (fingerprintSummary) {
 			recordUpdates.fingerprintSummary = fingerprintSummary;
-		} else if (fingerprintProof) {
-			this.logger.info(() => ({
-				msg: "fingerprintProof present but not summarisable",
-				data: { challenge, bytes: fingerprintProof.length },
-			}));
 		}
 		const storedClientMetaData = toStoredClientMetaData(clientMetaData);
 		if (storedClientMetaData) {
