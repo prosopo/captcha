@@ -58,7 +58,7 @@ import {
 	describeMatchedRule,
 } from "@prosopo/user-access-policy";
 import { at, extractData } from "@prosopo/util";
-import { randomAsHex, signatureVerify } from "@prosopo/util-crypto";
+import { randomAsHex } from "@prosopo/util-crypto";
 import { rawTlsSignalsFromRecord } from "../../api/rawTlsSignalsMiddleware.js";
 import {
 	getCompositeIpAddress,
@@ -90,6 +90,7 @@ import {
 	getIpInfoAsn,
 } from "../dnsEvent/enrichDnsEvent.js";
 import { computeFrictionlessScore } from "../frictionless/frictionlessTasksUtils.js";
+import { isSignatureValid } from "../signatureCheck.js";
 import {
 	evaluateEmailSpamRules,
 	normaliseEmailForMatching,
@@ -261,12 +262,13 @@ export class ImgCaptchaManager extends CaptchaManager {
 		clientMetaData?: ClientMetaData,
 	): Promise<DappUserSolutionResult> {
 		// check that the signature is valid (i.e. the user has signed the request hash with their private key, proving they own their account)
-		const verification = signatureVerify(
-			stringToHex(timestamp.toString()),
-			userTimestampSignature,
-			userAccount,
-		);
-		if (!verification.isValid) {
+		if (
+			!isSignatureValid(
+				timestamp.toString(),
+				userTimestampSignature,
+				userAccount,
+			)
+		) {
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
 			const err = new ProsopoError({
 				code: "UNAUTHORIZED",
@@ -282,13 +284,13 @@ export class ImgCaptchaManager extends CaptchaManager {
 		}
 
 		// check that the requestHash signature is valid and signed by the provider
-		const providerRequestHashSignatureVerify = signatureVerify(
-			stringToHex(requestHash.toString()),
-			providerRequestHashSignature,
-			this.pair.address,
-		);
-
-		if (!providerRequestHashSignatureVerify.isValid) {
+		if (
+			!isSignatureValid(
+				requestHash.toString(),
+				providerRequestHashSignature,
+				this.pair.address,
+			)
+		) {
 			// the signature is not valid, so the user is not the owner of the account. May have given a false account address with good reputation in an attempt to impersonate
 			const err = new ProsopoError({
 				code: "UNAUTHORIZED",
@@ -865,6 +867,11 @@ export class ImgCaptchaManager extends CaptchaManager {
 			failStatus = ResultReason.CLIENT_SESSION_MISMATCH;
 		}
 
+		// Read before the hard-block check, which needs its head hash.
+		const sessionRecord = solution.sessionId
+			? await this.getSessionRecordWithOriginFallback(solution.sessionId)
+			: undefined;
+
 		// Check user access policies for hard blocks
 		if (!failStatus && userAccessRulesStorage) {
 			try {
@@ -873,6 +880,7 @@ export class ImgCaptchaManager extends CaptchaManager {
 					solution,
 					solution.userAccount,
 					solution.headers,
+					sessionRecord?.decryptedHeadHash,
 					solution.coords,
 					solution.ipInfo?.isValid ? solution.ipInfo.countryCode : undefined,
 					solution.ipInfo?.isValid ? solution.ipInfo.asnNumber : undefined,
@@ -990,12 +998,6 @@ export class ImgCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Walker fills simdReadings / dnsEvent / entropy fields from the origin
-		// when this is an escalation record. See CaptchaManager.getSessionRecordWithOriginFallback.
-		const sessionRecord = solution.sessionId
-			? await this.getSessionRecordWithOriginFallback(solution.sessionId)
-			: undefined;
-
 		const enrichedDnsEvent = await enrichDnsEvent(
 			sessionRecord?.dnsEvent,
 			env.ipInfoService,
@@ -1004,10 +1006,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 
 		if (!failStatus) {
 			const check = await this.resolveTrafficFilterCheck(
-				env,
 				solution.ipInfo,
 				trafficFilter,
-				ip,
+				ip ? await env.ipInfoService.lookup(ip) : undefined,
 				enrichedDnsEvent,
 			);
 			if (check.isBlocked) {

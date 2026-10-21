@@ -14,7 +14,7 @@
 
 import { ProsopoError } from "@prosopo/common";
 import { ProviderDatabase } from "@prosopo/database";
-import { IpInfoService } from "@prosopo/ipinfo";
+import { DEFAULT_LOOKUP_CACHE, IpInfoService } from "@prosopo/ipinfo";
 import { Keyring, getPair } from "@prosopo/keyring";
 import { type Logger, getLogger, parseLogLevel } from "@prosopo/logger";
 import type { KeyringPair } from "@prosopo/types";
@@ -65,6 +65,7 @@ export class Environment implements ProsopoEnvironment {
 			ipapiUrl: this.config.ipApi?.baseUrl,
 			ipapiKey: this.config.ipApi?.apiKey,
 			logger: this.logger,
+			lookupCache: DEFAULT_LOOKUP_CACHE,
 		});
 
 		this.logger.info(() => ({
