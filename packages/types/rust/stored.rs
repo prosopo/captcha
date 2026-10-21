@@ -24,7 +24,9 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Labels superadmins put on a captcha record from the audit page, to build training sets.
+    /// Internal classification labels applied by superadmins from the audit page to
+    /// build supervised ML training sets. Stored directly on the captcha record
+    /// (see {@link StoredCaptcha.label}); not part of the captcha verification flow.
     pub enum CaptchaLabel {
         Human: "human" = "human",
         Bot: "bot" = "bot",
@@ -34,7 +36,9 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// Where in the user's journey the SIMD readings first reached the provider.
+    /// Stage at which the catcher's SIMD readings first reached the provider.
+    /// Tracked once on the Session record (first hop wins) so analytics can see
+    /// when in the user's journey the CPU fingerprint became available.
     pub enum SimdReadingsStage {
         Frictionless: "frictionless" = "frictionless",
         Challenge: "challenge" = "challenge",

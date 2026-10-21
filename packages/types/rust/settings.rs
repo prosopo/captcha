@@ -367,6 +367,10 @@ pub fn ip_validation_rules_schema() -> Schema {
 
 wire_enum! {
     /// The device families a context-aware baseline is held per.
+    ///
+    /// Coarse on purpose. A site's `<head>` differs most between a phone-width
+    /// responsive render, a tablet render and a desktop render; finer splits
+    /// (vendor, OS version) fracture the sample without changing the DOM.
     pub enum DeviceType {
         Desktop: "Desktop" = "desktop",
         Mobile: "Mobile" = "mobile",
@@ -375,8 +379,13 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// The bucket a session's head hash is averaged into, and the key its entropy record is
-    /// stored under: the device family crossed with whether the page is in a webview.
+    /// Context type — the bucket a session's head hash is averaged into, and the
+    /// key a context-aware entropy record is stored under.
+    ///
+    /// The device family crossed with whether the page is running inside a
+    /// webview. Both dimensions move the DOM independently: a phone renders
+    /// different markup from a desktop, and an in-app webview injects and
+    /// suppresses different things again from the same device's real browser.
     pub enum ContextType {
         Desktop: "Desktop" = "desktop",
         DesktopWebview: "DesktopWebview" = "desktop-webview",
@@ -556,6 +565,9 @@ pub fn traffic_filter_schema() -> Schema {
 }
 
 wire_enum! {
+    /// Encoding used when serialising the honeypot question into the rendered
+    /// hidden input. Humans don't see the field; bots that auto-fill text inputs
+    /// receive an encoded string they can't trivially decode.
     pub enum EncodingType {
         Morse: "morse" = "morse",
         Semaphore: "semaphore" = "semaphore",

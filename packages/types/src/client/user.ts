@@ -13,14 +13,11 @@
 // limitations under the License.
 
 import { z } from "zod";
+import { Tier } from "../generated/wire.js";
 
 import type { IUserSettings } from "./settings.js";
 
-export enum Tier {
-	Free = "free",
-	Professional = "professional",
-	Enterprise = "enterprise",
-}
+export { Tier };
 
 export const TierSchema = z.nativeEnum(Tier);
 

@@ -23,15 +23,13 @@
 // /verify are bound to the dapp's own site key, so it cannot be used against a
 // site protected by a real key), and the widget renders a visible warning so it
 // can never be shipped to production unnoticed.
+import { TestSiteKeyMode } from "../generated/wire.js";
+
+export { TestSiteKeyMode };
 export const ALWAYS_PASS_SITE_KEY =
 	"5EARALUe4HXQwKo5KanZSGGKqJV4VTaytpezFwv8ZHbZewmh";
 export const ALWAYS_FAIL_SITE_KEY =
 	"5ETtechmZkn3CUVeJX7Z511oiuiu742aHLm91D5ZZw4fqoAG";
-
-export enum TestSiteKeyMode {
-	Pass = "pass",
-	Fail = "fail",
-}
 
 // Returns the forced behaviour for a reserved test site key, or null for any
 // normal site key (the overwhelmingly common case).

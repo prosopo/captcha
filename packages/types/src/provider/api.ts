@@ -65,10 +65,18 @@ import {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
+import {
+	AdminApiPaths,
+	BlockRuleType,
+	ClientApiPaths,
+	PublicApiPaths,
+} from "../generated/wire.js";
 import type {
 	ChallengeSignature,
 	RequestHashSignature,
 } from "../procaptcha/index.js";
+
+export { ClientApiPaths, PublicApiPaths, AdminApiPaths, BlockRuleType };
 
 export type ApiJsonError = {
 	/** In the request's language. */
@@ -90,42 +98,6 @@ export type IPAddress = Address4 | Address6;
 
 export const DEFAULT_SOLVED_COUNT = 2;
 export const DEFAULT_UNSOLVED_COUNT = 0;
-
-export enum ClientApiPaths {
-	GetImageCaptchaChallenge = "/v1/prosopo/provider/client/captcha/image",
-	GetPowCaptchaChallenge = "/v1/prosopo/provider/client/captcha/pow",
-	GetFrictionlessCaptchaChallenge = "/v1/prosopo/provider/client/captcha/frictionless",
-	SubmitImageCaptchaSolution = "/v1/prosopo/provider/client/solution",
-	SubmitPowCaptchaSolution = "/v1/prosopo/provider/client/pow/solution",
-	VerifyPowCaptchaSolution = "/v1/prosopo/provider/client/pow/verify",
-	VerifyImageCaptchaSolutionDapp = "/v1/prosopo/provider/client/image/dapp/verify",
-	GetPuzzleCaptchaChallenge = "/v1/prosopo/provider/client/captcha/puzzle",
-	SubmitPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/solution",
-	VerifyPuzzleCaptchaSolution = "/v1/prosopo/provider/client/puzzle/verify",
-	GetAudioCaptchaChallenge = "/v1/prosopo/provider/client/captcha/audio",
-	SubmitAudioCaptchaSolution = "/v1/prosopo/provider/client/audio/solution",
-	VerifyAudioCaptchaSolution = "/v1/prosopo/provider/client/audio/verify",
-	GetIconOrderCaptchaChallenge = "/v1/prosopo/provider/client/captcha/icon-order",
-	SubmitIconOrderCaptchaSolution = "/v1/prosopo/provider/client/icon-order/solution",
-	VerifyIconOrderCaptchaSolution = "/v1/prosopo/provider/client/icon-order/verify",
-	// Verify path for Web Bot Auth authenticated sessions. Only accepts tokens
-	// minted with captchaType=authenticated. Requires the operator to forward
-	// the client IP so the session's `ipAddress` binding can be enforced;
-	// a leaked authenticated token cannot be replayed from a different IP.
-	VerifyAuthenticatedSession = "/v1/prosopo/provider/client/authenticated/verify",
-	GetProviderStatus = "/v1/prosopo/provider/client/status",
-	SubmitUserEvents = "/v1/prosopo/provider/client/events",
-	CheckSpamEmail = "/v1/prosopo/provider/client/spam/email",
-	// Assigns a precomputed detector bundle for this session and returns its
-	// obfuscated script inline (or signals the bundled fallback when no pool).
-	AssignDetectorBundle = "/v1/prosopo/provider/client/detector/assign",
-}
-
-export enum PublicApiPaths {
-	Healthz = "/healthz",
-	GetProviderDetails = "/v1/prosopo/provider/public/details",
-	Metrics = "/metrics",
-}
 
 export const providerDetailsSchema = object({
 	version: string(),
@@ -159,30 +131,6 @@ export type TGetPuzzleCaptchaChallengeURL =
 
 export type TSubmitPuzzleCaptchaSolutionURL =
 	`${string}${ClientApiPaths.SubmitPuzzleCaptchaSolution}`;
-
-export enum AdminApiPaths {
-	SiteKeyRegister = "/v1/prosopo/provider/admin/sitekey/register",
-	SiteKeysRegister = "/v1/prosopo/provider/admin/sitekeys/register",
-	ToggleMaintenanceMode = "/v1/prosopo/provider/admin/maintenance/toggle",
-	UpdateDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/update",
-	GetAllDecisionMachines = "/v1/prosopo/provider/admin/decision-machine/get-all",
-	GetDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/get",
-	RemoveDecisionMachine = "/v1/prosopo/provider/admin/decision-machine/remove",
-	RemoveAllDecisionMachines = "/v1/prosopo/provider/admin/decision-machine/remove-all",
-	ClearAllCounters = "/v1/prosopo/provider/admin/counters/clear-all",
-	SiteKeyRemove = "/v1/prosopo/provider/admin/sitekey/remove",
-	SiteKeysRemove = "/v1/prosopo/provider/admin/sitekeys/remove",
-	// Receives batched DNS observation events from the dns sidecar.
-	DnsEvent = "/v1/prosopo/provider/admin/dns/event",
-	// Hot-swaps the in-memory detector bundle pool (emergency push channel,
-	// avoids a redeploy to rotate the pool).
-	ReplaceDetectorPool = "/v1/prosopo/provider/admin/detector/pool/replace",
-	// Read a single session's current state from both Redis and Mongo.
-	// Test / diagnostic surface only — used by the cypress consistency
-	// suite to assert Redis and Mongo agree on captchaType at each stage
-	// of a captcha flow. Not called from any client code path.
-	GetSession = "/v1/prosopo/provider/admin/session/get",
-}
 
 export type CombinedApiPaths = ClientApiPaths | AdminApiPaths;
 
@@ -1226,11 +1174,6 @@ export type ProsopoCaptchaCountConfigSchemaInput = input<
 export type ProsopoCaptchaCountConfigSchemaOutput = output<
 	typeof ProsopoCaptchaCountConfigSchema
 >;
-
-export enum BlockRuleType {
-	ipAddress = "ipAddress",
-	userAccount = "userAccount",
-}
 
 const BlockRuleTypeSpec = nativeEnum(BlockRuleType);
 

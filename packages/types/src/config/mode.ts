@@ -14,11 +14,9 @@
 
 import type { infer as zInfer } from "zod";
 import { enum as zEnum } from "zod";
+import { ModeEnum } from "../generated/wire.js";
 
-export enum ModeEnum {
-	visible = "visible",
-	invisible = "invisible",
-}
+export { ModeEnum };
 
 export const Mode = zEnum([ModeEnum.visible, ModeEnum.invisible]).optional();
 export type ModeType = zInfer<typeof Mode>;

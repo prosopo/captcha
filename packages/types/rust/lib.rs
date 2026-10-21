@@ -36,6 +36,7 @@ pub mod settings_types;
 pub mod stored;
 pub mod timeouts;
 pub mod token;
+pub mod typescript;
 mod wire_enum;
 
 pub use api_params::ApiParams;

@@ -56,6 +56,11 @@ import type {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
+import {
+	CaptchaLabel,
+	IpAddressType,
+	SimdReadingsStage,
+} from "../generated/wire.js";
 import type {
 	AudioEvent,
 	IconClick,
@@ -69,6 +74,8 @@ import {
 	MatchedAccessRuleSchema,
 } from "./matchedAccessRule.js";
 import type { FrictionlessReason, ResultReason } from "./reasons.js";
+
+export { IpAddressType, CaptchaLabel, SimdReadingsStage };
 
 export interface BrowserInfo {
 	name: string;
@@ -104,11 +111,6 @@ export interface UserAgentInfo {
 	device: DeviceInfo;
 	engine: EngineInfo;
 	os: OSInfo;
-}
-
-export enum IpAddressType {
-	v4 = "v4",
-	v6 = "v6",
 }
 
 export interface CompositeIpAddress {
@@ -180,18 +182,6 @@ export interface ClientMetaData {
 	// for the provider's own frictionless session — these are different
 	// things and both appear on the same document.
 	clientSessionId?: string;
-}
-
-/**
- * Internal classification labels applied by superadmins from the audit page to
- * build supervised ML training sets. Stored directly on the captcha record
- * (see {@link StoredCaptcha.label}); not part of the captcha verification flow.
- */
-export enum CaptchaLabel {
-	human = "human",
-	bot = "bot",
-	suspicious = "suspicious",
-	unknown = "unknown",
 }
 
 export const CaptchaLabelSchema = nativeEnum(CaptchaLabel);
@@ -415,15 +405,6 @@ export const SimdReadingsSchema = union([
 // provider's `sanitiseDetectorData` — not here, since this schema also has to
 // parse records that were stored before any given cap existed.
 export const DetectorDataSchema = record(string(), unknownType());
-
-// Stage at which the catcher's SIMD readings first reached the provider.
-// Tracked once on the Session record (first hop wins) so analytics can see
-// when in the user's journey the CPU fingerprint became available.
-export enum SimdReadingsStage {
-	frictionless = "frictionless",
-	challenge = "challenge",
-	submit = "submit",
-}
 
 export const SimdReadingsStageSchema = nativeEnum(SimdReadingsStage);
 

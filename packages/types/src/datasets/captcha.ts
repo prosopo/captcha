@@ -1,16 +1,3 @@
-// Copyright 2021-2026 Prosopo (UK) Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 import type { AccountId } from "@polkadot/types/interfaces/runtime";
 import {
 	array,
@@ -24,29 +11,41 @@ import {
 	number as zNumber,
 	undefined as zUndefined,
 } from "zod";
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import {
+	CaptchaItemTypes,
+	CaptchaStates,
+	CaptchaStatus,
+	CaptchaTypes,
+	DappPayee,
+	GovernanceStatus,
+	InputMethod,
+	StoredStatusNames,
+} from "../generated/wire.js";
 import type { ResultReason } from "../provider/reasons.js";
 
-export enum CaptchaTypes {
-	SelectAll = "SelectAll",
-}
-export enum CaptchaItemTypes {
-	Text = "text",
-	Image = "image",
-}
-export enum CaptchaStates {
-	Solved = "solved",
-	Unsolved = "unsolved",
-}
-
-/**
- * How a selection was made: a tile, or the checkbox tick that opened the
- * challenge. Keyboard activation has no pointer position, so its coordinates
- * are always (0, 0) and say nothing about who made the selection.
- */
-export enum InputMethod {
-	pointer = "pointer",
-	keyboard = "keyboard",
-}
+export {
+	CaptchaTypes,
+	CaptchaItemTypes,
+	CaptchaStates,
+	InputMethod,
+	CaptchaStatus,
+	StoredStatusNames,
+	GovernanceStatus,
+	DappPayee,
+};
 
 export const InputMethodSchema = nativeEnum(InputMethod);
 export type RawSolution = number;
@@ -94,19 +93,6 @@ export interface CaptchaResult {
 	reason?: ResultReason;
 }
 
-export enum CaptchaStatus {
-	pending = "Pending",
-	approved = "Approved",
-	disapproved = "Disapproved",
-}
-
-export enum StoredStatusNames {
-	notStored = "notStored",
-	userSubmitted = "userSubmitted",
-	serverChecked = "serverChecked",
-	stored = "stored",
-}
-
 export type StoredStatus =
 	| StoredStatusNames.notStored
 	| StoredStatusNames.userSubmitted
@@ -124,23 +110,12 @@ export type Commit = {
 	userSignature: string;
 };
 
-export enum GovernanceStatus {
-	active = "Active",
-	inactive = "Inactive",
-}
-
 export type Dapp = {
 	status: GovernanceStatus;
 	balance: string | number;
 	owner: AccountId;
 	payee: DappPayee;
 };
-
-export enum DappPayee {
-	provider = "Provider",
-	dapp = "Dapp",
-	any = "Any",
-}
 
 export const TimestampSchema = zNumber();
 export type Timestamp = zInfer<typeof TimestampSchema>;

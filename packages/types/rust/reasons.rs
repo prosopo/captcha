@@ -20,24 +20,57 @@ use crate::wire_enum::wire_enum;
 use serde::{Deserialize, Serialize};
 
 wire_enum! {
-    /// Why the frictionless flow chose a captcha type, stored at `session.reason`.
+    /// Reason persisted at `session.reason` to record why a particular captcha
+    /// type was chosen for a user (the "selection reason"). Emitted by the
+    /// frictionless flow in @prosopo/provider; centralised here so the portal,
+    /// audit tooling, and tests can reference the same values without depending
+    /// on the server-side provider package.
     pub enum FrictionlessReason {
         UserAccessPolicy: "USER_ACCESS_POLICY" = "USER_ACCESS_POLICY",
         AccessPolicyBlock: "ACCESS_POLICY_BLOCK" = "ACCESS_POLICY_BLOCK",
         UserAgentMismatch: "USER_AGENT_MISMATCH" = "USER_AGENT_MISMATCH",
         OldTimestamp: "OLD_TIMESTAMP" = "OLD_TIMESTAMP",
         BotScoreAboveThreshold: "BOT_SCORE_ABOVE_THRESHOLD" = "BOT_SCORE_ABOVE_THRESHOLD",
+        /// Score landed in the middle band of the frictionless ladder: past the
+        /// point where a silent PoW pass is warranted, but short of the image
+        /// rung, so the user gets a puzzle instead.
         BotScorePuzzleBand: "BOT_SCORE_PUZZLE_BAND" = "BOT_SCORE_PUZZLE_BAND",
         WebviewDetected: "WEBVIEW_DETECTED" = "WEBVIEW_DETECTED",
         AutoBanScore: "AUTO_BAN_SCORE" = "AUTO_BAN_SCORE",
         FingerprintProofInvalid: "FINGERPRINT_PROOF_INVALID" = "FINGERPRINT_PROOF_INVALID",
         MissingCurrentUrl: "MISSING_CURRENT_URL" = "MISSING_CURRENT_URL",
+        /// A verified PoW solve arrived without click coordinates encoded in its
+        /// salt. Every current widget embeds the checkbox click position, so absent
+        /// coords mean the solve didn't come through the official widget path; such
+        /// solves are escalated to an image captcha rather than approved outright
+        /// (see verifyPowCaptchaSolution in @prosopo/provider).
         MissingCoordinates: "MISSING_COORDINATES" = "MISSING_COORDINATES",
+        /// The address that asked for a PoW challenge is not the address that
+        /// solved it. A challenge is short-lived and bound to one session, so the
+        /// honest explanations are narrow — a mobile handoff mid-solve — while
+        /// handing the challenge to a second host is the cheap way to farm the work
+        /// out. Escalated to an image captcha rather than denied: a real network
+        /// change should cost a picture, not a rejection. Judged on the network part
+        /// only — the v6 /64 and the v4 /24 — since the host bits are reassigned by
+        /// design on both (see isSameIpOrigin).
         IpChanged: "IP_CHANGED" = "IP_CHANGED",
+        /// The detector payload could not be decrypted: no bundle resolved for the
+        /// session (expired/missing Redis binding, bundle no longer in the pool), or
+        /// the ciphertext did not open with the bundle's keys. Distinct from a high
+        /// bot score — we learned nothing about this client, rather than learning
+        /// something bad — so it gets its own short image challenge instead of
+        /// falling through to the old-timestamp path, which used to catch it by
+        /// accident via the synthetic `timestamp = 0`.
         DecryptionFailed: "DECRYPTION_FAILED" = "DECRYPTION_FAILED",
+        /// The client sent no detector token, so nothing was measured about it.
         MissingToken: "MISSING_TOKEN" = "MISSING_TOKEN",
+        /// A token arrived without its accompanying head hash.
         MissingHeadHash: "MISSING_HEAD_HASH" = "MISSING_HEAD_HASH",
+        /// The user kept refreshing the puzzle, so the replacement is an image
+        /// challenge instead. Only ever this direction, and only where the site
+        /// has image enabled (see switchTypeAfterRefreshes in @prosopo/provider).
         PuzzleRefreshLimit: "PUZZLE_REFRESH_LIMIT" = "PUZZLE_REFRESH_LIMIT",
+        /// The user asked to swap the puzzle for an image challenge.
         PuzzleUserSwitch: "PUZZLE_USER_SWITCH" = "PUZZLE_USER_SWITCH",
     }
 }
@@ -52,13 +85,22 @@ pub const NO_MEASUREMENT_REASONS: [FrictionlessReason; 3] = [
 ];
 
 wire_enum! {
-    /// The outcome of a verification, stored at `result.reason`. The values are the
-    /// translation keys of the messages shown to the user.
+    /// Reason persisted at `result.reason` to record the outcome of a captcha
+    /// verification. Provider task code previously inlined these as string
+    /// literals — the enum lifts the canonical set into one place so callers
+    /// can type-check what they emit and the portal can render a known list.
+    ///
+    /// Values intentionally match the translation keys used to render messages
+    /// to the user, so the enum doubles as a typed bridge between server-side
+    /// outcomes and the locale package.
     pub enum ResultReason {
         CaptchaPassed: "CAPTCHA_PASSED" = "API.CAPTCHA_PASSED",
         CaptchaFailed: "CAPTCHA_FAILED" = "API.CAPTCHA_FAILED",
         AbuserBlocked: "ABUSER_BLOCKED" = "API.ABUSER_BLOCKED",
         AccessPolicyBlock: "ACCESS_POLICY_BLOCK" = "API.ACCESS_POLICY_BLOCK",
+        /// The dapp server verified with a `clientSessionId` that does not match the
+        /// one the widget was rendered with (or the solve carries none at all). Stops
+        /// a token earned in one session being replayed against another.
         ClientSessionMismatch: "CLIENT_SESSION_MISMATCH" = "API.CLIENT_SESSION_MISMATCH",
         CrawlerBlocked: "CRAWLER_BLOCKED" = "API.CRAWLER_BLOCKED",
         DatacenterBlocked: "DATACENTER_BLOCKED" = "API.DATACENTER_BLOCKED",

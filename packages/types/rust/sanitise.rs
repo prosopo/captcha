@@ -27,6 +27,7 @@ impl InputLimits {
     pub const NAME: usize = 256;
     /// Email addresses (treated as opaque strings — no format validation).
     pub const EMAIL: usize = 320;
+    /// URLs.
     pub const URL: usize = 2048;
     /// General short freetext. Default for `bounded_string` / `safe_text`.
     pub const TEXT: usize = 16384;
@@ -34,6 +35,17 @@ impl InputLimits {
     pub const LONG_TEXT: usize = 65536;
     /// Tokens, signatures, base64 payloads, behavioural/simd readings.
     pub const TOKEN: usize = 131072;
+
+    /// The doc comment of each entry, for the generated TypeScript.
+    pub const DOCS: [&'static str; 7] = [
+        "Identifiers, keys, slugs (accounts, site keys, dataset ids, …).",
+        "Names, labels, titles.",
+        "Email addresses (treated as opaque strings — no format validation).",
+        "URLs.",
+        "General short freetext. Default for `boundedString` / `safeText`.",
+        "Longer freetext: messages, descriptions, decision-machine source.",
+        "Tokens, signatures, base64 payloads, behavioural/simd readings.",
+    ];
 
     pub const ENTRIES: [(&'static str, usize); 7] = [
         ("ID", InputLimits::ID),

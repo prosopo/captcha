@@ -115,3 +115,75 @@ pub const TIMEOUTS: [(&str, u64); 19] = [
         DEFAULT_PROVIDER_REQUEST_TIMEOUT_MS,
     ),
 ];
+
+/// The comment the TS gives a timeout, for the generated TypeScript.
+pub const TIMEOUT_DOCS: [(&str, &str); 17] = [
+    (
+        "DEFAULT_IMAGE_CAPTCHA_TIMEOUT",
+        "The timeframe in which a user must complete an image captcha (1 minute)",
+    ),
+    (
+        "DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT",
+        "The timeframe in which an image captcha solution remains valid on the page before timing out (2 minutes)",
+    ),
+    (
+        "DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT",
+        "The timeframe in which an image captcha solution must be verified within (3 minutes)",
+    ),
+    (
+        "DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED",
+        "The time in milliseconds that a cached, verified, image captcha solution is valid for (15 minutes)",
+    ),
+    (
+        "DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT",
+        "The timeframe in which a pow captcha solution remains valid on the page before timing out (1 minute)",
+    ),
+    (
+        "DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT",
+        "The timeframe in which a pow captcha must be completed and verified (2 minutes)",
+    ),
+    (
+        "DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT",
+        "The time in milliseconds that a Provider cached, verified, pow captcha solution is valid for (3 minutes)",
+    ),
+    (
+        "DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT",
+        "The timeframe in which a puzzle captcha solution remains valid on the page before timing out (1 minute)",
+    ),
+    (
+        "DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT",
+        "The timeframe in which a puzzle captcha must be completed and verified (2 minutes)",
+    ),
+    (
+        "DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT",
+        "The time in milliseconds that a Provider cached, verified, puzzle captcha solution is valid for (3 minutes)",
+    ),
+    (
+        "DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT",
+        "The timeframe in which an audio captcha solution remains valid on the page before timing out (1 minute)",
+    ),
+    (
+        "DEFAULT_AUDIO_CAPTCHA_VERIFIED_TIMEOUT",
+        "The timeframe in which an audio captcha must be completed and verified (2 minutes)",
+    ),
+    (
+        "DEFAULT_AUDIO_CAPTCHA_CACHED_TIMEOUT",
+        "The time in milliseconds that a Provider cached, verified, audio captcha solution is valid for (3 minutes)",
+    ),
+    (
+        "DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT",
+        "Double the puzzle's solution window, since finding and clicking several\nicons takes longer than one drag; the other windows keep the puzzle's\nmultiples of it.",
+    ),
+    (
+        "DEFAULT_MAX_VERIFIED_TIME_CONTRACT",
+        "The time in milliseconds since the last correct captcha recorded in the contract (15 minutes), after which point, the\nuser will be required to complete another captcha",
+    ),
+    (
+        "DEFAULT_MAX_TIMESTAMP_AGE",
+        "How old a detector payload may be before the frictionless flow penalises it\nas stale (10 minutes). This is the window in which a payload is still worth\nreading, so it is also the window in which the provider must keep the key\nthat reads it — see `DETECTOR_BUNDLE_TTL_SECONDS`, which is derived from this\nrather than set independently. A binding shorter than this makes the provider\naccept payloads it has already thrown away the means to decrypt.",
+    ),
+    (
+        "DEFAULT_PROVIDER_REQUEST_TIMEOUT_MS",
+        "How long @prosopo/server waits for a provider to answer a verify call (10 seconds)",
+    ),
+];

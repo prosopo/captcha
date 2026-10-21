@@ -36,18 +36,18 @@ impl std::error::Error for UnknownEnumValue {}
 #[macro_export]
 macro_rules! wire_enum {
     (
-        $(#[$meta:meta])*
+        $(#[$($meta:tt)*])*
         $vis:vis enum $name:ident {
-            $($(#[$variant_meta:meta])* $variant:ident : $key:literal = $value:literal),+ $(,)?
+            $($(#[$($variant_meta:tt)*])* $variant:ident : $key:literal = $value:literal),+ $(,)?
         }
     ) => {
-        $(#[$meta])*
+        $(#[$($meta)*])*
         #[derive(
             Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord,
             serde::Serialize, serde::Deserialize,
         )]
         $vis enum $name {
-            $($(#[$variant_meta])* #[serde(rename = $value)] $variant),+
+            $($(#[$($variant_meta)*])* #[serde(rename = $value)] $variant),+
         }
 
         impl $name {
@@ -55,6 +55,10 @@ macro_rules! wire_enum {
             pub const ALL: [$name; [$($value),+].len()] = [$($name::$variant),+];
             /// The TS member names, in the same order.
             pub const TS_KEYS: [&'static str; [$($key),+].len()] = [$($key),+];
+            /// The enum's doc comment, for the generated TypeScript.
+            pub const TS_DOC: &'static str = $crate::ts_doc!($(#[$($meta)*])*);
+            /// Each member's doc comment, in the same order.
+            pub const TS_DOCS: [&'static str; [$($value),+].len()] = [$($crate::ts_doc!($(#[$($variant_meta)*])*)),+];
 
             pub const fn as_str(self) -> &'static str {
                 match self {
@@ -87,6 +91,21 @@ macro_rules! wire_enum {
                     })
             }
         }
+    };
+}
+
+/// The doc comment among some attributes, a line per `///`.
+#[macro_export]
+#[doc(hidden)]
+macro_rules! ts_doc {
+    () => {
+        ""
+    };
+    (#[doc = $doc:literal] $($rest:tt)*) => {
+        concat!($doc, "\n", $crate::ts_doc!($($rest)*))
+    };
+    (#[$($other:tt)*] $($rest:tt)*) => {
+        $crate::ts_doc!($($rest)*)
     };
 }
 

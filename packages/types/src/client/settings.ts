@@ -1,3 +1,8 @@
+import { array, boolean, number, object, type output, string, z } from "zod";
+import {
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+} from "../config/timeouts.js";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,13 +16,23 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { array, boolean, number, object, type output, string, z } from "zod";
 import {
-	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
-	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
-} from "../config/timeouts.js";
+	ContextType,
+	DeviceType,
+	EncodingType,
+	IPValidationAction,
+	TrafficFilterAction,
+} from "../generated/wire.js";
 import { CaptchaType } from "./captchaType/captchaType.js";
 import { SelectableCaptchaTypeSpec } from "./captchaType/captchaTypeSpec.js";
+
+export {
+	ContextType,
+	DeviceType,
+	EncodingType,
+	IPValidationAction,
+	TrafficFilterAction,
+};
 
 export const captchaTypeDefault = CaptchaType.frictionless;
 export const domainsDefault: string[] = [];
@@ -457,13 +472,6 @@ export const IconOrderSettingsSchema = object({
 
 export type IIconOrderSettings = output<typeof IconOrderSettingsSchema>;
 
-// IP Validation Rules
-export enum IPValidationAction {
-	Allow = "allow",
-	Reject = "reject",
-	Flag = "flag",
-}
-
 export type IPValidateCondition = {
 	met: boolean;
 	action: IPValidationAction;
@@ -531,38 +539,6 @@ export const IPValidationRulesSchema = object({
 	countryOverrides: z.record(string(), IPValidationSchema).optional(),
 	forceConsistentIp: boolean().optional().default(false),
 });
-
-/**
- * The device families a context-aware baseline is held per.
- *
- * Coarse on purpose. A site's `<head>` differs most between a phone-width
- * responsive render, a tablet render and a desktop render; finer splits
- * (vendor, OS version) fracture the sample without changing the DOM.
- */
-export enum DeviceType {
-	Desktop = "desktop",
-	Mobile = "mobile",
-	Tablet = "tablet",
-}
-
-/**
- * Context type — the bucket a session's head hash is averaged into, and the
- * key a context-aware entropy record is stored under.
- *
- * The device family crossed with whether the page is running inside a
- * webview. Both dimensions move the DOM independently: a phone renders
- * different markup from a desktop, and an in-app webview injects and
- * suppresses different things again from the same device's real browser.
- *
- */
-export enum ContextType {
-	Desktop = "desktop",
-	DesktopWebview = "desktop-webview",
-	Mobile = "mobile",
-	MobileWebview = "mobile-webview",
-	Tablet = "tablet",
-	TabletWebview = "tablet-webview",
-}
 
 // Zod schema for context type
 export const ContextTypeSchema = z.nativeEnum(ContextType);
@@ -713,11 +689,6 @@ export const trafficFilterAbuserScoreThresholdDefault = 0.2;
 const MAX_DATACENTER_ALLOWLIST_ENTRIES = 50;
 const MAX_DATACENTER_ALLOWLIST_ENTRY_LENGTH = 128;
 
-export enum TrafficFilterAction {
-	Block = "block",
-	Challenge = "challenge",
-}
-
 export const TrafficFilterActionSchema = z.nativeEnum(TrafficFilterAction);
 
 // Per-category policy. When `action === "challenge"`, the optional captcha
@@ -791,14 +762,6 @@ export const TrafficFilterSchema = object({
 export type IEmailSpamRules = output<typeof EmailSpamRulesSchema>;
 export type ISpamFilterRules = output<typeof SpamFilterRulesSchema>;
 export type ITrafficFilter = output<typeof TrafficFilterSchema>;
-
-// Encoding used when serialising the honeypot question into the rendered
-// hidden input. Humans don't see the field; bots that auto-fill text inputs
-// receive an encoded string they can't trivially decode.
-export enum EncodingType {
-	morse = "morse",
-	semaphore = "semaphore",
-}
 
 export const EncodingTypeSchema = z.nativeEnum(EncodingType);
 

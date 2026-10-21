@@ -28,6 +28,13 @@ import {
 	puzzleToleranceFieldSchema,
 } from "../client/settings.js";
 import type { ModeEnum } from "../config/mode.js";
+import {
+	DecisionMachineDecision,
+	DecisionMachineKind,
+	DecisionMachineLanguage,
+	DecisionMachineRuntime,
+	DecisionMachineScope,
+} from "../generated/wire.js";
 import type {
 	AudioEvent,
 	IconOrderEvent,
@@ -38,6 +45,14 @@ import type { ScoreComponents } from "../provider/database.js";
 import type { DetectorData, SimdReadings } from "../provider/detection.js";
 import type { FrictionlessReason } from "../provider/reasons.js";
 
+export {
+	DecisionMachineRuntime,
+	DecisionMachineKind,
+	DecisionMachineScope,
+	DecisionMachineLanguage,
+	DecisionMachineDecision,
+};
+
 export type EnrichedDnsEvent = {
 	peerIp?: string;
 	resolverIp?: string;
@@ -45,42 +60,6 @@ export type EnrichedDnsEvent = {
 	peerIpInfo?: IPInfoResponse;
 	resolverIpInfo?: IPInfoResponse;
 };
-
-export enum DecisionMachineRuntime {
-	Node = "node",
-}
-
-export enum DecisionMachineKind {
-	Routing = "routing",
-	Decision = "decision",
-}
-
-/**
- * Decision machine scope defines the specificity level of an artifact.
- * Only ONE artifact is selected per request based on scope priority.
- *
- * Current scopes (priority order):
- * - Dapp: Custom decision machine for a specific dapp (highest priority)
- * - Global: Default decision machine applied to all dapps (fallback)
- *
- * Future extensibility: Additional scopes can be added for device type
- * (mobile/desktop/app), geographic region, user tier, etc. New scopes
- * would be evaluated in priority order to maintain single-artifact execution.
- */
-export enum DecisionMachineScope {
-	Global = "global",
-	Dapp = "dapp",
-}
-
-export enum DecisionMachineLanguage {
-	JavaScript = "js",
-	TypeScript = "ts",
-}
-
-export enum DecisionMachineDecision {
-	Allow = "allow",
-	Deny = "deny",
-}
 
 export type DecisionMachineBehavioralDataPacked = {
 	c1: unknown[];

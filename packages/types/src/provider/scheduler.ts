@@ -11,22 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-export enum ScheduledTaskNames {
-	BatchCommitment = "BatchCommitment",
-	CalculateSolution = "CalculateSolution",
-	StoreCommitmentsExternal = "StoreCommitmentsExternal",
-	GetClientList = "GetClientList",
-	SetClientEntropy = "SetClientEntropy",
-	UpdateSpamEmailDomains = "UpdateSpamEmailDomains",
-}
 
-export enum ScheduledTaskStatus {
-	Pending = "Pending",
-	Running = "Running",
-	Completed = "Completed",
-	Failed = "Failed",
-}
+import { ScheduledTaskNames, ScheduledTaskStatus } from "../generated/wire.js";
 
+export { ScheduledTaskNames, ScheduledTaskStatus };
 export interface ScheduledTaskResult {
 	error?: string;
 	data?: Record<string, unknown>;

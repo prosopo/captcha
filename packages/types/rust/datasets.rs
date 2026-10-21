@@ -44,7 +44,9 @@ wire_enum! {
 }
 
 wire_enum! {
-    /// How a selection was made: a tile, or the checkbox tick that opened the challenge.
+    /// How a selection was made: a tile, or the checkbox tick that opened the
+    /// challenge. Keyboard activation has no pointer position, so its coordinates
+    /// are always (0, 0) and say nothing about who made the selection.
     pub enum InputMethod {
         Pointer: "pointer" = "pointer",
         Keyboard: "keyboard" = "keyboard",

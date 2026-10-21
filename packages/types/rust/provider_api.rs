@@ -53,12 +53,16 @@ wire_enum! {
         GetIconOrderCaptchaChallenge: "GetIconOrderCaptchaChallenge" = "/v1/prosopo/provider/client/captcha/icon-order",
         SubmitIconOrderCaptchaSolution: "SubmitIconOrderCaptchaSolution" = "/v1/prosopo/provider/client/icon-order/solution",
         VerifyIconOrderCaptchaSolution: "VerifyIconOrderCaptchaSolution" = "/v1/prosopo/provider/client/icon-order/verify",
-        /// Only accepts tokens minted with `captchaType=authenticated`, and needs the client IP
-        /// forwarded so the session's IP binding can be enforced.
+        /// Verify path for Web Bot Auth authenticated sessions. Only accepts tokens
+        /// minted with captchaType=authenticated. Requires the operator to forward
+        /// the client IP so the session's `ipAddress` binding can be enforced;
+        /// a leaked authenticated token cannot be replayed from a different IP.
         VerifyAuthenticatedSession: "VerifyAuthenticatedSession" = "/v1/prosopo/provider/client/authenticated/verify",
         GetProviderStatus: "GetProviderStatus" = "/v1/prosopo/provider/client/status",
         SubmitUserEvents: "SubmitUserEvents" = "/v1/prosopo/provider/client/events",
         CheckSpamEmail: "CheckSpamEmail" = "/v1/prosopo/provider/client/spam/email",
+        /// Assigns a precomputed detector bundle for this session and returns its
+        /// obfuscated script inline (or signals the bundled fallback when no pool).
         AssignDetectorBundle: "AssignDetectorBundle" = "/v1/prosopo/provider/client/detector/assign",
     }
 }
@@ -84,11 +88,15 @@ wire_enum! {
         ClearAllCounters: "ClearAllCounters" = "/v1/prosopo/provider/admin/counters/clear-all",
         SiteKeyRemove: "SiteKeyRemove" = "/v1/prosopo/provider/admin/sitekey/remove",
         SiteKeysRemove: "SiteKeysRemove" = "/v1/prosopo/provider/admin/sitekeys/remove",
-        /// Batched DNS observation events from the dns sidecar.
+        /// Receives batched DNS observation events from the dns sidecar.
         DnsEvent: "DnsEvent" = "/v1/prosopo/provider/admin/dns/event",
-        /// Hot-swaps the in-memory detector bundle pool.
+        /// Hot-swaps the in-memory detector bundle pool (emergency push channel,
+        /// avoids a redeploy to rotate the pool).
         ReplaceDetectorPool: "ReplaceDetectorPool" = "/v1/prosopo/provider/admin/detector/pool/replace",
-        /// Diagnostic only: one session as both Redis and Mongo hold it.
+        /// Read a single session's current state from both Redis and Mongo.
+        /// Test / diagnostic surface only — used by the cypress consistency
+        /// suite to assert Redis and Mongo agree on captchaType at each stage
+        /// of a captcha flow. Not called from any client code path.
         GetSession: "GetSession" = "/v1/prosopo/provider/admin/session/get",
     }
 }

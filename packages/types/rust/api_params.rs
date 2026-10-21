@@ -15,16 +15,19 @@
 //! `ApiParams`: the JSON keys of request and response bodies, and of the token.
 
 macro_rules! api_params {
-    ($($konst:ident : $key:literal = $value:literal),+ $(,)?) => {
+    ($($(#[$($meta:tt)*])* $konst:ident : $key:literal = $value:literal),+ $(,)?) => {
         /// `ApiParams.<key>` is `ApiParams::<KEY>`.
         pub struct ApiParams;
 
         impl ApiParams {
-            $(pub const $konst: &'static str = $value;)+
+            $($(#[$($meta)*])* pub const $konst: &'static str = $value;)+
 
             /// `(tsKey, value)` in TS declaration order.
             pub const ENTRIES: [(&'static str, &'static str); [$($value),+].len()] =
                 [$(($key, $value)),+];
+
+            /// Each entry's doc comment, in the same order.
+            pub const TS_DOCS: [&'static str; [$($value),+].len()] = [$($crate::ts_doc!($(#[$($meta)*])*)),+];
         }
     };
 }
@@ -112,6 +115,11 @@ api_params! {
     ESCALATION: "escalation" = "escalation",
     HP: "hp" = "hp",
     CLIENT_META_DATA: "clientMetaData" = "clientMetaData",
+    /// Site-owner-supplied session identifier (Protect's JTI, or any per-user
+    /// session id the site already holds). Handed to the widget at render time
+    /// and handed back on verify so the provider can confirm the session that
+    /// solved the captcha is the session being verified. Deliberately distinct
+    /// from `sessionId`, which is the provider's own frictionless session.
     CLIENT_SESSION_ID: "clientSessionId" = "clientSessionId",
     REFRESH_OF: "refreshOf" = "refreshOf",
     SWITCH_TO_IMAGE: "switchToImage" = "switchToImage",

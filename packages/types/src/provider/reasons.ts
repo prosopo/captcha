@@ -12,62 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * Reason persisted at `session.reason` to record why a particular captcha
- * type was chosen for a user (the "selection reason"). Emitted by the
- * frictionless flow in @prosopo/provider; centralised here so the portal,
- * audit tooling, and tests can reference the same values without depending
- * on the server-side provider package.
- */
-export enum FrictionlessReason {
-	USER_ACCESS_POLICY = "USER_ACCESS_POLICY",
-	ACCESS_POLICY_BLOCK = "ACCESS_POLICY_BLOCK",
-	USER_AGENT_MISMATCH = "USER_AGENT_MISMATCH",
-	OLD_TIMESTAMP = "OLD_TIMESTAMP",
-	BOT_SCORE_ABOVE_THRESHOLD = "BOT_SCORE_ABOVE_THRESHOLD",
-	// Score landed in the middle band of the frictionless ladder: past the
-	// point where a silent PoW pass is warranted, but short of the image
-	// rung, so the user gets a puzzle instead.
-	BOT_SCORE_PUZZLE_BAND = "BOT_SCORE_PUZZLE_BAND",
-	WEBVIEW_DETECTED = "WEBVIEW_DETECTED",
-	AUTO_BAN_SCORE = "AUTO_BAN_SCORE",
-	FINGERPRINT_PROOF_INVALID = "FINGERPRINT_PROOF_INVALID",
-	MISSING_CURRENT_URL = "MISSING_CURRENT_URL",
-	// A verified PoW solve arrived without click coordinates encoded in its
-	// salt. Every current widget embeds the checkbox click position, so absent
-	// coords mean the solve didn't come through the official widget path; such
-	// solves are escalated to an image captcha rather than approved outright
-	// (see verifyPowCaptchaSolution in @prosopo/provider).
-	MISSING_COORDINATES = "MISSING_COORDINATES",
-	// The address that asked for a PoW challenge is not the address that
-	// solved it. A challenge is short-lived and bound to one session, so the
-	// honest explanations are narrow — a mobile handoff mid-solve — while
-	// handing the challenge to a second host is the cheap way to farm the work
-	// out. Escalated to an image captcha rather than denied: a real network
-	// change should cost a picture, not a rejection. Judged on the network part
-	// only — the v6 /64 and the v4 /24 — since the host bits are reassigned by
-	// design on both (see isSameIpOrigin).
-	IP_CHANGED = "IP_CHANGED",
-	// The detector payload could not be decrypted: no bundle resolved for the
-	// session (expired/missing Redis binding, bundle no longer in the pool), or
-	// the ciphertext did not open with the bundle's keys. Distinct from a high
-	// bot score — we learned nothing about this client, rather than learning
-	// something bad — so it gets its own short image challenge instead of
-	// falling through to the old-timestamp path, which used to catch it by
-	// accident via the synthetic `timestamp = 0`.
-	DECRYPTION_FAILED = "DECRYPTION_FAILED",
-	// The client sent no detector token, so nothing was measured about it.
-	MISSING_TOKEN = "MISSING_TOKEN",
-	// A token arrived without its accompanying head hash.
-	MISSING_HEAD_HASH = "MISSING_HEAD_HASH",
-	// The user kept refreshing the puzzle, so the replacement is an image
-	// challenge instead. Only ever this direction, and only where the site
-	// has image enabled (see switchTypeAfterRefreshes in @prosopo/provider).
-	PUZZLE_REFRESH_LIMIT = "PUZZLE_REFRESH_LIMIT",
-	// The user asked to swap the puzzle for an image challenge.
-	PUZZLE_USER_SWITCH = "PUZZLE_USER_SWITCH",
-}
+import { FrictionlessReason, ResultReason } from "../generated/wire.js";
 
+export { FrictionlessReason, ResultReason };
 /**
  * Reasons that mean "we measured nothing", as opposed to "we measured
  * something bad".
@@ -95,50 +42,3 @@ export const NO_MEASUREMENT_REASONS: ReadonlySet<FrictionlessReason> = new Set([
 	FrictionlessReason.MISSING_HEAD_HASH,
 	FrictionlessReason.DECRYPTION_FAILED,
 ]);
-
-/**
- * Reason persisted at `result.reason` to record the outcome of a captcha
- * verification. Provider task code previously inlined these as string
- * literals — the enum lifts the canonical set into one place so callers
- * can type-check what they emit and the portal can render a known list.
- *
- * Values intentionally match the translation keys used to render messages
- * to the user, so the enum doubles as a typed bridge between server-side
- * outcomes and the locale package.
- */
-export enum ResultReason {
-	CAPTCHA_PASSED = "API.CAPTCHA_PASSED",
-	CAPTCHA_FAILED = "API.CAPTCHA_FAILED",
-	ABUSER_BLOCKED = "API.ABUSER_BLOCKED",
-	ACCESS_POLICY_BLOCK = "API.ACCESS_POLICY_BLOCK",
-	// The dapp server verified with a `clientSessionId` that does not match the
-	// one the widget was rendered with (or the solve carries none at all). Stops
-	// a token earned in one session being replayed against another.
-	CLIENT_SESSION_MISMATCH = "API.CLIENT_SESSION_MISMATCH",
-	CRAWLER_BLOCKED = "API.CRAWLER_BLOCKED",
-	DATACENTER_BLOCKED = "API.DATACENTER_BLOCKED",
-	FAILED_IP_VALIDATION = "API.FAILED_IP_VALIDATION",
-	INCORRECT_CAPTCHA_TYPE = "API.INCORRECT_CAPTCHA_TYPE",
-	MOBILE_BLOCKED = "API.MOBILE_BLOCKED",
-	PROXY_BLOCKED = "API.PROXY_BLOCKED",
-	SATELLITE_BLOCKED = "API.SATELLITE_BLOCKED",
-	SPAM_EMAIL_DOMAIN = "API.SPAM_EMAIL_DOMAIN",
-	SPAM_EMAIL_RULE = "API.SPAM_EMAIL_RULE",
-	SPAM_EMAIL_COUNT_EXCEEDED = "API.SPAM_EMAIL_COUNT_EXCEEDED",
-	TIMESTAMP_TOO_OLD = "API.TIMESTAMP_TOO_OLD",
-	TOO_MANY_LOCALHOST = "API.TOO_MANY_LOCALHOST",
-	TOR_BLOCKED = "API.TOR_BLOCKED",
-	VPN_BLOCKED = "API.VPN_BLOCKED",
-	CAPTCHA_INVALID_SALT = "CAPTCHA.INVALID_SALT",
-	CAPTCHA_INVALID_SOLUTION = "CAPTCHA.INVALID_SOLUTION",
-	CAPTCHA_INVALID_TIMESTAMP = "CAPTCHA.INVALID_TIMESTAMP",
-	CAPTCHA_NO_SESSION_FOUND = "CAPTCHA.NO_SESSION_FOUND",
-	CAPTCHA_DECISION_MACHINE_DENIED = "CAPTCHA.DECISION_MACHINE_DENIED",
-	DISALLOWED_WEBVIEW = "API.DISALLOWED_WEBVIEW",
-	USER_NOT_VERIFIED = "API.USER_NOT_VERIFIED",
-	USER_VERIFIED = "API.USER_VERIFIED",
-	EMAIL_INVALID = "EMAIL_INVALID",
-	EMAIL_MATCHED_CUSTOM_PATTERN = "EMAIL_MATCHED_CUSTOM_PATTERN",
-	EMAIL_MATCHED_DEFAULT_PATTERN = "EMAIL_MATCHED_DEFAULT_PATTERN",
-	EMAIL_TOO_MANY_DOTS = "EMAIL_TOO_MANY_DOTS",
-}

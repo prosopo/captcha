@@ -13,23 +13,7 @@
 // limitations under the License.
 
 import { z } from "zod";
-
-enum CaptchaType {
-	image = "image",
-	pow = "pow",
-	frictionless = "frictionless",
-	puzzle = "puzzle",
-	audio = "audio",
-	iconOrder = "iconOrder",
-	// Web Bot Auth verified — no user-facing challenge. Issued only by the
-	// frictionless flow when the request carried a valid Ed25519 signature
-	// per RFC 9421 / draft-meunier-web-bot-auth AND no operator-authored
-	// Block/Restrict rule matched the verified Signature-Agent URL. The
-	// widget renders a "Verified agent" badge and auto-submits the token.
-	// The captcha record carries `webBotAuthAgent` + `clientIp` so the
-	// verify path can enforce IP binding.
-	authenticated = "authenticated",
-}
+import { CaptchaType } from "../../generated/wire.js";
 
 const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
 

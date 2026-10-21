@@ -18,6 +18,21 @@ use serde_json::Value;
 use std::fmt;
 use std::str::FromStr;
 
+/// The doc comment of `CaptchaType::Authenticated`, given to both rustdoc and the generated
+/// TypeScript.
+macro_rules! authenticated_doc {
+    () => {
+        " Web Bot Auth verified — no user-facing challenge. Issued only by the
+ frictionless flow when the request carried a valid Ed25519 signature
+ per RFC 9421 / draft-meunier-web-bot-auth AND no operator-authored
+ Block/Restrict rule matched the verified Signature-Agent URL. The
+ widget renders a \"Verified agent\" badge and auto-submits the token.
+ The captcha record carries `webBotAuthAgent` + `clientIp` so the
+ verify path can enforce IP binding.
+"
+    };
+}
+
 /// `CaptchaType`, serialised as its TS string value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -28,8 +43,7 @@ pub enum CaptchaType {
     Puzzle,
     Audio,
     IconOrder,
-    /// Web Bot Auth verified: issued only by the frictionless flow, with no user-facing
-    /// challenge.
+    #[doc = authenticated_doc!()]
     Authenticated,
 }
 
@@ -54,6 +68,19 @@ impl CaptchaType {
         "audio",
         "iconOrder",
         "authenticated",
+    ];
+
+    /// The enum's doc comment and each member's, for the generated TypeScript, as
+    /// `wire_enum!` gives them.
+    pub const TS_DOC: &'static str = "";
+    pub const TS_DOCS: [&'static str; 7] = [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        authenticated_doc!(),
     ];
 
     pub fn as_str(self) -> &'static str {

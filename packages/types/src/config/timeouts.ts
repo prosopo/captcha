@@ -11,60 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-const ONE_MINUTE = 60 * 1000;
-// The timeframe in which a user must complete an image captcha (1 minute)
-export const DEFAULT_IMAGE_CAPTCHA_TIMEOUT = ONE_MINUTE;
-// The timeframe in which an image captcha solution remains valid on the page before timing out (2 minutes)
-export const DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT =
-	DEFAULT_IMAGE_CAPTCHA_TIMEOUT * 2;
-// The timeframe in which an image captcha solution must be verified within (3 minutes)
-export const DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT =
-	DEFAULT_IMAGE_CAPTCHA_TIMEOUT * 3;
-// The time in milliseconds that a cached, verified, image captcha solution is valid for (15 minutes)
-export const DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED =
-	DEFAULT_IMAGE_CAPTCHA_TIMEOUT * 15;
-// The timeframe in which a pow captcha solution remains valid on the page before timing out (1 minute)
-export const DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT = ONE_MINUTE;
-// The timeframe in which a pow captcha must be completed and verified (2 minutes)
-export const DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT =
-	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT * 2;
-// The time in milliseconds that a Provider cached, verified, pow captcha solution is valid for (3 minutes)
-export const DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT =
-	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT * 3;
-// The timeframe in which a puzzle captcha solution remains valid on the page before timing out (1 minute)
-export const DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT = ONE_MINUTE;
-// The timeframe in which a puzzle captcha must be completed and verified (2 minutes)
-export const DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT =
-	DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT * 2;
-// The time in milliseconds that a Provider cached, verified, puzzle captcha solution is valid for (3 minutes)
-export const DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT =
-	DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT * 3;
-// The timeframe in which an audio captcha solution remains valid on the page before timing out (1 minute)
-export const DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT = ONE_MINUTE;
-// The timeframe in which an audio captcha must be completed and verified (2 minutes)
-export const DEFAULT_AUDIO_CAPTCHA_VERIFIED_TIMEOUT =
-	DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT * 2;
-// The time in milliseconds that a Provider cached, verified, audio captcha solution is valid for (3 minutes)
-export const DEFAULT_AUDIO_CAPTCHA_CACHED_TIMEOUT =
-	DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT * 3;
 
-// Double the puzzle's solution window, since finding and clicking several
-// icons takes longer than one drag; the other windows keep the puzzle's
-// multiples of it.
-export const DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT = ONE_MINUTE * 2;
-export const DEFAULT_ICON_ORDER_CAPTCHA_VERIFIED_TIMEOUT =
-	DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT * 2;
-export const DEFAULT_ICON_ORDER_CAPTCHA_CACHED_TIMEOUT =
-	DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT * 3;
-// The time in milliseconds since the last correct captcha recorded in the contract (15 minutes), after which point, the
-// user will be required to complete another captcha
-export const DEFAULT_MAX_VERIFIED_TIME_CONTRACT = ONE_MINUTE * 15;
-// How old a detector payload may be before the frictionless flow penalises it
-// as stale (10 minutes). This is the window in which a payload is still worth
-// reading, so it is also the window in which the provider must keep the key
-// that reads it — see `DETECTOR_BUNDLE_TTL_SECONDS`, which is derived from this
-// rather than set independently. A binding shorter than this makes the provider
-// accept payloads it has already thrown away the means to decrypt.
-export const DEFAULT_MAX_TIMESTAMP_AGE = ONE_MINUTE * 10;
-// How long @prosopo/server waits for a provider to answer a verify call (10 seconds)
-export const DEFAULT_PROVIDER_REQUEST_TIMEOUT_MS = 10 * 1000;
+export {
+	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
+	DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT,
+	DEFAULT_IMAGE_MAX_VERIFIED_TIME_CACHED,
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+	DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
+	DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT,
+	DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT,
+	DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_AUDIO_CAPTCHA_VERIFIED_TIMEOUT,
+	DEFAULT_AUDIO_CAPTCHA_CACHED_TIMEOUT,
+	DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_ICON_ORDER_CAPTCHA_VERIFIED_TIMEOUT,
+	DEFAULT_ICON_ORDER_CAPTCHA_CACHED_TIMEOUT,
+	DEFAULT_MAX_VERIFIED_TIME_CONTRACT,
+	DEFAULT_MAX_TIMESTAMP_AGE,
+	DEFAULT_PROVIDER_REQUEST_TIMEOUT_MS,
+} from "../generated/wire.js";
