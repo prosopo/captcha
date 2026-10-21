@@ -1096,3 +1096,326 @@ mod request_array_limits {
         assert!(serde_json::to_string(&huge).expect("serialises").len() < 2_000);
     }
 }
+
+/// Port of src/datasets/captcha.test.ts.
+mod datasets_captcha {
+    use crate::datasets::*;
+    use prosopo_api_route::schema::Schema;
+    use serde_json::{json, Map, Value};
+
+    const SALT: &str = "0x0123456789abcdef0123456789abcdef01";
+
+    fn challenge(parts: &[&str]) -> Value {
+        json!(parts.join(POW_SEPARATOR))
+    }
+
+    fn accepts(schema: &Schema, value: Value) -> bool {
+        schema.safe_parse(Some(&value)).is_ok()
+    }
+
+    fn parse(schema: &Schema, value: Value) -> Value {
+        schema
+            .safe_parse(Some(&value))
+            .expect("valid")
+            .expect("defined")
+    }
+
+    fn with(mut value: Value, key: &str, field: Value) -> Value {
+        value[key] = field;
+        value
+    }
+
+    fn without(mut value: Value, key: &str) -> Value {
+        value.as_object_mut().expect("object").remove(key);
+        value
+    }
+
+    #[test]
+    fn the_separator_is_a_triple_underscore() {
+        assert_eq!(POW_SEPARATOR, "___");
+    }
+
+    #[test]
+    fn accepts_a_four_part_challenge() {
+        assert!(accepts(
+            &pow_challenge_id_schema(),
+            challenge(&["1700000000000", "user", "dapp", "7"])
+        ));
+    }
+
+    #[test]
+    fn rejects_a_three_part_challenge() {
+        assert!(!accepts(
+            &pow_challenge_id_schema(),
+            challenge(&["1700000000000", "u", "d"])
+        ));
+    }
+
+    #[test]
+    fn rejects_a_five_part_challenge() {
+        assert!(!accepts(
+            &pow_challenge_id_schema(),
+            challenge(&["1", "u", "d", "0", "extra"])
+        ));
+    }
+
+    #[test]
+    fn rejects_a_challenge_with_no_separators() {
+        assert!(!accepts(&pow_challenge_id_schema(), json!("1700000000000")));
+    }
+
+    #[test]
+    fn rejects_an_empty_challenge() {
+        assert!(!accepts(&pow_challenge_id_schema(), json!("")));
+    }
+
+    #[test]
+    fn does_not_check_that_the_timestamp_is_numeric() {
+        assert!(accepts(
+            &pow_challenge_id_schema(),
+            challenge(&["notanumber", "u", "d", "0"])
+        ));
+    }
+
+    #[test]
+    fn accepts_empty_segments() {
+        assert!(accepts(
+            &pow_challenge_id_schema(),
+            challenge(&["", "", "", ""])
+        ));
+    }
+
+    #[test]
+    fn treats_a_single_underscore_as_ordinary_content() {
+        assert!(accepts(
+            &pow_challenge_id_schema(),
+            challenge(&["1", "a_b", "c_d", "0"])
+        ));
+    }
+
+    #[test]
+    fn accepts_an_unsolved_captcha() {
+        assert!(accepts(&captcha_schema(), json!({ "salt": SALT })));
+    }
+
+    #[test]
+    fn requires_a_salt_of_at_least_34_characters() {
+        assert!(!accepts(&captcha_schema(), json!({ "salt": "0x01" })));
+        assert!(accepts(
+            &captcha_schema(),
+            json!({ "salt": "a".repeat(34) })
+        ));
+        assert!(!accepts(
+            &captcha_schema(),
+            json!({ "salt": "a".repeat(33) })
+        ));
+    }
+
+    #[test]
+    fn lets_the_id_fields_be_omitted() {
+        assert!(accepts(&captcha_schema(), json!({ "salt": SALT })));
+    }
+
+    #[test]
+    fn takes_a_numeric_solution_index_array() {
+        assert!(accepts(
+            &captcha_schema(),
+            json!({
+                "captchaId": "id", "captchaContentId": "cid", "salt": SALT,
+                "solution": [0, 2], "unlabelled": [], "timeLimit": 30000,
+            })
+        ));
+    }
+
+    #[test]
+    fn rejects_a_string_solution_on_the_numeric_schema() {
+        assert!(!accepts(
+            &captcha_schema(),
+            json!({ "captchaId": "id", "captchaContentId": "cid", "salt": SALT, "solution": ["a"] })
+        ));
+    }
+
+    fn base() -> Value {
+        json!({
+            "captchaId": "id", "captchaContentId": "cid", "salt": SALT, "target": "bus",
+            "items": [{ "hash": "0x1", "data": "data:image/png;base64,", "type": "image" }],
+        })
+    }
+
+    #[test]
+    fn requires_a_target_and_items() {
+        assert!(accepts(&select_all_captcha_schema_raw(), base()));
+        assert!(!accepts(
+            &select_all_captcha_schema_raw(),
+            without(base(), "target")
+        ));
+    }
+
+    #[test]
+    fn accepts_an_empty_item_list() {
+        assert!(accepts(
+            &select_all_captcha_schema_raw(),
+            with(base(), "items", json!([]))
+        ));
+    }
+
+    #[test]
+    fn rejects_an_unknown_item_type() {
+        let video: Value = json!([{ "hash": "0x1", "data": "d", "type": "video" }]);
+        assert!(!accepts(
+            &select_all_captcha_schema_raw(),
+            with(base(), "items", video)
+        ));
+    }
+
+    #[test]
+    fn takes_hashed_string_solutions_on_the_non_raw_variant() {
+        assert!(accepts(
+            &select_all_captcha_schema(),
+            with(base(), "solution", json!(["0xabc"]))
+        ));
+    }
+
+    #[test]
+    fn validates_a_list_of_captchas() {
+        assert!(accepts(&captchas_schema(), json!([base(), base()])));
+        assert!(accepts(&captchas_schema(), json!([])));
+        assert!(!accepts(&captchas_schema(), json!([{}])));
+    }
+
+    fn solution() -> Value {
+        json!({ "captchaId": "id", "captchaContentId": "cid", "solution": ["0xa", "0xb"], "salt": "s" })
+    }
+
+    #[test]
+    fn accepts_a_solution() {
+        assert!(accepts(&captcha_solution_schema(), solution()));
+    }
+
+    #[test]
+    fn accepts_an_empty_solution() {
+        assert!(accepts(
+            &captcha_solution_schema(),
+            with(solution(), "solution", json!([]))
+        ));
+    }
+
+    #[test]
+    fn requires_every_field() {
+        for key in ["captchaId", "captchaContentId", "solution", "salt"] {
+            let partial: Map<String, Value> = without(solution(), key)
+                .as_object()
+                .expect("object")
+                .clone();
+            assert!(
+                !accepts(&captcha_solution_schema(), Value::Object(partial)),
+                "{key}"
+            );
+        }
+    }
+
+    #[test]
+    fn does_not_bound_the_salt_length() {
+        assert!(accepts(
+            &captcha_solution_schema(),
+            with(solution(), "salt", json!(""))
+        ));
+    }
+
+    #[test]
+    fn accepts_how_each_selection_was_made() {
+        let declared: Value = with(solution(), "inputMethods", json!(["keyboard", "pointer"]));
+        assert_eq!(
+            parse(&captcha_solution_schema(), declared)["inputMethods"],
+            json!(["keyboard", "pointer"])
+        );
+    }
+
+    #[test]
+    fn rejects_an_input_method_it_does_not_know() {
+        assert!(!accepts(
+            &captcha_solution_schema(),
+            with(solution(), "inputMethods", json!(["voice"]))
+        ));
+    }
+
+    #[test]
+    fn leaves_the_input_methods_out_when_the_widget_does_not_send_them() {
+        assert!(parse(&captcha_solution_schema(), solution())
+            .get("inputMethods")
+            .is_none());
+    }
+
+    #[test]
+    fn validates_an_array_of_solutions() {
+        assert!(accepts(&captcha_solution_array_schema(), json!([])));
+        assert!(accepts(
+            &captcha_solution_array_schema(),
+            json!([solution()])
+        ));
+        assert!(!accepts(&captcha_solution_array_schema(), solution()));
+    }
+
+    fn item() -> Value {
+        json!({ "hash": "0x1", "data": "d", "type": "image" })
+    }
+
+    #[test]
+    fn allows_an_unlabelled_item_in_the_general_data_schema() {
+        assert!(accepts(&data_schema(), json!({ "items": [item()] })));
+    }
+
+    #[test]
+    fn requires_a_label_in_the_labelled_data_schema() {
+        assert!(!accepts(
+            &labelled_data_schema(),
+            json!({ "items": [item()] })
+        ));
+        assert!(accepts(
+            &labelled_data_schema(),
+            json!({ "items": [with(item(), "label", json!("bus"))] })
+        ));
+    }
+
+    #[test]
+    fn accepts_an_empty_dataset() {
+        assert!(accepts(&data_schema(), json!({ "items": [] })));
+    }
+
+    #[test]
+    fn names_the_captcha_item_types_it_can_render() {
+        assert!(CaptchaItemTypes::ALL.contains(&CaptchaItemTypes::Image));
+    }
+
+    #[test]
+    fn names_the_captcha_states() {
+        assert!(!CaptchaStates::ALL.is_empty());
+    }
+
+    /// Rust-only: `CaptchaResponseBody` has no TS schema to replay.
+    #[test]
+    fn an_image_challenge_response_round_trips() {
+        let body: Value = json!({
+            "status": "ok",
+            "captchas": [{
+                "salt": SALT,
+                "items": [{ "hash": "0x1", "data": "d", "type": "image" }],
+                "target": "Eule",
+                "captchaId": "id",
+                "captchaContentId": "cid",
+                "assetURI": "/img/1.png",
+                "datasetId": "0xd",
+                "targetKey": "owl",
+                "targetEn": "owl",
+            }],
+            "language": "de",
+            "requestHash": "0xh",
+            "timestamp": "1700000000000",
+            "signature": { "provider": { "requestHash": "0xs" } },
+        });
+        let parsed: crate::api_types::CaptchaResponseBody =
+            serde_json::from_value(body.clone()).expect("parses");
+        assert_eq!(parsed.captchas[0].target_key.as_deref(), Some("owl"));
+        assert_eq!(serde_json::to_value(&parsed).expect("serialises"), body);
+    }
+}

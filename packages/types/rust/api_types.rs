@@ -19,7 +19,7 @@
 
 use crate::captcha_type::CaptchaType;
 use crate::client::{BlockRuleType, ModeEnum, Tier};
-use crate::datasets::InputMethod;
+use crate::datasets::{Captcha, InputMethod};
 use crate::decision_machine::{
     DecisionMachineKind, DecisionMachineLanguage, DecisionMachineRuntime, DecisionMachineScope,
 };
@@ -1001,4 +1001,38 @@ pub struct FrontendProvider {
 pub struct RandomProvider {
     pub provider_account: String,
     pub provider: FrontendProvider,
+}
+
+/// A captcha as sent to the widget. `target` is already in the request's language; the key
+/// and English text are for logs and crash reports, and older providers omit them.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChallengeCaptcha {
+    #[serde(flatten)]
+    pub captcha: Captcha,
+    /// The label's catalogue key (`owl` for `TARGET.owl`), when it has one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_en: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ProviderRequestHashSignature {
+    pub provider: RequestHashSignature,
+}
+
+/// `CaptchaResponseBody`: an image challenge.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaptchaResponseBody {
+    #[serde(flatten)]
+    pub response: ApiResponse,
+    pub captchas: Vec<ChallengeCaptcha>,
+    /// The language `target` was translated into.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
+    pub request_hash: String,
+    pub timestamp: String,
+    pub signature: ProviderRequestHashSignature,
 }

@@ -18,8 +18,8 @@
 
 use crate::schema::{
     any, array, boolean, coerce_number, coerce_string, custom_with_message, literal, native_enum,
-    number, object, preprocess, record, record_with_keys, string, string_enum, tuple, union, Data,
-    IssueData, Schema,
+    number, object, preprocess, record, record_with_keys, string, string_enum, tuple, undefined,
+    union, Data, IssueData, Schema,
 };
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
@@ -242,6 +242,12 @@ fn battery() -> BTreeMap<&'static str, Schema> {
         .pipe(array(string()).max(2.0)),
     );
     schemas.insert("any", any());
+    schemas.insert("undefinedOnly", undefined());
+    schemas.insert("stringOrUndefined", union(vec![string(), undefined()]));
+    schemas.insert(
+        "objectWithUndefinedUnion",
+        object(vec![("id", union(vec![string(), undefined()]))]),
+    );
     schemas.insert("arrayOfOptional", array(string().optional()));
     schemas
 }

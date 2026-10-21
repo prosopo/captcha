@@ -53,6 +53,9 @@
 		"preprocess",
 		"boundedArray",
 		"any",
+		"undefinedOnly",
+		"stringOrUndefined",
+		"objectWithUndefinedUnion",
 		"arrayOfOptional"
 	],
 	"vectors": [
@@ -72537,6 +72540,4685 @@
 					"d": "no",
 					"e": "no"
 				}
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {},
+			"result": {
+				"okUndefined": true
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": null
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "null",
+						"path": [],
+						"message": "Expected undefined, received null"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": true
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "boolean",
+						"path": [],
+						"message": "Expected undefined, received boolean"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": false
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "boolean",
+						"path": [],
+						"message": "Expected undefined, received boolean"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": 0
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "number",
+						"path": [],
+						"message": "Expected undefined, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": 0
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "number",
+						"path": [],
+						"message": "Expected undefined, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": 1
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "number",
+						"path": [],
+						"message": "Expected undefined, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": 1.5
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "number",
+						"path": [],
+						"message": "Expected undefined, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": -2
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "number",
+						"path": [],
+						"message": "Expected undefined, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": 3
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "number",
+						"path": [],
+						"message": "Expected undefined, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": 42
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "number",
+						"path": [],
+						"message": "Expected undefined, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": 0.5
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "number",
+						"path": [],
+						"message": "Expected undefined, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": 1e+21
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "number",
+						"path": [],
+						"message": "Expected undefined, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": ""
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "a"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "ab"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "abc"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "abcdef"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "  Hi  "
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "   "
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "0xab"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "x.js"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "12"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": " 7 "
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "0x1f"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "1e3"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "Infinity"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "-"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "a@b.co"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "bad@"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "user.name+tag@ex-ample.co.uk"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "a..b@x.io"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": ".a@x.io"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "ſ@x.io"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "a@b.c"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "http://x"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "notaurl"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "https://例え.jp/パス"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "mailto:a@b.co"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "dns"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "http"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "\u0000"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "a\nb"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "😀😀😀"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": "é"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "string",
+						"path": [],
+						"message": "Expected undefined, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": []
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "array",
+						"path": [],
+						"message": "Expected undefined, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": [
+					1
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "array",
+						"path": [],
+						"message": "Expected undefined, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": [
+					1,
+					2
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "array",
+						"path": [],
+						"message": "Expected undefined, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": [
+					1,
+					2,
+					3,
+					4
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "array",
+						"path": [],
+						"message": "Expected undefined, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": [
+					"a"
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "array",
+						"path": [],
+						"message": "Expected undefined, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": [
+					"a",
+					"b",
+					"c"
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "array",
+						"path": [],
+						"message": "Expected undefined, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": [
+					null
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "array",
+						"path": [],
+						"message": "Expected undefined, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": [
+					"x",
+					1
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "array",
+						"path": [],
+						"message": "Expected undefined, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": [
+					"x",
+					1,
+					2
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "array",
+						"path": [],
+						"message": "Expected undefined, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": [
+					[]
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "array",
+						"path": [],
+						"message": "Expected undefined, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": [
+					5
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "array",
+						"path": [],
+						"message": "Expected undefined, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"a": "x"
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"a": "x",
+					"b": 2,
+					"c": false
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"a": 1
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"a": "x",
+					"extra": 1
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"a": "x",
+					"z": 2,
+					"y": "no"
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"2": 2,
+					"10": 1,
+					"b": 3
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"inner": {
+						"x": 1
+					},
+					"list": [
+						"a"
+					]
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"inner": {
+						"x": "no"
+					},
+					"list": [
+						"a",
+						"b",
+						"c"
+					]
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"n": 1
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"a": 5,
+					"b": 1
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"a": 1,
+					"b": 5
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"a": "x",
+					"b": 2
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"a": "x",
+					"b": "y"
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"ab": true,
+					"c": false
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"ab": "no"
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"b": "s",
+					"d": true,
+					"e": 3
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "undefinedOnly",
+			"input": {
+				"value": {
+					"a": "x",
+					"b": "two",
+					"d": "no",
+					"e": "no"
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "undefined",
+						"received": "object",
+						"path": [],
+						"message": "Expected undefined, received object"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {},
+			"result": {
+				"okUndefined": true
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": null
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "null",
+										"path": [],
+										"message": "Expected string, received null"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "null",
+										"path": [],
+										"message": "Expected undefined, received null"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": true
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "boolean",
+										"path": [],
+										"message": "Expected string, received boolean"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "boolean",
+										"path": [],
+										"message": "Expected undefined, received boolean"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": false
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "boolean",
+										"path": [],
+										"message": "Expected string, received boolean"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "boolean",
+										"path": [],
+										"message": "Expected undefined, received boolean"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": 0
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "number",
+										"path": [],
+										"message": "Expected string, received number"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "number",
+										"path": [],
+										"message": "Expected undefined, received number"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": 0
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "number",
+										"path": [],
+										"message": "Expected string, received number"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "number",
+										"path": [],
+										"message": "Expected undefined, received number"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": 1
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "number",
+										"path": [],
+										"message": "Expected string, received number"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "number",
+										"path": [],
+										"message": "Expected undefined, received number"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": 1.5
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "number",
+										"path": [],
+										"message": "Expected string, received number"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "number",
+										"path": [],
+										"message": "Expected undefined, received number"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": -2
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "number",
+										"path": [],
+										"message": "Expected string, received number"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "number",
+										"path": [],
+										"message": "Expected undefined, received number"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": 3
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "number",
+										"path": [],
+										"message": "Expected string, received number"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "number",
+										"path": [],
+										"message": "Expected undefined, received number"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": 42
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "number",
+										"path": [],
+										"message": "Expected string, received number"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "number",
+										"path": [],
+										"message": "Expected undefined, received number"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": 0.5
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "number",
+										"path": [],
+										"message": "Expected string, received number"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "number",
+										"path": [],
+										"message": "Expected undefined, received number"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": 1e+21
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "number",
+										"path": [],
+										"message": "Expected string, received number"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "number",
+										"path": [],
+										"message": "Expected undefined, received number"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": ""
+			},
+			"result": {
+				"ok": ""
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "a"
+			},
+			"result": {
+				"ok": "a"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "ab"
+			},
+			"result": {
+				"ok": "ab"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "abc"
+			},
+			"result": {
+				"ok": "abc"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "abcdef"
+			},
+			"result": {
+				"ok": "abcdef"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "  Hi  "
+			},
+			"result": {
+				"ok": "  Hi  "
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "   "
+			},
+			"result": {
+				"ok": "   "
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "0xab"
+			},
+			"result": {
+				"ok": "0xab"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "x.js"
+			},
+			"result": {
+				"ok": "x.js"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "12"
+			},
+			"result": {
+				"ok": "12"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": " 7 "
+			},
+			"result": {
+				"ok": " 7 "
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "0x1f"
+			},
+			"result": {
+				"ok": "0x1f"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "1e3"
+			},
+			"result": {
+				"ok": "1e3"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "Infinity"
+			},
+			"result": {
+				"ok": "Infinity"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "-"
+			},
+			"result": {
+				"ok": "-"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "a@b.co"
+			},
+			"result": {
+				"ok": "a@b.co"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "bad@"
+			},
+			"result": {
+				"ok": "bad@"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "user.name+tag@ex-ample.co.uk"
+			},
+			"result": {
+				"ok": "user.name+tag@ex-ample.co.uk"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "a..b@x.io"
+			},
+			"result": {
+				"ok": "a..b@x.io"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": ".a@x.io"
+			},
+			"result": {
+				"ok": ".a@x.io"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "ſ@x.io"
+			},
+			"result": {
+				"ok": "ſ@x.io"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "a@b.c"
+			},
+			"result": {
+				"ok": "a@b.c"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "http://x"
+			},
+			"result": {
+				"ok": "http://x"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "notaurl"
+			},
+			"result": {
+				"ok": "notaurl"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "https://例え.jp/パス"
+			},
+			"result": {
+				"ok": "https://例え.jp/パス"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "mailto:a@b.co"
+			},
+			"result": {
+				"ok": "mailto:a@b.co"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "dns"
+			},
+			"result": {
+				"ok": "dns"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "http"
+			},
+			"result": {
+				"ok": "http"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "\u0000"
+			},
+			"result": {
+				"ok": "\u0000"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "a\nb"
+			},
+			"result": {
+				"ok": "a\nb"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "😀😀😀"
+			},
+			"result": {
+				"ok": "😀😀😀"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": "é"
+			},
+			"result": {
+				"ok": "é"
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": []
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "array",
+										"path": [],
+										"message": "Expected string, received array"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "array",
+										"path": [],
+										"message": "Expected undefined, received array"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": [
+					1
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "array",
+										"path": [],
+										"message": "Expected string, received array"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "array",
+										"path": [],
+										"message": "Expected undefined, received array"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": [
+					1,
+					2
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "array",
+										"path": [],
+										"message": "Expected string, received array"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "array",
+										"path": [],
+										"message": "Expected undefined, received array"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": [
+					1,
+					2,
+					3,
+					4
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "array",
+										"path": [],
+										"message": "Expected string, received array"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "array",
+										"path": [],
+										"message": "Expected undefined, received array"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": [
+					"a"
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "array",
+										"path": [],
+										"message": "Expected string, received array"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "array",
+										"path": [],
+										"message": "Expected undefined, received array"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": [
+					"a",
+					"b",
+					"c"
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "array",
+										"path": [],
+										"message": "Expected string, received array"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "array",
+										"path": [],
+										"message": "Expected undefined, received array"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": [
+					null
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "array",
+										"path": [],
+										"message": "Expected string, received array"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "array",
+										"path": [],
+										"message": "Expected undefined, received array"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": [
+					"x",
+					1
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "array",
+										"path": [],
+										"message": "Expected string, received array"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "array",
+										"path": [],
+										"message": "Expected undefined, received array"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": [
+					"x",
+					1,
+					2
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "array",
+										"path": [],
+										"message": "Expected string, received array"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "array",
+										"path": [],
+										"message": "Expected undefined, received array"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": [
+					[]
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "array",
+										"path": [],
+										"message": "Expected string, received array"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "array",
+										"path": [],
+										"message": "Expected undefined, received array"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": [
+					5
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "array",
+										"path": [],
+										"message": "Expected string, received array"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "array",
+										"path": [],
+										"message": "Expected undefined, received array"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"a": "x"
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"a": "x",
+					"b": 2,
+					"c": false
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"a": 1
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"a": "x",
+					"extra": 1
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"a": "x",
+					"z": 2,
+					"y": "no"
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"2": 2,
+					"10": 1,
+					"b": 3
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"inner": {
+						"x": 1
+					},
+					"list": [
+						"a"
+					]
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"inner": {
+						"x": "no"
+					},
+					"list": [
+						"a",
+						"b",
+						"c"
+					]
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"n": 1
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"a": 5,
+					"b": 1
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"a": 1,
+					"b": 5
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"a": "x",
+					"b": 2
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"a": "x",
+					"b": "y"
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"ab": true,
+					"c": false
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"ab": "no"
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"b": "s",
+					"d": true,
+					"e": 3
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "stringOrUndefined",
+			"input": {
+				"value": {
+					"a": "x",
+					"b": "two",
+					"d": "no",
+					"e": "no"
+				}
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_union",
+						"unionErrors": [
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "string",
+										"received": "object",
+										"path": [],
+										"message": "Expected string, received object"
+									}
+								],
+								"name": "ZodError"
+							},
+							{
+								"issues": [
+									{
+										"code": "invalid_type",
+										"expected": "undefined",
+										"received": "object",
+										"path": [],
+										"message": "Expected undefined, received object"
+									}
+								],
+								"name": "ZodError"
+							}
+						],
+						"path": [],
+						"message": "Invalid input"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "undefined",
+						"path": [],
+						"message": "Required"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": null
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "null",
+						"path": [],
+						"message": "Expected object, received null"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": true
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "boolean",
+						"path": [],
+						"message": "Expected object, received boolean"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": false
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "boolean",
+						"path": [],
+						"message": "Expected object, received boolean"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": 0
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "number",
+						"path": [],
+						"message": "Expected object, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": 0
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "number",
+						"path": [],
+						"message": "Expected object, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": 1
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "number",
+						"path": [],
+						"message": "Expected object, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": 1.5
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "number",
+						"path": [],
+						"message": "Expected object, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": -2
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "number",
+						"path": [],
+						"message": "Expected object, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": 3
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "number",
+						"path": [],
+						"message": "Expected object, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": 42
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "number",
+						"path": [],
+						"message": "Expected object, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": 0.5
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "number",
+						"path": [],
+						"message": "Expected object, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": 1e+21
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "number",
+						"path": [],
+						"message": "Expected object, received number"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": ""
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "a"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "ab"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "abc"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "abcdef"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "  Hi  "
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "   "
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "0xab"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "x.js"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "12"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": " 7 "
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "0x1f"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "1e3"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "Infinity"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "-"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "a@b.co"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "bad@"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "user.name+tag@ex-ample.co.uk"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "a..b@x.io"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": ".a@x.io"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "ſ@x.io"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "a@b.c"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "http://x"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "notaurl"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "https://例え.jp/パス"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "mailto:a@b.co"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "dns"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "http"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "\u0000"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "a\nb"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "😀😀😀"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": "é"
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "string",
+						"path": [],
+						"message": "Expected object, received string"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": []
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "array",
+						"path": [],
+						"message": "Expected object, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": [
+					1
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "array",
+						"path": [],
+						"message": "Expected object, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": [
+					1,
+					2
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "array",
+						"path": [],
+						"message": "Expected object, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": [
+					1,
+					2,
+					3,
+					4
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "array",
+						"path": [],
+						"message": "Expected object, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": [
+					"a"
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "array",
+						"path": [],
+						"message": "Expected object, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": [
+					"a",
+					"b",
+					"c"
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "array",
+						"path": [],
+						"message": "Expected object, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": [
+					null
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "array",
+						"path": [],
+						"message": "Expected object, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": [
+					"x",
+					1
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "array",
+						"path": [],
+						"message": "Expected object, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": [
+					"x",
+					1,
+					2
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "array",
+						"path": [],
+						"message": "Expected object, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": [
+					[]
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "array",
+						"path": [],
+						"message": "Expected object, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": [
+					5
+				]
+			},
+			"result": {
+				"issues": [
+					{
+						"code": "invalid_type",
+						"expected": "object",
+						"received": "array",
+						"path": [],
+						"message": "Expected object, received array"
+					}
+				]
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"a": "x"
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"a": "x",
+					"b": 2,
+					"c": false
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"a": 1
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"a": "x",
+					"extra": 1
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"a": "x",
+					"z": 2,
+					"y": "no"
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"2": 2,
+					"10": 1,
+					"b": 3
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"inner": {
+						"x": 1
+					},
+					"list": [
+						"a"
+					]
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"inner": {
+						"x": "no"
+					},
+					"list": [
+						"a",
+						"b",
+						"c"
+					]
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"n": 1
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"a": 5,
+					"b": 1
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"a": 1,
+					"b": 5
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"a": "x",
+					"b": 2
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"a": "x",
+					"b": "y"
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"ab": true,
+					"c": false
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"ab": "no"
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"b": "s",
+					"d": true,
+					"e": 3
+				}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {}
+			},
+			"result": {
+				"ok": {}
+			}
+		},
+		{
+			"schema": "objectWithUndefinedUnion",
+			"input": {
+				"value": {
+					"a": "x",
+					"b": "two",
+					"d": "no",
+					"e": "no"
+				}
+			},
+			"result": {
+				"ok": {}
 			}
 		},
 		{

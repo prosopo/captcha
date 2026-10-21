@@ -172,6 +172,7 @@ enum Node {
         coerce: bool,
     },
     Boolean,
+    Undefined,
     Any,
     Literal(Value),
     Enum(Vec<Value>),
@@ -232,6 +233,11 @@ pub fn coerce_string() -> Schema {
 
 pub fn boolean() -> Schema {
     Schema::new(Node::Boolean)
+}
+
+/// `undefined()`: only an absent value.
+pub fn undefined() -> Schema {
+    Schema::new(Node::Undefined)
 }
 
 /// `any()` and `unknown()`, which parse the same.
@@ -682,6 +688,10 @@ impl Schema {
             Node::Boolean => match data {
                 Some(Value::Bool(flag)) => Outcome::valid(Some(Value::Bool(flag))),
                 other => invalid_type(issues, path, "boolean", other.as_ref()),
+            },
+            Node::Undefined => match data {
+                None => Outcome::valid(None),
+                other => invalid_type(issues, path, "undefined", other.as_ref()),
             },
             Node::Any => Outcome::valid(data),
             Node::Literal(expected) => {

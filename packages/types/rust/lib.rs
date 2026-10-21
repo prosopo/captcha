@@ -61,6 +61,8 @@ pub use wire_enum::UnknownEnumValue;
 #[cfg(test)]
 mod api_equivalence;
 #[cfg(test)]
+mod datasets_equivalence;
+#[cfg(test)]
 mod equivalence;
 #[cfg(test)]
 mod settings_equivalence;

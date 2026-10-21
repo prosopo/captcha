@@ -124,6 +124,9 @@ const SCHEMAS: Record<string, ZodTypeAny> = {
 		)
 		.pipe(z.array(z.string()).max(2)),
 	any: z.any(),
+	undefinedOnly: z.undefined(),
+	stringOrUndefined: z.union([z.string(), z.undefined()]),
+	objectWithUndefinedUnion: z.object({ id: z.union([z.string(), z.undefined()]) }),
 	arrayOfOptional: z.array(z.string().optional()),
 };
 
