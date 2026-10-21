@@ -23,7 +23,7 @@ prosopo-logger = { path = "../logger" }
 prosopo-types = { path = "../types" }
 prosopo-util = { path = "../util" }
 prosopo-util-crypto = { path = "../util-crypto" }
-serde_json = { version = "1.0", features = ["preserve_order"] }
+serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
 url = "2.5"
 
 [dev-dependencies]

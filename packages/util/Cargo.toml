@@ -18,7 +18,7 @@ futures-util = { version = "0.3", default-features = false, features = ["std"] }
 num-bigint = "0.4"
 num-traits = "0.2"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"] }
-serde_json = { version = "1.0", features = ["preserve_order"] }
+serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
 sha2 = "0.10"
 tokio = { version = "1.40", features = ["fs", "io-util"] }
 tokio-util = { version = "0.7", features = ["io"] }

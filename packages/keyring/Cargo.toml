@@ -18,7 +18,7 @@ prosopo-logger = { path = "../logger" }
 prosopo-types = { path = "../types" }
 prosopo-util-crypto = { path = "../util-crypto" }
 rand_core = { version = "0.6", features = ["getrandom"] }
-serde_json = { version = "1.0", features = ["preserve_order"] }
+serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
 
 [dev-dependencies]
 schnorrkel = "0.11"

@@ -17,7 +17,7 @@ curve25519-dalek = { version = "4.1", features = ["digest"] }
 http = "1.1"
 indexmap = "2.6"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
-serde_json = "1.0"
+serde_json = { version = "1.0", features = ["float_roundtrip"] }
 sha2 = "0.10"
 tokio = { version = "1.40", features = ["time"] }
 url = "2.5"
