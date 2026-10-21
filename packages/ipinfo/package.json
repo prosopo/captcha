@@ -23,7 +23,8 @@
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
-		"test:watch": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest watch --config ./vite.test.config.ts"
+		"test:watch": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest watch --config ./vite.test.config.ts",
+		"equivalence": "pnpm --workspace-root exec tsx packages/ipinfo/rust/equivalence/generate.ts && cargo test -p prosopo-ipinfo equivalence"
 	},
 	"dependencies": {
 		"@maxmind/geoip2-node": "7.1.0",

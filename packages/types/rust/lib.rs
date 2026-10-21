@@ -22,6 +22,7 @@ pub mod client;
 pub mod config;
 pub mod datasets;
 pub mod decision_machine;
+pub mod ipapi;
 mod js_regex;
 pub mod number;
 pub mod provider_api;
