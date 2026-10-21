@@ -23,7 +23,8 @@
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"typecheck": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts --mode $NODE_ENV",
-		"equivalence": "pnpm --workspace-root exec tsx packages/keyring/rust/equivalence/generate.ts && cargo test -p prosopo-keyring equivalence"
+		"equivalence": "pnpm --workspace-root exec tsx packages/keyring/rust/equivalence/generate.ts && cargo test -p prosopo-keyring equivalence",
+		"equivalence:sr25519": "pnpm --workspace-root exec tsx packages/keyring/rust/equivalence/sr25519/generate.ts && PROSOPO_SR25519_RUST_SIGNED=$PWD/rust/equivalence/sr25519/rust-signed.json cargo test -p prosopo-keyring sr25519_cross && PROSOPO_SR25519_RUST_SIGNED=$PWD/rust/equivalence/sr25519/rust-signed.json pnpm run test src/pair/rustSigned.test.ts"
 	},
 	"repository": {
 		"type": "git",

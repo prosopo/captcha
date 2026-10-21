@@ -1455,6 +1455,7 @@ dependencies = [
  "prosopo-types",
  "prosopo-util-crypto",
  "rand_core 0.6.4",
+ "schnorrkel",
  "serde_json",
 ]
 

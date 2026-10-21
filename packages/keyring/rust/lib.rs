@@ -34,4 +34,6 @@ pub use testing::{create_test_keyring, create_test_pairs, PairDef, PAIRSSR25519}
 #[cfg(test)]
 mod equivalence;
 #[cfg(test)]
+mod sr25519_cross;
+#[cfg(test)]
 mod tests;
