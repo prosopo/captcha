@@ -30,7 +30,7 @@ fn has_every_namespace_loaded() {
     assert_eq!(fixed.t_with("TARGET.owl", &english), "owl");
     assert_eq!(
         fixed.t_with("WIDGET.SELECT_ALL", &english),
-        "Select all containing the following:"
+        "Select all containing the following"
     );
     assert_eq!(
         fixed.t_with("DATABASE.UNKNOWN", &english),
@@ -45,7 +45,7 @@ fn translates_keys_from_all_three_namespaces_into_another_language() {
     assert_eq!(fixed.t("TARGET.owl"), "baykuş");
     assert_eq!(
         fixed.t("WIDGET.SELECT_ALL"),
-        "Aşağıdakini içeren tüm görselleri seçin:"
+        "Aşağıdakini içeren tüm görselleri seçin"
     );
     assert_eq!(fixed.t("DATABASE.UNKNOWN"), "Bilinmeyen veritabanı hatası");
 }

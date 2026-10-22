@@ -3,7 +3,7 @@
 		"NO_POLKADOT_EXTENSION": "Polkadot kengaytmasi topilmadi"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Quyidagilar bor barcha rasmlarni tanlang:",
+		"SELECT_ALL": "Quyidagilar bor barcha rasmlarni tanlang",
 		"IF_NONE_CLICK_NEXT": "Agar ular bo‘lmasa, “Keyingi” tugmasini bosing",
 		"NEXT": "Keyingi",
 		"SUBMIT": "Yuborish",

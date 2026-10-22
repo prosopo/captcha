@@ -93,7 +93,7 @@
 		"NO_POLKADOT_EXTENSION": "Polkadot laajennusta ei löytynyt"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Valitse kaikki kuvat, joissa on seuraava:",
+		"SELECT_ALL": "Valitse kaikki kuvat, joissa on seuraava",
 		"IF_NONE_CLICK_NEXT": "Jos sellaisia ei ole, valitse Seuraava",
 		"NEXT": "Seuraava",
 		"SUBMIT": "Lähetä",

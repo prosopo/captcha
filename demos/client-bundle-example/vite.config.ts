@@ -19,6 +19,7 @@ import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
 import codeSnippetInjector from "./src/plugins/code-snippet-injector.js";
 import formFillerInjector from "./src/plugins/form-filler-injector.js";
+import languageInjector from "./src/plugins/language-injector.js";
 import layoutInjector from "./src/plugins/layout-injector.js";
 import placementInjector from "./src/plugins/placement-injector.js";
 import statusLogInjector from "./src/plugins/status-log-injector.js";
@@ -281,6 +282,7 @@ export default defineConfig(({ command, mode }) => {
 			codeSnippetInjector(),
 			statusLogInjector(),
 			placementInjector(),
+			languageInjector(),
 			{
 				name: "copy-files",
 				closeBundle() {

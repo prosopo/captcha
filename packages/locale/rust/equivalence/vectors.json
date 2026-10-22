@@ -1266,7 +1266,7 @@
 			"language": "en",
 			"translations": {
 				"TARGET.owl": "owl",
-				"WIDGET.SELECT_ALL": "Select all containing the following:",
+				"WIDGET.SELECT_ALL": "Select all containing the following",
 				"DATABASE.UNKNOWN": "Unknown database error",
 				"API.USER_NOT_VERIFIED": "User not verified"
 			},
@@ -1290,7 +1290,7 @@
 			"language": "tr",
 			"translations": {
 				"TARGET.owl": "baykuş",
-				"WIDGET.SELECT_ALL": "Aşağıdakini içeren tüm görselleri seçin:",
+				"WIDGET.SELECT_ALL": "Aşağıdakini içeren tüm görselleri seçin",
 				"DATABASE.UNKNOWN": "Bilinmeyen veritabanı hatası",
 				"API.USER_NOT_VERIFIED": "Kullanıcı doğrulanmadı"
 			},
@@ -1315,7 +1315,7 @@
 			"language": "tr",
 			"translations": {
 				"TARGET.owl": "baykuş",
-				"WIDGET.SELECT_ALL": "Aşağıdakini içeren tüm görselleri seçin:",
+				"WIDGET.SELECT_ALL": "Aşağıdakini içeren tüm görselleri seçin",
 				"DATABASE.UNKNOWN": "Bilinmeyen veritabanı hatası",
 				"API.USER_NOT_VERIFIED": "Kullanıcı doğrulanmadı"
 			},
@@ -1340,7 +1340,7 @@
 			"language": "no",
 			"translations": {
 				"TARGET.owl": "ugle",
-				"WIDGET.SELECT_ALL": "Velg alle bildene som inneholder følgende:",
+				"WIDGET.SELECT_ALL": "Velg alle bildene som inneholder følgende",
 				"DATABASE.UNKNOWN": "Ukjent databasefeil",
 				"API.USER_NOT_VERIFIED": "Bruker ikke verifisert"
 			},
@@ -1365,7 +1365,7 @@
 			"language": "tr",
 			"translations": {
 				"TARGET.owl": "baykuş",
-				"WIDGET.SELECT_ALL": "Aşağıdakini içeren tüm görselleri seçin:",
+				"WIDGET.SELECT_ALL": "Aşağıdakini içeren tüm görselleri seçin",
 				"DATABASE.UNKNOWN": "Bilinmeyen veritabanı hatası",
 				"API.USER_NOT_VERIFIED": "Kullanıcı doğrulanmadı"
 			},
@@ -1389,7 +1389,7 @@
 			"language": "no",
 			"translations": {
 				"TARGET.owl": "ugle",
-				"WIDGET.SELECT_ALL": "Velg alle bildene som inneholder følgende:",
+				"WIDGET.SELECT_ALL": "Velg alle bildene som inneholder følgende",
 				"DATABASE.UNKNOWN": "Ukjent databasefeil",
 				"API.USER_NOT_VERIFIED": "Bruker ikke verifisert"
 			},
@@ -1413,7 +1413,7 @@
 			"language": "zh",
 			"translations": {
 				"TARGET.owl": "猫头鹰",
-				"WIDGET.SELECT_ALL": "请选择包含以下内容的所有图片：",
+				"WIDGET.SELECT_ALL": "请选择包含以下内容的所有图片",
 				"DATABASE.UNKNOWN": "未知数据库错误",
 				"API.USER_NOT_VERIFIED": "用户未验证"
 			},
@@ -1437,7 +1437,7 @@
 			"language": "zh-TW",
 			"translations": {
 				"TARGET.owl": "貓頭鷹",
-				"WIDGET.SELECT_ALL": "請選擇包含以下內容的所有圖片：",
+				"WIDGET.SELECT_ALL": "請選擇包含以下內容的所有圖片",
 				"DATABASE.UNKNOWN": "未知資料庫錯誤",
 				"API.USER_NOT_VERIFIED": "使用者未驗證"
 			},
@@ -1461,7 +1461,7 @@
 			"language": "en",
 			"translations": {
 				"TARGET.owl": "owl",
-				"WIDGET.SELECT_ALL": "Select all containing the following:",
+				"WIDGET.SELECT_ALL": "Select all containing the following",
 				"DATABASE.UNKNOWN": "Unknown database error",
 				"API.USER_NOT_VERIFIED": "User not verified"
 			},
@@ -1486,7 +1486,7 @@
 			"language": "no",
 			"translations": {
 				"TARGET.owl": "ugle",
-				"WIDGET.SELECT_ALL": "Velg alle bildene som inneholder følgende:",
+				"WIDGET.SELECT_ALL": "Velg alle bildene som inneholder følgende",
 				"DATABASE.UNKNOWN": "Ukjent databasefeil",
 				"API.USER_NOT_VERIFIED": "Bruker ikke verifisert"
 			},
@@ -1510,7 +1510,7 @@
 			"language": "en",
 			"translations": {
 				"TARGET.owl": "owl",
-				"WIDGET.SELECT_ALL": "Select all containing the following:",
+				"WIDGET.SELECT_ALL": "Select all containing the following",
 				"DATABASE.UNKNOWN": "Unknown database error",
 				"API.USER_NOT_VERIFIED": "User not verified"
 			},
@@ -1535,7 +1535,7 @@
 			"language": "tr",
 			"translations": {
 				"TARGET.owl": "baykuş",
-				"WIDGET.SELECT_ALL": "Aşağıdakini içeren tüm görselleri seçin:",
+				"WIDGET.SELECT_ALL": "Aşağıdakini içeren tüm görselleri seçin",
 				"DATABASE.UNKNOWN": "Bilinmeyen veritabanı hatası",
 				"API.USER_NOT_VERIFIED": "Kullanıcı doğrulanmadı"
 			},
@@ -1559,7 +1559,7 @@
 			"language": "de",
 			"translations": {
 				"TARGET.owl": "Eule",
-				"WIDGET.SELECT_ALL": "Wähle alle Bilder aus, die Folgendes enthalten:",
+				"WIDGET.SELECT_ALL": "Wähle alle Bilder aus, die Folgendes enthalten",
 				"DATABASE.UNKNOWN": "Unbekannter Datenbankfehler",
 				"API.USER_NOT_VERIFIED": "Benutzer nicht verifiziert"
 			},
@@ -1585,7 +1585,7 @@
 			"language": "fr",
 			"translations": {
 				"TARGET.owl": "hibou",
-				"WIDGET.SELECT_ALL": "Sélectionnez toutes les images contenant l'élément suivant :",
+				"WIDGET.SELECT_ALL": "Sélectionnez toutes les images contenant l'élément suivant",
 				"DATABASE.UNKNOWN": "Erreur de base de données inconnue",
 				"API.USER_NOT_VERIFIED": "Utilisateur non vérifié"
 			},
@@ -1609,7 +1609,7 @@
 			"language": "fr",
 			"translations": {
 				"TARGET.owl": "hibou",
-				"WIDGET.SELECT_ALL": "Sélectionnez toutes les images contenant l'élément suivant :",
+				"WIDGET.SELECT_ALL": "Sélectionnez toutes les images contenant l'élément suivant",
 				"DATABASE.UNKNOWN": "Erreur de base de données inconnue",
 				"API.USER_NOT_VERIFIED": "Utilisateur non vérifié"
 			},
@@ -1631,7 +1631,7 @@
 			"language": "en",
 			"translations": {
 				"TARGET.owl": "owl",
-				"WIDGET.SELECT_ALL": "Select all containing the following:",
+				"WIDGET.SELECT_ALL": "Select all containing the following",
 				"DATABASE.UNKNOWN": "Unknown database error",
 				"API.USER_NOT_VERIFIED": "User not verified"
 			},
@@ -1653,7 +1653,7 @@
 			"language": "zh-TW",
 			"translations": {
 				"TARGET.owl": "貓頭鷹",
-				"WIDGET.SELECT_ALL": "請選擇包含以下內容的所有圖片：",
+				"WIDGET.SELECT_ALL": "請選擇包含以下內容的所有圖片",
 				"DATABASE.UNKNOWN": "未知資料庫錯誤",
 				"API.USER_NOT_VERIFIED": "使用者未驗證"
 			},
@@ -1675,7 +1675,7 @@
 			"language": "tr",
 			"translations": {
 				"TARGET.owl": "baykuş",
-				"WIDGET.SELECT_ALL": "Aşağıdakini içeren tüm görselleri seçin:",
+				"WIDGET.SELECT_ALL": "Aşağıdakini içeren tüm görselleri seçin",
 				"DATABASE.UNKNOWN": "Bilinmeyen veritabanı hatası",
 				"API.USER_NOT_VERIFIED": "Kullanıcı doğrulanmadı"
 			},
@@ -1697,7 +1697,7 @@
 			"language": "de",
 			"translations": {
 				"TARGET.owl": "Eule",
-				"WIDGET.SELECT_ALL": "Wähle alle Bilder aus, die Folgendes enthalten:",
+				"WIDGET.SELECT_ALL": "Wähle alle Bilder aus, die Folgendes enthalten",
 				"DATABASE.UNKNOWN": "Unbekannter Datenbankfehler",
 				"API.USER_NOT_VERIFIED": "Benutzer nicht verifiziert"
 			},
@@ -1719,7 +1719,7 @@
 			"language": "en",
 			"translations": {
 				"TARGET.owl": "owl",
-				"WIDGET.SELECT_ALL": "Select all containing the following:",
+				"WIDGET.SELECT_ALL": "Select all containing the following",
 				"DATABASE.UNKNOWN": "Unknown database error",
 				"API.USER_NOT_VERIFIED": "User not verified"
 			},
@@ -1744,7 +1744,7 @@
 			"language": "pt-BR",
 			"translations": {
 				"TARGET.owl": "coruja",
-				"WIDGET.SELECT_ALL": "Selecione todas as imagens que contêm o seguinte:",
+				"WIDGET.SELECT_ALL": "Selecione todas as imagens que contêm o seguinte",
 				"DATABASE.UNKNOWN": "Erro de banco de dados desconhecido",
 				"API.USER_NOT_VERIFIED": "Usuário não verificado"
 			},
@@ -1768,7 +1768,7 @@
 			"language": "zh-HK",
 			"translations": {
 				"TARGET.owl": "貓頭鷹",
-				"WIDGET.SELECT_ALL": "請選擇包含以下內容的所有圖片：",
+				"WIDGET.SELECT_ALL": "請選擇包含以下內容的所有圖片",
 				"DATABASE.UNKNOWN": "未知資料庫錯誤",
 				"API.USER_NOT_VERIFIED": "使用者未驗證"
 			},
@@ -1792,7 +1792,7 @@
 			"language": "ar",
 			"translations": {
 				"TARGET.owl": "بومة",
-				"WIDGET.SELECT_ALL": "حدد كل الصور التي تحتوي على ما يلي:",
+				"WIDGET.SELECT_ALL": "حدد كل الصور التي تحتوي على ما يلي",
 				"DATABASE.UNKNOWN": "خطأ غير معروف في قاعدة البيانات",
 				"API.USER_NOT_VERIFIED": "المستخدم غير موثق"
 			},
@@ -1816,7 +1816,7 @@
 			"language": "en",
 			"translations": {
 				"TARGET.owl": "owl",
-				"WIDGET.SELECT_ALL": "Select all containing the following:",
+				"WIDGET.SELECT_ALL": "Select all containing the following",
 				"DATABASE.UNKNOWN": "Unknown database error",
 				"API.USER_NOT_VERIFIED": "User not verified"
 			},
@@ -1840,7 +1840,7 @@
 			"language": "fil",
 			"translations": {
 				"TARGET.owl": "kuwago",
-				"WIDGET.SELECT_ALL": "Piliin ang lahat ng may sumusunod:",
+				"WIDGET.SELECT_ALL": "Piliin ang lahat ng may sumusunod",
 				"DATABASE.UNKNOWN": "Hindi kilalang error sa database",
 				"API.USER_NOT_VERIFIED": "Hindi na-verify ang user"
 			},
@@ -3242,7 +3242,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Kies alle prente wat die volgende bevat:",
+					"Kies alle prente wat die volgende bevat",
 					true
 				],
 				[
@@ -3337,7 +3337,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"የሚከተሉትን የያዙትን ሁሉ ይምረጡ:",
+					"የሚከተሉትን የያዙትን ሁሉ ይምረጡ",
 					true
 				],
 				[
@@ -3380,7 +3380,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Trigar totas as que contiengan o siguient:",
+					"Trigar totas as que contiengan o siguient",
 					true
 				],
 				[
@@ -3423,7 +3423,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"حدد كل الصور التي تحتوي على ما يلي:",
+					"حدد كل الصور التي تحتوي على ما يلي",
 					true
 				],
 				[
@@ -3518,7 +3518,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"তলত দিয়াটো থকা সকলো ছবি বাছনি কৰক:",
+					"তলত দিয়াটো থকা সকলো ছবি বাছনি কৰক",
 					true
 				],
 				[
@@ -3613,7 +3613,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Esbilla toles que contengan lo siguiente:",
+					"Esbilla toles que contengan lo siguiente",
 					true
 				],
 				[
@@ -3656,7 +3656,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Aşağıdakını ehtiva edən bütün şəkilləri seçin:",
+					"Aşağıdakını ehtiva edən bütün şəkilləri seçin",
 					true
 				],
 				[
@@ -3699,7 +3699,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Выберыце ўсе выявы, на якіх ёсць:",
+					"Выберыце ўсе выявы, на якіх ёсць",
 					true
 				],
 				[
@@ -3742,7 +3742,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Изберете всички изображения, които съдържат следното:",
+					"Изберете всички изображения, които съдържат следното",
 					true
 				],
 				[
@@ -3837,7 +3837,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"নিচের জিনিসটি আছে এমন সব ছবি বেছে নিন:",
+					"নিচের জিনিসটি আছে এমন সব ছবি বেছে নিন",
 					true
 				],
 				[
@@ -3880,7 +3880,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Odaberite sve slike koje sadrže sljedeće:",
+					"Odaberite sve slike koje sadrže sljedeće",
 					true
 				],
 				[
@@ -3923,7 +3923,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Seleccioneu totes les imatges que continguin el següent:",
+					"Seleccioneu totes les imatges que continguin el següent",
 					true
 				],
 				[
@@ -3966,7 +3966,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Vyberte všechny obrázky, které obsahují následující:",
+					"Vyberte všechny obrázky, které obsahují následující",
 					true
 				],
 				[
@@ -4061,7 +4061,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Dewiswch bob llun sy'n cynnwys:",
+					"Dewiswch bob llun sy'n cynnwys",
 					true
 				],
 				[
@@ -4104,7 +4104,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Vælg alle, der indeholder følgende:",
+					"Vælg alle, der indeholder følgende",
 					true
 				],
 				[
@@ -4147,7 +4147,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Wähle alle Bilder aus, die Folgendes enthalten:",
+					"Wähle alle Bilder aus, die Folgendes enthalten",
 					true
 				],
 				[
@@ -4190,7 +4190,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Επιλέξτε όλες τις εικόνες που περιέχουν το εξής:",
+					"Επιλέξτε όλες τις εικόνες που περιέχουν το εξής",
 					true
 				],
 				[
@@ -4285,7 +4285,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Select all containing the following:",
+					"Select all containing the following",
 					true
 				],
 				[
@@ -4328,7 +4328,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Elektu ĉiujn, kiuj enhavas la jenon:",
+					"Elektu ĉiujn, kiuj enhavas la jenon",
 					true
 				],
 				[
@@ -4371,7 +4371,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Selecciona todas las imágenes que contengan lo siguiente:",
+					"Selecciona todas las imágenes que contengan lo siguiente",
 					true
 				],
 				[
@@ -4414,7 +4414,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Valige kõik pildid, millel on:",
+					"Valige kõik pildid, millel on",
 					true
 				],
 				[
@@ -4509,7 +4509,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Hautatu hau duten irudi guztiak:",
+					"Hautatu hau duten irudi guztiak",
 					true
 				],
 				[
@@ -4552,7 +4552,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"همهٔ تصاویری را انتخاب کنید که شامل این مورد هستند:",
+					"همهٔ تصاویری را انتخاب کنید که شامل این مورد هستند",
 					true
 				],
 				[
@@ -4595,7 +4595,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Valitse kaikki kuvat, joissa on seuraava:",
+					"Valitse kaikki kuvat, joissa on seuraava",
 					true
 				],
 				[
@@ -4638,7 +4638,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Piliin ang lahat ng may sumusunod:",
+					"Piliin ang lahat ng may sumusunod",
 					true
 				],
 				[
@@ -4733,7 +4733,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Sélectionnez toutes les images contenant l'élément suivant :",
+					"Sélectionnez toutes les images contenant l'élément suivant",
 					true
 				],
 				[
@@ -4776,7 +4776,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Selektearje alles wêryn it folgjende stiet:",
+					"Selektearje alles wêryn it folgjende stiet",
 					true
 				],
 				[
@@ -4819,7 +4819,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Roghnaigh gach ceann ina bhfuil an méid seo a leanas:",
+					"Roghnaigh gach ceann ina bhfuil an méid seo a leanas",
 					true
 				],
 				[
@@ -4862,7 +4862,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Tagh gach aon anns a bheil na leanas:",
+					"Tagh gach aon anns a bheil na leanas",
 					true
 				],
 				[
@@ -4957,7 +4957,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Selecciona todas as imaxes que conteñan:",
+					"Selecciona todas as imaxes que conteñan",
 					true
 				],
 				[
@@ -5000,7 +5000,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"નીચેની વસ્તુ ધરાવતાં બધાં ચિત્રો પસંદ કરો:",
+					"નીચેની વસ્તુ ધરાવતાં બધાં ચિત્રો પસંદ કરો",
 					true
 				],
 				[
@@ -5043,7 +5043,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"בחרו את כל התמונות שמכילות את הפריטים הבאים:",
+					"בחרו את כל התמונות שמכילות את הפריטים הבאים",
 					true
 				],
 				[
@@ -5138,7 +5138,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"वे सभी चित्र चुनें जिनमें निम्नलिखित है:",
+					"वे सभी चित्र चुनें जिनमें निम्नलिखित है",
 					true
 				],
 				[
@@ -5233,7 +5233,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Odaberite sve slike koje sadrže sljedeće:",
+					"Odaberite sve slike koje sadrže sljedeće",
 					true
 				],
 				[
@@ -5276,7 +5276,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Jelölje ki az összes képet, amelyen a következő látható:",
+					"Jelölje ki az összes képet, amelyen a következő látható",
 					true
 				],
 				[
@@ -5319,7 +5319,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Ընտրեք բոլոր պատկերները, որոնցում կա:",
+					"Ընտրեք բոլոր պատկերները, որոնցում կա",
 					true
 				],
 				[
@@ -5362,7 +5362,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Selige tote illos que contine lo sequente:",
+					"Selige tote illos que contine lo sequente",
 					true
 				],
 				[
@@ -5457,7 +5457,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Pilih semua gambar yang berisi berikut ini:",
+					"Pilih semua gambar yang berisi berikut ini",
 					true
 				],
 				[
@@ -5500,7 +5500,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Veldu allar myndir sem innihalda:",
+					"Veldu allar myndir sem innihalda",
 					true
 				],
 				[
@@ -5543,7 +5543,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Seleziona tutte le immagini che contengono quanto segue:",
+					"Seleziona tutte le immagini che contengono quanto segue",
 					true
 				],
 				[
@@ -5586,7 +5586,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"次の内容を含む画像をすべて選択してください：",
+					"次の内容を含む画像をすべて選択してください",
 					true
 				],
 				[
@@ -5681,7 +5681,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Pilih kabeh gambar sing ngemot ing ngisor iki:",
+					"Pilih kabeh gambar sing ngemot ing ngisor iki",
 					true
 				],
 				[
@@ -5724,7 +5724,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"აირჩიეთ ყველა სურათი, რომელზეც არის:",
+					"აირჩიეთ ყველა სურათი, რომელზეც არის",
 					true
 				],
 				[
@@ -5767,7 +5767,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Мыналар бар суреттердің барлығын таңдаңыз:",
+					"Мыналар бар суреттердің барлығын таңдаңыз",
 					true
 				],
 				[
@@ -5810,7 +5810,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"ជ្រើសរើសរូបភាពទាំងអស់ដែលមាន៖",
+					"ជ្រើសរើសរូបភាពទាំងអស់ដែលមាន",
 					true
 				],
 				[
@@ -5905,7 +5905,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"ಕೆಳಗಿನದನ್ನು ಹೊಂದಿರುವ ಎಲ್ಲಾ ಚಿತ್ರಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ:",
+					"ಕೆಳಗಿನದನ್ನು ಹೊಂದಿರುವ ಎಲ್ಲಾ ಚಿತ್ರಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ",
 					true
 				],
 				[
@@ -5948,7 +5948,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"다음 항목이 포함된 이미지를 모두 선택하세요:",
+					"다음 항목이 포함된 이미지를 모두 선택하세요",
 					true
 				],
 				[
@@ -5991,7 +5991,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Төмөнкүлөр бар бардык сүрөттөрдү тандаңыз:",
+					"Төмөнкүлөр бар бардык сүрөттөрдү тандаңыз",
 					true
 				],
 				[
@@ -6034,7 +6034,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"ເລືອກຮູບທັງໝົດທີ່ມີ:",
+					"ເລືອກຮູບທັງໝົດທີ່ມີ",
 					true
 				],
 				[
@@ -6129,7 +6129,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Pasirinkite visus vaizdus, kuriuose yra:",
+					"Pasirinkite visus vaizdus, kuriuose yra",
 					true
 				],
 				[
@@ -6172,7 +6172,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Atlasiet visus attēlus, kuros ir:",
+					"Atlasiet visus attēlus, kuros ir",
 					true
 				],
 				[
@@ -6215,7 +6215,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Изберете ги сите слики што содржат:",
+					"Изберете ги сите слики што содржат",
 					true
 				],
 				[
@@ -6258,7 +6258,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"താഴെ കാണുന്നത് അടങ്ങിയ എല്ലാ ചിത്രങ്ങളും തിരഞ്ഞെടുക്കുക:",
+					"താഴെ കാണുന്നത് അടങ്ങിയ എല്ലാ ചിത്രങ്ങളും തിരഞ്ഞെടുക്കുക",
 					true
 				],
 				[
@@ -6353,7 +6353,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Дараахыг агуулсан бүх зургийг сонгоно уу:",
+					"Дараахыг агуулсан бүх зургийг сонгоно уу",
 					true
 				],
 				[
@@ -6396,7 +6396,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"पुढील गोष्ट असलेली सर्व चित्रे निवडा:",
+					"पुढील गोष्ट असलेली सर्व चित्रे निवडा",
 					true
 				],
 				[
@@ -6439,7 +6439,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Pilih semua imej yang mengandungi yang berikut:",
+					"Pilih semua imej yang mengandungi yang berikut",
 					true
 				],
 				[
@@ -6482,7 +6482,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"အောက်ပါအရာ ပါဝင်သည့် ပုံအားလုံးကို ရွေးပါ:",
+					"အောက်ပါအရာ ပါဝင်သည့် ပုံအားလုံးကို ရွေးပါ",
 					true
 				],
 				[
@@ -6577,7 +6577,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"तलको समावेश भएका सबै तस्बिरहरू चयन गर्नुहोस्:",
+					"तलको समावेश भएका सबै तस्बिरहरू चयन गर्नुहोस्",
 					true
 				],
 				[
@@ -6620,7 +6620,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Selecteer alle afbeeldingen met het volgende:",
+					"Selecteer alle afbeeldingen met het volgende",
 					true
 				],
 				[
@@ -6663,7 +6663,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Vel alle bileta som inneheld følgjande:",
+					"Vel alle bileta som inneheld følgjande",
 					true
 				],
 				[
@@ -6706,7 +6706,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Velg alle bildene som inneholder følgende:",
+					"Velg alle bildene som inneholder følgende",
 					true
 				],
 				[
@@ -6801,7 +6801,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Seleccionatz totas las que contenon çò seguent:",
+					"Seleccionatz totas las que contenon çò seguent",
 					true
 				],
 				[
@@ -6844,7 +6844,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"ନିମ୍ନଲିଖିତ ଥିବା ସମସ୍ତ ଛବି ବାଛନ୍ତୁ:",
+					"ନିମ୍ନଲିଖିତ ଥିବା ସମସ୍ତ ଛବି ବାଛନ୍ତୁ",
 					true
 				],
 				[
@@ -6887,7 +6887,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"ਹੇਠਾਂ ਦਿੱਤੀ ਚੀਜ਼ ਵਾਲੀਆਂ ਸਾਰੀਆਂ ਤਸਵੀਰਾਂ ਚੁਣੋ:",
+					"ਹੇਠਾਂ ਦਿੱਤੀ ਚੀਜ਼ ਵਾਲੀਆਂ ਸਾਰੀਆਂ ਤਸਵੀਰਾਂ ਚੁਣੋ",
 					true
 				],
 				[
@@ -6930,7 +6930,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Zaznacz wszystkie obrazy zawierające następujący element:",
+					"Zaznacz wszystkie obrazy zawierające następujący element",
 					true
 				],
 				[
@@ -7025,7 +7025,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Selecione todas as imagens que contêm o seguinte:",
+					"Selecione todas as imagens que contêm o seguinte",
 					true
 				],
 				[
@@ -7068,7 +7068,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Selecione todas as imagens que contêm o seguinte:",
+					"Selecione todas as imagens que contêm o seguinte",
 					true
 				],
 				[
@@ -7163,7 +7163,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Tscherna tut quai che cuntegna il suandant:",
+					"Tscherna tut quai che cuntegna il suandant",
 					true
 				],
 				[
@@ -7206,7 +7206,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Selectați toate imaginile care conțin următorul element:",
+					"Selectați toate imaginile care conțin următorul element",
 					true
 				],
 				[
@@ -7301,7 +7301,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Выберите все изображения, на которых есть следующее:",
+					"Выберите все изображения, на которых есть следующее",
 					true
 				],
 				[
@@ -7344,7 +7344,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Wale aw that hae the follaein in them:",
+					"Wale aw that hae the follaein in them",
 					true
 				],
 				[
@@ -7387,7 +7387,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"පහත දෑ අඩංගු සියලු රූප තෝරන්න:",
+					"පහත දෑ අඩංගු සියලු රූප තෝරන්න",
 					true
 				],
 				[
@@ -7430,7 +7430,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Vyberte všetky obrázky, ktoré obsahujú nasledujúce:",
+					"Vyberte všetky obrázky, ktoré obsahujú nasledujúce",
 					true
 				],
 				[
@@ -7525,7 +7525,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Izberite vse slike, ki vsebujejo naslednje:",
+					"Izberite vse slike, ki vsebujejo naslednje",
 					true
 				],
 				[
@@ -7568,7 +7568,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Zgjidh të gjitha imazhet që përmbajnë:",
+					"Zgjidh të gjitha imazhet që përmbajnë",
 					true
 				],
 				[
@@ -7611,7 +7611,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Изаберите све слике које садрже следеће:",
+					"Изаберите све слике које садрже следеће",
 					true
 				],
 				[
@@ -7654,7 +7654,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Välj alla bilder som innehåller följande:",
+					"Välj alla bilder som innehåller följande",
 					true
 				],
 				[
@@ -7749,7 +7749,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Chagua picha zote zenye kitu hiki:",
+					"Chagua picha zote zenye kitu hiki",
 					true
 				],
 				[
@@ -7792,7 +7792,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"பின்வருவதைக் கொண்ட எல்லாப் படங்களையும் தேர்ந்தெடுக்கவும்:",
+					"பின்வருவதைக் கொண்ட எல்லாப் படங்களையும் தேர்ந்தெடுக்கவும்",
 					true
 				],
 				[
@@ -7835,7 +7835,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"కింది వాటిని కలిగి ఉన్న అన్ని చిత్రాలను ఎంచుకోండి:",
+					"కింది వాటిని కలిగి ఉన్న అన్ని చిత్రాలను ఎంచుకోండి",
 					true
 				],
 				[
@@ -7878,7 +7878,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Ҳамаи онҳоеро интихоб кунед, ки инҳоро доранд:",
+					"Ҳамаи онҳоеро интихоб кунед, ки инҳоро доранд",
 					true
 				],
 				[
@@ -7973,7 +7973,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"เลือกรูปภาพทั้งหมดที่มีสิ่งต่อไปนี้:",
+					"เลือกรูปภาพทั้งหมดที่มีสิ่งต่อไปนี้",
 					true
 				],
 				[
@@ -8016,7 +8016,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Aşağıdakini içeren tüm görselleri seçin:",
+					"Aşağıdakini içeren tüm görselleri seçin",
 					true
 				],
 				[
@@ -8059,7 +8059,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Виберіть усі зображення, що містять наступне:",
+					"Виберіть усі зображення, що містять наступне",
 					true
 				],
 				[
@@ -8102,7 +8102,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"وہ تمام تصاویر منتخب کریں جن میں یہ شامل ہو:",
+					"وہ تمام تصاویر منتخب کریں جن میں یہ شامل ہو",
 					true
 				],
 				[
@@ -8197,7 +8197,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Quyidagilar bor barcha rasmlarni tanlang:",
+					"Quyidagilar bor barcha rasmlarni tanlang",
 					true
 				],
 				[
@@ -8240,7 +8240,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Chọn tất cả hình ảnh có chứa nội dung sau:",
+					"Chọn tất cả hình ảnh có chứa nội dung sau",
 					true
 				],
 				[
@@ -8283,7 +8283,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Khetha konke okuqulethe oku kulandelayo:",
+					"Khetha konke okuqulethe oku kulandelayo",
 					true
 				],
 				[
@@ -8326,7 +8326,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"请选择包含以下内容的所有图片：",
+					"请选择包含以下内容的所有图片",
 					true
 				],
 				[
@@ -8421,7 +8421,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"请选择包含以下内容的所有图片：",
+					"请选择包含以下内容的所有图片",
 					true
 				],
 				[
@@ -8464,7 +8464,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"請選擇包含以下內容的所有圖片：",
+					"請選擇包含以下內容的所有圖片",
 					true
 				],
 				[
@@ -8507,7 +8507,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"請選擇包含以下內容的所有圖片：",
+					"請選擇包含以下內容的所有圖片",
 					true
 				],
 				[
@@ -8602,7 +8602,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Khetha konke okuqukethe lokhu okulandelayo:",
+					"Khetha konke okuqukethe lokhu okulandelayo",
 					true
 				],
 				[
@@ -9021,7 +9021,7 @@
 				[
 					"WIDGET.SELECT_ALL",
 					null,
-					"Wähle alle Bilder aus, die Folgendes enthalten:",
+					"Wähle alle Bilder aus, die Folgendes enthalten",
 					true
 				],
 				[

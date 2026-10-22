@@ -63,7 +63,7 @@
 		"NO_POLKADOT_EXTENSION": "Extensia Polkadot nu a fost gasit"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Selectați toate imaginile care conțin următorul element:",
+		"SELECT_ALL": "Selectați toate imaginile care conțin următorul element",
 		"IF_NONE_CLICK_NEXT": "Dacă nu există niciuna, apăsați Următorul",
 		"NEXT": "Următorul",
 		"SUBMIT": "Trimite",

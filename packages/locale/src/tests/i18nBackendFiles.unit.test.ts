@@ -29,7 +29,7 @@ describe("server i18n over the split catalogue", () => {
 		expect(i18n.hasLoadedNamespace("target")).toBe(true);
 		expect(i18n.t("TARGET.owl", { lng: "en" })).toBe("owl");
 		expect(i18n.t("WIDGET.SELECT_ALL", { lng: "en" })).toBe(
-			"Select all containing the following:",
+			"Select all containing the following",
 		);
 		expect(i18n.t("DATABASE.UNKNOWN", { lng: "en" })).toBe(
 			"Unknown database error",
@@ -44,7 +44,7 @@ describe("server i18n over the split catalogue", () => {
 		expect(i18n.language).toBe("tr");
 		expect(i18n.t("TARGET.owl")).toBe("baykuş");
 		expect(i18n.t("WIDGET.SELECT_ALL")).toBe(
-			"Aşağıdakini içeren tüm görselleri seçin:",
+			"Aşağıdakini içeren tüm görselleri seçin",
 		);
 		expect(i18n.t("DATABASE.UNKNOWN")).toBe("Bilinmeyen veritabanı hatası");
 	});

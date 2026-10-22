@@ -1,5 +1,15 @@
 # @prosopo/account
 
+## 2.8.111
+### Patch Changes
+
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+  - @prosopo/fingerprint@2.7.65
+  - @prosopo/keyring@2.10.8
+  - @prosopo/util@3.3.15
+  - @prosopo/util-crypto@13.6.0
+
 ## 2.8.110
 ### Patch Changes
 

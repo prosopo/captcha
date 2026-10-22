@@ -246,12 +246,12 @@ describe("locale catalogues", () => {
 	});
 
 	it.each(languages)(
-		"%s ends the select-all prompt with a colon, as the label follows it",
+		"%s leaves the colon after the select-all prompt to the widget",
 		(language: Language) => {
 			const prompt: unknown = flatten(readLocale(language)).get(
 				"WIDGET.SELECT_ALL",
 			);
-			expect(prompt).toMatch(/[:：៖]$/);
+			expect(prompt).not.toMatch(/[:：៖]\s*$/);
 		},
 	);
 });

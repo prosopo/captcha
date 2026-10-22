@@ -1,5 +1,10 @@
 # @prosopo/client-bundle-example
 
+## 2.11.5
+### Patch Changes
+
+- 710995a: The demo site has a "Widget language" picker. Add `?language=fr` (or any language tag, or an Accept-Language style list) to a demo page URL to show the widget in that language. The choice carries over when you switch demo pages.
+
 ## 2.11.4
 ### Patch Changes
 

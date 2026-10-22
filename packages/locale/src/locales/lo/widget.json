@@ -3,7 +3,7 @@
 		"NO_POLKADOT_EXTENSION": "ບໍ່ພົບສ່ວນຂະຫຍາຍ Polkadot"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "ເລືອກຮູບທັງໝົດທີ່ມີ:",
+		"SELECT_ALL": "ເລືອກຮູບທັງໝົດທີ່ມີ",
 		"IF_NONE_CLICK_NEXT": "ຖ້າບໍ່ມີ, ໃຫ້ຄລິກ \"ຕໍ່ໄປ\"",
 		"NEXT": "ຕໍ່ໄປ",
 		"SUBMIT": "ສົ່ງ",

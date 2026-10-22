@@ -63,7 +63,7 @@
 		"NO_POLKADOT_EXTENSION": "Polkadot拡張機能が見つかりません"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "次の内容を含む画像をすべて選択してください：",
+		"SELECT_ALL": "次の内容を含む画像をすべて選択してください",
 		"IF_NONE_CLICK_NEXT": "ない場合は、次をクリック",
 		"NEXT": "次",
 		"SUBMIT": "提出",

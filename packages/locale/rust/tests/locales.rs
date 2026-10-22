@@ -276,7 +276,7 @@ fn every_cyrillic_or_greek_language_has_no_latin_letters_inside_native_words() {
 }
 
 #[test]
-fn every_language_ends_the_select_all_prompt_with_a_colon() {
+fn every_language_leaves_the_colon_after_the_select_all_prompt_to_the_widget() {
     for language in LANGUAGES {
         let prompt: Option<Value> = flatten(&read_locale(language.code()))
             .into_iter()
@@ -284,7 +284,7 @@ fn every_language_ends_the_select_all_prompt_with_a_colon() {
             .map(|(_, value)| value);
         let text: &str = prompt.as_ref().and_then(Value::as_str).unwrap_or_default();
         assert!(
-            text.ends_with([':', '\u{FF1A}', '\u{17D6}']),
+            !text.trim_end().ends_with([':', '\u{FF1A}', '\u{17D6}']),
             "{language}: {text}"
         );
     }

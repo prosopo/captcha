@@ -1,5 +1,17 @@
 # @prosopo/client-example-server
 
+## 2.7.180
+### Patch Changes
+
+  - @prosopo/common@3.2.3
+  - @prosopo/server@2.13.6
+  - @prosopo/types@5.16.3
+  - @prosopo/database@4.2.7
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/keyring@2.10.8
+  - @prosopo/logger@2.1.4
+  - @prosopo/util@3.3.15
+
 ## 2.7.179
 ### Patch Changes
 

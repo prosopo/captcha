@@ -63,7 +63,7 @@
 		"NO_POLKADOT_EXTENSION": "Polkadot tillæg ikke funnet"
 	},
 	"WIDGET": {
-		"SELECT_ALL": "Velg alle bildene som inneholder følgende:",
+		"SELECT_ALL": "Velg alle bildene som inneholder følgende",
 		"IF_NONE_CLICK_NEXT": "Hvis det ikke er noen, klikk Neste",
 		"NEXT": "Neste",
 		"SUBMIT": "Send inn",

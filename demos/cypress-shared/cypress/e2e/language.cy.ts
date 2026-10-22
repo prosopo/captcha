@@ -194,7 +194,7 @@ describe("Widget language", () => {
 								})
 									.first()
 									.invoke("text")
-									.should("equal", `${widget.WIDGET.SELECT_ALL} ${label} `);
+									.should("equal", `${widget.WIDGET.SELECT_ALL}: ${label} `);
 							});
 						},
 					);
