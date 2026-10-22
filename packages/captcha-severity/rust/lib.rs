@@ -18,7 +18,6 @@
 //! JS numbers (fractions, negatives, NaN, infinities) straight from config and
 //! rules, and the clamping behaviour for those inputs is part of the contract.
 
-mod captcha_type;
 mod js_math;
 mod puzzle_difficulty;
 mod severity;
@@ -26,7 +25,6 @@ mod severity;
 #[cfg(test)]
 mod equivalence;
 
-pub use captcha_type::CaptchaType;
 pub use puzzle_difficulty::{
     clamp_difficulty_level, puzzle_difficulty_to_severity, resolve_max_escalation_level,
     severity_to_puzzle_difficulty, PuzzleDifficultyBand, PuzzleDifficultyRange,
