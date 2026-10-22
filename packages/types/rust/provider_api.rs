@@ -301,6 +301,10 @@ pub fn client_meta_data_schema() -> Schema {
         (ApiParams::HP, safe_text(InputLimits::TEXT).optional()),
         (ApiParams::CLIENT_SESSION_ID, id().optional()),
     ])
+    .ts_documented(
+        "ClientMetaDataSchema",
+        "Widget-controlled metadata sent alongside the captcha solution. `hp` is only\npopulated when the honeypot input has been filled in (which should only\nhappen for bots); `clientSessionId` is only populated when the site owner\nrendered the widget with a session id. Server-side: persisted on the\nStoredCaptcha record, no automatic verdict at submit time — the session\nalignment check happens at verify. The TS shape (`ClientMetaData`) lives in\n./database.ts — this schema is the wire-level zod for request bodies.",
+    )
 }
 
 fn bounded_procaptcha_token_spec() -> Schema {
@@ -466,6 +470,7 @@ pub fn submit_pow_captcha_solution_body() -> Schema {
         ),
         (ApiParams::FINGERPRINT_PROOF, token().optional()),
     ])
+    .ts_named("SubmitPowCaptchaSolutionBody")
 }
 
 pub fn get_frictionless_captcha_challenge_request_body() -> Schema {
@@ -514,6 +519,10 @@ pub fn replace_detector_pool_body() -> Schema {
 /// `PuzzleEventSchema`, also `IconOrderEventSchema`.
 pub fn puzzle_event_schema() -> Schema {
     object(vec![("x", number()), ("y", number()), ("t", number())])
+    .ts_documented(
+        "PuzzleEventSchema",
+        "Event captured during a drag of the puzzle piece. `t` is milliseconds\nsince the drag started (not absolute), which is enough for behavioural\nanalysis and lets the trail be replay-portable.",
+    )
 }
 
 fn interactive_solution_tail() -> Vec<(&'static str, Schema)> {
@@ -542,7 +551,7 @@ pub fn submit_puzzle_captcha_solution_body() -> Schema {
         ),
     ];
     shape.extend(interactive_solution_tail());
-    object(shape)
+    object(shape).ts_named("SubmitPuzzleCaptchaSolutionBody")
 }
 
 /// `AudioEventSchema`: `t` is milliseconds since the challenge was issued.
@@ -559,6 +568,10 @@ pub fn audio_event_schema() -> Schema {
         ),
         ("t", number()),
     ])
+    .ts_documented(
+        "AudioEventSchema",
+        "`t` is milliseconds since the challenge was issued.",
+    )
 }
 
 pub fn submit_audio_captcha_solution_body() -> Schema {
@@ -575,12 +588,16 @@ pub fn submit_audio_captcha_solution_body() -> Schema {
         ),
     ];
     shape.extend(interactive_solution_tail());
-    object(shape)
+    object(shape).ts_named("SubmitAudioCaptchaSolutionBody")
 }
 
 /// One click in background pixels; its index in `clicks` is its order.
 pub fn icon_click_schema() -> Schema {
     object(vec![("x", number()), ("y", number())])
+    .ts_documented(
+        "IconClickSchema",
+        "One click in background pixels; its index in `clicks` is its order.",
+    )
 }
 
 pub fn submit_icon_order_captcha_solution_body() -> Schema {
@@ -596,7 +613,7 @@ pub fn submit_icon_order_captcha_solution_body() -> Schema {
         ),
     ];
     shape.extend(interactive_solution_tail());
-    object(shape)
+    object(shape).ts_named("SubmitIconOrderCaptchaSolutionBody")
 }
 
 pub fn verify_pow_captcha_solution_body() -> Schema {

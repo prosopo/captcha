@@ -97,6 +97,7 @@ pub fn pow_challenge_id_schema() -> Schema {
         Some(Value::String(challenge)) => challenge.split(POW_SEPARATOR).count() == 4,
         _ => false,
     })
+    .ts_expression("PowChallengeIdSchema", Vec::new(), vec![("PowChallengeIdSchema", "../datasets/captcha.js")])
 }
 
 /// `TimestampSchema`.

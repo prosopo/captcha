@@ -19,6 +19,9 @@
 
 mod issue;
 mod js;
+mod zod;
+
+pub use zod::{TsArg, ZodError, ZodModule};
 
 pub use issue::IssueData;
 pub use js::string_to_number;
@@ -202,6 +205,8 @@ enum Node {
     Transform(Schema, Transform),
     Preprocess(Transform, Schema),
     Pipeline(Schema, Schema),
+    /// How the schema is written in the generated TypeScript; parses as the schema it wraps.
+    Ts(Schema, zod::TsForm),
 }
 
 /// A zod schema. Cheap to clone; builder methods return a new schema, as zod's do.
@@ -536,6 +541,7 @@ impl Schema {
 
     fn with_object(&self, update: impl FnOnce(&mut ObjectDef)) -> Schema {
         match &*self.0 {
+            Node::Ts(inner, _) => inner.with_object(update),
             Node::Object(def) => {
                 let mut def: ObjectDef = def.clone();
                 update(&mut def);
@@ -599,6 +605,7 @@ impl Schema {
     /// The shape of an object schema, for building another from it.
     pub fn shape(&self) -> Vec<(String, Schema)> {
         match &*self.0 {
+            Node::Ts(inner, _) => inner.shape(),
             Node::Object(def) => def.shape.clone(),
             _ => panic!("shape of a non-object schema"),
         }
@@ -703,6 +710,7 @@ impl Schema {
 
     fn parse(&self, data: Data, path: &[PathSegment], issues: &mut Issues) -> Outcome {
         match &*self.0 {
+            Node::Ts(inner, _) => inner.parse(data, path, issues),
             Node::String { checks, coerce } => parse_string(checks, *coerce, data, path, issues),
             Node::Number { checks, coerce } => parse_number(checks, *coerce, data, path, issues),
             Node::Boolean => match data {

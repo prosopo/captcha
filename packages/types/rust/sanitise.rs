@@ -14,7 +14,7 @@
 
 //! `INPUT_LIMITS` and the sanitising schema builders of api/sanitise.ts.
 
-use prosopo_api_route::schema::{array, custom_with_message, string, Data, Schema};
+use prosopo_api_route::schema::{array, custom_with_message, string, Data, Schema, TsArg};
 use serde_json::Value;
 
 /// Per-field input length limits, in UTF-16 code units as JS counts them.
@@ -73,6 +73,9 @@ fn has_no_control_characters_or_line_breaks(value: &str) -> bool {
         .any(|c| matches!(c, '\u{0}'..='\u{1f}' | '\u{7f}'))
 }
 
+/// Where the generated TypeScript imports the hand-written helpers from.
+const SANITISE_MODULE: &str = "../api/sanitise.js";
+
 /// `boundedString(max)`: for structured values whose character set the format already limits.
 pub fn bounded_string(max: usize) -> Schema {
     string().max(max as f64)
@@ -80,18 +83,18 @@ pub fn bounded_string(max: usize) -> Schema {
 
 /// `safeText(max)`: freetext that rejects control characters other than tab and line breaks.
 pub fn safe_text(max: usize) -> Schema {
-    string().max(max as f64).regex_with_message(
-        has_no_control_characters,
-        "must not contain control characters",
-    )
+    string()
+        .max(max as f64)
+        .regex_with_message(has_no_control_characters, "must not contain control characters")
+        .ts_expression("safeText({0})", vec![TsArg::Number(max as f64)], vec![("safeText", SANITISE_MODULE)])
 }
 
 /// `safeLine(max)`: single-line freetext, for values that reach headers.
 pub fn safe_line(max: usize) -> Schema {
-    string().max(max as f64).regex_with_message(
-        has_no_control_characters_or_line_breaks,
-        "must not contain control characters or line breaks",
-    )
+    string()
+        .max(max as f64)
+        .regex_with_message(has_no_control_characters_or_line_breaks, "must not contain control characters or line breaks")
+        .ts_expression("safeLine({0})", vec![TsArg::Number(max as f64)], vec![("safeLine", SANITISE_MODULE)])
 }
 
 /// `boundedArray(item, max)`: the length is checked before any element is parsed.
@@ -103,5 +106,6 @@ pub fn bounded_array(item: Schema, max: usize) -> Schema {
         },
         format!("Array must contain at most {max} element(s)"),
     )
-    .pipe(array(item).max(max as f64))
+    .pipe(array(item.clone()).max(max as f64))
+    .ts_expression("boundedArray({0}, {1})", vec![TsArg::Schema(item), TsArg::Number(max as f64)], vec![("boundedArray", SANITISE_MODULE)])
 }

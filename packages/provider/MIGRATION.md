@@ -458,13 +458,19 @@ date with the Rust.
 How, decided now that `types` has landed:
 
 - *Schemas*: the zod is generated from the Rust schema tree itself
-  (`prosopo_api_route::schema`), not from a second description. Every node has
-  a direct zod spelling (`object`, `string().max(n)`, `optional().default(x)`,
-  ...). Only the closures cannot be printed: regex tests, refinements,
-  transforms and preprocessors. Each of those is given its TS source text next
-  to the Rust closure (for example `regex_js("/^[^\\u0000-\\u001f]*$/", ...)`),
-  and the generator emits that text. `z.infer` then gives the TS types for
-  free.
+  (`prosopo_api_route::schema`, printed by `ZodModule`), not from a second
+  description. Every node has a direct zod spelling (`object`,
+  `string().max(n)`, `optional().default(x)`, ...). The closures cannot be
+  printed (regex tests, refinements, transforms, preprocessors, `custom`), nor
+  can a native enum's name. Those schemas name the hand-written TS that does
+  the same, with `Schema::ts_expression` (for example `boundedArray({0}, {1})`
+  imported from `../api/sanitise.js`, or `PowChallengeIdSchema`), so the
+  hand-written helper stays the one TS definition and keeps its TS type
+  (`custom<PoWChallengeId>`); a closure with no such name fails generation
+  rather than being guessed. Schemas the TS exports and reuses are named with
+  `ts_named`/`ts_documented` and written once, before the schemas that refer
+  to them. `z.infer` then gives the TS types for free. The output is written
+  as biome formats it, so the lint passes on the generated file.
 - *Enums and constants*: `wire_enum!` already records each TS member name, so
   the generator emits TS `enum`s with the same names and values, and `as const`
   objects for `ApiParams`, `INPUT_LIMITS`, the timeouts and the route paths.

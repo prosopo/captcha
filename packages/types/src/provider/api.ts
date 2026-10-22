@@ -23,7 +23,6 @@ import {
 	boolean,
 	coerce,
 	type input,
-	literal,
 	nativeEnum,
 	number,
 	object,
@@ -56,7 +55,6 @@ import {
 	type DatasetID,
 	InputMethodSchema,
 	type PoWChallengeId,
-	PowChallengeIdSchema,
 	type UserAccount,
 } from "../datasets/index.js";
 import {
@@ -65,6 +63,16 @@ import {
 	DecisionMachineRuntime,
 	DecisionMachineScope,
 } from "../decisionMachine/index.js";
+import {
+	AudioEventSchema,
+	ClientMetaDataSchema,
+	IconClickSchema,
+	PuzzleEventSchema,
+	SubmitAudioCaptchaSolutionBody,
+	SubmitIconOrderCaptchaSolutionBody,
+	SubmitPowCaptchaSolutionBody,
+	SubmitPuzzleCaptchaSolutionBody,
+} from "../generated/schemas.js";
 import {
 	AdminApiPaths,
 	BlockRuleType,
@@ -75,6 +83,17 @@ import type {
 	ChallengeSignature,
 	RequestHashSignature,
 } from "../procaptcha/index.js";
+
+export {
+	AudioEventSchema,
+	ClientMetaDataSchema,
+	IconClickSchema,
+	PuzzleEventSchema,
+	SubmitAudioCaptchaSolutionBody,
+	SubmitIconOrderCaptchaSolutionBody,
+	SubmitPowCaptchaSolutionBody,
+	SubmitPuzzleCaptchaSolutionBody,
+};
 
 export { ClientApiPaths, PublicApiPaths, AdminApiPaths, BlockRuleType };
 
@@ -346,18 +365,6 @@ export interface CaptchaResponseBody extends ApiResponse {
 		[ApiParams.provider]: RequestHashSignature;
 	};
 }
-
-// Widget-controlled metadata sent alongside the captcha solution. `hp` is only
-// populated when the honeypot input has been filled in (which should only
-// happen for bots); `clientSessionId` is only populated when the site owner
-// rendered the widget with a session id. Server-side: persisted on the
-// StoredCaptcha record, no automatic verdict at submit time — the session
-// alignment check happens at verify. The TS shape (`ClientMetaData`) lives in
-// ./database.ts — this schema is the wire-level zod for request bodies.
-export const ClientMetaDataSchema = object({
-	[ApiParams.hp]: safeText(INPUT_LIMITS.TEXT).optional(),
-	[ApiParams.clientSessionId]: boundedString(INPUT_LIMITS.ID).optional(),
-});
 
 // Request-body-level bounded variants of shared schemas. The shared schemas
 // (`ProcaptchaTokenSpec`, `CaptchaSolutionSchema`, `*SignatureSchema`) are also
@@ -658,27 +665,6 @@ export type ServerPowCaptchaVerifyRequestBodyType = zInfer<
 	typeof ServerPowCaptchaVerifyRequestBody
 >;
 
-export const SubmitPowCaptchaSolutionBody = object({
-	[ApiParams.challenge]: PowChallengeIdSchema,
-	[ApiParams.difficulty]: number(),
-	[ApiParams.signature]: object({
-		[ApiParams.user]: object({
-			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
-		}),
-		[ApiParams.provider]: object({
-			[ApiParams.challenge]: boundedString(INPUT_LIMITS.TOKEN),
-		}),
-	}),
-	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.nonce]: number(),
-	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
-	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
-	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
-	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
-	[ApiParams.fingerprintProof]: boundedString(INPUT_LIMITS.TOKEN).optional(),
-});
-
 export type SubmitPowCaptchaSolutionBodyType = input<
 	typeof SubmitPowCaptchaSolutionBody
 >;
@@ -815,40 +801,7 @@ export type GetPuzzleCaptchaChallengeRequestBodyTypeOutput = output<
 	typeof GetPuzzleCaptchaChallengeRequestBody
 >;
 
-// Event captured during a drag of the puzzle piece. `t` is milliseconds
-// since the drag started (not absolute), which is enough for behavioural
-// analysis and lets the trail be replay-portable.
-export const PuzzleEventSchema = object({
-	x: number(),
-	y: number(),
-	t: number(),
-});
-
 export type PuzzleEvent = zInfer<typeof PuzzleEventSchema>;
-
-export const SubmitPuzzleCaptchaSolutionBody = object({
-	[ApiParams.challenge]: PowChallengeIdSchema,
-	[ApiParams.finalX]: number(),
-	[ApiParams.finalY]: number(),
-	[ApiParams.puzzleEvents]: boundedArray(
-		PuzzleEventSchema,
-		REQUEST_ARRAY_LIMITS.puzzleEvents,
-	),
-	[ApiParams.signature]: object({
-		[ApiParams.user]: object({
-			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
-		}),
-		[ApiParams.provider]: object({
-			[ApiParams.challenge]: boundedString(INPUT_LIMITS.TOKEN),
-		}),
-	}),
-	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
-	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
-	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
-	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
-});
 
 export type SubmitPuzzleCaptchaSolutionBodyType = input<
 	typeof SubmitPuzzleCaptchaSolutionBody
@@ -875,46 +828,7 @@ export type ServerPuzzleCaptchaVerifyRequestBodyOutput = output<
 	typeof ServerPuzzleCaptchaVerifyRequestBody
 >;
 
-/** `t` is milliseconds since the challenge was issued. */
-export const AudioEventSchema = object({
-	kind: union([
-		literal("play"),
-		literal("pause"),
-		literal("replay"),
-		literal("key"),
-	]),
-	t: number(),
-});
-
 export type AudioEvent = zInfer<typeof AudioEventSchema>;
-
-// The longest answer the settings allow is 8 digits; the margin absorbs
-// separators and whitespace the grader strips.
-const MAX_AUDIO_ANSWER_LENGTH = 32;
-
-export const SubmitAudioCaptchaSolutionBody = object({
-	[ApiParams.challenge]: PowChallengeIdSchema,
-	[ApiParams.answer]: string().max(MAX_AUDIO_ANSWER_LENGTH),
-	[ApiParams.replays]: number().int().min(0).max(1000).optional(),
-	[ApiParams.audioEvents]: boundedArray(
-		AudioEventSchema,
-		REQUEST_ARRAY_LIMITS.audioEvents,
-	).optional(),
-	[ApiParams.signature]: object({
-		[ApiParams.user]: object({
-			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
-		}),
-		[ApiParams.provider]: object({
-			[ApiParams.challenge]: boundedString(INPUT_LIMITS.TOKEN),
-		}),
-	}),
-	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
-	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
-	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
-	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
-});
 
 /**
  * Grading needs exactly one click per target, so this only has to clear the
@@ -936,36 +850,7 @@ export const IconOrderEventSchema = PuzzleEventSchema;
 
 export type IconOrderEvent = PuzzleEvent;
 
-/** One click in background pixels; its index in `clicks` is its order. */
-export const IconClickSchema = object({
-	x: number(),
-	y: number(),
-});
-
 export type IconClick = zInfer<typeof IconClickSchema>;
-
-export const SubmitIconOrderCaptchaSolutionBody = object({
-	[ApiParams.challenge]: PowChallengeIdSchema,
-	[ApiParams.clicks]: boundedArray(IconClickSchema, MAX_ICON_CLICKS),
-	[ApiParams.iconOrderEvents]: boundedArray(
-		IconOrderEventSchema,
-		REQUEST_ARRAY_LIMITS.iconOrderEvents,
-	),
-	[ApiParams.signature]: object({
-		[ApiParams.user]: object({
-			[ApiParams.timestamp]: boundedString(INPUT_LIMITS.ID),
-		}),
-		[ApiParams.provider]: object({
-			[ApiParams.challenge]: boundedString(INPUT_LIMITS.TOKEN),
-		}),
-	}),
-	[ApiParams.user]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
-	[ApiParams.behavioralData]: boundedString(INPUT_LIMITS.TOKEN).optional(),
-	[ApiParams.salt]: boundedString(INPUT_LIMITS.ID).optional(),
-	[ApiParams.simdReadings]: boundedString(INPUT_LIMITS.TOKEN).optional(),
-	[ApiParams.clientMetaData]: ClientMetaDataSchema.optional(),
-});
 
 export type SubmitIconOrderCaptchaSolutionBodyType = input<
 	typeof SubmitIconOrderCaptchaSolutionBody

@@ -25,7 +25,11 @@ use crate::datasets::{
 use crate::decision_machine::{
     DecisionMachineDecision, DecisionMachineKind, DecisionMachineLanguage, DecisionMachineRuntime, DecisionMachineScope,
 };
-use crate::provider_api::{AdminApiPaths, ClientApiPaths, PublicApiPaths};
+use crate::provider_api::{
+    submit_audio_captcha_solution_body, submit_icon_order_captcha_solution_body, submit_pow_captcha_solution_body,
+    submit_puzzle_captcha_solution_body, AdminApiPaths, ClientApiPaths, PublicApiPaths,
+};
+use prosopo_api_route::schema::ZodModule;
 use crate::reasons::{FrictionlessReason, ResultReason};
 use crate::sanitise::InputLimits;
 use crate::settings::{ContextType, DeviceType, EncodingType, IPValidationAction, TrafficFilterAction};
@@ -148,13 +152,13 @@ const LICENSE: &str = "// Copyright 2021-2026 Prosopo (UK) Ltd.
 // limitations under the License.
 ";
 
+const GENERATED: &str = "\n// Generated from the Rust in packages/types/rust by `PROSOPO_WRITE_TS=1 cargo test -p prosopo-types\n\
+                         // generated_typescript_is_current`. Do not edit: change the Rust and generate it again.\n";
+
 /// src/generated/wire.ts.
 pub fn wire_module() -> String {
     let mut out: String = String::from(LICENSE);
-    out.push_str(
-        "\n// Generated from the Rust in packages/types/rust by `PROSOPO_WRITE_TS=1 cargo test -p prosopo-types\n\
-         // generated_typescript_is_current`. Do not edit: change the Rust and generate it again.\n",
-    );
+    out.push_str(GENERATED);
     for ts_enum in enums() {
         out.push('\n');
         out.push_str(&jsdoc(ts_enum.doc, ""));
@@ -178,24 +182,43 @@ pub fn wire_module() -> String {
     out
 }
 
+/// src/generated/schemas.ts: the zod schemas the widget validates its requests with, printed
+/// from the Rust schemas, each after the named ones it refers to.
+pub fn schemas_module() -> String {
+    let mut module: ZodModule = ZodModule::new();
+    for schema in [
+        submit_pow_captcha_solution_body(),
+        submit_puzzle_captcha_solution_body(),
+        submit_audio_captcha_solution_body(),
+        submit_icon_order_captcha_solution_body(),
+    ] {
+        module.export(&schema).expect("every exported schema has a TS spelling");
+    }
+    let mut out: String = String::from(LICENSE);
+    out.push_str(GENERATED);
+    out.push('\n');
+    out.push_str(&module.render());
+    out
+}
+
 #[cfg(test)]
 mod tests {
-    use super::wire_module;
+    use super::{schemas_module, wire_module};
 
-    const WIRE_TS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/src/generated/wire.ts");
-
-    /// Run with `PROSOPO_WRITE_TS=1` to write the file instead.
+    /// Run with `PROSOPO_WRITE_TS=1` to write the files instead.
     #[test]
     fn generated_typescript_is_current() {
-        let generated: String = wire_module();
-        if std::env::var("PROSOPO_WRITE_TS").is_ok() {
-            std::fs::write(WIRE_TS, &generated).expect("writes src/generated/wire.ts");
-            return;
+        for (path, generated) in [("src/generated/wire.ts", wire_module()), ("src/generated/schemas.ts", schemas_module())] {
+            let file: String = format!("{}/{path}", env!("CARGO_MANIFEST_DIR"));
+            if std::env::var("PROSOPO_WRITE_TS").is_ok() {
+                std::fs::write(&file, &generated).expect("writes the generated module");
+                continue;
+            }
+            let committed: String = std::fs::read_to_string(&file).unwrap_or_default();
+            assert!(
+                committed == generated,
+                "{path} is not what the Rust generates; run PROSOPO_WRITE_TS=1 cargo test -p prosopo-types generated_typescript_is_current"
+            );
         }
-        let committed: String = std::fs::read_to_string(WIRE_TS).unwrap_or_default();
-        assert!(
-            committed == generated,
-            "src/generated/wire.ts is not what the Rust generates; run PROSOPO_WRITE_TS=1 cargo test -p prosopo-types generated_typescript_is_current"
-        );
     }
 }
