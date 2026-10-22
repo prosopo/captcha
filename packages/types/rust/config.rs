@@ -66,7 +66,7 @@ pub fn database_types_schema() -> Schema {
 }
 
 pub fn environment_types_schema() -> Schema {
-    string_enum(&EnvironmentTypes::ALL.map(EnvironmentTypes::as_str))
+    string_enum(&EnvironmentTypes::ALL.map(EnvironmentTypes::as_str)).ts_named("EnvironmentTypesSchema")
 }
 
 /// `DatabaseConfigSchema`: per environment; only the environments present are checked.

@@ -22,6 +22,7 @@ import { record, string, enum as zEnum } from "zod";
 import { union } from "zod";
 import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
+import { EnvironmentTypesSchema } from "../generated/schemas.js";
 import { Mode, ModeEnum } from "./mode.js";
 import { type StartMode, StartModeEnum, StartModes } from "./startMode.js";
 export { Mode, ModeEnum };
@@ -81,11 +82,7 @@ export const DatabaseTypes = zEnum([
 	"captcha",
 ]);
 
-export const EnvironmentTypesSchema = zEnum([
-	"development",
-	"staging",
-	"production",
-]);
+export { EnvironmentTypesSchema };
 
 export type EnvironmentTypes = zInfer<typeof EnvironmentTypesSchema>;
 

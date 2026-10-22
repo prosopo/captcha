@@ -151,7 +151,15 @@ impl ZodModule {
             return Ok(());
         }
         self.defined.insert(name.clone());
-        let body: String = self.print(inner, 0).map_err(|error| ZodError(format!("{name}: {}", error.0)))?;
+        let named = |error: ZodError| ZodError(format!("{name}: {}", error.0));
+        let mut body: String = self.print(inner, 0).map_err(named)?;
+        let first_line: String = format!("export const {name} = {};", body.lines().next().unwrap_or_default());
+        if width(&first_line) > LINE_WIDTH && first_line.contains("([") {
+            self.break_lists = true;
+            let broken: Result<String, ZodError> = self.print(inner, 0);
+            self.break_lists = false;
+            body = broken.map_err(named)?;
+        }
         self.definitions.push((name.clone(), doc.clone(), body));
         Ok(())
     }
@@ -406,6 +414,21 @@ mod tests {
                 \t]),\n\
                 \tshort: z.union([z.literal(\"a\"), z.literal(\"b\")]),\n\
                 });\n"
+                .to_string())
+        );
+    }
+
+    #[test]
+    fn breaks_an_export_too_long_for_its_line() {
+        let environments: Schema = super::super::string_enum(&["development", "staging", "production"]).ts_named("EnvironmentTypesSchema");
+        assert_eq!(
+            rendered(&environments),
+            Ok("import { z } from \"zod\";\n\
+                \nexport const EnvironmentTypesSchema = z.enum([\n\
+                \t\"development\",\n\
+                \t\"staging\",\n\
+                \t\"production\",\n\
+                ]);\n"
                 .to_string())
         );
     }

@@ -19,6 +19,12 @@ import { z } from "zod";
 import { boundedArray, safeText } from "../api/sanitise.js";
 import { PowChallengeIdSchema } from "../datasets/captcha.js";
 
+export const EnvironmentTypesSchema = z.enum([
+	"development",
+	"staging",
+	"production",
+]);
+
 /**
  * Widget-controlled metadata sent alongside the captcha solution. `hp` is only
  * populated when the honeypot input has been filled in (which should only

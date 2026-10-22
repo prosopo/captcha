@@ -29,6 +29,7 @@ use crate::provider_api::{
     submit_audio_captcha_solution_body, submit_icon_order_captcha_solution_body, submit_pow_captcha_solution_body,
     submit_puzzle_captcha_solution_body, AdminApiPaths, ClientApiPaths, PublicApiPaths,
 };
+use crate::config::environment_types_schema;
 use prosopo_api_route::schema::ZodModule;
 use crate::reasons::{FrictionlessReason, ResultReason};
 use crate::sanitise::InputLimits;
@@ -187,6 +188,7 @@ pub fn wire_module() -> String {
 pub fn schemas_module() -> String {
     let mut module: ZodModule = ZodModule::new();
     for schema in [
+        environment_types_schema(),
         submit_pow_captcha_solution_body(),
         submit_puzzle_captcha_solution_body(),
         submit_audio_captcha_solution_body(),
