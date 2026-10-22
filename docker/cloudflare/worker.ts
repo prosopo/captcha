@@ -70,6 +70,7 @@ const demoPage = (siteKey: string, host: string): string => `<!doctype html>
 <script type="module" src="/procaptcha.bundle.js" async defer></script>
 <style>
 	:root {
+		color-scheme: light dark;
 		--bg: #f5f6f8; --card: #ffffff; --text: #1d2330; --muted: #5d6677;
 		--line: #e2e5eb; --accent: #4b3fe0; --ok: #1f8a5b; --warn: #b26a00;
 		--code: #f0f1f4;
