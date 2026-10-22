@@ -14,6 +14,7 @@
 
 //! The provider's tasks (src/tasks), as the routes come to need them.
 
+pub mod audio;
 pub mod audio_alternative;
 pub mod client;
 pub mod cron;

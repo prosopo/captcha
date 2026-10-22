@@ -50,6 +50,7 @@ import {
 } from "@prosopo/user-access-policy";
 import { startProviderApi } from "../../src/api/startProviderApi.js";
 import { getCompositeIpAddress } from "../../src/compositeIpAddress.js";
+import { resolveAudioRenderSettings } from "../../src/tasks/audio/audioRenderer.js";
 import decodeSimd from "../../src/tasks/detection/decodeSimd.js";
 import { resolveIconOrderRenderSettings } from "../../src/tasks/iconOrder/iconOrderRenderer.js";
 import {
@@ -88,6 +89,8 @@ const ZERO = getPair("//Zero");
 const ICON = getPair("//Icon");
 const ICON_FRICTIONLESS = getPair("//IconFrictionless");
 const ICON_TRAFFIC = getPair("//IconTraffic");
+const AUDIO = getPair("//Audio");
+const AUDIO_TRAFFIC = getPair("//AudioTraffic");
 const USER = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 const RESTRICTED_USER = "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy";
 const RULED_USER = "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw";
@@ -294,8 +297,33 @@ const records = [
 				vpn: {
 					action: "challenge",
 					iconOrderTolerance: 0.4,
-					iconOrderSettings: { targetCount: 2, decoyCount: 9 },
+					iconOrder: { targetCount: 2, decoyCount: 9 },
 				},
+			},
+		},
+		tier: Tier.Enterprise,
+	},
+	{
+		account: AUDIO.address,
+		settings: {
+			...base,
+			captchaType: "frictionless",
+			audioAccessibilityEnabled: true,
+			captchaTypeFeatureFlags: { audio: true, iconOrder: true },
+			audio: { digitCount: 4 },
+		},
+		tier: Tier.Professional,
+	},
+	{
+		account: AUDIO_TRAFFIC.address,
+		settings: {
+			...base,
+			captchaType: "frictionless",
+			audioAccessibilityEnabled: true,
+			captchaTypeFeatureFlags: { audio: true },
+			audio: { digitCount: 4, gapMs: 200 },
+			trafficFilter: {
+				vpn: { action: "challenge", audio: { digitCount: 5 } },
 			},
 		},
 		tier: Tier.Enterprise,
@@ -388,6 +416,26 @@ await seedSession("s-icon-plain", {
 	bundleId: "bundle-a",
 } as Partial<Session>);
 await seedSession("s-icon-on-pow-site", { captchaType: CaptchaType.iconOrder });
+await seedSession("s-audio-image", {
+	captchaType: CaptchaType.image,
+	siteKey: AUDIO.address,
+});
+await seedSession("s-audio-icon", {
+	captchaType: CaptchaType.iconOrder,
+	siteKey: AUDIO.address,
+});
+await seedSession("s-audio-pow", {
+	captchaType: CaptchaType.pow,
+	siteKey: AUDIO.address,
+});
+await seedSession("s-audio-traffic", {
+	captchaType: CaptchaType.image,
+	siteKey: AUDIO_TRAFFIC.address,
+});
+await seedSession("s-audio-off", {
+	captchaType: CaptchaType.image,
+	siteKey: FRICTIONLESS.address,
+});
 
 const database = await dumpDatabase(DATABASE);
 const redis = await dumpRedisHashes();
@@ -402,6 +450,7 @@ const cache = await dumpCache();
 
 const path = "/v1/prosopo/provider/client/captcha/pow";
 const iconPath = "/v1/prosopo/provider/client/captcha/icon-order";
+const audioPath = "/v1/prosopo/provider/client/captcha/audio";
 const json: [string, string] = ["Content-Type", "application/json"];
 const origin: [string, string] = ["Origin", "https://example.com"];
 const browser: [string, string] = [
@@ -582,11 +631,34 @@ const steps: (Step & { padded?: boolean })[] = [
 		...pow({ dapp: ALWAYS_PASS_SITE_KEY }, undefined, iconPath),
 		compare: false,
 	},
+	pow(
+		{ dapp: AUDIO.address, sessionId: "s-audio-image" },
+		undefined,
+		audioPath,
+	),
+	pow({ dapp: AUDIO.address, sessionId: "s-audio-icon" }, undefined, audioPath),
+	pow({ dapp: AUDIO.address, sessionId: "s-audio-pow" }, undefined, audioPath),
+	pow({ dapp: AUDIO.address }, undefined, audioPath),
+	pow(
+		{ dapp: FRICTIONLESS.address, sessionId: "s-audio-off" },
+		undefined,
+		audioPath,
+	),
+	pow(
+		{ dapp: AUDIO_TRAFFIC.address, sessionId: "s-audio-traffic" },
+		[origin, browser, from("198.51.100.30")],
+		audioPath,
+	),
+	{
+		...pow({ dapp: ALWAYS_PASS_SITE_KEY }, undefined, audioPath),
+		compare: false,
+	},
 ];
 
-// Each render's seed, in the order the renders draw them, for the Rust to replay: the renderers
-// draw them from `createSeed` (puzzle-assets/src/prng.ts) and nothing else here asks
-// `randomBytes` for that caller.
+// Each icon-order render's seed, in the order the renders draw them, for the Rust to replay: the
+// renderers draw them from `createSeed` (puzzle-assets/src/prng.ts). Audio clips come from a
+// buffer the TS fills ahead and on a timer, so which seed a served clip came from is timing and
+// cannot be replayed; the audio cases are compared on everything but the clip and its answer.
 // The builtin's own exports object: an `import` of it here may be a copy, which patching
 // would not reach.
 const builtinCrypto = createRequire(import.meta.url)("node:crypto") as {
@@ -596,7 +668,8 @@ const seeds: string[] = [];
 const drawBytes = builtinCrypto.randomBytes;
 builtinCrypto.randomBytes = (size: number, ...rest: unknown[]) => {
 	const drawn = drawBytes(size, ...rest);
-	if (new Error().stack?.includes("createSeed"))
+	const stack = new Error().stack ?? "";
+	if (stack.includes("createSeed") && stack.includes("renderIconOrder"))
 		seeds.push(drawn.toString("hex"));
 	return drawn;
 };
@@ -666,6 +739,31 @@ writeFileSync(
 	fileURLToPath(new URL("./icon-order-settings-vectors.json", import.meta.url)),
 	`${JSON.stringify(iconOrderSettings, null, "\t")}\n`,
 );
+const audioOverrides: (Record<string, unknown> | undefined | null)[] = [
+	undefined,
+	{},
+	{ digitCount: 6 },
+	{ digitCount: null, noiseSnrDb: 9 },
+	{ noiseSnrDb: 0, babbleGain: 0, babbleVoices: 0, reverbMix: 0, gapMs: 0 },
+	{ digitCount: 4, gapMs: 200, reverbMix: 0.35 },
+];
+const audioSettings: Json[] = [];
+for (const site of audioOverrides) {
+	for (const other of audioOverrides) {
+		audioSettings.push({
+			site: site ?? null,
+			other: other ?? null,
+			resolved: resolveAudioRenderSettings(
+				(site ?? undefined) as never,
+				(other ?? undefined) as never,
+			) as unknown as Json,
+		});
+	}
+}
+writeFileSync(
+	fileURLToPath(new URL("./audio-settings-vectors.json", import.meta.url)),
+	`${JSON.stringify(audioSettings, null, "\t")}\n`,
+);
 writeFileSync(
 	fileURLToPath(new URL("./challenge-vectors.json", import.meta.url)),
 	`${JSON.stringify({
@@ -688,6 +786,7 @@ writeFileSync(
 		after: {
 			powcaptchas: after.powcaptchas,
 			iconordercaptchas: after.iconordercaptchas,
+			audiocaptchas: after.audiocaptchas,
 			sessions: after.sessions,
 		},
 		cacheAfter,

@@ -1,0 +1,614 @@
+[
+	{
+		"site": null,
+		"other": null,
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": null,
+		"other": {},
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": null,
+		"other": {
+			"digitCount": 6
+		},
+		"resolved": {
+			"digitCount": 6,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": null,
+		"other": {
+			"digitCount": null,
+			"noiseSnrDb": 9
+		},
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 9,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": null,
+		"other": {
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		},
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		}
+	},
+	{
+		"site": null,
+		"other": {
+			"digitCount": 4,
+			"gapMs": 200,
+			"reverbMix": 0.35
+		},
+		"resolved": {
+			"digitCount": 4,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.35,
+			"gapMs": 200
+		}
+	},
+	{
+		"site": {},
+		"other": null,
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": {},
+		"other": {},
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": {},
+		"other": {
+			"digitCount": 6
+		},
+		"resolved": {
+			"digitCount": 6,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": {},
+		"other": {
+			"digitCount": null,
+			"noiseSnrDb": 9
+		},
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 9,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": {},
+		"other": {
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		},
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		}
+	},
+	{
+		"site": {},
+		"other": {
+			"digitCount": 4,
+			"gapMs": 200,
+			"reverbMix": 0.35
+		},
+		"resolved": {
+			"digitCount": 4,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.35,
+			"gapMs": 200
+		}
+	},
+	{
+		"site": {
+			"digitCount": 6
+		},
+		"other": null,
+		"resolved": {
+			"digitCount": 6,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": {
+			"digitCount": 6
+		},
+		"other": {},
+		"resolved": {
+			"digitCount": 6,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": {
+			"digitCount": 6
+		},
+		"other": {
+			"digitCount": 6
+		},
+		"resolved": {
+			"digitCount": 6,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": {
+			"digitCount": 6
+		},
+		"other": {
+			"digitCount": null,
+			"noiseSnrDb": 9
+		},
+		"resolved": {
+			"digitCount": 6,
+			"noiseSnrDb": 9,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": {
+			"digitCount": 6
+		},
+		"other": {
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		},
+		"resolved": {
+			"digitCount": 6,
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		}
+	},
+	{
+		"site": {
+			"digitCount": 6
+		},
+		"other": {
+			"digitCount": 4,
+			"gapMs": 200,
+			"reverbMix": 0.35
+		},
+		"resolved": {
+			"digitCount": 4,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.35,
+			"gapMs": 200
+		}
+	},
+	{
+		"site": {
+			"digitCount": null,
+			"noiseSnrDb": 9
+		},
+		"other": null,
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 9,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": {
+			"digitCount": null,
+			"noiseSnrDb": 9
+		},
+		"other": {},
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 9,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": {
+			"digitCount": null,
+			"noiseSnrDb": 9
+		},
+		"other": {
+			"digitCount": 6
+		},
+		"resolved": {
+			"digitCount": 6,
+			"noiseSnrDb": 9,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": {
+			"digitCount": null,
+			"noiseSnrDb": 9
+		},
+		"other": {
+			"digitCount": null,
+			"noiseSnrDb": 9
+		},
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 9,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.12,
+			"gapMs": 220
+		}
+	},
+	{
+		"site": {
+			"digitCount": null,
+			"noiseSnrDb": 9
+		},
+		"other": {
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		},
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		}
+	},
+	{
+		"site": {
+			"digitCount": null,
+			"noiseSnrDb": 9
+		},
+		"other": {
+			"digitCount": 4,
+			"gapMs": 200,
+			"reverbMix": 0.35
+		},
+		"resolved": {
+			"digitCount": 4,
+			"noiseSnrDb": 9,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.35,
+			"gapMs": 200
+		}
+	},
+	{
+		"site": {
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		},
+		"other": null,
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		}
+	},
+	{
+		"site": {
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		},
+		"other": {},
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		}
+	},
+	{
+		"site": {
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		},
+		"other": {
+			"digitCount": 6
+		},
+		"resolved": {
+			"digitCount": 6,
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		}
+	},
+	{
+		"site": {
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		},
+		"other": {
+			"digitCount": null,
+			"noiseSnrDb": 9
+		},
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 9,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		}
+	},
+	{
+		"site": {
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		},
+		"other": {
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		},
+		"resolved": {
+			"digitCount": 5,
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		}
+	},
+	{
+		"site": {
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		},
+		"other": {
+			"digitCount": 4,
+			"gapMs": 200,
+			"reverbMix": 0.35
+		},
+		"resolved": {
+			"digitCount": 4,
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0.35,
+			"gapMs": 200
+		}
+	},
+	{
+		"site": {
+			"digitCount": 4,
+			"gapMs": 200,
+			"reverbMix": 0.35
+		},
+		"other": null,
+		"resolved": {
+			"digitCount": 4,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.35,
+			"gapMs": 200
+		}
+	},
+	{
+		"site": {
+			"digitCount": 4,
+			"gapMs": 200,
+			"reverbMix": 0.35
+		},
+		"other": {},
+		"resolved": {
+			"digitCount": 4,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.35,
+			"gapMs": 200
+		}
+	},
+	{
+		"site": {
+			"digitCount": 4,
+			"gapMs": 200,
+			"reverbMix": 0.35
+		},
+		"other": {
+			"digitCount": 6
+		},
+		"resolved": {
+			"digitCount": 6,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.35,
+			"gapMs": 200
+		}
+	},
+	{
+		"site": {
+			"digitCount": 4,
+			"gapMs": 200,
+			"reverbMix": 0.35
+		},
+		"other": {
+			"digitCount": null,
+			"noiseSnrDb": 9
+		},
+		"resolved": {
+			"digitCount": 4,
+			"noiseSnrDb": 9,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.35,
+			"gapMs": 200
+		}
+	},
+	{
+		"site": {
+			"digitCount": 4,
+			"gapMs": 200,
+			"reverbMix": 0.35
+		},
+		"other": {
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		},
+		"resolved": {
+			"digitCount": 4,
+			"noiseSnrDb": 0,
+			"babbleGain": 0,
+			"babbleVoices": 0,
+			"reverbMix": 0,
+			"gapMs": 0
+		}
+	},
+	{
+		"site": {
+			"digitCount": 4,
+			"gapMs": 200,
+			"reverbMix": 0.35
+		},
+		"other": {
+			"digitCount": 4,
+			"gapMs": 200,
+			"reverbMix": 0.35
+		},
+		"resolved": {
+			"digitCount": 4,
+			"noiseSnrDb": 14,
+			"babbleGain": 0.16,
+			"babbleVoices": 2,
+			"reverbMix": 0.35,
+			"gapMs": 200
+		}
+	}
+]

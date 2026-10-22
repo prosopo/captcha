@@ -2580,6 +2580,7 @@ dependencies = [
  "prosopo-api",
  "prosopo-api-route",
  "prosopo-api-router",
+ "prosopo-audio-assets",
  "prosopo-captcha-severity",
  "prosopo-common",
  "prosopo-database",

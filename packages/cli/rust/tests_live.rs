@@ -1058,7 +1058,31 @@ fn checked_challenge(body: &mut Map<String, Value>, provider: &str, side: &str, 
     body.insert("challenge".to_string(), json!(masked_challenge(&challenge)));
 }
 
-const CHALLENGE_MEMBERS: [&str; 8] = ["status", "challenge", "difficulty", "timestamp", "signature", "background", "legend", "legendIconSize"];
+const CHALLENGE_MEMBERS: [&str; 10] = ["status", "challenge", "difficulty", "timestamp", "signature", "background", "legend", "legendIconSize", "clip", "characterCount"];
+
+/// An audio answer's clip checked as a WAV, then masked: which clip a request gets is the TS
+/// buffer's timing, and the clip's synthesis is proven by audio-assets' own vectors.
+fn compared_clip(body: &mut Map<String, Value>, side: &str, failures: &mut Vec<String>) {
+    let Some(clip) = body.get("clip").and_then(Value::as_str) else {
+        return;
+    };
+    let wav: Option<Vec<u8>> = clip.strip_prefix("data:audio/wav;base64,").and_then(|encoded| base64::engine::general_purpose::STANDARD.decode(encoded).ok());
+    if !wav.as_deref().is_some_and(|wav| wav.len() > 44 && wav.starts_with(b"RIFF") && &wav[8..12] == b"WAVE") {
+        failures.push(format!("{side}'s clip is not a WAV data URI"));
+    }
+    body.insert("clip".to_string(), json!("<clip>"));
+}
+
+/// A stored audio record with its answer masked to its length, once it is all digits.
+fn stored_audio(record: &Value, provider: &str, side: &str, failures: &mut Vec<String>) -> Value {
+    let mut record: Value = stored_challenge(record, provider, side, failures);
+    let answer: String = record["answer"].as_str().unwrap_or_default().to_string();
+    if answer.is_empty() || !answer.bytes().all(|byte| byte.is_ascii_digit()) {
+        failures.push(format!("{side}'s stored answer {answer:?} is not digits"));
+    }
+    record["answer"] = json!(format!("<answer:{}>", answer.len()));
+    record
+}
 
 /// A challenge answer as compared: its members with nonce and signature masked, and, when it
 /// was padded, the number and total length of the pads instead of the random pads themselves.
@@ -1199,7 +1223,7 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
         if step["compare"] == Value::Bool(false) {
             let body: Value = serde_json::from_slice(&actual.body).unwrap_or(Value::Null);
             let challenge: &str = body["challenge"].as_str().unwrap_or_default();
-            let shaped: bool = body["difficulty"] == json!(1) || body["legend"].as_str().and_then(data_uri_pixels).is_some();
+            let shaped: bool = body["difficulty"] == json!(1) || body["legend"].as_str().and_then(data_uri_pixels).is_some() || body["clip"].as_str().is_some_and(|clip| clip.starts_with("data:audio/wav;base64,"));
             if !actual.status_line.starts_with("HTTP/1.1 200 ") || !shaped || !challenge.ends_with("___0") || body.pointer("/signature/provider/challenge") != Some(&json!("")) {
                 failures.push(format!("{line}\n      rust dummy challenge {body}"));
             }
@@ -1215,6 +1239,8 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
             match (serde_json::from_slice::<Value>(&expected_body), serde_json::from_slice::<Value>(&actual_body)) {
                 (Ok(Value::Object(mut expected_json)), Ok(Value::Object(mut actual_json))) => {
                     compared_images(&mut expected_json, &mut actual_json, &mut failures);
+                    compared_clip(&mut expected_json, "ts", &mut failures);
+                    compared_clip(&mut actual_json, "rust", &mut failures);
                     (challenge_answer(expected_json, padded, provider, "ts", &mut failures), challenge_answer(actual_json, padded, provider, "rust", &mut failures))
                 }
                 _ => (String::from_utf8_lossy(&expected_body).into_owned(), String::from_utf8_lossy(&actual_body).into_owned()),
@@ -1248,6 +1274,9 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
     let expected_icons: Vec<Value> = vectors["after"]["iconordercaptchas"].as_array().expect("records").iter().map(|record| stored_challenge(record, provider, "ts", &mut failures)).collect();
     let actual_icons: Vec<Value> = dump(database, "iconordercaptchas").await.iter().map(|record| stored_challenge(record, provider, "rust", &mut failures)).collect();
     failures.extend(compare_records(&Value::Array(expected_icons), &actual_icons, &fresh));
+    let expected_audio: Vec<Value> = vectors["after"]["audiocaptchas"].as_array().expect("records").iter().map(|record| stored_audio(record, provider, "ts", &mut failures)).collect();
+    let actual_audio: Vec<Value> = dump(database, "audiocaptchas").await.iter().map(|record| stored_audio(record, provider, "rust", &mut failures)).collect();
+    failures.extend(compare_records(&Value::Array(expected_audio), &actual_audio, &fresh));
     let expected_sessions: Vec<Value> = vectors["after"]["sessions"].as_array().expect("sessions").iter().map(session_without_block_ids).collect();
     let actual_sessions: Vec<Value> = dump(database, "sessions").await.iter().map(session_without_block_ids).collect();
     failures.extend(compare_records(&Value::Array(expected_sessions), &actual_sessions, &fresh));

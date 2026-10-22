@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! The challenge routes ported so far: `captcha/pow` (captcha/getPoWCaptchaChallenge.ts) and
-//! `captcha/icon-order` (captcha/getIconOrderCaptchaChallenge.ts, through
-//! interactiveCaptchaChallenge.ts), with the minting of powTasks.ts and
+//! The challenge routes ported so far: `captcha/pow` (captcha/getPoWCaptchaChallenge.ts),
+//! `captcha/icon-order` and `captcha/audio` (getIconOrderCaptchaChallenge.ts and
+//! getAudioCaptchaChallenge.ts, through interactiveCaptchaChallenge.ts), with the minting of
+//! powTasks.ts and
 //! interactiveCaptchaManager.ts, maintenanceModeResponses.ts's dummies and
 //! trafficFilterRequestTime.ts's `applyTrafficFilterAtRequestTime`.
 
@@ -26,6 +27,7 @@ use crate::api::metrics::ProviderMetrics;
 use crate::api::padding::send_json_padded;
 use crate::api::pipeline::{handle_errors, validate_address, RequestSignals};
 use crate::composite_ip::get_composite_ip_address;
+use crate::tasks::audio::{render_audio_clip, resolve_audio_render_settings, AudioBufferOptions, AudioChallengeBuffer, AudioRenderer, RenderedAudioClip};
 use crate::tasks::detection::{DetectionServices, DetectorBundlePool, SimdDecoder};
 use crate::tasks::request::{settings_json, RequestStores, Validation};
 use crate::tasks::traffic::{check_traffic_filter, resolve_challenge_policy, resolve_pad_bytes, ResolvedChallengePolicy, TrafficFilterView};
@@ -53,7 +55,7 @@ use prosopo_types_database::number::to_bson_document;
 use prosopo_user_access_policy::AccessRule;
 use prosopo_util_crypto::u8a::{u8a_to_hex, U8aLike};
 use serde_json::{json, Map, Value};
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, OnceLock, RwLock};
 
 /// `DEFAULT_POW_DIFFICULTY`.
 const DEFAULT_POW_DIFFICULTY: f64 = 4.0;
@@ -86,6 +88,22 @@ pub struct ChallengeState {
     pub pool: Arc<RwLock<Arc<DetectorBundlePool>>>,
     pub decoder: Option<Arc<dyn SimdDecoder>>,
     pub seeds: Arc<dyn SeedSource>,
+    /// The process's audio buffer, made on first use as `initAudioChallengeBuffer` makes it.
+    pub audio: OnceLock<Arc<AudioChallengeBuffer>>,
+}
+
+impl ChallengeState {
+    /// `getAudioChallengeBuffer() ?? initAudioChallengeBuffer()`.
+    fn audio_buffer(&self) -> Result<Arc<AudioChallengeBuffer>, String> {
+        if let Some(buffer) = self.audio.get() {
+            return Ok(buffer.clone());
+        }
+        let render: AudioRenderer = Arc::new(|settings| {
+            prosopo_audio_assets::render_audio_challenge(settings, prosopo_audio_assets::SAMPLE_RATE).map_err(|error| error.to_string())
+        });
+        let buffer: Arc<AudioChallengeBuffer> = AudioChallengeBuffer::create(AudioBufferOptions::default(), render)?;
+        Ok(self.audio.get_or_init(|| buffer).clone())
+    }
 }
 
 /// `MintedChallenge`: `${now}___${user}___${dapp}___${nonce}`, signed by the provider.
@@ -427,6 +445,51 @@ fn icon_order_maintenance_response(user: &str, dapp: &str, seeds: &dyn SeedSourc
     }))
 }
 
+/// `buildAudioMaintenanceResponse`: a clip from the buffer, its answer discarded.
+fn audio_maintenance_response(user: &str, dapp: &str, buffer: &AudioChallengeBuffer) -> Result<Value, String> {
+    let timestamp: u128 = now_ms();
+    let rendered: RenderedAudioClip = render_audio_clip(buffer, &resolve_audio_render_settings(&[]))?;
+    Ok(json!({
+        "status": "ok",
+        "challenge": maintenance_challenge(user, dapp),
+        "clip": rendered.clip,
+        "characterCount": rendered.character_count,
+        "timestamp": timestamp.to_string(),
+        "signature": { "provider": { "challenge": "" } },
+    }))
+}
+
+/// getAudioCaptchaChallenge.ts's `issueAudioChallenge`.
+async fn issue_audio(state: &ChallengeState, services: &VerifyServices, pair: &KeyringPair, gate: &Gate, request: &ChallengeRequest<'_>) -> Result<Issued, String> {
+    let traffic_audio: Option<Value> = gate.verdict.challenge.as_ref().and_then(|challenge| challenge.audio_settings.clone()).map(Value::Object);
+    let settings = resolve_audio_render_settings(&[gate.settings.as_ref().and_then(|settings| settings.get("audio")), traffic_audio.as_ref()]);
+    let source = services.db.source();
+    let minted: MintedChallenge = mint_challenge(pair, request.user, request.dapp, source.now().timestamp_millis(), source.random())?;
+    let buffer: Arc<AudioChallengeBuffer> = state.audio_buffer()?;
+    let rendered: RenderedAudioClip = tokio::task::spawn_blocking(move || render_audio_clip(&buffer, &settings)).await.map_err(|error| error.to_string())??;
+    let components: PoWChallengeComponents = components(&minted, request.user, request.dapp);
+    services
+        .db
+        .store_interactive_captcha_record(&gate.provenance.new_challenge(&minted, &components), &InteractiveAnswer::Audio { answer: rendered.answer.clone() })
+        .await
+        .map_err(|error| error.to_string())?;
+    let mut log_data: Map<String, Value> = Map::new();
+    log_data.insert("characterCount".to_string(), json!(rendered.character_count));
+    log_data.insert("durationMs".to_string(), json!(rendered.duration_ms));
+    Ok(Issued {
+        body: json!({
+            "status": "ok",
+            "challenge": minted.challenge,
+            "clip": rendered.clip,
+            "characterCount": rendered.character_count,
+            "timestamp": minted.requested_at_timestamp.to_string(),
+            "signature": { "provider": { "challenge": minted.provider_signature } },
+        }),
+        pad_bytes: gate.verdict.pad_bytes,
+        log_data,
+    })
+}
+
 /// getIconOrderCaptchaChallenge.ts's `issueIconOrderChallenge`.
 async fn issue_icon_order(state: &ChallengeState, services: &VerifyServices, pair: &KeyringPair, gate: &Gate, request: &ChallengeRequest<'_>) -> Result<Issued, String> {
     let challenge = gate.verdict.challenge.as_ref();
@@ -478,6 +541,7 @@ async fn issue_icon_order(state: &ChallengeState, services: &VerifyServices, pai
 pub enum ChallengeRoute {
     Pow,
     IconOrder,
+    Audio,
 }
 
 impl ChallengeRoute {
@@ -485,6 +549,7 @@ impl ChallengeRoute {
         match self {
             ChallengeRoute::Pow => CaptchaType::Pow,
             ChallengeRoute::IconOrder => CaptchaType::IconOrder,
+            ChallengeRoute::Audio => CaptchaType::Audio,
         }
     }
 
@@ -492,13 +557,15 @@ impl ChallengeRoute {
         match self {
             ChallengeRoute::Pow => "PoW",
             ChallengeRoute::IconOrder => "icon-order",
+            ChallengeRoute::Audio => "audio",
         }
     }
 
-    fn maintenance_response(self, user: &str, dapp: &str, seeds: &dyn SeedSource) -> Result<Value, String> {
+    fn maintenance_response(self, user: &str, dapp: &str, state: &ChallengeState) -> Result<Value, String> {
         match self {
             ChallengeRoute::Pow => Ok(pow_maintenance_response(user, dapp)),
-            ChallengeRoute::IconOrder => icon_order_maintenance_response(user, dapp, seeds),
+            ChallengeRoute::IconOrder => icon_order_maintenance_response(user, dapp, state.seeds.as_ref()),
+            ChallengeRoute::Audio => audio_maintenance_response(user, dapp, state.audio_buffer()?.as_ref()),
         }
     }
 }
@@ -511,13 +578,16 @@ fn capitalise(text: &str) -> String {
 async fn issue(state: &ChallengeState, services: &VerifyServices, pair: &KeyringPair, route: ChallengeRoute, request: &ChallengeRequest<'_>, headers: &http::HeaderMap, logger: &Logger) -> Result<Result<Issued, Refusal>, String> {
     match route {
         ChallengeRoute::Pow => issue_pow(state, services, pair, request, headers, logger).await,
-        ChallengeRoute::IconOrder => {
+        ChallengeRoute::IconOrder | ChallengeRoute::Audio => {
             let gate: Gate = match gate(services, request, route.captcha_type(), headers, logger).await? {
                 Ok(gate) => gate,
                 Err(refusal) => return Ok(Err(refusal)),
             };
             attach_simd(state, services, &gate, request.simd_readings, route.label(), logger).await;
-            issue_icon_order(state, services, pair, &gate, request).await.map(Ok)
+            match route {
+                ChallengeRoute::Audio => issue_audio(state, services, pair, &gate, request).await.map(Ok),
+                _ => issue_icon_order(state, services, pair, &gate, request).await.map(Ok),
+            }
         }
     }
 }
@@ -553,7 +623,7 @@ pub async fn challenge_route(state: &ChallengeState, route: ChallengeRoute, requ
         } else {
             logger.info(record);
         }
-        match route.maintenance_response(user, dapp, state.seeds.as_ref()) {
+        match route.maintenance_response(user, dapp, state) {
             Ok(body) => send_json(&requested, StatusCode::OK, Vec::new(), &body),
             Err(error) => handle_errors(&request, &ThrownError::from(prosopo_logger::ErrorObject::new("Error", error))),
         }

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 //! captcha.ts, the client routes' router, for the routes ported so far: the spam email check
-//! (captcha/checkSpamEmail.ts) and the PoW and icon-order challenges (api/challenge.rs).
+//! (captcha/checkSpamEmail.ts) and the PoW, icon-order and audio challenges (api/challenge.rs).
 
 use crate::api::challenge::{challenge_route, ChallengeRoute, ChallengeState};
 use crate::api::express::{send_json, Requested};
@@ -148,7 +148,12 @@ pub async fn captcha_routes(State(state): State<Arc<CaptchaState>>, request: Req
     if request.method() == Method::POST && route_matches(request.uri().path(), ClientApiPaths::CheckSpamEmail.as_str()) {
         return check_spam_email_route(&state, request).await;
     }
-    for (path, route) in [(ClientApiPaths::GetPowCaptchaChallenge, ChallengeRoute::Pow), (ClientApiPaths::GetIconOrderCaptchaChallenge, ChallengeRoute::IconOrder)] {
+    let challenges = [
+        (ClientApiPaths::GetPowCaptchaChallenge, ChallengeRoute::Pow),
+        (ClientApiPaths::GetIconOrderCaptchaChallenge, ChallengeRoute::IconOrder),
+        (ClientApiPaths::GetAudioCaptchaChallenge, ChallengeRoute::Audio),
+    ];
+    for (path, route) in challenges {
         if request.method() == Method::POST && route_matches(request.uri().path(), path.as_str()) {
             return challenge_route(&state.challenge, route, request).await;
         }

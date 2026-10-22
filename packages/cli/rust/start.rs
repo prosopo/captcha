@@ -213,6 +213,7 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
         pool: Arc::new(std::sync::RwLock::new(Arc::new(pool))),
         decoder: simd_decoder,
         seeds,
+        audio: std::sync::OnceLock::new(),
     });
     let captcha: Arc<CaptchaState> = Arc::new(CaptchaState { challenge, db: db.clone(), maintenance, metrics: metrics.clone(), dns_servers: config.dns_servers.clone() });
     let rest: Router = pipeline(pipeline_state, request_logger(log_level), i18n, gate, admin, verify, block, domain, captcha);
