@@ -26,6 +26,7 @@ use prosopo_keyring::KeyringPair;
 use prosopo_locale::{default_locales_directory, locales_directory, I18n};
 use prosopo_logger::{parse_log_level, LogLevel, LogRecord, Logger};
 use prosopo_provider::api::block::{BlockState, HardBlockVerdictCache};
+use prosopo_provider::api::captcha::CaptchaState;
 use prosopo_provider::api::domain::DomainState;
 use prosopo_provider::api::maintenance::MaintenanceMode;
 use prosopo_provider::api::healthz_geo::{fetch_healthz_probe, read_healthz_geo_config, CountryLookup, HealthzGeoRouter, HealthzProbe};
@@ -144,9 +145,10 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
         maintenance: maintenance.clone(),
         inspector: std::sync::OnceLock::new(),
     });
-    let domain: Arc<DomainState> = Arc::new(DomainState { db: db.clone(), maintenance, metrics: metrics.clone() });
+    let domain: Arc<DomainState> = Arc::new(DomainState { db: db.clone(), maintenance: maintenance.clone(), metrics: metrics.clone() });
+    let captcha: Arc<CaptchaState> = Arc::new(CaptchaState { db: db.clone(), maintenance, metrics: metrics.clone(), dns_servers: config.dns_servers.clone() });
     let log_level: LogLevel = parse_log_level(Some(&config.log_level), LogLevel::Info);
-    let rest: Router = pipeline(pipeline_state, request_logger(log_level), i18n, auth, block, domain);
+    let rest: Router = pipeline(pipeline_state, request_logger(log_level), i18n, auth, block, domain, captcha);
     let state: PublicState = PublicState {
         host: config.host.clone(),
         version,

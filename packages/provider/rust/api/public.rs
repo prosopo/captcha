@@ -91,7 +91,7 @@ impl PublicState {
 
 /// An express route path matching as path-to-regexp 0.1 makes it: any case, one optional
 /// trailing slash.
-fn route_matches(path: &str, route: &str) -> bool {
+pub fn route_matches(path: &str, route: &str) -> bool {
     let path: &str = path.strip_suffix('/').filter(|stripped| stripped.len() == route.len()).unwrap_or(path);
     path.eq_ignore_ascii_case(route)
 }

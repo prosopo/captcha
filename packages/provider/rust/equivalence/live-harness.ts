@@ -16,6 +16,7 @@
 // (127.0.0.1:${PROSOPO_TEST_MONGO_PORT:-27999}, user root/root) and Redis Stack
 // (localhost:6379, password root), both emptied first; a stand-in for ipapi.is answering from a
 // table; the stores dumped so the Rust side can start from the same state; and raw HTTP.
+import dgram from "node:dgram";
 import http from "node:http";
 import type { AddressInfo } from "node:net";
 import net from "node:net";
@@ -176,4 +177,57 @@ export const dumpDatabase = async (database: string): Promise<Record<string, Jso
 		if ((documents as Json[]).length > 0) out[name] = documents;
 	}
 	return out;
+};
+
+/** A name's records: a CNAME target, mail exchangers. A name with no entry does not exist. */
+export type DnsTable = Record<string, { cname?: string; mx?: { preference: number; exchange: string }[] }>;
+
+const encodeName = (name: string): Buffer =>
+	Buffer.concat([...name.replace(/\.$/, "").split(".").filter((label) => label.length > 0).map((label) => Buffer.concat([Buffer.from([label.length]), Buffer.from(label, "ascii")])), Buffer.from([0])]);
+
+/** A DNS server on UDP answering CNAME and MX queries from `table`. */
+export const fakeDns = async (table: DnsTable): Promise<{ server: string; close: () => Promise<void> }> => {
+	const socket = dgram.createSocket("udp4");
+	socket.on("message", (query: Buffer, peer: dgram.RemoteInfo) => {
+		let offset = 12;
+		const labels: string[] = [];
+		while (offset < query.length && query[offset] !== 0) {
+			const length = query[offset] as number;
+			labels.push(query.subarray(offset + 1, offset + 1 + length).toString("ascii"));
+			offset += length + 1;
+		}
+		const questionEnd = offset + 5;
+		const type = query.readUInt16BE(offset + 1);
+		const name = labels.join(".").toLowerCase();
+		const entry = table[name];
+		const answers: Buffer[] = [];
+		const record = (rdataType: number, rdata: Buffer) => {
+			const head = Buffer.alloc(12);
+			head.writeUInt16BE(0xc00c, 0);
+			head.writeUInt16BE(rdataType, 2);
+			head.writeUInt16BE(1, 4);
+			head.writeUInt32BE(60, 6);
+			head.writeUInt16BE(rdata.length, 10);
+			answers.push(Buffer.concat([head, rdata]));
+		};
+		if (entry && type === 5 && entry.cname) record(5, encodeName(entry.cname));
+		if (entry && type === 15) {
+			for (const mx of entry.mx ?? []) {
+				const preference = Buffer.alloc(2);
+				preference.writeUInt16BE(mx.preference, 0);
+				record(15, Buffer.concat([preference, encodeName(mx.exchange)]));
+			}
+		}
+		const header = Buffer.alloc(12);
+		query.copy(header, 0, 0, 2);
+		header.writeUInt16BE(0x8400 | (query.readUInt16BE(2) & 0x0100) | 0x0080 | (entry ? 0 : 3), 2);
+		header.writeUInt16BE(1, 4);
+		header.writeUInt16BE(answers.length, 6);
+		socket.send(Buffer.concat([header, query.subarray(12, questionEnd), ...answers]), peer.port, peer.address);
+	});
+	await new Promise<void>((resolve) => socket.bind(0, "127.0.0.1", () => resolve()));
+	return {
+		server: `127.0.0.1:${socket.address().port}`,
+		close: () => new Promise<void>((resolve) => socket.close(() => resolve())),
+	};
 };

@@ -19,6 +19,7 @@
 //! Rust provider does not serve yet end in express's 404.
 
 use crate::api::block::BlockState;
+use crate::api::captcha::CaptchaState;
 use crate::api::domain::DomainState;
 use crate::api::express::{self, client_ip, header, send, send_json, Requested};
 use crate::api::signals::{get_handshake_timing, get_ja4, get_raw_tls_signals, node_base64_decode, HandshakeTiming, RawTlsSignals};
@@ -353,9 +354,19 @@ async fn not_found(request: Request) -> Response {
 }
 
 /// The stages after the public router, ending in express's 404.
-pub fn pipeline(state: Arc<PipelineState>, request_logger: Logger, i18n: Arc<I18n>, auth: AuthState, block: Arc<BlockState>, domain: Arc<DomainState>) -> Router {
+#[allow(clippy::too_many_arguments)]
+pub fn pipeline(
+    state: Arc<PipelineState>,
+    request_logger: Logger,
+    i18n: Arc<I18n>,
+    auth: AuthState,
+    block: Arc<BlockState>,
+    domain: Arc<DomainState>,
+    captcha: Arc<CaptchaState>,
+) -> Router {
     Router::new()
         .fallback(not_found)
+        .layer(from_fn_with_state(captcha, crate::api::captcha::captcha_routes))
         .layer(from_fn_with_state(domain, crate::api::domain::domain))
         .layer(from_fn_with_state(block, crate::api::block::block))
         .layer(from_fn_with_state(auth, admin_auth))

@@ -2531,6 +2531,7 @@ dependencies = [
  "flate2",
  "futures-util",
  "hex",
+ "hickory-resolver",
  "http",
  "hyper",
  "indexmap",

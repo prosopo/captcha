@@ -15,3 +15,4 @@
 //! The provider's tasks (src/tasks), as the routes come to need them.
 
 pub mod client;
+pub mod spam;

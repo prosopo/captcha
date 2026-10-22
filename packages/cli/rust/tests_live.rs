@@ -70,6 +70,77 @@ async fn fake_ipapi(table: Value) -> String {
     format!("http://127.0.0.1:{port}/")
 }
 
+fn encode_name(name: &str) -> Vec<u8> {
+    let mut out: Vec<u8> = Vec::new();
+    for label in name.trim_end_matches('.').split('.').filter(|label| !label.is_empty()) {
+        out.push(label.len() as u8);
+        out.extend_from_slice(label.as_bytes());
+    }
+    out.push(0);
+    out
+}
+
+/// A DNS server on UDP answering CNAME and MX queries from the vectors' table, as the TS
+/// generator's stand-in does: an unknown name does not exist, a known one without the record
+/// type has no data.
+async fn fake_dns(table: Value) -> String {
+    let socket: tokio::net::UdpSocket = tokio::net::UdpSocket::bind("127.0.0.1:0").await.expect("binds");
+    let address: SocketAddr = socket.local_addr().expect("an address");
+    tokio::spawn(async move {
+        let mut buffer: [u8; 1500] = [0; 1500];
+        loop {
+            let Ok((length, peer)) = socket.recv_from(&mut buffer).await else {
+                return;
+            };
+            let query: &[u8] = &buffer[..length];
+            let mut offset: usize = 12;
+            let mut labels: Vec<String> = Vec::new();
+            while offset < query.len() && query[offset] != 0 {
+                let size: usize = query[offset] as usize;
+                labels.push(String::from_utf8_lossy(&query[offset + 1..offset + 1 + size]).into_owned());
+                offset += size + 1;
+            }
+            let question_end: usize = offset + 5;
+            let record_type: u16 = u16::from_be_bytes([query[offset + 1], query[offset + 2]]);
+            let name: String = labels.join(".").to_lowercase();
+            let entry: Option<&Value> = table.get(&name);
+            let mut answers: Vec<u8> = Vec::new();
+            let mut count: u16 = 0;
+            let mut record = |kind: u16, rdata: Vec<u8>| {
+                answers.extend_from_slice(&[0xc0, 0x0c]);
+                answers.extend_from_slice(&kind.to_be_bytes());
+                answers.extend_from_slice(&1u16.to_be_bytes());
+                answers.extend_from_slice(&60u32.to_be_bytes());
+                answers.extend_from_slice(&(rdata.len() as u16).to_be_bytes());
+                answers.extend_from_slice(&rdata);
+                count += 1;
+            };
+            if let (Some(entry), 5) = (entry, record_type) {
+                if let Some(target) = entry.get("cname").and_then(Value::as_str) {
+                    record(5, encode_name(target));
+                }
+            }
+            if let (Some(entry), 15) = (entry, record_type) {
+                for mx in entry.get("mx").and_then(Value::as_array).cloned().unwrap_or_default() {
+                    let mut rdata: Vec<u8> = (mx["preference"].as_u64().unwrap_or(0) as u16).to_be_bytes().to_vec();
+                    rdata.extend(encode_name(mx["exchange"].as_str().unwrap_or_default()));
+                    record(15, rdata);
+                }
+            }
+            let flags: u16 = 0x8400 | (u16::from_be_bytes([query[2], query[3]]) & 0x0100) | 0x0080 | if entry.is_some() { 0 } else { 3 };
+            let mut response: Vec<u8> = query[..2].to_vec();
+            response.extend_from_slice(&flags.to_be_bytes());
+            response.extend_from_slice(&1u16.to_be_bytes());
+            response.extend_from_slice(&count.to_be_bytes());
+            response.extend_from_slice(&[0, 0, 0, 0]);
+            response.extend_from_slice(&query[12..question_end]);
+            response.extend(answers);
+            let _ = socket.send_to(&response, peer).await;
+        }
+    });
+    address.to_string()
+}
+
 async fn redis() -> redis::aio::MultiplexedConnection {
     redis::Client::open("redis://:root@localhost:6379").expect("a client").get_multiplexed_async_connection().await.expect("connects")
 }
@@ -269,5 +340,26 @@ async fn client_origins_are_checked_as_the_express_app_checks_them() {
     let port: u16 = serve(router).await;
     let (compared, failures) = replay(port, &vectors["exchanges"]).await;
     assert!(compared > 30, "only {compared} compared");
+    assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn spam_emails_are_checked_as_the_express_app_checks_them() {
+    let _live = LIVE.lock().await;
+    let vectors: Value = serde_json::from_str(include_str!("../../provider/rust/equivalence/spam-vectors.json")).expect("spam-vectors.json parses");
+    let database: &str = vectors["database"].as_str().expect("a database");
+    reset(database).await;
+    let ipapi: String = fake_ipapi(vectors["ipapi"].clone()).await;
+    let dns: String = fake_dns(vectors["dns"].clone()).await;
+    let mut variables: HashMap<String, String> = serde_json::from_value(vectors["variables"].clone()).expect("variables");
+    variables.insert("PROSOPO_IPAPI_URL".to_string(), ipapi);
+    variables.insert("PROSOPO_DNS_SERVERS".to_string(), json!([dns]).to_string());
+    variables.insert("NODE_ENV".to_string(), "production".to_string());
+    let (router, _env) = live_app(&variables).await;
+    restore_database(database, &vectors["seed"]).await;
+    let port: u16 = serve(router).await;
+    let (compared, failures) = replay(port, &vectors["exchanges"]).await;
+    assert!(compared > 25, "only {compared} compared");
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }
