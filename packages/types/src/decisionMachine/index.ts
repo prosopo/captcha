@@ -34,7 +34,10 @@ import type {
 	PuzzleEvent,
 	RequestHeaders,
 } from "../provider/api.js";
-import type { ScoreComponents } from "../provider/database.js";
+import type {
+	FingerprintSummaryStored,
+	ScoreComponents,
+} from "../provider/database.js";
 import type { DetectorData, SimdReadings } from "../provider/detection.js";
 import type { FrictionlessReason } from "../provider/reasons.js";
 
@@ -302,7 +305,23 @@ export const COUNTER_WINDOW_SECONDS: Record<CounterWindow, number> = {
 export const COUNTER_KINDS = ["served", "solved"] as const;
 export type CounterKind = (typeof COUNTER_KINDS)[number];
 
-export const COUNTER_DIMENSIONS = ["ip", "userAccount", "peerIp"] as const;
+/**
+ * `deviceBucket` is the `bucketId` disclosed by a verified proof of
+ * fingerprint. Counting on it answers "how much traffic has this kind of
+ * device produced", which no per-request field can: one bucketId on its own
+ * says nothing, and the account address is a different value on every visit
+ * from a client that redraws its fingerprint.
+ *
+ * It resolves only on a request that disclosed one. A spec naming it on a
+ * request that did not is skipped, so the counter reads as absent rather than
+ * as zero traffic.
+ */
+export const COUNTER_DIMENSIONS = [
+	"ip",
+	"userAccount",
+	"peerIp",
+	"deviceBucket",
+] as const;
 export type CounterDimension = (typeof COUNTER_DIMENSIONS)[number];
 
 export const COUNTER_CAPTCHA_ANY = "any" as const;
@@ -364,6 +383,12 @@ export interface RoutingMachineRawSignals {
 	ja4?: string;
 	behavioralDataPacked?: DecisionMachineBehavioralDataPacked;
 	fingerprintProof?: string;
+	// The verified proof above, reduced to the fields a rule can use: the
+	// commitment root, the disclosed values, and the device bucket. Present
+	// only when the proof verified, so a rule reading it never has to re-check
+	// anything. Absent when no proof arrived or it failed verification, which
+	// `fingerprintProofValid` reports separately.
+	fingerprintSummary?: FingerprintSummaryStored;
 	// Decoded per-CPU WASM SIMD fingerprint readings, when the client submitted
 	// them with the PoW solution (decrypted and attached to the session, then
 	// surfaced here for the post-pow routing machine). Undefined when absent or

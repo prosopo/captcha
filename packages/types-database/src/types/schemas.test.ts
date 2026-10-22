@@ -394,6 +394,57 @@ describe("PoWCaptchaRecordSchema", () => {
 			partialFilterExpression: { pendingStage: true },
 		});
 	});
+
+	// `strict: true` drops undeclared paths without complaining, so a field
+	// missing from the schema is written by the provider and never stored.
+	// These assert the whole fingerprint summary survives the schema.
+	it("keeps every field of a fingerprint summary", () => {
+		const summary = {
+			root: "0xroot",
+			groupHash: "0xgroup",
+			bucketId: "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f",
+			colorDepth: 24,
+			hardwareConcurrency: 8,
+			disclosed: {
+				timezone: "Europe/London",
+				languages: '[["en-GB"]]',
+				architecture: 127,
+				cookiesEnabled: true,
+				sessionStorage: true,
+				localStorage: false,
+			},
+		};
+
+		const doc = validate(PoWCaptchaRecordSchema, {
+			challenge: "0x1___100000___5Gx___5Gy",
+			dappAccount: "5Gx",
+			userAccount: "5Gy",
+			fingerprintSummary: summary,
+		});
+
+		expect(doc.validateSync()?.errors.fingerprintSummary).toBeUndefined();
+		expect(doc.toObject().fingerprintSummary).toStrictEqual(summary);
+	});
+
+	it("stores a summary that disclosed no bucket", () => {
+		const doc = validate(PoWCaptchaRecordSchema, {
+			challenge: "0x1___100000___5Gx___5Gy",
+			dappAccount: "5Gx",
+			userAccount: "5Gy",
+			fingerprintSummary: { root: "0xroot", groupHash: "0xgroup" },
+		});
+
+		expect(doc.toObject().fingerprintSummary).toStrictEqual({
+			root: "0xroot",
+			groupHash: "0xgroup",
+		});
+	});
+
+	it("leaves the fingerprint summary optional, since not every client proves one", () => {
+		expect(
+			PoWCaptchaRecordSchema.path("fingerprintSummary").isRequired,
+		).toBeFalsy();
+	});
 });
 
 describe("SessionRecordSchema", () => {

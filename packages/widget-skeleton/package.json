@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/widget-skeleton",
-	"version": "2.10.2",
+	"version": "2.10.3",
 	"description": "Non business logic utilities for web applications",
 	"type": "module",
 	"engines": {
@@ -42,11 +42,11 @@
 		"@prosopo/config": "workspace:*",
 		"@types/jsdom": "30.0.0",
 		"@types/node": "22.10.2",
-		"@vitest/browser-playwright": "4.1.11",
-		"@vitest/coverage-v8": "4.1.11",
+		"@vitest/browser-playwright": "5.0.4",
+		"@vitest/coverage-v8": "5.0.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"dotenv": "16.4.7",
+		"dotenv": "18.0.7",
 		"jsdom": "25.0.0",
 		"npm-run-all": "4.1.5",
 		"playwright": "1.64.0",
@@ -54,7 +54,7 @@
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
 		"vite": "8.1.6",
-		"vitest": "4.1.11"
+		"vitest": "5.0.4"
 	},
 	"sideEffects": false
 }

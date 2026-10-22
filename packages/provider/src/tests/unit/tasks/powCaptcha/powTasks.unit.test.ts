@@ -20,6 +20,7 @@ import {
 	CaptchaType,
 	type ClientMetaData,
 	FrictionlessReason,
+	type IIPValidationRules,
 	IPValidationAction,
 	type KeyringPair,
 	POW_SEPARATOR,
@@ -821,6 +822,43 @@ describe("PowCaptchaManager", () => {
 			expect(replayed.sessionId).toBe("session-abc");
 		});
 
+		it("answers without waiting for the bookkeeping writes", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const challengeRecord: Partial<PoWCaptchaStored> = {
+				challenge,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
+				serverChecked: false,
+				result: { status: CaptchaStatus.approved },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+			};
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as PoWCaptchaRecord,
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(db.updatePowCaptchaRecord).mockReturnValue(
+				new Promise<void>(() => {}),
+			);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+				"1.1.1.1",
+			);
+
+			expect(result.verified).toBe(true);
+			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, {
+				providedIp: getCompositeIpAddress("1.1.1.1"),
+			});
+		});
+
 		it("refuses a verify that lost the server-check claim to a concurrent verify", async () => {
 			const dappAccount = "dappAccount";
 			const timestamp = 123456789;
@@ -1451,6 +1489,28 @@ describe("PowCaptchaManager", () => {
 	});
 
 	describe("IP Validation Guard Conditions", () => {
+		const verifyWithIpRules = (
+			dappAccount: string,
+			challenge: PoWChallengeId,
+			ip: string | undefined,
+			ipValidationRules: IIPValidationRules | undefined,
+		) =>
+			powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+				ip,
+				undefined,
+				undefined,
+				false,
+				undefined,
+				undefined,
+				false,
+				undefined,
+				ipValidationRules,
+			);
+
 		it("should skip IP validation when ipValidationRules is undefined", async () => {
 			const dappAccount = "testDappAccount";
 			const userAccount = "testUserAccount";
@@ -1478,11 +1538,6 @@ describe("PowCaptchaManager", () => {
 			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
 				challengeRecord as PoWCaptchaRecord,
 			);
-			vi.mocked(db.getClientRecord).mockResolvedValue({
-				settings: {
-					// ipValidationRules is undefined
-				},
-			} as ClientRecord);
 			vi.mocked(checkPowSignature).mockReturnValue(undefined);
 			vi.mocked(validateSolution).mockReturnValue(true);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
@@ -1531,28 +1586,17 @@ describe("PowCaptchaManager", () => {
 			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
 				challengeRecord as PoWCaptchaRecord,
 			);
-			vi.mocked(db.getClientRecord).mockResolvedValue({
-				settings: {
-					ipValidationRules: {
-						enabled: false, // Explicitly disabled
-						actions: {
-							countryChangeAction: IPValidationAction.Reject,
-							cityChangeAction: IPValidationAction.Reject,
-						},
-					},
-				},
-			} as ClientRecord);
 			vi.mocked(checkPowSignature).mockReturnValue(undefined);
 			vi.mocked(validateSolution).mockReturnValue(true);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
-				dappAccount,
-				challenge,
-				timeout,
-				mockEnv,
-				ip,
-			);
+			const result = await verifyWithIpRules(dappAccount, challenge, ip, {
+				enabled: false, // Explicitly disabled
+				actions: {
+					countryChangeAction: IPValidationAction.Reject,
+					cityChangeAction: IPValidationAction.Reject,
+				},
+			} as IIPValidationRules);
 
 			// Should succeed without IP validation even though rules are configured
 			expect(result.verified).toBe(true);
@@ -1589,28 +1633,17 @@ describe("PowCaptchaManager", () => {
 			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
 				challengeRecord as PoWCaptchaRecord,
 			);
-			vi.mocked(db.getClientRecord).mockResolvedValue({
-				settings: {
-					ipValidationRules: {
-						// enabled field is missing/undefined
-						actions: {
-							countryChangeAction: IPValidationAction.Reject,
-							cityChangeAction: IPValidationAction.Reject,
-						},
-					},
-				},
-			} as ClientRecord);
 			vi.mocked(checkPowSignature).mockReturnValue(undefined);
 			vi.mocked(validateSolution).mockReturnValue(true);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
-				dappAccount,
-				challenge,
-				timeout,
-				mockEnv,
-				ip,
-			);
+			const result = await verifyWithIpRules(dappAccount, challenge, ip, {
+				// enabled field is missing/undefined
+				actions: {
+					countryChangeAction: IPValidationAction.Reject,
+					cityChangeAction: IPValidationAction.Reject,
+				},
+			} as IIPValidationRules);
 
 			// Should succeed without IP validation when enabled is undefined
 			expect(result.verified).toBe(true);
@@ -1619,7 +1652,7 @@ describe("PowCaptchaManager", () => {
 			});
 		});
 
-		it("should skip IP validation when clientRecord is null", async () => {
+		it("takes the site's rules from the caller instead of reading the client record again", async () => {
 			const dappAccount = pair.address;
 			const challenge: PoWChallengeId = `123456789${POW_SEPARATOR}userAccount${POW_SEPARATOR}${pair.address}`;
 			const timeout = 1000;
@@ -1647,24 +1680,30 @@ describe("PowCaptchaManager", () => {
 			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
 				challengeRecord as PoWCaptchaRecord,
 			);
-			vi.mocked(db.getClientRecord).mockResolvedValue(undefined);
+			// Rules that would reject, so reading them would fail the verify.
+			vi.mocked(db.getClientRecord).mockResolvedValue({
+				settings: {
+					ipValidationRules: {
+						enabled: true,
+						actions: {
+							countryChangeAction: IPValidationAction.Reject,
+						},
+					},
+				},
+			} as ClientRecord);
 			vi.mocked(checkPowSignature).mockReturnValue(undefined);
 			vi.mocked(validateSolution).mockReturnValue(true);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await verifyWithIpRules(
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
 				ip,
+				undefined,
 			);
 
-			// Should succeed without IP validation when client record is null
 			expect(result.verified).toBe(true);
-			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, {
-				providedIp: getCompositeIpAddress(ip),
-			});
+			expect(db.getClientRecord).not.toHaveBeenCalled();
 		});
 
 		it("should skip IP validation when no IP is provided", async () => {
@@ -1694,26 +1733,21 @@ describe("PowCaptchaManager", () => {
 			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
 				challengeRecord as PoWCaptchaRecord,
 			);
-			vi.mocked(db.getClientRecord).mockResolvedValue({
-				settings: {
-					ipValidationRules: {
-						enabled: true,
-						actions: {
-							countryChangeAction: IPValidationAction.Reject,
-						},
-					},
-				},
-			} as ClientRecord);
 			vi.mocked(checkPowSignature).mockReturnValue(undefined);
 			vi.mocked(validateSolution).mockReturnValue(true);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
 			// No IP provided
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await verifyWithIpRules(
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
+				undefined,
+				{
+					enabled: true,
+					actions: {
+						countryChangeAction: IPValidationAction.Reject,
+					},
+				} as IIPValidationRules,
 			);
 
 			// Should succeed - no IP provided means IP validation is skipped
@@ -3102,6 +3136,40 @@ module.exports = (input) => {
 				expect(result.reason).toBe("API.TIMESTAMP_TOO_OLD");
 				// Spam email check should NOT have been called since recency already failed
 				expect(db.getSpamEmailDomain).not.toHaveBeenCalled();
+			});
+
+			it("reads the session but does not look up the ip once recency has failed", async () => {
+				const dappAccount = "dappAccount";
+				const userAccount = "testUserAccount";
+				const challenge: PoWChallengeId = `${Date.now()}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+				const challengeRecord: Partial<PoWCaptchaStored> = {
+					challenge,
+					dappAccount,
+					userAccount,
+					sessionId: "session-abc",
+					requestedAtTimestamp: new Date(),
+					submittedAtTimestamp: new Date(0),
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+				};
+				vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+					challengeRecord as PoWCaptchaRecord,
+				);
+
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+					dappAccount,
+					challenge,
+					1000,
+					mockEnv,
+					"1.1.1.1",
+				);
+
+				expect(result.reason).toBe("API.TIMESTAMP_TOO_OLD");
+				expect(db.getSessionRecordBySessionId).toHaveBeenCalledWith(
+					"session-abc",
+				);
+				expect(mockEnv.ipInfoService.lookup).not.toHaveBeenCalled();
 			});
 
 			it("should write accumulated failure result in single batch", async () => {

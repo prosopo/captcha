@@ -29,7 +29,9 @@ import {
 	CaptchaStatus,
 	type ClientMetaData,
 	type DecisionMachineBehavioralDataPacked,
+	type FingerprintSummaryStored,
 	FrictionlessReason,
+	type IIPValidationRules,
 	type IPAddress,
 	type ISpamFilterRules,
 	type ITrafficFilter,
@@ -93,6 +95,7 @@ import {
 	evaluateEmailSpamRules,
 	normaliseEmailForMatching,
 } from "../spam/evaluateEmailSpamRules.js";
+import { BackgroundWrites } from "./backgroundWrites.js";
 import {
 	checkPowSignature,
 	isCoordsAllZero,
@@ -118,6 +121,8 @@ export type VerifyPowCaptchaSolutionResult = {
 };
 
 const DEFAULT_POW_DIFFICULTY = 4;
+
+const verifyOutcomeWrites = new BackgroundWrites(500);
 
 export class PowCaptchaManager extends CaptchaManager {
 	POW_SEPARATOR: string;
@@ -204,6 +209,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		salt?: string,
 		simdReadings?: string,
 		clientMetaData?: ClientMetaData,
+		fingerprintSummary?: FingerprintSummaryStored,
 	): Promise<VerifyPowCaptchaSolutionResult> {
 		// Check signatures before doing DB reads to avoid unnecessary network connections
 		checkPowSignature(
@@ -360,6 +366,8 @@ export class PowCaptchaManager extends CaptchaManager {
 					CaptchaType.pow,
 					ipAddress.address,
 					userAccount,
+					undefined,
+					fingerprintSummary?.bucketId,
 				),
 			);
 		}
@@ -432,6 +440,9 @@ export class PowCaptchaManager extends CaptchaManager {
 		// updatePowCaptchaRecordResult triggers centralStreamer.streamPowUpdate(),
 		// which reads back the full record.
 		const recordUpdates: Partial<PoWCaptchaRecord> = { ...behavioralUpdates };
+		if (fingerprintSummary) {
+			recordUpdates.fingerprintSummary = fingerprintSummary;
+		}
 		const storedClientMetaData = toStoredClientMetaData(clientMetaData);
 		if (storedClientMetaData) {
 			recordUpdates.clientMetaData = storedClientMetaData;
@@ -670,6 +681,8 @@ export class PowCaptchaManager extends CaptchaManager {
 	 * @param clientSessionId - the session id the site rendered the widget
 	 *   with. When supplied, the solve must carry the same value in its
 	 *   `clientMetaData` or it is disapproved.
+	 * @param ipValidationRules - the site's rules for comparing `ip` with the
+	 *   ip the challenge was issued to.
 	 */
 	async serverVerifyPowCaptchaSolution(
 		dappAccount: string,
@@ -684,6 +697,7 @@ export class PowCaptchaManager extends CaptchaManager {
 		trafficFilter?: ITrafficFilter,
 		storeMetadata = false,
 		clientSessionId?: string,
+		ipValidationRules?: IIPValidationRules,
 	): Promise<{
 		verified: boolean;
 		score?: number;
@@ -815,6 +829,30 @@ export class PowCaptchaManager extends CaptchaManager {
 			failReason = "API.CLIENT_SESSION_MISMATCH";
 		}
 
+		// Run alongside the checks below.
+		const sessionRecordRead = challengeRecord.sessionId
+			? this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
+			: Promise.resolve(undefined);
+		const enrichedDnsEventRead = sessionRecordRead.then((sessionRecord) =>
+			enrichDnsEvent(
+				sessionRecord?.dnsEvent,
+				env.ipInfoService,
+				ip ?? challengeRecord.ipInfo?.ip,
+			),
+		);
+		const currentIpInfoRead =
+			ip && !failResult
+				? env.ipInfoService.lookup(ip)
+				: Promise.resolve(undefined);
+		// Avoids an unhandled rejection if a check throws before these are awaited.
+		for (const read of [
+			sessionRecordRead,
+			enrichedDnsEventRead,
+			currentIpInfoRead,
+		]) {
+			read.catch(() => undefined);
+		}
+
 		// Check user access policies for hard blocks
 		if (!failResult && userAccessRulesStorage) {
 			try {
@@ -823,6 +861,7 @@ export class PowCaptchaManager extends CaptchaManager {
 					challengeRecord,
 					challengeRecord.userAccount,
 					challengeRecord.headers,
+					(await sessionRecordRead)?.decryptedHeadHash,
 					challengeRecord.coords,
 					challengeRecord.ipInfo?.isValid
 						? challengeRecord.ipInfo.countryCode
@@ -942,27 +981,14 @@ export class PowCaptchaManager extends CaptchaManager {
 			}
 		}
 
-		// Walk to the origin session when this is an escalation record —
-		// simdReadings / dnsEvent / entropy fields are populated on the
-		// origin and don't automatically end up on the escalation. Non-
-		// escalations pass through unchanged (walker no-ops when there's
-		// no originSessionId).
-		const sessionRecord = challengeRecord.sessionId
-			? await this.getSessionRecordWithOriginFallback(challengeRecord.sessionId)
-			: undefined;
-
-		const enrichedDnsEvent = await enrichDnsEvent(
-			sessionRecord?.dnsEvent,
-			env.ipInfoService,
-			ip ?? challengeRecord.ipInfo?.ip,
-		);
+		const sessionRecord = await sessionRecordRead;
+		const enrichedDnsEvent = await enrichedDnsEventRead;
 
 		if (!failResult) {
 			const check = await this.resolveTrafficFilterCheck(
-				env,
 				challengeRecord.ipInfo,
 				trafficFilter,
-				ip,
+				await currentIpInfoRead,
 				enrichedDnsEvent,
 			);
 			if (check.isBlocked) {
@@ -1002,10 +1028,6 @@ export class PowCaptchaManager extends CaptchaManager {
 			const challengeIpAddress = getIpAddressFromComposite(
 				challengeRecord.ipAddress,
 			);
-
-			// Get client settings for IP validation rules
-			const clientRecord = await this.db.getClientRecord(dappAccount);
-			const ipValidationRules = clientRecord?.settings?.ipValidationRules;
 
 			// Accumulate providedIp update instead of writing immediately
 			powRecordUpdates.providedIp = getCompositeIpAddress(ip);
@@ -1196,9 +1218,13 @@ export class PowCaptchaManager extends CaptchaManager {
 			);
 		}
 
-		if (writePromises.length > 0) {
-			await Promise.all(writePromises);
-		}
+		// Backgrounded up to a cap; the claim above already made the token single-use.
+		await verifyOutcomeWrites.add(Promise.all(writePromises), (err) => {
+			logger.error(() => ({
+				msg: "Failed to record the outcome of a PoW verification",
+				err,
+			}));
+		});
 
 		if (failReason) {
 			return notVerified(failReason, challengeRecord.sessionId);
