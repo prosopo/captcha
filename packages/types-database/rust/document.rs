@@ -87,9 +87,68 @@ pub fn create(schema: &Schema, input: &Document, ids: &mut dyn Ids) -> Result<Do
     Ok(sent)
 }
 
-/// `toObject()` of a document as built: `minimize` applied.
+/// `toObject()` of a document as built: `minimize` applied, then the virtuals.
 pub fn to_object(schema: &Schema, document: Document) -> Document {
-    minimize_schema(schema, document)
+    with_virtuals(schema, minimize_schema(schema, document))
+}
+
+/// `toObject()`'s virtuals on a top-level document: `id` on each document that applies them.
+fn with_virtuals(schema: &Schema, mut document: Document) -> Document {
+    apply_virtuals(schema, &mut document, None, false, false);
+    document
+}
+
+/// A document applies virtuals when its schema's `toObject` option says so or, under a
+/// subdocument, when the first schema from the top that sets the option does (`$toObject`'s
+/// `parentOptions`, which only a subdocument passes down). The `id` virtual is the `_id` as a
+/// string, added last, on a schema with an `_id` and no `id` path of its own.
+fn apply_virtuals(schema: &Schema, document: &mut Document, inherited: Option<bool>, under_subdocument: bool, is_subdocument: bool) {
+    let applies: bool = schema.to_object_virtuals.or(if under_subdocument { inherited } else { None }).unwrap_or(false);
+    let passed: Option<bool> = inherited.or(schema.to_object_virtuals);
+    for (path, leaf) in schema.paths() {
+        let Some(value) = lookup_mut(document, &path) else {
+            continue;
+        };
+        match (&leaf.kind, value) {
+            (Kind::Subdocument(sub), Bson::Document(inner)) => apply_virtuals(sub, inner, passed, is_subdocument, true),
+            (Kind::DocumentArray(sub), Bson::Array(items)) => {
+                for item in items {
+                    if let Bson::Document(inner) = item {
+                        apply_virtuals(sub, inner, passed, is_subdocument, true);
+                    }
+                }
+            }
+            (Kind::Map(sub), Bson::Document(entries)) => {
+                for (_, entry) in entries.iter_mut() {
+                    if let Bson::Document(inner) = entry {
+                        apply_virtuals(sub, inner, passed, is_subdocument, true);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    if applies && schema.path("_id").is_some() && schema.path("id").is_none() && !document.contains_key("id") {
+        let id: Bson = match document.get("_id") {
+            Some(Bson::ObjectId(id)) => Bson::String(id.to_hex()),
+            Some(Bson::String(text)) => Bson::String(text.clone()),
+            Some(Bson::Null | Bson::Undefined) | None => Bson::Null,
+            Some(other) => Bson::String(other.to_string()),
+        };
+        document.insert("id", id);
+    }
+}
+
+fn lookup_mut<'a>(document: &'a mut Document, path: &str) -> Option<&'a mut Bson> {
+    let mut cursor: &mut Document = document;
+    let pieces: Vec<&str> = path.split('.').collect();
+    for piece in &pieces[..pieces.len() - 1] {
+        cursor = match cursor.get_mut(*piece) {
+            Some(Bson::Document(inner)) => inner,
+            _ => return None,
+        };
+    }
+    cursor.get_mut(pieces[pieces.len() - 1])
 }
 
 /// The document as mongod stores an insert: `_id` moved to the front.
@@ -118,7 +177,7 @@ pub fn hydrate(schema: &Schema, stored: &Document, projection: Option<&Document>
     apply_defaults_to(schema, &mut document, DefaultTiming::Before, "", selected, ids, &mut issues);
     init_fields(schema, stored, &mut document, "", ids, &mut issues);
     apply_defaults_to(schema, &mut document, DefaultTiming::After, "", selected, ids, &mut issues);
-    minimize_schema(schema, document)
+    with_virtuals(schema, minimize_schema(schema, document))
 }
 
 /// The paths a query's projection selects, as mongoose reads it: exclusive when every value

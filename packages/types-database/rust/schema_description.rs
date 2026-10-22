@@ -153,9 +153,11 @@ pub fn first_difference(actual: &Value, expected: &Value, at: &str) -> Option<St
     }
 }
 
-/// mongoose lists the values of a TS enum object in reverse; only membership matters.
+/// mongoose lists the values of a TS enum object in reverse, and can list an array element's
+/// values twice (database-private's API key permissions); only membership matters.
 fn sort_enum(entry: &mut Map<String, Value>) {
     if let Some(Value::Array(values)) = entry.get_mut("enumValues") {
         values.sort_by(|a, b| a.as_str().cmp(&b.as_str()));
+        values.dedup();
     }
 }

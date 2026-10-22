@@ -832,3 +832,24 @@ fn array_additions_cast_each_value_as_an_element() {
         .unwrap_or_default();
     assert_eq!(refused, ["n.0"]);
 }
+
+/// mongoose 9.10's `Model.find(filter)` puts `$and`, then `$or`, before every other key, and
+/// leaves `$nor` and the other operators where they were.
+#[test]
+fn a_filter_has_its_and_then_its_or_first() {
+    use crate::schema::{field, number, string};
+    use crate::update::cast_filter;
+    let schema: Schema = Schema::new(vec![field("a", number()), field("b", string()), field("c", number())]);
+    let keys = |filter: Document| -> Vec<String> {
+        cast_filter(&schema, &filter, false, &mut FreshIds)
+            .expect("casts")
+            .keys()
+            .cloned()
+            .collect()
+    };
+    assert_eq!(keys(doc! { "a": 1, "$or": [{ "b": "x" }, { "c": 2 }] }), ["$or", "a"]);
+    assert_eq!(keys(doc! { "a": 1, "$and": [{ "b": "x" }], "c": 3 }), ["$and", "a", "c"]);
+    assert_eq!(keys(doc! { "a": 1, "$nor": [{ "b": "x" }], "$or": [{ "c": 1 }], "b": "y" }), ["$or", "a", "$nor", "b"]);
+    assert_eq!(keys(doc! { "a": 1, "$or": [{ "c": 1 }], "$and": [{ "b": "x" }], "$nor": [{ "a": 2 }] }), ["$and", "$or", "a", "$nor"]);
+    assert_eq!(keys(doc! { "a": 1, "$expr": { "$gt": ["$a", 1] }, "b": "y" }), ["a", "$expr", "b"]);
+}

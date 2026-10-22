@@ -385,6 +385,9 @@ pub struct Schema {
     /// Not declared `{ minimize: false }`: objects left empty are removed on save and by
     /// `toObject()`.
     pub minimize: bool,
+    /// `schema.set("toObject", { virtuals })`, which mongoose also gives the schemas it created
+    /// from plain objects inside this one.
+    pub to_object_virtuals: Option<bool>,
 }
 
 static ID_PATH: LazyLock<Path> = LazyLock::new(|| Path {
@@ -405,11 +408,17 @@ impl Schema {
             timestamps: false,
             indexes: Vec::new(),
             minimize: true,
+            to_object_virtuals: None,
         }
     }
 
     pub fn without_id(mut self) -> Schema {
         self.id = false;
+        self
+    }
+
+    pub fn with_to_object_virtuals(mut self) -> Schema {
+        self.to_object_virtuals = Some(true);
         self
     }
 
@@ -512,10 +521,18 @@ impl Schema {
     }
 
     /// `schema.indexes()`: an index for every path declared with `expires`, `unique` or `index`, in
-    /// path order, then the `schema.index(...)` calls.
+    /// path order, with a subdocument's or document array's own indexes in its place under its
+    /// path, then the `schema.index(...)` calls.
     pub fn indexes(&self) -> Vec<Index> {
         let mut out: Vec<Index> = Vec::new();
         for (path, leaf) in self.paths() {
+            if let Kind::Subdocument(sub) | Kind::DocumentArray(sub) = &leaf.kind {
+                out.extend(sub.indexes().into_iter().map(|index| Index {
+                    keys: index.keys.into_iter().map(|(key, direction)| (format!("{path}.{key}"), direction)).collect(),
+                    options: index.options,
+                }));
+                continue;
+            }
             if let Some(seconds) = leaf.expires {
                 out.push(Index {
                     keys: vec![(path, 1)],

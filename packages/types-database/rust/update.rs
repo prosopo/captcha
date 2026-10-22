@@ -164,8 +164,20 @@ fn walk(
             (_, Bson::Undefined) => None,
             (Target::Leaf(leaf), _) if leaf.immutable && op != "$setOnInsert" => None,
             (Target::Leaf(_), _) if op == "$unset" => Some(value.clone()),
-            (Target::Leaf(leaf @ Path { kind: Kind::Array(_), .. }), _) if op == "$addToSet" || op == "$push" => {
+            (Target::Leaf(leaf @ Path { kind: Kind::Array(_) | Kind::DocumentArray(_), .. }), _) if op == "$addToSet" || op == "$push" => {
                 cast_array_addition(leaf, value, &path, ids, issues)
+            }
+            (Target::Leaf(Path { kind: Kind::DocumentArray(sub), .. }), Bson::Document(condition)) if op == "$pull" => {
+                match cast_conditions(sub, condition, false, ids) {
+                    Ok(cast_condition) => Some(Bson::Document(cast_condition)),
+                    Err(error) => {
+                        issues.extend(error.issues.into_iter().map(|issue| Issue {
+                            path: join(&path, &issue.path),
+                            kind: issue.kind,
+                        }));
+                        None
+                    }
+                }
             }
             (Target::Leaf(leaf), _) => cast_value(leaf, value, &path, ids, issues),
             (Target::Nested, Bson::Document(inner)) if op != "$unset" => {
@@ -183,22 +195,26 @@ fn walk(
     out
 }
 
-/// `$addToSet` or `$push` on an array of primitives: `$each`'s values cast as the array's, its
-/// other modifiers kept as given; a single value cast as one element.
+/// `$addToSet` or `$push` on an array: `$each`'s values cast as the array's, its other modifiers
+/// kept as given; a single value cast as one element (a subdocument built, with its defaults and
+/// `_id`, as an element of a document array is).
 fn cast_array_addition(leaf: &Path, value: &Bson, path: &str, ids: &mut dyn Ids, issues: &mut Vec<Issue>) -> Option<Bson> {
-    let Kind::Array(element) = &leaf.kind else {
-        return cast_value(leaf, value, path, ids, issues);
-    };
     match value {
         Bson::Document(modifiers) if modifiers.contains_key("$each") => {
             let mut out: Document = Document::new();
             for (key, inner) in modifiers {
-                let cast_inner: Bson = if key == "$each" { cast(&leaf.kind, inner, path, ids, issues)? } else { inner.clone() };
+                let cast_inner: Bson = if key == "$each" { cast_value(leaf, inner, path, ids, issues)? } else { inner.clone() };
                 out.insert(key.clone(), cast_inner);
             }
             Some(Bson::Document(out))
         }
-        single => cast(element, single, path, ids, issues),
+        single => match &leaf.kind {
+            Kind::Array(element) => cast(element, single, path, ids, issues),
+            _ => match cast_value(leaf, &Bson::Array(vec![single.clone()]), path, ids, issues)? {
+                Bson::Array(mut items) if items.len() == 1 => items.pop(),
+                _ => None,
+            },
+        },
     }
 }
 
@@ -512,10 +528,32 @@ fn set_defaults_on_insert(schema: &Schema, filter: &Document, update: &mut Docum
 
 const QUERY_OPERATORS_WITH_ARRAYS: [&str; 3] = ["$in", "$nin", "$all"];
 
-/// The filter mongoose sends: each value cast to its path's type, `$in` and the like element by
-/// element, `$exists` to a boolean, undeclared paths left as they are (`strictQuery: false`).
-/// An upsert refuses an undeclared path, which it would otherwise write into the new document.
+/// The filter mongoose sends: `$and` and `$or` first (`Query.merge`), each value cast to its
+/// path's type, `$in` and the like element by element, `$exists` to a boolean, undeclared paths
+/// left as they are (`strictQuery: false`). An upsert refuses an undeclared path, which it would
+/// otherwise write into the new document.
 pub fn cast_filter(schema: &Schema, filter: &Document, upsert: bool, ids: &mut dyn Ids) -> Result<Document, CastError> {
+    cast_conditions(schema, &merged(filter), upsert, ids)
+}
+
+/// A filter as `Query.merge` takes it in: `$and` first, then `$or`, then the rest as given.
+fn merged(filter: &Document) -> Document {
+    let mut out: Document = Document::new();
+    for key in ["$and", "$or"] {
+        if let Some(value) = filter.get(key) {
+            out.insert(key, value.clone());
+        }
+    }
+    for (key, value) in filter {
+        if key != "$and" && key != "$or" {
+            out.insert(key.clone(), value.clone());
+        }
+    }
+    out
+}
+
+/// A filter cast as it is, without `Query.merge`'s reordering: a `$pull` condition's cast.
+fn cast_conditions(schema: &Schema, filter: &Document, upsert: bool, ids: &mut dyn Ids) -> Result<Document, CastError> {
     let mut issues: Vec<Issue> = Vec::new();
     if upsert {
         for key in filter.keys().filter(|key| !key.starts_with('$')) {
