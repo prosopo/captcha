@@ -18,6 +18,7 @@
 use crate::client_meta_data::{is_client_session_mismatch, to_stored_client_meta_data};
 use crate::composite_ip::{get_composite_ip_address, get_ip_address_from_composite, is_same_ip_origin};
 use crate::hashing::{hash_user_agent, hash_user_ip};
+use crate::tasks::verify::ip_matches_session;
 use crate::ip_comparison::{compare_ips, IpInfoLookup, LookupFuture};
 use crate::ip_validation::{
     deep_validate_ip_address, encode_string_address, evaluate_ip_validation_rules, get_ip_address, get_ip_address_from_big_int,
@@ -201,6 +202,10 @@ async fn the_ip_helpers_comparison_and_hashes_return_what_the_ts_returns() {
     for case in list("sessionMismatch") {
         let actual: bool = is_client_session_mismatch(case["expected"].as_str(), case["recorded"].as_str());
         check(&mut failures, format!("session mismatch {case}"), &json!(actual), &case["mismatch"]);
+    }
+    for case in list("ipMatches") {
+        let actual: bool = ip_matches_session(case["operatorIp"].as_str().expect("an operator IP"), &composite_from(&case["session"]));
+        check(&mut failures, format!("ip match {case}"), &json!(actual), &case["matches"]);
     }
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.iter().take(30).cloned().collect::<Vec<String>>().join("\n"));
 }

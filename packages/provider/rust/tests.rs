@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+//! util.unit.test.ts: the cases the vectors do not cover; ipMatch.unit.test.ts.
 //! util.unit.test.ts: the cases the vectors do not cover.
 
 mod shuffle_array {
@@ -123,5 +123,68 @@ mod check_if_task_is_running {
     #[tokio::test]
     async fn is_false_when_a_recent_run_has_completed() {
         assert!(!running(Some(NOW - 30 * 1000), true).await);
+    }
+}
+
+/// ipMatch.unit.test.ts. Its "halves as they come back from Mongo" cases have no Rust
+/// counterpart: `IpHalf` is a `u64` decoded from either BSON encoding, so there is no
+/// unconverted or unparseable half to compare.
+mod ip_matches_session {
+    use crate::composite_ip::get_composite_ip_address;
+    use crate::tasks::verify::ip_matches_session;
+    use prosopo_database::records::{CompositeIpAddress, IpHalf};
+    use prosopo_types::stored::IpAddressType;
+
+    fn matches(operator_ip: &str, session_ip: &str) -> bool {
+        ip_matches_session(operator_ip, &get_composite_ip_address(session_ip))
+    }
+
+    #[test]
+    fn compares_v4_addresses_exactly() {
+        assert!(matches("192.0.2.42", "192.0.2.42"));
+        assert!(!matches("192.0.2.43", "192.0.2.42"));
+        assert!(!matches("192.0.3.42", "192.0.2.42"));
+    }
+
+    #[test]
+    fn compares_v6_addresses_across_canonicalisations_and_both_halves() {
+        assert!(matches("2001:db8::1", "2001:db8::1"));
+        assert!(matches("2001:db8::1", "2001:db8:0:0:0:0:0:1"));
+        assert!(!matches("2001:db8::2", "2001:db8::1"));
+        assert!(!matches("2001:db9::1", "2001:db8::1"));
+    }
+
+    #[test]
+    fn rejects_a_cross_family_pair() {
+        assert!(!matches("192.0.2.42", "2001:db8::1"));
+        assert!(!matches("2001:db8::1", "192.0.2.42"));
+    }
+
+    #[test]
+    fn unmaps_ipv4_mapped_v6_on_either_side() {
+        assert!(matches("192.0.2.42", "::ffff:192.0.2.42"));
+        assert!(matches("::ffff:192.0.2.42", "192.0.2.42"));
+        assert!(!matches("192.0.2.43", "::ffff:192.0.2.42"));
+    }
+
+    #[test]
+    fn does_not_unmap_a_v6_address_that_only_shares_the_low_32_bits() {
+        assert!(!matches("192.0.2.42", "2001:db8::ffff:c000:22a"));
+    }
+
+    #[test]
+    fn rejects_an_empty_or_garbage_operator_ip_against_a_real_session() {
+        assert!(!matches("", "192.0.2.42"));
+        assert!(!matches("", "2001:db8::1"));
+        assert!(!matches("not.an.ip", "192.0.2.42"));
+        assert!(!matches("g:h:i", "2001:db8::1"));
+        assert!(!matches("", "1.1.1.1"));
+    }
+
+    #[test]
+    fn the_unparseable_sentinel_matches_a_zero_v4_session() {
+        let zero: CompositeIpAddress = CompositeIpAddress { lower: IpHalf(0), upper: None, ip_type: IpAddressType::V4 };
+        assert!(ip_matches_session("", &zero));
+        assert!(ip_matches_session("not.an.ip", &zero));
     }
 }

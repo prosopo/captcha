@@ -48,6 +48,7 @@ use prosopo_types::matched_access_rule::{AccessPolicyType, MatchedAccessRule};
 use prosopo_types::reasons::ResultReason;
 use prosopo_types::settings::TrafficFilterAction;
 use prosopo_types::settings_types::{IPValidationRules, TrafficCategoryPolicy};
+use prosopo_types::stored::IpAddressType;
 use prosopo_user_access_policy::{describe_matched_rule, AccessRule};
 use serde_json::{json, Map, Value};
 use std::sync::{Arc, OnceLock};
@@ -1136,10 +1137,24 @@ pub async fn verify_image_captcha_solution(services: &VerifyServices, request: &
     })
 }
 
-/// `ipMatchesSession`: the operator's IP is the session's, family and both halves.
+/// `::ffff:a.b.c.d` sits in the low 48 bits of a v6 address with a zero upper half.
+const V4_MAPPED_MARKER: u64 = 0xffff;
+
+/// A dual-stack socket reports an IPv4 client as `::ffff:a.b.c.d` while the operator usually
+/// forwards the plain `a.b.c.d`, so both reduce to the v4 address before they are compared.
+fn unmap_v4(ip: &CompositeIpAddress) -> (IpAddressType, u64, u64) {
+    let upper: u64 = ip.upper.map_or(0, |half| half.0);
+    if ip.ip_type == IpAddressType::V6 && upper == 0 && ip.lower.0 >> 32 == V4_MAPPED_MARKER {
+        return (IpAddressType::V4, ip.lower.0 & 0xffff_ffff, 0);
+    }
+    (ip.ip_type, ip.lower.0, upper)
+}
+
+/// `ipMatchesSession`: the operator's IP is the session's, family and both halves, once
+/// IPv4-mapped v6 addresses are unmapped. The TS also rejects a stored half it cannot read as
+/// a number; here that cannot reach this point, as `IpHalf` only deserialises from one.
 pub fn ip_matches_session(operator_ip: &str, session_ip: &CompositeIpAddress) -> bool {
-    let parsed: CompositeIpAddress = get_composite_ip_address(operator_ip);
-    parsed.ip_type == session_ip.ip_type && parsed.lower.0 == session_ip.lower.0 && parsed.upper.map_or(0, |half| half.0) == session_ip.upper.map_or(0, |half| half.0)
+    unmap_v4(&get_composite_ip_address(operator_ip)) == unmap_v4(session_ip)
 }
 
 /// `verifyAuthenticatedSession`: a Web Bot Auth session verifies once, for the IP it was

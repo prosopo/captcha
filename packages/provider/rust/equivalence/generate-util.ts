@@ -40,6 +40,7 @@ import {
 import { isClientSessionMismatch, toStoredClientMetaData } from "../../src/utils/clientMetaData.js";
 import { hashUserAgent } from "../../src/utils/hashUserAgent.js";
 import { hashUserIp } from "../../src/utils/hashUserIp.js";
+import { ipMatchesSession } from "../../src/tasks/frictionless/ipMatch.js";
 
 if (!process.version.startsWith("v24.")) {
 	throw new Error(`this generator must run on Node 24 (the production runtime), not ${process.version}`);
@@ -254,10 +255,55 @@ const sessionMismatch = [[undefined, undefined], ["a", undefined], [undefined, "
 	recorded: recorded ?? null,
 	mismatch: isClientSessionMismatch(expected, recorded),
 }));
+const mapped = (v4: string): string => `::ffff:${v4}`;
+const ipMatchPairs: [string, string][] = [
+	["192.0.2.42", "192.0.2.42"],
+	["192.0.2.43", "192.0.2.42"],
+	["192.0.3.42", "192.0.2.42"],
+	["2001:db8::1", "2001:db8::1"],
+	["2001:db8::1", "2001:db8:0:0:0:0:0:1"],
+	["2001:db8::2", "2001:db8::1"],
+	["2001:db9::1", "2001:db8::1"],
+	["192.0.2.42", "2001:db8::1"],
+	["2001:db8::1", "192.0.2.42"],
+	["192.0.2.42", "::ffff:192.0.2.42"],
+	["::ffff:192.0.2.42", "192.0.2.42"],
+	["192.0.2.43", "::ffff:192.0.2.42"],
+	["192.0.2.42", "2001:db8::ffff:c000:22a"],
+	["192.0.2.42", "::ffff:0:c000:22a"],
+	["192.0.2.42", "::c000:22a"],
+	["192.0.2.42", "::fffe:c000:22a"],
+	["192.0.2.42", "0:0:0:1::ffff:c000:22a"],
+	["::ffff:c000:22a", "::ffff:192.0.2.42"],
+	["::FFFF:192.0.2.42", "192.0.2.42"],
+	["0.0.0.0", "::ffff:0.0.0.0"],
+	["::ffff:0.0.0.0", "0.0.0.0"],
+	["255.255.255.255", "::ffff:255.255.255.255"],
+	["", "192.0.2.42"],
+	["", "2001:db8::1"],
+	["not.an.ip", "192.0.2.42"],
+	["g:h:i", "2001:db8::1"],
+	["", "1.1.1.1"],
+	["", "0.0.0.0"],
+	["not.an.ip", "0.0.0.0"],
+	["", "::ffff:0.0.0.0"],
+	["203.0.113.20", "203.0.113.20"],
+	["203.0.113.21", "203.0.113.20"],
+	...Array.from({ length: 60 }, (): [string, string] => {
+		const v4 = randomV4();
+		const other = pick([v4, randomV4()]);
+		return pick<[string, string]>([[v4, mapped(other)], [mapped(v4), other], [mapped(v4), mapped(other)], [v4, other]]);
+	}),
+	...Array.from({ length: 20 }, (): [string, string] => [randomV4(), randomV6()]),
+];
+const ipMatches = ipMatchPairs.map(([operatorIp, sessionIp]) => {
+	const session = getCompositeIpAddress(sessionIp);
+	return { operatorIp, session: plain(session), matches: ipMatchesSession(operatorIp, session) };
+});
 
 writeFileSync(
 	fileURLToPath(new URL("./util-vectors.json", import.meta.url)),
-	`${JSON.stringify({ composites, fromComposite, sameOrigin, providerIp, fromBigInt, validations, comparisons, ruleEvaluations, deepValidations, hashes, addresses, clientMetaData, sessionMismatch })}\n`,
+	`${JSON.stringify({ composites, fromComposite, sameOrigin, providerIp, fromBigInt, validations, comparisons, ruleEvaluations, deepValidations, hashes, addresses, clientMetaData, sessionMismatch, ipMatches })}\n`,
 );
 console.log(
 	`wrote util-vectors.json (${composites.length} composites, ${sameOrigin.length} origins, ${validations.length} validations, ${comparisons.length} comparisons, ${ruleEvaluations.length} rule evaluations, ${deepValidations.length} deep validations)`,
