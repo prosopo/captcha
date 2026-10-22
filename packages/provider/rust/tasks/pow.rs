@@ -123,7 +123,7 @@ pub struct PowSubmission<'a> {
     pub client_meta_data: Option<&'a ClientMetaData>,
 }
 
-/// Why a submission could not be judged; each is a 500 to the widget.
+/// Why a solution submission could not be judged; each is a 500 to the widget.
 #[derive(Debug)]
 pub enum PowSolutionError {
     Signature(PowSignatureError),
@@ -157,14 +157,14 @@ fn result_json(result: &StoredResult) -> Value {
 
 /// The session side of a submission: submitted, with its result, `blocked` where the result
 /// blocks, and the render's client metadata.
-fn submitted_session(result: &StoredResult, client_meta_data: Option<&ClientMetaData>) -> (Map<String, Value>, Document) {
+pub(crate) fn submitted_session(captcha_type: CaptchaType, result: &StoredResult, client_meta_data: Option<&ClientMetaData>) -> (Map<String, Value>, Document) {
     let mut cached: Map<String, Value> = Map::new();
     let mut stored: Document = Document::new();
     cached.insert("userSubmitted".to_string(), json!(true));
     stored.insert("userSubmitted", true);
     cached.insert("result".to_string(), result_json(result));
     stored.insert("result", result.to_document());
-    if is_blocking(CaptchaType::Pow, result) {
+    if is_blocking(captcha_type, result) {
         cached.insert("blocked".to_string(), json!(true));
         stored.insert("blocked", true);
     }
@@ -176,7 +176,7 @@ fn submitted_session(result: &StoredResult, client_meta_data: Option<&ClientMeta
     (cached, stored)
 }
 
-fn coords_of(salt: &str) -> Result<Option<Coords>, String> {
+pub(crate) fn coords_of(salt: &str) -> Result<Option<Coords>, String> {
     let extracted: Vec<f64> = prosopo_util::extract_data(salt).map_err(|error| error.to_string())?;
     if extracted.len() < 2 {
         return Ok(None);
@@ -193,7 +193,7 @@ impl PowSolutionServices<'_> {
         let record_write = db.update_pow_captcha_record_result(submission.challenge, &result, false, true, Some(submission.user_signature), coords);
         let session_write = async {
             if let Some(session_id) = record.session_id.as_deref().filter(|id| !id.is_empty()) {
-                self.services.update_session_record_with_cache(session_id, submitted_session(&result, None), true, self.logger).await;
+                self.services.update_session_record_with_cache(session_id, submitted_session(CaptchaType::Pow, &result, None), false, self.logger).await;
             }
         };
         let (written, ()) = futures_util::join!(record_write, session_write);
@@ -281,7 +281,7 @@ impl PowSolutionServices<'_> {
                         self.detection.record_session_simd_readings_if_absent_with_cache(session_id, readings, SimdReadingsStage::Submit).await;
                     }
                 };
-                futures_util::join!(self.services.update_session_record_with_cache(session_id, submitted_session(&result, stored_meta.as_ref()), true, self.logger), simd);
+                futures_util::join!(self.services.update_session_record_with_cache(session_id, submitted_session(CaptchaType::Pow, &result, stored_meta.as_ref()), false, self.logger), simd);
             }
         };
         let (written, ()) = futures_util::join!(record_write, session_writes);

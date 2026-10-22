@@ -414,12 +414,23 @@ impl ProviderDatabase {
     /// `claimIconOrderCaptchaSubmission` and `claimAudioCaptchaSubmission`: true only for the
     /// one caller whose update set `userSubmitted`.
     pub async fn claim_interactive_captcha_submission(&self, kind: Interactive, challenge: &str) -> Result<bool, ProsopoError> {
+        self.claim(kind, challenge, doc! { "userSubmitted": true, "submittedAtTimestamp": self.source().now() }).await
+    }
+
+    /// The puzzle's claim, which the TS makes by reading `userSubmitted` off the record, made
+    /// atomic: `userSubmitted` alone, so the submission time is still written by the result,
+    /// where the TS writes it, and the record's fields keep their order.
+    pub async fn claim_puzzle_captcha_submission(&self, challenge: &str) -> Result<bool, ProsopoError> {
+        self.claim(Interactive::Puzzle, challenge, doc! { "userSubmitted": true }).await
+    }
+
+    async fn claim(&self, kind: Interactive, challenge: &str, set: Document) -> Result<bool, ProsopoError> {
         let statement: UpdateStatement = self
             .statement(
                 kind.schema(),
                 UpdateMethod::UpdateOne,
                 doc! { "challenge": challenge, "userSubmitted": { "$ne": true } },
-                doc! { "$set": { "userSubmitted": true, "submittedAtTimestamp": self.source().now() } },
+                doc! { "$set": set },
                 false,
             )
             .map_err(|error| self.update_failed(ErrorContext::new().with("error", error)))?;

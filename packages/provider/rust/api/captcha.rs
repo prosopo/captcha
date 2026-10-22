@@ -16,6 +16,7 @@
 //! (captcha/checkSpamEmail.ts) and the PoW, icon-order and audio challenges (api/challenge.rs).
 
 use crate::api::challenge::{challenge_route, image_challenge_route, ChallengeRoute, ChallengeState};
+use crate::api::solution::InteractiveRoute;
 use crate::api::express::{send_json, Requested};
 use crate::api::maintenance::MaintenanceMode;
 use crate::api::metrics::ProviderMetrics;
@@ -156,6 +157,16 @@ pub async fn captcha_routes(State(state): State<Arc<CaptchaState>>, request: Req
     ];
     if request.method() == Method::POST && route_matches(request.uri().path(), ClientApiPaths::SubmitPowCaptchaSolution.as_str()) {
         return crate::api::solution::pow_solution_route(&state.challenge, request).await;
+    }
+    let solutions = [
+        (ClientApiPaths::SubmitPuzzleCaptchaSolution, InteractiveRoute::Puzzle),
+        (ClientApiPaths::SubmitAudioCaptchaSolution, InteractiveRoute::Audio),
+        (ClientApiPaths::SubmitIconOrderCaptchaSolution, InteractiveRoute::IconOrder),
+    ];
+    for (path, route) in solutions {
+        if request.method() == Method::POST && route_matches(request.uri().path(), path.as_str()) {
+            return crate::api::solution::interactive_solution_route(&state.challenge, route, request).await;
+        }
     }
     if request.method() == Method::POST && route_matches(request.uri().path(), ClientApiPaths::GetImageCaptchaChallenge.as_str()) {
         return image_challenge_route(&state.challenge, request).await;

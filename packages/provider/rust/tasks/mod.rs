@@ -25,6 +25,7 @@ pub mod dns_event;
 pub mod email;
 pub mod frictionless;
 pub mod image;
+pub mod interactive;
 pub mod pow;
 pub mod puzzle;
 pub mod request;

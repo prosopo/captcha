@@ -1604,6 +1604,10 @@ fn masked_draws(session: &mut Map<String, Value>, side: &str, failures: &mut Vec
     session.insert("puzzle".to_string(), json!("<drawn>"));
 }
 
+/// A solve's session result and its SIMD readings are written to Mongo by two background
+/// updates in both implementations, so which of their fields comes first is a race.
+const SUBMIT_RACE: [&str; 6] = ["result", "userSubmitted", "blocked", "clientMetaData", "simdReadings", "simdReadingsStage"];
+
 #[tokio::test(flavor = "multi_thread")]
 #[ignore = "needs MongoDB and Redis Stack"]
 async fn pow_solutions_are_judged_as_the_express_app_judges_them() {
@@ -1682,6 +1686,7 @@ async fn pow_solutions_are_judged_as_the_express_app_judges_them() {
             .iter()
             .map(|record| {
                 let mut record: Value = serde_json::from_str(&with_escalations_named(&record.to_string(), minted)).expect("JSON");
+                record = with_fields_last(&record, &SUBMIT_RACE);
                 if let Some(session) = record.as_object_mut().filter(|session| session.get("isEscalation") == Some(&json!(true))) {
                     session.insert("_id".to_string(), json!("<fresh>"));
                     session.insert("createdAt".to_string(), json!("<fresh>"));
@@ -1729,4 +1734,79 @@ async fn pow_solutions_are_judged_as_the_express_app_judges_them() {
     }
     assert_eq!(minted_ts.len(), minted_rust.len(), "escalations minted");
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn interactive_solutions_are_graded_as_the_express_app_grades_them() {
+    let _live = LIVE.lock().await;
+    let vectors: Value =
+        serde_json::from_str(include_str!("../../provider/rust/equivalence/interactive-solution-live-vectors.json")).expect("interactive-solution-live-vectors.json parses");
+    let database: &str = vectors["database"].as_str().expect("a database");
+    reset(database).await;
+    let ipapi: String = fake_ipapi(vectors["ipapi"].clone()).await;
+    let pool = tempfile::TempDir::new().expect("a pool directory");
+    for (name, contents) in vectors["poolFiles"].as_object().expect("pool files") {
+        std::fs::write(pool.path().join(name), contents.as_str().expect("text")).expect("writes");
+    }
+    let mut variables: HashMap<String, String> = serde_json::from_value(vectors["variables"].clone()).expect("variables");
+    variables.insert("PROSOPO_IPAPI_URL".to_string(), ipapi);
+    variables.insert("PROSOPO_DETECTOR_POOL_DIR".to_string(), pool.path().to_string_lossy().into_owned());
+    variables.insert("NODE_ENV".to_string(), "production".to_string());
+    let decoded: DecodedPayloads = vectors["decoded"]
+        .as_array()
+        .expect("decoded payloads")
+        .iter()
+        .map(|entry| {
+            let ciphertext: String = entry["ciphertext"].as_str().expect("a payload").to_string();
+            match entry["readings"].as_object() {
+                Some(readings) => (ciphertext, Ok(readings.clone())),
+                None => (ciphertext, Err(entry["error"].as_str().unwrap_or_default().to_string())),
+            }
+        })
+        .collect();
+    let clock: Arc<PinnedClock> = Arc::new(PinnedClock(AtomicI64::new(vectors["exchanges"][0]["at"].as_i64().expect("a time"))));
+    let (router, _env) = live_app_with(&variables, clock.clone(), Some(Arc::new(RecordedDecoder(decoded))), None, None).await;
+    restore_database(database, &vectors["seed"]).await;
+    restore_hashes(&vectors["redis"]).await;
+    let mut connection = redis().await;
+    for entry in vectors["cache"].as_array().expect("cache entries") {
+        let _: () = redis::cmd("SET").arg(entry["key"].as_str().expect("a key")).arg(entry["raw"].as_str().expect("a value")).arg("EX").arg(86400).query_async(&mut connection).await.expect("caches");
+    }
+    for entry in vectors["counters"].as_array().expect("counters") {
+        let _: () = redis::cmd("SET").arg(entry["key"].as_str().expect("a key")).arg(entry["value"].as_str().expect("a value")).arg("EX").arg(86400).query_async(&mut connection).await.expect("counts");
+    }
+    let port: u16 = serve(router).await;
+    let (compared, mut failures) = replay_with(port, &vectors["exchanges"], |step| clock.0.store(step["at"].as_i64().expect("a time"), Ordering::SeqCst)).await;
+    tokio::time::sleep(Duration::from_millis(1500)).await;
+    let fresh: [&str; 4] = ["lastUpdatedTimestamp", "submittedAtTimestamp", "failedAtTimestamp", "behavioralDataPacked._id"];
+    for collection in ["puzzlecaptchas", "audiocaptchas", "iconordercaptchas", "sessions"] {
+        let raced = |records: &[Value]| -> Vec<Value> { records.iter().map(|record| with_fields_last(record, &SUBMIT_RACE)).collect() };
+        let expected: Value = Value::Array(raced(vectors["after"][collection].as_array().expect("records")));
+        let actual: Vec<Value> = raced(&dump(database, collection).await);
+        failures.extend(compare_records(&expected, &actual, &fresh).into_iter().map(|failure| format!("{collection}: {failure}")));
+    }
+    let expected_cache: Vec<Value> = vectors["cacheAfter"].as_array().expect("cache").iter().map(cache_entry_without_time).collect();
+    let actual_cache: Vec<Value> = cache_entries().await.iter().map(cache_entry_without_time).collect();
+    if json!(expected_cache) != json!(actual_cache) {
+        failures.push(format!("cache differs\n  ts:   {}\n  rust: {}", json!(expected_cache), json!(actual_cache)));
+    }
+    let expected_counters: Vec<Value> = vectors["countersAfter"].as_array().expect("counters").iter().map(|entry| json!({ "key": entry["key"], "value": entry["value"] })).collect();
+    if json!(expected_counters) != json!(usage_counters().await) {
+        failures.push(format!("counters differ\n  ts:   {}\n  rust: {}", json!(expected_counters), json!(usage_counters().await)));
+    }
+    assert!(compared >= 29, "only {compared} compared");
+    assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
+
+    // DEVIATION: the TS graded both of two concurrent right answers to one puzzle (its claim
+    // reads `userSubmitted` off the record it fetched); the Rust claims atomically, as the TS
+    // does for audio and icon-order, so exactly one is graded.
+    assert_eq!(vectors["race"]["verdicts"], json!([true, true]), "the TS run graded both");
+    let race: Vec<u8> = base64::engine::general_purpose::STANDARD.decode(vectors["race"]["request"].as_str().expect("base64")).expect("base64 decodes");
+    let (first, second) = tokio::join!(exchange(port, &race), exchange(port, &race));
+    let verdicts: Vec<bool> = [first, second]
+        .iter()
+        .map(|raw| serde_json::from_slice::<Value>(&answer(raw).body).ok().and_then(|body| body["verified"].as_bool()).unwrap_or(false))
+        .collect();
+    assert_eq!(verdicts.iter().filter(|verdict| **verdict).count(), 1, "exactly one concurrent answer graded: {verdicts:?}");
 }

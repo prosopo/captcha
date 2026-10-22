@@ -209,6 +209,12 @@ impl VerifyServices {
         if let Some(queue) = self.write_queue() {
             queue.patch_cached_session(session_id, &cached, None).await;
         }
+        self.schedule_mongo_session_update(session_id, stored, stream_to_central, logger);
+    }
+
+    /// `scheduleMongoSessionUpdate`: the stored session updated in the background, a failure
+    /// only logged.
+    pub fn schedule_mongo_session_update(&self, session_id: &str, stored: Document, stream_to_central: bool, logger: &Logger) {
         let db: Arc<ProviderDatabase> = self.db.clone();
         let session_id: String = session_id.to_string();
         let logger: Logger = logger.clone();
