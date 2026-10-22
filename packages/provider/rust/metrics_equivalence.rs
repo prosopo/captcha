@@ -237,6 +237,7 @@ async fn metrics_and_the_request_counter_are_served_as_the_express_app_serves_th
         logger: get_logger(LogLevel::Fatal, "equivalence"),
         metrics: Some(metrics),
         env,
+        rest: crate::api::not_found_only(),
     };
     let listener: tokio::net::TcpListener = tokio::net::TcpListener::bind("[::]:0").await.expect("binds");
     let port: u16 = listener.local_addr().expect("an address").port();

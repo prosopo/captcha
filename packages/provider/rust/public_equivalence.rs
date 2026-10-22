@@ -151,6 +151,7 @@ async fn the_public_router_answers_as_the_express_app_does() {
             logger: get_logger(LogLevel::Fatal, "equivalence"),
             metrics: None,
             env: Arc::new(|_: &str| None),
+            rest: crate::api::not_found_only(),
         };
         let listener: tokio::net::TcpListener = tokio::net::TcpListener::bind("[::]:0").await.expect("binds");
         let port: u16 = listener.local_addr().expect("an address").port();

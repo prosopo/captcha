@@ -2261,6 +2261,7 @@ name = "prosopo-api-router"
 version = "6.0.0"
 dependencies = [
  "axum",
+ "base64 0.22.1",
  "http",
  "http-body-util",
  "hyper",
@@ -2274,6 +2275,7 @@ dependencies = [
  "prosopo-util-crypto",
  "serde",
  "serde_json",
+ "sha1",
  "tokio",
  "tower",
  "uuid",
@@ -2305,19 +2307,25 @@ name = "prosopo-cli"
 version = "6.0.0"
 dependencies = [
  "axum",
+ "base64 0.22.1",
  "clap",
  "prosopo-api-route",
+ "prosopo-api-router",
  "prosopo-common",
+ "prosopo-database",
  "prosopo-dotenv",
  "prosopo-env",
  "prosopo-keyring",
+ "prosopo-locale",
  "prosopo-logger",
  "prosopo-provider",
  "prosopo-types",
+ "prosopo-user-access-policy",
  "prosopo-util",
  "prosopo-util-crypto",
  "serde_json",
  "tokio",
+ "uuid",
 ]
 
 [[package]]
@@ -2454,6 +2462,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "prosopo-ja4"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a69160acbdc11ebb1819724f4c3f7e85f76a4bbaf7d71d0f3dbd0369de438e9c"
+dependencies = [
+ "hex",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "prosopo-keyring"
 version = "6.0.0"
 dependencies = [
@@ -2513,21 +2531,27 @@ dependencies = [
  "http",
  "hyper",
  "indexmap",
+ "num-bigint",
+ "num-traits",
  "prosopo-api-router",
  "prosopo-common",
  "prosopo-database",
  "prosopo-ipinfo",
+ "prosopo-ja4",
+ "prosopo-locale",
  "prosopo-logger",
  "prosopo-types",
+ "prosopo-user-access-policy",
  "prosopo-util",
  "prosopo-util-crypto",
  "reqwest",
  "serde",
  "serde_json",
- "sha1",
  "sha2 0.10.9",
  "tokio",
+ "tower",
  "url",
+ "uuid",
 ]
 
 [[package]]

@@ -20,10 +20,8 @@ use axum::body::{Body, HttpBody};
 use axum::extract::Request;
 use axum::middleware::Next;
 use axum::response::Response;
-use base64::Engine;
 use http::header::{HeaderName, HeaderValue, CONTENT_LENGTH, CONTENT_TYPE, ETAG};
 use http::{HeaderMap, Method, StatusCode};
-use sha1::{Digest, Sha1};
 use std::net::SocketAddr;
 
 /// A header value as Node gives it to JS: each byte one UTF-16 unit (latin1).
@@ -128,8 +126,7 @@ pub fn hostname(headers: &HeaderMap) -> Option<String> {
 
 /// The `etag` package's weak tag: `W/"<length in hex>-<27 characters of the SHA-1 in base64>"`.
 pub fn weak_etag(body: &[u8]) -> String {
-    let hash: String = base64::engine::general_purpose::STANDARD.encode(Sha1::digest(body));
-    format!("W/\"{:x}-{}\"", body.len(), &hash[..27])
+    prosopo_api_router::weak_etag(body)
 }
 
 /// `fresh`'s token list: split on commas, spaces around tokens dropped.
@@ -278,6 +275,11 @@ pub async fn cors(request: Request, next: Next) -> Response {
     response
 }
 
+/// Marks a page from express's final handler, which takes off the `Content-Language`,
+/// `Content-Encoding` and `Content-Range` that earlier middleware set.
+#[derive(Debug, Clone, Copy)]
+pub struct FinalHandlerPage;
+
 /// express's final handler for a request no route answered.
 pub fn not_found(request: &Request) -> Response {
     let mut response: Response = prosopo_api_router::not_found(request.method().as_str(), request.uri().path());
@@ -299,6 +301,7 @@ fn finish_page(response: &mut Response, method: &Method) {
         None => return,
     };
     response.headers_mut().insert(CONTENT_LENGTH, HeaderValue::from(length));
+    response.extensions_mut().insert(FinalHandlerPage);
     if method == Method::HEAD {
         *response.body_mut() = Body::empty();
     }

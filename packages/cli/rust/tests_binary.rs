@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! `prosopo-provider --api` against a live MongoDB and Redis Stack. Ignored by default; run
+//! `prosopo-provider --api` against a live MongoDB and Redis Stack: the public routes, the
+//! header check, and express's 404 past the stages ported so far. Ignored by default; run
 //! with `cargo test -p prosopo-cli --test binary -- --ignored`. MongoDB is
 //! `127.0.0.1:${PROSOPO_TEST_MONGO_PORT:-27999}` with a `root`/`root` user, as the provider's
 //! default connection string expects; Redis is `REDIS_CONNECTION_URL` (default
@@ -26,8 +27,12 @@ use std::time::{Duration, Instant};
 const PORT: u16 = 19_331;
 
 fn get(path: &str) -> Option<String> {
+    get_with(path, "")
+}
+
+fn get_with(path: &str, headers: &str) -> Option<String> {
     let mut stream: TcpStream = TcpStream::connect(("127.0.0.1", PORT)).ok()?;
-    write!(stream, "GET {path} HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n").ok()?;
+    write!(stream, "GET {path} HTTP/1.1\r\nHost: localhost\r\n{headers}Connection: close\r\n\r\n").ok()?;
     let mut response: String = String::new();
     stream.read_to_string(&mut response).ok()?;
     Some(response)
@@ -84,6 +89,9 @@ fn serves_the_phase_0_routes() {
     assert!(details.contains("{\"actor\":\"General\",\"isReady\":true"), "{details}");
     let metrics: String = get("/metrics").expect("metrics");
     assert!(metrics.contains("prosopo_redis_ready{actor=\"uap\"} 1"), "{metrics}");
-    let unported: String = get("/v1/prosopo/provider/client/captcha/pow").expect("an answer");
+    let unsigned: String = get("/v1/prosopo/provider/client/captcha/pow").expect("an answer");
+    assert!(unsigned.starts_with("HTTP/1.1 401 Unauthorized"), "{unsigned}");
+    let accounts: &str = "Prosopo-User: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY\r\nProsopo-Site-Key: 5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y\r\n";
+    let unported: String = get_with("/v1/prosopo/provider/client/captcha/pow", accounts).expect("an answer");
     assert!(unported.starts_with("HTTP/1.1 404 Not Found"), "{unported}");
 }

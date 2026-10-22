@@ -16,7 +16,7 @@
 //! page any other GET with `?m=n&u=<url>` gets. What none of them takes falls through to
 //! express's 404.
 
-use crate::api::express::{self, client_ip, hostname, send, send_json, Requested};
+use crate::api::express::{client_ip, hostname, send, send_json, Requested};
 use crate::api::healthz_geo::{HealthzGeoDecision, HealthzGeoRouter};
 use crate::api::metrics::{metrics_response, normalise_route, ProviderMetrics};
 use crate::api::query::query_string;
@@ -74,6 +74,8 @@ pub struct PublicState {
     /// `None` when `PROSOPO_METRICS_ENABLED=false`: no `/metrics` and nothing recorded.
     pub metrics: Option<Arc<ProviderMetrics>>,
     pub env: EnvReader,
+    /// What follows the public router.
+    pub rest: axum::Router,
 }
 
 impl PublicState {
@@ -232,10 +234,15 @@ pub async fn public_routes(State(state): State<Arc<PublicState>>, ConnectInfo(re
             return response;
         }
     }
+    let route: String = normalise_route(path).to_string();
+    let method: String = request.method().as_str().to_string();
     let started: Instant = Instant::now();
-    let response: Response = express::not_found(&request);
+    let response: Response = match tower::ServiceExt::oneshot(state.rest.clone(), request).await {
+        Ok(response) => response,
+        Err(never) => match never {},
+    };
     if let Some(metrics) = &state.metrics {
-        metrics.record_request(normalise_route(path), request.method().as_str(), response.status().as_u16(), started.elapsed().as_secs_f64());
+        metrics.record_request(&route, &method, response.status().as_u16(), started.elapsed().as_secs_f64());
     }
     response
 }

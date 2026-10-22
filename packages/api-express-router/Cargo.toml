@@ -13,6 +13,7 @@ autobenches = false
 path = "rust/lib.rs"
 
 [dependencies]
+base64 = "0.22"
 axum = { version = "0.8", default-features = false, features = ["http1", "json", "tokio", "query"] }
 http = "1"
 hyper = { version = "1", features = ["http1", "server"] }
@@ -25,6 +26,7 @@ prosopo-logger = { path = "../logger" }
 prosopo-types = { path = "../types" }
 prosopo-util-crypto = { path = "../util-crypto" }
 serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
+sha1 = "0.11"
 tokio = { version = "1", features = ["rt", "sync", "time"] }
 uuid = { version = "1", features = ["v4"] }
 

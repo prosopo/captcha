@@ -23,7 +23,9 @@ mod start;
 pub use config::{get_config, ConfigError, Environment};
 pub use process_env::{get_address, get_db, get_password, get_secret};
 pub use rate_limiter::get_rate_limit_config;
-pub use start::{start, version};
+pub use start::{locales, provider_router, start, version, AppParts};
 
 #[cfg(test)]
 mod config_equivalence;
+#[cfg(test)]
+mod pipeline_equivalence;

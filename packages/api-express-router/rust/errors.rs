@@ -16,6 +16,8 @@
 
 use crate::context::RequestI18n;
 use axum::body::Body;
+use base64::Engine;
+use sha1::{Digest, Sha1};
 use axum::response::Response;
 use http::header::{CONTENT_TYPE, HeaderValue};
 use http::StatusCode;
@@ -25,15 +27,26 @@ use prosopo_locale::I18nLookup;
 use prosopo_logger::json_stringify;
 use serde_json::{json, Value};
 
+/// The `etag` package's weak tag, which `res.send` puts on what it sends.
+pub fn weak_etag(body: &[u8]) -> String {
+    let hash: String = base64::engine::general_purpose::STANDARD.encode(Sha1::digest(body));
+    format!("W/\"{:x}-{}\"", body.len(), &hash[..27])
+}
+
 /// `res.status(code).json(body)`, with `res.statusMessage` set to `reason`: the body written
-/// as `JSON.stringify` writes it.
+/// as `JSON.stringify` writes it, with its ETag.
 pub fn json_response(code: u16, reason: &str, body: &Value) -> Response {
     let status: StatusCode = StatusCode::from_u16(code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-    let mut response: Response = Response::new(Body::from(json_stringify(body, 0)));
+    let text: String = json_stringify(body, 0);
+    let etag: String = weak_etag(text.as_bytes());
+    let mut response: Response = Response::new(Body::from(text));
     *response.status_mut() = status;
     response
         .headers_mut()
         .insert(CONTENT_TYPE, HeaderValue::from_static("application/json; charset=utf-8"));
+    if let Ok(etag) = HeaderValue::from_str(&etag) {
+        response.headers_mut().insert(http::header::ETAG, etag);
+    }
     if status.canonical_reason() != Some(reason) {
         if let Ok(phrase) = ReasonPhrase::try_from(reason.as_bytes().to_vec()) {
             response.extensions_mut().insert(phrase);

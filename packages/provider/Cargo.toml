@@ -21,10 +21,16 @@ futures-util = { version = "0.3", default-features = false, features = ["std"] }
 http = "1"
 hyper = { version = "1", features = ["http1", "server"] }
 indexmap = "2"
+num-bigint = "0.4"
+num-traits = "0.2"
 prosopo-api-router = { path = "../api-express-router" }
+prosopo-ja4 = "0.1"
+prosopo-locale = { path = "../locale" }
+prosopo-user-access-policy = { path = "../user-access-policy" }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
-sha1 = "0.11"
+tower = { version = "0.5", features = ["util"] }
 url = "2.5"
+uuid = { version = "1", features = ["v4"] }
 prosopo-common = { path = "../common" }
 prosopo-database = { path = "../database" }
 prosopo-ipinfo = { path = "../ipinfo" }
@@ -36,7 +42,11 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
 sha2 = "0.10"
 hex = "0.4"
-tokio = { version = "1", features = ["net", "rt", "sync", "time"] }
+tokio = { version = "1", features = ["io-util", "net", "rt", "sync", "time"] }
+
+[features]
+# The socket replay helpers, for the equivalence tests of crates that build the app.
+testing = []
 
 [dev-dependencies]
 bson = { version = "3.1", features = ["serde"] }
