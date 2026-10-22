@@ -240,7 +240,7 @@ mongoose, and the other way round, before its endpoint takes traffic.
 4. **Image captcha:** `captcha/image` and `solution`. Needs datasets, merkle
    trees and the commitment schedulers.
 5. **Frictionless and detector:** `captcha/frictionless` and `detector/assign`.
-   **Blocked** on §4.1 and §4.2.
+   **Blocked** on the linking question in §4.1 and on §4.2.
 6. **Admin, UAP rules and cron.** Admin endpoints change in-memory state: the
    detector pool hot-swap, the verdict cache, the decision-machine cache and the
    JWT replay guard. While both implementations are live, a change applied to
@@ -265,25 +265,48 @@ in Rust until phase 6 is complete.**
 
 ## 4. Hard problems
 
-1. **Detector payload decoders execute obfuscated JS.**
-   `provider/src/tasks/detection/decoderPool.ts` runs `decodePayload.js`,
-   `decodeSimd.js` and `decodeBehavior.js` (about 110 KB, obfuscated) in
-   `worker_threads`. They use `node:crypto` RSA-OAEP plus a symmetric cipher
-   whose name is itself obfuscated, and a `payloadLayout`/`keyMap` scheme.
-   Porting from obfuscated output is not a reliable source of truth. The
-   bundlePool comments mention a Rust "bumblebee" `bundle_manager` in the
-   protect stack. **Question:** is there a reference implementation or spec of
-   the decoder (bumblebee, or the detector build pipeline) that the Rust
-   service can depend on? Until that's answered, frictionless and
-   detector/assign stay on Node.
-2. **Decision machines are operator-supplied JavaScript.**
-   `decisionMachineRunner.ts:78` compiles DB-stored JS with `node:vm`.
-   Running it from Rust means embedding a JS engine: `rquickjs` (small, with an
-   interrupt-based timeout, but not V8 semantics), `boa`, or `deno_core`/V8
-   (exact semantics, large binary). Strictly speaking this is still not
-   *our* TypeScript running on the server. **Question for the owners:** is an
-   embedded engine acceptable, which one, or should decision machines move to a
-   declarative/WASM format?
+1. **Detector payload decoders: ported in captcha-private; how the provider
+   links them is open.** `provider/src/tasks/detection/decoderPool.ts` runs
+   three obfuscated bundles (`decodePayload.js`, `decodeSimd.js`,
+   `decodeBehavior.js`) in `worker_threads`. They are built from TypeScript in
+   captcha-private, `packages/catcher` (`vite.provider.config.ts`,
+   `vite.behavior.config.ts`, `vite.simd.config.ts`), and the obfuscation is
+   there so the decoding never appears as readable source in this public repo.
+   That source is the reference implementation the first version of this plan
+   asked for. Its equivalence generator runs every case through both the
+   source and the bundles shipped here, and all 380 cases agree, so the source
+   is proof of what production runs.
+   - *Decision:* the decoders are ported in captcha-private, as the crate
+     `prosopo-catcher` (`packages/catcher/Cargo.toml`), not here. A Rust port
+     in this repo would publish what the obfuscation hides.
+   - *Question for the owner:* how the public Rust provider links a private
+     crate. (a) Build the provider binary in captcha-private: `prosopo-provider`
+     takes the decoders through a trait, and a small private binary crate
+     depends on it and on `prosopo-catcher` by path. (b) A cargo feature on
+     `prosopo-provider` with a git dependency on the private crate; public
+     builds without the feature cannot serve the challenge routes. (c) A
+     separate private decode service. I recommend (a): it keeps one binary, and
+     this repo's CI still builds and tests everything else. All three move where
+     the provider image is built, which is a build and deployment change for a
+     human. Until this is answered, the challenge, solution, frictionless and
+     detector routes stay on Node.
+2. **Decision machines are JavaScript stored in MongoDB.**
+   `decisionMachineRunner.ts:78` compiles DB-stored JS with `node:vm`. Customers
+   do not write them. They are Prosopo-authored TypeScript in captcha-private
+   (`packages/decision-machines`: `src/sources/global/` and one directory per
+   site key), compiled with esbuild and published through the provider's admin
+   API by `src/publish.ts`. The portal only displays them, and only to
+   superadmins (`portal/src/pages/DecisionMachinesPage.tsx`). So there are
+   three ways to run them from Rust:
+   - Run the compiled JS in an embedded engine: `rquickjs` (small, with an
+     interrupt-based timeout, but not V8 semantics), `boa`, or `deno_core`/V8
+     (exact semantics, large binary). Machines keep being published at runtime.
+   - Port the machines themselves to Rust. Each then ships with the binary
+     instead of being published, which loses hot publishing.
+   - Compile them to WASM. This keeps runtime publishing, but needs a new
+     artifact format and a migration of the stored artifacts.
+
+   **Question for the owner:** which of the three.
 3. **sr25519 compatibility. Not a blocker.** Substrate is Rust, and
    `schnorrkel` is the same primitive `@scure/sr25519` implements. Keys,
    signatures and the custom JWT (`alg: "sr25519"`) are ported on
@@ -523,6 +546,25 @@ once. database-private also defines mongoose models over the same collections
 the provider writes (`PoWCaptchaData`, `ImageCaptchaData`, `Session`,
 `InteractiveCaptchaData`). Rust-written documents must still read back through
 those models, so they join the round-trip tests in §4.4.
+
+**Everything else in captcha-private.** The plan above covers what touches
+the provider. The owner's scope rule ("not frontend means port it") was stated
+for the captcha repo, and the private repo was brought in scope with the
+provider-serving process and these three packages named. Whether the rule
+covers the rest of captcha-private is the owner's call (MIGRATION-LOG.md,
+"question, captcha-private scope"). Until then, the rest is inventoried here and
+left alone, with the evidence each classification rests on.
+
+| Package | Classification | Evidence |
+|---|---|---|
+| catcher | split: provider decoders ported (`prosopo-catcher`, §4.1); the rest frontend | The detector that runs in the widget: 69 of its 316 source files use `document`, `window` or `HTMLElement`. `scripts/buildDetectorPool.ts` is Node build tooling for the bundles, like dev/\*. |
+| decision-machines | open, §4.2 | Authoring and publishing tooling for the machines the provider runs. |
+| portal, catcher-demo | frontend | React apps (`react`, `react-dom`). |
+| prosopo-website | frontend | The marketing site: 57 of its 63 source files use DOM APIs. |
+| cypress-e2e, e2e, puppeteer | frontend test tooling | Drive a browser (Cypress, Playwright, Puppeteer); the same reading as demos/cypress-shared, flagged the same way. |
+| docs | out of scope | Owner ruling. |
+| job-runner, job-orchestrator, monitoring, botter, email-client, openobserve-client, marketing, email-templates, seo, pricing, obfuscator, types-private, dev-private, deploy, infrastructure | server-side or build tooling; port if the rule extends here | Node: `node:` imports, `express` (job-orchestrator, monitoring), `mongoose` (monitoring, marketing), `mjml` (email-templates), `child_process` (deploy), `yargs` (infrastructure). No DOM references (the `window` hits in monitoring and marketing are time windows). |
+| aws-serverless-api, job-definitions, database-private | the plan above | They keep running as TypeScript and take the composite-IP encoding from WASM. That is this plan's reading, not a ruling: they are Node, so the captcha-repo rule would port them. It is part of the same scope question. |
 
 **Where the provider is assembled.** The provider image is built in *this* repo
 (`.github/workflows/provider_image.yml` builds `packages/cli/Dockerfile`).
