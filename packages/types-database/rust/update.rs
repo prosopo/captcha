@@ -103,6 +103,7 @@ fn resolve<'a>(schema: &'a Schema, path: &str) -> Target<'a> {
                     Some((_, deeper)) => resolve(sub, deeper),
                     None => Target::Unknown,
                 },
+                Kind::ValueMap(element) if !rest.contains('.') => Target::Leaf(element),
                 Kind::Mixed => Target::Unknown,
                 _ => Target::Unknown,
             };
@@ -566,7 +567,7 @@ fn query_cast(kind: &Kind, value: &Bson, path: &str, ids: &mut dyn Ids, issues: 
         },
         (Kind::Number, number) if as_js_number(number).is_some() => Some(js_number(as_js_number(number).unwrap_or(0.0))),
         (Kind::Mixed, other) => Some(mixed(other)),
-        (Kind::Subdocument(_) | Kind::DocumentArray(_) | Kind::Map(_), other) => Some(other.clone()),
+        (Kind::Subdocument(_) | Kind::DocumentArray(_) | Kind::Map(_) | Kind::ValueMap(_), other) => Some(other.clone()),
         _ => cast(kind, value, path, ids, issues),
     }
 }

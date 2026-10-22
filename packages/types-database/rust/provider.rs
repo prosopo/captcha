@@ -45,7 +45,7 @@ fn captcha_labels() -> Vec<&'static str> {
 }
 
 /// `CompositeIpAddressRecordSchemaObj`: the fields, spread into a parent or a schema of its own.
-pub(crate) fn composite_ip_fields() -> Vec<Field> {
+pub fn composite_ip_fields() -> Vec<Field> {
     vec![
         field("lower", ip_half().required()),
         field("upper", ip_half()),

@@ -119,6 +119,9 @@ pub enum Operation {
     },
     /// An administrative command whose reply nothing reads (`dropIndexes`, `createIndexes`).
     Command(Document),
+    /// Any other command, sent as given and answered with mongod's whole reply, for callers that
+    /// build mongoose's commands themselves (a cursor's later batches included).
+    Raw(Document),
 }
 
 impl Operation {
@@ -228,7 +231,7 @@ impl Operation {
                 out.insert("remove", false);
                 out
             }
-            Operation::Command(command) => command.clone(),
+            Operation::Command(command) | Operation::Raw(command) => command.clone(),
             Operation::Insert { collection, documents } => doc! {
                 "insert": collection,
                 "documents": documents.iter().cloned().map(Bson::Document).collect::<Vec<Bson>>(),
@@ -236,6 +239,8 @@ impl Operation {
         }
     }
 
+    /// Not a raw command: `runCommand` carries no transaction number, so mongod could not tell a
+    /// retried write from a second one, and a raw write need not be idempotent.
     fn is_retryable_write(&self) -> bool {
         matches!(self, Operation::Update { .. } | Operation::Delete { .. } | Operation::Insert { .. })
     }
@@ -249,6 +254,7 @@ pub enum Reply {
     Delete { deleted: u64 },
     Insert { inserted: u64 },
     Value(Option<Document>),
+    Raw(Document),
 }
 
 impl Reply {
@@ -297,6 +303,7 @@ impl Reply {
             Operation::Delete { .. } => Reply::Delete { deleted: count("n") },
             Operation::Insert { .. } => Reply::Insert { inserted: count("n") },
             Operation::Command(_) => Reply::Value(None),
+            Operation::Raw(_) => Reply::Raw(reply.clone()),
             Operation::FindAndModify { .. } => Reply::Value(reply.get_document("value").ok().cloned()),
         }
     }

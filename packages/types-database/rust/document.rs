@@ -87,6 +87,11 @@ pub fn create(schema: &Schema, input: &Document, ids: &mut dyn Ids) -> Result<Do
     Ok(sent)
 }
 
+/// `toObject()` of a document as built: `minimize` applied.
+pub fn to_object(schema: &Schema, document: Document) -> Document {
+    minimize_schema(schema, document)
+}
+
 /// The document as mongod stores an insert: `_id` moved to the front.
 pub fn stored(mut document: Document) -> Document {
     match document.remove("_id") {
@@ -100,15 +105,218 @@ pub fn stored(mut document: Document) -> Document {
     }
 }
 
+/// A stored document as a query without `lean` returns it, after `toObject()`: the model built
+/// with `{ skipId: true }` (the nested objects, then the defaults that run before setters), each
+/// stored field initialised in stored order (one that replaces a default moves to the end), the
+/// remaining function defaults, then `minimize`. With a projection, only the selected paths get
+/// their objects and defaults.
+pub fn hydrate(schema: &Schema, stored: &Document, projection: Option<&Document>, ids: &mut dyn Ids) -> Document {
+    let selection: Selection = Selection::of(projection);
+    let mut issues: Vec<Issue> = Vec::new();
+    let mut document: Document = selected_skeleton(&schema.fields, "", &selection);
+    let selected = |path: &str| path != "_id" && selection.selects(path);
+    apply_defaults_to(schema, &mut document, DefaultTiming::Before, "", selected, ids, &mut issues);
+    init_fields(schema, stored, &mut document, "", ids, &mut issues);
+    apply_defaults_to(schema, &mut document, DefaultTiming::After, "", selected, ids, &mut issues);
+    minimize_schema(schema, document)
+}
+
+/// The paths a query's projection selects, as mongoose reads it: exclusive when every value
+/// (but `_id`'s) is falsy.
+struct Selection<'a> {
+    fields: Option<&'a Document>,
+    exclusive: bool,
+}
+
+impl<'a> Selection<'a> {
+    fn of(projection: Option<&'a Document>) -> Selection<'a> {
+        let fields: Option<&Document> = projection.filter(|fields| !fields.is_empty());
+        let exclusive: bool = fields.is_some_and(|fields| {
+            let mut values = fields.iter().filter(|(key, _)| key.as_str() != "_id").map(|(_, value)| value);
+            let mut seen: bool = false;
+            let all_falsy: bool = values.all(|value| {
+                seen = true;
+                !truthy(value)
+            });
+            if seen {
+                all_falsy
+            } else {
+                fields.get("_id").is_some_and(|value| !truthy(value))
+            }
+        });
+        Selection { fields, exclusive }
+    }
+
+    fn named(&self, path: &str) -> bool {
+        let Some(fields) = self.fields else {
+            return false;
+        };
+        let mut prefix: String = String::new();
+        for piece in path.split('.') {
+            prefix = join(&prefix, piece);
+            if fields.contains_key(&prefix) {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn selects(&self, path: &str) -> bool {
+        match self.fields {
+            None => true,
+            Some(_) if self.exclusive => !self.named(path),
+            Some(_) => self.named(path),
+        }
+    }
+
+    /// A nested object is built if anything under it is selected.
+    fn reaches(&self, path: &str) -> bool {
+        match self.fields {
+            None => true,
+            Some(_) if self.exclusive => !self.named(path),
+            Some(fields) => self.named(path) || fields.keys().any(|key| key.starts_with(&format!("{path}."))),
+        }
+    }
+}
+
+fn truthy(value: &Bson) -> bool {
+    match value {
+        Bson::Boolean(flag) => *flag,
+        Bson::Null | Bson::Undefined => false,
+        Bson::Int32(n) => *n != 0,
+        Bson::Int64(n) => *n != 0,
+        Bson::Double(n) => *n != 0.0 && !n.is_nan(),
+        Bson::String(text) => !text.is_empty(),
+        _ => true,
+    }
+}
+
+fn selected_skeleton(fields: &[Field], prefix: &str, selection: &Selection) -> Document {
+    let mut out: Document = Document::new();
+    for field in fields {
+        if let Node::Nested(children) = &field.node {
+            let path: String = join(prefix, field.name);
+            if selection.reaches(&path) {
+                out.insert(field.name, selected_skeleton(children, &path, selection));
+            }
+        }
+    }
+    out
+}
+
+/// `init`: each stored key at `prefix`, cast by its path. A key the schema does not declare is
+/// kept as stored, an object under it walked as a nested path.
+fn init_fields(schema: &Schema, stored: &Document, document: &mut Document, prefix: &str, ids: &mut dyn Ids, issues: &mut Vec<Issue>) {
+    for (key, value) in stored {
+        let path: String = join(prefix, key);
+        let leaf: Option<&Path> = if path == "__v" { Some(&VERSION_KEY) } else { schema.path(&path) };
+        match (leaf, value) {
+            (None, Bson::Document(inner)) => {
+                if !matches!(document.get(key), Some(Bson::Document(_))) {
+                    document.insert(key, Document::new());
+                }
+                if let Some(Bson::Document(target)) = document.get_mut(key) {
+                    init_fields(schema, inner, target, &path, ids, issues);
+                }
+            }
+            (None, other) => {
+                document.insert(key, other.clone());
+            }
+            (Some(_), Bson::Undefined) => {}
+            (Some(leaf), other) => {
+                document.remove(key);
+                let initialised: Option<Bson> = match other {
+                    Bson::Null => Some(Bson::Null),
+                    _ => init_value(&leaf.kind, other, &path, ids, issues),
+                };
+                if let Some(initialised) = initialised {
+                    document.insert(key, initialised);
+                }
+            }
+        }
+    }
+}
+
+/// `schemaType.cast(value, doc, true)`: as a set casts, but a subdocument is initialised from
+/// what was stored rather than built.
+fn init_value(kind: &Kind, value: &Bson, path: &str, ids: &mut dyn Ids, issues: &mut Vec<Issue>) -> Option<Bson> {
+    match (kind, value) {
+        (Kind::Subdocument(sub), Bson::Document(stored)) => Some(Bson::Document(init_subdocument(sub, stored, ids, issues))),
+        (Kind::Map(sub), Bson::Document(entries)) => Some(Bson::Document(
+            entries
+                .iter()
+                .map(|(key, entry)| match entry {
+                    Bson::Document(stored) => (key.clone(), Bson::Document(init_subdocument(sub, stored, ids, issues))),
+                    other => (key.clone(), other.clone()),
+                })
+                .collect(),
+        )),
+        (Kind::DocumentArray(sub), Bson::Array(items)) => Some(Bson::Array(
+            items
+                .iter()
+                .map(|item| match item {
+                    Bson::Document(stored) => Bson::Document(init_array_element(sub, stored, ids, issues)),
+                    other => other.clone(),
+                })
+                .collect(),
+        )),
+        (Kind::DocumentArray(sub), Bson::Document(stored)) => Some(Bson::Array(vec![Bson::Document(init_array_element(sub, stored, ids, issues))])),
+        (Kind::Array(element), Bson::Array(items)) => {
+            let mut out: Vec<Bson> = Vec::with_capacity(items.len());
+            for (index, item) in items.iter().enumerate() {
+                out.push(match item {
+                    Bson::Null => Bson::Null,
+                    _ => init_value(element, item, &join(path, &index.to_string()), ids, issues)?,
+                });
+            }
+            Some(Bson::Array(out))
+        }
+        _ => cast(kind, value, path, ids, issues),
+    }
+}
+
+/// A single nested subdocument: built with `{ defaults: false }`, initialised, given its function
+/// defaults, then every other default.
+fn init_subdocument(schema: &Schema, stored: &Document, ids: &mut dyn Ids, issues: &mut Vec<Issue>) -> Document {
+    let mut document: Document = skeleton(&schema.fields);
+    init_fields(schema, stored, &mut document, "", ids, issues);
+    apply_defaults(schema, &mut document, DefaultTiming::After, "", ids, issues);
+    apply_defaults(schema, &mut document, DefaultTiming::Before, "", ids, issues);
+    document
+}
+
+/// A document array's element: built with `{ skipId: false }`, so its `_id` default runs (and
+/// takes an id) before the stored one replaces it.
+fn init_array_element(schema: &Schema, stored: &Document, ids: &mut dyn Ids, issues: &mut Vec<Issue>) -> Document {
+    let mut document: Document = skeleton(&schema.fields);
+    apply_defaults(schema, &mut document, DefaultTiming::Before, "", ids, issues);
+    init_fields(schema, stored, &mut document, "", ids, issues);
+    apply_defaults(schema, &mut document, DefaultTiming::After, "", ids, issues);
+    document
+}
+
 /// A top-level document: a model's schema also has the version key, `__v`, as a Number path
 /// after everything else, so a given `__v` takes that place (and `save` then overwrites it).
 fn construct_model(schema: &Schema, input: &Document, ids: &mut dyn Ids, issues: &mut Vec<Issue>) -> Document {
-    construct_with(schema, input, "", true, ids, issues)
+    construct_with(schema, input, "", true, false, ids, issues)
 }
 
 /// The `Document` constructor for a subdocument: steps 1 to 5 of the module docs.
 pub fn construct(schema: &Schema, input: &Document, prefix: &str, ids: &mut dyn Ids, issues: &mut Vec<Issue>) -> Document {
-    construct_with(schema, input, prefix, false, ids, issues)
+    construct_with(schema, input, prefix, false, false, ids, issues)
+}
+
+/// `findOneAndReplace`'s replacement: the model built with `{ skipId: true }`, validated, and sent
+/// minimized without a version key.
+pub fn replacement(schema: &Schema, input: &Document, ids: &mut dyn Ids) -> Result<Document, ValidationError> {
+    let mut issues: Vec<Issue> = Vec::new();
+    let document: Document = construct_with(schema, input, "", true, true, ids, &mut issues);
+    validate(schema, &document, "", &mut issues);
+    issues.sort();
+    if !issues.is_empty() {
+        return Err(ValidationError { issues });
+    }
+    Ok(minimize_schema(schema, document))
 }
 
 pub(crate) static VERSION_KEY: LazyLock<Path> = LazyLock::new(number);
@@ -118,6 +326,7 @@ fn construct_with(
     input: &Document,
     prefix: &str,
     model: bool,
+    skip_id: bool,
     ids: &mut dyn Ids,
     issues: &mut Vec<Issue>,
 ) -> Document {
@@ -126,7 +335,7 @@ fn construct_with(
         tree_keys.push("__v");
     }
     let mut document: Document = skeleton(&schema.fields);
-    apply_defaults(schema, &mut document, DefaultTiming::Before, prefix, ids, issues);
+    apply_defaults_to(schema, &mut document, DefaultTiming::Before, prefix, |path| !(skip_id && path == "_id"), ids, issues);
     for key in keys_in_schema_order(&tree_keys, input) {
         let value: &Bson = &input[key];
         let full: String = join(prefix, key);
@@ -245,8 +454,20 @@ fn apply_defaults(
     ids: &mut dyn Ids,
     issues: &mut Vec<Issue>,
 ) {
+    apply_defaults_to(schema, document, timing, prefix, |_| true, ids, issues);
+}
+
+fn apply_defaults_to(
+    schema: &Schema,
+    document: &mut Document,
+    timing: DefaultTiming,
+    prefix: &str,
+    wanted: impl Fn(&str) -> bool,
+    ids: &mut dyn Ids,
+    issues: &mut Vec<Issue>,
+) {
     for (path, leaf) in schema.paths() {
-        if leaf.timing() != timing {
+        if leaf.timing() != timing || !wanted(&path) {
             continue;
         }
         let pieces: Vec<&str> = path.split('.').collect();
@@ -407,6 +628,16 @@ pub(crate) fn cast(kind: &Kind, value: &Bson, path: &str, ids: &mut dyn Ids, iss
                     return cast_issue(issues, path, "Map");
                 };
                 out.insert(key, construct(schema, given, &join(path, key), ids, issues));
+            }
+            Some(Bson::Document(out))
+        }
+        Kind::ValueMap(element) => {
+            let Bson::Document(entries) = value else {
+                return cast_issue(issues, path, "Map");
+            };
+            let mut out: Document = Document::new();
+            for (key, entry) in entries {
+                out.insert(key, cast(&element.kind, entry, &join(path, key), ids, issues)?);
             }
             Some(Bson::Document(out))
         }
@@ -594,6 +825,7 @@ fn minimize_with(fields: &[Field], schema: Option<&Schema>, document: Document) 
                     })
                     .collect(),
             )),
+            (_, Some(Kind::ValueMap(_)), Bson::Document(entries)) => Some(Bson::Document(entries)),
             (_, Some(Kind::Subdocument(sub)), Bson::Document(inner)) => non_empty(minimize_schema(sub, inner)),
             (_, Some(Kind::DocumentArray(sub)), Bson::Array(items)) => Some(Bson::Array(
                 items

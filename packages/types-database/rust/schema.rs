@@ -57,6 +57,8 @@ pub enum Kind {
     Subdocument(SchemaRef),
     /// `type: Map, of: <schema>`.
     Map(SchemaRef),
+    /// `type: Map, of: <type>` for a type that is not a schema: each value is that path's.
+    ValueMap(Box<Path>),
 }
 
 #[derive(Clone, Copy)]
@@ -227,6 +229,10 @@ pub fn subdocument(schema: SchemaRef) -> Path {
 
 pub fn map_of(schema: SchemaRef) -> Path {
     Path::new(Kind::Map(schema))
+}
+
+pub fn map_of_values(element: Path) -> Path {
+    Path::new(Kind::ValueMap(Box::new(element)))
 }
 
 #[derive(Clone)]

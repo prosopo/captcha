@@ -239,7 +239,7 @@ fn kind_name(kind: &Kind) -> String {
         Kind::Array(element) => format!("Array<{}>", kind_name(element)),
         Kind::DocumentArray(_) => "DocumentArray".into(),
         Kind::Subdocument(_) => "Embedded".into(),
-        Kind::Map(_) => "Map".into(),
+        Kind::Map(_) | Kind::ValueMap(_) => "Map".into(),
     }
 }
 
