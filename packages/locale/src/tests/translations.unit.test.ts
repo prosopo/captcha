@@ -88,11 +88,11 @@ describe("isLanguage", () => {
 		expect(isLanguage("")).toBe(false);
 	});
 
-	// i18next treated `en-GB` as a region of `en`, and the browser i18n resolves
+	// i18next treated `en-AU` as a region of `en`, and the browser i18n resolves
 	// a regional tag to its base language before asking — so a regional variant
-	// is deliberately not itself a declared code.
+	// without its own catalogue is not itself a declared code.
 	test("rejects a regional variant of a supported language", () => {
-		expect(isLanguage("en-GB")).toBe(false);
+		expect(isLanguage("en-AU")).toBe(false);
 	});
 
 	test("is case sensitive — `EN` is not `en`", () => {
