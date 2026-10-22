@@ -15,8 +15,8 @@
 //! The challenge routes ported so far: `captcha/pow` (captcha/getPoWCaptchaChallenge.ts),
 //! `captcha/icon-order`, `captcha/audio` and `captcha/puzzle` (getIconOrderCaptchaChallenge.ts,
 //! getAudioCaptchaChallenge.ts and getPuzzleCaptchaChallenge.ts, through
-//! interactiveCaptchaChallenge.ts), with the minting of powTasks.ts, puzzleTasks.ts and
-//! interactiveCaptchaManager.ts, maintenanceModeResponses.ts's dummies and
+//! interactiveCaptchaChallenge.ts), and `captcha/image` (getImageCaptchaChallenge.ts), with
+//! the minting of powTasks.ts, puzzleTasks.ts and interactiveCaptchaManager.ts, maintenanceModeResponses.ts's dummies and
 //! trafficFilterRequestTime.ts's `applyTrafficFilterAtRequestTime`.
 
 use crate::api::block::{get_prioritised_access_rule, get_request_user_scope, normalize_headers_for_matching, PrioritisedRuleOptions, ScopeSignals};
@@ -24,12 +24,15 @@ use crate::api::captcha::api_error;
 use crate::api::express::{header, send_json, Requested};
 use crate::api::maintenance::MaintenanceMode;
 use crate::api::metrics::ProviderMetrics;
+use crate::api::assets::ItemAssetsResolver;
 use crate::api::padding::send_json_padded;
+use crate::api::public::EnvReader;
 use crate::api::pipeline::{handle_errors, validate_address, RequestSignals};
 use crate::composite_ip::get_composite_ip_address;
 use crate::tasks::audio::{render_audio_clip, resolve_audio_render_settings, AudioBufferOptions, AudioChallengeBuffer, AudioRenderer, RenderedAudioClip};
 use crate::tasks::detection::{DetectionServices, DetectorBundlePool, SimdDecoder};
 use crate::mobile_signals::{derive_mobile_verdict, MobileSignals, MobileVerdict};
+use crate::tasks::image::{get_random_captchas_and_request_hash, ImageChallenge, ImageChallengeRequest};
 use crate::tasks::puzzle::{
     is_puzzle_image_switch_available, render_puzzle_images, resolve_puzzle_piece_scale_range, resolve_puzzle_render_settings, stored_render_settings, PuzzleAssets, PuzzleBackgroundBuffer,
     RenderedPuzzleImages, ScaleRange,
@@ -41,7 +44,7 @@ use axum::extract::Request;
 use axum::response::Response;
 use bson::{Bson, Document};
 use http::StatusCode;
-use prosopo_api_router::{RequestBody, RequestLog};
+use prosopo_api_router::{RequestBody, RequestI18n, RequestLog};
 use prosopo_common::{ErrorClass, ErrorContext, ErrorOptions, ErrorSource, ProsopoError, ThrownError, ZodLikeError};
 use prosopo_captcha_severity::{ease_piece_scale_for_touch, ease_tolerance_for_touch, PuzzleDifficultyRange};
 use prosopo_database::challenges::{Interactive, InteractiveAnswer, NewChallenge};
@@ -54,11 +57,14 @@ use prosopo_types::captcha_type::CaptchaType;
 use prosopo_types::client::get_test_site_key_mode;
 use prosopo_types::datasets::{PoWChallengeComponents, POW_SEPARATOR};
 use prosopo_types::ipapi::IpInfoResponse;
-use prosopo_types::provider_api::get_challenge_request_body;
+use prosopo_locale::{english_text, is_language, is_target_key, I18nLookup};
+use prosopo_types::api_types::CaptchaCountConfig;
+use prosopo_types::number::JsNumber;
+use prosopo_types::provider_api::{captcha_request_body, get_challenge_request_body};
 use prosopo_puzzle_assets::{NotchPlacement, PuzzleRenderSettings, DEFAULT_GEOMETRY, DEFAULT_RENDER_SETTINGS};
-use prosopo_types::settings::{ICON_ORDER_TOLERANCE_DEFAULT, PUZZLE_TOLERANCE_DEFAULT};
+use prosopo_types::settings::{clamp_image_rounds, ICON_ORDER_TOLERANCE_DEFAULT, PUZZLE_TOLERANCE_DEFAULT};
 use prosopo_types::stored::SimdReadingsStage;
-use prosopo_types_database::number::to_bson_document;
+use prosopo_types_database::number::{json_to_bson, to_bson_document};
 use prosopo_user_access_policy::AccessRule;
 use prosopo_util_crypto::u8a::{u8a_to_hex, U8aLike};
 use serde_json::{json, Map, Value};
@@ -98,6 +104,13 @@ pub struct ChallengeState {
     /// The process's audio buffer, made on first use as `initAudioChallengeBuffer` makes it.
     pub audio: OnceLock<Arc<AudioChallengeBuffer>>,
     pub puzzle: PuzzleAssets,
+    /// `env.datasetId`: the dataset an image challenge draws from unless it names one.
+    pub dataset_id: Option<String>,
+    /// `env.config.captchas`: the image rounds when nothing else sets them.
+    pub captcha_counts: CaptchaCountConfig,
+    /// The process environment, which the image route reads its asset URL keys from per
+    /// request.
+    pub env: EnvReader,
 }
 
 impl ChallengeState {
@@ -243,6 +256,17 @@ impl Provenance {
     }
 }
 
+/// `req.ipInfo` as the TS object holds it, a key the backend lists but left `undefined` kept
+/// as BSON undefined: a typed path's cast drops it, a Mixed path's write makes it `null`.
+fn ip_info_literal(info: &IpInfoResponse) -> Result<Bson, String> {
+    match info {
+        IpInfoResponse::Valid(result) => {
+            Ok(Bson::Document(result.entries().into_iter().map(|(key, value)| (key.to_string(), value.as_ref().map_or(Bson::Undefined, json_to_bson))).collect()))
+        }
+        other => Ok(Bson::Document(to_bson_document(other).map_err(|error| error.to_string())?)),
+    }
+}
+
 /// What the shared request handling settles before a type issues its challenge.
 struct Gate {
     settings: Option<Value>,
@@ -250,6 +274,8 @@ struct Gate {
     deferred: Option<AccessRule>,
     enforcing: Option<AccessRule>,
     session_difficulty: Option<f64>,
+    /// The session's `solvedImagesCount`, when set and not zero.
+    image_rounds: Option<f64>,
     verdict: TrafficVerdict,
     provenance: Provenance,
 }
@@ -265,7 +291,14 @@ enum Refusal {
 /// client record, the user scope and access rules, `isValidRequest`, the `Origin` check and
 /// the traffic filter. The SIMD attach is left to the route ([`attach_simd`]), which runs it
 /// before the interactive types mint and after PoW has.
-async fn gate(services: &VerifyServices, request: &ChallengeRequest<'_>, captcha_type: CaptchaType, headers: &http::HeaderMap, logger: &Logger) -> Result<Result<Gate, Refusal>, String> {
+async fn gate(
+    services: &VerifyServices,
+    request: &ChallengeRequest<'_>,
+    captcha_type: CaptchaType,
+    require_origin: bool,
+    headers: &http::HeaderMap,
+    logger: &Logger,
+) -> Result<Result<Gate, Refusal>, String> {
     let Some(client) = services.db.get_client_record(request.dapp).await.map_err(|error| error.to_string())? else {
         return Ok(Err(Refusal::NotRegistered));
     };
@@ -313,25 +346,23 @@ async fn gate(services: &VerifyServices, request: &ChallengeRequest<'_>, captcha
         .is_valid_request(&client, captcha_type, request.session_id, enforcing.as_ref())
         .await
         .map_err(|error| error.to_string())?;
-    let (valid_session_id, session_difficulty) = match validation {
-        Validation::Valid { session_id, pow_difficulty, .. } => (session_id, pow_difficulty),
+    let (valid_session_id, session_difficulty, image_rounds) = match validation {
+        Validation::Valid { session_id, pow_difficulty, image_rounds, .. } => (session_id, pow_difficulty, image_rounds),
         Validation::Invalid(reason) => return Ok(Err(Refusal::Invalid(reason.as_str().to_string()))),
     };
-    if request.origin.is_none() {
+    if require_origin && request.origin.is_none() {
         return Ok(Err(Refusal::NoOrigin));
     }
     let settings: Option<Value> = settings_json(&client);
     let verdict: TrafficVerdict = traffic_verdict(ip_info, settings.as_ref(), logger);
-    let stored_ip_info: Option<Bson> = match ip_info {
-        Some(info) => Some(Bson::Document(to_bson_document(info).map_err(|error| error.to_string())?)),
-        None => None,
-    };
+    let stored_ip_info: Option<Bson> = ip_info.map(ip_info_literal).transpose()?;
     Ok(Ok(Gate {
         settings,
         session,
         deferred,
         enforcing,
         session_difficulty,
+        image_rounds,
         verdict,
         provenance: Provenance {
             ip_address: get_composite_ip_address(&ip),
@@ -375,7 +406,7 @@ struct Issued {
 }
 
 async fn issue_pow(state: &ChallengeState, services: &VerifyServices, pair: &KeyringPair, request: &ChallengeRequest<'_>, headers: &http::HeaderMap, logger: &Logger) -> Result<Result<Issued, Refusal>, String> {
-    let gate: Gate = match gate(services, request, CaptchaType::Pow, headers, logger).await? {
+    let gate: Gate = match gate(services, request, CaptchaType::Pow, true, headers, logger).await? {
         Ok(gate) => gate,
         Err(refusal) => return Ok(Err(refusal)),
     };
@@ -715,7 +746,7 @@ async fn issue(state: &ChallengeState, services: &VerifyServices, pair: &Keyring
     match route {
         ChallengeRoute::Pow => issue_pow(state, services, pair, request, headers, logger).await,
         ChallengeRoute::IconOrder | ChallengeRoute::Audio | ChallengeRoute::Puzzle => {
-            let gate: Gate = match gate(services, request, route.captcha_type(), headers, logger).await? {
+            let gate: Gate = match gate(services, request, route.captcha_type(), true, headers, logger).await? {
                 Ok(gate) => gate,
                 Err(refusal) => return Ok(Err(refusal)),
             };
@@ -822,6 +853,232 @@ pub async fn challenge_route(state: &ChallengeState, route: ChallengeRoute, requ
             &logger,
         ),
         Err(error) => failed(&request, error),
+    }
+}
+
+/// `buildImageMaintenanceResponse`: no captchas, nothing signed.
+fn image_maintenance_response() -> Value {
+    json!({
+        "status": "ok",
+        "captchas": [],
+        "requestHash": "",
+        "timestamp": now_ms().to_string(),
+        "signature": { "provider": { "requestHash": "" } },
+    })
+}
+
+/// `localiseTarget`: a catalogued label in the user's language with its key and English text;
+/// any other label as it is, logged for someone to translate.
+fn localise_target(captcha: &mut Map<String, Value>, i18n: Option<&RequestI18n>, logger: &Logger) {
+    let target: String = captcha.get("target").and_then(Value::as_str).unwrap_or_default().to_string();
+    if is_target_key(&target) {
+        let key: String = format!("TARGET.{target}");
+        let translated: String = i18n.map_or_else(|| english_text(&key), |i18n| I18nLookup::t(&i18n.lookup(), &key));
+        captcha.insert("target".to_string(), json!(translated));
+        captcha.insert("targetKey".to_string(), json!(target));
+        captcha.insert("targetEn".to_string(), json!(english_text(&key)));
+        return;
+    }
+    logger.warn(|| LogRecord::msg("Captcha target has no translation key").with_data(json!({ "target": target })));
+    captcha.insert("target".to_string(), json!(target));
+    captcha.insert("targetEn".to_string(), json!(target));
+}
+
+/// A drawn captcha as the answer serves it: localised, its items' URLs resolved.
+fn served_captcha(captcha: &Document, resolver: Option<&ItemAssetsResolver>, i18n: Option<&RequestI18n>, logger: &Logger) -> Result<Value, String> {
+    let Value::Object(mut served) = bson_json(&Bson::Document(captcha.clone())) else {
+        return Err("a captcha is not a document".to_string());
+    };
+    localise_target(&mut served, i18n, logger);
+    if let (Some(resolver), Some(Value::Array(items))) = (resolver, served.get_mut("items")) {
+        for item in items.iter_mut() {
+            let data: String = item.get("data").and_then(Value::as_str).unwrap_or_default().to_string();
+            let resolved: String = resolver.resolver().resolve_asset_url(&data)?;
+            if !resolved.is_empty() {
+                item["data"] = json!(resolved);
+            }
+        }
+    }
+    Ok(Value::Object(served))
+}
+
+/// `ipAddress.toString()` for the `Address4` or `Address6` the TS hands the signed resolver:
+/// neither class defines `toString`, so a URL bound to the client's IP is bound to this.
+const IP_ADDRESS_AS_STRING: &str = "[object Object]";
+
+/// A number setting read as `x || y` reads it: present unless absent, zero or NaN.
+fn truthy_number(value: Option<f64>) -> Option<f64> {
+    value.filter(|value| *value != 0.0 && !value.is_nan())
+}
+
+/// What the image route answers, short of a refusal: the challenge, or an error passed on.
+enum ImageFailure {
+    Refused(Refusal),
+    Failed(ThrownError),
+}
+
+impl From<String> for ImageFailure {
+    fn from(error: String) -> Self {
+        ImageFailure::Failed(ThrownError::from(prosopo_logger::ErrorObject::new("Error", error)))
+    }
+}
+
+impl From<ProsopoError> for ImageFailure {
+    fn from(error: ProsopoError) -> Self {
+        ImageFailure::Failed(ThrownError::from(error))
+    }
+}
+
+/// getImageCaptchaChallenge.ts from the client record on, inside its `try`.
+#[allow(clippy::too_many_arguments)]
+async fn issue_image(
+    state: &ChallengeState,
+    services: &VerifyServices,
+    pair: &KeyringPair,
+    request: &ChallengeRequest<'_>,
+    dataset_id: &str,
+    headers: &http::HeaderMap,
+    i18n: Option<&RequestI18n>,
+    logger: &Logger,
+) -> Result<(Value, Option<f64>, f64), ImageFailure> {
+    let gate: Gate = gate(services, request, CaptchaType::Image, false, headers, logger).await?.map_err(ImageFailure::Refused)?;
+    let traffic_rounds: Option<f64> = gate.verdict.challenge.as_ref().and_then(|challenge| challenge.solved_images_count);
+    let policy = |rule: &Option<AccessRule>, pick: fn(&AccessRule) -> Option<JsNumber>| truthy_number(rule.as_ref().and_then(pick).map(JsNumber::get));
+    let setting = |key: &str| gate.settings.as_ref().and_then(|settings| settings.get(key)).and_then(Value::as_f64);
+    let solved: f64 = clamp_image_rounds(
+        truthy_number(traffic_rounds)
+            .or(truthy_number(gate.image_rounds))
+            .or_else(|| policy(&gate.enforcing, |rule| rule.policy.solved_images_count()))
+            .or_else(|| policy(&gate.deferred, |rule| rule.policy.solved_images_count()))
+            .unwrap_or(state.captcha_counts.solved.count.get()),
+        setting("imageMinRounds"),
+        setting("imageMaxRounds"),
+    );
+    let unsolved: f64 = policy(&gate.enforcing, |rule| rule.policy.unsolved_images_count)
+        .or_else(|| policy(&gate.deferred, |rule| rule.policy.unsolved_images_count))
+        .unwrap_or(state.captcha_counts.unsolved.count.get());
+    attach_simd(state, services, &gate, request.simd_readings, "image", logger).await;
+    let challenge: ImageChallenge = get_random_captchas_and_request_hash(
+        &services.db,
+        pair,
+        &ImageChallengeRequest {
+            dataset_id,
+            user: request.user,
+            ip_address: &gate.provenance.ip_address,
+            solved_count: solved,
+            unsolved_count: unsolved,
+            threshold: setting("imageThreshold").unwrap_or(0.8),
+            session_id: gate.provenance.session_id.as_deref(),
+            ip_info: gate.provenance.ip_info.as_ref(),
+        },
+    )
+    .await?;
+    let now_ms: f64 = services.db.source().now().timestamp_millis() as f64;
+    let resolver: Option<ItemAssetsResolver> = ItemAssetsResolver::from_env(state.env.as_ref(), Some(IP_ADDRESS_AS_STRING))?.map(|resolver| match resolver {
+        ItemAssetsResolver::Sealed(sealed) => ItemAssetsResolver::Sealed(crate::api::assets::SealedAssetsResolver { now_ms: Some(now_ms), ..sealed }),
+        ItemAssetsResolver::Signed(signed) => ItemAssetsResolver::Signed(crate::api::assets::SignedAssetsResolver { now_ms: Some(now_ms), ..signed }),
+    });
+    let captchas: Vec<Value> = challenge.captchas.iter().map(|captcha| served_captcha(captcha, resolver.as_ref(), i18n, logger)).collect::<Result<_, String>>()?;
+    let language: &str = i18n.map(|i18n| i18n.language.as_str()).filter(|language| is_language(language)).unwrap_or("en");
+    let body: Value = json!({
+        "status": "ok",
+        "captchas": captchas,
+        "language": language,
+        "requestHash": challenge.request_hash,
+        "timestamp": challenge.timestamp.to_string(),
+        "signature": { "provider": { "requestHash": challenge.signed_request_hash } },
+    });
+    Ok((body, gate.verdict.pad_bytes, solved))
+}
+
+/// getImageCaptchaChallenge.ts's handler.
+pub async fn image_challenge_route(state: &ChallengeState, request: Request) -> Response {
+    let logger: Logger = logger_of(&request);
+    let signals: Option<RequestSignals> = request.extensions().get::<RequestSignals>().cloned();
+    if signals.as_ref().is_none_or(|signals| signals.ip.is_empty()) {
+        return api_error(&request, "API.BAD_REQUEST", ErrorContext::new().with("code", 400).with("error", "IP address not found"), &logger);
+    }
+    let raw: Value = request.extensions().get::<RequestBody>().map_or_else(|| json!({}), |body| body.0.clone());
+    let parsed: Value = match captcha_request_body().validate(Some(&raw)) {
+        Ok(parsed) => parsed,
+        Err(issues) => {
+            let cause: ZodLikeError = ZodLikeError {
+                message: issues.message(),
+                issues: issues.issues.iter().filter_map(|issue| serde_json::to_value(issue).ok()).collect(),
+            };
+            return api_error(&request, "CAPTCHA.PARSE_ERROR", ErrorContext::new().with("code", 400).with_error(cause), &logger);
+        }
+    };
+    let text = |key: &str| parsed.get(key).and_then(Value::as_str);
+    let (user, dapp) = (text("user").unwrap_or_default(), text("dapp").unwrap_or_default());
+    let dataset_id: Option<String> = match parsed.get("datasetId").filter(|id| !id.is_null()) {
+        Some(Value::String(id)) => Some(id.clone()),
+        Some(other) => Some(other.to_string()),
+        None => state.dataset_id.clone(),
+    };
+    let Some(dataset_id) = dataset_id.filter(|id| !id.is_empty()) else {
+        let context: ErrorContext = ErrorContext::new().with("code", 400).with("error", "No dataset available. Please upload a dataset first.");
+        return api_error(&request, "API.BAD_REQUEST", context, &logger);
+    };
+    for (address, key) in [(dapp, "API.INVALID_SITE_KEY"), (user, "CONTRACT.INVALID_ADDRESS")] {
+        if let Err(error) = validate_address(address, key) {
+            return handle_errors(&request, &ThrownError::from(error));
+        }
+    }
+    let requested: Requested = Requested::of(&request);
+    let dummy_record = |message: &str| LogRecord::msg(message).with_data(json!({ "dapp": dapp, "user": user, "sessionId": text("sessionId") }));
+    if state.maintenance.get() {
+        logger.info(|| dummy_record("Maintenance mode active - returning dummy image challenge"));
+        return send_json(&requested, StatusCode::OK, Vec::new(), &image_maintenance_response());
+    }
+    if get_test_site_key_mode(dapp).is_some() {
+        logger.warn(|| dummy_record("Reserved TEST site key - returning dummy image challenge"));
+        return send_json(&requested, StatusCode::OK, Vec::new(), &image_maintenance_response());
+    }
+    let (Some(services), Some(pair)) = (state.services.as_ref(), state.pair.as_ref()) else {
+        let error = ProsopoError::new(ErrorClass::Env, ErrorSource::message("db not setup! Please call isReady() first"), ErrorOptions::default());
+        return handle_errors(&request, &ThrownError::from(error));
+    };
+    let challenge_request: ChallengeRequest<'_> = ChallengeRequest {
+        user,
+        dapp,
+        session_id: text("sessionId").filter(|id| !id.is_empty()),
+        simd_readings: text("simdReadings"),
+        origin: None,
+        signals,
+    };
+    let i18n: Option<RequestI18n> = request.extensions().get::<RequestI18n>().map(|i18n| RequestI18n { i18n: i18n.i18n.clone(), language: i18n.language.clone() });
+    let headers: http::HeaderMap = request.headers().clone();
+    match issue_image(state, services, pair, &challenge_request, &dataset_id, &headers, i18n.as_ref(), &logger).await {
+        Ok((body, pad_bytes, solved)) => {
+            logger.info(|| {
+                LogRecord::msg("Image captcha challenge issued").with_data(json!({
+                    "captchaType": CaptchaType::Image.as_str(),
+                    "requestHash": body["requestHash"],
+                    "solvedImagesCount": solved,
+                    "user": user,
+                    "dapp": dapp,
+                    "sessionId": text("sessionId"),
+                }))
+            });
+            if let Some(metrics) = &state.metrics {
+                metrics.record_captcha_issued(CaptchaType::Image);
+            }
+            send_json_padded(&requested, &body, pad_bytes)
+        }
+        Err(ImageFailure::Refused(Refusal::NotRegistered)) => api_error(&request, "API.SITE_KEY_NOT_REGISTERED", ErrorContext::new().with("code", 400).with("siteKey", dapp), &logger),
+        Err(ImageFailure::Refused(Refusal::Invalid(reason))) => {
+            api_error(&request, &reason, ErrorContext::new().with("code", 400).with("siteKey", dapp).with("user", user), &logger)
+        }
+        Err(ImageFailure::Refused(Refusal::NoOrigin)) => api_error(&request, "API.BAD_REQUEST", ErrorContext::new().with("code", 400), &logger),
+        Err(ImageFailure::Failed(error)) => {
+            if let Some(metrics) = &state.metrics {
+                metrics.record_captcha_issue_error(CaptchaType::Image);
+            }
+            logger.error(|| LogRecord::msg("Error in image captcha challenge request").with_data(json!({})).with_err(error.to_json()));
+            let context: ErrorContext = ErrorContext::new().with_error(error).with("code", 500).with("params", json!({}));
+            api_error(&request, "API.BAD_REQUEST", context, &logger)
+        }
     }
 }
 

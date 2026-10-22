@@ -201,7 +201,9 @@ pub struct IpInfoResult {
 }
 
 impl IpInfoResult {
-    fn entries(&self) -> Vec<(&'static str, Option<serde_json::Value>)> {
+    /// The building backend's object literal: every key it lists, in its order, `None` where
+    /// the value is `undefined`.
+    pub fn entries(&self) -> Vec<(&'static str, Option<serde_json::Value>)> {
         fn value<T: Serialize>(field: &Option<T>) -> Option<serde_json::Value> {
             field.as_ref().and_then(|field| serde_json::to_value(field).ok())
         }

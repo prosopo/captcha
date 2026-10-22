@@ -36,6 +36,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { RedisWriteQueue } from "@prosopo/database";
+import { buildDataset, parseCaptchaDataset } from "@prosopo/datasets";
 import { getPair } from "@prosopo/keyring";
 import {
 	ALWAYS_PASS_SITE_KEY,
@@ -95,6 +96,9 @@ const PUZZLE = getPair("//Puzzle");
 const PUZZLE_FRICTIONLESS = getPair("//PuzzleFrictionless");
 const PUZZLE_TRAFFIC = getPair("//PuzzleTraffic");
 const PUZZLE_PLAIN = getPair("//PuzzlePlain");
+const IMAGE_TRAFFIC = getPair("//ImageTraffic");
+const IMAGE_RULED_USER = getPair("//ImageRuled").address;
+const IMAGE_DEFERRED_USER = getPair("//ImageDeferred").address;
 const USER = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 const RESTRICTED_USER = "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy";
 const RULED_USER = "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw";
@@ -219,6 +223,8 @@ await resetStores(DATABASE);
 const ipapi = await fakeIpapi(IPAPI);
 const variables = liveVariables(DATABASE, ipapi.url, {
 	PROSOPO_DETECTOR_POOL_DIR: poolDir,
+	PROSOPO_ASSET_TOKEN_KEY: "bunny-key",
+	PROSOPO_ASSET_TOKEN_BIND_IP: "true",
 });
 process.env.PROSOPO_DETECTOR_POOL_DIR = poolDir;
 const env = await liveEnvironment(variables);
@@ -384,6 +390,19 @@ const records = [
 		tier: Tier.Enterprise,
 	},
 	{
+		account: IMAGE_TRAFFIC.address,
+		settings: {
+			...base,
+			captchaType: "image",
+			imageMaxRounds: 4,
+			imageThreshold: 0.6,
+			trafficFilter: {
+				vpn: { action: "challenge", solvedImagesCount: 5, padBytes: 16 },
+			},
+		},
+		tier: Tier.Enterprise,
+	},
+	{
 		account: PUZZLE_PLAIN.address,
 		settings: { ...base, captchaType: "puzzle" },
 		tier: Tier.Free,
@@ -401,6 +420,19 @@ const rules: unknown[] = [
 		deferToVerify: true,
 	},
 	{ type: "restrict", headHash: "head-ruled", powDifficulty: 13 },
+	{
+		type: "restrict",
+		userId: IMAGE_RULED_USER,
+		solvedImagesCount: 3,
+		unsolvedImagesCount: 2,
+	},
+	{
+		type: "restrict",
+		userId: IMAGE_DEFERRED_USER,
+		solvedImagesCount: 5,
+		unsolvedImagesCount: 1,
+		deferToVerify: true,
+	},
 	{ type: "block", ip: "203.0.113.66", description: "a hard block" },
 ];
 await db
@@ -520,6 +552,49 @@ await seedSession("s-puzzle-wifi", {
 	tcpMss: 1460,
 } as Partial<Session>);
 await seedSession("s-puzzle-webview", { ...touchSession, webView: true });
+await seedSession("s-image-rounds", {
+	captchaType: CaptchaType.image,
+	solvedImagesCount: 4,
+} as Partial<Session>);
+await seedSession("s-image-simd", {
+	captchaType: CaptchaType.image,
+	bundleId: "bundle-a",
+} as Partial<Session>);
+
+// Captchas of one kind differ only in their salt, so in an answer they differ only in their
+// ids: which ones a request draws is random on both sides, but how many of each kind, and
+// everything served about them, is not.
+const ITEMS = Array.from({ length: 9 }, (_, index) => ({
+	hash: `0x${(index + 1).toString(16).padStart(64, "0")}`,
+	data: `https://cdn.example.com/img/${index}.jpg`,
+	type: "image",
+}));
+const captcha = (index: number, target: string, solved: boolean) => ({
+	salt: `0x${index.toString(16).padStart(32, "0")}`,
+	items: ITEMS,
+	target,
+	...(solved && { solution: [1, 4] }),
+});
+const storeDataset = async (
+	captchas: ReturnType<typeof captcha>[],
+): Promise<string> => {
+	const dataset = await buildDataset(
+		parseCaptchaDataset({ format: "SelectAll", captchas } as unknown as JSON),
+	);
+	await db.storeDataset(dataset);
+	return dataset.datasetId as string;
+};
+const DATASET = await storeDataset([
+	...Array.from({ length: 6 }, (_, index) => captcha(index, "dog", true)),
+	...Array.from({ length: 3 }, (_, index) => captcha(10 + index, "cat", false)),
+]);
+const UNTRANSLATED_DATASET = await storeDataset([
+	...Array.from({ length: 2 }, (_, index) =>
+		captcha(20 + index, "unicorn-x", true),
+	),
+	captcha(30, "unicorn-x", false),
+]);
+env.datasetId = DATASET;
 await seedSession("s-audio-off", {
 	captchaType: CaptchaType.image,
 	siteKey: FRICTIONLESS.address,
@@ -540,6 +615,7 @@ const path = "/v1/prosopo/provider/client/captcha/pow";
 const iconPath = "/v1/prosopo/provider/client/captcha/icon-order";
 const audioPath = "/v1/prosopo/provider/client/captcha/audio";
 const puzzlePath = "/v1/prosopo/provider/client/captcha/puzzle";
+const imagePath = "/v1/prosopo/provider/client/captcha/image";
 const json: [string, string] = ["Content-Type", "application/json"];
 const origin: [string, string] = ["Origin", "https://example.com"];
 const browser: [string, string] = [
@@ -560,6 +636,7 @@ type Ask = {
 	user?: string;
 	sessionId?: string;
 	simdReadings?: string;
+	datasetId?: string;
 };
 // The client routes' header check wants a valid account in both headers; a case about an
 // invalid body value keeps a valid one there, so it reaches the handler.
@@ -581,6 +658,7 @@ const pow = (
 		dapp: ask.dapp,
 		...(ask.sessionId && { sessionId: ask.sessionId }),
 		...(ask.simdReadings && { simdReadings: ask.simdReadings }),
+		...(ask.datasetId && { datasetId: ask.datasetId }),
 	}),
 });
 const steps: (Step & { padded?: boolean; varies?: boolean })[] = [
@@ -806,6 +884,72 @@ const steps: (Step & { padded?: boolean; varies?: boolean })[] = [
 		...pow({ dapp: ALWAYS_PASS_SITE_KEY }, undefined, puzzlePath),
 		compare: false,
 	},
+	pow({ dapp: IMAGE.address }, undefined, imagePath),
+	pow(
+		{ dapp: IMAGE.address },
+		[origin, browser, from("203.0.113.7"), ["Accept-Language", "es"]],
+		imagePath,
+	),
+	pow(
+		{ dapp: FRICTIONLESS.address, sessionId: "s-image-rounds" },
+		undefined,
+		imagePath,
+	),
+	pow(
+		{
+			dapp: FRICTIONLESS.address,
+			sessionId: "s-image-simd",
+			simdReadings: READINGS,
+		},
+		undefined,
+		imagePath,
+	),
+	pow({ dapp: IMAGE.address, user: IMAGE_RULED_USER }, undefined, imagePath),
+	pow({ dapp: IMAGE.address, user: IMAGE_DEFERRED_USER }, undefined, imagePath),
+	{
+		...pow(
+			{ dapp: IMAGE_TRAFFIC.address },
+			[origin, browser, from("198.51.100.30")],
+			imagePath,
+		),
+		padded: true,
+	},
+	pow({ dapp: IMAGE_TRAFFIC.address }, undefined, imagePath),
+	pow(
+		{ dapp: IMAGE.address, datasetId: UNTRANSLATED_DATASET },
+		undefined,
+		imagePath,
+	),
+	pow(
+		{ dapp: IMAGE.address, datasetId: `0x${"ab".repeat(32)}` },
+		undefined,
+		imagePath,
+	),
+	pow({ dapp: IMAGE.address, datasetId: "nope" }, undefined, imagePath),
+	{
+		method: "POST",
+		path: imagePath,
+		headers: [
+			json,
+			...account(IMAGE.address, USER),
+			origin,
+			browser,
+			from("203.0.113.7"),
+		],
+		body: JSON.stringify({
+			user: USER,
+			dapp: IMAGE.address,
+			datasetId: [1, 2],
+		}),
+	},
+	pow({ dapp: POW.address }, undefined, imagePath),
+	pow({ dapp: UNREGISTERED.address }, undefined, imagePath),
+	pow({ dapp: IMAGE.address, user: "not-an-address" }, undefined, imagePath),
+	pow({ dapp: IMAGE.address }, [browser, from("203.0.113.7")], imagePath),
+	{
+		...pow({ dapp: ALWAYS_PASS_SITE_KEY }, undefined, imagePath),
+		compare: false,
+	},
 ];
 
 // Each icon-order render's seed, in the order the renders draw them, for the Rust to replay: the
@@ -830,7 +974,16 @@ syncBuiltinESMExports();
 const server: Server = await startProviderApi(env, false, 0);
 const port = (server.address() as AddressInfo).port;
 const exchanges: Json[] = [];
+// The image route takes its answer's timestamp, then signs its URLs to expire 300 s after a
+// second reading of the clock; the Rust replays both at the first. Sending early in a second
+// keeps the two readings in the same second.
+const earlyInASecond = async (): Promise<void> => {
+	const into = Date.now() % 1000;
+	if (into > 200)
+		await new Promise((resolve) => setTimeout(resolve, 1000 - into));
+};
 for (const step of steps) {
+	if (step.path === imagePath) await earlyInASecond();
 	const bytes = requestBytes(step);
 	const sentAt = Date.now();
 	const response = await send(port, bytes);
@@ -845,6 +998,16 @@ for (const step of steps) {
 		varies: step.varies === true,
 		at: issuedAt === undefined ? sentAt : Number(issuedAt),
 	});
+}
+for (const exchange of exchanges as { response: string; at: number }[]) {
+	for (const [, expires] of Buffer.from(exchange.response, "base64")
+		.toString("utf8")
+		.matchAll(/expires=(\d+)/g)) {
+		if (Number(expires) !== Math.floor(exchange.at / 1000) + 300)
+			throw new Error(
+				`an image URL was signed a second after its answer at ${exchange.at}; run again`,
+			);
+	}
 }
 const metrics = (
 	await send(port, requestBytes({ method: "GET", path: "/metrics" }))
@@ -923,6 +1086,7 @@ writeFileSync(
 	`${JSON.stringify({
 		database: DATABASE,
 		provider: env.pair?.address ?? null,
+		datasetId: DATASET,
 		variables: {
 			...variables,
 			PROSOPO_IPAPI_URL: "{{IPAPI_URL}}",
@@ -942,6 +1106,7 @@ writeFileSync(
 			iconordercaptchas: after.iconordercaptchas,
 			audiocaptchas: after.audiocaptchas,
 			puzzlecaptchas: after.puzzlecaptchas,
+			usercommitments: after.usercommitments,
 			sessions: after.sessions,
 		},
 		cacheAfter,

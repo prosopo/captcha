@@ -232,7 +232,7 @@ impl Source for PinnedClock {
 
 /// `live_app`, its database telling the time by `source`.
 async fn live_app_at(variables: &HashMap<String, String>, source: Arc<dyn Source>) -> (Router, Arc<ProviderEnvironment>) {
-    live_app_with(variables, source, None, None).await
+    live_app_with(variables, source, None, None, None).await
 }
 
 /// `live_app_at`, with the SIMD decoder the private build would supply and the render seeds a
@@ -242,6 +242,7 @@ async fn live_app_with(
     source: Arc<dyn Source>,
     simd_decoder: Option<Arc<dyn SimdDecoder>>,
     seeds: Option<Arc<dyn SeedSource>>,
+    dataset_id: Option<String>,
 ) -> (Router, Arc<ProviderEnvironment>) {
     let config: ProsopoConfig = get_config(&Environment::from_map(variables.clone()), None, None, None, None).expect("a config");
     let pair: KeyringPair = get_pair(Some(Secret::Text(MNEMONIC)), None, None, None).expect("the provider pair");
@@ -264,6 +265,7 @@ async fn live_app_with(
         version: "dev".to_string(),
         simd_decoder,
         seeds: seeds.unwrap_or_else(|| Arc::new(prosopo_provider::api::challenge::FreshSeeds)),
+        dataset_id,
         ..app_parts(env.clone())
     };
     (provider_router(parts).0, env)
@@ -1061,7 +1063,10 @@ fn checked_challenge(body: &mut Map<String, Value>, provider: &str, side: &str, 
     body.insert("challenge".to_string(), json!(masked_challenge(&challenge)));
 }
 
-const CHALLENGE_MEMBERS: [&str; 15] = [
+const CHALLENGE_MEMBERS: [&str; 18] = [
+    "captchas",
+    "language",
+    "requestHash",
     "status",
     "challenge",
     "difficulty",
@@ -1078,6 +1083,86 @@ const CHALLENGE_MEMBERS: [&str; 15] = [
     "originY",
     "imageSwitchAvailable",
 ];
+
+/// An image answer as served, kept to be checked against the commitment it stored.
+struct ServedImages {
+    side: &'static str,
+    user: String,
+    request_hash: String,
+    captcha_ids: Vec<String>,
+}
+
+/// An image answer's random members checked, then masked: which captchas of a kind a request
+/// draws, and their order, are random on both sides, so each is checked to be the dataset's
+/// captcha of that id and label, distinct from the others, and its ids masked, and the
+/// captchas compared as a multiset; the request hash, which a fresh salt makes, is checked as
+/// signed by the provider and kept for [`checked_commitments`].
+fn masked_images(body: &mut Map<String, Value>, side: &'static str, user: &str, provider: &str, dataset: &[Value], served: &mut Vec<ServedImages>, failures: &mut Vec<String>) {
+    let Some(Value::Array(captchas)) = body.get_mut("captchas") else {
+        return;
+    };
+    if captchas.is_empty() {
+        return;
+    }
+    let mut ids: Vec<String> = Vec::new();
+    for captcha in captchas.iter_mut() {
+        let id: String = captcha["captchaId"].as_str().unwrap_or_default().to_string();
+        let stored: Option<&Value> = dataset.iter().find(|stored| stored["captchaId"].as_str() == Some(id.as_str()));
+        let matches: bool = stored.is_some_and(|stored| stored["captchaContentId"] == captcha["captchaContentId"] && stored["target"] == captcha["targetEn"]);
+        if !matches || ids.contains(&id) {
+            failures.push(format!("{side} served captcha {id}, which is not a distinct dataset captcha of label {}", captcha["targetEn"]));
+        }
+        ids.push(id);
+        captcha["captchaId"] = json!("<id>");
+        captcha["captchaContentId"] = json!("<id>");
+    }
+    captchas.sort_by_key(Value::to_string);
+    let request_hash: String = body["requestHash"].as_str().unwrap_or_default().to_string();
+    let signature: &str = body.get("signature").and_then(|signature| signature.pointer("/provider/requestHash")).and_then(Value::as_str).unwrap_or_default();
+    let valid: bool = prosopo_util_crypto::signature::signature_verify(U8aLike::Bytes(request_hash.as_bytes()), U8aLike::Str(signature), U8aLike::Str(provider))
+        .is_ok_and(|result| result.is_valid);
+    if !valid {
+        failures.push(format!("{side}'s signature over request hash {request_hash} does not verify against the provider"));
+    }
+    served.push(ServedImages { side, user: user.to_string(), request_hash, captcha_ids: ids });
+    body.insert("requestHash".to_string(), json!("<requestHash>"));
+    body.insert("signature".to_string(), json!({ "provider": { "requestHash": "<signature>" } }));
+}
+
+/// Each image answer's commitment found by its request hash, the hash recomputed from the
+/// captchas served, the user and the stored salt, and its deadline a minute per captcha from
+/// when it was requested.
+fn checked_commitments(served: &[ServedImages], side: &str, records: &[Value], failures: &mut Vec<String>) {
+    for images in served.iter().filter(|images| images.side == side) {
+        let Some(record) = records.iter().find(|record| record["requestHash"].as_str() == Some(images.request_hash.as_str())) else {
+            failures.push(format!("{side} stored no commitment for request hash {}", images.request_hash));
+            continue;
+        };
+        let salt: &str = record["salt"].as_str().unwrap_or_default();
+        let mut ids: Vec<String> = images.captcha_ids.clone();
+        let recomputed: String = prosopo_datasets::compute_pending_request_hash(&mut ids, prosopo_util_crypto::js::JoinValue::from(images.user.as_str()), salt);
+        if recomputed != images.request_hash {
+            failures.push(format!("{side}'s request hash {} is not the hash of what it served", images.request_hash));
+        }
+        let time = |key: &str| record[key].pointer("/$date/$numberLong").and_then(Value::as_str).and_then(|text| text.parse::<i64>().ok());
+        if time("deadlineTimestamp").zip(time("requestedAtTimestamp")).map(|(deadline, requested)| deadline - requested) != Some(60_000 * images.captcha_ids.len() as i64) {
+            failures.push(format!("{side}'s deadline for {} is not a minute per captcha", images.request_hash));
+        }
+    }
+}
+
+/// A stored commitment with what a fresh salt makes masked, once the salt is 32 bytes of hex.
+fn stored_commitment(record: &Value, side: &str, failures: &mut Vec<String>) -> Value {
+    let mut record: Value = record.clone();
+    let salt: &str = record["salt"].as_str().unwrap_or_default();
+    if !(salt.len() == 66 && salt.starts_with("0x") && salt[2..].bytes().all(|byte| byte.is_ascii_hexdigit())) {
+        failures.push(format!("{side}'s stored salt {salt:?} is not 32 bytes of hex"));
+    }
+    for key in ["requestHash", "salt", "_id"] {
+        record[key] = json!("<fresh>");
+    }
+    record
+}
 
 /// A number from canonical extended JSON.
 fn extended_number(value: &Value) -> Option<f64> {
@@ -1345,7 +1430,7 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
             (0..hex.len()).step_by(2).map(|i| u8::from_str_radix(&hex[i..i + 2], 16).expect("hex")).collect()
         })
         .collect();
-    let (router, _env) = live_app_with(&variables, clock.clone(), Some(Arc::new(RecordedSimdDecoder(decoded))), Some(Arc::new(RecordedSeeds(Mutex::new(seeds))))).await;
+    let (router, _env) = live_app_with(&variables, clock.clone(), Some(Arc::new(RecordedSimdDecoder(decoded))), Some(Arc::new(RecordedSeeds(Mutex::new(seeds)))), vectors["datasetId"].as_str().map(str::to_string)).await;
     restore_database(database, &vectors["seed"]).await;
     restore_hashes(&vectors["redis"]).await;
     let mut connection = redis().await;
@@ -1364,6 +1449,8 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
     let mut failures: Vec<String> = Vec::new();
     let mut compared: usize = 0;
     let mut served: Vec<ServedPuzzle> = Vec::new();
+    let mut served_images: Vec<ServedImages> = Vec::new();
+    let dataset: Vec<Value> = vectors["seed"]["captchas"].as_array().cloned().unwrap_or_default();
     let mut varying_sites: Vec<String> = Vec::new();
     for step in vectors["exchanges"].as_array().expect("exchanges") {
         clock.0.store(step["at"].as_i64().expect("a time"), Ordering::SeqCst);
@@ -1374,11 +1461,14 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
         if step["compare"] == Value::Bool(false) {
             let body: Value = serde_json::from_slice(&actual.body).unwrap_or(Value::Null);
             let challenge: &str = body["challenge"].as_str().unwrap_or_default();
-            let shaped: bool = body["difficulty"] == json!(1)
+            let shaped: bool = (body["captchas"] == json!([]) && body["requestHash"] == json!(""))
+                || body["difficulty"] == json!(1)
                 || body["legend"].as_str().and_then(data_uri_pixels).is_some()
                 || body["piece"].as_str().and_then(data_uri_pixels).is_some()
                 || body["clip"].as_str().is_some_and(|clip| clip.starts_with("data:audio/wav;base64,"));
-            if !actual.status_line.starts_with("HTTP/1.1 200 ") || !shaped || !challenge.ends_with("___0") || body.pointer("/signature/provider/challenge") != Some(&json!("")) {
+            let unsigned: bool = (challenge.ends_with("___0") && body.pointer("/signature/provider/challenge") == Some(&json!("")))
+                || body.pointer("/signature/provider/requestHash") == Some(&json!(""));
+            if !actual.status_line.starts_with("HTTP/1.1 200 ") || !shaped || !unsigned {
                 failures.push(format!("{line}\n      rust dummy challenge {body}"));
             }
             continue;
@@ -1401,6 +1491,11 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
                     compared_images(&mut expected_json, &mut actual_json, &mut failures);
                     masked_puzzle(&mut expected_json, "ts", varies, &mut served);
                     masked_puzzle(&mut actual_json, "rust", varies, &mut served);
+                    let sent: String = String::from_utf8_lossy(&request).into_owned();
+                    let sent_body: Value = sent.split_once("\r\n\r\n").and_then(|(_, body)| serde_json::from_str(body).ok()).unwrap_or(Value::Null);
+                    let user: &str = sent_body["user"].as_str().unwrap_or_default();
+                    masked_images(&mut expected_json, "ts", user, provider, &dataset, &mut served_images, &mut failures);
+                    masked_images(&mut actual_json, "rust", user, provider, &dataset, &mut served_images, &mut failures);
                     compared_clip(&mut expected_json, "ts", &mut failures);
                     compared_clip(&mut actual_json, "rust", &mut failures);
                     (challenge_answer(expected_json, padded, provider, "ts", &mut failures), challenge_answer(actual_json, padded, provider, "rust", &mut failures))
@@ -1446,6 +1541,13 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
     let expected_puzzles: Vec<Value> = ts_puzzles.iter().map(|record| stored_puzzle(record, provider, "ts", &varying_sites, &mut failures)).collect();
     let actual_puzzles: Vec<Value> = rust_puzzles.iter().map(|record| stored_puzzle(record, provider, "rust", &varying_sites, &mut failures)).collect();
     failures.extend(compare_records(&Value::Array(expected_puzzles), &actual_puzzles, &fresh));
+    let ts_commitments: Vec<Value> = vectors["after"]["usercommitments"].as_array().expect("records").clone();
+    let rust_commitments: Vec<Value> = dump(database, "usercommitments").await;
+    checked_commitments(&served_images, "ts", &ts_commitments, &mut failures);
+    checked_commitments(&served_images, "rust", &rust_commitments, &mut failures);
+    let expected_commitments: Vec<Value> = ts_commitments.iter().map(|record| stored_commitment(record, "ts", &mut failures)).collect();
+    let actual_commitments: Vec<Value> = rust_commitments.iter().map(|record| stored_commitment(record, "rust", &mut failures)).collect();
+    failures.extend(compare_records(&Value::Array(expected_commitments), &actual_commitments, &fresh));
     let expected_sessions: Vec<Value> = vectors["after"]["sessions"].as_array().expect("sessions").iter().map(session_without_block_ids).collect();
     let actual_sessions: Vec<Value> = dump(database, "sessions").await.iter().map(session_without_block_ids).collect();
     failures.extend(compare_records(&Value::Array(expected_sessions), &actual_sessions, &fresh));

@@ -85,18 +85,6 @@ pub struct StoredCaptcha {
     pub items: Vec<CaptchaItem>,
 }
 
-/// What `getRandomCaptcha` projects: no salt, no solved flag.
-#[derive(Debug, Clone, PartialEq, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SampledCaptcha {
-    pub dataset_id: String,
-    pub dataset_content_id: String,
-    pub captcha_id: String,
-    pub captcha_content_id: String,
-    pub items: Vec<CaptchaItem>,
-    pub target: String,
-}
-
 /// What `getCaptchaById` projects.
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -697,13 +685,14 @@ impl ProviderDatabase {
     }
 
     /// `getRandomCaptcha`: up to `size` captchas from a random point of the `randomKey` index,
-    /// wrapping round to its start, or by `$sample` for captchas stored before `randomKey`.
+    /// wrapping round to its start, or by `$sample` for captchas stored before `randomKey`; each
+    /// as stored, projected to its ids, items and target, as the TS's lean documents are.
     pub async fn get_random_captcha(
         &self,
         solved: bool,
         dataset_id: &str,
         size: Option<f64>,
-    ) -> Result<Vec<SampledCaptcha>, ProsopoError> {
+    ) -> Result<Vec<Document>, ProsopoError> {
         if !is_hex(dataset_id) {
             return Err(self.invalid_hash("getRandomCaptcha", "datasetId", dataset_id));
         }
@@ -748,11 +737,11 @@ impl ProviderDatabase {
                 ))
                 .await?;
             if !fallback.is_empty() {
-                return Ok(fallback.into_iter().map(without_id).filter_map(decode).collect());
+                return Ok(fallback.into_iter().map(without_id).collect());
             }
         }
         if !documents.is_empty() {
-            return Ok(documents.into_iter().filter_map(decode).collect());
+            return Ok(documents);
         }
         let mut context: ErrorContext = ErrorContext::new()
             .with("failedFuncName", "getRandomCaptcha")

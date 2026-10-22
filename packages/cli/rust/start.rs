@@ -128,12 +128,14 @@ pub struct AppParts {
     pub simd_decoder: Option<Arc<dyn SimdDecoder>>,
     /// Where render seeds come from; fresh random bytes unless a test pins them.
     pub seeds: Arc<dyn SeedSource>,
+    /// `env.datasetId`, which image challenges draw from unless they name a dataset.
+    pub dataset_id: Option<String>,
 }
 
 /// startProviderApi's app for the routes ported so far, and its healthz geo router, which the
 /// caller starts and stops.
 pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
-    let AppParts { config, pair, auth_account, logger, db, countries, ip_info, probe, env, i18n, version, simd_decoder, seeds } = parts;
+    let AppParts { config, pair, auth_account, logger, db, countries, ip_info, probe, env, i18n, version, simd_decoder, seeds, dataset_id } = parts;
     let geo: Arc<HealthzGeoRouter> =
         Arc::new(HealthzGeoRouter::with_probe(read_healthz_geo_config(env.as_ref(), Some(&logger)), countries, probe, Some(logger.clone())));
     let metrics: Option<Arc<ProviderMetrics>> =
@@ -215,6 +217,9 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
         seeds,
         audio: std::sync::OnceLock::new(),
         puzzle: prosopo_provider::tasks::puzzle::PuzzleAssets::default(),
+        dataset_id,
+        captcha_counts: config.captchas.clone(),
+        env: env.clone(),
     });
     let captcha: Arc<CaptchaState> = Arc::new(CaptchaState { challenge, db: db.clone(), maintenance, metrics: metrics.clone(), dns_servers: config.dns_servers.clone() });
     let rest: Router = pipeline(pipeline_state, request_logger(log_level), i18n, gate, admin, verify, block, domain, captcha);
@@ -270,6 +275,7 @@ pub fn app_parts(env: Arc<ProviderEnvironment>) -> AppParts {
         version: version(),
         simd_decoder: None,
         seeds: Arc::new(FreshSeeds),
+        dataset_id: env.dataset_id.clone(),
     }
 }
 

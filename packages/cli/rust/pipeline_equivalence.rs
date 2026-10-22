@@ -95,6 +95,7 @@ async fn the_pipeline_answers_as_the_express_app_does() {
             version: "dev".to_string(),
             simd_decoder: None,
             seeds: Arc::new(prosopo_provider::api::challenge::FreshSeeds),
+            dataset_id: None,
         });
         let listener: tokio::net::TcpListener = tokio::net::TcpListener::bind("[::]:0").await.expect("binds");
         let port: u16 = listener.local_addr().expect("an address").port();

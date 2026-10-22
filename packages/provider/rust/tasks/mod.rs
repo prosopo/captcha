@@ -23,6 +23,7 @@ pub mod detection;
 pub mod dns_event;
 pub mod email;
 pub mod frictionless;
+pub mod image;
 pub mod puzzle;
 pub mod request;
 pub mod schedulers;
