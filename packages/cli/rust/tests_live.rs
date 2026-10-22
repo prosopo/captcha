@@ -699,3 +699,96 @@ async fn admin_routes_answer_as_the_express_app_does() {
     }
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }
+
+/// A server answering each listed path with its text and an ETag, as the generator's does.
+async fn list_server(port: u16, lists: Value) {
+    let lists: Arc<Map<String, Value>> = Arc::new(lists.as_object().expect("lists").clone());
+    let router: Router = Router::new().fallback(move |request: axum::extract::Request| {
+        let lists: Arc<Map<String, Value>> = lists.clone();
+        async move {
+            let path: String = request.uri().path().to_string();
+            match lists.get(&path).and_then(Value::as_str) {
+                Some(text) => axum::response::Response::builder()
+                    .header("Content-Type", "text/plain")
+                    .header("ETag", format!("\"{path}\""))
+                    .body(axum::body::Body::from(text.to_string()))
+                    .expect("a response"),
+                None => axum::response::Response::builder().status(404).body(axum::body::Body::empty()).expect("a response"),
+            }
+        }
+    });
+    let listener: tokio::net::TcpListener = tokio::net::TcpListener::bind(("127.0.0.1", port)).await.expect("binds the list port");
+    tokio::spawn(async move { axum::serve(listener, router).await.expect("serves") });
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn scheduled_jobs_run_as_the_node_ones_do() {
+    use prosopo_provider::tasks::schedulers::{check_if_task_is_running, get_client_list, store_commitments_external, update_spam_email_domains};
+    use prosopo_types::client::ScheduledTaskNames;
+    let _live = LIVE.lock().await;
+    let vectors: Value = serde_json::from_str(include_str!("../../provider/rust/equivalence/schedulers-vectors.json")).expect("schedulers-vectors.json parses");
+    let database: &str = vectors["database"].as_str().expect("a database");
+    let central: &str = vectors["central"].as_str().expect("a central database");
+    let clients: &str = vectors["clients"].as_str().expect("a client database");
+    reset(database).await;
+    let mongo: mongodb::Client = mongodb::Client::with_uri_str(mongo_url()).await.expect("connects");
+    mongo.database(central).drop().await.expect("drops");
+    mongo.database(clients).drop().await.expect("drops");
+    let ipapi: String = fake_ipapi(json!({})).await;
+    list_server(u16::try_from(vectors["listPort"].as_u64().expect("a port")).expect("a port"), vectors["lists"].clone()).await;
+    let mut variables: HashMap<String, String> = serde_json::from_value(vectors["variables"].clone()).expect("variables");
+    variables.insert("PROSOPO_IPAPI_URL".to_string(), ipapi);
+    let clock: Arc<PinnedClock> = Arc::new(PinnedClock(AtomicI64::new(vectors["runningChecks"][0]["at"].as_i64().expect("a time"))));
+    let (_router, env) = live_app_at(&variables, clock.clone()).await;
+    restore_database(database, &vectors["seed"]).await;
+    restore_database(clients, &vectors["clientsSeed"]).await;
+    let db = env.0.db.clone().expect("a database");
+    let logger: Logger = env.0.logger.clone();
+    let mut failures: Vec<String> = Vec::new();
+    for check in vectors["runningChecks"].as_array().expect("checks") {
+        clock.0.store(check["at"].as_i64().expect("a time"), Ordering::SeqCst);
+        let name: ScheduledTaskNames = check["name"].as_str().expect("a name").parse().expect("a task name");
+        let running: bool = check_if_task_is_running(name, &db).await.expect("checks");
+        if Value::Bool(running) != check["running"] {
+            failures.push(format!("{} running: rust {running}, ts {}", name.as_str(), check["running"]));
+        }
+    }
+    let at = |job: &str| clock.0.store(vectors["ran"][job].as_i64().expect("a time"), Ordering::SeqCst);
+    let config = &env.0.config;
+    at("storeCommitmentsExternal");
+    store_commitments_external(&db, config.mongo_captcha_uri.as_deref(), &logger).await.expect("stores");
+    at("storeCommitmentsExternalAgain");
+    store_commitments_external(&db, config.mongo_captcha_uri.as_deref(), &logger).await.expect("stores");
+    at("getClientList");
+    get_client_list(&db, config.mongo_client_uri.as_deref(), &logger).await.expect("pulls");
+    let cache_dir: String = std::env::temp_dir().join(format!("spam-cache-{}", uuid::Uuid::new_v4())).to_string_lossy().into_owned();
+    let port: u64 = vectors["listPort"].as_u64().expect("a port");
+    at("updateSpamEmailDomains");
+    let lists: Vec<String> = vec![format!("http://127.0.0.1:{port}/one.txt"), format!("http://127.0.0.1:{port}/two.txt")];
+    update_spam_email_domains(&db, &logger, &lists, &cache_dir).await.expect("updates");
+    at("updateSpamEmailDomainsMissing");
+    let failure: Value = match update_spam_email_domains(&db, &logger, &[format!("http://127.0.0.1:{port}/missing.txt")], &cache_dir).await {
+        Ok(()) => Value::Null,
+        Err(error) => json!(error.message()),
+    };
+    if failure != vectors["failure"] {
+        failures.push(format!("the missing list: rust {failure}, ts {}", vectors["failure"]));
+    }
+    tokio::time::sleep(Duration::from_millis(500)).await;
+    let fresh_records: [&str; 4] = ["_id", "lastUpdatedTimestamp", "storedAtTimestamp", "verifiedAtTimestamp"];
+    for (collection, fresh) in [
+        ("schedulers", vec!["_id", "datetime", "updated"]),
+        ("clients", vec!["_id", "settings._id"]),
+        ("spamemaildomains", vec!["_id", "createdAt", "updatedAt"]),
+        ("powcaptchas", fresh_records.to_vec()),
+        ("sessions", fresh_records.to_vec()),
+    ] {
+        failures.extend(compare_records(&vectors["after"][collection], &dump(database, collection).await, &fresh).into_iter().map(|failure| format!("{collection}: {failure}")));
+    }
+    for collection in ["powcaptchas", "sessions"] {
+        let expected: &Value = &vectors["centralAfter"][collection];
+        failures.extend(compare_records(expected, &dump(central, collection).await, &fresh_records).into_iter().map(|failure| format!("central {collection}: {failure}")));
+    }
+    assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
+}

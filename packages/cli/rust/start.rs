@@ -15,8 +15,8 @@
 //! start.ts and startProviderApi.ts for the routes the Rust provider serves so far.
 //!
 //! While the Node provider still runs beside it (MIGRATION.md §3), this one leaves the start-up
-//! cleanup, the frictionless ladder migration and the cron schedulers to Node: each of them
-//! must run in exactly one implementation until phase 6.
+//! cleanup and the cron schedulers to Node: each must run in exactly one implementation. With
+//! `--sole` (phase 6) it runs them itself.
 
 use axum::Router;
 use prosopo_api_router::{request_logger, AdminKey, AuthState};
@@ -29,7 +29,11 @@ use prosopo_provider::api::block::{BlockState, HardBlockVerdictCache};
 use prosopo_provider::api::captcha::CaptchaState;
 use prosopo_provider::api::domain::DomainState;
 use prosopo_load_balancer::ProviderDirectory;
+use prosopo_env::is_maintenance_mode;
 use prosopo_provider::api::admin::{AdminContext, AdminState};
+use prosopo_provider::tasks::schedulers::{get_client_list, start_scheduler, store_commitments_external, update_spam_email_domains};
+use prosopo_types::client::ScheduledTaskNames;
+use prosopo_types::config::{ScheduleConfig, ScheduledTasksConfig};
 use prosopo_provider::api::pipeline::AdminGate;
 use prosopo_provider::api::rules::RuleRoutesState;
 use prosopo_provider::api::verify::VerifyState;
@@ -246,15 +250,96 @@ pub fn app_parts(env: Arc<ProviderEnvironment>) -> AppParts {
     }
 }
 
+/// The configured schedulers, each its job at its schedule (start.ts). None in maintenance
+/// mode, whose database the jobs would only log failures against.
+fn start_schedulers(env: &ProviderEnvironment) -> Vec<tokio::task::JoinHandle<()>> {
+    let (Some(db), Some(_)) = (env.db.clone(), env.pair.as_ref()) else {
+        return Vec::new();
+    };
+    if is_maintenance_mode() {
+        return Vec::new();
+    }
+    let logger: Logger = env.logger.clone();
+    let config = &env.config;
+    let schedule = |pick: fn(&ScheduledTasksConfig) -> Option<&ScheduleConfig>| {
+        config.scheduled_tasks.as_ref().and_then(pick).and_then(|scheduled| scheduled.schedule.clone())
+    };
+    let mut started: Vec<tokio::task::JoinHandle<()>> = Vec::new();
+    let mut schedule_job = |name: ScheduledTaskNames, schedule: Option<String>, failure: &'static str, job: Box<dyn Fn() -> JobFuture + Send + Sync>| {
+        let Some(schedule) = schedule else {
+            return;
+        };
+        match start_scheduler(name, &schedule, db.clone(), logger.clone(), job) {
+            Ok(handle) => started.push(handle),
+            Err(error) => logger.error(|| LogRecord::msg(failure).with_err(error.message().to_string())),
+        }
+    };
+    let (captcha_db, captcha_uri, captcha_log) = (db.clone(), config.mongo_captcha_uri.clone(), logger.clone());
+    schedule_job(
+        ScheduledTaskNames::StoreCommitmentsExternal,
+        schedule(|tasks| tasks.captcha_scheduler.as_ref()),
+        "Failed to start scheduler:",
+        Box::new(move || {
+            let (db, uri, log) = (captcha_db.clone(), captcha_uri.clone(), captcha_log.clone());
+            Box::pin(async move {
+                if let Err(error) = store_commitments_external(&db, uri.as_deref(), &log).await {
+                    log.error(|| LogRecord::msg("Error storing commitments externally").with_err(error.message().to_string()));
+                }
+            })
+        }),
+    );
+    let (client_db, client_uri, client_log) = (db.clone(), config.mongo_client_uri.clone(), logger.clone());
+    schedule_job(
+        ScheduledTaskNames::GetClientList,
+        schedule(|tasks| tasks.client_list_scheduler.as_ref()),
+        "Failed to start client list scheduler",
+        Box::new(move || {
+            let (db, uri, log) = (client_db.clone(), client_uri.clone(), client_log.clone());
+            Box::pin(async move {
+                if let Err(error) = get_client_list(&db, uri.as_deref(), &log).await {
+                    log.error(|| LogRecord::msg("Error getting client list").with_err(error.message().to_string()));
+                }
+            })
+        }),
+    );
+    let (spam_db, spam_urls, spam_log) = (db.clone(), config.spam_email_domains_urls.clone().unwrap_or_default(), logger.clone());
+    schedule_job(
+        ScheduledTaskNames::UpdateSpamEmailDomains,
+        schedule(|tasks| tasks.spam_email_domains_scheduler.as_ref()),
+        "Failed to start spam email domains scheduler",
+        Box::new(move || {
+            let (db, urls, log) = (spam_db.clone(), spam_urls.clone(), spam_log.clone());
+            Box::pin(async move {
+                if urls.is_empty() {
+                    log.warn(|| LogRecord::msg("No spam email domains URLs configured, skipping update"));
+                    return;
+                }
+                if let Err(error) = update_spam_email_domains(&db, &log, &urls, "./spam-cache").await {
+                    log.error(|| LogRecord::msg("Error updating spam email domains").with_err(error.message().to_string()));
+                }
+            })
+        }),
+    );
+    started
+}
+
+type JobFuture = std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send>>;
+
 /// The environment made ready, then the API served on `port` (else the configured one) until
-/// the process is told to stop.
-pub async fn start(mut env: ProviderEnvironment, port: Option<u16>) -> Result<(), String> {
+/// the process is told to stop. As the sole implementation it also cleans up after the last
+/// run and starts the schedulers; beside the Node provider it leaves both to Node.
+pub async fn start(mut env: ProviderEnvironment, port: Option<u16>, sole: bool) -> Result<(), String> {
     env.is_ready().await.map_err(|error| error.to_string())?;
     let logger: Logger = env.logger.clone();
     logger.info(|| LogRecord::msg("Starting Prosopo API"));
-    logger.info(|| {
-        LogRecord::msg("Start-up cleanup, the frictionless ladder migration and the schedulers are left to the Node provider while both run")
-    });
+    if sole {
+        for cleanup in env.cleanup() {
+            let _ = cleanup.await;
+        }
+        start_schedulers(&env);
+    } else {
+        logger.info(|| LogRecord::msg("Start-up cleanup and the schedulers are left to the Node provider while both run"));
+    }
     let port: u16 = match (port, &env.config.server) {
         (Some(port), _) => port,
         (None, Some(server)) => {

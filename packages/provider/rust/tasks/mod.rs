@@ -20,6 +20,7 @@ pub mod decision;
 pub mod dns_event;
 pub mod email;
 pub mod frictionless;
+pub mod schedulers;
 pub mod spam;
 pub mod traffic;
 pub mod usage_counters;

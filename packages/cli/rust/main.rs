@@ -46,6 +46,10 @@ struct Cli {
     /// Accepted for compatibility; the API does not use it.
     #[arg(long = "adminApi", visible_alias = "admin-api", num_args = 0..=1, default_value_t = false, default_missing_value = "true")]
     admin_api: bool,
+    /// Run as the only provider implementation: the start-up cleanup and the schedulers, which
+    /// the Node provider runs while both serve (MIGRATION.md §3, phase 6).
+    #[arg(long, default_value_t = false)]
+    sole: bool,
     /// A command, and its arguments.
     #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
     rest: Vec<String>,
@@ -78,7 +82,7 @@ async fn run(log: &Logger) -> Result<(), String> {
     load()?;
     let env: ProviderEnvironment =
         ProviderEnvironment(ProviderEnvironmentBase::new(config, Some(provider_pair), Some(auth_account)).map_err(|error| error.to_string())?);
-    start(env, None).await
+    start(env, None, cli.sole).await
 }
 
 #[tokio::main]
@@ -111,5 +115,7 @@ mod tests {
         assert!(parse(&["--api", "--adminApi"]).admin_api);
         assert!(parse(&["--admin-api"]).admin_api);
         assert_eq!(parse(&["ensure_indexes", "--foo"]).rest, vec!["ensure_indexes", "--foo"]);
+        assert!(!parse(&["--api"]).sole);
+        assert!(parse(&["--api", "--sole"]).sole);
     }
 }
