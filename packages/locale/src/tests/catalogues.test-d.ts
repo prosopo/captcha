@@ -70,6 +70,11 @@ import deWidget from "../locales/de/widget.json" with { type: "json" };
 import elTarget from "../locales/el/target.json" with { type: "json" };
 import elServer from "../locales/el/translation.json" with { type: "json" };
 import elWidget from "../locales/el/widget.json" with { type: "json" };
+import enGbTarget from "../locales/en-GB/target.json" with { type: "json" };
+import enGbServer from "../locales/en-GB/translation.json" with {
+	type: "json",
+};
+import enGbWidget from "../locales/en-GB/widget.json" with { type: "json" };
 import enTarget from "../locales/en/target.json" with { type: "json" };
 import enServer from "../locales/en/translation.json" with { type: "json" };
 import enWidget from "../locales/en/widget.json" with { type: "json" };
@@ -407,6 +412,11 @@ const catalogues = {
 		widget: enWidget,
 		target: enTarget,
 		translation: enServer,
+	},
+	"en-GB": {
+		widget: enGbWidget,
+		target: enGbTarget,
+		translation: enGbServer,
 	},
 	eo: {
 		widget: eoWidget,

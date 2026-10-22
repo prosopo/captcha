@@ -118,8 +118,11 @@ const homoglyphScripts: Partial<Record<Language, RegExp>> = {
 
 const en: Map<string, unknown> = flatten(readLocale("en"));
 const languages: Language[] = Object.values(Languages);
+// British English differs from en only in spelling and a few words, so it is
+// held to the shape checks but not to translating every value.
 const others: Language[] = languages.filter(
-	(language: Language) => language !== Languages.english,
+	(language: Language) =>
+		language !== Languages.english && language !== Languages.englishUk,
 );
 
 const leafName = (key: string): string => key.slice(key.lastIndexOf(".") + 1);
