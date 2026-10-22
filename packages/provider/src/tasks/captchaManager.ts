@@ -23,6 +23,7 @@ import {
 	type IPInfoResponse,
 	type ITrafficFilter,
 	type KeyringPair,
+	type OpenDetectorFormat,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	ResultReason,
@@ -77,7 +78,10 @@ import {
  */
 export interface PoolBundleDecrypt {
 	key: string;
-	innerConfig: string;
+	// Absent on open-format bundles, which carry no inner layer and produce no
+	// SIMD or behavioural payloads.
+	innerConfig?: string;
+	format?: OpenDetectorFormat;
 	/**
 	 * Opaque per-bundle decode parameter from the bundle's `{id}.json`. Only
 	 * meaningful to the decoder, and only alongside the bundle it was built
@@ -876,7 +880,8 @@ export class CaptchaManager {
 		return bundle
 			? {
 					key: bundle.privateKey,
-					innerConfig: bundle.innerConfig,
+					...(bundle.innerConfig && { innerConfig: bundle.innerConfig }),
+					...(bundle.format && { format: bundle.format }),
 					...(bundle.payloadLayout && {
 						payloadLayout: bundle.payloadLayout,
 					}),
@@ -972,6 +977,7 @@ export class CaptchaManager {
 			}));
 			return null;
 		}
+		if (!bundle.innerConfig) return null;
 		try {
 			return await decode<SimdReadingsResult>("simd", [
 				encryptedData,
@@ -997,6 +1003,7 @@ export class CaptchaManager {
 			}));
 			return null;
 		}
+		if (!bundle.innerConfig) return null;
 		try {
 			const result = await decode<BehavioralDataResult>("behaviour", [
 				encryptedData,
