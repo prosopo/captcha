@@ -56,3 +56,47 @@ pub fn coerce_to_enabled_captcha_type(requested: CaptchaType, allowed: Option<Al
     }
     resolved
 }
+
+/// `PUZZLE_REFRESHES_BEFORE_IMAGE`.
+pub const PUZZLE_REFRESHES_BEFORE_IMAGE: f64 = 3.0;
+
+/// `switchTypeAfterRefreshes`: a puzzle becomes an image challenge after three refreshes in a
+/// row, on a site that may serve image challenges.
+pub fn switch_type_after_refreshes(resolved: CaptchaType, refresh_count: Option<f64>, allowed: Option<&serde_json::Value>) -> CaptchaType {
+    if resolved == CaptchaType::Puzzle && refresh_count.unwrap_or(0.0) >= PUZZLE_REFRESHES_BEFORE_IMAGE && prosopo_types::settings::resolve_frictionless_types(allowed).image {
+        CaptchaType::Image
+    } else {
+        resolved
+    }
+}
+
+/// `switchTypeOnUserRequest`: a puzzle becomes an image challenge when the user asks, on a site
+/// that may serve image challenges.
+pub fn switch_type_on_user_request(resolved: CaptchaType, switch_to_image: bool, allowed: Option<&serde_json::Value>) -> CaptchaType {
+    if resolved == CaptchaType::Puzzle && switch_to_image && prosopo_types::settings::resolve_frictionless_types(allowed).image {
+        CaptchaType::Image
+    } else {
+        resolved
+    }
+}
+
+/// `resolveSiteAllowedCaptchaTypes`: the owner's `frictionlessTypes` count only for a
+/// frictionless site; a site pinned to a type is held to the feature flags alone.
+pub fn resolve_site_allowed_captcha_types(settings: Option<&serde_json::Value>) -> AllowedTypes {
+    let mut narrowed: serde_json::Map<String, serde_json::Value> = serde_json::Map::new();
+    if let Some(flags) = settings.and_then(|settings| settings.get("captchaTypeFeatureFlags")) {
+        narrowed.insert("captchaTypeFeatureFlags".to_string(), flags.clone());
+    }
+    let captcha_type = settings.and_then(|settings| settings.get("captchaType")).and_then(serde_json::Value::as_str).filter(|value| !value.is_empty());
+    if captcha_type.is_none_or(|captcha_type| captcha_type == CaptchaType::Frictionless.as_str()) {
+        if let Some(types) = settings.and_then(|settings| settings.get("frictionlessTypes")) {
+            narrowed.insert("frictionlessTypes".to_string(), types.clone());
+        }
+    }
+    resolve_allowed_captcha_types(Some(&serde_json::Value::Object(narrowed)))
+}
+
+/// The allowed types as the `IFrictionlessTypes` object the TS passes around.
+pub fn allowed_types_json(allowed: AllowedTypes) -> serde_json::Value {
+    json!({ "image": allowed.image, "puzzle": allowed.puzzle, "iconOrder": allowed.icon_order })
+}

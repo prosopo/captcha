@@ -120,3 +120,82 @@ impl SessionStores<'_> {
         Ok(session)
     }
 }
+
+/// What `checkLangRules` gives: a number, or, once a language names a property every JS object
+/// inherits (`constructor`, `toString`, `__proto__`, …), a string, since the TS indexes the
+/// rules object with it and adds what it finds. Every later use of such a score is string
+/// concatenation, and the session it is written to fails mongoose's cast.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum LangScore {
+    Number(f64),
+    Poisoned,
+}
+
+/// What `Object.prototype` answers to: the names a rules object finds without having them.
+const INHERITED: [&str; 12] = [
+    "constructor", "__defineGetter__", "__defineSetter__", "hasOwnProperty", "__lookupGetter__", "__lookupSetter__", "isPrototypeOf",
+    "propertyIsEnumerable", "toString", "valueOf", "__proto__", "toLocaleString",
+];
+
+/// rules/lang.ts's `checkLangRules`: the configured penalty of each language the
+/// `Accept-Language` header names, summed.
+pub fn check_lang_rules(l_rules: Option<&serde_json::Map<String, Value>>, accept_language: &str) -> LangScore {
+    let Some(rules) = l_rules.filter(|_| !accept_language.is_empty()) else {
+        return LangScore::Number(0.0);
+    };
+    let mut score: LangScore = LangScore::Number(0.0);
+    for lang in accept_language.split(',').filter_map(|lang| lang.trim_matches(crate::honeypot::is_js_whitespace).split(';').next()) {
+        if lang.is_empty() {
+            continue;
+        }
+        match rules.get(lang) {
+            Some(value) if lang != "__proto__" => {
+                let penalty: f64 = value.as_f64().unwrap_or(f64::NAN);
+                if penalty != 0.0 && !penalty.is_nan() {
+                    if let LangScore::Number(total) = score {
+                        score = LangScore::Number(total + penalty);
+                    }
+                }
+            }
+            _ if INHERITED.contains(&lang) => score = LangScore::Poisoned,
+            _ => {}
+        }
+    }
+    score
+}
+
+/// frictionlessTasksUtils.ts's `timestampDecayFunction`: image rounds for a payload `now_ms -
+/// timestamp` old, between 2 and `image_max_rounds` (12 past an hour).
+pub fn timestamp_decay_function(timestamp: f64, image_max_rounds: f64, now_ms: f64) -> f64 {
+    let max: f64 = now_ms;
+    if max - timestamp > 3_600_000.0 {
+        return js_min(image_max_rounds, 12.0);
+    }
+    let min: f64 = 1000.0;
+    let age: f64 = max - timestamp;
+    let decay: f64 = 2000f64.log10() / max;
+    let big_score: f64 = max * (1.0 - (1.0 - (decay * age).exp().powi(24)));
+    let scaled: f64 = (big_score.ln() - min.ln()) / (max.ln() - min.ln()) * 2.5;
+    js_min(image_max_rounds, js_max(2.0, prosopo_types::js_math_round(scaled)))
+}
+
+/// `getRoundsFromTriggeredDetectors`: the baseline plus a round per signal, at most six more.
+pub fn rounds_from_triggered_detectors(base: f64, triggered: Option<&[f64]>) -> f64 {
+    base + triggered.map_or(0, <[f64]>::len).min(6) as f64
+}
+
+/// `Math.min` of two: NaN if either is.
+fn js_min(a: f64, b: f64) -> f64 {
+    if a.is_nan() || b.is_nan() { f64::NAN } else { a.min(b) }
+}
+
+/// `Math.max` of two: NaN if either is.
+fn js_max(a: f64, b: f64) -> f64 {
+    if a.is_nan() || b.is_nan() { f64::NAN } else { a.max(b) }
+}
+
+/// refreshLineage.ts's `isImageSwitchRequestValid`: the user asked, the switch is on, and the
+/// session refreshed was a puzzle.
+pub fn is_image_switch_request_valid(switch_to_image: bool, replaced: Option<prosopo_types::captcha_type::CaptchaType>, switch_enabled: bool) -> bool {
+    switch_to_image && switch_enabled && replaced == Some(prosopo_types::captcha_type::CaptchaType::Puzzle)
+}

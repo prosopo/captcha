@@ -20,6 +20,7 @@ pub mod composite_ip;
 pub mod device_platform;
 pub mod dns;
 pub mod hashing;
+pub mod honeypot;
 pub mod tasks;
 pub mod ip_comparison;
 pub mod ip_validation;
@@ -43,3 +44,5 @@ mod util_equivalence;
 mod detection_equivalence;
 #[cfg(test)]
 mod pow_solution_equivalence;
+#[cfg(test)]
+mod frictionless_helpers_equivalence;
