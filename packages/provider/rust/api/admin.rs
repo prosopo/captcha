@@ -284,7 +284,6 @@ impl ApiEndpoint for UpdateDecisionMachine {
             log.error(|| LogRecord::msg("Error updating decision machine").with_err(error.message().to_string()));
             return Ok(fail(&error));
         }
-        self.0.services.decisions.invalidate();
         let mut result: Map<String, Value> = Map::new();
         result.insert("scope".into(), json!(args.decision_machine_scope.as_str()));
         if let Some(dapp) = &args.dapp {

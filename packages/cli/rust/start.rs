@@ -39,7 +39,7 @@ use prosopo_types::config::{ScheduleConfig, ScheduledTasksConfig};
 use prosopo_provider::api::pipeline::AdminGate;
 use prosopo_provider::api::rules::RuleRoutesState;
 use prosopo_provider::api::verify::VerifyState;
-use prosopo_provider::tasks::decision::{artifact_cache_ttl, DecisionGate};
+use prosopo_provider::tasks::decision::DecisionGate;
 use prosopo_provider::tasks::verify::VerifyServices;
 use prosopo_provider::api::maintenance::MaintenanceMode;
 use prosopo_provider::api::healthz_geo::{fetch_healthz_probe, read_healthz_geo_config, CountryLookup, HealthzGeoRouter, HealthzProbe};
@@ -174,7 +174,7 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
     let maintenance: Arc<MaintenanceMode> = Arc::new(MaintenanceMode::from_env(env("MAINTENANCE_MODE").as_deref()));
     let services: Option<Arc<VerifyServices>> = db.clone().map(|db| {
             Arc::new(VerifyServices {
-                decisions: Arc::new(DecisionGate::new(db.clone(), artifact_cache_ttl(env("DECISION_MACHINE_ARTIFACT_CACHE_TTL_MS").as_deref()))),
+                decisions: Arc::new(DecisionGate::new(db.clone())),
                 db,
                 write_queue: std::sync::OnceLock::new(),
                 usage_counters: std::sync::OnceLock::new(),

@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! decisionMachineRunner.ts's `decide`, as far as the Rust can take it. The TS allows when no
-//! machine applies, when the lookup fails, or when the machine's runtime is not `node`. A
-//! `node` machine is operator JavaScript the Rust cannot run, so where one applies the
-//! verify fails rather than skip it: allowing what the machine might deny would let through
-//! what the TS stops.
+//! decisionMachineRunner.ts's artifact selection, as far as the Rust can take it. The TS
+//! allows (or keeps the routing baseline) when no machine applies, when the lookup fails, or
+//! when the machine's runtime is not `node`. A `node` machine is operator JavaScript the Rust
+//! cannot run, so where one applies the request fails rather than skip it: allowing what the
+//! machine might deny, or serving the baseline where it might escalate, would let through what
+//! the TS stops.
+//!
+//! Nothing is cached between requests: the TS builds a runner, and with it its artifact cache,
+//! for every request, so each request reads the artifacts afresh.
 
 use prosopo_database::clients::DecisionMachineArtifact;
 use prosopo_database::provider::ProviderDatabase;
@@ -24,91 +28,75 @@ use prosopo_logger::{LogRecord, Logger};
 use prosopo_types::captcha_type::CaptchaType;
 use prosopo_types::decision_machine::{DecisionMachineKind, DecisionMachineScope};
 use serde_json::json;
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::sync::Arc;
 
-const DEFAULT_ARTIFACT_CACHE_TTL: Duration = Duration::from_millis(5 * 60 * 1000);
-
-/// `ARTIFACT_CACHE_TTL_MS`: `DECISION_MACHINE_ARTIFACT_CACHE_TTL_MS`, unless it is not a
-/// positive number of milliseconds.
-pub fn artifact_cache_ttl(variable: Option<&str>) -> Duration {
-    let millis: f64 = prosopo_util::parse_int(variable.unwrap_or_default(), 10);
-    if millis.is_nan() || millis == 0.0 {
-        return DEFAULT_ARTIFACT_CACHE_TTL;
-    }
-    Duration::from_millis(millis.max(0.0) as u64)
-}
-
-/// A decision machine applies that only Node can run.
+/// A machine applies that only Node can run.
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnsupportedDecisionMachine {
     pub scope: DecisionMachineScope,
+    pub kind: DecisionMachineKind,
 }
 
 impl std::fmt::Display for UnsupportedDecisionMachine {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "a {} decision machine applies, and the Rust provider cannot run one", self.scope.as_str())
+        write!(f, "a {} {} machine applies, and the Rust provider cannot run one", self.scope.as_str(), self.kind.as_str())
     }
 }
 
-type CacheKey = (DecisionMachineScope, Option<String>);
-
-/// The decide phase's artifact lookup, cached per scope (and site) as the TS caches it, absent
-/// artifacts included.
+/// The artifact lookups of `decide` and `route`.
 pub struct DecisionGate {
     db: Arc<ProviderDatabase>,
-    ttl: Duration,
-    cache: Mutex<HashMap<CacheKey, (Instant, Option<DecisionMachineArtifact>)>>,
 }
 
 impl DecisionGate {
-    pub fn new(db: Arc<ProviderDatabase>, ttl: Duration) -> DecisionGate {
-        DecisionGate { db, ttl, cache: Mutex::new(HashMap::new()) }
+    pub fn new(db: Arc<ProviderDatabase>) -> DecisionGate {
+        DecisionGate { db }
     }
 
-    /// `invalidateAllDecisionMachineArtifactCaches`: the next decide reads the artifacts again.
-    pub fn invalidate(&self) {
-        self.cache.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clear();
+    async fn artifact(&self, scope: DecisionMachineScope, dapp: Option<&str>, kind: DecisionMachineKind) -> Result<Option<DecisionMachineArtifact>, String> {
+        self.db.get_decision_machine_artifact(scope, dapp, Some(kind)).await.map_err(|error| error.to_string())
     }
 
-    fn cached(&self, key: &CacheKey) -> Option<Option<DecisionMachineArtifact>> {
-        let cache = self.cache.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        cache.get(key).filter(|(at, _)| at.elapsed() <= self.ttl).map(|(_, artifact)| artifact.clone())
-    }
-
-    async fn artifact(&self, scope: DecisionMachineScope, dapp: Option<&str>) -> Result<Option<DecisionMachineArtifact>, String> {
-        let key: CacheKey = (scope, dapp.map(str::to_string));
-        if let Some(artifact) = self.cached(&key) {
-            return Ok(artifact);
-        }
-        let artifact: Option<DecisionMachineArtifact> =
-            self.db.get_decision_machine_artifact(scope, dapp, Some(DecisionMachineKind::Decision)).await.map_err(|error| error.to_string())?;
-        let mut cache = self.cache.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        cache.insert(key, (Instant::now(), artifact.clone()));
-        Ok(artifact)
-    }
-
-    /// The site's machine, else the global one, each only if it covers the captcha type.
-    async fn select(&self, dapp: &str, captcha_type: CaptchaType) -> Result<Option<DecisionMachineArtifact>, String> {
-        let (site, global) = futures_util::join!(self.artifact(DecisionMachineScope::Dapp, Some(dapp)), self.artifact(DecisionMachineScope::Global, None));
-        let covers = |artifact: &DecisionMachineArtifact| artifact.captcha_type.is_none_or(|only| only == captcha_type);
+    /// `selectArtifact`: the site's machine, else the global one, each only if it covers the
+    /// captcha type. A machine limited to a type never covers a lookup for no type.
+    async fn select(&self, dapp: &str, kind: DecisionMachineKind, captcha_type: Option<CaptchaType>) -> Result<Option<DecisionMachineArtifact>, String> {
+        let (site, global) = futures_util::join!(self.artifact(DecisionMachineScope::Dapp, Some(dapp), kind), self.artifact(DecisionMachineScope::Global, None, kind));
+        let covers = |artifact: &DecisionMachineArtifact| artifact.captcha_type.is_none() || artifact.captcha_type == captcha_type;
         Ok(site?.filter(covers).or(global?.filter(covers)))
     }
 
     /// `decide` for the verify phase: allowed, unless a machine applies.
     pub async fn decide(&self, dapp: &str, captcha_type: CaptchaType, logger: &Logger) -> Result<(), UnsupportedDecisionMachine> {
-        match self.select(dapp, captcha_type).await {
+        match self.select(dapp, DecisionMachineKind::Decision, Some(captcha_type)).await {
             Ok(None) => Ok(()),
             Ok(Some(artifact)) => {
                 logger.error(|| {
                     LogRecord::msg("Decision machine cannot run in the Rust provider, failing verification")
                         .with_data(json!({ "dappAccount": dapp, "scope": artifact.scope.as_str() }))
                 });
-                Err(UnsupportedDecisionMachine { scope: artifact.scope })
+                Err(UnsupportedDecisionMachine { scope: artifact.scope, kind: DecisionMachineKind::Decision })
             }
             Err(error) => {
                 logger.error(|| LogRecord::msg("Decision machine failed, defaulting to allow").with_err(error).with_data(json!({ "dappAccount": dapp })));
+                Ok(())
+            }
+        }
+    }
+
+    /// `applyRouter`'s machine: the baseline stands, unless a routing machine applies.
+    pub async fn route(&self, dapp: &str, logger: &Logger) -> Result<(), UnsupportedDecisionMachine> {
+        match self.select(dapp, DecisionMachineKind::Routing, None).await {
+            Ok(None) => Ok(()),
+            Ok(Some(artifact)) => {
+                logger.error(|| {
+                    LogRecord::msg("Routing machine cannot run in the Rust provider, failing the request")
+                        .with_data(json!({ "dappAccount": dapp, "scope": artifact.scope.as_str() }))
+                });
+                Err(UnsupportedDecisionMachine { scope: artifact.scope, kind: DecisionMachineKind::Routing })
+            }
+            Err(error) => {
+                logger.warn(|| LogRecord::msg("requiredCounters() failed, proceeding with no counters").with_err(error.clone()).with_data(json!({ "dappAccount": dapp })));
+                logger.error(|| LogRecord::msg("Routing machine failed, falling back to baseline").with_err(error).with_data(json!({ "dappAccount": dapp })));
                 Ok(())
             }
         }
@@ -118,12 +106,107 @@ impl DecisionGate {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bson::{doc, Document};
+    use prosopo_database::operation::{Executor, Operation, Reply, ReplyFuture};
+    use prosopo_database::source::SystemSource;
+    use prosopo_logger::{get_logger, LogLevel};
+    use std::sync::Mutex;
 
-    #[test]
-    fn reads_the_ttl_as_the_ts_does() {
-        assert_eq!(artifact_cache_ttl(None), DEFAULT_ARTIFACT_CACHE_TTL);
-        assert_eq!(artifact_cache_ttl(Some("0")), DEFAULT_ARTIFACT_CACHE_TTL);
-        assert_eq!(artifact_cache_ttl(Some("x")), DEFAULT_ARTIFACT_CACHE_TTL);
-        assert_eq!(artifact_cache_ttl(Some("1500ms")), Duration::from_millis(1500));
+    /// The decision machine collection: each stored artifact is found by its scope, site and
+    /// kind, as the query filters them.
+    #[derive(Default)]
+    struct Artifacts {
+        stored: Mutex<Vec<Document>>,
+        down: bool,
+    }
+
+    impl Artifacts {
+        fn store(&self, scope: &str, dapp: Option<&str>, kind: &str, captcha_type: Option<&str>) {
+            let now: bson::DateTime = bson::DateTime::from_millis(1_700_000_000_000);
+            let mut artifact: Document = doc! { "scope": scope, "kind": kind, "runtime": "node", "source": "module.exports = {}", "createdAt": now, "updatedAt": now };
+            if let Some(dapp) = dapp {
+                artifact.insert("dappAccount", dapp);
+            }
+            if let Some(captcha_type) = captcha_type {
+                artifact.insert("captchaType", captcha_type);
+            }
+            self.stored.lock().expect("unpoisoned").push(artifact);
+        }
+    }
+
+    impl Executor for Artifacts {
+        fn run(&self, operation: Operation) -> ReplyFuture<'_> {
+            if self.down {
+                return Box::pin(async { Err(prosopo_database::mongo::MongoError::Unavailable("down".into())) });
+            }
+            let found: Vec<Document> = match operation {
+                Operation::Find { filter, .. } => self
+                    .stored
+                    .lock()
+                    .expect("unpoisoned")
+                    .iter()
+                    .filter(|artifact| {
+                        artifact.get_str("scope").ok() == filter.get_str("scope").ok()
+                            && artifact.get_str("kind").ok() == filter.get_str("kind").ok()
+                            && artifact.get_str("dappAccount").ok() == filter.get_str("dappAccount").ok()
+                    })
+                    .cloned()
+                    .collect(),
+                _ => Vec::new(),
+            };
+            Box::pin(async move { Ok(Reply::Documents(found)) })
+        }
+    }
+
+    fn gate(artifacts: Arc<Artifacts>) -> DecisionGate {
+        DecisionGate::new(Arc::new(ProviderDatabase::new(artifacts, Arc::new(SystemSource), get_logger(LogLevel::Error, "test"))))
+    }
+
+    fn logger() -> Logger {
+        get_logger(LogLevel::Error, "test")
+    }
+
+    #[tokio::test]
+    async fn keeps_the_baseline_when_no_routing_machine_applies() {
+        let artifacts: Arc<Artifacts> = Arc::new(Artifacts::default());
+        artifacts.store("global", None, "decision", None);
+        artifacts.store("dapp", Some("other-site"), "routing", None);
+        artifacts.store("global", None, "routing", Some("image"));
+        assert_eq!(gate(artifacts).route("site", &logger()).await, Ok(()));
+    }
+
+    #[tokio::test]
+    async fn refuses_where_a_routing_machine_applies_the_sites_before_the_global_one() {
+        let artifacts: Arc<Artifacts> = Arc::new(Artifacts::default());
+        artifacts.store("global", None, "routing", None);
+        let gate: DecisionGate = gate(artifacts.clone());
+        assert_eq!(gate.route("site", &logger()).await, Err(UnsupportedDecisionMachine { scope: DecisionMachineScope::Global, kind: DecisionMachineKind::Routing }));
+        artifacts.store("dapp", Some("site"), "routing", None);
+        assert_eq!(gate.route("site", &logger()).await, Err(UnsupportedDecisionMachine { scope: DecisionMachineScope::Dapp, kind: DecisionMachineKind::Routing }));
+    }
+
+    #[tokio::test]
+    async fn keeps_the_baseline_when_the_lookup_fails() {
+        let artifacts: Arc<Artifacts> = Arc::new(Artifacts { down: true, ..Artifacts::default() });
+        assert_eq!(gate(artifacts.clone()).route("site", &logger()).await, Ok(()));
+        assert_eq!(gate(artifacts).decide("site", CaptchaType::Pow, &logger()).await, Ok(()));
+    }
+
+    #[tokio::test]
+    async fn a_decision_machine_limited_to_a_type_applies_to_that_type_only() {
+        let artifacts: Arc<Artifacts> = Arc::new(Artifacts::default());
+        artifacts.store("global", None, "decision", Some("pow"));
+        let gate: DecisionGate = gate(artifacts);
+        assert_eq!(gate.decide("site", CaptchaType::Image, &logger()).await, Ok(()));
+        assert!(gate.decide("site", CaptchaType::Pow, &logger()).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn reads_the_artifacts_afresh_for_every_request() {
+        let artifacts: Arc<Artifacts> = Arc::new(Artifacts::default());
+        let gate: DecisionGate = gate(artifacts.clone());
+        assert_eq!(gate.decide("site", CaptchaType::Pow, &logger()).await, Ok(()));
+        artifacts.store("global", None, "decision", None);
+        assert!(gate.decide("site", CaptchaType::Pow, &logger()).await.is_err());
     }
 }
