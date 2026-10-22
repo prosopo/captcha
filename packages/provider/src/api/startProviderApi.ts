@@ -24,7 +24,7 @@ import {
 	requestLoggerMiddleware,
 } from "@prosopo/api-express-router";
 import type { ProviderEnvironment } from "@prosopo/env";
-import { i18nMiddleware } from "@prosopo/locale";
+import { LANGUAGE_HEADER, i18nMiddleware } from "@prosopo/locale";
 import { parseLogLevel } from "@prosopo/logger";
 import {
 	AdminApiPaths,
@@ -36,19 +36,21 @@ import {
 	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy/api";
 import type { JWT } from "@prosopo/util-crypto";
-import cors from "cors";
+import cors, { type CorsOptions } from "cors";
 import express from "express";
 import type { Request } from "express";
-import rateLimit, { type Options } from "express-rate-limit";
+import rateLimit from "express-rate-limit";
 import {
 	DEFAULT_DETECTOR_POOL_DIR,
 	initDetectorBundlePool,
 } from "../tasks/detection/bundlePool.js";
 import { createApiAdminRoutesProvider } from "./admin/createApiAdminRoutesProvider.js";
+import { adminAuthOptions } from "./adminAuthOptions.js";
 import { getVerdictCache } from "./blacklistRequestInspector.js";
 import { blockMiddleware } from "./block.js";
 import { prosopoRouter } from "./captcha.js";
 import { startCpuProfiler } from "./cpuProfiler.js";
+import { detectorPoolBodyParser } from "./detectorPoolBodyParser.js";
 import { domainMiddleware } from "./domainMiddleware.js";
 import { handshakeTimingMiddleware } from "./handshakeTimingMiddleware.js";
 import { headerCheckMiddleware } from "./headerCheckMiddleware.js";
@@ -57,6 +59,7 @@ import { ipInfoMiddleware } from "./ipInfoMiddleware.js";
 import { ja4Middleware } from "./ja4Middleware.js";
 import { metricsMiddleware } from "./metrics.js";
 import { publicRouter } from "./public.js";
+import { rateLimitHandler } from "./rateLimitHandler.js";
 import { rawTlsSignalsMiddleware } from "./rawTlsSignalsMiddleware.js";
 import { robotsMiddleware } from "./robotsMiddleware.js";
 import { prosopoVerifyRouter } from "./verify.js";
@@ -77,9 +80,32 @@ const crtPath = path.join(certPath, "server.crt");
  * Check if TLS certificates are available
  * @returns True if both key and cert files exist
  */
+/**
+ * CORS for the client API. See the comment where it is applied.
+ * `Prosopo-Lang` carries the widget's language list (see @prosopo/locale).
+ */
+export const providerCorsOptions: CorsOptions = {
+	exposedHeaders: ["x-prosopo-meta"],
+	allowedHeaders: [
+		"Accept",
+		"Accept-Language",
+		"Authorization",
+		"Content-Language",
+		"Content-Type",
+		LANGUAGE_HEADER,
+		"Prosopo-Site-Key",
+		"Prosopo-User",
+		"x-prosopo-meta",
+	],
+	maxAge: 86400,
+};
+
 export const isTlsAvailable = (): boolean => {
 	return fs.existsSync(keyPath) && fs.existsSync(crtPath);
 };
+
+export const getServerVerifyPaths = (): ClientApiPaths[] =>
+	Object.values(ClientApiPaths).filter((path) => path.endsWith("/verify"));
 
 /**
  * Get client API paths that expect Prosopo headers (like site key) for validation, excluding verify and spam routes
@@ -254,22 +280,7 @@ export async function startProviderApi(
 	// `maxAge: 86400` lets browsers cache the preflight result for 24h; the
 	// cors default is unset and most browsers fall back to 5s, so without
 	// this every /captcha/* call repays the OPTIONS round-trip.
-	apiApp.use(
-		cors({
-			exposedHeaders: ["x-prosopo-meta"],
-			allowedHeaders: [
-				"Accept",
-				"Accept-Language",
-				"Authorization",
-				"Content-Language",
-				"Content-Type",
-				"Prosopo-Site-Key",
-				"Prosopo-User",
-				"x-prosopo-meta",
-			],
-			maxAge: 86400,
-		}),
-	);
+	apiApp.use(cors(providerCorsOptions));
 	// The detector-pool push carries the entire pool in a single body: one
 	// obfuscated bundle is ~830 KB, so a 100-bundle pool JSON-encodes to ~86 MB
 	// (the obfuscated output is near-ASCII, so JSON escaping only adds ~2%).
@@ -281,9 +292,12 @@ export async function startProviderApi(
 	// express.json buffers the body into a single string before JSON.parse, and
 	// V8 caps strings at 512 MiB (~620 bundles), with the parse itself needing
 	// roughly the same again in heap on top of the raw body.
+	//
+	// Only requests with a valid admin JWT get the large limit: this runs ahead
+	// of the auth middleware and rate limits.
 	apiApp.use(
 		AdminApiPaths.ReplaceDetectorPool,
-		express.json({ limit: DETECTOR_POOL_BODY_LIMIT }),
+		detectorPoolBodyParser(DETECTOR_POOL_BODY_LIMIT, env.pair, env.authAccount),
 	);
 	// Coarse request body-size backstop. Generous enough for legitimate
 	// payloads (captcha solutions, behavioural/simd readings, DNS event
@@ -314,20 +328,6 @@ export async function startProviderApi(
 			...getExpressApiRuleRateLimits(),
 		};
 		const adminPaths = Object.values(AdminApiPaths);
-		// Log 429s so operators can alarm on sustained rate limiting.
-		const rateLimitHandler =
-			(path: string): Options["handler"] =>
-			(req, res, _next, options) => {
-				env.logger.warn(() => ({
-					msg: "Rate limit exceeded",
-					data: {
-						path,
-						ip: req.ip,
-						siteKey: req.headers["prosopo-site-key"],
-					},
-				}));
-				res.status(options.statusCode).send(options.message);
-			};
 		for (const [path, limit] of Object.entries(rateLimits)) {
 			const enumPath = path as CombinedApiPaths;
 			// For admin paths, key by authenticated user instead of IP
@@ -337,7 +337,7 @@ export async function startProviderApi(
 					enumPath,
 					rateLimit({
 						...limit,
-						handler: rateLimitHandler(enumPath),
+						handler: rateLimitHandler(env.logger, enumPath),
 						keyGenerator: (req) => {
 							const user = getUserFromJWT(req);
 							// Fall back to IP if no user found (shouldn't happen for admin routes with auth)
@@ -354,7 +354,7 @@ export async function startProviderApi(
 					enumPath,
 					rateLimit({
 						...limit,
-						handler: rateLimitHandler(enumPath),
+						handler: rateLimitHandler(env.logger, enumPath),
 						keyGenerator: (req) => {
 							const siteKey = req.headers["prosopo-site-key"] as string;
 							// Fall back to IP if no site key found (shouldn't happen for verify routes with headerCheckMiddleware)
@@ -365,7 +365,10 @@ export async function startProviderApi(
 			} else {
 				apiApp.use(
 					enumPath,
-					rateLimit({ ...limit, handler: rateLimitHandler(enumPath) }),
+					rateLimit({
+						...limit,
+						handler: rateLimitHandler(env.logger, enumPath),
+					}),
 				);
 			}
 		}
@@ -379,7 +382,10 @@ export async function startProviderApi(
 	apiApp.use(ja4Middleware(env));
 	apiApp.use(handshakeTimingMiddleware(env));
 	apiApp.use(rawTlsSignalsMiddleware(env));
-	apiApp.use(ipInfoMiddleware(env));
+	// Verify calls come from the site's backend, not the end user, and every
+	// verify handler reads ip info from the challenge record or the request
+	// body instead, so a sidecar lookup of the caller would be wasted latency.
+	apiApp.use(ipInfoMiddleware(env, new Set(getServerVerifyPaths())));
 
 	// Run Header check middleware on all client routes
 	apiApp.use(clientPathsExcludingVerify, headerCheckMiddleware(env));
@@ -389,17 +395,16 @@ export async function startProviderApi(
 
 	//  Admin routes - do not put after block middleware as this can block admin requests
 	env.logger.info(() => ({ msg: "Enabling admin auth middleware" }));
-	apiApp.use(
-		"/v1/prosopo/provider/admin",
-		authMiddleware(env.pair, env.authAccount),
+	const adminAuth = authMiddleware(
+		env.pair,
+		env.authAccount,
+		adminAuthOptions(process.env, env.config.host),
 	);
+	apiApp.use("/v1/prosopo/provider/admin", adminAuth);
 	if (apiRuleRoutesProvider) {
 		const userAccessRuleRoutes = apiRuleRoutesProvider.getRoutes();
 		for (const userAccessRuleRoute in userAccessRuleRoutes) {
-			apiApp.use(
-				userAccessRuleRoute,
-				authMiddleware(env.pair, env.authAccount),
-			);
+			apiApp.use(userAccessRuleRoute, adminAuth);
 		}
 		// Rule mutations must invalidate the process-wide verdict cache —
 		// otherwise a fresh Block rule takes up to DEFAULT_VERDICT_CACHE_TTL_MS

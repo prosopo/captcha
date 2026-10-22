@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Ezin izan da helbide baliogabea kodetu",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcharen ebazpenaren konpromisoa ez da existitzen",
+		"SIGNER_UNDEFINED": "Sinatzailea definitu gabe",
+		"CANNOT_FIND_KEYPAIR": "Ezin da gako-parea aurkitu",
+		"INVALID_DATA_FORMAT": "Datu-formatu baliogabea"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Ingurune ezezaguna eskatu da",
+		"INVALID_CAPTCHA_NUMBER": "Konfiguratu captchen ezarpenak behar bezala",
+		"INVALID_LOG_LEVEL": "Erregistro-maila baliogabea",
+		"INVALID_PACKAGE_DIR": "Pakete-direktorio baliogabea"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Errorea datu-multzoa analizatzean",
+		"SOLUTION_PARSE_ERROR": "Errorea datu-multzoa analizatzean",
+		"HASH_ERROR": "Errorea datu-multzoaren hasha kalkulatzean",
+		"DATASET_ID_UNDEFINED": "Datu-multzoaren IDa definitu gabe",
+		"NOT_ENOUGH_LABELS": "Ez dago etiketa nahikorik",
+		"NOT_ENOUGH_IMAGES": "Ez dago irudi nahikorik",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Datu-multzoko captcha kopurua konfiguratutako kopurua baino txikiagoa da",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Datu-multzoko ebazpen kopurua konfiguratutako kopurua baino txikiagoa da",
+		"DUPLICATE_IMAGE": "irudi bikoiztua detektatu da",
+		"MERKLE_ERROR": "Errorea Merkle zuhaitza sortzean"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Ezin izan da datu-basearen motorra inportatu",
+		"DATABASE_UNDEFINED": "Datu-basearen bezeroa ez dago konektatuta",
+		"DATABASE_HOST_UNDEFINED": "Datu-basearen ostalariaren helbidea ez dago definituta",
+		"DATASET_LOAD_FAILED": "Datu-multzoaren kargak huts egin du",
+		"DATASET_GET_FAILED": "Ezin izan da datu-multzoa lortu",
+		"CAPTCHA_GET_FAILED": "Ezin izan da captcha lortu",
+		"CAPTCHA_UPDATE_FAILED": "Ezin izan da captcha eguneratu",
+		"IMAGE_GET_FAILED": "Ezin izan da irudia lortu",
+		"PENDING_RECORD_NOT_FOUND": "Ez da zain dagoen erregistrorik aurkitu",
+		"INVALID_HASH": "Hash baliogabea",
+		"SOLUTION_GET_FAILED": "Ezin izan da ebazpena lortu",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Ez da beharrezko ebazpen kopurua duen datu-multzorik aurkitu",
+		"SOLUTION_APPROVE_FAILED": "Ezin izan da ebazpena onartu",
+		"SOLUTION_FLAG_FAILED": "Ezin izan da ebazpena prozesatu gisa markatu",
+		"TABLES_UNDEFINED": "Taulak definitu gabe",
+		"CONNECTION_UNDEFINED": "Konexioa definitu gabe",
+		"COMMITMENT_FLAG_FAILED": "Ezin izan da konpromisoa prozesatu gisa markatu",
+		"UNKNOWN": "Datu-basearen errore ezezaguna",
+		"QUERY_ERROR": "Datu-baseko kontsultak huts egin du",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis sarbide-arauen konexioa definitu gabe",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Erabiltzaileen sarbide-arauen biltegia definitu gabe",
+		"SESSION_STORE_FAILED": "Ezin izan da saioa gorde",
+		"SESSION_CHECK_REMOVE_FAILED": "Ezin izan da saioa egiaztatu eta kendu",
+		"SESSION_GET_FAILED": "Ezin izan da saioa lortu"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Ezin da jabe den erabiltzailea aldatu",
+		"CANNOT_DELETE_OWN_USER": "Ezin duzu zure kontua ezabatu",
+		"CANNOT_DELETE_LAST_USER": "Ezin da azken erabiltzailea ezabatu",
+		"USER_ALREADY_EXISTS": "Erabiltzailea dagoeneko existitzen da",
+		"NO_SUGGESTIONS_FOUND": "Ez da iradokizunik aurkitu",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Ezin da azken gune aktiboa desaktibatu",
+		"DUPLICATE_SITE_NAME": "Izen hau duen gune bat dagoeneko existitzen da",
+		"INVALID_SITE_NAME": "Gunearen izenak letrak, zenbakiak, marratxoak eta azpimarrak soilik izan ditzake"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Parametro baliogabea"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Ez da fitxategia aurkitu",
+		"FILE_ALREADY_EXISTS": "Fitxategia dagoeneko existitzen da",
+		"INVALID_DIR_FORMAT": "Direktorio-formatu baliogabea"
+	}
+}

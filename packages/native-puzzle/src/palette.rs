@@ -12,10 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Port of `palette.ts`. The palette table and the draw order are the parts
-//! that must not drift: both feed the shared PRNG stream.
+//! Port of `palette.ts`. The palette table, the draw order and the contrast
+//! retry are the parts that must not drift: all of them feed the shared PRNG
+//! stream.
 
+use crate::contrast::best_pair_contrast;
 use crate::prng::Prng;
+
+/// `MIN_PALETTE_CONTRAST` in `palette.ts`.
+const MIN_PALETTE_CONTRAST: f64 = 1.6;
+
+/// `MAX_PALETTE_ATTEMPTS` in `palette.ts`.
+const MAX_PALETTE_ATTEMPTS: u32 = 6;
 
 #[derive(Clone, Copy)]
 pub struct Rgb {
@@ -33,17 +41,47 @@ struct PaletteSpec {
 
 const PALETTES: [PaletteSpec; 6] = [
     // dusk violet
-    PaletteSpec { hue: 268.0, spread: 46.0, saturation: (0.55, 0.78), lightness: (0.4, 0.7) },
+    PaletteSpec {
+        hue: 268.0,
+        spread: 46.0,
+        saturation: (0.55, 0.78),
+        lightness: (0.4, 0.7),
+    },
     // prosopo blue
-    PaletteSpec { hue: 212.0, spread: 42.0, saturation: (0.58, 0.8), lightness: (0.4, 0.7) },
+    PaletteSpec {
+        hue: 212.0,
+        spread: 42.0,
+        saturation: (0.58, 0.8),
+        lightness: (0.4, 0.7),
+    },
     // teal drift
-    PaletteSpec { hue: 178.0, spread: 44.0, saturation: (0.5, 0.72), lightness: (0.38, 0.68) },
+    PaletteSpec {
+        hue: 178.0,
+        spread: 44.0,
+        saturation: (0.5, 0.72),
+        lightness: (0.38, 0.68),
+    },
     // warm sand
-    PaletteSpec { hue: 32.0, spread: 38.0, saturation: (0.58, 0.8), lightness: (0.45, 0.72) },
+    PaletteSpec {
+        hue: 32.0,
+        spread: 38.0,
+        saturation: (0.58, 0.8),
+        lightness: (0.45, 0.72),
+    },
     // rose quartz
-    PaletteSpec { hue: 338.0, spread: 40.0, saturation: (0.52, 0.74), lightness: (0.45, 0.72) },
+    PaletteSpec {
+        hue: 338.0,
+        spread: 40.0,
+        saturation: (0.52, 0.74),
+        lightness: (0.45, 0.72),
+    },
     // moss
-    PaletteSpec { hue: 138.0, spread: 42.0, saturation: (0.46, 0.66), lightness: (0.38, 0.66) },
+    PaletteSpec {
+        hue: 138.0,
+        spread: 42.0,
+        saturation: (0.46, 0.66),
+        lightness: (0.38, 0.66),
+    },
 ];
 
 fn hue_to_channel(p: f64, q: f64, t_raw: f64) -> f64 {
@@ -73,7 +111,11 @@ fn hsl_to_rgb(h: f64, s: f64, l: f64) -> Rgb {
         let v = js_round(l * 255.0);
         return Rgb { r: v, g: v, b: v };
     }
-    let q = if l < 0.5 { l * (1.0 + s) } else { l + s - l * s };
+    let q = if l < 0.5 {
+        l * (1.0 + s)
+    } else {
+        l + s - l * s
+    };
     let p = 2.0 * l - q;
     Rgb {
         r: js_round(hue_to_channel(p, q, h_norm + 1.0 / 3.0) * 255.0),
@@ -90,13 +132,13 @@ pub fn js_round(v: f64) -> f64 {
     (v + 0.5).floor()
 }
 
-/// Port of `drawPalette`. Consumes, per colour: hue jitter, saturation,
-/// lightness — plus the palette pick, base-hue jitter and direction draw up
-/// front.
-pub fn draw_palette(prng: &mut Prng, count: usize) -> Vec<Rgb> {
-    let spec = &PALETTES[prng.pick_index(PALETTES.len())];
+/// Port of `drawOnce`. Consumes, per colour: hue jitter, saturation,
+/// lightness — plus the base-hue jitter and direction draw up front.
+fn draw_once(prng: &mut Prng, count: usize, spec: &PaletteSpec, lightness_boost: f64) -> Vec<Rgb> {
     let base_hue = spec.hue + prng.range(-20.0, 20.0);
     let direction: f64 = if prng.next() < 0.5 { -1.0 } else { 1.0 };
+    let low = f64::max(0.08, spec.lightness.0 - lightness_boost);
+    let high = f64::min(0.92, spec.lightness.1 + lightness_boost);
     let mut colours = Vec::with_capacity(count);
     for i in 0..count {
         let t = if count == 1 {
@@ -107,13 +149,55 @@ pub fn draw_palette(prng: &mut Prng, count: usize) -> Vec<Rgb> {
         let hue = base_hue + direction * (t - 0.5) * 2.0 * spec.spread + prng.range(-6.0, 6.0);
         let saturation = prng.range(spec.saturation.0, spec.saturation.1);
         let pole = i % 2 != 0;
-        let (centre, sign) = if pole {
-            (spec.lightness.1, -1.0)
-        } else {
-            (spec.lightness.0, 1.0)
-        };
+        let (centre, sign) = if pole { (high, -1.0) } else { (low, 1.0) };
         let lightness = centre + prng.range(-0.04, 0.04) * sign;
         colours.push(hsl_to_rgb(hue, saturation, lightness));
     }
     colours
+}
+
+/// Port of `drawPalette`: the palette pick, then redraws with a widening
+/// lightness band until the palette clears the colour-blindness contrast floor.
+pub fn draw_palette(prng: &mut Prng, count: usize) -> Vec<Rgb> {
+    let spec = &PALETTES[prng.pick_index(PALETTES.len())];
+    let mut last = draw_once(prng, count, spec, 0.0);
+    for attempt in 1..=MAX_PALETTE_ATTEMPTS {
+        if best_pair_contrast(&last) >= MIN_PALETTE_CONTRAST {
+            return last;
+        }
+        last = draw_once(prng, count, spec, f64::from(attempt) * 0.07);
+    }
+    last
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::contrast::best_pair_contrast;
+
+    fn seed(n: u32) -> [u8; 16] {
+        let mut bytes = [0u8; 16];
+        for (i, chunk) in bytes.chunks_mut(4).enumerate() {
+            chunk.copy_from_slice(
+                &n.wrapping_mul(2_654_435_761)
+                    .wrapping_add(i as u32)
+                    .to_le_bytes(),
+            );
+        }
+        bytes
+    }
+
+    #[test]
+    fn every_palette_clears_the_contrast_floor() {
+        for n in 0..2000 {
+            let mut prng = Prng::new(&seed(n));
+            for count in [3, 5] {
+                let palette = draw_palette(&mut prng, count);
+                assert!(
+                    best_pair_contrast(&palette) >= MIN_PALETTE_CONTRAST,
+                    "seed {n} drew a {count}-colour palette below the floor"
+                );
+            }
+        }
+    }
 }

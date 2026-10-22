@@ -38,6 +38,13 @@ const SEEDS = [
 	"fedcba9876543210fedcba9876543210",
 	"a3f1c07e9b2d48561f0e7c3a9d5b2648",
 	"7d4e2a19c8b30f5629ae41d7b06c8f35",
+	// Each of these draws a first palette below the colour-blindness contrast
+	// floor, so it only matches if the native side redraws the palette too.
+	"a9a8cba560b8509bb43c129652eb0ef0",
+	"67db1c2bc412abc03172f47370eca524",
+	"974d4b23aafed4285f088be8407c8495",
+	"20518b2d04232174763e22aafa9303fc",
+	"521d2378753e8488146e8c1e555aef91",
 ].map((hex) => Buffer.from(hex, "hex"));
 
 describe("native puzzle background", () => {
@@ -57,11 +64,12 @@ describe("native puzzle background", () => {
 		const second = createBackgroundNative(DEFAULT_GEOMETRY);
 		// Single-use is a security property of the buffer above this; two calls
 		// seeding from the CSPRNG must never land on the same picture.
-		expect(first.data.equals(second.data)).toBe(false);
+		expect(first.image.data.equals(second.image.data)).toBe(false);
+		expect(first.seed.equals(second.seed)).toBe(false);
 	});
 
 	it("returns a correctly shaped RGBA buffer", () => {
-		const image = createBackgroundNative(DEFAULT_GEOMETRY);
+		const { image } = createBackgroundNative(DEFAULT_GEOMETRY);
 		expect(image.width).toBe(width);
 		expect(image.height).toBe(height);
 		expect(image.data.length).toBe(width * height * 4);
@@ -72,12 +80,21 @@ describe("native puzzle background", () => {
 	});
 
 	it("honours a non-default geometry", () => {
-		const image = createBackgroundNative({
+		const { image } = createBackgroundNative({
 			width: 64,
 			height: 32,
 			notchSize: 8,
 		});
 		expect(image.data.length).toBe(64 * 32 * 4);
+	});
+
+	// The returned seed is the whole point of the pairing: without it a stored
+	// record cannot reproduce the background it was served.
+	it("returns the seed that produced the image", () => {
+		const { image, seed } = createBackgroundNative(DEFAULT_GEOMETRY);
+		expect(seed.length).toBe(16);
+		const replayed = native.generateBackground(seed, width, height);
+		expect(replayed.equals(image.data)).toBe(true);
 	});
 
 	it("rejects a seed shorter than the generator needs", () => {

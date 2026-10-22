@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Kodearjen fan unjildich adres mislearre",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Ferplichting fan captcha-oplossing bestiet net",
+		"SIGNER_UNDEFINED": "Ûndertekener net definiearre",
+		"CANNOT_FIND_KEYPAIR": "Kin kaaipear net fine",
+		"INVALID_DATA_FORMAT": "Unjildich gegevensformaat"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Unbekende omjouwing oanfrege",
+		"INVALID_CAPTCHA_NUMBER": "Konfigurearje de captcha-ynstellingen goed",
+		"INVALID_LOG_LEVEL": "Unjildich lognivo",
+		"INVALID_PACKAGE_DIR": "Unjildige pakketmap"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Flater by it ûntleden fan dataset",
+		"SOLUTION_PARSE_ERROR": "Flater by it ferwurkjen fan dataset",
+		"HASH_ERROR": "Flater by it hashen fan dataset",
+		"DATASET_ID_UNDEFINED": "Dataset-ID net definiearre",
+		"NOT_ENOUGH_LABELS": "Net genôch labels",
+		"NOT_ENOUGH_IMAGES": "Net genôch ôfbyldings",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "It tal captcha's yn de dataset is minder as it konfigurearre tal",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "It tal oplossingen yn de dataset is minder as it konfigurearre tal",
+		"DUPLICATE_IMAGE": "Dûbele ôfbylding ûntdutsen",
+		"MERKLE_ERROR": "Flater by it bouwen fan Merkle-beam"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Ymportearjen fan databankmotor mislearre",
+		"DATABASE_UNDEFINED": "Databankkliïnt net ferbûn",
+		"DATABASE_HOST_UNDEFINED": "Hostadres fan databank net definiearre",
+		"DATASET_LOAD_FAILED": "Laden fan dataset mislearre",
+		"DATASET_GET_FAILED": "Opheljen fan dataset mislearre",
+		"CAPTCHA_GET_FAILED": "Opheljen fan captcha's mislearre",
+		"CAPTCHA_UPDATE_FAILED": "Bywurkjen fan captcha's mislearre",
+		"IMAGE_GET_FAILED": "Opheljen fan ôfbylding mislearre",
+		"PENDING_RECORD_NOT_FOUND": "Gjin ôfwachtsjende records fûn",
+		"INVALID_HASH": "Unjildige hash",
+		"SOLUTION_GET_FAILED": "Opheljen fan oplossing mislearre",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Gjin dataset fûn mei it fereaske tal oplossingen",
+		"SOLUTION_APPROVE_FAILED": "Goedkarren fan oplossing mislearre",
+		"SOLUTION_FLAG_FAILED": "Markearjen fan oplossing as ferwurke mislearre",
+		"TABLES_UNDEFINED": "Tabellen net definiearre",
+		"CONNECTION_UNDEFINED": "Ferbining net definiearre",
+		"COMMITMENT_FLAG_FAILED": "Markearjen fan ferplichting as ferwurke mislearre",
+		"UNKNOWN": "Unbekende databankflater",
+		"QUERY_ERROR": "Databankfraach mislearre",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis-ferbining foar tagongsregels net definiearre",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Opslach foar tagongsregels fan brûkers net definiearre",
+		"SESSION_STORE_FAILED": "Opslaan fan sesje mislearre",
+		"SESSION_CHECK_REMOVE_FAILED": "Kontrolearjen en fuortsmiten fan sesje mislearre",
+		"SESSION_GET_FAILED": "Opheljen fan sesje mislearre"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Kin de eigner-brûker net wizigje",
+		"CANNOT_DELETE_OWN_USER": "Kin jo eigen account net wiskje",
+		"CANNOT_DELETE_LAST_USER": "Kin de lêste brûker net wiskje",
+		"USER_ALREADY_EXISTS": "Brûker bestiet al",
+		"NO_SUGGESTIONS_FOUND": "Gjin suggestjes fûn",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Kin de lêste aktive webside net deaktivearje",
+		"DUPLICATE_SITE_NAME": "Der bestiet al in webside mei dizze namme",
+		"INVALID_SITE_NAME": "In websidenamme mei allinnich letters, sifers, ûnderstreekjes en keppeltekens befetsje"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Unjildige parameter"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Bestân net fûn",
+		"FILE_ALREADY_EXISTS": "Bestân bestiet al",
+		"INVALID_DIR_FORMAT": "Unjildich mapformaat"
+	}
+}

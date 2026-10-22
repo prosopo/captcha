@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "ਅਵੈਧ ਪਤਾ ਇਨਕੋਡ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "captcha ਹੱਲ ਵਚਨਬੱਧਤਾ ਮੌਜੂਦ ਨਹੀਂ",
+		"SIGNER_UNDEFINED": "ਦਸਤਖ਼ਤਕਰਤਾ ਪਰਿਭਾਸ਼ਿਤ ਨਹੀਂ ਹੈ",
+		"CANNOT_FIND_KEYPAIR": "ਕੁੰਜੀ ਜੋੜਾ ਨਹੀਂ ਮਿਲਿਆ",
+		"INVALID_DATA_FORMAT": "ਅਵੈਧ ਡਾਟਾ ਫਾਰਮੈਟ"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "ਅਣਜਾਣ ਵਾਤਾਵਰਣ ਦੀ ਬੇਨਤੀ ਕੀਤੀ ਗਈ",
+		"INVALID_CAPTCHA_NUMBER": "ਕਿਰਪਾ ਕਰਕੇ captcha ਸੰਰਚਨਾਵਾਂ ਨੂੰ ਸਹੀ ਢੰਗ ਨਾਲ ਸੈੱਟ ਕਰੋ",
+		"INVALID_LOG_LEVEL": "ਅਵੈਧ ਲੌਗ ਪੱਧਰ",
+		"INVALID_PACKAGE_DIR": "ਅਵੈਧ ਪੈਕੇਜ ਡਾਇਰੈਕਟਰੀ"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "ਡਾਟਾਸੈੱਟ ਪਾਰਸ ਕਰਨ ਵਿੱਚ ਗੜਬੜ",
+		"SOLUTION_PARSE_ERROR": "ਡਾਟਾਸੈੱਟ ਪ੍ਰੋਸੈਸ ਕਰਨ ਵਿੱਚ ਗੜਬੜ",
+		"HASH_ERROR": "ਡਾਟਾਸੈੱਟ ਹੈਸ਼ ਕਰਨ ਵਿੱਚ ਗੜਬੜ",
+		"DATASET_ID_UNDEFINED": "ਡਾਟਾਸੈੱਟ ID ਪਰਿਭਾਸ਼ਿਤ ਨਹੀਂ ਹੈ",
+		"NOT_ENOUGH_LABELS": "ਲੋੜੀਂਦੇ ਲੇਬਲ ਨਹੀਂ ਹਨ",
+		"NOT_ENOUGH_IMAGES": "ਲੋੜੀਂਦੀਆਂ ਤਸਵੀਰਾਂ ਨਹੀਂ ਹਨ",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "ਡਾਟਾਸੈੱਟ ਵਿੱਚ captcha ਦੀ ਗਿਣਤੀ ਸੰਰਚਿਤ ਗਿਣਤੀ ਤੋਂ ਘੱਟ ਹੈ",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "ਡਾਟਾਸੈੱਟ ਵਿੱਚ ਹੱਲਾਂ ਦੀ ਗਿਣਤੀ ਸੰਰਚਿਤ ਗਿਣਤੀ ਤੋਂ ਘੱਟ ਹੈ",
+		"DUPLICATE_IMAGE": "ਦੁਹਰਾਈ ਤਸਵੀਰ ਪਛਾਣੀ ਗਈ",
+		"MERKLE_ERROR": "ਮਰਕਲ ਟ੍ਰੀ ਬਣਾਉਣ ਵਿੱਚ ਗੜਬੜ"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "ਡਾਟਾਬੇਸ ਇੰਜਣ ਆਯਾਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+		"DATABASE_UNDEFINED": "ਡਾਟਾਬੇਸ ਕਲਾਇੰਟ ਕਨੈਕਟ ਨਹੀਂ ਹੈ",
+		"DATABASE_HOST_UNDEFINED": "ਡਾਟਾਬੇਸ ਹੋਸਟ ਪਤਾ ਪਰਿਭਾਸ਼ਿਤ ਨਹੀਂ ਹੈ",
+		"DATASET_LOAD_FAILED": "ਡਾਟਾਸੈੱਟ ਲੋਡ ਅਸਫਲ",
+		"DATASET_GET_FAILED": "ਡਾਟਾਸੈੱਟ ਪ੍ਰਾਪਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+		"CAPTCHA_GET_FAILED": "captcha ਪ੍ਰਾਪਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+		"CAPTCHA_UPDATE_FAILED": "captcha ਅੱਪਡੇਟ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+		"IMAGE_GET_FAILED": "ਤਸਵੀਰ ਪ੍ਰਾਪਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+		"PENDING_RECORD_NOT_FOUND": "ਕੋਈ ਬਕਾਇਆ ਰਿਕਾਰਡ ਨਹੀਂ ਮਿਲਿਆ",
+		"INVALID_HASH": "ਅਵੈਧ ਹੈਸ਼",
+		"SOLUTION_GET_FAILED": "ਹੱਲ ਪ੍ਰਾਪਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "ਲੋੜੀਂਦੀ ਗਿਣਤੀ ਵਿੱਚ ਹੱਲਾਂ ਵਾਲਾ ਕੋਈ ਡਾਟਾਸੈੱਟ ਨਹੀਂ ਮਿਲਿਆ",
+		"SOLUTION_APPROVE_FAILED": "ਹੱਲ ਮਨਜ਼ੂਰ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+		"SOLUTION_FLAG_FAILED": "ਹੱਲ ਨੂੰ ਪ੍ਰੋਸੈਸ ਕੀਤਾ ਚਿੰਨ੍ਹਿਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+		"TABLES_UNDEFINED": "ਟੇਬਲ ਪਰਿਭਾਸ਼ਿਤ ਨਹੀਂ ਹਨ",
+		"CONNECTION_UNDEFINED": "ਕਨੈਕਸ਼ਨ ਪਰਿਭਾਸ਼ਿਤ ਨਹੀਂ ਹੈ",
+		"COMMITMENT_FLAG_FAILED": "ਵਚਨਬੱਧਤਾ ਨੂੰ ਪ੍ਰੋਸੈਸ ਕੀਤਾ ਚਿੰਨ੍ਹਿਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+		"UNKNOWN": "ਅਣਜਾਣ ਡਾਟਾਬੇਸ ਗੜਬੜ",
+		"QUERY_ERROR": "ਡਾਟਾਬੇਸ ਕਿਊਰੀ ਅਸਫਲ",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "ਪਹੁੰਚ ਨਿਯਮਾਂ ਦਾ Redis ਕਨੈਕਸ਼ਨ ਪਰਿਭਾਸ਼ਿਤ ਨਹੀਂ ਹੈ",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "ਵਰਤੋਂਕਾਰ ਪਹੁੰਚ ਨਿਯਮਾਂ ਦੀ ਸਟੋਰੇਜ ਪਰਿਭਾਸ਼ਿਤ ਨਹੀਂ ਹੈ",
+		"SESSION_STORE_FAILED": "ਸੈਸ਼ਨ ਸਟੋਰ ਕਰਨ ਵਿੱਚ ਅਸਫਲ",
+		"SESSION_CHECK_REMOVE_FAILED": "ਸੈਸ਼ਨ ਜਾਂਚ ਕੇ ਹਟਾਉਣ ਵਿੱਚ ਅਸਫਲ",
+		"SESSION_GET_FAILED": "ਸੈਸ਼ਨ ਪ੍ਰਾਪਤ ਕਰਨ ਵਿੱਚ ਅਸਫਲ"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "ਮਾਲਕ ਵਰਤੋਂਕਾਰ ਨੂੰ ਸੋਧਿਆ ਨਹੀਂ ਜਾ ਸਕਦਾ",
+		"CANNOT_DELETE_OWN_USER": "ਆਪਣਾ ਖਾਤਾ ਮਿਟਾਇਆ ਨਹੀਂ ਜਾ ਸਕਦਾ",
+		"CANNOT_DELETE_LAST_USER": "ਆਖਰੀ ਵਰਤੋਂਕਾਰ ਨੂੰ ਮਿਟਾਇਆ ਨਹੀਂ ਜਾ ਸਕਦਾ",
+		"USER_ALREADY_EXISTS": "ਵਰਤੋਂਕਾਰ ਪਹਿਲਾਂ ਹੀ ਮੌਜੂਦ ਹੈ",
+		"NO_SUGGESTIONS_FOUND": "ਕੋਈ ਸੁਝਾਅ ਨਹੀਂ ਮਿਲਿਆ",
+		"CANNOT_DEACTIVATE_LAST_SITE": "ਆਖਰੀ ਕਿਰਿਆਸ਼ੀਲ ਸਾਈਟ ਨੂੰ ਅਕਿਰਿਆਸ਼ੀਲ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਦਾ",
+		"DUPLICATE_SITE_NAME": "ਇਸ ਨਾਮ ਵਾਲੀ ਸਾਈਟ ਪਹਿਲਾਂ ਹੀ ਮੌਜੂਦ ਹੈ",
+		"INVALID_SITE_NAME": "ਸਾਈਟ ਦੇ ਨਾਮ ਵਿੱਚ ਸਿਰਫ਼ ਅੱਖਰ, ਅੰਕ, ਹਾਈਫ਼ਨ ਅਤੇ ਅੰਡਰਸਕੋਰ ਹੋ ਸਕਦੇ ਹਨ"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "ਅਵੈਧ ਪੈਰਾਮੀਟਰ"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "ਫ਼ਾਈਲ ਨਹੀਂ ਮਿਲੀ",
+		"FILE_ALREADY_EXISTS": "ਫ਼ਾਈਲ ਪਹਿਲਾਂ ਹੀ ਮੌਜੂਦ ਹੈ",
+		"INVALID_DIR_FORMAT": "ਅਵੈਧ ਡਾਇਰੈਕਟਰੀ ਫਾਰਮੈਟ"
+	}
+}

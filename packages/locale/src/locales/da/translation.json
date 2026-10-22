@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Kunne ikke kode en ugyldig adresse",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Forpligtelsen for captcha-løsningen findes ikke",
+		"SIGNER_UNDEFINED": "Underskriver er ikke defineret",
+		"CANNOT_FIND_KEYPAIR": "Kan ikke finde nøgleparret",
+		"INVALID_DATA_FORMAT": "Ugyldigt dataformat"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Ukendt miljø anmodet",
+		"INVALID_CAPTCHA_NUMBER": "Konfigurer captcha-indstillingerne korrekt",
+		"INVALID_LOG_LEVEL": "Ugyldigt logniveau",
+		"INVALID_PACKAGE_DIR": "Ugyldig pakkemappe"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Fejl ved fortolkning af datasæt",
+		"SOLUTION_PARSE_ERROR": "Fejl ved fortolkning af datasæt",
+		"HASH_ERROR": "Fejl ved hashing af datasæt",
+		"DATASET_ID_UNDEFINED": "Datasæt-id er ikke defineret",
+		"NOT_ENOUGH_LABELS": "Ikke nok etiketter",
+		"NOT_ENOUGH_IMAGES": "Ikke nok billeder",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Antallet af captchaer i datasættet er mindre end det konfigurerede antal captchaer",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Antallet af løsninger i datasættet er mindre end det konfigurerede antal løsninger",
+		"DUPLICATE_IMAGE": "dubleret billede fundet",
+		"MERKLE_ERROR": "Fejl ved oprettelse af merkletræ"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Kunne ikke importere databasemotoren",
+		"DATABASE_UNDEFINED": "Databaseklienten er ikke forbundet",
+		"DATABASE_HOST_UNDEFINED": "Databaseværtens adresse er ikke defineret",
+		"DATASET_LOAD_FAILED": "Indlæsning af datasæt mislykkedes",
+		"DATASET_GET_FAILED": "Kunne ikke hente datasæt",
+		"CAPTCHA_GET_FAILED": "Kunne ikke hente captcha",
+		"CAPTCHA_UPDATE_FAILED": "Kunne ikke opdatere captcha",
+		"IMAGE_GET_FAILED": "Kunne ikke hente billede",
+		"PENDING_RECORD_NOT_FOUND": "Ingen afventende post fundet",
+		"INVALID_HASH": "Ugyldig hash",
+		"SOLUTION_GET_FAILED": "Kunne ikke hente løsning",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Ingen datasæt fundet med det krævede antal løsninger",
+		"SOLUTION_APPROVE_FAILED": "Kunne ikke godkende løsning",
+		"SOLUTION_FLAG_FAILED": "Kunne ikke markere løsningen som behandlet",
+		"TABLES_UNDEFINED": "Tabeller er ikke defineret",
+		"CONNECTION_UNDEFINED": "Forbindelse er ikke defineret",
+		"COMMITMENT_FLAG_FAILED": "Kunne ikke markere forpligtelsen som behandlet",
+		"UNKNOWN": "Ukendt databasefejl",
+		"QUERY_ERROR": "Databaseforespørgslen mislykkedes",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis-forbindelsen til adgangsregler er ikke defineret",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Lageret til brugeradgangsregler er ikke defineret",
+		"SESSION_STORE_FAILED": "Kunne ikke gemme session",
+		"SESSION_CHECK_REMOVE_FAILED": "Kunne ikke kontrollere og fjerne session",
+		"SESSION_GET_FAILED": "Kunne ikke hente session"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Ejerbrugeren kan ikke ændres",
+		"CANNOT_DELETE_OWN_USER": "Du kan ikke slette din egen konto",
+		"CANNOT_DELETE_LAST_USER": "Den sidste bruger kan ikke slettes",
+		"USER_ALREADY_EXISTS": "Brugeren findes allerede",
+		"NO_SUGGESTIONS_FOUND": "Ingen forslag fundet",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Det sidste aktive websted kan ikke deaktiveres",
+		"DUPLICATE_SITE_NAME": "Der findes allerede et websted med dette navn",
+		"INVALID_SITE_NAME": "Webstedsnavnet må kun indeholde bogstaver, tal, bindestreger og understregninger"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Ugyldig parameter"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Filen blev ikke fundet",
+		"FILE_ALREADY_EXISTS": "Filen findes allerede",
+		"INVALID_DIR_FORMAT": "Ugyldigt mappeformat"
+	}
+}

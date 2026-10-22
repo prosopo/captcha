@@ -20,6 +20,12 @@ import { Address4, Address6 } from "ip-address";
 const V6_SHIFT = 64n;
 const v6_LOWER_MASK = (1n << V6_SHIFT) - 1n;
 
+/**
+ * The part of a v4 address treated as the host rather than the network, for
+ * the purposes of `isSameIpOrigin`. 8 bits — a /24.
+ */
+const V4_HOST_BITS = 8n;
+
 export const getCompositeIpAddress = (
 	ip: string | IPAddress,
 ): CompositeIpAddress => {
@@ -102,10 +108,19 @@ const isUnknownIp = (ip: CompositeIpAddress): boolean =>
 /**
  * Do two observations of a client come from the same place on the network?
  *
- * v4 is compared exactly. v6 is compared on the /64 prefix alone — the
- * interface identifier in the low 64 bits is designed to rotate (RFC 8981
- * privacy extensions), often several times a day on one unchanged connection,
- * so comparing it would call an ordinary phone a different host.
+ * Both families are compared on the network part and neither on the host part.
+ *
+ * v6 is the /64 prefix: the interface identifier in the low 64 bits is designed
+ * to rotate (RFC 8981 privacy extensions), often several times a day on one
+ * unchanged connection, so comparing it would call an ordinary phone a
+ * different host.
+ *
+ * v4 is the /24. A carrier NAT or mobile pool reassigns the low octet mid
+ * session — an EE subscriber was observed moving one address in four seconds —
+ * so comparing the whole address called every rotating mobile and CGNAT client
+ * a different host, which is the opposite of the leniency this check is for.
+ * The /24 still separates an unrelated network, which is the case worth
+ * catching: a challenge handed to a second host to farm the work out.
  *
  * A value we do not actually have counts as the same — one that will not
  * parse, or the all-zero v4 `getCompositeIpAddress` returns when handed an
@@ -119,19 +134,22 @@ export const isSameIpOrigin = (
 	if (isUnknownIp(a) || isUnknownIp(b)) return true;
 	if (a.type !== b.type) return false;
 
-	const compare = (
+	const sameNetwork = (
 		left: bigint | number | undefined,
 		right: bigint | number | undefined,
+		hostBits: bigint,
 	): boolean => {
 		const leftPart = readPart(left);
 		const rightPart = readPart(right);
 		if (leftPart === undefined || rightPart === undefined) return true;
-		return leftPart === rightPart;
+		return leftPart >> hostBits === rightPart >> hostBits;
 	};
 
+	// v6's host part is already split off into `lower`, so `upper` is the
+	// network as stored and needs no further masking.
 	return a.type === IpAddressType.v6
-		? compare(a.upper, b.upper)
-		: compare(a.lower, b.lower);
+		? sameNetwork(a.upper, b.upper, 0n)
+		: sameNetwork(a.lower, b.lower, V4_HOST_BITS);
 };
 
 const never = (): never => {

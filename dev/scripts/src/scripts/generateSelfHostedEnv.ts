@@ -32,7 +32,7 @@ interface Args {
 const usage = `
 Generate a complete .env file for a self-hosted Procaptcha provider.
 
-  npx tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
+  pnpm exec tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
 
 Options:
   --host <domain>   Hostname clients will reach this provider on (required)
@@ -77,6 +77,7 @@ const parseArgs = (argv: string[]): Args => {
 const generatePassword = (): string => randomBytes(24).toString("base64url");
 
 const buildEnvFile = async (host: string): Promise<string> => {
+	const providerImageVersion = readProviderImageVersion();
 	const [providerMnemonic, providerAddress] = await generateMnemonic();
 	const [siteKeyMnemonic, siteKeyAddress] = await generateMnemonic();
 	const databasePassword = generatePassword();
@@ -93,6 +94,14 @@ const buildEnvFile = async (host: string): Promise<string> => {
 NODE_ENV=production
 PROSOPO_DEFAULT_ENVIRONMENT=production
 PROSOPO_LOG_LEVEL=info
+
+# Lets every docker compose command find docker-compose.self-hosted.yml
+# without -f.
+COMPOSE_FILE=docker-compose.self-hosted.yml
+
+# The provider release this checkout documents. Change it when you pull a
+# newer checkout, so the image and the instructions you follow stay in step.
+PROSOPO_PROVIDER_IMAGE_VERSION=${providerImageVersion}
 
 # Read by the provider as its own host identity, and by Caddy as the
 # certificate subject.
@@ -144,6 +153,22 @@ MAXMIND_DB_PATH=./GeoLite2-Country.mmdb
 MAXMIND_CITY_DB_PATH=./GeoLite2-City.mmdb
 MAXMIND_ASN_DB_PATH=./GeoLite2-ASN.mmdb
 `;
+};
+
+// The provider image is tagged with the CLI package's version, which is the
+// release this checkout was cut from.
+const readProviderImageVersion = (): string => {
+	const manifestPath = path.resolve(
+		import.meta.dirname,
+		"../../../../packages/cli/package.json",
+	);
+	const { version } = JSON.parse(fs.readFileSync(manifestPath, "utf8")) as {
+		version?: unknown;
+	};
+	if (typeof version !== "string") {
+		throw new Error(`No version in ${manifestPath}`);
+	}
+	return version;
 };
 
 const main = async (): Promise<void> => {

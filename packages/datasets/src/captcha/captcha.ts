@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { isHex } from "@polkadot/util";
-import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	type AssetsResolver,
 	type Captcha,
@@ -66,8 +66,11 @@ export function parseCaptchaDataset(datasetJSON: JSON): DatasetRaw {
 			result2.solutionTree = result.solutionTree;
 		return result2;
 	} catch (err) {
-		throw new ProsopoDatasetError("DATASET.DATASET_PARSE_ERROR", {
-			context: { error: err },
+		throw new ProsopoError({
+			code: "DATASET_INVALID",
+			errorSite: "DSET-1",
+			message: "Error parsing dataset",
+			cause: err,
 		});
 	}
 }
@@ -86,8 +89,11 @@ export function parseAndSortCaptchaSolutions(
 			solution: captcha.solution.sort(),
 		}));
 	} catch (err) {
-		throw new ProsopoDatasetError("DATASET.SOLUTION_PARSE_ERROR", {
-			context: { error: err },
+		throw new ProsopoError({
+			code: "DATASET_INVALID",
+			errorSite: "DSET-2",
+			message: "Error parsing dataset",
+			cause: err,
 		});
 	}
 }
@@ -107,7 +113,11 @@ export function sortAndComputeHashes(
 		({ salt, items = [], target = "", captchaId, solved }, index) => {
 			const item = at(received, index);
 			if (captchaId !== item.captchaId) {
-				throw new ProsopoEnvError("CAPTCHA.ID_MISMATCH");
+				throw new ProsopoError({
+					code: "INVALID_DATA",
+					errorSite: "DSET-3",
+					message: "captcha id mismatch",
+				});
 			}
 
 			return {
@@ -146,8 +156,9 @@ export function compareCaptchaSolutions(
 	received.sort(captchaSort);
 	solutions.sort(captchaSort);
 
-	// Check if lengths match
-	if (received.length !== solutions.length) {
+	// Check if lengths match. An empty submission solved nothing, and
+	// Array.every below would otherwise vacuously accept it.
+	if (received.length === 0 || received.length !== solutions.length) {
 		return false;
 	}
 
@@ -212,11 +223,11 @@ export function computeCaptchaHash(
 			if (item.hash) {
 				return item.hash;
 			}
-			throw new ProsopoDatasetError("CAPTCHA.MISSING_ITEM_HASH", {
-				context: {
-					computeCaptchaHashName: computeCaptchaHash.name,
-					index,
-				},
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "DSET-4",
+				message: "missing item hash",
+				context: { computeCaptchaHashName: computeCaptchaHash.name, index },
 			});
 		});
 		return hexHashArray([
@@ -228,8 +239,11 @@ export function computeCaptchaHash(
 			sortItemHashes ? itemHashes.sort() : itemHashes,
 		]);
 	} catch (err) {
-		throw new ProsopoDatasetError("DATASET.HASH_ERROR", {
-			context: { error: err },
+		throw new ProsopoError({
+			code: "DATASET_INVALID",
+			errorSite: "DSET-5",
+			message: "Error hashing dataset",
+			cause: err,
 		});
 	}
 }
@@ -255,7 +269,11 @@ export async function computeItemHash(item: Item): Promise<HashedItem> {
 	if (item.type === "image") {
 		return { ...item, hash: hexHash(await downloadImage(item.data)) };
 	}
-	throw new ProsopoDatasetError("CAPTCHA.INVALID_ITEM_FORMAT");
+	throw new ProsopoError({
+		code: "INVALID_DATA",
+		errorSite: "DSET-6",
+		message: "Only image and text item types allowed",
+	});
 }
 
 /**
@@ -276,7 +294,11 @@ export function matchItemsToSolutions(
 			// solution must already be a hash
 			// check that solution is in items array
 			if (!items?.some((item) => item.hash === solution)) {
-				throw new ProsopoDatasetError("CAPTCHA.INVALID_ITEM_HASH");
+				throw new ProsopoError({
+					code: "INVALID_DATA",
+					errorSite: "DSET-7",
+					message: "Invalid item hash",
+				});
 			}
 			return solution;
 		}
@@ -287,7 +309,11 @@ export function matchItemsToSolutions(
 			// get the hash of the item
 			return item.hash;
 		}
-		throw new ProsopoDatasetError("CAPTCHA.INVALID_SOLUTION_TYPE");
+		throw new ProsopoError({
+			code: "INVALID_DATA",
+			errorSite: "DSET-8",
+			message: "Invalid solution type",
+		});
 	});
 }
 

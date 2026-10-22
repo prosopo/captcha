@@ -14,9 +14,9 @@
 
 import type { Logger } from "@prosopo/logger";
 import type {
+	CounterDimension,
 	CounterSpec,
 	DetectorData,
-	IFrictionlessTypes,
 	RoutingMachineBaseline,
 	RoutingMachineInput,
 	RoutingMachineInputBase,
@@ -49,12 +49,6 @@ export interface RoutingContext {
 	// the answer.
 	imageMaxRounds?: number;
 	imageMinRounds?: number;
-	// Which challenge types this site permits. Carried here for the same
-	// reason as `imageMaxRounds`: `sendCaptcha` is the point a session's type
-	// is finalised and it has no other handle on the client record. Optional
-	// for the dedup replay; absent means "no constraint recorded", which
-	// `coerceToEnabledCaptchaType` reads as every type enabled.
-	frictionlessTypes?: IFrictionlessTypes;
 	// The site's ordinary image round count (`captchas.solved.count`). Used
 	// as the zero point when translating a requested round count into a
 	// puzzle difficulty level — severity is "rounds above normal", which
@@ -133,8 +127,9 @@ export const applyRouter = async (
 
 /**
  * Map machine-declared CounterSpecs onto the values that the provider knows
- * how to read (IP and userAccount). Specs whose dimension we cannot resolve
- * are silently skipped.
+ * how to read. Specs whose dimension we cannot resolve are silently skipped,
+ * so a rule naming `deviceBucket` on a request that disclosed no proof of
+ * fingerprint simply does not get that key.
  */
 const specsToReads = (
 	specs: CounterSpec[],
@@ -142,14 +137,27 @@ const specsToReads = (
 ): CounterIncrement[] => {
 	const out: CounterIncrement[] = [];
 	for (const spec of specs) {
-		const value =
-			spec.dimension === "ip"
-				? ctx.ip
-				: spec.dimension === "userAccount"
-					? ctx.userAccount
-					: undefined;
-		if (value === undefined) continue;
+		const value = resolveDimension(spec.dimension, ctx);
+		if (value === undefined || value === "") continue;
 		out.push({ spec, value });
 	}
 	return out;
+};
+
+const resolveDimension = (
+	dimension: CounterDimension,
+	ctx: RoutingContext,
+): string | undefined => {
+	switch (dimension) {
+		case "ip":
+			return ctx.ip;
+		case "userAccount":
+			return ctx.userAccount;
+		case "deviceBucket":
+			return ctx.raw.fingerprintSummary?.bucketId;
+		// peerIp is not resolvable here: the routing machine runs on the
+		// provider's own request, which has no peer hop.
+		case "peerIp":
+			return undefined;
+	}
 };

@@ -1,5 +1,46 @@
 # @prosopo/lint
 
+## 2.8.50
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+  - @prosopo/util@3.3.16
+  - @prosopo/workspace@3.2.4
+
+## 2.8.49
+### Patch Changes
+
+- Updated dependencies [1f36456]
+  - @prosopo/util@3.3.15
+  - @prosopo/workspace@3.2.3
+
+## 2.8.48
+### Patch Changes
+
+- Updated dependencies [a17e8eb]
+  - @prosopo/workspace@3.2.2
+  - @prosopo/util@3.3.14
+
+## 2.8.47
+### Patch Changes
+
+- Updated dependencies [de6bb08]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+  - @prosopo/util@3.3.13
+
+## 2.8.46
+### Patch Changes
+
+- Updated dependencies [0d29dde]
+  - @prosopo/util@3.3.12
+
 ## 2.8.45
 ### Patch Changes
 

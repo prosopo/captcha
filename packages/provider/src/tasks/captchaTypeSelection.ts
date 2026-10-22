@@ -16,15 +16,17 @@ import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
 	type IFrictionlessTypes,
+	resolveAllowedCaptchaTypes,
 	resolveFrictionlessTypes,
 } from "@prosopo/types";
 import { isPuzzleRenderAvailable } from "./puzzle/puzzleRenderer.js";
 
-/** The three concrete types a session can actually be minted as. */
+/** The concrete types a session can actually be minted as. */
 export type ConcreteCaptchaType =
 	| CaptchaType.pow
 	| CaptchaType.image
-	| CaptchaType.puzzle;
+	| CaptchaType.puzzle
+	| CaptchaType.iconOrder;
 
 /**
  * Resolve a requested captcha type against what the site permits and what
@@ -43,22 +45,30 @@ export type ConcreteCaptchaType =
  * Restrict rules, traffic-filter category policies, routing-machine actions
  * and detector-generated rules.
  *
+ * Pass `allowedTypes` from `resolveAllowedCaptchaTypes`, so Prosopo's
+ * per-site captcha type feature flags are applied alongside the site owner's
+ * own `frictionlessTypes`. Absent means the defaults for both, so icon-order
+ * stays off.
+ *
  * Coercion only ever narrows. A disabled type falls back to the other
  * interactive type if that is permitted, and to PoW otherwise — never the
  * reverse, so this can't hand a user a harder challenge than was asked for.
  */
 export const coerceToEnabledCaptchaType = (
 	requested: ConcreteCaptchaType,
-	frictionlessTypes: Partial<IFrictionlessTypes> | undefined,
+	allowedTypes: Partial<IFrictionlessTypes> | undefined,
 	logger?: Logger,
 ): ConcreteCaptchaType => {
-	const types = resolveFrictionlessTypes(frictionlessTypes);
+	const types = allowedTypes
+		? resolveFrictionlessTypes(allowedTypes)
+		: resolveAllowedCaptchaTypes(undefined);
 
 	// A puzzle this provider cannot render is as unavailable as one the site
 	// disabled, and has to be treated identically here rather than downgraded
 	// separately — a site with image off would otherwise be handed an image.
 	const puzzleAllowed = types.puzzle && isPuzzleRenderAvailable();
 	const imageAllowed = types.image;
+	const iconOrderAllowed = types.iconOrder;
 
 	const resolved = ((): ConcreteCaptchaType => {
 		switch (requested) {
@@ -72,6 +82,13 @@ export const coerceToEnabledCaptchaType = (
 			case CaptchaType.image:
 				if (imageAllowed) return CaptchaType.image;
 				return puzzleAllowed ? CaptchaType.puzzle : CaptchaType.pow;
+			// Only an explicit icon-order request is served icon-order: the
+			// branches above never fall back to it, which would hand users a
+			// harsher challenge than the one coerced away.
+			case CaptchaType.iconOrder:
+				if (iconOrderAllowed) return CaptchaType.iconOrder;
+				if (puzzleAllowed) return CaptchaType.puzzle;
+				return imageAllowed ? CaptchaType.image : CaptchaType.pow;
 		}
 	})();
 
@@ -84,9 +101,61 @@ export const coerceToEnabledCaptchaType = (
 				imageEnabled: types.image,
 				puzzleEnabled: types.puzzle,
 				puzzleRenderable: isPuzzleRenderAvailable(),
+				iconOrderEnabled: types.iconOrder,
 			},
 		}));
 	}
 
 	return resolved;
 };
+
+/**
+ * How many refreshes in a row a user gets on the puzzle before the
+ * replacement becomes an image challenge instead.
+ */
+export const PUZZLE_REFRESHES_BEFORE_IMAGE = 3;
+
+/**
+ * Swap a puzzle for an image challenge once the user has refreshed it
+ * `PUZZLE_REFRESHES_BEFORE_IMAGE` times in a row.
+ *
+ * A user who keeps refreshing either cannot solve this kind of puzzle or is a
+ * solver shopping for an easy instance. The image challenge answers both.
+ *
+ * The refresh count is client-reported, so this only moves one way: from
+ * puzzle to image, never back. Lying about it can only earn a harder
+ * challenge. Leaving it out looks like a fresh visit, which is what a page
+ * reload already gets.
+ *
+ * A site that has not enabled image keeps its puzzle. Serving a type the site
+ * turned off is exactly what `coerceToEnabledCaptchaType` exists to stop.
+ */
+export const switchTypeAfterRefreshes = (
+	resolved: ConcreteCaptchaType,
+	refreshCount: number | undefined,
+	allowedTypes: Partial<IFrictionlessTypes> | undefined,
+): ConcreteCaptchaType =>
+	CaptchaType.puzzle === resolved &&
+	(refreshCount ?? 0) >= PUZZLE_REFRESHES_BEFORE_IMAGE &&
+	resolveFrictionlessTypes(allowedTypes).image
+		? CaptchaType.image
+		: resolved;
+
+/**
+ * Swap a puzzle for an image challenge because the user asked for one.
+ *
+ * Same one-way rule as `switchTypeAfterRefreshes`: the request is
+ * client-reported, so it may only ever earn a harder challenge. Whatever the
+ * routing settled on other than a puzzle stands, and so does a site that may
+ * not be served image challenges.
+ */
+export const switchTypeOnUserRequest = (
+	resolved: ConcreteCaptchaType,
+	switchToImage: boolean | undefined,
+	allowedTypes: Partial<IFrictionlessTypes> | undefined,
+): ConcreteCaptchaType =>
+	CaptchaType.puzzle === resolved &&
+	true === switchToImage &&
+	resolveFrictionlessTypes(allowedTypes).image
+		? CaptchaType.image
+		: resolved;

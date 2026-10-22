@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "رمزگذاری نشانی نامعتبر ناموفق بود",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "تعهد راه‌حل captcha وجود ندارد",
+		"SIGNER_UNDEFINED": "امضاکننده تعریف نشده است",
+		"CANNOT_FIND_KEYPAIR": "جفت‌کلید پیدا نشد",
+		"INVALID_DATA_FORMAT": "قالب داده نامعتبر"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "محیط ناشناخته درخواست شد",
+		"INVALID_CAPTCHA_NUMBER": "لطفاً پیکربندی captchaها را درست تنظیم کنید",
+		"INVALID_LOG_LEVEL": "سطح گزارش نامعتبر",
+		"INVALID_PACKAGE_DIR": "پوشهٔ بسته نامعتبر"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "خطا در تجزیهٔ مجموعه‌داده",
+		"SOLUTION_PARSE_ERROR": "خطا در پردازش مجموعه‌داده",
+		"HASH_ERROR": "خطا در هش کردن مجموعه‌داده",
+		"DATASET_ID_UNDEFINED": "شناسهٔ مجموعه‌داده تعریف نشده است",
+		"NOT_ENOUGH_LABELS": "برچسب‌ها کافی نیستند",
+		"NOT_ENOUGH_IMAGES": "تصاویر کافی نیستند",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "تعداد captchaهای مجموعه‌داده کمتر از تعداد پیکربندی‌شده است",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "تعداد راه‌حل‌های مجموعه‌داده کمتر از تعداد پیکربندی‌شده است",
+		"DUPLICATE_IMAGE": "تصویر تکراری شناسایی شد",
+		"MERKLE_ERROR": "خطا در ساخت درخت مرکل"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "وارد کردن موتور پایگاه داده ناموفق بود",
+		"DATABASE_UNDEFINED": "کلاینت پایگاه داده متصل نیست",
+		"DATABASE_HOST_UNDEFINED": "نشانی میزبان پایگاه داده تعریف نشده است",
+		"DATASET_LOAD_FAILED": "بارگیری مجموعه‌داده ناموفق بود",
+		"DATASET_GET_FAILED": "دریافت مجموعه‌داده ناموفق بود",
+		"CAPTCHA_GET_FAILED": "دریافت captcha ناموفق بود",
+		"CAPTCHA_UPDATE_FAILED": "به‌روزرسانی captcha ناموفق بود",
+		"IMAGE_GET_FAILED": "دریافت تصویر ناموفق بود",
+		"PENDING_RECORD_NOT_FOUND": "هیچ رکورد در انتظاری پیدا نشد",
+		"INVALID_HASH": "هش نامعتبر",
+		"SOLUTION_GET_FAILED": "دریافت راه‌حل ناموفق بود",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "هیچ مجموعه‌داده‌ای با تعداد راه‌حل لازم پیدا نشد",
+		"SOLUTION_APPROVE_FAILED": "تأیید راه‌حل ناموفق بود",
+		"SOLUTION_FLAG_FAILED": "علامت‌گذاری راه‌حل به‌عنوان پردازش‌شده ناموفق بود",
+		"TABLES_UNDEFINED": "جدول‌ها تعریف نشده‌اند",
+		"CONNECTION_UNDEFINED": "اتصال تعریف نشده است",
+		"COMMITMENT_FLAG_FAILED": "علامت‌گذاری تعهد به‌عنوان پردازش‌شده ناموفق بود",
+		"UNKNOWN": "خطای ناشناختهٔ پایگاه داده",
+		"QUERY_ERROR": "پرس‌وجوی پایگاه داده ناموفق بود",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "اتصال Redis برای قوانین دسترسی تعریف نشده است",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "ذخیره‌گاه قوانین دسترسی کاربران تعریف نشده است",
+		"SESSION_STORE_FAILED": "ذخیرهٔ نشست ناموفق بود",
+		"SESSION_CHECK_REMOVE_FAILED": "بررسی و حذف نشست ناموفق بود",
+		"SESSION_GET_FAILED": "دریافت نشست ناموفق بود"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "تغییر کاربر مالک ممکن نیست",
+		"CANNOT_DELETE_OWN_USER": "حذف حساب خودتان ممکن نیست",
+		"CANNOT_DELETE_LAST_USER": "حذف آخرین کاربر ممکن نیست",
+		"USER_ALREADY_EXISTS": "کاربر از قبل وجود دارد",
+		"NO_SUGGESTIONS_FOUND": "هیچ پیشنهادی پیدا نشد",
+		"CANNOT_DEACTIVATE_LAST_SITE": "غیرفعال کردن آخرین سایت فعال ممکن نیست",
+		"DUPLICATE_SITE_NAME": "سایتی با این نام از قبل وجود دارد",
+		"INVALID_SITE_NAME": "نام سایت فقط می‌تواند شامل حروف، اعداد، خط تیره و زیرخط باشد"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "پارامتر نامعتبر"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "فایل پیدا نشد",
+		"FILE_ALREADY_EXISTS": "فایل از قبل وجود دارد",
+		"INVALID_DIR_FORMAT": "قالب پوشه نامعتبر"
+	}
+}
