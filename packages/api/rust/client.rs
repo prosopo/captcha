@@ -177,6 +177,33 @@ impl ProviderApi {
             .await
     }
 
+    /// `registerSiteKey` with the settings as the caller built them, sent as they are: the CLI's
+    /// `site_key_register_api` passes a partial settings object, which the provider completes.
+    pub async fn register_site_key_settings(
+        &self,
+        site_key: &str,
+        tier: Tier,
+        settings: &Value,
+        jwt: &str,
+    ) -> Result<Value, ApiError> {
+        let body: Value = serde_json::json!({ "siteKey": site_key, "tier": tier.as_str(), "settings": settings });
+        let headers: Headers = vec![
+            header("Prosopo-Site-Key", &self.client.account),
+            header("Authorization", &format!("Bearer {jwt}")),
+        ];
+        self.client
+            .http
+            .post(
+                AdminApiPaths::SiteKeyRegister.as_str(),
+                Some(&body),
+                RequestOptions {
+                    method: None,
+                    headers: Some(headers),
+                },
+            )
+            .await
+    }
+
     async fn post_verify(
         &self,
         path: ClientApiPaths,

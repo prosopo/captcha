@@ -1,0 +1,274 @@
+{
+	"datasetId": "0x3e067b8f6aeae82fdbe2b2557b9c2d90aaabff241df651bf0f36667d2ab0018d",
+	"captchas": [
+		{
+			"salt": "0x01010101010101010101010101010101",
+			"solution": [
+				1,
+				2,
+				3
+			],
+			"timeLimit": 20,
+			"items": [
+				{
+					"hash": "0x7f4313a6d4240e206d7c7f16d368ddf12d5f1d78296fd3de7e91df1d7739a35f",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.01.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x967a0107da9f2b1658fea482111dcae32b1bc544da0ee5a3797d758937872ceb",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.02.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x369734d30701d97ded13c95b34bcd81fc63160fce136ae0c2eb7a2457b5b96c5",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.03.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x3be8ae584fa11426b8eeac21c87e9f2ab751ab380ec9298b7cd7aed713007ca8",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.04.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x156390dcf3d60b0e6cff5c9d83b5309049fa8a06a44e948cffe469369940a838",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.05.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0xd4ff6a66ca9b373061cd1dd0477cf598779a73bc7f048eb12b3b8631ea151d7d",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.06.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0xcbcb4ad03e1309f009f78ca0b71125916b5ee8eb8cb53d174f32e58fd3b3dbcd",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.07.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x0e5279ccf0f0f956d510b15af0b7a2c2c99b6f28a565ea0d5a367c7dbf992495",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.08.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x5a9f32b7cb8b55a7ec138d21260df31a401ed4fbaa67550ede344e240bf277ee",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.09.jpeg",
+					"type": "image"
+				}
+			],
+			"target": "bus"
+		},
+		{
+			"salt": "0x02020202020202020202020202020202",
+			"solution": [
+				0,
+				7,
+				8
+			],
+			"items": [
+				{
+					"hash": "0x7f4313a6d4240e206d7c7f16d368ddf12d5f1d78296fd3de7e91df1d7739a35f",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.01.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x967a0107da9f2b1658fea482111dcae32b1bc544da0ee5a3797d758937872ceb",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.02.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x369734d30701d97ded13c95b34bcd81fc63160fce136ae0c2eb7a2457b5b96c5",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.03.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x3be8ae584fa11426b8eeac21c87e9f2ab751ab380ec9298b7cd7aed713007ca8",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.04.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x156390dcf3d60b0e6cff5c9d83b5309049fa8a06a44e948cffe469369940a838",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.05.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0xd4ff6a66ca9b373061cd1dd0477cf598779a73bc7f048eb12b3b8631ea151d7d",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.06.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0xcbcb4ad03e1309f009f78ca0b71125916b5ee8eb8cb53d174f32e58fd3b3dbcd",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.07.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x0e5279ccf0f0f956d510b15af0b7a2c2c99b6f28a565ea0d5a367c7dbf992495",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.08.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x5a9f32b7cb8b55a7ec138d21260df31a401ed4fbaa67550ede344e240bf277ee",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.09.jpeg",
+					"type": "image"
+				}
+			],
+			"target": "train"
+		},
+		{
+			"salt": "0x03030303030303030303030303030303",
+			"solution": [],
+			"items": [
+				{
+					"hash": "0x7f4313a6d4240e206d7c7f16d368ddf12d5f1d78296fd3de7e91df1d7739a35f",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.01.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x967a0107da9f2b1658fea482111dcae32b1bc544da0ee5a3797d758937872ceb",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.02.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x369734d30701d97ded13c95b34bcd81fc63160fce136ae0c2eb7a2457b5b96c5",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.03.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x3be8ae584fa11426b8eeac21c87e9f2ab751ab380ec9298b7cd7aed713007ca8",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.04.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x156390dcf3d60b0e6cff5c9d83b5309049fa8a06a44e948cffe469369940a838",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.05.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0xd4ff6a66ca9b373061cd1dd0477cf598779a73bc7f048eb12b3b8631ea151d7d",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.06.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0xcbcb4ad03e1309f009f78ca0b71125916b5ee8eb8cb53d174f32e58fd3b3dbcd",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.07.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x0e5279ccf0f0f956d510b15af0b7a2c2c99b6f28a565ea0d5a367c7dbf992495",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.08.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x5a9f32b7cb8b55a7ec138d21260df31a401ed4fbaa67550ede344e240bf277ee",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.09.jpeg",
+					"type": "image"
+				}
+			],
+			"target": "car"
+		},
+		{
+			"salt": "0x05050505050505050505050505050505",
+			"items": [
+				{
+					"hash": "0x7f4313a6d4240e206d7c7f16d368ddf12d5f1d78296fd3de7e91df1d7739a35f",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.01.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x967a0107da9f2b1658fea482111dcae32b1bc544da0ee5a3797d758937872ceb",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.02.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x369734d30701d97ded13c95b34bcd81fc63160fce136ae0c2eb7a2457b5b96c5",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.03.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x3be8ae584fa11426b8eeac21c87e9f2ab751ab380ec9298b7cd7aed713007ca8",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.04.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x156390dcf3d60b0e6cff5c9d83b5309049fa8a06a44e948cffe469369940a838",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.05.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0xd4ff6a66ca9b373061cd1dd0477cf598779a73bc7f048eb12b3b8631ea151d7d",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.06.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0xcbcb4ad03e1309f009f78ca0b71125916b5ee8eb8cb53d174f32e58fd3b3dbcd",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.07.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x0e5279ccf0f0f956d510b15af0b7a2c2c99b6f28a565ea0d5a367c7dbf992495",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.08.jpeg",
+					"type": "image"
+				},
+				{
+					"hash": "0x5a9f32b7cb8b55a7ec138d21260df31a401ed4fbaa67550ede344e240bf277ee",
+					"data": "https://prosopo.github.io/demo-datasets/img/01.09.jpeg",
+					"type": "image"
+				}
+			],
+			"target": "plane"
+		},
+		{
+			"salt": "0x03030303030303030303030303030303",
+			"items": [
+				{
+					"hash": "0x0138ab8b1951c2b36284f6abacfc40cc3ec8280adc38462cc5f6b852e17ffe59",
+					"data": "https://prosopo.github.io/demo-datasets/img/test_image_png_5.png",
+					"type": "image"
+				},
+				{
+					"hash": "0x42f21fc48111aa49236db34cc4c98571dfb145f146a5672640b9c5568edb77c1",
+					"data": "https://prosopo.github.io/demo-datasets/img/test_image_png_24.png",
+					"type": "image"
+				},
+				{
+					"hash": "0xef306d5ae594772d9d5bb0729ff7f9ecdff016c21cd07ea9008856b16698dd06",
+					"data": "https://prosopo.github.io/demo-datasets/img/test_image_png_27.png",
+					"type": "image"
+				},
+				{
+					"hash": "0x7291367a7273dcdd07506634f19679679f4c2b3cfb25e3b662c74a4c75ab2d41",
+					"data": "https://prosopo.github.io/demo-datasets/img/test_image_png_28.png",
+					"type": "image"
+				},
+				{
+					"hash": "0x0b1539673d659a02a13782745ca98bbb2fed8c95f04621b0aa86e464e4b6773f",
+					"data": "https://prosopo.github.io/demo-datasets/img/test_image_png_22.png",
+					"type": "image"
+				},
+				{
+					"hash": "0x5fddbc30f4ac4edd73ac4242f183a2dab7da1bb8e5de3ea483611022319080cd",
+					"data": "https://prosopo.github.io/demo-datasets/img/test_image_png_32.png",
+					"type": "image"
+				},
+				{
+					"hash": "0x777ec78a400afa334f16d283803461cbbf814601aea9755b8350683567208172",
+					"data": "https://prosopo.github.io/demo-datasets/img/test_image_png_26.png",
+					"type": "image"
+				},
+				{
+					"hash": "0x58dc1a9c15b6e6629179c4fe08c05f12b3be168094a14c8d941e3f973b4b67e0",
+					"data": "https://prosopo.github.io/demo-datasets/img/test_image_png_44.png",
+					"type": "image"
+				},
+				{
+					"hash": "0x2ee5bac3c390ebff1f400d4da87a877e3efa1054625bd03102596babd3021589",
+					"data": "https://prosopo.github.io/demo-datasets/img/test_image_png_51.png",
+					"type": "image"
+				}
+			],
+			"target": "horse"
+		}
+	],
+	"format": "SelectAll",
+	"timeLimit": 30
+}

@@ -133,6 +133,38 @@ impl ProviderDatabase {
         Ok(())
     }
 
+    /// The client records with a traffic filter but no `abuserScoreThreshold`, which
+    /// `migrate_abuser_score_threshold` sets.
+    fn without_abuser_score_threshold(&self) -> Document {
+        doc! {
+            "settings.trafficFilter": { "$exists": true },
+            "settings.trafficFilter.abuserScoreThreshold": { "$exists": false },
+        }
+    }
+
+    /// `countDocuments` of those records.
+    pub async fn count_clients_without_abuser_score_threshold(&self) -> Result<u64, ProsopoError> {
+        let filter: Document = self.filter(&CLIENT_RECORD, self.without_abuser_score_threshold());
+        self.count_documents(collections::CLIENT, filter).await
+    }
+
+    /// `updateMany` setting their threshold to 0; how many changed.
+    pub async fn set_missing_abuser_score_threshold(&self) -> Result<u64, ProsopoError> {
+        let statement: UpdateStatement = self
+            .statement(
+                &CLIENT_RECORD,
+                UpdateMethod::UpdateMany,
+                self.without_abuser_score_threshold(),
+                doc! { "$set": { "settings.trafficFilter.abuserScoreThreshold": 0 } },
+                false,
+            )
+            .map_err(|error| db_error("DATABASE.QUERY_ERROR", ErrorContext::new().with("error", error), None))?;
+        match self.run(Operation::update(collections::CLIENT, vec![statement])).await? {
+            Reply::Update { modified, .. } => Ok(modified),
+            _ => Ok(0),
+        }
+    }
+
     /// `removeClientRecords`.
     pub async fn remove_client_records(&self, accounts: &[String]) -> Result<(), ProsopoError> {
         if accounts.is_empty() {

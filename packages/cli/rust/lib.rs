@@ -15,7 +15,9 @@
 //! `@prosopo/cli`: the provider's entry point: its config from the environment, and the API
 //! started from it (the `prosopo-provider` binary).
 
+pub mod commands;
 mod config;
+mod dataset;
 mod process_env;
 mod rate_limiter;
 mod start;

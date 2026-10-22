@@ -80,6 +80,17 @@ export const liveVariables = (database: string, ipapiUrl: string, extra: Record<
 	...extra,
 });
 
+/** `use` given a connected client on the live MongoDB, closed after. */
+export const withMongo = async <T>(use: (mongo: InstanceType<typeof MongoClient>) => Promise<T>): Promise<T> => {
+	const mongo = new MongoClient(MONGO_URL);
+	await mongo.connect();
+	try {
+		return await use(mongo);
+	} finally {
+		await mongo.close();
+	}
+};
+
 /** The database dropped and Redis emptied, so a run starts from nothing. */
 export const resetStores = async (database: string): Promise<void> => {
 	const mongo = new MongoClient(MONGO_URL);

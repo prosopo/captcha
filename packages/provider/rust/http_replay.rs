@@ -72,7 +72,9 @@ pub fn answer(raw: &[u8]) -> Answer {
 
 pub async fn exchange(port: u16, request: &[u8]) -> Vec<u8> {
     let mut socket: tokio::net::TcpStream = tokio::net::TcpStream::connect(("127.0.0.1", port)).await.expect("connects");
-    socket.write_all(request).await.expect("writes");
+    // A server may answer and close before the whole request is written (an oversized body's
+    // 413), so a failed write still leaves its answer to read.
+    let _ = socket.write_all(request).await;
     let mut response: Vec<u8> = Vec::new();
     let _ = tokio::time::timeout(Duration::from_secs(10), socket.read_to_end(&mut response)).await;
     response

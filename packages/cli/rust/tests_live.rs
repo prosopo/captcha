@@ -792,3 +792,156 @@ async fn scheduled_jobs_run_as_the_node_ones_do() {
     }
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }
+
+/// Every collection of `database` that holds documents, as `dumpDatabase` writes them.
+async fn dump_database(database: &str) -> Map<String, Value> {
+    let mongo: mongodb::Client = mongodb::Client::with_uri_str(mongo_url()).await.expect("connects");
+    let mut names: Vec<String> = mongo.database(database).list_collection_names().await.expect("lists");
+    names.sort();
+    let mut out: Map<String, Value> = Map::new();
+    for name in names {
+        let documents: Vec<Value> = dump(database, &name).await;
+        if !documents.is_empty() {
+            out.insert(name, Value::Array(documents));
+        }
+    }
+    out
+}
+
+/// Each collection's indexes sorted by name, as relaxed extended JSON (the generator's `JSON.stringify`).
+async fn indexes(database: &str) -> Value {
+    let mongo: mongodb::Client = mongodb::Client::with_uri_str(mongo_url()).await.expect("connects");
+    let mut names: Vec<String> = mongo.database(database).list_collection_names().await.expect("lists");
+    names.sort();
+    let mut out: Map<String, Value> = Map::new();
+    for name in names {
+        let mut cursor = mongo.database(database).collection::<Document>(&name).list_indexes().await.expect("lists indexes");
+        let mut list: Vec<Value> = Vec::new();
+        while cursor.advance().await.expect("reads") {
+            let index: mongodb::IndexModel = cursor.deserialize_current().expect("an index");
+            list.push(Bson::Document(bson::serialize_to_document(&index).expect("serialises")).into_relaxed_extjson());
+        }
+        out.insert(name, Value::Array(list));
+    }
+    indexes_by_name(&Value::Object(out))
+}
+
+/// Each collection's indexes in byte order of their names: the generator sorts them with
+/// `localeCompare`, which orders `ipInfo_1` before `ipInfo.countryCode_1`.
+fn indexes_by_name(indexes: &Value) -> Value {
+    let mut indexes: Value = indexes.clone();
+    for list in indexes.as_object_mut().expect("collections").values_mut() {
+        list.as_array_mut().expect("indexes").sort_by_key(|index| index["name"].as_str().unwrap_or_default().to_string());
+    }
+    indexes
+}
+
+/// Canonical extended JSON with each `$numberDouble` read back as its value: JS writes 1e-7 as
+/// `"1e-7"` and the bson crate as `"0.0000001"`, the same double.
+fn doubles_as_values(value: &Value) -> Value {
+    match value {
+        Value::Object(fields) => match fields.get("$numberDouble").and_then(Value::as_str) {
+            Some(text) if fields.len() == 1 => match text.parse::<f64>() {
+                Ok(double) if double.is_finite() => json!({ "$numberDouble": format!("{:e}", double) }),
+                _ => value.clone(),
+            },
+            _ => Value::Object(fields.iter().map(|(name, value)| (name.clone(), doubles_as_values(value))).collect()),
+        },
+        Value::Array(items) => Value::Array(items.iter().map(doubles_as_values).collect()),
+        other => other.clone(),
+    }
+}
+
+/// What a stand-in provider was sent, as the generator records it.
+type Sent = Arc<Mutex<Vec<Value>>>;
+
+/// A JWT's header and payload, its times masked, and whether the provider's key verifies it.
+fn decoded_jwt(authorization: &str) -> Value {
+    let token: &str = authorization.strip_prefix("Bearer ").unwrap_or(authorization);
+    let part = |index: usize| -> Value {
+        let bytes: Vec<u8> = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(token.split('.').nth(index).unwrap_or_default()).expect("base64url");
+        serde_json::from_slice(&bytes).expect("JSON")
+    };
+    let payload: Map<String, Value> =
+        part(1).as_object().expect("claims").iter().map(|(name, value)| (name.clone(), if value.is_number() { json!("<time>") } else { value.clone() })).collect();
+    let pair: KeyringPair = get_pair(Some(Secret::Text(MNEMONIC)), None, None, None).expect("the provider pair");
+    let verified: bool = pair.jwt_verify(token, &Default::default()).map(|result| result.is_valid).unwrap_or(false);
+    json!({ "header": part(0), "payload": payload, "verified": verified })
+}
+
+async fn stand_in_provider(sent: Sent) -> String {
+    async fn receive(State(sent): State<Sent>, request: axum::extract::Request) -> axum::response::Response {
+        let (parts, body) = request.into_parts();
+        let header = |name: &str| parts.headers.get(name).and_then(|value| value.to_str().ok()).map(str::to_string);
+        let body = axum::body::to_bytes(body, usize::MAX).await.expect("a body");
+        let record: Value = json!({
+            "method": parts.method.as_str(),
+            "url": parts.uri.to_string(),
+            "contentType": header("content-type"),
+            "siteKey": header("prosopo-site-key"),
+            "body": String::from_utf8_lossy(&body),
+            "jwt": decoded_jwt(&header("authorization").unwrap_or_default()),
+        });
+        sent.lock().expect("unpoisoned").push(record);
+        let mut response = axum::response::Response::new(axum::body::Body::from(r#"{"status":"ok"}"#));
+        response.headers_mut().insert(axum::http::header::CONTENT_TYPE, axum::http::HeaderValue::from_static("application/json"));
+        response
+    }
+    let listener: tokio::net::TcpListener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("binds");
+    let port: u16 = listener.local_addr().expect("an address").port();
+    let router: Router = Router::new().fallback(receive).with_state(sent);
+    tokio::spawn(async move { axum::serve(listener, router).await.expect("serves") });
+    format!("http://127.0.0.1:{port}")
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn commands_run_as_the_node_ones_do() {
+    use prosopo_cli::commands::{invocation, run};
+    let _live = LIVE.lock().await;
+    let vectors: Value = serde_json::from_str(include_str!("equivalence/commands-live-vectors.json")).expect("commands-live-vectors.json parses");
+    let database: &str = vectors["database"].as_str().expect("a database");
+    let central: &str = vectors["central"].as_str().expect("a central database");
+    reset(database).await;
+    let mongo: mongodb::Client = mongodb::Client::with_uri_str(mongo_url()).await.expect("connects");
+    mongo.database(central).drop().await.expect("drops");
+    restore_database(database, &vectors["seed"]).await;
+    let sent: Sent = Arc::new(Mutex::new(Vec::new()));
+    let provider: String = stand_in_provider(sent.clone()).await;
+    let mut variables: HashMap<String, String> = serde_json::from_value(vectors["variables"].clone()).expect("variables");
+    variables.insert("PROSOPO_IPAPI_URL".to_string(), fake_ipapi(json!({})).await);
+    let config: ProsopoConfig = get_config(&Environment::from_map(variables), None, None, None, None).expect("a config");
+    let pair: KeyringPair = get_pair(Some(Secret::Text(MNEMONIC)), None, None, None).expect("the provider pair");
+    let admin: KeyringPair = get_pair(None, Some(U8aLike::Str(ADMIN)), None, None).expect("the admin pair");
+    let mut failures: Vec<String> = Vec::new();
+    for step in vectors["steps"].as_array().expect("steps") {
+        let line: Vec<String> =
+            step["line"].as_array().expect("a line").iter().map(|token| token.as_str().expect("a token").replace("<provider>", &provider)).collect();
+        let shown_line: String = step["line"].as_array().expect("a line").iter().filter_map(Value::as_str).collect::<Vec<&str>>().join(" ");
+        let before: usize = sent.lock().expect("unpoisoned").len();
+        let env: ProviderEnvironment = ProviderEnvironment(BaseEnvironment::new(config.clone(), Some(pair.clone()), Some(admin.clone())).expect("an environment"));
+        let _ = run(invocation(&line), env).await;
+        let after: Map<String, Value> = dump_database(database).await;
+        let expected: &Map<String, Value> = step["after"].as_object().expect("collections");
+        let mut names: Vec<&String> = expected.keys().chain(after.keys()).collect();
+        names.sort();
+        names.dedup();
+        for name in names {
+            let actual: Vec<Value> = after.get(name).and_then(Value::as_array).cloned().unwrap_or_default();
+            let expected: Value = expected.get(name).cloned().unwrap_or_else(|| json!([]));
+            let (expected, actual): (Value, Vec<Value>) = (doubles_as_values(&expected), actual.iter().map(doubles_as_values).collect());
+            failures.extend(compare_records(&expected, &actual, &["_id", "settings._id", "randomKey"]).into_iter().map(|failure| format!("{shown_line}\n  {name}: {failure}")));
+        }
+        let received: Vec<Value> = sent.lock().expect("unpoisoned")[before..].to_vec();
+        if Value::Array(received.clone()) != step["sent"] {
+            failures.push(format!("{shown_line}\n  sent: rust {}\n  ts   {}", Value::Array(received), step["sent"]));
+        }
+    }
+    for (name, database) in [("provider", database), ("central", central)] {
+        let actual: Value = indexes(database).await;
+        if actual != indexes_by_name(&vectors["indexes"][name]) {
+            failures.push(format!("{name} indexes: rust {actual}\n  ts {}", vectors["indexes"][name]));
+        }
+    }
+    assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
+}

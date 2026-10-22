@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! `prosopo-provider [--api] [--adminApi] [command]` (cli.ts, argv.ts, reloader.ts).
+//! `prosopo-provider [--api] [--adminApi] [--sole] [command]` (cli.ts, argv.ts, reloader.ts).
 
 use clap::Parser;
+use prosopo_cli::commands::{invocation, run as run_command, Invocation};
 use prosopo_cli::{get_config, start, Environment};
 use prosopo_env::{Environment as ProviderEnvironmentBase, ProviderEnvironment};
 use prosopo_keyring::{get_pair, KeyringPair, Secret};
@@ -23,19 +24,6 @@ use prosopo_types::config::{AccountConfig, ProsopoConfig};
 use prosopo_util_crypto::U8aLike;
 use serde_json::json;
 use std::process::ExitCode;
-
-/// The commands of argv.ts, which this binary does not run yet.
-const COMMANDS: [&str; 9] = [
-    "ensure_indexes",
-    "ensure_external_indexes",
-    "migrate_abuser_score_threshold",
-    "provider_set_data_set",
-    "store_captchas",
-    "update_spam_email_domains",
-    "site_key_register",
-    "site_key_register_api",
-    "version",
-];
 
 #[derive(Parser, Debug)]
 #[command(name = "prosopo-provider", about = "CLI for Prosopo Provider", override_usage = "prosopo-provider [global options] <command> [options]")]
@@ -72,8 +60,11 @@ async fn run(log: &Logger) -> Result<(), String> {
     log.info(|| {
         LogRecord::default().with_data(json!({ "cliArgs": { "_": cli.rest, "api": cli.api, "adminApi": cli.admin_api, "admin-api": cli.admin_api } }))
     });
-    if let Some(command) = cli.rest.first().filter(|command| COMMANDS.contains(&command.as_str())) {
-        return Err(format!("the {command} command is not in the Rust provider yet; run it with the Node CLI"));
+    let invocation: Invocation = invocation(&cli.rest);
+    if invocation != Invocation::None {
+        let env: ProviderEnvironment =
+            ProviderEnvironment(ProviderEnvironmentBase::new(config.clone(), Some(provider_pair.clone()), Some(auth_account.clone())).map_err(|error| error.to_string())?);
+        run_command(invocation, env).await?;
     }
     if !cli.api {
         return Ok(());
