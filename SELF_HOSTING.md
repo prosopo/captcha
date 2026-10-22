@@ -120,6 +120,84 @@ The CAPTCHA type comes from the site key record, not the page.
 The bundle is an ES module split into chunks, so `type="module"` is required and the whole `dist/bundle/` directory must
 be hosted together.
 
+## No server? Run it on Cloudflare's free plan
+
+Steps 2 and 4 assume a server with a public IP and ports 80 and 443 open. If you don't have one, any machine that can
+run Docker will do — a spare PC, a home server — with Cloudflare in front of it. You need a free Cloudflare account and
+nothing else: no domain, no public IP, no open ports, no certificates.
+
+One Worker on your free `workers.dev` subdomain serves the widget and forwards API calls to your provider through a
+Cloudflare Tunnel. The tunnel connects outbound from your machine, so nothing is exposed on your network. Cloudflare
+handles HTTPS, so Caddy is not used.
+
+Do step 1 up to `pnpm run build:all`, but don't generate the environment file yet — you'll generate it below with
+the Worker's hostname. Then, from the repository root:
+
+```bash
+npx wrangler@4.151.3 login
+npx wrangler@4.151.3 tunnel create procaptcha        # note the ID it prints
+```
+
+Open the tunnel in the Cloudflare dashboard (**Zero Trust → Networks → Tunnels → procaptcha**). Its install command
+contains `--token <token>`; copy the token. You don't need to add a public hostname.
+
+Your Worker will be at `procaptcha.<subdomain>.workers.dev`, where `<subdomain>` is shown in the dashboard under
+**Workers & Pages**. Generate the environment file for that hostname, with `--cloudflare`:
+
+```bash
+pnpm exec tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts \
+  --host procaptcha.<subdomain>.workers.dev --cloudflare
+```
+
+Paste the token into `CLOUDFLARE_TUNNEL_TOKEN` in `.env`, then start the stack. `--cloudflare` has already set
+`COMPOSE_FILE` to add [`docker-compose.self-hosted.cloudflare.yml`](docker-compose.self-hosted.cloudflare.yml), which
+runs `cloudflared` and leaves Caddy out:
+
+```bash
+docker compose up -d
+```
+
+Let Workers reach the provider through the tunnel, and put the service ID it prints into
+[`docker/cloudflare/wrangler.jsonc`](docker/cloudflare/wrangler.jsonc) in place of `REPLACE_WITH_YOUR_VPC_SERVICE_ID`:
+
+```bash
+npx wrangler@4.151.3 vpc service create procaptcha-provider \
+  --type http --tunnel-id <tunnel ID> --hostname provider --http-port 9229
+```
+
+Register your site key as in [step 3](#3-register-a-site-key), adding the Worker's hostname to `--domains` so its demo
+page works: `--domains example.com procaptcha.<subdomain>.workers.dev`.
+
+Build the widget against the Worker and deploy it:
+
+```bash
+NODE_ENV=production \
+PROSOPO_PROVIDER_LIST=https://procaptcha.<subdomain>.workers.dev \
+pnpm --filter @prosopo/procaptcha-bundle run bundle
+
+npx wrangler@4.151.3 deploy --config docker/cloudflare/wrangler.jsonc
+```
+
+Open `https://procaptcha.<subdomain>.workers.dev/?sitekey=<your site key>`. The demo page shows whether the provider is
+reachable, renders the CAPTCHA, and shows the response token once it is solved. On your own site, load the widget from
+the Worker:
+
+```html
+<script type="module" src="https://procaptcha.<subdomain>.workers.dev/procaptcha.bundle.js" async defer></script>
+<div class="procaptcha" data-sitekey="5Fpd..."></div>
+```
+
+Server-side verification is unchanged; `PROSOPO_PROVIDER_LIST` in your `.env` already points at the Worker.
+
+Worth knowing before you rely on it:
+
+- Workers VPC, which lets the Worker reach the tunnel, is in open beta.
+- The free Workers plan has a daily request allowance. Each solve is a handful of requests, so check the current limit
+  against your traffic.
+- The Worker passes each visitor's address to the provider in `X-Forwarded-For`. Without that, the provider would see
+  every visitor as the tunnel, and per-IP rate limits and rules would apply to all of them together.
+- The provider only runs while your machine does.
+
 ## Bring your own detector
 
 The steps above serve a fixed challenge to everyone. To score visitors yourself, load a detector of your own and register
