@@ -27,6 +27,7 @@ import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { BSON, EJSON, Long, ObjectId } from "bson";
 import mongoose, { type Schema, type SchemaType } from "mongoose";
+import { type ArrayType, describe, type Json, type MapType, type NestedSchemaType } from "./describe.js";
 
 if (!process.version.startsWith("v24.")) {
 	throw new Error(`this generator must run on Node 24 (the production runtime), not ${process.version}`);
@@ -115,8 +116,6 @@ const OBJECT_IDS: string[] = ["65f0a1b2c3d4e5f601234567", "000000000000000000000
 const MIXED_KEYS: string[] = ["a", "b", "1", "0", "z", "key with space", "_", "10", "isVPN", "countryCode"];
 const IP_HALVES: bigint[] = [0n, 1n, 16909060n, 2n ** 32n - 1n, 2n ** 63n + 5n, 2n ** 64n - 1n];
 
-type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
-
 const mixed = (depth: number): unknown => {
 	const roll: number = random();
 	if (depth >= 3 || roll < 0.45) {
@@ -161,10 +160,6 @@ const ipHalf = (): unknown => {
 	if (roll < 0.85) return value.toString();
 	return Number(value % 1000n);
 };
-
-type ArrayType = SchemaType & { embeddedSchemaType: SchemaType };
-type NestedSchemaType = SchemaType & { schema: Schema };
-type MapType = SchemaType & { $__schemaType: SchemaType };
 
 const valueFor = (type: SchemaType, depth: number): unknown => {
 	switch (type.instance) {
@@ -323,52 +318,6 @@ const toJson = (value: unknown): Json =>
 	JSON.parse(
 		EJSON.stringify(value, { relaxed: false }).replaceAll('{"undefinedMarker":true}', '{"$undefined":true}'),
 	) as Json;
-
-const kindOf = (type: SchemaType): string => {
-	if ((type as unknown as { $isMongooseDocumentArray?: boolean }).$isMongooseDocumentArray) return "DocumentArray";
-	if (type.instance === "Array") return `Array<${kindOf((type as ArrayType).embeddedSchemaType)}>`;
-	return type.instance;
-};
-
-// How mongoose itself sees a schema: its top-level keys, nested paths and every path with its
-// kind, constraints, when its default applies and, for a subdocument, its own schema.
-const describe = (schema: Schema): Json => {
-	const paths: Json[] = Object.entries(schema.paths).map(([path, type]): Json => {
-		const options = type.options as { min?: number; max?: number; expires?: number | string; unique?: boolean; index?: unknown };
-		const defaultValue: unknown = (type as unknown as { defaultValue: unknown }).defaultValue;
-		const timing: string =
-			defaultValue === undefined
-				? "none"
-				: typeof defaultValue === "function"
-					? (defaultValue as { $runBeforeSetters?: boolean }).$runBeforeSetters
-						? "before"
-						: "after"
-					: "value";
-		const element: SchemaType | undefined =
-			type.instance === "Array" ? (type as ArrayType).embeddedSchemaType : type.instance === "Map" ? (type as MapType).$__schemaType : undefined;
-		const enumValues: string[] =
-			(type as unknown as { enumValues?: string[] }).enumValues ?? (element as unknown as { enumValues?: string[] } | undefined)?.enumValues ?? [];
-		const subschema: Schema | undefined = (type as Partial<NestedSchemaType>).schema ?? (element as Partial<NestedSchemaType> | undefined)?.schema;
-		return {
-			path,
-			kind: kindOf(type),
-			required: type.isRequired,
-			enumValues: enumValues.length > 0 ? enumValues : null,
-			min: options.min ?? null,
-			max: options.max ?? null,
-			default: timing,
-			expires: options.expires ?? null,
-			unique: options.unique ?? null,
-			schema: subschema ? describe(subschema) : null,
-		};
-	});
-	return {
-		tree: Object.keys(schema.tree),
-		nested: Object.keys((schema as unknown as { nested: Record<string, boolean> }).nested),
-		timestamps: Boolean(schema.options.timestamps),
-		paths,
-	};
-};
 
 const SAVE_TO_OBJECT = {
 	transform: false,

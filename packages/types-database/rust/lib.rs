@@ -24,6 +24,7 @@ pub mod projection;
 pub mod provider;
 pub mod scheduled_task;
 pub mod schema;
+pub mod schema_description;
 pub mod update;
 
 #[cfg(test)]
