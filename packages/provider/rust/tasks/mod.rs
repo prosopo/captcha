@@ -15,10 +15,12 @@
 //! The provider's tasks (src/tasks), as the routes come to need them.
 
 pub mod client;
+pub mod decision;
 pub mod dns_event;
 pub mod email;
 pub mod frictionless;
 pub mod spam;
 pub mod traffic;
+pub mod verify;
 #[cfg(test)]
 mod verify_helpers_equivalence;

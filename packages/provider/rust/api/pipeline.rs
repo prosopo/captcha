@@ -360,6 +360,7 @@ pub fn pipeline(
     request_logger: Logger,
     i18n: Arc<I18n>,
     auth: AuthState,
+    verify: Arc<crate::api::verify::VerifyState>,
     block: Arc<BlockState>,
     domain: Arc<DomainState>,
     captcha: Arc<CaptchaState>,
@@ -370,6 +371,7 @@ pub fn pipeline(
         .layer(from_fn_with_state(domain, crate::api::domain::domain))
         .layer(from_fn_with_state(block, crate::api::block::block))
         .layer(from_fn_with_state(auth, admin_auth))
+        .layer(from_fn_with_state(verify, crate::api::verify::verify_routes))
         .layer(from_fn(header_check))
         .layer(from_fn_with_state(state.clone(), request_signals))
         .layer(from_fn_with_state(i18n, i18n_middleware))

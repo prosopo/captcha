@@ -38,6 +38,25 @@ pub struct EmailSpamRulesView {
     pub use_default_patterns: Option<bool>,
     #[serde(default)]
     pub custom_regex_blocklist: Option<Vec<String>>,
+    #[serde(default)]
+    pub max_email_submission_count: Option<JsNumber>,
+}
+
+/// A site's `spamFilter` as verification reads it.
+#[derive(Debug, Clone, Default, PartialEq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SpamFilterView {
+    #[serde(default)]
+    pub enabled: Option<bool>,
+    #[serde(default)]
+    pub email_rules: Option<EmailSpamRulesView>,
+}
+
+impl SpamFilterView {
+    /// The email rules, when both the filter and they are on.
+    pub fn active_email_rules(&self) -> Option<&EmailSpamRulesView> {
+        self.email_rules.as_ref().filter(|rules| self.enabled == Some(true) && rules.enabled == Some(true))
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

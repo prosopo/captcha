@@ -439,8 +439,13 @@ impl ProviderDatabase {
         })
     }
 
-    pub(crate) fn source(&self) -> &dyn Source {
+    pub fn source(&self) -> &dyn Source {
         self.source.as_ref()
+    }
+
+    /// The same source, for what outlives a borrow of the database.
+    pub fn shared_source(&self) -> Arc<dyn Source> {
+        self.source.clone()
     }
 
     pub(crate) fn logger(&self) -> &Logger {

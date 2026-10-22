@@ -24,6 +24,7 @@ pub mod maintenance;
 pub mod metrics;
 pub mod pipeline;
 pub mod public;
+pub mod verify;
 pub mod query;
 pub mod signals;
 

@@ -39,7 +39,14 @@ use prosopo_util_crypto::U8aLike;
 use serde_json::{json, Map, Value};
 use std::collections::HashMap;
 use std::net::SocketAddr;
-use std::sync::Arc;
+use prosopo_database::provider::ProviderDatabase;
+use prosopo_database::source::{Source, SystemSource};
+use prosopo_database::MongoConnectionTimeouts;
+use prosopo_database::MongoDatabase;
+use prosopo_env::DatabaseSettings;
+use prosopo_logger::Logger;
+use std::sync::atomic::{AtomicI64, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 /// The live tests share one MongoDB and one Redis, which each empties, so they run one at a time.
@@ -200,10 +207,39 @@ async fn dump(database: &str, collection: &str) -> Vec<Value> {
 
 /// A ready environment over the live stores, and the app built from it as `start` builds it.
 async fn live_app(variables: &HashMap<String, String>) -> (Router, Arc<ProviderEnvironment>) {
+    live_app_at(variables, Arc::new(SystemSource)).await
+}
+
+/// The time a recorded request was sent; ids and `Math.random()` as the system makes them.
+struct PinnedClock(AtomicI64);
+
+impl Source for PinnedClock {
+    fn now(&self) -> bson::DateTime {
+        bson::DateTime::from_millis(self.0.load(Ordering::SeqCst))
+    }
+
+    fn random(&self) -> f64 {
+        SystemSource.random()
+    }
+
+    fn object_id(&self) -> bson::oid::ObjectId {
+        SystemSource.object_id()
+    }
+}
+
+/// `live_app`, its database telling the time by `source`.
+async fn live_app_at(variables: &HashMap<String, String>, source: Arc<dyn Source>) -> (Router, Arc<ProviderEnvironment>) {
     let config: ProsopoConfig = get_config(&Environment::from_map(variables.clone()), None, None, None, None).expect("a config");
     let pair: KeyringPair = get_pair(Some(Secret::Text(MNEMONIC)), None, None, None).expect("the provider pair");
     let admin: KeyringPair = get_pair(None, Some(U8aLike::Str(ADMIN)), None, None).expect("the admin pair");
     let mut env: ProviderEnvironment = ProviderEnvironment(BaseEnvironment::new(config, Some(pair), Some(admin)).expect("an environment"));
+    let builder_source: Arc<dyn Source> = source.clone();
+    env.0.database_builder = Box::new(move |settings: &DatabaseSettings, logger: &Logger| {
+        let mongo: MongoDatabase = MongoDatabase::new(&settings.url, Some(&settings.dbname), Some(&settings.auth_source), Some(logger.clone()), MongoConnectionTimeouts::default())
+            .expect("a database");
+        Ok(ProviderDatabase::with_mongo(Arc::new(mongo), Some(settings.redis.clone()), builder_source.clone(), logger.clone()))
+    });
+    env.0.source = source;
     env.is_ready().await.expect("ready");
     let env: Arc<ProviderEnvironment> = Arc::new(env);
     let reader: HashMap<String, String> = variables.clone();
@@ -239,10 +275,16 @@ fn without_request_id(answer: &Answer) -> (Vec<(String, String)>, Vec<u8>) {
 
 /// Replays the vectors' exchanges in order; the differences, as messages.
 async fn replay(port: u16, exchanges: &Value) -> (usize, Vec<String>) {
+    replay_with(port, exchanges, |_| {}).await
+}
+
+/// `replay`, with `before` told of each exchange before it is sent.
+async fn replay_with(port: u16, exchanges: &Value, before: impl Fn(&Value)) -> (usize, Vec<String>) {
     let decode = |text: &Value| base64::engine::general_purpose::STANDARD.decode(text.as_str().expect("base64")).expect("base64 decodes");
     let mut failures: Vec<String> = Vec::new();
     let mut compared: usize = 0;
     for step in exchanges.as_array().expect("exchanges") {
+        before(step);
         let request: Vec<u8> = decode(&step["request"]);
         let actual: Answer = answer(&exchange(port, &request).await);
         if step["compare"] == Value::Bool(false) {
@@ -361,5 +403,122 @@ async fn spam_emails_are_checked_as_the_express_app_checks_them() {
     let port: u16 = serve(router).await;
     let (compared, failures) = replay(port, &vectors["exchanges"]).await;
     assert!(compared > 25, "only {compared} compared");
+    assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
+}
+
+/// The cached sessions, by key, as JSON.
+async fn cached_sessions() -> Vec<Value> {
+    let mut connection = redis().await;
+    let mut keys: Vec<String> = redis::cmd("KEYS").arg("cache:session:*").query_async(&mut connection).await.expect("lists");
+    keys.sort();
+    let mut out: Vec<Value> = Vec::new();
+    for key in keys {
+        let value: String = redis::cmd("GET").arg(&key).query_async(&mut connection).await.expect("reads");
+        out.push(json!({ "key": key, "value": serde_json::from_str::<Value>(&value).expect("JSON") }));
+    }
+    out
+}
+
+async fn restore_cached_sessions(cache: &Value) {
+    let mut connection = redis().await;
+    for entry in cache.as_array().expect("cached sessions") {
+        let _: () = redis::cmd("SET")
+            .arg(entry["key"].as_str().expect("a key"))
+            .arg(entry["value"].to_string())
+            .arg("EX")
+            .arg(86400)
+            .query_async(&mut connection)
+            .await
+            .expect("caches");
+    }
+}
+
+/// A cached session with the time it was last patched left out.
+fn cached_without_time(entries: &[Value]) -> Vec<Value> {
+    entries
+        .iter()
+        .map(|entry| {
+            let mut entry: Value = entry.clone();
+            if let Some(value) = entry["value"].as_object_mut() {
+                if value.contains_key("lastUpdatedTimestamp") {
+                    value.insert("lastUpdatedTimestamp".to_string(), json!("<fresh>"));
+                }
+            }
+            entry
+        })
+        .collect()
+}
+
+type Forwarded = Arc<Mutex<Vec<Value>>>;
+
+/// The issuing provider a forwarded verify reaches: what it was sent, kept, and a fixed answer.
+async fn other_provider(port: u16, received: Forwarded) {
+    async fn verify(State(received): State<Forwarded>, request: axum::extract::Request) -> axum::response::Response {
+        let (parts, body) = request.into_parts();
+        let bytes = axum::body::to_bytes(body, usize::MAX).await.expect("a body");
+        let pick = |name: &str| parts.headers.get(name).and_then(|value| value.to_str().ok()).map(str::to_string);
+        received.lock().expect("lock").push(json!({
+            "method": parts.method.as_str(),
+            "path": parts.uri.to_string(),
+            "siteKey": pick("prosopo-site-key"),
+            "user": pick("prosopo-user"),
+            "marker": pick("prosopo-verify-forwarded"),
+            "body": serde_json::from_slice::<Value>(&bytes).expect("JSON"),
+        }));
+        let answer: Value = json!({ "status": "ok", "verified": true, "score": 0.25, "forwardedBy": "issuer" });
+        axum::response::Response::builder().header("Content-Type", "application/json").body(axum::body::Body::from(answer.to_string())).expect("a response")
+    }
+    let listener: tokio::net::TcpListener = tokio::net::TcpListener::bind(("::", port)).await.expect("binds the issuer's port");
+    let router: Router = Router::new().route("/{*path}", post(verify)).with_state(received);
+    tokio::spawn(async move { axum::serve(listener, router).await.expect("serves") });
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn pow_verifies_as_the_express_app_verifies() {
+    let _live = LIVE.lock().await;
+    let vectors: Value = serde_json::from_str(include_str!("../../provider/rust/equivalence/verify-vectors.json")).expect("verify-vectors.json parses");
+    let database: &str = vectors["database"].as_str().expect("a database");
+    reset(database).await;
+    let ipapi: String = fake_ipapi(vectors["ipapi"].clone()).await;
+    let dns: String = fake_dns(vectors["dns"].clone()).await;
+    let received: Forwarded = Arc::new(Mutex::new(Vec::new()));
+    other_provider(28123, received.clone()).await;
+    let pair: KeyringPair = get_pair(Some(Secret::Text(MNEMONIC)), None, None, None).expect("the provider pair");
+    let list: String = vectors["providerList"].as_str().expect("a provider list").replace("{{SELF}}", &pair.address().expect("an address"));
+    std::env::set_var("PROSOPO_PROVIDER_LIST", list);
+    let mut variables: HashMap<String, String> = serde_json::from_value(vectors["variables"].clone()).expect("variables");
+    variables.insert("PROSOPO_IPAPI_URL".to_string(), ipapi);
+    variables.insert("PROSOPO_DNS_SERVERS".to_string(), json!([dns]).to_string());
+    variables.insert("NODE_ENV".to_string(), "production".to_string());
+    let clock: Arc<PinnedClock> = Arc::new(PinnedClock(AtomicI64::new(0)));
+    let first: i64 = vectors["exchanges"][0]["at"].as_i64().expect("a time");
+    clock.0.store(first, Ordering::SeqCst);
+    let (router, _env) = live_app_at(&variables, clock.clone()).await;
+    restore_database(database, &vectors["seed"]).await;
+    restore_hashes(&vectors["redis"]).await;
+    restore_cached_sessions(&vectors["cache"]).await;
+    let port: u16 = serve(router).await;
+    let (compared, mut failures) = replay_with(port, &vectors["exchanges"], |step| clock.0.store(step["at"].as_i64().expect("a time"), Ordering::SeqCst)).await;
+    let scraped: Vec<u8> = exchange(port, b"GET /metrics HTTP/1.1\r\nHost: h.example\r\nConnection: close\r\n\r\n").await;
+    let mut metrics: Vec<String> = String::from_utf8_lossy(&scraped).lines().filter(|line| line.starts_with("prosopo_captcha_verify")).map(str::to_string).collect();
+    metrics.sort();
+    if json!(metrics) != vectors["metrics"] {
+        failures.push(format!("verify metrics differ\n  ts:   {}\n  rust: {}", vectors["metrics"], json!(metrics)));
+    }
+    tokio::time::sleep(Duration::from_millis(1500)).await;
+    let fresh: [&str; 2] = ["lastUpdatedTimestamp", "verifiedAtTimestamp"];
+    failures.extend(compare_records(&vectors["after"]["powcaptchas"], &dump(database, "powcaptchas").await, &fresh));
+    failures.extend(compare_records(&vectors["after"]["sessions"], &dump(database, "sessions").await, &fresh));
+    let cached: Vec<Value> = cached_sessions().await;
+    let expected_cache: Vec<Value> = vectors["cacheAfter"].as_array().expect("cached sessions").clone();
+    if cached_without_time(&cached) != cached_without_time(&expected_cache) {
+        failures.push(format!("cached sessions differ\n  ts:   {}\n  rust: {}", json!(expected_cache), json!(cached)));
+    }
+    let forwarded: Vec<Value> = received.lock().expect("lock").clone();
+    if json!(forwarded) != vectors["forwarded"] {
+        failures.push(format!("forwarded requests differ\n  ts:   {}\n  rust: {}", vectors["forwarded"], json!(forwarded)));
+    }
+    assert!(compared > 50, "only {compared} compared");
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }

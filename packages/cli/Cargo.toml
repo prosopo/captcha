@@ -25,6 +25,7 @@ name = "live"
 path = "rust/tests_live.rs"
 
 [dependencies]
+prosopo-load-balancer = { path = "../load-balancer" }
 axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
 clap = { version = "4.5", features = ["derive"] }
 prosopo-api-router = { path = "../api-express-router" }

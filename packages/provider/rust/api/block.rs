@@ -203,35 +203,42 @@ pub fn hard_block_cache_key(client_id: Option<&str>, scope: &UserScope, block_on
     format!("{flags}|{}", parts.join("|"))
 }
 
+/// What `getRequestUserScope` builds a scope from.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct ScopeSignals<'a> {
+    pub user_agent: Option<&'a str>,
+    pub ja4: Option<&'a str>,
+    pub ip: Option<&'a str>,
+    pub user: Option<&'a str>,
+    pub head_hash: Option<&'a str>,
+    pub coords: Option<&'a str>,
+    pub country_code: Option<&'a str>,
+    pub asn: Option<f64>,
+    pub web_bot_auth_agent: Option<&'a str>,
+}
+
 /// `getRequestUserScope`, in record form: what `userScopeInput` reads.
-#[allow(clippy::too_many_arguments)]
-pub fn get_request_user_scope(
-    headers: &HeaderMap,
-    ja4: Option<&str>,
-    ip: Option<&str>,
-    user: Option<&str>,
-    country_code: Option<&str>,
-    asn: Option<f64>,
-    web_bot_auth_agent: Option<&str>,
-) -> Value {
-    let user_agent: Option<String> = header(headers, "user-agent").filter(|agent| !agent.is_empty());
+pub fn get_request_user_scope(signals: ScopeSignals<'_>) -> Value {
     fn put(record: &mut Map<String, Value>, key: &str, value: Option<&str>) {
         if let Some(value) = value.filter(|value| !value.is_empty()) {
             record.insert(key.to_string(), json!(value));
         }
     }
+    let user_agent: Option<&str> = signals.user_agent.filter(|agent| !agent.is_empty());
     let mut record: Map<String, Value> = Map::new();
-    put(&mut record, "userId", user);
-    put(&mut record, "ja4Hash", ja4);
-    put(&mut record, "userAgent", user_agent.as_deref());
-    put(&mut record, "ip", ip);
-    put(&mut record, "countryCode", country_code);
-    if let Some(asn) = asn {
+    put(&mut record, "userId", signals.user);
+    put(&mut record, "ja4Hash", signals.ja4);
+    put(&mut record, "userAgent", user_agent);
+    put(&mut record, "ip", signals.ip);
+    put(&mut record, "headHash", signals.head_hash);
+    put(&mut record, "coords", signals.coords);
+    put(&mut record, "countryCode", signals.country_code);
+    if let Some(asn) = signals.asn {
         record.insert("asn".to_string(), json!(asn));
     }
-    put(&mut record, "webBotAuthAgent", web_bot_auth_agent);
-    record.insert("os".to_string(), json!(classify_os(user_agent.as_deref()).as_str()));
-    record.insert("browser".to_string(), json!(classify_browser(user_agent.as_deref()).as_str()));
+    put(&mut record, "webBotAuthAgent", signals.web_bot_auth_agent);
+    record.insert("os".to_string(), json!(classify_os(user_agent).as_str()));
+    record.insert("browser".to_string(), json!(classify_browser(user_agent).as_str()));
     record.insert("headerMatch".to_string(), json!(HEADER_RULE_MARKER));
     Value::Object(record)
 }
@@ -239,6 +246,30 @@ pub fn get_request_user_scope(
 /// `normalizeHeadersForMatching`.
 pub fn normalize_headers_for_matching(headers: &HeaderMap) -> HashMap<String, String> {
     headers.keys().filter_map(|name| Some((name.as_str().to_string(), header(headers, name.as_str())?))).collect()
+}
+
+/// `normalizeHeadersForMatching` over headers as a record stores them: string values, and
+/// arrays joined, under lower-cased names.
+pub fn normalize_stored_headers(headers: &Map<String, Value>) -> HashMap<String, String> {
+    /// `String(value)`.
+    fn text(value: &Value) -> String {
+        match value {
+            Value::String(text) => text.clone(),
+            Value::Number(number) => prosopo_util::number_to_string(number.as_f64().unwrap_or(f64::NAN)),
+            Value::Null => "null".to_string(),
+            Value::Bool(flag) => flag.to_string(),
+            Value::Array(items) => items.iter().map(|item| if item.is_null() { String::new() } else { text(item) }).collect::<Vec<String>>().join(","),
+            Value::Object(_) => "[object Object]".to_string(),
+        }
+    }
+    headers
+        .iter()
+        .filter_map(|(name, value)| match value {
+            Value::String(text) => Some((name.to_lowercase(), text.clone())),
+            Value::Array(items) => Some((name.to_lowercase(), items.iter().map(text).collect::<Vec<String>>().join(", "))),
+            _ => None,
+        })
+        .collect()
 }
 
 /// The scalar user-scope fields, each one point of specificity when a rule sets it.
@@ -423,7 +454,16 @@ impl BlacklistRequestInspector {
             Some(IpInfoResponse::Valid(info)) => (info.country_code.as_deref(), info.asn_number.map(|asn| asn.get())),
             _ => (None, None),
         };
-        let scope: Value = get_request_user_scope(request.headers, Some(request.ja4), Some(request.ip), user_id, country_code, asn, None);
+        let user_agent: Option<String> = header(request.headers, "user-agent");
+        let scope: Value = get_request_user_scope(ScopeSignals {
+            user_agent: user_agent.as_deref(),
+            ja4: Some(request.ja4),
+            ip: Some(request.ip),
+            user: user_id,
+            country_code,
+            asn,
+            ..ScopeSignals::default()
+        });
         let options = PrioritisedRuleOptions { block_only: true, memo: request.memo, ..PrioritisedRuleOptions::default() };
         let rules: Vec<AccessRule> =
             match get_prioritised_access_rule(self.storage.clone(), &self.cache, &scope, client_id, &normalize_headers_for_matching(request.headers), options).await {
