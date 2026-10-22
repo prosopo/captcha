@@ -163,6 +163,9 @@ graph TB
     %% The detector ships ONLY as a provider-served pool bundle — there is no
     %% detector in the widget bundle. The browser is assigned one per session
     %% and the provider decrypts its output with that bundle's key.
+    %% A bundle stamped format "open-v1" (e.g. demos/detector-botd) is read by
+    %% the open decoder instead of the sealed one; such bundles load only when
+    %% PROSOPO_DETECTOR_OPEN_FORMAT=1, which self-hosted nodes set.
     Detector -->|request a bundle| DetectorAssignEP
     DetectorAssignEP --> DetectorPool
     DetectorPool -->|"per-session bundle + key"| Detector

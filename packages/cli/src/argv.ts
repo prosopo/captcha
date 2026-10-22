@@ -18,6 +18,7 @@ import type { ProsopoConfigOutput } from "@prosopo/types";
 import yargs, { type CommandModule } from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
+	commandDetectorPoolSet,
 	commandEnsureExternalIndexes,
 	commandEnsureIndexes,
 	commandMigrateAbuserScoreThreshold,
@@ -47,6 +48,7 @@ function getCommands(
 		commandEnsureExternalIndexes(pair, config, { logger }),
 		commandMigrateAbuserScoreThreshold(pair, config, { logger }),
 		commandProviderSetDataset(pair, config, { logger }),
+		commandDetectorPoolSet(pair, config, { logger }),
 		commandStoreCaptchasExternally(pair, config, { logger }),
 		commandUpdateSpamEmailDomains(pair, config, { logger }),
 		commandSiteKeyRegister(pair, config, { logger }),

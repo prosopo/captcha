@@ -68,7 +68,8 @@ missing those two DNS records doesn't break the main one — you'll just see ACM
 `bundle pool directory does not exist` and `No datasets found in database` are expected on a self-hosted node. They mean
 "no bot detector" and "no image dataset"; neither affects `pow` or `puzzle`.
 
-Pin different versions with `PROSOPO_PROVIDER_IMAGE_VERSION` and `CADDY_IMAGE_VERSION` in your `.env`.
+`PROSOPO_PROVIDER_IMAGE_VERSION` in your `.env` is set to the release your checkout documents. When you pull a newer
+checkout, change it to match. `CADDY_IMAGE_VERSION` pins Caddy the same way.
 
 ## 3. Register a site key
 
@@ -109,11 +110,92 @@ For several providers, pass comma-separated URLs, or the provider-list JSON if y
 Host `packages/procaptcha-bundle/dist/bundle/`, then:
 
 ```html
-<script src="https://your-cdn.example.com/procaptcha.bundle.js" async defer></script>
+<script type="module" src="https://your-cdn.example.com/procaptcha.bundle.js" async defer></script>
 <div class="procaptcha" data-sitekey="5Fpd..."></div>
 ```
 
 The CAPTCHA type comes from the site key record, not the page.
+
+The bundle is an ES module split into chunks, so `type="module"` is required and the whole `dist/bundle/` directory must
+be hosted together.
+
+## Bring your own detector
+
+The steps above serve a fixed challenge to everyone. To score visitors yourself, load a detector of your own and register
+the site key as `frictionless`. The provider then picks a challenge per visitor from your detector's score.
+
+[`demos/detector-botd`](demos/detector-botd) is a working example built on [BotD](https://github.com/fingerprintjs/BotD).
+It reports a score of `1` when BotD flags the browser as automated (headless Chrome, Selenium, Playwright, PhantomJS and
+others) and `0` otherwise. It makes no requests to anyone but your provider.
+
+```bash
+pnpm --filter @prosopo/detector-botd run build
+pnpm --filter @prosopo/detector-botd run pool --out detector-pool.json
+
+docker compose exec -T provider /nodejs/bin/node /usr/src/app/provider.cli.bundle.js detector_pool_set < detector-pool.json
+docker compose restart provider
+
+docker compose exec provider /nodejs/bin/node /usr/src/app/provider.cli.bundle.js site_key_register \
+  "$(grep '^PROSOPO_SITE_KEY=' .env | cut -d= -f2)" enterprise \
+  --captcha_type frictionless \
+  --domains example.com \
+  --pow_difficulty 4 \
+  --frictionless_threshold 0.5 \
+  --frictionless_image_threshold 2 \
+  --image_threshold 0.8
+```
+
+`pool` builds four bundles, each with its own RSA keypair: the public key goes into the bundle's JavaScript and the
+private key stays on your provider. You never handle the encryption yourself. The provider gives each visitor one of the
+bundles, and the detector encrypts what it reports with that bundle's key.
+
+The pool is read from stdin, not copied in as a file, because the provider container does not run as root and could not
+read a copied file. It is stored in the `detector_pool` volume, so it survives restarts and upgrades. Run the same
+commands again to replace it.
+
+The provider's score thresholds decide what each visitor gets:
+
+- below `--frictionless_threshold` (0.5): invisible proof of work
+- between that and `--frictionless_image_threshold`: a slider puzzle
+- at or above `--frictionless_image_threshold`: an image challenge
+
+The example sets the image threshold to `2`, above any score BotD gives, so flagged browsers get a puzzle. Leave it at its
+default of `1` only if you have [loaded an image dataset](#image-captchas); without one, visitors routed to an image
+challenge get an error.
+
+### Writing your own
+
+Replace `collectSignals` in [`demos/detector-botd/src/detector.ts`](demos/detector-botd/src/detector.ts) and rebuild the
+pool. It returns a `score` and a `d` object:
+
+```ts
+const collectSignals = async (): Promise<Signals> => ({
+  score: navigator.webdriver ? 1 : 0,
+  d: { webDriver: navigator.webdriver, languages: navigator.languages.length },
+});
+```
+
+Everything in `d` is stored on the session and passed to decision and routing machines as `input.d`, so a rule can act on
+`input.d.botKind` or any key you add. Nothing on the provider declares the keys.
+Values must be plain JSON: keys containing `.` or starting with `$` are dropped, and a `d` larger than 8 KB is dropped
+whole.
+
+The rest of the file handles the contract with the widget and the provider: the visitor's account, a hash of the user
+agent and of `document.head`, a timestamp, and the encryption. Keep it as it is.
+
+### What a self-built detector can and cannot do
+
+Your detector runs in the visitor's browser, and its public key ships inside the bundle. Anyone who reads the bundle can
+send any score they like. The provider checks that a token was made for this visitor, this browser and this page in the
+last ten minutes, but it cannot check that the score is honest. That is true of every client-side detector; ours resists
+it with obfuscation and per-bundle rotation, which the example does not attempt.
+
+So a detector like this one stops off-the-shelf automation — default headless browsers and frameworks that make no effort
+to hide — and it gives your rules signals to work with. It will not stop someone who studies your bundle and targets your
+site.
+
+`PROSOPO_DETECTOR_OPEN_FORMAT=1`, set in the self-hosted compose file, is what lets the provider load these bundles. A
+provider without it ignores them.
 
 ## Image CAPTCHAs
 
@@ -176,9 +258,10 @@ changes nothing about an existing dataset or its verification.
 
 ## What this does not give you
 
-A self-hosted node serves challenges and validates solutions. It does not decide who is a bot.
+A self-hosted node serves challenges and validates solutions. Unless you load a detector, it does not decide who is a
+bot.
 
-Frictionless scoring needs the client-side detector, which is closed source and not in the public image. An explicit
+Our frictionless scoring needs our client-side detector, which is closed source and not in the public image. An explicit
 `captcha_type` bypasses that path entirely, so `pow` and `puzzle` behave exactly as they do on the managed service, and
 a site key left on `frictionless` against a detector-less provider falls back to proof of work.
 
@@ -188,5 +271,5 @@ automatically, with access rules, traffic filters and analytics to tune it. None
 self-hosted challenge is a fixed obstacle in front of your form — good against opportunistic automation, but it does not
 adapt to an attacker who is targeting you specifically.
 
-[Contact us](https://prosopo.io/contact/) if you want an obfuscated detector bundle for your own node. Bring-your-own
-detector support is planned.
+A [detector of your own](#bring-your-own-detector) adds scoring on signals you choose. [Contact us](https://prosopo.io/contact/)
+if you want our obfuscated detector bundle for your own node.
