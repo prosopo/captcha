@@ -14,6 +14,7 @@
 
 //! `@prosopo/provider`: the provider service, ported in the phases of MIGRATION.md §3.
 
+pub mod api;
 pub mod client_meta_data;
 pub mod composite_ip;
 pub mod hashing;
@@ -21,6 +22,8 @@ pub mod ip_comparison;
 pub mod ip_validation;
 pub mod util;
 
+#[cfg(test)]
+mod public_equivalence;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

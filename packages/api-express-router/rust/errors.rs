@@ -55,13 +55,22 @@ pub fn error_response(error: &ThrownError, i18n: Option<&RequestI18n>) -> Respon
 /// What express's final handler answers a request no route took: `Cannot <METHOD> <path>` as
 /// a small HTML page, with its two protective headers.
 pub fn not_found(method: &str, path: &str) -> Response {
-    let message: String = escape_html(&format!("Cannot {method} {}", encode_url(path)));
-    let message: String = message.replace('\n', "<br>").replace("  ", " &nbsp;");
+    final_handler_page(StatusCode::NOT_FOUND, &format!("Cannot {method} {}", encode_url(path)))
+}
+
+/// What express's final handler answers an error no handler took, under
+/// `NODE_ENV=production`: the status text alone, where other environments show the stack.
+pub fn error_page(status: StatusCode) -> Response {
+    final_handler_page(status, status.canonical_reason().unwrap_or_default())
+}
+
+fn final_handler_page(status: StatusCode, message: &str) -> Response {
+    let message: String = escape_html(message).replace('\n', "<br>").replace("  ", " &nbsp;");
     let document: String = format!(
         "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Error</title>\n</head>\n<body>\n<pre>{message}</pre>\n</body>\n</html>\n"
     );
     let mut response: Response = Response::new(Body::from(document));
-    *response.status_mut() = StatusCode::NOT_FOUND;
+    *response.status_mut() = status;
     let headers = response.headers_mut();
     headers.insert("content-security-policy", HeaderValue::from_static("default-src 'none'"));
     headers.insert("x-content-type-options", HeaderValue::from_static("nosniff"));

@@ -2495,8 +2495,17 @@ dependencies = [
 name = "prosopo-provider"
 version = "6.0.0"
 dependencies = [
+ "axum",
+ "base64 0.22.1",
  "bson",
+ "bytes",
+ "flate2",
+ "futures-util",
  "hex",
+ "http",
+ "hyper",
+ "indexmap",
+ "prosopo-api-router",
  "prosopo-common",
  "prosopo-database",
  "prosopo-ipinfo",
@@ -2504,10 +2513,13 @@ dependencies = [
  "prosopo-types",
  "prosopo-util",
  "prosopo-util-crypto",
+ "reqwest",
  "serde",
  "serde_json",
+ "sha1",
  "sha2 0.10.9",
  "tokio",
+ "url",
 ]
 
 [[package]]

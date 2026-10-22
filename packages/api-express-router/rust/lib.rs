@@ -29,7 +29,7 @@ mod router;
 pub use adapter::{DefaultEndpointAdapter, EndpointAdapter};
 pub use auth::{auth_middleware, verify_signature, AdminKey, AuthMiddlewareOptions, AuthState};
 pub use context::{RequestBody, RequestI18n, RequestLog};
-pub use errors::{error_response, json_response, not_found};
+pub use errors::{error_page, error_response, json_response, not_found};
 pub use i18n::i18n_middleware;
 pub use logging::{request_logger, request_logger_middleware, HEALTH_CHECK_PATHS};
 pub use replay::{JwtReplayGuard, MemoryJwtReplayGuard};
