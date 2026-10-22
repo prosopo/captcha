@@ -15,10 +15,10 @@
 //! tasks/puzzle: the render-settings layering and piece size of puzzleRenderer.ts, the
 //! stratified sampler (stratifiedSampler.ts) and the pre-generated background buffer
 //! (backgroundBuffer.ts with nativeBackground.ts), and getFrictionlessCaptchaChallenge's
-//! `isPuzzleImageSwitchAvailable`, and `renderPuzzleImages` over the process's buffer and
-//! piece-size sampler.
+//! `isPuzzleImageSwitchAvailable`, `renderPuzzleImages` over the process's buffer and
+//! piece-size sampler, and puzzleDifficulty.ts's `samplePuzzleDifficulty`.
 
-use prosopo_captcha_severity::MIN_DECOY_HOLE_DARKEN_MARGIN;
+use prosopo_captcha_severity::{clamp_difficulty_level, PuzzleDifficultyBand, MIN_DECOY_HOLE_DARKEN_MARGIN, PUZZLE_DIFFICULTY_LEVELS};
 use prosopo_puzzle_assets::{create_background, render_puzzle, to_data_uri, NotchPlacement, PuzzleGeometry, PuzzleRenderSettings, RenderedPuzzle, RgbaImage, DEFAULT_GEOMETRY, DEFAULT_RENDER_SETTINGS};
 use std::sync::OnceLock;
 use prosopo_types::settings::{is_puzzle_image_switch_enabled, AllowedTypes, resolve_allowed_captcha_types, PUZZLE_PIECE_SCALE_MAX_DEFAULT, PUZZLE_PIECE_SCALE_MIN_DEFAULT};
@@ -183,6 +183,70 @@ impl StratifiedSampler {
     }
 }
 
+impl StratifiedSampler {
+    /// `sampleInt`: a draw rounded as `Math.round` rounds.
+    pub fn sample_int(&self, min: f64, max: f64) -> f64 {
+        prosopo_types::js_math_round(self.sample(min, max))
+    }
+}
+
+/// `SampledPuzzleDifficulty`: a level's bands drawn to one concrete puzzle.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SampledPuzzleDifficulty {
+    pub level: f64,
+    pub tolerance: f64,
+    pub decoy_count: f64,
+    pub decoy_edge_darkness: f64,
+    pub decoy_hole_darken: f64,
+    pub piece_scale: ScaleRange,
+}
+
+impl SampledPuzzleDifficulty {
+    /// The `puzzle` settings, as a session stores them.
+    pub fn puzzle_settings(&self) -> Value {
+        json!({
+            "decoyCount": self.decoy_count,
+            "decoyEdgeDarkness": self.decoy_edge_darkness,
+            "decoyHoleDarken": self.decoy_hole_darken,
+            "pieceScale": { "min": self.piece_scale.min, "max": self.piece_scale.max },
+        })
+    }
+}
+
+/// puzzleDifficulty.ts's samplers, one per knob: a shared cursor would move the knobs in
+/// lockstep and give away the level from one observed value.
+pub struct PuzzleDifficultySamplers {
+    tolerance: StratifiedSampler,
+    decoy_count: StratifiedSampler,
+    decoy_hole_darken: StratifiedSampler,
+    decoy_edge_darkness: StratifiedSampler,
+}
+
+impl PuzzleDifficultySamplers {
+    pub fn new(random: Arc<dyn SamplerRandom>) -> PuzzleDifficultySamplers {
+        let sampler = || StratifiedSampler::new(STRATIFIED_BUCKETS, random.clone());
+        PuzzleDifficultySamplers { tolerance: sampler(), decoy_count: sampler(), decoy_hole_darken: sampler(), decoy_edge_darkness: sampler() }
+    }
+
+    /// `samplePuzzleDifficulty`: a concrete puzzle from `level`'s bands, the level clamped to
+    /// `max_level` (`MAX_AUTO_ESCALATION_LEVEL` when absent). The decoys' hole is clamped after
+    /// the draw, so no band can put it within `MIN_DECOY_HOLE_DARKEN_MARGIN` of the real cut.
+    pub fn sample(&self, level: f64, hole_darken: f64, max_level: Option<f64>) -> SampledPuzzleDifficulty {
+        let index: f64 = clamp_difficulty_level(level, max_level);
+        let band: &PuzzleDifficultyBand = &PUZZLE_DIFFICULTY_LEVELS[index as usize];
+        let floor: f64 = hole_darken + MIN_DECOY_HOLE_DARKEN_MARGIN;
+        let decoy_hole_darken: f64 = self.decoy_hole_darken.sample(band.decoy_hole_darken.min, band.decoy_hole_darken.max);
+        SampledPuzzleDifficulty {
+            level: index,
+            tolerance: self.tolerance.sample_int(band.tolerance.min, band.tolerance.max),
+            decoy_count: self.decoy_count.sample_int(band.decoy_count.min, band.decoy_count.max),
+            decoy_edge_darkness: self.decoy_edge_darkness.sample_int(band.decoy_edge_darkness.min, band.decoy_edge_darkness.max),
+            decoy_hole_darken: floor.max(decoy_hole_darken).min(1.0),
+            piece_scale: ScaleRange { min: band.piece_scale.min, max: band.piece_scale.max },
+        }
+    }
+}
+
 /// `samplePuzzlePieceSize`: a piece size in whole pixels, at least one.
 pub fn sample_puzzle_piece_size(sampler: &StratifiedSampler, range: ScaleRange) -> u32 {
     let scale: f64 = sampler.sample(range.min, range.max);
@@ -318,11 +382,16 @@ pub struct RenderedPuzzleImages {
 pub struct PuzzleAssets {
     buffer: OnceLock<Arc<PuzzleBackgroundBuffer>>,
     piece_sizes: StratifiedSampler,
+    pub difficulty: PuzzleDifficultySamplers,
 }
 
 impl Default for PuzzleAssets {
     fn default() -> Self {
-        PuzzleAssets { buffer: OnceLock::new(), piece_sizes: StratifiedSampler::new(STRATIFIED_BUCKETS, Arc::new(OsSamplerRandom)) }
+        PuzzleAssets {
+            buffer: OnceLock::new(),
+            piece_sizes: StratifiedSampler::new(STRATIFIED_BUCKETS, Arc::new(OsSamplerRandom)),
+            difficulty: PuzzleDifficultySamplers::new(Arc::new(OsSamplerRandom)),
+        }
     }
 }
 

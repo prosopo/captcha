@@ -55,7 +55,7 @@ pub const MOBILE_SCORE_THRESHOLD: f64 = 3.0;
 /// `/a|b|…/i.test(text)` for ASCII alternatives: JS case-insensitive matching never maps a
 /// non-ASCII character onto an ASCII one, so `ſ` is not `s` here, as it would be under Unicode
 /// case folding.
-fn contains_ascii_insensitive(text: &str, needles: &[&str]) -> bool {
+pub(crate) fn contains_ascii_insensitive(text: &str, needles: &[&str]) -> bool {
     let lowered: String = text.chars().map(|c| c.to_ascii_lowercase()).collect();
     needles.iter().any(|needle| lowered.contains(needle))
 }

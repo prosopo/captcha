@@ -16,6 +16,7 @@
 
 pub mod audio;
 pub mod audio_alternative;
+pub mod captcha_type_selection;
 pub mod client;
 pub mod cron;
 pub mod decision;
@@ -24,6 +25,7 @@ pub mod dns_event;
 pub mod email;
 pub mod frictionless;
 pub mod image;
+pub mod pow;
 pub mod puzzle;
 pub mod request;
 pub mod schedulers;

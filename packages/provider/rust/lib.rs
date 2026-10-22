@@ -17,6 +17,7 @@
 pub mod api;
 pub mod client_meta_data;
 pub mod composite_ip;
+pub mod device_platform;
 pub mod dns;
 pub mod hashing;
 pub mod tasks;
@@ -39,3 +40,5 @@ mod tests;
 mod util_equivalence;
 #[cfg(test)]
 mod detection_equivalence;
+#[cfg(test)]
+mod pow_solution_equivalence;

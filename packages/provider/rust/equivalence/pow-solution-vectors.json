@@ -1,0 +1,5000 @@
+{
+	"node": "v24.22.1",
+	"solutions": [
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 1,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": -1,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 44,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 45,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 43,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 48,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 2,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 49,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 2,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 47,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 2,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 1832,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 3,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 1833,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 3,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 1831,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 3,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 74809,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 4,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 74810,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 4,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 74808,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 4,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 108,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 2.5,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 109,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 2.5,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 107,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 2.5,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0.1,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 1,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0.1,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": -1,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0.1,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0.125,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 1,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0.125,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": -1,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0.125,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0.13,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 1,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0.13,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": -1,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0.13,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": -1,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 1,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": -1,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": -1,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": -1,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 64,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 65,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1000,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 64,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 65,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1000,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 1.5,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 1.5,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 1.5,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 64,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 1.5,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 65,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 1.5,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1000,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 1e+21,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 1e+21,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 1e+21,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 64,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 1e+21,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 65,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 1e+21,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1000,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 1e-7,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 1e-7,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 1e-7,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 64,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 1e-7,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 65,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 1e-7,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1000,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 123456789012,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 123456789012,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 123456789012,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 64,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 123456789012,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 65,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 123456789012,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1000,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": -5,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": -5,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": -5,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 64,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": -5,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 65,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": -5,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1000,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 9007199254740992,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 0,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 9007199254740992,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 9007199254740992,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 64,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 9007199254740992,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 65,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 9007199254740992,
+			"challenge": "1700000000000___5Grwva___5FHne___123456",
+			"difficulty": 1000,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 0,
+			"challenge": "1700000000000___5Grwva___5FHne___12345631",
+			"difficulty": 2,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 1.5,
+			"challenge": "1700000000000___5Grwva___5FHne___1234561421",
+			"difficulty": 2,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 1e+21,
+			"challenge": "1700000000000___5Grwva___5FHne___1234561091",
+			"difficulty": 2,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 1e-7,
+			"challenge": "1700000000000___5Grwva___5FHne___12345655",
+			"difficulty": 2,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 9007199254740992,
+			"challenge": "1700000000000___5Grwva___5FHne___123456223",
+			"difficulty": 2,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 0.30000000000000004,
+			"challenge": "1700000000000___5Grwva___5FHne___12345630",
+			"difficulty": 2,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 1e+300,
+			"challenge": "1700000000000___5Grwva___5FHne___123456225",
+			"difficulty": 2,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": -1e-300,
+			"challenge": "1700000000000___5Grwva___5FHne___123456247",
+			"difficulty": 2,
+			"result": {
+				"ok": true
+			}
+		},
+		{
+			"nonce": 7,
+			"challenge": "",
+			"difficulty": 1,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 7,
+			"challenge": "ü",
+			"difficulty": 1,
+			"result": {
+				"ok": false
+			}
+		},
+		{
+			"nonce": 7,
+			"challenge": "😀___x",
+			"difficulty": 1,
+			"result": {
+				"ok": false
+			}
+		}
+	],
+	"signatures": [
+		{
+			"message": "1700000000000___5Grwva___5FHne___123456",
+			"signature": "0x20b5d9d9a970e81ef5f85677bfe0f9aad56ecd4d071f549849d6fda1263add53e7c4df6fa5a03c4414180f95f28d9796fcafae7af5d4df05175185626f8c508a",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {}
+		},
+		{
+			"message": "1700000000000___5Grwva___5FHne___123456",
+			"signature": "0x20b5d9d9a970e81ef5f85677bfe0f9aad56ecd4d071f549849d6fda1263add53e7c4df6fa5a03c4414180f95f28d9796fcafae7af5d4df05175185626f8c508a",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": null,
+			"result": {}
+		},
+		{
+			"message": "1700000000000___5Grwva___5FHne___123456",
+			"signature": "0x20b5d9d9a970e81ef5f85677bfe0f9aad56ecd4d071f549849d6fda1263add53e7c4df6fa5a03c4414180f95f28d9796fcafae7af5d4df05175185626f8c508a",
+			"address": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+			"signatureType": "timestamp",
+			"result": {}
+		},
+		{
+			"message": "1700000000000___5Grwva___5FHne___123456",
+			"signature": "0x20b5d9d9a970e81ef5f85677bfe0f9aad56ecd4d071f549849d6fda1263add53e7c4df6fa5a03c4414180f95f28d9796fcafae7af5d4df05175185626f8c5000",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: challenge",
+					"failedFuncName": "checkPowSignature",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"message": "1700000000000___5Grwva___5FHne___123456",
+					"signature": "0x20b5d9d9a970e81ef5f85677bfe0f9aad56ecd4d071f549849d6fda1263add53e7c4df6fa5a03c4414180f95f28d9796fcafae7af5d4df05175185626f8c5000",
+					"signatureType": "challenge",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "1700000000000___5Grwva___5FHne___123456",
+			"signature": "0x20b5d9d9a970e81ef5f85677bfe0f9aad56ecd4d071f549849d6fda1263add53e7c4df6fa5a03c4414180f95f28d9796fcafae7af5d4df05175185626f8c508a",
+			"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+			"signatureType": "timestamp",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: timestamp",
+					"failedFuncName": "checkPowSignature",
+					"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+					"message": "1700000000000___5Grwva___5FHne___123456",
+					"signature": "0x20b5d9d9a970e81ef5f85677bfe0f9aad56ecd4d071f549849d6fda1263add53e7c4df6fa5a03c4414180f95f28d9796fcafae7af5d4df05175185626f8c508a",
+					"signatureType": "timestamp",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "1700000000000___5Grwva___5FHne___123456",
+			"signature": "0x4070ab033af477369c963e769bc51b715173008184f923c4d7afb5f5caff13633c078fb725f7fc0d8a59a8c4daea1c9ebf801f98f69e2cc6f56cdf58bf7df883",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: challenge",
+					"failedFuncName": "checkPowSignature",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"message": "1700000000000___5Grwva___5FHne___123456",
+					"signature": "0x4070ab033af477369c963e769bc51b715173008184f923c4d7afb5f5caff13633c078fb725f7fc0d8a59a8c4daea1c9ebf801f98f69e2cc6f56cdf58bf7df883",
+					"signatureType": "challenge",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "1700000000000___5Grwva___5FHne___123456",
+			"signature": "0x1234",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid signature length, expected [64..66] bytes, found 2"
+			}
+		},
+		{
+			"message": "1700000000000___5Grwva___5FHne___123456",
+			"signature": "not hex",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid signature length, expected [64..66] bytes, found 7"
+			}
+		},
+		{
+			"message": "1700000000000___5Grwva___5FHne___123456",
+			"signature": "0x20b5d9d9a970e81ef5f85677bfe0f9aad56ecd4d071f549849d6fda1263add53e7c4df6fa5a03c4414180f95f28d9796fcafae7af5d4df05175185626f8c508a",
+			"address": "not an address",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Decoding not an address: Invalid base58 character \" \" (0x20) at index 3"
+			}
+		},
+		{
+			"message": "1700000000000___5Grwva___5FHne___123456",
+			"signature": "0x20b5d9d9a970e81ef5f85677bfe0f9aad56ecd4d071f549849d6fda1263add53e7c4df6fa5a03c4414180f95f28d9796fcafae7af5d4df05175185626f8c508a",
+			"address": "",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid empty address passed"
+			}
+		},
+		{
+			"message": "1700000000000",
+			"signature": "0x10c79267a06cb3ec0cbeba332fbee2bfb69331809e10853848e743aa65358d25f85f1e4dfda52b49a90e69d605bfbc1d236223153043d95bb371aa8ae36dc28c",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {}
+		},
+		{
+			"message": "1700000000000",
+			"signature": "0x10c79267a06cb3ec0cbeba332fbee2bfb69331809e10853848e743aa65358d25f85f1e4dfda52b49a90e69d605bfbc1d236223153043d95bb371aa8ae36dc28c",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": null,
+			"result": {}
+		},
+		{
+			"message": "1700000000000",
+			"signature": "0x10c79267a06cb3ec0cbeba332fbee2bfb69331809e10853848e743aa65358d25f85f1e4dfda52b49a90e69d605bfbc1d236223153043d95bb371aa8ae36dc28c",
+			"address": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+			"signatureType": "timestamp",
+			"result": {}
+		},
+		{
+			"message": "1700000000000",
+			"signature": "0x10c79267a06cb3ec0cbeba332fbee2bfb69331809e10853848e743aa65358d25f85f1e4dfda52b49a90e69d605bfbc1d236223153043d95bb371aa8ae36dc200",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: challenge",
+					"failedFuncName": "checkPowSignature",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"message": "1700000000000",
+					"signature": "0x10c79267a06cb3ec0cbeba332fbee2bfb69331809e10853848e743aa65358d25f85f1e4dfda52b49a90e69d605bfbc1d236223153043d95bb371aa8ae36dc200",
+					"signatureType": "challenge",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "1700000000000",
+			"signature": "0x10c79267a06cb3ec0cbeba332fbee2bfb69331809e10853848e743aa65358d25f85f1e4dfda52b49a90e69d605bfbc1d236223153043d95bb371aa8ae36dc28c",
+			"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+			"signatureType": "timestamp",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: timestamp",
+					"failedFuncName": "checkPowSignature",
+					"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+					"message": "1700000000000",
+					"signature": "0x10c79267a06cb3ec0cbeba332fbee2bfb69331809e10853848e743aa65358d25f85f1e4dfda52b49a90e69d605bfbc1d236223153043d95bb371aa8ae36dc28c",
+					"signatureType": "timestamp",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "1700000000000",
+			"signature": "0x86caed9d99e3178deac0e2127696c0acf90a6953ead8f3c60fd75522490a4e38877bffa89a1bb967f1c6564034c2fc7736b063f40af912dcdff694484e39b187",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: challenge",
+					"failedFuncName": "checkPowSignature",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"message": "1700000000000",
+					"signature": "0x86caed9d99e3178deac0e2127696c0acf90a6953ead8f3c60fd75522490a4e38877bffa89a1bb967f1c6564034c2fc7736b063f40af912dcdff694484e39b187",
+					"signatureType": "challenge",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "1700000000000",
+			"signature": "0x1234",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid signature length, expected [64..66] bytes, found 2"
+			}
+		},
+		{
+			"message": "1700000000000",
+			"signature": "not hex",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid signature length, expected [64..66] bytes, found 7"
+			}
+		},
+		{
+			"message": "1700000000000",
+			"signature": "0x10c79267a06cb3ec0cbeba332fbee2bfb69331809e10853848e743aa65358d25f85f1e4dfda52b49a90e69d605bfbc1d236223153043d95bb371aa8ae36dc28c",
+			"address": "not an address",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Decoding not an address: Invalid base58 character \" \" (0x20) at index 3"
+			}
+		},
+		{
+			"message": "1700000000000",
+			"signature": "0x10c79267a06cb3ec0cbeba332fbee2bfb69331809e10853848e743aa65358d25f85f1e4dfda52b49a90e69d605bfbc1d236223153043d95bb371aa8ae36dc28c",
+			"address": "",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid empty address passed"
+			}
+		},
+		{
+			"message": "",
+			"signature": "0xeca2d3f8ddb3f3fb456a5bb986310cbb6075796643f9439d57e7f4059ff63013d9ac579b25c688bd6d956bf50b2986ebf440987fcc92719ea1edf1d92958de8f",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {}
+		},
+		{
+			"message": "",
+			"signature": "0xeca2d3f8ddb3f3fb456a5bb986310cbb6075796643f9439d57e7f4059ff63013d9ac579b25c688bd6d956bf50b2986ebf440987fcc92719ea1edf1d92958de8f",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": null,
+			"result": {}
+		},
+		{
+			"message": "",
+			"signature": "0xeca2d3f8ddb3f3fb456a5bb986310cbb6075796643f9439d57e7f4059ff63013d9ac579b25c688bd6d956bf50b2986ebf440987fcc92719ea1edf1d92958de8f",
+			"address": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+			"signatureType": "timestamp",
+			"result": {}
+		},
+		{
+			"message": "",
+			"signature": "0xeca2d3f8ddb3f3fb456a5bb986310cbb6075796643f9439d57e7f4059ff63013d9ac579b25c688bd6d956bf50b2986ebf440987fcc92719ea1edf1d92958de00",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: challenge",
+					"failedFuncName": "checkPowSignature",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"message": "",
+					"signature": "0xeca2d3f8ddb3f3fb456a5bb986310cbb6075796643f9439d57e7f4059ff63013d9ac579b25c688bd6d956bf50b2986ebf440987fcc92719ea1edf1d92958de00",
+					"signatureType": "challenge",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "",
+			"signature": "0xeca2d3f8ddb3f3fb456a5bb986310cbb6075796643f9439d57e7f4059ff63013d9ac579b25c688bd6d956bf50b2986ebf440987fcc92719ea1edf1d92958de8f",
+			"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+			"signatureType": "timestamp",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: timestamp",
+					"failedFuncName": "checkPowSignature",
+					"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+					"message": "",
+					"signature": "0xeca2d3f8ddb3f3fb456a5bb986310cbb6075796643f9439d57e7f4059ff63013d9ac579b25c688bd6d956bf50b2986ebf440987fcc92719ea1edf1d92958de8f",
+					"signatureType": "timestamp",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "",
+			"signature": "0x9421188694866f6ffd5a0bc74dd51cc65bad39eb5e5de748a39fdd83bae11540da26d68c5e5155faf8b4b58a00eb7a30d8ff8713d740c1da7d24999c1b7bab87",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: challenge",
+					"failedFuncName": "checkPowSignature",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"message": "",
+					"signature": "0x9421188694866f6ffd5a0bc74dd51cc65bad39eb5e5de748a39fdd83bae11540da26d68c5e5155faf8b4b58a00eb7a30d8ff8713d740c1da7d24999c1b7bab87",
+					"signatureType": "challenge",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "",
+			"signature": "0x1234",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid signature length, expected [64..66] bytes, found 2"
+			}
+		},
+		{
+			"message": "",
+			"signature": "not hex",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid signature length, expected [64..66] bytes, found 7"
+			}
+		},
+		{
+			"message": "",
+			"signature": "0xeca2d3f8ddb3f3fb456a5bb986310cbb6075796643f9439d57e7f4059ff63013d9ac579b25c688bd6d956bf50b2986ebf440987fcc92719ea1edf1d92958de8f",
+			"address": "not an address",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Decoding not an address: Invalid base58 character \" \" (0x20) at index 3"
+			}
+		},
+		{
+			"message": "",
+			"signature": "0xeca2d3f8ddb3f3fb456a5bb986310cbb6075796643f9439d57e7f4059ff63013d9ac579b25c688bd6d956bf50b2986ebf440987fcc92719ea1edf1d92958de8f",
+			"address": "",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid empty address passed"
+			}
+		},
+		{
+			"message": "ü😀",
+			"signature": "0x845ed90f805bde4ef3ad1e67c07fc8e27cec4e85f79efb9b933e9ec07abc6b4c3aaa2833cc5c68424e5f5bd40f8639aa04ef5d3b81ba8063f0c9f6ba91546d8b",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {}
+		},
+		{
+			"message": "ü😀",
+			"signature": "0x845ed90f805bde4ef3ad1e67c07fc8e27cec4e85f79efb9b933e9ec07abc6b4c3aaa2833cc5c68424e5f5bd40f8639aa04ef5d3b81ba8063f0c9f6ba91546d8b",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": null,
+			"result": {}
+		},
+		{
+			"message": "ü😀",
+			"signature": "0x845ed90f805bde4ef3ad1e67c07fc8e27cec4e85f79efb9b933e9ec07abc6b4c3aaa2833cc5c68424e5f5bd40f8639aa04ef5d3b81ba8063f0c9f6ba91546d8b",
+			"address": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+			"signatureType": "timestamp",
+			"result": {}
+		},
+		{
+			"message": "ü😀",
+			"signature": "0x845ed90f805bde4ef3ad1e67c07fc8e27cec4e85f79efb9b933e9ec07abc6b4c3aaa2833cc5c68424e5f5bd40f8639aa04ef5d3b81ba8063f0c9f6ba91546d00",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: challenge",
+					"failedFuncName": "checkPowSignature",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"message": "ü😀",
+					"signature": "0x845ed90f805bde4ef3ad1e67c07fc8e27cec4e85f79efb9b933e9ec07abc6b4c3aaa2833cc5c68424e5f5bd40f8639aa04ef5d3b81ba8063f0c9f6ba91546d00",
+					"signatureType": "challenge",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "ü😀",
+			"signature": "0x845ed90f805bde4ef3ad1e67c07fc8e27cec4e85f79efb9b933e9ec07abc6b4c3aaa2833cc5c68424e5f5bd40f8639aa04ef5d3b81ba8063f0c9f6ba91546d8b",
+			"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+			"signatureType": "timestamp",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: timestamp",
+					"failedFuncName": "checkPowSignature",
+					"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+					"message": "ü😀",
+					"signature": "0x845ed90f805bde4ef3ad1e67c07fc8e27cec4e85f79efb9b933e9ec07abc6b4c3aaa2833cc5c68424e5f5bd40f8639aa04ef5d3b81ba8063f0c9f6ba91546d8b",
+					"signatureType": "timestamp",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "ü😀",
+			"signature": "0xbc7b27629168e0657f7456b209e722a2678719fc3b549b39a43080443f742561a2a3c95a7ed009125db1a35a19d33791790d2cb2fb007b96e90cb8db3a81ce89",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: challenge",
+					"failedFuncName": "checkPowSignature",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"message": "ü😀",
+					"signature": "0xbc7b27629168e0657f7456b209e722a2678719fc3b549b39a43080443f742561a2a3c95a7ed009125db1a35a19d33791790d2cb2fb007b96e90cb8db3a81ce89",
+					"signatureType": "challenge",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "ü😀",
+			"signature": "0x1234",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid signature length, expected [64..66] bytes, found 2"
+			}
+		},
+		{
+			"message": "ü😀",
+			"signature": "not hex",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid signature length, expected [64..66] bytes, found 7"
+			}
+		},
+		{
+			"message": "ü😀",
+			"signature": "0x845ed90f805bde4ef3ad1e67c07fc8e27cec4e85f79efb9b933e9ec07abc6b4c3aaa2833cc5c68424e5f5bd40f8639aa04ef5d3b81ba8063f0c9f6ba91546d8b",
+			"address": "not an address",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Decoding not an address: Invalid base58 character \" \" (0x20) at index 3"
+			}
+		},
+		{
+			"message": "ü😀",
+			"signature": "0x845ed90f805bde4ef3ad1e67c07fc8e27cec4e85f79efb9b933e9ec07abc6b4c3aaa2833cc5c68424e5f5bd40f8639aa04ef5d3b81ba8063f0c9f6ba91546d8b",
+			"address": "",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid empty address passed"
+			}
+		},
+		{
+			"message": "0x1234",
+			"signature": "0x6291838ccd672d17e1b1aac94c37662ff4c9d8dc3cea57185ce868dbf762a26a599f5f70356b53948eba4a5dde4028e6731f775ea071c3fb47e7fd2052464a8c",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: challenge",
+					"failedFuncName": "checkPowSignature",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"message": "0x1234",
+					"signature": "0x6291838ccd672d17e1b1aac94c37662ff4c9d8dc3cea57185ce868dbf762a26a599f5f70356b53948eba4a5dde4028e6731f775ea071c3fb47e7fd2052464a8c",
+					"signatureType": "challenge",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "0x1234",
+			"signature": "0x6291838ccd672d17e1b1aac94c37662ff4c9d8dc3cea57185ce868dbf762a26a599f5f70356b53948eba4a5dde4028e6731f775ea071c3fb47e7fd2052464a8c",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": null,
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: undefined",
+					"failedFuncName": "checkPowSignature",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"message": "0x1234",
+					"signature": "0x6291838ccd672d17e1b1aac94c37662ff4c9d8dc3cea57185ce868dbf762a26a599f5f70356b53948eba4a5dde4028e6731f775ea071c3fb47e7fd2052464a8c",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "0x1234",
+			"signature": "0x6291838ccd672d17e1b1aac94c37662ff4c9d8dc3cea57185ce868dbf762a26a599f5f70356b53948eba4a5dde4028e6731f775ea071c3fb47e7fd2052464a8c",
+			"address": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+			"signatureType": "timestamp",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: timestamp",
+					"failedFuncName": "checkPowSignature",
+					"address": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+					"message": "0x1234",
+					"signature": "0x6291838ccd672d17e1b1aac94c37662ff4c9d8dc3cea57185ce868dbf762a26a599f5f70356b53948eba4a5dde4028e6731f775ea071c3fb47e7fd2052464a8c",
+					"signatureType": "timestamp",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "0x1234",
+			"signature": "0x6291838ccd672d17e1b1aac94c37662ff4c9d8dc3cea57185ce868dbf762a26a599f5f70356b53948eba4a5dde4028e6731f775ea071c3fb47e7fd2052464a00",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: challenge",
+					"failedFuncName": "checkPowSignature",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"message": "0x1234",
+					"signature": "0x6291838ccd672d17e1b1aac94c37662ff4c9d8dc3cea57185ce868dbf762a26a599f5f70356b53948eba4a5dde4028e6731f775ea071c3fb47e7fd2052464a00",
+					"signatureType": "challenge",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "0x1234",
+			"signature": "0x6291838ccd672d17e1b1aac94c37662ff4c9d8dc3cea57185ce868dbf762a26a599f5f70356b53948eba4a5dde4028e6731f775ea071c3fb47e7fd2052464a8c",
+			"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+			"signatureType": "timestamp",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: timestamp",
+					"failedFuncName": "checkPowSignature",
+					"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+					"message": "0x1234",
+					"signature": "0x6291838ccd672d17e1b1aac94c37662ff4c9d8dc3cea57185ce868dbf762a26a599f5f70356b53948eba4a5dde4028e6731f775ea071c3fb47e7fd2052464a8c",
+					"signatureType": "timestamp",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "0x1234",
+			"signature": "0xbcff5f4545810357a1aa873c8ff87a6a29703c1c12f4b41aee4c26114422bc23244529b13f9236a942af78fe8d78fbc7fa2a7bdc027a969ebce1e159b9128389",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: challenge",
+					"failedFuncName": "checkPowSignature",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"message": "0x1234",
+					"signature": "0xbcff5f4545810357a1aa873c8ff87a6a29703c1c12f4b41aee4c26114422bc23244529b13f9236a942af78fe8d78fbc7fa2a7bdc027a969ebce1e159b9128389",
+					"signatureType": "challenge",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "0x1234",
+			"signature": "0x1234",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid signature length, expected [64..66] bytes, found 2"
+			}
+		},
+		{
+			"message": "0x1234",
+			"signature": "not hex",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid signature length, expected [64..66] bytes, found 7"
+			}
+		},
+		{
+			"message": "0x1234",
+			"signature": "0x6291838ccd672d17e1b1aac94c37662ff4c9d8dc3cea57185ce868dbf762a26a599f5f70356b53948eba4a5dde4028e6731f775ea071c3fb47e7fd2052464a8c",
+			"address": "not an address",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Decoding not an address: Invalid base58 character \" \" (0x20) at index 3"
+			}
+		},
+		{
+			"message": "0x1234",
+			"signature": "0x6291838ccd672d17e1b1aac94c37662ff4c9d8dc3cea57185ce868dbf762a26a599f5f70356b53948eba4a5dde4028e6731f775ea071c3fb47e7fd2052464a8c",
+			"address": "",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid empty address passed"
+			}
+		},
+		{
+			"message": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			"signature": "0x98a12b4a49c50fde7a33d555829ca2bcee280fcbc8e4954e24d6f162edfc10207eb776a972c5ac1c0fec4934c3d68888d8b29b9f33cc947a28b072eeef25a18a",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {}
+		},
+		{
+			"message": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			"signature": "0x98a12b4a49c50fde7a33d555829ca2bcee280fcbc8e4954e24d6f162edfc10207eb776a972c5ac1c0fec4934c3d68888d8b29b9f33cc947a28b072eeef25a18a",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": null,
+			"result": {}
+		},
+		{
+			"message": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			"signature": "0x98a12b4a49c50fde7a33d555829ca2bcee280fcbc8e4954e24d6f162edfc10207eb776a972c5ac1c0fec4934c3d68888d8b29b9f33cc947a28b072eeef25a18a",
+			"address": "0xd43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+			"signatureType": "timestamp",
+			"result": {}
+		},
+		{
+			"message": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			"signature": "0x98a12b4a49c50fde7a33d555829ca2bcee280fcbc8e4954e24d6f162edfc10207eb776a972c5ac1c0fec4934c3d68888d8b29b9f33cc947a28b072eeef25a100",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: challenge",
+					"failedFuncName": "checkPowSignature",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"message": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+					"signature": "0x98a12b4a49c50fde7a33d555829ca2bcee280fcbc8e4954e24d6f162edfc10207eb776a972c5ac1c0fec4934c3d68888d8b29b9f33cc947a28b072eeef25a100",
+					"signatureType": "challenge",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			"signature": "0x98a12b4a49c50fde7a33d555829ca2bcee280fcbc8e4954e24d6f162edfc10207eb776a972c5ac1c0fec4934c3d68888d8b29b9f33cc947a28b072eeef25a18a",
+			"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+			"signatureType": "timestamp",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: timestamp",
+					"failedFuncName": "checkPowSignature",
+					"address": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+					"message": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+					"signature": "0x98a12b4a49c50fde7a33d555829ca2bcee280fcbc8e4954e24d6f162edfc10207eb776a972c5ac1c0fec4934c3d68888d8b29b9f33cc947a28b072eeef25a18a",
+					"signatureType": "timestamp",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			"signature": "0x9efd92b2a0a62c9fd88f73e8235e3a608c88987298d732f11b43ca7289f5fc0798f58c2e44edc045619475124a4eb064e1bd68c7a861827037112500560d248a",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"key": "GENERAL.INVALID_SIGNATURE",
+				"context": {
+					"ERROR": "Signature is invalid for this message: challenge",
+					"failedFuncName": "checkPowSignature",
+					"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+					"message": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+					"signature": "0x9efd92b2a0a62c9fd88f73e8235e3a608c88987298d732f11b43ca7289f5fc0798f58c2e44edc045619475124a4eb064e1bd68c7a861827037112500560d248a",
+					"signatureType": "challenge",
+					"code": 500
+				}
+			}
+		},
+		{
+			"message": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			"signature": "0x1234",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid signature length, expected [64..66] bytes, found 2"
+			}
+		},
+		{
+			"message": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			"signature": "not hex",
+			"address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid signature length, expected [64..66] bytes, found 7"
+			}
+		},
+		{
+			"message": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			"signature": "0x98a12b4a49c50fde7a33d555829ca2bcee280fcbc8e4954e24d6f162edfc10207eb776a972c5ac1c0fec4934c3d68888d8b29b9f33cc947a28b072eeef25a18a",
+			"address": "not an address",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Decoding not an address: Invalid base58 character \" \" (0x20) at index 3"
+			}
+		},
+		{
+			"message": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+			"signature": "0x98a12b4a49c50fde7a33d555829ca2bcee280fcbc8e4954e24d6f162edfc10207eb776a972c5ac1c0fec4934c3d68888d8b29b9f33cc947a28b072eeef25a18a",
+			"address": "",
+			"signatureType": "challenge",
+			"result": {
+				"thrown": "Invalid empty address passed"
+			}
+		}
+	],
+	"coords": [
+		{
+			"coords": null,
+			"result": false
+		},
+		{
+			"coords": [],
+			"result": false
+		},
+		{
+			"coords": [
+				[]
+			],
+			"result": false
+		},
+		{
+			"coords": [
+				[
+					[
+						0,
+						0
+					]
+				]
+			],
+			"result": true
+		},
+		{
+			"coords": [
+				[
+					[
+						0,
+						0
+					],
+					[
+						0,
+						0
+					]
+				],
+				[
+					[
+						0,
+						0
+					]
+				]
+			],
+			"result": true
+		},
+		{
+			"coords": [
+				[
+					[
+						0,
+						1
+					]
+				]
+			],
+			"result": false
+		},
+		{
+			"coords": [
+				[
+					[
+						0,
+						0
+					]
+				],
+				[]
+			],
+			"result": false
+		},
+		{
+			"coords": [
+				[
+					[
+						0,
+						0
+					]
+				]
+			],
+			"result": true
+		},
+		{
+			"coords": [
+				[
+					[
+						0.5,
+						0
+					]
+				]
+			],
+			"result": false
+		}
+	],
+	"platforms": [
+		{
+			"userAgent": "",
+			"webView": false,
+			"signals": {},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "",
+			"webView": false,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "",
+			"webView": false,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "",
+			"webView": false,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "",
+			"webView": true,
+			"signals": {},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "",
+			"webView": true,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "",
+			"webView": true,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "",
+			"webView": true,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148",
+			"webView": false,
+			"signals": {},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148",
+			"webView": false,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148",
+			"webView": false,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148",
+			"webView": false,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148",
+			"webView": true,
+			"signals": {},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148",
+			"webView": true,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148",
+			"webView": true,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148",
+			"webView": true,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15",
+			"webView": false,
+			"signals": {},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15",
+			"webView": false,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15",
+			"webView": false,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15",
+			"webView": false,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15",
+			"webView": true,
+			"signals": {},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15",
+			"webView": true,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15",
+			"webView": true,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15",
+			"webView": true,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/119",
+			"webView": false,
+			"signals": {},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/119",
+			"webView": false,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/119",
+			"webView": false,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/119",
+			"webView": false,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/119",
+			"webView": true,
+			"signals": {},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/119",
+			"webView": true,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/119",
+			"webView": true,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/119",
+			"webView": true,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) Mobile",
+			"webView": false,
+			"signals": {},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) Mobile",
+			"webView": false,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) Mobile",
+			"webView": false,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) Mobile",
+			"webView": false,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) Mobile",
+			"webView": true,
+			"signals": {},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) Mobile",
+			"webView": true,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) Mobile",
+			"webView": true,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Mozilla/5.0 (Linux; Android 14; Pixel 7) Mobile",
+			"webView": true,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "IPOD touch",
+			"webView": false,
+			"signals": {},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "IPOD touch",
+			"webView": false,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "IPOD touch",
+			"webView": false,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "IPOD touch",
+			"webView": false,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "IPOD touch",
+			"webView": true,
+			"signals": {},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "IPOD touch",
+			"webView": true,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "IPOD touch",
+			"webView": true,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "IPOD touch",
+			"webView": true,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "mac os x",
+			"webView": false,
+			"signals": {},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "mac os x",
+			"webView": false,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "mac os x",
+			"webView": false,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "mac os x",
+			"webView": false,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "mac os x",
+			"webView": true,
+			"signals": {},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "mac os x",
+			"webView": true,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "mac os x",
+			"webView": true,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "mac os x",
+			"webView": true,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": true,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "MacOS X",
+			"webView": false,
+			"signals": {},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "MacOS X",
+			"webView": false,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "MacOS X",
+			"webView": false,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "MacOS X",
+			"webView": false,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "MacOS X",
+			"webView": true,
+			"signals": {},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "MacOS X",
+			"webView": true,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "MacOS X",
+			"webView": true,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "MacOS X",
+			"webView": true,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Macintoſh",
+			"webView": false,
+			"signals": {},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Macintoſh",
+			"webView": false,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Macintoſh",
+			"webView": false,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Macintoſh",
+			"webView": false,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": false,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Macintoſh",
+			"webView": true,
+			"signals": {},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Macintoſh",
+			"webView": true,
+			"signals": {
+				"carrierNetwork": true,
+				"tcpMss": 1400
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": false
+			}
+		},
+		{
+			"userAgent": "Macintoſh",
+			"webView": true,
+			"signals": {
+				"headers": {
+					"sec-ch-ua-mobile": "?1"
+				}
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": true
+			}
+		},
+		{
+			"userAgent": "Macintoſh",
+			"webView": true,
+			"signals": {
+				"deviceCapability": "touch",
+				"touchEventCount": 3
+			},
+			"result": {
+				"isApple": false,
+				"isWebView": true,
+				"isMobile": true
+			}
+		}
+	],
+	"coercions": [
+		{
+			"requested": "pow",
+			"allowed": null,
+			"result": "pow"
+		},
+		{
+			"requested": "pow",
+			"allowed": {
+				"image": false,
+				"puzzle": false,
+				"iconOrder": false
+			},
+			"result": "pow"
+		},
+		{
+			"requested": "pow",
+			"allowed": {
+				"image": true,
+				"puzzle": false,
+				"iconOrder": false
+			},
+			"result": "pow"
+		},
+		{
+			"requested": "pow",
+			"allowed": {
+				"image": false,
+				"puzzle": true,
+				"iconOrder": false
+			},
+			"result": "pow"
+		},
+		{
+			"requested": "pow",
+			"allowed": {
+				"image": true,
+				"puzzle": true,
+				"iconOrder": false
+			},
+			"result": "pow"
+		},
+		{
+			"requested": "pow",
+			"allowed": {
+				"image": false,
+				"puzzle": false,
+				"iconOrder": true
+			},
+			"result": "pow"
+		},
+		{
+			"requested": "pow",
+			"allowed": {
+				"image": true,
+				"puzzle": false,
+				"iconOrder": true
+			},
+			"result": "pow"
+		},
+		{
+			"requested": "pow",
+			"allowed": {
+				"image": false,
+				"puzzle": true,
+				"iconOrder": true
+			},
+			"result": "pow"
+		},
+		{
+			"requested": "pow",
+			"allowed": {
+				"image": true,
+				"puzzle": true,
+				"iconOrder": true
+			},
+			"result": "pow"
+		},
+		{
+			"requested": "image",
+			"allowed": null,
+			"result": "image"
+		},
+		{
+			"requested": "image",
+			"allowed": {
+				"image": false,
+				"puzzle": false,
+				"iconOrder": false
+			},
+			"result": "pow"
+		},
+		{
+			"requested": "image",
+			"allowed": {
+				"image": true,
+				"puzzle": false,
+				"iconOrder": false
+			},
+			"result": "image"
+		},
+		{
+			"requested": "image",
+			"allowed": {
+				"image": false,
+				"puzzle": true,
+				"iconOrder": false
+			},
+			"result": "puzzle"
+		},
+		{
+			"requested": "image",
+			"allowed": {
+				"image": true,
+				"puzzle": true,
+				"iconOrder": false
+			},
+			"result": "image"
+		},
+		{
+			"requested": "image",
+			"allowed": {
+				"image": false,
+				"puzzle": false,
+				"iconOrder": true
+			},
+			"result": "pow"
+		},
+		{
+			"requested": "image",
+			"allowed": {
+				"image": true,
+				"puzzle": false,
+				"iconOrder": true
+			},
+			"result": "image"
+		},
+		{
+			"requested": "image",
+			"allowed": {
+				"image": false,
+				"puzzle": true,
+				"iconOrder": true
+			},
+			"result": "puzzle"
+		},
+		{
+			"requested": "image",
+			"allowed": {
+				"image": true,
+				"puzzle": true,
+				"iconOrder": true
+			},
+			"result": "image"
+		},
+		{
+			"requested": "puzzle",
+			"allowed": null,
+			"result": "puzzle"
+		},
+		{
+			"requested": "puzzle",
+			"allowed": {
+				"image": false,
+				"puzzle": false,
+				"iconOrder": false
+			},
+			"result": "pow"
+		},
+		{
+			"requested": "puzzle",
+			"allowed": {
+				"image": true,
+				"puzzle": false,
+				"iconOrder": false
+			},
+			"result": "image"
+		},
+		{
+			"requested": "puzzle",
+			"allowed": {
+				"image": false,
+				"puzzle": true,
+				"iconOrder": false
+			},
+			"result": "puzzle"
+		},
+		{
+			"requested": "puzzle",
+			"allowed": {
+				"image": true,
+				"puzzle": true,
+				"iconOrder": false
+			},
+			"result": "puzzle"
+		},
+		{
+			"requested": "puzzle",
+			"allowed": {
+				"image": false,
+				"puzzle": false,
+				"iconOrder": true
+			},
+			"result": "pow"
+		},
+		{
+			"requested": "puzzle",
+			"allowed": {
+				"image": true,
+				"puzzle": false,
+				"iconOrder": true
+			},
+			"result": "image"
+		},
+		{
+			"requested": "puzzle",
+			"allowed": {
+				"image": false,
+				"puzzle": true,
+				"iconOrder": true
+			},
+			"result": "puzzle"
+		},
+		{
+			"requested": "puzzle",
+			"allowed": {
+				"image": true,
+				"puzzle": true,
+				"iconOrder": true
+			},
+			"result": "puzzle"
+		},
+		{
+			"requested": "iconOrder",
+			"allowed": null,
+			"result": "puzzle"
+		},
+		{
+			"requested": "iconOrder",
+			"allowed": {
+				"image": false,
+				"puzzle": false,
+				"iconOrder": false
+			},
+			"result": "pow"
+		},
+		{
+			"requested": "iconOrder",
+			"allowed": {
+				"image": true,
+				"puzzle": false,
+				"iconOrder": false
+			},
+			"result": "image"
+		},
+		{
+			"requested": "iconOrder",
+			"allowed": {
+				"image": false,
+				"puzzle": true,
+				"iconOrder": false
+			},
+			"result": "puzzle"
+		},
+		{
+			"requested": "iconOrder",
+			"allowed": {
+				"image": true,
+				"puzzle": true,
+				"iconOrder": false
+			},
+			"result": "puzzle"
+		},
+		{
+			"requested": "iconOrder",
+			"allowed": {
+				"image": false,
+				"puzzle": false,
+				"iconOrder": true
+			},
+			"result": "iconOrder"
+		},
+		{
+			"requested": "iconOrder",
+			"allowed": {
+				"image": true,
+				"puzzle": false,
+				"iconOrder": true
+			},
+			"result": "iconOrder"
+		},
+		{
+			"requested": "iconOrder",
+			"allowed": {
+				"image": false,
+				"puzzle": true,
+				"iconOrder": true
+			},
+			"result": "iconOrder"
+		},
+		{
+			"requested": "iconOrder",
+			"allowed": {
+				"image": true,
+				"puzzle": true,
+				"iconOrder": true
+			},
+			"result": "iconOrder"
+		}
+	],
+	"difficulties": [
+		{
+			"level": -1,
+			"maxLevel": null,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": null,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": null,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 0,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 0,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 0,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 1,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 1,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 1,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 2,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 2,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 2,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 4,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 4,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 4,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 9,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 9,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": -1,
+			"maxLevel": 9,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": null,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": null,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": null,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 0,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 0,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 0,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 1,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 1,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 1,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 2,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 2,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 2,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 4,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 4,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 4,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 9,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 9,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0,
+			"maxLevel": 9,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": null,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": null,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": null,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 0,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 0,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 0,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 1,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 1,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 1,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 2,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 2,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 2,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 4,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 4,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 4,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 9,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 9,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 0.5,
+			"maxLevel": 9,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": null,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": null,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": null,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 0,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 0,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 0,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 1,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 1,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 1,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 2,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 2,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 2,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 4,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 4,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 4,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 9,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 9,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 1,
+			"maxLevel": 9,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": null,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": null,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": null,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 0,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 0,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 0,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 1,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 1,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 1,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 2,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 2,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 2,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 4,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 4,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 4,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 9,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 9,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 2,
+			"maxLevel": 9,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": null,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": null,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": null,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 0,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 0,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 0,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 1,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 1,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 1,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 2,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 2,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 2,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 4,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 4,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 4,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 9,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 9,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 3,
+			"maxLevel": 9,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": null,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": null,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": null,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 0,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 0,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 0,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 1,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 1,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 1,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 2,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 2,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 2,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 4,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 4,
+				"pieceScale": {
+					"min": 0.09,
+					"max": 0.22
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 4,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 4,
+				"pieceScale": {
+					"min": 0.09,
+					"max": 0.22
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 4,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 4,
+				"pieceScale": {
+					"min": 0.09,
+					"max": 0.22
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 9,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 4,
+				"pieceScale": {
+					"min": 0.09,
+					"max": 0.22
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 9,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 4,
+				"pieceScale": {
+					"min": 0.09,
+					"max": 0.22
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 4,
+			"maxLevel": 9,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 4,
+				"pieceScale": {
+					"min": 0.09,
+					"max": 0.22
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": null,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": null,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": null,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 3,
+				"pieceScale": {
+					"min": 0.1,
+					"max": 0.28
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 0,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 0,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 0,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 1,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 1,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 1,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 1,
+				"pieceScale": {
+					"min": 0.14,
+					"max": 0.4
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 2,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 2,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 2,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 2,
+				"pieceScale": {
+					"min": 0.12,
+					"max": 0.34
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 4,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 4,
+				"pieceScale": {
+					"min": 0.09,
+					"max": 0.22
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 4,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 4,
+				"pieceScale": {
+					"min": 0.09,
+					"max": 0.22
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 4,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 4,
+				"pieceScale": {
+					"min": 0.09,
+					"max": 0.22
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 9,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 4,
+				"pieceScale": {
+					"min": 0.09,
+					"max": 0.22
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 9,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 4,
+				"pieceScale": {
+					"min": 0.09,
+					"max": 0.22
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": 5,
+			"maxLevel": 9,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 4,
+				"pieceScale": {
+					"min": 0.09,
+					"max": 0.22
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": null,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": null,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": null,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 0,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 0,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 0,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 1,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 1,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 1,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 2,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 2,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 2,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 4,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 4,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 4,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 9,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 9,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "NaN",
+			"maxLevel": 9,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": null,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": null,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": null,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 0,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 0,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 0,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 1,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 1,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 1,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 2,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 2,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 2,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 4,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 4,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 4,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 9,
+			"holeDarken": 0.4,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": null
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 9,
+			"holeDarken": 0.97,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		},
+		{
+			"level": "Infinity",
+			"maxLevel": 9,
+			"holeDarken": 1.5,
+			"result": {
+				"level": 0,
+				"pieceScale": {
+					"min": 0.15,
+					"max": 0.45
+				},
+				"decoyHoleDarken": 1
+			}
+		}
+	]
+}
