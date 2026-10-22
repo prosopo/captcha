@@ -106,6 +106,7 @@ declare module "@prosopo/common" {
 		"PROV-91": true;
 		"PROV-92": true;
 		"PROV-93": true;
+		"PROV-94": true;
 	}
 }
 

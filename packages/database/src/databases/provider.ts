@@ -807,7 +807,7 @@ export class ProviderDatabase
 		}
 
 		throw new ProsopoError({
-			code: "DB_QUERY_FAILED",
+			code: "RECORD_NOT_FOUND",
 			errorSite: "DBSE-17",
 			message: "Failed to get dataset",
 			context: { failedFuncName: this.getDatasetDetails.name, datasetId },
