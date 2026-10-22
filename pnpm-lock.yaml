@@ -308,6 +308,40 @@ importers:
         specifier: 5.0.4
         version: 5.0.4(@opentelemetry/api@1.9.1)(@types/node@22.5.5)(@vitest/browser-playwright@5.0.4)(@vitest/coverage-v8@5.0.4)(@vitest/ui@5.0.4)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.6(@types/node@22.5.5)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
 
+  demos/detector-botd:
+    dependencies:
+      '@fingerprintjs/botd':
+        specifier: 2.0.0
+        version: 2.0.0
+    devDependencies:
+      '@prosopo/procaptcha-frictionless':
+        specifier: workspace:*
+        version: link:../../packages/procaptcha-frictionless
+      '@prosopo/provider':
+        specifier: workspace:*
+        version: link:../../packages/provider
+      '@prosopo/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@types/node':
+        specifier: 22.10.2
+        version: 22.10.2
+      del-cli:
+        specifier: 6.0.0
+        version: 6.0.0
+      tsx:
+        specifier: 4.20.3
+        version: 4.20.3
+      typescript:
+        specifier: 5.6.2
+        version: 5.6.2
+      vite:
+        specifier: 8.1.6
+        version: 8.1.6(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1)
+      vitest:
+        specifier: 5.0.4
+        version: 5.0.4(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@5.0.4)(@vitest/coverage-v8@5.0.4)(@vitest/ui@5.0.4)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.6(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
+
   demos/provider-mock:
     dependencies:
       '@prosopo/api-express-router':
@@ -4578,6 +4612,9 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fingerprintjs/botd@2.0.0':
+    resolution: {integrity: sha512-yhuz23NKEcBDTHmGz/ULrXlGnbHenO+xZmVwuBkuqHUkqvaZ5TAA0kAgcRy4Wyo5dIBdkIf57UXX8/c9UlMLJg==}
 
   '@grpc/grpc-js@1.14.4':
     resolution: {integrity: sha512-k9Dj3DV/itK9D06Y8f190Qgop7/Ui+D0njFV3LHMPwPT75DpXLQohE9Wmz0QElrJnzsjB7KPWiKJbOl7IPDArQ==}
@@ -12381,6 +12418,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.2':
     optional: true
+
+  '@fingerprintjs/botd@2.0.0': {}
 
   '@grpc/grpc-js@1.14.4':
     dependencies:

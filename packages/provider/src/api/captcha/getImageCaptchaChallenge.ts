@@ -1,4 +1,5 @@
-import { ProsopoError } from "@prosopo/common";
+import { isHex } from "@polkadot/util/is";
+import { ProsopoError, isProsopoError } from "@prosopo/common";
 import { parseCaptchaAssets } from "@prosopo/datasets";
 import { Languages, isLanguage } from "@prosopo/locale";
 import {
@@ -46,6 +47,27 @@ import { buildImageMaintenanceResponse } from "./maintenanceModeResponses.js";
 import { getSealedAssetsResolver } from "./sealedAssetsResolver.js";
 import { getSignedAssetsResolver } from "./signedAssetsResolver.js";
 import { applyTrafficFilterAtRequestTime } from "./trafficFilterRequestTime.js";
+
+// A client-supplied datasetId that is not a stored dataset is bad input, not a
+// server fault. Any other lookup failure (e.g. the database being down) is
+// rethrown so it still surfaces as a 500.
+const clientDatasetExists = async (
+	tasks: Tasks,
+	datasetId: string | number[],
+): Promise<boolean> => {
+	if (typeof datasetId !== "string" || !isHex(datasetId)) {
+		return false;
+	}
+	try {
+		await tasks.db.getDatasetDetails(datasetId);
+		return true;
+	} catch (err) {
+		if (isProsopoError(err, "RECORD_NOT_FOUND")) {
+			return false;
+		}
+		throw err;
+	}
+};
 
 export default (
 	env: ProviderEnvironment,
@@ -148,6 +170,20 @@ export default (
 					new ProsopoError({
 						code: "SITE_KEY_NOT_REGISTERED",
 						errorSite: "PROV-11",
+						context: { siteKey: dapp },
+					}),
+				);
+			}
+
+			if (
+				clientDatasetId !== undefined &&
+				!(await clientDatasetExists(tasks, clientDatasetId))
+			) {
+				return next(
+					new ProsopoError({
+						code: "INVALID_REQUEST",
+						errorSite: "PROV-94",
+						message: "Unknown dataset",
 						context: { siteKey: dapp },
 					}),
 				);

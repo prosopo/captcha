@@ -22,6 +22,12 @@ COPY ./packages/cli/dist/bundle/ ./
 
 COPY ./packages/locale/dist/locales/ ./locales/
 
+# Created here so it reaches the runtime image owned by the runtime user. A
+# named volume mounted on it starts with that ownership; one mounted on a path
+# the image lacks is created root-owned, and the provider cannot write a pool
+# into it. The self-hosted compose file mounts its pool volume here.
+RUN mkdir -p data/detector-pool
+
 # Download the GeoLite2 databases into the same directory. One layer rather
 # than three so the intermediate states are not retained.
 RUN curl -fLsS -o GeoLite2-Country.mmdb https://git.io/GeoLite2-Country.mmdb && \

@@ -609,7 +609,9 @@ describe("Image Captcha Integration Tests", () => {
 				},
 			});
 
-			expect(response.status).toBe(500);
+			const data = (await response.json()) as CaptchaResponseBody;
+			expect(response.status).toBe(400);
+			expect(data.error?.message).toBe("Unknown dataset");
 		});
 		it("should return an error if the captcha type is set to pow", async () => {
 			const origin = "https://localhost";
