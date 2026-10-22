@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { describe, expect, it } from "vitest";
+import { number } from "zod";
 import { INPUT_LIMITS } from "./inputLimits.js";
-import { boundedString, safeLine, safeText } from "./sanitise.js";
+import { boundedArray, boundedString, safeLine, safeText } from "./sanitise.js";
 
 describe("INPUT_LIMITS", () => {
 	it("orders the limits from identifier sized up to token sized", () => {
@@ -146,5 +147,35 @@ describe("safeLine", () => {
 				"must not contain control characters or line breaks",
 			);
 		}
+	});
+});
+
+describe("boundedArray", () => {
+	const schema = boundedArray(number(), 3);
+
+	it("accepts arrays up to the cap", () => {
+		expect(schema.parse([1, 2, 3])).toEqual([1, 2, 3]);
+		expect(schema.parse([])).toEqual([]);
+	});
+
+	it("rejects an over-long array with a single issue before parsing elements", () => {
+		const result = schema.safeParse(["a", "b", "c", "d", "e"]);
+		expect(result.success).toBe(false);
+		expect(result.error?.issues).toHaveLength(1);
+		expect(result.error?.issues[0]?.message).toBe(
+			"Array must contain at most 3 element(s)",
+		);
+	});
+
+	it("reports element issues within the cap", () => {
+		const result = schema.safeParse([1, "b"]);
+		expect(result.success).toBe(false);
+		expect(result.error?.issues[0]?.path).toEqual([1]);
+	});
+
+	it("reports a non-array as a type error", () => {
+		const result = schema.safeParse("nope");
+		expect(result.success).toBe(false);
+		expect(result.error?.issues[0]?.code).toBe("invalid_type");
 	});
 });

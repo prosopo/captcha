@@ -14,10 +14,12 @@
 
 // Widget for the `authenticated` captcha outcome — no user-facing challenge,
 // just a visible acknowledgement that Web Bot Auth verification succeeded.
-// Mounts once, immediately encodes a ProcaptchaToken with the sessionId as
-// its commitmentId (matching what /client/authenticated/verify decodes) and
-// fires `onHuman`. The badge itself is purely presentational; the token
-// submission happens on mount.
+// Encodes a ProcaptchaToken with the sessionId as its commitmentId (matching
+// what /client/authenticated/verify decodes) and fires `onHuman`: on mount in
+// visible mode, and on execute() in invisible mode, where nothing is drawn.
+// Like a solved PoW, the pass expires and the frictionless flow is re-run for
+// a fresh session, so an agent that takes its time still submits a token the
+// site's server accepts as recent.
 //
 // The token carries empty signature bags (`{provider: {}, user: {}}`) — the
 // authenticated verify endpoint does not check the token's user or provider
@@ -26,6 +28,7 @@
 // is applied by the dApp on the way to /verify (not by the widget here).
 
 import {
+	PROCAPTCHA_EXECUTE_EVENT,
 	type StaticComponent,
 	createElement,
 	createSvgElement,
@@ -39,6 +42,7 @@ import {
 	type RandomProvider,
 	encodeProcaptchaOutput,
 } from "@prosopo/types";
+import { type Theme, lightTheme, withAlpha } from "@prosopo/widget-skeleton";
 
 export type AuthenticatedBadgeProps = {
 	sessionId: string;
@@ -47,6 +51,23 @@ export type AuthenticatedBadgeProps = {
 	userAccount: Account;
 	provider: RandomProvider;
 	callbacks: ProcaptchaCallbacks;
+	theme?: Theme;
+	labels?: AuthenticatedBadgeLabels;
+	invisible?: boolean;
+	// Receives a targeted execute() for this widget.
+	widgetContainer?: HTMLElement;
+	expiresInMs: number;
+	restart: () => void;
+};
+
+export type AuthenticatedBadgeLabels = {
+	verifiedAgent: string;
+	trustedRequest: string;
+};
+
+const DEFAULT_LABELS: AuthenticatedBadgeLabels = {
+	verifiedAgent: "Verified agent",
+	trustedRequest: "Trusted request",
 };
 
 const displayHost = (agent?: string): string => {
@@ -58,19 +79,22 @@ const displayHost = (agent?: string): string => {
 	}
 };
 
-const buildLabel = (agent?: string): HTMLElement => {
+const buildLabel = (
+	labels: AuthenticatedBadgeLabels,
+	agent?: string,
+): HTMLElement => {
 	if (!agent) {
 		// No Signature-Agent URL on the response — the operator's Allow rule
 		// matched on a non-Web-Bot-Auth condition (IP CIDR, JA4, UA substring,
 		// ASN, country). Fall back to generic copy so the operator isn't misled
 		// about which qualifier fired.
 		return createElement("span", {
-			children: [createElement("strong", { text: "Trusted request" })],
+			children: [createElement("strong", { text: labels.trustedRequest })],
 		});
 	}
 	return createElement("span", {
 		children: [
-			createElement("strong", { text: "Verified agent" }),
+			createElement("strong", { text: labels.verifiedAgent }),
 			document.createTextNode(`: ${displayHost(agent)}`),
 		],
 	});
@@ -103,6 +127,8 @@ export const mountAuthenticatedBadge = (
 	props: AuthenticatedBadgeProps,
 ): StaticComponent => {
 	const { sessionId, agent, dapp, userAccount, provider, callbacks } = props;
+	const { palette } = props.theme ?? lightTheme;
+	const events = getDefaultEvents(callbacks);
 
 	const badge = createElement("div", {
 		style: {
@@ -111,40 +137,66 @@ export const mountAuthenticatedBadge = (
 			gap: "8px",
 			padding: "8px 12px",
 			borderRadius: "6px",
-			background: "#eef2ff",
-			border: "1px solid #c7d2fe",
-			color: "#3730a3",
+			background: palette.primaryContainer.main,
+			border: `1px solid ${withAlpha(palette.primary.main, 0.4)}`,
+			color: palette.primaryContainer.contrastText,
 			fontFamily:
 				"-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
 			fontSize: "13px",
 			lineHeight: 1.4,
 		},
-		attributes: { role: "status", "aria-label": "Verified agent" },
-		children: [buildTick(), buildLabel(agent)],
+		// No aria-label: it replaced the visible text, and said "Verified agent"
+		// even for a trusted request.
+		attributes: { role: "status" },
+		children: [buildTick(), buildLabel(props.labels ?? DEFAULT_LABELS, agent)],
 	});
 
-	container.appendChild(badge);
+	let expiryTimer: ReturnType<typeof setTimeout> | undefined;
 
-	const events = getDefaultEvents(callbacks);
-	const token = encodeProcaptchaOutput({
-		[ApiParams.providerUrl]: provider.provider.url,
-		[ApiParams.user]: userAccount.account.address,
-		[ApiParams.dapp]: dapp,
-		// Verify endpoint reads commitmentId as the sessionId — reusing the
-		// existing slot avoids a token codec bump for this one flow.
-		[ApiParams.commitmentId]: sessionId,
-		[ApiParams.timestamp]: Date.now().toString(),
-		[ApiParams.signature]: {
-			[ApiParams.provider]: {},
-			[ApiParams.user]: {},
-		},
-		[ApiParams.captchaType]: CaptchaType.authenticated,
-	});
-	events.onHuman(token);
+	const issueToken = () => {
+		const token = encodeProcaptchaOutput({
+			[ApiParams.providerUrl]: provider.provider.url,
+			[ApiParams.user]: userAccount.account.address,
+			[ApiParams.dapp]: dapp,
+			// Verify endpoint reads commitmentId as the sessionId — reusing the
+			// existing slot avoids a token codec bump for this one flow.
+			[ApiParams.commitmentId]: sessionId,
+			[ApiParams.timestamp]: Date.now().toString(),
+			[ApiParams.signature]: {
+				[ApiParams.provider]: {},
+				[ApiParams.user]: {},
+			},
+			[ApiParams.captchaType]: CaptchaType.authenticated,
+		});
+		events.onHuman(token);
+		if (expiryTimer === undefined) {
+			expiryTimer = setTimeout(() => {
+				events.onExpired();
+				props.restart();
+			}, props.expiresInMs);
+		}
+	};
+
+	const executeTargets: EventTarget[] = [
+		...(props.widgetContainer ? [props.widgetContainer] : []),
+		...(props.invisible ? [document] : []),
+	];
+	for (const target of executeTargets) {
+		target.addEventListener(PROCAPTCHA_EXECUTE_EVENT, issueToken);
+	}
+
+	if (!props.invisible) {
+		container.appendChild(badge);
+		issueToken();
+	}
 
 	return {
 		update: () => undefined,
 		destroy: () => {
+			clearTimeout(expiryTimer);
+			for (const target of executeTargets) {
+				target.removeEventListener(PROCAPTCHA_EXECUTE_EVENT, issueToken);
+			}
 			badge.parentNode?.removeChild(badge);
 		},
 	};

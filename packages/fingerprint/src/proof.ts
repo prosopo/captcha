@@ -44,6 +44,10 @@ export const FINGERPRINT_DISCLOSURE_KEYS: readonly string[] = [
 	"hardwareConcurrency",
 	"languages",
 	"architecture",
+	// An opaque digest of the stable device characteristics. Disclosed so a
+	// verifier can group a returning device from a proven value; it reveals a
+	// hash and nothing about the device itself.
+	"deviceBucket",
 ];
 
 /**

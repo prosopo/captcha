@@ -16,6 +16,7 @@
 extern crate napi_derive;
 
 mod background;
+mod contrast;
 mod palette;
 mod prng;
 

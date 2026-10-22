@@ -63,6 +63,24 @@ const FOCUSABLE_SELECTOR = [
 const focusableWithin = (root: HTMLElement): HTMLElement[] =>
 	Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
 
+/**
+ * The nearest `dir` above `element`, continuing past shadow roots to their
+ * hosts: the bundle sets `dir` on the widget's host, outside the shadow tree
+ * the anchor sits in.
+ */
+const inheritedDirection = (element: Element): string => {
+	let current: Element | null = element;
+	while (current) {
+		const withDir: Element | null = current.closest("[dir]");
+		if (withDir) {
+			return withDir.getAttribute("dir") ?? "";
+		}
+		const root: Node = current.getRootNode();
+		current = root instanceof ShadowRoot ? root.host : null;
+	}
+	return "";
+};
+
 const SURFACE_Z_INDEX = 2147483646;
 const CONTENT_Z_INDEX = 2147483647;
 
@@ -151,6 +169,7 @@ const popupLayerStyle = (show: boolean, scrim: SurfaceScrim): StyleMap => ({
 });
 
 const floatContentStyle = (position: FloatPosition | null): StyleMap => ({
+	width: undefined,
 	maxWidth: undefined,
 	maxHeight: undefined,
 	overflowY: undefined,
@@ -177,6 +196,15 @@ const popupContentStyle = (): StyleMap => ({
 	position: "relative",
 	zIndex: CONTENT_Z_INDEX,
 	boxSizing: "border-box",
+	// Without a width this box shrink-wraps, and the panel inside it can only
+	// reach its own intrinsic width — which bottoms out at the grid's 300px
+	// `minWidth` floor. On a 360px phone that left 22px of the available width
+	// unused and every image tile at 94.7px regardless of screen size, a 500px
+	// desktop panel included. Filling the layer lets the panel grow to its
+	// `maxWidth`, so the tiles scale with the viewport instead of being fixed
+	// at the floor. `maxWidth: 100%` below still bounds it, and a viewport
+	// narrower than the floor keeps the panel's existing horizontal scroll.
+	width: "100%",
 	maxWidth: "100%",
 	maxHeight: "100%",
 	overflowY: "auto",
@@ -371,6 +399,15 @@ export const mountChallengeSurface = (
 
 	const render = () => {
 		const floating = isFloating();
+
+		// The layer lives under document.body, so without this it takes the
+		// page's direction rather than the widget's.
+		const direction = props.anchor ? inheritedDirection(props.anchor) : "";
+		if (direction) {
+			layer.dir = direction;
+		} else {
+			layer.removeAttribute("dir");
+		}
 
 		layer.className = [
 			names.layer,

@@ -224,13 +224,40 @@ describe("compositeIpAddress", () => {
 			).toBe(true);
 		});
 
-		it("separates two IPv4 addresses, however close", () => {
-			// v4 is compared exactly: neighbouring addresses are different
-			// customers, so there is no prefix to be lenient about.
+		it("treats a reassigned IPv4 low octet as the same network", () => {
+			// A mobile pool or carrier NAT moves a live session to the next
+			// address in the same /24 — observed taking four seconds on EE.
+			expect(
+				isSameIpOrigin(
+					getCompositeIpAddress("203.0.113.108"),
+					getCompositeIpAddress("203.0.113.109"),
+				),
+			).toBe(true);
+		});
+
+		it("treats the whole IPv4 /24 as the same network", () => {
+			expect(
+				isSameIpOrigin(
+					getCompositeIpAddress("203.0.113.1"),
+					getCompositeIpAddress("203.0.113.254"),
+				),
+			).toBe(true);
+		});
+
+		it("separates two different IPv4 /24s", () => {
 			expect(
 				isSameIpOrigin(
 					getCompositeIpAddress("203.0.113.7"),
-					getCompositeIpAddress("203.0.113.8"),
+					getCompositeIpAddress("203.0.114.7"),
+				),
+			).toBe(false);
+		});
+
+		it("separates adjacent IPv4 addresses that straddle a /24 boundary", () => {
+			expect(
+				isSameIpOrigin(
+					getCompositeIpAddress("203.0.113.255"),
+					getCompositeIpAddress("203.0.114.0"),
 				),
 			).toBe(false);
 		});
@@ -305,7 +332,7 @@ describe("compositeIpAddress", () => {
 				isSameIpOrigin(asDecimal128, getCompositeIpAddress("203.0.113.7")),
 			).toBe(true);
 			expect(
-				isSameIpOrigin(asDecimal128, getCompositeIpAddress("203.0.113.8")),
+				isSameIpOrigin(asDecimal128, getCompositeIpAddress("203.0.114.7")),
 			).toBe(false);
 		});
 	});

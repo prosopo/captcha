@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { EnvironmentTypes } from "@prosopo/types";
 import { getDevelopmentProviderUrl } from "./developmentProviderUrl.js";
 import { readProviderListOverride } from "./providerUrlOverride.js";
@@ -161,14 +161,34 @@ export const getLoadBalancerUrl = (environment: EnvironmentTypes): string => {
 	if (environment === "staging") {
 		return "https://provider-list.prosopo.io/staging.json";
 	}
-	throw new ProsopoEnvError("CONFIG.UNKNOWN_ENVIRONMENT", {
+	throw new ProsopoError({
+		code: "CONFIG_INVALID",
+		errorSite: "LBAL-1",
+		message: "Unknown environment requested",
 		context: { environment },
 	});
 };
 
+/**
+ * Upper bound on the provider-list fetch. `@prosopo/server` calls
+ * `loadBalancer` on every `isVerified`, so a stalled list endpoint would
+ * otherwise hold the site owner's request open for the runtime's default
+ * (~300s in undici).
+ */
+export const PROVIDER_LIST_FETCH_TIMEOUT_MS = 10_000;
+
+const timeoutSignal = (timeoutMs: number): AbortSignal | undefined =>
+	// Older browsers running the widget lack AbortSignal.timeout; there the
+	// fetch keeps its previous unbounded behaviour rather than throwing.
+	typeof AbortSignal !== "undefined" &&
+	typeof AbortSignal.timeout === "function"
+		? AbortSignal.timeout(timeoutMs)
+		: undefined;
+
 export const loadBalancer = async (
 	environment: EnvironmentTypes,
 	ipMode?: IpMode,
+	timeoutMs: number = PROVIDER_LIST_FETCH_TIMEOUT_MS,
 ): Promise<HardcodedProvider[]> => {
 	// An override supplies the whole list. Checked before the environment
 	// branches so a self-hosted deployment answers for `production` too, and
@@ -197,6 +217,7 @@ export const loadBalancer = async (
 		{
 			method: "GET",
 			mode: "cors",
+			signal: timeoutSignal(timeoutMs),
 		},
 	).then((res) => res.json());
 	// `ipMode` steers `convertHostedProvider` at the fetched JSON's

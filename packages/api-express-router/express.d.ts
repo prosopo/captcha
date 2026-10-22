@@ -12,17 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { I18nLookup, TranslateFn } from "@prosopo/locale";
 import type { Logger } from "@prosopo/logger";
 import type { IPInfoResponse } from "@prosopo/types";
-import type { TFunction } from "i18next";
 
 declare global {
 	namespace Express {
 		interface Request {
-			t: TFunction;
-			i18n: {
-				t: TFunction;
-			};
+			t: TranslateFn;
+			i18n: I18nLookup;
 			user?: string;
 			siteKey?: string;
 			ja4: string;

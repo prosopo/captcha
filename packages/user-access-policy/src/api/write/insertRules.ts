@@ -24,10 +24,12 @@ import type {
 	AccessPolicy,
 	AccessRule,
 	PolicyScope,
+	PolicyScopeExclusions,
 	UserScope,
 } from "#policy/rule.js";
 import {
 	accessPolicyInput,
+	policyScopeExclusionsInput,
 	policyScopeInput,
 	sanitizeAccessPolicy,
 } from "#policy/ruleInput/policyInput.js";
@@ -40,7 +42,7 @@ import type {
 	AccessRulesWriter,
 } from "#policy/rulesStorage.js";
 
-export type InsertRulesGroup = {
+export type InsertRulesGroup = PolicyScopeExclusions & {
 	accessPolicy: AccessPolicy;
 	userScopes: UserScopeInput[];
 	// a single client may have multiple siteKeys,
@@ -71,6 +73,7 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 			z.object({
 				accessPolicy: accessPolicyInput,
 				policyScopes: z.array(policyScopeInput).optional(),
+				excludedClientIds: policyScopeExclusionsInput.shape.excludedClientIds,
 				groupId: z.string().optional(),
 				userScopes: z.array(userScopeInput),
 				expiresUnixTimestamp: z.number().optional(),
@@ -174,7 +177,12 @@ export class InsertRulesEndpoint implements ApiEndpoint<InsertRulesSchema> {
 				}
 			} else {
 				ruleEntries.push({
-					rule: ruleBase,
+					rule: {
+						...ruleBase,
+						...(group.excludedClientIds && {
+							excludedClientIds: group.excludedClientIds,
+						}),
+					},
 					expiresUnixTimestamp: group.expiresUnixTimestamp,
 				});
 			}

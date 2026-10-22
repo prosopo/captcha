@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "無法編碼無效地址",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "驗證碼解決方案承諾不存在",
+		"SIGNER_UNDEFINED": "簽署者未定義",
+		"CANNOT_FIND_KEYPAIR": "找不到金鑰對",
+		"INVALID_DATA_FORMAT": "無效的資料格式"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "請求的環境未知",
+		"INVALID_CAPTCHA_NUMBER": "請正確設定驗證碼",
+		"INVALID_LOG_LEVEL": "無效的日誌等級",
+		"INVALID_PACKAGE_DIR": "無效的套件目錄"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "剖析資料集時出錯",
+		"SOLUTION_PARSE_ERROR": "剖析資料集時出錯",
+		"HASH_ERROR": "雜湊資料集時出錯",
+		"DATASET_ID_UNDEFINED": "資料集ID未定義",
+		"NOT_ENOUGH_LABELS": "標籤不足",
+		"NOT_ENOUGH_IMAGES": "影像不足",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "資料集中的驗證碼數量少於配置的驗證碼數量",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "資料集中的解決方案數量少於配置的解決方案數量",
+		"DUPLICATE_IMAGE": "檢測到重複影像",
+		"MERKLE_ERROR": "建立Merkle 樹時出錯"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "匯入資料庫引擎失敗",
+		"DATABASE_UNDEFINED": "資料庫客戶端未連線",
+		"DATABASE_HOST_UNDEFINED": "未定義資料庫主機地址",
+		"DATASET_LOAD_FAILED": "資料集載入失敗",
+		"DATASET_GET_FAILED": "取得資料集失敗",
+		"CAPTCHA_GET_FAILED": "取得驗證碼失敗",
+		"CAPTCHA_UPDATE_FAILED": "更新驗證碼失敗",
+		"IMAGE_GET_FAILED": "取得影像失敗",
+		"PENDING_RECORD_NOT_FOUND": "未找到待處理記錄",
+		"INVALID_HASH": "無效的雜湊",
+		"SOLUTION_GET_FAILED": "取得解決方案失敗",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "找不到具有所需數量解決方案的資料集",
+		"SOLUTION_APPROVE_FAILED": "批准解決方案失敗",
+		"SOLUTION_FLAG_FAILED": "標記解決方案為已處理失敗",
+		"TABLES_UNDEFINED": "未定義表",
+		"CONNECTION_UNDEFINED": "連線未定義",
+		"COMMITMENT_FLAG_FAILED": "標記承諾為已處理失敗",
+		"UNKNOWN": "未知資料庫錯誤",
+		"QUERY_ERROR": "資料庫查詢失敗",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "存取規則的 Redis 連線未定義",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "使用者存取規則儲存未定義",
+		"SESSION_STORE_FAILED": "儲存工作階段失敗",
+		"SESSION_CHECK_REMOVE_FAILED": "檢查並移除工作階段失敗",
+		"SESSION_GET_FAILED": "取得工作階段失敗"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "無法修改所有者使用者",
+		"CANNOT_DELETE_OWN_USER": "無法刪除您自己的帳戶",
+		"CANNOT_DELETE_LAST_USER": "無法刪除最後一個使用者",
+		"USER_ALREADY_EXISTS": "使用者已經存在",
+		"NO_SUGGESTIONS_FOUND": "未找到建議",
+		"CANNOT_DEACTIVATE_LAST_SITE": "無法停用最後一個活動網站",
+		"DUPLICATE_SITE_NAME": "已存在同名網站",
+		"INVALID_SITE_NAME": "網站名稱只能包含字母、數字、連字元和底線"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "無效的參數"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "未找到檔案",
+		"FILE_ALREADY_EXISTS": "檔案已存在",
+		"INVALID_DIR_FORMAT": "無效的目錄格式"
+	}
+}

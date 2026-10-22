@@ -1,5 +1,63 @@
 # @prosopo/config
 
+## 3.5.0
+### Minor Changes
+
+- 67268f8: Name the procaptcha bundle's honeypot and shared fingerprint chunks from a seed instead of at random, so bundling the same source twice gives byte-identical output.
+  
+  The names come from the new `buildToken` helper in `@prosopo/config`: an HMAC of the package version (or `PROSOPO_BUILD_SEED`) keyed by the secret `PROSOPO_BUILD_TOKEN_KEY`. They still change every release, and without the key they cannot be worked out from this public source.
+
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+
+## 3.4.5
+### Patch Changes
+
+- a5c953d: Lay the widget out at its natural width in hosts that size it by measuring it.
+  
+  Size containment on the widget's container-query element left it with no
+  intrinsic width, so an inline-block, float, `fit-content` box, table cell,
+  flex item, auto grid track or absolutely positioned host found nothing to
+  shrink-wrap and fell back to the widget's 170px minimum — rendering it in its
+  smallest breakpoint on pages with room for all 302px. A zero-height measuring
+  row now states both intrinsic widths, so the widget fills its natural width
+  where there is room and still shrinks into parents narrower than it.
+  
+  `@prosopo/config` gains a `browser` test type, which keeps vitest browser-mode
+  suites out of jsdom runs.
+
+## 3.4.4
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+
+## 3.4.3
+### Patch Changes
+
+- a17e8eb: Move the repo from npm to pnpm 11.
+  
+  - `pnpm-workspace.yaml` replaces the `workspaces` field and `.npmrc`, and `pnpm-lock.yaml` replaces `package-lock.json` (converted with `pnpm import`, so versions are unchanged).
+  - Internal `@prosopo/*` dependencies use `workspace:*`. `pnpm publish` (which `changeset publish` now runs) swaps each for the exact version, so published manifests are the same as before. Member packages no longer declare an npm engine.
+  - `@prosopo/config`'s `getDependencies` walks the installed `node_modules` tree instead of parsing `npm ls`, so bundle externals are computed the same way under any package manager.
+  - `@prosopo/workspace` exports `getWorkspacePatterns`, which builds glob patterns from the workspace's `pnpm-workspace.yaml` (keeping its exclusions); the lint commands use it instead of `package.json`'s `workspaces`.
+  - `verifyDepsBeforeRun` is off, because inside captcha-private a script run here would otherwise install captcha standalone over the parent's `node_modules`.
+  - Packages that relied on npm hoisting for types or tools now declare them.
+  - `@prosopo/util` declares the `url` package. `isMain` imports `url`, which Node serves from its built-in module and browser bundlers resolve to this package; npm used to provide it by hoisting.
+
+## 3.4.2
+### Patch Changes
+
+- 25c795f: Setting `TEST_TYPE` no longer drops test files that don't declare a type. The vitest configs selected only `*.<type>.test.ts`, so a package whose `test` script filtered by type (provider, user-access-policy, redis-client) silently skipped every plain `*.test.ts`, contrary to the config's own comment. Filtering now works by excluding the other known types (`unit`, `integration`), so untyped tests run under every filter. Two provider test files that had never run in CI since they were added are now collected.
+
 ## 3.4.1
 ### Patch Changes
 

@@ -19,6 +19,7 @@ import { z } from "zod";
 import type { AccessRule } from "./rule.js";
 import {
 	accessPolicyInputShape,
+	policyScopeExclusionsInput,
 	policyScopeInput,
 } from "./ruleInput/policyInput.js";
 import { accessRuleInput } from "./ruleInput/ruleInput.js";
@@ -30,10 +31,18 @@ const RULE_HASH_ALGORITHM = "md5";
 // IPv4 numeric values occupy 0..2^32-1. Anything above is treated as IPv6.
 const MAX_IPV4_NUMERIC = (1n << 32n) - 1n;
 
+// The hash is the rule's Redis key. Exclusions are left out so that changing
+// who a global rule spares rewrites the same key; hashing them would leave the
+// previous version behind, still enforcing the old exclusion list.
+const UNHASHED_RULE_FIELDS: ReadonlySet<string> = new Set([
+	"excludedClientIds",
+] satisfies (keyof AccessRule)[]);
+
 export const makeAccessRuleHash = (rule: AccessRule): string => {
 	// 1. exclude "undefined" values to ensure hash consistency
 	const valueProperties = Object.entries(rule).filter(
-		([key, value]) => "undefined" !== typeof value,
+		([key, value]) =>
+			"undefined" !== typeof value && !UNHASHED_RULE_FIELDS.has(key),
 	);
 
 	// 2. order alphabetically to ensure hash consistency
@@ -58,6 +67,7 @@ const accessRuleToRecordScheme = z
 	.object({
 		...accessPolicyInputShape.shape,
 		...policyScopeInput.shape,
+		...policyScopeExclusionsInput.shape,
 		...userScopeSchema.shape,
 		groupId: z.coerce.string().optional(),
 	})

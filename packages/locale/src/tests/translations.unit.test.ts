@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
+import { NAMESPACES } from "../translationKey.js";
 import { LanguageCodes, Languages, isLanguage } from "../translations.js";
 
 const codes: string[] = Object.values(Languages);
@@ -26,7 +27,8 @@ describe("Languages", () => {
 
 	test("maps English language names to BCP 47 codes", () => {
 		expect(Languages.english).toBe("en");
-		expect(Languages.chinese).toBe("zh-CN");
+		expect(Languages.chinese).toBe("zh");
+		expect(Languages.chineseChina).toBe("zh-CN");
 		expect(Languages.portugeseBrazil).toBe("pt-BR");
 	});
 
@@ -42,14 +44,16 @@ describe("Languages", () => {
 
 	test("every code is a well-formed, lowercase-primary language tag", () => {
 		for (const code of codes) {
-			expect(code).toMatch(/^[a-z]{2}(-[A-Z]{2})?$/);
+			expect(code).toMatch(/^[a-z]{2,3}(-[A-Z]{2})?$/);
 		}
 	});
 
-	test("every code has a locales directory containing translation.json", () => {
+	test("every code has a locales directory with every namespace file", () => {
 		for (const code of codes) {
-			const file = path.resolve(`./src/locales/${code}/translation.json`);
-			expect(fs.existsSync(file), `missing ${code}`).toBe(true);
+			for (const namespace of Object.values(NAMESPACES)) {
+				const file = path.resolve(`./src/locales/${code}/${namespace}.json`);
+				expect(fs.existsSync(file), `missing ${code}/${namespace}`).toBe(true);
+			}
 		}
 	});
 

@@ -15,8 +15,15 @@
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { NextFunction, Request, Response } from "express";
 
-export const ipInfoMiddleware = (env: ProviderEnvironment) => {
+export const ipInfoMiddleware = (
+	env: ProviderEnvironment,
+	skipPaths: ReadonlySet<string> = new Set(),
+) => {
 	return async (req: Request, _res: Response, next: NextFunction) => {
+		if (skipPaths.has(req.path)) {
+			next();
+			return;
+		}
 		try {
 			const ip = req.ip;
 			if (ip && env.ipInfoService.isAvailable()) {

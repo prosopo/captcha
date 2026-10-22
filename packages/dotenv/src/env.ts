@@ -45,7 +45,7 @@ export function loadEnv(
 		filePath,
 		nodeEnv,
 	);
-	const args = { path: envPath, override };
+	const args = { path: envPath, override, quiet: true };
 	logger.debug(() => ({
 		data: { envPath },
 		msg: "Loading env",
