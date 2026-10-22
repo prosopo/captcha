@@ -63,7 +63,7 @@ fn describe_path(path: &str, leaf: &Path) -> Value {
     json!({
         "path": path,
         "kind": kind_name(&leaf.kind),
-        "required": leaf.required,
+        "required": leaf.required || leaf.required_when.is_some(),
         "enumValues": enum_values,
         "min": number(leaf.min),
         "max": number(leaf.max),
