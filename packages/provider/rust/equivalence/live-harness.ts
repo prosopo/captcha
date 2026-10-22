@@ -163,3 +163,17 @@ export const alpn = (protocols: string[]): Buffer => {
 	const list = Buffer.concat(protocols.map((p) => Buffer.concat([Buffer.from([p.length]), Buffer.from(p, "ascii")])));
 	return Buffer.concat([Buffer.from([0, list.length]), list]);
 };
+
+/** Every collection that holds documents, by name, as `dumpCollection` writes them. */
+export const dumpDatabase = async (database: string): Promise<Record<string, Json>> => {
+	const mongo = new MongoClient(MONGO_URL);
+	await mongo.connect();
+	const names = (await mongo.db(database).listCollections().toArray()).map((collection) => collection.name).sort();
+	await mongo.close();
+	const out: Record<string, Json> = {};
+	for (const name of names) {
+		const documents = await dumpCollection(database, name);
+		if ((documents as Json[]).length > 0) out[name] = documents;
+	}
+	return out;
+};

@@ -18,6 +18,7 @@ pub mod api;
 pub mod client_meta_data;
 pub mod composite_ip;
 pub mod hashing;
+pub mod tasks;
 pub mod ip_comparison;
 pub mod ip_validation;
 pub mod util;

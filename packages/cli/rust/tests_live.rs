@@ -42,6 +42,9 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
 
+/// The live tests share one MongoDB and one Redis, which each empties, so they run one at a time.
+static LIVE: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
 const MNEMONIC: &str = "bottom drive obey lake curtain smoke basket hold race lonely fit walk";
 const ADMIN: &str = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
 
@@ -92,6 +95,23 @@ async fn restore_hashes(hashes: &Value) {
             command.arg(name).arg(value);
         }
         let _: () = command.query_async(&mut connection).await.expect("writes");
+    }
+}
+
+/// The collections the TS run started from, from their canonical extended JSON.
+async fn restore_database(database: &str, seed: &Value) {
+    let mongo: mongodb::Client = mongodb::Client::with_uri_str(mongo_url()).await.expect("connects");
+    for (collection, documents) in seed.as_object().expect("collections") {
+        let documents: Vec<Document> = documents
+            .as_array()
+            .expect("documents")
+            .iter()
+            .map(|document| match Bson::try_from(document.clone()).expect("extended JSON") {
+                Bson::Document(document) => document,
+                other => panic!("not a document: {other}"),
+            })
+            .collect();
+        mongo.database(database).collection::<Document>(collection).insert_many(documents).await.expect("inserts");
     }
 }
 
@@ -214,6 +234,7 @@ async fn serve(router: Router) -> u16 {
 #[tokio::test(flavor = "multi_thread")]
 #[ignore = "needs MongoDB and Redis Stack"]
 async fn access_policy_blocks_as_the_express_app_does() {
+    let _live = LIVE.lock().await;
     let vectors: Value = serde_json::from_str(include_str!("../../provider/rust/equivalence/block-vectors.json")).expect("block-vectors.json parses");
     let database: &str = vectors["database"].as_str().expect("a database");
     reset(database).await;
@@ -229,5 +250,24 @@ async fn access_policy_blocks_as_the_express_app_does() {
     let sessions: Vec<Value> = dump(database, "sessions").await;
     failures.extend(compare_records(&vectors["sessions"], &sessions, &["_id", "sessionId", "createdAt", "storedAtTimestamp", "lastUpdatedTimestamp"]));
     assert!(compared > 25, "only {compared} compared");
+    assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn client_origins_are_checked_as_the_express_app_checks_them() {
+    let _live = LIVE.lock().await;
+    let vectors: Value = serde_json::from_str(include_str!("../../provider/rust/equivalence/domain-vectors.json")).expect("domain-vectors.json parses");
+    let database: &str = vectors["database"].as_str().expect("a database");
+    reset(database).await;
+    let ipapi: String = fake_ipapi(vectors["ipapi"].clone()).await;
+    let mut variables: HashMap<String, String> = serde_json::from_value(vectors["variables"].clone()).expect("variables");
+    variables.insert("PROSOPO_IPAPI_URL".to_string(), ipapi);
+    variables.insert("NODE_ENV".to_string(), "production".to_string());
+    let (router, _env) = live_app(&variables).await;
+    restore_database(database, &vectors["seed"]).await;
+    let port: u16 = serve(router).await;
+    let (compared, failures) = replay(port, &vectors["exchanges"]).await;
+    assert!(compared > 30, "only {compared} compared");
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }

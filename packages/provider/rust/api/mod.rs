@@ -16,6 +16,7 @@
 
 pub mod block;
 pub mod body;
+pub mod domain;
 pub mod express;
 pub mod healthz_geo;
 pub mod maintenance;

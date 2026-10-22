@@ -26,6 +26,7 @@ use prosopo_keyring::KeyringPair;
 use prosopo_locale::{default_locales_directory, locales_directory, I18n};
 use prosopo_logger::{parse_log_level, LogLevel, LogRecord, Logger};
 use prosopo_provider::api::block::{BlockState, HardBlockVerdictCache};
+use prosopo_provider::api::domain::DomainState;
 use prosopo_provider::api::maintenance::MaintenanceMode;
 use prosopo_provider::api::healthz_geo::{fetch_healthz_probe, read_healthz_geo_config, CountryLookup, HealthzGeoRouter, HealthzProbe};
 use prosopo_provider::api::metrics::{metrics_enabled, ProcessSource, ProviderMetrics};
@@ -135,14 +136,17 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
         options: admin_auth_options(env.as_ref(), Some(&config.host)),
     };
     let pipeline_state: Arc<PipelineState> = Arc::new(PipelineState { limiters, logger: logger.clone(), node_env, ip_info });
+    let maintenance: Arc<MaintenanceMode> = Arc::new(MaintenanceMode::from_env(env("MAINTENANCE_MODE").as_deref()));
     let block: Arc<BlockState> = Arc::new(BlockState {
         db: db.clone(),
         cache: Arc::new(HardBlockVerdictCache::default()),
         metrics: metrics.clone(),
-        maintenance: Arc::new(MaintenanceMode::from_env(env("MAINTENANCE_MODE").as_deref())),
+        maintenance: maintenance.clone(),
         inspector: std::sync::OnceLock::new(),
     });
-    let rest: Router = pipeline(pipeline_state, request_logger(parse_log_level(Some(&config.log_level), LogLevel::Info)), i18n, auth, block);
+    let domain: Arc<DomainState> = Arc::new(DomainState { db: db.clone(), maintenance, metrics: metrics.clone() });
+    let log_level: LogLevel = parse_log_level(Some(&config.log_level), LogLevel::Info);
+    let rest: Router = pipeline(pipeline_state, request_logger(log_level), i18n, auth, block, domain);
     let state: PublicState = PublicState {
         host: config.host.clone(),
         version,
