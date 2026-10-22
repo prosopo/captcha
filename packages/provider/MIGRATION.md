@@ -540,17 +540,38 @@ to Rust or take the hash from a WASM build (§5 rule).
 Both functions convert between an IP address and the composite form stored
 in Mongo (`type` plus `lower`/`upper` 64-bit halves of the address), so their
 output is a stored record and must be byte-identical (§0).
-`getIpAddressFromComposite` returns an `ip-address` class instance, which a
-WASM function cannot return, so the TS side keeps a few-line wrapper that
-builds it from the string the WASM returns. The plan: they are ported into the Rust crate
-that owns the IP types, and the TS package is deleted along with the provider.
-The three private packages then import a WASM build of that crate instead of
-`@prosopo/provider`, which is the §5 rule applied to server-side Node: these
-jobs and lambdas keep running as TypeScript, and the encoding is implemented
-once. database-private also defines mongoose models over the same collections
-the provider writes (`PoWCaptchaData`, `ImageCaptchaData`, `Session`,
-`InteractiveCaptchaData`). Rust-written documents must still read back through
-those models, so they join the round-trip tests in §4.4.
+Both are already in Rust (`prosopo_provider::composite_ip`).
+
+**The three packages are ported.** An earlier revision of this plan kept them
+as TypeScript on a WASM build of the composite-IP functions. That was a scope
+call with no evidence behind it: none of the three imports a DOM or browser API
+or has a `browser` field, the brief names them as part of the job, and the rule
+is that what is not frontend is ported. So each becomes a Rust crate in its own
+package directory, as catcher did (`prosopo-catcher`), linking the captcha
+crates by path, in dependency order:
+
+1. **database-private** (`prosopo-database-private`). Its dependencies are
+   captcha packages already in Rust plus `@prosopo/types-private`, whose types
+   it uses are ported with it. The 30-odd mongoose models become serde structs
+   on the official driver as §4.4 did for database; each store is proven the way
+   database's `methods.rs` is, by replaying the commands mongoose sent and the
+   replies mongod gave, so a Rust write is byte-identical to a TS one. Several
+   models cover the collections the provider writes (`PoWCaptchaData`,
+   `ImageCaptchaData`, `Session`, `InteractiveCaptchaData`), so the same proof
+   covers that both implementations read each other's documents.
+2. **job-definitions**, then **aws-serverless-api**. Both depend on private
+   packages the owner has not named (email-client, email-templates, marketing,
+   monitoring, openobserve-client, job-orchestrator, pricing,
+   decision-machines). Those are ported as far as the named packages use them,
+   as the captcha-repo dependencies of the provider were; whether the rest of
+   them is ported is the scope question below. aws-serverless-api runs as AWS
+   Lambda functions, so its Rust runs on a Lambda Rust runtime; changing the
+   functions' runtime and handler is deployment config, written up for a human
+   in MIGRATION-LOG.md "deployment".
+
+Until each is ported, its TS keeps importing `@prosopo/provider` for the two
+composite-IP functions, which is one reason the TS provider is deleted only
+after them.
 
 **Everything else in captcha-private.** The plan above covers what touches
 the provider. The owner's scope rule ("not frontend means port it") was stated
@@ -569,7 +590,7 @@ left alone, with the evidence each classification rests on.
 | cypress-e2e, e2e, puppeteer | frontend test tooling | Drive a browser (Cypress, Playwright, Puppeteer); the same reading as demos/cypress-shared, flagged the same way. |
 | docs | out of scope | Owner ruling. |
 | job-runner, job-orchestrator, monitoring, botter, email-client, openobserve-client, marketing, email-templates, seo, pricing, obfuscator, types-private, dev-private, deploy, infrastructure | server-side or build tooling; port if the rule extends here | Node: `node:` imports, `express` (job-orchestrator, monitoring), `mongoose` (monitoring, marketing), `mjml` (email-templates), `child_process` (deploy), `yargs` (infrastructure). No DOM references (the `window` hits in monitoring and marketing are time windows). |
-| aws-serverless-api, job-definitions, database-private | the plan above | They keep running as TypeScript and take the composite-IP encoding from WASM. That is this plan's reading, not a ruling: they are Node, so the captcha-repo rule would port them. It is part of the same scope question. |
+| aws-serverless-api, job-definitions, database-private | port, the plan above | Named in the brief. Node with no DOM references: `mongoose` and `mongodb` (database-private), `cron`, `stripe` and `bottleneck` (job-definitions), `yargs`, `undici` and Lambda handlers (aws-serverless-api); no `browser` field in any package.json. The 30 `window`/`document` hits are time windows in comments and mongoose's `document.save()`. |
 
 **Where the provider is assembled.** The provider image is built in *this* repo
 (`.github/workflows/provider_image.yml` builds `packages/cli/Dockerfile`).
