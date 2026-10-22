@@ -17,6 +17,7 @@
 pub mod body;
 pub mod express;
 pub mod healthz_geo;
+pub mod metrics;
 pub mod public;
 pub mod query;
 

@@ -41,7 +41,7 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use crate::http_replay::{answer, exchange, shown, Answer};
 
 const VECTORS: &str = include_str!("equivalence/public-vectors.json");
 
@@ -97,66 +97,6 @@ fn redis(db: &Value) -> FixedRedis {
     }
 }
 
-/// The parts of an answer that are compared.
-#[derive(Debug, PartialEq)]
-struct Answer {
-    status_line: String,
-    headers: Vec<(String, String)>,
-    content_length: Option<String>,
-    body: Vec<u8>,
-}
-
-fn dechunk(mut body: &[u8]) -> Vec<u8> {
-    let mut out: Vec<u8> = Vec::new();
-    loop {
-        let Some(line_end) = body.windows(2).position(|pair| pair == b"\r\n") else {
-            return out;
-        };
-        let size: usize = usize::from_str_radix(std::str::from_utf8(&body[..line_end]).unwrap_or("0").trim(), 16).unwrap_or(0);
-        if size == 0 {
-            return out;
-        }
-        out.extend_from_slice(&body[line_end + 2..line_end + 2 + size]);
-        body = &body[line_end + 2 + size + 2..];
-    }
-}
-
-fn answer(raw: &[u8]) -> Answer {
-    let split: usize = raw.windows(4).position(|window| window == b"\r\n\r\n").unwrap_or(raw.len());
-    let head: String = raw[..split].iter().map(|&byte| byte as char).collect();
-    let rest: &[u8] = raw.get(split + 4..).unwrap_or_default();
-    let mut lines = head.split("\r\n");
-    let status_line: String = lines.next().unwrap_or_default().to_string();
-    let mut headers: Vec<(String, String)> = Vec::new();
-    let mut chunked: bool = false;
-    let mut content_length: Option<String> = None;
-    for line in lines {
-        let (name, value) = line.split_once(':').unwrap_or((line, ""));
-        let (name, value) = (name.to_ascii_lowercase(), value.trim().to_string());
-        match name.as_str() {
-            "transfer-encoding" => chunked = value.eq_ignore_ascii_case("chunked"),
-            "content-length" => content_length = Some(value),
-            "date" | "connection" | "keep-alive" => {}
-            _ => headers.push((name, value)),
-        }
-    }
-    headers.sort();
-    Answer {
-        status_line,
-        headers,
-        content_length,
-        body: if chunked { dechunk(rest) } else { rest.to_vec() },
-    }
-}
-
-async fn exchange(port: u16, request: &[u8]) -> Vec<u8> {
-    let mut socket: tokio::net::TcpStream = tokio::net::TcpStream::connect(("127.0.0.1", port)).await.expect("connects");
-    socket.write_all(request).await.expect("writes");
-    let mut response: Vec<u8> = Vec::new();
-    let _ = tokio::time::timeout(Duration::from_secs(10), socket.read_to_end(&mut response)).await;
-    response
-}
-
 /// Which parser refuses this request, when the two disagree about its target.
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum ParserRefusal {
@@ -187,11 +127,6 @@ fn body_refusal(request: &[u8]) -> Option<&'static str> {
     head.windows(b"charset=utf-7".len()).any(|window| window == b"charset=utf-7").then_some("HTTP/1.1 415 Unsupported Media Type")
 }
 
-fn shown(bytes: &[u8]) -> String {
-    let text: String = bytes.iter().map(|&byte| byte as char).collect();
-    text.chars().take(400).collect()
-}
-
 #[tokio::test(flavor = "multi_thread")]
 async fn the_public_router_answers_as_the_express_app_does() {
     let vectors: Value = serde_json::from_str(VECTORS).expect("public-vectors.json parses");
@@ -214,6 +149,8 @@ async fn the_public_router_answers_as_the_express_app_does() {
             geo: Arc::new(geo_router(&env, lookup, healthy).await),
             redis: Arc::new(redis(&app["db"])),
             logger: get_logger(LogLevel::Fatal, "equivalence"),
+            metrics: None,
+            env: Arc::new(|_: &str| None),
         };
         let listener: tokio::net::TcpListener = tokio::net::TcpListener::bind("[::]:0").await.expect("binds");
         let port: u16 = listener.local_addr().expect("an address").port();

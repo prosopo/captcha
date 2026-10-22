@@ -23,6 +23,10 @@ pub mod ip_validation;
 pub mod util;
 
 #[cfg(test)]
+mod http_replay;
+#[cfg(test)]
+mod metrics_equivalence;
+#[cfg(test)]
 mod public_equivalence;
 #[cfg(test)]
 mod tests;

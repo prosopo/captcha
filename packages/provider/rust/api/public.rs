@@ -18,6 +18,7 @@
 
 use crate::api::express::{self, client_ip, hostname, send, send_json, Requested};
 use crate::api::healthz_geo::{HealthzGeoDecision, HealthzGeoRouter};
+use crate::api::metrics::{metrics_response, normalise_route, ProviderMetrics};
 use crate::api::query::query_string;
 use axum::extract::{ConnectInfo, Request, State};
 use axum::response::Response;
@@ -29,9 +30,11 @@ use prosopo_logger::{LogRecord, Logger};
 use serde_json::{json, Map, Value};
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::Instant;
 
 pub const HEALTHZ: &str = "/healthz";
 pub const PROVIDER_DETAILS: &str = "/v1/prosopo/provider/public/details";
+pub const METRICS: &str = "/metrics";
 
 /// A Redis connection's readiness and how long it has been connecting, in milliseconds.
 pub type RedisStatus = (bool, i64);
@@ -57,6 +60,9 @@ impl RedisStatuses for DatabaseRedisStatuses {
     }
 }
 
+/// The environment variables a route reads per request, as `process.env` gives them.
+pub type EnvReader = Arc<dyn Fn(&str) -> Option<String> + Send + Sync>;
+
 pub struct PublicState {
     /// `config.host`.
     pub host: String,
@@ -65,6 +71,9 @@ pub struct PublicState {
     pub geo: Arc<HealthzGeoRouter>,
     pub redis: Arc<dyn RedisStatuses>,
     pub logger: Logger,
+    /// `None` when `PROSOPO_METRICS_ENABLED=false`: no `/metrics` and nothing recorded.
+    pub metrics: Option<Arc<ProviderMetrics>>,
+    pub env: EnvReader,
 }
 
 impl PublicState {
@@ -102,6 +111,9 @@ fn healthz(state: &PublicState, remote: &SocketAddr, request: &Request) -> Respo
     }
     let ip: String = client_ip(remote, request.headers());
     let decision: HealthzGeoDecision = state.geo.resolve_host(Some(&ip), own_host.as_deref());
+    if let Some(metrics) = &state.metrics {
+        metrics.record_healthz_geo_outcome(decision.outcome);
+    }
     let headers: Vec<(HeaderName, HeaderValue)> = vec![(CACHE_CONTROL, HeaderValue::from_static("no-store, private"))];
     send_json(&requested, StatusCode::OK, headers, &healthz_body(decision.host))
 }
@@ -200,12 +212,17 @@ fn asset_document(request: &Request) -> Option<Response> {
     Some(send(&Requested::of(request), StatusCode::OK, headers, page(&inner, &id).into_bytes()))
 }
 
-/// The public router, then express's 404.
+/// The public router, then the request counter around what follows it (so far, express's 404).
 pub async fn public_routes(State(state): State<Arc<PublicState>>, ConnectInfo(remote): ConnectInfo<SocketAddr>, request: Request) -> Response {
     let get: bool = request.method() == Method::GET || request.method() == Method::HEAD;
     let path: &str = request.uri().path();
     if get && route_matches(path, HEALTHZ) {
         return healthz(&state, &remote, &request);
+    }
+    if get && route_matches(path, METRICS) {
+        if let Some(metrics) = &state.metrics {
+            return metrics_response(metrics, state.redis.as_ref(), state.env.as_ref(), &remote, &request);
+        }
     }
     if get && route_matches(path, PROVIDER_DETAILS) {
         return details(&state, &request);
@@ -215,7 +232,12 @@ pub async fn public_routes(State(state): State<Arc<PublicState>>, ConnectInfo(re
             return response;
         }
     }
-    express::not_found(&request)
+    let started: Instant = Instant::now();
+    let response: Response = express::not_found(&request);
+    if let Some(metrics) = &state.metrics {
+        metrics.record_request(normalise_route(path), request.method().as_str(), response.status().as_u16(), started.elapsed().as_secs_f64());
+    }
+    response
 }
 
 #[cfg(test)]
