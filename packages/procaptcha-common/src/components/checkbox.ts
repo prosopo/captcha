@@ -367,6 +367,12 @@ export const mountCheckbox = (
 	teardown.addEventListener(input, "click", (event: Event) => {
 		activate(event as MouseEvent);
 	});
+	teardown.addEventListener(root, "click", (event: Event) => {
+		if (event.target !== root || props.loading || input.disabled) {
+			return;
+		}
+		activate(event as MouseEvent);
+	});
 	teardown.addEventListener(input, "keydown", (event: Event) => {
 		const keyboardEvent = event as KeyboardEvent;
 		if ("Enter" !== keyboardEvent.key) {
