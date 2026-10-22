@@ -26,6 +26,12 @@
  * single correct keypair + inner config rather than brute-forcing a key pool.
  * The session→bundle binding lives in Redis (short TTL); this module only holds
  * the immutable pool.
+ *
+ * A bundle stamped `format: "open-v1"` is a detector built outside Prosopo
+ * (see `demos/detector-botd`). It carries only a private key and is read by
+ * the open decoder. Those bundles are dropped unless
+ * `PROSOPO_DETECTOR_OPEN_FORMAT=1`, so a node that never opted in cannot be
+ * made to trust one by a pushed or mounted pool.
  */
 
 import {
@@ -38,6 +44,7 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { extname, join } from "node:path";
+import { OPEN_DETECTOR_FORMAT, type OpenDetectorFormat } from "@prosopo/types";
 
 /**
  * Default on-disk location of the pool inside the provider container. Backed by
@@ -54,8 +61,12 @@ export interface PoolBundle {
 	readonly js: string;
 	/** Base64-encoded PKCS8 PEM RSA private key (outer transport). */
 	readonly privateKey: string;
-	/** Base64-encoded InnerCipherConfig (inner symmetric layer). */
-	readonly innerConfig: string;
+	/**
+	 * Base64-encoded InnerCipherConfig (inner symmetric layer). Present on every
+	 * sealed bundle; open-format bundles have no inner layer.
+	 */
+	readonly innerConfig?: string;
+	readonly format?: OpenDetectorFormat;
 	/**
 	 * The release the bundle was built from (e.g. "3.6.64"), stamped by the
 	 * catcher `bundle:pool` script. The widget no longer carries a detector — it
@@ -83,6 +94,41 @@ interface LoadLogger {
 	info?: (msg: string, data?: Record<string, unknown>) => void;
 	warn?: (msg: string, data?: Record<string, unknown>) => void;
 }
+
+export const isOpenDetectorFormatEnabled = (): boolean =>
+	process.env.PROSOPO_DETECTOR_OPEN_FORMAT === "1";
+
+/**
+ * Why a bundle cannot be loaded, or `undefined` if it can. Shared by the disk
+ * loader and the admin push so the two cannot disagree about what is trusted.
+ */
+export const rejectPoolBundle = (
+	bundle: Pick<PoolBundle, "innerConfig" | "format">,
+): string | undefined => {
+	if (bundle.format === OPEN_DETECTOR_FORMAT) {
+		return isOpenDetectorFormatEnabled()
+			? undefined
+			: "open-format bundle on a node without PROSOPO_DETECTOR_OPEN_FORMAT=1";
+	}
+	return bundle.innerConfig ? undefined : "sealed bundle has no innerConfig";
+};
+
+/** Drop the bundles {@link rejectPoolBundle} refuses, logging each one. */
+export const filterPoolBundles = (
+	bundles: Map<string, PoolBundle>,
+	logger: LoadLogger = {},
+): Map<string, PoolBundle> => {
+	const accepted = new Map<string, PoolBundle>();
+	for (const [bundleId, bundle] of bundles) {
+		const reason = rejectPoolBundle(bundle);
+		if (reason) {
+			logger.warn?.("bundle pool entry rejected", { bundleId, reason });
+			continue;
+		}
+		accepted.set(bundleId, bundle);
+	}
+	return accepted;
+};
 
 /**
  * In-memory pool of detector bundles. Immutable after {@link loadFromDir} except
@@ -125,13 +171,17 @@ export class DetectorBundlePool {
 				const secrets = JSON.parse(readFileSync(jsonPath, "utf8")) as {
 					privateKey?: unknown;
 					innerConfig?: unknown;
+					format?: unknown;
 					release?: unknown;
 					payloadLayout?: unknown;
 					keyMap?: unknown;
 				};
 				if (
 					typeof secrets.privateKey !== "string" ||
-					typeof secrets.innerConfig !== "string"
+					(secrets.innerConfig !== undefined &&
+						typeof secrets.innerConfig !== "string") ||
+					(secrets.format !== undefined &&
+						secrets.format !== OPEN_DETECTOR_FORMAT)
 				) {
 					logger.warn?.("bundle pool entry has malformed secrets", {
 						bundleId,
@@ -159,7 +209,12 @@ export class DetectorBundlePool {
 				next.set(bundleId, {
 					js,
 					privateKey: secrets.privateKey,
-					innerConfig: secrets.innerConfig,
+					...(typeof secrets.innerConfig === "string" && {
+						innerConfig: secrets.innerConfig,
+					}),
+					...(secrets.format === OPEN_DETECTOR_FORMAT && {
+						format: OPEN_DETECTOR_FORMAT,
+					}),
 					...(release && { release }),
 					...(payloadLayout && { payloadLayout }),
 					...(keyMap && { keyMap }),
@@ -185,7 +240,7 @@ export class DetectorBundlePool {
 			});
 		}
 
-		this.replace(next);
+		this.replace(filterPoolBundles(next, logger));
 		logger.info?.("bundle pool loaded", { count: this.ids.length, dir });
 	}
 
@@ -282,7 +337,8 @@ export function persistDetectorBundlePool(
 			jsonTmp,
 			JSON.stringify({
 				privateKey: bundle.privateKey,
-				innerConfig: bundle.innerConfig,
+				...(bundle.innerConfig && { innerConfig: bundle.innerConfig }),
+				...(bundle.format && { format: bundle.format }),
 				...(bundle.release && { release: bundle.release }),
 				...(bundle.payloadLayout && {
 					payloadLayout: bundle.payloadLayout,
@@ -341,11 +397,12 @@ export function replaceDetectorBundlePool(
 	if (!globalPool) {
 		globalPool = new DetectorBundlePool();
 	}
-	globalPool.replace(bundles);
+	const accepted = filterPoolBundles(bundles, logger);
+	globalPool.replace(accepted);
 
 	let persisted = false;
 	try {
-		persistDetectorBundlePool(bundles);
+		persistDetectorBundlePool(accepted);
 		persisted = true;
 	} catch (error) {
 		logger.warn?.("failed to persist detector bundle pool to disk", {
