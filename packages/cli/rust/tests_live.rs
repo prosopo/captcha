@@ -406,6 +406,22 @@ async fn spam_emails_are_checked_as_the_express_app_checks_them() {
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }
 
+/// The fields image verification's side update (`providedIp`, `metadata`) and its result
+/// update (`blocked`) add to a commitment. The TS sends the two at once, so which lands first,
+/// and with it the order these fields are added in, varies from one request to the next.
+const COMMITMENT_RACE: [&str; 3] = ["blocked", "metadata", "providedIp"];
+
+/// The record with `fields` moved to the end, in that order.
+fn with_fields_last(record: &Value, fields: &[&str]) -> Value {
+    let mut ordered: Map<String, Value> = record.as_object().expect("a record").clone();
+    for field in fields {
+        if let Some(value) = ordered.shift_remove(*field) {
+            ordered.insert(field.to_string(), value);
+        }
+    }
+    Value::Object(ordered)
+}
+
 /// The cached sessions, by key, as JSON.
 async fn cached_sessions() -> Vec<Value> {
     let mut connection = redis().await;
@@ -415,6 +431,19 @@ async fn cached_sessions() -> Vec<Value> {
     for key in keys {
         let value: String = redis::cmd("GET").arg(&key).query_async(&mut connection).await.expect("reads");
         out.push(json!({ "key": key, "value": serde_json::from_str::<Value>(&value).expect("JSON") }));
+    }
+    out
+}
+
+/// The usage counters, by key.
+async fn usage_counters() -> Vec<Value> {
+    let mut connection = redis().await;
+    let mut keys: Vec<String> = redis::cmd("KEYS").arg("cnt:*").query_async(&mut connection).await.expect("lists");
+    keys.sort();
+    let mut out: Vec<Value> = Vec::new();
+    for key in keys {
+        let value: String = redis::cmd("GET").arg(&key).query_async(&mut connection).await.expect("reads");
+        out.push(json!({ "key": key, "value": value }));
     }
     out
 }
@@ -512,6 +541,13 @@ async fn verifies_as_the_express_app_verifies() {
     for collection in ["sessions", "puzzlecaptchas", "audiocaptchas", "iconordercaptchas"] {
         failures.extend(compare_records(&vectors["after"][collection], &dump(database, collection).await, &fresh));
     }
+    let racing = |records: Vec<Value>| records.iter().map(|record| with_fields_last(record, &COMMITMENT_RACE)).collect::<Vec<Value>>();
+    let expected_commitments: Value = Value::Array(racing(vectors["after"]["usercommitments"].as_array().expect("commitments").clone()));
+    failures.extend(compare_records(&expected_commitments, &racing(dump(database, "usercommitments").await), &fresh));
+    let counters: Vec<Value> = usage_counters().await;
+    if json!(counters) != vectors["counters"] {
+        failures.push(format!("usage counters differ\n  ts:   {}\n  rust: {}", vectors["counters"], json!(counters)));
+    }
     let cached: Vec<Value> = cached_sessions().await;
     let expected_cache: Vec<Value> = vectors["cacheAfter"].as_array().expect("cached sessions").clone();
     if cached_without_time(&cached) != cached_without_time(&expected_cache) {
@@ -521,6 +557,6 @@ async fn verifies_as_the_express_app_verifies() {
     if json!(forwarded) != vectors["forwarded"] {
         failures.push(format!("forwarded requests differ\n  ts:   {}\n  rust: {}", vectors["forwarded"], json!(forwarded)));
     }
-    assert!(compared > 75, "only {compared} compared");
+    assert!(compared > 105, "only {compared} compared");
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }

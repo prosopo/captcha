@@ -29,11 +29,13 @@ use crate::tasks::email::{evaluate_email_spam_rules, normalise_email_for_matchin
 use crate::tasks::frictionless::compute_frictionless_score;
 use crate::tasks::spam::check_spam_email;
 use crate::tasks::traffic::{check_traffic_filter, TrafficCheckResult, TrafficFilterView};
+use crate::tasks::usage_counters::{build_all_window_increments, UsageCounters};
+use prosopo_types::decision_machine::{CounterCaptchaType, CounterKind};
 use bson::{doc, Bson, Document};
 use prosopo_common::{ErrorClass, ErrorContext, ErrorOptions, ErrorSource, ProsopoError, ThrownError};
 use prosopo_database::challenges::{is_blocking, Interactive};
 use prosopo_database::provider::ProviderDatabase;
-use prosopo_database::records::{ChallengeRecord, StoredResult};
+use prosopo_database::records::{ChallengeRecord, CommitmentRecord, CompositeIpAddress, StoredResult};
 use prosopo_database::redis_cache::RedisWriteQueue;
 use prosopo_database::session::Session;
 use prosopo_logger::{ErrorObject, LogObject, LogRecord, Logger};
@@ -56,6 +58,8 @@ pub struct VerifyServices {
     pub db: Arc<ProviderDatabase>,
     /// Made once Redis is there, as `initWriteQueue` makes the TS's.
     pub write_queue: OnceLock<RedisWriteQueue>,
+    /// Made once Redis is there, as `initUsageCounters` makes the TS's.
+    pub usage_counters: OnceLock<Arc<UsageCounters>>,
     pub logger: Logger,
     pub ip_info: Option<Arc<dyn IpInfoLookup>>,
     pub verdict_cache: Arc<HardBlockVerdictCache>,
@@ -88,6 +92,46 @@ impl IpInfoLookup for NoLookup {
 
     fn lookup<'a>(&'a self, ip: &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = IpInfoResponse> + Send + 'a>> {
         Box::pin(lookup_ip(None, ip))
+    }
+}
+
+/// `HardBlockRecordView`: what `checkForHardBlock` reads of a captcha record.
+pub struct HardBlockRecordView<'a> {
+    pub dapp_account: &'a str,
+    pub user_account: &'a str,
+    pub ip_address: &'a CompositeIpAddress,
+    pub ja4: Option<&'a str>,
+    pub session_id: Option<&'a str>,
+    pub headers: Option<&'a Bson>,
+    pub coords: Option<&'a [Vec<Vec<f64>>]>,
+}
+
+impl<'a> From<&'a ChallengeRecord> for HardBlockRecordView<'a> {
+    fn from(record: &'a ChallengeRecord) -> HardBlockRecordView<'a> {
+        HardBlockRecordView {
+            dapp_account: &record.dapp_account,
+            user_account: &record.user_account,
+            ip_address: &record.ip_address,
+            ja4: record.ja4.as_deref(),
+            session_id: record.session_id.as_deref(),
+            headers: record.headers.as_ref(),
+            coords: record.coords.as_deref(),
+        }
+    }
+}
+
+/// A commitment is read without its `ja4` (`DAPP_USER_COMMITMENT_PROJECTION` leaves it out).
+impl<'a> From<&'a CommitmentRecord> for HardBlockRecordView<'a> {
+    fn from(record: &'a CommitmentRecord) -> HardBlockRecordView<'a> {
+        HardBlockRecordView {
+            dapp_account: &record.dapp_account,
+            user_account: &record.user_account,
+            ip_address: &record.ip_address,
+            ja4: None,
+            session_id: record.session_id.as_deref(),
+            headers: record.headers.as_ref(),
+            coords: record.coords.as_deref(),
+        }
     }
 }
 
@@ -145,6 +189,14 @@ impl VerifyServices {
         Some(self.write_queue.get_or_init(|| RedisWriteQueue::new(connection, self.logger.clone(), self.db.shared_source())))
     }
 
+    fn usage_counters(&self) -> Option<&Arc<UsageCounters>> {
+        if let Some(counters) = self.usage_counters.get() {
+            return Some(counters);
+        }
+        let connection = self.db.get_redis_connection().ok()?;
+        Some(self.usage_counters.get_or_init(|| Arc::new(UsageCounters::new(connection, self.logger.clone()))))
+    }
+
     fn ip_info(&self) -> &dyn IpInfoLookup {
         self.ip_info.as_deref().unwrap_or(&NoLookup)
     }
@@ -184,15 +236,15 @@ impl VerifyServices {
 
     /// `checkForHardBlock`: the deferred or type-less Block rule that applies to the record's
     /// user, if any.
-    pub async fn check_for_hard_block(&self, record: &ChallengeRecord, ip_info: Option<&IpInfoResponse>) -> Result<Option<AccessRule>, String> {
+    pub async fn check_for_hard_block(&self, record: &HardBlockRecordView<'_>, ip_info: Option<&IpInfoResponse>) -> Result<Option<AccessRule>, String> {
         let storage = self.db.get_user_access_rules_storage().map_err(|error| error.to_string())?;
-        let head_hash: Option<String> = match &record.session_id {
+        let head_hash: Option<String> = match record.session_id {
             Some(session_id) => self.db.get_session_record_by_session_id(session_id).await.map_err(|error| error.to_string())?.map(|session| session.decrypted_head_hash),
             None => None,
         };
-        let coords: Option<String> = record.coords.as_deref().map(coords_json);
-        let address: String = get_ip_address_from_composite(&record.ip_address).map_err(|error| error.to_string())?.address().to_string();
-        let headers: Map<String, Value> = match record.headers.as_ref().map(bson_json) {
+        let coords: Option<String> = record.coords.map(coords_json);
+        let address: String = get_ip_address_from_composite(record.ip_address).map_err(|error| error.to_string())?.address().to_string();
+        let headers: Map<String, Value> = match record.headers.map(bson_json) {
             Some(Value::Object(headers)) => headers,
             _ => Map::new(),
         };
@@ -203,9 +255,9 @@ impl VerifyServices {
         };
         let scope: Value = get_request_user_scope(ScopeSignals {
             user_agent: user_agent.as_deref(),
-            ja4: record.ja4.as_deref(),
+            ja4: record.ja4,
             ip: Some(&address),
-            user: Some(&record.user_account),
+            user: Some(record.user_account),
             head_hash: head_hash.as_deref(),
             coords: coords.as_deref(),
             country_code: country_code.as_deref(),
@@ -214,7 +266,7 @@ impl VerifyServices {
         });
         let options: PrioritisedRuleOptions = PrioritisedRuleOptions { block_only: true, include_deferred: true, ..PrioritisedRuleOptions::default() };
         let rules: Vec<AccessRule> =
-            get_prioritised_access_rule(Arc::new(storage), &self.verdict_cache, &scope, Some(&record.dapp_account), &normalize_stored_headers(&headers), options).await?;
+            get_prioritised_access_rule(Arc::new(storage), &self.verdict_cache, &scope, Some(record.dapp_account), &normalize_stored_headers(&headers), options).await?;
         Ok(find_hard_block_policy(rules))
     }
 
@@ -398,7 +450,7 @@ pub async fn server_verify_pow_captcha_solution(services: &VerifyServices, reque
     }
 
     if failure.is_none() && db.get_user_access_rules_storage().is_ok() {
-        match services.check_for_hard_block(&record, record_ip_info.as_ref()).await {
+        match services.check_for_hard_block(&HardBlockRecordView::from(&record), record_ip_info.as_ref()).await {
             Ok(Some(rule)) => {
                 logger.info(|| {
                     LogRecord::msg("User blocked by access policy in server PoW verification")
@@ -636,7 +688,7 @@ impl VerifyServices {
         }
         let record_ip_info: Option<IpInfoResponse> = record_ip_info(record.ip_info.as_ref());
         if db.get_user_access_rules_storage().is_ok() {
-            match self.check_for_hard_block(record, record_ip_info.as_ref()).await {
+            match self.check_for_hard_block(&HardBlockRecordView::from(record), record_ip_info.as_ref()).await {
                 Ok(Some(rule)) => {
                     logger.info(|| {
                         LogRecord::msg(format!("User blocked by access policy in server {label} verification"))
@@ -803,6 +855,284 @@ pub async fn server_verify_interactive_captcha_solution(
         score: score.filter(|score| *score != 0.0 && !score.is_nan()),
         reason: None,
         session_id: record.session_id.filter(|id| !id.is_empty()),
+    })
+}
+
+/// What `verifyImageCaptchaSolution` answers: the outcome, its status (a translation key, or
+/// the stored reason), and the commitment it was about.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ImageVerifyOutcome {
+    pub outcome: VerifyOutcome,
+    pub status: String,
+    pub commitment_id: Option<String>,
+}
+
+/// What image verification is asked beyond the shared request.
+pub struct ImageVerifyRequest<'a> {
+    pub shared: ServerVerifyRequest<'a>,
+    pub commitment_id: Option<&'a str>,
+    pub max_verified_time: Option<f64>,
+    pub disallow_web_view: Option<bool>,
+}
+
+fn image_not_verified(status: &str, session_id: Option<&String>) -> ImageVerifyOutcome {
+    ImageVerifyOutcome {
+        outcome: VerifyOutcome { verified: false, score: None, reason: None, session_id: session_id.filter(|id| !id.is_empty()).cloned() },
+        status: status.to_string(),
+        commitment_id: None,
+    }
+}
+
+/// `verifyImageCaptchaSolution`: whether the token's commitment is a solved, unused image
+/// challenge that passes the site's checks. Unlike the other types the commitment's own result
+/// decides, a refusal found after the IP check is written to the session only, and the answer's
+/// status is the reason.
+pub async fn verify_image_captcha_solution(services: &VerifyServices, request: &ImageVerifyRequest<'_>, logger: &Logger) -> Result<ImageVerifyOutcome, ThrownError> {
+    let shared: &ServerVerifyRequest = &request.shared;
+    let mut bindings: LogObject = LogObject::new();
+    bindings.insert("commitmentId".to_string(), json!(request.commitment_id));
+    bindings.insert("dapp".to_string(), json!(shared.dapp));
+    let logger: Logger = logger.with(&bindings, None);
+    let db: &ProviderDatabase = &services.db;
+    let Some(commitment_id) = request.commitment_id.filter(|id| !id.is_empty()) else {
+        logger.debug(|| LogRecord::msg("Not verified - token carried no commitmentId"));
+        return Ok(image_not_verified("API.USER_NOT_VERIFIED_NO_SOLUTION", None));
+    };
+    let Some(solution) = db.get_dapp_user_commitment_by_id(commitment_id).await? else {
+        let context: ErrorContext = ErrorContext::new().with("failedFuncName", "getDappUserCommitmentById").with("commitmentId", commitment_id);
+        return Err(thrown(ErrorClass::Env, "CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", context));
+    };
+    if solution.server_checked == Some(true) || db.mark_dapp_user_commitments_checked(std::slice::from_ref(&solution.id)).await? == 0 {
+        return Ok(image_not_verified("API.USER_ALREADY_VERIFIED", solution.session_id.as_ref()));
+    }
+    if solution.result.status == CaptchaStatus::Disapproved {
+        let status: &str = solution.result.reason.as_deref().filter(|reason| !reason.is_empty()).unwrap_or("API.USER_NOT_VERIFIED");
+        return Ok(image_not_verified(status, solution.session_id.as_ref()));
+    }
+    let max_verified_time: f64 = request.max_verified_time.filter(|time| *time != 0.0 && !time.is_nan()).unwrap_or(60_000.0);
+    let since_completion: f64 =
+        solution.submitted_at_timestamp.map_or(f64::INFINITY, |submitted| (db.source().now().timestamp_millis() - submitted.timestamp_millis()) as f64);
+    if since_completion > max_verified_time {
+        logger.debug(|| LogRecord::msg("Not verified - timed out"));
+        return Ok(image_not_verified("API.USER_NOT_VERIFIED_TIME_EXPIRED", solution.session_id.as_ref()));
+    }
+
+    let mut result_update: Option<StoredResult> = None;
+    let mut fail_status: Option<String> = None;
+    let mut matched_rule: Option<MatchedAccessRule> = None;
+    let fail = |reason: &str, result: &mut Option<StoredResult>| {
+        *result = Some(StoredResult::new(CaptchaStatus::Disapproved, Some(reason)));
+        Some(reason.to_string())
+    };
+
+    let recorded_session: Option<&str> = solution.client_meta_data.as_ref().and_then(|meta| meta.client_session_id.as_deref());
+    if is_client_session_mismatch(shared.client_session_id, recorded_session) {
+        logger.info(|| {
+            LogRecord::msg("Client session mismatch in server image verification")
+                .with_data(json!({ "hasRecordedClientSessionId": recorded_session.is_some_and(|id| !id.is_empty()) }))
+        });
+        fail_status = fail(ResultReason::ClientSessionMismatch.as_str(), &mut result_update);
+    }
+    let record_ip_info: Option<IpInfoResponse> = record_ip_info(solution.ip_info.as_ref());
+    if fail_status.is_none() && db.get_user_access_rules_storage().is_ok() {
+        match services.check_for_hard_block(&HardBlockRecordView::from(&solution), record_ip_info.as_ref()).await {
+            Ok(Some(rule)) => {
+                logger.info(|| {
+                    LogRecord::msg("User blocked by access policy in server image verification").with_data(json!({
+                        "userAccount": solution.user_account,
+                        "dappAccount": solution.dapp_account,
+                        "policy": serde_json::to_value(&rule).unwrap_or(Value::Null),
+                    }))
+                });
+                fail_status = fail(ResultReason::AccessPolicyBlock.as_str(), &mut result_update);
+                matched_rule = Some(describe_matched_rule(&rule));
+            }
+            Ok(None) => {}
+            Err(error) => logger.warn(|| LogRecord::msg("Failed to check user access policies in server image verification").with_data(json!({ "error": error }))),
+        }
+    }
+    let email: Option<&str> = shared.email.filter(|email| !email.is_empty());
+    if let (None, Some(email), true) = (&fail_status, email, shared.spam_email_domain_check_enabled) {
+        if check_spam_email(email, db, services.dns_servers.as_deref(), &logger).await {
+            let email_domain: &str = email.split('@').nth(1).filter(|domain| !domain.is_empty()).unwrap_or("unknown");
+            logger.info(|| LogRecord::msg("Spam email domain detected in server image verification").with_data(json!({ "emailDomain": email_domain })));
+            fail_status = fail(ResultReason::SpamEmailDomain.as_str(), &mut result_update);
+        }
+    }
+    let email_rules = shared.spam_filter.as_ref().and_then(SpamFilterView::active_email_rules);
+    if let (None, Some(rules), Some(email)) = (&fail_status, email_rules, email) {
+        if let Some(spam) = evaluate_email_spam_rules(Some(email), Some(rules)) {
+            logger.info(|| LogRecord::msg("Spam filter rejected email in image verification").with_data(json!({ "reason": spam.reason.as_str() })));
+            fail_status = fail(ResultReason::SpamEmailRule.as_str(), &mut result_update);
+        }
+    }
+    let max_email_submission_count: Option<f64> = email_rules.and_then(|rules| rules.max_email_submission_count).map(|count| count.get());
+    let mut email_normalised: Option<String> = None;
+    if let (None, Some(max), Some(email), true) = (&fail_status, max_email_submission_count, email, shared.store_metadata) {
+        let normalised: String = normalise_email_for_matching(email);
+        if !normalised.is_empty() {
+            match db.count_commitments_by_normalised_email(shared.dapp, &normalised).await {
+                Ok(prior) if prior as f64 >= max => {
+                    logger.info(|| {
+                        LogRecord::msg("Email submission count exceeded in image verification").with_data(json!({ "priorCount": prior, "maxEmailSubmissionCount": max }))
+                    });
+                    fail_status = fail(ResultReason::SpamEmailCountExceeded.as_str(), &mut result_update);
+                }
+                Ok(_) => {}
+                Err(error) => {
+                    logger.warn(|| LogRecord::msg("Failed to check email submission count in image verification").with_data(json!({ "error": error.to_string() })))
+                }
+            }
+        }
+        email_normalised = Some(normalised);
+    }
+
+    let mut session: Option<Session> = match solution.session_id.as_deref().filter(|id| !id.is_empty()) {
+        Some(session_id) => services.get_session_record_with_origin_fallback(session_id).await?,
+        None => None,
+    };
+    let ip: Option<&str> = shared.ip;
+    let primary_ip: Option<String> = ip.map(str::to_string).or_else(|| record_ip_info.as_ref().map(ip_of));
+    let dns_event: Option<DnsEventAddresses> = session.as_ref().and_then(dns_addresses);
+    let enriched: Option<EnrichedDnsEvent> = enrich_dns_event(dns_event.as_ref(), services.ip_info(), primary_ip.as_deref()).await;
+    if fail_status.is_none() {
+        let check: TrafficCheckResult = services.resolve_traffic_filter_check(record_ip_info.as_ref(), shared.traffic_filter.as_ref(), ip, enriched.as_ref()).await;
+        if let Some(reason) = check.blocked {
+            logger.info(|| {
+                LogRecord::msg("Traffic filter rejected request").with_data(json!({
+                    "ip": ip,
+                    "reason": reason.as_str(),
+                    "dnsPeerIp": enriched.as_ref().and_then(|event| event.peer_ip.clone()),
+                    "dnsResolverIp": enriched.as_ref().and_then(|event| event.resolver_ip.clone()),
+                    "dnsPeerAsn": get_ip_info_asn(enriched.as_ref().and_then(|event| event.peer_ip_info.as_ref())),
+                    "dnsResolverAsn": get_ip_info_asn(enriched.as_ref().and_then(|event| event.resolver_ip_info.as_ref())),
+                    "dnsPathValid": enriched.as_ref().and_then(|event| event.path_valid),
+                }))
+            });
+            fail_status = fail(reason.as_str(), &mut result_update);
+        }
+    }
+
+    let metadata: Option<Document> = match (shared.store_metadata, email) {
+        (true, Some(email)) => Some(doc! { "email": email, "emailNormalised": email_normalised.unwrap_or_else(|| normalise_email_for_matching(email)) }),
+        _ => None,
+    };
+    let mut provided_ip: Option<Document> = None;
+    if let Some(ip) = ip.filter(|ip| !ip.is_empty()) {
+        let solution_ip = get_ip_address_from_composite(&solution.ip_address).map_err(|error| ThrownError::from(ErrorObject::new("Error", error.to_string())))?;
+        let client = db.get_client_record(shared.dapp).await?;
+        let rules: Option<Value> = client.as_ref().and_then(|client| client.settings.as_ref()).and_then(|settings| settings.get("ipValidationRules")).map(bson_json);
+        provided_ip = Some(get_composite_ip_address(ip).to_document());
+        if fail_status.is_none() && rules.as_ref().and_then(|rules| rules.get("enabled")) == Some(&json!(true)) {
+            let rules: Option<IPValidationRules> = rules.and_then(|rules| serde_json::from_value(rules).ok());
+            let peer_ip: Option<&str> = enriched.as_ref().and_then(|event| event.peer_ip.as_deref());
+            let lookup: ValidationLookup = ValidationLookup(services.ip_info.as_deref());
+            let validation: IpCheck = deep_validate_ip_address(ip, &solution_ip, &logger, &lookup, rules.as_ref(), peer_ip).await;
+            if !validation.is_valid {
+                logger.error(|| {
+                    LogRecord::msg("IP validation failed for image captcha").with_data(json!({
+                        "ip": ip,
+                        "solutionIp": solution_ip.address(),
+                        "error": validation.error_message,
+                        "distanceKm": validation.distance_km,
+                    }))
+                });
+                fail_status = Some(ResultReason::FailedIpValidation.as_str().to_string());
+            }
+        }
+    }
+
+    let approved_solution: bool = solution.result.status == CaptchaStatus::Approved;
+    let mut is_approved: bool = fail_status.is_none() && approved_solution;
+    let mut failure_status: String = fail_status.clone().unwrap_or_else(|| ResultReason::UserNotVerified.as_str().to_string());
+    if let (None, true, Some(counters)) = (&fail_status, approved_solution, services.usage_counters()) {
+        let increments = build_all_window_increments(
+            CounterKind::Solved,
+            CounterCaptchaType::Type(CaptchaType::Image),
+            ip.unwrap_or_default(),
+            &solution.user_account,
+            enriched.as_ref().and_then(|event| event.peer_ip.as_deref()),
+        );
+        counters.incr_many_async(&solution.dapp_account, increments);
+    }
+
+    let mut score: Option<f64> = None;
+    if let Some(session) = session.as_mut() {
+        let dns_asymmetry: f64 = compute_dns_asymmetry(enriched.as_ref(), record_ip_info.as_ref(), shared.traffic_filter.as_ref());
+        if dns_asymmetry > 0.0 {
+            session.score_components.dns_asymmetry = Some(dns_asymmetry);
+        }
+        let computed: f64 = compute_frictionless_score(&session.score_components);
+        logger.info(|| {
+            LogRecord::default().with_data(json!({
+                "scoreComponents": serde_json::to_value(&session.score_components).unwrap_or(Value::Null),
+                "score": computed,
+                "dnsPeerAsn": get_ip_info_asn(enriched.as_ref().and_then(|event| event.peer_ip_info.as_ref())),
+                "dnsResolverAsn": get_ip_info_asn(enriched.as_ref().and_then(|event| event.resolver_ip_info.as_ref())),
+            }))
+        });
+        score = Some(computed);
+        let web_view: bool = session.web_view || session.score_components.web_view.unwrap_or(0.0) > 0.0;
+        if fail_status.is_none() && request.disallow_web_view == Some(true) && web_view {
+            logger.info(|| LogRecord::msg("Disallowing webview access - user not verified"));
+            result_update = Some(StoredResult::new(CaptchaStatus::Disapproved, Some(ResultReason::DisallowedWebview.as_str())));
+            is_approved = false;
+            failure_status = ResultReason::DisallowedWebview.as_str().to_string();
+        }
+    }
+    if is_approved {
+        services
+            .decisions
+            .decide(shared.dapp, CaptchaType::Image, &logger)
+            .await
+            .map_err(|unsupported| ThrownError::from(ErrorObject::new("Error", unsupported.to_string())))?;
+    }
+
+    let mut side_updates: Document = Document::new();
+    if let Some(provided_ip) = provided_ip {
+        side_updates.insert("providedIp", provided_ip);
+    }
+    if let Some(metadata) = metadata {
+        side_updates.insert("metadata", metadata);
+    }
+    let final_result: StoredResult = if is_approved {
+        StoredResult::new(CaptchaStatus::Approved, None)
+    } else {
+        result_update.clone().unwrap_or_else(|| StoredResult::new(CaptchaStatus::Disapproved, Some(&failure_status)))
+    };
+    let side_write = async {
+        if side_updates.is_empty() {
+            return Ok(());
+        }
+        db.update_dapp_user_commitment(&solution.id, &side_updates).await
+    };
+    let result_write = async {
+        if is_approved {
+            db.approve_dapp_user_commitment(commitment_id, None).await
+        } else if let Some(result) = &result_update {
+            db.disapprove_dapp_user_commitment(commitment_id, result.reason.as_deref(), None).await
+        } else {
+            Ok(())
+        }
+    };
+    let session_write = async {
+        if let Some(session_id) = solution.session_id.as_deref().filter(|id| !id.is_empty()) {
+            services.update_session_record_with_cache(session_id, session_updates(CaptchaType::Image, &final_result, matched_rule.as_ref()), true, &logger).await;
+        }
+    };
+    let (side, result, ()) = futures_util::join!(side_write, result_write, session_write);
+    side?;
+    result?;
+
+    Ok(ImageVerifyOutcome {
+        outcome: VerifyOutcome {
+            verified: is_approved,
+            score: score.filter(|score| *score != 0.0 && !score.is_nan()),
+            reason: None,
+            session_id: solution.session_id.clone().filter(|id| !id.is_empty()),
+        },
+        status: if is_approved { ResultReason::UserVerified.as_str().to_string() } else { failure_status },
+        commitment_id: Some(solution.id.clone()),
     })
 }
 

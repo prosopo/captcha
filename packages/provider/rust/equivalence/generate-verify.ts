@@ -82,6 +82,8 @@ const UNREGISTERED = pair("//Ferdie");
 const USER = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 const BLOCKED_USER = "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y";
 const RESTRICTED_USER = "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy";
+const JA4 = "t13d1516h2_8daaf6152771_02713d6af862";
+const JA4_BLOCKED = "t13d0000h2_000000000000_000000000000";
 
 const location = (country: string, code: string, latitude: number, longitude: number) => ({ country, country_code: code, state: "S", city: `${code} City`, latitude, longitude, timezone: "UTC" });
 const answer = (ip: string, code: string, latitude: number, longitude: number, flags: Record<string, boolean> = {}, extra: Record<string, Json> = {}): Json => ({
@@ -108,6 +110,7 @@ const IPAPI: IpapiTable = {
 	"198.51.100.30": answer("198.51.100.30", "NL", 52.37, 4.9, { is_vpn: true }),
 	"198.51.100.40": answer("198.51.100.40", "US", 37.77, -122.42, { is_abuser: true }, { company: { name: "Bad", abuser_score: "0.9 (Very High)", domain: "bad.example", type: "hosting" } }),
 	"192.0.2.53": answer("192.0.2.53", "US", 37.4, -122.08, { is_datacenter: true }, { company: { name: "Resolver Co", abuser_score: "0.001 (Low)", domain: "dns.example", type: "hosting" }, datacenter: { datacenter: "Resolver Co" } }),
+	"192.0.2.77": answer("192.0.2.77", "DE", 52.52, 13.405),
 	"192.0.2.54": answer("192.0.2.54", "US", 37.4, -122.08, { is_abuser: true }, { company: { name: "Peer Co", abuser_score: "0.4 (High)", domain: "peer.example", type: "isp" } }),
 };
 const DNS: DnsTable = { "clean.eqv.zz": {} };
@@ -171,7 +174,7 @@ const records = [
 		tier: Tier.Enterprise,
 	},
 	{ account: STRICT.address, settings: { ...base, verifiedTimeout: 1000 }, tier: Tier.Free },
-	{ account: SESSIONS.address, settings: { ...base }, tier: Tier.Professional },
+	{ account: SESSIONS.address, settings: { ...base, disallowWebView: true }, tier: Tier.Professional },
 ] as unknown as IUserDataSlim[];
 await db.updateClientRecords(records);
 await db.bulkUpdateSpamEmailDomains(SPAM_LIST.map((domain) => ({ filter: { domain }, update: { domain } })), true);
@@ -180,6 +183,7 @@ const rules: unknown[] = [
 	{ type: "block", userId: BLOCKED_USER, clientId: FREE.address, deferToVerify: true, description: "a deferred user block" },
 	{ type: "restrict", userId: RESTRICTED_USER, deferToVerify: true, captchaType: "image", solvedImagesCount: 8 },
 	{ type: "block", ip: "203.0.113.66", description: "a hard block" },
+	{ type: "block", ja4Hash: JA4_BLOCKED, deferToVerify: true },
 	{ type: "block", ip: "203.0.113.67", captchaType: "image" },
 ];
 await db.getUserAccessRulesStorage().insertRules(rules.map((rule) => ({ rule: accessRuleInput.parse(rule) }) as AccessRuleEntry));
@@ -197,6 +201,7 @@ type Seed = {
 	clientSessionId?: string;
 	coords?: [number, number][][];
 	serverChecked?: boolean;
+	ja4?: string;
 };
 let nonce = 0;
 const seedPow = async (seed: Seed): Promise<string> => {
@@ -212,7 +217,7 @@ const seedPow = async (seed: Seed): Promise<string> => {
 		"0xprovidersignature",
 		getCompositeIpAddress(ip),
 		recordHeaders,
-		"t13d1516h2_8daaf6152771_02713d6af862",
+		seed.ja4 ?? JA4,
 		seed.sessionId,
 		seed.serverChecked ?? false,
 		false,
@@ -276,6 +281,7 @@ const seeds: Seed[] = [
 	{ name: "deferred-restrict", dapp: FREE.address, user: RESTRICTED_USER },
 	{ name: "hard-ip", dapp: FREE.address, ip: "203.0.113.66", coords: [[[1, 2]], [[35, 4000]]] },
 	{ name: "routing-ip", dapp: FREE.address, ip: "203.0.113.67" },
+	{ name: "pow-ja4", dapp: FREE.address, ja4: JA4_BLOCKED },
 	{ name: "pro", dapp: PRO.address, sessionId: "s-plain" },
 	{ name: "pro-spam-domain", dapp: PRO.address },
 	{ name: "pro-default-pattern", dapp: PRO.address },
@@ -355,6 +361,65 @@ const seedInteractive = async (seed: InteractiveSeed): Promise<string> => {
 };
 for (const seed of interactiveSeeds) challenges[seed.name] = await seedInteractive(seed);
 
+type ImageSeed = Seed & { status?: CaptchaStatus; reason?: string; webView?: boolean };
+const imageSeeds: ImageSeed[] = [
+	{ name: "img", dapp: FREE.address },
+	{ name: "img-pro", dapp: PRO.address, sessionId: "s-img-plain" },
+	{ name: "img-replayed", dapp: FREE.address },
+	{ name: "img-disapproved", dapp: PRO.address, status: CaptchaStatus.disapproved, reason: "CAPTCHA.INVALID_SOLUTION", sessionId: "s-img-disapproved" },
+	{ name: "img-disapproved-free", dapp: FREE.address, status: CaptchaStatus.disapproved },
+	{ name: "img-pending", dapp: PRO.address, status: CaptchaStatus.pending, sessionId: "s-img-pending" },
+	{ name: "img-old", dapp: PRO.address, submitted: "old" },
+	{ name: "img-unsubmitted", dapp: PRO.address, submitted: "never" },
+	{ name: "img-max-time", dapp: FREE.address },
+	{ name: "img-client-session", dapp: PRO.address, clientSessionId: "widget-img", sessionId: "s-img-client" },
+	{ name: "img-deferred", dapp: FREE.address, user: BLOCKED_USER, sessionId: "s-img-deferred" },
+	{ name: "img-ja4", dapp: FREE.address, ja4: JA4_BLOCKED },
+	{ name: "img-spam", dapp: PRO.address },
+	{ name: "img-rule", dapp: PRO.address },
+	{ name: "img-vpn", dapp: TRAFFIC.address, ip: "198.51.100.30" },
+	{ name: "img-far", dapp: TRAFFIC.address, sessionId: "s-img-far" },
+	{ name: "img-webview", dapp: SESSIONS.address, sessionId: "s-img-webview" },
+	{ name: "img-dns", dapp: SESSIONS.address, sessionId: "s-img-dns" },
+	{ name: "img-forward", dapp: FREE.address },
+];
+for (const sessionId of ["s-img-plain", "s-img-disapproved", "s-img-pending", "s-img-client", "s-img-deferred", "s-img-far"]) await seedSession(sessionId);
+await seedSession("s-img-webview", { webView: true } as Partial<Session>);
+await seedSession("s-img-dns", { dnsEvent: { receivedAt: new Date(Date.now() - 9000), peerIp: "192.0.2.77", resolverIp: "192.0.2.53", pathValid: true } } as Partial<Session>);
+const seedImage = async (seed: ImageSeed): Promise<string> => {
+	nonce += 1;
+	const id = `0x${nonce.toString(16).padStart(64, "0")}`;
+	const ip = seed.ip ?? "203.0.113.7";
+	const now = Date.now();
+	await db.storeUserImageCaptchaSolution([{ captchaId: `0xcaptcha${nonce}`, captchaContentId: `0xcontent${nonce}`, salt: "0xsalt", solution: ["0xsolution"] }], {
+		userAccount: seed.user ?? USER,
+		dappAccount: seed.dapp,
+		datasetId: "0xdataset",
+		providerAccount: selfAddress,
+		id,
+		result: { status: seed.status ?? CaptchaStatus.approved, ...(seed.reason && { reason: seed.reason }) },
+		userSignature: "0xusersignature",
+		ipAddress: getCompositeIpAddress(ip),
+		headers: recordHeaders,
+		ja4: seed.ja4 ?? JA4,
+		userSubmitted: seed.submitted !== "never",
+		serverChecked: false,
+		ipInfo: await ipInfoFor(ip),
+		requestedAtTimestamp: new Date(now - 8000),
+		...(seed.submitted !== "never" && { submittedAtTimestamp: new Date(seed.submitted === "old" ? now - 3_600_000 : now - 2000) }),
+		...(seed.sessionId && { sessionId: seed.sessionId }),
+		...(seed.clientSessionId && { clientMetaData: { clientSessionId: seed.clientSessionId } }),
+		pending: false,
+		salt: "0xsalt",
+		requestHash: "0xrequesthash",
+		deadlineTimestamp: new Date(now + 600000),
+		threshold: 0.8,
+	} as Parameters<typeof db.storeUserImageCaptchaSolution>[1]);
+	return id;
+};
+const commitments: Record<string, string> = {};
+for (const seed of imageSeeds) commitments[seed.name] = await seedImage(seed);
+
 const database = await dumpDatabase(DATABASE);
 const redis = await dumpRedisHashes();
 const client = await db.getRedisConnection().getClient();
@@ -362,11 +427,12 @@ const cache: Json[] = [];
 for (const key of (await client.keys("cache:session:*")).sort()) cache.push({ key, value: JSON.parse((await client.get(key)) ?? "null") as Json });
 
 const signer = (dapp: string) => [FREE, PRO, TRAFFIC, STRICT, SESSIONS, UNREGISTERED].find((candidate) => candidate.address === dapp);
-const token = (o: { dapp: string; user?: string; challenge?: string; providerUrl?: string; timestamp?: string }) =>
+const token = (o: { dapp: string; user?: string; challenge?: string; commitmentId?: string; providerUrl?: string; timestamp?: string }) =>
 	encodeProcaptchaOutput({
 		dapp: o.dapp,
 		user: o.user ?? USER,
 		...(o.challenge !== undefined && { challenge: o.challenge }),
+		...(o.commitmentId !== undefined && { commitmentId: o.commitmentId }),
 		...(o.providerUrl !== undefined && { providerUrl: o.providerUrl }),
 		timestamp: o.timestamp ?? "1700000000000",
 		signature: { provider: { challenge: "0xprovider" }, user: { timestamp: "0xuser" } },
@@ -375,7 +441,7 @@ const signed = (dapp: string, timestamp = "1700000000000") => u8aToHex((signer(d
 
 const path = "/v1/prosopo/provider/client/pow/verify";
 const json: [string, string] = ["Content-Type", "application/json"];
-const verify = (body: Record<string, unknown>, headers: [string, string][] = []): Step => ({ method: "POST", path, headers: [json, ...headers], body: JSON.stringify(body) });
+const verify = (body: Record<string, unknown>, headers: [string, string][] = [], at: string = path): Step => ({ method: "POST", path: at, headers: [json, ...headers], body: JSON.stringify(body) });
 const interactivePath: Record<Kind, string> = {
 	puzzle: "/v1/prosopo/provider/client/puzzle/verify",
 	audio: "/v1/prosopo/provider/client/audio/verify",
@@ -385,6 +451,12 @@ const ofInteractive = (name: string, extra: Record<string, unknown> = {}, header
 	const seed = interactiveSeeds.find((candidate) => candidate.name === name) as InteractiveSeed;
 	const body = { token: token({ dapp: seed.dapp, user: seed.user, challenge: challenges[name], ...tokenExtra }), dappSignature: signed(seed.dapp), ...extra };
 	return { method: "POST", path: interactivePath[seed.kind], headers: [json, ...headers], body: JSON.stringify(body) };
+};
+const imagePath = "/v1/prosopo/provider/client/image/dapp/verify";
+const ofImage = (name: string, extra: Record<string, unknown> = {}, headers: [string, string][] = [], tokenExtra: { providerUrl?: string } = {}): Step => {
+	const seed = imageSeeds.find((candidate) => candidate.name === name) as ImageSeed;
+	const body = { token: token({ dapp: seed.dapp, user: seed.user, commitmentId: commitments[name], timestamp: "1700000000001", ...tokenExtra }), dappSignature: signed(seed.dapp, "1700000000001"), ...extra };
+	return { method: "POST", path: imagePath, headers: [json, ...headers], body: JSON.stringify(body) };
 };
 const ofSeed = (name: string, extra: Record<string, unknown> = {}, headers: [string, string][] = [], tokenExtra: { providerUrl?: string; user?: string } = {}): Step => {
 	const seed = seeds.find((candidate) => candidate.name === name) as Seed;
@@ -408,6 +480,7 @@ const steps: Step[] = [
 	ofSeed("deferred-restrict"),
 	ofSeed("hard-ip"),
 	ofSeed("routing-ip"),
+	ofSeed("pow-ja4"),
 	ofSeed("pro"),
 	ofSeed("pro-spam-domain", { email: "someone@spam-direct.zz" }),
 	ofSeed("pro-default-pattern", { email: "a.b.c.d.e@example.com" }),
@@ -470,6 +543,35 @@ const steps: Step[] = [
 	ofInteractive("i-puzzle", {}, [], { providerUrl: OTHER_URL }),
 	{ method: "POST", path: "/v1/prosopo/provider/client/audio/verify", headers: [json], body: JSON.stringify({ token: token({ dapp: ALWAYS_FAIL_SITE_KEY }), dappSignature: "0x00" }) },
 	{ method: "POST", path: "/v1/prosopo/provider/client/icon-order/verify", headers: [json], body: JSON.stringify({ dappSignature: "0x00" }) },
+	ofImage("img"),
+	ofImage("img-pro"),
+	ofImage("img-replayed"),
+	ofImage("img-replayed"),
+	ofImage("img-disapproved"),
+	ofImage("img-disapproved-free"),
+	ofImage("img-pending"),
+	ofImage("img-old"),
+	ofImage("img-unsubmitted"),
+	ofImage("img-max-time", { maxVerifiedTime: 0 }),
+	ofImage("img-client-session", { clientSessionId: "someone-else" }),
+	ofImage("img-deferred"),
+	ofImage("img-ja4"),
+	ofImage("img-spam", { email: "someone@spam-direct.zz" }),
+	ofImage("img-rule", { email: "a.b.c.d.e@example.com" }),
+	ofImage("img-vpn"),
+	ofImage("img-far", { ip: "198.51.100.20" }),
+	ofImage("img-webview"),
+	ofImage("img-dns", { ip: "203.0.113.8" }),
+	ofImage("img-forward", {}, [], { providerUrl: OTHER_URL }),
+	verify({ token: token({ dapp: FREE.address }), dappSignature: signed(FREE.address) }, [], imagePath),
+	verify({ token: token({ dapp: FREE.address, commitmentId: "0xunknown" }), dappSignature: signed(FREE.address) }, [], imagePath),
+	verify({ token: token({ dapp: FREE.address, user: "not-an-address", commitmentId: "0x1" }), dappSignature: signed(FREE.address) }, [], imagePath),
+	verify({ token: token({ dapp: UNREGISTERED.address, commitmentId: "0x1" }), dappSignature: signed(UNREGISTERED.address) }, [], imagePath),
+	verify({ token: token({ dapp: FREE.address, commitmentId: "0x1" }), dappSignature: signed(PRO.address) }, [], imagePath),
+	verify({ token: token({ dapp: FREE.address, commitmentId: "0x1" }), dappSignature: "0x00", maxVerifiedTime: "soon" }, [], imagePath),
+	verify({ token: token({ dapp: FREE.address, commitmentId: "0x1" }), dappSignature: "0x00", email: "not an email" }, [], imagePath),
+	verify({ token: "0xdeadbeef", dappSignature: "0x00" }, [], imagePath),
+	verify({ token: token({ dapp: ALWAYS_PASS_SITE_KEY }), dappSignature: "0x00" }, [], imagePath),
 	{ method: "GET", path, headers: [json] },
 	{ method: "POST", path, headers: [["Content-Type", "text/plain"]], body: "token" },
 ];
@@ -490,6 +592,8 @@ const metrics = (await send(port, requestBytes({ method: "GET", path: "/metrics"
 	.sort();
 await new Promise<void>((resolve) => setTimeout(resolve, 1500));
 const after = await dumpDatabase(DATABASE);
+const counters: Json[] = [];
+for (const key of (await client.keys("cnt:*")).sort()) counters.push({ key, value: await client.get(key) });
 const cacheAfter: Json[] = [];
 for (const key of (await client.keys("cache:session:*")).sort()) cacheAfter.push({ key, value: JSON.parse((await client.get(key)) ?? "null") as Json });
 await client.quit();
@@ -512,7 +616,15 @@ writeFileSync(
 		exchanges,
 		forwarded,
 		metrics,
-		after: { powcaptchas: after.powcaptchas, sessions: after.sessions, puzzlecaptchas: after.puzzlecaptchas, audiocaptchas: after.audiocaptchas, iconordercaptchas: after.iconordercaptchas },
+		after: {
+			powcaptchas: after.powcaptchas,
+			sessions: after.sessions,
+			puzzlecaptchas: after.puzzlecaptchas,
+			audiocaptchas: after.audiocaptchas,
+			iconordercaptchas: after.iconordercaptchas,
+			usercommitments: after.usercommitments,
+		},
+		counters,
 		cacheAfter,
 	})}\n`,
 );

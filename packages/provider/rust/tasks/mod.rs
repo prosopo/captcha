@@ -21,6 +21,7 @@ pub mod email;
 pub mod frictionless;
 pub mod spam;
 pub mod traffic;
+pub mod usage_counters;
 pub mod verify;
 #[cfg(test)]
 mod verify_helpers_equivalence;

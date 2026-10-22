@@ -150,6 +150,7 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
                 decisions: Arc::new(DecisionGate::new(db.clone(), artifact_cache_ttl(env("DECISION_MACHINE_ARTIFACT_CACHE_TTL_MS").as_deref()))),
                 db,
                 write_queue: std::sync::OnceLock::new(),
+                usage_counters: std::sync::OnceLock::new(),
                 logger: logger.clone(),
                 ip_info,
                 verdict_cache: verdict_cache.clone(),

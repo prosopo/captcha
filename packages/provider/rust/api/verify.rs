@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! verify.ts, the dapp servers' verify router, for the routes ported so far: PoW, puzzle,
-//! audio and icon-order. With
+//! verify.ts, the dapp servers' verify router, for the routes ported so far: image, PoW,
+//! puzzle, audio and icon-order. With
 //! forwardVerify.ts (a token another provider issued is verified there) and testSiteKey.ts.
 
 use crate::api::express::{send_json, Requested};
@@ -24,7 +24,8 @@ use crate::api::public::route_matches;
 use crate::tasks::email::SpamFilterView;
 use crate::tasks::traffic::TrafficFilterView;
 use crate::tasks::verify::{
-    bson_json, get_verification_response, server_verify_interactive_captcha_solution, server_verify_pow_captcha_solution, ServerVerifyRequest, VerifyOutcome, VerifyServices,
+    bson_json, get_verification_response, server_verify_interactive_captcha_solution, server_verify_pow_captcha_solution, verify_image_captcha_solution, ImageVerifyOutcome,
+    ImageVerifyRequest, ServerVerifyRequest, VerifyOutcome, VerifyServices,
 };
 use prosopo_database::challenges::Interactive;
 use axum::extract::{Request, State};
@@ -43,7 +44,7 @@ use prosopo_types::captcha_type::CaptchaType;
 use prosopo_types::client::{get_test_site_key_mode, TestSiteKeyMode};
 use prosopo_types::config::EnvironmentTypes;
 use prosopo_types::keyring::KeyringOptions;
-use prosopo_types::provider_api::{server_captcha_verify_request_body, ClientApiPaths};
+use prosopo_types::provider_api::{server_captcha_verify_request_body, verify_solution_body, ClientApiPaths};
 use prosopo_types::{decode_procaptcha_output, ProcaptchaOutput};
 use prosopo_util_crypto::u8a::U8aLike;
 use serde_json::{json, Value};
@@ -190,12 +191,14 @@ fn pair_from_address(address: &str) -> Result<KeyringPair, ThrownError> {
 /// The verify routes ported so far.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum VerifyRoute {
+    Image,
     Pow,
     Interactive(Interactive),
 }
 
 impl VerifyRoute {
-    const ALL: [VerifyRoute; 4] = [
+    const ALL: [VerifyRoute; 5] = [
+        VerifyRoute::Image,
         VerifyRoute::Pow,
         VerifyRoute::Interactive(Interactive::Puzzle),
         VerifyRoute::Interactive(Interactive::Audio),
@@ -204,6 +207,7 @@ impl VerifyRoute {
 
     fn path(self) -> ClientApiPaths {
         match self {
+            VerifyRoute::Image => ClientApiPaths::VerifyImageCaptchaSolutionDapp,
             VerifyRoute::Pow => ClientApiPaths::VerifyPowCaptchaSolution,
             VerifyRoute::Interactive(Interactive::Puzzle) => ClientApiPaths::VerifyPuzzleCaptchaSolution,
             VerifyRoute::Interactive(Interactive::Audio) => ClientApiPaths::VerifyAudioCaptchaSolution,
@@ -213,6 +217,7 @@ impl VerifyRoute {
 
     fn captcha_type(self) -> CaptchaType {
         match self {
+            VerifyRoute::Image => CaptchaType::Image,
             VerifyRoute::Pow => CaptchaType::Pow,
             VerifyRoute::Interactive(Interactive::Puzzle) => CaptchaType::Puzzle,
             VerifyRoute::Interactive(Interactive::Audio) => CaptchaType::Audio,
@@ -223,6 +228,7 @@ impl VerifyRoute {
     /// The handler's `label`.
     fn label(self) -> &'static str {
         match self {
+            VerifyRoute::Image => "image",
             VerifyRoute::Pow => "PoW",
             VerifyRoute::Interactive(Interactive::Puzzle) => "puzzle",
             VerifyRoute::Interactive(Interactive::Audio) => "audio",
@@ -233,6 +239,7 @@ impl VerifyRoute {
     /// The handler's name, as its error log gives it.
     fn handler_name(self) -> &'static str {
         match self {
+            VerifyRoute::Image => "verifyImageCaptchaSolution",
             VerifyRoute::Pow => "verifyPowCaptchaSolution",
             VerifyRoute::Interactive(Interactive::Puzzle) => "verifyPuzzleCaptchaSolution",
             VerifyRoute::Interactive(Interactive::Audio) => "verifyAudioCaptchaSolution",
@@ -248,6 +255,7 @@ struct VerifySettings {
     spam_filter: Option<SpamFilterView>,
     traffic_filter: Option<TrafficFilterView>,
     store_metadata: bool,
+    disallow_web_view: Option<bool>,
 }
 
 fn verify_settings(record: &ClientRecord) -> Result<VerifySettings, ThrownError> {
@@ -264,6 +272,7 @@ fn verify_settings(record: &ClientRecord) -> Result<VerifySettings, ThrownError>
         spam_filter: view(&settings, "spamFilter"),
         traffic_filter: view(&settings, "trafficFilter"),
         store_metadata: flag("storeMetadata"),
+        disallow_web_view: settings.get("disallowWebView").and_then(Value::as_bool),
     })
 }
 
@@ -296,12 +305,16 @@ async fn verify(state: &VerifyState, route: VerifyRoute, asked: &Asked, body: &V
     validate_address(&token.dapp)?;
     validate_address(&token.user)?;
     let Some(client) = services.db.get_client_record(&token.dapp).await? else {
-        let context: ErrorContext = ErrorContext::new().with("code", 400).with("siteKey", token.dapp.as_str());
+        let mut context: ErrorContext = ErrorContext::new().with("code", 400).with("siteKey", token.dapp.as_str());
+        if route == VerifyRoute::Image {
+            context = context.with("user", token.user.as_str());
+        }
         return Ok(Answer::Error(api_error(i18n, "API.SITE_KEY_NOT_REGISTERED", context, logger)));
     };
-    let Some(challenge) = token.challenge.as_deref().filter(|challenge| !challenge.is_empty()) else {
+    let challenge: &str = token.challenge.as_deref().unwrap_or_default();
+    if route != VerifyRoute::Image && challenge.is_empty() {
         return Ok(Answer::Json(json!({ "status": translate(i18n, "API.USER_NOT_VERIFIED"), "verified": false })));
-    };
+    }
     let pair: KeyringPair = pair_from_address(&token.dapp)?;
     let signature: &str = body.get("dappSignature").and_then(Value::as_str).unwrap_or_default();
     if verify_signature(signature, &token.timestamp, &pair).is_err() {
@@ -326,12 +339,27 @@ async fn verify(state: &VerifyState, route: VerifyRoute, asked: &Asked, body: &V
         store_metadata: settings.store_metadata,
         client_session_id: text("clientSessionId"),
     };
-    let outcome: VerifyOutcome = match route {
-        VerifyRoute::Pow => server_verify_pow_captcha_solution(services, &verify_request, logger).await?,
-        VerifyRoute::Interactive(kind) => server_verify_interactive_captcha_solution(services, kind, &verify_request, logger).await?,
+    let (outcome, commitment_id): (VerifyOutcome, Option<String>) = match route {
+        VerifyRoute::Image => {
+            let image: ImageVerifyRequest = ImageVerifyRequest {
+                shared: verify_request,
+                commitment_id: token.commitment_id.as_deref(),
+                max_verified_time: body.get("maxVerifiedTime").and_then(Value::as_f64),
+                disallow_web_view: settings.disallow_web_view,
+            };
+            let answer: ImageVerifyOutcome = verify_image_captcha_solution(services, &image, logger).await?;
+            let outcome: VerifyOutcome = VerifyOutcome { reason: Some(answer.status), ..answer.outcome };
+            (outcome, answer.commitment_id)
+        }
+        VerifyRoute::Pow => (server_verify_pow_captcha_solution(services, &verify_request, logger).await?, None),
+        VerifyRoute::Interactive(kind) => (server_verify_interactive_captcha_solution(services, kind, &verify_request, logger).await?, None),
     };
     let status: String = translate(i18n, if outcome.verified { "API.USER_VERIFIED" } else { "API.USER_NOT_VERIFIED" });
-    Ok(Answer::Json(get_verification_response(&outcome, client.tier, status)))
+    let mut answer: Value = get_verification_response(&outcome, client.tier, status);
+    if let (Some(commitment_id), Some(fields)) = (commitment_id.filter(|id| !id.is_empty()), answer.as_object_mut()) {
+        fields.insert("commitmentId".to_string(), json!(commitment_id));
+    }
+    Ok(Answer::Json(answer))
 }
 
 /// The response, and the JSON it carries when it answers the verify.
@@ -349,7 +377,8 @@ async fn verify_route(state: &VerifyState, route: VerifyRoute, request: Request)
         return answered(maintenance_response(i18n));
     }
     let raw: Value = request.extensions().get::<RequestBody>().map_or_else(|| json!({}), |body| body.0.clone());
-    let body: Value = match server_captcha_verify_request_body().validate(Some(&raw)) {
+    let schema = if route == VerifyRoute::Image { verify_solution_body() } else { server_captcha_verify_request_body() };
+    let body: Value = match schema.validate(Some(&raw)) {
         Ok(body) => body,
         Err(issues) => {
             let cause: ZodLikeError = ZodLikeError {
@@ -375,7 +404,11 @@ async fn verify_route(state: &VerifyState, route: VerifyRoute, request: Request)
         Ok(Answer::Error(error)) => (handle_errors(&request, &ThrownError::from(error)), None),
         Err(error) => {
             logger.error(|| LogRecord::msg(format!("Error in {}", route.handler_name())).with_err(format!("{error:?}")));
-            let error: ProsopoError = api_error(i18n, "API.BAD_REQUEST", ErrorContext::new().with("code", 500).with_error(error), &logger);
+            let context: ErrorContext = match route {
+                VerifyRoute::Image => ErrorContext::new().with("code", 500),
+                _ => ErrorContext::new().with("code", 500).with_error(error),
+            };
+            let error: ProsopoError = api_error(i18n, "API.BAD_REQUEST", context, &logger);
             (handle_errors(&request, &ThrownError::from(error)), None)
         }
     }
