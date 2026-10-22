@@ -31,6 +31,8 @@ pub mod scheduler;
 pub mod session;
 pub mod source;
 pub mod streamer;
+#[cfg(any(test, feature = "testing"))]
+pub mod testing;
 
 pub use mongo::{build_url, mask_credentials, MongoConnectionTimeouts, MongoDatabase, MongoError};
 

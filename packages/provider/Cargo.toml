@@ -60,6 +60,7 @@ tokio = { version = "1", features = ["io-util", "net", "rt", "sync", "time"] }
 testing = []
 
 [dev-dependencies]
+prosopo-database = { path = "../database", features = ["testing"] }
 tempfile = "3.10"
 bson = { version = "3.1", features = ["serde"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time"] }

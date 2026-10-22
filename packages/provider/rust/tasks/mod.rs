@@ -14,6 +14,7 @@
 
 //! The provider's tasks (src/tasks), as the routes come to need them.
 
+pub mod audio_alternative;
 pub mod client;
 pub mod cron;
 pub mod decision;
@@ -21,6 +22,7 @@ pub mod detection;
 pub mod dns_event;
 pub mod email;
 pub mod frictionless;
+pub mod request;
 pub mod schedulers;
 pub mod spam;
 pub mod traffic;
