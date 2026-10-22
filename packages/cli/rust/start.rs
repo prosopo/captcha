@@ -29,6 +29,8 @@ use prosopo_provider::api::block::{BlockState, HardBlockVerdictCache};
 use prosopo_provider::api::captcha::CaptchaState;
 use prosopo_provider::api::domain::DomainState;
 use prosopo_load_balancer::ProviderDirectory;
+use prosopo_provider::api::pipeline::AdminGate;
+use prosopo_provider::api::rules::RuleRoutesState;
 use prosopo_provider::api::verify::VerifyState;
 use prosopo_provider::tasks::decision::{artifact_cache_ttl, DecisionGate};
 use prosopo_provider::tasks::verify::VerifyServices;
@@ -141,9 +143,20 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
         auth_account: admin_key(auth_account),
         options: admin_auth_options(env.as_ref(), Some(&config.host)),
     };
+    let verdict_cache: Arc<HardBlockVerdictCache> = Arc::new(HardBlockVerdictCache::default());
+    let log_level: LogLevel = parse_log_level(Some(&config.log_level), LogLevel::Info);
+    let gate: AdminGate = AdminGate {
+        auth,
+        rules: Arc::new(RuleRoutesState {
+            db: db.clone(),
+            cache: verdict_cache.clone(),
+            logger: logger.clone(),
+            log_level,
+            router: std::sync::OnceLock::new(),
+        }),
+    };
     let pipeline_state: Arc<PipelineState> = Arc::new(PipelineState { limiters, logger: logger.clone(), node_env, ip_info: ip_info.clone() });
     let maintenance: Arc<MaintenanceMode> = Arc::new(MaintenanceMode::from_env(env("MAINTENANCE_MODE").as_deref()));
-    let verdict_cache: Arc<HardBlockVerdictCache> = Arc::new(HardBlockVerdictCache::default());
     let verify: Arc<VerifyState> = Arc::new(VerifyState {
         services: db.clone().map(|db| {
             Arc::new(VerifyServices {
@@ -172,8 +185,7 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
     });
     let domain: Arc<DomainState> = Arc::new(DomainState { db: db.clone(), maintenance: maintenance.clone(), metrics: metrics.clone() });
     let captcha: Arc<CaptchaState> = Arc::new(CaptchaState { db: db.clone(), maintenance, metrics: metrics.clone(), dns_servers: config.dns_servers.clone() });
-    let log_level: LogLevel = parse_log_level(Some(&config.log_level), LogLevel::Info);
-    let rest: Router = pipeline(pipeline_state, request_logger(log_level), i18n, auth, verify, block, domain, captcha);
+    let rest: Router = pipeline(pipeline_state, request_logger(log_level), i18n, gate, verify, block, domain, captcha);
     let state: PublicState = PublicState {
         host: config.host.clone(),
         version,

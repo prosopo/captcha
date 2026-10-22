@@ -26,6 +26,7 @@ pub mod pipeline;
 pub mod public;
 pub mod verify;
 pub mod query;
+pub mod rules;
 pub mod signals;
 
 use axum::middleware::from_fn;

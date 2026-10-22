@@ -329,12 +329,23 @@ async fn header_check(mut request: Request, next: Next) -> Response {
     next.run(request).await
 }
 
-/// The admin JWT gate on everything under the admin prefix.
-async fn admin_auth(State(auth): State<AuthState>, request: Request, next: Next) -> Response {
-    if !mounted(request.uri().path(), ADMIN_PREFIX) {
+/// The admin gate's state: the JWT check, and whether the access-rule routes it also guards
+/// are mounted.
+#[derive(Clone)]
+pub struct AdminGate {
+    pub auth: AuthState,
+    pub rules: Arc<crate::api::rules::RuleRoutesState>,
+}
+
+/// The admin JWT gate on everything under the admin prefix, and on the access-rule routes
+/// when they are mounted.
+async fn admin_auth(State(gate): State<AdminGate>, request: Request, next: Next) -> Response {
+    let path: &str = request.uri().path();
+    let guarded: bool = mounted(path, ADMIN_PREFIX) || (crate::api::rules::is_rule_path(path) && gate.rules.mounted());
+    if !guarded {
         return next.run(request).await;
     }
-    auth_middleware(State(auth), request, next).await
+    auth_middleware(State(gate.auth), request, next).await
 }
 
 /// What the final handler takes off a page, after the stages inside this one set it.
@@ -359,7 +370,7 @@ pub fn pipeline(
     state: Arc<PipelineState>,
     request_logger: Logger,
     i18n: Arc<I18n>,
-    auth: AuthState,
+    auth: AdminGate,
     verify: Arc<crate::api::verify::VerifyState>,
     block: Arc<BlockState>,
     domain: Arc<DomainState>,
@@ -370,6 +381,7 @@ pub fn pipeline(
         .layer(from_fn_with_state(captcha, crate::api::captcha::captcha_routes))
         .layer(from_fn_with_state(domain, crate::api::domain::domain))
         .layer(from_fn_with_state(block, crate::api::block::block))
+        .layer(from_fn_with_state(auth.rules.clone(), crate::api::rules::rule_routes))
         .layer(from_fn_with_state(auth, admin_auth))
         .layer(from_fn_with_state(verify, crate::api::verify::verify_routes))
         .layer(from_fn(header_check))

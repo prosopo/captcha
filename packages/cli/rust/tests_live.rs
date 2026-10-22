@@ -32,6 +32,7 @@ use bson::{Bson, Document};
 use prosopo_cli::{app_parts, get_config, provider_router, AppParts, Environment};
 use prosopo_env::{Environment as BaseEnvironment, ProviderEnvironment};
 use prosopo_keyring::{get_pair, KeyringPair, Secret};
+use prosopo_util_crypto::jwt::JwtIssueOptions;
 use prosopo_provider::api::healthz_geo::HealthzProbe;
 use prosopo_provider::http_replay::{answer, exchange, shown, Answer};
 use prosopo_types::config::ProsopoConfig;
@@ -273,6 +274,18 @@ fn without_request_id(answer: &Answer) -> (Vec<(String, String)>, Vec<u8>) {
     (headers, body.into_bytes())
 }
 
+/// The request with `{{ADMIN_JWT}}` replaced by a token freshly issued by the provider's pair,
+/// as the generators send it.
+fn with_admin_jwt(request: &[u8]) -> Vec<u8> {
+    let text: String = String::from_utf8_lossy(request).into_owned();
+    if !text.contains("{{ADMIN_JWT}}") {
+        return request.to_vec();
+    }
+    let pair: KeyringPair = get_pair(Some(Secret::Text(MNEMONIC)), None, None, None).expect("the provider pair");
+    let token: String = pair.jwt_issue(&JwtIssueOptions { expires_in: Some(300.0), not_before: None }, &[]).expect("a token");
+    text.replace("{{ADMIN_JWT}}", &token).into_bytes()
+}
+
 /// Replays the vectors' exchanges in order; the differences, as messages.
 async fn replay(port: u16, exchanges: &Value) -> (usize, Vec<String>) {
     replay_with(port, exchanges, |_| {}).await
@@ -286,7 +299,7 @@ async fn replay_with(port: u16, exchanges: &Value, before: impl Fn(&Value)) -> (
     for step in exchanges.as_array().expect("exchanges") {
         before(step);
         let request: Vec<u8> = decode(&step["request"]);
-        let actual: Answer = answer(&exchange(port, &request).await);
+        let actual: Answer = answer(&exchange(port, &with_admin_jwt(&request)).await);
         if step["compare"] == Value::Bool(false) {
             continue;
         }
@@ -435,6 +448,24 @@ async fn cached_sessions() -> Vec<Value> {
     out
 }
 
+/// Every Redis hash, by key, as `dumpRedisHashes` writes them.
+async fn redis_hashes() -> Value {
+    let mut connection = redis().await;
+    let mut keys: Vec<String> = redis::cmd("KEYS").arg("*").query_async(&mut connection).await.expect("lists");
+    keys.sort();
+    let mut out: Vec<Value> = Vec::new();
+    for key in keys {
+        let kind: String = redis::cmd("TYPE").arg(&key).query_async(&mut connection).await.expect("a type");
+        if kind != "hash" {
+            continue;
+        }
+        let fields: Vec<(String, String)> = redis::cmd("HGETALL").arg(&key).query_async(&mut connection).await.expect("fields");
+        let fields: Map<String, Value> = fields.into_iter().map(|(name, value)| (name, Value::String(value))).collect();
+        out.push(json!({ "key": key, "fields": fields }));
+    }
+    Value::Array(out)
+}
+
 /// The usage counters, by key.
 async fn usage_counters() -> Vec<Value> {
     let mut connection = redis().await;
@@ -558,5 +589,29 @@ async fn verifies_as_the_express_app_verifies() {
         failures.push(format!("forwarded requests differ\n  ts:   {}\n  rust: {}", vectors["forwarded"], json!(forwarded)));
     }
     assert!(compared > 120, "only {compared} compared");
+    assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn access_rule_routes_answer_as_the_express_app_does() {
+    let _live = LIVE.lock().await;
+    let vectors: Value = serde_json::from_str(include_str!("../../provider/rust/equivalence/rules-vectors.json")).expect("rules-vectors.json parses");
+    let database: &str = vectors["database"].as_str().expect("a database");
+    reset(database).await;
+    let ipapi: String = fake_ipapi(json!({})).await;
+    let mut variables: HashMap<String, String> = serde_json::from_value(vectors["variables"].clone()).expect("variables");
+    variables.insert("PROSOPO_IPAPI_URL".to_string(), ipapi);
+    variables.insert("NODE_ENV".to_string(), "production".to_string());
+    let (router, _env) = live_app(&variables).await;
+    restore_hashes(&vectors["redis"]).await;
+    let port: u16 = serve(router).await;
+    let (compared, mut failures) = replay(port, &vectors["exchanges"]).await;
+    tokio::time::sleep(Duration::from_millis(500)).await;
+    let after: Value = redis_hashes().await;
+    if after != vectors["after"] {
+        failures.push(format!("rule hashes differ\n  ts:   {}\n  rust: {}", vectors["after"], after));
+    }
+    assert!(compared > 25, "only {compared} compared");
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }
