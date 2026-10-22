@@ -260,7 +260,7 @@ impl Provenance {
 
 /// `req.ipInfo` as the TS object holds it, a key the backend lists but left `undefined` kept
 /// as BSON undefined: a typed path's cast drops it, a Mixed path's write makes it `null`.
-fn ip_info_literal(info: &IpInfoResponse) -> Result<Bson, String> {
+pub(crate) fn ip_info_literal(info: &IpInfoResponse) -> Result<Bson, String> {
     match info {
         IpInfoResponse::Valid(result) => {
             Ok(Bson::Document(result.entries().into_iter().map(|(key, value)| (key.to_string(), value.as_ref().map_or(Bson::Undefined, json_to_bson))).collect()))

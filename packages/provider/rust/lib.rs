@@ -24,6 +24,7 @@ pub mod tasks;
 pub mod ip_comparison;
 pub mod ip_validation;
 pub mod mobile_signals;
+pub mod pairs;
 pub mod util;
 
 #[cfg(any(test, feature = "testing"))]

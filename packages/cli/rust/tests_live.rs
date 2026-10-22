@@ -1606,7 +1606,9 @@ fn masked_draws(session: &mut Map<String, Value>, side: &str, failures: &mut Vec
 
 /// A solve's session result and its SIMD readings are written to Mongo by two background
 /// updates in both implementations, so which of their fields comes first is a race.
-const SUBMIT_RACE: [&str; 6] = ["result", "userSubmitted", "blocked", "clientMetaData", "simdReadings", "simdReadingsStage"];
+/// MongoDB writes an upsert's two query fields in either order, from one run to the next, for
+/// the same command, so the user solutions' `commitmentId` and `captchaId` are compared the same way.
+const SUBMIT_RACE: [&str; 8] = ["result", "userSubmitted", "blocked", "clientMetaData", "simdReadings", "simdReadingsStage", "commitmentId", "captchaId"];
 
 #[tokio::test(flavor = "multi_thread")]
 #[ignore = "needs MongoDB and Redis Stack"]
@@ -1736,12 +1738,11 @@ async fn pow_solutions_are_judged_as_the_express_app_judges_them() {
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }
 
-#[tokio::test(flavor = "multi_thread")]
-#[ignore = "needs MongoDB and Redis Stack"]
-async fn interactive_solutions_are_graded_as_the_express_app_grades_them() {
-    let _live = LIVE.lock().await;
-    let vectors: Value =
-        serde_json::from_str(include_str!("../../provider/rust/equivalence/interactive-solution-live-vectors.json")).expect("interactive-solution-live-vectors.json parses");
+/// Replays a solution route's recorded submissions on the stores the TS started from, the clock
+/// pinned to each send, and compares every answer, the given collections (the fields two
+/// background writes race on compared regardless of their order), the cache and the counters.
+/// The port, to send more on, and the differences.
+async fn replay_solutions(vectors: &Value, collections: &[&str], extra_fresh: &[&str]) -> (u16, Vec<String>) {
     let database: &str = vectors["database"].as_str().expect("a database");
     reset(database).await;
     let ipapi: String = fake_ipapi(vectors["ipapi"].clone()).await;
@@ -1773,14 +1774,15 @@ async fn interactive_solutions_are_graded_as_the_express_app_grades_them() {
     for entry in vectors["cache"].as_array().expect("cache entries") {
         let _: () = redis::cmd("SET").arg(entry["key"].as_str().expect("a key")).arg(entry["raw"].as_str().expect("a value")).arg("EX").arg(86400).query_async(&mut connection).await.expect("caches");
     }
-    for entry in vectors["counters"].as_array().expect("counters") {
+    for entry in vectors["counters"].as_array().into_iter().flatten() {
         let _: () = redis::cmd("SET").arg(entry["key"].as_str().expect("a key")).arg(entry["value"].as_str().expect("a value")).arg("EX").arg(86400).query_async(&mut connection).await.expect("counts");
     }
     let port: u16 = serve(router).await;
     let (compared, mut failures) = replay_with(port, &vectors["exchanges"], |step| clock.0.store(step["at"].as_i64().expect("a time"), Ordering::SeqCst)).await;
     tokio::time::sleep(Duration::from_millis(1500)).await;
-    let fresh: [&str; 4] = ["lastUpdatedTimestamp", "submittedAtTimestamp", "failedAtTimestamp", "behavioralDataPacked._id"];
-    for collection in ["puzzlecaptchas", "audiocaptchas", "iconordercaptchas", "sessions"] {
+    let mut fresh: Vec<&str> = vec!["lastUpdatedTimestamp", "submittedAtTimestamp", "failedAtTimestamp", "behavioralDataPacked._id"];
+    fresh.extend_from_slice(extra_fresh);
+    for collection in collections {
         let raced = |records: &[Value]| -> Vec<Value> { records.iter().map(|record| with_fields_last(record, &SUBMIT_RACE)).collect() };
         let expected: Value = Value::Array(raced(vectors["after"][collection].as_array().expect("records")));
         let actual: Vec<Value> = raced(&dump(database, collection).await);
@@ -1791,11 +1793,23 @@ async fn interactive_solutions_are_graded_as_the_express_app_grades_them() {
     if json!(expected_cache) != json!(actual_cache) {
         failures.push(format!("cache differs\n  ts:   {}\n  rust: {}", json!(expected_cache), json!(actual_cache)));
     }
-    let expected_counters: Vec<Value> = vectors["countersAfter"].as_array().expect("counters").iter().map(|entry| json!({ "key": entry["key"], "value": entry["value"] })).collect();
-    if json!(expected_counters) != json!(usage_counters().await) {
-        failures.push(format!("counters differ\n  ts:   {}\n  rust: {}", json!(expected_counters), json!(usage_counters().await)));
+    if let Some(counters) = vectors["countersAfter"].as_array() {
+        let expected_counters: Vec<Value> = counters.iter().map(|entry| json!({ "key": entry["key"], "value": entry["value"] })).collect();
+        if json!(expected_counters) != json!(usage_counters().await) {
+            failures.push(format!("counters differ\n  ts:   {}\n  rust: {}", json!(expected_counters), json!(usage_counters().await)));
+        }
     }
-    assert!(compared >= 29, "only {compared} compared");
+    assert_eq!(compared, vectors["exchanges"].as_array().map_or(0, Vec::len), "every exchange compared");
+    (port, failures)
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn interactive_solutions_are_graded_as_the_express_app_grades_them() {
+    let _live = LIVE.lock().await;
+    let vectors: Value =
+        serde_json::from_str(include_str!("../../provider/rust/equivalence/interactive-solution-live-vectors.json")).expect("interactive-solution-live-vectors.json parses");
+    let (port, failures) = replay_solutions(&vectors, &["puzzlecaptchas", "audiocaptchas", "iconordercaptchas", "sessions"], &[]).await;
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 
     // DEVIATION: the TS graded both of two concurrent right answers to one puzzle (its claim
@@ -1809,4 +1823,14 @@ async fn interactive_solutions_are_graded_as_the_express_app_grades_them() {
         .map(|raw| serde_json::from_slice::<Value>(&answer(raw).body).ok().and_then(|body| body["verified"].as_bool()).unwrap_or(false))
         .collect();
     assert_eq!(verdicts.iter().filter(|verdict| **verdict).count(), 1, "exactly one concurrent answer graded: {verdicts:?}");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn image_solutions_are_graded_as_the_express_app_grades_them() {
+    let _live = LIVE.lock().await;
+    let vectors: Value = serde_json::from_str(include_str!("../../provider/rust/equivalence/image-solution-live-vectors.json")).expect("image-solution-live-vectors.json parses");
+    // An upserted commitment or solution gets a fresh document id, and a solution its creation time.
+    let (_, failures) = replay_solutions(&vectors, &["usercommitments", "usersolutions", "sessions"], &["_id", "createdAt"]).await;
+    assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }

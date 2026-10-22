@@ -13,7 +13,8 @@
 // limitations under the License.
 
 //! The solution routes ported so far: `pow/solution` (captcha/submitPoWCaptchaSolution.ts), and
-//! `puzzle/solution`, `audio/solution` and `icon-order/solution` (interactiveCaptchaSolution.ts).
+//! `puzzle/solution`, `audio/solution` and `icon-order/solution` (interactiveCaptchaSolution.ts),
+//! and the image route's `solution` (submitImageCaptchaSolution.ts).
 
 use crate::api::body_summary::summarise_request_body;
 use crate::api::captcha::api_error;
@@ -21,6 +22,7 @@ use crate::api::challenge::{logger_of, ChallengeState};
 use crate::api::express::{header, send_json, Requested};
 use crate::api::pipeline::{handle_errors, validate_address, RequestSignals};
 use crate::tasks::detection::{DetectionServices, DetectorBundlePool};
+use crate::tasks::image::{ImageSolutionError, ImageSolutionServices, ImageSubmission};
 use crate::tasks::interactive::{Answer, InteractiveServices, InteractiveSubmission};
 use crate::tasks::pow::{EscalationServices, PowSignatureError, PowSolutionError, PowSolutionServices, PowSubmission, PowVerified, SiteConstraints};
 use crate::tasks::request::settings_json;
@@ -28,18 +30,24 @@ use axum::extract::Request;
 use axum::response::Response;
 use http::StatusCode;
 use prosopo_api_route::schema::Schema;
+use prosopo_locale::I18nLookup;
 use prosopo_api_router::RequestBody;
 use prosopo_common::{ErrorClass, ErrorContext, ErrorOptions, ErrorSource, ProsopoError, ThrownError, ZodLikeError};
 use prosopo_logger::{ErrorObject, LogRecord, Logger};
 use prosopo_types::api_types::ClientMetaData;
 use prosopo_types::client::{get_test_site_key_mode, TestSiteKeyMode};
-use prosopo_types::provider_api::{submit_audio_captcha_solution_body, submit_icon_order_captcha_solution_body, submit_pow_captcha_solution_body, submit_puzzle_captcha_solution_body};
+use prosopo_types::provider_api::{captcha_solution_body, submit_audio_captcha_solution_body, submit_icon_order_captcha_solution_body, submit_pow_captcha_solution_body, submit_puzzle_captcha_solution_body};
 use prosopo_types::settings::resolve_allowed_captcha_types;
 use serde_json::{json, Map, Value};
 use std::sync::Arc;
 
 fn verdict(requested: &Requested, verified: bool) -> Response {
     send_json(requested, StatusCode::OK, Vec::new(), &json!({ "status": "ok", "verified": verified }))
+}
+
+/// The image route's short answers, which also carry an empty `captchas`.
+fn image_verdict(requested: &Requested, verified: bool) -> Response {
+    send_json(requested, StatusCode::OK, Vec::new(), &json!({ "status": "ok", "captchas": [], "verified": verified }))
 }
 
 /// What a failed submission passes on: the error itself where it was a Prosopo one.
@@ -75,6 +83,8 @@ struct Failure<'a> {
     raw: Option<&'a Value>,
     content_length: Option<&'a str>,
     label: &'a str,
+    /// The image route answers its short verdicts with an empty `captchas` too.
+    image: bool,
 }
 
 impl Failure<'_> {
@@ -94,12 +104,14 @@ impl Failure<'_> {
 /// site's record. `Err` is the answer already given.
 async fn admit<'a>(state: &'a ChallengeState, request: Request, schema: Schema, failure: &Failure<'_>, logger: &Logger) -> Result<(Request, Admitted<'a>), Response> {
     let requested: Requested = Requested::of(&request);
+    let short = if failure.image { image_verdict } else { verdict };
     if state.maintenance.get() {
-        logger.info(|| LogRecord::msg("Maintenance mode active - returning verified"));
-        return Err(verdict(&requested, true));
+        let message: &str = if failure.image { "Maintenance mode active - returning verified for image captcha" } else { "Maintenance mode active - returning verified" };
+        logger.info(|| LogRecord::msg(message));
+        return Err(short(&requested, true));
     }
     let summary = || summarise_request_body(failure.raw, failure.content_length);
-    if let Some(message) = challenge_type_error(failure.raw) {
+    if let Some(message) = challenge_type_error(failure.raw).filter(|_| !failure.image) {
         let cause: ErrorObject = ErrorObject::new("TypeError", message);
         return Err(api_error(&request, "CAPTCHA.PARSE_ERROR", ErrorContext::new().with("code", 400).with_error(cause).with("body", summary()), logger));
     }
@@ -119,7 +131,7 @@ async fn admit<'a>(state: &'a ChallengeState, request: Request, schema: Schema, 
     }
     if let Some(mode) = get_test_site_key_mode(dapp) {
         logger.warn(|| LogRecord::msg("Reserved TEST site key - forcing deterministic captcha verdict").with_data(json!({ "siteKey": dapp, "mode": mode.as_str() })));
-        return Err(verdict(&requested, mode == TestSiteKeyMode::Pass));
+        return Err(short(&requested, mode == TestSiteKeyMode::Pass));
     }
     let Some(services) = state.services.as_ref() else {
         let error = ProsopoError::new(ErrorClass::Env, ErrorSource::message("db not setup! Please call isReady() first"), ErrorOptions::default());
@@ -153,7 +165,7 @@ pub async fn pow_solution_route(state: &ChallengeState, request: Request) -> Res
     let requested: Requested = Requested::of(&request);
     let raw: Option<Value> = request.extensions().get::<RequestBody>().map(|body| body.0.clone());
     let content_length: Option<String> = header(request.headers(), "content-length");
-    let failure: Failure<'_> = Failure { raw: raw.as_ref(), content_length: content_length.as_deref(), label: "PoW" };
+    let failure: Failure<'_> = Failure { raw: raw.as_ref(), content_length: content_length.as_deref(), label: "PoW", image: false };
     let (request, admitted): (Request, Admitted<'_>) = match admit(state, request, submit_pow_captcha_solution_body(), &failure, &logger).await {
         Ok(admitted) => admitted,
         Err(answer) => return answer,
@@ -270,7 +282,7 @@ pub async fn interactive_solution_route(state: &ChallengeState, route: Interacti
     let requested: Requested = Requested::of(&request);
     let raw: Option<Value> = request.extensions().get::<RequestBody>().map(|body| body.0.clone());
     let content_length: Option<String> = header(request.headers(), "content-length");
-    let failure: Failure<'_> = Failure { raw: raw.as_ref(), content_length: content_length.as_deref(), label: route.label() };
+    let failure: Failure<'_> = Failure { raw: raw.as_ref(), content_length: content_length.as_deref(), label: route.label(), image: false };
     let (request, admitted): (Request, Admitted<'_>) = match admit(state, request, route.schema(), &failure, &logger).await {
         Ok(admitted) => admitted,
         Err(answer) => return answer,
@@ -322,5 +334,67 @@ pub async fn interactive_solution_route(state: &ChallengeState, route: Interacti
     match interactive.submit(&submission).await {
         Ok(verified) => verdict(&requested, verified),
         Err(error) => failure.answer(&request, &logger, thrown(error)),
+    }
+}
+
+/// submitImageCaptchaSolution.ts's handler.
+pub async fn image_solution_route(state: &ChallengeState, request: Request) -> Response {
+    let logger: Logger = logger_of(&request);
+    let requested: Requested = Requested::of(&request);
+    let raw: Option<Value> = request.extensions().get::<RequestBody>().map(|body| body.0.clone());
+    let content_length: Option<String> = header(request.headers(), "content-length");
+    let failure: Failure<'_> = Failure { raw: raw.as_ref(), content_length: content_length.as_deref(), label: "image", image: true };
+    let (request, admitted): (Request, Admitted<'_>) = match admit(state, request, captcha_solution_body(), &failure, &logger).await {
+        Ok(admitted) => admitted,
+        Err(answer) => return answer,
+    };
+    let Admitted { parsed, services, provider_address, .. } = admitted;
+    let text = |key: &str| parsed.get(key).and_then(Value::as_str);
+    let pointer = |path: &str| parsed.pointer(path).and_then(Value::as_str).unwrap_or_default();
+    let signals: Option<RequestSignals> = request.extensions().get::<RequestSignals>().cloned();
+    let ip: String = signals.as_ref().map(|signals| signals.ip.clone()).unwrap_or_default();
+    if let Err(error) = prosopo_util::get_ip_address(&ip) {
+        return failure.answer(&request, &logger, ThrownError::from(ErrorObject::new("Error", error.to_string())));
+    }
+    let ip_info = match signals.as_ref().and_then(|signals| signals.ip_info.as_ref()).map(crate::api::challenge::ip_info_literal).transpose() {
+        Ok(ip_info) => ip_info,
+        Err(error) => return failure.answer(&request, &logger, ThrownError::from(ErrorObject::new("Error", error))),
+    };
+    let client_meta_data: Option<ClientMetaData> = parsed.get("clientMetaData").and_then(|meta| serde_json::from_value(meta.clone()).ok());
+    let pool: Arc<DetectorBundlePool> = state.pool.read().map_or_else(|poisoned| poisoned.into_inner().clone(), |pool| pool.clone());
+    let image: ImageSolutionServices<'_> = ImageSolutionServices {
+        services,
+        detection: DetectionServices { db: &services.db, write_queue: services.write_queue(), pool: Some(&pool), decoder: state.decoder.as_deref(), logger: &logger },
+        provider_address: &provider_address,
+        now: services.db.source().now(),
+        logger: &logger,
+        node_env_test: (state.env)("NODE_ENV").as_deref() == Some("test"),
+    };
+    let empty: Value = json!([]);
+    let submission: ImageSubmission<'_> = ImageSubmission {
+        user: text("user").unwrap_or_default(),
+        dapp: text("dapp").unwrap_or_default(),
+        request_hash: text("requestHash").unwrap_or_default(),
+        captchas: parsed.get("captchas").unwrap_or(&empty),
+        user_signature: pointer("/signature/user/timestamp"),
+        timestamp: prosopo_util::parse_int(text("timestamp").unwrap_or_default(), 10),
+        provider_signature: pointer("/signature/provider/requestHash"),
+        ip: &ip,
+        headers: crate::api::challenge::request_headers_document(request.headers()),
+        ja4: signals.as_ref().map(|signals| signals.ja4.clone()).unwrap_or_default(),
+        behavioral_data: text("behavioralData"),
+        ip_info,
+        simd_readings: text("simdReadings"),
+        client_meta_data: client_meta_data.as_ref(),
+    };
+    match image.dapp_user_solution(&submission).await {
+        Ok(result) => {
+            let key: &str = if result.verified { "API.CAPTCHA_PASSED" } else { "API.CAPTCHA_FAILED" };
+            let status: String = request.extensions().get::<prosopo_api_router::RequestI18n>().map_or_else(|| key.to_string(), |i18n| i18n.lookup().t(key));
+            let captchas: Vec<Value> = result.captchas.iter().map(|(id, proof)| json!({ "captchaId": id, "proof": proof })).collect();
+            send_json(&requested, StatusCode::OK, Vec::new(), &json!({ "status": status, "captchas": captchas, "verified": result.verified }))
+        }
+        Err(ImageSolutionError::Prosopo(error)) => failure.answer(&request, &logger, ThrownError::from(error)),
+        Err(ImageSolutionError::Plain(message)) => failure.answer(&request, &logger, ThrownError::from(ErrorObject::new("Error", message))),
     }
 }
