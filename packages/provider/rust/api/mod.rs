@@ -20,6 +20,7 @@ pub mod block;
 pub mod body_summary;
 pub mod body;
 pub mod captcha;
+pub mod detector;
 pub mod challenge;
 pub mod domain;
 pub mod express;

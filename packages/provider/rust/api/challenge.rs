@@ -113,6 +113,9 @@ pub struct ChallengeState {
     pub env: EnvReader,
     /// `getSessionIDPrefix(config.host)`, which an escalation's session id starts with.
     pub session_id_prefix: String,
+    /// `getDetectorBundlePoolDir()`, where the assign secret is kept.
+    pub pool_dir: String,
+    pub assign_secret: crate::api::detector::AssignSecret,
 }
 
 impl ChallengeState {

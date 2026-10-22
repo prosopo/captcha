@@ -1834,3 +1834,51 @@ async fn image_solutions_are_graded_as_the_express_app_grades_them() {
     let (_, failures) = replay_solutions(&vectors, &["usercommitments", "usersolutions", "sessions"], &["_id", "createdAt"]).await;
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn detector_bundles_are_assigned_as_the_express_app_assigns_them() {
+    let _live = LIVE.lock().await;
+    let vectors: Value = serde_json::from_str(include_str!("../../provider/rust/equivalence/detector-assign-vectors.json")).expect("detector-assign-vectors.json parses");
+    let database: &str = vectors["database"].as_str().expect("a database");
+    reset(database).await;
+    let pool = tempfile::TempDir::new().expect("a pool directory");
+    for (name, contents) in vectors["poolFiles"].as_object().expect("pool files") {
+        let bytes: Vec<u8> = base64::engine::general_purpose::STANDARD.decode(contents.as_str().expect("base64")).expect("base64 decodes");
+        std::fs::write(pool.path().join(name), bytes).expect("writes");
+    }
+    let mut variables: HashMap<String, String> = serde_json::from_value(vectors["variables"].clone()).expect("variables");
+    variables.insert("PROSOPO_IPAPI_URL".to_string(), fake_ipapi(json!({})).await);
+    variables.insert("PROSOPO_DETECTOR_POOL_DIR".to_string(), pool.path().to_string_lossy().into_owned());
+    variables.insert("NODE_ENV".to_string(), "production".to_string());
+    let (router, _env) = live_app(&variables).await;
+    restore_database(database, &vectors["seed"]).await;
+    let port: u16 = serve(router).await;
+    let decode = |text: &Value| base64::engine::general_purpose::STANDARD.decode(text.as_str().expect("base64")).expect("base64 decodes");
+    let session_id = |body: &[u8]| serde_json::from_slice::<Value>(body).ok().and_then(|body| body["detectorSessionId"].as_str().map(str::to_string));
+    let mut failures: Vec<String> = Vec::new();
+    let mut connection = redis().await;
+    for step in vectors["exchanges"].as_array().expect("exchanges") {
+        let request: Vec<u8> = decode(&step["request"]);
+        let actual: Answer = answer(&exchange(port, &request).await);
+        let expected: Answer = answer(&decode(&step["response"]));
+        let masked = |answer: &Answer| -> (String, Vec<(String, String)>, String) {
+            let (headers, body) = without_request_id(answer);
+            let body: String = String::from_utf8_lossy(&body).into_owned();
+            let body: String = session_id(body.as_bytes()).map_or(body.clone(), |id| body.replace(&id, "<detector session>"));
+            (answer.status_line.clone(), headers.into_iter().filter(|(name, _)| name != "etag").collect(), body)
+        };
+        if masked(&expected) != masked(&actual) {
+            failures.push(format!("{}\n      rust {:?}\n      ts   {:?}", shown(&request).lines().next().unwrap_or_default(), masked(&actual), masked(&expected)));
+        }
+        let expected_bundle: Option<&Value> = session_id(&expected.body).and_then(|id| vectors["bindings"].as_array().and_then(|bindings| bindings.iter().find(|binding| binding["key"] == json!(format!("cache:detector:{id}")))).map(|binding| &binding["value"]));
+        if let Some(id) = session_id(&actual.body) {
+            let bound: Option<String> = redis::cmd("GET").arg(format!("cache:detector:{id}")).query_async(&mut connection).await.expect("reads");
+            let ttl: i64 = redis::cmd("TTL").arg(format!("cache:detector:{id}")).query_async(&mut connection).await.expect("reads");
+            if expected_bundle != bound.map(Value::String).as_ref() || !(590..=600).contains(&ttl) {
+                failures.push(format!("binding for {id}: rust {ttl}s, ts {expected_bundle:?}"));
+            }
+        }
+    }
+    assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
+}

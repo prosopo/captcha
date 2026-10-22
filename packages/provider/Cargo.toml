@@ -56,6 +56,7 @@ prosopo-util-crypto = { path = "../util-crypto" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
 sha2 = "0.10"
+hmac = "0.12"
 hex = "0.4"
 aes-gcm = "0.10"
 tokio = { version = "1", features = ["io-util", "net", "rt", "sync", "time"] }
