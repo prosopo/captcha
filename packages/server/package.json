@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/server",
-	"version": "2.13.8",
+	"version": "2.14.0",
 	"description": "NodeJS package for server side communication with the prosopo captcha client",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",

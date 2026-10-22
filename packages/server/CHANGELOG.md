@@ -1,5 +1,21 @@
 # @prosopo/server
 
+## 2.14.0
+### Minor Changes
+
+- f695b3a: `ProsopoServer.isVerified` now resolves `{ verified: false }` when verification cannot be completed — a malformed token, an unreachable provider list or provider, a provider request that times out, or a signing failure — instead of throwing. A timed-out provider request used to reject with a 504 error; it now answers "not verified" too. The outcome is still fail-closed, but site owners who did not wrap the call in `try`/`catch` no longer return a 500 from their own endpoint. The underlying error, with its 504 or 500 status, is still logged.
+
+### Patch Changes
+
+- Updated dependencies [b460b0b]
+- Updated dependencies [159766a]
+  - @prosopo/locale@3.13.0
+  - @prosopo/types@5.18.0
+  - @prosopo/api@4.7.6
+  - @prosopo/common@3.3.0
+  - @prosopo/keyring@2.10.11
+  - @prosopo/load-balancer@2.11.15
+
 ## 2.13.8
 ### Patch Changes
 

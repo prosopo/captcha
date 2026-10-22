@@ -1,5 +1,12 @@
 # @prosopo/keyring
 
+## 2.10.11
+### Patch Changes
+
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+  - @prosopo/common@3.3.0
+
 ## 2.10.10
 ### Patch Changes
 
