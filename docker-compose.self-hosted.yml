@@ -1,10 +1,13 @@
 # Self-hosted Procaptcha provider.
 #
 # Generate the .env this reads with:
-#   npx tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
+#   pnpm exec tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
 #
 # Then, from the repository root (where the .env is):
-#   docker compose -f docker-compose.self-hosted.yml up -d
+#   docker compose up -d
+#
+# The .env sets COMPOSE_FILE to this file, so plain docker compose commands
+# find it without -f.
 #
 # Full guide: https://docs.prosopo.io/en/self-hosting/
 #

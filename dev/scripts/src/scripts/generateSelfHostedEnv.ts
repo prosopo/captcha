@@ -32,7 +32,7 @@ interface Args {
 const usage = `
 Generate a complete .env file for a self-hosted Procaptcha provider.
 
-  npx tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
+  pnpm exec tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
 
 Options:
   --host <domain>   Hostname clients will reach this provider on (required)
@@ -94,6 +94,10 @@ const buildEnvFile = async (host: string): Promise<string> => {
 NODE_ENV=production
 PROSOPO_DEFAULT_ENVIRONMENT=production
 PROSOPO_LOG_LEVEL=info
+
+# Lets every docker compose command find docker-compose.self-hosted.yml
+# without -f.
+COMPOSE_FILE=docker-compose.self-hosted.yml
 
 # The provider release this checkout documents. Change it when you pull a
 # newer checkout, so the image and the instructions you follow stay in step.
