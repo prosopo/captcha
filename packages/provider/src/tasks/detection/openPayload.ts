@@ -76,7 +76,9 @@ export const decodeOpenPayload = (
 		throw new Error("malformed open detector token");
 	}
 
-	const decipher = createDecipheriv("aes-256-gcm", aesKey, iv);
+	const decipher = createDecipheriv("aes-256-gcm", aesKey, iv, {
+		authTagLength: GCM_TAG_BYTES,
+	});
 	decipher.setAuthTag(sealed.subarray(sealed.length - GCM_TAG_BYTES));
 	const plaintext = Buffer.concat([
 		decipher.update(sealed.subarray(0, sealed.length - GCM_TAG_BYTES)),
