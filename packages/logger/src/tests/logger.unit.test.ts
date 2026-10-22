@@ -149,6 +149,29 @@ describe("stringifyBigInts", () => {
 	});
 });
 
+describe("print", () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it("logs frozen data without modifying it", () => {
+		const lines: string[] = [];
+		vi.spyOn(console, "info").mockImplementation((...args: unknown[]): void => {
+			lines.push(String(args[0]));
+		});
+		const data: Readonly<Record<string, unknown>> = Object.freeze({
+			missing: Object.freeze(["KEY"]),
+			count: 3n,
+		});
+		getLogger("info", "test").info(() => ({ data }));
+		expect(JSON.parse(lines[0] ?? "{}").data).toEqual({
+			missing: ["KEY"],
+			count: "3",
+		});
+		expect(data.count).toBe(3n);
+	});
+});
+
 describe("parseLogLevel", () => {
 	it("parses a bare level", () => {
 		expect(parseLogLevel("warn")).toBe("warn");

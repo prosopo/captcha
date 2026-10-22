@@ -13,10 +13,9 @@
 // limitations under the License.
 
 import { sha256 } from "@noble/hashes/sha2.js";
-import { stringToHex } from "@polkadot/util";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { hashMeetsDifficulty } from "@prosopo/util";
-import { signatureVerify } from "@prosopo/util-crypto";
+import { isSignatureValid } from "../signatureCheck.js";
 
 export const validateSolution = (
 	nonce: number,
@@ -34,13 +33,11 @@ export const checkPowSignature = (
 	address: string,
 	signatureType?: string,
 ): void => {
-	const signatureVerification = signatureVerify(
-		stringToHex(message),
-		signature,
-		address,
-	);
-	if (!signatureVerification.isValid) {
-		throw new ProsopoApiError("GENERAL.INVALID_SIGNATURE", {
+	if (!isSignatureValid(message, signature, address)) {
+		throw new ProsopoError({
+			code: "UNAUTHORIZED",
+			errorSite: "PROV-75",
+			message: "Invalid signature",
 			context: {
 				ERROR: `Signature is invalid for this message: ${signatureType}`,
 				failedFuncName: checkPowSignature.name,
@@ -52,3 +49,12 @@ export const checkPowSignature = (
 		});
 	}
 };
+
+export const isCoordsAllZero = (
+	coords: [number, number][][] | undefined,
+): boolean =>
+	coords !== undefined &&
+	coords.length > 0 &&
+	coords.every(
+		(group) => group.length > 0 && group.every(([x, y]) => x === 0 && y === 0),
+	);

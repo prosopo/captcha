@@ -74,5 +74,5 @@ When the tags are pushed, the **"Publish Release"** workflow runs automatically.
 - **No changesets found:** The "Create Release PR" workflow will exit early
 - **PR checks fail:** Fix the issues and push more commits to the release branch
 - **npm publishing fails:** The workflow stops immediately. Check Slack for error details.
-- **Docker publishing fails:** Check Slack for error details. Manually republish the Docker image with `npm run -w @prosopo/cli publish:docker`.
+- **Docker publishing fails:** Check Slack for error details. Manually republish the Docker image with `pnpm --filter @prosopo/cli run publish:docker`.
 - **Tag already exists:** The workflow will skip creating duplicate tags

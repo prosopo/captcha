@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Kodimi i adresës së pavlefshme dështoi",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Angazhimi i zgjidhjes së captcha-s nuk ekziston",
+		"SIGNER_UNDEFINED": "Nënshkruesi i papërcaktuar",
+		"CANNOT_FIND_KEYPAIR": "Nuk gjendet çifti i çelësave",
+		"INVALID_DATA_FORMAT": "Format i pavlefshëm të dhënash"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "U kërkua mjedis i panjohur",
+		"INVALID_CAPTCHA_NUMBER": "Konfiguro saktë cilësimet e captcha-ve",
+		"INVALID_LOG_LEVEL": "Nivel i pavlefshëm regjistri",
+		"INVALID_PACKAGE_DIR": "Direktori i pavlefshëm paketash"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Gabim gjatë analizimit të grupit të të dhënave",
+		"SOLUTION_PARSE_ERROR": "Gabim gjatë analizimit të grupit të të dhënave",
+		"HASH_ERROR": "Gabim gjatë llogaritjes së hash-it të grupit të të dhënave",
+		"DATASET_ID_UNDEFINED": "ID-ja e grupit të të dhënave e papërcaktuar",
+		"NOT_ENOUGH_LABELS": "Nuk ka mjaftueshëm etiketa",
+		"NOT_ENOUGH_IMAGES": "Nuk ka mjaftueshëm imazhe",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Numri i captcha-ve në grupin e të dhënave është më i vogël se numri i konfiguruar",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Numri i zgjidhjeve në grupin e të dhënave është më i vogël se numri i konfiguruar",
+		"DUPLICATE_IMAGE": "u zbulua imazh i dyfishtë",
+		"MERKLE_ERROR": "Gabim gjatë krijimit të pemës Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Importimi i motorit të bazës së të dhënave dështoi",
+		"DATABASE_UNDEFINED": "Klienti i bazës së të dhënave nuk është lidhur",
+		"DATABASE_HOST_UNDEFINED": "Adresa e hostit të bazës së të dhënave nuk është përcaktuar",
+		"DATASET_LOAD_FAILED": "Ngarkimi i grupit të të dhënave dështoi",
+		"DATASET_GET_FAILED": "Marrja e grupit të të dhënave dështoi",
+		"CAPTCHA_GET_FAILED": "Marrja e captcha-s dështoi",
+		"CAPTCHA_UPDATE_FAILED": "Përditësimi i captcha-s dështoi",
+		"IMAGE_GET_FAILED": "Marrja e imazhit dështoi",
+		"PENDING_RECORD_NOT_FOUND": "Nuk u gjet asnjë regjistrim në pritje",
+		"INVALID_HASH": "Hash i pavlefshëm",
+		"SOLUTION_GET_FAILED": "Marrja e zgjidhjes dështoi",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Nuk u gjetën grupe të dhënash me numrin e kërkuar të zgjidhjeve",
+		"SOLUTION_APPROVE_FAILED": "Miratimi i zgjidhjes dështoi",
+		"SOLUTION_FLAG_FAILED": "Shënimi i zgjidhjes si e përpunuar dështoi",
+		"TABLES_UNDEFINED": "Tabelat e papërcaktuara",
+		"CONNECTION_UNDEFINED": "Lidhja e papërcaktuar",
+		"COMMITMENT_FLAG_FAILED": "Shënimi i angazhimit si i përpunuar dështoi",
+		"UNKNOWN": "Gabim i panjohur i bazës së të dhënave",
+		"QUERY_ERROR": "Kërkesa në bazën e të dhënave dështoi",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Lidhja e rregullave të qasjes së Redis e papërcaktuar",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Ruajtja e rregullave të qasjes së përdoruesve e papërcaktuar",
+		"SESSION_STORE_FAILED": "Ruajtja e sesionit dështoi",
+		"SESSION_CHECK_REMOVE_FAILED": "Kontrolli dhe heqja e sesionit dështoi",
+		"SESSION_GET_FAILED": "Marrja e sesionit dështoi"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Përdoruesi pronar nuk mund të ndryshohet",
+		"CANNOT_DELETE_OWN_USER": "Nuk mund të fshish llogarinë tënde",
+		"CANNOT_DELETE_LAST_USER": "Përdoruesi i fundit nuk mund të fshihet",
+		"USER_ALREADY_EXISTS": "Përdoruesi ekziston tashmë",
+		"NO_SUGGESTIONS_FOUND": "Nuk u gjetën sugjerime",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Sajti i fundit aktiv nuk mund të çaktivizohet",
+		"DUPLICATE_SITE_NAME": "Ekziston tashmë një sajt me këtë emër",
+		"INVALID_SITE_NAME": "Emri i sajtit duhet të përmbajë vetëm shkronja, numra, viza dhe nënvija"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Parametër i pavlefshëm"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Skedari nuk u gjet",
+		"FILE_ALREADY_EXISTS": "Skedari ekziston tashmë",
+		"INVALID_DIR_FORMAT": "Format i pavlefshëm direktoriumi"
+	}
+}

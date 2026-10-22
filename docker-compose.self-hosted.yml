@@ -44,12 +44,21 @@ services:
         max-file: '1'
 
   provider:
-    image: prosopo/provider:${PROSOPO_PROVIDER_IMAGE_VERSION:-3.8.19}
+    image: prosopo/provider:${PROSOPO_PROVIDER_IMAGE_VERSION:?set it in .env, or regenerate .env with generateSelfHostedEnv.ts}
     restart: unless-stopped
     depends_on:
       - mongo
       - redis
     env_file: .env
+    environment:
+      # Where detector_pool_set writes a pool and the provider loads it from.
+      # Fixed here because it must match the volume below.
+      PROSOPO_DETECTOR_POOL_DIR: /usr/src/app/data/detector-pool
+      # Lets this node load detectors built outside Prosopo, such as
+      # demos/detector-botd. Without a pool it does nothing.
+      PROSOPO_DETECTOR_OPEN_FORMAT: '1'
+    volumes:
+      - detector_pool:/usr/src/app/data/detector-pool
     ports:
       # Loopback only. Public traffic arrives through Caddy on 443; this is
       # here so you can curl the provider directly while setting up, and can
@@ -96,6 +105,7 @@ services:
         max-file: '1'
 
 volumes:
+  detector_pool:
   mongo_data:
   redis_data:
   caddy_data:

@@ -13,11 +13,12 @@
 // limitations under the License.
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import widgetEn from "../locales/en/widget.json" with { type: "json" };
 import type { Ti18n } from "../types.js";
 
 // The module keeps a singleton, so every test re-imports it under a fresh
-// registry. `fetch`, `localStorage`, `navigator.languages` and `document.cookie`
-// are the module's four inputs and are all stubbed per test.
+// registry. `fetch` and `navigator.languages` are the module's inputs;
+// `localStorage` and `document.cookie` are stubbed to prove it leaves them alone.
 
 type Catalogues = Record<string, Record<string, unknown>>;
 
@@ -57,10 +58,9 @@ const load = async (options: {
 			}
 			const language = url.split("/").at(-2) ?? "";
 			const body = options.catalogues?.[language];
-			return {
-				ok: body !== undefined,
-				json: async (): Promise<unknown> => body,
-			} as Response;
+			return body === undefined
+				? new Response(null, { status: 404 })
+				: new Response(JSON.stringify(body));
 		}),
 	);
 	vi.stubGlobal("localStorage", {
@@ -113,27 +113,6 @@ describe("choosing a language", () => {
 		expect(i18n.language).toBe("fr");
 	});
 
-	test("prefers a cookie over the browser", async () => {
-		const harness = await load({
-			catalogues: { es: {}, en: {} },
-			cookie: "es",
-			stored: "de",
-			languages: ["it"],
-		});
-
-		expect((await initialised(harness)).language).toBe("es");
-	});
-
-	test("prefers stored over the browser", async () => {
-		const harness = await load({
-			catalogues: { de: {}, en: {} },
-			stored: "de",
-			languages: ["it"],
-		});
-
-		expect((await initialised(harness)).language).toBe("de");
-	});
-
 	test("falls back to the browser when nothing is remembered", async () => {
 		const harness = await load({
 			catalogues: { it: {}, en: {} },
@@ -160,89 +139,153 @@ describe("choosing a language", () => {
 		expect((await initialised(harness)).language).toBe("en");
 	});
 
-	test("remembers the language in both cookie and storage", async () => {
-		// Kept from the i18next language detector: a visitor who has picked a
-		// language keeps it across pages that embed the widget.
-		const harness = await load({ catalogues: { fr: {}, en: {} } });
+	test("ignores a language the host page stored in cookie or storage", async () => {
+		// The i18next cookie and `i18nextLng` key belong to the host site's own
+		// i18n, not to the visitor's choice of widget language.
+		const harness = await load({
+			catalogues: { es: {}, de: {}, it: {}, en: {} },
+			cookie: "es",
+			stored: "de",
+			languages: ["it"],
+		});
 
-		await initialised(harness, "fr");
+		expect((await initialised(harness)).language).toBe("it");
+	});
 
-		expect(harness.stored().i18nextLng).toBe("fr");
-		expect(harness.cookie()).toContain("i18next=fr");
+	test("writes nothing to cookie or storage", async () => {
+		const harness = await load({ catalogues: { fr: {}, de: {}, en: {} } });
+
+		const i18n = await initialised(harness, "fr");
+		await i18n.changeLanguage("de");
+
+		expect(harness.stored()).toEqual({});
+		expect(harness.cookie()).toBe("");
+	});
+
+	test("takes the first browser language with a catalogue", async () => {
+		const harness = await load({
+			catalogues: { it: {}, en: {} },
+			languages: ["xx", "it-IT", "fr"],
+		});
+
+		expect((await initialised(harness)).language).toBe("it");
+	});
+
+	test("takes the first supported code from a comma list", async () => {
+		const harness = await load({
+			catalogues: { tr: {}, en: {} },
+			languages: ["de"],
+		});
+
+		expect((await initialised(harness, "xx, tr-TR, fr")).language).toBe("tr");
+	});
+
+	test("falls back to the browser when no requested code is supported", async () => {
+		const harness = await load({
+			catalogues: { de: {}, en: {} },
+			languages: ["de"],
+		});
+
+		expect((await initialised(harness, "xx")).language).toBe("de");
+	});
+
+	test("reads Norwegian Bokmål as Norwegian", async () => {
+		const harness = await load({
+			catalogues: { no: {}, en: {} },
+			languages: ["nb-NO"],
+		});
+
+		expect((await initialised(harness)).language).toBe("no");
 	});
 });
 
 describe("fetching catalogues", () => {
-	test("loads the active language from the directory the module came from", async () => {
-		const harness = await load({ catalogues: { fr: {}, en: {} } });
+	test("loads only the active language's widget namespace, from the module's directory", async () => {
+		// Image labels and server-only text live in other namespaces the
+		// browser never needs: the provider translates the labels itself.
+		const harness = await load({ catalogues: { fr: {} } });
 
 		await initialised(harness, "fr");
 
-		expect(
-			harness.requested.some((url) =>
-				url.endsWith("/locales/fr/translation.json"),
-			),
-		).toBe(true);
+		expect(harness.requested).toHaveLength(1);
+		expect(harness.requested[0]).toMatch(/\/locales\/fr\/widget\.json$/);
 	});
 
-	test("loads English alongside it, for keys a translation is missing", async () => {
-		const harness = await load({ catalogues: { fr: {}, en: {} } });
-
-		await initialised(harness, "fr");
-
-		expect(harness.requested).toHaveLength(2);
-		expect(
-			harness.requested.some((url) =>
-				url.endsWith("/locales/en/translation.json"),
-			),
-		).toBe(true);
-	});
-
-	test("fetches once when the active language is already English", async () => {
+	test("does not fetch English, which is bundled", async () => {
 		const harness = await load({ catalogues: { en: {} } });
 
 		await initialised(harness, "en");
 
-		expect(harness.requested).toHaveLength(1);
+		expect(harness.requested).toEqual([]);
 	});
 });
 
 describe("translating", () => {
 	test("reads a nested key by its dotted path", async () => {
 		const harness = await load({
-			catalogues: { en: { WIDGET: { I_AM_HUMAN: "I am human" } } },
+			catalogues: { fr: { WIDGET: { I_AM_HUMAN: "Je suis humain" } } },
 		});
 
-		expect((await initialised(harness)).t("WIDGET.I_AM_HUMAN")).toBe(
-			"I am human",
+		expect((await initialised(harness, "fr")).t("WIDGET.I_AM_HUMAN")).toBe(
+			"Je suis humain",
 		);
+	});
+
+	test("has English text with no fetch at all", async () => {
+		const harness = await load({ fetchFails: true });
+
+		expect((await initialised(harness, "en")).t("WIDGET.I_AM_HUMAN")).toBe(
+			widgetEn.WIDGET.I_AM_HUMAN,
+		);
+	});
+
+	test("exists for a key of the active or the English catalogue only", async () => {
+		const harness = await load({
+			catalogues: { fr: { WIDGET: { I_AM_HUMAN: "Je suis humain" } } },
+		});
+		const i18n = await initialised(harness, "fr");
+
+		expect(i18n.exists("WIDGET.I_AM_HUMAN")).toBe(true);
+		expect(i18n.exists("WIDGET.SELECT_ALL")).toBe(true);
+		expect(i18n.exists("TARGET.owl")).toBe(false);
+		expect(i18n.exists("DATABASE.UNKNOWN")).toBe(false);
+		expect(i18n.exists("Something went wrong.")).toBe(false);
+		expect(i18n.exists("WIDGET")).toBe(false);
 	});
 
 	test("substitutes interpolation values", async () => {
 		const harness = await load({
-			catalogues: { en: { POSITION: "{{x}} across, {{y}} down" } },
+			catalogues: {
+				fr: { WIDGET: { PUZZLE: { POSITION: "{{x}} across, {{y}} down" } } },
+			},
 		});
 
-		expect((await initialised(harness)).t("POSITION", { x: 10, y: 20 })).toBe(
-			"10 across, 20 down",
-		);
+		expect(
+			(await initialised(harness, "fr")).t("WIDGET.PUZZLE.POSITION", {
+				x: 10,
+				y: 20,
+			}),
+		).toBe("10 across, 20 down");
 	});
 
 	test("falls back to English when the translation lacks the key", async () => {
 		const harness = await load({
-			catalogues: { fr: { KEPT: "gardé" }, en: { KEPT: "kept", ONLY: "only" } },
+			catalogues: {
+				fr: { WIDGET: { SUBMIT: "gardé" } },
+			},
 		});
 		const i18n = await initialised(harness, "fr");
 
-		expect(i18n.t("KEPT")).toBe("gardé");
-		expect(i18n.t("ONLY")).toBe("only");
+		expect(i18n.t("WIDGET.SUBMIT")).toBe("gardé");
+		expect(i18n.t("WIDGET.CANCEL")).toBe(widgetEn.WIDGET.CANCEL);
 	});
 
+	// A server-only key: no widget catalogue, English included, has its text.
 	test("falls back to the caller's default when no catalogue has the key", async () => {
 		const harness = await load({ catalogues: { en: {} } });
 
 		expect(
-			(await initialised(harness)).t("WIDGET.CHECKING", {
+			(await initialised(harness)).t("DATABASE.UNKNOWN", {
 				defaultValue: "Checking that you are human",
 			}),
 		).toBe("Checking that you are human");
@@ -252,7 +295,7 @@ describe("translating", () => {
 		const harness = await load({ catalogues: { en: {} } });
 
 		expect(
-			(await initialised(harness)).t("POSITION", {
+			(await initialised(harness)).t("DATABASE.UNKNOWN", {
 				defaultValue: "{{x}} across",
 				x: 7,
 			}),
@@ -262,19 +305,19 @@ describe("translating", () => {
 	test("falls back to the key when there is no default either", async () => {
 		const harness = await load({ catalogues: { en: {} } });
 
-		expect((await initialised(harness)).t("WIDGET.MISSING")).toBe(
-			"WIDGET.MISSING",
+		expect((await initialised(harness)).t("DATABASE.UNKNOWN")).toBe(
+			"DATABASE.UNKNOWN",
 		);
 	});
 
 	test("leaves a placeholder alone when no value was supplied for it", async () => {
 		const harness = await load({
-			catalogues: { en: { GREET: "hello {{name}}" } },
+			catalogues: { fr: { WIDGET: { SUBMIT: "hello {{name}}" } } },
 		});
 
-		expect((await initialised(harness)).t("GREET", { other: 1 })).toBe(
-			"hello {{name}}",
-		);
+		expect(
+			(await initialised(harness, "fr")).t("WIDGET.SUBMIT", { other: 1 }),
+		).toBe("hello {{name}}");
 	});
 });
 
@@ -284,34 +327,42 @@ describe("when the catalogue cannot be fetched", () => {
 		// widget the visitor cannot use.
 		const harness = await load({ catalogues: {}, fetchFails: true });
 
-		const i18n = await initialised(harness);
+		const i18n = await initialised(harness, "fr");
 
 		expect(i18n.isInitialized).toBe(true);
-		expect(i18n.t("WIDGET.CHECKING", { defaultValue: "Checking" })).toBe(
-			"Checking",
-		);
+		expect(i18n.t("WIDGET.CHECKING")).toBe(widgetEn.WIDGET.CHECKING);
 	});
 
 	test("reports the namespace as loaded so callers stop waiting", async () => {
 		const harness = await load({ catalogues: {}, fetchFails: true });
 
-		expect((await initialised(harness)).hasLoadedNamespace("translation")).toBe(
-			true,
-		);
+		expect(
+			(await initialised(harness, "fr")).hasLoadedNamespace("widget"),
+		).toBe(true);
+	});
+
+	test("never reports a namespace the browser does not load", async () => {
+		const harness = await load({ catalogues: { fr: {} } });
+		const i18n = await initialised(harness, "fr");
+
+		expect(i18n.hasLoadedNamespace("target")).toBe(false);
+		expect(i18n.hasLoadedNamespace("translation")).toBe(false);
 	});
 });
 
 describe("switching language", () => {
 	test("loads the new catalogue and translates against it", async () => {
 		const harness = await load({
-			catalogues: { en: { YES: "yes" }, de: { YES: "ja" } },
+			catalogues: {
+				de: { WIDGET: { SUBMIT: "ja" } },
+			},
 		});
 		const i18n = await initialised(harness, "en");
 
 		await i18n.changeLanguage("de");
 
 		expect(i18n.language).toBe("de");
-		expect(i18n.t("YES")).toBe("ja");
+		expect(i18n.t("WIDGET.SUBMIT")).toBe("ja");
 	});
 
 	test("notifies subscribers", async () => {
@@ -351,14 +402,13 @@ describe("switching language", () => {
 describe("the singleton", () => {
 	test("a second call reuses the instance rather than refetching", async () => {
 		// Every widget on the page shares one catalogue fetch.
-		const harness = await load({ catalogues: { en: {} } });
-		const first = await initialised(harness);
-		const before = harness.requested.length;
+		const harness = await load({ catalogues: { fr: {} } });
+		const first = await initialised(harness, "fr");
 
 		const second = harness.initializeI18n();
 
 		expect(second).toBe(first);
-		expect(harness.requested).toHaveLength(before);
+		expect(harness.requested).toHaveLength(1);
 	});
 
 	test("a second call still fires its callback", async () => {
@@ -378,7 +428,7 @@ describe("before the catalogue arrives", () => {
 	let harness: Harness;
 
 	beforeEach(async () => {
-		harness = await load({ never: true });
+		harness = await load({ never: true, languages: ["fr"] });
 	});
 
 	test("reports itself uninitialised", () => {
@@ -386,8 +436,6 @@ describe("before the catalogue arrives", () => {
 	});
 
 	test("reports the namespace as not loaded", () => {
-		expect(harness.initializeI18n().hasLoadedNamespace("translation")).toBe(
-			false,
-		);
+		expect(harness.initializeI18n().hasLoadedNamespace("widget")).toBe(false);
 	});
 });

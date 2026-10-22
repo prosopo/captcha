@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { assetTokenOptionsFromEnv, signAssetUrl } from "./assetToken.js";
 
 export async function downloadImage(url: string): Promise<Uint8Array> {
@@ -21,7 +21,10 @@ export async function downloadImage(url: string): Promise<Uint8Array> {
 			options ? await signAssetUrl(url, options) : url,
 		);
 		if (!response.ok) {
-			throw new ProsopoDatasetError("API.BAD_REQUEST", {
+			throw new ProsopoError({
+				code: "INVALID_REQUEST",
+				errorSite: "DSET-15",
+				message: "BadRequest",
 				context: {
 					error: `Network response was not ok, status: ${response.status}`,
 					url,
@@ -31,8 +34,11 @@ export async function downloadImage(url: string): Promise<Uint8Array> {
 		const buffer = await response.arrayBuffer();
 		return new Uint8Array(buffer);
 	} catch (err) {
-		throw new ProsopoEnvError("DATABASE.IMAGE_GET_FAILED", {
-			context: { error: err },
+		throw new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "DSET-16",
+			message: "Failed to get image",
+			cause: err,
 		});
 	}
 }

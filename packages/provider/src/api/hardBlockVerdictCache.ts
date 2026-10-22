@@ -63,6 +63,9 @@ export class HardBlockVerdictCache {
 	// callers on the same key. See getOrCompute for the ordering
 	// guarantees.
 	private readonly inflight = new Map<string, Promise<AccessRule[]>>();
+	// Bumped by clear(), so a compute that read storage before the clear
+	// cannot write its now-stale verdict back afterwards.
+	private generation = 0;
 
 	constructor(
 		private readonly ttlMs: number = DEFAULT_VERDICT_CACHE_TTL_MS,
@@ -140,9 +143,12 @@ export class HardBlockVerdictCache {
 		if (existing !== undefined) {
 			return existing;
 		}
+		const generation = this.generation;
 		const promise = (async () => {
 			const value = await compute();
-			this.set(key, value);
+			if (generation === this.generation) {
+				this.set(key, value);
+			}
 			return value;
 		})();
 		this.inflight.set(key, promise);
@@ -166,6 +172,7 @@ export class HardBlockVerdictCache {
 	// the stored entries and any in-flight Promises so a rule mutation
 	// can't leave a stale computation in flight.
 	clear(): void {
+		this.generation++;
 		this.store.clear();
 		this.inflight.clear();
 	}

@@ -20,6 +20,7 @@ import {
 	CaptchaType,
 	type ClientMetaData,
 	FrictionlessReason,
+	type IIPValidationRules,
 	IPValidationAction,
 	type KeyringPair,
 	POW_SEPARATOR,
@@ -122,7 +123,7 @@ describe("PowCaptchaManager", () => {
 			getPowCaptchaRecordByChallenge: vi.fn(),
 			updatePowCaptchaRecordResult: vi.fn(),
 			updatePowCaptchaRecord: vi.fn(),
-			markDappUserPoWCommitmentsChecked: vi.fn(),
+			markDappUserPoWCommitmentsChecked: vi.fn().mockResolvedValue(1),
 			getClientRecord: vi.fn(),
 			getSessionRecordBySessionId: vi.fn(),
 			updateSessionRecord: vi.fn(),
@@ -231,9 +232,7 @@ describe("PowCaptchaManager", () => {
 				challengeRecord as PoWCaptchaRecord,
 			);
 			vi.mocked(db.updatePowCaptchaRecordResult).mockResolvedValue(undefined);
-			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(
-				undefined,
-			);
+			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(1);
 
 			const verifyPowCaptchaSolutionArgs: Parameters<
 				typeof powCaptchaManager.verifyPowCaptchaSolution
@@ -300,6 +299,50 @@ describe("PowCaptchaManager", () => {
 			expect(db.updatePowCaptchaRecordResult).toHaveBeenCalledWith(
 				...updatePowCaptchaRecordArgs,
 			);
+		});
+
+		it("refuses a resubmission so a server-checked token cannot be re-armed", async () => {
+			const requestedAtTimestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${requestedAtTimestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${pair.address}`;
+			const ipAddress = getIPAddress("1.1.1.1");
+			const headers: RequestHeaders = { a: "1" };
+			const challengeRecord: PoWCaptchaStored = {
+				challenge,
+				difficulty: 4,
+				dappAccount: pair.address,
+				userAccount,
+				requestedAtTimestamp: new Date(requestedAtTimestamp),
+				submittedAtTimestamp: new Date(),
+				result: { status: CaptchaStatus.approved },
+				userSubmitted: true,
+				serverChecked: true,
+				ipAddress: getCompositeIpAddress(ipAddress),
+				headers,
+				ja4: "ja4",
+				providerSignature: "testSignature",
+				lastUpdatedTimestamp: new Date(),
+			};
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(checkPowSignature).mockImplementation(() => undefined);
+			vi.mocked(validateSolution).mockImplementation(() => true);
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as PoWCaptchaRecord,
+			);
+
+			const result = await powCaptchaManager.verifyPowCaptchaSolution(
+				challenge,
+				"testSignature",
+				12345,
+				1000,
+				"testTimestampSignature",
+				ipAddress,
+				headers,
+			);
+
+			expect(result.verified).toBe(false);
+			expect(db.updatePowCaptchaRecordResult).not.toHaveBeenCalled();
+			expect(db.updatePowCaptchaRecord).not.toHaveBeenCalled();
 		});
 
 		it("should throw an error if PoW captcha solution is invalid", async () => {
@@ -777,6 +820,75 @@ describe("PowCaptchaManager", () => {
 			);
 			expect(replayed.verified).toBe(false);
 			expect(replayed.sessionId).toBe("session-abc");
+		});
+
+		it("answers without waiting for the bookkeeping writes", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			const challengeRecord: Partial<PoWCaptchaStored> = {
+				challenge,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
+				serverChecked: false,
+				result: { status: CaptchaStatus.approved },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+			};
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as PoWCaptchaRecord,
+			);
+			vi.mocked(verifyRecency).mockImplementation(() => true);
+			vi.mocked(db.updatePowCaptchaRecord).mockReturnValue(
+				new Promise<void>(() => {}),
+			);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+				"1.1.1.1",
+			);
+
+			expect(result.verified).toBe(true);
+			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, {
+				providedIp: getCompositeIpAddress("1.1.1.1"),
+			});
+		});
+
+		it("refuses a verify that lost the server-check claim to a concurrent verify", async () => {
+			const dappAccount = "dappAccount";
+			const timestamp = 123456789;
+			const userAccount = "testUserAccount";
+			const challenge: PoWChallengeId = `${timestamp}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+			// Both verifies read the record before either marked it checked.
+			const challengeRecord: Partial<PoWCaptchaStored> = {
+				challenge,
+				dappAccount,
+				userAccount,
+				requestedAtTimestamp: new Date(timestamp),
+				submittedAtTimestamp: new Date(),
+				serverChecked: false,
+				result: { status: CaptchaStatus.approved },
+				ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+			};
+			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+				challengeRecord as PoWCaptchaRecord,
+			);
+			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(0);
+
+			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+			);
+
+			expect(result.verified).toBe(false);
+			expect(result.reason).toBe("API.USER_ALREADY_VERIFIED");
 		});
 
 		it("should return verified:false if a challenge cannot be found", async () => {
@@ -1318,6 +1430,8 @@ describe("PowCaptchaManager", () => {
 				captchaType: CaptchaType.pow,
 				webView: false,
 				iFrame: true,
+				currentUrl: "https://example.com/checkout",
+				iframeUrl: "https://embed.example.org/captcha/abc",
 				decryptedHeadHash: "h".repeat(16),
 				userSitekeyIpHash: "ush",
 				reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
@@ -1365,6 +1479,8 @@ describe("PowCaptchaManager", () => {
 				expect(input.ruleType).toEqual(sessionRecord.ruleType);
 				expect(input.webView).toBe(sessionRecord.webView);
 				expect(input.iFrame).toBe(sessionRecord.iFrame);
+				expect(input.currentUrl).toBe(sessionRecord.currentUrl);
+				expect(input.iframeUrl).toBe(sessionRecord.iframeUrl);
 				expect(typeof input.score).toBe("number");
 			} finally {
 				restoreDecisionMachine();
@@ -1373,6 +1489,28 @@ describe("PowCaptchaManager", () => {
 	});
 
 	describe("IP Validation Guard Conditions", () => {
+		const verifyWithIpRules = (
+			dappAccount: string,
+			challenge: PoWChallengeId,
+			ip: string | undefined,
+			ipValidationRules: IIPValidationRules | undefined,
+		) =>
+			powCaptchaManager.serverVerifyPowCaptchaSolution(
+				dappAccount,
+				challenge,
+				1000,
+				mockEnv,
+				ip,
+				undefined,
+				undefined,
+				false,
+				undefined,
+				undefined,
+				false,
+				undefined,
+				ipValidationRules,
+			);
+
 		it("should skip IP validation when ipValidationRules is undefined", async () => {
 			const dappAccount = "testDappAccount";
 			const userAccount = "testUserAccount";
@@ -1400,11 +1538,6 @@ describe("PowCaptchaManager", () => {
 			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
 				challengeRecord as PoWCaptchaRecord,
 			);
-			vi.mocked(db.getClientRecord).mockResolvedValue({
-				settings: {
-					// ipValidationRules is undefined
-				},
-			} as ClientRecord);
 			vi.mocked(checkPowSignature).mockReturnValue(undefined);
 			vi.mocked(validateSolution).mockReturnValue(true);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
@@ -1453,28 +1586,17 @@ describe("PowCaptchaManager", () => {
 			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
 				challengeRecord as PoWCaptchaRecord,
 			);
-			vi.mocked(db.getClientRecord).mockResolvedValue({
-				settings: {
-					ipValidationRules: {
-						enabled: false, // Explicitly disabled
-						actions: {
-							countryChangeAction: IPValidationAction.Reject,
-							cityChangeAction: IPValidationAction.Reject,
-						},
-					},
-				},
-			} as ClientRecord);
 			vi.mocked(checkPowSignature).mockReturnValue(undefined);
 			vi.mocked(validateSolution).mockReturnValue(true);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
-				dappAccount,
-				challenge,
-				timeout,
-				mockEnv,
-				ip,
-			);
+			const result = await verifyWithIpRules(dappAccount, challenge, ip, {
+				enabled: false, // Explicitly disabled
+				actions: {
+					countryChangeAction: IPValidationAction.Reject,
+					cityChangeAction: IPValidationAction.Reject,
+				},
+			} as IIPValidationRules);
 
 			// Should succeed without IP validation even though rules are configured
 			expect(result.verified).toBe(true);
@@ -1511,28 +1633,17 @@ describe("PowCaptchaManager", () => {
 			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
 				challengeRecord as PoWCaptchaRecord,
 			);
-			vi.mocked(db.getClientRecord).mockResolvedValue({
-				settings: {
-					ipValidationRules: {
-						// enabled field is missing/undefined
-						actions: {
-							countryChangeAction: IPValidationAction.Reject,
-							cityChangeAction: IPValidationAction.Reject,
-						},
-					},
-				},
-			} as ClientRecord);
 			vi.mocked(checkPowSignature).mockReturnValue(undefined);
 			vi.mocked(validateSolution).mockReturnValue(true);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
-				dappAccount,
-				challenge,
-				timeout,
-				mockEnv,
-				ip,
-			);
+			const result = await verifyWithIpRules(dappAccount, challenge, ip, {
+				// enabled field is missing/undefined
+				actions: {
+					countryChangeAction: IPValidationAction.Reject,
+					cityChangeAction: IPValidationAction.Reject,
+				},
+			} as IIPValidationRules);
 
 			// Should succeed without IP validation when enabled is undefined
 			expect(result.verified).toBe(true);
@@ -1541,7 +1652,7 @@ describe("PowCaptchaManager", () => {
 			});
 		});
 
-		it("should skip IP validation when clientRecord is null", async () => {
+		it("takes the site's rules from the caller instead of reading the client record again", async () => {
 			const dappAccount = pair.address;
 			const challenge: PoWChallengeId = `123456789${POW_SEPARATOR}userAccount${POW_SEPARATOR}${pair.address}`;
 			const timeout = 1000;
@@ -1569,24 +1680,30 @@ describe("PowCaptchaManager", () => {
 			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
 				challengeRecord as PoWCaptchaRecord,
 			);
-			vi.mocked(db.getClientRecord).mockResolvedValue(undefined);
+			// Rules that would reject, so reading them would fail the verify.
+			vi.mocked(db.getClientRecord).mockResolvedValue({
+				settings: {
+					ipValidationRules: {
+						enabled: true,
+						actions: {
+							countryChangeAction: IPValidationAction.Reject,
+						},
+					},
+				},
+			} as ClientRecord);
 			vi.mocked(checkPowSignature).mockReturnValue(undefined);
 			vi.mocked(validateSolution).mockReturnValue(true);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await verifyWithIpRules(
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
 				ip,
+				undefined,
 			);
 
-			// Should succeed without IP validation when client record is null
 			expect(result.verified).toBe(true);
-			expect(db.updatePowCaptchaRecord).toHaveBeenCalledWith(challenge, {
-				providedIp: getCompositeIpAddress(ip),
-			});
+			expect(db.getClientRecord).not.toHaveBeenCalled();
 		});
 
 		it("should skip IP validation when no IP is provided", async () => {
@@ -1616,26 +1733,21 @@ describe("PowCaptchaManager", () => {
 			vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
 				challengeRecord as PoWCaptchaRecord,
 			);
-			vi.mocked(db.getClientRecord).mockResolvedValue({
-				settings: {
-					ipValidationRules: {
-						enabled: true,
-						actions: {
-							countryChangeAction: IPValidationAction.Reject,
-						},
-					},
-				},
-			} as ClientRecord);
 			vi.mocked(checkPowSignature).mockReturnValue(undefined);
 			vi.mocked(validateSolution).mockReturnValue(true);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 
 			// No IP provided
-			const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+			const result = await verifyWithIpRules(
 				dappAccount,
 				challenge,
-				timeout,
-				mockEnv,
+				undefined,
+				{
+					enabled: true,
+					actions: {
+						countryChangeAction: IPValidationAction.Reject,
+					},
+				} as IIPValidationRules,
 			);
 
 			// Should succeed - no IP provided means IP validation is skipped
@@ -2060,9 +2172,7 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(verifyRecency as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-				undefined,
-			);
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 			// Mock spam email domain found
@@ -2128,9 +2238,7 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(verifyRecency as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-				undefined,
-			);
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 			// Mock spam email domain not found (legitimate)
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(db.getSpamEmailDomain as any).mockResolvedValue(null);
@@ -2201,9 +2309,7 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(verifyRecency as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-				undefined,
-			);
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 
 			// Mock decision machine to allow
 			mockDecisionMachine(async () => ({
@@ -2263,9 +2369,7 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(verifyRecency as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-				undefined,
-			);
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 			// Mock spam email domain found
@@ -2331,9 +2435,7 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(verifyRecency as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-				undefined,
-			);
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 			// Mock spam email domain found
@@ -2389,9 +2491,7 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(verifyRecency as any).mockImplementation(() => true);
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-				undefined,
-			);
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 			// Mock database error when checking spam
 			// biome-ignore lint/suspicious/noExplicitAny: Test mock
 			(db.getSpamEmailDomain as any).mockRejectedValue(
@@ -2896,9 +2996,7 @@ module.exports = (input) => {
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(verifyRecency as any).mockReturnValue(true);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
-				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-					undefined,
-				);
+				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
@@ -2962,9 +3060,7 @@ module.exports = (input) => {
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(verifyRecency as any).mockReturnValue(true);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
-				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-					undefined,
-				);
+				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(db.getClientRecord as any).mockResolvedValue(undefined);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
@@ -3021,9 +3117,7 @@ module.exports = (input) => {
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(verifyRecency as any).mockReturnValue(false);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
-				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-					undefined,
-				);
+				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 
@@ -3042,6 +3136,40 @@ module.exports = (input) => {
 				expect(result.reason).toBe("API.TIMESTAMP_TOO_OLD");
 				// Spam email check should NOT have been called since recency already failed
 				expect(db.getSpamEmailDomain).not.toHaveBeenCalled();
+			});
+
+			it("reads the session but does not look up the ip once recency has failed", async () => {
+				const dappAccount = "dappAccount";
+				const userAccount = "testUserAccount";
+				const challenge: PoWChallengeId = `${Date.now()}${POW_SEPARATOR}${userAccount}${POW_SEPARATOR}${dappAccount}`;
+				const challengeRecord: Partial<PoWCaptchaStored> = {
+					challenge,
+					dappAccount,
+					userAccount,
+					sessionId: "session-abc",
+					requestedAtTimestamp: new Date(),
+					submittedAtTimestamp: new Date(0),
+					result: { status: CaptchaStatus.approved },
+					serverChecked: false,
+					ipAddress: getCompositeIpAddress(getIPAddress("1.1.1.1")),
+				};
+				vi.mocked(db.getPowCaptchaRecordByChallenge).mockResolvedValue(
+					challengeRecord as PoWCaptchaRecord,
+				);
+
+				const result = await powCaptchaManager.serverVerifyPowCaptchaSolution(
+					dappAccount,
+					challenge,
+					1000,
+					mockEnv,
+					"1.1.1.1",
+				);
+
+				expect(result.reason).toBe("API.TIMESTAMP_TOO_OLD");
+				expect(db.getSessionRecordBySessionId).toHaveBeenCalledWith(
+					"session-abc",
+				);
+				expect(mockEnv.ipInfoService.lookup).not.toHaveBeenCalled();
 			});
 
 			it("should write accumulated failure result in single batch", async () => {
@@ -3074,9 +3202,7 @@ module.exports = (input) => {
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(verifyRecency as any).mockReturnValue(false);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
-				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-					undefined,
-				);
+				(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 				// biome-ignore lint/suspicious/noExplicitAny: test mock
 				(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 
@@ -3164,9 +3290,7 @@ module.exports = (input) => {
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.getPowCaptchaRecordByChallenge as any).mockResolvedValue(record);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
-			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(
-				undefined,
-			);
+			(db.markDappUserPoWCommitmentsChecked as any).mockResolvedValue(1);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
 			(db.updatePowCaptchaRecord as any).mockResolvedValue(undefined);
 			// biome-ignore lint/suspicious/noExplicitAny: tests
@@ -3327,9 +3451,7 @@ module.exports = (input) => {
 				// the mocks above).
 				record as unknown as PoWCaptchaRecord,
 			);
-			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(
-				undefined,
-			);
+			vi.mocked(db.markDappUserPoWCommitmentsChecked).mockResolvedValue(1);
 			vi.mocked(db.updatePowCaptchaRecord).mockResolvedValue(undefined);
 			vi.mocked(verifyRecency).mockImplementation(() => true);
 			return record;

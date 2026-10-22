@@ -13,13 +13,11 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
-import { ProsopoApiError } from "@prosopo/common";
-import type { Logger } from "@prosopo/logger";
+import { ProsopoError, isProsopoError, toPublicError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { decodeGoogleTranslateHost, parseUrl } from "@prosopo/util";
 import { validateAddress } from "@prosopo/util-crypto";
 import type { NextFunction, Request, Response } from "express";
-import type { TFunction } from "i18next";
 import { ZodError } from "zod";
 import { Tasks } from "../tasks/index.js";
 import { getMaintenanceMode } from "./admin/apiToggleMaintenanceModeEndpoint.js";
@@ -50,17 +48,12 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			const tasks = cachedTasks;
 
 			const siteKey = req.headers["prosopo-site-key"] as string;
-			if (!siteKey)
-				throw siteKeyNotRegisteredError(
-					req.i18n,
-					"No sitekey provided",
-					req.logger,
-				);
+			if (!siteKey) throw siteKeyNotRegisteredError("No sitekey provided");
 
 			try {
 				validateAddress(siteKey, false, 42);
 			} catch (err) {
-				throw invalidSiteKeyError(req.i18n, siteKey, req.logger);
+				throw invalidSiteKeyError(siteKey);
 			}
 
 			// Reserved CI test site keys have no DB record and no domain
@@ -73,21 +66,14 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 			}
 
 			const clientSettings = await tasks.db.getClientRecord(siteKey);
-			if (!clientSettings)
-				throw siteKeyNotRegisteredError(req.i18n, siteKey, req.logger);
+			if (!clientSettings) throw siteKeyNotRegisteredError(siteKey);
 
 			const allowedDomains = clientSettings.settings?.domains;
 			if (!allowedDomains)
-				throw siteKeyInvalidDomainError(
-					req.i18n,
-					siteKey,
-					req.hostname,
-					req.logger,
-				);
+				throw siteKeyInvalidDomainError(siteKey, req.hostname);
 
 			const origin = req.headers.origin;
-			if (!origin)
-				throw unauthorizedOriginError(req.i18n, undefined, req.logger);
+			if (!origin) throw unauthorizedOriginError(undefined);
 
 			const candidateOrigins = [origin, ...googleTranslateOrigins(origin)];
 
@@ -101,19 +87,28 @@ export const domainMiddleware = (env: ProviderEnvironment) => {
 				}
 			}
 
-			throw unauthorizedOriginError(req.i18n, origin, req.logger);
+			throw unauthorizedOriginError(origin);
 		} catch (err) {
 			recordDomainValidation("rejected");
 			if (
-				err instanceof ProsopoApiError ||
+				isProsopoError(err) ||
 				err instanceof ZodError ||
 				err instanceof SyntaxError
 			) {
 				handleErrors(err, req, res, next);
-			} else {
-				res.status(401).json({ error: "Unauthorized", message: err });
 				return;
 			}
+			// Anything else (a database or driver error, say) can carry
+			// connection details, so it is logged rather than returned.
+			req.logger.error(() => ({ err, msg: "Domain middleware error" }));
+			const error = new ProsopoError({
+				code: "UNAUTHORIZED",
+				errorSite: "PROV-85",
+				cause: err,
+			});
+			res
+				.status(error.status)
+				.json({ error: toPublicError(error, "BACKEND_ERROR") });
 		}
 	};
 };
@@ -131,57 +126,39 @@ const googleTranslateOrigins = (origin: string): string[] => {
 	}
 };
 
-const siteKeyNotRegisteredError = (
-	i18n: { t: TFunction<"translation", undefined> },
-	dapp: string,
-	logger?: Logger,
-) => {
-	return new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-		context: { code: 400, siteKey: dapp },
-		i18n,
-		logger,
+const siteKeyNotRegisteredError = (dapp: string) => {
+	return new ProsopoError({
+		code: "SITE_KEY_NOT_REGISTERED",
+		errorSite: "PROV-30",
+		context: { siteKey: dapp },
 	});
 };
 
-const invalidSiteKeyError = (
-	i18n: { t: TFunction<"translation", undefined> },
-	siteKey: string,
-	logger?: Logger,
-) => {
-	return new ProsopoApiError("API.INVALID_SITE_KEY", {
-		context: { code: 400, siteKey: siteKey },
-		i18n,
-		logger,
+const invalidSiteKeyError = (siteKey: string) => {
+	return new ProsopoError({
+		code: "SITE_KEY_INVALID",
+		errorSite: "PROV-31",
+		context: { siteKey: siteKey },
 	});
 };
 
-const unauthorizedOriginError = (
-	i18n: { t: TFunction<"translation", undefined> },
-	origin?: string,
-	logger?: Logger,
-) => {
-	return new ProsopoApiError("API.UNAUTHORIZED_ORIGIN_URL", {
-		context: { code: 400, origin },
-		i18n,
-		logger,
+const unauthorizedOriginError = (origin?: string) => {
+	return new ProsopoError({
+		code: "ORIGIN_NOT_ALLOWED",
+		errorSite: "PROV-32",
+		context: { origin },
 	});
 };
 
-const siteKeyInvalidDomainError = (
-	i18n: { t: TFunction<"translation", undefined> },
-	dapp: string,
-	domain: string,
-	logger?: Logger,
-) => {
-	return new ProsopoApiError("API.UNAUTHORIZED_ORIGIN_URL", {
+const siteKeyInvalidDomainError = (dapp: string, domain: string) => {
+	return new ProsopoError({
+		code: "ORIGIN_NOT_ALLOWED",
+		errorSite: "PROV-33",
 		context: {
-			code: 400,
 			message:
 				"No domains are allowed for this site key. Please fix in the Procaptcha Portal",
 			siteKey: dapp,
 			domain,
 		},
-		i18n,
-		logger,
 	});
 };

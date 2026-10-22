@@ -38,6 +38,7 @@ interface FireOptions {
 	trusted?: boolean;
 	clientX?: number;
 	clientY?: number;
+	touches?: { clientX: number; clientY: number }[];
 	key?: string;
 }
 
@@ -81,7 +82,10 @@ const build = (type: string, options: FireOptions): Event => {
 	});
 };
 
-/** Dispatches a real event at the element. */
+/**
+ * Dispatches a real event at the element. Touch points are plain objects:
+ * jsdom has no Touch constructor.
+ */
 export const fire = (
 	element: Element,
 	type: string,
@@ -101,6 +105,9 @@ export const fireAndReturn = (
 ): Event => {
 	const event = build(type, options);
 	setTrusted(event, options.trusted ?? true);
+	if (options.touches) {
+		Object.defineProperty(event, "touches", { value: options.touches });
+	}
 	element.dispatchEvent(event);
 	return event;
 };

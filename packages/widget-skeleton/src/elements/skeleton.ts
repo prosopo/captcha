@@ -18,12 +18,18 @@ import {
 	WIDGET_INNER_HEIGHT,
 	WIDGET_MAX_WIDTH,
 	WIDGET_MIN_HEIGHT,
+	WIDGET_MIN_WIDTH,
 	WIDGET_OUTER_HEIGHT,
 	WIDGET_PADDING,
 } from "../constants.js";
 import { type Theme, withAlpha } from "../theme.js";
 import { createCheckboxElement } from "./checkbox.js";
 import { createLogoElement } from "./logo.js";
+
+// The widget ignores the page's direction and follows only a `dir` set on its
+// own host, which the bundle derives from the widget language.
+const RTL_CONTENT_SELECTOR =
+	'[dir="rtl"] > .prosopo-widget .prosopo-widget__content';
 
 /** The widget, and the node inside it that the captcha is mounted into. */
 export interface WidgetSkeletonElement {
@@ -35,14 +41,16 @@ export interface WidgetSkeletonElement {
  * Creates a widget skeleton element with theme styling
  *
  * @param theme - The theme to apply to the widget
+ * @param loadingLabel - What the spinner is announced as, in the widget's language
  */
 export function createWidgetSkeletonElement(
 	theme: Theme,
+	loadingLabel?: string,
 ): WidgetSkeletonElement {
 	const widgetElement = document.createElement("div");
 	widgetElement.className = "prosopo-widget";
 
-	const checkbox = createCheckboxElement(theme);
+	const checkbox = createCheckboxElement(theme, loadingLabel);
 	const logoElement = createLogoElement(theme);
 
 	widgetElement.innerHTML =
@@ -86,6 +94,7 @@ function getWidgetMarkup(isDevelopmentMode: boolean): string {
 
 	return `
 <div class="prosopo-widget__outer">
+	<div class="prosopo-widget__intrinsic" aria-hidden="true"><i></i><i></i></div>
 	<div class="prosopo-widget__wrapper">
 		<div class="prosopo-widget__inner">
 			<div class="prosopo-widget__dimensions" ${buttonDataAttribute}>
@@ -121,10 +130,10 @@ function getWidgetStyles(theme: Theme): string {
 }
 
 .prosopo-widget__outer {
+    width: auto;
     max-width: ${WIDGET_MAX_WIDTH};
     min-height: 100%;
     overflow-x: auto;
-    width: 100%;
     font-family: ${theme.font.fontFamily};
     color: ${theme.font.color};
     -ms-overflow-style: none;
@@ -135,13 +144,48 @@ function getWidgetStyles(theme: Theme): string {
     display: none;
 }
 
+/* Restates the intrinsic widths that size containment erases.
+
+   A host that sizes the widget by measuring it — an inline-block, a float, an
+   auto-sized grid or flex item, an absolutely positioned box — asks how wide
+   the widget wants to be. __wrapper below is \`container-type: size\`, so it is
+   measured as if it were empty and answers with nothing, and every other box
+   sizes in percentages, which resolve as \`auto\` against an indefinite width.
+   The host would find only __wrapper's \`min-width\` and lay the widget out at
+   that floor, in its smallest container-query breakpoint.
+
+   Two unwrappable boxes on a wrapping line answer for it: min-content is the
+   wider box (the floor, so narrow hosts can still shrink us) and max-content
+   is the pair (${WIDGET_MAX_WIDTH}, the natural width). \`contain-intrinsic-width\` cannot
+   express this — it sets both to the same value, which overflows any host
+   narrower than ${WIDGET_MAX_WIDTH}. The row has no height and paints nothing. */
+.prosopo-widget__intrinsic {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+.prosopo-widget__intrinsic > i {
+    display: block !important;
+    height: 0 !important;
+}
+
+.prosopo-widget__intrinsic > i:first-child {
+    width: ${WIDGET_MIN_WIDTH} !important;
+}
+
+.prosopo-widget__intrinsic > i:last-child {
+    width: calc(${WIDGET_MAX_WIDTH} - ${WIDGET_MIN_WIDTH}) !important;
+}
+
 .prosopo-widget__wrapper {
     container-type: size;
     container-name: prosopo-widget;
     display: flex;
     flex-direction: column;
     height: ${WIDGET_OUTER_HEIGHT}px;
-    min-width: 170px;
+    min-width: ${WIDGET_MIN_WIDTH};
 }
 
 .prosopo-widget__inner {
@@ -175,6 +219,10 @@ function getWidgetStyles(theme: Theme): string {
     min-height: ${WIDGET_INNER_HEIGHT}px;
     height: 100%;
     direction: ltr !important;
+}
+
+${RTL_CONTENT_SELECTOR} {
+    direction: rtl !important;
 }
 
 /* Shadowless hover: an M3 state layer (onSurface at 8%) laid over the surface

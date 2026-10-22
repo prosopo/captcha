@@ -41,6 +41,53 @@ export function setMaintenanceMode(enabled: boolean): void {
 	process.env.MAINTENANCE_MODE = enabled ? "true" : "false";
 }
 
+/**
+ * Site keys taken out of scoring individually, rather than putting the whole
+ * node into maintenance mode.
+ *
+ * Same durability as the node-wide flag above: per-process, cleared on restart,
+ * and set by calling this endpoint on each node. Deliberately not persisted —
+ * a forced-pass state that survives a restart unnoticed is worse than one an
+ * operator has to re-apply.
+ */
+const maintenanceModeSiteKeys = new Set<string>();
+
+export function getMaintenanceModeSiteKeys(): string[] {
+	return [...maintenanceModeSiteKeys];
+}
+
+export function setMaintenanceModeForSiteKeys(
+	siteKeys: readonly string[],
+	enabled: boolean,
+): void {
+	for (const siteKey of siteKeys) {
+		if (enabled) maintenanceModeSiteKeys.add(siteKey);
+		else maintenanceModeSiteKeys.delete(siteKey);
+	}
+}
+
+export function clearMaintenanceModeSiteKeys(): void {
+	maintenanceModeSiteKeys.clear();
+}
+
+/**
+ * Whether this specific site key is in maintenance mode, node-wide or scoped.
+ *
+ * Callers MUST pass a site key the request has proven it owns. Maintenance mode
+ * forces an approval, so deciding it from an unverified, caller-supplied value
+ * — the `prosopo-site-key` header, or a site key read out of a request body
+ * before its signature is checked — would let anyone claim maintenance for a
+ * key they do not control and collect a free pass. The verify handlers call
+ * this only after the dapp signature has been verified.
+ */
+export function isSiteKeyInMaintenanceMode(
+	siteKey: string | undefined,
+): boolean {
+	if (getMaintenanceMode()) return true;
+	if (!siteKey) return false;
+	return maintenanceModeSiteKeys.has(siteKey);
+}
+
 class ApiToggleMaintenanceModeEndpoint
 	implements ApiEndpoint<ToggleMaintenanceModeBodyType>
 {
@@ -48,13 +95,36 @@ class ApiToggleMaintenanceModeEndpoint
 		args: z.infer<ToggleMaintenanceModeBodyType>,
 		logger?: Logger,
 	): Promise<ApiEndpointResponse> {
-		const { enabled } = args;
+		const { enabled, siteKeys } = args;
 
 		logger = logger
 			? logger.with({}, "admin:maintenance:toggle")
 			: getLogger("info", "provider:admin:maintenance:toggle");
 
 		const previousMode = getMaintenanceMode();
+
+		// A scoped toggle leaves the node-wide flag and its gauge alone: the two
+		// are independent, and a caller asking for one customer must not take the
+		// whole node out of scoring as a side effect.
+		if (siteKeys && siteKeys.length > 0) {
+			logger.info(() => ({
+				data: { enabled, siteKeys },
+				msg: "Toggling maintenance mode for site keys",
+			}));
+			setMaintenanceModeForSiteKeys(siteKeys, enabled);
+			const currentSiteKeys = getMaintenanceModeSiteKeys();
+			logger.info(() => ({
+				data: { siteKeys: currentSiteKeys, maintenanceMode: previousMode },
+				msg: "Maintenance mode site keys updated",
+			}));
+			return {
+				status: ApiEndpointResponseStatus.SUCCESS,
+				data: {
+					maintenanceMode: previousMode,
+					maintenanceModeSiteKeys: currentSiteKeys,
+				},
+			};
+		}
 
 		logger.info(() => ({
 			data: { enabled, previous: previousMode },
@@ -75,6 +145,7 @@ class ApiToggleMaintenanceModeEndpoint
 			status: ApiEndpointResponseStatus.SUCCESS,
 			data: {
 				maintenanceMode: currentMode,
+				maintenanceModeSiteKeys: getMaintenanceModeSiteKeys(),
 			},
 		};
 	}

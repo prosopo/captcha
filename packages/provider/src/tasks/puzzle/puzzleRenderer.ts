@@ -37,6 +37,15 @@ export interface RenderedPuzzleImages {
 	background: string;
 	piece: string;
 	pieceSize: number;
+	/**
+	 * Hex seeds for the clean background and for decoy placement / notch cut.
+	 * Together with the geometry, render settings and notch placement these
+	 * reproduce the served imagery byte for byte, which is what the portal's
+	 * replay view needs. Handle per the secrecy note in prng.ts: they belong on
+	 * the challenge record and nowhere else.
+	 */
+	backgroundSeed: string;
+	renderSeed: string;
 }
 
 /**
@@ -90,15 +99,11 @@ const pieceSizeSampler = createStratifiedSampler();
 
 /**
  * Resolve the effective piece scale range from the same layered
- * client-settings / traffic-filter overrides used for render settings, and
- * draw a per-challenge piece size in pixels. Stratified so the distribution
- * is evenly spread across the range even for short bursts of requests.
- * Rounded to an integer because the pixel buffer is allocated as
- * `size * size * 4`.
+ * client-settings / traffic-filter overrides used for render settings.
  */
-export const resolvePuzzlePieceSize = (
+export const resolvePuzzlePieceScaleRange = (
 	...overrides: (IPuzzleSettings | undefined)[]
-): number => {
+): { min: number; max: number } => {
 	let min = puzzlePieceScaleMinDefault;
 	let max = puzzlePieceScaleMaxDefault;
 	for (const override of overrides) {
@@ -109,7 +114,20 @@ export const resolvePuzzlePieceSize = (
 	// Defend against a partial override that inverts the range (e.g. only
 	// `min` set, above the default `max`).
 	if (min > max) min = max;
-	const scale = pieceSizeSampler.sample(min, max);
+	return { min, max };
+};
+
+/**
+ * Draw a per-challenge piece size in pixels from a scale range. Stratified so
+ * the distribution is evenly spread across the range even for short bursts of
+ * requests. Rounded to an integer because the pixel buffer is allocated as
+ * `size * size * 4`.
+ */
+export const samplePuzzlePieceSize = (range: {
+	min: number;
+	max: number;
+}): number => {
+	const scale = pieceSizeSampler.sample(range.min, range.max);
 	return Math.max(1, Math.round(DEFAULT_GEOMETRY.width * scale));
 };
 
@@ -145,15 +163,12 @@ export const renderPuzzleImages = async (
 ): Promise<RenderedPuzzleImages> => {
 	const buffer = getPuzzleBackgroundBuffer() ?? initPuzzleBackgroundBuffer();
 	const background = buffer.take();
-	if (!background) {
-		throw new Error("puzzle renderer: no background available");
-	}
 
 	// Only the decoy paint and notch cut are billed to the span; renderPuzzle
 	// hands the encode to sharp, which runs off the event loop.
 	const rendered = await measureSync("puzzle_render", () =>
 		renderPuzzle(
-			background,
+			background.image,
 			placement,
 			pieceSize !== undefined
 				? { ...DEFAULT_GEOMETRY, pieceSize }
@@ -166,5 +181,7 @@ export const renderPuzzleImages = async (
 		background: toDataUri(rendered.background),
 		piece: toDataUri(rendered.piece),
 		pieceSize: rendered.pieceSize,
+		backgroundSeed: background.seed.toString("hex"),
+		renderSeed: rendered.seed.toString("hex"),
 	};
 };
