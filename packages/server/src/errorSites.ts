@@ -15,7 +15,6 @@
 declare module "@prosopo/common" {
 	interface ErrorSites {
 		"SRVR-1": true;
-		"SRVR-2": true;
 	}
 }
 

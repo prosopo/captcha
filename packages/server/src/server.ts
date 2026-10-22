@@ -396,16 +396,17 @@ export class ProsopoServer {
 
 			return verificationResponse;
 		} catch (err) {
-			this.logger.error(() => ({ err, data: { token } }));
+			// Any failure (malformed token, provider list or provider
+			// unreachable, signer error) answers "not verified" rather than
+			// throwing: callers that don't catch would otherwise turn a bad
+			// token or a provider outage into a 500 from their own endpoint.
 			const code =
 				err instanceof HttpError ? err.status : isTimeoutError(err) ? 504 : 500;
-			throw new ProsopoError({
-				code: "INVALID_REQUEST",
-				errorSite: "SRVR-2",
-				message: "BadRequest",
-				status: code,
-				context: { token },
-			});
+			this.logger.error(() => ({ err, data: { token, code } }));
+			return {
+				verified: false,
+				status: translate("API.USER_NOT_VERIFIED"),
+			};
 		}
 	}
 }
