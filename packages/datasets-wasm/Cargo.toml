@@ -1,0 +1,22 @@
+[package]
+name = "prosopo-datasets-wasm"
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "rust/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+prosopo-datasets = { path = "../datasets", default-features = false }
+prosopo-types = { path = "../types" }
+serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["custom"] }

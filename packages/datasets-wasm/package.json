@@ -1,0 +1,53 @@
+{
+	"name": "@prosopo/datasets-wasm",
+	"version": "6.0.0-rust.0",
+	"author": "PROSOPO LIMITED <info@prosopo.io>",
+	"license": "Apache-2.0",
+	"private": false,
+	"type": "module",
+	"engines": {
+		"node": "^24"
+	},
+	"scripts": {
+		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
+		"build:tsc": "tsc --build --verbose",
+		"build:wasm": "RUSTFLAGS=\"--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=$(cd ../.. && pwd)=/captcha\" cargo build -p prosopo-datasets-wasm --target wasm32-unknown-unknown --profile wasm && tsx rust/embed.ts ../../target/wasm32-unknown-unknown/wasm/prosopo_datasets_wasm.wasm src/generated/module.ts",
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
+		"test:cargo": "cargo test -p prosopo-datasets-wasm"
+	},
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"dependencies": {
+		"@prosopo/types": "workspace:*"
+	},
+	"devDependencies": {
+		"@prosopo/config": "workspace:*",
+		"@prosopo/datasets": "workspace:*",
+		"@types/node": "22.10.2",
+		"del-cli": "6.0.0",
+		"tsx": "4.20.3",
+		"typescript": "5.6.2",
+		"vite": "8.1.5",
+		"vitest": "4.1.11"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/datasets-wasm"
+	},
+	"bugs": {
+		"url": "https://github.com/prosopo/captcha/issues"
+	},
+	"homepage": "https://github.com/prosopo/captcha#readme",
+	"publishConfig": {
+		"registry": "https://registry.npmjs.org"
+	},
+	"description": "The image captcha commitment (the merkle root over the solution hashes), compiled from the provider's Rust to WebAssembly.",
+	"sideEffects": false
+}

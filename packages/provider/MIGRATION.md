@@ -467,8 +467,13 @@ its output. Being portable is not enough.
 | util: PoW hashing | procaptcha-pow | decide when it lands | Same reasoning as blake2: tiny, and the widget's solve loop is performance-sensitive. Measure first. |
 | util-crypto: `randomAsHex`, `entropyToMnemonic` | procaptcha\*, account | no | Randomness and key creation; the server never recomputes them. |
 
-A WASM module is built with `wasm-bindgen` from the same crate the service
-links, and published as an npm artifact versioned `6.0.0-rust.N` (§0). The
+A WASM module is built from the same crate the service links, and published
+as an npm artifact versioned `6.0.0-rust.N` (§0). The first one,
+`@prosopo/datasets-wasm`, uses no `wasm-bindgen`: it imports nothing, takes its
+input as JSON through linear memory, and is embedded as base64 in a committed
+TS module (MIGRATION-LOG.md, "datasets WASM core"). procaptcha switches to it
+when the TS provider is deleted, not before: until then it would add the module
+to every widget bundle without removing an implementation. The
 equivalence tests for the crate cover the WASM build too, by running the
 generated vectors through the WASM from Node.
 

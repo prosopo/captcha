@@ -1371,6 +1371,37 @@ importers:
         specifier: 4.1.11
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
 
+  packages/datasets-wasm:
+    dependencies:
+      '@prosopo/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      '@prosopo/config':
+        specifier: workspace:*
+        version: link:../../dev/config
+      '@prosopo/datasets':
+        specifier: workspace:*
+        version: link:../datasets
+      '@types/node':
+        specifier: 22.10.2
+        version: 22.10.2
+      del-cli:
+        specifier: 6.0.0
+        version: 6.0.0
+      tsx:
+        specifier: 4.20.3
+        version: 4.20.3
+      typescript:
+        specifier: 5.6.2
+        version: 5.6.2
+      vite:
+        specifier: 8.1.5
+        version: 8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1)
+      vitest:
+        specifier: 4.1.11
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
+
   packages/detector:
     dependencies:
       '@prosopo/types':
@@ -14182,7 +14213,7 @@ snapshots:
       '@vitest/mocker': 4.1.11(vite@8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
       playwright: 1.64.0
       tinyrainbow: 3.1.1
-      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(jsdom@25.0.0(supports-color@8.1.1))(vite@8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
+      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -14226,7 +14257,7 @@ snapshots:
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.1.1
-      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(jsdom@25.0.0(supports-color@8.1.1))(vite@8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
+      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(jsdom@26.1.0(supports-color@8.1.1))(vite@8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
       ws: 8.21.3
     transitivePeerDependencies:
       - bufferutil
@@ -14310,9 +14341,9 @@ snapshots:
       obug: 2.1.4
       std-env: 4.2.0
       tinyrainbow: 3.1.1
-      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(jsdom@25.0.0(supports-color@8.1.1))(vite@8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
+      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.5.5)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(jsdom@25.0.0(supports-color@8.1.1))(vite@8.1.5(@types/node@22.5.5)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))
     optionalDependencies:
-      '@vitest/browser': 4.1.11(vite@8.1.5(@types/node@22.10.2)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))(vitest@4.1.11)
+      '@vitest/browser': 4.1.11(vite@8.1.5(@types/node@22.5.5)(esbuild@0.28.2)(terser@5.51.2)(tsx@4.20.3)(yaml@2.9.1))(vitest@4.1.11)
 
   '@vitest/expect@4.1.10':
     dependencies:

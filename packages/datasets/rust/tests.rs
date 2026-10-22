@@ -296,6 +296,20 @@ mod merkle {
         }
         assert_eq!(parent_layers(&numbered(5)), built.layers[1..].to_vec());
     }
+
+    #[test]
+    fn merkle_root_is_the_built_trees_root() {
+        assert_eq!(merkle_root(&[]), None);
+        for count in 1..=40 {
+            let leaves: Vec<String> = numbered(count);
+            let mut tree: CaptchaMerkleTree = CaptchaMerkleTree::new();
+            tree.build(&leaves).expect("builds");
+            assert_eq!(
+                merkle_root(&leaves).as_ref(),
+                tree.root.as_ref().map(|root| &root.hash)
+            );
+        }
+    }
 }
 
 // Ported from src/tests/captcha.unit.test.ts

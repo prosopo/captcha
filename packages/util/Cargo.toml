@@ -14,15 +14,21 @@ path = "rust/lib.rs"
 
 [dependencies]
 base64 = "0.22"
-futures-util = { version = "0.3", default-features = false, features = ["std"] }
+futures-util = { version = "0.3", default-features = false, features = ["std"], optional = true }
 num-bigint = "0.4"
 num-traits = "0.2"
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"], optional = true }
 serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
 sha2 = "0.10"
-tokio = { version = "1.40", features = ["fs", "io-util"] }
-tokio-util = { version = "0.7", features = ["io"] }
+tokio = { version = "1.40", features = ["fs", "io-util"], optional = true }
+tokio-util = { version = "0.7", features = ["io"], optional = true }
 url = "2.5"
+
+[features]
+default = ["io"]
+# The file cache and the conditional fetches, over the filesystem and HTTP. Without it the crate
+# builds for WebAssembly.
+io = ["dep:futures-util", "dep:reqwest", "dep:tokio", "dep:tokio-util"]
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }

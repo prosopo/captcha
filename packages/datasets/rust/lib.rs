@@ -15,13 +15,17 @@
 //! The datasets package: captcha merkle trees, dataset parsing and building, solution checks
 //! and signed asset URLs.
 
+#[cfg(feature = "fetch")]
 mod asset_token;
 mod captcha;
+#[cfg(feature = "fetch")]
 mod dataset;
+#[cfg(feature = "fetch")]
 mod download;
 mod error;
 mod merkle;
 
+#[cfg(feature = "fetch")]
 pub use asset_token::{
     asset_token_base, asset_token_options_from, asset_token_options_from_env, encode_asset_token,
     sign_asset_url, SignAssetUrlOptions, ASSET_TOKEN_KEY_ENV, ASSET_TOKEN_TTL_ENV,
@@ -34,16 +38,18 @@ pub use captcha::{
     sort_and_compute_hashes, AssetsResolver, CaptchaHashInput, CaptchaIdHash, SolutionValue,
     NO_SOLUTION_VALUE,
 };
+#[cfg(feature = "fetch")]
 pub use dataset::{
     add_solution_hashes_to_dataset, build_captcha_tree, build_dataset, hash_dataset_items,
     validate_dataset_content,
 };
+#[cfg(feature = "fetch")]
 pub use download::{
     compute_item_hash, compute_item_hash_with, download_image, download_image_with, Fetch,
     FetchFuture, FetchedResponse, HttpFetch,
 };
 pub use error::{plain_message, DatasetsError, Result};
-pub use merkle::{hash_strings, parent_layers, verify_proof, CaptchaMerkleTree};
+pub use merkle::{hash_strings, merkle_root, parent_layers, verify_proof, CaptchaMerkleTree};
 
 #[cfg(test)]
 mod equivalence;

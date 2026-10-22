@@ -20,6 +20,7 @@ members = [
 	"packages/api",
 	"packages/locale",
 	"packages/datasets",
+	"packages/datasets-wasm",
 	"packages/user-access-policy",
 	"packages/server",
 	"packages/datasets-fs",
@@ -47,6 +48,12 @@ publish = false
 lto = true
 codegen-units = 1
 strip = "symbols"
+
+# The WebAssembly the widget downloads: small over fast, and no unwinding to carry.
+[profile.wasm]
+inherits = "release"
+opt-level = "z"
+panic = "abort"
 
 [profile.dev.package."*"]
 debug = false

@@ -14,17 +14,23 @@ path = "rust/lib.rs"
 
 [dependencies]
 base64 = "0.22"
-futures-util = { version = "0.3", default-features = false, features = ["std"] }
+futures-util = { version = "0.3", default-features = false, features = ["std"], optional = true }
 prosopo-api-route = { path = "../api-route" }
 prosopo-common = { path = "../common" }
 prosopo-logger = { path = "../logger" }
 prosopo-types = { path = "../types" }
-prosopo-util = { path = "../util" }
+prosopo-util = { path = "../util", default-features = false }
 prosopo-util-crypto = { path = "../util-crypto" }
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"], optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
-url = "2"
+url = { version = "2", optional = true }
+
+[features]
+default = ["fetch"]
+# Building datasets and signing their URLs, which fetch over HTTP. Without it the crate is the
+# hashing and merkle core the widget runs as WebAssembly.
+fetch = ["dep:futures-util", "dep:reqwest", "dep:url"]
 
 [dev-dependencies]
 sha2 = "0.10"

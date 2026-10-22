@@ -15,11 +15,13 @@
 //! Rust port of the server-side subset of `@prosopo/util`.
 
 mod at;
+#[cfg(feature = "io")]
 mod cache_file;
 mod coords;
 mod domain_validation;
 mod email;
 mod error;
+#[cfg(feature = "io")]
 mod fetch_with_etag;
 mod hex;
 mod ip;
@@ -36,6 +38,7 @@ mod equivalence;
 mod seeded_equivalence;
 
 pub use crate::at::{at, at_f64, at_optional, at_str, resolve_at_index, AtOptions};
+#[cfg(feature = "io")]
 pub use crate::cache_file::{
     cache_file, ensure_dir_exists, get_cached_file_path, get_current_etag,
     get_current_last_modified, purge_old_cache, save_file_with_etag, save_file_with_last_modified,
@@ -51,6 +54,7 @@ pub use crate::domain_validation::{
 };
 pub use crate::email::extract_domain_from_email;
 pub use crate::error::UtilError;
+#[cfg(feature = "io")]
 pub use crate::fetch_with_etag::{
     fetch_with_etag, fetch_with_last_modified, ByteStream, FetchWithETagResult,
     FetchWithLastModifiedResult, HttpClient, HttpResponse, ReqwestHttpClient,

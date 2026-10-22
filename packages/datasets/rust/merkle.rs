@@ -66,6 +66,15 @@ pub fn parent_layers(leaves: &[String]) -> Vec<Vec<String>> {
     layers
 }
 
+/// The root `CaptchaMerkleTree::build` gives over `leaves`, without building the tree; `None`
+/// when there are no leaves.
+pub fn merkle_root(leaves: &[String]) -> Option<String> {
+    match parent_layers(leaves).pop() {
+        Some(mut root_layer) => root_layer.pop(),
+        None => leaves.first().cloned(),
+    }
+}
+
 /// `CaptchaMerkleTree`.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct CaptchaMerkleTree {
