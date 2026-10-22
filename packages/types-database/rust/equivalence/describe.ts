@@ -51,7 +51,7 @@ export const describe = (schema: Schema): Json => {
 		return {
 			path,
 			kind: kindOf(type),
-			required: type.isRequired,
+			...(type.isRequired === undefined ? {} : { required: type.isRequired }),
 			enumValues: enumValues.length > 0 ? enumValues : null,
 			min: options.min ?? null,
 			max: options.max ?? null,
@@ -62,7 +62,7 @@ export const describe = (schema: Schema): Json => {
 		};
 	});
 	return {
-		tree: Object.keys(schema.tree),
+		tree: Object.keys((schema as unknown as { tree: Record<string, unknown> }).tree),
 		nested: Object.keys((schema as unknown as { nested: Record<string, boolean> }).nested),
 		timestamps: Boolean(schema.options.timestamps),
 		paths,
