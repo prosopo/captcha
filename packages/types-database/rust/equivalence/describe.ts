@@ -56,7 +56,8 @@ export const describe = (schema: Schema): Json => {
 			min: options.min ?? null,
 			max: options.max ?? null,
 			default: timing,
-			expires: options.expires ?? null,
+			// mongoose turns `expires` into the TTL index's seconds, parsing a timespan such as "7d".
+			expires: (type as unknown as { _index?: { expireAfterSeconds?: number } })._index?.expireAfterSeconds ?? options.expires ?? null,
 			unique: options.unique ?? null,
 			schema: subschema ? describe(subschema) : null,
 		};
