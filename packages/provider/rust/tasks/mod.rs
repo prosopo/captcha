@@ -15,6 +15,7 @@
 //! The provider's tasks (src/tasks), as the routes come to need them.
 
 pub mod client;
+pub mod cron;
 pub mod decision;
 pub mod dns_event;
 pub mod email;
