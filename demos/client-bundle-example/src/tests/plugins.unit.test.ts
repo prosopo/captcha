@@ -18,13 +18,23 @@
 // the html untouched rather than producing a broken page.
 
 import { CaptchaType } from "@prosopo/types";
+import { JSDOM } from "jsdom";
 import type { IndexHtmlTransformContext, Plugin } from "vite";
 import { describe, expect, it } from "vitest";
 import codeSnippetInjector, {
 	snippetFor,
 } from "../plugins/code-snippet-injector.js";
 import formFillerInjector from "../plugins/form-filler-injector.js";
-import layoutInjector, { DEMO_HOSTNAME } from "../plugins/layout-injector.js";
+import languageInjector, {
+	DEMO_LANGUAGES,
+	type DemoLanguage,
+	languageHtml,
+	languageJs,
+} from "../plugins/language-injector.js";
+import layoutInjector, {
+	DEMO_HOSTNAME,
+	keepQueryScript,
+} from "../plugins/layout-injector.js";
 import {
 	type DemoRendering,
 	demoPages,
@@ -153,7 +163,13 @@ describe("layoutInjector", () => {
 		expect(html).toContain('<body class="demo">');
 		expect(html).toContain('class="demo-header"');
 		expect(html).toContain('href="styles/demo.css"');
-		for (const slot of ["placement", "toolbar", "events", "code"] as const) {
+		for (const slot of [
+			"placement",
+			"language",
+			"toolbar",
+			"events",
+			"code",
+		] as const) {
 			expect(html).toContain(slotMarkup(slot));
 		}
 		expect(html.indexOf("<p>hello</p>")).toBeLessThan(
@@ -331,6 +347,32 @@ describe("statusLogInjector", () => {
 		expect(html).toContain("updateCaptchaStatus");
 	});
 
+	it("defines updateCaptchaStatus before the page's entry module runs", () => {
+		// What Vite hands a "post" transform: the entry module already hoisted
+		// into <head>. Module scripts run in document order, so the helper must
+		// be defined by a classic script ahead of it.
+		const built =
+			'<html><head><title>demo</title><script type="module" crossorigin src="/assets/entry.js"></script></head><body><p>hi</p></body></html>';
+		const html = handler(built, ctx("src/frictionless-explicit.html"));
+
+		const definedAt = html.indexOf("window.updateCaptchaStatus = ");
+		const entryAt = html.indexOf('src="/assets/entry.js"');
+		expect(definedAt).toBeGreaterThan(-1);
+		expect(definedAt).toBeLessThan(entryAt);
+		const definingScript = html.lastIndexOf("<script", definedAt);
+		expect(html.slice(definingScript, definedAt)).not.toContain("module");
+	});
+
+	it("wraps the page callbacks after the page's entry module", () => {
+		const built =
+			'<html><head><script type="module" src="/assets/entry.js"></script></head><body></body></html>';
+		const html = handler(built, ctx("src/image-explicit.html"));
+
+		expect(html.indexOf("window.onCaptchaFailed = ")).toBeGreaterThan(
+			html.indexOf('src="/assets/entry.js"'),
+		);
+	});
+
 	it("fills the events slot when the layout provides one", () => {
 		const html = handler(
 			page(`<form></form>${slotMarkup("events")}`),
@@ -460,5 +502,178 @@ describe("formFillerInjector", () => {
 		const fragment = "<html><body><div>truncated</div>";
 
 		expect(handler(fragment, ctx("src/index.html"))).toBe(fragment);
+	});
+});
+
+describe("formFillerInjector with the language picker", () => {
+	const demoUrl = "https://staging.demo.prosopo.io/frictionless-implicit.html";
+	const fillPage = async (): Promise<JSDOM> => {
+		const withLanguage = getHandler(languageInjector())(
+			page(
+				`<form><input type="text" id="name"><select id="plan"><option value="">Pick</option><option value="pro">Pro</option></select></form>${slotMarkup("language")}`,
+			),
+			ctx("src/frictionless-implicit.html"),
+		);
+		const dom = new JSDOM(
+			getHandler(formFillerInjector())(
+				withLanguage,
+				ctx("src/frictionless-implicit.html"),
+			),
+			{ url: demoUrl, runScripts: "dangerously" },
+		);
+		await new Promise<void>((resolve: () => void) => {
+			dom.window.addEventListener("load", () => resolve());
+		});
+		dom.window.document.getElementById("form-filler-button")?.click();
+		return dom;
+	};
+	const fieldValue = (dom: JSDOM, id: string): string | undefined => {
+		const element = dom.window.document.getElementById(id);
+		return element instanceof dom.window.HTMLSelectElement ||
+			element instanceof dom.window.HTMLInputElement
+			? element.value
+			: undefined;
+	};
+
+	it("leaves the browser-default language alone when filling the form", async () => {
+		const dom = await fillPage();
+
+		expect(fieldValue(dom, "language-select")).toBe("");
+		expect(dom.window.location.href).toBe(demoUrl);
+	});
+
+	it("still fills the form's own fields", async () => {
+		const dom = await fillPage();
+
+		expect(fieldValue(dom, "name")).toBe("John Doe");
+		expect(fieldValue(dom, "plan")).toBe("pro");
+	});
+});
+
+const runScripts = (body: string, url: string): JSDOM =>
+	new JSDOM(`<!DOCTYPE html><html><body>${body}</body></html>`, {
+		url,
+		runScripts: "dangerously",
+	});
+
+describe("languageInjector", () => {
+	const handler = getHandler(languageInjector());
+	const implicit = '<div class="procaptcha" data-sitekey="key"></div>';
+	const explicit = '<div id="procaptcha-container"></div>';
+	const demoUrl = "https://staging.demo.prosopo.io/image-implicit.html";
+
+	it("fills the language slot with every demo language and the script", () => {
+		const html = handler(page(slotMarkup("language")), ctx("src/index.html"));
+
+		expect(html).not.toContain(slotMarkup("language"));
+		for (const language of DEMO_LANGUAGES) {
+			expect(html).toContain(`<option value="${language.tag}"`);
+		}
+		expect(html).toContain('data-language"');
+	});
+
+	it("lists canonical, unique, sorted tags", () => {
+		const tags: string[] = DEMO_LANGUAGES.map(
+			(language: DemoLanguage) => language.tag,
+		);
+
+		expect(Intl.getCanonicalLocales(tags)).toEqual(tags);
+		expect(new Set(tags).size).toBe(tags.length);
+		expect([...tags].sort()).toEqual(tags);
+	});
+
+	it("goes above the status log when there is no slot", () => {
+		const html = handler(
+			page('<div id="captcha-status" class="captcha-status"></div>'),
+			ctx("src/index.html"),
+		);
+
+		expect(html.indexOf('id="language-switcher"')).toBeLessThan(
+			html.indexOf('id="captcha-status"'),
+		);
+	});
+
+	it("is idempotent", () => {
+		const once = handler(page(), ctx("src/index.html"));
+
+		expect(handler(once, ctx("src/index.html"))).toBe(once);
+	});
+
+	it("leaves html without a body untouched", () => {
+		expect(handler(noBody, ctx("src/index.html"))).toBe(noBody);
+	});
+
+	it("stamps the requested language on implicit and explicit containers", () => {
+		const dom = runScripts(
+			`${implicit}${explicit}${languageHtml}${languageJs}`,
+			`${demoUrl}?language=fr`,
+		);
+		const document: Document = dom.window.document;
+
+		for (const selector of [".procaptcha", "#procaptcha-container"]) {
+			expect(
+				document.querySelector(selector)?.getAttribute("data-language"),
+			).toBe("fr");
+		}
+		const select = document.getElementById("language-select");
+		expect(select).toBeInstanceOf(dom.window.HTMLSelectElement);
+		expect(
+			select instanceof dom.window.HTMLSelectElement ? select.value : "",
+		).toBe("fr");
+	});
+
+	it("leaves the widget on the browser language without the parameter", () => {
+		const dom = runScripts(`${implicit}${languageHtml}${languageJs}`, demoUrl);
+		const document: Document = dom.window.document;
+
+		expect(
+			document.querySelector(".procaptcha")?.hasAttribute("data-language"),
+		).toBe(false);
+		const select = document.getElementById("language-select");
+		expect(
+			select instanceof dom.window.HTMLSelectElement ? select.value : "unset",
+		).toBe("");
+	});
+
+	it("adds a language that is not in the list so the picker shows it", () => {
+		const dom = runScripts(
+			`${implicit}${languageHtml}${languageJs}`,
+			`${demoUrl}?language=${encodeURIComponent("xx, tr-TR")}`,
+		);
+		const document: Document = dom.window.document;
+
+		expect(
+			document.querySelector(".procaptcha")?.getAttribute("data-language"),
+		).toBe("xx, tr-TR");
+		const select = document.getElementById("language-select");
+		expect(
+			select instanceof dom.window.HTMLSelectElement ? select.value : "",
+		).toBe("xx, tr-TR");
+	});
+});
+
+describe("keepQueryScript", () => {
+	const nav = '<a data-demo-nav href="pow-explicit.html">PoW</a>';
+	const navHref = (dom: JSDOM): string | null | undefined =>
+		dom.window.document.querySelector("a[data-demo-nav]")?.getAttribute("href");
+
+	it("carries placement and language onto the page links", () => {
+		const dom = runScripts(
+			`${nav}${keepQueryScript}`,
+			"https://staging.demo.prosopo.io/index.html?placement=float&language=de&other=1",
+		);
+
+		expect(navHref(dom)).toBe(
+			"https://staging.demo.prosopo.io/pow-explicit.html?placement=float&language=de",
+		);
+	});
+
+	it("leaves the links alone when neither is set", () => {
+		const dom = runScripts(
+			`${nav}${keepQueryScript}`,
+			"https://staging.demo.prosopo.io/index.html?other=1",
+		);
+
+		expect(navHref(dom)).toBe("pow-explicit.html");
 	});
 });

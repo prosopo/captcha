@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "අවලංගු ලිපිනය කේතනය කිරීමට අසමත් විය",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "captcha විසඳුම් කැපවීම නොපවතී",
+		"SIGNER_UNDEFINED": "අත්සන් කරන්නා නිර්වචනය කර නැත",
+		"CANNOT_FIND_KEYPAIR": "යතුරු යුගලය හමු නොවීය",
+		"INVALID_DATA_FORMAT": "අවලංගු දත්ත ආකෘතිය"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "නොදන්නා පරිසරයක් ඉල්ලා ඇත",
+		"INVALID_CAPTCHA_NUMBER": "කරුණාකර captcha වින්‍යාස නිවැරදිව සකසන්න",
+		"INVALID_LOG_LEVEL": "අවලංගු ලොග් මට්ටම",
+		"INVALID_PACKAGE_DIR": "අවලංගු පැකේජ නාමාවලිය"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "දත්ත කට්ටලය විග්‍රහ කිරීමේ දෝෂයකි",
+		"SOLUTION_PARSE_ERROR": "දත්ත කට්ටලය සැකසීමේ දෝෂයකි",
+		"HASH_ERROR": "දත්ත කට්ටලය hash කිරීමේ දෝෂයකි",
+		"DATASET_ID_UNDEFINED": "දත්ත කට්ටල ID නිර්වචනය කර නැත",
+		"NOT_ENOUGH_LABELS": "ප්‍රමාණවත් ලේබල නැත",
+		"NOT_ENOUGH_IMAGES": "ප්‍රමාණවත් රූප නැත",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "දත්ත කට්ටලයේ captcha ගණන වින්‍යාස කළ ගණනට වඩා අඩුය",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "දත්ත කට්ටලයේ විසඳුම් ගණන වින්‍යාස කළ ගණනට වඩා අඩුය",
+		"DUPLICATE_IMAGE": "අනුපිටපත් රූපයක් අනාවරණය විය",
+		"MERKLE_ERROR": "Merkle ගස ගොඩනැගීමේ දෝෂයකි"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "දත්ත සමුදා එන්ජිම ආයාත කිරීමට අසමත් විය",
+		"DATABASE_UNDEFINED": "දත්ත සමුදා සේවාලාභියා සම්බන්ධ වී නැත",
+		"DATABASE_HOST_UNDEFINED": "දත්ත සමුදා ධාරක ලිපිනය නිර්වචනය කර නැත",
+		"DATASET_LOAD_FAILED": "දත්ත කට්ටලය පූරණය අසමත් විය",
+		"DATASET_GET_FAILED": "දත්ත කට්ටලය ලබා ගැනීමට අසමත් විය",
+		"CAPTCHA_GET_FAILED": "captcha ලබා ගැනීමට අසමත් විය",
+		"CAPTCHA_UPDATE_FAILED": "captcha යාවත්කාලීන කිරීමට අසමත් විය",
+		"IMAGE_GET_FAILED": "රූපය ලබා ගැනීමට අසමත් විය",
+		"PENDING_RECORD_NOT_FOUND": "පොරොත්තු වාර්තා කිසිවක් හමු නොවීය",
+		"INVALID_HASH": "අවලංගු hash",
+		"SOLUTION_GET_FAILED": "විසඳුම ලබා ගැනීමට අසමත් විය",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "අවශ්‍ය විසඳුම් ගණන සහිත දත්ත කට්ටලයක් හමු නොවීය",
+		"SOLUTION_APPROVE_FAILED": "විසඳුම අනුමත කිරීමට අසමත් විය",
+		"SOLUTION_FLAG_FAILED": "විසඳුම සැකසූ ලෙස සලකුණු කිරීමට අසමත් විය",
+		"TABLES_UNDEFINED": "වගු නිර්වචනය කර නැත",
+		"CONNECTION_UNDEFINED": "සම්බන්ධතාව නිර්වචනය කර නැත",
+		"COMMITMENT_FLAG_FAILED": "කැපවීම සැකසූ ලෙස සලකුණු කිරීමට අසමත් විය",
+		"UNKNOWN": "නොදන්නා දත්ත සමුදා දෝෂය",
+		"QUERY_ERROR": "දත්ත සමුදා විමසුම අසමත් විය",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "ප්‍රවේශ නීතිවල Redis සම්බන්ධතාව නිර්වචනය කර නැත",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "පරිශීලක ප්‍රවේශ නීති ගබඩාව නිර්වචනය කර නැත",
+		"SESSION_STORE_FAILED": "සැසිය ගබඩා කිරීමට අසමත් විය",
+		"SESSION_CHECK_REMOVE_FAILED": "සැසිය පරීක්ෂා කර ඉවත් කිරීමට අසමත් විය",
+		"SESSION_GET_FAILED": "සැසිය ලබා ගැනීමට අසමත් විය"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "හිමිකරු පරිශීලකයා වෙනස් කළ නොහැක",
+		"CANNOT_DELETE_OWN_USER": "ඔබේම ගිණුම මකා දැමිය නොහැක",
+		"CANNOT_DELETE_LAST_USER": "අවසාන පරිශීලකයා මකා දැමිය නොහැක",
+		"USER_ALREADY_EXISTS": "පරිශීලකයා දැනටමත් පවතී",
+		"NO_SUGGESTIONS_FOUND": "යෝජනා කිසිවක් හමු නොවීය",
+		"CANNOT_DEACTIVATE_LAST_SITE": "අවසාන සක්‍රිය අඩවිය අක්‍රිය කළ නොහැක",
+		"DUPLICATE_SITE_NAME": "මෙම නම සහිත අඩවියක් දැනටමත් පවතී",
+		"INVALID_SITE_NAME": "අඩවි නාමයේ අකුරු, ඉලක්කම්, යටි ඉරි සහ හයිෆන පමණක් තිබිය හැක"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "අවලංගු පරාමිතිය"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "ගොනුව හමු නොවීය",
+		"FILE_ALREADY_EXISTS": "ගොනුව දැනටමත් පවතී",
+		"INVALID_DIR_FORMAT": "අවලංගු නාමාවලි ආකෘතිය"
+	}
+}

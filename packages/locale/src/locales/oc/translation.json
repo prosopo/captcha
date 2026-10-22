@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Fracàs de l'encodatge de l'adreça invalida",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "L'engatjament de solucion del captcha existís pas",
+		"SIGNER_UNDEFINED": "Signataire pas definit",
+		"CANNOT_FIND_KEYPAIR": "Impossible de trobar lo parelh de claus",
+		"INVALID_DATA_FORMAT": "Format de donadas invalid"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Environament desconegut demandat",
+		"INVALID_CAPTCHA_NUMBER": "Configuratz corrèctament los paramètres dels captchas",
+		"INVALID_LOG_LEVEL": "Nivèl de jornal invalid",
+		"INVALID_PACKAGE_DIR": "Repertòri de paquet invalid"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Error d'analisi del jòc de donadas",
+		"SOLUTION_PARSE_ERROR": "Error de tractament del jòc de donadas",
+		"HASH_ERROR": "Error de hachatge del jòc de donadas",
+		"DATASET_ID_UNDEFINED": "ID del jòc de donadas pas definit",
+		"NOT_ENOUGH_LABELS": "Pas pro d'etiquetas",
+		"NOT_ENOUGH_IMAGES": "Pas pro d'imatges",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Lo nombre de captchas dins lo jòc de donadas es inferior al nombre configurat",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Lo nombre de solucions dins lo jòc de donadas es inferior al nombre configurat",
+		"DUPLICATE_IMAGE": "Imatge en doble detectat",
+		"MERKLE_ERROR": "Error de construccion de l'arbre de Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Fracàs de l'importacion del motor de basa de donadas",
+		"DATABASE_UNDEFINED": "Client de basa de donadas pas connectat",
+		"DATABASE_HOST_UNDEFINED": "Adreça de l'òste de la basa de donadas pas definida",
+		"DATASET_LOAD_FAILED": "Fracàs del cargament del jòc de donadas",
+		"DATASET_GET_FAILED": "Fracàs de l'obtencion del jòc de donadas",
+		"CAPTCHA_GET_FAILED": "Fracàs de l'obtencion dels captchas",
+		"CAPTCHA_UPDATE_FAILED": "Fracàs de la mesa a jorn dels captchas",
+		"IMAGE_GET_FAILED": "Fracàs de l'obtencion de l'imatge",
+		"PENDING_RECORD_NOT_FOUND": "Cap d'enregistrament en espèra pas trobat",
+		"INVALID_HASH": "Hash invalid",
+		"SOLUTION_GET_FAILED": "Fracàs de l'obtencion de la solucion",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Cap de jòc de donadas amb lo nombre requesit de solucions pas trobat",
+		"SOLUTION_APPROVE_FAILED": "Fracàs de l'aprobacion de la solucion",
+		"SOLUTION_FLAG_FAILED": "Fracàs del marcatge de la solucion coma tractada",
+		"TABLES_UNDEFINED": "Taulas pas definidas",
+		"CONNECTION_UNDEFINED": "Connexion pas definida",
+		"COMMITMENT_FLAG_FAILED": "Fracàs del marcatge de l'engatjament coma tractat",
+		"UNKNOWN": "Error de basa de donadas desconeguda",
+		"QUERY_ERROR": "Fracàs de la requèsta de basa de donadas",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Connexion Redis de las règlas d'accès pas definida",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Magazin de règlas d'accès d'utilizaire pas definit",
+		"SESSION_STORE_FAILED": "Fracàs de l'enregistrament de la session",
+		"SESSION_CHECK_REMOVE_FAILED": "Fracàs de la verificacion e de la supression de la session",
+		"SESSION_GET_FAILED": "Fracàs de l'obtencion de la session"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Impossible de modificar l'utilizaire proprietari",
+		"CANNOT_DELETE_OWN_USER": "Impossible de suprimir vòstre pròpri compte",
+		"CANNOT_DELETE_LAST_USER": "Impossible de suprimir lo darrièr utilizaire",
+		"USER_ALREADY_EXISTS": "L'utilizaire existís ja",
+		"NO_SUGGESTIONS_FOUND": "Cap de suggestion pas trobada",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Impossible de desactivar lo darrièr site actiu",
+		"DUPLICATE_SITE_NAME": "Un site amb aqueste nom existís ja",
+		"INVALID_SITE_NAME": "Lo nom del site pòt conténer sonque de letras, de chifras, de jonhents bas e de jonhents"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Paramètre invalid"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Fichièr pas trobat",
+		"FILE_ALREADY_EXISTS": "Lo fichièr existís ja",
+		"INVALID_DIR_FORMAT": "Format de repertòri invalid"
+	}
+}

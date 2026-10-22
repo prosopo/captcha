@@ -23,7 +23,7 @@ import {
 } from "@prosopo/types";
 import { setClientSessionId } from "../clientSession.js";
 import { createConfig } from "../configCreator.js";
-import { setLanguage } from "../language.js";
+import { resolveLanguage, setLanguage } from "../language.js";
 import { setStartMode } from "../startMode.js";
 import { setValidChallengeLength } from "../timeout.js";
 import {
@@ -56,7 +56,10 @@ class CaptchaRenderer {
 		const config = createConfig({
 			siteKey: renderOptions.siteKey,
 			theme: renderOptions.theme,
-			language: renderOptions.language,
+			// Validated here, not only in readAndValidateSettings: an unsupported
+			// code (e.g. "he") otherwise fails the config schema and leaves the
+			// skeleton spinning.
+			language: resolveLanguage(renderOptions, sourceElement || container),
 			web2: isWeb2,
 			invisible,
 			placement: resolveRequestedPlacement(

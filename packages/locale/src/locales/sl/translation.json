@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Neveljavnega naslova ni bilo mogoče kodirati",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Zaveza za rešitev captche ne obstaja",
+		"SIGNER_UNDEFINED": "Podpisnik ni določen",
+		"CANNOT_FIND_KEYPAIR": "Para ključev ni mogoče najti",
+		"INVALID_DATA_FORMAT": "Neveljavna oblika podatkov"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Zahtevano je neznano okolje",
+		"INVALID_CAPTCHA_NUMBER": "Pravilno nastavite nastavitve captche",
+		"INVALID_LOG_LEVEL": "Neveljavna raven beleženja",
+		"INVALID_PACKAGE_DIR": "Neveljavna mapa paketa"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Napaka pri razčlenjevanju nabora podatkov",
+		"SOLUTION_PARSE_ERROR": "Napaka pri razčlenjevanju nabora podatkov",
+		"HASH_ERROR": "Napaka pri zgoščevanju nabora podatkov",
+		"DATASET_ID_UNDEFINED": "ID nabora podatkov ni določen",
+		"NOT_ENOUGH_LABELS": "Premalo oznak",
+		"NOT_ENOUGH_IMAGES": "Premalo slik",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Število captch v naboru podatkov je manjše od nastavljenega števila captch",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Število rešitev v naboru podatkov je manjše od nastavljenega števila rešitev",
+		"DUPLICATE_IMAGE": "zaznana je podvojena slika",
+		"MERKLE_ERROR": "Napaka pri ustvarjanju drevesa Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Uvoz pogona zbirke podatkov ni uspel",
+		"DATABASE_UNDEFINED": "Odjemalec zbirke podatkov ni povezan",
+		"DATABASE_HOST_UNDEFINED": "Naslov gostitelja zbirke podatkov ni določen",
+		"DATASET_LOAD_FAILED": "Nalaganje nabora podatkov ni uspelo",
+		"DATASET_GET_FAILED": "Pridobivanje nabora podatkov ni uspelo",
+		"CAPTCHA_GET_FAILED": "Pridobivanje captche ni uspelo",
+		"CAPTCHA_UPDATE_FAILED": "Posodabljanje captche ni uspelo",
+		"IMAGE_GET_FAILED": "Pridobivanje slike ni uspelo",
+		"PENDING_RECORD_NOT_FOUND": "Ni najdenega čakajočega zapisa",
+		"INVALID_HASH": "Neveljaven zgoščeni niz",
+		"SOLUTION_GET_FAILED": "Pridobivanje rešitve ni uspelo",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Ni najdenih naborov podatkov z zahtevanim številom rešitev",
+		"SOLUTION_APPROVE_FAILED": "Odobritev rešitve ni uspela",
+		"SOLUTION_FLAG_FAILED": "Označevanje rešitve kot obdelane ni uspelo",
+		"TABLES_UNDEFINED": "Tabele niso določene",
+		"CONNECTION_UNDEFINED": "Povezava ni določena",
+		"COMMITMENT_FLAG_FAILED": "Označevanje zaveze kot obdelane ni uspelo",
+		"UNKNOWN": "Neznana napaka zbirke podatkov",
+		"QUERY_ERROR": "Poizvedba v zbirki podatkov ni uspela",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Povezava Redis za pravila dostopa ni določena",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Shramba pravil dostopa uporabnikov ni določena",
+		"SESSION_STORE_FAILED": "Shranjevanje seje ni uspelo",
+		"SESSION_CHECK_REMOVE_FAILED": "Preverjanje in odstranjevanje seje ni uspelo",
+		"SESSION_GET_FAILED": "Pridobivanje seje ni uspelo"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Uporabnika lastnika ni mogoče spremeniti",
+		"CANNOT_DELETE_OWN_USER": "Svojega računa ne morete izbrisati",
+		"CANNOT_DELETE_LAST_USER": "Zadnjega uporabnika ni mogoče izbrisati",
+		"USER_ALREADY_EXISTS": "Uporabnik že obstaja",
+		"NO_SUGGESTIONS_FOUND": "Ni najdenih predlogov",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Zadnjega aktivnega spletnega mesta ni mogoče deaktivirati",
+		"DUPLICATE_SITE_NAME": "Spletno mesto s tem imenom že obstaja",
+		"INVALID_SITE_NAME": "Ime spletnega mesta lahko vsebuje samo črke, številke, vezaje in podčrtaje"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Neveljaven parameter"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Datoteke ni bilo mogoče najti",
+		"FILE_ALREADY_EXISTS": "Datoteka že obstaja",
+		"INVALID_DIR_FORMAT": "Neveljavna oblika mape"
+	}
+}

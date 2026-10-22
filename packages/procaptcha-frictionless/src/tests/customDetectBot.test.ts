@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { describe, expect, it, vi } from "vitest";
 import { withTimeout } from "../customDetectBot.js";
 
@@ -44,11 +44,11 @@ describe("withTimeout", () => {
 
 		vi.advanceTimersByTime(200);
 
-		await expect(timeoutPromise).rejects.toThrow(ProsopoEnvError);
+		await expect(timeoutPromise).rejects.toThrow(ProsopoError);
 		await expect(timeoutPromise).rejects.toEqual(
 			expect.objectContaining({
-				message: "API.UNKNOWN",
-				translationKey: "API.UNKNOWN",
+				code: "UNEXPECTED",
+				errorId: "UNEXPECTED:FRIC-1",
 			}),
 		);
 
@@ -70,7 +70,7 @@ describe("withTimeout", () => {
 		expect(await fastResult).toBe("success");
 
 		vi.advanceTimersByTime(600);
-		await expect(slowWithTimeout).rejects.toThrow(ProsopoEnvError);
+		await expect(slowWithTimeout).rejects.toThrow(ProsopoError);
 
 		vi.useRealTimers();
 	});

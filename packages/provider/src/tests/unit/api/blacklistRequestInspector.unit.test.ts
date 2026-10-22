@@ -868,17 +868,21 @@ describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
 		);
 
 		expect(status).toHaveBeenCalledWith(403);
-		// Structured object so the widget's `result.error?.message` extractor
-		// renders `Forbidden: <requestId>` instead of falling through to
-		// "Cannot load CAPTCHA". requestId gives support a handle to trace
-		// the blocked session back to the matching rule.
+		// requestId gives support a handle to trace the blocked session back
+		// to the matching rule.
 		expect(json).toHaveBeenCalledWith({
-			error: { message: "Forbidden: test-request-id", code: 403 },
+			error: {
+				code: "FORBIDDEN",
+				errorId: "FORBIDDEN:PROV-84",
+				status: 403,
+				message: "Forbidden",
+				data: { requestId: "test-request-id" },
+			},
 		});
 		expect(next).not.toHaveBeenCalled();
 	});
 
-	it("replaces the generic Forbidden with the rule's translated messageKey", async () => {
+	it("replaces the generic Forbidden with the rule's error code", async () => {
 		const inspector = new BlacklistRequestInspector(
 			{
 				findRules: vi.fn().mockResolvedValue([
@@ -906,12 +910,47 @@ describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
 		expect(status).toHaveBeenCalledWith(403);
 		expect(json).toHaveBeenCalledWith({
 			error: {
-				message: `translated(${ResultReason.TOO_MANY_LOCALHOST}): test-request-id`,
-				code: 403,
-				key: ResultReason.TOO_MANY_LOCALHOST,
+				code: "TOO_MANY_LOCALHOST",
+				errorId: "TOO_MANY_LOCALHOST:PROV-84",
+				status: 403,
+				message: "Too many CAPTCHA requests from localhost for this site key",
+				data: { requestId: "test-request-id" },
 			},
 		});
 		expect(next).not.toHaveBeenCalled();
+	});
+
+	it("falls back to FORBIDDEN for a messageKey that is not an error code, without translating", async () => {
+		const inspector = new BlacklistRequestInspector(
+			{
+				findRules: vi.fn().mockResolvedValue([
+					{
+						type: AccessPolicyType.Block,
+						messageKey: ResultReason.EMAIL_INVALID,
+					},
+				]),
+			} as unknown as AccessRulesStorage,
+			async () => undefined,
+		);
+		const { res, json } = buildResponse();
+		const t = vi.fn((key: string) => `translated(${key})`);
+
+		await inspector.abortRequestForBlockedUsers(
+			buildRequest({ i18n: { t } } as unknown as Partial<Request>),
+			res,
+			vi.fn(),
+		);
+
+		expect(t).not.toHaveBeenCalled();
+		expect(json).toHaveBeenCalledWith({
+			error: {
+				code: "FORBIDDEN",
+				errorId: "FORBIDDEN:PROV-84",
+				status: 403,
+				message: "Forbidden",
+				data: { requestId: "test-request-id" },
+			},
+		});
 	});
 
 	it("keeps the generic Forbidden for a Block rule that names no reason", async () => {
@@ -928,7 +967,13 @@ describe("BlacklistRequestInspector.abortRequestForBlockedUsers", () => {
 		await inspector.abortRequestForBlockedUsers(buildRequest({}), res, vi.fn());
 
 		expect(json).toHaveBeenCalledWith({
-			error: { message: "Forbidden: test-request-id", code: 403 },
+			error: {
+				code: "FORBIDDEN",
+				errorId: "FORBIDDEN:PROV-84",
+				status: 403,
+				message: "Forbidden",
+				data: { requestId: "test-request-id" },
+			},
 		});
 	});
 
@@ -993,6 +1038,49 @@ describe("rankCandidateRules", () => {
 		};
 		const ranked = rankCandidateRules([rule], request, undefined, {});
 		expect(ranked).toEqual([rule]);
+	});
+
+	describe("global rule exclusions", () => {
+		const excludingGlobalRule: AccessRule = {
+			type: AccessPolicyType.Block,
+			numericIp: 16909060n,
+			excludedClientIds: ["site-excluded"],
+		};
+
+		it("skips a global rule for a client it excludes", () => {
+			expect(
+				rankCandidateRules([excludingGlobalRule], request, "site-excluded", {}),
+			).toEqual([]);
+		});
+
+		it("applies a global rule to a client it does not exclude", () => {
+			expect(
+				rankCandidateRules([excludingGlobalRule], request, "site-other", {}),
+			).toEqual([excludingGlobalRule]);
+		});
+
+		it("applies a global rule when the request carries no client id", () => {
+			expect(
+				rankCandidateRules([excludingGlobalRule], request, undefined, {}),
+			).toEqual([excludingGlobalRule]);
+		});
+
+		it("still applies the excluded client's own rules", () => {
+			const ownRule: AccessRule = {
+				type: AccessPolicyType.Restrict,
+				numericIp: 16909060n,
+				clientId: "site-excluded",
+			};
+
+			expect(
+				rankCandidateRules(
+					[excludingGlobalRule, ownRule],
+					request,
+					"site-excluded",
+					{},
+				),
+			).toEqual([ownRule]);
+		});
 	});
 
 	it("rejects a CIDR rule when request IP is outside range", () => {

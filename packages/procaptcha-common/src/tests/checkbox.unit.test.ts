@@ -292,6 +292,70 @@ describe("the error state", () => {
 		expect(label().textContent).toBe("I am human");
 		expect(box().disabled).toBe(false);
 	});
+
+	test("announces the error through a live region that was there from mount", () => {
+		render();
+		const region = mounted.container.querySelector('[aria-live="polite"]');
+		expect(region?.textContent).toBe("");
+		render({ error: "Cannot load CAPTCHA" });
+		expect(mounted.container.querySelector('[aria-live="polite"]')).toBe(
+			region,
+		);
+		expect(region?.textContent).toBe("Cannot load CAPTCHA");
+		render({ error: undefined });
+		expect(region?.textContent).toBe("");
+	});
+
+	test("takes its live region with it on destroy", () => {
+		render({ error: "Cannot load CAPTCHA" });
+		checkbox?.destroy();
+		checkbox = undefined;
+		expect(mounted.container.querySelector("[aria-live]")).toBeNull();
+	});
+});
+
+describe("the retry notice", () => {
+	const NOTICE = "Incorrect, try again";
+
+	test("replaces the label with the notice", () => {
+		render({ notice: NOTICE });
+		expect(label().textContent).toBe(NOTICE);
+	});
+
+	test("announces the notice to assistive tech", () => {
+		render({ notice: NOTICE });
+		expect(label().querySelector('[role="alert"]')?.textContent).toBe(NOTICE);
+	});
+
+	test("paints the notice in the theme's error colour", () => {
+		render({ notice: NOTICE });
+		expect(
+			label().querySelector<HTMLElement>('[role="alert"]')?.style.color,
+		).toBe(asRgb(lightTheme.palette.error.main));
+	});
+
+	test("keeps the box enabled so the user can try again", () => {
+		render({ notice: NOTICE });
+		expect(box().disabled).toBe(false);
+		fire(box(), "click");
+		expect(onChange).toHaveBeenCalledTimes(1);
+	});
+
+	test("keeps the accessible name of the box", () => {
+		render({ notice: NOTICE });
+		expect(box().getAttribute("aria-label")).toBe("I am human");
+	});
+
+	test("gives way to an error", () => {
+		render({ notice: NOTICE, error: "Cannot load CAPTCHA" });
+		expect(label().textContent).toBe("Cannot load CAPTCHA");
+	});
+
+	test("puts the label back once cleared", () => {
+		render({ notice: NOTICE });
+		render({ notice: undefined });
+		expect(label().textContent).toBe("I am human");
+	});
 });
 
 describe("theming", () => {
@@ -380,6 +444,47 @@ describe("theming", () => {
 });
 
 describe("activating it", () => {
+	const row = (): HTMLElement => {
+		const element = box().parentElement;
+		if (!element) throw new Error("expected the box to sit in a row");
+		return element;
+	};
+
+	test("a tap on the row around the box reports the change with its coordinates", () => {
+		render();
+		fire(row(), "click", { clientX: 12, clientY: 40 });
+		expect(onChange).toHaveBeenCalledTimes(1);
+		const event = onChange.mock.calls[0]?.[0] as MouseEvent;
+		expect(event.clientX).toBe(12);
+		expect(event.clientY).toBe(40);
+	});
+
+	test("the row is at least 44px tall, so the tap area is too", () => {
+		render();
+		expect(Number.parseFloat(row().style.minHeight)).toBeGreaterThanOrEqual(44);
+	});
+
+	test("a synthetic click on the row is ignored", () => {
+		render();
+		fire(row(), "click", { trusted: false });
+		expect(onChange).not.toHaveBeenCalled();
+	});
+
+	test("a tap on the row does nothing while the box is disabled by an error", () => {
+		render({ error: "Something went wrong" });
+		fire(row(), "click");
+		expect(onChange).not.toHaveBeenCalled();
+	});
+
+	test("a tap on the row does nothing while loading", () => {
+		render({ loading: true });
+		const spinner = mounted.container.querySelector(SPINNER_SELECTOR);
+		const loadingRow = spinner?.parentElement;
+		if (!loadingRow) throw new Error("expected the spinner to sit in a row");
+		fire(loadingRow, "click");
+		expect(onChange).not.toHaveBeenCalled();
+	});
+
 	test("a real click reports the change", async () => {
 		render();
 		fire(box(), "click");

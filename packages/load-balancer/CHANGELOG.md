@@ -1,5 +1,167 @@
 # @prosopo/load-balancer
 
+## 2.11.14
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+  - @prosopo/common@3.3.0
+
+## 2.11.13
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/common@3.3.0
+  - @prosopo/types@5.17.0
+
+## 2.11.12
+### Patch Changes
+
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+
+## 2.11.11
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+
+## 2.11.10
+### Patch Changes
+
+  - @prosopo/common@3.2.1
+  - @prosopo/types@5.16.1
+
+## 2.11.9
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+- Updated dependencies [0bd0230]
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+
+## 2.11.8
+### Patch Changes
+
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/types@5.15.1
+  - @prosopo/common@3.1.65
+
+## 2.11.7
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+  - @prosopo/common@3.1.64
+
+## 2.11.6
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/common@3.1.63
+
+## 2.11.5
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/common@3.1.62
+
+## 2.11.4
+### Patch Changes
+
+- 70fcefd: `retryWithBackoff` now fails straight away with a clear "maxAttempts must be a positive integer" error when `maxAttempts` is 0, negative, fractional or NaN. Before, it never ran the function and threw a confusing `Error("undefined")`.
+- Updated dependencies [ede4352]
+- Updated dependencies [2145922]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+  - @prosopo/types@5.12.0
+  - @prosopo/common@3.1.61
+
+## 2.11.3
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+
+## 2.11.2
+### Patch Changes
+
+- e5aefc6: Stop re-downloading the provider list on every server-side verification.
+  
+  `ProsopoServer.isVerified` only needs the list to find the one provider that minted the token, but it called `loadBalancer` directly, which fetches the list fresh every time. The package already had a cached `getProviders`, and the verify path was the one caller not using it.
+  
+  That fetch was measured at 201 ms (p50, and flat — 216 ms at p90) inside the production `siteverify` lambda, on a total invocation of 376 ms. It is a 5.6 KB file listing eight providers that changes when the fleet does, and it was being downloaded roughly 360,000 times a day.
+  
+  `getProviders` is now keyed by environment *and* ipMode — the `ipv4`/`ipv6` sections of the list carry different urls to the dual-stack default, so they can't share a cache entry — and it ages entries out after five minutes, matching the `cache-control: max-age=300` the list is served with.
+  
+  A new `findProvider` does the lookup. On a miss it reloads the list once before giving up, so a pronode added part-way through the TTL still verifies the tokens it has already minted. That reload is rate-limited to once every ten seconds, because `providerUrl` is read from the token and an unknown url is a miss too — without the floor, a caller could put the fetch back on every request.
+- 5375d10: The provider-list fetch in `loadBalancer` now gives up after 10 seconds (overridable via a new optional third argument). `@prosopo/server` calls it on every `isVerified`, so a stalled provider-list endpoint used to hold the site owner's verification request open for the runtime's default timeout (about five minutes in Node). Browsers without `AbortSignal.timeout` keep the old unbounded behaviour.
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+
+## 2.11.1
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+
 ## 2.11.0
 ### Minor Changes
 

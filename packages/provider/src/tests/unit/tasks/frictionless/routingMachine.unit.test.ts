@@ -230,6 +230,73 @@ describe("applyRouter", () => {
 		expect(reads[1]?.value).toBe("0xabc");
 	});
 
+	const deviceBucketSpec: CounterSpec = {
+		kind: "solved",
+		captchaType: CaptchaType.pow,
+		dimension: "deviceBucket",
+		window: "24h",
+	};
+
+	const readsFromLastCall = (): Array<{
+		spec: CounterSpec;
+		value: string;
+	}> => {
+		const call = counters.batchGet.mock.calls[0];
+		if (!call) throw new Error("expected batchGet to be called");
+		return call[1] as Array<{ spec: CounterSpec; value: string }>;
+	};
+
+	it("resolves a deviceBucket counter from the verified fingerprint summary", async () => {
+		runner.getRequiredCounters.mockResolvedValueOnce([deviceBucketSpec]);
+
+		await run(
+			buildCtx({
+				raw: {
+					headers: {},
+					userAgent: "Mozilla/5.0",
+					fingerprintSummary: {
+						root: "0xroot",
+						groupHash: "0xgroup",
+						bucketId: "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f",
+					},
+				},
+			}),
+		);
+
+		expect(readsFromLastCall()).toStrictEqual([
+			{
+				spec: deviceBucketSpec,
+				value: "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f",
+			},
+		]);
+	});
+
+	it("skips a deviceBucket counter when no proof disclosed one", async () => {
+		// Skipped rather than read under a placeholder, so the key is absent
+		// rather than reporting zero traffic for every bucketless request.
+		runner.getRequiredCounters.mockResolvedValueOnce([deviceBucketSpec]);
+
+		await run(buildCtx());
+
+		expect(readsFromLastCall()).toStrictEqual([]);
+	});
+
+	it("skips a deviceBucket counter when the summary carries no bucketId", async () => {
+		runner.getRequiredCounters.mockResolvedValueOnce([deviceBucketSpec]);
+
+		await run(
+			buildCtx({
+				raw: {
+					headers: {},
+					userAgent: "Mozilla/5.0",
+					fingerprintSummary: { root: "0xroot", groupHash: "0xgroup" },
+				},
+			}),
+		);
+
+		expect(readsFromLastCall()).toStrictEqual([]);
+	});
+
 	it("falls back to baseline when batchGet returns null (Redis down)", async () => {
 		runner.getRequiredCounters.mockResolvedValueOnce([
 			{

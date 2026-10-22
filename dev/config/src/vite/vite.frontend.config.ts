@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { builtinModules } from "node:module";
+import { builtinModules, createRequire } from "node:module";
 import path from "node:path";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
@@ -118,11 +118,9 @@ export default async function (
 	// The two i18next entries are server-only: the fs backend reads locale JSON
 	// off disk and the middleware is Express request handling. Neither can run
 	// in a browser — `i18nBackend.ts` also imports `node:path`, which is already
-	// external — so they are pure weight in a frontend bundle. The other
-	// i18next-* packages (http-backend, browser-languagedetector,
-	// chained-backend, resources-to-backend) ARE used in the browser and must
-	// stay bundled; these filters are substring matches, so they catch only
-	// themselves.
+	// external — so they are pure weight in a frontend bundle. No other i18next
+	// package is bundled: the widget uses its own `i18nFrontend.ts`. These
+	// filters are substring matches, so they catch only themselves.
 	const { external, internal } = filterDependencies(deps, [
 		"pm2",
 		"nodejs-polars",
@@ -176,8 +174,27 @@ export default async function (
 
 	const rollupExternal: ExternalOption = allExternal;
 
+	// nodePolyfills injects bare imports of its shims into every module it
+	// transforms, and each resolves from that module's own location. Point them
+	// at this package's copy of the plugin so they do not depend on it being
+	// hoisted to a node_modules above every bundled package.
+	const polyfillsDir = path.dirname(
+		path.dirname(
+			createRequire(import.meta.url).resolve("vite-plugin-node-polyfills"),
+		),
+	);
+	const polyfillShimAliases = Object.fromEntries(
+		["buffer", "global", "process"].map((shim) => [
+			`vite-plugin-node-polyfills/shims/${shim}`,
+			path.join(polyfillsDir, "shims", shim, "dist", "index.js"),
+		]),
+	);
+
 	console.info({ bundleName }, "Bundle name");
 	return {
+		resolve: {
+			alias: polyfillShimAliases,
+		},
 		server: {
 			host: "127.0.0.1",
 		},

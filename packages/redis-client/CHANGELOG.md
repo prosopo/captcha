@@ -1,5 +1,43 @@
 # @prosopo/redis-client
 
+## 1.0.42
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+  - @prosopo/logger@2.1.5
+
+## 1.0.41
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+  - @prosopo/logger@2.1.4
+
+## 1.0.40
+### Patch Changes
+
+  - @prosopo/logger@2.1.3
+
+## 1.0.39
+### Patch Changes
+
+  - @prosopo/logger@2.1.2
+
+## 1.0.38
+### Patch Changes
+
+- 4109641: The Redis client no longer writes the Redis password to the logs. It used to attach the full connection URL, including any `user:password@`, to every log line, and now the credentials show as `redacted`. A failed first connect or a failed index setup, for example on a Redis server without the search module, is now logged as an error. Before, the failure became an unhandled promise rejection, which crashes Node by default. Callers of `getClient()` still receive the error.
+  - @prosopo/logger@2.1.1
+
 ## 1.0.37
 ### Patch Changes
 

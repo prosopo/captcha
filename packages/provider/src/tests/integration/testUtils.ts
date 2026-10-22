@@ -13,7 +13,13 @@
 // limitations under the License.
 
 import { createServer } from "node:net";
-import { Agent } from "undici";
+import {
+	Agent,
+	type RequestInfo,
+	type RequestInit,
+	type Response,
+	fetch,
+} from "undici";
 
 /**
  * Reserve a port the OS says is free, rather than guessing one.
@@ -52,7 +58,7 @@ export const httpsAgent =
 
 // Wrapper around fetch that automatically uses the HTTPS agent in dev/test
 export async function testFetch(
-	input: RequestInfo | URL,
+	input: RequestInfo,
 	init?: RequestInit,
 ): Promise<Response> {
 	return fetch(input, {

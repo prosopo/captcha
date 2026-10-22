@@ -13,3 +13,4 @@
 // limitations under the License.
 export * from "./procaptchaFrictionless.js";
 export * from "./detectorPrefetch.js";
+export type { DetectorOptions, DetectorType } from "./detectorLoader.js";

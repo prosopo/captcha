@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import { createUntranslatedI18n } from "@prosopo/locale";
 import {
 	type GetPuzzleCaptchaResponse,
 	ModeEnum,
@@ -40,7 +40,8 @@ const mocks = vi.hoisted(() => {
 	const submitSolution =
 		vi.fn<(x: number, y: number, events: PuzzleEvent[]) => Promise<boolean>>();
 	const resetState = vi.fn<() => void>();
-	return { start, submitSolution, resetState };
+	const dispose = vi.fn<() => void>();
+	return { start, submitSolution, resetState, dispose };
 });
 
 vi.mock("../services/Manager.js", () => ({
@@ -52,6 +53,7 @@ vi.mock("../services/Manager.js", () => ({
 		start: mocks.start,
 		submitSolution: mocks.submitSolution,
 		resetState: mocks.resetState,
+		dispose: mocks.dispose,
 	}),
 }));
 
@@ -60,15 +62,16 @@ vi.mock("@prosopo/locale", async (importOriginal) => ({
 	loadI18next: vi.fn(async () => undefined),
 }));
 
-const i18nStub = {
+const i18nStub = createUntranslatedI18n({
 	isInitialized: true,
 	language: "en",
 	t: (key: string) => key,
 	changeLanguage: vi.fn(),
+	exists: (): boolean => false,
 	hasLoadedNamespace: () => true,
 	on: () => undefined,
 	off: () => undefined,
-} as unknown as Ti18n;
+});
 
 const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps =>
 	({
