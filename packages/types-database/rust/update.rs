@@ -143,12 +143,14 @@ fn cast_value(leaf: &Path, value: &Bson, path: &str, ids: &mut dyn Ids, issues: 
     })
 }
 
-/// `walkUpdatePath`: the operator's object cast in place, its key order kept.
+/// `walkUpdatePath`: the operator's object cast in place, its key order kept. A path the schema
+/// does not declare is dropped, or with `strict: false` kept as given.
 fn walk(
     schema: &Schema,
     object: &Document,
     op: &str,
     prefix: &str,
+    strict: bool,
     ids: &mut dyn Ids,
     issues: &mut Vec<Issue>,
 ) -> Document {
@@ -181,10 +183,11 @@ fn walk(
             }
             (Target::Leaf(leaf), _) => cast_value(leaf, value, &path, ids, issues),
             (Target::Nested, Bson::Document(inner)) if op != "$unset" => {
-                Some(Bson::Document(walk(schema, inner, op, &path, ids, issues)))
+                Some(Bson::Document(walk(schema, inner, op, &path, strict, ids, issues)))
             }
             (Target::Nested, _) => Some(value.clone()),
-            (Target::Unknown, _) => None,
+            (Target::Unknown, _) if strict => None,
+            (Target::Unknown, _) => Some(value.clone()),
         };
     }
     for (key, value) in keys.iter().zip(cast_values) {
@@ -237,6 +240,20 @@ pub fn cast_update(
     update: &Document,
     filter: &Document,
     upsert: bool,
+    ids: &mut dyn Ids,
+) -> Result<Document, CastError> {
+    cast_update_with(schema, method, update, filter, upsert, true, ids)
+}
+
+/// `cast_update` with mongoose's `strict` option: `false` keeps the paths the schema does not
+/// declare.
+pub fn cast_update_with(
+    schema: &Schema,
+    method: UpdateMethod,
+    update: &Document,
+    filter: &Document,
+    upsert: bool,
+    strict: bool,
     ids: &mut dyn Ids,
 ) -> Result<Document, CastError> {
     let mut raw: Document = update.clone();
@@ -296,7 +313,7 @@ pub fn cast_update(
         let Some(Bson::Document(value)) = ret.get(op) else {
             continue;
         };
-        let walked: Document = walk(schema, value, op, "", ids, &mut issues);
+        let walked: Document = walk(schema, value, op, "", strict, ids, &mut issues);
         if walked.is_empty() {
             ret.remove(op);
         } else {
