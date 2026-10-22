@@ -560,3 +560,55 @@ pub fn is_valid_js_regex(pattern: &str) -> bool {
     };
     parser.pattern().is_ok()
 }
+
+/// The pattern as regress should read it to match as V8 does without `u`: as code units, so
+/// an astral character or an escaped surrogate pair is two units rather than one character,
+/// and with `\u{` as V8's Annex B reads it, a `u` that the braces may quantify.
+fn regress_units(pattern: &str) -> Vec<u32> {
+    let units: Vec<u16> = pattern.encode_utf16().collect();
+    let hex4 = |at: usize| -> Option<u16> {
+        let digits: String = String::from_utf16(units.get(at..at + 4)?).ok()?;
+        digits.chars().all(|c| c.is_ascii_hexdigit()).then(|| u16::from_str_radix(&digits, 16).ok()).flatten()
+    };
+    let mut out: Vec<u32> = Vec::with_capacity(units.len());
+    let mut at: usize = 0;
+    while at < units.len() {
+        let current: u16 = units[at];
+        if current != unit('\\') || at + 1 == units.len() {
+            out.push(u32::from(current));
+            at += 1;
+            continue;
+        }
+        let next: u16 = units[at + 1];
+        if next == unit('u') && units.get(at + 2) == Some(&unit('{')) {
+            out.push(u32::from(unit('u')));
+            at += 2;
+        } else if let Some(surrogate) = (next == unit('u')).then(|| hex4(at + 2)).flatten().filter(|value| (0xD800..=0xDFFF).contains(value)) {
+            out.push(u32::from(surrogate));
+            at += 6;
+        } else {
+            out.extend([u32::from(current), u32::from(next)]);
+            at += 2;
+        }
+    }
+    out
+}
+
+/// `new RegExp(pattern, flags)` for flags without `u` or `v`, matched over UTF-16 code units
+/// as V8 matches; none where V8 would throw.
+pub struct JsRegex(regress::Regex);
+
+impl JsRegex {
+    pub fn new(pattern: &str, flags: &str) -> Option<JsRegex> {
+        if !is_valid_js_regex(pattern) {
+            return None;
+        }
+        regress::Regex::from_unicode(regress_units(pattern).into_iter(), flags).ok().map(JsRegex)
+    }
+
+    /// `RegExp.prototype.test` from the start of the text.
+    pub fn test(&self, text: &str) -> bool {
+        let units: Vec<u16> = text.encode_utf16().collect();
+        self.0.find_from_ucs2(&units, 0).next().is_some()
+    }
+}

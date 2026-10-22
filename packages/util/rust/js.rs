@@ -40,7 +40,8 @@ pub(crate) fn is_line_terminator(c: char) -> bool {
     matches!(c, '\n' | '\r' | '\u{2028}' | '\u{2029}')
 }
 
-pub(crate) fn trim(s: &str) -> &str {
+/// `String.prototype.trim`: JS whitespace and line terminators, which differ from Rust's.
+pub fn trim(s: &str) -> &str {
     s.trim_matches(is_whitespace)
 }
 

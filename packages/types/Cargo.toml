@@ -17,7 +17,7 @@ prosopo-api-route = { path = "../api-route" }
 prosopo-util-crypto = { path = "../util-crypto" }
 indexmap = { version = "2.14", features = ["serde"] }
 regex = "1.13"
-regress = "0.12"
+regress = { version = "0.12", features = ["utf16"] }
 unicode-ident = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }

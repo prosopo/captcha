@@ -447,7 +447,7 @@ static DANGEROUS_REGEX_TOKENS: LazyLock<regex::Regex> = LazyLock::new(|| {
     regex::Regex::new(r"(\(\?[<!=])|(\(\?P[<])|(\(\?\{)|(\{[0-9,]{4,})").expect("pattern compiles")
 });
 
-pub use crate::js_regex::is_valid_js_regex;
+pub use crate::js_regex::{is_valid_js_regex, JsRegex};
 
 fn safe_regex_pattern() -> Schema {
     string()

@@ -251,3 +251,41 @@ pub fn routing_machine_output_schema() -> Schema {
         ("iconOrder", icon_order_settings_schema().optional()),
     ])
 }
+
+/// `EnrichedDnsEvent`: a session's DNS event with what the IP service says of its addresses.
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EnrichedDnsEvent {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub peer_ip: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resolver_ip: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path_valid: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub peer_ip_info: Option<crate::ipapi::IpInfoResponse>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resolver_ip_info: Option<crate::ipapi::IpInfoResponse>,
+}
+
+/// `TrafficCategoryPolicies`: a site's traffic filter, its category policies only.
+#[derive(Debug, Clone, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrafficCategoryPolicies {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vpn: Option<crate::settings_types::TrafficCategoryPolicy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proxy: Option<crate::settings_types::TrafficCategoryPolicy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tor: Option<crate::settings_types::TrafficCategoryPolicy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub datacenter: Option<crate::settings_types::TrafficCategoryPolicy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub abuser: Option<crate::settings_types::TrafficCategoryPolicy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mobile: Option<crate::settings_types::TrafficCategoryPolicy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub satellite: Option<crate::settings_types::TrafficCategoryPolicy>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub crawler: Option<crate::settings_types::TrafficCategoryPolicy>,
+}
