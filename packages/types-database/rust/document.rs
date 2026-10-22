@@ -733,58 +733,62 @@ fn satisfies_required(kind: &Kind, value: Option<&Bson>) -> bool {
 /// then each subdocument's own paths.
 pub fn validate(schema: &Schema, document: &Document, prefix: &str, issues: &mut Vec<Issue>) {
     for (path, leaf) in schema.paths() {
-        let full: String = join(prefix, &path);
-        let value: Option<&Bson> = lookup(document, &path);
-        let push = |issues: &mut Vec<Issue>, kind: &str| {
-            issues.push(Issue {
-                path: full.clone(),
-                kind: kind.to_string(),
-            })
-        };
         let required: bool = leaf.required || leaf.required_when.is_some_and(|condition| condition(document));
-        if required && !satisfies_required(&leaf.kind, value) {
-            push(issues, "required");
-            continue;
+        validate_path(leaf, required, lookup(document, &path), &join(prefix, &path), issues);
+    }
+}
+
+/// One path's validators on its value: required, then enum or the bounds, then a subdocument's
+/// own paths.
+pub(crate) fn validate_path(leaf: &Path, required: bool, value: Option<&Bson>, full: &str, issues: &mut Vec<Issue>) {
+    let push = |issues: &mut Vec<Issue>, kind: &str| {
+        issues.push(Issue {
+            path: full.to_string(),
+            kind: kind.to_string(),
+        })
+    };
+    if required && !satisfies_required(&leaf.kind, value) {
+        push(issues, "required");
+        return;
+    }
+    match (&leaf.kind, value) {
+        (Kind::String, Some(Bson::String(text))) => {
+            if let Some(values) = &leaf.enum_values {
+                if !values.iter().any(|allowed| allowed == text) {
+                    push(issues, "enum");
+                }
+            }
         }
-        match (&leaf.kind, value) {
-            (Kind::String, Some(Bson::String(text))) => {
-                if let Some(values) = &leaf.enum_values {
-                    if !values.iter().any(|allowed| allowed == text) {
-                        push(issues, "enum");
-                    }
+        (Kind::Number, Some(number)) => {
+            if let Some(number) = as_js_number(number) {
+                if leaf.min.is_some_and(|min| number < min) {
+                    push(issues, "min");
+                } else if leaf.max.is_some_and(|max| number > max) {
+                    push(issues, "max");
                 }
             }
-            (Kind::Number, Some(number)) => {
-                if let Some(number) = as_js_number(number) {
-                    if leaf.min.is_some_and(|min| number < min) {
-                        push(issues, "min");
-                    } else if leaf.max.is_some_and(|max| number > max) {
-                        push(issues, "max");
-                    }
-                }
-            }
-            (Kind::Array(element), Some(Bson::Array(items))) => {
-                if let Some(values) = &leaf.enum_values {
-                    validate_element_enum(element, items, values, &full, issues);
-                }
-            }
-            (Kind::Subdocument(sub), Some(Bson::Document(inner))) => validate(sub, inner, &full, issues),
-            (Kind::DocumentArray(sub), Some(Bson::Array(items))) => {
-                for (index, item) in items.iter().enumerate() {
-                    if let Bson::Document(inner) = item {
-                        validate(sub, inner, &join(&full, &index.to_string()), issues);
-                    }
-                }
-            }
-            (Kind::Map(sub), Some(Bson::Document(entries))) => {
-                for (key, entry) in entries {
-                    if let Bson::Document(inner) = entry {
-                        validate(sub, inner, &join(&full, key), issues);
-                    }
-                }
-            }
-            _ => {}
         }
+        (Kind::Array(element), Some(Bson::Array(items))) => {
+            if let Some(values) = &leaf.enum_values {
+                validate_element_enum(element, items, values, full, issues);
+            }
+        }
+        (Kind::Subdocument(sub), Some(Bson::Document(inner))) => validate(sub, inner, full, issues),
+        (Kind::DocumentArray(sub), Some(Bson::Array(items))) => {
+            for (index, item) in items.iter().enumerate() {
+                if let Bson::Document(inner) = item {
+                    validate(sub, inner, &join(full, &index.to_string()), issues);
+                }
+            }
+        }
+        (Kind::Map(sub), Some(Bson::Document(entries))) => {
+            for (key, entry) in entries {
+                if let Bson::Document(inner) = entry {
+                    validate(sub, inner, &join(full, key), issues);
+                }
+            }
+        }
+        _ => {}
     }
 }
 
@@ -847,6 +851,9 @@ fn minimize_with(fields: &[Field], schema: Option<&Schema>, document: Document) 
 }
 
 pub(crate) fn minimize_schema(schema: &Schema, document: Document) -> Document {
+    if !schema.minimize {
+        return document;
+    }
     minimize_with(&schema.fields, Some(schema), document)
 }
 

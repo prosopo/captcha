@@ -382,6 +382,9 @@ pub struct Schema {
     pub timestamps: bool,
     /// The `schema.index(...)` calls, in order.
     pub indexes: Vec<Index>,
+    /// Not declared `{ minimize: false }`: objects left empty are removed on save and by
+    /// `toObject()`.
+    pub minimize: bool,
 }
 
 static ID_PATH: LazyLock<Path> = LazyLock::new(|| Path {
@@ -401,11 +404,17 @@ impl Schema {
             id: true,
             timestamps: false,
             indexes: Vec::new(),
+            minimize: true,
         }
     }
 
     pub fn without_id(mut self) -> Schema {
         self.id = false;
+        self
+    }
+
+    pub fn without_minimize(mut self) -> Schema {
+        self.minimize = false;
         self
     }
 

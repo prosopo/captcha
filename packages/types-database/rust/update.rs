@@ -28,7 +28,7 @@
 //!
 //! A pipeline update (an array of stages) is not cast at all: the driver serialises it as given.
 
-use crate::document::{cast, minimize_schema, mixed, Issue, VERSION_KEY};
+use crate::document::{cast, minimize_schema, mixed, validate_path, Issue, ValidationError, VERSION_KEY};
 use crate::number::{as_js_number, js_number};
 use crate::schema::{join, Ids, Kind, Path, Schema};
 use bson::oid::ObjectId;
@@ -164,6 +164,9 @@ fn walk(
             (_, Bson::Undefined) => None,
             (Target::Leaf(leaf), _) if leaf.immutable && op != "$setOnInsert" => None,
             (Target::Leaf(_), _) if op == "$unset" => Some(value.clone()),
+            (Target::Leaf(leaf @ Path { kind: Kind::Array(_), .. }), _) if op == "$addToSet" || op == "$push" => {
+                cast_array_addition(leaf, value, &path, ids, issues)
+            }
             (Target::Leaf(leaf), _) => cast_value(leaf, value, &path, ids, issues),
             (Target::Nested, Bson::Document(inner)) if op != "$unset" => {
                 Some(Bson::Document(walk(schema, inner, op, &path, ids, issues)))
@@ -178,6 +181,25 @@ fn walk(
         }
     }
     out
+}
+
+/// `$addToSet` or `$push` on an array of primitives: `$each`'s values cast as the array's, its
+/// other modifiers kept as given; a single value cast as one element.
+fn cast_array_addition(leaf: &Path, value: &Bson, path: &str, ids: &mut dyn Ids, issues: &mut Vec<Issue>) -> Option<Bson> {
+    let Kind::Array(element) = &leaf.kind else {
+        return cast_value(leaf, value, path, ids, issues);
+    };
+    match value {
+        Bson::Document(modifiers) if modifiers.contains_key("$each") => {
+            let mut out: Document = Document::new();
+            for (key, inner) in modifiers {
+                let cast_inner: Bson = if key == "$each" { cast(&leaf.kind, inner, path, ids, issues)? } else { inner.clone() };
+                out.insert(key.clone(), cast_inner);
+            }
+            Some(Bson::Document(out))
+        }
+        single => cast(element, single, path, ids, issues),
+    }
 }
 
 /// Each method decorates an upsert in its own order, which decides where `$setOnInsert` and its
@@ -282,6 +304,35 @@ pub fn cast_update(
         }
     }
     Ok(undefined_to_null(ret))
+}
+
+/// `runValidators` on a cast update: each path it sets, sets on insert or unsets, through that
+/// path's validators, an unset path's value being `undefined`. Paths under other operators are
+/// not validated, as mongoose does not validate them.
+pub fn validate_update(schema: &Schema, update: &Document) -> Result<(), ValidationError> {
+    fn walk(schema: &Schema, path: &str, value: Option<&Bson>, issues: &mut Vec<Issue>) {
+        if let Some(leaf) = schema.path(path) {
+            validate_path(leaf, leaf.required, value, path, issues);
+        } else if let (Some(_), Some(Bson::Document(children))) = (schema.nested_fields(path), value) {
+            for (key, child) in children {
+                walk(schema, &join(path, key), Some(child), issues);
+            }
+        }
+    }
+    let mut issues: Vec<Issue> = Vec::new();
+    for (op, fields) in update {
+        let (Bson::Document(fields), true) = (fields, ["$set", "$setOnInsert", "$unset"].contains(&op.as_str())) else {
+            continue;
+        };
+        for (path, value) in fields {
+            walk(schema, path, (op != "$unset").then_some(value), &mut issues);
+        }
+    }
+    if issues.is_empty() {
+        Ok(())
+    } else {
+        Err(ValidationError { issues })
+    }
 }
 
 /// The driver writes a JS `undefined` that survives casting (inside a Mixed value) as `null`.

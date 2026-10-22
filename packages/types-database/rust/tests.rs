@@ -756,3 +756,79 @@ mod rust_only {
         assert_eq!(stored(sent).keys().collect::<Vec<&String>>(), ["_id", "domain", "__v"]);
     }
 }
+
+/// mongoose 9.10's update validators (`findOneAndUpdate` with `runValidators`) on this schema
+/// refuse these updates at these paths, and let `$inc` past a minimum through.
+#[test]
+fn update_validators_check_the_paths_an_update_sets_or_unsets() {
+    use crate::schema::{array, date, field, nested, number, string, subdocument, Kind};
+    use crate::update::validate_update;
+    use std::sync::LazyLock;
+    static AT: LazyLock<Schema> = LazyLock::new(|| Schema::new(vec![field("at", date().required())]).without_id());
+    let schema: Schema = Schema::new(vec![
+        field("name", string().required()),
+        field("kind", string().one_of(["a", "b"])),
+        field("count", number().min(0.0)),
+        field("tags", array(Kind::String).one_of(["x", "y"])),
+        nested("nested", vec![field("level", string().one_of(["low", "high"]))]),
+        field("sub", subdocument(&AT)),
+    ]);
+    let refused = |update: Document| -> Vec<String> {
+        validate_update(&schema, &update)
+            .err()
+            .map(|error| error.issues.into_iter().map(|issue| issue.path).collect())
+            .unwrap_or_default()
+    };
+    assert_eq!(refused(doc! { "$unset": { "name": 1 } }), ["name"]);
+    assert_eq!(refused(doc! { "$set": { "kind": "c" } }), ["kind"]);
+    assert_eq!(refused(doc! { "$setOnInsert": { "kind": "c" } }), ["kind"]);
+    assert!(refused(doc! { "$inc": { "count": -5 } }).is_empty());
+    assert_eq!(refused(doc! { "$set": { "count": -5 } }), ["count"]);
+    assert_eq!(refused(doc! { "$set": { "nested": { "level": "mid" } } }), ["nested.level"]);
+    assert_eq!(refused(doc! { "$set": { "nested.level": "mid" } }), ["nested.level"]);
+    assert_eq!(refused(doc! { "$set": { "tags": ["x", "z"] } }), ["tags.1"]);
+    assert_eq!(refused(doc! { "$set": { "name": "" } }), ["name"]);
+    assert_eq!(refused(doc! { "$set": { "sub": {} } }), ["sub.at"]);
+    assert!(refused(doc! { "$set": { "name": "n", "kind": "a", "count": 0 } }).is_empty());
+}
+
+/// `{ minimize: false }` keeps an empty object on save and in `toObject()`.
+#[test]
+fn a_schema_without_minimize_keeps_empty_objects() {
+    use crate::document::to_object;
+    use crate::schema::{field, mixed};
+    let schema: Schema = Schema::new(vec![field("parameters", mixed())]).without_minimize();
+    let sent: Document = create(&schema, &doc! { "parameters": {} }, &mut FreshIds).expect("valid");
+    assert_eq!(sent.get_document("parameters").ok(), Some(&Document::new()));
+    assert_eq!(to_object(&schema, doc! { "parameters": {} }), doc! { "parameters": {} });
+    let minimizing: Schema = Schema::new(vec![field("parameters", mixed())]);
+    assert_eq!(to_object(&minimizing, doc! { "parameters": {} }), Document::new());
+}
+
+/// mongoose 9.10's `_castUpdate` of `$addToSet` and `$push` on arrays of primitives.
+#[test]
+fn array_additions_cast_each_value_as_an_element() {
+    use crate::schema::{array, field, Kind};
+    use crate::update::{cast_update, UpdateMethod};
+    let schema: Schema = Schema::new(vec![field("tags", array(Kind::String)), field("n", array(Kind::Number))]);
+    let cast = |update: Document| cast_update(&schema, UpdateMethod::FindOneAndUpdate, &update, &Document::new(), false, &mut FreshIds);
+    assert_eq!(cast(doc! { "$addToSet": { "tags": "x" } }).ok(), Some(doc! { "$addToSet": { "tags": "x" } }));
+    assert_eq!(
+        cast(doc! { "$addToSet": { "tags": { "$each": ["x", 1] } } }).ok(),
+        Some(doc! { "$addToSet": { "tags": { "$each": ["x", "1"] } } })
+    );
+    assert_eq!(
+        cast(doc! { "$addToSet": { "tags": { "$each": [] } } }).ok(),
+        Some(doc! { "$addToSet": { "tags": { "$each": [] } } })
+    );
+    assert_eq!(
+        cast(doc! { "$push": { "n": { "$each": ["1", 2], "$slice": -2, "$position": 0 } } }).ok(),
+        Some(doc! { "$push": { "n": { "$each": [1, 2], "$slice": -2, "$position": 0 } } })
+    );
+    assert_eq!(cast(doc! { "$push": { "n": "3" } }).ok(), Some(doc! { "$push": { "n": 3 } }));
+    let refused: Vec<String> = cast(doc! { "$addToSet": { "n": { "$each": ["nope"] } } })
+        .err()
+        .map(|error| error.issues.into_iter().map(|issue| issue.path).collect())
+        .unwrap_or_default();
+    assert_eq!(refused, ["n.0"]);
+}
