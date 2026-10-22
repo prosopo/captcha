@@ -28,7 +28,7 @@ use prosopo_logger::{parse_log_level, LogLevel, LogRecord, Logger};
 use prosopo_provider::api::block::{BlockState, HardBlockVerdictCache};
 use prosopo_provider::api::captcha::CaptchaState;
 use prosopo_provider::api::challenge::{ChallengeState, FreshSeeds, SeedSource};
-use prosopo_provider::tasks::detection::{DetectorBundlePool, SimdDecoder, DEFAULT_DETECTOR_POOL_DIR};
+use prosopo_provider::tasks::detection::{DetectorBundlePool, PayloadDecoder, DEFAULT_DETECTOR_POOL_DIR};
 use prosopo_provider::api::domain::DomainState;
 use prosopo_load_balancer::ProviderDirectory;
 use prosopo_env::is_maintenance_mode;
@@ -125,7 +125,7 @@ pub struct AppParts {
     pub version: String,
     /// The detector decoders, which are not public source (MIGRATION.md §4.1); without them a
     /// challenge's SIMD readings are dropped.
-    pub simd_decoder: Option<Arc<dyn SimdDecoder>>,
+    pub decoder: Option<Arc<dyn PayloadDecoder>>,
     /// Where render seeds come from; fresh random bytes unless a test pins them.
     pub seeds: Arc<dyn SeedSource>,
     /// `env.datasetId`, which image challenges draw from unless they name a dataset.
@@ -135,7 +135,7 @@ pub struct AppParts {
 /// startProviderApi's app for the routes ported so far, and its healthz geo router, which the
 /// caller starts and stops.
 pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
-    let AppParts { config, pair, auth_account, logger, db, countries, ip_info, probe, env, i18n, version, simd_decoder, seeds, dataset_id } = parts;
+    let AppParts { config, pair, auth_account, logger, db, countries, ip_info, probe, env, i18n, version, decoder, seeds, dataset_id } = parts;
     let geo: Arc<HealthzGeoRouter> =
         Arc::new(HealthzGeoRouter::with_probe(read_healthz_geo_config(env.as_ref(), Some(&logger)), countries, probe, Some(logger.clone())));
     let metrics: Option<Arc<ProviderMetrics>> =
@@ -213,7 +213,7 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
         metrics: metrics.clone(),
         pair: signing_pair,
         pool: Arc::new(std::sync::RwLock::new(Arc::new(pool))),
-        decoder: simd_decoder,
+        decoder: decoder,
         seeds,
         audio: std::sync::OnceLock::new(),
         puzzle: prosopo_provider::tasks::puzzle::PuzzleAssets::default(),
@@ -273,7 +273,7 @@ pub fn app_parts(env: Arc<ProviderEnvironment>) -> AppParts {
         env: Arc::new(|name: &str| std::env::var(name).ok()),
         i18n: locales(),
         version: version(),
-        simd_decoder: None,
+        decoder: None,
         seeds: Arc::new(FreshSeeds),
         dataset_id: env.dataset_id.clone(),
     }

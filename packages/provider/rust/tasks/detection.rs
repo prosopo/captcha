@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! The detector bundle pool (tasks/detection/bundlePool.ts) and the SIMD-readings attach the
-//! challenge routes run (captchaManager.ts). Decoding itself is behind [`SimdDecoder`]: the
+//! The detector bundle pool (tasks/detection/bundlePool.ts), the SIMD-readings attach the
+//! challenge routes run and the payload decoding the solution routes run (captchaManager.ts).
+//! Decoding itself is behind [`PayloadDecoder`]: the
 //! decoders are not public source (MIGRATION.md §4 hard problem 1), so whoever assembles the
 //! provider supplies them.
 
@@ -253,10 +254,26 @@ pub fn resolve_bundle_by_id(pool: Option<&DetectorBundlePool>, bundle_id: Option
 
 pub type DecodeFuture<'a> = Pin<Box<dyn Future<Output = Result<Map<String, Value>, String>> + Send + 'a>>;
 
-/// The SIMD-readings decoder, `decode("simd", [encrypted, privateKey, innerConfig])`: the
-/// readings object with the decoder's `timestamp` in it, or why it could not be read.
-pub trait SimdDecoder: Send + Sync {
+/// The detector's payload decoders.
+pub trait PayloadDecoder: Send + Sync {
+    /// `decode("simd", [encrypted, privateKey, innerConfig])`: the readings object with the
+    /// decoder's `timestamp` in it, or why it could not be read.
     fn decrypt_simd_readings<'a>(&'a self, encrypted: &'a str, private_key: &'a str, inner_config: &'a str) -> DecodeFuture<'a>;
+    /// `decode("behaviour", [encrypted, privateKey, innerConfig])`: `BehavioralDataResult`, or
+    /// why it could not be read.
+    fn decrypt_behavioral_data<'a>(&'a self, encrypted: &'a str, private_key: &'a str, inner_config: &'a str) -> DecodeFuture<'a>;
+}
+
+/// What `decodeSubmissionPayloads` could read of a submission.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct DecodedSubmission {
+    pub behavioural: Option<Map<String, Value>>,
+    pub simd: Option<Map<String, Value>>,
+}
+
+/// `collectorN?.length || 0`.
+fn collector_length(decoded: &Map<String, Value>, key: &str) -> usize {
+    decoded.get(key).and_then(Value::as_array).map_or(0, Vec::len)
 }
 
 /// What the attach needs from the provider.
@@ -264,7 +281,7 @@ pub struct DetectionServices<'a> {
     pub db: &'a Arc<ProviderDatabase>,
     pub write_queue: Option<&'a RedisWriteQueue>,
     pub pool: Option<&'a DetectorBundlePool>,
-    pub decoder: Option<&'a dyn SimdDecoder>,
+    pub decoder: Option<&'a dyn PayloadDecoder>,
     pub logger: &'a Logger,
 }
 
@@ -312,6 +329,71 @@ impl DetectionServices<'_> {
                 None
             }
         }
+    }
+
+    /// `decryptBehavioralData`: `None` when there is no bundle or no decoder, or decoding fails.
+    pub async fn decrypt_behavioral_data(&self, encrypted: &str, bundle: Option<&PoolBundleDecrypt>) -> Option<Map<String, Value>> {
+        let Some(bundle) = bundle else {
+            self.logger.warn(|| LogRecord::msg("No detector bundle resolved for behavioral data — dropping field"));
+            return None;
+        };
+        let Some(decoder) = self.decoder else {
+            self.logger.warn(|| LogRecord::msg("No behavioral data decoder in this build — dropping field"));
+            return None;
+        };
+        match decoder.decrypt_behavioral_data(encrypted, &bundle.key, &bundle.inner_config).await {
+            Ok(decoded) => {
+                self.logger.info(|| {
+                    LogRecord::msg("Behavioral data decrypted successfully").with_data(json!({
+                        "c1Length": collector_length(&decoded, "collector1"),
+                        "c2Length": collector_length(&decoded, "collector2"),
+                        "c3Length": collector_length(&decoded, "collector3"),
+                        "c4Length": collector_length(&decoded, "collector4"),
+                        "deviceCapability": decoded.get("deviceCapability"),
+                    }))
+                });
+                Some(decoded)
+            }
+            Err(error) => {
+                self.logger.warn(|| {
+                    LogRecord::msg("Failed to decrypt behavioral data with the session's bundle").with_data(json!({ "err": { "message": error } }))
+                });
+                None
+            }
+        }
+    }
+
+    /// `decodeSubmissionPayloads`: the session's bundle resolved once, and both payloads decoded
+    /// together with it. Absent, empty or unreadable payloads come back `None`.
+    pub async fn decode_submission_payloads(&self, session_id: Option<&str>, behavioural: Option<&str>, simd: Option<&str>) -> DecodedSubmission {
+        let behavioural: Option<&str> = behavioural.filter(|payload| !payload.is_empty());
+        let simd: Option<&str> = simd.filter(|payload| !payload.is_empty());
+        if behavioural.is_none() && simd.is_none() {
+            return DecodedSubmission::default();
+        }
+        let bundle: Option<PoolBundleDecrypt> = match self.resolve_bundle_by_session_id(session_id.unwrap_or_default()).await {
+            Ok(bundle) => bundle,
+            Err(error) => {
+                self.logger.warn(|| {
+                    LogRecord::msg("Could not resolve the detector bundle for a submission").with_data(json!({ "sessionId": session_id })).with_err(error)
+                });
+                return DecodedSubmission::default();
+            }
+        };
+        let decode_behavioural = async {
+            match behavioural {
+                Some(payload) => self.decrypt_behavioral_data(payload, bundle.as_ref()).await,
+                None => None,
+            }
+        };
+        let decode_simd = async {
+            match simd {
+                Some(payload) => self.decrypt_simd_readings_for_attach(payload, bundle.as_ref()).await,
+                None => None,
+            }
+        };
+        let (behavioural, simd) = futures_util::join!(decode_behavioural, decode_simd);
+        DecodedSubmission { behavioural, simd }
     }
 
     /// `decryptSimdReadingsForAttach`: the readings without the decoder's `timestamp`.
@@ -563,13 +645,24 @@ mod tests {
         fails: bool,
     }
 
-    impl SimdDecoder for FakeDecoder {
+    impl PayloadDecoder for FakeDecoder {
         fn decrypt_simd_readings<'a>(&'a self, encrypted: &'a str, private_key: &'a str, inner_config: &'a str) -> DecodeFuture<'a> {
             self.calls.lock().expect("unpoisoned").push((encrypted.into(), private_key.into(), inner_config.into()));
             let result: Result<Map<String, Value>, String> = if self.fails {
                 Err("decrypt failed".into())
             } else {
                 serde_json::from_str(r#"{"supported":true,"timestamp":1000,"schema":1}"#).map_err(|error| error.to_string())
+            };
+            Box::pin(async move { result })
+        }
+
+        fn decrypt_behavioral_data<'a>(&'a self, encrypted: &'a str, private_key: &'a str, inner_config: &'a str) -> DecodeFuture<'a> {
+            self.calls.lock().expect("unpoisoned").push((encrypted.into(), private_key.into(), inner_config.into()));
+            let result: Result<Map<String, Value>, String> = if self.fails {
+                Err("decrypt failed".into())
+            } else {
+                serde_json::from_str(r#"{"collector1":[{"event":"click"}],"collector2":[],"collector3":[],"deviceCapability":"desktop","timestamp":1000}"#)
+                    .map_err(|error| error.to_string())
             };
             Box::pin(async move { result })
         }
@@ -640,6 +733,139 @@ mod tests {
         assert_eq!(resolve_bundle_by_id(Some(&pool), Some("")), None);
         assert_eq!(resolve_bundle_by_id(Some(&pool), None), None);
         assert_eq!(resolve_bundle_by_id(None, Some("b")), None);
+    }
+
+    #[tokio::test]
+    async fn returns_no_behavioural_data_when_no_bundle_is_provided() {
+        let decoder: FakeDecoder = FakeDecoder::default();
+        let (db, logger) = (database(), logger());
+        let services = DetectionServices { db: &db, write_queue: None, pool: None, decoder: Some(&decoder), logger: &logger };
+        assert_eq!(services.decrypt_behavioral_data("encryptedData", None).await, None);
+        assert!(decoder.calls.lock().expect("unpoisoned").is_empty());
+    }
+
+    #[tokio::test]
+    async fn decrypts_behavioural_data_with_the_bundles_key_and_inner_config() {
+        let decoder: FakeDecoder = FakeDecoder::default();
+        let (db, logger) = (database(), logger());
+        let services = DetectionServices { db: &db, write_queue: None, pool: None, decoder: Some(&decoder), logger: &logger };
+        let decoded: Map<String, Value> = services.decrypt_behavioral_data("encryptedData", Some(&decrypt_bundle())).await.expect("decrypts");
+        assert_eq!(decoded.get("deviceCapability"), Some(&json!("desktop")));
+        assert_eq!(*decoder.calls.lock().expect("unpoisoned"), vec![("encryptedData".into(), "pk".into(), "cfg".into())]);
+    }
+
+    #[tokio::test]
+    async fn returns_no_behavioural_data_when_the_bundle_fails_to_decrypt() {
+        let decoder: FakeDecoder = FakeDecoder { fails: true, ..FakeDecoder::default() };
+        let (db, logger) = (database(), logger());
+        let services = DetectionServices { db: &db, write_queue: None, pool: None, decoder: Some(&decoder), logger: &logger };
+        assert_eq!(services.decrypt_behavioral_data("encryptedData", Some(&decrypt_bundle())).await, None);
+        assert_eq!(decoder.calls.lock().expect("unpoisoned").len(), 1);
+    }
+
+    /// A database whose every session is promoted to bundle `b`, counting the lookups, or one
+    /// whose lookups fail.
+    #[derive(Default)]
+    struct BundledSessions {
+        lookups: Mutex<usize>,
+        down: bool,
+    }
+
+    impl Executor for BundledSessions {
+        fn run(&self, _operation: Operation) -> ReplyFuture<'_> {
+            *self.lookups.lock().expect("unpoisoned") += 1;
+            let reply = if self.down {
+                Err(prosopo_database::mongo::MongoError::Unavailable("redis down".into()))
+            } else {
+                Ok(Reply::Documents(vec![bson::doc! {
+                    "sessionId": "s1",
+                    "createdAt": bson::DateTime::from_millis(1_700_000_000_000),
+                    "token": "token",
+                    "score": 0.5,
+                    "threshold": 0.5,
+                    "scoreComponents": { "baseScore": 0.5 },
+                    "ipAddress": { "lower": 2_130_706_433_i64, "type": "v4" },
+                    "captchaType": "pow",
+                    "webView": false,
+                    "iFrame": false,
+                    "decryptedHeadHash": "",
+                    "bundleId": "b",
+                }]))
+            };
+            Box::pin(async move { reply })
+        }
+    }
+
+    fn bundled_pool() -> DetectorBundlePool {
+        let mut pool: DetectorBundlePool = DetectorBundlePool::default();
+        pool.replace(HashMap::from([("b".to_string(), bundle("JS", "pk", "cfg"))]));
+        pool
+    }
+
+    /// Decodes behavioural data only once SIMD decoding has started, so it finishes only if the
+    /// two run together.
+    #[derive(Default)]
+    struct OverlapDecoder {
+        simd_started: tokio::sync::Notify,
+        behaviour_fails: bool,
+    }
+
+    impl PayloadDecoder for OverlapDecoder {
+        fn decrypt_simd_readings<'a>(&'a self, _encrypted: &'a str, _private_key: &'a str, _inner_config: &'a str) -> DecodeFuture<'a> {
+            self.simd_started.notify_one();
+            Box::pin(async { Ok(serde_json::from_str(r#"{"ops":[1,2],"timestamp":5}"#).expect("json")) })
+        }
+
+        fn decrypt_behavioral_data<'a>(&'a self, _encrypted: &'a str, _private_key: &'a str, _inner_config: &'a str) -> DecodeFuture<'a> {
+            Box::pin(async move {
+                self.simd_started.notified().await;
+                if self.behaviour_fails {
+                    return Err("decoder blew up".into());
+                }
+                Ok(serde_json::from_str(r#"{"collector1":[{"event":"click"}],"collector2":[],"collector3":[],"deviceCapability":"desktop","timestamp":1000}"#).expect("json"))
+            })
+        }
+    }
+
+    async fn decode_submission(executor: Arc<BundledSessions>, decoder: &dyn PayloadDecoder, behavioural: Option<&str>, simd: Option<&str>) -> DecodedSubmission {
+        let db: Arc<ProviderDatabase> = Arc::new(ProviderDatabase::new(executor, Arc::new(SystemSource), logger()));
+        let (pool, logger) = (bundled_pool(), logger());
+        let services = DetectionServices { db: &db, write_queue: None, pool: Some(&pool), decoder: Some(decoder), logger: &logger };
+        tokio::time::timeout(std::time::Duration::from_secs(5), services.decode_submission_payloads(Some("s1"), behavioural, simd)).await.expect("the decodes overlap")
+    }
+
+    #[tokio::test]
+    async fn resolves_the_session_bundle_once_for_both_payloads_and_decodes_them_together() {
+        let executor: Arc<BundledSessions> = Arc::new(BundledSessions::default());
+        let decoded: DecodedSubmission = decode_submission(executor.clone(), &OverlapDecoder::default(), Some("b"), Some("s")).await;
+        assert_eq!(*executor.lookups.lock().expect("unpoisoned"), 1);
+        assert_eq!(decoded.behavioural.as_ref().and_then(|data| data.get("deviceCapability")), Some(&json!("desktop")));
+        assert_eq!(decoded.simd, Some(serde_json::from_str(r#"{"ops":[1,2]}"#).expect("json")));
+    }
+
+    #[tokio::test]
+    async fn keeps_one_payload_when_the_other_decode_fails() {
+        let decoder: OverlapDecoder = OverlapDecoder { behaviour_fails: true, ..OverlapDecoder::default() };
+        let decoded: DecodedSubmission = decode_submission(Arc::new(BundledSessions::default()), &decoder, Some("b"), Some("s")).await;
+        assert_eq!(decoded.behavioural, None);
+        assert_eq!(decoded.simd, Some(serde_json::from_str(r#"{"ops":[1,2]}"#).expect("json")));
+    }
+
+    #[tokio::test]
+    async fn does_not_resolve_a_bundle_when_there_is_nothing_to_decode() {
+        let executor: Arc<BundledSessions> = Arc::new(BundledSessions::default());
+        let decoder: FakeDecoder = FakeDecoder::default();
+        assert_eq!(decode_submission(executor.clone(), &decoder, None, None).await, DecodedSubmission::default());
+        assert_eq!(decode_submission(executor.clone(), &decoder, Some(""), Some("")).await, DecodedSubmission::default());
+        assert_eq!(*executor.lookups.lock().expect("unpoisoned"), 0);
+    }
+
+    #[tokio::test]
+    async fn yields_nothing_when_the_bundle_lookup_fails() {
+        let executor: Arc<BundledSessions> = Arc::new(BundledSessions { down: true, ..BundledSessions::default() });
+        let decoder: FakeDecoder = FakeDecoder::default();
+        assert_eq!(decode_submission(executor, &decoder, Some("b"), None).await, DecodedSubmission::default());
+        assert!(decoder.calls.lock().expect("unpoisoned").is_empty());
     }
 
     #[tokio::test]

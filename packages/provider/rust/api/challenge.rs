@@ -30,7 +30,7 @@ use crate::api::public::EnvReader;
 use crate::api::pipeline::{handle_errors, validate_address, RequestSignals};
 use crate::composite_ip::get_composite_ip_address;
 use crate::tasks::audio::{render_audio_clip, resolve_audio_render_settings, AudioBufferOptions, AudioChallengeBuffer, AudioRenderer, RenderedAudioClip};
-use crate::tasks::detection::{DetectionServices, DetectorBundlePool, SimdDecoder};
+use crate::tasks::detection::{DetectionServices, DetectorBundlePool, PayloadDecoder};
 use crate::mobile_signals::{derive_mobile_verdict, MobileSignals, MobileVerdict};
 use crate::tasks::image::{get_random_captchas_and_request_hash, ImageChallenge, ImageChallengeRequest};
 use crate::tasks::puzzle::{
@@ -99,7 +99,7 @@ pub struct ChallengeState {
     /// `env.pair`, which signs each challenge.
     pub pair: Option<KeyringPair>,
     pub pool: Arc<RwLock<Arc<DetectorBundlePool>>>,
-    pub decoder: Option<Arc<dyn SimdDecoder>>,
+    pub decoder: Option<Arc<dyn PayloadDecoder>>,
     pub seeds: Arc<dyn SeedSource>,
     /// The process's audio buffer, made on first use as `initAudioChallengeBuffer` makes it.
     pub audio: OnceLock<Arc<AudioChallengeBuffer>>,

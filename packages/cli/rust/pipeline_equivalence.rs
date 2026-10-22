@@ -93,7 +93,7 @@ async fn the_pipeline_answers_as_the_express_app_does() {
             env: Arc::new(move |name: &str| variables.get(name).cloned()),
             i18n: locales(),
             version: "dev".to_string(),
-            simd_decoder: None,
+            decoder: None,
             seeds: Arc::new(prosopo_provider::api::challenge::FreshSeeds),
             dataset_id: None,
         });

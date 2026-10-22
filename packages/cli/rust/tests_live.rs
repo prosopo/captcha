@@ -36,7 +36,7 @@ use prosopo_util_crypto::jwt::JwtIssueOptions;
 use prosopo_provider::api::healthz_geo::HealthzProbe;
 use prosopo_provider::http_replay::{answer, exchange, shown, Answer};
 use prosopo_provider::api::challenge::SeedSource;
-use prosopo_provider::tasks::detection::{DecodeFuture, SimdDecoder};
+use prosopo_provider::tasks::detection::{DecodeFuture, PayloadDecoder};
 use prosopo_types::config::ProsopoConfig;
 use prosopo_util_crypto::U8aLike;
 use serde_json::{json, Map, Value};
@@ -240,7 +240,7 @@ async fn live_app_at(variables: &HashMap<String, String>, source: Arc<dyn Source
 async fn live_app_with(
     variables: &HashMap<String, String>,
     source: Arc<dyn Source>,
-    simd_decoder: Option<Arc<dyn SimdDecoder>>,
+    decoder: Option<Arc<dyn PayloadDecoder>>,
     seeds: Option<Arc<dyn SeedSource>>,
     dataset_id: Option<String>,
 ) -> (Router, Arc<ProviderEnvironment>) {
@@ -263,7 +263,7 @@ async fn live_app_with(
         env: Arc::new(move |name: &str| reader.get(name).cloned()),
         probe,
         version: "dev".to_string(),
-        simd_decoder,
+        decoder,
         seeds: seeds.unwrap_or_else(|| Arc::new(prosopo_provider::api::challenge::FreshSeeds)),
         dataset_id,
         ..app_parts(env.clone())
@@ -966,16 +966,26 @@ async fn commands_run_as_the_node_ones_do() {
 /// Each SIMD payload the challenge generator sent, and what decodeSimd.js read out of it.
 type DecodedPayloads = Vec<(String, Result<Map<String, Value>, String>)>;
 
-struct RecordedSimdDecoder(DecodedPayloads);
+struct RecordedDecoder(DecodedPayloads);
 
-impl SimdDecoder for RecordedSimdDecoder {
-    fn decrypt_simd_readings<'a>(&'a self, encrypted: &'a str, _private_key: &'a str, _inner_config: &'a str) -> DecodeFuture<'a> {
+impl RecordedDecoder {
+    fn recorded(&self, encrypted: &str) -> DecodeFuture<'_> {
         let found: Result<Map<String, Value>, String> = self
             .0
             .iter()
             .find(|(ciphertext, _)| ciphertext == encrypted)
             .map_or_else(|| Err("not a payload the generator sent".to_string()), |(_, decoded)| decoded.clone());
         Box::pin(async move { found })
+    }
+}
+
+impl PayloadDecoder for RecordedDecoder {
+    fn decrypt_simd_readings<'a>(&'a self, encrypted: &'a str, _private_key: &'a str, _inner_config: &'a str) -> DecodeFuture<'a> {
+        self.recorded(encrypted)
+    }
+
+    fn decrypt_behavioral_data<'a>(&'a self, encrypted: &'a str, _private_key: &'a str, _inner_config: &'a str) -> DecodeFuture<'a> {
+        self.recorded(encrypted)
     }
 }
 
@@ -1430,7 +1440,7 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
             (0..hex.len()).step_by(2).map(|i| u8::from_str_radix(&hex[i..i + 2], 16).expect("hex")).collect()
         })
         .collect();
-    let (router, _env) = live_app_with(&variables, clock.clone(), Some(Arc::new(RecordedSimdDecoder(decoded))), Some(Arc::new(RecordedSeeds(Mutex::new(seeds)))), vectors["datasetId"].as_str().map(str::to_string)).await;
+    let (router, _env) = live_app_with(&variables, clock.clone(), Some(Arc::new(RecordedDecoder(decoded))), Some(Arc::new(RecordedSeeds(Mutex::new(seeds)))), vectors["datasetId"].as_str().map(str::to_string)).await;
     restore_database(database, &vectors["seed"]).await;
     restore_hashes(&vectors["redis"]).await;
     let mut connection = redis().await;
