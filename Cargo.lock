@@ -2304,12 +2304,20 @@ dependencies = [
 name = "prosopo-cli"
 version = "6.0.0"
 dependencies = [
+ "axum",
+ "clap",
  "prosopo-api-route",
  "prosopo-common",
+ "prosopo-dotenv",
+ "prosopo-env",
+ "prosopo-keyring",
  "prosopo-logger",
+ "prosopo-provider",
  "prosopo-types",
  "prosopo-util",
+ "prosopo-util-crypto",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]

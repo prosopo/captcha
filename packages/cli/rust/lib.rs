@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! `@prosopo/cli`: the provider's entry point. This part builds its config from the
-//! environment as the TS does.
+//! `@prosopo/cli`: the provider's entry point: its config from the environment, and the API
+//! started from it (the `prosopo-provider` binary).
 
 mod config;
 mod process_env;
 mod rate_limiter;
+mod start;
 
 pub use config::{get_config, ConfigError, Environment};
 pub use process_env::{get_address, get_db, get_password, get_secret};
 pub use rate_limiter::get_rate_limit_config;
+pub use start::{start, version};
 
 #[cfg(test)]
 mod config_equivalence;

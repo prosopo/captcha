@@ -12,7 +12,23 @@ autobenches = false
 [lib]
 path = "rust/lib.rs"
 
+[[bin]]
+name = "prosopo-provider"
+path = "rust/main.rs"
+
+[[test]]
+name = "binary"
+path = "rust/tests_binary.rs"
+
 [dependencies]
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
+clap = { version = "4.5", features = ["derive"] }
+prosopo-dotenv = { path = "../dotenv" }
+prosopo-env = { path = "../env" }
+prosopo-keyring = { path = "../keyring" }
+prosopo-provider = { path = "../provider" }
+prosopo-util-crypto = { path = "../util-crypto" }
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "signal"] }
 prosopo-api-route = { path = "../api-route" }
 prosopo-common = { path = "../common" }
 prosopo-logger = { path = "../logger" }
