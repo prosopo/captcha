@@ -2593,6 +2593,7 @@ dependencies = [
  "prosopo-user-access-policy",
  "prosopo-util",
  "prosopo-util-crypto",
+ "rand_core 0.6.4",
  "redis",
  "reqwest",
  "serde",

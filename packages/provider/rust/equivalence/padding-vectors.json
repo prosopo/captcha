@@ -1,0 +1,1765 @@
+{
+	"maxPadBytes": 5242880,
+	"cases": [
+		{
+			"body": {
+				"status": "ok",
+				"challenge": "0x1234",
+				"difficulty": 9,
+				"timestamp": "1764000000000"
+			},
+			"padBytes": null,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"status\":\"ok\"",
+					"\"challenge\":\"0x1234\"",
+					"\"difficulty\":9",
+					"\"timestamp\":\"1764000000000\""
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"status": "ok",
+				"challenge": "0x1234",
+				"difficulty": 9,
+				"timestamp": "1764000000000"
+			},
+			"padBytes": 0,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"status\":\"ok\"",
+					"\"challenge\":\"0x1234\"",
+					"\"difficulty\":9",
+					"\"timestamp\":\"1764000000000\""
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"status": "ok",
+				"challenge": "0x1234",
+				"difficulty": 9,
+				"timestamp": "1764000000000"
+			},
+			"padBytes": -1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"status\":\"ok\"",
+					"\"challenge\":\"0x1234\"",
+					"\"difficulty\":9",
+					"\"timestamp\":\"1764000000000\""
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"status": "ok",
+				"challenge": "0x1234",
+				"difficulty": 9,
+				"timestamp": "1764000000000"
+			},
+			"padBytes": "NaN",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"status\":\"ok\"",
+					"\"challenge\":\"0x1234\"",
+					"\"difficulty\":9",
+					"\"timestamp\":\"1764000000000\""
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"status": "ok",
+				"challenge": "0x1234",
+				"difficulty": 9,
+				"timestamp": "1764000000000"
+			},
+			"padBytes": 0.5,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"status\":\"ok\"",
+					"\"challenge\":\"0x1234\"",
+					"\"difficulty\":9",
+					"\"timestamp\":\"1764000000000\""
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"status": "ok",
+				"challenge": "0x1234",
+				"difficulty": 9,
+				"timestamp": "1764000000000"
+			},
+			"padBytes": 1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"status\":\"ok\"",
+					"\"challenge\":\"0x1234\"",
+					"\"difficulty\":9",
+					"\"timestamp\":\"1764000000000\""
+				],
+				"pads": 4,
+				"total": 1
+			}
+		},
+		{
+			"body": {
+				"status": "ok",
+				"challenge": "0x1234",
+				"difficulty": 9,
+				"timestamp": "1764000000000"
+			},
+			"padBytes": 1.9,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"status\":\"ok\"",
+					"\"challenge\":\"0x1234\"",
+					"\"difficulty\":9",
+					"\"timestamp\":\"1764000000000\""
+				],
+				"pads": 4,
+				"total": 1
+			}
+		},
+		{
+			"body": {
+				"status": "ok",
+				"challenge": "0x1234",
+				"difficulty": 9,
+				"timestamp": "1764000000000"
+			},
+			"padBytes": 64,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"status\":\"ok\"",
+					"\"challenge\":\"0x1234\"",
+					"\"difficulty\":9",
+					"\"timestamp\":\"1764000000000\""
+				],
+				"pads": 4,
+				"total": 64
+			}
+		},
+		{
+			"body": {
+				"status": "ok",
+				"challenge": "0x1234",
+				"difficulty": 9,
+				"timestamp": "1764000000000"
+			},
+			"padBytes": 4096,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"status\":\"ok\"",
+					"\"challenge\":\"0x1234\"",
+					"\"difficulty\":9",
+					"\"timestamp\":\"1764000000000\""
+				],
+				"pads": 4,
+				"total": 4096
+			}
+		},
+		{
+			"body": {
+				"status": "ok",
+				"challenge": "0x1234",
+				"difficulty": 9,
+				"timestamp": "1764000000000"
+			},
+			"padBytes": "Infinity",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"status\":\"ok\"",
+					"\"challenge\":\"0x1234\"",
+					"\"difficulty\":9",
+					"\"timestamp\":\"1764000000000\""
+				],
+				"pads": 4,
+				"total": 5242880
+			}
+		},
+		{
+			"body": {
+				"status": "ok",
+				"challenge": "0x1234",
+				"difficulty": 9,
+				"timestamp": "1764000000000"
+			},
+			"padBytes": 52428800,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"status\":\"ok\"",
+					"\"challenge\":\"0x1234\"",
+					"\"difficulty\":9",
+					"\"timestamp\":\"1764000000000\""
+				],
+				"pads": 4,
+				"total": 5242880
+			}
+		},
+		{
+			"body": {},
+			"padBytes": null,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {},
+			"padBytes": 0,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {},
+			"padBytes": -1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {},
+			"padBytes": "NaN",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {},
+			"padBytes": 0.5,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {},
+			"padBytes": 1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [],
+				"pads": 1,
+				"total": 1
+			}
+		},
+		{
+			"body": {},
+			"padBytes": 1.9,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [],
+				"pads": 1,
+				"total": 1
+			}
+		},
+		{
+			"body": {},
+			"padBytes": 64,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [],
+				"pads": 1,
+				"total": 64
+			}
+		},
+		{
+			"body": {},
+			"padBytes": 4096,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [],
+				"pads": 1,
+				"total": 4096
+			}
+		},
+		{
+			"body": {},
+			"padBytes": "Infinity",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [],
+				"pads": 1,
+				"total": 5242880
+			}
+		},
+		{
+			"body": {},
+			"padBytes": 52428800,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [],
+				"pads": 1,
+				"total": 5242880
+			}
+		},
+		{
+			"body": {
+				"1": null,
+				"2": {
+					"1": 2,
+					"z": 1
+				},
+				"b": 1,
+				"a": [
+					1,
+					"x",
+					null
+				],
+				"01": true
+			},
+			"padBytes": null,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"1\":null",
+					"\"2\":{\"1\":2,\"z\":1}",
+					"\"b\":1",
+					"\"a\":[1,\"x\",null]",
+					"\"01\":true"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"1": null,
+				"2": {
+					"1": 2,
+					"z": 1
+				},
+				"b": 1,
+				"a": [
+					1,
+					"x",
+					null
+				],
+				"01": true
+			},
+			"padBytes": 0,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"1\":null",
+					"\"2\":{\"1\":2,\"z\":1}",
+					"\"b\":1",
+					"\"a\":[1,\"x\",null]",
+					"\"01\":true"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"1": null,
+				"2": {
+					"1": 2,
+					"z": 1
+				},
+				"b": 1,
+				"a": [
+					1,
+					"x",
+					null
+				],
+				"01": true
+			},
+			"padBytes": -1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"1\":null",
+					"\"2\":{\"1\":2,\"z\":1}",
+					"\"b\":1",
+					"\"a\":[1,\"x\",null]",
+					"\"01\":true"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"1": null,
+				"2": {
+					"1": 2,
+					"z": 1
+				},
+				"b": 1,
+				"a": [
+					1,
+					"x",
+					null
+				],
+				"01": true
+			},
+			"padBytes": "NaN",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"1\":null",
+					"\"2\":{\"1\":2,\"z\":1}",
+					"\"b\":1",
+					"\"a\":[1,\"x\",null]",
+					"\"01\":true"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"1": null,
+				"2": {
+					"1": 2,
+					"z": 1
+				},
+				"b": 1,
+				"a": [
+					1,
+					"x",
+					null
+				],
+				"01": true
+			},
+			"padBytes": 0.5,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"1\":null",
+					"\"2\":{\"1\":2,\"z\":1}",
+					"\"b\":1",
+					"\"a\":[1,\"x\",null]",
+					"\"01\":true"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"1": null,
+				"2": {
+					"1": 2,
+					"z": 1
+				},
+				"b": 1,
+				"a": [
+					1,
+					"x",
+					null
+				],
+				"01": true
+			},
+			"padBytes": 1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"1\":null",
+					"\"2\":{\"1\":2,\"z\":1}",
+					"\"b\":1",
+					"\"a\":[1,\"x\",null]",
+					"\"01\":true"
+				],
+				"pads": 5,
+				"total": 1
+			}
+		},
+		{
+			"body": {
+				"1": null,
+				"2": {
+					"1": 2,
+					"z": 1
+				},
+				"b": 1,
+				"a": [
+					1,
+					"x",
+					null
+				],
+				"01": true
+			},
+			"padBytes": 1.9,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"1\":null",
+					"\"2\":{\"1\":2,\"z\":1}",
+					"\"b\":1",
+					"\"a\":[1,\"x\",null]",
+					"\"01\":true"
+				],
+				"pads": 5,
+				"total": 1
+			}
+		},
+		{
+			"body": {
+				"1": null,
+				"2": {
+					"1": 2,
+					"z": 1
+				},
+				"b": 1,
+				"a": [
+					1,
+					"x",
+					null
+				],
+				"01": true
+			},
+			"padBytes": 64,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"1\":null",
+					"\"2\":{\"1\":2,\"z\":1}",
+					"\"b\":1",
+					"\"a\":[1,\"x\",null]",
+					"\"01\":true"
+				],
+				"pads": 5,
+				"total": 64
+			}
+		},
+		{
+			"body": {
+				"1": null,
+				"2": {
+					"1": 2,
+					"z": 1
+				},
+				"b": 1,
+				"a": [
+					1,
+					"x",
+					null
+				],
+				"01": true
+			},
+			"padBytes": 4096,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"1\":null",
+					"\"2\":{\"1\":2,\"z\":1}",
+					"\"b\":1",
+					"\"a\":[1,\"x\",null]",
+					"\"01\":true"
+				],
+				"pads": 5,
+				"total": 4096
+			}
+		},
+		{
+			"body": {
+				"1": null,
+				"2": {
+					"1": 2,
+					"z": 1
+				},
+				"b": 1,
+				"a": [
+					1,
+					"x",
+					null
+				],
+				"01": true
+			},
+			"padBytes": "Infinity",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"1\":null",
+					"\"2\":{\"1\":2,\"z\":1}",
+					"\"b\":1",
+					"\"a\":[1,\"x\",null]",
+					"\"01\":true"
+				],
+				"pads": 5,
+				"total": 5242880
+			}
+		},
+		{
+			"body": {
+				"1": null,
+				"2": {
+					"1": 2,
+					"z": 1
+				},
+				"b": 1,
+				"a": [
+					1,
+					"x",
+					null
+				],
+				"01": true
+			},
+			"padBytes": 52428800,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"1\":null",
+					"\"2\":{\"1\":2,\"z\":1}",
+					"\"b\":1",
+					"\"a\":[1,\"x\",null]",
+					"\"01\":true"
+				],
+				"pads": 5,
+				"total": 5242880
+			}
+		},
+		{
+			"body": {
+				"s": "é\"\\\n 😀\u0000"
+			},
+			"padBytes": null,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"s\":\"é\\\"\\\\\\n 😀\\u0000\""
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"s": "é\"\\\n 😀\u0000"
+			},
+			"padBytes": 0,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"s\":\"é\\\"\\\\\\n 😀\\u0000\""
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"s": "é\"\\\n 😀\u0000"
+			},
+			"padBytes": -1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"s\":\"é\\\"\\\\\\n 😀\\u0000\""
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"s": "é\"\\\n 😀\u0000"
+			},
+			"padBytes": "NaN",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"s\":\"é\\\"\\\\\\n 😀\\u0000\""
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"s": "é\"\\\n 😀\u0000"
+			},
+			"padBytes": 0.5,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"s\":\"é\\\"\\\\\\n 😀\\u0000\""
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"s": "é\"\\\n 😀\u0000"
+			},
+			"padBytes": 1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"s\":\"é\\\"\\\\\\n 😀\\u0000\""
+				],
+				"pads": 1,
+				"total": 1
+			}
+		},
+		{
+			"body": {
+				"s": "é\"\\\n 😀\u0000"
+			},
+			"padBytes": 1.9,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"s\":\"é\\\"\\\\\\n 😀\\u0000\""
+				],
+				"pads": 1,
+				"total": 1
+			}
+		},
+		{
+			"body": {
+				"s": "é\"\\\n 😀\u0000"
+			},
+			"padBytes": 64,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"s\":\"é\\\"\\\\\\n 😀\\u0000\""
+				],
+				"pads": 1,
+				"total": 64
+			}
+		},
+		{
+			"body": {
+				"s": "é\"\\\n 😀\u0000"
+			},
+			"padBytes": 4096,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"s\":\"é\\\"\\\\\\n 😀\\u0000\""
+				],
+				"pads": 1,
+				"total": 4096
+			}
+		},
+		{
+			"body": {
+				"s": "é\"\\\n 😀\u0000"
+			},
+			"padBytes": "Infinity",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"s\":\"é\\\"\\\\\\n 😀\\u0000\""
+				],
+				"pads": 1,
+				"total": 5242880
+			}
+		},
+		{
+			"body": {
+				"s": "é\"\\\n 😀\u0000"
+			},
+			"padBytes": 52428800,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"s\":\"é\\\"\\\\\\n 😀\\u0000\""
+				],
+				"pads": 1,
+				"total": 5242880
+			}
+		},
+		{
+			"body": {
+				"n": 1e+21,
+				"f": 0.1,
+				"small": 0.000001,
+				"neg": -42,
+				"big": 12345678901234567000
+			},
+			"padBytes": null,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"n\":1e+21",
+					"\"f\":0.1",
+					"\"small\":0.000001",
+					"\"neg\":-42",
+					"\"big\":12345678901234567000"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"n": 1e+21,
+				"f": 0.1,
+				"small": 0.000001,
+				"neg": -42,
+				"big": 12345678901234567000
+			},
+			"padBytes": 0,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"n\":1e+21",
+					"\"f\":0.1",
+					"\"small\":0.000001",
+					"\"neg\":-42",
+					"\"big\":12345678901234567000"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"n": 1e+21,
+				"f": 0.1,
+				"small": 0.000001,
+				"neg": -42,
+				"big": 12345678901234567000
+			},
+			"padBytes": -1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"n\":1e+21",
+					"\"f\":0.1",
+					"\"small\":0.000001",
+					"\"neg\":-42",
+					"\"big\":12345678901234567000"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"n": 1e+21,
+				"f": 0.1,
+				"small": 0.000001,
+				"neg": -42,
+				"big": 12345678901234567000
+			},
+			"padBytes": "NaN",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"n\":1e+21",
+					"\"f\":0.1",
+					"\"small\":0.000001",
+					"\"neg\":-42",
+					"\"big\":12345678901234567000"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"n": 1e+21,
+				"f": 0.1,
+				"small": 0.000001,
+				"neg": -42,
+				"big": 12345678901234567000
+			},
+			"padBytes": 0.5,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"n\":1e+21",
+					"\"f\":0.1",
+					"\"small\":0.000001",
+					"\"neg\":-42",
+					"\"big\":12345678901234567000"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"n": 1e+21,
+				"f": 0.1,
+				"small": 0.000001,
+				"neg": -42,
+				"big": 12345678901234567000
+			},
+			"padBytes": 1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"n\":1e+21",
+					"\"f\":0.1",
+					"\"small\":0.000001",
+					"\"neg\":-42",
+					"\"big\":12345678901234567000"
+				],
+				"pads": 5,
+				"total": 1
+			}
+		},
+		{
+			"body": {
+				"n": 1e+21,
+				"f": 0.1,
+				"small": 0.000001,
+				"neg": -42,
+				"big": 12345678901234567000
+			},
+			"padBytes": 1.9,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"n\":1e+21",
+					"\"f\":0.1",
+					"\"small\":0.000001",
+					"\"neg\":-42",
+					"\"big\":12345678901234567000"
+				],
+				"pads": 5,
+				"total": 1
+			}
+		},
+		{
+			"body": {
+				"n": 1e+21,
+				"f": 0.1,
+				"small": 0.000001,
+				"neg": -42,
+				"big": 12345678901234567000
+			},
+			"padBytes": 64,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"n\":1e+21",
+					"\"f\":0.1",
+					"\"small\":0.000001",
+					"\"neg\":-42",
+					"\"big\":12345678901234567000"
+				],
+				"pads": 5,
+				"total": 64
+			}
+		},
+		{
+			"body": {
+				"n": 1e+21,
+				"f": 0.1,
+				"small": 0.000001,
+				"neg": -42,
+				"big": 12345678901234567000
+			},
+			"padBytes": 4096,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"n\":1e+21",
+					"\"f\":0.1",
+					"\"small\":0.000001",
+					"\"neg\":-42",
+					"\"big\":12345678901234567000"
+				],
+				"pads": 5,
+				"total": 4096
+			}
+		},
+		{
+			"body": {
+				"n": 1e+21,
+				"f": 0.1,
+				"small": 0.000001,
+				"neg": -42,
+				"big": 12345678901234567000
+			},
+			"padBytes": "Infinity",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"n\":1e+21",
+					"\"f\":0.1",
+					"\"small\":0.000001",
+					"\"neg\":-42",
+					"\"big\":12345678901234567000"
+				],
+				"pads": 5,
+				"total": 5242880
+			}
+		},
+		{
+			"body": {
+				"n": 1e+21,
+				"f": 0.1,
+				"small": 0.000001,
+				"neg": -42,
+				"big": 12345678901234567000
+			},
+			"padBytes": 52428800,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"n\":1e+21",
+					"\"f\":0.1",
+					"\"small\":0.000001",
+					"\"neg\":-42",
+					"\"big\":12345678901234567000"
+				],
+				"pads": 5,
+				"total": 5242880
+			}
+		},
+		{
+			"body": {
+				"nested": {
+					"deeper": {
+						"deepest": [
+							[
+								[]
+							]
+						]
+					}
+				}
+			},
+			"padBytes": null,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"nested\":{\"deeper\":{\"deepest\":[[[]]]}}"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"nested": {
+					"deeper": {
+						"deepest": [
+							[
+								[]
+							]
+						]
+					}
+				}
+			},
+			"padBytes": 0,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"nested\":{\"deeper\":{\"deepest\":[[[]]]}}"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"nested": {
+					"deeper": {
+						"deepest": [
+							[
+								[]
+							]
+						]
+					}
+				}
+			},
+			"padBytes": -1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"nested\":{\"deeper\":{\"deepest\":[[[]]]}}"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"nested": {
+					"deeper": {
+						"deepest": [
+							[
+								[]
+							]
+						]
+					}
+				}
+			},
+			"padBytes": "NaN",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"nested\":{\"deeper\":{\"deepest\":[[[]]]}}"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"nested": {
+					"deeper": {
+						"deepest": [
+							[
+								[]
+							]
+						]
+					}
+				}
+			},
+			"padBytes": 0.5,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"members": [
+					"\"nested\":{\"deeper\":{\"deepest\":[[[]]]}}"
+				],
+				"pads": 0,
+				"total": 0
+			}
+		},
+		{
+			"body": {
+				"nested": {
+					"deeper": {
+						"deepest": [
+							[
+								[]
+							]
+						]
+					}
+				}
+			},
+			"padBytes": 1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"nested\":{\"deeper\":{\"deepest\":[[[]]]}}"
+				],
+				"pads": 1,
+				"total": 1
+			}
+		},
+		{
+			"body": {
+				"nested": {
+					"deeper": {
+						"deepest": [
+							[
+								[]
+							]
+						]
+					}
+				}
+			},
+			"padBytes": 1.9,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"nested\":{\"deeper\":{\"deepest\":[[[]]]}}"
+				],
+				"pads": 1,
+				"total": 1
+			}
+		},
+		{
+			"body": {
+				"nested": {
+					"deeper": {
+						"deepest": [
+							[
+								[]
+							]
+						]
+					}
+				}
+			},
+			"padBytes": 64,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"nested\":{\"deeper\":{\"deepest\":[[[]]]}}"
+				],
+				"pads": 1,
+				"total": 64
+			}
+		},
+		{
+			"body": {
+				"nested": {
+					"deeper": {
+						"deepest": [
+							[
+								[]
+							]
+						]
+					}
+				}
+			},
+			"padBytes": 4096,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"nested\":{\"deeper\":{\"deepest\":[[[]]]}}"
+				],
+				"pads": 1,
+				"total": 4096
+			}
+		},
+		{
+			"body": {
+				"nested": {
+					"deeper": {
+						"deepest": [
+							[
+								[]
+							]
+						]
+					}
+				}
+			},
+			"padBytes": "Infinity",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"nested\":{\"deeper\":{\"deepest\":[[[]]]}}"
+				],
+				"pads": 1,
+				"total": 5242880
+			}
+		},
+		{
+			"body": {
+				"nested": {
+					"deeper": {
+						"deepest": [
+							[
+								[]
+							]
+						]
+					}
+				}
+			},
+			"padBytes": 52428800,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": true,
+			"etag": false,
+			"contentLength": false,
+			"shape": {
+				"members": [
+					"\"nested\":{\"deeper\":{\"deepest\":[[[]]]}}"
+				],
+				"pads": 1,
+				"total": 5242880
+			}
+		},
+		{
+			"body": [
+				"a",
+				"b"
+			],
+			"padBytes": null,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "[\"a\",\"b\"]"
+			}
+		},
+		{
+			"body": [
+				"a",
+				"b"
+			],
+			"padBytes": 0,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "[\"a\",\"b\"]"
+			}
+		},
+		{
+			"body": [
+				"a",
+				"b"
+			],
+			"padBytes": -1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "[\"a\",\"b\"]"
+			}
+		},
+		{
+			"body": [
+				"a",
+				"b"
+			],
+			"padBytes": "NaN",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "[\"a\",\"b\"]"
+			}
+		},
+		{
+			"body": [
+				"a",
+				"b"
+			],
+			"padBytes": 0.5,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "[\"a\",\"b\"]"
+			}
+		},
+		{
+			"body": [
+				"a",
+				"b"
+			],
+			"padBytes": 1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "[\"a\",\"b\"]"
+			}
+		},
+		{
+			"body": [
+				"a",
+				"b"
+			],
+			"padBytes": 1.9,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "[\"a\",\"b\"]"
+			}
+		},
+		{
+			"body": [
+				"a",
+				"b"
+			],
+			"padBytes": 64,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "[\"a\",\"b\"]"
+			}
+		},
+		{
+			"body": [
+				"a",
+				"b"
+			],
+			"padBytes": 4096,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "[\"a\",\"b\"]"
+			}
+		},
+		{
+			"body": [
+				"a",
+				"b"
+			],
+			"padBytes": "Infinity",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "[\"a\",\"b\"]"
+			}
+		},
+		{
+			"body": [
+				"a",
+				"b"
+			],
+			"padBytes": 52428800,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "[\"a\",\"b\"]"
+			}
+		},
+		{
+			"body": "text",
+			"padBytes": null,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "\"text\""
+			}
+		},
+		{
+			"body": "text",
+			"padBytes": 0,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "\"text\""
+			}
+		},
+		{
+			"body": "text",
+			"padBytes": -1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "\"text\""
+			}
+		},
+		{
+			"body": "text",
+			"padBytes": "NaN",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "\"text\""
+			}
+		},
+		{
+			"body": "text",
+			"padBytes": 0.5,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "\"text\""
+			}
+		},
+		{
+			"body": "text",
+			"padBytes": 1,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "\"text\""
+			}
+		},
+		{
+			"body": "text",
+			"padBytes": 1.9,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "\"text\""
+			}
+		},
+		{
+			"body": "text",
+			"padBytes": 64,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "\"text\""
+			}
+		},
+		{
+			"body": "text",
+			"padBytes": 4096,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "\"text\""
+			}
+		},
+		{
+			"body": "text",
+			"padBytes": "Infinity",
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "\"text\""
+			}
+		},
+		{
+			"body": "text",
+			"padBytes": 52428800,
+			"contentType": "application/json; charset=utf-8",
+			"chunked": false,
+			"etag": true,
+			"contentLength": true,
+			"shape": {
+				"raw": "\"text\""
+			}
+		}
+	]
+}

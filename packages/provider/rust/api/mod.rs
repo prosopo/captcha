@@ -23,6 +23,7 @@ pub mod express;
 pub mod healthz_geo;
 pub mod maintenance;
 pub mod metrics;
+pub mod padding;
 pub mod pipeline;
 pub mod public;
 pub mod verify;

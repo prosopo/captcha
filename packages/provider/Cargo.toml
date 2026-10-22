@@ -18,6 +18,7 @@ axum = { version = "0.8", default-features = false, features = ["http1", "tokio"
 base64 = "0.22"
 bytes = "1"
 flate2 = "1.1"
+rand_core = { version = "0.6", features = ["getrandom"] }
 futures-util = { version = "0.3", default-features = false, features = ["std"] }
 hickory-resolver = { version = "0.26", default-features = false, features = ["tokio"] }
 http = "1"
