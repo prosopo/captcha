@@ -44,10 +44,11 @@ use std::sync::Arc;
 /// The app: Node's `Host` check, express's `X-Powered-By`, CORS, the JSON body, the public
 /// routes, then the state's `rest` (the pipeline after the public router).
 pub fn provider_app(public: Arc<PublicState>) -> Router {
+    let pool_push_keys: body::PoolPushKeys = public.pool_push_keys.clone();
     Router::new()
         .fallback(public_routes)
         .with_state(public)
-        .layer(from_fn(body::json_body))
+        .layer(axum::middleware::from_fn_with_state(pool_push_keys, body::json_body))
         .layer(from_fn(express::cors))
         .layer(from_fn(express::powered_by))
         .layer(from_fn(express::require_host))

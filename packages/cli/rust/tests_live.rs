@@ -1882,3 +1882,51 @@ async fn detector_bundles_are_assigned_as_the_express_app_assigns_them() {
     }
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn detector_pools_are_replaced_as_the_express_app_replaces_them() {
+    let _live = LIVE.lock().await;
+    let vectors: Value = serde_json::from_str(include_str!("../../provider/rust/equivalence/pool-replace-vectors.json")).expect("pool-replace-vectors.json parses");
+    let database: &str = vectors["database"].as_str().expect("a database");
+    reset(database).await;
+    let decode = |text: &Value| base64::engine::general_purpose::STANDARD.decode(text.as_str().expect("base64")).expect("base64 decodes");
+    let pool = tempfile::TempDir::new().expect("a pool directory");
+    for (name, contents) in vectors["poolBefore"].as_object().expect("pool files") {
+        std::fs::write(pool.path().join(name), decode(contents)).expect("writes");
+    }
+    let read_pool = || -> Value {
+        let mut names: Vec<String> = std::fs::read_dir(pool.path()).expect("lists").map(|entry| entry.expect("an entry").file_name().to_string_lossy().into_owned()).collect();
+        names.sort();
+        Value::Object(names.into_iter().map(|name| {
+            let bytes: Vec<u8> = std::fs::read(pool.path().join(&name)).expect("reads");
+            (name, json!(base64::engine::general_purpose::STANDARD.encode(bytes)))
+        }).collect())
+    };
+    let mut variables: HashMap<String, String> = serde_json::from_value(vectors["variables"].clone()).expect("variables");
+    variables.insert("PROSOPO_IPAPI_URL".to_string(), fake_ipapi(json!({})).await);
+    variables.insert("PROSOPO_DETECTOR_POOL_DIR".to_string(), pool.path().to_string_lossy().into_owned());
+    variables.insert("NODE_ENV".to_string(), "production".to_string());
+    let (router, _env) = live_app(&variables).await;
+    restore_database(database, &vectors["seed"]).await;
+    let port: u16 = serve(router).await;
+    let mut failures: Vec<String> = Vec::new();
+    for step in vectors["exchanges"].as_array().expect("exchanges") {
+        let request: Vec<u8> = decode(&step["request"]);
+        let actual: Answer = answer(&exchange(port, &with_admin_jwt(&request)).await);
+        let expected: Answer = answer(&decode(&step["response"]));
+        let masked = |answer: &Answer| -> (String, String) {
+            let body: String = String::from_utf8_lossy(&without_request_id(answer).1).into_owned();
+            let id: Option<String> = serde_json::from_str::<Value>(&body).ok().and_then(|body| body["detectorSessionId"].as_str().map(str::to_string));
+            (answer.status_line.clone(), id.map_or(body.clone(), |id| body.replace(&id, "<detector session>")))
+        };
+        if masked(&expected) != masked(&actual) {
+            let (status, body) = masked(&actual);
+            failures.push(format!("{}\n      rust {status} {}\n      ts   {:?}", shown(&request).lines().next().unwrap_or_default(), &body[..body.len().min(300)], masked(&expected).0));
+        }
+        if read_pool() != step["pool"] {
+            failures.push(format!("pool directory after {} differs", shown(&request).lines().next().unwrap_or_default()));
+        }
+    }
+    assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
+}

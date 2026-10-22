@@ -34,6 +34,21 @@ use std::io::Read;
 
 pub const JSON_LIMIT: usize = 1024 * 1024;
 
+/// `DETECTOR_POOL_BODY_LIMIT`, 128 MB, for a detector pool push carrying a valid admin token.
+pub const DETECTOR_POOL_LIMIT: usize = 128 * 1024 * 1024;
+
+/// The keys whose admin token earns a pool push the larger limit: the provider's pair and the
+/// admin account.
+pub type PoolPushKeys = std::sync::Arc<Vec<std::sync::Arc<dyn prosopo_api_router::AdminKey>>>;
+
+/// `hasValidAdminJwt`: a bearer token either key verifies with no further options.
+fn has_valid_admin_jwt(headers: &HeaderMap, keys: &PoolPushKeys) -> bool {
+    let Some(jwt) = header(headers, "authorization").and_then(|value| value.strip_prefix("Bearer ").map(str::to_string)) else {
+        return false;
+    };
+    keys.iter().any(|key| key.jwt_verify(&jwt, &prosopo_util_crypto::jwt::JwtVerifyOptions::default()).is_ok_and(|result| result.is_valid))
+}
+
 fn is_token_byte(byte: u8) -> bool {
     byte.is_ascii_alphanumeric() || b"!#$%&'*+-.^_`|~".contains(&byte)
 }
@@ -262,8 +277,13 @@ async fn read(request: Request, content_type: &str, limit: usize) -> Result<(htt
 }
 
 /// The middleware: `RequestBody` holds the parsed body, or `{}` when there was none to parse.
-pub async fn json_body(request: Request, next: Next) -> Response {
-    match json_body_within(request, JSON_LIMIT).await {
+/// A detector pool push with a valid admin token is read with the larger limit, as
+/// `detectorPoolBodyParser` reads it ahead of `express.json`.
+pub async fn json_body(axum::extract::State(keys): axum::extract::State<PoolPushKeys>, request: Request, next: Next) -> Response {
+    let pool_push: bool = crate::api::pipeline::mounted(request.uri().path(), prosopo_types::provider_api::AdminApiPaths::ReplaceDetectorPool.as_str())
+        && has_valid_admin_jwt(request.headers(), &keys);
+    let limit: usize = if pool_push { DETECTOR_POOL_LIMIT } else { JSON_LIMIT };
+    match json_body_within(request, limit).await {
         Ok(request) => next.run(request).await,
         Err(page) => *page,
     }

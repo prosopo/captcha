@@ -158,6 +158,10 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
         auth_account: admin_key(auth_account),
         options: admin_auth_options(env.as_ref(), Some(&config.host)),
     };
+    let pool_dir: String = env("PROSOPO_DETECTOR_POOL_DIR").unwrap_or_else(|| DEFAULT_DETECTOR_POOL_DIR.to_string());
+    let pool: DetectorBundlePool = DetectorBundlePool::load_from_dir(std::path::Path::new(&pool_dir), &logger, env("PROSOPO_DETECTOR_POOL_RELEASE").as_deref());
+    let shared_pool = Arc::new(std::sync::RwLock::new(Arc::new(pool)));
+    let pool_push_keys: prosopo_provider::api::body::PoolPushKeys = Arc::new(auth.pair.iter().chain(auth.auth_account.iter()).cloned().collect());
     let verdict_cache: Arc<HardBlockVerdictCache> = Arc::new(HardBlockVerdictCache::default());
     let log_level: LogLevel = parse_log_level(Some(&config.log_level), LogLevel::Info);
     let gate: AdminGate = AdminGate {
@@ -185,7 +189,9 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
             })
         });
     let admin: Arc<AdminState> = Arc::new(AdminState {
-        context: services.clone().map(|services| Arc::new(AdminContext { services, maintenance: maintenance.clone(), metrics: metrics.clone() })),
+        context: services.clone().map(|services| {
+            Arc::new(AdminContext { services, maintenance: maintenance.clone(), metrics: metrics.clone(), pool: shared_pool.clone(), pool_dir: std::path::PathBuf::from(&pool_dir) })
+        }),
         log_level,
         router: std::sync::OnceLock::new(),
     });
@@ -205,14 +211,12 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
         inspector: std::sync::OnceLock::new(),
     });
     let domain: Arc<DomainState> = Arc::new(DomainState { db: db.clone(), maintenance: maintenance.clone(), metrics: metrics.clone() });
-    let pool_dir: String = env("PROSOPO_DETECTOR_POOL_DIR").unwrap_or_else(|| DEFAULT_DETECTOR_POOL_DIR.to_string());
-    let pool: DetectorBundlePool = DetectorBundlePool::load_from_dir(std::path::Path::new(&pool_dir), &logger, env("PROSOPO_DETECTOR_POOL_RELEASE").as_deref());
     let challenge: Arc<ChallengeState> = Arc::new(ChallengeState {
         services: verify.services.clone(),
         maintenance: maintenance.clone(),
         metrics: metrics.clone(),
         pair: signing_pair,
-        pool: Arc::new(std::sync::RwLock::new(Arc::new(pool))),
+        pool: shared_pool.clone(),
         decoder: decoder,
         seeds,
         audio: std::sync::OnceLock::new(),
@@ -235,6 +239,7 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
         metrics,
         env,
         rest,
+        pool_push_keys,
     };
     (provider_app(Arc::new(state)), geo)
 }

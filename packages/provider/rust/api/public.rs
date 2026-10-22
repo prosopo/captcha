@@ -76,6 +76,8 @@ pub struct PublicState {
     pub env: EnvReader,
     /// What follows the public router.
     pub rest: axum::Router,
+    /// The keys whose admin token earns a detector pool push the larger body limit.
+    pub pool_push_keys: crate::api::body::PoolPushKeys,
 }
 
 impl PublicState {

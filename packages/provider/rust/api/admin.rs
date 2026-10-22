@@ -56,6 +56,10 @@ pub struct AdminContext {
     pub services: Arc<VerifyServices>,
     pub maintenance: Arc<MaintenanceMode>,
     pub metrics: Option<Arc<ProviderMetrics>>,
+    /// The process's detector pool, which the challenge and solution routes read.
+    pub pool: Arc<std::sync::RwLock<Arc<crate::tasks::detection::DetectorBundlePool>>>,
+    /// `getDetectorBundlePoolDir()`, where a replaced pool is persisted.
+    pub pool_dir: std::path::PathBuf,
 }
 
 /// `logger.with({}, scope)`, or a logger of its own under `provider:` without one.
@@ -620,6 +624,40 @@ impl ApiEndpoint for GetSession {
     }
 }
 
+struct ReplaceDetectorPool(Arc<AdminContext>);
+
+impl ApiEndpoint for ReplaceDetectorPool {
+    type Args = prosopo_types::api_types::ReplaceDetectorPoolBody;
+
+    async fn process_request(&self, args: prosopo_types::api_types::ReplaceDetectorPoolBody, logger: Option<&Logger>) -> Result<ApiEndpointResponse, ApiEndpointError> {
+        use crate::tasks::detection::{persist_detector_bundle_pool, DetectorBundlePool, PoolBundle};
+        let log: Logger = logger.cloned().unwrap_or_else(|| prosopo_logger::get_logger(LogLevel::Info, ""));
+        let bundles: std::collections::HashMap<String, PoolBundle> = args
+            .bundles
+            .into_iter()
+            .map(|(id, bundle)| {
+                (id, PoolBundle { js: bundle.js, private_key: bundle.private_key, inner_config: bundle.inner_config, release: bundle.release, payload_layout: bundle.payload_layout, key_map: bundle.key_map })
+            })
+            .collect();
+        let mut pool: DetectorBundlePool = DetectorBundlePool::default();
+        pool.replace(bundles.clone());
+        let count: usize = pool.size();
+        *self.0.pool.write().unwrap_or_else(std::sync::PoisonError::into_inner) = Arc::new(pool);
+        let persisted: bool = match persist_detector_bundle_pool(&bundles, &self.0.pool_dir) {
+            Ok(()) => true,
+            Err(error) => {
+                log.warn(|| {
+                    LogRecord::msg("failed to persist detector bundle pool to disk")
+                        .with_data(json!({ "dir": self.0.pool_dir.display().to_string(), "error": error.to_string() }))
+                });
+                false
+            }
+        };
+        log.info(|| LogRecord::msg("Detector bundle pool replaced"));
+        Ok(success(Some(json!({ "count": count, "persisted": persisted }))))
+    }
+}
+
 struct AdminRoutes(Arc<AdminContext>);
 
 impl ApiRoutesProvider for AdminRoutes {
@@ -639,6 +677,7 @@ impl ApiRoutesProvider for AdminRoutes {
         routes.insert(AdminApiPaths::ToggleMaintenanceMode.as_str().to_string(), Arc::new(ToggleMaintenanceMode(context())));
         routes.insert(AdminApiPaths::DnsEvent.as_str().to_string(), Arc::new(DnsEventIngest(context())));
         routes.insert(AdminApiPaths::GetSession.as_str().to_string(), Arc::new(GetSession(context())));
+        routes.insert(AdminApiPaths::ReplaceDetectorPool.as_str().to_string(), Arc::new(ReplaceDetectorPool(context())));
         routes
     }
 }
