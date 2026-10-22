@@ -741,7 +741,8 @@ pub fn validate(schema: &Schema, document: &Document, prefix: &str, issues: &mut
                 kind: kind.to_string(),
             })
         };
-        if leaf.required && !satisfies_required(&leaf.kind, value) {
+        let required: bool = leaf.required || leaf.required_when.is_some_and(|condition| condition(document));
+        if required && !satisfies_required(&leaf.kind, value) {
             push(issues, "required");
             continue;
         }

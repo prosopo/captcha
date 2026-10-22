@@ -88,6 +88,8 @@ pub enum DefaultTiming {
 pub struct Path {
     pub kind: Kind,
     pub required: bool,
+    /// `required: function () { ... }`: required when this holds of the document being validated.
+    pub required_when: Option<fn(&bson::Document) -> bool>,
     pub default: Default,
     /// For a string path, or a string array's elements.
     pub enum_values: Option<Vec<String>>,
@@ -96,6 +98,8 @@ pub struct Path {
     /// `expires`, in seconds: a TTL index on the path.
     pub expires: Option<i64>,
     pub unique: bool,
+    /// `index: true`: a plain index on the path.
+    pub index: bool,
     /// Set once on insert, never by an update: the timestamps' `createdAt`.
     pub immutable: bool,
 }
@@ -105,18 +109,30 @@ impl Path {
         Path {
             kind,
             required: false,
+            required_when: None,
             default: Default::None,
             enum_values: None,
             min: None,
             max: None,
             expires: None,
             unique: false,
+            index: false,
             immutable: false,
         }
     }
 
     pub fn required(mut self) -> Path {
         self.required = true;
+        self
+    }
+
+    pub fn required_when(mut self, condition: fn(&bson::Document) -> bool) -> Path {
+        self.required_when = Some(condition);
+        self
+    }
+
+    pub fn index(mut self) -> Path {
+        self.index = true;
         self
     }
 
@@ -413,13 +429,17 @@ impl Schema {
             keys.push("_id");
         }
         if self.timestamps {
-            keys.extend(["createdAt", "updatedAt"]);
+            for key in ["createdAt", "updatedAt"] {
+                if !keys.contains(&key) {
+                    keys.push(key);
+                }
+            }
         }
         keys
     }
 
     /// `schema.paths`, in mongoose's order: every leaf path, dotted, then `_id`, then the
-    /// timestamps.
+    /// timestamps the schema does not declare itself.
     pub fn paths(&self) -> Vec<(String, &Path)> {
         fn walk<'a>(fields: &'a [Field], prefix: &str, out: &mut Vec<(String, &'a Path)>) {
             for field in fields {
@@ -436,8 +456,11 @@ impl Schema {
             out.push(("_id".to_string(), &ID_PATH));
         }
         if self.timestamps {
-            out.push(("createdAt".to_string(), &CREATED_AT_PATH));
-            out.push(("updatedAt".to_string(), &UPDATED_AT_PATH));
+            for (key, leaf) in [("createdAt", &*CREATED_AT_PATH), ("updatedAt", &*UPDATED_AT_PATH)] {
+                if !self.fields.iter().any(|field| field.name == key) {
+                    out.push((key.to_string(), leaf));
+                }
+            }
         }
         out
     }
@@ -479,7 +502,7 @@ impl Schema {
         self.paths().into_iter().find(|(name, _)| name == path).map(|(_, leaf)| leaf)
     }
 
-    /// `schema.indexes()`: an index for every path declared with `expires` or `unique`, in
+    /// `schema.indexes()`: an index for every path declared with `expires`, `unique` or `index`, in
     /// path order, then the `schema.index(...)` calls.
     pub fn indexes(&self) -> Vec<Index> {
         let mut out: Vec<Index> = Vec::new();
@@ -496,6 +519,11 @@ impl Schema {
                 out.push(Index {
                     keys: vec![(path, 1)],
                     options: IndexOptions::unique(),
+                });
+            } else if leaf.index {
+                out.push(Index {
+                    keys: vec![(path, 1)],
+                    options: IndexOptions::default(),
                 });
             }
         }
