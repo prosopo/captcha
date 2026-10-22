@@ -1,0 +1,1867 @@
+{
+	"umask": 18,
+	"loads": [
+		{
+			"name": "paired, orphaned and malformed",
+			"entries": {
+				"bundle-0.js": {
+					"hex": "4a532d62756e646c652d30"
+				},
+				"bundle-0.json": {
+					"hex": "7b22707269766174654b6579223a22504b30222c22696e6e6572436f6e666967223a224330227d"
+				},
+				"bundle-1.js": {
+					"hex": "4a532d62756e646c652d31"
+				},
+				"bundle-1.json": {
+					"hex": "7b22707269766174654b6579223a22504b31222c22696e6e6572436f6e666967223a224331227d"
+				},
+				"orphan.js": {
+					"hex": "4a53"
+				},
+				"bad-shape.js": {
+					"hex": "4a532d6261642d7368617065"
+				},
+				"bad-shape.json": {
+					"hex": "7b22707269766174654b6579223a22504b227d"
+				},
+				"bad-json.js": {
+					"hex": "4a53"
+				},
+				"bad-json.json": {
+					"hex": "7b6e6f74206a736f6e"
+				},
+				"manifest.json": {
+					"hex": "7b22636f756e74223a317d"
+				}
+			},
+			"expectedRelease": null,
+			"pool": [
+				{
+					"id": "bundle-0",
+					"js": "JS-bundle-0",
+					"privateKey": "PK0",
+					"innerConfig": "C0"
+				},
+				{
+					"id": "bundle-1",
+					"js": "JS-bundle-1",
+					"privateKey": "PK1",
+					"innerConfig": "C1"
+				}
+			],
+			"logs": [
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "bad-json"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "bad-shape"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "orphan"
+					}
+				},
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 2,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "paired, orphaned and malformed",
+			"entries": {
+				"bundle-0.js": {
+					"hex": "4a532d62756e646c652d30"
+				},
+				"bundle-0.json": {
+					"hex": "7b22707269766174654b6579223a22504b30222c22696e6e6572436f6e666967223a224330227d"
+				},
+				"bundle-1.js": {
+					"hex": "4a532d62756e646c652d31"
+				},
+				"bundle-1.json": {
+					"hex": "7b22707269766174654b6579223a22504b31222c22696e6e6572436f6e666967223a224331227d"
+				},
+				"orphan.js": {
+					"hex": "4a53"
+				},
+				"bad-shape.js": {
+					"hex": "4a532d6261642d7368617065"
+				},
+				"bad-shape.json": {
+					"hex": "7b22707269766174654b6579223a22504b227d"
+				},
+				"bad-json.js": {
+					"hex": "4a53"
+				},
+				"bad-json.json": {
+					"hex": "7b6e6f74206a736f6e"
+				},
+				"manifest.json": {
+					"hex": "7b22636f756e74223a317d"
+				}
+			},
+			"expectedRelease": "",
+			"pool": [
+				{
+					"id": "bundle-0",
+					"js": "JS-bundle-0",
+					"privateKey": "PK0",
+					"innerConfig": "C0"
+				},
+				{
+					"id": "bundle-1",
+					"js": "JS-bundle-1",
+					"privateKey": "PK1",
+					"innerConfig": "C1"
+				}
+			],
+			"logs": [
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "bad-json"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "bad-shape"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "orphan"
+					}
+				},
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 2,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "paired, orphaned and malformed",
+			"entries": {
+				"bundle-0.js": {
+					"hex": "4a532d62756e646c652d30"
+				},
+				"bundle-0.json": {
+					"hex": "7b22707269766174654b6579223a22504b30222c22696e6e6572436f6e666967223a224330227d"
+				},
+				"bundle-1.js": {
+					"hex": "4a532d62756e646c652d31"
+				},
+				"bundle-1.json": {
+					"hex": "7b22707269766174654b6579223a22504b31222c22696e6e6572436f6e666967223a224331227d"
+				},
+				"orphan.js": {
+					"hex": "4a53"
+				},
+				"bad-shape.js": {
+					"hex": "4a532d6261642d7368617065"
+				},
+				"bad-shape.json": {
+					"hex": "7b22707269766174654b6579223a22504b227d"
+				},
+				"bad-json.js": {
+					"hex": "4a53"
+				},
+				"bad-json.json": {
+					"hex": "7b6e6f74206a736f6e"
+				},
+				"manifest.json": {
+					"hex": "7b22636f756e74223a317d"
+				}
+			},
+			"expectedRelease": "3.6.64",
+			"pool": [
+				{
+					"id": "bundle-0",
+					"js": "JS-bundle-0",
+					"privateKey": "PK0",
+					"innerConfig": "C0"
+				},
+				{
+					"id": "bundle-1",
+					"js": "JS-bundle-1",
+					"privateKey": "PK1",
+					"innerConfig": "C1"
+				}
+			],
+			"logs": [
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "bad-json"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "bad-shape"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "orphan"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entries have no release stamp",
+					"data": {
+						"count": 2,
+						"expectedRelease": "3.6.64"
+					}
+				},
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 2,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "names and extensions",
+			"entries": {
+				".hidden.js": {
+					"hex": "4a532d2e68696464656e"
+				},
+				".hidden.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				".js": {
+					"hex": "646f7466696c65206e616d6564202e6a73"
+				},
+				".json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"UPPER.JS": {
+					"hex": "4a53"
+				},
+				"UPPER.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"a.b.js": {
+					"hex": "4a532d612e62"
+				},
+				"a.b.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"dir.js": {
+					"dir": true
+				},
+				"dir.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"json-dir.js": {
+					"hex": "4a532d6a736f6e2d646972"
+				},
+				"json-dir.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"plain.txt": {
+					"hex": "6e6f7420612062756e646c65"
+				},
+				"noext": {
+					"hex": "4a53"
+				}
+			},
+			"expectedRelease": null,
+			"pool": [
+				{
+					"id": ".hidden",
+					"js": "JS-.hidden",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "a.b",
+					"js": "JS-a.b",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "json-dir",
+					"js": "JS-json-dir",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				}
+			],
+			"logs": [
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "dir"
+					}
+				},
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 3,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "names and extensions",
+			"entries": {
+				".hidden.js": {
+					"hex": "4a532d2e68696464656e"
+				},
+				".hidden.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				".js": {
+					"hex": "646f7466696c65206e616d6564202e6a73"
+				},
+				".json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"UPPER.JS": {
+					"hex": "4a53"
+				},
+				"UPPER.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"a.b.js": {
+					"hex": "4a532d612e62"
+				},
+				"a.b.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"dir.js": {
+					"dir": true
+				},
+				"dir.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"json-dir.js": {
+					"hex": "4a532d6a736f6e2d646972"
+				},
+				"json-dir.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"plain.txt": {
+					"hex": "6e6f7420612062756e646c65"
+				},
+				"noext": {
+					"hex": "4a53"
+				}
+			},
+			"expectedRelease": "",
+			"pool": [
+				{
+					"id": ".hidden",
+					"js": "JS-.hidden",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "a.b",
+					"js": "JS-a.b",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "json-dir",
+					"js": "JS-json-dir",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				}
+			],
+			"logs": [
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "dir"
+					}
+				},
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 3,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "names and extensions",
+			"entries": {
+				".hidden.js": {
+					"hex": "4a532d2e68696464656e"
+				},
+				".hidden.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				".js": {
+					"hex": "646f7466696c65206e616d6564202e6a73"
+				},
+				".json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"UPPER.JS": {
+					"hex": "4a53"
+				},
+				"UPPER.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"a.b.js": {
+					"hex": "4a532d612e62"
+				},
+				"a.b.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"dir.js": {
+					"dir": true
+				},
+				"dir.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"json-dir.js": {
+					"hex": "4a532d6a736f6e2d646972"
+				},
+				"json-dir.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"plain.txt": {
+					"hex": "6e6f7420612062756e646c65"
+				},
+				"noext": {
+					"hex": "4a53"
+				}
+			},
+			"expectedRelease": "3.6.64",
+			"pool": [
+				{
+					"id": ".hidden",
+					"js": "JS-.hidden",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "a.b",
+					"js": "JS-a.b",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "json-dir",
+					"js": "JS-json-dir",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				}
+			],
+			"logs": [
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "dir"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entries have no release stamp",
+					"data": {
+						"count": 3,
+						"expectedRelease": "3.6.64"
+					}
+				},
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 3,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "id ordering",
+			"entries": {
+				"z.js": {
+					"hex": "4a532d7a"
+				},
+				"z.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"A.js": {
+					"hex": "4a532d41"
+				},
+				"A.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"a.js": {
+					"hex": "4a532d61"
+				},
+				"a.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"ü.js": {
+					"hex": "4a532dc3bc"
+				},
+				"ü.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"ﬁ.js": {
+					"hex": "4a532defac81"
+				},
+				"ﬁ.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"😀.js": {
+					"hex": "4a532df09f9880"
+				},
+				"😀.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"10.js": {
+					"hex": "4a532d3130"
+				},
+				"10.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"9.js": {
+					"hex": "4a532d39"
+				},
+				"9.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"-.js": {
+					"hex": "4a532d2d"
+				},
+				"-.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				}
+			},
+			"expectedRelease": null,
+			"pool": [
+				{
+					"id": "-",
+					"js": "JS--",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "10",
+					"js": "JS-10",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "9",
+					"js": "JS-9",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "A",
+					"js": "JS-A",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "a",
+					"js": "JS-a",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "z",
+					"js": "JS-z",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "ü",
+					"js": "JS-ü",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "😀",
+					"js": "JS-😀",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "ﬁ",
+					"js": "JS-ﬁ",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				}
+			],
+			"logs": [
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 9,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "id ordering",
+			"entries": {
+				"z.js": {
+					"hex": "4a532d7a"
+				},
+				"z.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"A.js": {
+					"hex": "4a532d41"
+				},
+				"A.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"a.js": {
+					"hex": "4a532d61"
+				},
+				"a.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"ü.js": {
+					"hex": "4a532dc3bc"
+				},
+				"ü.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"ﬁ.js": {
+					"hex": "4a532defac81"
+				},
+				"ﬁ.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"😀.js": {
+					"hex": "4a532df09f9880"
+				},
+				"😀.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"10.js": {
+					"hex": "4a532d3130"
+				},
+				"10.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"9.js": {
+					"hex": "4a532d39"
+				},
+				"9.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"-.js": {
+					"hex": "4a532d2d"
+				},
+				"-.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				}
+			},
+			"expectedRelease": "",
+			"pool": [
+				{
+					"id": "-",
+					"js": "JS--",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "10",
+					"js": "JS-10",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "9",
+					"js": "JS-9",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "A",
+					"js": "JS-A",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "a",
+					"js": "JS-a",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "z",
+					"js": "JS-z",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "ü",
+					"js": "JS-ü",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "😀",
+					"js": "JS-😀",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "ﬁ",
+					"js": "JS-ﬁ",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				}
+			],
+			"logs": [
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 9,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "id ordering",
+			"entries": {
+				"z.js": {
+					"hex": "4a532d7a"
+				},
+				"z.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"A.js": {
+					"hex": "4a532d41"
+				},
+				"A.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"a.js": {
+					"hex": "4a532d61"
+				},
+				"a.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"ü.js": {
+					"hex": "4a532dc3bc"
+				},
+				"ü.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"ﬁ.js": {
+					"hex": "4a532defac81"
+				},
+				"ﬁ.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"😀.js": {
+					"hex": "4a532df09f9880"
+				},
+				"😀.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"10.js": {
+					"hex": "4a532d3130"
+				},
+				"10.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"9.js": {
+					"hex": "4a532d39"
+				},
+				"9.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"-.js": {
+					"hex": "4a532d2d"
+				},
+				"-.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				}
+			},
+			"expectedRelease": "3.6.64",
+			"pool": [
+				{
+					"id": "-",
+					"js": "JS--",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "10",
+					"js": "JS-10",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "9",
+					"js": "JS-9",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "A",
+					"js": "JS-A",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "a",
+					"js": "JS-a",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "z",
+					"js": "JS-z",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "ü",
+					"js": "JS-ü",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "😀",
+					"js": "JS-😀",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "ﬁ",
+					"js": "JS-ﬁ",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				}
+			],
+			"logs": [
+				{
+					"level": "warn",
+					"msg": "bundle pool entries have no release stamp",
+					"data": {
+						"count": 9,
+						"expectedRelease": "3.6.64"
+					}
+				},
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 9,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "secrets of every shape",
+			"entries": {
+				"empty-strings.js": {
+					"hex": "4a532d656d7074792d737472696e6773"
+				},
+				"empty-strings.json": {
+					"hex": "7b22707269766174654b6579223a22222c22696e6e6572436f6e666967223a22227d"
+				},
+				"numeric-key.js": {
+					"hex": "4a532d6e756d657269632d6b6579"
+				},
+				"numeric-key.json": {
+					"hex": "7b22707269766174654b6579223a372c22696e6e6572436f6e666967223a2243227d"
+				},
+				"null-config.js": {
+					"hex": "4a532d6e756c6c2d636f6e666967"
+				},
+				"null-config.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a6e756c6c7d"
+				},
+				"all-fields.js": {
+					"hex": "4a532d616c6c2d6669656c6473"
+				},
+				"all-fields.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243222c2272656c65617365223a22332e362e3634222c227061796c6f61644c61796f7574223a225446593d222c226b65794d6170223a225330303d222c226578747261223a7b226e6573746564223a747275657d7d"
+				},
+				"empty-optionals.js": {
+					"hex": "4a532d656d7074792d6f7074696f6e616c73"
+				},
+				"empty-optionals.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243222c2272656c65617365223a22222c227061796c6f61644c61796f7574223a22222c226b65794d6170223a22227d"
+				},
+				"numeric-optionals.js": {
+					"hex": "4a532d6e756d657269632d6f7074696f6e616c73"
+				},
+				"numeric-optionals.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243222c2272656c65617365223a332e362c227061796c6f61644c61796f7574223a312c226b65794d6170223a66616c73657d"
+				},
+				"stale.js": {
+					"hex": "4a532d7374616c65"
+				},
+				"stale.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243222c2272656c65617365223a22332e362e3130227d"
+				},
+				"unstamped.js": {
+					"hex": "4a532d756e7374616d706564"
+				},
+				"unstamped.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"array.js": {
+					"hex": "4a53"
+				},
+				"array.json": {
+					"hex": "5b22504b222c2243225d"
+				},
+				"null.js": {
+					"hex": "4a53"
+				},
+				"null.json": {
+					"hex": "6e756c6c"
+				},
+				"string.js": {
+					"hex": "4a53"
+				},
+				"string.json": {
+					"hex": "22504b22"
+				},
+				"bom.js": {
+					"hex": "4a53"
+				},
+				"bom.json": {
+					"hex": "efbbbf7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"duplicate.js": {
+					"hex": "4a53"
+				},
+				"duplicate.json": {
+					"hex": "7b22707269766174654b6579223a226669727374222c22696e6e6572436f6e666967223a2243222c22707269766174654b6579223a227365636f6e64227d"
+				},
+				"escapes.js": {
+					"hex": "4a53"
+				},
+				"escapes.json": {
+					"hex": "7b22707269766174654b6579223a22505c75303034625c6e5c225c5c222c22696e6e6572436f6e666967223a225c7530306539227d"
+				}
+			},
+			"expectedRelease": null,
+			"pool": [
+				{
+					"id": "all-fields",
+					"js": "JS-all-fields",
+					"privateKey": "PK",
+					"innerConfig": "C",
+					"release": "3.6.64",
+					"payloadLayout": "TFY=",
+					"keyMap": "S00="
+				},
+				{
+					"id": "duplicate",
+					"js": "JS",
+					"privateKey": "second",
+					"innerConfig": "C"
+				},
+				{
+					"id": "empty-optionals",
+					"js": "JS-empty-optionals",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "empty-strings",
+					"js": "JS-empty-strings",
+					"privateKey": "",
+					"innerConfig": ""
+				},
+				{
+					"id": "escapes",
+					"js": "JS",
+					"privateKey": "PK\n\"\\",
+					"innerConfig": "é"
+				},
+				{
+					"id": "numeric-optionals",
+					"js": "JS-numeric-optionals",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "stale",
+					"js": "JS-stale",
+					"privateKey": "PK",
+					"innerConfig": "C",
+					"release": "3.6.10"
+				},
+				{
+					"id": "unstamped",
+					"js": "JS-unstamped",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				}
+			],
+			"logs": [
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "array"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "bom"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "null-config"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "null"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "numeric-key"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "string"
+					}
+				},
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 8,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "secrets of every shape",
+			"entries": {
+				"empty-strings.js": {
+					"hex": "4a532d656d7074792d737472696e6773"
+				},
+				"empty-strings.json": {
+					"hex": "7b22707269766174654b6579223a22222c22696e6e6572436f6e666967223a22227d"
+				},
+				"numeric-key.js": {
+					"hex": "4a532d6e756d657269632d6b6579"
+				},
+				"numeric-key.json": {
+					"hex": "7b22707269766174654b6579223a372c22696e6e6572436f6e666967223a2243227d"
+				},
+				"null-config.js": {
+					"hex": "4a532d6e756c6c2d636f6e666967"
+				},
+				"null-config.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a6e756c6c7d"
+				},
+				"all-fields.js": {
+					"hex": "4a532d616c6c2d6669656c6473"
+				},
+				"all-fields.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243222c2272656c65617365223a22332e362e3634222c227061796c6f61644c61796f7574223a225446593d222c226b65794d6170223a225330303d222c226578747261223a7b226e6573746564223a747275657d7d"
+				},
+				"empty-optionals.js": {
+					"hex": "4a532d656d7074792d6f7074696f6e616c73"
+				},
+				"empty-optionals.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243222c2272656c65617365223a22222c227061796c6f61644c61796f7574223a22222c226b65794d6170223a22227d"
+				},
+				"numeric-optionals.js": {
+					"hex": "4a532d6e756d657269632d6f7074696f6e616c73"
+				},
+				"numeric-optionals.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243222c2272656c65617365223a332e362c227061796c6f61644c61796f7574223a312c226b65794d6170223a66616c73657d"
+				},
+				"stale.js": {
+					"hex": "4a532d7374616c65"
+				},
+				"stale.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243222c2272656c65617365223a22332e362e3130227d"
+				},
+				"unstamped.js": {
+					"hex": "4a532d756e7374616d706564"
+				},
+				"unstamped.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"array.js": {
+					"hex": "4a53"
+				},
+				"array.json": {
+					"hex": "5b22504b222c2243225d"
+				},
+				"null.js": {
+					"hex": "4a53"
+				},
+				"null.json": {
+					"hex": "6e756c6c"
+				},
+				"string.js": {
+					"hex": "4a53"
+				},
+				"string.json": {
+					"hex": "22504b22"
+				},
+				"bom.js": {
+					"hex": "4a53"
+				},
+				"bom.json": {
+					"hex": "efbbbf7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"duplicate.js": {
+					"hex": "4a53"
+				},
+				"duplicate.json": {
+					"hex": "7b22707269766174654b6579223a226669727374222c22696e6e6572436f6e666967223a2243222c22707269766174654b6579223a227365636f6e64227d"
+				},
+				"escapes.js": {
+					"hex": "4a53"
+				},
+				"escapes.json": {
+					"hex": "7b22707269766174654b6579223a22505c75303034625c6e5c225c5c222c22696e6e6572436f6e666967223a225c7530306539227d"
+				}
+			},
+			"expectedRelease": "",
+			"pool": [
+				{
+					"id": "all-fields",
+					"js": "JS-all-fields",
+					"privateKey": "PK",
+					"innerConfig": "C",
+					"release": "3.6.64",
+					"payloadLayout": "TFY=",
+					"keyMap": "S00="
+				},
+				{
+					"id": "duplicate",
+					"js": "JS",
+					"privateKey": "second",
+					"innerConfig": "C"
+				},
+				{
+					"id": "empty-optionals",
+					"js": "JS-empty-optionals",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "empty-strings",
+					"js": "JS-empty-strings",
+					"privateKey": "",
+					"innerConfig": ""
+				},
+				{
+					"id": "escapes",
+					"js": "JS",
+					"privateKey": "PK\n\"\\",
+					"innerConfig": "é"
+				},
+				{
+					"id": "numeric-optionals",
+					"js": "JS-numeric-optionals",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "stale",
+					"js": "JS-stale",
+					"privateKey": "PK",
+					"innerConfig": "C",
+					"release": "3.6.10"
+				},
+				{
+					"id": "unstamped",
+					"js": "JS-unstamped",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				}
+			],
+			"logs": [
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "array"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "bom"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "null-config"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "null"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "numeric-key"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "string"
+					}
+				},
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 8,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "secrets of every shape",
+			"entries": {
+				"empty-strings.js": {
+					"hex": "4a532d656d7074792d737472696e6773"
+				},
+				"empty-strings.json": {
+					"hex": "7b22707269766174654b6579223a22222c22696e6e6572436f6e666967223a22227d"
+				},
+				"numeric-key.js": {
+					"hex": "4a532d6e756d657269632d6b6579"
+				},
+				"numeric-key.json": {
+					"hex": "7b22707269766174654b6579223a372c22696e6e6572436f6e666967223a2243227d"
+				},
+				"null-config.js": {
+					"hex": "4a532d6e756c6c2d636f6e666967"
+				},
+				"null-config.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a6e756c6c7d"
+				},
+				"all-fields.js": {
+					"hex": "4a532d616c6c2d6669656c6473"
+				},
+				"all-fields.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243222c2272656c65617365223a22332e362e3634222c227061796c6f61644c61796f7574223a225446593d222c226b65794d6170223a225330303d222c226578747261223a7b226e6573746564223a747275657d7d"
+				},
+				"empty-optionals.js": {
+					"hex": "4a532d656d7074792d6f7074696f6e616c73"
+				},
+				"empty-optionals.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243222c2272656c65617365223a22222c227061796c6f61644c61796f7574223a22222c226b65794d6170223a22227d"
+				},
+				"numeric-optionals.js": {
+					"hex": "4a532d6e756d657269632d6f7074696f6e616c73"
+				},
+				"numeric-optionals.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243222c2272656c65617365223a332e362c227061796c6f61644c61796f7574223a312c226b65794d6170223a66616c73657d"
+				},
+				"stale.js": {
+					"hex": "4a532d7374616c65"
+				},
+				"stale.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243222c2272656c65617365223a22332e362e3130227d"
+				},
+				"unstamped.js": {
+					"hex": "4a532d756e7374616d706564"
+				},
+				"unstamped.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"array.js": {
+					"hex": "4a53"
+				},
+				"array.json": {
+					"hex": "5b22504b222c2243225d"
+				},
+				"null.js": {
+					"hex": "4a53"
+				},
+				"null.json": {
+					"hex": "6e756c6c"
+				},
+				"string.js": {
+					"hex": "4a53"
+				},
+				"string.json": {
+					"hex": "22504b22"
+				},
+				"bom.js": {
+					"hex": "4a53"
+				},
+				"bom.json": {
+					"hex": "efbbbf7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"duplicate.js": {
+					"hex": "4a53"
+				},
+				"duplicate.json": {
+					"hex": "7b22707269766174654b6579223a226669727374222c22696e6e6572436f6e666967223a2243222c22707269766174654b6579223a227365636f6e64227d"
+				},
+				"escapes.js": {
+					"hex": "4a53"
+				},
+				"escapes.json": {
+					"hex": "7b22707269766174654b6579223a22505c75303034625c6e5c225c5c222c22696e6e6572436f6e666967223a225c7530306539227d"
+				}
+			},
+			"expectedRelease": "3.6.64",
+			"pool": [
+				{
+					"id": "all-fields",
+					"js": "JS-all-fields",
+					"privateKey": "PK",
+					"innerConfig": "C",
+					"release": "3.6.64",
+					"payloadLayout": "TFY=",
+					"keyMap": "S00="
+				},
+				{
+					"id": "duplicate",
+					"js": "JS",
+					"privateKey": "second",
+					"innerConfig": "C"
+				},
+				{
+					"id": "empty-optionals",
+					"js": "JS-empty-optionals",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "empty-strings",
+					"js": "JS-empty-strings",
+					"privateKey": "",
+					"innerConfig": ""
+				},
+				{
+					"id": "escapes",
+					"js": "JS",
+					"privateKey": "PK\n\"\\",
+					"innerConfig": "é"
+				},
+				{
+					"id": "numeric-optionals",
+					"js": "JS-numeric-optionals",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "unstamped",
+					"js": "JS-unstamped",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				}
+			],
+			"logs": [
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "array"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "bom"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "null-config"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "failed to load bundle pool entry",
+					"data": {
+						"bundleId": "null"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "numeric-key"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entry has malformed secrets",
+					"data": {
+						"bundleId": "string"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "skipped bundle pool entries built for another release",
+					"data": {
+						"skipped": 1,
+						"expectedRelease": "3.6.64"
+					}
+				},
+				{
+					"level": "warn",
+					"msg": "bundle pool entries have no release stamp",
+					"data": {
+						"count": 6,
+						"expectedRelease": "3.6.64"
+					}
+				},
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 7,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "file contents",
+			"entries": {
+				"invalid-utf8.js": {
+					"hex": "4aff53c328eda080"
+				},
+				"invalid-utf8.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"bom-js.js": {
+					"hex": "efbbbf4a532077697468206120424f4d"
+				},
+				"bom-js.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"empty.js": {
+					"hex": ""
+				},
+				"empty.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"unicode.js": {
+					"hex": "c3a9e282acf09f98800d0a00"
+				},
+				"unicode.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				}
+			},
+			"expectedRelease": null,
+			"pool": [
+				{
+					"id": "bom-js",
+					"js": "﻿JS with a BOM",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "empty",
+					"js": "",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "invalid-utf8",
+					"js": "J�S�(���",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "unicode",
+					"js": "é€😀\r\n\u0000",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				}
+			],
+			"logs": [
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 4,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "file contents",
+			"entries": {
+				"invalid-utf8.js": {
+					"hex": "4aff53c328eda080"
+				},
+				"invalid-utf8.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"bom-js.js": {
+					"hex": "efbbbf4a532077697468206120424f4d"
+				},
+				"bom-js.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"empty.js": {
+					"hex": ""
+				},
+				"empty.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"unicode.js": {
+					"hex": "c3a9e282acf09f98800d0a00"
+				},
+				"unicode.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				}
+			},
+			"expectedRelease": "",
+			"pool": [
+				{
+					"id": "bom-js",
+					"js": "﻿JS with a BOM",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "empty",
+					"js": "",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "invalid-utf8",
+					"js": "J�S�(���",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "unicode",
+					"js": "é€😀\r\n\u0000",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				}
+			],
+			"logs": [
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 4,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "file contents",
+			"entries": {
+				"invalid-utf8.js": {
+					"hex": "4aff53c328eda080"
+				},
+				"invalid-utf8.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"bom-js.js": {
+					"hex": "efbbbf4a532077697468206120424f4d"
+				},
+				"bom-js.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"empty.js": {
+					"hex": ""
+				},
+				"empty.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				},
+				"unicode.js": {
+					"hex": "c3a9e282acf09f98800d0a00"
+				},
+				"unicode.json": {
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				}
+			},
+			"expectedRelease": "3.6.64",
+			"pool": [
+				{
+					"id": "bom-js",
+					"js": "﻿JS with a BOM",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "empty",
+					"js": "",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "invalid-utf8",
+					"js": "J�S�(���",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				},
+				{
+					"id": "unicode",
+					"js": "é€😀\r\n\u0000",
+					"privateKey": "PK",
+					"innerConfig": "C"
+				}
+			],
+			"logs": [
+				{
+					"level": "warn",
+					"msg": "bundle pool entries have no release stamp",
+					"data": {
+						"count": 4,
+						"expectedRelease": "3.6.64"
+					}
+				},
+				{
+					"level": "info",
+					"msg": "bundle pool loaded",
+					"data": {
+						"count": 4,
+						"dir": "<dir>"
+					}
+				}
+			]
+		},
+		{
+			"name": "missing directory",
+			"entries": null,
+			"expectedRelease": null,
+			"pool": [],
+			"logs": [
+				{
+					"level": "warn",
+					"msg": "bundle pool directory does not exist",
+					"data": {
+						"dir": "<dir>"
+					}
+				}
+			]
+		}
+	],
+	"persists": [
+		{
+			"name": "into an empty directory",
+			"before": {},
+			"bundles": [
+				[
+					"b",
+					{
+						"js": "JS",
+						"privateKey": "PK",
+						"innerConfig": "C"
+					}
+				]
+			],
+			"after": [
+				{
+					"name": "b.js",
+					"mode": 420,
+					"hex": "4a53"
+				},
+				{
+					"name": "b.json",
+					"mode": 384,
+					"hex": "7b22707269766174654b6579223a22504b222c22696e6e6572436f6e666967223a2243227d"
+				}
+			],
+			"sameDirectory": true
+		},
+		{
+			"name": "over a previous pool and other files",
+			"before": {
+				"old.js": {
+					"hex": "4f4c44"
+				},
+				"old.json": {
+					"hex": "7b22707269766174654b6579223a224f504b222c22696e6e6572436f6e666967223a224f43227d"
+				},
+				"manifest.json": {
+					"hex": "7b22636f756e74223a317d"
+				},
+				"keep.txt": {
+					"hex": "6b657074"
+				},
+				".hidden.json": {
+					"hex": "7b7d"
+				},
+				".dotjs": {
+					"hex": "6b657074"
+				},
+				"new.js": {
+					"hex": "7374616c6520636f6e74656e74206f6620612062756e646c65206265696e672072657772697474656e"
+				}
+			},
+			"bundles": [
+				[
+					"new",
+					{
+						"js": "NJS",
+						"privateKey": "NPK",
+						"innerConfig": "NC"
+					}
+				],
+				[
+					"full",
+					{
+						"js": "é€😀",
+						"privateKey": "quote\" backslash\\ newline\n tab\t nul\u0000 del",
+						"innerConfig": "  ",
+						"release": "3.6.64",
+						"payloadLayout": "TFY=",
+						"keyMap": "S00="
+					}
+				],
+				[
+					"empties",
+					{
+						"js": "",
+						"privateKey": "",
+						"innerConfig": "",
+						"release": "",
+						"payloadLayout": "",
+						"keyMap": ""
+					}
+				]
+			],
+			"after": [
+				{
+					"name": ".dotjs",
+					"mode": 420,
+					"hex": "6b657074"
+				},
+				{
+					"name": "empties.js",
+					"mode": 420,
+					"hex": ""
+				},
+				{
+					"name": "empties.json",
+					"mode": 384,
+					"hex": "7b22707269766174654b6579223a22222c22696e6e6572436f6e666967223a22227d"
+				},
+				{
+					"name": "full.js",
+					"mode": 420,
+					"hex": "c3a9e282acf09f9880"
+				},
+				{
+					"name": "full.json",
+					"mode": 384,
+					"hex": "7b22707269766174654b6579223a2271756f74655c22206261636b736c6173685c5c206e65776c696e655c6e207461625c74206e756c5c75303030302064656c7f222c22696e6e6572436f6e666967223a22e280a8e280a9222c2272656c65617365223a22332e362e3634222c227061796c6f61644c61796f7574223a225446593d222c226b65794d6170223a225330303d227d"
+				},
+				{
+					"name": "keep.txt",
+					"mode": 420,
+					"hex": "6b657074"
+				},
+				{
+					"name": "new.js",
+					"mode": 420,
+					"hex": "4e4a53"
+				},
+				{
+					"name": "new.json",
+					"mode": 384,
+					"hex": "7b22707269766174654b6579223a224e504b222c22696e6e6572436f6e666967223a224e43227d"
+				}
+			],
+			"sameDirectory": true
+		},
+		{
+			"name": "an empty pool",
+			"before": {
+				"old.js": {
+					"hex": "4f4c44"
+				},
+				"old.json": {
+					"hex": "7b22707269766174654b6579223a224f504b222c22696e6e6572436f6e666967223a224f43227d"
+				}
+			},
+			"bundles": [],
+			"after": [],
+			"sameDirectory": true
+		}
+	]
+}

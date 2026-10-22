@@ -36,3 +36,5 @@ mod public_equivalence;
 mod tests;
 #[cfg(test)]
 mod util_equivalence;
+#[cfg(test)]
+mod detection_equivalence;

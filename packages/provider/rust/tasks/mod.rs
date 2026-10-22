@@ -17,6 +17,7 @@
 pub mod client;
 pub mod cron;
 pub mod decision;
+pub mod detection;
 pub mod dns_event;
 pub mod email;
 pub mod frictionless;
