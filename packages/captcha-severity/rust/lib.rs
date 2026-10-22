@@ -26,10 +26,12 @@ mod severity;
 mod equivalence;
 
 pub use puzzle_difficulty::{
-    clamp_difficulty_level, puzzle_difficulty_to_severity, resolve_max_escalation_level,
-    severity_to_puzzle_difficulty, PuzzleDifficultyBand, PuzzleDifficultyRange,
-    MAX_AUTO_ESCALATION_LEVEL, MAX_AUTO_ESCALATION_LEVEL_TOUCH, MIN_DECOY_HOLE_DARKEN_MARGIN,
-    PUZZLE_DIFFICULTY_LEVELS, PUZZLE_ROUNDS_PER_DIFFICULTY_LEVEL,
+    clamp_difficulty_level, ease_piece_scale_for_touch, ease_tolerance_for_touch,
+    puzzle_difficulty_to_severity, resolve_max_escalation_level, severity_to_puzzle_difficulty,
+    PuzzleDifficultyBand, PuzzleDifficultyRange, MAX_AUTO_ESCALATION_LEVEL,
+    MAX_AUTO_ESCALATION_LEVEL_TOUCH, MAX_STALE_PAYLOAD_LEVEL, MIN_DECOY_HOLE_DARKEN_MARGIN,
+    PUZZLE_DIFFICULTY_LEVELS, PUZZLE_ROUNDS_PER_DIFFICULTY_LEVEL, TOUCH_MIN_PIECE_SCALE,
+    TOUCH_MIN_TOLERANCE_PX,
 };
 pub use severity::{
     captcha_policy_severity, is_stricter_captcha_policy, is_stricter_captcha_type,

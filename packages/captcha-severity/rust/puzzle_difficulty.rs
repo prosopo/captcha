@@ -58,6 +58,19 @@ pub const MAX_AUTO_ESCALATION_LEVEL: f64 = 3.0;
 /// level asks the same accuracy of a fingertip as of a mouse.
 pub const MAX_AUTO_ESCALATION_LEVEL_TOUCH: f64 = 2.0;
 
+/// Ceiling on automatic escalation when the bot-detection payload is stale.
+pub const MAX_STALE_PAYLOAD_LEVEL: f64 = 1.0;
+
+/// Loosest placement target a touch device is ever asked for, in px. The touch
+/// ceiling bounds the ladder only; this floor is applied at the point of issue,
+/// after the site's tolerance, a traffic-filter override and a routing
+/// machine's override have resolved, so it covers all four.
+pub const TOUCH_MIN_TOLERANCE_PX: f64 = 12.0;
+
+/// Smallest piece served to a touch device, as a fraction of background width:
+/// below this the finger dragging it hides it.
+pub const TOUCH_MIN_PIECE_SCALE: f64 = 0.2;
+
 pub const PUZZLE_ROUNDS_PER_DIFFICULTY_LEVEL: f64 = 2.0;
 
 const fn range(min: f64, max: f64) -> PuzzleDifficultyRange {
@@ -110,6 +123,17 @@ pub const PUZZLE_DIFFICULTY_LEVELS: [PuzzleDifficultyBand; 5] = [
 ];
 
 const HIGHEST_LEVEL: f64 = (PUZZLE_DIFFICULTY_LEVELS.len() - 1) as f64;
+
+pub fn ease_tolerance_for_touch(tolerance: f64) -> f64 {
+    js_max(tolerance, TOUCH_MIN_TOLERANCE_PX)
+}
+
+pub fn ease_piece_scale_for_touch(range: PuzzleDifficultyRange) -> PuzzleDifficultyRange {
+    PuzzleDifficultyRange {
+        min: js_max(range.min, TOUCH_MIN_PIECE_SCALE),
+        max: js_max(range.max, TOUCH_MIN_PIECE_SCALE),
+    }
+}
 
 /// `max_level` defaults to `MAX_AUTO_ESCALATION_LEVEL` when `None`.
 pub fn clamp_difficulty_level(level: f64, max_level: Option<f64>) -> f64 {
@@ -396,5 +420,57 @@ mod tests {
         assert!(touch.tolerance.min > pointer.tolerance.min);
         assert!(touch.piece_scale.min > pointer.piece_scale.min);
         assert!(touch.decoy_count.max < pointer.decoy_count.max);
+    }
+
+    #[test]
+    fn touch_easing_raises_a_tolerance_below_the_floor() {
+        assert_eq!(ease_tolerance_for_touch(5.0), TOUCH_MIN_TOLERANCE_PX);
+        assert_eq!(ease_tolerance_for_touch(8.0), TOUCH_MIN_TOLERANCE_PX);
+    }
+
+    #[test]
+    fn touch_easing_leaves_a_tolerance_at_or_above_the_floor_alone() {
+        assert_eq!(ease_tolerance_for_touch(TOUCH_MIN_TOLERANCE_PX), TOUCH_MIN_TOLERANCE_PX);
+        assert_eq!(ease_tolerance_for_touch(15.0), 15.0);
+    }
+
+    #[test]
+    fn touch_easing_never_tightens_a_tolerance() {
+        for tolerance in [1.0, 5.0, 10.0, 12.0, 15.0, 20.0, 1000.0] {
+            assert!(ease_tolerance_for_touch(tolerance) >= tolerance);
+        }
+    }
+
+    #[test]
+    fn touch_easing_raises_both_ends_of_a_piece_scale_range_under_the_floor() {
+        assert_eq!(
+            ease_piece_scale_for_touch(range(0.05, 0.1)),
+            range(TOUCH_MIN_PIECE_SCALE, TOUCH_MIN_PIECE_SCALE)
+        );
+    }
+
+    #[test]
+    fn touch_easing_raises_only_the_min_when_the_max_is_above_the_floor() {
+        assert_eq!(
+            ease_piece_scale_for_touch(range(0.1, 0.28)),
+            range(TOUCH_MIN_PIECE_SCALE, 0.28)
+        );
+    }
+
+    #[test]
+    fn touch_easing_never_inverts_a_piece_scale_range() {
+        for original in [range(0.05, 0.05), range(0.1, 0.28), range(0.15, 0.45), range(0.3, 0.3)] {
+            let eased: PuzzleDifficultyRange = ease_piece_scale_for_touch(original);
+            assert!(eased.max >= eased.min);
+            assert!(eased.min >= original.min);
+        }
+    }
+
+    #[test]
+    fn touch_easing_bites_at_the_touch_ceiling() {
+        let band: &PuzzleDifficultyBand =
+            &PUZZLE_DIFFICULTY_LEVELS[MAX_AUTO_ESCALATION_LEVEL_TOUCH as usize];
+        assert!(ease_tolerance_for_touch(band.tolerance.min) > band.tolerance.min);
+        assert!(ease_piece_scale_for_touch(band.piece_scale).min > band.piece_scale.min);
     }
 }

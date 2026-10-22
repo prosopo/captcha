@@ -17,11 +17,13 @@
 use serde::Deserialize;
 
 use crate::{
-    captcha_policy_severity, clamp_difficulty_level, is_stricter_captcha_policy,
-    is_stricter_captcha_type, puzzle_difficulty_to_severity, rank_captcha_type,
-    resolve_max_escalation_level, severity_to_puzzle_difficulty, CaptchaPolicySeverityInput,
-    PuzzleDifficultyBand, MAX_AUTO_ESCALATION_LEVEL, MAX_AUTO_ESCALATION_LEVEL_TOUCH,
-    MIN_DECOY_HOLE_DARKEN_MARGIN, PUZZLE_DIFFICULTY_LEVELS, PUZZLE_ROUNDS_PER_DIFFICULTY_LEVEL,
+    captcha_policy_severity, clamp_difficulty_level, ease_piece_scale_for_touch,
+    ease_tolerance_for_touch, is_stricter_captcha_policy, is_stricter_captcha_type,
+    puzzle_difficulty_to_severity, rank_captcha_type, resolve_max_escalation_level,
+    severity_to_puzzle_difficulty, CaptchaPolicySeverityInput, PuzzleDifficultyBand,
+    PuzzleDifficultyRange, MAX_AUTO_ESCALATION_LEVEL, MAX_AUTO_ESCALATION_LEVEL_TOUCH,
+    MAX_STALE_PAYLOAD_LEVEL, MIN_DECOY_HOLE_DARKEN_MARGIN, PUZZLE_DIFFICULTY_LEVELS,
+    PUZZLE_ROUNDS_PER_DIFFICULTY_LEVEL, TOUCH_MIN_PIECE_SCALE, TOUCH_MIN_TOLERANCE_PX,
 };
 
 const VECTORS: &str = include_str!("equivalence/vectors.json");
@@ -97,6 +99,9 @@ impl EncodedPolicy {
 #[derive(Debug, Deserialize)]
 #[allow(non_snake_case)]
 struct Constants {
+    MAX_STALE_PAYLOAD_LEVEL: OptionalNumber,
+    TOUCH_MIN_TOLERANCE_PX: OptionalNumber,
+    TOUCH_MIN_PIECE_SCALE: OptionalNumber,
     MIN_DECOY_HOLE_DARKEN_MARGIN: OptionalNumber,
     MAX_AUTO_ESCALATION_LEVEL: OptionalNumber,
     MAX_AUTO_ESCALATION_LEVEL_TOUCH: OptionalNumber,
@@ -126,6 +131,10 @@ struct Vectors {
     level_numbers: Vec<OptionalNumber>,
     clamp_difficulty_level: Vec<Vec<OptionalNumber>>,
     resolve_max_escalation_level: ResolveMaxEscalationLevel,
+    tolerances: Vec<OptionalNumber>,
+    ease_tolerance_for_touch: Vec<OptionalNumber>,
+    piece_scale_ends: Vec<OptionalNumber>,
+    ease_piece_scale_for_touch: Vec<Vec<[OptionalNumber; 2]>>,
     requested_rounds: Vec<OptionalNumber>,
     base_rounds: Vec<OptionalNumber>,
     max_levels: Vec<OptionalNumber>,
@@ -141,6 +150,9 @@ fn vectors() -> Vectors {
 fn equivalence_constants() {
     let v: Vectors = vectors();
     let c: &Constants = &v.constants;
+    assert_same(MAX_STALE_PAYLOAD_LEVEL, c.MAX_STALE_PAYLOAD_LEVEL, "MAX_STALE_PAYLOAD_LEVEL");
+    assert_same(TOUCH_MIN_TOLERANCE_PX, c.TOUCH_MIN_TOLERANCE_PX, "TOUCH_MIN_TOLERANCE_PX");
+    assert_same(TOUCH_MIN_PIECE_SCALE, c.TOUCH_MIN_PIECE_SCALE, "TOUCH_MIN_PIECE_SCALE");
     assert_same(
         MIN_DECOY_HOLE_DARKEN_MARGIN,
         c.MIN_DECOY_HOLE_DARKEN_MARGIN,
@@ -313,6 +325,33 @@ fn equivalence_puzzle_difficulty() {
                     &format!("puzzle_difficulty_to_severity({level:?}, {base:?}, {max_level:?})"),
                 );
             }
+        }
+    }
+}
+
+#[test]
+fn equivalence_touch_easing() {
+    let v: Vectors = vectors();
+    assert_eq!(v.ease_tolerance_for_touch.len(), v.tolerances.len());
+    for (tolerance, expected) in v.tolerances.iter().zip(&v.ease_tolerance_for_touch) {
+        assert_same(
+            ease_tolerance_for_touch(require(*tolerance)),
+            *expected,
+            &format!("ease_tolerance_for_touch({tolerance:?})"),
+        );
+    }
+
+    assert_eq!(v.ease_piece_scale_for_touch.len(), v.piece_scale_ends.len());
+    for (min, row) in v.piece_scale_ends.iter().zip(&v.ease_piece_scale_for_touch) {
+        assert_eq!(row.len(), v.piece_scale_ends.len());
+        for (max, [expected_min, expected_max]) in v.piece_scale_ends.iter().zip(row) {
+            let eased: PuzzleDifficultyRange = ease_piece_scale_for_touch(PuzzleDifficultyRange {
+                min: require(*min),
+                max: require(*max),
+            });
+            let context: String = format!("ease_piece_scale_for_touch({min:?}, {max:?})");
+            assert_same(eased.min, *expected_min, &context);
+            assert_same(eased.max, *expected_max, &context);
         }
     }
 }

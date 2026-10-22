@@ -18,11 +18,16 @@ import {
 	type CaptchaPolicySeverityInput,
 	MAX_AUTO_ESCALATION_LEVEL,
 	MAX_AUTO_ESCALATION_LEVEL_TOUCH,
+	MAX_STALE_PAYLOAD_LEVEL,
 	MIN_DECOY_HOLE_DARKEN_MARGIN,
 	PUZZLE_DIFFICULTY_LEVELS,
 	PUZZLE_ROUNDS_PER_DIFFICULTY_LEVEL,
+	TOUCH_MIN_PIECE_SCALE,
+	TOUCH_MIN_TOLERANCE_PX,
 	captchaPolicySeverity,
 	clampDifficultyLevel,
+	easePieceScaleForTouch,
+	easeToleranceForTouch,
 	isStricterCaptchaPolicy,
 	isStricterCaptchaType,
 	puzzleDifficultyToSeverity,
@@ -222,8 +227,38 @@ const LEVEL_ARGUMENTS: EncodedNumber[] = LEVEL_NUMBERS.filter(
 	(value: EncodedNumber): boolean => value !== null,
 );
 
+const TOLERANCES: EncodedNumber[] = [
+	...SPECIAL_NUMBERS,
+	-12,
+	0,
+	1,
+	5,
+	8,
+	11.999999999999998,
+	12,
+	12.5,
+	15,
+	20,
+	1000,
+];
+
+const PIECE_SCALE_ENDS: EncodedNumber[] = [
+	...SPECIAL_NUMBERS,
+	0,
+	0.05,
+	0.1,
+	0.19999999999999998,
+	0.2,
+	0.28,
+	0.45,
+	1,
+];
+
 const data = {
 	constants: {
+		MAX_STALE_PAYLOAD_LEVEL: encode(MAX_STALE_PAYLOAD_LEVEL),
+		TOUCH_MIN_TOLERANCE_PX: encode(TOUCH_MIN_TOLERANCE_PX),
+		TOUCH_MIN_PIECE_SCALE: encode(TOUCH_MIN_PIECE_SCALE),
 		MIN_DECOY_HOLE_DARKEN_MARGIN: encode(MIN_DECOY_HOLE_DARKEN_MARGIN),
 		MAX_AUTO_ESCALATION_LEVEL: encode(MAX_AUTO_ESCALATION_LEVEL),
 		MAX_AUTO_ESCALATION_LEVEL_TOUCH: encode(MAX_AUTO_ESCALATION_LEVEL_TOUCH),
@@ -294,6 +329,22 @@ const data = {
 				encode(resolveMaxEscalationLevel(decode(site), false)),
 		),
 	},
+	tolerances: TOLERANCES,
+	easeToleranceForTouch: TOLERANCES.map(
+		(tolerance: EncodedNumber): EncodedNumber =>
+			encode(easeToleranceForTouch(requireNumber(tolerance))),
+	),
+	pieceScaleEnds: PIECE_SCALE_ENDS,
+	easePieceScaleForTouch: PIECE_SCALE_ENDS.map(
+		(min: EncodedNumber): EncodedNumber[][] =>
+			PIECE_SCALE_ENDS.map((max: EncodedNumber): EncodedNumber[] => {
+				const eased = easePieceScaleForTouch({
+					min: requireNumber(min),
+					max: requireNumber(max),
+				});
+				return [encode(eased.min), encode(eased.max)];
+			}),
+	),
 	requestedRounds: REQUESTED_ROUNDS,
 	baseRounds: BASE_ROUNDS,
 	maxLevels: MAX_LEVELS,
