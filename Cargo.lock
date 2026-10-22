@@ -2370,6 +2370,7 @@ dependencies = [
  "prosopo-api",
  "prosopo-api-route",
  "prosopo-api-router",
+ "prosopo-captcha-severity",
  "prosopo-common",
  "prosopo-database",
  "prosopo-datasets",

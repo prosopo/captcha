@@ -17,6 +17,7 @@
 pub mod admin;
 pub mod assets;
 pub mod block;
+pub mod body_summary;
 pub mod body;
 pub mod captcha;
 pub mod challenge;
@@ -32,6 +33,7 @@ pub mod verify;
 pub mod query;
 pub mod rules;
 pub mod signals;
+pub mod solution;
 
 use axum::middleware::from_fn;
 use axum::Router;

@@ -1569,3 +1569,164 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
     assert!(compared > 35, "only {compared} compared");
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }
+
+/// Each escalated session id in `text` replaced by the step that minted it.
+fn with_escalations_named(text: &str, minted: &[(String, String)]) -> String {
+    minted.iter().fold(text.to_string(), |text, (id, name)| text.replace(id.as_str(), name))
+}
+
+/// The escalation id an answer carries, if any.
+fn escalation_id(answer: &Answer) -> Option<String> {
+    serde_json::from_slice::<Value>(&answer.body).ok()?.pointer("/escalation/sessionId")?.as_str().map(str::to_string)
+}
+
+/// A puzzle escalation's draws, masked once they are within their level's bands; the level is
+/// not stored, so any level's bands will do, as long as it is one band for all of them.
+fn masked_draws(session: &mut Map<String, Value>, side: &str, failures: &mut Vec<String>) {
+    let Some(tolerance) = session.get("puzzleTolerance").and_then(extended_number) else {
+        return;
+    };
+    let puzzle: Value = session.get("puzzle").cloned().unwrap_or(Value::Null);
+    let number = |key: &str| puzzle.get(key).and_then(extended_number);
+    let banded = prosopo_captcha_severity::PUZZLE_DIFFICULTY_LEVELS.iter().any(|band| {
+        let within = |value: Option<f64>, range: &prosopo_captcha_severity::PuzzleDifficultyRange| value.is_some_and(|value| value >= range.min && value <= range.max);
+        within(Some(tolerance), &band.tolerance)
+            && within(number("decoyCount"), &band.decoy_count)
+            && within(number("decoyEdgeDarkness"), &band.decoy_edge_darkness)
+            && number("decoyHoleDarken").is_some_and(|value| value <= 1.0)
+            && puzzle.pointer("/pieceScale/min").and_then(extended_number) == Some(band.piece_scale.min)
+            && puzzle.pointer("/pieceScale/max").and_then(extended_number) == Some(band.piece_scale.max)
+    });
+    if !banded {
+        failures.push(format!("{side} puzzle escalation drew outside every band: {tolerance} {puzzle}"));
+    }
+    session.insert("puzzleTolerance".to_string(), json!("<drawn>"));
+    session.insert("puzzle".to_string(), json!("<drawn>"));
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn pow_solutions_are_judged_as_the_express_app_judges_them() {
+    let _live = LIVE.lock().await;
+    let vectors: Value = serde_json::from_str(include_str!("../../provider/rust/equivalence/pow-solution-live-vectors.json")).expect("pow-solution-live-vectors.json parses");
+    let database: &str = vectors["database"].as_str().expect("a database");
+    reset(database).await;
+    let ipapi: String = fake_ipapi(vectors["ipapi"].clone()).await;
+    let pool = tempfile::TempDir::new().expect("a pool directory");
+    for (name, contents) in vectors["poolFiles"].as_object().expect("pool files") {
+        std::fs::write(pool.path().join(name), contents.as_str().expect("text")).expect("writes");
+    }
+    let mut variables: HashMap<String, String> = serde_json::from_value(vectors["variables"].clone()).expect("variables");
+    variables.insert("PROSOPO_IPAPI_URL".to_string(), ipapi);
+    variables.insert("PROSOPO_DETECTOR_POOL_DIR".to_string(), pool.path().to_string_lossy().into_owned());
+    variables.insert("NODE_ENV".to_string(), "production".to_string());
+    let decoded: DecodedPayloads = vectors["decoded"]
+        .as_array()
+        .expect("decoded payloads")
+        .iter()
+        .map(|entry| {
+            let ciphertext: String = entry["ciphertext"].as_str().expect("a payload").to_string();
+            match entry["readings"].as_object() {
+                Some(readings) => (ciphertext, Ok(readings.clone())),
+                None => (ciphertext, Err(entry["error"].as_str().unwrap_or_default().to_string())),
+            }
+        })
+        .collect();
+    let clock: Arc<PinnedClock> = Arc::new(PinnedClock(AtomicI64::new(vectors["exchanges"][0]["at"].as_i64().expect("a time"))));
+    let (router, _env) = live_app_with(&variables, clock.clone(), Some(Arc::new(RecordedDecoder(decoded))), None, None).await;
+    restore_database(database, &vectors["seed"]).await;
+    restore_hashes(&vectors["redis"]).await;
+    let mut connection = redis().await;
+    for entry in vectors["cache"].as_array().expect("cache entries") {
+        let _: () = redis::cmd("SET").arg(entry["key"].as_str().expect("a key")).arg(entry["raw"].as_str().expect("a value")).arg("EX").arg(86400).query_async(&mut connection).await.expect("caches");
+    }
+    for entry in vectors["counters"].as_array().expect("counters") {
+        let _: () = redis::cmd("SET").arg(entry["key"].as_str().expect("a key")).arg(entry["value"].as_str().expect("a value")).arg("EX").arg(86400).query_async(&mut connection).await.expect("counts");
+    }
+    let port: u16 = serve(router).await;
+    let decode = |text: &Value| base64::engine::general_purpose::STANDARD.decode(text.as_str().expect("base64")).expect("base64 decodes");
+    let mut failures: Vec<String> = Vec::new();
+    let (mut minted_ts, mut minted_rust): (Vec<(String, String)>, Vec<(String, String)>) = (Vec::new(), Vec::new());
+    let exchanges: &Vec<Value> = vectors["exchanges"].as_array().expect("exchanges");
+    for (index, step) in exchanges.iter().enumerate() {
+        clock.0.store(step["at"].as_i64().expect("a time"), Ordering::SeqCst);
+        let request: Vec<u8> = decode(&step["request"]);
+        let actual: Answer = answer(&exchange(port, &request).await);
+        let expected: Answer = answer(&decode(&step["response"]));
+        let name: String = format!("<escalation-{index}>");
+        minted_ts.extend(escalation_id(&expected).map(|id| (id, name.clone())));
+        minted_rust.extend(escalation_id(&actual).map(|id| (id, name.clone())));
+        let (expected_headers, expected_body) = without_request_id(&expected);
+        let (actual_headers, actual_body) = without_request_id(&actual);
+        let expected_body: String = with_escalations_named(&String::from_utf8_lossy(&expected_body), &minted_ts);
+        let actual_body: String = with_escalations_named(&String::from_utf8_lossy(&actual_body), &minted_rust);
+        let headers = |headers: Vec<(String, String)>| -> Vec<(String, String)> { headers.into_iter().filter(|(name, _)| name != "etag" && name != "content-length").collect() };
+        if expected.status_line != actual.status_line || headers(expected_headers.clone()) != headers(actual_headers.clone()) || expected_body != actual_body {
+            failures.push(format!(
+                "{}\n      rust {:?} {:?} {}\n      ts   {:?} {:?} {}",
+                shown(&request).lines().next().unwrap_or_default(),
+                actual.status_line,
+                actual_headers,
+                actual_body,
+                expected.status_line,
+                expected_headers,
+                expected_body
+            ));
+        }
+    }
+    tokio::time::sleep(Duration::from_millis(1500)).await;
+    let fresh: [&str; 4] = ["lastUpdatedTimestamp", "submittedAtTimestamp", "failedAtTimestamp", "behavioralDataPacked._id"];
+    failures.extend(compare_records(&vectors["after"]["powcaptchas"], &dump(database, "powcaptchas").await, &fresh));
+    let sessions = |records: &[Value], minted: &[(String, String)], side: &str, failures: &mut Vec<String>| -> Vec<Value> {
+        records
+            .iter()
+            .map(|record| {
+                let mut record: Value = serde_json::from_str(&with_escalations_named(&record.to_string(), minted)).expect("JSON");
+                if let Some(session) = record.as_object_mut().filter(|session| session.get("isEscalation") == Some(&json!(true))) {
+                    session.insert("_id".to_string(), json!("<fresh>"));
+                    session.insert("createdAt".to_string(), json!("<fresh>"));
+                    masked_draws(session, side, failures);
+                }
+                record
+            })
+            .collect()
+    };
+    let expected_sessions: Vec<Value> = sessions(vectors["after"]["sessions"].as_array().expect("sessions"), &minted_ts, "ts", &mut failures);
+    let actual_sessions: Vec<Value> = sessions(&dump(database, "sessions").await, &minted_rust, "rust", &mut failures);
+    failures.extend(compare_records(&Value::Array(expected_sessions), &actual_sessions, &fresh));
+    let cached = |entries: &[Value], minted: &[(String, String)], side: &str, failures: &mut Vec<String>| -> Vec<Value> {
+        entries
+            .iter()
+            .map(|entry| {
+                let key: String = with_escalations_named(entry["key"].as_str().unwrap_or_default(), minted);
+                let raw: String = with_escalations_named(entry["raw"].as_str().unwrap_or_default(), minted);
+                match serde_json::from_str::<Value>(&raw) {
+                    Ok(Value::Object(mut session)) => {
+                        if session.get("isEscalation") == Some(&json!(true)) {
+                            session.insert("createdAt".to_string(), json!("<fresh>"));
+                            masked_draws(&mut session, side, failures);
+                        }
+                        if session.contains_key("lastUpdatedTimestamp") {
+                            session.insert("lastUpdatedTimestamp".to_string(), json!("<fresh>"));
+                        }
+                        json!({ "key": key, "raw": serde_json::to_string(&session).expect("JSON") })
+                    }
+                    _ => json!({ "key": key, "raw": raw }),
+                }
+            })
+            .collect()
+    };
+    let mut expected_cache: Vec<Value> = cached(vectors["cacheAfter"].as_array().expect("cache"), &minted_ts, "ts", &mut failures);
+    let mut actual_cache: Vec<Value> = cached(&cache_entries().await, &minted_rust, "rust", &mut failures);
+    expected_cache.sort_by_key(|entry| entry["key"].to_string());
+    actual_cache.sort_by_key(|entry| entry["key"].to_string());
+    if expected_cache != actual_cache {
+        failures.push(format!("cache differs\n  ts:   {}\n  rust: {}", json!(expected_cache), json!(actual_cache)));
+    }
+    let expected_counters: Vec<Value> = vectors["countersAfter"].as_array().expect("counters").iter().map(|entry| json!({ "key": entry["key"], "value": entry["value"] })).collect();
+    if json!(expected_counters) != json!(usage_counters().await) {
+        failures.push(format!("counters differ\n  ts:   {}\n  rust: {}", json!(expected_counters), json!(usage_counters().await)));
+    }
+    assert_eq!(minted_ts.len(), minted_rust.len(), "escalations minted");
+    assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
+}

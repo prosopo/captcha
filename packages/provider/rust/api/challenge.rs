@@ -111,6 +111,8 @@ pub struct ChallengeState {
     /// The process environment, which the image route reads its asset URL keys from per
     /// request.
     pub env: EnvReader,
+    /// `getSessionIDPrefix(config.host)`, which an escalation's session id starts with.
+    pub session_id_prefix: String,
 }
 
 impl ChallengeState {
@@ -213,7 +215,7 @@ pub fn request_headers_document(headers: &http::HeaderMap) -> Document {
     out
 }
 
-fn logger_of(request: &Request) -> Logger {
+pub(crate) fn logger_of(request: &Request) -> Logger {
     request
         .extensions()
         .get::<RequestLog>()

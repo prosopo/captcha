@@ -154,6 +154,9 @@ pub async fn captcha_routes(State(state): State<Arc<CaptchaState>>, request: Req
         (ClientApiPaths::GetAudioCaptchaChallenge, ChallengeRoute::Audio),
         (ClientApiPaths::GetPuzzleCaptchaChallenge, ChallengeRoute::Puzzle),
     ];
+    if request.method() == Method::POST && route_matches(request.uri().path(), ClientApiPaths::SubmitPowCaptchaSolution.as_str()) {
+        return crate::api::solution::pow_solution_route(&state.challenge, request).await;
+    }
     if request.method() == Method::POST && route_matches(request.uri().path(), ClientApiPaths::GetImageCaptchaChallenge.as_str()) {
         return image_challenge_route(&state.challenge, request).await;
     }
