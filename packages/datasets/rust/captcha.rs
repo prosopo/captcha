@@ -370,25 +370,26 @@ pub fn compute_pending_request_hash(
     hash(&parts)
 }
 
-/// `AssetsResolver`: maps an item's data to the URL a widget fetches it from.
+/// `AssetsResolver`: maps an item's data to the URL a widget fetches it from, or refuses to.
 pub trait AssetsResolver {
-    fn resolve_asset_url(&self, data: &str) -> String;
+    fn resolve_asset_url(&self, data: &str) -> std::result::Result<String, String>;
 }
 
 /// `parseCaptchaAssets`: the item with its data resolved, unless the resolver gives nothing.
 pub fn parse_captcha_assets(
     item: &CaptchaItem,
     resolver: Option<&dyn AssetsResolver>,
-) -> CaptchaItem {
-    let resolved: String = resolver.map_or_else(String::new, |resolver| {
-        resolver.resolve_asset_url(&item.data)
-    });
-    CaptchaItem {
+) -> std::result::Result<CaptchaItem, String> {
+    let resolved: String = match resolver {
+        Some(resolver) => resolver.resolve_asset_url(&item.data)?,
+        None => String::new(),
+    };
+    Ok(CaptchaItem {
         data: if resolved.is_empty() {
             item.data.clone()
         } else {
             resolved
         },
         ..item.clone()
-    }
+    })
 }

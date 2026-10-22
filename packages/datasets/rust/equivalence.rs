@@ -457,11 +457,12 @@ fn pending_request_hashes_match_the_ts() {
 struct MappedResolver(HashMap<String, String>);
 
 impl AssetsResolver for MappedResolver {
-    fn resolve_asset_url(&self, data: &str) -> String {
-        self.0
+    fn resolve_asset_url(&self, data: &str) -> std::result::Result<String, String> {
+        Ok(self
+            .0
             .get(data)
             .cloned()
-            .unwrap_or_else(|| data.to_uppercase())
+            .unwrap_or_else(|| data.to_uppercase()))
     }
 }
 
@@ -472,7 +473,8 @@ fn asset_resolution_matches_the_ts() {
         let resolver: Option<MappedResolver> =
             (!case["mapping"].is_null()).then(|| MappedResolver(decode(&case["mapping"])));
         let resolved: CaptchaItem =
-            parse_captcha_assets(&item, resolver.as_ref().map(|r| r as &dyn AssetsResolver));
+            parse_captcha_assets(&item, resolver.as_ref().map(|r| r as &dyn AssetsResolver))
+                .expect("resolves");
         assert_eq!(case["result"], encode(&resolved), "{case}");
     }
 }

@@ -15,6 +15,7 @@
 //! The provider's HTTP API (startProviderApi.ts), route by route as MIGRATION.md §3 phases them.
 
 pub mod admin;
+pub mod assets;
 pub mod block;
 pub mod body;
 pub mod captcha;
