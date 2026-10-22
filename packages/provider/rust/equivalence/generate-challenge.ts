@@ -91,6 +91,10 @@ const ICON_FRICTIONLESS = getPair("//IconFrictionless");
 const ICON_TRAFFIC = getPair("//IconTraffic");
 const AUDIO = getPair("//Audio");
 const AUDIO_TRAFFIC = getPair("//AudioTraffic");
+const PUZZLE = getPair("//Puzzle");
+const PUZZLE_FRICTIONLESS = getPair("//PuzzleFrictionless");
+const PUZZLE_TRAFFIC = getPair("//PuzzleTraffic");
+const PUZZLE_PLAIN = getPair("//PuzzlePlain");
 const USER = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 const RESTRICTED_USER = "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy";
 const RULED_USER = "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw";
@@ -135,6 +139,7 @@ const IPAPI: IpapiTable = {
 	"198.51.100.30": answer("198.51.100.30", { is_vpn: true }),
 	"198.51.100.31": answer("198.51.100.31", { is_proxy: true }),
 	"192.0.2.53": answer("192.0.2.53", { is_datacenter: true }),
+	"198.51.100.40": answer("198.51.100.40", { is_mobile: true }),
 };
 
 // A pool of one bundle, without the inner cipher, whose key the SIMD payloads are sealed to.
@@ -328,6 +333,61 @@ const records = [
 		},
 		tier: Tier.Enterprise,
 	},
+	{
+		account: PUZZLE.address,
+		settings: {
+			...base,
+			captchaType: "puzzle",
+			puzzleTolerance: 8,
+			puzzle: { decoyCount: 3, pieceScale: { min: 0.15, max: 0.15 } },
+			widgetFeatureFlags: { puzzleImageSwitch: true },
+		},
+		tier: Tier.Free,
+	},
+	{
+		account: PUZZLE_FRICTIONLESS.address,
+		settings: {
+			...base,
+			captchaType: "frictionless",
+			frictionlessTypes: { image: false, puzzle: true },
+			widgetFeatureFlags: { puzzleImageSwitch: true },
+			puzzle: { pieceScale: { min: 0.3, max: 0.3 } },
+			trafficFilter: {
+				vpn: {
+					action: "challenge",
+					puzzleTolerance: 14,
+					puzzle: { decoyCount: 2 },
+				},
+			},
+		},
+		tier: Tier.Professional,
+	},
+	{
+		account: PUZZLE_TRAFFIC.address,
+		settings: {
+			...base,
+			captchaType: "puzzle",
+			puzzle: {
+				decoyCount: 4,
+				holeDarken: 0.6,
+				pieceScale: { min: 0.2, max: 0.2 },
+			},
+			trafficFilter: {
+				vpn: {
+					action: "challenge",
+					puzzleTolerance: 9,
+					padBytes: 32,
+					puzzle: { holeDarken: 0.9, pieceScale: { min: 0.35, max: 0.35 } },
+				},
+			},
+		},
+		tier: Tier.Enterprise,
+	},
+	{
+		account: PUZZLE_PLAIN.address,
+		settings: { ...base, captchaType: "puzzle" },
+		tier: Tier.Free,
+	},
 ] as unknown as IUserDataSlim[];
 await db.updateClientRecords(records);
 
@@ -432,6 +492,34 @@ await seedSession("s-audio-traffic", {
 	captchaType: CaptchaType.image,
 	siteKey: AUDIO_TRAFFIC.address,
 });
+const puzzleSession = {
+	captchaType: CaptchaType.puzzle,
+	siteKey: PUZZLE_FRICTIONLESS.address,
+	puzzleTolerance: 11,
+	puzzle: {
+		decoyCount: 7,
+		holeDarken: 0.8,
+		pieceScale: { min: 0.25, max: 0.25 },
+	},
+	puzzleLevel: 2,
+} as Partial<Session>;
+await seedSession("s-puzzle", puzzleSession);
+await seedSession("s-puzzle-vpn", puzzleSession);
+const touchSession = {
+	captchaType: CaptchaType.puzzle,
+	siteKey: PUZZLE_FRICTIONLESS.address,
+	puzzleTolerance: 5,
+	puzzle: { pieceScale: { min: 0.1, max: 0.1 } },
+} as Partial<Session>;
+await seedSession("s-puzzle-tunnelled", {
+	...touchSession,
+	tcpMss: 1400,
+} as Partial<Session>);
+await seedSession("s-puzzle-wifi", {
+	...touchSession,
+	tcpMss: 1460,
+} as Partial<Session>);
+await seedSession("s-puzzle-webview", { ...touchSession, webView: true });
 await seedSession("s-audio-off", {
 	captchaType: CaptchaType.image,
 	siteKey: FRICTIONLESS.address,
@@ -451,6 +539,7 @@ const cache = await dumpCache();
 const path = "/v1/prosopo/provider/client/captcha/pow";
 const iconPath = "/v1/prosopo/provider/client/captcha/icon-order";
 const audioPath = "/v1/prosopo/provider/client/captcha/audio";
+const puzzlePath = "/v1/prosopo/provider/client/captcha/puzzle";
 const json: [string, string] = ["Content-Type", "application/json"];
 const origin: [string, string] = ["Origin", "https://example.com"];
 const browser: [string, string] = [
@@ -458,6 +547,14 @@ const browser: [string, string] = [
 	"Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
 ];
 const from = (ip: string): [string, string] => ["X-Forwarded-For", ip];
+const iphone: [string, string] = [
+	"User-Agent",
+	"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148",
+];
+const androidHints: [string, string][] = [
+	["User-Agent", "Mozilla/5.0 (Linux; Android 14) Chrome/119 Safari/537.36"],
+	["Sec-CH-UA-Mobile", "?1"],
+];
 type Ask = {
 	dapp: string;
 	user?: string;
@@ -486,7 +583,7 @@ const pow = (
 		...(ask.simdReadings && { simdReadings: ask.simdReadings }),
 	}),
 });
-const steps: (Step & { padded?: boolean })[] = [
+const steps: (Step & { padded?: boolean; varies?: boolean })[] = [
 	pow({ dapp: POW.address }),
 	pow({ dapp: DIFFICULT.address }),
 	pow({ dapp: ZERO.address }),
@@ -653,6 +750,62 @@ const steps: (Step & { padded?: boolean })[] = [
 		...pow({ dapp: ALWAYS_PASS_SITE_KEY }, undefined, audioPath),
 		compare: false,
 	},
+	pow({ dapp: PUZZLE.address }, undefined, puzzlePath),
+	pow(
+		{ dapp: PUZZLE.address },
+		[origin, iphone, from("203.0.113.7")],
+		puzzlePath,
+	),
+	pow(
+		{ dapp: PUZZLE.address },
+		[origin, iphone, from("198.51.100.40")],
+		puzzlePath,
+	),
+	pow(
+		{ dapp: PUZZLE_FRICTIONLESS.address, sessionId: "s-puzzle" },
+		undefined,
+		puzzlePath,
+	),
+	pow(
+		{ dapp: PUZZLE_FRICTIONLESS.address, sessionId: "s-puzzle-vpn" },
+		[origin, browser, from("198.51.100.30")],
+		puzzlePath,
+	),
+	pow(
+		{ dapp: PUZZLE_FRICTIONLESS.address, sessionId: "s-puzzle-tunnelled" },
+		[origin, iphone, from("203.0.113.7")],
+		puzzlePath,
+	),
+	pow(
+		{ dapp: PUZZLE_FRICTIONLESS.address, sessionId: "s-puzzle-wifi" },
+		[origin, iphone, from("203.0.113.7")],
+		puzzlePath,
+	),
+	pow(
+		{ dapp: PUZZLE_FRICTIONLESS.address, sessionId: "s-puzzle-webview" },
+		[origin, ...androidHints, from("203.0.113.7")],
+		puzzlePath,
+	),
+	pow({ dapp: PUZZLE_FRICTIONLESS.address }, undefined, puzzlePath),
+	{
+		...pow(
+			{ dapp: PUZZLE_TRAFFIC.address },
+			[origin, browser, from("198.51.100.30")],
+			puzzlePath,
+		),
+		padded: true,
+	},
+	pow({ dapp: PUZZLE_TRAFFIC.address }, undefined, puzzlePath),
+	{
+		...pow({ dapp: PUZZLE_PLAIN.address }, undefined, puzzlePath),
+		varies: true,
+	},
+	pow({ dapp: POW.address }, undefined, puzzlePath),
+	pow({ dapp: UNREGISTERED.address }, undefined, puzzlePath),
+	{
+		...pow({ dapp: ALWAYS_PASS_SITE_KEY }, undefined, puzzlePath),
+		compare: false,
+	},
 ];
 
 // Each icon-order render's seed, in the order the renders draw them, for the Rust to replay: the
@@ -689,6 +842,7 @@ for (const step of steps) {
 		response: response.toString("base64"),
 		compare: step.compare !== false,
 		padded: step.padded === true,
+		varies: step.varies === true,
 		at: issuedAt === undefined ? sentAt : Number(issuedAt),
 	});
 }
@@ -787,6 +941,7 @@ writeFileSync(
 			powcaptchas: after.powcaptchas,
 			iconordercaptchas: after.iconordercaptchas,
 			audiocaptchas: after.audiocaptchas,
+			puzzlecaptchas: after.puzzlecaptchas,
 			sessions: after.sessions,
 		},
 		cacheAfter,

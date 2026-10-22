@@ -2324,6 +2324,7 @@ dependencies = [
  "prosopo-locale",
  "prosopo-logger",
  "prosopo-provider",
+ "prosopo-puzzle-assets",
  "prosopo-types",
  "prosopo-user-access-policy",
  "prosopo-util",

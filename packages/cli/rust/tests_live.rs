@@ -1011,6 +1011,9 @@ fn psnr(a: &[u8], b: &[u8]) -> f64 {
 /// layout falls far below the 30 dB floor, and the stored targets, compared exactly, pin the
 /// geometry.
 fn compared_images(expected: &mut Map<String, Value>, actual: &mut Map<String, Value>, failures: &mut Vec<String>) {
+    if expected.contains_key("piece") {
+        return;
+    }
     for key in ["legend", "background"] {
         let (Some(expected_uri), Some(actual_uri)) = (expected.get(key).and_then(Value::as_str), actual.get(key).and_then(Value::as_str)) else {
             continue;
@@ -1058,7 +1061,153 @@ fn checked_challenge(body: &mut Map<String, Value>, provider: &str, side: &str, 
     body.insert("challenge".to_string(), json!(masked_challenge(&challenge)));
 }
 
-const CHALLENGE_MEMBERS: [&str; 10] = ["status", "challenge", "difficulty", "timestamp", "signature", "background", "legend", "legendIconSize", "clip", "characterCount"];
+const CHALLENGE_MEMBERS: [&str; 15] = [
+    "status",
+    "challenge",
+    "difficulty",
+    "timestamp",
+    "signature",
+    "background",
+    "legend",
+    "legendIconSize",
+    "clip",
+    "characterCount",
+    "piece",
+    "pieceSize",
+    "originX",
+    "originY",
+    "imageSwitchAvailable",
+];
+
+/// A number from canonical extended JSON.
+fn extended_number(value: &Value) -> Option<f64> {
+    value.as_f64().or_else(|| ["$numberInt", "$numberDouble", "$numberLong"].iter().find_map(|key| value.get(*key)?.as_str()?.parse().ok()))
+}
+
+/// A puzzle answer as served, kept to be checked against the record it stored.
+struct ServedPuzzle {
+    side: &'static str,
+    body: Map<String, Value>,
+}
+
+/// A puzzle answer taken for [`rerendered_puzzles`], then its random members masked: the
+/// target and origin are `Math.random`, the imagery comes from fresh seeds, and an unpinned
+/// piece size from a cryptographic sampler.
+fn masked_puzzle(body: &mut Map<String, Value>, side: &'static str, varies: bool, served: &mut Vec<ServedPuzzle>) {
+    if !body.contains_key("piece") {
+        return;
+    }
+    served.push(ServedPuzzle { side, body: body.clone() });
+    for key in ["background", "piece", "originX", "originY"] {
+        body.insert(key.to_string(), json!("<random>"));
+    }
+    if varies {
+        body.insert("pieceSize".to_string(), json!("<random>"));
+    }
+}
+
+/// A stored puzzle record checked and masked: its target and origin integers within the ranges
+/// they are drawn from, its seeds 128-bit hex, and an unpinned piece size within the default
+/// scale range.
+fn stored_puzzle(record: &Value, provider: &str, side: &str, varying_sites: &[String], failures: &mut Vec<String>) -> Value {
+    let mut record: Value = stored_challenge(record, provider, side, failures);
+    for (key, min, max) in [("targetX", 150.0, 280.0), ("targetY", 30.0, 170.0), ("originX", 20.0, 130.0), ("originY", 30.0, 170.0)] {
+        let drawn: Option<f64> = extended_number(&record[key]);
+        if !drawn.is_some_and(|drawn| drawn.fract() == 0.0 && (min..=max).contains(&drawn)) {
+            failures.push(format!("{side}'s stored {key} {:?} is not an integer in [{min}, {max}]", record[key]));
+        }
+        record[key] = json!("<random>");
+    }
+    let varies: bool = record["dappAccount"].as_str().is_some_and(|site| varying_sites.iter().any(|varying| varying == site));
+    let Some(render) = record.get_mut("render").and_then(Value::as_object_mut) else {
+        failures.push(format!("{side} stored no render inputs"));
+        return record;
+    };
+    for key in ["backgroundSeed", "renderSeed"] {
+        let seed: &str = render.get(key).and_then(Value::as_str).unwrap_or_default();
+        if seed.len() != 32 || !seed.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            failures.push(format!("{side}'s stored {key} {seed:?} is not 128-bit hex"));
+        }
+        render.insert(key.to_string(), json!("<seed>"));
+    }
+    if varies {
+        let size: Option<f64> = render.get("pieceSize").and_then(extended_number);
+        if !size.is_some_and(|size| (45.0..=135.0).contains(&size)) {
+            failures.push(format!("{side}'s stored piece size {size:?} is outside the default scale range"));
+        }
+        render.insert("pieceSize".to_string(), json!("<random>"));
+    }
+    record
+}
+
+/// Pixels with the colour under full transparency cleared: sharp's lossless WebP keeps
+/// whatever colour it is given there, the Rust encoder does not, and nothing shows it.
+fn visible_pixels(pixels: &[u8]) -> Vec<u8> {
+    pixels.chunks(4).flat_map(|pixel| if pixel[3] == 0 { [0; 4] } else { [pixel[0], pixel[1], pixel[2], pixel[3]] }).collect()
+}
+
+/// Each served puzzle re-rendered by the Rust renderer from the record it stored: the record's
+/// seeds, target, piece size and settings must reproduce the imagery served, byte for byte from
+/// the Rust and pixel for pixel, wherever a pixel is visible, from the TS's sharp encoding, and
+/// the answer's origin and piece size must be the stored ones.
+fn rerendered_puzzles(served: &[ServedPuzzle], side: &str, records: &[Value], failures: &mut Vec<String>) {
+    for puzzle in served.iter().filter(|puzzle| puzzle.side == side) {
+        let Some(record) = records.iter().find(|record| record["challenge"] == puzzle.body["challenge"]) else {
+            failures.push(format!("{side} stored no record for {}", puzzle.body["challenge"]));
+            continue;
+        };
+        let number = |value: &Value| extended_number(value).unwrap_or(f64::NAN);
+        let render: &Value = &record["render"];
+        for (served_key, stored) in [("originX", &record["originX"]), ("originY", &record["originY"]), ("pieceSize", &render["pieceSize"])] {
+            if puzzle.body[served_key].as_f64() != Some(number(stored)) {
+                failures.push(format!("{side} served {served_key} {} but stored {stored}", puzzle.body[served_key]));
+            }
+        }
+        let seed = |key: &str| -> Option<Vec<u8>> {
+            let hex: &str = render[key].as_str()?;
+            (0..hex.len()).step_by(2).map(|i| u8::from_str_radix(hex.get(i..i + 2)?, 16).ok()).collect()
+        };
+        let settings: &Value = &render["settings"];
+        let rendered = prosopo_puzzle_assets::create_puzzle(
+            &prosopo_puzzle_assets::NotchPlacement { target_x: number(&record["targetX"]), target_y: number(&record["targetY"]) },
+            &prosopo_puzzle_assets::PuzzleGeometry { piece_size: Some(number(&render["pieceSize"]) as u32), ..prosopo_puzzle_assets::DEFAULT_GEOMETRY },
+            &prosopo_puzzle_assets::PuzzleRenderSettings {
+                decoy_count: number(&settings["decoyCount"]),
+                decoy_edge_darkness: number(&settings["decoyEdgeDarkness"]),
+                decoy_body_brightness: number(&settings["decoyBodyBrightness"]),
+                hole_darken: number(&settings["holeDarken"]),
+                decoy_hole_darken: number(&settings["decoyHoleDarken"]),
+            },
+            seed("backgroundSeed"),
+            seed("renderSeed"),
+        );
+        let rendered = match rendered {
+            Ok(rendered) => rendered,
+            Err(error) => {
+                failures.push(format!("{side}'s stored render inputs do not render: {error}"));
+                continue;
+            }
+        };
+        for (key, bytes) in [("background", &rendered.background), ("piece", &rendered.piece)] {
+            let again: String = prosopo_puzzle_assets::to_data_uri(bytes);
+            let served_uri: &str = puzzle.body[key].as_str().unwrap_or_default();
+            if side == "rust" {
+                if again != served_uri {
+                    failures.push(format!("rust's {key} is not what its stored inputs render"));
+                }
+                continue;
+            }
+            match (data_uri_pixels(served_uri), data_uri_pixels(&again)) {
+                (Some((sw, sh, sp)), Some((rw, rh, rp))) if (sw, sh) == (rw, rh) && sp.len() == rp.len() => {
+                    if visible_pixels(&sp) != visible_pixels(&rp) {
+                        failures.push(format!("ts's {key} differs from what its stored inputs render"));
+                    }
+                }
+                _ => failures.push(format!("ts's {key} does not decode to the size its stored inputs render")),
+            }
+        }
+    }
+}
 
 /// An audio answer's clip checked as a WAV, then masked: which clip a request gets is the TS
 /// buffer's timing, and the clip's synthesis is proven by audio-assets' own vectors.
@@ -1214,6 +1363,8 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
     let decode = |text: &Value| base64::engine::general_purpose::STANDARD.decode(text.as_str().expect("base64")).expect("base64 decodes");
     let mut failures: Vec<String> = Vec::new();
     let mut compared: usize = 0;
+    let mut served: Vec<ServedPuzzle> = Vec::new();
+    let mut varying_sites: Vec<String> = Vec::new();
     for step in vectors["exchanges"].as_array().expect("exchanges") {
         clock.0.store(step["at"].as_i64().expect("a time"), Ordering::SeqCst);
         let request: Vec<u8> = decode(&step["request"]);
@@ -1223,7 +1374,10 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
         if step["compare"] == Value::Bool(false) {
             let body: Value = serde_json::from_slice(&actual.body).unwrap_or(Value::Null);
             let challenge: &str = body["challenge"].as_str().unwrap_or_default();
-            let shaped: bool = body["difficulty"] == json!(1) || body["legend"].as_str().and_then(data_uri_pixels).is_some() || body["clip"].as_str().is_some_and(|clip| clip.starts_with("data:audio/wav;base64,"));
+            let shaped: bool = body["difficulty"] == json!(1)
+                || body["legend"].as_str().and_then(data_uri_pixels).is_some()
+                || body["piece"].as_str().and_then(data_uri_pixels).is_some()
+                || body["clip"].as_str().is_some_and(|clip| clip.starts_with("data:audio/wav;base64,"));
             if !actual.status_line.starts_with("HTTP/1.1 200 ") || !shaped || !challenge.ends_with("___0") || body.pointer("/signature/provider/challenge") != Some(&json!("")) {
                 failures.push(format!("{line}\n      rust dummy challenge {body}"));
             }
@@ -1231,6 +1385,12 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
         }
         compared += 1;
         let padded: bool = step["padded"] == Value::Bool(true);
+        let varies: bool = step["varies"] == Value::Bool(true);
+        if varies {
+            let text: String = String::from_utf8_lossy(&request).into_owned();
+            let body: Value = text.split_once("\r\n\r\n").and_then(|(_, body)| serde_json::from_str(body).ok()).unwrap_or(Value::Null);
+            varying_sites.extend(body["dapp"].as_str().map(str::to_string));
+        }
         let (expected_headers, expected_body) = without_request_id(&expected);
         let (actual_headers, actual_body) = without_request_id(&actual);
         let issued: bool = expected_body.starts_with(b"{\"status\":\"ok\"") || padded;
@@ -1239,6 +1399,8 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
             match (serde_json::from_slice::<Value>(&expected_body), serde_json::from_slice::<Value>(&actual_body)) {
                 (Ok(Value::Object(mut expected_json)), Ok(Value::Object(mut actual_json))) => {
                     compared_images(&mut expected_json, &mut actual_json, &mut failures);
+                    masked_puzzle(&mut expected_json, "ts", varies, &mut served);
+                    masked_puzzle(&mut actual_json, "rust", varies, &mut served);
                     compared_clip(&mut expected_json, "ts", &mut failures);
                     compared_clip(&mut actual_json, "rust", &mut failures);
                     (challenge_answer(expected_json, padded, provider, "ts", &mut failures), challenge_answer(actual_json, padded, provider, "rust", &mut failures))
@@ -1277,6 +1439,13 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
     let expected_audio: Vec<Value> = vectors["after"]["audiocaptchas"].as_array().expect("records").iter().map(|record| stored_audio(record, provider, "ts", &mut failures)).collect();
     let actual_audio: Vec<Value> = dump(database, "audiocaptchas").await.iter().map(|record| stored_audio(record, provider, "rust", &mut failures)).collect();
     failures.extend(compare_records(&Value::Array(expected_audio), &actual_audio, &fresh));
+    let ts_puzzles: Vec<Value> = vectors["after"]["puzzlecaptchas"].as_array().expect("records").clone();
+    let rust_puzzles: Vec<Value> = dump(database, "puzzlecaptchas").await;
+    rerendered_puzzles(&served, "ts", &ts_puzzles, &mut failures);
+    rerendered_puzzles(&served, "rust", &rust_puzzles, &mut failures);
+    let expected_puzzles: Vec<Value> = ts_puzzles.iter().map(|record| stored_puzzle(record, provider, "ts", &varying_sites, &mut failures)).collect();
+    let actual_puzzles: Vec<Value> = rust_puzzles.iter().map(|record| stored_puzzle(record, provider, "rust", &varying_sites, &mut failures)).collect();
+    failures.extend(compare_records(&Value::Array(expected_puzzles), &actual_puzzles, &fresh));
     let expected_sessions: Vec<Value> = vectors["after"]["sessions"].as_array().expect("sessions").iter().map(session_without_block_ids).collect();
     let actual_sessions: Vec<Value> = dump(database, "sessions").await.iter().map(session_without_block_ids).collect();
     failures.extend(compare_records(&Value::Array(expected_sessions), &actual_sessions, &fresh));

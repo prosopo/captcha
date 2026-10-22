@@ -15,10 +15,12 @@
 //! tasks/puzzle: the render-settings layering and piece size of puzzleRenderer.ts, the
 //! stratified sampler (stratifiedSampler.ts) and the pre-generated background buffer
 //! (backgroundBuffer.ts with nativeBackground.ts), and getFrictionlessCaptchaChallenge's
-//! `isPuzzleImageSwitchAvailable`.
+//! `isPuzzleImageSwitchAvailable`, and `renderPuzzleImages` over the process's buffer and
+//! piece-size sampler.
 
 use prosopo_captcha_severity::MIN_DECOY_HOLE_DARKEN_MARGIN;
-use prosopo_puzzle_assets::{create_background, PuzzleGeometry, PuzzleRenderSettings, RgbaImage, DEFAULT_GEOMETRY, DEFAULT_RENDER_SETTINGS};
+use prosopo_puzzle_assets::{create_background, render_puzzle, to_data_uri, NotchPlacement, PuzzleGeometry, PuzzleRenderSettings, RenderedPuzzle, RgbaImage, DEFAULT_GEOMETRY, DEFAULT_RENDER_SETTINGS};
+use std::sync::OnceLock;
 use prosopo_types::settings::{is_puzzle_image_switch_enabled, AllowedTypes, resolve_allowed_captcha_types, PUZZLE_PIECE_SCALE_MAX_DEFAULT, PUZZLE_PIECE_SCALE_MIN_DEFAULT};
 use rand_core::{OsRng, RngCore};
 use serde_json::{json, Map, Value};
@@ -300,6 +302,59 @@ impl Drop for PuzzleBackgroundBuffer {
     fn drop(&mut self) {
         self.stop();
     }
+}
+
+/// `RenderedPuzzleImages`: both halves as data URIs, and the seeds that reproduce them.
+pub struct RenderedPuzzleImages {
+    pub background: String,
+    pub piece: String,
+    pub piece_size: u32,
+    pub background_seed: String,
+    pub render_seed: String,
+}
+
+/// The process-wide puzzle state of puzzleRenderer.ts and backgroundBuffer.ts: the background
+/// buffer, made on first use, and the piece-size sampler's cursor.
+pub struct PuzzleAssets {
+    buffer: OnceLock<Arc<PuzzleBackgroundBuffer>>,
+    piece_sizes: StratifiedSampler,
+}
+
+impl Default for PuzzleAssets {
+    fn default() -> Self {
+        PuzzleAssets { buffer: OnceLock::new(), piece_sizes: StratifiedSampler::new(STRATIFIED_BUCKETS, Arc::new(OsSamplerRandom)) }
+    }
+}
+
+impl PuzzleAssets {
+    /// `getPuzzleBackgroundBuffer() ?? initPuzzleBackgroundBuffer()`.
+    pub fn buffer(&self) -> Result<Arc<PuzzleBackgroundBuffer>, String> {
+        if let Some(buffer) = self.buffer.get() {
+            return Ok(buffer.clone());
+        }
+        let buffer: Arc<PuzzleBackgroundBuffer> = PuzzleBackgroundBuffer::create(PuzzleBufferOptions::default(), Arc::new(prosopo_puzzle_assets::create_seed))?;
+        Ok(self.buffer.get_or_init(|| buffer).clone())
+    }
+
+    /// `samplePuzzlePieceSize`.
+    pub fn sample_piece_size(&self, range: ScaleRange) -> u32 {
+        sample_puzzle_piece_size(&self.piece_sizes, range)
+    }
+}
+
+/// `renderPuzzleImages`: a background from the buffer, cut at `placement`, the piece
+/// `piece_size` across or the geometry's default.
+pub fn render_puzzle_images(buffer: &PuzzleBackgroundBuffer, placement: NotchPlacement, settings: &PuzzleRenderSettings, piece_size: Option<u32>) -> Result<RenderedPuzzleImages, String> {
+    let background: SeededBackground = buffer.take()?;
+    let geometry: PuzzleGeometry = PuzzleGeometry { piece_size: piece_size.or(DEFAULT_GEOMETRY.piece_size), ..DEFAULT_GEOMETRY };
+    let rendered: RenderedPuzzle = render_puzzle(background.image, &placement, &geometry, settings, None).map_err(|error| error.to_string())?;
+    Ok(RenderedPuzzleImages {
+        background: to_data_uri(&rendered.background),
+        piece: to_data_uri(&rendered.piece),
+        piece_size: rendered.piece_size,
+        background_seed: hex::encode(&background.seed),
+        render_seed: hex::encode(&rendered.seed),
+    })
 }
 
 /// The render settings as the challenge record stores them, in the order the TS writes them.

@@ -13,9 +13,9 @@
 // limitations under the License.
 
 //! The challenge routes ported so far: `captcha/pow` (captcha/getPoWCaptchaChallenge.ts),
-//! `captcha/icon-order` and `captcha/audio` (getIconOrderCaptchaChallenge.ts and
-//! getAudioCaptchaChallenge.ts, through interactiveCaptchaChallenge.ts), with the minting of
-//! powTasks.ts and
+//! `captcha/icon-order`, `captcha/audio` and `captcha/puzzle` (getIconOrderCaptchaChallenge.ts,
+//! getAudioCaptchaChallenge.ts and getPuzzleCaptchaChallenge.ts, through
+//! interactiveCaptchaChallenge.ts), with the minting of powTasks.ts, puzzleTasks.ts and
 //! interactiveCaptchaManager.ts, maintenanceModeResponses.ts's dummies and
 //! trafficFilterRequestTime.ts's `applyTrafficFilterAtRequestTime`.
 
@@ -29,6 +29,11 @@ use crate::api::pipeline::{handle_errors, validate_address, RequestSignals};
 use crate::composite_ip::get_composite_ip_address;
 use crate::tasks::audio::{render_audio_clip, resolve_audio_render_settings, AudioBufferOptions, AudioChallengeBuffer, AudioRenderer, RenderedAudioClip};
 use crate::tasks::detection::{DetectionServices, DetectorBundlePool, SimdDecoder};
+use crate::mobile_signals::{derive_mobile_verdict, MobileSignals, MobileVerdict};
+use crate::tasks::puzzle::{
+    is_puzzle_image_switch_available, render_puzzle_images, resolve_puzzle_piece_scale_range, resolve_puzzle_render_settings, stored_render_settings, PuzzleAssets, PuzzleBackgroundBuffer,
+    RenderedPuzzleImages, ScaleRange,
+};
 use crate::tasks::request::{settings_json, RequestStores, Validation};
 use crate::tasks::traffic::{check_traffic_filter, resolve_challenge_policy, resolve_pad_bytes, ResolvedChallengePolicy, TrafficFilterView};
 use crate::tasks::verify::{bson_json, VerifyServices};
@@ -38,7 +43,8 @@ use bson::{Bson, Document};
 use http::StatusCode;
 use prosopo_api_router::{RequestBody, RequestLog};
 use prosopo_common::{ErrorClass, ErrorContext, ErrorOptions, ErrorSource, ProsopoError, ThrownError, ZodLikeError};
-use prosopo_database::challenges::{InteractiveAnswer, NewChallenge};
+use prosopo_captcha_severity::{ease_piece_scale_for_touch, ease_tolerance_for_touch, PuzzleDifficultyRange};
+use prosopo_database::challenges::{Interactive, InteractiveAnswer, NewChallenge};
 use prosopo_database::records::{CompositeIpAddress, StoredIconTarget};
 use prosopo_database::session::Session;
 use prosopo_icon_order_assets::{render_icon_order, IconOrderRenderSettings, RenderedIconOrder};
@@ -49,7 +55,8 @@ use prosopo_types::client::get_test_site_key_mode;
 use prosopo_types::datasets::{PoWChallengeComponents, POW_SEPARATOR};
 use prosopo_types::ipapi::IpInfoResponse;
 use prosopo_types::provider_api::get_challenge_request_body;
-use prosopo_types::settings::ICON_ORDER_TOLERANCE_DEFAULT;
+use prosopo_puzzle_assets::{NotchPlacement, PuzzleRenderSettings, DEFAULT_GEOMETRY, DEFAULT_RENDER_SETTINGS};
+use prosopo_types::settings::{ICON_ORDER_TOLERANCE_DEFAULT, PUZZLE_TOLERANCE_DEFAULT};
 use prosopo_types::stored::SimdReadingsStage;
 use prosopo_types_database::number::to_bson_document;
 use prosopo_user_access_policy::AccessRule;
@@ -90,6 +97,7 @@ pub struct ChallengeState {
     pub seeds: Arc<dyn SeedSource>,
     /// The process's audio buffer, made on first use as `initAudioChallengeBuffer` makes it.
     pub audio: OnceLock<Arc<AudioChallengeBuffer>>,
+    pub puzzle: PuzzleAssets,
 }
 
 impl ChallengeState {
@@ -216,6 +224,8 @@ struct Provenance {
     ja4: String,
     session_id: Option<String>,
     ip_info: Option<Bson>,
+    /// `ipInfo.isMobile` of a valid lookup.
+    carrier_network: Option<bool>,
 }
 
 impl Provenance {
@@ -329,6 +339,10 @@ async fn gate(services: &VerifyServices, request: &ChallengeRequest<'_>, captcha
             ja4,
             session_id: valid_session_id,
             ip_info: stored_ip_info,
+            carrier_network: match ip_info {
+                Some(IpInfoResponse::Valid(info)) => info.is_mobile,
+                _ => None,
+            },
         },
     }))
 }
@@ -535,6 +549,124 @@ async fn issue_icon_order(state: &ChallengeState, services: &VerifyServices, pai
     })
 }
 
+/// `buildPuzzleMaintenanceResponse`: a cut frame nobody stores.
+fn puzzle_maintenance_response(user: &str, dapp: &str, puzzle: &PuzzleAssets) -> Result<Value, String> {
+    let timestamp: u128 = now_ms();
+    let images: RenderedPuzzleImages = render_puzzle_images(puzzle.buffer()?.as_ref(), NotchPlacement { target_x: 200.0, target_y: 100.0 }, &DEFAULT_RENDER_SETTINGS, None)?;
+    Ok(json!({
+        "status": "ok",
+        "challenge": maintenance_challenge(user, dapp),
+        "background": images.background,
+        "piece": images.piece,
+        "pieceSize": images.piece_size,
+        "originX": 60,
+        "originY": 100,
+        "timestamp": timestamp.to_string(),
+        "signature": { "provider": { "challenge": "" } },
+    }))
+}
+
+/// `Math.floor(Math.random() * (max - min + 1)) + min`.
+fn random_between(random: f64, min: f64, max: f64) -> f64 {
+    (random * (max - min + 1.0)).floor() + min
+}
+
+/// getPuzzleCaptchaChallenge.ts's `issuePuzzleChallenge`.
+async fn issue_puzzle(state: &ChallengeState, services: &VerifyServices, pair: &KeyringPair, gate: &Gate, request: &ChallengeRequest<'_>) -> Result<Issued, String> {
+    let challenge = gate.verdict.challenge.as_ref();
+    let session: Option<&Session> = gate.session.as_ref();
+    let headers: &Document = &gate.provenance.headers;
+    let mobile: MobileVerdict = derive_mobile_verdict(&MobileSignals {
+        user_agent: headers.get_str("user-agent").ok(),
+        headers: Some(headers),
+        carrier_network: gate.provenance.carrier_network,
+        tcp_mss: session.and_then(|session| session.tcp_mss),
+        web_view: session.map(|session| session.web_view),
+        device_capability: None,
+        touch_event_count: None,
+    });
+    let ease_for_touch: bool = mobile.is_mobile && mobile.corroborated;
+    let requested_tolerance: Option<f64> = challenge
+        .and_then(|challenge| challenge.puzzle_tolerance)
+        .or_else(|| session.and_then(|session| session.puzzle_tolerance))
+        .or_else(|| nullish_number(gate.settings.as_ref().and_then(|settings| settings.get("puzzleTolerance"))));
+    let tolerance: f64 = match requested_tolerance {
+        Some(tolerance) if ease_for_touch => ease_tolerance_for_touch(tolerance),
+        Some(tolerance) => tolerance,
+        None => PUZZLE_TOLERANCE_DEFAULT,
+    };
+    let site_puzzle: Option<&Value> = gate.settings.as_ref().and_then(|settings| settings.get("puzzle"));
+    let routed: Option<Value> = challenge
+        .and_then(|challenge| challenge.puzzle_settings.clone())
+        .map(Value::Object)
+        .or_else(|| session.and_then(|session| session.puzzle.as_ref()).map(bson_json));
+    let render_settings: PuzzleRenderSettings = resolve_puzzle_render_settings(&[site_puzzle, routed.as_ref()]);
+    let range: ScaleRange = resolve_puzzle_piece_scale_range(&[site_puzzle, routed.as_ref()]);
+    let range: ScaleRange = if ease_for_touch {
+        let eased: PuzzleDifficultyRange = ease_piece_scale_for_touch(PuzzleDifficultyRange { min: range.min, max: range.max });
+        ScaleRange { min: eased.min, max: eased.max }
+    } else {
+        range
+    };
+    let piece_size: u32 = state.puzzle.sample_piece_size(range);
+    let source = services.db.source();
+    let minted: MintedChallenge = mint_challenge(pair, request.user, request.dapp, source.now().timestamp_millis(), source.random())?;
+    let target_x: f64 = random_between(source.random(), 150.0, 280.0);
+    let target_y: f64 = random_between(source.random(), 30.0, 170.0);
+    let origin_x: f64 = random_between(source.random(), 20.0, 130.0);
+    let origin_y: f64 = random_between(source.random(), 30.0, 170.0);
+    let components: PoWChallengeComponents = components(&minted, request.user, request.dapp);
+    services
+        .db
+        .store_interactive_captcha_record(&gate.provenance.new_challenge(&minted, &components), &InteractiveAnswer::Puzzle { target_x, target_y, origin_x, origin_y, tolerance })
+        .await
+        .map_err(|error| error.to_string())?;
+    let buffer: Arc<PuzzleBackgroundBuffer> = state.puzzle.buffer()?;
+    let placement: NotchPlacement = NotchPlacement { target_x, target_y };
+    let images: RenderedPuzzleImages = tokio::task::spawn_blocking(move || render_puzzle_images(&buffer, placement, &render_settings, Some(piece_size)))
+        .await
+        .map_err(|error| error.to_string())??;
+    let mut render: Map<String, Value> = Map::new();
+    if let Some(level) = session.and_then(|session| session.puzzle_level) {
+        render.insert("level".to_string(), json!(level));
+    }
+    render.insert("pieceSize".to_string(), json!(images.piece_size));
+    render.insert(
+        "geometry".to_string(),
+        json!({ "width": DEFAULT_GEOMETRY.width, "height": DEFAULT_GEOMETRY.height, "notchSize": DEFAULT_GEOMETRY.notch_size }),
+    );
+    render.insert("settings".to_string(), stored_render_settings(&render_settings));
+    render.insert("backgroundSeed".to_string(), json!(images.background_seed));
+    render.insert("renderSeed".to_string(), json!(images.render_seed));
+    let patched: Result<(), String> = match to_bson_document(&json!({ "render": render })) {
+        Ok(update) => services.db.update_interactive_captcha_record(Interactive::Puzzle, &minted.challenge, &update).await.map_err(|error| error.to_string()),
+        Err(error) => Err(error.to_string()),
+    };
+    if let Err(error) = patched {
+        services.logger.warn(|| LogRecord::msg("Failed to patch puzzle render inputs onto the challenge record").with_err(error));
+    }
+    let mut log_data: Map<String, Value> = Map::new();
+    log_data.insert("tolerance".to_string(), json!(tolerance));
+    log_data.insert("pieceSize".to_string(), json!(images.piece_size));
+    log_data.insert("mobileScore".to_string(), json!(mobile.score));
+    log_data.insert("mobileCorroborated".to_string(), json!(u8::from(mobile.corroborated)));
+    let mut body: Value = json!({
+        "status": "ok",
+        "challenge": minted.challenge,
+        "background": images.background,
+        "piece": images.piece,
+        "pieceSize": images.piece_size,
+        "originX": origin_x,
+        "originY": origin_y,
+        "timestamp": minted.requested_at_timestamp.to_string(),
+        "signature": { "provider": { "challenge": minted.provider_signature } },
+    });
+    if is_puzzle_image_switch_available(Some(gate.settings.as_ref().unwrap_or(&json!({})))) {
+        body["imageSwitchAvailable"] = json!(true);
+    }
+    Ok(Issued { body, pad_bytes: gate.verdict.pad_bytes, log_data })
+}
+
 /// A challenge route: its type, the label its log lines use, and what it answers in
 /// maintenance mode.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -542,6 +674,7 @@ pub enum ChallengeRoute {
     Pow,
     IconOrder,
     Audio,
+    Puzzle,
 }
 
 impl ChallengeRoute {
@@ -550,6 +683,7 @@ impl ChallengeRoute {
             ChallengeRoute::Pow => CaptchaType::Pow,
             ChallengeRoute::IconOrder => CaptchaType::IconOrder,
             ChallengeRoute::Audio => CaptchaType::Audio,
+            ChallengeRoute::Puzzle => CaptchaType::Puzzle,
         }
     }
 
@@ -558,6 +692,7 @@ impl ChallengeRoute {
             ChallengeRoute::Pow => "PoW",
             ChallengeRoute::IconOrder => "icon-order",
             ChallengeRoute::Audio => "audio",
+            ChallengeRoute::Puzzle => "puzzle",
         }
     }
 
@@ -566,6 +701,7 @@ impl ChallengeRoute {
             ChallengeRoute::Pow => Ok(pow_maintenance_response(user, dapp)),
             ChallengeRoute::IconOrder => icon_order_maintenance_response(user, dapp, state.seeds.as_ref()),
             ChallengeRoute::Audio => audio_maintenance_response(user, dapp, state.audio_buffer()?.as_ref()),
+            ChallengeRoute::Puzzle => puzzle_maintenance_response(user, dapp, &state.puzzle),
         }
     }
 }
@@ -578,7 +714,7 @@ fn capitalise(text: &str) -> String {
 async fn issue(state: &ChallengeState, services: &VerifyServices, pair: &KeyringPair, route: ChallengeRoute, request: &ChallengeRequest<'_>, headers: &http::HeaderMap, logger: &Logger) -> Result<Result<Issued, Refusal>, String> {
     match route {
         ChallengeRoute::Pow => issue_pow(state, services, pair, request, headers, logger).await,
-        ChallengeRoute::IconOrder | ChallengeRoute::Audio => {
+        ChallengeRoute::IconOrder | ChallengeRoute::Audio | ChallengeRoute::Puzzle => {
             let gate: Gate = match gate(services, request, route.captcha_type(), headers, logger).await? {
                 Ok(gate) => gate,
                 Err(refusal) => return Ok(Err(refusal)),
@@ -586,6 +722,7 @@ async fn issue(state: &ChallengeState, services: &VerifyServices, pair: &Keyring
             attach_simd(state, services, &gate, request.simd_readings, route.label(), logger).await;
             match route {
                 ChallengeRoute::Audio => issue_audio(state, services, pair, &gate, request).await.map(Ok),
+                ChallengeRoute::Puzzle => issue_puzzle(state, services, pair, &gate, request).await.map(Ok),
                 _ => issue_icon_order(state, services, pair, &gate, request).await.map(Ok),
             }
         }

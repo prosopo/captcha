@@ -152,6 +152,7 @@ pub async fn captcha_routes(State(state): State<Arc<CaptchaState>>, request: Req
         (ClientApiPaths::GetPowCaptchaChallenge, ChallengeRoute::Pow),
         (ClientApiPaths::GetIconOrderCaptchaChallenge, ChallengeRoute::IconOrder),
         (ClientApiPaths::GetAudioCaptchaChallenge, ChallengeRoute::Audio),
+        (ClientApiPaths::GetPuzzleCaptchaChallenge, ChallengeRoute::Puzzle),
     ];
     for (path, route) in challenges {
         if request.method() == Method::POST && route_matches(request.uri().path(), path.as_str()) {
