@@ -300,6 +300,61 @@ const seeds: Seed[] = [
 ];
 for (const seed of seeds) challenges[seed.name] = await seedPow(seed);
 
+type Kind = "puzzle" | "audio" | "iconOrder";
+type InteractiveSeed = Seed & { kind: Kind };
+const interactiveSeeds: InteractiveSeed[] = [
+	{ name: "i-puzzle", kind: "puzzle", dapp: FREE.address },
+	{ name: "i-puzzle-pro", kind: "puzzle", dapp: PRO.address, sessionId: "s-i-plain" },
+	{ name: "i-puzzle-replayed", kind: "puzzle", dapp: FREE.address, sessionId: "s-i-replayed" },
+	{ name: "i-puzzle-pending", kind: "puzzle", dapp: FREE.address, status: CaptchaStatus.pending },
+	{ name: "i-puzzle-wrong", kind: "puzzle", dapp: FREE.address, status: CaptchaStatus.disapproved },
+	{ name: "i-puzzle-old", kind: "puzzle", dapp: STRICT.address, submitted: "old", sessionId: "s-i-old" },
+	{ name: "i-puzzle-client-session", kind: "puzzle", dapp: FREE.address, clientSessionId: "widget-i", sessionId: "s-i-client" },
+	{ name: "i-audio-deferred", kind: "audio", dapp: FREE.address, user: BLOCKED_USER, sessionId: "s-i-deferred" },
+	{ name: "i-audio-vpn", kind: "audio", dapp: TRAFFIC.address, ip: "198.51.100.30", sessionId: "s-i-vpn" },
+	{ name: "i-audio-mismatch", kind: "audio", dapp: PRO.address },
+	{ name: "i-icon-spam", kind: "iconOrder", dapp: PRO.address, sessionId: "s-i-spam" },
+	{ name: "i-icon-rule", kind: "iconOrder", dapp: PRO.address },
+	{ name: "i-icon-email", kind: "iconOrder", dapp: PRO.address },
+	{ name: "i-icon-email-again", kind: "iconOrder", dapp: PRO.address, sessionId: "s-i-count" },
+	{ name: "i-icon-far", kind: "iconOrder", dapp: TRAFFIC.address },
+	{ name: "i-icon-dns", kind: "iconOrder", dapp: SESSIONS.address, sessionId: "s-i-dns" },
+	{ name: "i-icon-escalation", kind: "iconOrder", dapp: SESSIONS.address, sessionId: "s-i-escalation" },
+];
+for (const sessionId of ["s-i-plain", "s-i-replayed", "s-i-old", "s-i-client", "s-i-deferred", "s-i-vpn", "s-i-spam", "s-i-count"]) await seedSession(sessionId);
+await seedSession("s-i-dns", { dnsEvent: { receivedAt: new Date(Date.now() - 9000), peerIp: "192.0.2.54", resolverIp: "192.0.2.53", pathValid: false } } as Partial<Session>);
+await seedSession("s-i-escalation", { originSessionId: "s-origin", isEscalation: true, scoreComponents: { baseScore: 0.15 } } as Partial<Session>);
+const seedInteractive = async (seed: InteractiveSeed): Promise<string> => {
+	const user = seed.user ?? USER;
+	const requestedAt = Date.now() - 5000 + nonce;
+	nonce += 1;
+	const challenge = `${requestedAt}${POW_SEPARATOR}${user}${POW_SEPARATOR}${seed.dapp}${POW_SEPARATOR}${nonce}` as PoWChallengeId;
+	const ip = seed.ip ?? "203.0.113.7";
+	const components = { requestedAtTimestamp: requestedAt, userAccount: user, dappAccount: seed.dapp };
+	const shared = ["0xprovidersignature", getCompositeIpAddress(ip), recordHeaders, "t13d1516h2_8daaf6152771_02713d6af862", seed.sessionId, await ipInfoFor(ip)] as const;
+	const result = { status: seed.status ?? CaptchaStatus.approved };
+	if (seed.kind === "puzzle") {
+		await db.storePuzzleCaptchaRecord(challenge, components, 120, 40, 10, 40, 6, ...shared);
+		if (seed.submitted !== "never") await db.updatePuzzleCaptchaRecordResult(challenge, result, false, true, "0xusersignature");
+	} else if (seed.kind === "audio") {
+		await db.storeAudioCaptchaRecord(challenge, components, "4817", ...shared);
+		if (seed.submitted !== "never") await db.updateAudioCaptchaRecordResult(challenge, result, false, true, "0xusersignature");
+	} else {
+		await db.storeIconOrderCaptchaRecord(challenge, components, [{ x: 10, y: 20, size: 32, kind: "star" }], 8, ...shared);
+		if (seed.submitted !== "never") await db.updateIconOrderCaptchaRecordResult(challenge, result, false, true, "0xusersignature");
+	}
+	const extra: Record<string, unknown> = {};
+	if (seed.submitted === "old") extra.submittedAtTimestamp = new Date(Date.now() - 3_600_000);
+	if (seed.clientSessionId) extra.clientMetaData = { clientSessionId: seed.clientSessionId };
+	if (Object.keys(extra).length > 0) {
+		if (seed.kind === "puzzle") await db.updatePuzzleCaptchaRecord(challenge, extra);
+		else if (seed.kind === "audio") await db.updateAudioCaptchaRecord(challenge, extra);
+		else await db.updateIconOrderCaptchaRecord(challenge, extra);
+	}
+	return challenge;
+};
+for (const seed of interactiveSeeds) challenges[seed.name] = await seedInteractive(seed);
+
 const database = await dumpDatabase(DATABASE);
 const redis = await dumpRedisHashes();
 const client = await db.getRedisConnection().getClient();
@@ -321,6 +376,16 @@ const signed = (dapp: string, timestamp = "1700000000000") => u8aToHex((signer(d
 const path = "/v1/prosopo/provider/client/pow/verify";
 const json: [string, string] = ["Content-Type", "application/json"];
 const verify = (body: Record<string, unknown>, headers: [string, string][] = []): Step => ({ method: "POST", path, headers: [json, ...headers], body: JSON.stringify(body) });
+const interactivePath: Record<Kind, string> = {
+	puzzle: "/v1/prosopo/provider/client/puzzle/verify",
+	audio: "/v1/prosopo/provider/client/audio/verify",
+	iconOrder: "/v1/prosopo/provider/client/icon-order/verify",
+};
+const ofInteractive = (name: string, extra: Record<string, unknown> = {}, headers: [string, string][] = [], tokenExtra: { providerUrl?: string } = {}): Step => {
+	const seed = interactiveSeeds.find((candidate) => candidate.name === name) as InteractiveSeed;
+	const body = { token: token({ dapp: seed.dapp, user: seed.user, challenge: challenges[name], ...tokenExtra }), dappSignature: signed(seed.dapp), ...extra };
+	return { method: "POST", path: interactivePath[seed.kind], headers: [json, ...headers], body: JSON.stringify(body) };
+};
 const ofSeed = (name: string, extra: Record<string, unknown> = {}, headers: [string, string][] = [], tokenExtra: { providerUrl?: string; user?: string } = {}): Step => {
 	const seed = seeds.find((candidate) => candidate.name === name) as Seed;
 	return verify({ token: token({ dapp: seed.dapp, user: seed.user, challenge: challenges[name], ...tokenExtra }), dappSignature: signed(seed.dapp), ...extra }, headers);
@@ -382,6 +447,29 @@ const steps: Step[] = [
 	verify({ token: token({ dapp: FREE.address, challenge: "x" }) }),
 	{ method: "POST", path: `${path}/`, headers: [json], body: JSON.stringify({ token: token({ dapp: ALWAYS_PASS_SITE_KEY }), dappSignature: "0x00" }) },
 	{ method: "POST", path: path.toUpperCase(), headers: [json], body: JSON.stringify({ token: token({ dapp: ALWAYS_FAIL_SITE_KEY }), dappSignature: "0x00" }) },
+	ofInteractive("i-puzzle"),
+	ofInteractive("i-puzzle-pro"),
+	ofInteractive("i-puzzle-replayed"),
+	ofInteractive("i-puzzle-replayed"),
+	ofInteractive("i-puzzle-pending"),
+	ofInteractive("i-puzzle-wrong"),
+	ofInteractive("i-puzzle-old"),
+	ofInteractive("i-puzzle-client-session", { clientSessionId: "someone-else" }),
+	ofInteractive("i-audio-deferred"),
+	ofInteractive("i-audio-vpn"),
+	{ ...verify({ token: token({ dapp: FREE.address, challenge: challenges["i-audio-mismatch"] }), dappSignature: signed(FREE.address) }), path: "/v1/prosopo/provider/client/audio/verify" },
+	{ ...ofInteractive("i-audio-mismatch"), path: "/v1/prosopo/provider/client/puzzle/verify" },
+	ofInteractive("i-audio-mismatch", {}, [["Accept-Language", "de"]]),
+	ofInteractive("i-icon-spam", { email: "someone@spam-direct.zz" }),
+	ofInteractive("i-icon-rule", { email: "blocked@example.com" }),
+	ofInteractive("i-icon-email", { email: "count+one@example.com" }),
+	ofInteractive("i-icon-email-again", { email: "Count+two@example.com" }),
+	ofInteractive("i-icon-far", { ip: "198.51.100.20" }),
+	ofInteractive("i-icon-dns"),
+	ofInteractive("i-icon-escalation"),
+	ofInteractive("i-puzzle", {}, [], { providerUrl: OTHER_URL }),
+	{ method: "POST", path: "/v1/prosopo/provider/client/audio/verify", headers: [json], body: JSON.stringify({ token: token({ dapp: ALWAYS_FAIL_SITE_KEY }), dappSignature: "0x00" }) },
+	{ method: "POST", path: "/v1/prosopo/provider/client/icon-order/verify", headers: [json], body: JSON.stringify({ dappSignature: "0x00" }) },
 	{ method: "GET", path, headers: [json] },
 	{ method: "POST", path, headers: [["Content-Type", "text/plain"]], body: "token" },
 ];
@@ -424,7 +512,7 @@ writeFileSync(
 		exchanges,
 		forwarded,
 		metrics,
-		after: { powcaptchas: after.powcaptchas, sessions: after.sessions },
+		after: { powcaptchas: after.powcaptchas, sessions: after.sessions, puzzlecaptchas: after.puzzlecaptchas, audiocaptchas: after.audiocaptchas, iconordercaptchas: after.iconordercaptchas },
 		cacheAfter,
 	})}\n`,
 );

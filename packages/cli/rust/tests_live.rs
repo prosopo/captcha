@@ -475,7 +475,7 @@ async fn other_provider(port: u16, received: Forwarded) {
 
 #[tokio::test(flavor = "multi_thread")]
 #[ignore = "needs MongoDB and Redis Stack"]
-async fn pow_verifies_as_the_express_app_verifies() {
+async fn verifies_as_the_express_app_verifies() {
     let _live = LIVE.lock().await;
     let vectors: Value = serde_json::from_str(include_str!("../../provider/rust/equivalence/verify-vectors.json")).expect("verify-vectors.json parses");
     let database: &str = vectors["database"].as_str().expect("a database");
@@ -507,9 +507,11 @@ async fn pow_verifies_as_the_express_app_verifies() {
         failures.push(format!("verify metrics differ\n  ts:   {}\n  rust: {}", vectors["metrics"], json!(metrics)));
     }
     tokio::time::sleep(Duration::from_millis(1500)).await;
-    let fresh: [&str; 2] = ["lastUpdatedTimestamp", "verifiedAtTimestamp"];
+    let fresh: [&str; 3] = ["lastUpdatedTimestamp", "verifiedAtTimestamp", "failedAtTimestamp"];
     failures.extend(compare_records(&vectors["after"]["powcaptchas"], &dump(database, "powcaptchas").await, &fresh));
-    failures.extend(compare_records(&vectors["after"]["sessions"], &dump(database, "sessions").await, &fresh));
+    for collection in ["sessions", "puzzlecaptchas", "audiocaptchas", "iconordercaptchas"] {
+        failures.extend(compare_records(&vectors["after"][collection], &dump(database, collection).await, &fresh));
+    }
     let cached: Vec<Value> = cached_sessions().await;
     let expected_cache: Vec<Value> = vectors["cacheAfter"].as_array().expect("cached sessions").clone();
     if cached_without_time(&cached) != cached_without_time(&expected_cache) {
@@ -519,6 +521,6 @@ async fn pow_verifies_as_the_express_app_verifies() {
     if json!(forwarded) != vectors["forwarded"] {
         failures.push(format!("forwarded requests differ\n  ts:   {}\n  rust: {}", vectors["forwarded"], json!(forwarded)));
     }
-    assert!(compared > 50, "only {compared} compared");
+    assert!(compared > 75, "only {compared} compared");
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }

@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! verify.ts, the dapp servers' verify router, for the routes ported so far: PoW. With
+//! verify.ts, the dapp servers' verify router, for the routes ported so far: PoW, puzzle,
+//! audio and icon-order. With
 //! forwardVerify.ts (a token another provider issued is verified there) and testSiteKey.ts.
 
 use crate::api::express::{send_json, Requested};
@@ -22,7 +23,10 @@ use crate::api::pipeline::handle_errors;
 use crate::api::public::route_matches;
 use crate::tasks::email::SpamFilterView;
 use crate::tasks::traffic::TrafficFilterView;
-use crate::tasks::verify::{bson_json, get_verification_response, server_verify_pow_captcha_solution, PowVerifyRequest, VerifyOutcome, VerifyServices};
+use crate::tasks::verify::{
+    bson_json, get_verification_response, server_verify_interactive_captcha_solution, server_verify_pow_captcha_solution, ServerVerifyRequest, VerifyOutcome, VerifyServices,
+};
+use prosopo_database::challenges::Interactive;
 use axum::extract::{Request, State};
 use axum::middleware::Next;
 use axum::response::Response;
@@ -183,7 +187,61 @@ fn pair_from_address(address: &str) -> Result<KeyringPair, ThrownError> {
     keyring.add_from_address(U8aLike::Str(address), FromAddress::default()).map_err(|error| plain_error(error.to_string()))
 }
 
-/// The client settings the PoW verify reads.
+/// The verify routes ported so far.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum VerifyRoute {
+    Pow,
+    Interactive(Interactive),
+}
+
+impl VerifyRoute {
+    const ALL: [VerifyRoute; 4] = [
+        VerifyRoute::Pow,
+        VerifyRoute::Interactive(Interactive::Puzzle),
+        VerifyRoute::Interactive(Interactive::Audio),
+        VerifyRoute::Interactive(Interactive::IconOrder),
+    ];
+
+    fn path(self) -> ClientApiPaths {
+        match self {
+            VerifyRoute::Pow => ClientApiPaths::VerifyPowCaptchaSolution,
+            VerifyRoute::Interactive(Interactive::Puzzle) => ClientApiPaths::VerifyPuzzleCaptchaSolution,
+            VerifyRoute::Interactive(Interactive::Audio) => ClientApiPaths::VerifyAudioCaptchaSolution,
+            VerifyRoute::Interactive(Interactive::IconOrder) => ClientApiPaths::VerifyIconOrderCaptchaSolution,
+        }
+    }
+
+    fn captcha_type(self) -> CaptchaType {
+        match self {
+            VerifyRoute::Pow => CaptchaType::Pow,
+            VerifyRoute::Interactive(Interactive::Puzzle) => CaptchaType::Puzzle,
+            VerifyRoute::Interactive(Interactive::Audio) => CaptchaType::Audio,
+            VerifyRoute::Interactive(Interactive::IconOrder) => CaptchaType::IconOrder,
+        }
+    }
+
+    /// The handler's `label`.
+    fn label(self) -> &'static str {
+        match self {
+            VerifyRoute::Pow => "PoW",
+            VerifyRoute::Interactive(Interactive::Puzzle) => "puzzle",
+            VerifyRoute::Interactive(Interactive::Audio) => "audio",
+            VerifyRoute::Interactive(Interactive::IconOrder) => "icon-order",
+        }
+    }
+
+    /// The handler's name, as its error log gives it.
+    fn handler_name(self) -> &'static str {
+        match self {
+            VerifyRoute::Pow => "verifyPowCaptchaSolution",
+            VerifyRoute::Interactive(Interactive::Puzzle) => "verifyPuzzleCaptchaSolution",
+            VerifyRoute::Interactive(Interactive::Audio) => "verifyAudioCaptchaSolution",
+            VerifyRoute::Interactive(Interactive::IconOrder) => "verifyIconOrderCaptchaSolution",
+        }
+    }
+}
+
+/// The client settings verification reads.
 struct VerifySettings {
     verified_timeout: f64,
     spam_email_domain_check_enabled: bool,
@@ -221,7 +279,7 @@ struct Asked {
     already_forwarded: bool,
 }
 
-async fn verify_pow(state: &VerifyState, asked: &Asked, body: &Value, token: &ProcaptchaOutput, logger: &Logger) -> Result<Answer, ThrownError> {
+async fn verify(state: &VerifyState, route: VerifyRoute, asked: &Asked, body: &Value, token: &ProcaptchaOutput, logger: &Logger) -> Result<Answer, ThrownError> {
     let i18n: Option<&RequestI18n> = asked.i18n.as_ref();
     if let Some(mode) = get_test_site_key_mode(&token.dapp) {
         logger.warn(|| {
@@ -229,7 +287,7 @@ async fn verify_pow(state: &VerifyState, asked: &Asked, body: &Value, token: &Pr
         });
         return Ok(Answer::Json(json!({ "status": "ok", "verified": mode == TestSiteKeyMode::Pass })));
     }
-    if let Some(forwarded) = forward_verify_if_not_issuer(state, logger, ClientApiPaths::VerifyPowCaptchaSolution, token, body, asked.already_forwarded).await? {
+    if let Some(forwarded) = forward_verify_if_not_issuer(state, logger, route.path(), token, body, asked.already_forwarded).await? {
         return Ok(Answer::Json(forwarded));
     }
     let services: &Arc<VerifyServices> = state.services.as_ref().ok_or_else(|| {
@@ -256,7 +314,7 @@ async fn verify_pow(state: &VerifyState, asked: &Asked, body: &Value, token: &Pr
     }
     let settings: VerifySettings = verify_settings(&client)?;
     let text = |key: &str| body.get(key).and_then(Value::as_str);
-    let verify_request: PowVerifyRequest = PowVerifyRequest {
+    let verify_request: ServerVerifyRequest = ServerVerifyRequest {
         dapp: &token.dapp,
         challenge,
         timeout: settings.verified_timeout,
@@ -268,13 +326,16 @@ async fn verify_pow(state: &VerifyState, asked: &Asked, body: &Value, token: &Pr
         store_metadata: settings.store_metadata,
         client_session_id: text("clientSessionId"),
     };
-    let outcome: VerifyOutcome = server_verify_pow_captcha_solution(services, &verify_request, logger).await?;
+    let outcome: VerifyOutcome = match route {
+        VerifyRoute::Pow => server_verify_pow_captcha_solution(services, &verify_request, logger).await?,
+        VerifyRoute::Interactive(kind) => server_verify_interactive_captcha_solution(services, kind, &verify_request, logger).await?,
+    };
     let status: String = translate(i18n, if outcome.verified { "API.USER_VERIFIED" } else { "API.USER_NOT_VERIFIED" });
     Ok(Answer::Json(get_verification_response(&outcome, client.tier, status)))
 }
 
 /// The response, and the JSON it carries when it answers the verify.
-async fn pow_verify_route(state: &VerifyState, request: Request) -> (Response, Option<Value>) {
+async fn verify_route(state: &VerifyState, route: VerifyRoute, request: Request) -> (Response, Option<Value>) {
     let logger: Logger = logger_of(&request);
     let asked: Asked = Asked {
         i18n: request.extensions().get::<RequestI18n>().cloned(),
@@ -284,7 +345,7 @@ async fn pow_verify_route(state: &VerifyState, request: Request) -> (Response, O
     let requested: Requested = Requested::of(&request);
     let answered = |answer: Value| (send_json(&requested, StatusCode::OK, Vec::new(), &answer), Some(answer));
     if state.maintenance.get() {
-        logger.info(|| LogRecord::msg("Maintenance mode active - returning verified for PoW captcha verification"));
+        logger.info(|| LogRecord::msg(format!("Maintenance mode active - returning verified for {} captcha verification", route.label())));
         return answered(maintenance_response(i18n));
     }
     let raw: Value = request.extensions().get::<RequestBody>().map_or_else(|| json!({}), |body| body.0.clone());
@@ -308,12 +369,12 @@ async fn pow_verify_route(state: &VerifyState, request: Request) -> (Response, O
             return (handle_errors(&request, &ThrownError::from(error)), None);
         }
     };
-    let outcome: Result<Answer, ThrownError> = verify_pow(state, &asked, &body, &decoded, &logger).await;
+    let outcome: Result<Answer, ThrownError> = verify(state, route, &asked, &body, &decoded, &logger).await;
     match outcome {
         Ok(Answer::Json(answer)) => answered(answer),
         Ok(Answer::Error(error)) => (handle_errors(&request, &ThrownError::from(error)), None),
         Err(error) => {
-            logger.error(|| LogRecord::msg("Error in verifyPowCaptchaSolution").with_err(format!("{error:?}")));
+            logger.error(|| LogRecord::msg(format!("Error in {}", route.handler_name())).with_err(format!("{error:?}")));
             let error: ProsopoError = api_error(i18n, "API.BAD_REQUEST", ErrorContext::new().with("code", 500).with_error(error), &logger);
             (handle_errors(&request, &ThrownError::from(error)), None)
         }
@@ -323,14 +384,15 @@ async fn pow_verify_route(state: &VerifyState, request: Request) -> (Response, O
 /// The verify router: each answered verify counted by type, outcome and source, then the
 /// verify routes ported so far; anything else goes on.
 pub async fn verify_routes(State(state): State<Arc<VerifyState>>, request: Request, next: Next) -> Response {
-    if !(request.method() == Method::POST && route_matches(request.uri().path(), ClientApiPaths::VerifyPowCaptchaSolution.as_str())) {
+    let path: String = request.uri().path().to_string();
+    let Some(route) = VerifyRoute::ALL.into_iter().find(|route| request.method() == Method::POST && route_matches(&path, route.path().as_str())) else {
         return next.run(request).await;
-    }
-    let counted: Option<VerifySource> = (state.metrics.is_some() && request.uri().path() == ClientApiPaths::VerifyPowCaptchaSolution.as_str())
+    };
+    let counted: Option<VerifySource> = (state.metrics.is_some() && path == route.path().as_str())
         .then(|| verify_source(&state.maintenance, request.extensions().get::<RequestBody>().map(|body| &body.0)));
-    let (response, answer) = pow_verify_route(&state, request).await;
+    let (response, answer) = verify_route(&state, route, request).await;
     if let (Some(metrics), Some(source), Some(answer)) = (&state.metrics, counted, answer) {
-        metrics.record_captcha_verify(CaptchaType::Pow, answer.get("verified").is_some_and(truthy), source);
+        metrics.record_captcha_verify(route.captcha_type(), answer.get("verified").is_some_and(truthy), source);
     }
     response
 }

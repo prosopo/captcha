@@ -31,7 +31,7 @@ use crate::tasks::spam::check_spam_email;
 use crate::tasks::traffic::{check_traffic_filter, TrafficCheckResult, TrafficFilterView};
 use bson::{doc, Bson, Document};
 use prosopo_common::{ErrorClass, ErrorContext, ErrorOptions, ErrorSource, ProsopoError, ThrownError};
-use prosopo_database::challenges::is_blocking;
+use prosopo_database::challenges::{is_blocking, Interactive};
 use prosopo_database::provider::ProviderDatabase;
 use prosopo_database::records::{ChallengeRecord, StoredResult};
 use prosopo_database::redis_cache::RedisWriteQueue;
@@ -258,8 +258,8 @@ fn js_string(value: &Value) -> String {
     }
 }
 
-/// What `serverVerifyPowCaptchaSolution` is asked, the site's settings included.
-pub struct PowVerifyRequest<'a> {
+/// What a server verification is asked, the site's settings included.
+pub struct ServerVerifyRequest<'a> {
     pub dapp: &'a str,
     pub challenge: &'a str,
     pub timeout: f64,
@@ -320,8 +320,8 @@ fn result_json(result: &StoredResult) -> Value {
 }
 
 /// The session's verified state, for the cache and for the database, in the TS's key order.
-fn session_updates(result: &StoredResult, matched_rule: Option<&MatchedAccessRule>) -> (Map<String, Value>, Document) {
-    let blocked: bool = is_blocking(CaptchaType::Pow, result);
+fn session_updates(captcha_type: CaptchaType, result: &StoredResult, matched_rule: Option<&MatchedAccessRule>) -> (Map<String, Value>, Document) {
+    let blocked: bool = is_blocking(captcha_type, result);
     let mut cached: Map<String, Value> = Map::new();
     let mut stored: Document = Document::new();
     cached.insert("serverChecked".to_string(), json!(true));
@@ -350,7 +350,7 @@ fn dns_addresses(session: &Session) -> Option<DnsEventAddresses> {
 /// `serverVerifyPowCaptchaSolution`: whether the dapp's token stands for a solved, unused PoW
 /// challenge that passes the site's checks. The record is claimed first, so a token verifies
 /// once.
-pub async fn server_verify_pow_captcha_solution(services: &VerifyServices, request: &PowVerifyRequest<'_>, logger: &Logger) -> Result<VerifyOutcome, ThrownError> {
+pub async fn server_verify_pow_captcha_solution(services: &VerifyServices, request: &ServerVerifyRequest<'_>, logger: &Logger) -> Result<VerifyOutcome, ThrownError> {
     let mut bindings: LogObject = LogObject::new();
     bindings.insert("challenge".to_string(), json!(request.challenge));
     bindings.insert("dappAccount".to_string(), json!(request.dapp));
@@ -545,7 +545,7 @@ pub async fn server_verify_pow_captcha_solution(services: &VerifyServices, reque
     };
     let session_write = async {
         if let Some(session_id) = record.session_id.as_deref().filter(|id| !id.is_empty()) {
-            services.update_session_record_with_cache(session_id, session_updates(&final_result, matched_rule.as_ref()), true, &logger).await;
+            services.update_session_record_with_cache(session_id, session_updates(CaptchaType::Pow, &final_result, matched_rule.as_ref()), true, &logger).await;
         }
     };
     let (written, ()) = futures_util::join!(record_write, session_write);
@@ -553,6 +553,250 @@ pub async fn server_verify_pow_captcha_solution(services: &VerifyServices, reque
 
     if let Some(failure) = failure {
         return Ok(not_verified(&failure.reason, record.session_id.as_ref()));
+    }
+    Ok(VerifyOutcome {
+        verified: true,
+        score: score.filter(|score| *score != 0.0 && !score.is_nan()),
+        reason: None,
+        session_id: record.session_id.filter(|id| !id.is_empty()),
+    })
+}
+
+/// What an interactive verification refuses with: the stored reason, and the session's
+/// part (none for the spam checks, which leave the session as it is).
+struct Refusal {
+    reason: ResultReason,
+    session: Option<Option<MatchedAccessRule>>,
+}
+
+impl Refusal {
+    fn new(reason: ResultReason) -> Refusal {
+        Refusal { reason, session: Some(None) }
+    }
+}
+
+fn captcha_type_of(kind: Interactive) -> CaptchaType {
+    match kind {
+        Interactive::Puzzle => CaptchaType::Puzzle,
+        Interactive::IconOrder => CaptchaType::IconOrder,
+        Interactive::Audio => CaptchaType::Audio,
+    }
+}
+
+fn log_label(kind: Interactive) -> &'static str {
+    match kind {
+        Interactive::Puzzle => "puzzle",
+        Interactive::IconOrder => "icon-order",
+        Interactive::Audio => "audio",
+    }
+}
+
+const INTERACTIVE_FUNC_NAME: &str = "serverVerifyInteractiveCaptchaSolution";
+
+impl VerifyServices {
+    /// `disapproveVerification`: the result on the record and, unless the refusal leaves it
+    /// out, on the session.
+    async fn disapprove_verification(&self, kind: Interactive, record: &ChallengeRecord, refusal: Refusal, logger: &Logger) -> Result<(), ProsopoError> {
+        let captcha_type: CaptchaType = captcha_type_of(kind);
+        let result: StoredResult = StoredResult::new(CaptchaStatus::Disapproved, Some(refusal.reason.as_str()));
+        let mut updates: Document = doc! { "result": result.to_document() };
+        if is_blocking(captcha_type, &result) {
+            updates.insert("blocked", true);
+        }
+        self.db.update_interactive_captcha_record(kind, &record.challenge, &updates).await?;
+        if let (Some(matched_rule), Some(session_id)) = (refusal.session, record.session_id.as_deref().filter(|id| !id.is_empty())) {
+            self.update_session_record_with_cache(session_id, session_updates(captcha_type, &result, matched_rule.as_ref()), false, logger).await;
+        }
+        Ok(())
+    }
+
+    /// The checks of `serverVerifyInteractiveCaptchaSolution` after the record is claimed, up
+    /// to the score: the first that refuses, or the score.
+    async fn interactive_checks(
+        &self,
+        kind: Interactive,
+        record: &ChallengeRecord,
+        request: &ServerVerifyRequest<'_>,
+        logger: &Logger,
+    ) -> Result<Result<Option<f64>, Refusal>, ThrownError> {
+        let db: &ProviderDatabase = &self.db;
+        let label: &str = log_label(kind);
+        let submit_to_verify_ms: f64 =
+            record.submitted_at_timestamp.map_or(f64::INFINITY, |submitted| (db.source().now().timestamp_millis() - submitted.timestamp_millis()) as f64);
+        if submit_to_verify_ms > request.timeout {
+            return Ok(Err(Refusal::new(ResultReason::TimestampTooOld)));
+        }
+        let recorded_session: Option<&str> = record.client_meta_data.as_ref().and_then(|meta| meta.client_session_id.as_deref());
+        if is_client_session_mismatch(request.client_session_id, recorded_session) {
+            logger.info(|| {
+                LogRecord::msg(format!("Client session mismatch in server {label} verification"))
+                    .with_data(json!({ "hasRecordedClientSessionId": recorded_session.is_some_and(|id| !id.is_empty()) }))
+            });
+            return Ok(Err(Refusal::new(ResultReason::ClientSessionMismatch)));
+        }
+        let record_ip_info: Option<IpInfoResponse> = record_ip_info(record.ip_info.as_ref());
+        if db.get_user_access_rules_storage().is_ok() {
+            match self.check_for_hard_block(record, record_ip_info.as_ref()).await {
+                Ok(Some(rule)) => {
+                    logger.info(|| {
+                        LogRecord::msg(format!("User blocked by access policy in server {label} verification"))
+                            .with_data(json!({ "userAccount": record.user_account, "policy": serde_json::to_value(&rule).unwrap_or(Value::Null) }))
+                    });
+                    return Ok(Err(Refusal { reason: ResultReason::AccessPolicyBlock, session: Some(Some(describe_matched_rule(&rule))) }));
+                }
+                Ok(None) => {}
+                Err(error) => logger.warn(|| LogRecord::msg(format!("Failed to check user access policies in server {label} verification")).with_data(json!({ "error": error }))),
+            }
+        }
+        let email: Option<&str> = request.email.filter(|email| !email.is_empty());
+        if let (Some(email), true) = (email, request.spam_email_domain_check_enabled) {
+            if check_spam_email(email, db, self.dns_servers.as_deref(), logger).await {
+                let email_domain: &str = email.split('@').nth(1).filter(|domain| !domain.is_empty()).unwrap_or("unknown");
+                logger.info(|| LogRecord::msg(format!("Spam email domain detected in server {label} verification")).with_data(json!({ "emailDomain": email_domain })));
+                return Ok(Err(Refusal { reason: ResultReason::SpamEmailDomain, session: None }));
+            }
+        }
+        let email_rules = request.spam_filter.as_ref().and_then(SpamFilterView::active_email_rules);
+        let max_email_submission_count: Option<f64> = email_rules.and_then(|rules| rules.max_email_submission_count).map(|count| count.get());
+        let mut email_normalised: Option<String> = None;
+        if let (Some(max), Some(email), true) = (max_email_submission_count, email, request.store_metadata) {
+            let normalised: String = normalise_email_for_matching(email);
+            if !normalised.is_empty() {
+                match db.count_commitments_by_normalised_email(request.dapp, &normalised).await {
+                    Ok(prior) if prior as f64 >= max => {
+                        logger.info(|| {
+                            LogRecord::msg(format!("Email submission count exceeded in server {label} verification"))
+                                .with_data(json!({ "priorCount": prior, "maxEmailSubmissionCount": max }))
+                        });
+                        return Ok(Err(Refusal { reason: ResultReason::SpamEmailCountExceeded, session: None }));
+                    }
+                    Ok(_) => {}
+                    Err(error) => logger.warn(|| {
+                        LogRecord::msg(format!("Failed to check email submission count in server {label} verification")).with_data(json!({ "error": error.to_string() }))
+                    }),
+                }
+            }
+            email_normalised = Some(normalised);
+        }
+        let mut session: Option<Session> = match record.session_id.as_deref().filter(|id| !id.is_empty()) {
+            Some(session_id) => self.get_session_record_with_origin_fallback(session_id).await?,
+            None => None,
+        };
+        let ip: Option<&str> = request.ip;
+        let primary_ip: Option<String> = ip.map(str::to_string).or_else(|| record_ip_info.as_ref().map(ip_of));
+        let dns_event: Option<DnsEventAddresses> = session.as_ref().and_then(dns_addresses);
+        let enriched: Option<EnrichedDnsEvent> = enrich_dns_event(dns_event.as_ref(), self.ip_info(), primary_ip.as_deref()).await;
+        let check: TrafficCheckResult = self.resolve_traffic_filter_check(record_ip_info.as_ref(), request.traffic_filter.as_ref(), ip, enriched.as_ref()).await;
+        if let Some(reason) = check.blocked {
+            logger.info(|| {
+                LogRecord::msg(format!("Traffic filter rejected request in {label} verification")).with_data(json!({
+                    "ip": ip,
+                    "reason": reason.as_str(),
+                    "dnsPeerIp": enriched.as_ref().and_then(|event| event.peer_ip.clone()),
+                    "dnsResolverIp": enriched.as_ref().and_then(|event| event.resolver_ip.clone()),
+                    "dnsPeerAsn": get_ip_info_asn(enriched.as_ref().and_then(|event| event.peer_ip_info.as_ref())),
+                    "dnsResolverAsn": get_ip_info_asn(enriched.as_ref().and_then(|event| event.resolver_ip_info.as_ref())),
+                    "dnsPathValid": enriched.as_ref().and_then(|event| event.path_valid),
+                }))
+            });
+            return Ok(Err(Refusal::new(reason)));
+        }
+        if let (true, Some(email)) = (request.store_metadata, email) {
+            let normalised: String = email_normalised.unwrap_or_else(|| normalise_email_for_matching(email));
+            db.update_interactive_captcha_record(kind, &record.challenge, &doc! { "metadata": { "email": email, "emailNormalised": normalised } }).await?;
+        }
+        if let Some(ip) = ip.filter(|ip| !ip.is_empty()) {
+            let challenge_ip = get_ip_address_from_composite(&record.ip_address).map_err(|error| ThrownError::from(ErrorObject::new("Error", error.to_string())))?;
+            let client = db.get_client_record(request.dapp).await?;
+            let rules: Option<Value> = client.as_ref().and_then(|client| client.settings.as_ref()).and_then(|settings| settings.get("ipValidationRules")).map(bson_json);
+            db.update_interactive_captcha_record(kind, &record.challenge, &doc! { "providedIp": get_composite_ip_address(ip).to_document() }).await?;
+            if rules.as_ref().and_then(|rules| rules.get("enabled")) == Some(&json!(true)) {
+                let rules: Option<IPValidationRules> = rules.and_then(|rules| serde_json::from_value(rules).ok());
+                let peer_ip: Option<&str> = enriched.as_ref().and_then(|event| event.peer_ip.as_deref());
+                let lookup: ValidationLookup = ValidationLookup(self.ip_info.as_deref());
+                let validation: IpCheck = deep_validate_ip_address(ip, &challenge_ip, logger, &lookup, rules.as_ref(), peer_ip).await;
+                if !validation.is_valid {
+                    logger.error(|| {
+                        LogRecord::msg(format!("IP validation failed for {label} captcha")).with_data(json!({
+                            "ip": ip,
+                            "challengeIp": challenge_ip.address(),
+                            "error": validation.error_message,
+                            "distanceKm": validation.distance_km,
+                        }))
+                    });
+                    return Ok(Err(Refusal::new(ResultReason::FailedIpValidation)));
+                }
+            }
+        }
+        let Some(session) = session.as_mut() else {
+            return Ok(Ok(None));
+        };
+        let dns_asymmetry: f64 = compute_dns_asymmetry(enriched.as_ref(), record_ip_info.as_ref(), request.traffic_filter.as_ref());
+        if dns_asymmetry > 0.0 {
+            session.score_components.dns_asymmetry = Some(dns_asymmetry);
+        }
+        let score: f64 = compute_frictionless_score(&session.score_components);
+        logger.info(|| {
+            LogRecord::default().with_data(json!({
+                "scoreComponents": serde_json::to_value(&session.score_components).unwrap_or(Value::Null),
+                "score": score,
+                "dnsPeerAsn": get_ip_info_asn(enriched.as_ref().and_then(|event| event.peer_ip_info.as_ref())),
+                "dnsResolverAsn": get_ip_info_asn(enriched.as_ref().and_then(|event| event.resolver_ip_info.as_ref())),
+            }))
+        });
+        Ok(Ok(Some(score)))
+    }
+}
+
+/// `serverVerifyInteractiveCaptchaSolution`, for puzzle, icon-order and audio: as the PoW
+/// verify, but each refusal is written as it is found, the site's email rules are not
+/// applied, and the answer names no reason.
+pub async fn server_verify_interactive_captcha_solution(
+    services: &VerifyServices,
+    kind: Interactive,
+    request: &ServerVerifyRequest<'_>,
+    logger: &Logger,
+) -> Result<VerifyOutcome, ThrownError> {
+    let mut bindings: LogObject = LogObject::new();
+    bindings.insert("challenge".to_string(), json!(request.challenge));
+    bindings.insert("dappAccount".to_string(), json!(request.dapp));
+    let logger: Logger = logger.with(&bindings, None);
+    let db: &ProviderDatabase = &services.db;
+    let Some(record) = db.get_interactive_captcha_record_by_challenge(kind, request.challenge).await? else {
+        logger.debug(|| LogRecord::msg(format!("No record of this challenge: {}", request.challenge)));
+        return Ok(VerifyOutcome { verified: false, score: None, reason: None, session_id: None });
+    };
+    let not_verified: VerifyOutcome = VerifyOutcome { verified: false, score: None, reason: None, session_id: record.session_id.clone() };
+    if record.result.status != CaptchaStatus::Approved {
+        let context: ErrorContext = ErrorContext::new().with("code", 400).with("failedFuncName", INTERACTIVE_FUNC_NAME).with("challenge", request.challenge);
+        return Err(thrown(ErrorClass::Api, "CAPTCHA.INVALID_SOLUTION", context));
+    }
+    if record.server_checked == Some(true) {
+        return Ok(not_verified);
+    }
+    if request.dapp != record.dapp_account {
+        let context: ErrorContext =
+            ErrorContext::new().with("failedFuncName", INTERACTIVE_FUNC_NAME).with("dappAccount", request.dapp).with("challengeDappAccount", record.dapp_account.as_str());
+        return Err(thrown(ErrorClass::Env, "CAPTCHA.DAPP_USER_SOLUTION_NOT_FOUND", context));
+    }
+    if !db.mark_interactive_captcha_record_checked(kind, &record.challenge).await? {
+        return Ok(not_verified);
+    }
+    let score: Option<f64> = match services.interactive_checks(kind, &record, request, &logger).await? {
+        Ok(score) => score,
+        Err(refusal) => {
+            services.disapprove_verification(kind, &record, refusal, &logger).await?;
+            return Ok(not_verified);
+        }
+    };
+    services
+        .decisions
+        .decide(request.dapp, captcha_type_of(kind), &logger)
+        .await
+        .map_err(|unsupported| ThrownError::from(ErrorObject::new("Error", unsupported.to_string())))?;
+    if let Some(session_id) = record.session_id.as_deref().filter(|id| !id.is_empty()) {
+        let approved: StoredResult = StoredResult::new(CaptchaStatus::Approved, None);
+        services.update_session_record_with_cache(session_id, session_updates(captcha_type_of(kind), &approved, None), false, &logger).await;
     }
     Ok(VerifyOutcome {
         verified: true,
