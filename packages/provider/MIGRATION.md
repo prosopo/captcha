@@ -550,7 +550,8 @@ is that what is not frontend is ported. So each becomes a Rust crate in its own
 package directory, as catcher did (`prosopo-catcher`), linking the captcha
 crates by path, in dependency order:
 
-1. **database-private** (`prosopo-database-private`). Its dependencies are
+1. **database-private** (`prosopo-database-private`): **done** (captcha-private
+   e4451065f; its MIGRATION-LOG.md has a line per slice). Its dependencies are
    captcha packages already in Rust plus `@prosopo/types-private`, whose types
    it uses are ported with it. The 30-odd mongoose models become serde structs
    on the official driver as §4.4 did for database; each store is proven the way
@@ -559,6 +560,10 @@ crates by path, in dependency order:
    models cover the collections the provider writes (`PoWCaptchaData`,
    `ImageCaptchaData`, `Session`, `InteractiveCaptchaData`), so the same proof
    covers that both implementations read each other's documents.
+   Besides the replays, every model's schema is checked path for path against
+   mongoose's own description of it (captcha `rust/equivalence/describe.ts`
+   and the `schema_description` module), and the pure query builders against
+   the TS's output byte for byte.
 2. **job-definitions**, then **aws-serverless-api**. Both depend on private
    packages the owner has not named (email-client, email-templates, marketing,
    monitoring, openobserve-client, job-orchestrator, pricing,
