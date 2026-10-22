@@ -408,7 +408,7 @@ impl EscalationServices<'_> {
         }
         let session_id: String = format!("{}-{}", self.session_id_prefix, uuid::Uuid::new_v4());
         let stores: SessionStores<'_> = SessionStores { db, write_queue: self.services.write_queue() };
-        let session: Session = stores.create_session(session_id, self.now, &fields).await.map_err(PowSolutionError::Failed)?;
+        let session: Session = stores.create_session(session_id, self.now, &fields, false).await.map_err(PowSolutionError::Failed)?;
         if let Some(queue) = self.services.write_queue() {
             queue.cache_session_escalation(&origin_id, &session.session_id, None).await;
         }

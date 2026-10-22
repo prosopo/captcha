@@ -116,6 +116,8 @@ pub struct ChallengeState {
     /// `getDetectorBundlePoolDir()`, where the assign secret is kept.
     pub pool_dir: String,
     pub assign_secret: crate::api::detector::AssignSecret,
+    /// What the frictionless route reads of the config.
+    pub frictionless: crate::api::frictionless::FrictionlessConfig,
 }
 
 impl ChallengeState {

@@ -1934,3 +1934,153 @@ async fn detector_pools_are_replaced_as_the_express_app_replaces_them() {
     }
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }
+
+/// Each `pronode1-<uuid>` session id in `text` named by the order it was first seen in
+/// `answers`.
+fn sessions_named(text: &str, minted: &[String]) -> String {
+    minted.iter().enumerate().fold(text.to_string(), |text, (index, id)| text.replace(id.as_str(), &format!("<session-{index}>")))
+}
+
+/// `text` with each session id no answer named, such as an autoban's, made `<unrecorded>`.
+fn unnamed_sessions_masked(text: &str) -> String {
+    regex::Regex::new(r"pronode1-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}").expect("a pattern").replace_all(text, "<unrecorded>").into_owned()
+}
+
+fn minted_ids(answers: &[Vec<u8>]) -> Vec<String> {
+    let pattern = regex::Regex::new(r"pronode1-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}").expect("a pattern");
+    let mut ids: Vec<String> = Vec::new();
+    for answer in answers {
+        for found in pattern.find_iter(&String::from_utf8_lossy(answer)) {
+            if !ids.iter().any(|id| id == found.as_str()) {
+                ids.push(found.as_str().to_string());
+            }
+        }
+    }
+    ids
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn frictionless_sessions_are_issued_as_the_express_app_issues_them() {
+    let _live = LIVE.lock().await;
+    let vectors: Value = serde_json::from_str(include_str!("../../provider/rust/equivalence/frictionless-live-vectors.json")).expect("frictionless-live-vectors.json parses");
+    let database: &str = vectors["database"].as_str().expect("a database");
+    reset(database).await;
+    let ipapi: String = fake_ipapi(vectors["ipapi"].clone()).await;
+    let pool = tempfile::TempDir::new().expect("a pool directory");
+    for (name, contents) in vectors["poolFiles"].as_object().expect("pool files") {
+        std::fs::write(pool.path().join(name), contents.as_str().expect("text")).expect("writes");
+    }
+    let mut variables: HashMap<String, String> = serde_json::from_value(vectors["variables"].clone()).expect("variables");
+    variables.insert("PROSOPO_IPAPI_URL".to_string(), ipapi);
+    variables.insert("PROSOPO_DETECTOR_POOL_DIR".to_string(), pool.path().to_string_lossy().into_owned());
+    variables.insert("NODE_ENV".to_string(), "production".to_string());
+    let mut decoded: DecodedPayloads = Vec::new();
+    for section in ["payloads", "simd"] {
+        for (ciphertext, result) in vectors[section].as_object().expect("a table") {
+            decoded.push((ciphertext.clone(), Ok(result.as_object().expect("an object").clone())));
+        }
+    }
+    let clock: Arc<PinnedClock> = Arc::new(PinnedClock(AtomicI64::new(vectors["exchanges"][0]["at"].as_i64().expect("a time"))));
+    let (router, _env) = live_app_with(&variables, clock.clone(), Some(Arc::new(RecordedDecoder(decoded))), None, None).await;
+    restore_database(database, &vectors["seed"]).await;
+    restore_hashes(&vectors["redis"]).await;
+    let mut connection = redis().await;
+    for entry in vectors["seedStrings"].as_array().expect("strings") {
+        let _: () = redis::cmd("SET").arg(entry["key"].as_str().expect("a key")).arg(entry["raw"].as_str().expect("a value")).arg("EX").arg(600).query_async(&mut connection).await.expect("writes");
+    }
+    let port: u16 = serve(router).await;
+    let decode = |text: &Value| base64::engine::general_purpose::STANDARD.decode(text.as_str().expect("base64")).expect("base64 decodes");
+    let mut expected_answers: Vec<Answer> = Vec::new();
+    let mut actual_answers: Vec<Answer> = Vec::new();
+    let mut requests: Vec<Vec<u8>> = Vec::new();
+    for step in vectors["exchanges"].as_array().expect("exchanges") {
+        clock.0.store(step["at"].as_i64().expect("a time"), Ordering::SeqCst);
+        let request: Vec<u8> = decode(&step["request"]);
+        actual_answers.push(answer(&exchange(port, &request).await));
+        expected_answers.push(answer(&decode(&step["response"])));
+        requests.push(request);
+    }
+    let ts_ids: Vec<String> = minted_ids(&expected_answers.iter().map(|answer| answer.body.clone()).collect::<Vec<_>>());
+    let rust_ids: Vec<String> = minted_ids(&actual_answers.iter().map(|answer| answer.body.clone()).collect::<Vec<_>>());
+    let mut failures: Vec<String> = Vec::new();
+    for ((request, expected), actual) in requests.iter().zip(&expected_answers).zip(&actual_answers) {
+        let shape = |answer: &Answer, ids: &[String]| -> (String, Vec<(String, String)>, String) {
+            let (headers, body) = without_request_id(answer);
+            let body: String = sessions_named(&String::from_utf8_lossy(&body), ids);
+            let body: String = regex::Regex::new(r#""dns_url":"https://<session-(\d+)>\.dns\.example/[0-9a-f]{16}\.(gif|png|webp)\?sid=<session-\d+>""#).expect("a pattern").replace_all(&body, r#""dns_url":"<dns $1>""#).into_owned();
+            let body: String = regex::Regex::new(r#""sessionId":"pronode1-[0-9a-f-]{36}""#).expect("a pattern").replace_all(&body, r#""sessionId":"<unrecorded>""#).into_owned();
+            (answer.status_line.clone(), headers.into_iter().filter(|(name, _)| name != "etag" && name != "content-length").collect(), body)
+        };
+        if shape(expected, &ts_ids) != shape(actual, &rust_ids) {
+            failures.push(format!("{}\n      rust {:?}\n      ts   {:?}", shown(request).lines().nth(0).unwrap_or_default(), shape(actual, &rust_ids), shape(expected, &ts_ids)));
+        }
+    }
+    tokio::time::sleep(Duration::from_millis(1500)).await;
+    let fresh: [&str; 5] = ["lastUpdatedTimestamp", "storedAtTimestamp", "_id", "createdAt", "refreshedAfterMs"];
+    let sessions = |records: &[Value], ids: &[String], side: &str, failures: &mut Vec<String>| -> Vec<Value> {
+        records
+            .iter()
+            .map(|record| {
+                let mut record: Value = serde_json::from_str(&unnamed_sessions_masked(&sessions_named(&session_without_block_ids(record).to_string(), ids))).expect("JSON");
+                if let Some(session) = record.as_object_mut() {
+                    masked_draws(session, side, failures);
+                    if let Some(token) = session.get("token").and_then(Value::as_str).filter(|token| token.starts_with("notoken-") || token.starts_with("nodetector-")) {
+                        let kind: String = token.split('-').next().unwrap_or_default().to_string();
+                        session.insert("token".to_string(), json!(format!("{kind}-<uuid>")));
+                    }
+                }
+                record
+            })
+            .collect()
+    };
+    let expected_sessions: Vec<Value> = sessions(vectors["after"]["sessions"].as_array().expect("sessions"), &ts_ids, "ts", &mut failures);
+    let actual_sessions: Vec<Value> = sessions(&dump(database, "sessions").await, &rust_ids, "rust", &mut failures);
+    failures.extend(compare_records(&Value::Array(expected_sessions), &actual_sessions, &fresh));
+    let strings = |entries: Vec<(String, String)>, ids: &[String], side: &str, failures: &mut Vec<String>| -> Vec<Value> {
+        let mut out: Vec<Value> = entries
+            .into_iter()
+            .map(|(key, raw)| {
+                let key: String = unnamed_sessions_masked(&sessions_named(&key, ids));
+                let raw: String = unnamed_sessions_masked(&sessions_named(&raw, ids));
+                match serde_json::from_str::<Value>(&raw) {
+                    Ok(Value::Object(mut session)) if session.contains_key("sessionId") => {
+                        for field in ["createdAt", "lastUpdatedTimestamp", "refreshedAfterMs"] {
+                            if session.contains_key(field) {
+                                session.insert(field.to_string(), json!("<fresh>"));
+                            }
+                        }
+                        masked_draws(&mut session, side, failures);
+                        if let Some(token) = session.get("token").and_then(Value::as_str).filter(|token| token.starts_with("notoken-") || token.starts_with("nodetector-")) {
+                            let kind: String = token.split('-').next().unwrap_or_default().to_string();
+                            session.insert("token".to_string(), json!(format!("{kind}-<uuid>")));
+                        }
+                        json!({ "key": key, "raw": serde_json::to_string(&session).expect("JSON") })
+                    }
+                    _ => json!({ "key": key, "raw": raw }),
+                }
+            })
+            .collect();
+        out.sort_by_key(|entry| entry.to_string());
+        out
+    };
+    let ts_strings: Vec<(String, String)> = vectors["stringsAfter"].as_array().expect("strings").iter().map(|entry| (entry["key"].as_str().unwrap_or_default().to_string(), entry["raw"].as_str().unwrap_or_default().to_string())).collect();
+    let mut rust_strings: Vec<(String, String)> = Vec::new();
+    let keys: Vec<String> = redis::cmd("KEYS").arg("*").query_async(&mut connection).await.expect("lists");
+    for key in keys {
+        let kind: String = redis::cmd("TYPE").arg(&key).query_async(&mut connection).await.expect("a type");
+        if kind == "string" {
+            let raw: String = redis::cmd("GET").arg(&key).query_async(&mut connection).await.expect("reads");
+            rust_strings.push((key, raw));
+        }
+    }
+    let expected_strings: Vec<Value> = strings(ts_strings, &ts_ids, "ts", &mut failures);
+    let actual_strings: Vec<Value> = strings(rust_strings, &rust_ids, "rust", &mut failures);
+    if expected_strings != actual_strings {
+        let only_ts: Vec<&Value> = expected_strings.iter().filter(|entry| !actual_strings.contains(entry)).collect();
+        let only_rust: Vec<&Value> = actual_strings.iter().filter(|entry| !expected_strings.contains(entry)).collect();
+        failures.push(format!("redis strings differ\n  only in ts:\n    {}\n  only in rust:\n    {}", json!(only_ts), json!(only_rust)));
+    }
+    assert_eq!(ts_ids.len(), rust_ids.len(), "sessions minted");
+    assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
+}

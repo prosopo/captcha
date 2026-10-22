@@ -60,9 +60,23 @@ const CREATE_SESSION_ORDER: [&str; 63] = [
 pub fn lean_json(value: &Bson) -> Value {
     match value {
         Bson::DateTime(date) => Value::String(prosopo_logger::iso_timestamp(date.timestamp_millis())),
-        Bson::Document(document) => Value::Object(document.iter().map(|(key, value)| (key.clone(), lean_json(value))).collect()),
+        Bson::Document(document) => Value::Object(document.iter().filter(|(_, value)| !matches!(value, Bson::Undefined)).map(|(key, value)| (key.clone(), lean_json(value))).collect()),
         Bson::Array(items) => Value::Array(items.iter().map(lean_json).collect()),
+        Bson::Undefined => Value::Null,
         other => other.clone().into_relaxed_extjson(),
+    }
+}
+
+/// An address computed for this request, as `bigIntReplacer` writes its halves into the cache
+/// (`"__bigint__:<digits>"`), where one read back from Mongo is a Decimal128.
+pub fn tag_fresh_address(cached: &mut Map<String, Value>) {
+    if let Some(Value::Object(address)) = cached.get_mut("ipAddress") {
+        for half in ["lower", "upper"] {
+            let digits: Option<String> = address.get(half).and_then(|value| value.get("$numberDecimal")).and_then(Value::as_str).map(str::to_string);
+            if let Some(digits) = digits {
+                address.insert(half.to_string(), prosopo_database::redis_cache::tag_bigint(&digits));
+            }
+        }
     }
 }
 
@@ -83,8 +97,9 @@ pub fn session_id_prefix(host: Option<&str>) -> String {
 impl SessionStores<'_> {
     /// `createSession`: a session record from `fields` (every key but the id and creation time,
     /// absent where the TS input leaves it undefined), stored, then cached with its pointer from
-    /// `userSitekeyIpHash`, both awaited.
-    pub async fn create_session(&self, session_id: String, created_at: DateTime, fields: &Document) -> Result<Session, String> {
+    /// `userSitekeyIpHash`, both awaited. `fresh_address` when the address was computed for
+    /// this request rather than read from a stored session.
+    pub async fn create_session(&self, session_id: String, created_at: DateTime, fields: &Document, fresh_address: bool) -> Result<Session, String> {
         let mut record: Document = Document::new();
         record.insert("sessionId", session_id.clone());
         record.insert("createdAt", created_at);
@@ -111,7 +126,10 @@ impl SessionStores<'_> {
         let session: Session = bson::deserialize_from_document(record.clone()).map_err(|error| error.to_string())?;
         self.db.store_session_record(&session).await.map_err(|error| error.message().to_string())?;
         if let Some(queue) = self.write_queue {
-            let cached: Map<String, Value> = record.iter().map(|(key, value)| (key.clone(), lean_json(value))).collect();
+            let mut cached: Map<String, Value> = record.iter().map(|(key, value)| (key.clone(), lean_json(value))).collect();
+            if fresh_address {
+                tag_fresh_address(&mut cached);
+            }
             queue.cache_session(&session_id, &cached, None).await;
             if let Some(hash) = session.user_sitekey_ip_hash.as_deref().filter(|hash| !hash.is_empty()) {
                 queue.cache_session_by_hash(hash, &session_id, None).await;

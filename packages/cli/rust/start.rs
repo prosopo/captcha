@@ -227,6 +227,12 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
         session_id_prefix: prosopo_provider::tasks::frictionless::session_id_prefix(Some(&config.host)),
         pool_dir: pool_dir.clone(),
         assign_secret: prosopo_provider::api::detector::AssignSecret::default(),
+        frictionless: prosopo_provider::api::frictionless::FrictionlessConfig {
+            penalties: config.penalties.clone(),
+            l_rules: config.l_rules.as_ref().map(|rules| rules.iter().map(|(language, penalty)| (language.clone(), serde_json::json!(penalty.get()))).collect()),
+            host: config.host.clone(),
+            phrase_bank: prosopo_provider::honeypot::PhraseBank::default(),
+        },
     });
     let captcha: Arc<CaptchaState> = Arc::new(CaptchaState { challenge, db: db.clone(), maintenance, metrics: metrics.clone(), dns_servers: config.dns_servers.clone() });
     let rest: Router = pipeline(pipeline_state, request_logger(log_level), i18n, gate, admin, verify, block, domain, captcha);

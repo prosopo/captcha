@@ -2669,6 +2669,7 @@ dependencies = [
  "prosopo-user-access-policy",
  "prosopo-util",
  "prosopo-util-crypto",
+ "prosopo-web-bot-auth",
  "rand_core 0.6.4",
  "redis",
  "reqwest",

@@ -25,6 +25,7 @@ pub mod challenge;
 pub mod dns_event_url;
 pub mod domain;
 pub mod express;
+pub mod frictionless;
 pub mod healthz_geo;
 pub mod maintenance;
 pub mod metrics;
