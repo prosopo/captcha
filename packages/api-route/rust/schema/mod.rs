@@ -853,6 +853,7 @@ impl Schema {
 /// An issue map as `ValidationIssue`: `code`, `path` and `message`, with every other key as
 /// a param.
 fn validation_issue(mut issue: Map<String, Value>) -> ValidationIssue {
+    let key_order: Vec<String> = issue.keys().cloned().collect();
     let code: String = issue
         .shift_remove("code")
         .and_then(|code| code.as_str().map(str::to_string))
@@ -877,6 +878,7 @@ fn validation_issue(mut issue: Map<String, Value>) -> ValidationIssue {
         params: issue,
         path,
         message,
+        key_order: Some(key_order),
     }
 }
 

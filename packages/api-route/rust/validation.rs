@@ -14,7 +14,7 @@
 
 use std::fmt;
 
-use serde::ser::SerializeStruct;
+use serde::ser::{SerializeMap, SerializeStruct};
 use serde::{Deserialize, Serialize, Serializer};
 use serde_json::{Map, Value};
 
@@ -43,15 +43,53 @@ impl From<usize> for PathSegment {
     }
 }
 
-/// A zod `ZodIssue`. Serialises with zod's key order: `code`, the code-specific params
-/// (e.g. `expected`, `received`), then `path` and `message`.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+/// A zod `ZodIssue`. Serialises in zod's key order: the order the schema made it in, where it
+/// came from a schema (zod puts `message` before `path` on a check's issue, and `validation`
+/// before `code` on a string format's), else `code`, the code-specific params (e.g. `expected`,
+/// `received`), then `path` and `message`.
+#[derive(Debug, Clone, Deserialize)]
 pub struct ValidationIssue {
     pub code: String,
     #[serde(flatten)]
     pub params: Map<String, Value>,
     pub path: Vec<PathSegment>,
     pub message: String,
+    /// The keys in the order zod wrote them, when the issue came from a schema.
+    #[serde(skip)]
+    pub key_order: Option<Vec<String>>,
+}
+
+/// The key order is how the issue is written, not what it says.
+impl PartialEq for ValidationIssue {
+    fn eq(&self, other: &ValidationIssue) -> bool {
+        self.code == other.code && self.params == other.params && self.path == other.path && self.message == other.message
+    }
+}
+
+impl Serialize for ValidationIssue {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let default_order = || {
+            let mut keys: Vec<String> = vec!["code".to_string()];
+            keys.extend(self.params.keys().cloned());
+            keys.extend(["path".to_string(), "message".to_string()]);
+            keys
+        };
+        let order: Vec<String> = self.key_order.clone().unwrap_or_else(default_order);
+        let mut map = serializer.serialize_map(Some(order.len()))?;
+        for key in &order {
+            match key.as_str() {
+                "code" => map.serialize_entry(key, &self.code)?,
+                "path" => map.serialize_entry(key, &self.path)?,
+                "message" => map.serialize_entry(key, &self.message)?,
+                other => {
+                    if let Some(value) = self.params.get(other) {
+                        map.serialize_entry(key, value)?;
+                    }
+                }
+            }
+        }
+        map.end()
+    }
 }
 
 impl ValidationIssue {
@@ -70,6 +108,7 @@ impl ValidationIssue {
             params,
             path,
             message,
+            key_order: None,
         }
     }
 
@@ -79,6 +118,7 @@ impl ValidationIssue {
             params: Map::new(),
             path,
             message: message.into(),
+            key_order: None,
         }
     }
 }
