@@ -14,9 +14,11 @@
 
 //! The provider's HTTP API (startProviderApi.ts), route by route as MIGRATION.md §3 phases them.
 
+pub mod block;
 pub mod body;
 pub mod express;
 pub mod healthz_geo;
+pub mod maintenance;
 pub mod metrics;
 pub mod pipeline;
 pub mod public;

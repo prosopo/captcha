@@ -15,8 +15,10 @@
 //! startProviderApi.ts after the public router, in its order: the rate limits, the robots
 //! headers, the non-API 404, the request logger and language, the request signals (JA4,
 //! handshake timing, raw TLS signals, IP information), the header check on the client routes,
-//! and the admin JWT gate. Routes the Rust provider does not serve yet end in express's 404.
+//! the admin JWT gate, and the access-policy block. Routes the Rust provider does not serve yet
+//! end in express's 404.
 
+use crate::api::block::BlockState;
 use crate::api::express::{self, client_ip, header, send, send_json, Requested};
 use crate::api::signals::{get_handshake_timing, get_ja4, get_raw_tls_signals, node_base64_decode, HandshakeTiming, RawTlsSignals};
 use axum::extract::{ConnectInfo, Request, State};
@@ -350,9 +352,10 @@ async fn not_found(request: Request) -> Response {
 }
 
 /// The stages after the public router, ending in express's 404.
-pub fn pipeline(state: Arc<PipelineState>, request_logger: Logger, i18n: Arc<I18n>, auth: AuthState) -> Router {
+pub fn pipeline(state: Arc<PipelineState>, request_logger: Logger, i18n: Arc<I18n>, auth: AuthState, block: Arc<BlockState>) -> Router {
     Router::new()
         .fallback(not_found)
+        .layer(from_fn_with_state(block, crate::api::block::block))
         .layer(from_fn_with_state(auth, admin_auth))
         .layer(from_fn(header_check))
         .layer(from_fn_with_state(state.clone(), request_signals))

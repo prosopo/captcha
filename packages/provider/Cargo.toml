@@ -13,6 +13,7 @@ autobenches = false
 path = "rust/lib.rs"
 
 [dependencies]
+bson = { version = "3.1", features = ["serde"] }
 axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
 base64 = "0.22"
 bytes = "1"
@@ -23,7 +24,9 @@ hyper = { version = "1", features = ["http1", "server"] }
 indexmap = "2"
 num-bigint = "0.4"
 num-traits = "0.2"
+prosopo-api-route = { path = "../api-route" }
 prosopo-api-router = { path = "../api-express-router" }
+prosopo-captcha-severity = { path = "../captcha-severity" }
 prosopo-ja4 = "0.1"
 prosopo-locale = { path = "../locale" }
 prosopo-user-access-policy = { path = "../user-access-policy" }

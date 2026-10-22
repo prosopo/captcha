@@ -25,6 +25,8 @@ use prosopo_env::ProviderEnvironment;
 use prosopo_keyring::KeyringPair;
 use prosopo_locale::{default_locales_directory, locales_directory, I18n};
 use prosopo_logger::{parse_log_level, LogLevel, LogRecord, Logger};
+use prosopo_provider::api::block::{BlockState, HardBlockVerdictCache};
+use prosopo_provider::api::maintenance::MaintenanceMode;
 use prosopo_provider::api::healthz_geo::{fetch_healthz_probe, read_healthz_geo_config, CountryLookup, HealthzGeoRouter, HealthzProbe};
 use prosopo_provider::api::metrics::{metrics_enabled, ProcessSource, ProviderMetrics};
 use prosopo_provider::api::pipeline::{pipeline, rate_limiters, IpInfoLookup, PipelineState};
@@ -133,7 +135,14 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
         options: admin_auth_options(env.as_ref(), Some(&config.host)),
     };
     let pipeline_state: Arc<PipelineState> = Arc::new(PipelineState { limiters, logger: logger.clone(), node_env, ip_info });
-    let rest: Router = pipeline(pipeline_state, request_logger(parse_log_level(Some(&config.log_level), LogLevel::Info)), i18n, auth);
+    let block: Arc<BlockState> = Arc::new(BlockState {
+        db: db.clone(),
+        cache: Arc::new(HardBlockVerdictCache::default()),
+        metrics: metrics.clone(),
+        maintenance: Arc::new(MaintenanceMode::from_env(env("MAINTENANCE_MODE").as_deref())),
+        inspector: std::sync::OnceLock::new(),
+    });
+    let rest: Router = pipeline(pipeline_state, request_logger(parse_log_level(Some(&config.log_level), LogLevel::Info)), i18n, auth, block);
     let state: PublicState = PublicState {
         host: config.host.clone(),
         version,
@@ -169,6 +178,24 @@ impl IpInfoLookup for EnvironmentIpInfo {
     }
 }
 
+/// What `start` builds the app from: the ready environment's keys, database and lookups, the
+/// process environment, and the real health probe.
+pub fn app_parts(env: Arc<ProviderEnvironment>) -> AppParts {
+    AppParts {
+        config: env.config.clone(),
+        pair: env.pair.clone(),
+        auth_account: env.auth_account.clone(),
+        logger: env.logger.clone(),
+        db: env.db.clone(),
+        countries: Arc::new(EnvironmentCountries(env.clone())),
+        ip_info: Some(Arc::new(EnvironmentIpInfo(env.clone()))),
+        probe: fetch_healthz_probe(),
+        env: Arc::new(|name: &str| std::env::var(name).ok()),
+        i18n: locales(),
+        version: version(),
+    }
+}
+
 /// The environment made ready, then the API served on `port` (else the configured one) until
 /// the process is told to stop.
 pub async fn start(mut env: ProviderEnvironment, port: Option<u16>) -> Result<(), String> {
@@ -186,20 +213,7 @@ pub async fn start(mut env: ProviderEnvironment, port: Option<u16>) -> Result<()
         }
         (None, None) => 0,
     };
-    let env: Arc<ProviderEnvironment> = Arc::new(env);
-    let (app, geo) = provider_router(AppParts {
-        config: env.config.clone(),
-        pair: env.pair.clone(),
-        auth_account: env.auth_account.clone(),
-        logger: logger.clone(),
-        db: env.db.clone(),
-        countries: Arc::new(EnvironmentCountries(env.clone())),
-        ip_info: Some(Arc::new(EnvironmentIpInfo(env.clone()))),
-        probe: fetch_healthz_probe(),
-        env: Arc::new(|name: &str| std::env::var(name).ok()),
-        i18n: locales(),
-        version: version(),
-    });
+    let (app, geo) = provider_router(app_parts(Arc::new(env)));
     geo.start();
     let listener: TcpListener = listen(port).await.map_err(|error| format!("cannot listen on port {port}: {error}"))?;
     logger.info(|| LogRecord::msg("Prosopo app listening").with_data(json!({ "apiPort": port })));
