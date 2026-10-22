@@ -17,14 +17,16 @@ Full guide, including server-side verification and the optional extras:
 
 ## 1. Clone and generate your environment file
 
-One script generates the provider account, the site key account and strong random passwords for Mongo and Redis, then
-fills in everything else from the hostname you give it.
+Clone with submodules, install, and build the workspace once. The env script and every later step use the built
+packages. Then one script generates the provider account, the site key account and strong random passwords for Mongo and
+Redis, and fills in everything else from the hostname you give it.
 
 ```bash
-git clone https://github.com/prosopo/captcha
+git clone --recurse-submodules https://github.com/prosopo/captcha
 cd captcha
 corepack enable
 pnpm install --frozen-lockfile
+pnpm run build:all
 
 pnpm exec tsx ./dev/scripts/src/scripts/generateSelfHostedEnv.ts --host captcha.example.com
 ```
@@ -47,10 +49,11 @@ Options: `--output <path>`, `--force` to overwrite.
 
 ## 2. Start the stack
 
-The compose file ships with the repo, so there is nothing to paste:
+The compose file, `docker-compose.self-hosted.yml`, ships with the repo. Your `.env` sets `COMPOSE_FILE` to it, so this
+and every later `docker compose` command finds it without `-f`. Run them from the repository root.
 
 ```bash
-docker compose -f docker-compose.self-hosted.yml up -d
+docker compose up -d
 curl localhost:9229/healthz     # {"ok":true,"host":"captcha.example.com"}
 ```
 
@@ -94,8 +97,6 @@ and `reason` from the verification response — use `enterprise` if you want the
 The CDN bundle is compiled to talk to Prosopo's fleet, so build your own with `PROSOPO_PROVIDER_LIST` baked in:
 
 ```bash
-pnpm run build:all
-
 NODE_ENV=production \
 PROSOPO_PROVIDER_LIST=https://captcha.example.com \
 pnpm --filter @prosopo/procaptcha-bundle run bundle

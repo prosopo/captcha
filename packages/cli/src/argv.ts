@@ -65,8 +65,11 @@ export function processArgs(
 ) {
 	const logger = getLogger(LogLevel.enum.info, "cli");
 
+	// strictCommands so a command this release does not have fails loudly
+	// instead of exiting 0 having done nothing.
 	const commandManager = yargs(hideBin(args))
 		.usage("Usage: $0 [global options] <command> [options]")
+		.strictCommands()
 		.option("api", { demand: false, default: false, type: "boolean" } as const)
 		.option("adminApi", {
 			demand: false,
