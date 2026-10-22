@@ -987,6 +987,10 @@ impl PayloadDecoder for RecordedDecoder {
     fn decrypt_behavioral_data<'a>(&'a self, encrypted: &'a str, _private_key: &'a str, _inner_config: &'a str) -> DecodeFuture<'a> {
         self.recorded(encrypted)
     }
+
+    fn decrypt_payload<'a>(&'a self, payload: &'a str, _head_hash: &'a str, _bundle: &'a prosopo_provider::tasks::detection::PoolBundleDecrypt) -> DecodeFuture<'a> {
+        self.recorded(payload)
+    }
 }
 
 /// The render seeds the TS drew, handed out in the order it drew them.

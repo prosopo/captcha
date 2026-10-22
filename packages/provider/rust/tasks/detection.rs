@@ -262,6 +262,126 @@ pub trait PayloadDecoder: Send + Sync {
     /// `decode("behaviour", [encrypted, privateKey, innerConfig])`: `BehavioralDataResult`, or
     /// why it could not be read.
     fn decrypt_behavioral_data<'a>(&'a self, encrypted: &'a str, private_key: &'a str, inner_config: &'a str) -> DecodeFuture<'a>;
+    /// `decode("payload", [payload, headHash, privateKey, innerConfig, payloadLayout, keyMap])`:
+    /// the detector's `DetectorResult`, or why it could not be read.
+    fn decrypt_payload<'a>(&'a self, payload: &'a str, head_hash: &'a str, bundle: &'a PoolBundleDecrypt) -> DecodeFuture<'a>;
+}
+
+const DETECTOR_MAX_KEYS: usize = 64;
+const DETECTOR_MAX_KEY_LENGTH: usize = 64;
+const DETECTOR_MAX_ARRAY_LENGTH: usize = 64;
+const DETECTOR_MAX_STRING_LENGTH: usize = 512;
+const DETECTOR_MAX_DEPTH: usize = 4;
+const DETECTOR_MAX_NODES: usize = DETECTOR_MAX_KEYS * DETECTOR_MAX_ARRAY_LENGTH;
+const DETECTOR_MAX_SERIALISED_LENGTH: usize = 8192;
+
+fn utf16_length(text: &str) -> usize {
+    text.encode_utf16().count()
+}
+
+/// `isStorableKey`: a name Mongo will store, of bounded length (in UTF-16 units).
+fn is_storable_key(key: &str) -> bool {
+    let length: usize = utf16_length(key);
+    length > 0 && length <= DETECTOR_MAX_KEY_LENGTH && !key.contains('.') && !key.starts_with('$') && !key.contains('\u{0}')
+}
+
+fn sanitise_object(value: &Map<String, Value>, depth: usize, budget: &mut usize) -> Map<String, Value> {
+    let mut sanitised: Map<String, Value> = Map::new();
+    let mut kept: usize = 0;
+    for key in prosopo_logger::js_key_order(value) {
+        if kept >= DETECTOR_MAX_KEYS {
+            break;
+        }
+        if !is_storable_key(key) {
+            continue;
+        }
+        if let Some(entry) = sanitise_value(&value[key.as_str()], depth + 1, budget) {
+            sanitised.insert(key.clone(), entry);
+            kept += 1;
+        }
+    }
+    sanitised
+}
+
+fn sanitise_value(value: &Value, depth: usize, budget: &mut usize) -> Option<Value> {
+    if *budget == 0 {
+        return None;
+    }
+    *budget -= 1;
+    match value {
+        Value::Null | Value::Bool(_) => Some(value.clone()),
+        Value::Number(number) => number.as_f64().filter(|number| number.is_finite()).map(|_| value.clone()),
+        Value::String(text) => Some(if utf16_length(text) <= DETECTOR_MAX_STRING_LENGTH {
+            value.clone()
+        } else {
+            let units: Vec<u16> = text.encode_utf16().take(DETECTOR_MAX_STRING_LENGTH).collect();
+            Value::String(String::from_utf16_lossy(&units))
+        }),
+        _ if depth >= DETECTOR_MAX_DEPTH => None,
+        Value::Array(items) => Some(Value::Array(items.iter().take(DETECTOR_MAX_ARRAY_LENGTH).filter_map(|item| sanitise_value(item, depth + 1, budget)).collect())),
+        Value::Object(fields) => Some(Value::Object(sanitise_object(fields, depth, budget))),
+    }
+}
+
+/// `sanitiseDetectorData`: the detector's bag, cut to what Mongo stores and a rule may read, or
+/// nothing when it is empty or still too big once cut.
+pub fn sanitise_detector_data(value: &Value) -> Option<Map<String, Value>> {
+    let Value::Object(fields) = value else {
+        return None;
+    };
+    let mut budget: usize = DETECTOR_MAX_NODES;
+    let sanitised: Map<String, Value> = sanitise_object(fields, 0, &mut budget);
+    if sanitised.is_empty() || utf16_length(&prosopo_logger::json_stringify(&Value::Object(sanitised.clone()), 0)) > DETECTOR_MAX_SERIALISED_LENGTH {
+        return None;
+    }
+    Some(sanitised)
+}
+
+/// `DecodedDetectorPayload`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DecodedDetectorPayload {
+    pub base_bot_score: f64,
+    pub timestamp: f64,
+    pub user_id: Option<String>,
+    pub user_agent: Option<String>,
+    pub is_web_view: bool,
+    pub is_iframe: bool,
+    pub decrypted_head_hash: String,
+    pub triggered_detectors: Option<Vec<f64>>,
+    pub shadow_dom_penalty: Option<bool>,
+    pub d: Option<Map<String, Value>>,
+}
+
+/// `getBotScore`: the detector's verdict on a payload, a score of 1 when it gave none.
+pub async fn get_bot_score(decoder: &dyn PayloadDecoder, payload: &str, head_hash: &str, bundle: &PoolBundleDecrypt) -> Result<DecodedDetectorPayload, String> {
+    let result: Map<String, Value> = decoder.decrypt_payload(payload, head_hash, bundle).await?;
+    let Some(score) = result.get("score").and_then(Value::as_f64).filter(|score| !score.is_nan()) else {
+        return Ok(DecodedDetectorPayload {
+            base_bot_score: 1.0,
+            timestamp: 0.0,
+            user_id: None,
+            user_agent: None,
+            is_web_view: false,
+            is_iframe: false,
+            decrypted_head_hash: String::new(),
+            triggered_detectors: None,
+            shadow_dom_penalty: None,
+            d: None,
+        });
+    };
+    let text = |key: &str| result.get(key).and_then(Value::as_str).map(str::to_string);
+    Ok(DecodedDetectorPayload {
+        base_bot_score: score,
+        timestamp: result.get("timestamp").and_then(Value::as_f64).unwrap_or(f64::NAN),
+        user_id: text("userId"),
+        user_agent: text("userAgent"),
+        is_web_view: result.get("isWebView").and_then(Value::as_bool).unwrap_or(false),
+        is_iframe: result.get("isIframe").and_then(Value::as_bool).unwrap_or(false),
+        decrypted_head_hash: text("decryptedHeadHash").unwrap_or_default(),
+        triggered_detectors: result.get("triggeredDetectors").and_then(Value::as_array).map(|items| items.iter().filter_map(Value::as_f64).collect()),
+        shadow_dom_penalty: result.get("shadowDomPenalty").and_then(Value::as_bool),
+        d: result.get("d").and_then(sanitise_detector_data),
+    })
 }
 
 /// What `decodeSubmissionPayloads` could read of a submission.
@@ -656,6 +776,10 @@ mod tests {
             Box::pin(async move { result })
         }
 
+        fn decrypt_payload<'a>(&'a self, _payload: &'a str, _head_hash: &'a str, _bundle: &'a PoolBundleDecrypt) -> DecodeFuture<'a> {
+            Box::pin(async { Err("not used".to_string()) })
+        }
+
         fn decrypt_behavioral_data<'a>(&'a self, encrypted: &'a str, private_key: &'a str, inner_config: &'a str) -> DecodeFuture<'a> {
             self.calls.lock().expect("unpoisoned").push((encrypted.into(), private_key.into(), inner_config.into()));
             let result: Result<Map<String, Value>, String> = if self.fails {
@@ -816,6 +940,10 @@ mod tests {
             Box::pin(async { Ok(serde_json::from_str(r#"{"ops":[1,2],"timestamp":5}"#).expect("json")) })
         }
 
+        fn decrypt_payload<'a>(&'a self, _payload: &'a str, _head_hash: &'a str, _bundle: &'a PoolBundleDecrypt) -> DecodeFuture<'a> {
+            Box::pin(async { Err("not used".to_string()) })
+        }
+
         fn decrypt_behavioral_data<'a>(&'a self, _encrypted: &'a str, _private_key: &'a str, _inner_config: &'a str) -> DecodeFuture<'a> {
             Box::pin(async move {
                 self.simd_started.notified().await;
@@ -866,6 +994,99 @@ mod tests {
         let decoder: FakeDecoder = FakeDecoder::default();
         assert_eq!(decode_submission(executor, &decoder, Some("b"), None).await, DecodedSubmission::default());
         assert!(decoder.calls.lock().expect("unpoisoned").is_empty());
+    }
+
+    #[test]
+    fn equivalence_sanitise_detector_data() {
+        let vectors: Value = serde_json::from_str(include_str!("../equivalence/detector-data-vectors.json")).expect("detector-data-vectors.json parses");
+        let cases: &Vec<Value> = vectors["cases"].as_array().expect("cases");
+        assert!(cases.len() > 300);
+        // The same JS object with its integer-like keys written last: JS enumerates those first
+        // whatever order they were added in, so the result must not change.
+        fn indices_last(value: &Value) -> Value {
+            match value {
+                Value::Object(fields) => {
+                    let is_index = |key: &String| !key.is_empty() && key.bytes().all(|byte| byte.is_ascii_digit()) && (key == "0" || !key.starts_with('0'));
+                    let named = fields.iter().filter(|(key, _)| !is_index(key));
+                    let indices = fields.iter().filter(|(key, _)| is_index(key));
+                    Value::Object(named.chain(indices).map(|(key, value)| (key.clone(), indices_last(value))).collect())
+                }
+                Value::Array(items) => Value::Array(items.iter().map(indices_last).collect()),
+                other => other.clone(),
+            }
+        }
+        for case in cases {
+            let actual: Value = sanitise_detector_data(&indices_last(&case["input"])).map_or(Value::Null, Value::Object);
+            assert_eq!(prosopo_logger::json_stringify(&actual, 0), prosopo_logger::json_stringify(&case["result"], 0), "{}", case["input"]);
+        }
+    }
+
+    /// Answers every payload with `result`.
+    struct DetectorAnswers(Result<Map<String, Value>, String>, Mutex<Vec<(String, String, PoolBundleDecrypt)>>);
+
+    impl PayloadDecoder for DetectorAnswers {
+        fn decrypt_simd_readings<'a>(&'a self, _encrypted: &'a str, _private_key: &'a str, _inner_config: &'a str) -> DecodeFuture<'a> {
+            Box::pin(async { Err("not used".to_string()) })
+        }
+
+        fn decrypt_behavioral_data<'a>(&'a self, _encrypted: &'a str, _private_key: &'a str, _inner_config: &'a str) -> DecodeFuture<'a> {
+            Box::pin(async { Err("not used".to_string()) })
+        }
+
+        fn decrypt_payload<'a>(&'a self, payload: &'a str, head_hash: &'a str, bundle: &'a PoolBundleDecrypt) -> DecodeFuture<'a> {
+            self.1.lock().expect("unpoisoned").push((payload.into(), head_hash.into(), bundle.clone()));
+            let result = self.0.clone();
+            Box::pin(async move { result })
+        }
+    }
+
+    fn answering(result: Value) -> DetectorAnswers {
+        DetectorAnswers(Ok(result.as_object().expect("an object").clone()), Mutex::new(Vec::new()))
+    }
+
+    // getBotScore.unit.test.ts.
+    #[tokio::test]
+    async fn returns_bot_score_with_all_fields_when_the_decoder_succeeds() {
+        let decoder = answering(json!({ "score": 0.4, "timestamp": 1000, "userId": "u", "userAgent": "ua", "isWebView": true, "isIframe": true, "decryptedHeadHash": "hh", "triggeredDetectors": [1, 2], "shadowDomPenalty": true, "d": { "a": 1 } }));
+        let decoded = get_bot_score(&decoder, "payload", "head", &decrypt_bundle()).await.expect("decodes");
+        assert_eq!(decoded, DecodedDetectorPayload {
+            base_bot_score: 0.4,
+            timestamp: 1000.0,
+            user_id: Some("u".into()),
+            user_agent: Some("ua".into()),
+            is_web_view: true,
+            is_iframe: true,
+            decrypted_head_hash: "hh".into(),
+            triggered_detectors: Some(vec![1.0, 2.0]),
+            shadow_dom_penalty: Some(true),
+            d: Some(json!({ "a": 1 }).as_object().expect("an object").clone()),
+        });
+    }
+
+    #[tokio::test]
+    async fn returns_default_values_when_the_score_is_missing() {
+        let decoded = get_bot_score(&answering(json!({ "timestamp": 5, "isWebView": true })), "p", "h", &decrypt_bundle()).await.expect("decodes");
+        assert_eq!((decoded.base_bot_score, decoded.timestamp, decoded.is_web_view, decoded.is_iframe, decoded.decrypted_head_hash.as_str()), (1.0, 0.0, false, false, ""));
+    }
+
+    #[tokio::test]
+    async fn handles_missing_optional_fields_and_an_empty_bag() {
+        let decoded = get_bot_score(&answering(json!({ "score": 0.1, "timestamp": 2, "decryptedHeadHash": "x", "d": {} })), "p", "h", &decrypt_bundle()).await.expect("decodes");
+        assert_eq!((decoded.user_id, decoded.is_web_view, decoded.is_iframe, decoded.triggered_detectors, decoded.d), (None, false, false, None, None));
+    }
+
+    #[tokio::test]
+    async fn sanitises_the_bag_and_forwards_the_bundle_to_the_decoder() {
+        let decoder = answering(json!({ "score": 0.1, "timestamp": 2, "decryptedHeadHash": "x", "d": { "ok": 1, "x.y": 2, "$z": 3 } }));
+        let decoded = get_bot_score(&decoder, "payload", "head", &decrypt_bundle()).await.expect("decodes");
+        assert_eq!(decoded.d, Some(json!({ "ok": 1 }).as_object().expect("an object").clone()));
+        assert_eq!(*decoder.1.lock().expect("unpoisoned"), vec![("payload".to_string(), "head".to_string(), decrypt_bundle())]);
+    }
+
+    #[tokio::test]
+    async fn passes_on_why_the_decoder_failed() {
+        let decoder = DetectorAnswers(Err("bad payload".into()), Mutex::new(Vec::new()));
+        assert_eq!(get_bot_score(&decoder, "p", "h", &decrypt_bundle()).await, Err("bad payload".to_string()));
     }
 
     #[tokio::test]
