@@ -13,8 +13,9 @@
 // limitations under the License.
 
 //! captcha.ts, the client routes' router, for the routes ported so far: the spam email check
-//! (captcha/checkSpamEmail.ts).
+//! (captcha/checkSpamEmail.ts) and the PoW challenge (api/challenge.rs).
 
+use crate::api::challenge::{pow_challenge_route, ChallengeState};
 use crate::api::express::{send_json, Requested};
 use crate::api::maintenance::MaintenanceMode;
 use crate::api::metrics::ProviderMetrics;
@@ -37,6 +38,7 @@ use serde_json::{json, Value};
 use std::sync::Arc;
 
 pub struct CaptchaState {
+    pub challenge: Arc<ChallengeState>,
     pub db: Option<Arc<ProviderDatabase>>,
     pub maintenance: Arc<MaintenanceMode>,
     pub metrics: Option<Arc<ProviderMetrics>>,
@@ -50,7 +52,7 @@ fn check_spam_email_body() -> Schema {
 }
 
 /// What a handler passes to `next(error)`: a `ProsopoApiError` in the request's language.
-fn api_error(request: &Request, key: &str, context: ErrorContext, logger: &Logger) -> Response {
+pub(crate) fn api_error(request: &Request, key: &str, context: ErrorContext, logger: &Logger) -> Response {
     let lookup = request.extensions().get::<RequestI18n>().map(RequestI18n::lookup);
     let error: ProsopoError = ProsopoError::new(
         ErrorClass::Api,
@@ -145,6 +147,9 @@ async fn check_spam_email_route(state: &CaptchaState, request: Request) -> Respo
 pub async fn captcha_routes(State(state): State<Arc<CaptchaState>>, request: Request, next: Next) -> Response {
     if request.method() == Method::POST && route_matches(request.uri().path(), ClientApiPaths::CheckSpamEmail.as_str()) {
         return check_spam_email_route(&state, request).await;
+    }
+    if request.method() == Method::POST && route_matches(request.uri().path(), ClientApiPaths::GetPowCaptchaChallenge.as_str()) {
+        return pow_challenge_route(&state.challenge, request).await;
     }
     next.run(request).await
 }

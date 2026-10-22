@@ -29,15 +29,16 @@ pub fn latin1(bytes: &[u8]) -> String {
     bytes.iter().map(|&byte| byte as char).collect()
 }
 
-/// `req.headers[name]`: duplicates joined with `", "`, except the fields Node keeps only the
-/// first of.
+/// `req.headers[name]`: duplicates joined with `", "` (`"; "` for `cookie`), except the fields
+/// Node keeps only the first of.
 pub fn header(headers: &HeaderMap, name: &str) -> Option<String> {
     let mut values = headers.get_all(name).iter().map(|value: &HeaderValue| latin1(value.as_bytes()));
     let first: String = values.next()?;
     if FIRST_ONLY.contains(&name) {
         return Some(first);
     }
-    Some(values.fold(first, |joined, value| format!("{joined}, {value}")))
+    let separator: &str = if name == "cookie" { "; " } else { ", " };
+    Some(values.fold(first, |joined, value| format!("{joined}{separator}{value}")))
 }
 
 /// The fields Node's `IncomingMessage` drops duplicates of.
@@ -310,6 +311,17 @@ fn finish_page(response: &mut Response, method: &Method) {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn joins_duplicate_headers_as_node_does() {
+        let mut map: HeaderMap = HeaderMap::new();
+        for (name, value) in [("cookie", "a=1"), ("cookie", "b=2"), ("x-dup", "1"), ("x-dup", "2"), ("user-agent", "one"), ("user-agent", "two")] {
+            map.append(http::HeaderName::from_static(name), HeaderValue::from_static(value));
+        }
+        assert_eq!(header(&map, "cookie").as_deref(), Some("a=1; b=2"));
+        assert_eq!(header(&map, "x-dup").as_deref(), Some("1, 2"));
+        assert_eq!(header(&map, "user-agent").as_deref(), Some("one"));
+    }
+
     use super::*;
 
     fn headers(pairs: &[(&str, &[u8])]) -> HeaderMap {

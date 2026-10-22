@@ -35,6 +35,7 @@ use prosopo_keyring::{get_pair, KeyringPair, Secret};
 use prosopo_util_crypto::jwt::JwtIssueOptions;
 use prosopo_provider::api::healthz_geo::HealthzProbe;
 use prosopo_provider::http_replay::{answer, exchange, shown, Answer};
+use prosopo_provider::tasks::detection::{DecodeFuture, SimdDecoder};
 use prosopo_types::config::ProsopoConfig;
 use prosopo_util_crypto::U8aLike;
 use serde_json::{json, Map, Value};
@@ -230,6 +231,11 @@ impl Source for PinnedClock {
 
 /// `live_app`, its database telling the time by `source`.
 async fn live_app_at(variables: &HashMap<String, String>, source: Arc<dyn Source>) -> (Router, Arc<ProviderEnvironment>) {
+    live_app_with(variables, source, None).await
+}
+
+/// `live_app_at`, with the SIMD decoder the private build would supply.
+async fn live_app_with(variables: &HashMap<String, String>, source: Arc<dyn Source>, simd_decoder: Option<Arc<dyn SimdDecoder>>) -> (Router, Arc<ProviderEnvironment>) {
     let config: ProsopoConfig = get_config(&Environment::from_map(variables.clone()), None, None, None, None).expect("a config");
     let pair: KeyringPair = get_pair(Some(Secret::Text(MNEMONIC)), None, None, None).expect("the provider pair");
     let admin: KeyringPair = get_pair(None, Some(U8aLike::Str(ADMIN)), None, None).expect("the admin pair");
@@ -249,6 +255,7 @@ async fn live_app_at(variables: &HashMap<String, String>, source: Arc<dyn Source
         env: Arc::new(move |name: &str| reader.get(name).cloned()),
         probe,
         version: "dev".to_string(),
+        simd_decoder,
         ..app_parts(env.clone())
     };
     (provider_router(parts).0, env)
@@ -943,5 +950,235 @@ async fn commands_run_as_the_node_ones_do() {
             failures.push(format!("{name} indexes: rust {actual}\n  ts {}", vectors["indexes"][name]));
         }
     }
+    assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
+}
+
+/// Each SIMD payload the challenge generator sent, and what decodeSimd.js read out of it.
+type DecodedPayloads = Vec<(String, Result<Map<String, Value>, String>)>;
+
+struct RecordedSimdDecoder(DecodedPayloads);
+
+impl SimdDecoder for RecordedSimdDecoder {
+    fn decrypt_simd_readings<'a>(&'a self, encrypted: &'a str, _private_key: &'a str, _inner_config: &'a str) -> DecodeFuture<'a> {
+        let found: Result<Map<String, Value>, String> = self
+            .0
+            .iter()
+            .find(|(ciphertext, _)| ciphertext == encrypted)
+            .map_or_else(|| Err("not a payload the generator sent".to_string()), |(_, decoded)| decoded.clone());
+        Box::pin(async move { found })
+    }
+}
+
+/// `${timestamp}___${user}___${dapp}___<nonce>`: the nonce is `Math.random`, so it is masked.
+fn masked_challenge(challenge: &str) -> String {
+    let parts: Vec<&str> = challenge.split("___").collect();
+    if parts.len() != 4 {
+        return challenge.to_string();
+    }
+    format!("{}___{}___{}___<nonce>", parts[0], parts[1], parts[2])
+}
+
+/// The answer's challenge checked as signed by `provider`, then its nonce and signature masked.
+fn checked_challenge(body: &mut Map<String, Value>, provider: &str, side: &str, failures: &mut Vec<String>) {
+    let Some(challenge) = body.get("challenge").and_then(Value::as_str).map(str::to_string) else {
+        return;
+    };
+    let signature: Option<String> = body.get("signature").and_then(|signature| signature.pointer("/provider/challenge")).and_then(Value::as_str).map(str::to_string);
+    if let Some(signature) = signature.filter(|signature| !signature.is_empty()) {
+        let valid: bool = prosopo_util_crypto::signature::signature_verify(U8aLike::Bytes(challenge.as_bytes()), U8aLike::Str(&signature), U8aLike::Str(provider))
+            .is_ok_and(|result| result.is_valid);
+        if !valid {
+            failures.push(format!("{side}'s signature over {challenge} does not verify against the provider"));
+        }
+        if let Some(Value::Object(provider)) = body.get_mut("signature").and_then(|signature| signature.get_mut("provider")) {
+            provider.insert("challenge".to_string(), json!("<signature>"));
+        }
+    }
+    body.insert("challenge".to_string(), json!(masked_challenge(&challenge)));
+}
+
+const CHALLENGE_MEMBERS: [&str; 5] = ["status", "challenge", "difficulty", "timestamp", "signature"];
+
+/// A challenge answer as compared: its members with nonce and signature masked, and, when it
+/// was padded, the number and total length of the pads instead of the random pads themselves.
+fn challenge_answer(body: &[u8], padded: bool, provider: &str, side: &str, failures: &mut Vec<String>) -> String {
+    let Ok(Value::Object(parsed)) = serde_json::from_slice::<Value>(body) else {
+        return String::from_utf8_lossy(body).into_owned();
+    };
+    let mut members: Map<String, Value> = Map::new();
+    let mut pads: Vec<usize> = Vec::new();
+    for (key, value) in parsed {
+        if padded && !CHALLENGE_MEMBERS.contains(&key.as_str()) {
+            pads.push(value.as_str().map_or(0, str::len));
+        } else {
+            members.insert(key, value);
+        }
+    }
+    checked_challenge(&mut members, provider, side, failures);
+    if padded {
+        return json!({ "members": members, "pads": pads.len(), "padded": pads.iter().sum::<usize>() }).to_string();
+    }
+    Value::Object(members).to_string()
+}
+
+async fn cache_entries() -> Vec<Value> {
+    let mut connection = redis().await;
+    let mut keys: Vec<String> = redis::cmd("KEYS").arg("cache:session:*").query_async(&mut connection).await.expect("lists");
+    keys.sort();
+    let mut out: Vec<Value> = Vec::new();
+    for key in keys {
+        let raw: String = redis::cmd("GET").arg(&key).query_async(&mut connection).await.expect("reads");
+        out.push(json!({ "key": key, "raw": raw }));
+    }
+    out
+}
+
+/// A cache entry with the time a session was last patched masked; a pointer is kept as it is.
+fn cache_entry_without_time(entry: &Value) -> Value {
+    let raw: &str = entry["raw"].as_str().unwrap_or_default();
+    match serde_json::from_str::<Value>(raw) {
+        Ok(Value::Object(mut session)) => {
+            if session.contains_key("lastUpdatedTimestamp") {
+                session.insert("lastUpdatedTimestamp".to_string(), json!("<fresh>"));
+            }
+            json!({ "key": entry["key"], "session": session })
+        }
+        _ => entry.clone(),
+    }
+}
+
+/// A stored PoW record with its nonce and signature masked, once the signature checks out.
+fn stored_challenge(record: &Value, provider: &str, side: &str, failures: &mut Vec<String>) -> Value {
+    let mut record: Value = record.clone();
+    let challenge: String = record["challenge"].as_str().unwrap_or_default().to_string();
+    let signature: String = record["providerSignature"].as_str().unwrap_or_default().to_string();
+    let valid: bool = prosopo_util_crypto::signature::signature_verify(U8aLike::Bytes(challenge.as_bytes()), U8aLike::Str(&signature), U8aLike::Str(provider))
+        .is_ok_and(|result| result.is_valid);
+    if !valid {
+        failures.push(format!("{side}'s stored signature over {challenge} does not verify against the provider"));
+    }
+    record["challenge"] = json!(masked_challenge(&challenge));
+    record["providerSignature"] = json!("<signature>");
+    record["_id"] = json!("<fresh>");
+    record
+}
+
+/// A session with what the block middleware's synthetic one makes fresh masked: its id, its
+/// times and its document id. Its contents are checked by the block test.
+fn session_without_block_ids(record: &Value) -> Value {
+    let mut record: Value = record.clone();
+    if record["sessionId"].as_str().is_some_and(|id| id.starts_with("blocked-")) {
+        for field in ["_id", "sessionId", "createdAt", "storedAtTimestamp"] {
+            record[field] = json!("<fresh>");
+        }
+    }
+    record
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn challenges_are_issued_as_the_express_app_issues_them() {
+    let _live = LIVE.lock().await;
+    let vectors: Value = serde_json::from_str(include_str!("../../provider/rust/equivalence/challenge-vectors.json")).expect("challenge-vectors.json parses");
+    let database: &str = vectors["database"].as_str().expect("a database");
+    let provider: &str = vectors["provider"].as_str().expect("the provider's address");
+    reset(database).await;
+    let ipapi: String = fake_ipapi(vectors["ipapi"].clone()).await;
+    let pool = tempfile::TempDir::new().expect("a pool directory");
+    for (name, contents) in vectors["poolFiles"].as_object().expect("pool files") {
+        std::fs::write(pool.path().join(name), contents.as_str().expect("text")).expect("writes");
+    }
+    let mut variables: HashMap<String, String> = serde_json::from_value(vectors["variables"].clone()).expect("variables");
+    variables.insert("PROSOPO_IPAPI_URL".to_string(), ipapi);
+    variables.insert("PROSOPO_DETECTOR_POOL_DIR".to_string(), pool.path().to_string_lossy().into_owned());
+    variables.insert("NODE_ENV".to_string(), "production".to_string());
+    let decoded: DecodedPayloads = vectors["decoded"]
+        .as_array()
+        .expect("decoded payloads")
+        .iter()
+        .map(|entry| {
+            let ciphertext: String = entry["ciphertext"].as_str().expect("a payload").to_string();
+            match entry["readings"].as_object() {
+                Some(readings) => (ciphertext, Ok(readings.clone())),
+                None => (ciphertext, Err(entry["error"].as_str().unwrap_or_default().to_string())),
+            }
+        })
+        .collect();
+    let clock: Arc<PinnedClock> = Arc::new(PinnedClock(AtomicI64::new(vectors["exchanges"][0]["at"].as_i64().expect("a time"))));
+    let (router, _env) = live_app_with(&variables, clock.clone(), Some(Arc::new(RecordedSimdDecoder(decoded)))).await;
+    restore_database(database, &vectors["seed"]).await;
+    restore_hashes(&vectors["redis"]).await;
+    let mut connection = redis().await;
+    for entry in vectors["cache"].as_array().expect("cache entries") {
+        let _: () = redis::cmd("SET")
+            .arg(entry["key"].as_str().expect("a key"))
+            .arg(entry["raw"].as_str().expect("a value"))
+            .arg("EX")
+            .arg(86400)
+            .query_async(&mut connection)
+            .await
+            .expect("caches");
+    }
+    let port: u16 = serve(router).await;
+    let decode = |text: &Value| base64::engine::general_purpose::STANDARD.decode(text.as_str().expect("base64")).expect("base64 decodes");
+    let mut failures: Vec<String> = Vec::new();
+    let mut compared: usize = 0;
+    for step in vectors["exchanges"].as_array().expect("exchanges") {
+        clock.0.store(step["at"].as_i64().expect("a time"), Ordering::SeqCst);
+        let request: Vec<u8> = decode(&step["request"]);
+        let actual: Answer = answer(&exchange(port, &request).await);
+        let expected: Answer = answer(&decode(&step["response"]));
+        let line: String = shown(&request).lines().next().unwrap_or_default().to_string();
+        if step["compare"] == Value::Bool(false) {
+            let body: Value = serde_json::from_slice(&actual.body).unwrap_or(Value::Null);
+            let challenge: &str = body["challenge"].as_str().unwrap_or_default();
+            if !actual.status_line.starts_with("HTTP/1.1 200 ") || body["difficulty"] != json!(1) || !challenge.ends_with("___0") || body.pointer("/signature/provider/challenge") != Some(&json!("")) {
+                failures.push(format!("{line}\n      rust dummy challenge {body}"));
+            }
+            continue;
+        }
+        compared += 1;
+        let padded: bool = step["padded"] == Value::Bool(true);
+        let (expected_headers, expected_body) = without_request_id(&expected);
+        let (actual_headers, actual_body) = without_request_id(&actual);
+        let issued: bool = expected_body.starts_with(b"{\"status\":\"ok\"") || padded;
+        let headers = |headers: Vec<(String, String)>| -> Vec<(String, String)> { headers.into_iter().filter(|(name, _)| !(issued && name == "etag")).collect() };
+        let (expected_body, actual_body) = if issued {
+            (challenge_answer(&expected_body, padded, provider, "ts", &mut failures), challenge_answer(&actual_body, padded, provider, "rust", &mut failures))
+        } else {
+            (String::from_utf8_lossy(&expected_body).into_owned(), String::from_utf8_lossy(&actual_body).into_owned())
+        };
+        let lengths_agree: bool = issued || expected.content_length == actual.content_length;
+        if expected.status_line != actual.status_line || headers(expected_headers.clone()) != headers(actual_headers.clone()) || expected_body != actual_body || !lengths_agree {
+            failures.push(format!(
+                "{line}\n      rust {:?} {:?} {}\n      ts   {:?} {:?} {}",
+                actual.status_line, actual_headers, actual_body, expected.status_line, expected_headers, expected_body
+            ));
+        }
+    }
+    let scraped: Vec<u8> = exchange(port, b"GET /metrics HTTP/1.1\r\nHost: h.example\r\nConnection: close\r\n\r\n").await;
+    let mut metrics: Vec<String> = String::from_utf8_lossy(&scraped)
+        .lines()
+        .filter(|line| line.starts_with("prosopo_captcha_issued") || line.starts_with("prosopo_captcha_issue_errors"))
+        .map(str::to_string)
+        .collect();
+    metrics.sort();
+    if json!(metrics) != vectors["metrics"] {
+        failures.push(format!("issue metrics differ\n  ts:   {}\n  rust: {}", vectors["metrics"], json!(metrics)));
+    }
+    tokio::time::sleep(Duration::from_millis(1500)).await;
+    let fresh: [&str; 1] = ["lastUpdatedTimestamp"];
+    let expected_challenges: Vec<Value> = vectors["after"]["powcaptchas"].as_array().expect("records").iter().map(|record| stored_challenge(record, provider, "ts", &mut failures)).collect();
+    let actual_challenges: Vec<Value> = dump(database, "powcaptchas").await.iter().map(|record| stored_challenge(record, provider, "rust", &mut failures)).collect();
+    failures.extend(compare_records(&Value::Array(expected_challenges), &actual_challenges, &fresh));
+    let expected_sessions: Vec<Value> = vectors["after"]["sessions"].as_array().expect("sessions").iter().map(session_without_block_ids).collect();
+    let actual_sessions: Vec<Value> = dump(database, "sessions").await.iter().map(session_without_block_ids).collect();
+    failures.extend(compare_records(&Value::Array(expected_sessions), &actual_sessions, &fresh));
+    let cache: Vec<Value> = cache_entries().await.iter().map(cache_entry_without_time).collect();
+    let expected_cache: Vec<Value> = vectors["cacheAfter"].as_array().expect("cache entries").iter().map(cache_entry_without_time).collect();
+    if cache != expected_cache {
+        failures.push(format!("cache differs\n  ts:   {}\n  rust: {}", json!(expected_cache), json!(cache)));
+    }
+    assert!(compared > 35, "only {compared} compared");
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }

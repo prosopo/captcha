@@ -2331,6 +2331,7 @@ dependencies = [
  "redis",
  "regex",
  "serde_json",
+ "tempfile",
  "tokio",
  "uuid",
 ]

@@ -27,6 +27,8 @@ use prosopo_locale::{default_locales_directory, locales_directory, I18n};
 use prosopo_logger::{parse_log_level, LogLevel, LogRecord, Logger};
 use prosopo_provider::api::block::{BlockState, HardBlockVerdictCache};
 use prosopo_provider::api::captcha::CaptchaState;
+use prosopo_provider::api::challenge::ChallengeState;
+use prosopo_provider::tasks::detection::{DetectorBundlePool, SimdDecoder, DEFAULT_DETECTOR_POOL_DIR};
 use prosopo_provider::api::domain::DomainState;
 use prosopo_load_balancer::ProviderDirectory;
 use prosopo_env::is_maintenance_mode;
@@ -121,12 +123,15 @@ pub struct AppParts {
     pub env: EnvReader,
     pub i18n: Arc<I18n>,
     pub version: String,
+    /// The detector decoders, which are not public source (MIGRATION.md §4.1); without them a
+    /// challenge's SIMD readings are dropped.
+    pub simd_decoder: Option<Arc<dyn SimdDecoder>>,
 }
 
 /// startProviderApi's app for the routes ported so far, and its healthz geo router, which the
 /// caller starts and stops.
 pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
-    let AppParts { config, pair, auth_account, logger, db, countries, ip_info, probe, env, i18n, version } = parts;
+    let AppParts { config, pair, auth_account, logger, db, countries, ip_info, probe, env, i18n, version, simd_decoder } = parts;
     let geo: Arc<HealthzGeoRouter> =
         Arc::new(HealthzGeoRouter::with_probe(read_healthz_geo_config(env.as_ref(), Some(&logger)), countries, probe, Some(logger.clone())));
     let metrics: Option<Arc<ProviderMetrics>> =
@@ -142,6 +147,7 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
         rate_limiters(configured.chain(rules))
     };
     let pair_address: Option<String> = pair.as_ref().and_then(|pair| pair.address().ok());
+    let signing_pair: Option<KeyringPair> = pair.clone();
     let admin_key = |pair: Option<KeyringPair>| pair.map(|pair| Arc::new(pair) as Arc<dyn AdminKey>);
     let auth: AuthState = AuthState {
         pair: admin_key(pair),
@@ -195,7 +201,17 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
         inspector: std::sync::OnceLock::new(),
     });
     let domain: Arc<DomainState> = Arc::new(DomainState { db: db.clone(), maintenance: maintenance.clone(), metrics: metrics.clone() });
-    let captcha: Arc<CaptchaState> = Arc::new(CaptchaState { db: db.clone(), maintenance, metrics: metrics.clone(), dns_servers: config.dns_servers.clone() });
+    let pool_dir: String = env("PROSOPO_DETECTOR_POOL_DIR").unwrap_or_else(|| DEFAULT_DETECTOR_POOL_DIR.to_string());
+    let pool: DetectorBundlePool = DetectorBundlePool::load_from_dir(std::path::Path::new(&pool_dir), &logger, env("PROSOPO_DETECTOR_POOL_RELEASE").as_deref());
+    let challenge: Arc<ChallengeState> = Arc::new(ChallengeState {
+        services: verify.services.clone(),
+        maintenance: maintenance.clone(),
+        metrics: metrics.clone(),
+        pair: signing_pair,
+        pool: Arc::new(std::sync::RwLock::new(Arc::new(pool))),
+        decoder: simd_decoder,
+    });
+    let captcha: Arc<CaptchaState> = Arc::new(CaptchaState { challenge, db: db.clone(), maintenance, metrics: metrics.clone(), dns_servers: config.dns_servers.clone() });
     let rest: Router = pipeline(pipeline_state, request_logger(log_level), i18n, gate, admin, verify, block, domain, captcha);
     let state: PublicState = PublicState {
         host: config.host.clone(),
@@ -247,6 +263,7 @@ pub fn app_parts(env: Arc<ProviderEnvironment>) -> AppParts {
         env: Arc::new(|name: &str| std::env::var(name).ok()),
         i18n: locales(),
         version: version(),
+        simd_decoder: None,
     }
 }
 

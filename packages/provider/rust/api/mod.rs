@@ -18,6 +18,7 @@ pub mod admin;
 pub mod block;
 pub mod body;
 pub mod captcha;
+pub mod challenge;
 pub mod domain;
 pub mod express;
 pub mod healthz_geo;
