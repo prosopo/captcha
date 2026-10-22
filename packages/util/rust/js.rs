@@ -114,6 +114,47 @@ pub fn number_to_string(x: f64) -> String {
 }
 
 /// `parseInt(s, radix)` for radix 10 or 16.
+/// `Number.prototype.toFixed(digits)`: the decimal closest to the double's exact value,
+/// the larger one on an exact tie, as ECMA-262 specifies (Rust's own formatting rounds a tie to
+/// even). From 1e21 up, and for NaN and the infinities, it is `String(x)`.
+pub fn to_fixed(x: f64, digits: usize) -> String {
+    if !x.is_finite() || x.abs() >= 1e21 {
+        return number_to_string(x);
+    }
+    let negative: bool = x < 0.0;
+    let exact: String = format!("{:.1100}", x.abs());
+    let (whole, fraction) = exact.split_once('.').expect("a fractional part");
+    let kept: &str = &fraction[..digits];
+    let round_up: bool = fraction.as_bytes()[digits] >= b'5';
+    let mut number: Vec<u8> = format!("{whole}{kept}").into_bytes();
+    if round_up {
+        let mut index: usize = number.len();
+        loop {
+            if index == 0 {
+                number.insert(0, b'1');
+                break;
+            }
+            index -= 1;
+            if number[index] == b'9' {
+                number[index] = b'0';
+            } else {
+                number[index] += 1;
+                break;
+            }
+        }
+    }
+    let number: String = String::from_utf8(number).expect("digits");
+    let split: usize = number.len() - digits;
+    let (whole, fraction) = number.split_at(split);
+    let whole: &str = if whole.is_empty() { "0" } else { whole };
+    let unsigned: String = if digits == 0 { whole.to_string() } else { format!("{whole}.{fraction}") };
+    if negative {
+        format!("-{unsigned}")
+    } else {
+        unsigned
+    }
+}
+
 pub fn parse_int(s: &str, radix: u32) -> f64 {
     let s = s.trim_start_matches(is_whitespace);
     let (negative, s) = match s.as_bytes().first() {

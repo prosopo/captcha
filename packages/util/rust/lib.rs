@@ -57,7 +57,7 @@ pub use crate::fetch_with_etag::{
 };
 pub use crate::hex::{embed_data, extract_data, u8a_to_hex, u8a_to_hex_with};
 pub use crate::ip::{get_ip_address, get_ip_address_from_big_int, Address4, Address6, IpAddress};
-pub use crate::js::{number_to_string, parse_int};
+pub use crate::js::{number_to_string, parse_int, to_fixed};
 pub use crate::seeded::{Rng, SeedRandom, SeededLodash};
 pub use crate::solver_service::{hash_meets_difficulty, solve_pow, target_for_difficulty};
 pub use crate::url::{

@@ -373,3 +373,28 @@ fn equivalence_verify_recency() {
         assert_vector("verifyRecency", &v, &json!(actual), &v["result"]);
     }
 }
+
+#[test]
+fn equivalence_to_fixed() {
+    let cases: Vec<(serde_json::Value, usize, String)> =
+        serde_json::from_str(include_str!("equivalence/to-fixed.json")).expect("to-fixed.json parses");
+    let mut failures: Vec<String> = Vec::new();
+    for (x, digits, expected) in &cases {
+        let x: f64 = match x {
+            serde_json::Value::String(name) => match name.as_str() {
+                "NaN" => f64::NAN,
+                "Infinity" => f64::INFINITY,
+                "-Infinity" => f64::NEG_INFINITY,
+                "-0" => -0.0,
+                other => panic!("{other}"),
+            },
+            number => number.as_f64().expect("a number"),
+        };
+        let actual: String = crate::to_fixed(x, *digits);
+        if &actual != expected {
+            failures.push(format!("{x:?}.toFixed({digits}): rust {actual}, ts {expected}"));
+        }
+    }
+    assert!(cases.len() > 3000);
+    assert!(failures.is_empty(), "{} of {} differ:\n{}", failures.len(), cases.len(), failures.join("\n"));
+}

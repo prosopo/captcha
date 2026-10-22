@@ -8,6 +8,7 @@
 		"node": "^24"
 	},
 	"scripts": {
+		"equivalence": "tsx rust/equivalence/generate-util.ts && cargo test -p prosopo-provider util_equivalence",
 		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
 		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
 		"build:cross-env": "vite build --config vite.esm.config.ts",

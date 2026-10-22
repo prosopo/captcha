@@ -1,0 +1,31 @@
+[package]
+name = "prosopo-provider"
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "rust/lib.rs"
+
+[dependencies]
+prosopo-common = { path = "../common" }
+prosopo-database = { path = "../database" }
+prosopo-ipinfo = { path = "../ipinfo" }
+prosopo-logger = { path = "../logger" }
+prosopo-types = { path = "../types" }
+prosopo-util = { path = "../util" }
+prosopo-util-crypto = { path = "../util-crypto" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
+sha2 = "0.10"
+hex = "0.4"
+tokio = { version = "1", features = ["rt", "sync", "time"] }
+
+[dev-dependencies]
+bson = { version = "3.1", features = ["serde"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time"] }

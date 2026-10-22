@@ -335,3 +335,89 @@ impl<'de> Deserialize<'de> for IpInfoResponse {
         }
     }
 }
+
+/// `IPConnectionType`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum IpConnectionType {
+    Datacenter,
+    Mobile,
+    Satellite,
+    Residential,
+    Unknown,
+}
+
+/// A latitude and longitude.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub struct IpCoordinates {
+    pub latitude: JsNumber,
+    pub longitude: JsNumber,
+}
+
+/// What `compareIPs` reports of each address. `isVpnOrProxy` is `isVPN || isProxy || isTor`,
+/// which is undefined, and so absent, when none of the three is known.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IpDetails {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provider: Option<String>,
+    pub connection_type: IpConnectionType,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub is_vpn_or_proxy: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub country: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub country_code: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub city: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub coordinates: Option<IpCoordinates>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub abuser_score: Option<JsNumber>,
+}
+
+/// `IPComparison`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IpComparison {
+    pub different_providers: bool,
+    pub different_connection_types: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub distance_km: Option<JsNumber>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub any_vpn_or_proxy: Option<bool>,
+    pub ip1_details: IpDetails,
+    pub ip2_details: IpDetails,
+}
+
+/// `IPComparisonResult`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IpComparisonResult {
+    pub ips_match: bool,
+    pub ip1: String,
+    pub ip2: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub comparison: Option<IpComparison>,
+}
+
+/// `IPComparisonError`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IpComparisonError {
+    pub error: String,
+    pub ip1: String,
+    pub ip2: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ip1_error: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ip2_error: Option<String>,
+}
+
+/// `IPComparisonResponse`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum IpComparisonResponse {
+    Error(IpComparisonError),
+    Result(Box<IpComparisonResult>),
+}

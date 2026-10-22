@@ -2480,6 +2480,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "prosopo-provider"
+version = "6.0.0"
+dependencies = [
+ "bson",
+ "hex",
+ "prosopo-common",
+ "prosopo-database",
+ "prosopo-ipinfo",
+ "prosopo-logger",
+ "prosopo-types",
+ "prosopo-util",
+ "prosopo-util-crypto",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "tokio",
+]
+
+[[package]]
 name = "prosopo-puzzle-assets"
 version = "6.0.0"
 dependencies = [
