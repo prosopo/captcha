@@ -17,14 +17,20 @@
 // which would take the test runner down with it.
 
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { type SpawnSyncReturns, spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { test } from "node:test";
 
 const require = createRequire(import.meta.url);
 const binding = require.resolve("../index.js");
 
-const call = (fn, width, height) =>
+type NativeFn = "generateBackground" | "generateBackgroundSeparable";
+
+const call = (
+	fn: NativeFn,
+	width: number,
+	height: number,
+): SpawnSyncReturns<string> =>
 	spawnSync(
 		process.execPath,
 		[
@@ -40,7 +46,8 @@ try {
 		{ encoding: "utf8", timeout: 30_000 },
 	);
 
-for (const fn of ["generateBackground", "generateBackgroundSeparable"]) {
+const fns: NativeFn[] = ["generateBackground", "generateBackgroundSeparable"];
+for (const fn of fns) {
 	for (const [width, height] of [
 		[4294967295, 4294967295],
 		[4097, 1],
