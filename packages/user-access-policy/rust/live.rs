@@ -741,6 +741,18 @@ async fn finds_rules_by_coords_with_exact_match() {
 
 #[tokio::test]
 #[ignore = "needs Redis Stack at redis://localhost:6379 (password root)"]
+async fn finds_rules_by_web_bot_auth_agent_with_exact_match() {
+    finds_one_of_two(
+        "webBotAuthAgent",
+        json!({ "webBotAuthAgent": "https://chatgpt.com" }),
+        json!({ "webBotAuthAgent": "https://signatures.openai.com" }),
+        "block",
+    )
+    .await;
+}
+
+#[tokio::test]
+#[ignore = "needs Redis Stack at redis://localhost:6379 (password root)"]
 async fn finds_rules_by_combined_head_hash_and_coords_with_exact_match() {
     finds_one_of_two(
         "headHash+coords",

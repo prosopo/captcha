@@ -908,6 +908,10 @@ const FILTERS: AccessRulesFilter[] = [
 	{ userScope: { numericIpMaskMin: 5n } },
 	{ userScope: { numericIpMaskMin: 5n, numericIpMaskMax: 9n } },
 	{ userScope: { coords: "[[1,2],[3,4]]", asn: 5 } },
+	{
+		userScope: { webBotAuthAgent: "https://chatgpt.com" },
+		userScopeMatch: FilterScopeMatch.Exact,
+	},
 	...Array.from({ length: 300 }, randomFilter),
 ];
 const queries: Json[] = FILTERS.flatMap((filter: AccessRulesFilter): Json[] =>

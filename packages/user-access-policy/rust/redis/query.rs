@@ -83,12 +83,13 @@ fn escape_tag_value(value: &str) -> String {
     escaped
 }
 
-/// Only `coords` (JSON text) is escaped; NUMERIC fields take range syntax.
+/// Only `coords` (JSON text) and `webBotAuthAgent` (a URL) are escaped; NUMERIC fields take
+/// range syntax.
 fn field_clause(field: &str, value: &ScopeValue<'_>) -> String {
     let text: String = value.text();
     match field {
         "asn" => format!("@{field}:[{text} {text}]"),
-        "coords" => format!("@{field}:{{{}}}", escape_tag_value(&text)),
+        "coords" | "webBotAuthAgent" => format!("@{field}:{{{}}}", escape_tag_value(&text)),
         _ => format!("@{field}:{{{text}}}"),
     }
 }

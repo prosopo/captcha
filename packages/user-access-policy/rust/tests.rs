@@ -1322,6 +1322,15 @@ mod rules_query {
     }
 
     #[test]
+    fn escapes_the_signer_url_in_a_web_bot_auth_agent_query() {
+        let query: String = get_rules_redis_query(
+            &filter(json!({ "webBotAuthAgent": "https://chatgpt.com" }), "exact"),
+            false,
+        );
+        assert_eq!(query, "( @webBotAuthAgent:{https\\:\\/\\/chatgpt\\.com} )");
+    }
+
+    #[test]
     fn includes_both_head_hash_and_coords_when_both_provided() {
         let query: String = get_rules_redis_query(
             &filter(

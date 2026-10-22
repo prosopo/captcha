@@ -511,7 +511,7 @@ fn rule_queries_match_the_ts() {
             "{case}"
         );
     }
-    assert_eq!(cases.len(), 616);
+    assert_eq!(cases.len(), 618);
     let clauses: &Value = &DATA["blockPoolClauses"];
     assert_eq!(text(&clauses["deferred"]), get_block_pool_clause(true));
     assert_eq!(text(&clauses["plain"]), get_block_pool_clause(false));
