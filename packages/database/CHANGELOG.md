@@ -1,5 +1,17 @@
 # @prosopo/database
 
+## 4.2.10
+### Patch Changes
+
+- d02b3bc: The image challenge endpoint now answers 400 `INVALID_REQUEST` when the caller sends a `datasetId` that is not a stored dataset: an unknown hex id, a non-hex string or a byte array. Before, the id was only looked up once challenge generation had started, so a bad id came back as a 500. The response does not echo the id. If looking up the dataset fails for another reason, such as the database being unreachable, the endpoint still returns 500. Requests that leave `datasetId` out still use the provider's default dataset.
+  
+  `getDatasetDetails` now throws `RECORD_NOT_FOUND` rather than `DB_QUERY_FAILED` when no dataset matches, so a missing dataset can be told apart from a failed query.
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+  - @prosopo/types-database@5.11.2
+  - @prosopo/common@3.3.0
+  - @prosopo/user-access-policy@3.15.7
+
 ## 4.2.9
 ### Patch Changes
 

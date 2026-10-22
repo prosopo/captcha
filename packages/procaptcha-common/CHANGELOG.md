@@ -1,5 +1,14 @@
 # @prosopo/procaptcha-common
 
+## 2.21.8
+### Patch Changes
+
+- 96dbf9a: The widget's controls were smaller than a fingertip. Tapping the empty space around the "I am human" box now ticks it, so the area that responds is the full 58px row instead of the 28px box. The challenge's Cancel/Next buttons are now at least 44px tall (were 40px) and the reload button is 44px (was 40px).
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+  - @prosopo/account@2.8.114
+  - @prosopo/load-balancer@2.11.15
+
 ## 2.21.7
 ### Patch Changes
 

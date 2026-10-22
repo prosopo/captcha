@@ -1,5 +1,10 @@
 # @prosopo/locale
 
+## 3.13.0
+### Minor Changes
+
+- b460b0b: Add a British English (`en-GB`) catalogue. Browsers and sites asking for `en-GB` now get British spelling and words (unauthorised, data centre, number plate, petrol pump, airship) instead of falling back to US English.
+
 ## 3.12.1
 ### Patch Changes
 

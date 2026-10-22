@@ -1,5 +1,11 @@
 # @prosopo/fingerprint
 
+## 2.8.2
+### Patch Changes
+
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+
 ## 2.8.1
 ### Patch Changes
 
