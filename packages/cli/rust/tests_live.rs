@@ -557,6 +557,6 @@ async fn verifies_as_the_express_app_verifies() {
     if json!(forwarded) != vectors["forwarded"] {
         failures.push(format!("forwarded requests differ\n  ts:   {}\n  rust: {}", vectors["forwarded"], json!(forwarded)));
     }
-    assert!(compared > 105, "only {compared} compared");
+    assert!(compared > 120, "only {compared} compared");
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! verify.ts, the dapp servers' verify router, for the routes ported so far: image, PoW,
-//! puzzle, audio and icon-order. With
+//! verify.ts, the dapp servers' verify router: image, PoW, puzzle, audio, icon-order and
+//! authenticated sessions. With
 //! forwardVerify.ts (a token another provider issued is verified there) and testSiteKey.ts.
 
 use crate::api::express::{send_json, Requested};
@@ -27,6 +27,7 @@ use crate::tasks::verify::{
     bson_json, get_verification_response, server_verify_interactive_captcha_solution, server_verify_pow_captcha_solution, verify_image_captcha_solution, ImageVerifyOutcome,
     ImageVerifyRequest, ServerVerifyRequest, VerifyOutcome, VerifyServices,
 };
+use crate::tasks::verify::verify_authenticated_session;
 use prosopo_database::challenges::Interactive;
 use axum::extract::{Request, State};
 use axum::middleware::Next;
@@ -191,13 +192,15 @@ fn pair_from_address(address: &str) -> Result<KeyringPair, ThrownError> {
 /// The verify routes ported so far.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum VerifyRoute {
+    Authenticated,
     Image,
     Pow,
     Interactive(Interactive),
 }
 
 impl VerifyRoute {
-    const ALL: [VerifyRoute; 5] = [
+    const ALL: [VerifyRoute; 6] = [
+        VerifyRoute::Authenticated,
         VerifyRoute::Image,
         VerifyRoute::Pow,
         VerifyRoute::Interactive(Interactive::Puzzle),
@@ -207,6 +210,7 @@ impl VerifyRoute {
 
     fn path(self) -> ClientApiPaths {
         match self {
+            VerifyRoute::Authenticated => ClientApiPaths::VerifyAuthenticatedSession,
             VerifyRoute::Image => ClientApiPaths::VerifyImageCaptchaSolutionDapp,
             VerifyRoute::Pow => ClientApiPaths::VerifyPowCaptchaSolution,
             VerifyRoute::Interactive(Interactive::Puzzle) => ClientApiPaths::VerifyPuzzleCaptchaSolution,
@@ -215,19 +219,27 @@ impl VerifyRoute {
         }
     }
 
-    fn captcha_type(self) -> CaptchaType {
+    /// `VERIFY_PATH_TYPE`: the type a route's verify metric is counted under, if it is.
+    fn counted_type(self) -> Option<CaptchaType> {
         match self {
-            VerifyRoute::Image => CaptchaType::Image,
-            VerifyRoute::Pow => CaptchaType::Pow,
-            VerifyRoute::Interactive(Interactive::Puzzle) => CaptchaType::Puzzle,
-            VerifyRoute::Interactive(Interactive::Audio) => CaptchaType::Audio,
-            VerifyRoute::Interactive(Interactive::IconOrder) => CaptchaType::IconOrder,
+            VerifyRoute::Authenticated => None,
+            VerifyRoute::Image => Some(CaptchaType::Image),
+            VerifyRoute::Pow => Some(CaptchaType::Pow),
+            VerifyRoute::Interactive(Interactive::Puzzle) => Some(CaptchaType::Puzzle),
+            VerifyRoute::Interactive(Interactive::Audio) => Some(CaptchaType::Audio),
+            VerifyRoute::Interactive(Interactive::IconOrder) => Some(CaptchaType::IconOrder),
         }
+    }
+
+    /// The routes whose failures pass on no inner error, and whose body is `VerifySolutionBody`.
+    fn is_dapp_solution(self) -> bool {
+        matches!(self, VerifyRoute::Authenticated | VerifyRoute::Image)
     }
 
     /// The handler's `label`.
     fn label(self) -> &'static str {
         match self {
+            VerifyRoute::Authenticated => "authenticated",
             VerifyRoute::Image => "image",
             VerifyRoute::Pow => "PoW",
             VerifyRoute::Interactive(Interactive::Puzzle) => "puzzle",
@@ -239,6 +251,7 @@ impl VerifyRoute {
     /// The handler's name, as its error log gives it.
     fn handler_name(self) -> &'static str {
         match self {
+            VerifyRoute::Authenticated => "verifyAuthenticatedSession",
             VerifyRoute::Image => "verifyImageCaptchaSolution",
             VerifyRoute::Pow => "verifyPowCaptchaSolution",
             VerifyRoute::Interactive(Interactive::Puzzle) => "verifyPuzzleCaptchaSolution",
@@ -306,13 +319,13 @@ async fn verify(state: &VerifyState, route: VerifyRoute, asked: &Asked, body: &V
     validate_address(&token.user)?;
     let Some(client) = services.db.get_client_record(&token.dapp).await? else {
         let mut context: ErrorContext = ErrorContext::new().with("code", 400).with("siteKey", token.dapp.as_str());
-        if route == VerifyRoute::Image {
+        if route.is_dapp_solution() {
             context = context.with("user", token.user.as_str());
         }
         return Ok(Answer::Error(api_error(i18n, "API.SITE_KEY_NOT_REGISTERED", context, logger)));
     };
     let challenge: &str = token.challenge.as_deref().unwrap_or_default();
-    if route != VerifyRoute::Image && challenge.is_empty() {
+    if !route.is_dapp_solution() && challenge.is_empty() {
         return Ok(Answer::Json(json!({ "status": translate(i18n, "API.USER_NOT_VERIFIED"), "verified": false })));
     }
     let pair: KeyringPair = pair_from_address(&token.dapp)?;
@@ -325,8 +338,15 @@ async fn verify(state: &VerifyState, route: VerifyRoute, asked: &Asked, body: &V
         logger.info(|| LogRecord::msg("Site key in maintenance mode - returning verified").with_data(json!({ "siteKey": token.dapp })));
         return Ok(Answer::Json(maintenance_response(i18n)));
     }
-    let settings: VerifySettings = verify_settings(&client)?;
     let text = |key: &str| body.get(key).and_then(Value::as_str);
+    if route == VerifyRoute::Authenticated {
+        let Some(session_id) = token.commitment_id.as_deref().filter(|id| !id.is_empty()) else {
+            return Ok(Answer::Json(json!({ "status": "API.USER_NOT_VERIFIED_NO_SOLUTION", "verified": false })));
+        };
+        let (verified, status) = verify_authenticated_session(services, session_id, text("ip"), text("clientSessionId")).await?;
+        return Ok(Answer::Json(json!({ "verified": verified, "status": status })));
+    }
+    let settings: VerifySettings = verify_settings(&client)?;
     let verify_request: ServerVerifyRequest = ServerVerifyRequest {
         dapp: &token.dapp,
         challenge,
@@ -352,6 +372,7 @@ async fn verify(state: &VerifyState, route: VerifyRoute, asked: &Asked, body: &V
             (outcome, answer.commitment_id)
         }
         VerifyRoute::Pow => (server_verify_pow_captcha_solution(services, &verify_request, logger).await?, None),
+        VerifyRoute::Authenticated => unreachable!("an authenticated session is answered before the settings are read"),
         VerifyRoute::Interactive(kind) => (server_verify_interactive_captcha_solution(services, kind, &verify_request, logger).await?, None),
     };
     let status: String = translate(i18n, if outcome.verified { "API.USER_VERIFIED" } else { "API.USER_NOT_VERIFIED" });
@@ -373,11 +394,13 @@ async fn verify_route(state: &VerifyState, route: VerifyRoute, request: Request)
     let requested: Requested = Requested::of(&request);
     let answered = |answer: Value| (send_json(&requested, StatusCode::OK, Vec::new(), &answer), Some(answer));
     if state.maintenance.get() {
-        logger.info(|| LogRecord::msg(format!("Maintenance mode active - returning verified for {} captcha verification", route.label())));
+        if route != VerifyRoute::Authenticated {
+            logger.info(|| LogRecord::msg(format!("Maintenance mode active - returning verified for {} captcha verification", route.label())));
+        }
         return answered(maintenance_response(i18n));
     }
     let raw: Value = request.extensions().get::<RequestBody>().map_or_else(|| json!({}), |body| body.0.clone());
-    let schema = if route == VerifyRoute::Image { verify_solution_body() } else { server_captcha_verify_request_body() };
+    let schema = if route.is_dapp_solution() { verify_solution_body() } else { server_captcha_verify_request_body() };
     let body: Value = match schema.validate(Some(&raw)) {
         Ok(body) => body,
         Err(issues) => {
@@ -404,10 +427,8 @@ async fn verify_route(state: &VerifyState, route: VerifyRoute, request: Request)
         Ok(Answer::Error(error)) => (handle_errors(&request, &ThrownError::from(error)), None),
         Err(error) => {
             logger.error(|| LogRecord::msg(format!("Error in {}", route.handler_name())).with_err(format!("{error:?}")));
-            let context: ErrorContext = match route {
-                VerifyRoute::Image => ErrorContext::new().with("code", 500),
-                _ => ErrorContext::new().with("code", 500).with_error(error),
-            };
+            let context: ErrorContext =
+                if route.is_dapp_solution() { ErrorContext::new().with("code", 500) } else { ErrorContext::new().with("code", 500).with_error(error) };
             let error: ProsopoError = api_error(i18n, "API.BAD_REQUEST", context, &logger);
             (handle_errors(&request, &ThrownError::from(error)), None)
         }
@@ -421,11 +442,13 @@ pub async fn verify_routes(State(state): State<Arc<VerifyState>>, request: Reque
     let Some(route) = VerifyRoute::ALL.into_iter().find(|route| request.method() == Method::POST && route_matches(&path, route.path().as_str())) else {
         return next.run(request).await;
     };
-    let counted: Option<VerifySource> = (state.metrics.is_some() && path == route.path().as_str())
-        .then(|| verify_source(&state.maintenance, request.extensions().get::<RequestBody>().map(|body| &body.0)));
+    let counted: Option<(CaptchaType, VerifySource)> = route
+        .counted_type()
+        .filter(|_| state.metrics.is_some() && path == route.path().as_str())
+        .map(|captcha_type| (captcha_type, verify_source(&state.maintenance, request.extensions().get::<RequestBody>().map(|body| &body.0))));
     let (response, answer) = verify_route(&state, route, request).await;
-    if let (Some(metrics), Some(source), Some(answer)) = (&state.metrics, counted, answer) {
-        metrics.record_captcha_verify(route.captcha_type(), answer.get("verified").is_some_and(truthy), source);
+    if let (Some(metrics), Some((captcha_type, source)), Some(answer)) = (&state.metrics, counted, answer) {
+        metrics.record_captcha_verify(captcha_type, answer.get("verified").is_some_and(truthy), source);
     }
     response
 }

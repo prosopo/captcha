@@ -1136,6 +1136,40 @@ pub async fn verify_image_captcha_solution(services: &VerifyServices, request: &
     })
 }
 
+/// `ipMatchesSession`: the operator's IP is the session's, family and both halves.
+pub fn ip_matches_session(operator_ip: &str, session_ip: &CompositeIpAddress) -> bool {
+    let parsed: CompositeIpAddress = get_composite_ip_address(operator_ip);
+    parsed.ip_type == session_ip.ip_type && parsed.lower.0 == session_ip.lower.0 && parsed.upper.map_or(0, |half| half.0) == session_ip.upper.map_or(0, |half| half.0)
+}
+
+/// `verifyAuthenticatedSession`: a Web Bot Auth session verifies once, for the IP it was
+/// issued to. The status is a translation key, sent untranslated.
+pub async fn verify_authenticated_session(services: &VerifyServices, session_id: &str, ip: Option<&str>, client_session_id: Option<&str>) -> Result<(bool, &'static str), ThrownError> {
+    let Some(ip) = ip.filter(|ip| !ip.is_empty()) else {
+        return Ok((false, "API.AUTHENTICATED_IP_REQUIRED"));
+    };
+    let Some(session) = services.db.get_session_record_by_session_id(session_id).await? else {
+        return Ok((false, "API.USER_NOT_VERIFIED_NO_SOLUTION"));
+    };
+    if session.captcha_type != CaptchaType::Authenticated {
+        return Ok((false, "API.INCORRECT_CAPTCHA_TYPE"));
+    }
+    if session.server_checked == Some(true) {
+        return Ok((false, "API.USER_ALREADY_VERIFIED"));
+    }
+    if !ip_matches_session(ip, &session.ip_address) {
+        return Ok((false, "API.AUTHENTICATED_IP_MISMATCH"));
+    }
+    let recorded: Option<&str> = session.client_meta_data.as_ref().and_then(|meta| meta.client_session_id.as_deref());
+    if is_client_session_mismatch(client_session_id, recorded) {
+        return Ok((false, "API.CLIENT_SESSION_MISMATCH"));
+    }
+    if !services.db.claim_session_server_check(session_id).await? {
+        return Ok((false, "API.USER_ALREADY_VERIFIED"));
+    }
+    Ok((true, "API.USER_VERIFIED"))
+}
+
 fn ip_of(info: &IpInfoResponse) -> String {
     match info {
         IpInfoResponse::Valid(info) => info.ip.clone().unwrap_or_default(),

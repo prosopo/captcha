@@ -420,6 +420,12 @@ const seedImage = async (seed: ImageSeed): Promise<string> => {
 const commitments: Record<string, string> = {};
 for (const seed of imageSeeds) commitments[seed.name] = await seedImage(seed);
 
+await seedSession("s-auth", { captchaType: CaptchaType.authenticated } as Partial<Session>);
+await seedSession("s-auth-2", { captchaType: CaptchaType.authenticated } as Partial<Session>);
+await seedSession("s-auth-family", { captchaType: CaptchaType.authenticated } as Partial<Session>);
+await seedSession("s-auth-v6", { captchaType: CaptchaType.authenticated, ipAddress: getCompositeIpAddress("2001:db8::7") } as Partial<Session>);
+await seedSession("s-auth-client", { captchaType: CaptchaType.authenticated, clientMetaData: { clientSessionId: "widget-auth" } } as Partial<Session>);
+
 const database = await dumpDatabase(DATABASE);
 const redis = await dumpRedisHashes();
 const client = await db.getRedisConnection().getClient();
@@ -457,6 +463,11 @@ const ofImage = (name: string, extra: Record<string, unknown> = {}, headers: [st
 	const seed = imageSeeds.find((candidate) => candidate.name === name) as ImageSeed;
 	const body = { token: token({ dapp: seed.dapp, user: seed.user, commitmentId: commitments[name], timestamp: "1700000000001", ...tokenExtra }), dappSignature: signed(seed.dapp, "1700000000001"), ...extra };
 	return { method: "POST", path: imagePath, headers: [json, ...headers], body: JSON.stringify(body) };
+};
+const authenticatedPath = "/v1/prosopo/provider/client/authenticated/verify";
+const authenticated = (sessionId: string | undefined, extra: Record<string, unknown> = {}, headers: [string, string][] = [], tokenExtra: { providerUrl?: string; user?: string } = {}): Step => {
+	const body = { token: token({ dapp: FREE.address, ...(sessionId !== undefined && { commitmentId: sessionId }), ...tokenExtra }), dappSignature: signed(FREE.address), ...extra };
+	return { method: "POST", path: authenticatedPath, headers: [json, ...headers], body: JSON.stringify(body) };
 };
 const ofSeed = (name: string, extra: Record<string, unknown> = {}, headers: [string, string][] = [], tokenExtra: { providerUrl?: string; user?: string } = {}): Step => {
 	const seed = seeds.find((candidate) => candidate.name === name) as Seed;
@@ -572,6 +583,21 @@ const steps: Step[] = [
 	verify({ token: token({ dapp: FREE.address, commitmentId: "0x1" }), dappSignature: "0x00", email: "not an email" }, [], imagePath),
 	verify({ token: "0xdeadbeef", dappSignature: "0x00" }, [], imagePath),
 	verify({ token: token({ dapp: ALWAYS_PASS_SITE_KEY }), dappSignature: "0x00" }, [], imagePath),
+	authenticated("s-auth", { ip: "203.0.113.7" }),
+	authenticated("s-auth", { ip: "203.0.113.7" }),
+	authenticated("s-auth-2"),
+	authenticated("s-auth-2", { ip: "203.0.113.70" }),
+	authenticated("s-auth-2", { ip: "not-an-ip" }),
+	authenticated("s-auth-v6", { ip: "2001:db8::7" }),
+	authenticated("s-auth-family", { ip: "::cb00:7107" }),
+	authenticated("s-auth-client", { ip: "203.0.113.7", clientSessionId: "someone-else" }),
+	authenticated("s-plain", { ip: "203.0.113.7" }),
+	authenticated("s-missing", { ip: "203.0.113.7" }),
+	authenticated(undefined, { ip: "203.0.113.7" }),
+	authenticated("s-auth-client", { ip: "203.0.113.7" }, [["Accept-Language", "fr"]], { providerUrl: OTHER_URL }),
+	authenticated("s-auth-client", { ip: "203.0.113.7" }, [], { user: "not-an-address" }),
+	verify({ token: token({ dapp: ALWAYS_FAIL_SITE_KEY }), dappSignature: "0x00" }, [], authenticatedPath),
+	verify({ dappSignature: "0x00" }, [], authenticatedPath),
 	{ method: "GET", path, headers: [json] },
 	{ method: "POST", path, headers: [["Content-Type", "text/plain"]], body: "token" },
 ];
