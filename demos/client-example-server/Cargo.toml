@@ -1,0 +1,54 @@
+[package]
+name = "prosopo-client-example-server"
+version.workspace = true
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
+
+[lib]
+path = "rust/lib.rs"
+
+[[bin]]
+name = "client-example-server"
+path = "rust/main.rs"
+
+[[test]]
+name = "live"
+path = "rust/tests_live.rs"
+
+[dependencies]
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio"] }
+base64 = "0.22"
+bson = { version = "3.1", features = ["serde", "serde_json-1"] }
+hmac = "0.12"
+http = "1"
+hyper = { version = "1", features = ["http1", "server"] }
+hyper-util = { version = "0.1", features = ["tokio", "service"] }
+mongodb = { version = "3.9", default-features = false, features = ["compat-3-3-0", "bson-3", "rustls-tls", "dns-resolver"] }
+prosopo-api-route = { path = "../../packages/api-route" }
+prosopo-api-router = { path = "../../packages/api-express-router" }
+prosopo-common = { path = "../../packages/common" }
+prosopo-dotenv = { path = "../../packages/dotenv" }
+prosopo-keyring = { path = "../../packages/keyring" }
+prosopo-load-balancer = { path = "../../packages/load-balancer" }
+prosopo-logger = { path = "../../packages/logger" }
+prosopo-provider = { path = "../../packages/provider" }
+prosopo-server = { path = "../../packages/server" }
+prosopo-types = { path = "../../packages/types" }
+prosopo-types-database = { path = "../../packages/types-database" }
+prosopo-util = { path = "../../packages/util" }
+prosopo-util-crypto = { path = "../../packages/util-crypto" }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+rustls-pki-types = "1.15"
+serde_json = { version = "1.0", features = ["float_roundtrip", "preserve_order"] }
+sha2 = "0.10"
+tokio = { version = "1", features = ["macros", "net", "process", "rt-multi-thread", "time", "fs"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
+
+[dev-dependencies]
+prosopo-provider = { path = "../../packages/provider", features = ["testing"] }

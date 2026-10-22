@@ -2336,6 +2336,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "prosopo-client-example-server"
+version = "6.0.0"
+dependencies = [
+ "axum",
+ "base64 0.22.1",
+ "bson",
+ "hmac 0.12.1",
+ "http",
+ "hyper",
+ "hyper-util",
+ "mongodb",
+ "prosopo-api-route",
+ "prosopo-api-router",
+ "prosopo-common",
+ "prosopo-dotenv",
+ "prosopo-keyring",
+ "prosopo-load-balancer",
+ "prosopo-logger",
+ "prosopo-provider",
+ "prosopo-server",
+ "prosopo-types",
+ "prosopo-types-database",
+ "prosopo-util",
+ "prosopo-util-crypto",
+ "reqwest",
+ "rustls",
+ "rustls-pki-types",
+ "serde_json",
+ "sha2 0.10.9",
+ "tokio",
+ "tokio-rustls",
+]
+
+[[package]]
 name = "prosopo-common"
 version = "6.0.0"
 dependencies = [

@@ -29,6 +29,7 @@ members = [
 	"packages/api-express-router",
 	"packages/provider",
 	"packages/cli",
+	"demos/client-example-server",
 ]
 exclude = [
 	"packages/native-ja4",

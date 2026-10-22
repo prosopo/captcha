@@ -201,7 +201,7 @@ fn decode(bytes: &[u8], charset: &str) -> Result<String, Refusal> {
     Ok(text.strip_prefix('\u{feff}').map(str::to_string).unwrap_or(text))
 }
 
-fn inflate(raw: &[u8], encoding: &str) -> Result<Vec<u8>, Refusal> {
+fn inflate(raw: &[u8], encoding: &str, limit: usize) -> Result<Vec<u8>, Refusal> {
     let reader: Box<dyn Read + '_> = match encoding {
         "gzip" => Box::new(MultiGzDecoder::new(raw)),
         "deflate" => Box::new(ZlibDecoder::new(raw)),
@@ -209,10 +209,10 @@ fn inflate(raw: &[u8], encoding: &str) -> Result<Vec<u8>, Refusal> {
     };
     let mut inflated: Vec<u8> = Vec::new();
     reader
-        .take(JSON_LIMIT as u64 + 1)
+        .take(limit as u64 + 1)
         .read_to_end(&mut inflated)
         .map_err(|_| Refusal::Status(StatusCode::BAD_REQUEST))?;
-    if inflated.len() > JSON_LIMIT {
+    if inflated.len() > limit {
         return Err(Refusal::Status(StatusCode::PAYLOAD_TOO_LARGE));
     }
     Ok(inflated)
@@ -230,7 +230,7 @@ fn parse(text: &str) -> Result<Value, Refusal> {
     serde_json::from_str(text).map_err(|_| Refusal::Status(StatusCode::BAD_REQUEST))
 }
 
-async fn read(request: Request, content_type: &str) -> Result<(http::request::Parts, Value), Refusal> {
+async fn read(request: Request, content_type: &str, limit: usize) -> Result<(http::request::Parts, Value), Refusal> {
     let charset: String = charset(content_type).unwrap_or_else(|| "utf-8".to_string());
     if !charset.starts_with("utf-") {
         return Err(Refusal::Status(StatusCode::UNSUPPORTED_MEDIA_TYPE));
@@ -244,40 +244,49 @@ async fn read(request: Request, content_type: &str) -> Result<(http::request::Pa
         .flatten()
         .map(|length| prosopo_util::parse_int(&length, 10))
         .filter(|length| !length.is_nan());
-    if declared.is_some_and(|length| length > JSON_LIMIT as f64) {
+    if declared.is_some_and(|length| length > limit as f64) {
         return Err(Refusal::Status(StatusCode::PAYLOAD_TOO_LARGE));
     }
-    let raw_limit: usize = if encoding == "identity" { JSON_LIMIT + 1 } else { 2 * JSON_LIMIT + 64 };
+    let raw_limit: usize = if encoding == "identity" { limit + 1 } else { 2 * limit + 64 };
     let (parts, body) = request.into_parts();
     let raw: Bytes = to_bytes(body, raw_limit).await.map_err(|_| Refusal::Status(StatusCode::PAYLOAD_TOO_LARGE))?;
-    if encoding == "identity" && raw.len() > JSON_LIMIT {
+    if encoding == "identity" && raw.len() > limit {
         return Err(Refusal::Status(StatusCode::PAYLOAD_TOO_LARGE));
     }
     if declared.is_some_and(|length| length != raw.len() as f64) {
         return Err(Refusal::Status(StatusCode::BAD_REQUEST));
     }
-    let inflated: Vec<u8> = inflate(&raw, &encoding)?;
+    let inflated: Vec<u8> = inflate(&raw, &encoding, limit)?;
     let text: String = decode(&inflated, &charset)?;
     Ok((parts, parse(&text)?))
 }
 
 /// The middleware: `RequestBody` holds the parsed body, or `{}` when there was none to parse.
 pub async fn json_body(request: Request, next: Next) -> Response {
+    match json_body_within(request, JSON_LIMIT).await {
+        Ok(request) => next.run(request).await,
+        Err(page) => *page,
+    }
+}
+
+/// `express.json({ limit })`: the request with `RequestBody` holding the parsed body, or `{}`
+/// when there was none to parse; or the page express answers when the body cannot be read.
+pub async fn json_body_within(request: Request, limit: usize) -> Result<Request, Box<Response>> {
     let content_type: Option<String> = header(request.headers(), "content-type");
     let parse_it: bool = has_body(request.headers()) && content_type.as_deref().is_some_and(is_json);
     if !parse_it {
         let mut request: Request = request;
         request.extensions_mut().insert(RequestBody(json!({})));
-        return next.run(request).await;
+        return Ok(request);
     }
     let method: http::Method = request.method().clone();
-    match read(request, content_type.as_deref().unwrap_or_default()).await {
+    match read(request, content_type.as_deref().unwrap_or_default(), limit).await {
         Ok((parts, value)) => {
             let mut request: Request = Request::from_parts(parts, Body::empty());
             request.extensions_mut().insert(RequestBody(value));
-            next.run(request).await
+            Ok(request)
         }
-        Err(Refusal::Status(status)) => error_page(&method, status),
+        Err(Refusal::Status(status)) => Err(Box::new(error_page(&method, status))),
     }
 }
 
