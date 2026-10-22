@@ -325,15 +325,21 @@ async fn replay_with(port: u16, exchanges: &Value, before: impl Fn(&Value)) -> (
     (compared, failures)
 }
 
-/// A stored record with the values a run makes fresh replaced.
+/// A stored record with the values a run makes fresh replaced; a dotted name reaches into a
+/// subdocument.
 fn normalised(record: &Value, fresh: &[&str]) -> String {
-    let mut record: Map<String, Value> = record.as_object().expect("a record").clone();
+    let mut record: Value = record.clone();
     for field in fresh {
-        if record.contains_key(*field) {
-            record.insert(field.to_string(), json!("<fresh>"));
+        let mut parts: Vec<&str> = field.split('.').collect();
+        let last: &str = parts.pop().unwrap_or_default();
+        let parent: Option<&mut Value> = parts.into_iter().try_fold(&mut record, |value, part| value.get_mut(part));
+        if let Some(Value::Object(parent)) = parent {
+            if parent.contains_key(last) {
+                parent.insert(last.to_string(), json!("<fresh>"));
+            }
         }
     }
-    Value::Object(record).to_string()
+    record.to_string()
 }
 
 /// Records compared as a multiset, since stores written in the background may land in any order.
@@ -613,5 +619,83 @@ async fn access_rule_routes_answer_as_the_express_app_does() {
         failures.push(format!("rule hashes differ\n  ts:   {}\n  rust: {}", vectors["after"], after));
     }
     assert!(compared > 25, "only {compared} compared");
+    assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
+}
+
+/// A body with the ids and times a run makes fresh masked.
+fn masked(body: &[u8]) -> String {
+    let ids = regex::Regex::new(r"\b[0-9a-f]{24}\b").expect("a pattern");
+    let times = regex::Regex::new(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z").expect("a pattern");
+    let text: String = String::from_utf8_lossy(body).into_owned();
+    times.replace_all(&ids.replace_all(&text, "<id>"), "<time>").into_owned()
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[ignore = "needs MongoDB and Redis Stack"]
+async fn admin_routes_answer_as_the_express_app_does() {
+    let _live = LIVE.lock().await;
+    let vectors: Value = serde_json::from_str(include_str!("../../provider/rust/equivalence/admin-vectors.json")).expect("admin-vectors.json parses");
+    let database: &str = vectors["database"].as_str().expect("a database");
+    reset(database).await;
+    let ipapi: String = fake_ipapi(vectors["ipapi"].clone()).await;
+    let mut variables: HashMap<String, String> = serde_json::from_value(vectors["variables"].clone()).expect("variables");
+    variables.insert("PROSOPO_IPAPI_URL".to_string(), ipapi);
+    variables.insert("NODE_ENV".to_string(), "production".to_string());
+    let clock: Arc<PinnedClock> = Arc::new(PinnedClock(AtomicI64::new(vectors["exchanges"][0]["at"].as_i64().expect("a time"))));
+    let (router, _env) = live_app_at(&variables, clock.clone()).await;
+    restore_database(database, &vectors["seed"]).await;
+    restore_hashes(&vectors["redis"]).await;
+    let mut connection = redis().await;
+    for entry in vectors["strings"].as_array().expect("strings") {
+        let _: () = redis::cmd("SET").arg(entry["key"].as_str().expect("a key")).arg(entry["value"].as_str().expect("a value")).query_async(&mut connection).await.expect("writes");
+    }
+    let port: u16 = serve(router).await;
+    let decode = |text: &Value| base64::engine::general_purpose::STANDARD.decode(text.as_str().expect("base64")).expect("base64 decodes");
+    let mut failures: Vec<String> = Vec::new();
+    for step in vectors["exchanges"].as_array().expect("exchanges") {
+        clock.0.store(step["at"].as_i64().expect("a time"), Ordering::SeqCst);
+        let request: Vec<u8> = decode(&step["request"]);
+        let actual: Answer = answer(&exchange(port, &with_admin_jwt(&request)).await);
+        let expected: Answer = answer(&decode(&step["response"]));
+        let fresh: bool = masked(&expected.body) != String::from_utf8_lossy(&expected.body);
+        let headers = |answer: &Answer| -> Vec<(String, String)> {
+            without_request_id(answer)
+                .0
+                .into_iter()
+                .map(|(name, value)| if name == "etag" && fresh { (name, value.split('-').next().unwrap_or_default().to_string()) } else { (name, value) })
+                .collect()
+        };
+        if expected.status_line != actual.status_line || headers(&expected) != headers(&actual) || masked(&expected.body) != masked(&actual.body) {
+            failures.push(format!(
+                "{}\n      rust {:?} {}\n      ts   {:?} {}",
+                shown(&request).lines().next().unwrap_or_default(),
+                actual.status_line,
+                masked(&actual.body),
+                expected.status_line,
+                masked(&expected.body)
+            ));
+        }
+    }
+    let scraped: Vec<u8> = exchange(port, b"GET /metrics HTTP/1.1\r\nHost: h.example\r\nConnection: close\r\n\r\n").await;
+    let gauge: Vec<String> = String::from_utf8_lossy(&scraped).lines().filter(|line| line.starts_with("prosopo_maintenance_mode")).map(str::to_string).collect();
+    if json!(gauge) != vectors["metrics"] {
+        failures.push(format!("maintenance gauge differs: ts {} rust {}", vectors["metrics"], json!(gauge)));
+    }
+    tokio::time::sleep(Duration::from_millis(1000)).await;
+    failures.extend(compare_records(&vectors["after"]["clients"], &dump(database, "clients").await, &["_id", "settings._id"]));
+    failures.extend(compare_records(&vectors["after"]["decisionmachines"], &dump(database, "decisionmachines").await, &["_id", "createdAt", "updatedAt"]));
+    failures.extend(compare_records(&vectors["after"]["sessions"], &dump(database, "sessions").await, &["lastUpdatedTimestamp", "dnsEvent.receivedAt"]));
+    let mut strings: Vec<Value> = Vec::new();
+    for pattern in ["cache:session:*", "cnt:*"] {
+        let mut keys: Vec<String> = redis::cmd("KEYS").arg(pattern).query_async(&mut connection).await.expect("lists");
+        keys.sort();
+        for key in keys {
+            let value: String = redis::cmd("GET").arg(&key).query_async(&mut connection).await.expect("reads");
+            strings.push(json!({ "key": key, "value": value }));
+        }
+    }
+    if json!(strings) != vectors["afterStrings"] {
+        failures.push(format!("Redis strings differ\n  ts:   {}\n  rust: {}", vectors["afterStrings"], json!(strings)));
+    }
     assert!(failures.is_empty(), "{} differ:\n{}", failures.len(), failures.join("\n"));
 }

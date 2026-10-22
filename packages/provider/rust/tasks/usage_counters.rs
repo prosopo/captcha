@@ -62,6 +62,51 @@ impl UsageCounters {
         }
     }
 
+    /// `clearAll`: every counter of the site, or every counter; how many were deleted, or none
+    /// when Redis is not there or the clear failed part way.
+    pub async fn clear_all(&self, dapp_account: Option<&str>) -> Option<u64> {
+        if !self.connection.is_ready() {
+            return None;
+        }
+        let mut client = self.connection.get_client().await.ok()?;
+        let pattern: String = match dapp_account {
+            Some(dapp_account) => format!("cnt:{dapp_account}:*"),
+            None => "cnt:*".to_string(),
+        };
+        let mut deleted: u64 = 0;
+        let mut cursor: u64 = 0;
+        let mut batch: Vec<String> = Vec::new();
+        let outcome: Result<(), redis::RedisError> = async {
+            loop {
+                let (next, keys): (u64, Vec<String>) =
+                    redis::cmd("SCAN").arg(cursor).arg("MATCH").arg(&pattern).arg("COUNT").arg(200).query_async(&mut client).await?;
+                batch.extend(keys);
+                if batch.len() >= 500 {
+                    deleted += redis::cmd("DEL").arg(&batch).query_async::<u64>(&mut client).await?;
+                    batch.clear();
+                }
+                if next == 0 {
+                    break;
+                }
+                cursor = next;
+            }
+            if !batch.is_empty() {
+                deleted += redis::cmd("DEL").arg(&batch).query_async::<u64>(&mut client).await?;
+            }
+            Ok(())
+        }
+        .await;
+        match outcome {
+            Ok(()) => Some(deleted),
+            Err(error) => {
+                self.logger.warn(|| {
+                    LogRecord::msg("Counter clearAll failed").with_err(error.to_string()).with_data(json!({ "pattern": pattern, "deleted": deleted }))
+                });
+                None
+            }
+        }
+    }
+
     /// `incrManyAsync`: each increment in the background.
     pub fn incr_many_async(self: &Arc<Self>, dapp_account: &str, increments: Vec<CounterIncrement>) {
         for increment in increments {

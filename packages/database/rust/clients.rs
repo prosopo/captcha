@@ -247,6 +247,18 @@ impl ProviderDatabase {
             .and_then(decode))
     }
 
+    /// `getAllDecisionMachineArtifacts` as the stored documents, for a caller that maps them on
+    /// as the TS maps lean documents, values it does not know included.
+    pub async fn get_all_decision_machine_documents(&self) -> Result<Vec<Document>, ProsopoError> {
+        self.find(Operation::find(collections::DECISION_MACHINE, Document::new())).await
+    }
+
+    /// `getDecisionMachineArtifactById` as the stored document.
+    pub async fn get_decision_machine_document_by_id(&self, id: &str) -> Result<Option<Document>, ProsopoError> {
+        let filter: Document = self.by_artifact_id(id)?;
+        Ok(self.find(Operation::find(collections::DECISION_MACHINE, filter).with_limit(1)).await?.into_iter().next())
+    }
+
     async fn remove_artifacts(&self, filter: Document, many: bool) -> Result<u64, ProsopoError> {
         let reply: Reply = self
             .run(Operation::Delete {

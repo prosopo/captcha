@@ -51,4 +51,5 @@ mongodb = { version = "3.9", default-features = false, features = ["compat-3-3-0
 redis = { version = "1.7", default-features = false, features = ["aio", "tokio-comp"] }
 uuid = "1"
 base64 = "0.22"
+regex = "1"
 prosopo-provider = { path = "../provider", features = ["testing"] }

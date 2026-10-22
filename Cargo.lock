@@ -2327,6 +2327,7 @@ dependencies = [
  "prosopo-util",
  "prosopo-util-crypto",
  "redis",
+ "regex",
  "serde_json",
  "tokio",
  "uuid",

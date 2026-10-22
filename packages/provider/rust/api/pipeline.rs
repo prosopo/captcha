@@ -293,7 +293,7 @@ pub fn handle_errors(request: &Request, error: &ThrownError) -> Response {
 }
 
 /// `validateAddr`: a polkadot address in prefix 42 form, else a 400 under `key`.
-fn validate_address(address: &str, key: &str) -> Result<(), ProsopoError> {
+pub fn validate_address(address: &str, key: &str) -> Result<(), ProsopoError> {
     match prosopo_util_crypto::validate_address(Some(address), false, Some(42)) {
         Ok(true) => Ok(()),
         _ => Err(ProsopoError::new(
@@ -371,6 +371,7 @@ pub fn pipeline(
     request_logger: Logger,
     i18n: Arc<I18n>,
     auth: AdminGate,
+    admin: Arc<crate::api::admin::AdminState>,
     verify: Arc<crate::api::verify::VerifyState>,
     block: Arc<BlockState>,
     domain: Arc<DomainState>,
@@ -381,6 +382,7 @@ pub fn pipeline(
         .layer(from_fn_with_state(captcha, crate::api::captcha::captcha_routes))
         .layer(from_fn_with_state(domain, crate::api::domain::domain))
         .layer(from_fn_with_state(block, crate::api::block::block))
+        .layer(from_fn_with_state(admin, crate::api::admin::admin_routes))
         .layer(from_fn_with_state(auth.rules.clone(), crate::api::rules::rule_routes))
         .layer(from_fn_with_state(auth, admin_auth))
         .layer(from_fn_with_state(verify, crate::api::verify::verify_routes))

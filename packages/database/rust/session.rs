@@ -257,6 +257,14 @@ impl ProviderDatabase {
         self.find_session(doc! { "sessionId": session_id }, Some(session_projection())).await
     }
 
+    /// `getSessionRecordBySessionId` as the stored document, field order and types kept, for a
+    /// caller that hands it on rather than reads it.
+    pub async fn get_session_document_by_session_id(&self, session_id: &str) -> Result<Option<Document>, ProsopoError> {
+        let filter: Document = self.filter(&SESSION_RECORD, doc! { "sessionId": session_id });
+        let operation: Operation = Operation::find(collections::SESSION, filter).with_limit(1).with_projection(session_projection());
+        Ok(self.find(operation).await?.into_iter().next())
+    }
+
     /// `getSessionRecordByToken`.
     pub async fn get_session_record_by_token(&self, token: &str) -> Result<Option<Session>, ProsopoError> {
         self.find_session(doc! { "token": token }, None).await

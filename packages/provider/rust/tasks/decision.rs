@@ -67,6 +67,11 @@ impl DecisionGate {
         DecisionGate { db, ttl, cache: Mutex::new(HashMap::new()) }
     }
 
+    /// `invalidateAllDecisionMachineArtifactCaches`: the next decide reads the artifacts again.
+    pub fn invalidate(&self) {
+        self.cache.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clear();
+    }
+
     fn cached(&self, key: &CacheKey) -> Option<Option<DecisionMachineArtifact>> {
         let cache = self.cache.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         cache.get(key).filter(|(at, _)| at.elapsed() <= self.ttl).map(|(_, artifact)| artifact.clone())

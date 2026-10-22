@@ -29,6 +29,7 @@ use prosopo_provider::api::block::{BlockState, HardBlockVerdictCache};
 use prosopo_provider::api::captcha::CaptchaState;
 use prosopo_provider::api::domain::DomainState;
 use prosopo_load_balancer::ProviderDirectory;
+use prosopo_provider::api::admin::{AdminContext, AdminState};
 use prosopo_provider::api::pipeline::AdminGate;
 use prosopo_provider::api::rules::RuleRoutesState;
 use prosopo_provider::api::verify::VerifyState;
@@ -157,8 +158,7 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
     };
     let pipeline_state: Arc<PipelineState> = Arc::new(PipelineState { limiters, logger: logger.clone(), node_env, ip_info: ip_info.clone() });
     let maintenance: Arc<MaintenanceMode> = Arc::new(MaintenanceMode::from_env(env("MAINTENANCE_MODE").as_deref()));
-    let verify: Arc<VerifyState> = Arc::new(VerifyState {
-        services: db.clone().map(|db| {
+    let services: Option<Arc<VerifyServices>> = db.clone().map(|db| {
             Arc::new(VerifyServices {
                 decisions: Arc::new(DecisionGate::new(db.clone(), artifact_cache_ttl(env("DECISION_MACHINE_ARTIFACT_CACHE_TTL_MS").as_deref()))),
                 db,
@@ -169,7 +169,14 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
                 verdict_cache: verdict_cache.clone(),
                 dns_servers: config.dns_servers.clone(),
             })
-        }),
+        });
+    let admin: Arc<AdminState> = Arc::new(AdminState {
+        context: services.clone().map(|services| Arc::new(AdminContext { services, maintenance: maintenance.clone(), metrics: metrics.clone() })),
+        log_level,
+        router: std::sync::OnceLock::new(),
+    });
+    let verify: Arc<VerifyState> = Arc::new(VerifyState {
+        services,
         maintenance: maintenance.clone(),
         metrics: metrics.clone(),
         providers: Arc::new(ProviderDirectory::default()),
@@ -185,7 +192,7 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
     });
     let domain: Arc<DomainState> = Arc::new(DomainState { db: db.clone(), maintenance: maintenance.clone(), metrics: metrics.clone() });
     let captcha: Arc<CaptchaState> = Arc::new(CaptchaState { db: db.clone(), maintenance, metrics: metrics.clone(), dns_servers: config.dns_servers.clone() });
-    let rest: Router = pipeline(pipeline_state, request_logger(log_level), i18n, gate, verify, block, domain, captcha);
+    let rest: Router = pipeline(pipeline_state, request_logger(log_level), i18n, gate, admin, verify, block, domain, captcha);
     let state: PublicState = PublicState {
         host: config.host.clone(),
         version,

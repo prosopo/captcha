@@ -181,7 +181,7 @@ fn effective_traffic_filter(filter: Option<&TrafficFilterView>) -> TrafficFilter
 }
 
 impl VerifyServices {
-    fn write_queue(&self) -> Option<&RedisWriteQueue> {
+    pub fn write_queue(&self) -> Option<&RedisWriteQueue> {
         if let Some(queue) = self.write_queue.get() {
             return Some(queue);
         }
@@ -189,7 +189,7 @@ impl VerifyServices {
         Some(self.write_queue.get_or_init(|| RedisWriteQueue::new(connection, self.logger.clone(), self.db.shared_source())))
     }
 
-    fn usage_counters(&self) -> Option<&Arc<UsageCounters>> {
+    pub fn usage_counters(&self) -> Option<&Arc<UsageCounters>> {
         if let Some(counters) = self.usage_counters.get() {
             return Some(counters);
         }
@@ -197,7 +197,7 @@ impl VerifyServices {
         Some(self.usage_counters.get_or_init(|| Arc::new(UsageCounters::new(connection, self.logger.clone()))))
     }
 
-    fn ip_info(&self) -> &dyn IpInfoLookup {
+    pub fn ip_info(&self) -> &dyn IpInfoLookup {
         self.ip_info.as_deref().unwrap_or(&NoLookup)
     }
 

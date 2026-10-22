@@ -73,7 +73,7 @@ fn rule_route(method: &Method, path: &str) -> Option<&'static str> {
 }
 
 /// The request with its path replaced by the route's, the query kept.
-fn at_route(mut request: Request, route: &str) -> Request {
+pub fn at_route(mut request: Request, route: &str) -> Request {
     let path_and_query: String = match request.uri().query() {
         Some(query) => format!("{route}?{query}"),
         None => route.to_string(),
