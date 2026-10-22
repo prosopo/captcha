@@ -30,6 +30,7 @@ import {
 } from "node:crypto";
 import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import type { Server } from "node:http";
+import { createRequire, syncBuiltinESMExports } from "node:module";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -50,6 +51,7 @@ import {
 import { startProviderApi } from "../../src/api/startProviderApi.js";
 import { getCompositeIpAddress } from "../../src/compositeIpAddress.js";
 import decodeSimd from "../../src/tasks/detection/decodeSimd.js";
+import { resolveIconOrderRenderSettings } from "../../src/tasks/iconOrder/iconOrderRenderer.js";
 import {
 	type IpapiTable,
 	type Json,
@@ -83,6 +85,9 @@ const UNREGISTERED = getPair("//Ferdie");
 // Every stored site gets mongoose's default difficulty of 4; only a site set to 0 reaches the
 // handler's own default.
 const ZERO = getPair("//Zero");
+const ICON = getPair("//Icon");
+const ICON_FRICTIONLESS = getPair("//IconFrictionless");
+const ICON_TRAFFIC = getPair("//IconTraffic");
 const USER = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
 const RESTRICTED_USER = "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy";
 const RULED_USER = "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw";
@@ -259,6 +264,42 @@ const records = [
 		settings: { ...base, captchaType: "pow", powDifficulty: 0 },
 		tier: Tier.Free,
 	},
+	{
+		account: ICON.address,
+		settings: {
+			...base,
+			captchaType: "iconOrder",
+			captchaTypeFeatureFlags: { iconOrder: true },
+			iconOrderTolerance: 0.6,
+			iconOrder: { targetCount: 4 },
+		},
+		tier: Tier.Free,
+	},
+	{
+		account: ICON_FRICTIONLESS.address,
+		settings: {
+			...base,
+			captchaType: "frictionless",
+			captchaTypeFeatureFlags: { iconOrder: true },
+		},
+		tier: Tier.Professional,
+	},
+	{
+		account: ICON_TRAFFIC.address,
+		settings: {
+			...base,
+			captchaType: "iconOrder",
+			captchaTypeFeatureFlags: { iconOrder: true },
+			trafficFilter: {
+				vpn: {
+					action: "challenge",
+					iconOrderTolerance: 0.4,
+					iconOrderSettings: { targetCount: 2, decoyCount: 9 },
+				},
+			},
+		},
+		tier: Tier.Enterprise,
+	},
 ] as unknown as IUserDataSlim[];
 await db.updateClientRecords(records);
 
@@ -335,6 +376,18 @@ await queue.cacheSession("s-simd-cached", {
 	bundleId: "bundle-a",
 });
 await seedSession("s-no-origin");
+await seedSession("s-icon", {
+	captchaType: CaptchaType.iconOrder,
+	siteKey: ICON_FRICTIONLESS.address,
+	iconOrderTolerance: 0.9,
+	iconOrder: { decoyCount: 2 },
+} as Partial<Session>);
+await seedSession("s-icon-plain", {
+	captchaType: CaptchaType.iconOrder,
+	siteKey: ICON_FRICTIONLESS.address,
+	bundleId: "bundle-a",
+} as Partial<Session>);
+await seedSession("s-icon-on-pow-site", { captchaType: CaptchaType.iconOrder });
 
 const database = await dumpDatabase(DATABASE);
 const redis = await dumpRedisHashes();
@@ -348,6 +401,7 @@ const dumpCache = async (): Promise<Json[]> => {
 const cache = await dumpCache();
 
 const path = "/v1/prosopo/provider/client/captcha/pow";
+const iconPath = "/v1/prosopo/provider/client/captcha/icon-order";
 const json: [string, string] = ["Content-Type", "application/json"];
 const origin: [string, string] = ["Origin", "https://example.com"];
 const browser: [string, string] = [
@@ -493,8 +547,60 @@ const steps: (Step & { padded?: boolean })[] = [
 		body: JSON.stringify({ dapp: POW.address, user: USER }),
 	},
 	{ ...pow({ dapp: ALWAYS_PASS_SITE_KEY }), compare: false },
+	pow({ dapp: ICON.address }, undefined, iconPath),
+	pow(
+		{ dapp: ICON_FRICTIONLESS.address, sessionId: "s-icon" },
+		undefined,
+		iconPath,
+	),
+	pow(
+		{
+			dapp: ICON_FRICTIONLESS.address,
+			sessionId: "s-icon-plain",
+			simdReadings: READINGS,
+		},
+		undefined,
+		iconPath,
+	),
+	pow(
+		{ dapp: FRICTIONLESS.address, sessionId: "s-icon-on-pow-site" },
+		undefined,
+		iconPath,
+	),
+	pow({ dapp: POW.address }, undefined, iconPath),
+	{
+		...pow(
+			{ dapp: ICON_TRAFFIC.address },
+			[origin, browser, from("198.51.100.30")],
+			iconPath,
+		),
+		padded: false,
+	},
+	pow({ dapp: ICON_TRAFFIC.address }, undefined, iconPath),
+	pow({ dapp: UNREGISTERED.address }, undefined, iconPath),
+	{
+		...pow({ dapp: ALWAYS_PASS_SITE_KEY }, undefined, iconPath),
+		compare: false,
+	},
 ];
 
+// Each render's seed, in the order the renders draw them, for the Rust to replay: the renderers
+// draw them from `createSeed` (puzzle-assets/src/prng.ts) and nothing else here asks
+// `randomBytes` for that caller.
+// The builtin's own exports object: an `import` of it here may be a copy, which patching
+// would not reach.
+const builtinCrypto = createRequire(import.meta.url)("node:crypto") as {
+	randomBytes: (size: number, ...rest: unknown[]) => Buffer;
+};
+const seeds: string[] = [];
+const drawBytes = builtinCrypto.randomBytes;
+builtinCrypto.randomBytes = (size: number, ...rest: unknown[]) => {
+	const drawn = drawBytes(size, ...rest);
+	if (new Error().stack?.includes("createSeed"))
+		seeds.push(drawn.toString("hex"));
+	return drawn;
+};
+syncBuiltinESMExports();
 const server: Server = await startProviderApi(env, false, 0);
 const port = (server.address() as AddressInfo).port;
 const exchanges: Json[] = [];
@@ -530,6 +636,36 @@ const cacheAfter = await dumpCache();
 await client.quit();
 await new Promise<void>((resolve) => server.close(() => resolve()));
 await ipapi.close();
+// resolveIconOrderRenderSettings over the overrides a site, a traffic category and a session
+// can give, including the decoy cut, which only changes the background and so is checked here.
+const iconOrderOverrides: (Record<string, unknown> | undefined | null)[] = [
+	undefined,
+	{},
+	{ targetCount: 4 },
+	{ decoyCount: 9 },
+	{ targetCount: 2, decoyCount: 9 },
+	{ targetCount: 6, decoyCount: 6 },
+	{ targetCount: 12 },
+	{ strokeWidth: 0, iconOpacity: 0.5, haloOpacity: null, backgroundClutter: 0 },
+	{ targetCount: 0, decoyCount: 0 },
+];
+const iconOrderSettings: Json[] = [];
+for (const site of iconOrderOverrides) {
+	for (const other of iconOrderOverrides) {
+		iconOrderSettings.push({
+			site: site ?? null,
+			other: other ?? null,
+			resolved: resolveIconOrderRenderSettings(
+				site ?? undefined,
+				other ?? undefined,
+			) as unknown as Json,
+		});
+	}
+}
+writeFileSync(
+	fileURLToPath(new URL("./icon-order-settings-vectors.json", import.meta.url)),
+	`${JSON.stringify(iconOrderSettings, null, "\t")}\n`,
+);
 writeFileSync(
 	fileURLToPath(new URL("./challenge-vectors.json", import.meta.url)),
 	`${JSON.stringify({
@@ -548,7 +684,12 @@ writeFileSync(
 		cache,
 		exchanges,
 		metrics,
-		after: { powcaptchas: after.powcaptchas, sessions: after.sessions },
+		seeds,
+		after: {
+			powcaptchas: after.powcaptchas,
+			iconordercaptchas: after.iconordercaptchas,
+			sessions: after.sessions,
+		},
 		cacheAfter,
 	})}\n`,
 );

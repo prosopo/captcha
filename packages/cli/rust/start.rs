@@ -27,7 +27,7 @@ use prosopo_locale::{default_locales_directory, locales_directory, I18n};
 use prosopo_logger::{parse_log_level, LogLevel, LogRecord, Logger};
 use prosopo_provider::api::block::{BlockState, HardBlockVerdictCache};
 use prosopo_provider::api::captcha::CaptchaState;
-use prosopo_provider::api::challenge::ChallengeState;
+use prosopo_provider::api::challenge::{ChallengeState, FreshSeeds, SeedSource};
 use prosopo_provider::tasks::detection::{DetectorBundlePool, SimdDecoder, DEFAULT_DETECTOR_POOL_DIR};
 use prosopo_provider::api::domain::DomainState;
 use prosopo_load_balancer::ProviderDirectory;
@@ -126,12 +126,14 @@ pub struct AppParts {
     /// The detector decoders, which are not public source (MIGRATION.md §4.1); without them a
     /// challenge's SIMD readings are dropped.
     pub simd_decoder: Option<Arc<dyn SimdDecoder>>,
+    /// Where render seeds come from; fresh random bytes unless a test pins them.
+    pub seeds: Arc<dyn SeedSource>,
 }
 
 /// startProviderApi's app for the routes ported so far, and its healthz geo router, which the
 /// caller starts and stops.
 pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
-    let AppParts { config, pair, auth_account, logger, db, countries, ip_info, probe, env, i18n, version, simd_decoder } = parts;
+    let AppParts { config, pair, auth_account, logger, db, countries, ip_info, probe, env, i18n, version, simd_decoder, seeds } = parts;
     let geo: Arc<HealthzGeoRouter> =
         Arc::new(HealthzGeoRouter::with_probe(read_healthz_geo_config(env.as_ref(), Some(&logger)), countries, probe, Some(logger.clone())));
     let metrics: Option<Arc<ProviderMetrics>> =
@@ -210,6 +212,7 @@ pub fn provider_router(parts: AppParts) -> (Router, Arc<HealthzGeoRouter>) {
         pair: signing_pair,
         pool: Arc::new(std::sync::RwLock::new(Arc::new(pool))),
         decoder: simd_decoder,
+        seeds,
     });
     let captcha: Arc<CaptchaState> = Arc::new(CaptchaState { challenge, db: db.clone(), maintenance, metrics: metrics.clone(), dns_servers: config.dns_servers.clone() });
     let rest: Router = pipeline(pipeline_state, request_logger(log_level), i18n, gate, admin, verify, block, domain, captcha);
@@ -264,6 +267,7 @@ pub fn app_parts(env: Arc<ProviderEnvironment>) -> AppParts {
         i18n: locales(),
         version: version(),
         simd_decoder: None,
+        seeds: Arc::new(FreshSeeds),
     }
 }
 

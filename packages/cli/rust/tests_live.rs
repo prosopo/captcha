@@ -35,6 +35,7 @@ use prosopo_keyring::{get_pair, KeyringPair, Secret};
 use prosopo_util_crypto::jwt::JwtIssueOptions;
 use prosopo_provider::api::healthz_geo::HealthzProbe;
 use prosopo_provider::http_replay::{answer, exchange, shown, Answer};
+use prosopo_provider::api::challenge::SeedSource;
 use prosopo_provider::tasks::detection::{DecodeFuture, SimdDecoder};
 use prosopo_types::config::ProsopoConfig;
 use prosopo_util_crypto::U8aLike;
@@ -231,11 +232,17 @@ impl Source for PinnedClock {
 
 /// `live_app`, its database telling the time by `source`.
 async fn live_app_at(variables: &HashMap<String, String>, source: Arc<dyn Source>) -> (Router, Arc<ProviderEnvironment>) {
-    live_app_with(variables, source, None).await
+    live_app_with(variables, source, None, None).await
 }
 
-/// `live_app_at`, with the SIMD decoder the private build would supply.
-async fn live_app_with(variables: &HashMap<String, String>, source: Arc<dyn Source>, simd_decoder: Option<Arc<dyn SimdDecoder>>) -> (Router, Arc<ProviderEnvironment>) {
+/// `live_app_at`, with the SIMD decoder the private build would supply and the render seeds a
+/// run drew.
+async fn live_app_with(
+    variables: &HashMap<String, String>,
+    source: Arc<dyn Source>,
+    simd_decoder: Option<Arc<dyn SimdDecoder>>,
+    seeds: Option<Arc<dyn SeedSource>>,
+) -> (Router, Arc<ProviderEnvironment>) {
     let config: ProsopoConfig = get_config(&Environment::from_map(variables.clone()), None, None, None, None).expect("a config");
     let pair: KeyringPair = get_pair(Some(Secret::Text(MNEMONIC)), None, None, None).expect("the provider pair");
     let admin: KeyringPair = get_pair(None, Some(U8aLike::Str(ADMIN)), None, None).expect("the admin pair");
@@ -256,6 +263,7 @@ async fn live_app_with(variables: &HashMap<String, String>, source: Arc<dyn Sour
         probe,
         version: "dev".to_string(),
         simd_decoder,
+        seeds: seeds.unwrap_or_else(|| Arc::new(prosopo_provider::api::challenge::FreshSeeds)),
         ..app_parts(env.clone())
     };
     (provider_router(parts).0, env)
@@ -969,6 +977,59 @@ impl SimdDecoder for RecordedSimdDecoder {
     }
 }
 
+/// The render seeds the TS drew, handed out in the order it drew them.
+struct RecordedSeeds(Mutex<std::collections::VecDeque<Vec<u8>>>);
+
+impl SeedSource for RecordedSeeds {
+    fn seed(&self) -> Vec<u8> {
+        let hex: Vec<u8> = self.0.lock().expect("lock").pop_front().expect("the TS drew a seed for every render");
+        hex
+    }
+}
+
+/// A WebP data URI decoded: width, height and pixels.
+fn data_uri_pixels(uri: &str) -> Option<(u32, u32, Vec<u8>)> {
+    let encoded: &str = uri.strip_prefix("data:image/webp;base64,")?;
+    let bytes: Vec<u8> = base64::engine::general_purpose::STANDARD.decode(encoded).ok()?;
+    let image = webp::Decoder::new(&bytes).decode()?;
+    Some((image.width(), image.height(), image.to_vec()))
+}
+
+/// Peak signal-to-noise ratio of two equal-sized pixel buffers, in dB.
+fn psnr(a: &[u8], b: &[u8]) -> f64 {
+    let mse: f64 = a.iter().zip(b).map(|(x, y)| (f64::from(*x) - f64::from(*y)).powi(2)).sum::<f64>() / a.len() as f64;
+    if mse == 0.0 {
+        f64::INFINITY
+    } else {
+        10.0 * (255.0 * 255.0 / mse).log10()
+    }
+}
+
+/// The two answers' images compared as pixels, then masked. They are not byte-equal and not
+/// pixel-equal: the icons are rasterised by resvg rather than librsvg (the icon-order-assets
+/// deviation, antialiasing only) and the background is lossy WebP from two encoders. A wrong
+/// layout falls far below the 30 dB floor, and the stored targets, compared exactly, pin the
+/// geometry.
+fn compared_images(expected: &mut Map<String, Value>, actual: &mut Map<String, Value>, failures: &mut Vec<String>) {
+    for key in ["legend", "background"] {
+        let (Some(expected_uri), Some(actual_uri)) = (expected.get(key).and_then(Value::as_str), actual.get(key).and_then(Value::as_str)) else {
+            continue;
+        };
+        match (data_uri_pixels(expected_uri), data_uri_pixels(actual_uri)) {
+            (Some((ew, eh, ep)), Some((aw, ah, ap))) => {
+                if (ew, eh) != (aw, ah) || ep.len() != ap.len() {
+                    failures.push(format!("{key}: ts {ew}x{eh}, rust {aw}x{ah}"));
+                } else if psnr(&ep, &ap) < 30.0 {
+                    failures.push(format!("{key}: {:.1} dB apart", psnr(&ep, &ap)));
+                }
+            }
+            _ => failures.push(format!("{key} does not decode")),
+        }
+        expected.insert(key.to_string(), json!("<image>"));
+        actual.insert(key.to_string(), json!("<image>"));
+    }
+}
+
 /// `${timestamp}___${user}___${dapp}___<nonce>`: the nonce is `Math.random`, so it is masked.
 fn masked_challenge(challenge: &str) -> String {
     let parts: Vec<&str> = challenge.split("___").collect();
@@ -997,14 +1058,11 @@ fn checked_challenge(body: &mut Map<String, Value>, provider: &str, side: &str, 
     body.insert("challenge".to_string(), json!(masked_challenge(&challenge)));
 }
 
-const CHALLENGE_MEMBERS: [&str; 5] = ["status", "challenge", "difficulty", "timestamp", "signature"];
+const CHALLENGE_MEMBERS: [&str; 8] = ["status", "challenge", "difficulty", "timestamp", "signature", "background", "legend", "legendIconSize"];
 
 /// A challenge answer as compared: its members with nonce and signature masked, and, when it
 /// was padded, the number and total length of the pads instead of the random pads themselves.
-fn challenge_answer(body: &[u8], padded: bool, provider: &str, side: &str, failures: &mut Vec<String>) -> String {
-    let Ok(Value::Object(parsed)) = serde_json::from_slice::<Value>(body) else {
-        return String::from_utf8_lossy(body).into_owned();
-    };
+fn challenge_answer(parsed: Map<String, Value>, padded: bool, provider: &str, side: &str, failures: &mut Vec<String>) -> String {
     let mut members: Map<String, Value> = Map::new();
     let mut pads: Vec<usize> = Vec::new();
     for (key, value) in parsed {
@@ -1105,7 +1163,16 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
         })
         .collect();
     let clock: Arc<PinnedClock> = Arc::new(PinnedClock(AtomicI64::new(vectors["exchanges"][0]["at"].as_i64().expect("a time"))));
-    let (router, _env) = live_app_with(&variables, clock.clone(), Some(Arc::new(RecordedSimdDecoder(decoded)))).await;
+    let seeds: std::collections::VecDeque<Vec<u8>> = vectors["seeds"]
+        .as_array()
+        .expect("seeds")
+        .iter()
+        .map(|seed| {
+            let hex: &str = seed.as_str().expect("hex");
+            (0..hex.len()).step_by(2).map(|i| u8::from_str_radix(&hex[i..i + 2], 16).expect("hex")).collect()
+        })
+        .collect();
+    let (router, _env) = live_app_with(&variables, clock.clone(), Some(Arc::new(RecordedSimdDecoder(decoded))), Some(Arc::new(RecordedSeeds(Mutex::new(seeds))))).await;
     restore_database(database, &vectors["seed"]).await;
     restore_hashes(&vectors["redis"]).await;
     let mut connection = redis().await;
@@ -1132,7 +1199,8 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
         if step["compare"] == Value::Bool(false) {
             let body: Value = serde_json::from_slice(&actual.body).unwrap_or(Value::Null);
             let challenge: &str = body["challenge"].as_str().unwrap_or_default();
-            if !actual.status_line.starts_with("HTTP/1.1 200 ") || body["difficulty"] != json!(1) || !challenge.ends_with("___0") || body.pointer("/signature/provider/challenge") != Some(&json!("")) {
+            let shaped: bool = body["difficulty"] == json!(1) || body["legend"].as_str().and_then(data_uri_pixels).is_some();
+            if !actual.status_line.starts_with("HTTP/1.1 200 ") || !shaped || !challenge.ends_with("___0") || body.pointer("/signature/provider/challenge") != Some(&json!("")) {
                 failures.push(format!("{line}\n      rust dummy challenge {body}"));
             }
             continue;
@@ -1144,7 +1212,13 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
         let issued: bool = expected_body.starts_with(b"{\"status\":\"ok\"") || padded;
         let headers = |headers: Vec<(String, String)>| -> Vec<(String, String)> { headers.into_iter().filter(|(name, _)| !(issued && name == "etag")).collect() };
         let (expected_body, actual_body) = if issued {
-            (challenge_answer(&expected_body, padded, provider, "ts", &mut failures), challenge_answer(&actual_body, padded, provider, "rust", &mut failures))
+            match (serde_json::from_slice::<Value>(&expected_body), serde_json::from_slice::<Value>(&actual_body)) {
+                (Ok(Value::Object(mut expected_json)), Ok(Value::Object(mut actual_json))) => {
+                    compared_images(&mut expected_json, &mut actual_json, &mut failures);
+                    (challenge_answer(expected_json, padded, provider, "ts", &mut failures), challenge_answer(actual_json, padded, provider, "rust", &mut failures))
+                }
+                _ => (String::from_utf8_lossy(&expected_body).into_owned(), String::from_utf8_lossy(&actual_body).into_owned()),
+            }
         } else {
             (String::from_utf8_lossy(&expected_body).into_owned(), String::from_utf8_lossy(&actual_body).into_owned())
         };
@@ -1171,6 +1245,9 @@ async fn challenges_are_issued_as_the_express_app_issues_them() {
     let expected_challenges: Vec<Value> = vectors["after"]["powcaptchas"].as_array().expect("records").iter().map(|record| stored_challenge(record, provider, "ts", &mut failures)).collect();
     let actual_challenges: Vec<Value> = dump(database, "powcaptchas").await.iter().map(|record| stored_challenge(record, provider, "rust", &mut failures)).collect();
     failures.extend(compare_records(&Value::Array(expected_challenges), &actual_challenges, &fresh));
+    let expected_icons: Vec<Value> = vectors["after"]["iconordercaptchas"].as_array().expect("records").iter().map(|record| stored_challenge(record, provider, "ts", &mut failures)).collect();
+    let actual_icons: Vec<Value> = dump(database, "iconordercaptchas").await.iter().map(|record| stored_challenge(record, provider, "rust", &mut failures)).collect();
+    failures.extend(compare_records(&Value::Array(expected_icons), &actual_icons, &fresh));
     let expected_sessions: Vec<Value> = vectors["after"]["sessions"].as_array().expect("sessions").iter().map(session_without_block_ids).collect();
     let actual_sessions: Vec<Value> = dump(database, "sessions").await.iter().map(session_without_block_ids).collect();
     failures.extend(compare_records(&Value::Array(expected_sessions), &actual_sessions, &fresh));

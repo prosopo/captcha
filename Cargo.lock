@@ -2334,6 +2334,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "uuid",
+ "webp",
 ]
 
 [[package]]
@@ -2582,12 +2583,14 @@ dependencies = [
  "prosopo-captcha-severity",
  "prosopo-common",
  "prosopo-database",
+ "prosopo-icon-order-assets",
  "prosopo-ipinfo",
  "prosopo-ja4",
  "prosopo-keyring",
  "prosopo-load-balancer",
  "prosopo-locale",
  "prosopo-logger",
+ "prosopo-puzzle-assets",
  "prosopo-redis-client",
  "prosopo-types",
  "prosopo-types-database",

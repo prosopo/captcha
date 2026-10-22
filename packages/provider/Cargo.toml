@@ -45,6 +45,8 @@ prosopo-database = { path = "../database" }
 prosopo-ipinfo = { path = "../ipinfo" }
 prosopo-logger = { path = "../logger" }
 prosopo-redis-client = { path = "../redis-client" }
+prosopo-icon-order-assets = { path = "../icon-order-assets" }
+prosopo-puzzle-assets = { path = "../puzzle-assets" }
 prosopo-types = { path = "../types" }
 prosopo-types-database = { path = "../types-database" }
 prosopo-util = { path = "../util" }
