@@ -665,7 +665,7 @@ const DEFAULT_WINDOW_MS: u64 = 10 * 1_000;
 /// the TS would pass on to express-rate-limit, falls back to the default.
 fn int_variable(env: &dyn Fn(&str) -> Option<String>, name: &str) -> Option<u64> {
     let value: String = env(name).filter(|value: &String| !value.is_empty())?;
-    let parsed: f64 = prosopo_util::parse_int(&value, 10);
+    let parsed: f64 = prosopo_util::parse_int(&value, 0);
     (parsed.is_finite() && parsed >= 1.0).then_some(parsed as u64)
 }
 

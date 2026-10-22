@@ -155,6 +155,8 @@ pub fn to_fixed(x: f64, digits: usize) -> String {
     }
 }
 
+/// `Number.parseInt(s, radix)`. A radix of 0 is JS's missing radix: 16 after a `0x` prefix,
+/// otherwise 10.
 pub fn parse_int(s: &str, radix: u32) -> f64 {
     let s = s.trim_start_matches(is_whitespace);
     let (negative, s) = match s.as_bytes().first() {
@@ -162,11 +164,13 @@ pub fn parse_int(s: &str, radix: u32) -> f64 {
         Some(b'+') => (false, &s[1..]),
         _ => (false, s),
     };
-    let s = if radix == 16 && (s.starts_with("0x") || s.starts_with("0X")) {
-        &s[2..]
-    } else {
-        s
+    let hex_prefixed: bool = s.starts_with("0x") || s.starts_with("0X");
+    let radix: u32 = match radix {
+        0 if hex_prefixed => 16,
+        0 => 10,
+        radix => radix,
     };
+    let s = if radix == 16 && hex_prefixed { &s[2..] } else { s };
     let end = s
         .char_indices()
         .find(|(_, c)| !c.is_digit(radix))
@@ -265,5 +269,15 @@ mod tests {
         assert_eq!(parse_int(" -12abc", 10), -12.0);
         assert!(parse_int("zz", 16).is_nan());
         assert!(parse_int("", 10).is_nan());
+    }
+
+    #[test]
+    fn parses_ints_without_a_radix_like_parse_int() {
+        for (text, expected) in [("0x10", 16.0), ("0X1f", 31.0), ("-0x10", -16.0), (" +0xff", 255.0), ("010", 10.0), ("12px", 12.0), ("0b11", 0.0), ("1e3", 1.0), ("  42", 42.0)] {
+            assert_eq!(parse_int(text, 0), expected, "{text}");
+        }
+        for text in ["0x", "0xg", "abc", ""] {
+            assert!(parse_int(text, 0).is_nan(), "{text}");
+        }
     }
 }
