@@ -60,6 +60,9 @@
 			"path": "../load-balancer"
 		},
 		{
+			"path": "../fingerprint"
+		},
+		{
 			"path": "../locale"
 		},
 		{

@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/fingerprint",
-	"version": "2.7.65",
+	"version": "2.8.1",
 	"description": "Provider fingerprint",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -13,6 +13,11 @@
 			"types": "./dist/index.d.ts",
 			"import": "./dist/index.js",
 			"require": "./dist/cjs/index.cjs"
+		},
+		"./summary": {
+			"types": "./dist/summary.d.ts",
+			"import": "./dist/summary.js",
+			"require": "./dist/cjs/summary.cjs"
 		}
 	},
 	"scripts": {

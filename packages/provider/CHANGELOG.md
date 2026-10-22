@@ -1,5 +1,185 @@
 # @prosopo/provider
 
+## 5.20.2
+### Patch Changes
+
+- 749fe8a: Finish holding express at 4, and build `@prosopo/fingerprint` before the
+  provider that imports it.
+  
+  v3.8.37 pinned `@prosopo/locale` back to express 4 because the i18next
+  middleware has no express 5 typings, but left `provider`, `cli`,
+  `api-express-router` and the two demos on express 5. That split the workspace:
+  `provider` takes the middleware handler from `locale`, which is now typed for
+  express 4, and hands it to its own express 5 `app.use`, which does not accept
+  it. All six are on express 4 now.
+  
+  Separately, `packages/provider` gained a dependency on `@prosopo/fingerprint`
+  without a matching tsconfig project reference, so `tsc --build` did not build
+  it first. A full build hid this because something else built fingerprint
+  earlier; a partial build of just the packages a consumer needs did not, and
+  failed with "Cannot find module '@prosopo/fingerprint/summary'". The reference
+  is now declared.
+  
+  Lift the express pins together with the dependabot ignore once the middleware
+  ships express 5 typings.
+- Updated dependencies [749fe8a]
+  - @prosopo/api-express-router@3.3.2
+
+## 5.20.1
+### Patch Changes
+
+- Updated dependencies [49892fc]
+  - @prosopo/locale@3.12.1
+  - @prosopo/api-express-router@3.3.1
+  - @prosopo/types@5.17.1
+  - @prosopo/types-database@5.11.1
+  - @prosopo/api@4.7.5
+  - @prosopo/common@3.3.0
+  - @prosopo/database@4.2.9
+  - @prosopo/datasets@3.2.10
+  - @prosopo/env@3.6.79
+  - @prosopo/fingerprint@2.8.1
+  - @prosopo/ipinfo@0.4.23
+  - @prosopo/keyring@2.10.10
+  - @prosopo/load-balancer@2.11.14
+  - @prosopo/types-env@2.11.25
+  - @prosopo/user-access-policy@3.15.6
+
+## 5.20.0
+### Minor Changes
+
+- 2bcf2fe: Store a compact summary of each verified proof of fingerprint on the PoW record,
+  and add a device grouping value to the proof.
+  
+  Until now the proof was checked and discarded, so nothing it disclosed survived
+  the request. `summariseFingerprintProof` reduces a proof to its commitment root,
+  the values it disclosed, and a hash over the subset of those values listed in
+  `GROUP_KEYS`, and the provider writes that onto the captcha record.
+  
+  The proof now also discloses `deviceBucket`, a new component from
+  `@prosopo/fingerprintjs`. It is a 128 bit hash of the device traits that stay the
+  same between sessions: platform, screen resolution, colour depth, core count and
+  installed fonts. Disclosing it lets us tell that two visits came from the same
+  kind of device without being told the platform, the screen size or the font list,
+  which disclosing those values individually would have done. It is stored as
+  `bucketId`.
+  
+  `deviceBucket` is excluded from the visitorId. The account address is a pure
+  function of the visitorId, so folding a new component in would rotate every
+  account on record and orphan its sighting history. `forIdentity` drops it before
+  hashing, and there is a test asserting the visitorId does not move.
+  
+  The summary reaches the decision machines as well as the database. It is
+  computed once, at the provider boundary, and handed to both, so the machine and
+  the stored record cannot disagree about what a proof disclosed, and a 7.8KB
+  proof is parsed and Merkle-checked once per submission instead of twice. Rules
+  read it as `input.raw.fingerprintSummary`.
+  
+  There is also a new counter dimension, `deviceBucket`. One bucket on its own
+  says nothing, so counting is the whole point: a rule can now ask how much
+  traffic a kind of device has produced in a window, which no per-request field
+  can answer. The solve hook writes the counter whenever a proof disclosed a
+  bucket, and a rule naming the dimension on a request that disclosed none is
+  skipped rather than read as zero, so an `lte` clause does not match every
+  client that proved nothing.
+  
+  The proof itself is still not stored. Each disclosure carries a full Merkle path,
+  which is large and spent once verified: at current traffic, retaining proofs
+  would add roughly 70GB over the collection's one-month TTL against under 3GB for
+  the summary.
+  
+  A summary is only produced for a proof that passes structural verification, so
+  every stored value is one that hashes to the committed root. Bounding what those
+  values may be is separate and unchanged.
+  
+  `@prosopo/fingerprint` gains a `./summary` entry point so server-side callers can
+  import this without the browser-only fingerprinting sources. The new field is
+  declared on the Mongoose schema: `strict: true` silently drops undeclared paths,
+  so omitting it would mean writing the field and never storing it.
+
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- 22f0721: The image, PoW and puzzle solution-submit endpoints now answer 401 `UNAUTHORIZED` when the user or provider signature in the body is empty, not hex, the wrong length, or signed by the wrong key. Before, a signature that could not be decoded threw inside the signature check, and the handlers wrapped every error, including the 401 for a wrong signer, in a 500. Anyone could send these and inflate the provider's 500 rate. Any other client error raised while handling a submission now keeps its own 4xx status too; genuine server faults still return 500 and are still logged.
+- 860948c: Server-side verify (what siteverify calls) now does far less waiting. A PoW verify used to make about 19 database and ip-lookup calls one after another; it now makes about 6, and a rejected verify fewer. Changes:
+  
+  - The ip lookup that runs on every request is skipped on verify routes. Nothing on verify used it, and the caller there is the site's server, not the user.
+  - The session record is read once instead of twice, and the client record once instead of twice.
+  - DNS enrichment and the user's ip lookup run alongside the access-rule check instead of after it. The ip lookup is skipped once a check has already failed.
+  - The verify answers without waiting for its two bookkeeping writes, unless 500 are already waiting, so a slow database cannot pile them up in memory. The single-use claim is still made before anything else, so a token still verifies only once.
+  - Decision-machine artifacts are cached per process. They were cached per request, so every verify read them from Mongo. Saving or deleting a machine clears the cache.
+  - Client records are cached for 30 seconds and the cache is cleared by every client-record write in the process.
+  - Successful ip lookups are cached for 10 minutes, so an address is not looked up twice in one verify, or again at verify after the challenge looked it up.
+- Updated dependencies [5bc4eba]
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+- Updated dependencies [860948c]
+  - @prosopo/web-bot-auth@0.1.4
+  - @prosopo/api@4.7.4
+  - @prosopo/api-express-router@3.3.0
+  - @prosopo/api-route@2.6.65
+  - @prosopo/audio-assets@0.2.2
+  - @prosopo/captcha-severity@1.3.3
+  - @prosopo/common@3.3.0
+  - @prosopo/database@4.2.8
+  - @prosopo/datasets@3.2.9
+  - @prosopo/env@3.6.78
+  - @prosopo/fingerprint@2.8.0
+  - @prosopo/icon-order-assets@0.2.2
+  - @prosopo/ipinfo@0.4.22
+  - @prosopo/keyring@2.10.9
+  - @prosopo/load-balancer@2.11.13
+  - @prosopo/locale@3.12.0
+  - @prosopo/logger@2.1.5
+  - @prosopo/native-ja4@0.0.9
+  - @prosopo/native-merkle@0.0.8
+  - @prosopo/native-puzzle@0.1.3
+  - @prosopo/puzzle-assets@0.2.3
+  - @prosopo/redis-client@1.0.42
+  - @prosopo/types@5.17.0
+  - @prosopo/types-database@5.11.0
+  - @prosopo/types-env@2.11.24
+  - @prosopo/user-access-policy@3.15.5
+  - @prosopo/util@3.3.16
+  - @prosopo/util-crypto@13.6.1
+
 ## 5.19.4
 ### Patch Changes
 

@@ -297,6 +297,35 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		required: false,
 	},
 	providerSignature: { type: String, required: true },
+	// Mongoose runs `strict: true` and silently drops undeclared paths, so an
+	// omission here means the field is written and never stored.
+	fingerprintSummary: {
+		type: new Schema(
+			{
+				root: { type: String, required: true },
+				groupHash: { type: String, required: true },
+				bucketId: { type: String, required: false },
+				colorDepth: { type: Number, required: false },
+				hardwareConcurrency: { type: Number, required: false },
+				disclosed: {
+					type: new Schema(
+						{
+							timezone: { type: String, required: false },
+							languages: { type: String, required: false },
+							architecture: { type: Number, required: false },
+							cookiesEnabled: { type: Boolean, required: false },
+							sessionStorage: { type: Boolean, required: false },
+							localStorage: { type: Boolean, required: false },
+						},
+						{ _id: false },
+					),
+					required: false,
+				},
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
 	// Internal ML labelling applied by superadmins via the audit page.
 	label: { type: String, enum: Object.values(CaptchaLabel), required: false },
 	labelReason: { type: String, required: false },

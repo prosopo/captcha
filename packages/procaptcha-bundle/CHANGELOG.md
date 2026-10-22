@@ -1,5 +1,37 @@
 # @prosopo/procaptcha-bundle
 
+## 4.5.17
+### Patch Changes
+
+- Updated dependencies [49892fc]
+  - @prosopo/locale@3.12.1
+  - @prosopo/procaptcha-frictionless@2.21.7
+  - @prosopo/types@5.17.1
+  - @prosopo/procaptcha-common@2.21.7
+
+## 4.5.16
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- 67268f8: Name the procaptcha bundle's honeypot and shared fingerprint chunks from a seed instead of at random, so bundling the same source twice gives byte-identical output.
+  
+  The names come from the new `buildToken` helper in `@prosopo/config`: an HMAC of the package version (or `PROSOPO_BUILD_SEED`) keyed by the secret `PROSOPO_BUILD_TOKEN_KEY`. They still change every release, and without the key they cannot be worked out from this public source.
+- Updated dependencies [f31f0d5]
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/widget-skeleton@2.10.3
+  - @prosopo/dotenv@3.0.62
+  - @prosopo/locale@3.12.0
+  - @prosopo/procaptcha-common@2.21.6
+  - @prosopo/procaptcha-frictionless@2.21.6
+  - @prosopo/types@5.17.0
+  - @prosopo/util@3.3.16
+
 ## 4.5.15
 ### Patch Changes
 

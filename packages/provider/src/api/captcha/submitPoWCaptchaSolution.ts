@@ -16,6 +16,7 @@ import {
 	severityToPuzzleDifficulty,
 } from "@prosopo/captcha-severity";
 import { ProsopoError, isProsopoError, isSevereError } from "@prosopo/common";
+import { summariseFingerprintProof } from "@prosopo/fingerprint/summary";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
 	CaptchaType,
@@ -137,6 +138,11 @@ export default (env: ProviderEnvironment) =>
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.countryCode
 					: undefined;
+			// Summarised once here and handed to both the routing context and the
+			// record write, so the machine and the stored record cannot disagree
+			// about what a proof disclosed, and a 7.8KB proof is parsed and
+			// Merkle-checked once per submission rather than twice.
+			const fingerprintSummary = summariseFingerprintProof(fingerprintProof);
 			// Observability for the proof-of-fingerprint flow: the validation
 			// itself runs inside the closed-source routing machine (no logger), so
 			// log here at the provider boundary whether a proof arrived.
@@ -147,6 +153,7 @@ export default (env: ProviderEnvironment) =>
 				data: {
 					fingerprintProofPresent: fingerprintProof !== undefined,
 					fingerprintProofBytes: fingerprintProof?.length ?? 0,
+					fingerprintSummarised: fingerprintSummary !== undefined,
 					challenge,
 				},
 			}));
@@ -172,6 +179,7 @@ export default (env: ProviderEnvironment) =>
 					userAgent,
 					...(req.ja4 && { ja4: req.ja4 }),
 					...(fingerprintProof && { fingerprintProof }),
+					...(fingerprintSummary && { fingerprintSummary }),
 					...(req.tcpToChelloUs !== undefined && {
 						tcpToChelloUs: req.tcpToChelloUs,
 					}),
@@ -214,6 +222,7 @@ export default (env: ProviderEnvironment) =>
 				salt,
 				simdReadings,
 				clientMetaData,
+				fingerprintSummary,
 			);
 
 			// Surface the routing machine's post-PoW decision (escalation +

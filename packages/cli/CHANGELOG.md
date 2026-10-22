@@ -1,5 +1,99 @@
 # @prosopo/cli
 
+## 3.8.38
+### Patch Changes
+
+- 749fe8a: Finish holding express at 4, and build `@prosopo/fingerprint` before the
+  provider that imports it.
+  
+  v3.8.37 pinned `@prosopo/locale` back to express 4 because the i18next
+  middleware has no express 5 typings, but left `provider`, `cli`,
+  `api-express-router` and the two demos on express 5. That split the workspace:
+  `provider` takes the middleware handler from `locale`, which is now typed for
+  express 4, and hands it to its own express 5 `app.use`, which does not accept
+  it. All six are on express 4 now.
+  
+  Separately, `packages/provider` gained a dependency on `@prosopo/fingerprint`
+  without a matching tsconfig project reference, so `tsc --build` did not build
+  it first. A full build hid this because something else built fingerprint
+  earlier; a partial build of just the packages a consumer needs did not, and
+  failed with "Cannot find module '@prosopo/fingerprint/summary'". The reference
+  is now declared.
+  
+  Lift the express pins together with the dependabot ignore once the middleware
+  ships express 5 typings.
+- Updated dependencies [749fe8a]
+  - @prosopo/provider@5.20.2
+
+## 3.8.37
+### Patch Changes
+
+- Updated dependencies [49892fc]
+  - @prosopo/locale@3.12.1
+  - @prosopo/provider@5.20.1
+  - @prosopo/types@5.17.1
+  - @prosopo/api@4.7.5
+  - @prosopo/common@3.3.0
+  - @prosopo/env@3.6.79
+  - @prosopo/keyring@2.10.10
+
+## 3.8.36
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+- Updated dependencies [22f0721]
+- Updated dependencies [860948c]
+  - @prosopo/api@4.7.4
+  - @prosopo/common@3.3.0
+  - @prosopo/dotenv@3.0.62
+  - @prosopo/env@3.6.78
+  - @prosopo/keyring@2.10.9
+  - @prosopo/locale@3.12.0
+  - @prosopo/logger@2.1.5
+  - @prosopo/provider@5.20.0
+  - @prosopo/types@5.17.0
+  - @prosopo/util@3.3.16
+  - @prosopo/workspace@3.2.4
+
 ## 3.8.35
 ### Patch Changes
 
