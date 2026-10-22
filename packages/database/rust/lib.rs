@@ -19,6 +19,7 @@ pub mod captcha;
 pub mod challenges;
 pub mod client;
 pub mod clients;
+pub mod composite_ip;
 mod connection;
 pub mod image;
 pub mod mongo;

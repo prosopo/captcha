@@ -12,57 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! compositeIpAddress.ts: an address as the two 64-bit halves the records store, and whether
-//! two observations of a client come from the same network.
+//! compositeIpAddress.ts: whether two observations of a client come from the same network. The
+//! conversions to and from the stored halves live in the database crate, next to the record.
 
-use prosopo_database::records::{CompositeIpAddress, IpHalf};
+pub use prosopo_database::composite_ip::{composite_of, get_composite_ip_address, get_ip_address_from_composite};
+use prosopo_database::records::CompositeIpAddress;
 use prosopo_types::stored::IpAddressType;
-use prosopo_util::{get_ip_address, Address4, Address6, IpAddress};
-
-const V6_LOWER_MASK: u128 = (1 << 64) - 1;
 
 /// The part of a v4 address treated as the host rather than the network: a /24.
 const V4_HOST_BITS: u32 = 8;
-
-/// `getCompositeIpAddress`: an address the text cannot be read as is 0.0.0.0.
-pub fn get_composite_ip_address(ip: &str) -> CompositeIpAddress {
-    match get_ip_address(ip) {
-        Ok(address) => composite_of(&address),
-        Err(_) => CompositeIpAddress {
-            lower: IpHalf(0),
-            upper: None,
-            ip_type: IpAddressType::V4,
-        },
-    }
-}
-
-/// `getCompositeIpAddress` of an address already read.
-pub fn composite_of(address: &IpAddress) -> CompositeIpAddress {
-    let numeric: u128 = address.big_int();
-    if address.is_v4() {
-        return CompositeIpAddress {
-            lower: IpHalf(numeric as u64),
-            upper: None,
-            ip_type: IpAddressType::V4,
-        };
-    }
-    CompositeIpAddress {
-        lower: IpHalf((numeric & V6_LOWER_MASK) as u64),
-        upper: Some(IpHalf((numeric >> 64) as u64)),
-        ip_type: IpAddressType::V6,
-    }
-}
-
-/// `getIpAddressFromComposite`.
-pub fn get_ip_address_from_composite(composite: &CompositeIpAddress) -> Result<IpAddress, prosopo_util::UtilError> {
-    match composite.ip_type {
-        IpAddressType::V4 => Address4::from_big_int(u128::from(composite.lower.0)).map(IpAddress::V4),
-        IpAddressType::V6 => {
-            let upper: u128 = composite.upper.map_or(0, |upper| u128::from(upper.0));
-            Ok(IpAddress::V6(Address6::from_big_int((upper << 64) | u128::from(composite.lower.0))))
-        }
-    }
-}
 
 /// The value `getCompositeIpAddress` gives an address it could not read.
 fn is_unknown_ip(ip: &CompositeIpAddress) -> bool {
