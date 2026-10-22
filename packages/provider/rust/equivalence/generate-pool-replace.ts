@@ -75,15 +75,13 @@ const variables = liveVariables(DATABASE, ipapi.url, {
 });
 process.env.PROSOPO_DETECTOR_POOL_DIR = poolDir;
 const env = await liveEnvironment(variables);
-await env
-	.getDb()
-	.updateClientRecords([
-		{
-			account: SITE.address,
-			settings: { domains: ["example.com"], captchaType: "frictionless" },
-			tier: Tier.Professional,
-		},
-	] as unknown as IUserDataSlim[]);
+await env.getDb().updateClientRecords([
+	{
+		account: SITE.address,
+		settings: { domains: ["example.com"], captchaType: "frictionless" },
+		tier: Tier.Professional,
+	},
+] as unknown as IUserDataSlim[]);
 const pair = env.pair;
 if (!pair) throw new Error("no provider pair");
 
