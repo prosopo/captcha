@@ -1,5 +1,12 @@
 # @prosopo/provider-mock
 
+## 2.8.207
+### Patch Changes
+
+- Updated dependencies [5c9792b]
+- Updated dependencies [4201cf0]
+  - @prosopo/provider@5.21.1
+
 ## 2.8.206
 ### Patch Changes
 
