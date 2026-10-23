@@ -20,6 +20,7 @@ import {
 	type IPInfoResponse,
 	type IPInfoResult,
 	type IPuzzleSettings,
+	type ITrafficCategoryException,
 	type ITrafficCategoryPolicy,
 	type ITrafficFilter,
 	ResultReason,
@@ -164,12 +165,44 @@ export const isEffectivelyDatacenter = (
 	);
 };
 
+const maxAbuserScore = (ipInfo: IPInfoResult): number =>
+	Math.max(ipInfo.abuserScore ?? 0, ipInfo.companyAbuserScore ?? 0);
+
+const exceptionApplies = (
+	exception: ITrafficCategoryException,
+	ipInfo: IPInfoResult,
+): boolean => {
+	if (exception.countries) {
+		const countryCode = ipInfo.countryCode?.trim().toUpperCase();
+		if (!countryCode || !exception.countries.includes(countryCode)) {
+			return false;
+		}
+	}
+	return (
+		exception.minAbuserScore === undefined ||
+		maxAbuserScore(ipInfo) >= exception.minAbuserScore
+	);
+};
+
+const policyForIp = (
+	policy: ITrafficCategoryPolicy,
+	ipInfo: IPInfoResult,
+): ITrafficCategoryPolicy => {
+	const exception = policy.exceptions?.find((candidate) =>
+		exceptionApplies(candidate, ipInfo),
+	);
+	if (!exception) return policy;
+	const { countries, minAbuserScore, ...exceptionPolicy } = exception;
+	return exceptionPolicy;
+};
+
 const push = (
 	matches: TrafficFilterMatch[],
 	category: TrafficCategory,
 	policy: ITrafficCategoryPolicy | undefined,
+	ipInfo: IPInfoResult,
 ): void => {
-	if (policy) matches.push({ category, policy });
+	if (policy) matches.push({ category, policy: policyForIp(policy, ipInfo) });
 };
 
 // Highest-precedence flag set on the IP wins. Only that category's policy
@@ -193,22 +226,22 @@ const evaluateIpInfo = (
 	if (!ipInfo || !ipInfo.isValid) return matches;
 
 	if (ipInfo.isTor) {
-		push(matches, "tor", trafficFilter.tor);
+		push(matches, "tor", trafficFilter.tor, ipInfo);
 		return matches;
 	}
 
 	if (ipInfo.isVPN) {
-		push(matches, "vpn", trafficFilter.vpn);
+		push(matches, "vpn", trafficFilter.vpn, ipInfo);
 		return matches;
 	}
 
 	if (ipInfo.isProxy) {
-		push(matches, "proxy", trafficFilter.proxy);
+		push(matches, "proxy", trafficFilter.proxy, ipInfo);
 		return matches;
 	}
 
 	if (isEffectivelyDatacenter(ipInfo, trafficFilter)) {
-		push(matches, "datacenter", trafficFilter.datacenter);
+		push(matches, "datacenter", trafficFilter.datacenter, ipInfo);
 		return matches;
 	}
 
@@ -223,29 +256,25 @@ const evaluateIpInfo = (
 		const threshold =
 			trafficFilter.abuserScoreThreshold ??
 			trafficFilterAbuserScoreThresholdDefault;
-		const maxScore = Math.max(
-			ipInfo.abuserScore ?? 0,
-			ipInfo.companyAbuserScore ?? 0,
-		);
-		if (maxScore >= threshold) {
-			push(matches, "abuser", trafficFilter.abuser);
+		if (maxAbuserScore(ipInfo) >= threshold) {
+			push(matches, "abuser", trafficFilter.abuser, ipInfo);
 			return matches;
 		}
 	}
 
 	// Public DNS resolvers share IP space with search crawlers.
 	if (ipInfo.isCrawler && !isDnsExtra) {
-		push(matches, "crawler", trafficFilter.crawler);
+		push(matches, "crawler", trafficFilter.crawler, ipInfo);
 		return matches;
 	}
 
 	if (ipInfo.isSatellite) {
-		push(matches, "satellite", trafficFilter.satellite);
+		push(matches, "satellite", trafficFilter.satellite, ipInfo);
 		return matches;
 	}
 
 	if (ipInfo.isMobile) {
-		push(matches, "mobile", trafficFilter.mobile);
+		push(matches, "mobile", trafficFilter.mobile, ipInfo);
 		return matches;
 	}
 
@@ -264,6 +293,11 @@ const evaluateIpInfo = (
  * If the operator hasn't configured a policy for that top flag, the IP
  * passes cleanly — lower flags are not consulted. So an IP that's flagged
  * as both VPN and proxy is only acted on if the operator has a VPN policy.
+ *
+ * Exceptions: once a category owns the IP, the first of its `exceptions`
+ * whose conditions (country, minimum abuser score) the IP meets replaces the
+ * category's policy, so e.g. proxies can be challenged in GB and blocked
+ * elsewhere.
  *
  * Qualifying conditions: a flag that fails its qualifier does not "own"
  * the IP and evaluation falls through to the next flag. The abuser flag

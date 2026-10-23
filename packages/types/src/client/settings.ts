@@ -724,7 +724,7 @@ export const TrafficFilterActionSchema = z.nativeEnum(TrafficFilterAction);
 // fields override the site-wide `ClientSettingsSchema` defaults for that
 // request (same override semantics as `AccessPolicy`). Field validators
 // are reused verbatim from the site-wide settings so bounds stay in sync.
-export const TrafficCategoryPolicySchema = object({
+const TrafficCategoryActionSchema = object({
 	action: TrafficFilterActionSchema,
 	captchaType: SelectableCaptchaTypeSpec.optional(),
 	powDifficulty: powDifficultyFieldSchema.optional(),
@@ -741,6 +741,44 @@ export const TrafficCategoryPolicySchema = object({
 	audio: AudioSettingsSchema.optional(),
 	iconOrderTolerance: iconOrderToleranceFieldSchema.optional(),
 	iconOrder: IconOrderSettingsSchema.optional(),
+});
+
+const MAX_TRAFFIC_CATEGORY_EXCEPTIONS = 20;
+const MAX_TRAFFIC_CATEGORY_EXCEPTION_COUNTRIES = 250;
+
+// Replaces the category's action (and captcha overrides) for IPs meeting
+// every condition set on it. `countries` are ISO 3166-1 alpha-2 codes, so the
+// UK is "GB". `minAbuserScore` compares against the higher of the IP's own and
+// its company's abuser score, inclusive.
+export const TrafficCategoryExceptionSchema =
+	TrafficCategoryActionSchema.extend({
+		countries: array(
+			string()
+				.trim()
+				.length(2)
+				.transform((code) => code.toUpperCase()),
+		)
+			.min(1)
+			.max(MAX_TRAFFIC_CATEGORY_EXCEPTION_COUNTRIES)
+			.optional(),
+		minAbuserScore: number().min(0).max(1).optional(),
+	}).refine(
+		(exception) =>
+			exception.countries !== undefined ||
+			exception.minAbuserScore !== undefined,
+		{ message: "An exception needs countries or minAbuserScore" },
+	);
+
+export type ITrafficCategoryException = output<
+	typeof TrafficCategoryExceptionSchema
+>;
+
+// `exceptions` are checked in order and the first match wins; an IP matching
+// none gets the category's own action.
+export const TrafficCategoryPolicySchema = TrafficCategoryActionSchema.extend({
+	exceptions: array(TrafficCategoryExceptionSchema)
+		.max(MAX_TRAFFIC_CATEGORY_EXCEPTIONS)
+		.optional(),
 });
 
 export type ITrafficCategoryPolicy = output<typeof TrafficCategoryPolicySchema>;
