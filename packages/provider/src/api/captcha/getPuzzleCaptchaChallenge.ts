@@ -24,6 +24,11 @@ import {
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import {
+	MAX_DECOY_COVERAGE,
+	MAX_DECOY_COVERAGE_TOUCH,
+	capDecoyCountForCoverage,
+} from "../../tasks/puzzle/puzzleDifficulty.js";
+import {
 	renderPuzzleImages,
 	resolvePuzzlePieceScaleRange,
 	resolvePuzzleRenderSettings,
@@ -114,6 +119,22 @@ export const issuePuzzleChallenge = async ({
 	const effectivePieceSize = samplePuzzlePieceSize(
 		easeForTouch ? easePieceScaleForTouch(pieceScaleRange) : pieceScaleRange,
 	);
+	// `decoyCount` and `pieceScale` are drawn from the band independently, so a
+	// level can land on many large decoys and bury the background. Trim the
+	// count against the piece size actually drawn, which is the only point both
+	// are known. Touch takes the lower ceiling: `easePieceScaleForTouch` raises
+	// the scale floor without lowering the count, so easing for touch otherwise
+	// adds crowding rather than removing it.
+	const renderedPuzzleSettings = {
+		...effectivePuzzleSettings,
+		decoyCount: capDecoyCountForCoverage(
+			effectivePuzzleSettings.decoyCount,
+			effectivePieceSize,
+			DEFAULT_GEOMETRY.width,
+			DEFAULT_GEOMETRY.height,
+			easeForTouch ? MAX_DECOY_COVERAGE_TOUCH : MAX_DECOY_COVERAGE,
+		),
+	};
 	const challenge = await tasks.puzzleCaptchaManager.getPuzzleCaptchaChallenge(
 		user,
 		dapp,
@@ -150,7 +171,7 @@ export const issuePuzzleChallenge = async ({
 			targetX: challenge.targetX,
 			targetY: challenge.targetY,
 		},
-		effectivePuzzleSettings,
+		renderedPuzzleSettings,
 		effectivePieceSize,
 	);
 
@@ -171,11 +192,11 @@ export const issuePuzzleChallenge = async ({
 					notchSize: DEFAULT_GEOMETRY.notchSize,
 				},
 				settings: {
-					decoyCount: effectivePuzzleSettings.decoyCount,
-					decoyEdgeDarkness: effectivePuzzleSettings.decoyEdgeDarkness,
-					decoyBodyBrightness: effectivePuzzleSettings.decoyBodyBrightness,
-					holeDarken: effectivePuzzleSettings.holeDarken,
-					decoyHoleDarken: effectivePuzzleSettings.decoyHoleDarken,
+					decoyCount: renderedPuzzleSettings.decoyCount,
+					decoyEdgeDarkness: renderedPuzzleSettings.decoyEdgeDarkness,
+					decoyBodyBrightness: renderedPuzzleSettings.decoyBodyBrightness,
+					holeDarken: renderedPuzzleSettings.holeDarken,
+					decoyHoleDarken: renderedPuzzleSettings.decoyHoleDarken,
 				},
 				backgroundSeed: images.backgroundSeed,
 				renderSeed: images.renderSeed,
