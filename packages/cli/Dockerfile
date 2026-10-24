@@ -20,7 +20,7 @@ RUN apt-get update && \
 
 COPY ./packages/cli/dist/bundle/ ./
 
-COPY ./packages/locale/dist/locales/ ./locales/
+COPY ./packages/locale/dist/esm/locales/ ./locales/
 
 # Created here so it reaches the runtime image owned by the runtime user. A
 # named volume mounted on it starts with that ownership; one mounted on a path

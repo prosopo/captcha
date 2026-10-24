@@ -10,4 +10,4 @@ COPY ./dist /usr/src/app/dist
 
 EXPOSE 3000
 
-CMD [ "node", "./dist/index.js" ]
+CMD [ "node", "./dist/esm/index.js" ]
