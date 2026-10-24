@@ -209,6 +209,28 @@ jobs:
         with:
           submodules: false
 
+      - name: Record the rustc version for the cache key
+        id: rustc-version
+        run: |
+          release=$(rustc -vV | sed -n 's/^release: //p')
+          commit=$(rustc -vV | sed -n 's/^commit-hash: //p')
+          if [ -z "$release" ]; then
+            echo "::error::could not read release from rustc -vV"; exit 1
+          fi
+          echo "version=${release}${commit:+-${commit:0:9}}" >> "$GITHUB_OUTPUT"
+
+      # The compiler goes in prefix-key, not just key: rust-cache derives its
+      # restore-keys from the prefix, so a version left outside it can restore a
+      # target/ built by another rustc, which cargo rejects with E0514.
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          workspaces: ${{ matrix.crate }}
+          prefix-key: v0-rust-${{ steps.rustc-version.outputs.version }}
+
+      # Debug, not --release: the release profile's fat LTO and single codegen
+      # unit are for the shipped addon, and only slow a test build down. The
+      # dependencies are still optimised via profile.dev.package."*".
       - name: cargo test
         working-directory: ${{ matrix.crate }}
-        run: cargo test --release --locked
+        run: cargo test --locked

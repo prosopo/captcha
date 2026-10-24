@@ -20,10 +20,11 @@
 		"targets": ["x86_64-unknown-linux-gnu"]
 	},
 	"scripts": {
-		"build": "napi build --platform --release",
+		"build": "if [ \"$NODE_ENV\" = production ]; then pnpm run build:release; else pnpm run build:debug; fi",
 		"build:debug": "napi build --platform",
-		"bench": "node bench.mjs",
-		"test:cargo": "cargo test --release",
+		"build:release": "napi build --platform --release",
+		"bench": "pnpm run build:release && node bench.mjs",
+		"test:cargo": "cargo test",
 		"test": "node --test tests/dimensions.test.ts",
 		"clean": "cargo clean && rm -f *.node"
 	},
