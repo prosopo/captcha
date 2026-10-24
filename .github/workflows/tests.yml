@@ -197,11 +197,6 @@ jobs:
     name: cargo test (${{ matrix.crate }})
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    # Blank the workflow-level PAT: nothing here needs it, and a third-party
-    # action (rust-cache) runs in this job.
-    env:
-      GITHUB_TOKEN: ""
-      GH_TOKEN: ""
     strategy:
       fail-fast: false
       matrix:
@@ -214,9 +209,6 @@ jobs:
         with:
           submodules: false
 
-      # Debug, not --release: the release profile's fat LTO and single codegen
-      # unit are for the shipped addon, and only slow a test build down. The
-      # dependencies are still optimised via profile.dev.package."*".
       - name: cargo test
         working-directory: ${{ matrix.crate }}
-        run: cargo test --locked
+        run: cargo test --release --locked
