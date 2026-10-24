@@ -197,6 +197,11 @@ jobs:
     name: cargo test (${{ matrix.crate }})
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
+    # Blank the workflow-level PAT: nothing here needs it, and a third-party
+    # action (rust-cache) runs in this job.
+    env:
+      GITHUB_TOKEN: ""
+      GH_TOKEN: ""
     strategy:
       fail-fast: false
       matrix:
