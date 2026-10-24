@@ -211,4 +211,4 @@ jobs:
 
       - name: cargo test
         working-directory: ${{ matrix.crate }}
-        run: cargo test --release --locked
+        run: cargo test --locked
