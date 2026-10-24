@@ -41,7 +41,7 @@ From the root of this repository, run the following commands:
 ```bash
 cp demos/client-example-server/env.development demos/client-example-server/.env.development && \
 cp dev/scripts/env.development dev/scripts/.env.development && \
-docker compose --file ./docker/docker-compose.development.yml up -d && \
+docker compose --file ./docker/docker-compose.test.yml up -d && \
 pnpm install && \
 pnpm run build:all && \
 pnpm run setup:all && \
