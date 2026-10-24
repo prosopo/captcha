@@ -202,6 +202,7 @@ const TrafficCategoryActionSchema = new Schema(
 
 const TrafficCategoryExceptionSchema = TrafficCategoryActionSchema.clone().add({
 	countries: { type: [String], default: undefined, required: false },
+	inMarket: { type: Boolean, required: false },
 	minAbuserScore: { type: Number, min: 0, max: 1, required: false },
 });
 
@@ -378,6 +379,7 @@ export const UserSettingsSchema = new Schema({
 		mobile: { type: TrafficCategoryPolicySchema, required: false },
 		satellite: { type: TrafficCategoryPolicySchema, required: false },
 		crawler: { type: TrafficCategoryPolicySchema, required: false },
+		marketCountries: { type: [String], default: undefined, required: false },
 	},
 	storeMetadata: {
 		type: Boolean,
@@ -429,6 +431,7 @@ type AccountRecord = mongoose.Document & {
 	signupEmail: string;
 	tier: string;
 	tierRequestQuota: number;
+	marketCountries?: string[];
 	marketingPreferences: boolean;
 	users: User[];
 	sites: {
@@ -450,6 +453,7 @@ export const AccountSchema = new Schema<AccountRecord>({
 	signupEmail: String,
 	tier: String,
 	tierRequestQuota: Number,
+	marketCountries: { type: [String], default: undefined },
 	marketingPreferences: Boolean,
 	users: [
 		{

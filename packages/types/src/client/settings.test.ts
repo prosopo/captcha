@@ -58,6 +58,7 @@ import {
 	resolveImageRoundsBounds,
 	trafficFilterAbuserScoreThresholdDefault,
 	widgetFeatureFlagDefaults,
+	withMarketCountries,
 } from "./settings.js";
 
 type Settings = output<typeof ClientSettingsSchema>;
@@ -658,6 +659,20 @@ describe("TrafficFilterSchema", () => {
 		expect(filter.proxy?.exceptions?.[0]?.countries).toEqual(["GB"]);
 	});
 
+	it("accepts an exception conditioned only on the market", () => {
+		const filter = TrafficFilterSchema.parse({
+			proxy: {
+				action: TrafficFilterAction.Block,
+				exceptions: [
+					{ inMarket: false, action: TrafficFilterAction.Challenge },
+				],
+			},
+			marketCountries: ["gb"],
+		});
+		expect(filter.proxy?.exceptions?.[0]?.inMarket).toBe(false);
+		expect(filter.marketCountries).toEqual(["GB"]);
+	});
+
 	it.each([
 		[{ action: TrafficFilterAction.Challenge }],
 		[{ countries: [], action: TrafficFilterAction.Challenge }],
@@ -1031,5 +1046,33 @@ describe("widget feature flags", () => {
 				widgetFeatureFlags: { puzzleImageSwitch: true },
 			}).widgetFeatureFlags,
 		).toEqual({ puzzleImageSwitch: true });
+	});
+});
+
+describe("withMarketCountries", () => {
+	const settings = (trafficFilter?: object): Settings =>
+		ClientSettingsSchema.parse({ domains: ["example.com"], trafficFilter });
+
+	it("sets the account's market on the traffic filter", () => {
+		const result = withMarketCountries(settings({}), ["GB", "IE"]);
+		expect(result.trafficFilter?.marketCountries).toEqual(["GB", "IE"]);
+	});
+
+	it("replaces a stale copy saved on the site", () => {
+		const stale = settings({ marketCountries: ["FR"] });
+		expect(
+			withMarketCountries(stale, ["GB"]).trafficFilter?.marketCountries,
+		).toEqual(["GB"]);
+		expect(
+			withMarketCountries(stale, []).trafficFilter?.marketCountries,
+		).toBeUndefined();
+		expect(
+			withMarketCountries(stale, undefined).trafficFilter?.marketCountries,
+		).toBeUndefined();
+	});
+
+	it("leaves a site without a traffic filter alone", () => {
+		const bare = settings();
+		expect(withMarketCountries(bare, ["GB"])).toBe(bare);
 	});
 });

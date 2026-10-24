@@ -744,29 +744,35 @@ const TrafficCategoryActionSchema = object({
 });
 
 const MAX_TRAFFIC_CATEGORY_EXCEPTIONS = 20;
-const MAX_TRAFFIC_CATEGORY_EXCEPTION_COUNTRIES = 250;
+const MAX_COUNTRY_CODES = 250;
+
+// ISO 3166-1 alpha-2, so the UK is "GB".
+const countryCodesSchema = array(
+	string()
+		.trim()
+		.length(2)
+		.transform((code) => code.toUpperCase()),
+).max(MAX_COUNTRY_CODES);
 
 // Replaces the category's action (and captcha overrides) for IPs meeting
-// every condition set on it. `countries` are ISO 3166-1 alpha-2 codes, so the
-// UK is "GB". `minAbuserScore` compares against the higher of the IP's own and
-// its company's abuser score, inclusive.
+// every condition set on it. `inMarket` tests the IP's country against the
+// filter's `marketCountries`: true matches inside the market, false outside
+// it, and neither matches while the market is unknown. `minAbuserScore`
+// compares against the higher of the IP's own and its company's abuser
+// score, inclusive.
 export const TrafficCategoryExceptionSchema =
 	TrafficCategoryActionSchema.extend({
-		countries: array(
-			string()
-				.trim()
-				.length(2)
-				.transform((code) => code.toUpperCase()),
-		)
-			.min(1)
-			.max(MAX_TRAFFIC_CATEGORY_EXCEPTION_COUNTRIES)
-			.optional(),
+		countries: countryCodesSchema.min(1).optional(),
+		inMarket: boolean().optional(),
 		minAbuserScore: number().min(0).max(1).optional(),
 	}).refine(
 		(exception) =>
 			exception.countries !== undefined ||
+			exception.inMarket !== undefined ||
 			exception.minAbuserScore !== undefined,
-		{ message: "An exception needs countries or minAbuserScore" },
+		{
+			message: "An exception needs countries, inMarket or minAbuserScore",
+		},
 	);
 
 export type ITrafficCategoryException = output<
@@ -824,6 +830,10 @@ export const TrafficFilterSchema = object({
 	mobile: TrafficCategoryPolicySchema.optional(),
 	satellite: TrafficCategoryPolicySchema.optional(),
 	crawler: TrafficCategoryPolicySchema.optional(),
+	// The account's market, which the portal copies in when it pushes the site
+	// to providers. Account-owned: values saved from the site settings form
+	// are overwritten on the next push.
+	marketCountries: countryCodesSchema.optional(),
 });
 
 export type IEmailSpamRules = output<typeof EmailSpamRulesSchema>;
@@ -972,6 +982,24 @@ export const ClientSettingsSchema = object({
 });
 
 export type IUserSettings = output<typeof ClientSettingsSchema>;
+
+// The market is account-owned, so whatever the site's own copy says is
+// replaced on the way to a provider, and dropped once the account has none.
+export const withMarketCountries = (
+	settings: IUserSettings,
+	marketCountries: ReadonlyArray<string> | undefined,
+): IUserSettings => {
+	if (!settings.trafficFilter) return settings;
+	const { marketCountries: _siteCopy, ...trafficFilter } =
+		settings.trafficFilter;
+	return {
+		...settings,
+		trafficFilter:
+			marketCountries && marketCountries.length > 0
+				? { ...trafficFilter, marketCountries: [...marketCountries] }
+				: trafficFilter,
+	};
+};
 
 /**
  * The subset of a client record's settings that bounds how many image rounds

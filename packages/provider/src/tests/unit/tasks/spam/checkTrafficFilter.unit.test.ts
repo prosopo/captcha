@@ -1271,6 +1271,71 @@ describe("checkTrafficFilter", () => {
 			expect(result.isBlocked).toBe(true);
 		});
 
+		describe("inMarket", () => {
+			const marketFilter = (
+				inMarket: boolean,
+				marketCountries?: string[],
+			): ITrafficFilter => ({
+				proxy: {
+					action: TrafficFilterAction.Block,
+					exceptions: [{ inMarket, action: TrafficFilterAction.Challenge }],
+				},
+				marketCountries,
+				abuserScoreThreshold: 0.2,
+				skipExtrasOnValidDnsPath: true,
+			});
+
+			it.each([
+				[true, "GB", false],
+				[true, "FR", true],
+				[false, "FR", false],
+				[false, "GB", true],
+			])(
+				"with inMarket %s, a proxy from %s is blocked: %s",
+				(inMarket: boolean, countryCode: string, blocked: boolean) => {
+					const result = checkTrafficFilter(
+						baseInfo({ isProxy: true, countryCode }),
+						marketFilter(inMarket, ["GB", "IE"]),
+					);
+					expect(result.isBlocked).toBe(blocked);
+				},
+			);
+
+			it.each([[true], [false]])(
+				"never matches inMarket %s while the account has no market",
+				(inMarket: boolean) => {
+					for (const marketCountries of [undefined, []]) {
+						const result = checkTrafficFilter(
+							baseInfo({ isProxy: true, countryCode: "GB" }),
+							marketFilter(inMarket, marketCountries),
+						);
+						expect(result.isBlocked).toBe(true);
+					}
+				},
+			);
+
+			it("never matches an IP with no country", () => {
+				const result = checkTrafficFilter(
+					baseInfo({ isProxy: true }),
+					marketFilter(false, ["GB"]),
+				);
+				expect(result.isBlocked).toBe(true);
+			});
+
+			it("strips the condition from the policy it returns", () => {
+				const result = checkTrafficFilter(
+					baseInfo({ isProxy: true, countryCode: "IE" }),
+					marketFilter(true, ["GB", "IE"]),
+				);
+				expect(result.matches).toEqual([
+					{
+						category: "proxy",
+						policy: { action: TrafficFilterAction.Challenge },
+					},
+				]);
+			});
+		});
+
 		it("judges a DNS extra IP by its own country", () => {
 			const result = checkTrafficFilter(
 				baseInfo({ isProxy: true, countryCode: "GB" }),
