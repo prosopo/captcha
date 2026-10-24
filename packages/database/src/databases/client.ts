@@ -14,7 +14,12 @@
 
 import { ProsopoError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
-import type { IUserSettings, Tier, Timestamp } from "@prosopo/types";
+import {
+	type IUserSettings,
+	type Tier,
+	type Timestamp,
+	withMarketCountries,
+} from "@prosopo/types";
 import {
 	AccountSchema,
 	type IClientDatabase,
@@ -29,6 +34,7 @@ import { MongoDatabase } from "../base/index.js";
 // fields read below cannot drift apart.
 interface UpdatedClientAccount {
 	tier: Tier;
+	marketCountries?: string[];
 	sites?: {
 		siteKey?: string;
 		settings?: IUserSettings;
@@ -99,6 +105,7 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 				},
 				{
 					tier: 1,
+					marketCountries: 1,
 					"sites.siteKey": 1,
 					"sites.settings": 1,
 					"sites.updatedAt": 1,
@@ -119,7 +126,7 @@ export class ClientDatabase extends MongoDatabase implements IClientDatabase {
 				if (!isNew) continue;
 				newClientRecords.push({
 					account: site.siteKey,
-					settings: site.settings,
+					settings: withMarketCountries(site.settings, account.marketCountries),
 					tier: account.tier,
 				});
 			}

@@ -13,7 +13,11 @@
 // limitations under the License.
 
 import { LogLevel, getLogger } from "@prosopo/logger";
-import { ClientSettingsSchema, Tier } from "@prosopo/types";
+import {
+	ClientSettingsSchema,
+	Tier,
+	TrafficFilterAction,
+} from "@prosopo/types";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ClientDatabase } from "../../databases/client.js";
@@ -153,5 +157,48 @@ describe("ClientDatabase.getUpdatedClients", () => {
 		});
 
 		expect(await db.getUpdatedClients(100)).toHaveLength(0);
+	});
+
+	it("puts the account's market countries into the site's traffic filter", async () => {
+		const db = await seed();
+		// Inserted raw: this read-side schema declares only some settings
+		// fields, and the portal writes the full settings object.
+		await db.tables.accounts.collection.insertOne({
+			signupEmail: "market@example.com",
+			tier: Tier.Professional,
+			marketCountries: ["GB", "IE"],
+			users: [{ email: "market@example.com", status: "active" }],
+			sites: [
+				{
+					name: "m",
+					siteKey: "marketKey",
+					secretKey: "s",
+					settings: ClientSettingsSchema.parse({
+						domains: ["m.example.com"],
+						trafficFilter: {
+							proxy: {
+								action: TrafficFilterAction.Block,
+								exceptions: [
+									{ inMarket: true, action: TrafficFilterAction.Challenge },
+								],
+							},
+						},
+					}),
+					createdAt: 1,
+					updatedAt: 900,
+					active: true,
+				},
+			],
+		});
+
+		const [record] = await db.getUpdatedClients(100);
+
+		expect(record?.settings.trafficFilter?.marketCountries).toEqual([
+			"GB",
+			"IE",
+		]);
+		expect(record?.settings.trafficFilter?.proxy?.exceptions).toEqual([
+			{ inMarket: true, action: TrafficFilterAction.Challenge },
+		]);
 	});
 });
