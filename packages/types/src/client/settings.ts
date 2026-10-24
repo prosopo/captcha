@@ -779,8 +779,9 @@ export type ITrafficCategoryException = output<
 	typeof TrafficCategoryExceptionSchema
 >;
 
-// `exceptions` are checked in order and the first match wins; an IP matching
-// none gets the category's own action.
+// When several `exceptions` match an IP the harshest wins (a block beats any
+// challenge, then by captcha severity); an IP matching none gets the
+// category's own action.
 export const TrafficCategoryPolicySchema = TrafficCategoryActionSchema.extend({
 	exceptions: array(TrafficCategoryExceptionSchema)
 		.max(MAX_TRAFFIC_CATEGORY_EXCEPTIONS)

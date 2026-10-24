@@ -15,6 +15,7 @@
 import {
 	CaptchaType,
 	type IPInfoResult,
+	type ITrafficCategoryException,
 	type ITrafficFilter,
 	TrafficFilterAction,
 } from "@prosopo/types";
@@ -1253,22 +1254,99 @@ describe("checkTrafficFilter", () => {
 			},
 		);
 
-		it("applies the first matching exception", () => {
-			const result = checkTrafficFilter(
-				baseInfo({ isProxy: true, countryCode: "GB", abuserScore: 0.9 }),
-				{
-					proxy: {
-						...challenge,
-						exceptions: [
-							{ minAbuserScore: 0.8, action: TrafficFilterAction.Block },
-							{ countries: ["GB"], ...challenge },
-						],
-					},
-					abuserScoreThreshold: 0.2,
-					skipExtrasOnValidDnsPath: true,
+		describe("when several exceptions match", () => {
+			// Proxies blocked; in the market, challenged unless the abuser
+			// score is high. Both exceptions match a high-scoring GB proxy.
+			const highScoreBlock = {
+				inMarket: true,
+				minAbuserScore: 0.5,
+				action: TrafficFilterAction.Block,
+			};
+			const inMarketChallenge = {
+				inMarket: true,
+				action: TrafficFilterAction.Challenge,
+				captchaType: CaptchaType.puzzle,
+			};
+			const filterWith = (
+				exceptions: ITrafficCategoryException[],
+			): ITrafficFilter => ({
+				proxy: { action: TrafficFilterAction.Block, exceptions },
+				marketCountries: ["GB"],
+				abuserScoreThreshold: 0.2,
+				skipExtrasOnValidDnsPath: true,
+			});
+
+			it.each([
+				["block listed first", [highScoreBlock, inMarketChallenge]],
+				["challenge listed first", [inMarketChallenge, highScoreBlock]],
+			])(
+				"blocks with %s, so the order of the list does not matter",
+				(_order: string, exceptions: ITrafficCategoryException[]) => {
+					const highScore = baseInfo({
+						isProxy: true,
+						countryCode: "GB",
+						abuserScore: 0.7,
+					});
+					const lowScore = baseInfo({
+						isProxy: true,
+						countryCode: "GB",
+						abuserScore: 0.1,
+					});
+					expect(
+						checkTrafficFilter(highScore, filterWith(exceptions)).isBlocked,
+					).toBe(true);
+					expect(
+						checkTrafficFilter(lowScore, filterWith(exceptions)).matches,
+					).toEqual([
+						{
+							category: "proxy",
+							policy: {
+								action: TrafficFilterAction.Challenge,
+								captchaType: CaptchaType.puzzle,
+							},
+						},
+					]);
 				},
 			);
-			expect(result.isBlocked).toBe(true);
+
+			it("takes the stricter captcha between two matching challenges", () => {
+				const result = checkTrafficFilter(
+					baseInfo({ isProxy: true, countryCode: "GB" }),
+					filterWith([
+						{
+							countries: ["GB"],
+							action: TrafficFilterAction.Challenge,
+							captchaType: CaptchaType.pow,
+							powDifficulty: 10,
+						},
+						{
+							inMarket: true,
+							action: TrafficFilterAction.Challenge,
+							captchaType: CaptchaType.image,
+						},
+					]),
+				);
+				expect(result.matches[0]?.policy.captchaType).toBe(CaptchaType.image);
+			});
+
+			it("keeps the earlier of two equally harsh exceptions", () => {
+				const result = checkTrafficFilter(
+					baseInfo({ isProxy: true, countryCode: "GB" }),
+					filterWith([
+						{
+							countries: ["GB"],
+							action: TrafficFilterAction.Challenge,
+							padBytes: 1024,
+						},
+						{
+							inMarket: true,
+							action: TrafficFilterAction.Challenge,
+							padBytes: 2048,
+						},
+					]),
+				);
+				expect(result.matches[0]?.policy.padBytes).toBe(1024);
+			});
 		});
 
 		describe("inMarket", () => {

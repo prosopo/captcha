@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { randomUUID } from "node:crypto";
-import { captchaPolicySeverity } from "@prosopo/captcha-severity";
+import { policyHarshness } from "@prosopo/captcha-severity";
 import { ProsopoError, toPublicError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import {
@@ -309,12 +309,8 @@ const ruleSpecificity = (
 // fires (request-time vs verify-time), not how severe it is. The flag
 // rides on the chosen rule and downstream consumers (`findHardBlockPolicy`,
 // blockMiddleware's `enforceable` filter) read it after ranking.
-const ruleHarshness = (rule: AccessRule): number => {
-	if (rule.type === AccessPolicyType.Block) {
-		return Number.MAX_SAFE_INTEGER;
-	}
-	return captchaPolicySeverity(rule);
-};
+const ruleHarshness = (rule: AccessRule): number =>
+	policyHarshness(rule, rule.type === AccessPolicyType.Block);
 
 /**
  * Rank the candidate rules a single Redis query returned. A rule "applies" iff

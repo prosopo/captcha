@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { isStricterCaptchaType } from "@prosopo/captcha-severity";
+import {
+	harshestPolicy,
+	isStricterCaptchaType,
+} from "@prosopo/captcha-severity";
 import {
 	type CaptchaType,
 	type IAudioSettings,
@@ -197,8 +200,11 @@ const policyForIp = (
 	ipInfo: IPInfoResult,
 	marketCountries: ReadonlyArray<string>,
 ): ITrafficCategoryPolicy => {
-	const exception = policy.exceptions?.find((candidate) =>
-		exceptionApplies(candidate, ipInfo, marketCountries),
+	const exception = harshestPolicy(
+		(policy.exceptions ?? []).filter((candidate) =>
+			exceptionApplies(candidate, ipInfo, marketCountries),
+		),
+		(candidate) => candidate.action === TrafficFilterAction.Block,
 	);
 	if (!exception) return policy;
 	const { countries, inMarket, minAbuserScore, ...exceptionPolicy } = exception;
@@ -306,11 +312,12 @@ const evaluateIpInfo = (
  * passes cleanly — lower flags are not consulted. So an IP that's flagged
  * as both VPN and proxy is only acted on if the operator has a VPN policy.
  *
- * Exceptions: once a category owns the IP, the first of its `exceptions`
- * whose conditions (country, in or out of the account's market, minimum
- * abuser score) the IP meets replaces the
- * category's policy, so e.g. proxies can be challenged in GB and blocked
- * elsewhere.
+ * Exceptions: once a category owns the IP, its `exceptions` whose conditions
+ * (country, in or out of the account's market, minimum abuser score) the IP
+ * meets replace the category's policy. When several match, the harshest wins
+ * by the same ranking the access rules use, so their order does not matter:
+ * e.g. proxies blocked, but challenged in the market unless their abuser
+ * score is high.
  *
  * Qualifying conditions: a flag that fails its qualifier does not "own"
  * the IP and evaluation falls through to the next flag. The abuser flag
