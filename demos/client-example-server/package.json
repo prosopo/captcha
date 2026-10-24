@@ -56,11 +56,11 @@
 		"@prosopo/util": "workspace:*",
 		"@typegoose/auto-increment": "5.0.1",
 		"cors": "2.8.6",
-		"express": "4.22.2",
+		"express": "4.22.3",
 		"jsonwebtoken": "9.0.3",
 		"mongodb-memory-server": "10.3.0",
 		"mongoose": "9.11.2",
-		"zod": "3.23.8"
+		"zod": "3.25.76"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
