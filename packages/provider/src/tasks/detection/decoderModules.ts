@@ -22,9 +22,9 @@
  * construct.
  *
  * Resolution works unchanged in both layouts because each is relative to this
- * module: from `dist/tasks/detection/` in development (tsc copies the .js
- * decoders through, `allowJs`), and from beside `provider.cli.bundle.js` in
- * production, where `copyAssetsPlugin` puts them under these exact names.
+ * module: from `dist/esm/tasks/detection/` in development (the ESM build
+ * copies the .js decoders through), and from beside `provider.cli.bundle.js`
+ * in production, where `copyAssetsPlugin` puts them under these exact names.
  */
 export const DECODERS = ["payload", "simd", "behaviour"] as const;
 

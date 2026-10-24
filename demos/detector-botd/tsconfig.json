@@ -2,7 +2,8 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist",
+		"outDir": "./dist/tsc",
+		"tsBuildInfoFile": "./dist/tsc/tsconfig.tsbuildinfo",
 		"module": "NodeNext",
 		"lib": ["es2022", "dom"]
 	},

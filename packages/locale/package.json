@@ -6,34 +6,33 @@
 	"engines": {
 		"node": "^24"
 	},
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		},
 		"./locales/en/translation.json": {
-			"import": "./dist/locales/en/translation.json",
-			"require": "./dist/locales/en/translation.json"
+			"import": "./dist/esm/locales/en/translation.json",
+			"require": "./dist/cjs/locales/en/translation.json"
 		},
 		"./locales/en/widget.json": {
-			"import": "./dist/locales/en/widget.json",
-			"require": "./dist/locales/en/widget.json"
+			"import": "./dist/esm/locales/en/widget.json",
+			"require": "./dist/cjs/locales/en/widget.json"
 		},
 		"./locales/en/target.json": {
-			"import": "./dist/locales/en/target.json",
-			"require": "./dist/locales/en/target.json"
+			"import": "./dist/esm/locales/en/target.json",
+			"require": "./dist/cjs/locales/en/target.json"
 		}
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json",
+		"build:types": "tsc --project tsconfig.types.json && node -e \"require('node:fs').cpSync('src/locales', 'dist/types/locales', { recursive: true })\"",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts"
 	},
 	"author": "Prosopo Limited",
