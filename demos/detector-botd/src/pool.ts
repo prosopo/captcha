@@ -72,7 +72,7 @@ const main = (): void => {
 	);
 	if (!existsSync(detectorPath)) {
 		throw new Error(
-			"no built detector: run `pnpm --filter @prosopo/detector-botd run build` first",
+			"no built detector: run `pnpm --filter @prosopo/detector-botd run bundle` first",
 		);
 	}
 	const out = resolve(process.env.INIT_CWD ?? process.cwd(), values.out);

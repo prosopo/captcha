@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import i18n, { type BackendModule, type NewableModule } from "i18next";
@@ -22,24 +21,12 @@ import { createRequestLanguageDetector } from "./requestLanguageDetector.js";
 import { NAMESPACES } from "./translationKey.js";
 import { isServerSide } from "./util.js";
 
-// The catalogues sit in `locales/` beside the ESM build (and the source), but
-// the CJS build runs from `dist/cjs/`, one level below them. Browser bundles
-// stub `fs` with an empty module, so it is reached through the default import
-// and only on the server.
-export const localesDirectory = (
-	moduleDirectory: string,
-	exists: (file: string) => boolean = fs.existsSync,
-): string => {
-	const beside = path.join(moduleDirectory, "locales");
-	const above = path.join(moduleDirectory, "..", "locales");
-	const hasCatalogues = (directory: string): boolean =>
-		exists(path.join(directory, "en", `${NAMESPACES.server}.json`));
-	return !hasCatalogues(beside) && hasCatalogues(above) ? above : beside;
-};
-
+// Each build (dist/esm, dist/cjs) carries its own copy of the catalogues in
+// `locales/` beside it, as the source does.
 const cataloguePath = (): string =>
 	path.join(
-		localesDirectory(path.dirname(fileURLToPath(import.meta.url))),
+		path.dirname(fileURLToPath(import.meta.url)),
+		"locales",
 		"{{lng}}",
 		"{{ns}}.json",
 	);

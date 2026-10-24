@@ -112,7 +112,9 @@ export default defineConfig(async ({ command, mode }) => {
 					...frontendConfig.build?.rollupOptions?.output,
 					manualChunks(id: string) {
 						if (
-							id.includes("packages/procaptcha-common/dist/components/honeypot")
+							id.includes(
+								"packages/procaptcha-common/dist/esm/components/honeypot",
+							)
 						) {
 							return honeypotChunkName;
 						}
@@ -134,7 +136,7 @@ export default defineConfig(async ({ command, mode }) => {
 							return "web3Chunk";
 						}
 						// Split up the extension code into 2 chunks
-						if (id.includes("packages/account/dist/extension")) {
+						if (id.includes("packages/account/dist/esm/extension")) {
 							if (id.includes("ExtensionWeb3.js")) {
 								return "web3Chunk";
 							}

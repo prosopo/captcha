@@ -179,11 +179,6 @@ docker/dns-tenants.json
 # ANDROID_HOME and breaks the build everywhere else, CI included.
 local.properties
 
-# napi builds only the linux target (see `napi.targets` in each native package),
-# and that artefact is committed. A local build on any other platform is not.
-packages/native-*/index.*.node
-!packages/native-*/index.linux-x64-gnu.node
-
 # Private key material, by shape rather than by path. A path-specific ignore
 # only covers the directory someone thought of; this covers the shape. Nothing
 # matching these is tracked, so there are no exceptions. If a public certificate

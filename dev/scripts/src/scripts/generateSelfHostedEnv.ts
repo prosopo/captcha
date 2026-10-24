@@ -17,6 +17,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { generateMnemonic } from "@prosopo/keyring";
 import { LogLevel, getLogger, parseLogLevel } from "@prosopo/logger";
+import { getCliPkgDir } from "@prosopo/workspace";
 
 const logger = getLogger(
 	parseLogLevel(process.env.PROSOPO_LOG_LEVEL || LogLevel.enum.info),
@@ -176,10 +177,7 @@ MAXMIND_ASN_DB_PATH=./GeoLite2-ASN.mmdb
 // The provider image is tagged with the CLI package's version, which is the
 // release this checkout was cut from.
 const readProviderImageVersion = (): string => {
-	const manifestPath = path.resolve(
-		import.meta.dirname,
-		"../../../../packages/cli/package.json",
-	);
+	const manifestPath = path.join(getCliPkgDir(), "package.json");
 	const { version } = JSON.parse(fs.readFileSync(manifestPath, "utf8")) as {
 		version?: unknown;
 	};

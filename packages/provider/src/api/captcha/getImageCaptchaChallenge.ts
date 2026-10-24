@@ -175,20 +175,6 @@ export default (
 				);
 			}
 
-			if (
-				clientDatasetId !== undefined &&
-				!(await clientDatasetExists(tasks, clientDatasetId))
-			) {
-				return next(
-					new ProsopoError({
-						code: "INVALID_REQUEST",
-						errorSite: "PROV-94",
-						message: "Unknown dataset",
-						context: { siteKey: dapp },
-					}),
-				);
-			}
-
 			// Get country code for geoblocking from middleware-provided IP info
 			const countryCode =
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
@@ -264,6 +250,23 @@ export default (
 						code: errorCodeForReason(reason),
 						errorSite: "PROV-81",
 						context: { siteKey: dapp, user },
+					}),
+				);
+			}
+
+			// After the type check, so a key that is not served image is told
+			// INCORRECT_CAPTCHA_TYPE whatever datasetId it sends. The demo monitor
+			// relies on that to tell which type a key serves.
+			if (
+				clientDatasetId !== undefined &&
+				!(await clientDatasetExists(tasks, clientDatasetId))
+			) {
+				return next(
+					new ProsopoError({
+						code: "INVALID_REQUEST",
+						errorSite: "PROV-94",
+						message: "Unknown dataset",
+						context: { siteKey: dapp },
 					}),
 				);
 			}

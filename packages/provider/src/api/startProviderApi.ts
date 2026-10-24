@@ -16,7 +16,6 @@ import fs from "node:fs";
 import https from "node:https";
 import type { Server } from "node:net";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import {
 	apiExpressRouterFactory,
 	authMiddleware,
@@ -36,6 +35,7 @@ import {
 	getExpressApiRuleRateLimits,
 } from "@prosopo/user-access-policy/api";
 import type { JWT } from "@prosopo/util-crypto";
+import { packageDir } from "@prosopo/util/node";
 import cors, { type CorsOptions } from "cors";
 import express from "express";
 import type { Request } from "express";
@@ -71,15 +71,25 @@ import { prosopoVerifyRouter } from "./verify.js";
  */
 const DETECTOR_POOL_BODY_LIMIT = "128mb";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const certPath = path.resolve(__dirname, "../../../../certs");
-const keyPath = path.join(certPath, "server.key");
-const crtPath = path.join(certPath, "server.crt");
-
 /**
- * Check if TLS certificates are available
- * @returns True if both key and cert files exist
+ * The repo's TLS key and certificate, when both exist. A bundle copied alone
+ * into an image has no package above it, so it has none and serves HTTP.
  */
+const tlsFiles = (): { key: string; cert: string } | undefined => {
+	const pkg = packageDir(import.meta.url);
+	if (pkg === undefined) {
+		return undefined;
+	}
+	const certs = path.resolve(pkg, "../../certs");
+	const files = {
+		key: path.join(certs, "server.key"),
+		cert: path.join(certs, "server.crt"),
+	};
+	return fs.existsSync(files.key) && fs.existsSync(files.cert)
+		? files
+		: undefined;
+};
+
 /**
  * CORS for the client API. See the comment where it is applied.
  * `Prosopo-Lang` carries the widget's language list (see @prosopo/locale).
@@ -100,9 +110,7 @@ export const providerCorsOptions: CorsOptions = {
 	maxAge: 86400,
 };
 
-export const isTlsAvailable = (): boolean => {
-	return fs.existsSync(keyPath) && fs.existsSync(crtPath);
-};
+export const isTlsAvailable = (): boolean => tlsFiles() !== undefined;
 
 export const getServerVerifyPaths = (): ClientApiPaths[] =>
 	Object.values(ClientApiPaths).filter((path) => path.endsWith("/verify"));
@@ -454,13 +462,13 @@ export async function startProviderApi(
 	apiApp.use(prosopoRouter(env));
 
 	// Check if certificates exist and create HTTPS server if available
-	const useTls = fs.existsSync(keyPath) && fs.existsSync(crtPath);
+	const tls = tlsFiles();
 
-	if (useTls) {
+	if (tls) {
 		env.logger.info(() => ({ msg: "Starting Provider API with HTTPS" }));
 		const httpsOptions = {
-			key: fs.readFileSync(keyPath),
-			cert: fs.readFileSync(crtPath),
+			key: fs.readFileSync(tls.key),
+			cert: fs.readFileSync(tls.cert),
 		};
 		const httpsServer = https
 			.createServer(httpsOptions, apiApp)
