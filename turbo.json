@@ -32,9 +32,11 @@
 			"outputs": ["dist/types/**"]
 		},
 		// Workspace dependencies resolve through `exports.types`, which is
-		// dist/types, not the dist/tsc this task emits.
+		// dist/types, not the dist/tsc this task emits. That includes a package
+		// importing itself by name (@prosopo/types does, and so do provider
+		// and api-route tests), hence its own build:types as well.
 		"build:tsc": {
-			"dependsOn": ["^build:tsc", "^build:types"],
+			"dependsOn": ["^build:tsc", "^build:types", "build:types"],
 			"outputs": ["dist/tsc/**"]
 		},
 		"build:cjs": {
