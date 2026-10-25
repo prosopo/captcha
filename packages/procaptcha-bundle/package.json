@@ -45,7 +45,7 @@
 		"@prosopo/types": "workspace:*",
 		"@prosopo/util": "workspace:*",
 		"@prosopo/widget-skeleton": "workspace:*",
-		"dotenv": "18.0.7",
+		"dotenv": "18.0.8",
 		"jsdom": "25.0.0"
 	},
 	"repository": {
@@ -76,7 +76,7 @@
 		"typescript": "5.6.2",
 		"vite": "8.1.6",
 		"vitest": "5.0.4",
-		"webpack": "5.111.1",
+		"webpack": "5.112.0",
 		"webpack-cli": "7.2.3"
 	},
 	"overrides": {
