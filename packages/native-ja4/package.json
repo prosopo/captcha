@@ -11,19 +11,13 @@
 	},
 	"main": "index.js",
 	"types": "index.d.ts",
-	"files": [
-		"index.js",
-		"index.d.ts",
-		"dist/native/*.node"
-	],
+	"files": ["index.js", "index.d.ts", "dist/native/*.node"],
 	"engines": {
 		"node": "^24"
 	},
 	"napi": {
 		"binaryName": "prosopo-native-ja4",
-		"targets": [
-			"x86_64-unknown-linux-gnu"
-		]
+		"targets": ["x86_64-unknown-linux-gnu"]
 	},
 	"scripts": {
 		"build:native": "if [ \"$NODE_ENV\" = production ]; then pnpm run build:release; else pnpm run build:debug; fi",
