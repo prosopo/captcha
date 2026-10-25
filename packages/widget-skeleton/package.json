@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/widget-skeleton",
-	"version": "2.10.3",
+	"version": "2.10.4",
 	"description": "Non business logic utilities for web applications",
 	"type": "module",
 	"engines": {

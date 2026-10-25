@@ -1,5 +1,54 @@
 # @prosopo/provider
 
+## 5.22.0
+### Minor Changes
+
+- 915f30b: Traffic filter categories can now have exceptions. An exception matches visitors by country, by whether their country is inside or outside the account's market, by a minimum abuser score, or any mix of these. It then replaces the category's block or challenge action. When several exceptions match, the harshest wins: a block beats any challenge, and a stricter captcha beats a milder one. So the order of the list does not matter. For example, block proxies, but challenge those from the account's market unless their abuser score is at least 0.5.
+  
+  The account's market countries now travel to providers inside each site's traffic filter, including when a provider pulls updated sites from the portal database. An exception that depends on the market never matches while the account has no market set.
+  
+  `@prosopo/captcha-severity` gains `policyHarshness` and `harshestPolicy`. They rank a policy that may block, and the access rules now use them too, with the same ordering as before.
+
+### Patch Changes
+
+- 870fab7: An image challenge request now has its captcha type checked before its `datasetId`. Since 3.9.1 the unknown-dataset check (`INVALID_REQUEST:PROV-94`) ran first, so a site key that serves another captcha type got "Unknown dataset" instead of `INCORRECT_CAPTCHA_TYPE` whenever it sent an unknown `datasetId`. That broke the demo monitor, which uses exactly that answer to tell which captcha type a key serves, and it has reported every demo as broken since the 3.9.1 deploy.
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [f9c3fc3]
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/native-ja4@0.0.10
+  - @prosopo/native-merkle@0.0.9
+  - @prosopo/native-puzzle@0.1.5
+  - @prosopo/api-express-router@3.3.4
+  - @prosopo/api@4.7.7
+  - @prosopo/api-route@2.6.66
+  - @prosopo/audio-assets@0.2.3
+  - @prosopo/captcha-severity@1.4.0
+  - @prosopo/common@3.3.1
+  - @prosopo/database@4.3.0
+  - @prosopo/datasets@3.2.12
+  - @prosopo/env@3.6.81
+  - @prosopo/fingerprint@2.8.3
+  - @prosopo/icon-order-assets@0.2.3
+  - @prosopo/ipinfo@0.4.25
+  - @prosopo/keyring@2.10.12
+  - @prosopo/load-balancer@2.11.16
+  - @prosopo/locale@3.13.1
+  - @prosopo/logger@2.1.6
+  - @prosopo/puzzle-assets@0.2.4
+  - @prosopo/redis-client@1.0.43
+  - @prosopo/types-database@5.12.0
+  - @prosopo/types-env@2.11.27
+  - @prosopo/types@5.19.0
+  - @prosopo/user-access-policy@3.15.8
+  - @prosopo/util-crypto@13.6.2
+  - @prosopo/util@3.3.17
+  - @prosopo/web-bot-auth@0.1.5
+
 ## 5.21.1
 ### Patch Changes
 

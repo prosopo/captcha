@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/api",
-	"version": "4.7.6",
+	"version": "4.7.7",
 	"description": "Wrapper for the provider API",
 	"main": "dist/esm/index.js",
 	"types": "dist/types/index.d.ts",
