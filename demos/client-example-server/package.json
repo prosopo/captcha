@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/client-example-server",
-	"version": "2.7.184",
+	"version": "2.7.185",
 	"description": "Backend for client-example",
 	"main": "dist/esm/app.js",
 	"types": "dist/types/app.d.ts",

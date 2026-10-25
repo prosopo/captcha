@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/procaptcha-wrapper",
-	"version": "2.7.26",
+	"version": "2.7.27",
 	"type": "module",
 	"engines": {
 		"node": "^24"
