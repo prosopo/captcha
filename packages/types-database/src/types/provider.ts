@@ -16,7 +16,6 @@ import type { AllKeys } from "@prosopo/common";
 import { translationKeys } from "@prosopo/locale";
 import {
 	type AudioCaptchaStored,
-	type FingerprintSummaryStored,
 	type AudioEvent,
 	CaptchaLabel,
 	CaptchaType,
@@ -28,6 +27,7 @@ import {
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
+	type FingerprintSummaryStored,
 	type IconOrderCaptchaStored,
 	IpAddressType,
 	ModeEnum,
@@ -42,7 +42,7 @@ import {
 	Tier,
 	type UserCommitment,
 	type UserSolutionSchema,
- from "@prosopo/types";
+} from "@prosopo/types";
 import {
 	type Captcha,
 	type CaptchaResult,

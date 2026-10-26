@@ -2306,6 +2306,9 @@ importers:
       '@prosopo/common':
         specifier: workspace:*
         version: link:../common
+      '@prosopo/fingerprint':
+        specifier: workspace:*
+        version: link:../fingerprint
       '@prosopo/locale':
         specifier: workspace:*
         version: link:../locale

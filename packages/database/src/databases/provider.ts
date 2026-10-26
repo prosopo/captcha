@@ -22,7 +22,6 @@ import {
 } from "@prosopo/redis-client";
 import {
 	type AudioCaptchaStored,
-	type FingerprintSummaryStored,
 	type Captcha,
 	type CaptchaResult,
 	type CaptchaSolution,
@@ -38,6 +37,7 @@ import {
 	type DecisionMachineArtifact,
 	DecisionMachineKind,
 	type DecisionMachineScope,
+	type FingerprintSummaryStored,
 	type Hash,
 	type IPInfoResponse,
 	type IconOrderCaptchaStored,
@@ -61,7 +61,7 @@ import {
 	type UserCommitment,
 	UserCommitmentSchema,
 	isBlockingCaptchaResult,
- from "@prosopo/types";
+} from "@prosopo/types";
 import type { SessionRecord, StoredSession } from "@prosopo/types-database";
 import {
 	type AudioCaptchaRecord,

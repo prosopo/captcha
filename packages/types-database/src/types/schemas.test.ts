@@ -43,6 +43,7 @@ import {
 	ScheduledTaskRecordSchema,
 	ScheduledTaskSchema,
 	SessionRecordSchema,
+	UserCommitmentRecordSchema,
 	UserSolutionRecordSchema,
 } from "./provider.js";
 import { SpamEmailDomainRecordSchema } from "./spamEmailDomain.js";
@@ -870,5 +871,35 @@ describe("the puzzle render record", () => {
 	it("keeps puzzleLevel on the session schema and its projection", () => {
 		const session = validate(SessionRecordSchema, { puzzleLevel: 3 });
 		expect(session.puzzleLevel).toBe(3);
+	});
+});
+
+// The summary used to be declared on the PoW schema alone, so a session, an
+// image commitment or a puzzle that carried one had it dropped on write. Every
+// schema a summary is copied onto, and its central-store twin, has to keep it.
+describe("fingerprint summary on every record that carries one", () => {
+	const summary = {
+		root: "0xroot",
+		groupHash: "0xgroup",
+		bucketId: "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f",
+		colorDepth: 24,
+		hardwareConcurrency: 8,
+		disclosed: { timezone: "Europe/London", cookiesEnabled: true },
+	};
+	const schemas: [string, Schema][] = [
+		["SessionRecordSchema", SessionRecordSchema],
+		["StoredSessionRecordSchema", StoredSessionRecordSchema],
+		["UserCommitmentRecordSchema", UserCommitmentRecordSchema],
+		["StoredUserCommitmentRecordSchema", StoredUserCommitmentRecordSchema],
+		["PuzzleCaptchaRecordSchema", PuzzleCaptchaRecordSchema],
+		["StoredPuzzleCaptchaRecordSchema", StoredPuzzleCaptchaRecordSchema],
+		["PoWCaptchaRecordSchema", PoWCaptchaRecordSchema],
+		["StoredPoWCaptchaRecordSchema", StoredPoWCaptchaRecordSchema],
+	];
+
+	it.each(schemas)("%s keeps it", (_name, schema) => {
+		const doc = validate(schema, { fingerprintSummary: summary });
+
+		expect(doc.toObject().fingerprintSummary).toStrictEqual(summary);
 	});
 });
