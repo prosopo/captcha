@@ -101,54 +101,44 @@ export const hashMeetsDifficulty = (
 	difficulty: number,
 ): boolean => hashMeetsMask(hash, difficultyMask(difficulty));
 
-// Reused across every nonce attempt — allocating a fresh TextEncoder in the
-// tight solve loop is pure overhead.
-const textEncoder = new TextEncoder();
-
-// Per-nonce check for solvePoWOffset: hash `nonce + data` and test it against
-// the precomputed difficulty mask. solvePoW rewrites a single buffer instead,
-// which it can only do because it walks the nonces in order.
-const nonceMeetsMask = (
-	nonce: number,
-	data: string,
-	mask: DifficultyMask,
-): boolean => hashMeetsMask(sha256(textEncoder.encode(nonce + data)), mask);
-
-export const solvePoW = async (
-	data: string,
-	difficulty: number,
-): Promise<number> => {
-	const mask = difficultyMask(difficulty);
-
-	// Encode the constant suffix once and reuse a single message buffer, only
-	// rewriting the nonce's decimal digits each iteration. The digit count only
-	// grows at powers of ten, where the buffer is reallocated.
-	const encoder = new TextEncoder();
-	const dataBytes = encoder.encode(data);
-
-	let nonce = 0;
+// Builds the `nonce + data` message for each attempt. The constant suffix is
+// encoded once into a single reused buffer and only the nonce's decimal digits
+// are rewritten per call. Nonces must not decrease between calls: the buffer
+// only grows, at powers of ten, when the nonce gains a digit.
+const nonceMessageWriter = (data: string): ((nonce: number) => Uint8Array) => {
+	const dataBytes = new TextEncoder().encode(data);
 	let digits = 1;
+	let rollover = 10;
 	let message = new Uint8Array(digits + dataBytes.length);
 	message.set(dataBytes, digits);
-	let rollover = 10;
 
-	while (true) {
-		if (nonce === rollover) {
-			// the decimal representation gained a digit; grow the buffer
+	return (nonce: number): Uint8Array => {
+		while (nonce >= rollover) {
 			digits += 1;
 			rollover *= 10;
 			message = new Uint8Array(digits + dataBytes.length);
 			message.set(dataBytes, digits);
 		}
 
-		// write the nonce's decimal digits into the leading `digits` bytes
 		let n = nonce;
 		for (let i = digits - 1; i >= 0; i--) {
 			message[i] = 48 + (n % 10); // 48 === '0'.charCodeAt(0)
 			n = Math.floor(n / 10);
 		}
+		return message;
+	};
+};
 
-		if (hashMeetsMask(sha256(message), mask)) {
+export const solvePoW = async (
+	data: string,
+	difficulty: number,
+): Promise<number> => {
+	const mask = difficultyMask(difficulty);
+	const messageFor = nonceMessageWriter(data);
+	let nonce = 0;
+
+	while (true) {
+		if (hashMeetsMask(sha256(messageFor(nonce)), mask)) {
 			return nonce;
 		}
 
@@ -184,8 +174,10 @@ export const solvePoWOffset = (
 	start: number,
 	step: number,
 ): number => {
-	if (!Number.isInteger(start)) {
-		throw new Error(`solvePoWOffset: start must be an integer, got ${start}`);
+	if (!Number.isInteger(start) || start < 0) {
+		throw new Error(
+			`solvePoWOffset: start must be a non-negative integer, got ${start}`,
+		);
 	}
 	if (!Number.isInteger(step) || step < 1) {
 		throw new Error(
@@ -199,10 +191,11 @@ export const solvePoWOffset = (
 	}
 
 	const mask = difficultyMask(difficulty);
+	const messageFor = nonceMessageWriter(data);
 	let nonce = start;
 
 	while (true) {
-		if (nonceMeetsMask(nonce, data, mask)) {
+		if (hashMeetsMask(sha256(messageFor(nonce)), mask)) {
 			return nonce;
 		}
 

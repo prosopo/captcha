@@ -23,7 +23,7 @@ import PowWorkerConstructor from "./powWorker.js?worker&inline";
 // challenge in parallel. Each worker explores a disjoint slice of the nonce
 // space (see solvePoWOffset / divide-and-conquer below).
 const POW_WORKER_COUNT = Number.parseInt(
-	process.env.PROSOPO_POW_WORKERS || "8",
+	process.env.PROSOPO_POW_WORKERS || "4",
 	10,
 );
 
@@ -35,9 +35,9 @@ const MAX_POW_WORKERS = 16;
  * Number of workers to use, guaranteed to be a sane positive integer.
  *
  * The configured count is clamped to a hard maximum and, where the browser
- * exposes it, to `navigator.hardwareConcurrency` — spawning more workers than
- * CPU cores does not speed up a CPU-bound PoW search and only risks freezing the
- * page.
+ * exposes it, to one fewer than `navigator.hardwareConcurrency`. Occupying every
+ * core starves the main thread and drops frames, and spawning more workers than
+ * cores does not speed up a CPU-bound PoW search.
  */
 const getWorkerCount = (): number => {
 	if (!Number.isFinite(POW_WORKER_COUNT) || POW_WORKER_COUNT < 1) {
@@ -48,7 +48,7 @@ const getWorkerCount = (): number => {
 		typeof navigator !== "undefined" &&
 		Number.isFinite(navigator.hardwareConcurrency) &&
 		navigator.hardwareConcurrency > 0
-			? navigator.hardwareConcurrency
+			? Math.max(1, navigator.hardwareConcurrency - 1)
 			: MAX_POW_WORKERS;
 
 	return Math.min(Math.floor(POW_WORKER_COUNT), hardwareLimit, MAX_POW_WORKERS);

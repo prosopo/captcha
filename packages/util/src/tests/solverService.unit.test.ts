@@ -205,8 +205,22 @@ describe("solvePoWOffset", () => {
 		expect(Math.min(...poolWinners)).toBe(expected);
 	});
 
-	it("throws on a non-integer start", () => {
+	it("returns the first nonce in its slice whose hash meets the difficulty, across digit rollovers", () => {
+		const challenge = "offset-rollover";
+		const difficulty = 2.5;
+		const start = 3;
+		const step = 7;
+		let expected = start;
+		while (!hashMeetsDifficulty(hashOfNonce(expected, challenge), difficulty)) {
+			expected += step;
+		}
+		expect(expected).toBeGreaterThan(100);
+		expect(solvePoWOffset(challenge, difficulty, start, step)).toBe(expected);
+	});
+
+	it("throws on a negative or non-integer start", () => {
 		expect(() => solvePoWOffset("x", 2, 0.5, 1)).toThrow(/start/);
+		expect(() => solvePoWOffset("x", 2, -1, 1)).toThrow(/start/);
 	});
 
 	it("throws on a non-positive or non-integer step", () => {
