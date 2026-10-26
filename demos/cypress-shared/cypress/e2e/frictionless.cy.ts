@@ -17,7 +17,11 @@ import "@cypress/xpath";
 import { ProsopoError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { CaptchaType } from "@prosopo/types";
-import { checkboxClass, getWidgetElement } from "../support/commands.js";
+import {
+	checkboxClass,
+	getWidgetElement,
+	widgetHostSelector,
+} from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
 
@@ -84,6 +88,8 @@ describe("Captchas", () => {
 			"frictionless",
 		);
 		cy.wait("@frictionless", { timeout: 5000 });
+
+		cy.get(widgetHostSelector).first().snap("frictionless-initial");
 
 		cy.clickIAmHuman().then((captchas) => {
 			expect(captchas.length).to.be.gt(0);
