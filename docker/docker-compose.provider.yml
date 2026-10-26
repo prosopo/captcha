@@ -318,42 +318,44 @@ services:
       - 8.8.8.8
       - 1.1.1.1
       - 208.67.222.222
+  # Our own IP reputation DB (captcha-private#5467), replacing the ipapi.is
+  # worker outright. It keeps the service name, the port and an `ipinfo`
+  # network alias, so every caller that resolves ipinfo:3899 keeps working
+  # untouched and the rollback is reverting this block. The response carries
+  # the ipapi.is field shape, so callers parsing asn/geo/booleans need no
+  # change.
+  #
+  # Memory: the artifact is ~1.8 GB held in RAM against the ipapi.is worker's
+  # 7.4-8.4 GB. The cap is well above the measured figure and well below the
+  # old 10G, so an overshoot kills this container rather than letting the
+  # kernel pick mongod or a provider as the victim.
   ipinfo:
-    # IP metadata sidecar
     container_name: ipinfo
-    image: prosopo/ipinfo:${IPINFO_VERSION:-0.1.0}
+    image: ghcr.io/prosopo/reputation:${REPUTATION_VERSION:-0.3.1}
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          # Loading the RAM database settles at 7.4-8.4 GB resident. Without a
-          # ceiling an overshoot is a *global* OOM, and the kernel is free to
-          # pick mongod or a provider as the victim instead, which is how a
-          # node too small for the sidecar lost the page cache the rest of its
-          # stack depended on. This confines the kill to the sidecar, whose
-          # absence the providers already handle by falling back to MaxMind.
-          memory: 10G
-    # Pass the config path explicitly. The image bakes a default config.json
-    # at /usr/src/app/config.json which getConfigPath() finds before the
-    # mounted /usr/src/app/config/config.json — silently ignoring our
-    # customLists and API key. Passing the path as argv[2] short-circuits
-    # that resolution order.
-    command: ["node", "src/ipapi_is_worker.js", "/usr/src/app/config/config.json"]
-    # NET_ADMIN is required to check/create firewall chains, even when
-    # enableFirewall is false in config.
-    cap_add:
-      - NET_ADMIN
-    # No host ports
+          memory: 3G
+    environment:
+      REPUTATION_ARTIFACT: /data/reputation.bin
+      REPUTATION_WEIGHTS: /data/weights.json
+      REPUTATION_BIND: 0.0.0.0:3899
     expose:
       - "3899"
     networks:
-      - internal
+      internal:
+        aliases:
+          - ipinfo
+          - reputation
     volumes:
-      # Database blob ships separately
-      - ./ipinfo/ipapi_database_ram:/usr/src/app/ipapi_database_ram:ro
-      # Config override
-      - ./ipinfo/config:/usr/src/app/config:ro
-    # Cap the json log file so a chatty container can't fill the host disk.
+      - ./reputation:/data:ro
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/reputation", "--healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     logging:
       driver: 'json-file'
       options:
