@@ -324,10 +324,17 @@ export class ImgCaptchaManager extends CaptchaManager {
 		// (promoted onto the session record at frictionless time) is resolved once
 		// and both payloads decode together. img submit may attach to multiple
 		// sessions, all sharing this bundle.
-		const decodedPayloads = await this.decodeSubmissionPayloads(
-			pendingRecord?.sessionId,
-			{ behavioural: behavioralData, simd: simdReadings },
-		);
+		// The session is read alongside the decode rather than after it: its
+		// fingerprint summary is copied onto the commitment below.
+		const [decodedPayloads, sessionRecord] = await Promise.all([
+			this.decodeSubmissionPayloads(pendingRecord?.sessionId, {
+				behavioural: behavioralData,
+				simd: simdReadings,
+			}),
+			pendingRecord?.sessionId
+				? this.db.getSessionRecordBySessionId(pendingRecord.sessionId)
+				: undefined,
+		]);
 		const decodedSimdReadings = decodedPayloads.simd;
 		const pushSimdAttachIfAny = (
 			sessionId: string,
@@ -474,6 +481,9 @@ export class ImgCaptchaManager extends CaptchaManager {
 					clientMetaData: storedClientMetaData,
 				}),
 				...(inputMethodsDeclared && inputMethods && { inputMethods }),
+				...(sessionRecord?.fingerprintSummary && {
+					fingerprintSummary: sessionRecord.fingerprintSummary,
+				}),
 			};
 			await this.db.storeUserImageCaptchaSolution(receivedCaptchas, commit);
 

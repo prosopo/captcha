@@ -30,6 +30,7 @@
 	"dependencies": {
 		"@prosopo/api": "workspace:*",
 		"@prosopo/common": "workspace:*",
+		"@prosopo/fingerprint": "workspace:*",
 		"@prosopo/locale": "workspace:*",
 		"@prosopo/procaptcha-audio": "workspace:*",
 		"@prosopo/procaptcha-common": "workspace:*",
@@ -39,7 +40,7 @@
 		"@prosopo/procaptcha-react": "workspace:*",
 		"@prosopo/types": "workspace:*",
 		"@prosopo/widget-skeleton": "workspace:*",
-		"dotenv": "18.0.7"
+		"dotenv": "18.0.8"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
