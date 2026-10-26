@@ -2,7 +2,8 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist",
+		"outDir": "./dist/tsc",
+		"tsBuildInfoFile": "./dist/tsc/tsconfig.tsbuildinfo",
 		"lib": ["es6", "dom"],
 		"allowJs": true
 	},
@@ -23,6 +24,9 @@
 		},
 		{
 			"path": "../common"
+		},
+		{
+			"path": "../fingerprint"
 		},
 		{
 			"path": "../locale"

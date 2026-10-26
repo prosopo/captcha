@@ -17,6 +17,7 @@ import { handleErrors } from "@prosopo/api-express-router";
 import { ProsopoError } from "@prosopo/common";
 import { Keyring } from "@prosopo/keyring";
 import { getLogger } from "@prosopo/logger";
+import { ResultReason } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import type { AccessRulesStorage } from "@prosopo/user-access-policy";
 import express, {
@@ -43,10 +44,16 @@ declare module "@prosopo/common" {
 	}
 }
 
+type ValidRequestResult = { valid: boolean; reason?: string };
+
 type TasksStub = {
 	db: {
 		getClientRecord: Mock<() => Promise<{ settings: object }>>;
 		getDatasetDetails: Mock<(datasetId: string) => Promise<object>>;
+	};
+	imgCaptchaManager: {
+		getPrioritisedAccessPolicies: Mock<() => Promise<[]>>;
+		isValidRequest: Mock<() => Promise<ValidRequestResult>>;
 	};
 };
 
@@ -129,6 +136,12 @@ beforeEach(() => {
 				});
 			}),
 		},
+		imgCaptchaManager: {
+			getPrioritisedAccessPolicies: vi.fn(async (): Promise<[]> => []),
+			isValidRequest: vi.fn(
+				async (): Promise<ValidRequestResult> => ({ valid: true }),
+			),
+		},
 	};
 });
 
@@ -175,6 +188,17 @@ describe("image challenge with a client-supplied datasetId", () => {
 			KNOWN_DATASET,
 		);
 		expect(status).toBe(500);
+	});
+
+	it("reports the wrong captcha type before an unknown datasetId", async () => {
+		holder.tasks?.imgCaptchaManager.isValidRequest.mockResolvedValueOnce({
+			valid: false,
+			reason: ResultReason.INCORRECT_CAPTCHA_TYPE,
+		});
+		const { status, text } = await post(UNKNOWN_DATASET);
+		expect(status).toBe(400);
+		expect(text).toContain("INCORRECT_CAPTCHA_TYPE");
+		expect(holder.tasks?.db.getDatasetDetails).not.toHaveBeenCalled();
 	});
 
 	it("does not look up the dataset when the client omits it", async () => {

@@ -1,5 +1,120 @@
 # @prosopo/scripts
 
+## 3.1.213
+### Patch Changes
+
+- Updated dependencies [92aa8f5]
+  - @prosopo/cli@3.9.4
+
+## 3.1.212
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [870fab7]
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/provider@5.22.0
+  - @prosopo/cli@3.9.3
+  - @prosopo/common@3.3.1
+  - @prosopo/datasets@3.2.12
+  - @prosopo/dotenv@3.0.63
+  - @prosopo/env@3.6.81
+  - @prosopo/keyring@2.10.12
+  - @prosopo/logger@2.1.6
+  - @prosopo/types-env@2.11.27
+  - @prosopo/types@5.19.0
+  - @prosopo/util-crypto@13.6.2
+  - @prosopo/util@3.3.17
+  - @prosopo/workspace@3.2.5
+
+## 3.1.211
+### Patch Changes
+
+- Updated dependencies [5c9792b]
+- Updated dependencies [4201cf0]
+  - @prosopo/provider@5.21.1
+  - @prosopo/cli@3.9.2
+
+## 3.1.210
+### Patch Changes
+
+- Updated dependencies [0d94ae6]
+  - @prosopo/cli@3.9.1
+
+## 3.1.209
+### Patch Changes
+
+- b4235b4: Document and support self-hosting on Cloudflare's free plan, for anyone without a server that has a public IP.
+  
+  A Worker on the free `workers.dev` subdomain serves the widget and forwards API calls through a Workers VPC binding to a
+  Cloudflare Tunnel, so the provider can run on any machine with Docker: no domain, no open ports, no certificates.
+  
+  - `docker/cloudflare/worker.ts` and `wrangler.jsonc`: the Worker. It also serves a demo page at `/` that shows whether
+    the provider is reachable, renders the CAPTCHA and displays the response token. It sets `X-Forwarded-For` to the
+    visitor's address, because without it the provider sees every visitor as the tunnel and per-IP limits apply to all of
+    them together.
+  - `docker-compose.self-hosted.cloudflare.yml`: adds `cloudflared` and leaves Caddy out, since Cloudflare terminates TLS.
+  - `generateSelfHostedEnv.ts --cloudflare`: writes a `COMPOSE_FILE` that loads both compose files and a
+    `CLOUDFLARE_TUNNEL_TOKEN` to fill in.
+  - `SELF_HOSTING.md`: a "No server? Run it on Cloudflare's free plan" section.
+- 159766a: Let a self-hosted provider run a detector you built yourself, and ship a working example built on BotD.
+  
+  Until now the only detector a provider could load was ours. Its output can only be read by the closed decoder in the
+  provider, so a self-hosted node with any other detector had nothing to score visitors with.
+  
+  **Open detector format.** A pool bundle can now be marked `format: "open-v1"`. The provider reads those bundles with a
+  short, documented decoder: an AES-256-GCM payload whose key is wrapped with the bundle's RSA-OAEP public key, carrying
+  `{ score, timestamp, userId, userAgent, headHash, d }`. The same checks apply as for our detector — the token must
+  match this visitor's account, user agent and page, and be under ten minutes old — and `d` reaches decision and routing
+  machines as `input.d`. Open bundles are only loaded when `PROSOPO_DETECTOR_OPEN_FORMAT=1`; the hosted fleet never sets
+  it, so nothing changes there.
+  
+  **`demos/detector-botd`.** A detector built on BotD that scores automated browsers as 1 and everything else as 0, plus a
+  `pool` script that builds the bundles with a fresh keypair each. Writing your own detector means replacing one function;
+  the encryption is done for you.
+  
+  **`detector_pool_set` CLI command.** Writes a pool read from stdin into the provider's pool directory. Stdin rather than a
+  file because the provider image runs as a non-root user and cannot read a file copied in as root.
+  
+  **Self-hosted compose and image.** The image now creates its pool directory owned by the runtime user, and the
+  self-hosted compose file mounts a `detector_pool` volume there and turns the open format on. The compose file no longer
+  defaults to provider 3.8.19, which it had silently stayed on for nineteen releases: `generateSelfHostedEnv.ts` writes
+  the version of the checkout it runs from.
+  
+  `SELF_HOSTING.md` gains a "Bring your own detector" section and now loads the widget with `type="module"`, which the
+  bundle has needed since it was split into chunks.
+  
+  Tested end to end on a stack built from this branch: stock headless Chromium was flagged by BotD and served a puzzle,
+  headed Chromium passed with proof of work, the detector's signals were stored on the session, and a provider without
+  the flag rejected the pool.
+- 5a1db28: Fix four things that broke the self-hosting guide for anyone starting from a fresh clone.
+  
+  - **The `fingerprintjs` submodule used an SSH URL**, so it could only be fetched by someone with GitHub SSH keys. It is
+    now HTTPS. The repository is public, so nobody needs credentials for it. Without it `pnpm run build:all` fails.
+  - **The guide ran the env script before anything was built.** The script imports built workspace packages, so on a fresh
+    clone it crashed with `ERR_MODULE_NOT_FOUND`. The guide now clones with `--recurse-submodules` and runs
+    `pnpm run build:all` in step 1.
+  - **Every `docker compose exec` in the guide failed** with "no configuration file provided", because the compose file is
+    not named `docker-compose.yml`. `generateSelfHostedEnv.ts` now writes `COMPOSE_FILE=docker-compose.self-hosted.yml`
+    into `.env`, which Compose reads on its own, so plain `docker compose` commands work.
+  - **The provider CLI exited 0 on a command it did not have.** An older image given `detector_pool_set` did nothing and
+    reported success. It now fails with `Unknown command`.
+- Updated dependencies [d02b3bc]
+- Updated dependencies [159766a]
+- Updated dependencies [5a1db28]
+  - @prosopo/provider@5.21.0
+  - @prosopo/types@5.18.0
+  - @prosopo/cli@3.9.0
+  - @prosopo/env@3.6.80
+  - @prosopo/common@3.3.0
+  - @prosopo/datasets@3.2.11
+  - @prosopo/keyring@2.10.11
+  - @prosopo/types-env@2.11.26
+
 ## 3.1.208
 ### Patch Changes
 

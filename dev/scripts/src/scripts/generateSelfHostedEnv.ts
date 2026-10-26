@@ -17,6 +17,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { generateMnemonic } from "@prosopo/keyring";
 import { LogLevel, getLogger, parseLogLevel } from "@prosopo/logger";
+import { getCliPkgDir } from "@prosopo/workspace";
 
 const logger = getLogger(
 	parseLogLevel(process.env.PROSOPO_LOG_LEVEL || LogLevel.enum.info),
@@ -27,6 +28,7 @@ interface Args {
 	host: string;
 	output: string;
 	force: boolean;
+	cloudflare: boolean;
 }
 
 const usage = `
@@ -38,6 +40,9 @@ Options:
   --host <domain>   Hostname clients will reach this provider on (required)
   --output <path>   Where to write (default: .env)
   --force           Overwrite the output file if it already exists
+  --cloudflare      Run behind a Cloudflare Tunnel instead of Caddy. Adds the
+                    cloudflared service and a CLOUDFLARE_TUNNEL_TOKEN to fill in.
+                    --host is then the Worker's workers.dev hostname.
 `;
 
 const parseArgs = (argv: string[]): Args => {
@@ -65,6 +70,7 @@ const parseArgs = (argv: string[]): Args => {
 		host,
 		output: flagValue("--output") ?? ".env",
 		force: argv.includes("--force"),
+		cloudflare: argv.includes("--cloudflare"),
 	};
 };
 
@@ -76,7 +82,22 @@ const parseArgs = (argv: string[]): Args => {
  */
 const generatePassword = (): string => randomBytes(24).toString("base64url");
 
-const buildEnvFile = async (host: string): Promise<string> => {
+const composeFileSection = (cloudflare: boolean): string =>
+	cloudflare
+		? `# Lets every docker compose command find both compose files without -f.
+# The second runs cloudflared and leaves Caddy out.
+COMPOSE_FILE=docker-compose.self-hosted.yml:docker-compose.self-hosted.cloudflare.yml
+
+# The token from your tunnel's page in the Cloudflare dashboard.
+CLOUDFLARE_TUNNEL_TOKEN=`
+		: `# Lets every docker compose command find docker-compose.self-hosted.yml
+# without -f.
+COMPOSE_FILE=docker-compose.self-hosted.yml`;
+
+const buildEnvFile = async (
+	host: string,
+	cloudflare: boolean,
+): Promise<string> => {
 	const providerImageVersion = readProviderImageVersion();
 	const [providerMnemonic, providerAddress] = await generateMnemonic();
 	const [siteKeyMnemonic, siteKeyAddress] = await generateMnemonic();
@@ -95,9 +116,7 @@ NODE_ENV=production
 PROSOPO_DEFAULT_ENVIRONMENT=production
 PROSOPO_LOG_LEVEL=info
 
-# Lets every docker compose command find docker-compose.self-hosted.yml
-# without -f.
-COMPOSE_FILE=docker-compose.self-hosted.yml
+${composeFileSection(cloudflare)}
 
 # The provider release this checkout documents. Change it when you pull a
 # newer checkout, so the image and the instructions you follow stay in step.
@@ -158,10 +177,7 @@ MAXMIND_ASN_DB_PATH=./GeoLite2-ASN.mmdb
 // The provider image is tagged with the CLI package's version, which is the
 // release this checkout was cut from.
 const readProviderImageVersion = (): string => {
-	const manifestPath = path.resolve(
-		import.meta.dirname,
-		"../../../../packages/cli/package.json",
-	);
+	const manifestPath = path.join(getCliPkgDir(), "package.json");
 	const { version } = JSON.parse(fs.readFileSync(manifestPath, "utf8")) as {
 		version?: unknown;
 	};
@@ -181,7 +197,7 @@ const main = async (): Promise<void> => {
 		);
 	}
 
-	const contents = await buildEnvFile(args.host);
+	const contents = await buildEnvFile(args.host, args.cloudflare);
 	// 0o600 because this file holds two mnemonics and two passwords.
 	fs.writeFileSync(outputPath, contents, { mode: 0o600 });
 

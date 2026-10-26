@@ -15,8 +15,10 @@
 import { describe, expect, it } from "vitest";
 import {
 	captchaPolicySeverity,
+	harshestPolicy,
 	isStricterCaptchaPolicy,
 	isStricterCaptchaType,
+	policyHarshness,
 	rankCaptchaType,
 } from "./index.js";
 
@@ -282,5 +284,46 @@ describe("isStricterCaptchaPolicy — type then settings", () => {
 			false,
 		);
 		expect(isStricterCaptchaPolicy(harder, milder)).toBe(true);
+	});
+});
+
+describe("policyHarshness — blocks above every challenge", () => {
+	it("ranks a block above the strictest possible challenge", () => {
+		expect(policyHarshness({}, true)).toBeGreaterThan(
+			policyHarshness({ captchaType: "image", solvedImagesCount: 1e9 }, false),
+		);
+	});
+
+	it("ranks a challenge by its captcha policy severity", () => {
+		const policy = { captchaType: "pow", powDifficulty: 7 };
+		expect(policyHarshness(policy, false)).toBe(captchaPolicySeverity(policy));
+	});
+});
+
+describe("harshestPolicy", () => {
+	type Rule = { name: string; block: boolean; captchaType?: string };
+	const blocks = (rule: Rule): boolean => rule.block;
+
+	it("picks a block over any challenge, wherever it sits", () => {
+		const block: Rule = { name: "block", block: true };
+		const image: Rule = { name: "image", block: false, captchaType: "image" };
+		expect(harshestPolicy([image, block], blocks)).toBe(block);
+		expect(harshestPolicy([block, image], blocks)).toBe(block);
+	});
+
+	it("picks the stricter challenge", () => {
+		const pow: Rule = { name: "pow", block: false, captchaType: "pow" };
+		const image: Rule = { name: "image", block: false, captchaType: "image" };
+		expect(harshestPolicy([pow, image], blocks)).toBe(image);
+	});
+
+	it("keeps the first of equally harsh policies", () => {
+		const first: Rule = { name: "first", block: false, captchaType: "pow" };
+		const second: Rule = { name: "second", block: false, captchaType: "pow" };
+		expect(harshestPolicy([first, second], blocks)).toBe(first);
+	});
+
+	it("returns undefined for no policies", () => {
+		expect(harshestPolicy<Rule>([], blocks)).toBeUndefined();
 	});
 });

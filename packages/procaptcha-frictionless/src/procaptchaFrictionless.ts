@@ -57,6 +57,7 @@ import {
 	handleSessionInvalidated,
 	normaliseRetryCoords,
 } from "./sessionInvalidatedRecovery.js";
+import { claimWidgetSlot, releaseWidgetSlot } from "./widgetSlot.js";
 
 const frontendError = (error: ProsopoError): WidgetError =>
 	toPublicError(error, "FRONTEND_ERROR");
@@ -183,9 +184,10 @@ export const mountProcaptchaFrictionless = (
 	// that window (e.g. a fast form submit) would otherwise be dropped and the
 	// challenge never open, so it is held here and replayed on mount.
 	let pendingExecute = false;
-	const banner: StaticComponent = mountTestModeBanner(container, {
-		siteKey: config.account?.address ?? "",
-	});
+	const siteKey = config.account?.address ?? "";
+	const banner: StaticComponent = mountTestModeBanner(container, { siteKey });
+	const widgetSlot = claimWidgetSlot(siteKey);
+	teardown.add(() => releaseWidgetSlot(siteKey, widgetSlot));
 
 	// The solver (or the placeholder checkbox) renders here. Swapping the slot's
 	// contents replaces what the React version did by putting an element in
@@ -263,6 +265,7 @@ export const mountProcaptchaFrictionless = (
 	let restartCount = 0;
 
 	const restartComponentTimeout = () => {
+		if (destroyed) return;
 		const delay = getRestartDelayMs(restartCount);
 		restartCount += 1;
 		const timer = setTimeout(() => {
@@ -322,6 +325,7 @@ export const mountProcaptchaFrictionless = (
 		autoStart = false,
 		escalationCoords?: RetryCoords,
 	): Promise<void> => {
+		if (destroyed) return;
 		// Audio is mounted against the visual session /frictionless just minted.
 		audioChosen = audioChosen && offersAudioAlternative(captchaType);
 
@@ -518,6 +522,7 @@ export const mountProcaptchaFrictionless = (
 	};
 
 	const start = async (): Promise<void> => {
+		if (destroyed) return;
 		// Procaptcha cannot run over plain HTTP (no SubtleCrypto etc.), which
 		// would otherwise fail later with a cryptic provider-selection error.
 		// Surface a clear, non-retrying message instead.
@@ -545,7 +550,9 @@ export const mountProcaptchaFrictionless = (
 					{ attempt: state.attemptCount },
 					nextRefreshOf,
 					nextSwitchToImage,
+					widgetSlot,
 				);
+				if (destroyed) return;
 
 				const guard = evaluateFrictionlessResult(result);
 				if ("error" === guard.kind) {
@@ -600,6 +607,7 @@ export const mountProcaptchaFrictionless = (
 			state.attemptCount,
 			5,
 		).finally(() => {
+			if (destroyed) return;
 			if (state.attemptCount >= 5) {
 				// Retries swallow the underlying error, so without this a site's
 				// error callback never fires for a failure that retried — it would

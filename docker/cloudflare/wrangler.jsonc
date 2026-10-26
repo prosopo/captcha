@@ -1,0 +1,24 @@
+// Deploys the Worker that fronts a self-hosted provider on Cloudflare's free
+// plan. See "Self-hosting on Cloudflare" in SELF_HOSTING.md.
+{
+	"name": "procaptcha",
+	"main": "worker.ts",
+	"compatibility_date": "2026-10-01",
+	"assets": {
+		// The widget, built with PROSOPO_PROVIDER_LIST pointing at this Worker.
+		"directory": "../../packages/procaptcha-bundle/dist/bundle",
+		"binding": "ASSETS",
+		"run_worker_first": ["/v1/*", "/healthz"]
+	},
+	"vpc_services": [
+		{
+			"binding": "PROVIDER",
+			// The id printed by `wrangler vpc service create`.
+			"service_id": "REPLACE_WITH_YOUR_VPC_SERVICE_ID"
+		}
+	],
+	"vars": {
+		// Shown on the demo page at /. Leave empty to pass ?sitekey= instead.
+		"SITE_KEY": ""
+	}
+}

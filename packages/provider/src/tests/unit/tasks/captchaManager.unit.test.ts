@@ -15,6 +15,7 @@
 import type { RedisWriteQueue } from "@prosopo/database";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
+	type FingerprintSummaryStored,
 	IpAddressType,
 	type KeyringPair,
 	type Session,
@@ -133,6 +134,17 @@ describe("CaptchaManager", () => {
 	// fields that live on the origin are surfaced on the escalation record
 	// without duplicating them at write time.
 	describe("getSessionRecordWithOriginFallback", () => {
+		const originSummary: FingerprintSummaryStored = {
+			root: "0xorigin",
+			groupHash: "0xgroup",
+			bucketId: "a".repeat(32),
+		};
+		const escalationSummary: FingerprintSummaryStored = {
+			root: "0xescalation",
+			groupHash: "0xgroup",
+			bucketId: "b".repeat(32),
+		};
+
 		const dbGet = () =>
 			db.getSessionRecordBySessionId as unknown as ReturnType<typeof vi.fn>;
 
@@ -166,6 +178,7 @@ describe("CaptchaManager", () => {
 				simdReadings: { supported: true, results: [] },
 				dnsEvent: { receivedAt: new Date() },
 				d: { k1: "v1", k2: false },
+				fingerprintSummary: escalationSummary,
 			} as unknown as Session;
 			dbGet().mockResolvedValue(session);
 
@@ -258,6 +271,49 @@ describe("CaptchaManager", () => {
 			});
 		});
 
+		it("fills the fingerprint summary from origin when the escalation has none", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				fingerprintSummary: originSummary,
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+				d: { k1: "escalation-value" },
+				simdReadings: { supported: false, reason: "n/a" },
+				dnsEvent: { receivedAt: new Date() },
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.fingerprintSummary).toEqual(originSummary);
+			expect(got?.sessionId).toBe("esc");
+		});
+
+		it("keeps the escalation's own fingerprint summary over the origin's", async () => {
+			const origin = {
+				sessionId: "origin",
+				captchaType: CaptchaType.pow,
+				fingerprintSummary: originSummary,
+			} as unknown as Session;
+			const escalation = {
+				sessionId: "esc",
+				originSessionId: "origin",
+				captchaType: CaptchaType.puzzle,
+				fingerprintSummary: escalationSummary,
+			} as unknown as Session;
+			dbGet().mockResolvedValueOnce(escalation).mockResolvedValueOnce(origin);
+
+			const got =
+				await captchaManager.getSessionRecordWithOriginFallback("esc");
+
+			expect(got?.fingerprintSummary).toEqual(escalationSummary);
+		});
+
 		it("does not walk to the origin when the escalation has everything", async () => {
 			const escalation = {
 				sessionId: "esc",
@@ -266,6 +322,7 @@ describe("CaptchaManager", () => {
 				d: { k1: "escalation-value" },
 				simdReadings: { supported: false, reason: "n/a" },
 				dnsEvent: { receivedAt: new Date() },
+				fingerprintSummary: escalationSummary,
 			} as unknown as Session;
 			dbGet().mockResolvedValueOnce(escalation);
 

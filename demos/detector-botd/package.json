@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/detector-botd",
-	"version": "0.1.0",
+	"version": "0.2.1",
 	"private": true,
 	"description": "Example Procaptcha detector for self-hosted providers, built on BotD",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
@@ -10,10 +10,10 @@
 		"node": "^24"
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "vite build --config vite.config.ts",
+		"clean": "del-cli --verbose dist",
+		"bundle": "vite build --config vite.config.ts",
 		"build:tsc": "tsc --build --verbose",
-		"typecheck": "tsc --project tsconfig.types.json",
+		"build:types": "tsc --project tsconfig.types.json",
 		"pool": "tsx src/pool.ts",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts"
 	},

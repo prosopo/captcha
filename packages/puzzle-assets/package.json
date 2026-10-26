@@ -1,34 +1,33 @@
 {
 	"name": "@prosopo/puzzle-assets",
-	"version": "0.2.3",
+	"version": "0.2.4",
 	"description": "Procedural imagery for the slider puzzle captcha",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "^24"
 	},
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		},
 		"./browser": {
-			"types": "./dist/browser.d.ts",
-			"import": "./dist/browser.js",
+			"types": "./dist/types/browser.d.ts",
+			"import": "./dist/esm/browser.js",
 			"require": "./dist/cjs/browser.cjs"
 		}
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"preview": "tsx scripts/preview.ts",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"build:types": "tsc --project tsconfig.types.json"
 	},
 	"repository": {
 		"type": "git",
@@ -49,7 +48,7 @@
 		"@types/node": "22.10.2",
 		"@vitest/coverage-v8": "5.0.4",
 		"del-cli": "6.0.0",
-		"dotenv": "18.0.7",
+		"dotenv": "18.0.8",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",

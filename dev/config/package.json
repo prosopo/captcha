@@ -1,15 +1,14 @@
 {
 	"name": "@prosopo/config",
-	"version": "3.5.0",
+	"version": "3.5.1",
 	"description": "Prosopo config library",
 	"type": "module",
 	"scripts": {
-		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"typecheck": "tsc --project tsconfig.types.json",
+		"clean": "del-cli --verbose dist",
+		"build:types": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts --mode $NODE_ENV"
 	},
 	"engines": {
@@ -27,7 +26,7 @@
 		"html-webpack-plugin": "5.6.8",
 		"mini-css-extract-plugin": "2.10.2",
 		"node-polyfill-webpack-plugin": "4.1.0",
-		"rollup": "4.64.6",
+		"rollup": "4.64.10",
 		"rollup-plugin-import-css": "4.2.1",
 		"rollup-plugin-visualizer": "5.12.0",
 		"terser-webpack-plugin": "5.6.1",
@@ -66,10 +65,10 @@
 		"vite-plugin-node-polyfills": "0.28.0",
 		"vite-tsconfig-paths": "6.1.1",
 		"vitest": "5.0.4",
-		"webpack": "5.111.1",
+		"webpack": "5.112.0",
 		"webpack-cli": "7.2.3",
-		"webpack-dev-server": "6.0.0",
-		"zod": "3.23.8"
+		"webpack-dev-server": "6.1.0",
+		"zod": "3.25.76"
 	},
 	"repository": {
 		"type": "git",
@@ -84,20 +83,22 @@
 		"registry": "https://registry.npmjs.org"
 	},
 	"sideEffects": false,
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		},
 		"./webpack": {
-			"import": "./dist/webpack/index.js",
-			"require": "./dist/webpack/cjs/index.cjs"
+			"types": "./dist/types/webpack/index.d.ts",
+			"import": "./dist/esm/webpack/index.js",
+			"require": "./dist/cjs/webpack/index.cjs"
 		},
 		"./webpack/webpack.config": {
-			"import": "./dist/webpack/webpack.config.js",
+			"types": "./dist/types/webpack/webpack.config.d.ts",
+			"import": "./dist/esm/webpack/webpack.config.js",
 			"require": "./dist/cjs/webpack/webpack.config.cjs"
 		}
 	}

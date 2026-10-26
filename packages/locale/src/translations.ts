@@ -31,6 +31,7 @@ export const Languages = {
 	german: "de",
 	greek: "el",
 	english: "en",
+	englishUk: "en-GB",
 	esperanto: "eo",
 	spanish: "es",
 	estonian: "et",

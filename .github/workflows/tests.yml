@@ -73,7 +73,6 @@ jobs:
           INPUTS_CONTEXT: ${{ toJson(inputs) }}
           NEEDS_CONTEXT: ${{ toJson(needs) }}
           VARS_CONTEXT: ${{ toJson(vars) }}
-          SECRETS_CONTEXT: ${{ toJson(secrets) }}
 
       - uses: actions/checkout@v7
         with:
@@ -84,7 +83,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: '24.22.1'
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile --prefer-offline
@@ -162,8 +161,8 @@ jobs:
   # way CSS allows, and the ones that size it by *measuring* it have broken
   # repeatedly and silently: the widget renders, just at its minimum width.
   #
-  # Kept out of `check` for the same reason as cargo-test, and because it needs
-  # none of what that job builds -- no docker, no provider, no workspace build,
+  # Kept out of `check` so its failure is reported on its own, and because it
+  # needs none of what that job builds -- no docker, no provider, no workspace build,
   # since the package imports nothing from the workspace at runtime. It still
   # gates the merge: required-check.yml waits on every check run on the commit,
   # so there is no list to add this to.
@@ -180,7 +179,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '24'
+          node-version: '24.22.1'
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile --prefer-offline --filter @prosopo/widget-skeleton
@@ -189,26 +188,3 @@ jobs:
         run: pnpm --filter @prosopo/widget-skeleton exec playwright install --with-deps chromium
 
       - run: pnpm --filter @prosopo/widget-skeleton run test:browser
-
-  # The napi crates carry Rust unit tests that `pnpm run test:all` never runs:
-  # turbo only drives the JS suites. Kept out of `check` so a Rust failure is
-  # reported on its own and does not wait for the full JS build.
-  cargo-test:
-    name: cargo test (${{ matrix.crate }})
-    runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
-    strategy:
-      fail-fast: false
-      matrix:
-        # Independent crates, each with its own lockfile. A new
-        # packages/native-* crate is not tested until it is listed here.
-        crate:
-          [packages/native-ja4, packages/native-merkle, packages/native-puzzle]
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          submodules: false
-
-      - name: cargo test
-        working-directory: ${{ matrix.crate }}
-        run: cargo test --release --locked

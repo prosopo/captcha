@@ -57,7 +57,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: '24.22.1'
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile --prefer-offline
@@ -102,6 +102,10 @@ jobs:
 
       - name: Regenerate frictionless baselines
         if: contains(inputs.configs, 'frictionless')
+        env:
+          # Same as cypress.yml: without the detector pool, frictionless falls
+          # back to PoW and the spec never sees the image challenge it expects.
+          PROSOPO_DETECTOR_POOL_DIR: ${{ github.workspace }}/packages/provider/fixtures/detector-pool
         run: |
           pnpm exec concurrently "pnpm run start:server" "pnpm run start:provider:admin" "pnpm run start:bundle" "pnpm run serve:bundle" "pnpm exec tsx ./demos/cypress-shared/scripts/wait-for-services.ts && pnpm --filter @prosopo/cypress-shared run cypress:baselines:frictionless" --success "first" --kill-others
 

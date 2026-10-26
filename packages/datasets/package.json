@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/datasets",
-	"version": "3.2.10",
+	"version": "3.2.12",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
@@ -8,35 +8,34 @@
 		"node": "^24"
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json",
+		"build:types": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
-		"cli": "node ./dist/cli.js"
+		"cli": "node ./dist/esm/cli.js"
 	},
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"type": "module",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		},
 		"./captcha": {
-			"types": "./dist/captcha/index.d.ts",
-			"import": "./dist/captcha/index.js",
+			"types": "./dist/types/captcha/index.d.ts",
+			"import": "./dist/esm/captcha/index.js",
 			"require": "./dist/cjs/captcha/index.cjs",
-			"default": "./dist/captcha/index.js"
+			"default": "./dist/esm/captcha/index.js"
 		}
 	},
 	"typesVersions": {
 		"*": {
-			"types": ["dist/types"],
-			"captcha": ["dist/captcha"]
+			"types": ["dist/types/types"],
+			"captcha": ["dist/types/captcha"]
 		}
 	},
 	"dependencies": {
@@ -53,7 +52,7 @@
 		"@vitest/coverage-v8": "5.0.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"dotenv": "18.0.7",
+		"dotenv": "18.0.8",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",

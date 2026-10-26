@@ -1,5 +1,128 @@
 # @prosopo/provider
 
+## 5.22.0
+### Minor Changes
+
+- 915f30b: Traffic filter categories can now have exceptions. An exception matches visitors by country, by whether their country is inside or outside the account's market, by a minimum abuser score, or any mix of these. It then replaces the category's block or challenge action. When several exceptions match, the harshest wins: a block beats any challenge, and a stricter captcha beats a milder one. So the order of the list does not matter. For example, block proxies, but challenge those from the account's market unless their abuser score is at least 0.5.
+  
+  The account's market countries now travel to providers inside each site's traffic filter, including when a provider pulls updated sites from the portal database. An exception that depends on the market never matches while the account has no market set.
+  
+  `@prosopo/captcha-severity` gains `policyHarshness` and `harshestPolicy`. They rank a policy that may block, and the access rules now use them too, with the same ordering as before.
+
+### Patch Changes
+
+- 870fab7: An image challenge request now has its captcha type checked before its `datasetId`. Since 3.9.1 the unknown-dataset check (`INVALID_REQUEST:PROV-94`) ran first, so a site key that serves another captcha type got "Unknown dataset" instead of `INCORRECT_CAPTCHA_TYPE` whenever it sent an unknown `datasetId`. That broke the demo monitor, which uses exactly that answer to tell which captcha type a key serves, and it has reported every demo as broken since the 3.9.1 deploy.
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [f9c3fc3]
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/native-ja4@0.0.10
+  - @prosopo/native-merkle@0.0.9
+  - @prosopo/native-puzzle@0.1.5
+  - @prosopo/api-express-router@3.3.4
+  - @prosopo/api@4.7.7
+  - @prosopo/api-route@2.6.66
+  - @prosopo/audio-assets@0.2.3
+  - @prosopo/captcha-severity@1.4.0
+  - @prosopo/common@3.3.1
+  - @prosopo/database@4.3.0
+  - @prosopo/datasets@3.2.12
+  - @prosopo/env@3.6.81
+  - @prosopo/fingerprint@2.8.3
+  - @prosopo/icon-order-assets@0.2.3
+  - @prosopo/ipinfo@0.4.25
+  - @prosopo/keyring@2.10.12
+  - @prosopo/load-balancer@2.11.16
+  - @prosopo/locale@3.13.1
+  - @prosopo/logger@2.1.6
+  - @prosopo/puzzle-assets@0.2.4
+  - @prosopo/redis-client@1.0.43
+  - @prosopo/types-database@5.12.0
+  - @prosopo/types-env@2.11.27
+  - @prosopo/types@5.19.0
+  - @prosopo/user-access-policy@3.15.8
+  - @prosopo/util-crypto@13.6.2
+  - @prosopo/util@3.3.17
+  - @prosopo/web-bot-auth@0.1.5
+
+## 5.21.1
+### Patch Changes
+
+- 5c9792b: Stop the puzzle burying the background under decoys, especially on phones.
+  
+  The difficulty ladder draws `decoyCount` and `pieceScale` from a band independently — one in `samplePuzzleDifficulty`, the other in the renderer's own piece-size draw — so nothing tied how many decoys there were to how big they were. Ten decoys against a 126px piece is a different puzzle from ten against a 42px one, and a level was not monotonic in what the user actually saw: at the current bands a level-0 render could be crowded roughly seven times harder than a level-3 one.
+  
+  Touch was worse rather than better. `easePieceScaleForTouch` raises the piece-scale floor so a finger cannot hide the piece, but it left the decoy count alone — bigger decoys in the same number is strictly more crowding. At level 4 the *minimum* coverage on a touch device was 1.56x the background area, so every render was a pile of overlapping pieces no one could read.
+  
+  The decoy count is now trimmed against the piece size actually drawn, so the decoys cannot cover more of the background than a ceiling allows. Touch takes a lower ceiling than desktop, which is what makes easing for touch help instead of hurt. The cap only ever reduces the count, so no render becomes harder than the ladder intended, and a count already inside the ceiling is untouched — a render drawn near the middle of any level is unaffected and only the crowded corner is trimmed.
+  
+  The trimmed count is what gets rendered *and* what is written to `render.settings.decoyCount` on the challenge record, so a replay reproduces the puzzle the user saw. The browser renderer takes the count as an input rather than deriving it, so the node and JS paths stay in step without a change to `@prosopo/puzzle-assets`.
+- 4201cf0: The provider now logs `Detector bundle assigned` with the `bundleId`, its `release` and the `detectorSessionId` every time `detector/assign` hands out a bundle. Before this nothing recorded which bundle went out, so after a harvest we could only estimate how much of the pool had leaked.
+
+## 5.21.0
+### Minor Changes
+
+- 159766a: Let a self-hosted provider run a detector you built yourself, and ship a working example built on BotD.
+  
+  Until now the only detector a provider could load was ours. Its output can only be read by the closed decoder in the
+  provider, so a self-hosted node with any other detector had nothing to score visitors with.
+  
+  **Open detector format.** A pool bundle can now be marked `format: "open-v1"`. The provider reads those bundles with a
+  short, documented decoder: an AES-256-GCM payload whose key is wrapped with the bundle's RSA-OAEP public key, carrying
+  `{ score, timestamp, userId, userAgent, headHash, d }`. The same checks apply as for our detector — the token must
+  match this visitor's account, user agent and page, and be under ten minutes old — and `d` reaches decision and routing
+  machines as `input.d`. Open bundles are only loaded when `PROSOPO_DETECTOR_OPEN_FORMAT=1`; the hosted fleet never sets
+  it, so nothing changes there.
+  
+  **`demos/detector-botd`.** A detector built on BotD that scores automated browsers as 1 and everything else as 0, plus a
+  `pool` script that builds the bundles with a fresh keypair each. Writing your own detector means replacing one function;
+  the encryption is done for you.
+  
+  **`detector_pool_set` CLI command.** Writes a pool read from stdin into the provider's pool directory. Stdin rather than a
+  file because the provider image runs as a non-root user and cannot read a file copied in as root.
+  
+  **Self-hosted compose and image.** The image now creates its pool directory owned by the runtime user, and the
+  self-hosted compose file mounts a `detector_pool` volume there and turns the open format on. The compose file no longer
+  defaults to provider 3.8.19, which it had silently stayed on for nineteen releases: `generateSelfHostedEnv.ts` writes
+  the version of the checkout it runs from.
+  
+  `SELF_HOSTING.md` gains a "Bring your own detector" section and now loads the widget with `type="module"`, which the
+  bundle has needed since it was split into chunks.
+  
+  Tested end to end on a stack built from this branch: stock headless Chromium was flagged by BotD and served a puzzle,
+  headed Chromium passed with proof of work, the detector's signals were stored on the session, and a provider without
+  the flag rejected the pool.
+
+### Patch Changes
+
+- d02b3bc: The image challenge endpoint now answers 400 `INVALID_REQUEST` when the caller sends a `datasetId` that is not a stored dataset: an unknown hex id, a non-hex string or a byte array. Before, the id was only looked up once challenge generation had started, so a bad id came back as a 500. The response does not echo the id. If looking up the dataset fails for another reason, such as the database being unreachable, the endpoint still returns 500. Requests that leave `datasetId` out still use the provider's default dataset.
+  
+  `getDatasetDetails` now throws `RECORD_NOT_FOUND` rather than `DB_QUERY_FAILED` when no dataset matches, so a missing dataset can be told apart from a failed query.
+- Updated dependencies [d02b3bc]
+- Updated dependencies [b460b0b]
+- Updated dependencies [937f441]
+- Updated dependencies [159766a]
+  - @prosopo/database@4.2.10
+  - @prosopo/locale@3.13.0
+  - @prosopo/native-puzzle@0.1.4
+  - @prosopo/types@5.18.0
+  - @prosopo/env@3.6.80
+  - @prosopo/api-express-router@3.3.3
+  - @prosopo/types-database@5.11.2
+  - @prosopo/api@4.7.6
+  - @prosopo/common@3.3.0
+  - @prosopo/datasets@3.2.11
+  - @prosopo/fingerprint@2.8.2
+  - @prosopo/ipinfo@0.4.24
+  - @prosopo/keyring@2.10.11
+  - @prosopo/load-balancer@2.11.15
+  - @prosopo/types-env@2.11.26
+  - @prosopo/user-access-policy@3.15.7
+
 ## 5.20.2
 ### Patch Changes
 

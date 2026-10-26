@@ -1,9 +1,9 @@
 {
 	"name": "@prosopo/procaptcha-bundle",
-	"version": "4.5.17",
+	"version": "4.5.19",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
-	"main": "dist/index.js",
+	"main": "dist/esm/index.js",
 	"type": "module",
 	"sideEffects": false,
 	"engines": {
@@ -11,24 +11,24 @@
 	},
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		},
 		"./components": {
-			"import": "./dist/components.js",
-			"require": "./dist/components.cjs"
+			"types": "./dist/types/components.d.ts",
+			"import": "./dist/esm/components.js",
+			"require": "./dist/cjs/components.cjs"
 		}
 	},
-	"types": "dist/index.d.ts",
+	"types": "dist/types/index.d.ts",
 	"source": "./src/index.tsx",
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json",
+		"build:types": "tsc --project tsconfig.types.json",
 		"bundle": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.config.ts --mode $NODE_ENV",
 		"bundle:iife": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.iife.config.ts --mode $NODE_ENV",
 		"start": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode $NODE_ENV --host",
@@ -45,7 +45,7 @@
 		"@prosopo/types": "workspace:*",
 		"@prosopo/util": "workspace:*",
 		"@prosopo/widget-skeleton": "workspace:*",
-		"dotenv": "18.0.7",
+		"dotenv": "18.0.8",
 		"jsdom": "25.0.0"
 	},
 	"repository": {
@@ -76,7 +76,7 @@
 		"typescript": "5.6.2",
 		"vite": "8.1.6",
 		"vitest": "5.0.4",
-		"webpack": "5.111.1",
+		"webpack": "5.112.0",
 		"webpack-cli": "7.2.3"
 	},
 	"overrides": {

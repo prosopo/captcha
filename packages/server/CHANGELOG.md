@@ -1,5 +1,40 @@
 # @prosopo/server
 
+## 2.14.1
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/api@4.7.7
+  - @prosopo/common@3.3.1
+  - @prosopo/keyring@2.10.12
+  - @prosopo/load-balancer@2.11.16
+  - @prosopo/locale@3.13.1
+  - @prosopo/logger@2.1.6
+  - @prosopo/types@5.19.0
+  - @prosopo/util@3.3.17
+
+## 2.14.0
+### Minor Changes
+
+- f695b3a: `ProsopoServer.isVerified` now resolves `{ verified: false }` when verification cannot be completed — a malformed token, an unreachable provider list or provider, a provider request that times out, or a signing failure — instead of throwing. A timed-out provider request used to reject with a 504 error; it now answers "not verified" too. The outcome is still fail-closed, but site owners who did not wrap the call in `try`/`catch` no longer return a 500 from their own endpoint. The underlying error, with its 504 or 500 status, is still logged.
+
+### Patch Changes
+
+- Updated dependencies [b460b0b]
+- Updated dependencies [159766a]
+  - @prosopo/locale@3.13.0
+  - @prosopo/types@5.18.0
+  - @prosopo/api@4.7.6
+  - @prosopo/common@3.3.0
+  - @prosopo/keyring@2.10.11
+  - @prosopo/load-balancer@2.11.15
+
 ## 2.13.8
 ### Patch Changes
 

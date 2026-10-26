@@ -239,3 +239,37 @@ export const isStricterCaptchaPolicy = (
 	incumbent: CaptchaPolicySeverityInput,
 ): boolean =>
 	captchaPolicySeverity(candidate) > captchaPolicySeverity(incumbent);
+
+/**
+ * Severity of a policy that may block instead of challenging. A block
+ * outranks every challenge; challenges rank by `captchaPolicySeverity`.
+ *
+ * Whether the policy blocks is passed in rather than read off it, because
+ * each caller encodes that with its own enum (`AccessPolicyType.Block`,
+ * `TrafficFilterAction.Block`) and this package imports neither.
+ */
+export const policyHarshness = (
+	policy: CaptchaPolicySeverityInput,
+	blocks: boolean,
+): number => (blocks ? Number.MAX_SAFE_INTEGER : captchaPolicySeverity(policy));
+
+/**
+ * The harshest of `policies` by `policyHarshness`, or undefined when there
+ * are none. A tie keeps the earlier policy, so the result never depends on
+ * anything but the policies and their order.
+ */
+export const harshestPolicy = <T extends CaptchaPolicySeverityInput>(
+	policies: readonly T[],
+	blocks: (policy: T) => boolean,
+): T | undefined => {
+	let harshest: T | undefined;
+	let harshestSeverity = Number.NEGATIVE_INFINITY;
+	for (const policy of policies) {
+		const severity = policyHarshness(policy, blocks(policy));
+		if (severity > harshestSeverity) {
+			harshest = policy;
+			harshestSeverity = severity;
+		}
+	}
+	return harshest;
+};

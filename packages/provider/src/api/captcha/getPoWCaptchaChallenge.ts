@@ -267,6 +267,9 @@ export default (
 				// individual flags off this object instead of separate
 				// flat fields.
 				req.ipInfo,
+				// From the proof sent at frictionless time. A proof submitted
+				// with the solution replaces it.
+				sessionRecord?.fingerprintSummary,
 			);
 
 			const padBytes = trafficVerdict.padBytes;
