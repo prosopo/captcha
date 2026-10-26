@@ -160,6 +160,7 @@ export const issuePuzzleChallenge = async ({
 		provenance.ja4,
 		provenance.sessionId,
 		provenance.ipInfo,
+		sessionRecord?.fingerprintSummary,
 	);
 
 	// Render AFTER the record is stored: the target must be durable

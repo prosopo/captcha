@@ -736,6 +736,10 @@ export type SubmitPowCaptchaSolutionBodyType = input<
 	typeof SubmitPowCaptchaSolutionBody
 >;
 
+// Caps how many concurrent frictionless sessions one user can hold per site
+// key by varying the slot.
+export const MAX_WIDGET_SLOT = 15;
+
 export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	[ApiParams.dapp]: boundedString(INPUT_LIMITS.ID),
 	// Empty when the client had no detector to run — never a bypass; the
@@ -783,6 +787,12 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// refresh. Only honoured alongside a `refreshOf` naming a puzzle session
 	// on a site with the switch enabled, and only ever moves puzzle to image.
 	[ApiParams.switchToImage]: boolean().optional(),
+	// Encoded proof of fingerprint. Sent here so every session carries the
+	// device bucket whichever captcha type it is served, not only PoW.
+	[ApiParams.fingerprintProof]: boundedString(INPUT_LIMITS.TOKEN).optional(),
+	// Which of the page's widgets for this site key is asking, so each one is
+	// deduplicated onto its own session instead of all sharing the first.
+	[ApiParams.widgetSlot]: number().int().min(0).max(MAX_WIDGET_SLOT).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<

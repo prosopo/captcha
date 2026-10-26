@@ -79,6 +79,8 @@ export type BotDetectionFunction = (
 	refreshOf?: string,
 	// The user asked for the replacement to be an image challenge.
 	switchToImage?: boolean,
+	// This widget's slot among the page's widgets for the same site key.
+	widgetSlot?: number,
 ) => Promise<BotDetectionFunctionResult>;
 
 /**

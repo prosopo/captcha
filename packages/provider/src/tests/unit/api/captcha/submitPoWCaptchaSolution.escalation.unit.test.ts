@@ -15,6 +15,7 @@
 import {
 	CaptchaType,
 	type DetectorData,
+	type FingerprintSummaryStored,
 	type Session,
 	resolveAllowedCaptchaTypes,
 } from "@prosopo/types";
@@ -91,6 +92,47 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 
 	beforeEach(() => {
 		env = makeTasks();
+	});
+
+	describe("fingerprint summary", () => {
+		const submitted: FingerprintSummaryStored = {
+			root: "0xsubmitted",
+			groupHash: "0xgroup",
+			bucketId: "a".repeat(32),
+		};
+		const atFrictionless: FingerprintSummaryStored = {
+			root: "0xfrictionless",
+			groupHash: "0xgroup",
+			bucketId: "b".repeat(32),
+		};
+
+		const escalate = async (powSummary?: FingerprintSummaryStored) => {
+			env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+				sessionId: "origin-id",
+				dappAccount: "dapp",
+				...(powSummary && { fingerprintSummary: powSummary }),
+			});
+			env.spies.getSessionRecordBySessionId.mockResolvedValue({
+				...makeOriginSession(),
+				fingerprintSummary: atFrictionless,
+			});
+			await buildEscalation(
+				env.tasks,
+				{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
+				"challenge",
+			);
+			const input: CreateSessionInput =
+				env.spies.createSession.mock.calls[0]?.[0];
+			return input.fingerprintSummary;
+		};
+
+		it("carries the summary from the proof submitted with the PoW", async () => {
+			expect(await escalate(submitted)).toStrictEqual(submitted);
+		});
+
+		it("falls back to the summary recorded at frictionless time", async () => {
+			expect(await escalate()).toStrictEqual(atFrictionless);
+		});
 	});
 
 	it("returns undefined when no routing output was supplied (no escalation)", async () => {

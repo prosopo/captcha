@@ -620,3 +620,108 @@ describe("tearing down", () => {
 		expect(mocks.mounted).toHaveLength(0);
 	});
 });
+
+describe("a detection that lands after destroy", () => {
+	const deferred = (): {
+		detectBot: BotDetectionFunction;
+		release: (result: BotDetectionFunctionResult) => void;
+		fail: (error: Error) => void;
+		calls: () => number;
+	} => {
+		let release: (result: BotDetectionFunctionResult) => void = () => undefined;
+		let fail: (error: Error) => void = () => undefined;
+		const detectBot = vi.fn<BotDetectionFunction>(
+			() =>
+				new Promise<BotDetectionFunctionResult>(
+					(
+						resolve: (result: BotDetectionFunctionResult) => void,
+						reject: (error: Error) => void,
+					) => {
+						release = resolve;
+						fail = reject;
+					},
+				),
+		);
+		return {
+			detectBot,
+			release: (result: BotDetectionFunctionResult) => release(result),
+			fail: (error: Error) => fail(error),
+			calls: () => detectBot.mock.calls.length,
+		};
+	};
+
+	test("does not pass a dead widget as human", async () => {
+		const onHuman = vi.fn<(token: string) => void>();
+		const detection$ = deferred();
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(detection$.detectBot, { callbacks: { onHuman } }),
+		);
+		widget.destroy();
+		widget = undefined;
+		detection$.release(detection(CaptchaType.authenticated));
+		await settle();
+		expect(onHuman).not.toHaveBeenCalled();
+		expect(container.textContent).toBe("");
+	});
+
+	test("does not report an error for a dead widget", async () => {
+		const onError = vi.fn<(error: Error) => void>();
+		const detection$ = deferred();
+		widget = mountProcaptchaFrictionless(
+			container,
+			props(detection$.detectBot, { callbacks: { onError } }),
+		);
+		widget.destroy();
+		widget = undefined;
+		detection$.release({
+			sessionId: "session-1",
+		} as unknown as BotDetectionFunctionResult);
+		await settle();
+		expect(onError).not.toHaveBeenCalled();
+	});
+
+	test("does not retry detection for a dead widget", async () => {
+		const longestRetryBackoffMs = 10_000;
+		vi.useFakeTimers();
+		try {
+			const detection$ = deferred();
+			widget = mountProcaptchaFrictionless(
+				container,
+				props(detection$.detectBot),
+			);
+			widget.destroy();
+			widget = undefined;
+			detection$.fail(new Error("provider down"));
+			await vi.advanceTimersByTimeAsync(longestRetryBackoffMs);
+			expect(detection$.calls()).toBe(1);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+});
+
+describe("several widgets on one page", () => {
+	test("gives each widget for a site key its own slot, and reuses a freed one", async () => {
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValue(detection(CaptchaType.pow));
+		const second = document.createElement("div");
+		document.body.appendChild(second);
+		widget = mountProcaptchaFrictionless(container, props(detectBot));
+		const secondWidget = mountProcaptchaFrictionless(second, props(detectBot));
+		await settle();
+		expect(detectBot.mock.calls.map((call) => call[6])).toEqual([0, 1]);
+
+		widget.destroy();
+		const remounted = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValue(detection(CaptchaType.pow));
+		widget = mountProcaptchaFrictionless(container, props(remounted));
+		await settle();
+		expect(remounted.mock.calls[0]?.[6]).toBe(0);
+
+		secondWidget.destroy();
+		second.remove();
+	});
+});

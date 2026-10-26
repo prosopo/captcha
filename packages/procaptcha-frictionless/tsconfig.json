@@ -26,6 +26,9 @@
 			"path": "../common"
 		},
 		{
+			"path": "../fingerprint"
+		},
+		{
 			"path": "../locale"
 		},
 		{

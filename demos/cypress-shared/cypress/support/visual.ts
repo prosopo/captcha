@@ -48,15 +48,30 @@ declare global {
 	}
 }
 
-function injectPauseAnimationsStyle(): void {
+function appendPauseAnimationsStyle(
+	doc: Document,
+	root: Document | ShadowRoot,
+): void {
+	if (root.getElementById(PAUSE_STYLE_ID)) {
+		return;
+	}
+	const style = doc.createElement("style");
+	style.id = PAUSE_STYLE_ID;
+	style.appendChild(doc.createTextNode(PAUSE_ANIMATIONS_STYLE));
+	(root === doc ? doc.head : root).appendChild(style);
+}
+
+// Document styles don't reach into a shadow root, so a widget snapshot needs
+// the pause style injected inside the widget's own shadow root as well.
+function injectPauseAnimationsStyle(
+	subject: JQuery<HTMLElement> | undefined,
+): void {
 	cy.document({ log: false }).then((doc) => {
-		if (doc.getElementById(PAUSE_STYLE_ID)) {
-			return;
+		appendPauseAnimationsStyle(doc, doc);
+		const shadowRoot = subject?.get(0)?.shadowRoot;
+		if (shadowRoot) {
+			appendPauseAnimationsStyle(doc, shadowRoot);
 		}
-		const style = doc.createElement("style");
-		style.id = PAUSE_STYLE_ID;
-		style.appendChild(doc.createTextNode(PAUSE_ANIMATIONS_STYLE));
-		doc.head.appendChild(style);
 	});
 }
 
@@ -86,7 +101,7 @@ Cypress.Commands.add(
 				: cy.wrap(null, { log: false });
 		}
 
-		injectPauseAnimationsStyle();
+		injectPauseAnimationsStyle(subject || undefined);
 		// One animation frame for the style to apply before screenshotting.
 		cy.wait(50, { log: false });
 
