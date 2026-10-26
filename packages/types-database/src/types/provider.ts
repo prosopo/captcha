@@ -16,6 +16,7 @@ import type { AllKeys } from "@prosopo/common";
 import { translationKeys } from "@prosopo/locale";
 import {
 	type AudioCaptchaStored,
+	type FingerprintSummaryStored,
 	type AudioEvent,
 	CaptchaLabel,
 	CaptchaType,
@@ -41,7 +42,7 @@ import {
 	Tier,
 	type UserCommitment,
 	type UserSolutionSchema,
-} from "@prosopo/types";
+ from "@prosopo/types";
 import {
 	type Captcha,
 	type CaptchaResult,
@@ -223,6 +224,38 @@ CaptchaRecordSchema.index({ datasetId: 1, solved: 1 });
 // of materialising the full matched set.
 CaptchaRecordSchema.index({ datasetId: 1, solved: 1, randomKey: 1 });
 
+// Mongoose runs `strict: true` and silently drops undeclared paths, so every
+// record that carries a fingerprint summary has to declare this field.
+const FingerprintSummaryRecordSchema = new Schema(
+	{
+		root: { type: String, required: true },
+		groupHash: { type: String, required: true },
+		bucketId: { type: String, required: false },
+		colorDepth: { type: Number, required: false },
+		hardwareConcurrency: { type: Number, required: false },
+		disclosed: {
+			type: new Schema(
+				{
+					timezone: { type: String, required: false },
+					languages: { type: String, required: false },
+					architecture: { type: Number, required: false },
+					cookiesEnabled: { type: Boolean, required: false },
+					sessionStorage: { type: Boolean, required: false },
+					localStorage: { type: Boolean, required: false },
+				},
+				{ _id: false },
+			),
+			required: false,
+		},
+	},
+	{ _id: false },
+);
+
+const fingerprintSummaryField = {
+	type: FingerprintSummaryRecordSchema,
+	required: false,
+};
+
 export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 	challenge: { type: String, required: true },
 	dappAccount: { type: String, required: true },
@@ -297,35 +330,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		required: false,
 	},
 	providerSignature: { type: String, required: true },
-	// Mongoose runs `strict: true` and silently drops undeclared paths, so an
-	// omission here means the field is written and never stored.
-	fingerprintSummary: {
-		type: new Schema(
-			{
-				root: { type: String, required: true },
-				groupHash: { type: String, required: true },
-				bucketId: { type: String, required: false },
-				colorDepth: { type: Number, required: false },
-				hardwareConcurrency: { type: Number, required: false },
-				disclosed: {
-					type: new Schema(
-						{
-							timezone: { type: String, required: false },
-							languages: { type: String, required: false },
-							architecture: { type: Number, required: false },
-							cookiesEnabled: { type: Boolean, required: false },
-							sessionStorage: { type: Boolean, required: false },
-							localStorage: { type: Boolean, required: false },
-						},
-						{ _id: false },
-					),
-					required: false,
-				},
-			},
-			{ _id: false },
-		),
-		required: false,
-	},
+	fingerprintSummary: fingerprintSummaryField,
 	// Internal ML labelling applied by superadmins via the audit page.
 	label: { type: String, enum: Object.values(CaptchaLabel), required: false },
 	labelReason: { type: String, required: false },
@@ -401,6 +406,7 @@ PoWCaptchaRecordSchema.index(
  * type shows up as an empty column rather than a compile error.
  */
 const interactiveCaptchaRecordFields = {
+	fingerprintSummary: fingerprintSummaryField,
 	challenge: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
@@ -624,6 +630,7 @@ indexInteractiveCaptchaRecord(IconOrderCaptchaRecordSchema);
 indexInteractiveCaptchaRecord(AudioCaptchaRecordSchema);
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
+	fingerprintSummary: fingerprintSummaryField,
 	userAccount: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	providerAccount: { type: String, required: true },
@@ -850,6 +857,7 @@ ScheduledTaskRecordSchema.index({ _id: 1, status: 1 });
 export type SessionRecord = mongoose.Document & Session;
 
 export const SessionRecordSchema = new Schema<SessionRecord>({
+	fingerprintSummary: fingerprintSummaryField,
 	sessionId: { type: String, required: true },
 	createdAt: { type: Date, required: true },
 	token: { type: String, required: true },
@@ -1269,6 +1277,9 @@ export const SESSION_PROJECTION = {
 	// so session-level readers see the same clientSessionId the
 	// captcha record carries.
 	clientMetaData: 1,
+	// Copied onto the captcha record a session leads to, and walked to
+	// the origin for escalations; see getSessionRecordWithOriginFallback.
+	fingerprintSummary: 1,
 	// captchaType is required by the peek-before-consume path
 	// in `CaptchaManager.isValidRequest` — without it, every
 	// escalation peek would compare `undefined !== <requested>`
@@ -1554,6 +1565,7 @@ export interface IProviderDatabase extends IDatabase {
 		userSubmitted?: boolean,
 		userSignature?: string,
 		ipInfo?: IPInfoResponse,
+		fingerprintSummary?: FingerprintSummaryStored,
 	): Promise<void>;
 
 	getPowCaptchaRecordByChallenge(
@@ -1588,6 +1600,7 @@ export interface IProviderDatabase extends IDatabase {
 		ja4: string,
 		sessionId?: string,
 		ipInfo?: IPInfoResponse,
+		fingerprintSummary?: FingerprintSummaryStored,
 	): Promise<void>;
 
 	getPuzzleCaptchaRecordByChallenge(

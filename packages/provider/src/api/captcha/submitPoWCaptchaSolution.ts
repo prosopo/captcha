@@ -479,6 +479,10 @@ export const buildEscalation = async (
 		// The escalated session is the same render as the origin, so it answers
 		// to the same session id the verify call will correlate against.
 		clientMetaData: originSession.clientMetaData,
+		// Same device, so the same bucket. A proof submitted with this PoW is
+		// newer than the one sent at frictionless time, so it wins.
+		fingerprintSummary:
+			powRecord.fingerprintSummary ?? originSession.fingerprintSummary,
 	});
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*
