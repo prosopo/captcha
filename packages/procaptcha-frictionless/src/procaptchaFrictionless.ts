@@ -57,6 +57,7 @@ import {
 	handleSessionInvalidated,
 	normaliseRetryCoords,
 } from "./sessionInvalidatedRecovery.js";
+import { claimWidgetSlot, releaseWidgetSlot } from "./widgetSlot.js";
 
 const frontendError = (error: ProsopoError): WidgetError =>
 	toPublicError(error, "FRONTEND_ERROR");
@@ -183,9 +184,10 @@ export const mountProcaptchaFrictionless = (
 	// that window (e.g. a fast form submit) would otherwise be dropped and the
 	// challenge never open, so it is held here and replayed on mount.
 	let pendingExecute = false;
-	const banner: StaticComponent = mountTestModeBanner(container, {
-		siteKey: config.account?.address ?? "",
-	});
+	const siteKey = config.account?.address ?? "";
+	const banner: StaticComponent = mountTestModeBanner(container, { siteKey });
+	const widgetSlot = claimWidgetSlot(siteKey);
+	teardown.add(() => releaseWidgetSlot(siteKey, widgetSlot));
 
 	// The solver (or the placeholder checkbox) renders here. Swapping the slot's
 	// contents replaces what the React version did by putting an element in
@@ -548,6 +550,7 @@ export const mountProcaptchaFrictionless = (
 					{ attempt: state.attemptCount },
 					nextRefreshOf,
 					nextSwitchToImage,
+					widgetSlot,
 				);
 				if (destroyed) return;
 

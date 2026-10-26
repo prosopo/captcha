@@ -37,6 +37,7 @@ import {
 	type DecisionMachineArtifact,
 	DecisionMachineKind,
 	type DecisionMachineScope,
+	type FingerprintSummaryStored,
 	type Hash,
 	type IPInfoResponse,
 	type IconOrderCaptchaStored,
@@ -901,6 +902,7 @@ export class ProviderDatabase
 		userSubmitted = false,
 		userSignature?: string,
 		ipInfo?: IPInfoResponse,
+		fingerprintSummary?: FingerprintSummaryStored,
 	): Promise<void> {
 		const tables = this.getTables();
 
@@ -922,6 +924,7 @@ export class ProviderDatabase
 			pendingStage: true,
 			sessionId,
 			ipInfo,
+			...(fingerprintSummary && { fingerprintSummary }),
 		};
 
 		try {
@@ -1354,6 +1357,7 @@ export class ProviderDatabase
 		ja4: string,
 		sessionId?: string,
 		ipInfo?: IPInfoResponse,
+		fingerprintSummary?: FingerprintSummaryStored,
 	): Promise<void> {
 		await this.storeInteractiveCaptchaRecord(
 			this.interactiveCollection(CaptchaType.puzzle),
@@ -1373,6 +1377,7 @@ export class ProviderDatabase
 				targetY,
 				originX,
 				originY,
+				...(fingerprintSummary && { fingerprintSummary }),
 			},
 		);
 	}

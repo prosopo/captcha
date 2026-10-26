@@ -183,6 +183,74 @@ export interface ClientMetaData {
 }
 
 /**
+ * The disclosed values that are fixed by the installation and the host, kept
+ * individually alongside `groupHash`, which is a hash of exactly these.
+ *
+ * `groupHash` alone is enough to group by, but it is one-way: a cohort could be
+ * counted and never described, so "which timezone is this concentrated in?"
+ * would be unanswerable after the fact. Keeping the values costs about 170
+ * bytes a record against a whole proof's ~7.8KB, and the hash stays
+ * precomputed so it can carry an index.
+ *
+ * `languages` is a nested array in the component set and is stored as canonical
+ * JSON, so it is one indexable scalar rather than an array path.
+ */
+export interface FingerprintDisclosedValuesStored {
+	timezone?: string;
+	languages?: string;
+	architecture?: number;
+	cookiesEnabled?: boolean;
+	sessionStorage?: boolean;
+	localStorage?: boolean;
+}
+
+/**
+ * What is worth keeping from a verified fingerprint proof.
+ *
+ * The proof itself is not persisted: each disclosure carries a full Merkle
+ * path, which is large and of no use once the proof has been checked.
+ *
+ *   root      the commitment to the whole component set. Both this and the
+ *             account address are functions of that one set, so one root
+ *             belongs to one address and vice versa.
+ *   groupHash a hash of the disclosed values in `disclosed`.
+ *   bucketId  the disclosed `deviceBucket` digest, an opaque hash of the device
+ *             traits that do not change between sessions. Carried through only
+ *             because its disclosure hashed to `root`, so it cannot be
+ *             presented independently of the identity the same commitment
+ *             produced. Absent for a client that did not disclose it.
+ *   colorDepth / hardwareConcurrency
+ *             disclosed values kept per record, so a cohort can be described
+ *             rather than only counted.
+ */
+export interface FingerprintSummaryStored {
+	root: string;
+	groupHash: string;
+	bucketId?: string;
+	colorDepth?: number;
+	hardwareConcurrency?: number;
+	disclosed?: FingerprintDisclosedValuesStored;
+}
+
+export const FingerprintDisclosedValuesSchema = object({
+	timezone: string().optional(),
+	languages: string().optional(),
+	architecture: number().optional(),
+	cookiesEnabled: boolean().optional(),
+	sessionStorage: boolean().optional(),
+	localStorage: boolean().optional(),
+});
+
+export const FingerprintSummarySchema = object({
+	root: string(),
+	groupHash: string(),
+	bucketId: string().optional(),
+	colorDepth: number().optional(),
+	hardwareConcurrency: number().optional(),
+	disclosed: FingerprintDisclosedValuesSchema.optional(),
+});
+
+/**
  * Internal classification labels applied by superadmins from the audit page to
  * build supervised ML training sets. Stored directly on the captcha record
  * (see {@link StoredCaptcha.label}); not part of the captcha verification flow.
@@ -257,6 +325,9 @@ export interface StoredCaptcha {
 	labelReason?: string;
 	labelledBy?: string;
 	labelledAt?: Date;
+	// From the fingerprint proof sent with the frictionless request, copied
+	// from the session, or from a proof submitted with a PoW solution.
+	fingerprintSummary?: FingerprintSummaryStored;
 }
 
 export interface UserCommitment extends StoredCaptcha {
@@ -356,6 +427,7 @@ export const UserCommitmentSchema = object({
 	labelReason: string().optional(),
 	labelledBy: string().optional(),
 	labelledAt: date().optional(),
+	fingerprintSummary: FingerprintSummarySchema.optional(),
 }) satisfies ZodType<UserCommitment, ZodTypeDef, unknown>;
 
 // Zod schema for ScoreComponents
@@ -591,6 +663,7 @@ export const SessionSchema = object({
 	}).optional(),
 	// See Session.clientMetaData.
 	clientMetaData: ClientMetaDataDbSchema.optional(),
+	fingerprintSummary: FingerprintSummarySchema.optional(),
 }) satisfies ZodType<Session, ZodTypeDef, unknown>;
 
 // Session now includes all frictionless token fields
@@ -783,80 +856,13 @@ export type Session = {
 	// `clientSessionId` the dapp server sends against the one recorded here /
 	// on the captcha record, and reject the token when they disagree.
 	clientMetaData?: ClientMetaData;
+	fingerprintSummary?: FingerprintSummaryStored;
 };
 
 // Zod schema for PoWCaptchaStored
 // PoWCaptchaStored = PoWCaptchaUser (minus requestedAtTimestamp) + StoredCaptcha
 // Note: challenge uses PowChallengeIdSchema for runtime validation
 // The PoWCaptchaStored interface enforces the PoWChallengeId template literal type at compile time
-/**
- * The disclosed values that are fixed by the installation and the host, kept
- * individually alongside `groupHash`, which is a hash of exactly these.
- *
- * `groupHash` alone is enough to group by, but it is one-way: a cohort could be
- * counted and never described, so "which timezone is this concentrated in?"
- * would be unanswerable after the fact. Keeping the values costs about 170
- * bytes a record against a whole proof's ~7.8KB, and the hash stays
- * precomputed so it can carry an index.
- *
- * `languages` is a nested array in the component set and is stored as canonical
- * JSON, so it is one indexable scalar rather than an array path.
- */
-export interface FingerprintDisclosedValuesStored {
-	timezone?: string;
-	languages?: string;
-	architecture?: number;
-	cookiesEnabled?: boolean;
-	sessionStorage?: boolean;
-	localStorage?: boolean;
-}
-
-/**
- * What is worth keeping from a verified fingerprint proof.
- *
- * The proof itself is not persisted: each disclosure carries a full Merkle
- * path, which is large and of no use once the proof has been checked.
- *
- *   root      the commitment to the whole component set. Both this and the
- *             account address are functions of that one set, so one root
- *             belongs to one address and vice versa.
- *   groupHash a hash of the disclosed values in `disclosed`.
- *   bucketId  the disclosed `deviceBucket` digest, an opaque hash of the device
- *             traits that do not change between sessions. Carried through only
- *             because its disclosure hashed to `root`, so it cannot be
- *             presented independently of the identity the same commitment
- *             produced. Absent for a client that did not disclose it.
- *   colorDepth / hardwareConcurrency
- *             disclosed values kept per record, so a cohort can be described
- *             rather than only counted.
- */
-export interface FingerprintSummaryStored {
-	root: string;
-	groupHash: string;
-	bucketId?: string;
-	colorDepth?: number;
-	hardwareConcurrency?: number;
-	disclosed?: FingerprintDisclosedValuesStored;
-}
-
-export const FingerprintDisclosedValuesSchema = object({
-	timezone: string().optional(),
-	languages: string().optional(),
-	architecture: number().optional(),
-	cookiesEnabled: boolean().optional(),
-	sessionStorage: boolean().optional(),
-	localStorage: boolean().optional(),
-});
-
-export const FingerprintSummarySchema = object({
-	root: string(),
-	groupHash: string(),
-	bucketId: string().optional(),
-	colorDepth: number().optional(),
-	hardwareConcurrency: number().optional(),
-	disclosed: FingerprintDisclosedValuesSchema.optional(),
-});
-
 export const PoWCaptchaStoredSchema = object({
 	// From PoWCaptchaUser (extends PoWCaptcha)
 	challenge: PowChallengeIdSchema,
@@ -894,7 +900,6 @@ export const PoWCaptchaStoredSchema = object({
 	clickEvents: array(object({}).catchall(any())).optional(),
 	deviceCapability: string().optional(),
 	behavioralDataPacked: BehavioralDataPackedSchema.optional(),
-	fingerprintSummary: FingerprintSummarySchema.optional(),
 	// Internal ML labelling (see StoredCaptcha.label)
 	label: CaptchaLabelSchema.optional(),
 	labelReason: string().optional(),
@@ -916,9 +921,7 @@ export type PendingImageCaptchaRequest = {
 
 export interface PoWCaptchaStored
 	extends Omit<PoWCaptchaUser, "requestedAtTimestamp">,
-		StoredCaptcha {
-	fingerprintSummary?: FingerprintSummaryStored;
-}
+		StoredCaptcha {}
 
 /**
  * Everything needed to reproduce a served puzzle exactly, for the portal's
@@ -1017,6 +1020,7 @@ export const UserSolutionSchema = CaptchaSolutionSchema.extend({
 	checked: boolean(),
 	commitmentId: string(),
 	createdAt: date(),
+	fingerprintSummary: FingerprintSummarySchema.optional(),
 });
 
 export type UserSolution = zInfer<typeof UserSolutionSchema>;
