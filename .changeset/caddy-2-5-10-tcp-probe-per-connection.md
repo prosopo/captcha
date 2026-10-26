@@ -1,5 +1,4 @@
 ---
-"@prosopo/caddy-docker": patch
 ---
 
 `prosopo/caddy:2.5.10` picks up chaddy with the TCP handshake record kept for the life of each connection (prosopo/chaddy#19).
