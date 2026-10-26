@@ -155,6 +155,7 @@ declare global {
 }
 
 export const checkboxClass = '[type="checkbox"]';
+export const widgetHostSelector = "prosopo-procaptcha";
 
 export function getWidgetElement(
 	selector: string,
