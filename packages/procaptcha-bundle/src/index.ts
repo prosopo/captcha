@@ -23,7 +23,7 @@ import {
 } from "@prosopo/types";
 import { at } from "@prosopo/util";
 import type { BundleCaptchaHandle } from "./util/captcha/components/bundleCaptcha.js";
-import { extractParams, getProcaptchaScript } from "./util/config.js";
+import { extractParams } from "./util/config.js";
 import { siteLanguage } from "./util/language.js";
 import { resolveStartMode } from "./util/startMode.js";
 import { type CreatedWidget, WidgetFactory } from "./util/widgetFactory.js";
@@ -120,12 +120,27 @@ const PROCAPTCHA_EXECUTE_EVENT = "procaptcha:execute";
 // Define a custom event name for procaptcha ready
 const PROCAPTCHA_READY_EVENT = "procaptcha:ready";
 
+const IMPLICIT_RENDER_MARK = "data-procaptcha-rendered";
+
+// The mark lives on the element rather than in this module so that a second
+// copy of the bundle loaded on the same page skips the element too.
+const claimImplicitElements = (): Element[] => {
+	const unclaimed = Array.from(
+		document.getElementsByClassName("procaptcha"),
+	).filter((element) => !element.hasAttribute(IMPLICIT_RENDER_MARK));
+	for (const element of unclaimed) {
+		element.setAttribute(IMPLICIT_RENDER_MARK, "");
+	}
+	return unclaimed;
+};
+
+const isButton = (element: Element): boolean =>
+	element.tagName.toLowerCase() === "button";
+
 // Implicit render for targeting all elements with class 'procaptcha'
 const implicitRender = async () => {
-	// Get elements with class 'procaptcha', not including buttons
-	const elements: Element[] = Array.from(
-		document.getElementsByClassName("procaptcha"),
-	).filter((element) => element.tagName.toLowerCase() !== "button");
+	const claimed = claimImplicitElements();
+	const elements = claimed.filter((element) => !isButton(element));
 
 	// Set siteKey from renderOptions or from the first element's data-sitekey attribute
 	if (elements.length) {
@@ -181,9 +196,7 @@ const implicitRender = async () => {
 	}
 
 	// Check for invisible mode indicators (procaptcha class on buttons)
-	const invisibleButtons = Array.from(
-		document.getElementsByClassName("procaptcha"),
-	).filter((button) => button.tagName.toLowerCase() === "button");
+	const invisibleButtons = claimed.filter(isButton);
 
 	if (invisibleButtons.length) {
 		for (const button of invisibleButtons) {
@@ -291,11 +304,15 @@ export default function ready(fn: () => void) {
 		fn();
 	} else {
 		console.log("DOMContentLoaded listener!");
-		document.addEventListener("DOMContentLoaded", () => {
-			console.log("DOMContentLoaded fired");
-			console.log(window);
-			fn();
-		});
+		document.addEventListener(
+			"DOMContentLoaded",
+			() => {
+				console.log("DOMContentLoaded fired");
+				console.log(window);
+				fn();
+			},
+			{ once: true },
+		);
 	}
 }
 
@@ -444,34 +461,17 @@ declare global {
 	}
 }
 
+// Boots straight away rather than on the script's `load` event: that event
+// fires immediately after this script has run, however the script was added.
 const boot = () => {
 	// onLoadUrlCallback defines the name of the callback function to be called when the script is loaded
 	// onRenderExplicit takes values of either explicit or implicit
 	const { onloadUrlCallback, renderExplicit } = extractParams(BUNDLE_NAMES);
-	if (renderExplicit === "explicit" && !onloadUrlCallback) return;
-
-	// A script injected after the page loaded runs with readyState already
-	// "complete" and then receives its own `load` event, so both triggers
-	// below fire. Without the guard every implicit widget was mounted twice
-	// (the first copy orphaned but still running) and the onload callback ran
-	// twice.
-	let booted = false;
-	const run = () => {
-		if (booted) return;
-		booted = true;
-		if (renderExplicit !== "explicit") {
-			ready(implicitRender);
-		}
-		if (onloadUrlCallback) {
-			ready(getWindowCallback(onloadUrlCallback));
-		}
-	};
-
-	getProcaptchaScript(BUNDLE_NAMES)?.addEventListener("load", run, {
-		once: true,
-	});
-	if (document.readyState === "complete") {
-		run();
+	if (renderExplicit !== "explicit") {
+		ready(implicitRender);
+	}
+	if (onloadUrlCallback) {
+		ready(getWindowCallback(onloadUrlCallback));
 	}
 };
 
@@ -501,10 +501,6 @@ const clearHost = (entry: WidgetEntry): void => {
  * skeleton stayed in the DOM with no checkbox inside it and no fresh captcha
  * request was ever made. Rebuilding from the stored descriptor makes reset
  * behave the same way on both paths.
- *
- * `boot()` is deliberately not called here any more. It re-renders implicit
- * widgets, which would double up with the remount below, and it attaches
- * another `load` listener to the script tag on every call.
  */
 export const reset = async (widgetId?: string): Promise<void> => {
 	const ids: string[] =
@@ -570,12 +566,19 @@ export const remove = (widgetId?: string): void => {
 		entry.unbindTrigger?.();
 		entry.handle.destroy();
 		clearHost(entry);
+		entry.element.removeAttribute(IMPLICIT_RENDER_MARK);
 		procaptchaWidgets.delete(id);
 	}
 };
 
-// set the procaptcha attribute on the window
-window.procaptcha = { ready, render, reset, remove, execute, start };
+// A second copy of the bundle leaves the first copy's API in place: only the
+// first copy tracks the widgets it has already rendered, so reset() and
+// remove() must keep reaching it.
+const BUNDLE_LOADED = Symbol.for("@prosopo/procaptcha-bundle/loaded");
+if (!Reflect.has(window, BUNDLE_LOADED)) {
+	Reflect.set(window, BUNDLE_LOADED, true);
+	window.procaptcha = { ready, render, reset, remove, execute, start };
+}
 
 // Dispatch a custom event to notify that window.procaptcha is ready
 const procaptchaReadyEvent = new CustomEvent(PROCAPTCHA_READY_EVENT, {
