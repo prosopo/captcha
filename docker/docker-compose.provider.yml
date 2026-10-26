@@ -221,11 +221,31 @@ services:
     image: prosopo/vector:${VECTOR_IMAGE}
     env_file:
       - ../.env.1.${NODE_ENV}
+    environment:
+      # host_metrics reads these instead of the container's own /proc and /sys
+      PROCFS_ROOT: /host/proc
+      SYSFS_ROOT: /host/sys
+      # Measured at 0-17% of one core; two worker threads is plenty and keeps
+      # it from spawning one per core on the big hosts.
+      VECTOR_THREADS: 2
     labels:
       - "vector.docker=true" # log docker events
     restart: unless-stopped # unless the container has been stopped, it will be restarted, even on reboot
+    deploy:
+      resources:
+        limits:
+          # Measured RSS is 120-250MB. The cap stops a backlog or a leak from
+          # starving the provider; vector restarts and its disk buffers survive.
+          memory: 512M
+          cpus: '1.0'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # needed for monitoring docker container events, e.g. start/stop/etc
+      # Read-only bind mounts need no extra privileges.
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      # Disk buffers for the high-value log sinks. Without a volume they live
+      # in the container layer and are lost whenever vector is recreated.
+      - vector_data:/var/lib/vector
     networks:
       external:
       internal:
@@ -372,3 +392,4 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
+  vector_data:

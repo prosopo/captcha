@@ -22,11 +22,26 @@
 # CONFIGURATION NOTES
 # =============================================================================
 #
-# Rate Limiting: Set to 10 requests per second to avoid overwhelming the API
-# Batch Timeout: 15 seconds to balance between latency and throughput
-# Buffer Size: ~256MB disk buffer to handle temporary network issues
+# Both OpenObserve instances (oo, oo2) are best effort: no sink may block the
+# pipeline, so every buffer is bounded and drops new events when full. One
+# instance being down never stalls delivery to the other.
+#
+# Rate Limiting: 10 requests per second per sink to avoid overwhelming the API
+# Batch: sent every 15s, or sooner at 5MB (logs) / 10k events (metrics). At
+# ~125KB/s per host the timer always wins; the size caps only bite when a
+# backlog drains after an outage, keeping each request well under limits.
+# Retries: attempts are unlimited (vector's default). Backoff starts at 1s and
+# is capped at 60s by retry_max_duration_secs. The bounded buffer, not an
+# attempt count, is what limits data loss during a long outage.
+# Buffers:
+#   - provider, runner, orchestrator, mongo, caddy logs: 256MB disk buffer
+#     each, so a restart or outage doesn't lose them. Needs /var/lib/vector
+#     mounted as a volume, or the buffer lives in the container layer.
+#   - docker events, vector's own logs, redis logs, metrics: 10k-event memory
+#     buffer. Cheap to lose, so not worth the disk writes.
 # Compression: Gzip enabled to reduce bandwidth usage
-# Health Checks: Enabled to monitor sink connectivity
+# Health Checks: Enabled on log sinks. Off on the remote-write metrics sinks,
+# whose endpoint has no GET handler, so the check always fails with a 405.
 #
 # To enable console output for debugging, uncomment the console sink sections
 # and comment out the corresponding OpenObserve sinks.
@@ -97,13 +112,13 @@ enabled = true
 
 [sinks.oo_provider.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo_provider.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-retry_initial_backoff_secs = 1    # Start retrying after 1s
-retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
 
 [sinks.oo_provider.buffer]
 type = "disk"
@@ -133,13 +148,13 @@ enabled = true
 
 [sinks.oo2_provider.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo2_provider.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-retry_initial_backoff_secs = 1    # Start retrying after 1s
-retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
 
 [sinks.oo2_provider.buffer]
 type = "disk"
@@ -206,13 +221,13 @@ enabled = true
 
 [sinks.oo_runner.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo_runner.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5
 retry_initial_backoff_secs = 1
-retry_max_backoff_secs = 30
+retry_max_duration_secs = 60
 
 [sinks.oo_runner.buffer]
 type = "disk"
@@ -240,13 +255,13 @@ enabled = true
 
 [sinks.oo2_runner.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo2_runner.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5
 retry_initial_backoff_secs = 1
-retry_max_backoff_secs = 30
+retry_max_duration_secs = 60
 
 [sinks.oo2_runner.buffer]
 type = "disk"
@@ -302,13 +317,13 @@ enabled = true
 
 [sinks.oo_orchestrator.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo_orchestrator.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5
 retry_initial_backoff_secs = 1
-retry_max_backoff_secs = 30
+retry_max_duration_secs = 60
 
 [sinks.oo_orchestrator.buffer]
 type = "disk"
@@ -336,13 +351,13 @@ enabled = true
 
 [sinks.oo2_orchestrator.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo2_orchestrator.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5
 retry_initial_backoff_secs = 1
-retry_max_backoff_secs = 30
+retry_max_duration_secs = 60
 
 [sinks.oo2_orchestrator.buffer]
 type = "disk"
@@ -404,13 +419,13 @@ enabled = true
 
 [sinks.oo_mongo.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo_mongo.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-retry_initial_backoff_secs = 1    # Start retrying after 1s
-retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
 
 [sinks.oo_mongo.buffer]
 type = "disk"
@@ -440,13 +455,13 @@ enabled = true
 
 [sinks.oo2_mongo.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo2_mongo.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-retry_initial_backoff_secs = 1    # Start retrying after 1s
-retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
 
 [sinks.oo2_mongo.buffer]
 type = "disk"
@@ -524,17 +539,17 @@ enabled = true
 
 [sinks.oo_docker.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo_docker.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-retry_initial_backoff_secs = 1    # Start retrying after 1s
-retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
 
 [sinks.oo_docker.buffer]
-type = "disk"
-max_size = 268435488
+type = "memory"
+max_events = 10000
 when_full = "drop_newest"
 
 # Sink: Forward Docker events to secondary OpenObserve instance
@@ -559,17 +574,17 @@ enabled = true
 
 [sinks.oo2_docker.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo2_docker.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-retry_initial_backoff_secs = 1    # Start retrying after 1s
-retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
 
 [sinks.oo2_docker.buffer]
-type = "disk"
-max_size = 268435488
+type = "memory"
+max_events = 10000
 when_full = "drop_newest"
 
 # =============================================================================
@@ -628,13 +643,13 @@ enabled = true
 
 [sinks.oo_caddy.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo_caddy.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-retry_initial_backoff_secs = 1    # Start retrying after 1s
-retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
 
 [sinks.oo_caddy.buffer]
 type = "disk"
@@ -663,13 +678,13 @@ enabled = true
 
 [sinks.oo2_caddy.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo2_caddy.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-retry_initial_backoff_secs = 1    # Start retrying after 1s
-retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
 
 [sinks.oo2_caddy.buffer]
 type = "disk"
@@ -715,17 +730,17 @@ enabled = true
 
 [sinks.oo_vector.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo_vector.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-retry_initial_backoff_secs = 1    # Start retrying after 1s
-retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
 
 [sinks.oo_vector.buffer]
-type = "disk"
-max_size = 268435488
+type = "memory"
+max_events = 10000
 when_full = "drop_newest"
 
 # Sink: Forward Vector logs to secondary OpenObserve instance
@@ -750,17 +765,17 @@ enabled = true
 
 [sinks.oo2_vector.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo2_vector.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-retry_initial_backoff_secs = 1    # Start retrying after 1s
-retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
 
 [sinks.oo2_vector.buffer]
-type = "disk"
-max_size = 268435488
+type = "memory"
+max_events = 10000
 when_full = "drop_newest"
 
 # =============================================================================
@@ -834,17 +849,17 @@ enabled = true
 
 [sinks.oo_redis.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo_redis.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-retry_initial_backoff_secs = 1    # Start retrying after 1s
-retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
 
 [sinks.oo_redis.buffer]
-type = "disk"
-max_size = 268435488
+type = "memory"
+max_events = 10000
 when_full = "drop_newest"
 
 # Sink: Forward Redis logs to secondary OpenObserve instance
@@ -869,17 +884,17 @@ enabled = true
 
 [sinks.oo2_redis.batch]
 timeout_secs = 15
+max_bytes = 5000000
 
 [sinks.oo2_redis.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-retry_initial_backoff_secs = 1    # Start retrying after 1s
-retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
 
 [sinks.oo2_redis.buffer]
-type = "disk"
-max_size = 268435488
+type = "memory"
+max_events = 10000
 when_full = "drop_newest"
 
 # =============================================================================
@@ -894,17 +909,35 @@ when_full = "drop_newest"
 # HOST METRICS
 # =============================================================================
 
-# Source: Collect system-level metrics from the host machine
-# Includes CPU, memory, disk, network, and other hardware metrics
+# Source: Collect system-level metrics from the host machine, split by how
+# fast they change. Fast-moving ones (cpu, memory, load, disk IO) every 30s;
+# slow ones (filesystem usage, host uptime/boot info) every 5 minutes, which
+# cuts their series volume 10x.
+# Left out on purpose:
+#   - process, cgroups (on by default): per-process series are
+#     high-cardinality, and per-container numbers come from cAdvisor.
+#   - network, tcp: vector runs in its own network namespace, so these only
+#     ever see the container's lo/eth0 and vector's own sockets, even with the
+#     host's /proc mounted (/proc/net follows the reader's namespace; tcp uses
+#     netlink). Machine-wide network and tcp come from cAdvisor's root
+#     container (id="/"), which does report the host's interfaces.
+# Reads the host's /proc and /sys when PROCFS_ROOT / SYSFS_ROOT point at them
+# (compose mounts them read-only); otherwise it reports the container's view.
 [sources.host_metrics]
 type = "host_metrics"
 scrape_interval_secs = 30
+collectors = ["cpu", "memory", "load", "disk"]
+
+[sources.host_metrics_slow]
+type = "host_metrics"
+scrape_interval_secs = 300
+collectors = ["filesystem", "host"]
 
 # Transform: Add host and environment tags to host metrics
 # Enables filtering and grouping metrics by host and environment
 [transforms.host_metrics_format]
 type = "remap"
-inputs = ["host_metrics"]
+inputs = ["host_metrics", "host_metrics_slow"]
 source = '''
 .tags.host=get_env_var!("OO_HOST")
 .tags.env=get_env_var!("NODE_ENV")
@@ -1008,19 +1041,22 @@ strategy = "basic"
 user = "${OO_USERNAME:?err}"
 password = "${OO_PASSWORD:?err}"
 
+[sinks.oo_metrics.healthcheck]
+enabled = false
+
 [sinks.oo_metrics.batch]
 timeout_secs = 15
+max_events = 10000
 
 [sinks.oo_metrics.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-retry_initial_backoff_secs = 1    # Start retrying after 1s
-retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
 
 [sinks.oo_metrics.buffer]
-type = "disk"
-max_size = 268435488
+type = "memory"
+max_events = 10000
 when_full = "drop_newest"
 
 # Sink: Forward all metrics to secondary OpenObserve instance
@@ -1035,18 +1071,21 @@ strategy = "basic"
 user = "${OO2_USERNAME:?err}"
 password = "${OO2_PASSWORD:?err}"
 
+[sinks.oo2_metrics.healthcheck]
+enabled = false
+
 [sinks.oo2_metrics.batch]
 timeout_secs = 15
+max_events = 10000
 
 [sinks.oo2_metrics.request]
 rate_limit_duration_secs = 1
 rate_limit_num = 10
-retry_max_attempts = 5            # Chuck the log away after 5 failed tries
-retry_initial_backoff_secs = 1    # Start retrying after 1s
-retry_max_backoff_secs = 30       # Don't wait longer than 30s between retries
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 60
 
 [sinks.oo2_metrics.buffer]
-type = "disk"
-max_size = 268435488
+type = "memory"
+max_events = 10000
 when_full = "drop_newest"
 
