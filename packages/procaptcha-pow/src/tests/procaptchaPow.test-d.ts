@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import { type Ti18n, createUntranslatedI18n } from "@prosopo/locale";
 import type {
 	FrictionlessState,
 	ProcaptchaCallbacks,
@@ -29,7 +29,7 @@ import { Manager } from "../services/Manager.js";
 import { config, frictionless, state } from "./managerHarness.js";
 
 /** The widget only ever reads `language`/`changeLanguage` off this. */
-const i18n = (): Ti18n => undefined as unknown as Ti18n;
+const i18n = (): Ti18n => createUntranslatedI18n();
 
 describe("the package entrypoint's types", () => {
 	test("mountProcaptchaPow takes a host element and the shared widget props", () => {
@@ -50,7 +50,7 @@ describe("the package entrypoint's types", () => {
 		>();
 	});
 
-	test("config, callbacks and i18n are all required", () => {
+	test("config and callbacks are required; i18n is optional", () => {
 		// @ts-expect-error - a widget with no config has no provider to talk to.
 		assertType<ProcaptchaProps>({ callbacks: {}, i18n: i18n() });
 		// @ts-expect-error - callbacks decide what a solve reports back.
@@ -60,6 +60,7 @@ describe("the package entrypoint's types", () => {
 			callbacks: {},
 			i18n: i18n(),
 		});
+		assertType<ProcaptchaProps>({ config: config(), callbacks: {} });
 	});
 });
 
@@ -87,9 +88,9 @@ describe("Manager's types", () => {
 			.toEqualTypeOf<(() => string | undefined) | undefined>();
 	});
 
-	test("it exposes exactly start and resetState", () => {
+	test("it exposes exactly start, resetState and dispose", () => {
 		expectTypeOf<keyof ReturnType<typeof Manager>>().toEqualTypeOf<
-			"start" | "resetState"
+			"start" | "resetState" | "dispose"
 		>();
 		expectTypeOf<ReturnType<typeof Manager>["start"]>().toEqualTypeOf<
 			(x?: number, y?: number) => Promise<void>

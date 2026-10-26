@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { sendProsopoError } from "@prosopo/api-express-router";
+import { ProsopoError } from "@prosopo/common";
 import {
 	CaptchaType,
 	type IPInfoResponse,
@@ -253,7 +255,10 @@ export const runDecisionMachine = async (
 			ipInfo,
 			headers: flatHeaders,
 		});
-		return res.status(401).json({ error: "Unauthorized" });
+		return sendProsopoError(
+			res,
+			new ProsopoError({ code: "UNAUTHORIZED", errorSite: "PROV-88" }),
+		);
 	}
 
 	if (webViewTripped) {

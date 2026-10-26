@@ -21,7 +21,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	DetectorBundlePool,
 	getDetectorBundlePool,
@@ -38,6 +38,7 @@ const writeBundle = (
 		| {
 				privateKey?: string;
 				innerConfig?: string;
+				format?: string;
 				release?: string;
 				payloadLayout?: string;
 				keyMap?: string;
@@ -342,5 +343,84 @@ describe("DetectorBundlePool", () => {
 		reloaded.loadFromDir(dir);
 		expect(reloaded.get("old")).toBeUndefined();
 		expect(reloaded.size()).toBe(1);
+	});
+
+	describe("open-format bundles", () => {
+		afterEach(() => {
+			vi.unstubAllEnvs();
+		});
+
+		it("are skipped unless the node opts in", () => {
+			writeBundle(dir, "open", "JS", { privateKey: "PK", format: "open-v1" });
+			writeBundle(dir, "sealed", "JS", { privateKey: "PK", innerConfig: "C" });
+
+			const pool = new DetectorBundlePool();
+			pool.loadFromDir(dir);
+
+			expect(pool.get("open")).toBeUndefined();
+			expect(pool.get("sealed")).toBeDefined();
+		});
+
+		it("load without an innerConfig once the node opts in", () => {
+			vi.stubEnv("PROSOPO_DETECTOR_OPEN_FORMAT", "1");
+			writeBundle(dir, "open", "JS", { privateKey: "PK", format: "open-v1" });
+
+			const pool = new DetectorBundlePool();
+			pool.loadFromDir(dir);
+
+			expect(pool.get("open")).toEqual({
+				js: "JS",
+				privateKey: "PK",
+				format: "open-v1",
+			});
+		});
+
+		it("do not exempt a sealed bundle from needing an innerConfig", () => {
+			vi.stubEnv("PROSOPO_DETECTOR_OPEN_FORMAT", "1");
+			writeBundle(dir, "sealed", "JS", { privateKey: "PK" });
+
+			const pool = new DetectorBundlePool();
+			pool.loadFromDir(dir);
+
+			expect(pool.size()).toBe(0);
+		});
+
+		it("reject an unknown format", () => {
+			vi.stubEnv("PROSOPO_DETECTOR_OPEN_FORMAT", "1");
+			writeBundle(dir, "future", "JS", { privateKey: "PK", format: "open-v2" });
+
+			const pool = new DetectorBundlePool();
+			pool.loadFromDir(dir);
+
+			expect(pool.size()).toBe(0);
+		});
+
+		it("are dropped from a push to a node that has not opted in", () => {
+			initDetectorBundlePool(dir);
+
+			const { count } = replaceDetectorBundlePool(
+				new Map([
+					["open", { js: "JS", privateKey: "PK", format: "open-v1" }],
+					["sealed", { js: "JS", privateKey: "PK", innerConfig: "C" }],
+				]),
+			);
+
+			expect(count).toBe(1);
+			expect(getDetectorBundlePool()?.get("open")).toBeUndefined();
+			expect(readdirSync(dir).sort()).toEqual(["sealed.js", "sealed.json"]);
+		});
+
+		it("persist their format so they reload after a restart", () => {
+			vi.stubEnv("PROSOPO_DETECTOR_OPEN_FORMAT", "1");
+			persistDetectorBundlePool(
+				new Map([["open", { js: "JS", privateKey: "PK", format: "open-v1" }]]),
+				dir,
+			);
+
+			const reloaded = new DetectorBundlePool();
+			reloaded.loadFromDir(dir);
+
+			expect(reloaded.get("open")?.format).toBe("open-v1");
+		});
 	});
 });

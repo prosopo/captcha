@@ -12,7 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { CaptchaType, type DetectorData, type Session } from "@prosopo/types";
+import {
+	CaptchaType,
+	type DetectorData,
+	type FingerprintSummaryStored,
+	type Session,
+	resolveAllowedCaptchaTypes,
+} from "@prosopo/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { buildEscalation } from "../../../../api/captcha/submitPoWCaptchaSolution.js";
 import type { CreateSessionInput } from "../../../../tasks/frictionless/frictionlessTasks.js";
@@ -86,6 +92,47 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 
 	beforeEach(() => {
 		env = makeTasks();
+	});
+
+	describe("fingerprint summary", () => {
+		const submitted: FingerprintSummaryStored = {
+			root: "0xsubmitted",
+			groupHash: "0xgroup",
+			bucketId: "a".repeat(32),
+		};
+		const atFrictionless: FingerprintSummaryStored = {
+			root: "0xfrictionless",
+			groupHash: "0xgroup",
+			bucketId: "b".repeat(32),
+		};
+
+		const escalate = async (powSummary?: FingerprintSummaryStored) => {
+			env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+				sessionId: "origin-id",
+				dappAccount: "dapp",
+				...(powSummary && { fingerprintSummary: powSummary }),
+			});
+			env.spies.getSessionRecordBySessionId.mockResolvedValue({
+				...makeOriginSession(),
+				fingerprintSummary: atFrictionless,
+			});
+			await buildEscalation(
+				env.tasks,
+				{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
+				"challenge",
+			);
+			const input: CreateSessionInput =
+				env.spies.createSession.mock.calls[0]?.[0];
+			return input.fingerprintSummary;
+		};
+
+		it("carries the summary from the proof submitted with the PoW", async () => {
+			expect(await escalate(submitted)).toStrictEqual(submitted);
+		});
+
+		it("falls back to the summary recorded at frictionless time", async () => {
+			expect(await escalate()).toStrictEqual(atFrictionless);
+		});
 	});
 
 	it("returns undefined when no routing output was supplied (no escalation)", async () => {
@@ -283,6 +330,31 @@ describe("submitPoWCaptchaSolution.buildEscalation", () => {
 		const input = createSessionInput();
 		expect(input.captchaType).toBe(CaptchaType.puzzle);
 		expect(input.originSessionId).toBe("origin-id");
+	});
+
+	it("escalates to image instead of puzzle when the site has puzzle switched off", async () => {
+		env.spies.getPowCaptchaRecordByChallenge.mockResolvedValue({
+			sessionId: "origin-id",
+			dappAccount: "dapp",
+		});
+		env.spies.getSessionRecordBySessionId.mockResolvedValue(
+			makeOriginSession(),
+		);
+
+		const out = await buildEscalation(
+			env.tasks,
+			{ verified: true, routingOutput: { captchaType: CaptchaType.puzzle } },
+			"challenge",
+			undefined,
+			{
+				allowedCaptchaTypes: resolveAllowedCaptchaTypes({
+					captchaTypeFeatureFlags: { puzzle: false },
+				}),
+			},
+		);
+
+		expect(out?.captchaType).toBe(CaptchaType.image);
+		expect(createSessionInput().captchaType).toBe(CaptchaType.image);
 	});
 
 	it("carries the origin's simdReadings onto the image escalation at creation time (so the DM verify path doesn't have to lean on chain fallback for the common case)", async () => {

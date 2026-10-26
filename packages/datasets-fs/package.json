@@ -1,62 +1,60 @@
 {
 	"name": "@prosopo/datasets-fs",
-	"version": "3.0.138",
+	"version": "3.0.154",
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",
 	"private": false,
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts",
-		"cli": "node ./dist/cli.js"
+		"build:types": "tsc --project tsconfig.types.json",
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
+		"cli": "node ./dist/esm/cli.js"
 	},
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"type": "module",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
 	"dependencies": {
 		"@noble/hashes": "2.4.0",
-		"@prosopo/common": "3.1.59",
-		"@prosopo/logger": "2.1.0",
-		"@prosopo/types": "5.10.1",
-		"@prosopo/util": "3.3.11",
-		"@prosopo/util-crypto": "13.5.33",
-		"@prosopo/workspace": "3.2.1",
+		"@prosopo/common": "workspace:*",
+		"@prosopo/logger": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
+		"@prosopo/util-crypto": "workspace:*",
 		"bcrypt": "6.0.0",
 		"cli-progress": "3.12.0",
-		"sharp": "0.35.4",
-		"yargs": "18.1.0",
-		"zod": "3.23.8"
+		"sharp": "0.35.5",
+		"yargs": "18.2.0",
+		"zod": "3.25.76"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.1",
+		"@prosopo/config": "workspace:*",
 		"@types/bcrypt": "6.0.0",
 		"@types/cli-progress": "3.11.6",
 		"@types/node": "22.10.2",
-		"@vitest/coverage-v8": "4.1.11",
+		"@types/yargs": "17.0.35",
+		"@vitest/coverage-v8": "5.0.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
-		"dotenv": "16.4.5",
+		"dotenv": "18.0.8",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "8.1.5",
-		"vitest": "4.1.11"
+		"vite": "8.1.6",
+		"vitest": "5.0.4"
 	},
 	"repository": {
 		"type": "git",

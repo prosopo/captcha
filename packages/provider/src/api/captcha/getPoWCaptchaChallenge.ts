@@ -1,17 +1,4 @@
-// Copyright 2021-2026 Prosopo (UK) Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	ApiParams,
 	CaptchaType,
@@ -33,7 +20,22 @@ import {
 	getRequestUserScope,
 	normalizeHeadersForMatching,
 } from "../blacklistRequestInspector.js";
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+import { errorCodeForReason } from "../errorCodeForReason.js";
 import { recordCaptchaIssueError, recordCaptchaIssued } from "../metrics.js";
+import { summariseRequestBody } from "../requestBodySummary.js";
 import { isReservedTestSiteKey } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 import { buildPowMaintenanceResponse } from "./maintenanceModeResponses.js";
@@ -54,10 +56,11 @@ export default (
 			parsed = GetPowCaptchaChallengeRequestBody.parse(req.body);
 		} catch (err) {
 			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-13",
+					message: "Error parsing captcha",
+					cause: err,
 				}),
 			);
 		}
@@ -99,10 +102,10 @@ export default (
 
 			if (!clientSettings) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "SITE_KEY_NOT_REGISTERED",
+						errorSite: "PROV-14",
+						context: { siteKey: dapp },
 					}),
 				);
 			}
@@ -179,14 +182,10 @@ export default (
 
 			if (!valid) {
 				return next(
-					new ProsopoApiError(reason || "API.BAD_REQUEST", {
-						context: {
-							code: 400,
-							siteKey: dapp,
-							user,
-						},
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: errorCodeForReason(reason),
+						errorSite: "PROV-82",
+						context: { siteKey: dapp, user },
 					}),
 				);
 			}
@@ -195,15 +194,11 @@ export default (
 
 			if (!origin) {
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: {
-							error: "Origin header not found",
-							code: 400,
-							siteKey: dapp,
-							user,
-						},
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "INVALID_REQUEST",
+						errorSite: "PROV-15",
+						message: "BadRequest",
+						context: { error: "Origin header not found", siteKey: dapp, user },
 					}),
 				);
 			}
@@ -272,7 +267,12 @@ export default (
 				// individual flags off this object instead of separate
 				// flat fields.
 				req.ipInfo,
+				// From the proof sent at frictionless time. A proof submitted
+				// with the solution replaces it.
+				sessionRecord?.fingerprintSummary,
 			);
+
+			const padBytes = trafficVerdict.padBytes;
 
 			const getPowCaptchaResponse: GetPowCaptchaResponse = {
 				[ApiParams.status]: "ok",
@@ -297,25 +297,23 @@ export default (
 					session: sessionId,
 				},
 			}));
+			res.locals.padBytes = padBytes;
 			recordCaptchaIssued(CaptchaType.pow);
 			return res.json(getPowCaptchaResponse);
 		} catch (err) {
 			recordCaptchaIssueError(CaptchaType.pow);
 			req.logger.error(() => ({
 				err,
-				body: req.body,
+				body: summariseRequestBody(req),
 				msg: "Error in PoW captcha challenge request",
 			}));
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: {
-						code: 500,
-						siteKey: req.body.dapp,
-						user: req.body.user,
-						error: err,
-					},
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "PROV-16",
+					message: "BadRequest",
+					cause: err,
+					context: { siteKey: req.body.dapp, user: req.body.user },
 				}),
 			);
 		}

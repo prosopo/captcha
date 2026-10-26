@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { Language } from "@prosopo/locale";
 import { getWindowCallback } from "@prosopo/procaptcha-common";
 import {
 	type EnvironmentTypes,
@@ -23,6 +24,7 @@ import {
 import { at } from "@prosopo/util";
 import type { BundleCaptchaHandle } from "./util/captcha/components/bundleCaptcha.js";
 import { extractParams, getProcaptchaScript } from "./util/config.js";
+import { siteLanguage } from "./util/language.js";
 import { resolveStartMode } from "./util/startMode.js";
 import { type CreatedWidget, WidgetFactory } from "./util/widgetFactory.js";
 import { WidgetThemeResolver } from "./util/widgetThemeResolver.js";
@@ -52,6 +54,7 @@ interface WidgetEntry {
 }
 
 const procaptchaWidgets = new Map<string, WidgetEntry>();
+const resetsInFlight = new Map<string, Promise<void>>();
 
 let widgetIdCounter = 0;
 const nextWidgetId = (): string => `procaptcha-widget-${widgetIdCounter++}`;
@@ -92,6 +95,7 @@ const widgetFactory = new WidgetFactory(new WidgetThemeResolver());
 const startDetectorPrefetch = (
 	siteKey: string | null,
 	flags: { ipv4?: boolean; ipv6?: boolean; startMode?: StartModeEnum },
+	language: Language | undefined,
 ): void => {
 	if (!siteKey) return;
 	if (flags.startMode === StartModeEnum.manual) return;
@@ -104,6 +108,7 @@ const startDetectorPrefetch = (
 				process.env.PROSOPO_DEFAULT_ENVIRONMENT as EnvironmentTypes,
 				common.pickIpMode(flags),
 				siteKey,
+				language,
 			);
 		})
 		.catch(() => undefined);
@@ -140,7 +145,11 @@ const implicitRender = async () => {
 		// constant. Start it now so the round-trip overlaps the widget's own
 		// dynamic-import chain instead of queueing behind it —
 		// `customDetectBot` claims the in-flight promise when it eventually runs.
-		startDetectorPrefetch(siteKey, { ipv4, ipv6, startMode });
+		startDetectorPrefetch(
+			siteKey,
+			{ ipv4, ipv6, startMode },
+			siteLanguage(undefined, firstElement),
+		);
 
 		const implicitRenderOptions: ProcaptchaRenderOptions = {
 			siteKey: siteKey,
@@ -184,7 +193,11 @@ const implicitRender = async () => {
 			const ipv6 = button.getAttribute("data-ipv6") === "true";
 			const startMode = resolveStartMode(undefined, button);
 
-			startDetectorPrefetch(siteKey, { ipv4, ipv6, startMode });
+			startDetectorPrefetch(
+				siteKey,
+				{ ipv4, ipv6, startMode },
+				siteLanguage(undefined, button),
+			);
 
 			const buttonRenderOptions: ProcaptchaRenderOptions = {
 				siteKey: siteKey,
@@ -232,10 +245,14 @@ export const render = async (
 	element: Element,
 	renderOptions: ProcaptchaRenderOptions,
 ): Promise<string | undefined> => {
-	startDetectorPrefetch(renderOptions.siteKey, {
-		...renderOptions,
-		startMode: resolveStartMode(renderOptions, element),
-	});
+	startDetectorPrefetch(
+		renderOptions.siteKey,
+		{
+			...renderOptions,
+			startMode: resolveStartMode(renderOptions, element),
+		},
+		siteLanguage(renderOptions, element),
+	);
 
 	const hasInvisibleSize =
 		Object.prototype.hasOwnProperty.call(renderOptions, "size") &&
@@ -459,6 +476,20 @@ const boot = () => {
 };
 
 /**
+ * The skeleton is plain DOM the handle doesn't own, so destroying the widget
+ * alone would leave it behind. A skeleton owns its whole host element, but an
+ * invisible widget only appends its own node to the site's element (usually
+ * the submit button), whose label must survive.
+ */
+const clearHost = (entry: WidgetEntry): void => {
+	if (entry.invisible) {
+		entry.target.remove();
+	} else {
+		entry.element.innerHTML = "";
+	}
+};
+
+/**
  * Returns a widget to its unsolved state, ready to be solved again. Pass a
  * widget id to reset one widget, or omit it to reset every widget on the page.
  *
@@ -480,27 +511,46 @@ export const reset = async (widgetId?: string): Promise<void> => {
 		undefined === widgetId ? Array.from(procaptchaWidgets.keys()) : [widgetId];
 
 	for (const id of ids) {
-		const current = procaptchaWidgets.get(id);
-		if (!current) continue;
-
-		current.handle.destroy();
-
-		const [widget] = await widgetFactory.createWidgets(
-			[current.element],
-			current.renderOptions,
-			current.isWeb2,
-			current.invisible,
-		);
-
-		if (widget) {
-			procaptchaWidgets.set(id, {
-				...current,
-				handle: widget.handle,
-				target: widget.container,
-			});
-		} else {
-			procaptchaWidgets.delete(id);
+		// A second reset while one is still building joins it: running both would
+		// leave the first replacement live but no longer tracked by the map.
+		let pending = resetsInFlight.get(id);
+		if (!pending) {
+			pending = remount(id).finally(() => resetsInFlight.delete(id));
+			resetsInFlight.set(id, pending);
 		}
+		await pending;
+	}
+};
+
+const remount = async (id: string): Promise<void> => {
+	const current = procaptchaWidgets.get(id);
+	if (!current) return;
+
+	current.handle.destroy();
+	clearHost(current);
+
+	const [widget] = await widgetFactory.createWidgets(
+		[current.element],
+		current.renderOptions,
+		current.isWeb2,
+		current.invisible,
+	);
+
+	if (procaptchaWidgets.get(id) !== current) {
+		// remove() ran while the replacement was being built.
+		widget?.handle.destroy();
+		widget?.container.remove();
+		return;
+	}
+
+	if (widget) {
+		procaptchaWidgets.set(id, {
+			...current,
+			handle: widget.handle,
+			target: widget.container,
+		});
+	} else {
+		procaptchaWidgets.delete(id);
 	}
 };
 
@@ -519,9 +569,7 @@ export const remove = (widgetId?: string): void => {
 		if (!entry) continue;
 		entry.unbindTrigger?.();
 		entry.handle.destroy();
-		// The skeleton is plain DOM the handle doesn't own, so tearing the widget
-		// down alone would leave it behind.
-		entry.element.innerHTML = "";
+		clearHost(entry);
 		procaptchaWidgets.delete(id);
 	}
 };

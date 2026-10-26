@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import { randomUUID } from "node:crypto";
-import { captchaPolicySeverity } from "@prosopo/captcha-severity";
+import { policyHarshness } from "@prosopo/captcha-severity";
+import { ProsopoError, toPublicError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import {
 	ApiPrefix,
@@ -43,6 +44,7 @@ import {
 } from "@prosopo/user-access-policy";
 import type { NextFunction, Request, Response } from "express";
 import { getCompositeIpAddress } from "../compositeIpAddress.js";
+import { errorCodeForReason } from "./errorCodeForReason.js";
 import {
 	HardBlockVerdictCache,
 	hardBlockCacheKey,
@@ -223,8 +225,16 @@ const ruleApplies = (
 	requestHeaders: Record<string, string>,
 ): boolean => {
 	// Client-scoped rules: rule.clientId must equal the request's clientId.
-	// Rules without a clientId are global and apply to any client.
+	// Rules without a clientId are global and apply to any client they do not
+	// exclude.
 	if (rule.clientId !== undefined && rule.clientId !== requestClientId) {
+		return false;
+	}
+	if (
+		rule.clientId === undefined &&
+		requestClientId !== undefined &&
+		rule.excludedClientIds?.includes(requestClientId)
+	) {
 		return false;
 	}
 	for (const field of SCALAR_USER_SCOPE_FIELDS) {
@@ -299,12 +309,8 @@ const ruleSpecificity = (
 // fires (request-time vs verify-time), not how severe it is. The flag
 // rides on the chosen rule and downstream consumers (`findHardBlockPolicy`,
 // blockMiddleware's `enforceable` filter) read it after ranking.
-const ruleHarshness = (rule: AccessRule): number => {
-	if (rule.type === AccessPolicyType.Block) {
-		return Number.MAX_SAFE_INTEGER;
-	}
-	return captchaPolicySeverity(rule);
-};
+const ruleHarshness = (rule: AccessRule): number =>
+	policyHarshness(rule, rule.type === AccessPolicyType.Block);
 
 /**
  * Rank the candidate rules a single Redis query returned. A rule "applies" iff
@@ -546,19 +552,15 @@ export class BlacklistRequestInspector {
 			// (blocked IP / JA4 / user / country / ASN), a request with no IP, or
 			// a fail-closed middleware error - is a 403 Forbidden, not a 401
 			// Unauthorized: the client isn't lacking credentials, it is denied
-			// access. Body must be a structured `{ message, code }` object
-			// (not a plain string) so the widget's `result.error?.message`
-			// extractor picks it up — a plain string falls through to the
-			// generic "Cannot load CAPTCHA" fallback. Surfacing the
-			// requestId lets support quote it back on tickets.
-			const { messageKey } = blockOutcome;
-			const reason = messageKey ? request.i18n.t(messageKey) : "Forbidden";
-			res.status(403).json({
-				error: {
-					message: `${reason}: ${request.requestId ?? "unknown"}`,
-					code: 403,
-					...(messageKey && { key: messageKey }),
-				},
+			// access. The requestId lets support find the request from a ticket.
+			const error = new ProsopoError({
+				code: errorCodeForReason(blockOutcome.messageKey, "FORBIDDEN"),
+				errorSite: "PROV-84",
+				status: 403,
+				data: { requestId: request.requestId ?? "unknown" },
+			});
+			res.status(error.status).json({
+				error: toPublicError(error, "BACKEND_ERROR"),
 			});
 			return;
 		}

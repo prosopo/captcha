@@ -15,7 +15,7 @@
 // The layout plugin leaves empty placeholders that the other plugins fill, so
 // each plugin still works on its own when the layout is not there.
 
-export type DemoSlot = "placement" | "toolbar" | "events" | "code";
+export type DemoSlot = "placement" | "language" | "toolbar" | "events" | "code";
 
 export const slotMarkup = (slot: DemoSlot): string =>
 	`<div data-demo-slot="${slot}"></div>`;

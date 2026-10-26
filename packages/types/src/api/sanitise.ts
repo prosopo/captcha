@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { string } from "zod";
+import { type ZodTypeAny, array, custom, type input, string } from "zod";
 import { INPUT_LIMITS } from "./inputLimits.js";
 
 // Anchored negated character classes: a string is valid only if it contains
@@ -57,3 +57,14 @@ export const safeLine = (max: number = INPUT_LIMITS.NAME) =>
 			NO_CONTROL_OR_NEWLINE,
 			"must not contain control characters or line breaks",
 		);
+
+/**
+ * An array capped at `max` elements. The length is checked before any element
+ * is parsed: `array().max()` alone still validates every element, so a huge
+ * array of invalid items produces one issue per item before the cap rejects it.
+ */
+export const boundedArray = <T extends ZodTypeAny>(item: T, max: number) =>
+	custom<input<T>[]>(
+		(value: unknown) => !Array.isArray(value) || value.length <= max,
+		{ message: `Array must contain at most ${max} element(s)` },
+	).pipe(array(item).max(max));

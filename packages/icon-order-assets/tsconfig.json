@@ -1,0 +1,23 @@
+{
+	"extends": "../../tsconfig.esm.json",
+	"compilerOptions": {
+		"rootDir": "./src",
+		"outDir": "./dist/tsc",
+		"tsBuildInfoFile": "./dist/tsc/tsconfig.tsbuildinfo"
+	},
+	"include": [
+		"src",
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts",
+		"src/**/*.json"
+	],
+	"references": [
+		{
+			"path": "../../dev/config/tsconfig.json"
+		},
+		{
+			"path": "../puzzle-assets"
+		}
+	]
+}

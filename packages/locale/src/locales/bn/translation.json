@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "অবৈধ ঠিকানা এনকোড করা যায়নি",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "captcha সমাধানের প্রতিশ্রুতি নেই",
+		"SIGNER_UNDEFINED": "স্বাক্ষরকারী নির্ধারিত নেই",
+		"CANNOT_FIND_KEYPAIR": "কী-জোড়া পাওয়া যায়নি",
+		"INVALID_DATA_FORMAT": "অবৈধ ডেটা ফরম্যাট"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "অজানা এনভায়রনমেন্টের অনুরোধ করা হয়েছে",
+		"INVALID_CAPTCHA_NUMBER": "অনুগ্রহ করে captcha কনফিগারেশন সঠিকভাবে সেট করুন",
+		"INVALID_LOG_LEVEL": "অবৈধ লগ স্তর",
+		"INVALID_PACKAGE_DIR": "অবৈধ প্যাকেজ ডিরেক্টরি"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "ডেটাসেট পার্স করতে ত্রুটি",
+		"SOLUTION_PARSE_ERROR": "ডেটাসেট প্রক্রিয়া করতে ত্রুটি",
+		"HASH_ERROR": "ডেটাসেট হ্যাশ করতে ত্রুটি",
+		"DATASET_ID_UNDEFINED": "ডেটাসেট আইডি নির্ধারিত নেই",
+		"NOT_ENOUGH_LABELS": "পর্যাপ্ত লেবেল নেই",
+		"NOT_ENOUGH_IMAGES": "পর্যাপ্ত ছবি নেই",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "ডেটাসেটে captcha-র সংখ্যা কনফিগার করা সংখ্যার চেয়ে কম",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "ডেটাসেটে সমাধানের সংখ্যা কনফিগার করা সংখ্যার চেয়ে কম",
+		"DUPLICATE_IMAGE": "একই ছবি দুবার পাওয়া গেছে",
+		"MERKLE_ERROR": "মার্কল ট্রি তৈরি করতে ত্রুটি"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "ডেটাবেস ইঞ্জিন ইমপোর্ট করা যায়নি",
+		"DATABASE_UNDEFINED": "ডেটাবেস ক্লায়েন্ট সংযুক্ত নয়",
+		"DATABASE_HOST_UNDEFINED": "ডেটাবেস হোস্টের ঠিকানা নির্ধারিত নেই",
+		"DATASET_LOAD_FAILED": "ডেটাসেট লোড ব্যর্থ হয়েছে",
+		"DATASET_GET_FAILED": "ডেটাসেট পাওয়া যায়নি",
+		"CAPTCHA_GET_FAILED": "captcha পাওয়া যায়নি",
+		"CAPTCHA_UPDATE_FAILED": "captcha আপডেট করা যায়নি",
+		"IMAGE_GET_FAILED": "ছবি পাওয়া যায়নি",
+		"PENDING_RECORD_NOT_FOUND": "অপেক্ষমাণ কোনো রেকর্ড পাওয়া যায়নি",
+		"INVALID_HASH": "অবৈধ হ্যাশ",
+		"SOLUTION_GET_FAILED": "সমাধান পাওয়া যায়নি",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "প্রয়োজনীয় সংখ্যক সমাধানসহ কোনো ডেটাসেট পাওয়া যায়নি",
+		"SOLUTION_APPROVE_FAILED": "সমাধান অনুমোদন করা যায়নি",
+		"SOLUTION_FLAG_FAILED": "সমাধানকে প্রক্রিয়াকৃত হিসেবে চিহ্নিত করা যায়নি",
+		"TABLES_UNDEFINED": "টেবিল নির্ধারিত নেই",
+		"CONNECTION_UNDEFINED": "সংযোগ নির্ধারিত নেই",
+		"COMMITMENT_FLAG_FAILED": "প্রতিশ্রুতিকে প্রক্রিয়াকৃত হিসেবে চিহ্নিত করা যায়নি",
+		"UNKNOWN": "অজানা ডেটাবেস ত্রুটি",
+		"QUERY_ERROR": "ডেটাবেস কোয়েরি ব্যর্থ হয়েছে",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "অ্যাক্সেস নিয়মের Redis সংযোগ নির্ধারিত নেই",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "ব্যবহারকারী অ্যাক্সেস নিয়মের স্টোরেজ নির্ধারিত নেই",
+		"SESSION_STORE_FAILED": "সেশন সংরক্ষণ করা যায়নি",
+		"SESSION_CHECK_REMOVE_FAILED": "সেশন যাচাই ও মুছে ফেলা যায়নি",
+		"SESSION_GET_FAILED": "সেশন পাওয়া যায়নি"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "মালিক ব্যবহারকারী পরিবর্তন করা যাবে না",
+		"CANNOT_DELETE_OWN_USER": "নিজের অ্যাকাউন্ট মুছে ফেলা যাবে না",
+		"CANNOT_DELETE_LAST_USER": "শেষ ব্যবহারকারীকে মুছে ফেলা যাবে না",
+		"USER_ALREADY_EXISTS": "ব্যবহারকারী আগে থেকেই আছে",
+		"NO_SUGGESTIONS_FOUND": "কোনো পরামর্শ পাওয়া যায়নি",
+		"CANNOT_DEACTIVATE_LAST_SITE": "শেষ সক্রিয় সাইটটি নিষ্ক্রিয় করা যাবে না",
+		"DUPLICATE_SITE_NAME": "এই নামে একটি সাইট আগে থেকেই আছে",
+		"INVALID_SITE_NAME": "সাইটের নামে শুধু অক্ষর, সংখ্যা, হাইফেন ও আন্ডারস্কোর থাকতে পারে"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "অবৈধ প্যারামিটার"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "ফাইল পাওয়া যায়নি",
+		"FILE_ALREADY_EXISTS": "ফাইল আগে থেকেই আছে",
+		"INVALID_DIR_FORMAT": "অবৈধ ডিরেক্টরি ফরম্যাট"
+	}
+}

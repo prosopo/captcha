@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import fs from "node:fs";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	CaptchaTypes,
 	type CaptchaWithoutId,
@@ -95,12 +95,11 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
 	private setupTarget(i: number) {
 		const _ = lodash();
 		if (this.targets.length <= 1) {
-			throw new ProsopoDatasetError(
-				new Error("not enough different labels in labelled data"),
-				{
-					translationKey: "DATASET.NOT_ENOUGH_LABELS",
-				},
-			);
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "DSFS-11",
+				message: "not enough different labels in labelled data",
+			});
 		}
 
 		// uniformly sample targets
@@ -122,25 +121,25 @@ export class GenerateV2 extends Generate<ArgsSchemaType> {
 		);
 
 		if (this.unlabelled.length > 0 && nUnlabelled > this.unlabelled.length) {
-			throw new ProsopoDatasetError(new Error("not enough unlabelled data"), {
-				translationKey: "DATASET.NOT_ENOUGH_IMAGES",
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "DSFS-12",
+				message: "not enough unlabelled data",
 			});
 		}
 		if (nCorrect > targetItems.length) {
-			throw new ProsopoDatasetError(
-				new Error(`not enough images for target (${target})`),
-				{
-					translationKey: "DATASET.NOT_ENOUGH_IMAGES",
-				},
-			);
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "DSFS-13",
+				message: `not enough images for target (${target})`,
+			});
 		}
 		if (nIncorrect > notTargetItems.length) {
-			throw new ProsopoDatasetError(
-				new Error(`not enough non-matching images for target (${target})`),
-				{
-					translationKey: "DATASET.NOT_ENOUGH_IMAGES",
-				},
-			);
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "DSFS-14",
+				message: `not enough non-matching images for target (${target})`,
+			});
 		}
 
 		this.#nCorrect = nCorrect;

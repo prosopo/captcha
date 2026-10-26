@@ -16,7 +16,15 @@ import type { Server } from "node:http";
 import type { ProsopoServerConfigOutput } from "@prosopo/types";
 import express from "express";
 import type { Connection } from "mongoose";
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	test,
+	vi,
+} from "vitest";
 import { serverConfig } from "./authHarness.js";
 
 /**
@@ -106,6 +114,18 @@ const importApp = async (
 	}
 	return listeners[0];
 };
+
+/**
+ * The first import of app.js transforms its whole dependency graph, which on
+ * a loaded machine takes far longer than the per-test timeout, and lands on
+ * whichever case happens to run first. Pay it once here: vitest keeps the
+ * transformed modules across resetModules, so each case only re-evaluates.
+ */
+const WARM_UP_TIMEOUT_MS = 180_000;
+beforeAll(async () => {
+	mocks.isMain = false;
+	await import("../app.js");
+}, WARM_UP_TIMEOUT_MS);
 
 beforeEach(() => {
 	mocks.isMain = true;

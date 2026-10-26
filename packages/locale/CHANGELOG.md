@@ -1,5 +1,247 @@
 # @prosopo/locale
 
+## 3.13.1
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+  - @prosopo/util@3.3.17
+
+## 3.13.0
+### Minor Changes
+
+- b460b0b: Add a British English (`en-GB`) catalogue. Browsers and sites asking for `en-GB` now get British spelling and words (unauthorised, data centre, number plate, petrol pump, airship) instead of falling back to US English.
+
+## 3.12.1
+### Patch Changes
+
+- 49892fc: Hold express at 4 in `@prosopo/locale`, because the i18next middleware it uses
+  has no express 5 typings.
+  
+  `i18next-http-middleware@3.9.9` types the handler returned by `handle()` against
+  express 4. On express 5 that handler no longer matches the `app.use` it is passed
+  to, so locale stops compiling with "Argument of type 'Handler' is not assignable
+  to parameter of type 'PathParams'".
+  
+  This repo's own CI never saw it. The middleware's type definitions import
+  `express-serve-static-core` by bare name while declaring it only as a
+  devDependency, so pnpm gives the middleware no copy of its own and the import
+  resolves to whichever version reached the hoisted directory. Here that is
+  express 5 and everything passes. In a workspace that embeds this one alongside
+  express 4 consumers, the express 4 types win the hoist instead, the handler comes
+  back typed for express 4, and the build fails. That is how v3.8.36 shipped green
+  and broke its consumer.
+  
+  Dependabot is set to ignore express 5 for now. Lift the pin and the ignore
+  together once the middleware ships express 5 typings.
+
+## 3.12.0
+### Minor Changes
+
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+  - @prosopo/util@3.3.16
+
+## 3.11.1
+### Patch Changes
+
+- b6e9459: The colon after the "Select all …" prompt is added by the widget again, rather than being part of each translation. Every language's `WIDGET.SELECT_ALL` no longer ends with a colon, and the widget renders it as `<prompt>: <target>`. A locale test now fails if a translation brings its own colon back.
+  - @prosopo/util@3.3.15
+
+## 3.11.0
+### Minor Changes
+
+- 03df637: `@prosopo/locale` now exports `createUntranslatedI18n()`: a complete i18n instance with no catalogues, where `t` gives back the default value or the key. The tests use it in place of hand-made fakes that were cast to the i18n type. Those casts let a fake miss a method the code calls (as happened with `exists`) and still compile; now a missing method is a type error.
+  
+  `handleErrors` now only asks for the request and response fields it actually uses, so its tests can pass plain objects. It is still an Express error handler.
+  
+  The `i18n` prop on the image, audio, PoW and puzzle widgets is now typed as optional. The widgets already started their own i18n when none was passed; the type said it was required, so the tests had to cast `undefined` to pass nothing. The frictionless widget still requires it, because it reads from it straight away.
+
+### Patch Changes
+
+- 49e9385: The audio captcha's text (play button, instructions, error messages and so on) is now translated into all 92 languages. Before this it showed in English everywhere. The catalogue test had a special exemption for these strings, so nothing flagged it. That exemption is gone: any string left in English now fails the test, unless it is on the short list of words that really are the same in that language (brand names, loanwords, "OK").
+  
+  Some Filipino animal and object names and two Filipino/Scots error messages were on that list without being real loanwords. They are now translated too.
+  
+  Every translation still needs checking by a native speaker.
+
+## 3.10.1
+### Patch Changes
+
+- e841741: Browser apps that bundle `@prosopo/locale` (such as the portal) build again. The server catalogue lookup imported `existsSync` by name from `fs`, which browser bundlers replace with an empty module, so the build failed. It now reaches `fs` only when the server starts i18next.
+
+## 3.10.0
+### Minor Changes
+
+- eb99b3d: Fill in the missing and wrong translations across all 32 widget languages and add a generic Chinese (`zh`) catalogue.
+  
+  - Image labels that had been machine-translated wrongly (for example Hungarian "camel" as "cow", Thai "rhinoceros" as "gibbon") or left as hyphenated keys ("hot-air-balloon") now read as proper words.
+  - Turkish, Ukrainian, Malay, Indonesian, Javanese, Azerbaijani, Finnish, Romanian, Thai and Malayalam were largely rewritten. Corrupted Serbian characters were fixed.
+  - The "Select all …" prompt now ends with its own colon in each language (" :" in French, "：" in Chinese and Japanese), so the widget no longer appends an English colon.
+  - `Languages.chinese` is now `zh`. The existing `zh-CN` catalogue is still available as `Languages.chineseChina`.
+  - A new `locales` CI check fails a PR whose catalogues have missing or extra keys, empty or untranslated values (audio captcha strings excepted), the wrong script, or broken characters.
+- f3f7243: Add translations for 58 more languages, so the widget, image labels and error messages are translated for nearly every language Chrome and Firefox ship: Afrikaans, Albanian, Amharic, Aragonese, Armenian, Assamese, Asturian, Basque, Belarusian, Bengali, Bosnian, Bulgarian, Burmese, Catalan, Croatian, Danish, Esperanto, Estonian, Filipino, Frisian, Galician, Georgian, Gujarati, Hebrew, Icelandic, Interlingua, Irish, Kannada, Kazakh, Khmer, Kyrgyz, Lao, Latvian, Lithuanian, Macedonian, Marathi, Mongolian, Nepali, Norwegian Nynorsk, Occitan, Odia, Persian, Punjabi, Romansh, Scots, Scottish Gaelic, Sinhala, Slovak, Slovenian, Swahili, Tajik, Tamil, Telugu, Urdu, Uzbek, Welsh, Xhosa and Zulu. They were drafted without a native speaker and need review. Nynorsk (`nn`) now gets its own catalogue instead of Bokmål's, and the old codes `iw` (Hebrew) and `tl` (Filipino, as Firefox sends it) are matched.
+- f8eddf7: Image challenges now send each label's key (`targetKey`) and English text (`targetEn`) beside the translated `target`, and say which `language` they were translated into. Error responses add `messageEn` when the widget has no text of its own for the error's key. All new fields are additive. New `englishText(key)` in `@prosopo/locale`.
+- aec7857: Type-check translation keys on the server and every language file.
+  
+  - `req.t` and `req.i18n.t` only accept keys from the English catalogue, so a typo fails to compile.
+  - New `TargetKey`, `targetKeys` and `isTargetKey` for image labels. An image label with no translation now shows the English label (and logs a warning) instead of the raw `TARGET.<label>` key.
+  - Every language file must have the English file's keys, checked by `typecheck`.
+  - `@prosopo/server` returns the key instead of `undefined` for its status text when i18next is not initialised.
+  - Removed the last `@ts-ignore` in `@prosopo/locale`.
+- 6b11b15: The widget now tells the provider which language to use, so the challenge text comes back in the user's language.
+  
+  - The widget sends its language in a `Prosopo-Lang` header on every provider request. It uses the site's `data-language` if set, otherwise the browser's languages. The browser's own `Accept-Language` is left untouched, so bot detection still sees the real value.
+  - `data-language` may list several codes (`"xx, tr"`). The first one we support wins. If none are supported, the widget uses the browser's language instead of English.
+  - The provider picks `?lng=`, then `Prosopo-Lang`, then `Accept-Language`, then English.
+  - A variant uses its parent's catalogue (`zh-SG` → `zh`, `pt-PT` → `pt`). Traditional Chinese (`zh-TW`, `zh-HK`, `zh-Hant`) skips the Simplified `zh` catalogue and moves on to the reader's next language. `nb`/`nn` map to `no`, `in` to `id` and `jw` to `jv`.
+  - The widget no longer reads or writes an `i18next` cookie or local storage key on the host site.
+  - `ApiClient`/`ProviderApi` take optional default headers as a 4th constructor argument.
+- f8eddf7: Split each language's catalogue into `widget.json`, `target.json` and `translation.json`. The widget bundles English and downloads only the active language's `widget.json`. The provider loads all three. Server i18n now finishes loading every file before it reports ready. Removed two broken, unused scripts (`findUnused`, `testImport`) and the dependencies only they used.
+
+### Patch Changes
+
+- cbb6a10: Add `BROWSER_UI_LANGUAGES`, the list of every language Chrome and Firefox ship their interface in, with each one's layout direction. A test checks each direction against `getLanguageDirection`, so a browser language the right-to-left lists miss fails CI.
+- 4961a7e: Fix server translations when `@prosopo/locale` is loaded with `require`. The CommonJS build looked for its catalogues in `dist/cjs/locales`, which does not exist, so every string came back as its key. It now finds them in `dist/locales`.
+- b351896: Document why the widget keeps its own small translation look-up instead of i18next: measured again, i18next core is 14.1 KB gzipped against 1.8 KB, on a render path of about 21 KB, for plural and context features the widget does not use.
+- 0bd0230: The widget bundle no longer contains the English image labels and server error strings. `ProsopoError` used to check message keys against every English catalogue, which pulled all of them into the widget. It now asks the i18n instance it was given (`exists`). The server-only key helpers (`isTranslationKey`, `isTargetKey`, `englishText`) moved to their own module.
+- 1634139: `getLanguageDirection` now knows every right-to-left language and script in CLDR 48, not just ten languages, including ones we have no translation for yet (Hebrew, Persian, Urdu, Pashto, Kurdish and so on). It also reads script subtags (`pa-Arab` is right to left, `az-Latn` left to right), regions whose usual script is Arabic (`pa-PK`, `uz-AF`), and old codes such as `iw` for Hebrew. Where the browser has `Intl.Locale` text info, a language it says is right to left is laid out that way too, so languages added to CLDR later work without a code change. The language e2e test now also checks that an Arabic widget, chosen by the browser or by `data-language`, is laid out right to left.
+
+## 3.9.1
+### Patch Changes
+
+- Updated dependencies [1f36456]
+  - @prosopo/util@3.3.15
+
+## 3.9.0
+### Minor Changes
+
+- 4570692: Let a user swap the puzzle captcha for an image challenge, on sites where Prosopo has switched it on.
+  
+  Sites get a new staff-only setting, `widgetFeatureFlags.puzzleImageSwitch`. It is off by default and has no stored default. When it is on and the site allows image challenges, the puzzle response says `imageSwitchAvailable: true`. The puzzle then shows a small grid icon next to its title, with a "Switch to an image challenge" tooltip on hover or keyboard focus. After two wrong answers or refreshes in a row, the icon fills with the primary colour and its tooltip shows without a hover, because a touch screen has no hover. The tooltip goes away once the user starts moving the piece.
+  
+  Pressing it re-mints the session the same way refresh does, with `switchToImage: true`. The provider only honours that when the request is a refresh of a puzzle session on the same site and the switch is on. The new session is then an image challenge with reason `PUZZLE_USER_SWITCH`. Like the refresh limit, it only ever moves from puzzle to image, so a client that fakes the request can only make its own challenge harder.
+  
+  Also fixes a wrong puzzle answer restarting the whole widget. The user was sent back to the checkbox instead of getting a new puzzle with "Not quite — try again", and a wasted `/frictionless` request went out. The puzzle now retries in place.
+
+## 3.8.0
+### Minor Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+
+### Patch Changes
+
+- e13d7a8: New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
+  
+  Icon-order is off by default. Only Prosopo can switch it on for a site, with the `captchaTypeFeatureFlags.iconOrder` feature flag; the site owner cannot. A site without the flag is never served icon-order by any route, and the challenge endpoint refuses it. Once the flag is on, the owner can still keep icon-order out of the frictionless flow with `frictionlessTypes.iconOrder`, the same way as image and puzzle.
+  
+  The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
+  
+  `@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
+  
+  Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+  
+  The demo playground has icon-order pages, and there is an end-to-end test for it.
+
+## 3.7.0
+### Minor Changes
+
+- dcb691b: Add a refresh control to the puzzle captcha.
+  
+  A user who can't solve the puzzle they were given can now ask for a different one, from a button in the puzzle's header. The replacement comes through a new frictionless session, like a wrong answer already does.
+  
+  The widget tells the provider which session was refreshed (`refreshOf`). The provider then records `refreshOf`, `refreshCount` and `refreshedAfterMs` on the new session, so refresh behaviour can be scored later. After three refreshes in a row it serves an image challenge instead, with reason `PUZZLE_REFRESH_LIMIT`. It only does this if the site has image enabled. The switch only goes from puzzle to image, so a client that lies about its refreshes can only make its own challenge harder. A client that leaves the field out gets a normal session, the same as reloading the page.
+  
+  The image widget's reload button now reports itself as a refresh too. That way a user who was moved onto image isn't sent back to the puzzle by their next reload.
+
+### Patch Changes
+
+- Updated dependencies [a17e8eb]
+  - @prosopo/util@3.3.14
+
+## 3.6.2
+### Patch Changes
+
+- 8ed0eb8: Every error key the code throws now has a translation. Twelve keys were missing from the catalogue, so users and logs saw the raw key: ten thrown keys plus the `CAPTCHA.INVALID_TIMESTAMP` and `CAPTCHA.DECISION_MACHINE_DENIED` result reasons. They are added to all 32 locales. The database import error threw `DATABASE.DATABASE_IMPORT_ERROR`, a typo for the existing `DATABASE.DATABASE_IMPORT_FAILED`. A new test fails if an error is thrown with a key that is not in the catalogue.
+- 06784d0: Translation keys are now a typed union built from the English catalogue, so calling the translator with a key that does not exist fails to compile. Error classes only pass a message to the translator when it is a real catalogue key, and free-text messages are shown as they are.
+- 4461043: Widget accessibility fixes.
+  
+  - Screen readers now announce the checkbox's error message, through a polite live region that exists from the moment the widget mounts.
+  - The authenticated ("Verified agent" / "Trusted request") badge now follows `theme: "dark"` and the widget's language.
+  - The badge no longer carries a fixed `aria-label`, which hid its visible text and said "Verified agent" even for a trusted request.
+- 92edebd: The widget's loading spinner and the reload icon no longer announce hard-coded English. The spinner is a progress indicator labelled from the new `WIDGET.LOADING` string (in all 32 languages) once translations are loaded, and the reload icon's tooltip uses the same translated label as the button.
+- 54a07f3: Provider errors shown in the widget now use the widget's configured language. The provider translates errors into the browser's language, so a German widget in an English browser showed English errors. The widget now translates the error key itself and keeps the provider's text only for errors its catalogue does not know.
+- b75e9b7: Fix the error FAQ link and translate two widget strings.
+  
+  - The error FAQ link no longer ends in `//` when `PROSOPO_DOCS_URL` is set, and a trailing slash on that variable no longer breaks it.
+  - The "Cannot load CAPTCHA" fallback message now shows in the widget's language.
+  - The image challenge's reload button now has a translated accessible name instead of always being "Reload".
+  - Adds `WIDGET.CANNOT_LOAD` and `WIDGET.RELOAD` to every locale.
+- 6d5b7f5: The widget now lays itself out right to left when its language is written right to left (Arabic today). The bundle sets `dir` on the widget from its language, and the checkbox, spinner and logo use start/end spacing so they mirror. The widget still ignores the page's own direction, so an English widget on an Arabic page stays left to right. `@prosopo/locale` gains `getLanguageDirection` for this.
+- Updated dependencies [de6bb08]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+  - @prosopo/util@3.3.13
+
+## 3.6.1
+### Patch Changes
+
+- 294b480: Hindi text is readable again. A bulk edit in July 2025 had stripped every vowel sign from 410 of the 444 Hindi strings, so the widget said "म मनषय ह" instead of "मैं मनुष्य हूँ". The originals are restored, and the 14 strings added since then are translated properly. The Finnish, Hindi and Dutch "can't find keyring pair" messages had also translated their `{{address}}` placeholder, so the address was never filled in; that is fixed too. New tests check that every locale keeps all of the English placeholders, and that Hindi strings keep their vowel signs.
+- Updated dependencies [0d29dde]
+  - @prosopo/util@3.3.12
+
 ## 3.6.0
 ### Minor Changes
 

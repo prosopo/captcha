@@ -12,342 +12,327 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { TranslateFn } from "@prosopo/locale";
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
 import {
-	type LogObject,
-	type LogRecord,
-	type LogRecordFn,
-	type Logger,
-	NativeLogger,
-} from "@prosopo/logger";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ProsopoApiError, ProsopoEnvError, unwrapError } from "../error.js";
+	type ErrorDescription,
+	MAX_REPORTED_ISSUES,
+	ProsopoError,
+	type ZodLikeError,
+	boundedIssues,
+	describeError,
+	isProsopoError,
+	isSevereError,
+	isZodError,
+	toApiError,
+	toProsopoError,
+	toPublicError,
+} from "../error.js";
+import { ERROR_CODES, isErrorCode } from "../errorCodes.js";
 
-// Tiny stand-in for the translator. Keys present in the map are translated,
-// anything else falls through unchanged (mirrors the real one's behaviour for
-// unknown keys).
-const makeI18n = (
-	translations: Record<string, string>,
-): { t: TranslateFn } => ({
-	t: (key: string): string => translations[key] ?? key,
+declare module "../error.js" {
+	interface ErrorSites {
+		"TEST-1": true;
+		"TEST-2": true;
+	}
+}
+
+const zodError = (count: number): ZodLikeError => ({
+	name: "ZodError",
+	message: "[]",
+	issues: Array.from({ length: count }, (_, i) => ({ path: [i] })),
 });
 
-const englishI18n = makeI18n({
-	"CAPTCHA.NO_SESSION_FOUND": "No session found",
-	"API.INVALID_SITE_KEY": "Invalid site key",
-	"API.UNKNOWN": "Unknown error",
-});
-
-const frenchI18n = makeI18n({
-	"CAPTCHA.NO_SESSION_FOUND": "Aucune session trouvée",
-	"API.INVALID_SITE_KEY": "Clé de site invalide",
-});
-
-// Mock logger that captures the LogRecord produced by each invocation so we
-// can assert on the emitted shape.
-type CapturedLog = { level: string; record: LogRecord };
-
-const makeCapturingLogger = (): {
-	logger: Logger;
-	logs: CapturedLog[];
-} => {
-	const logs: CapturedLog[] = [];
-	const capture = (level: string) => (fn: LogRecordFn) => {
-		logs.push({ level, record: fn() });
-	};
-	const logger: Logger = {
-		setLogLevel: () => {},
-		getLogLevel: () => "info",
-		getScope: () => "test",
-		info: capture("info"),
-		debug: capture("debug"),
-		trace: capture("trace"),
-		warn: capture("warn"),
-		error: capture("error"),
-		fatal: capture("fatal"),
-		log: (level, fn) => capture(level)(fn),
-		with: () => logger,
-		getPretty: () => false,
-		setPretty: () => {},
-		getPrintStack: () => false,
-		setPrintStack: () => {},
-		getFormat: () => "json",
-		setFormat: () => {},
-	};
-	return { logger, logs };
+const asDescription = (value: ErrorDescription | string): ErrorDescription => {
+	if (typeof value === "string") throw new Error(`not described: ${value}`);
+	return value;
 };
 
-describe("ProsopoBaseError.logError", () => {
-	it("logs the translation key as the top-level `err` field, not the translated message", () => {
-		const { logger, logs } = makeCapturingLogger();
-
-		new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
-			context: { code: 400 },
-			i18n: englishI18n,
-			logger,
+describe("ProsopoError", () => {
+	it("takes status, visibility and message from the code", () => {
+		const err = new ProsopoError({
+			code: "NO_SESSION_FOUND",
+			errorSite: "TEST-1",
 		});
-
-		expect(logs).toHaveLength(1);
-		expect(logs[0]?.level).toBe("error");
-		expect(logs[0]?.record.err).toBe("CAPTCHA.NO_SESSION_FOUND");
-		// The translated string must not be the top-level err.
-		expect(logs[0]?.record.err).not.toBe("No session found");
+		expect(err.message).toBe("No session found");
+		expect(err.status).toBe(400);
+		expect(err.isPublic).toBe(true);
+		expect(err.errorId).toBe("NO_SESSION_FOUND:TEST-1");
+		expect(err.name).toBe("ProsopoError");
+		expect(err).toBeInstanceOf(Error);
 	});
 
-	it("logs the same translation key regardless of locale", () => {
-		const { logger: enLogger, logs: enLogs } = makeCapturingLogger();
-		const { logger: frLogger, logs: frLogs } = makeCapturingLogger();
-
-		new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
-			context: { code: 400 },
-			i18n: englishI18n,
-			logger: enLogger,
-		});
-		new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
-			context: { code: 400 },
-			i18n: frenchI18n,
-			logger: frLogger,
-		});
-
-		expect(enLogs[0]?.record.err).toBe("CAPTCHA.NO_SESSION_FOUND");
-		expect(frLogs[0]?.record.err).toBe("CAPTCHA.NO_SESSION_FOUND");
+	it("defaults to 500 and not public", () => {
+		const err = new ProsopoError({ code: "UNEXPECTED", errorSite: "TEST-1" });
+		expect(err.status).toBe(500);
+		expect(err.isPublic).toBe(false);
 	});
 
-	it("emits errorType and context under `data`, with no `errorParams` nesting", () => {
-		const { logger, logs } = makeCapturingLogger();
-
-		new ProsopoApiError("API.INVALID_SITE_KEY", {
-			context: { code: 400, siteKey: "abc" },
-			i18n: englishI18n,
-			logger,
+	it("lets the throw override message, status and visibility", () => {
+		const err = new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "TEST-2",
+			message: "Failed to get captcha",
+			status: 502,
+			public: true,
 		});
-
-		const data = logs[0]?.record.data as LogObject & {
-			errorType?: string;
-			context?: Record<string, unknown>;
-			errorParams?: unknown;
-		};
-		expect(data?.errorType).toBe("ProsopoApiError");
-		expect(data?.context?.code).toBe(400);
-		expect(data?.context?.siteKey).toBe("abc");
-		expect(data?.errorParams).toBeUndefined();
+		expect(err.message).toBe("Failed to get captcha");
+		expect(err.status).toBe(502);
+		expect(err.isPublic).toBe(true);
 	});
 
-	it("does not inject a translated `translationMessage` into context when wrapping an Error", () => {
-		const { logger, logs } = makeCapturingLogger();
-
-		const inner = new Error("kaboom");
-		new ProsopoEnvError(inner, {
-			translationKey: "API.UNKNOWN",
-			context: { code: 500 },
-			i18n: englishI18n,
-			logger,
+	it("keeps the cause", () => {
+		const cause = new Error("boom");
+		const err = new ProsopoError({
+			code: "UNEXPECTED",
+			errorSite: "TEST-1",
+			cause,
 		});
-
-		const data = logs[0]?.record.data as LogObject & {
-			context?: Record<string, unknown>;
-		};
-		expect(data?.context?.translationMessage).toBeUndefined();
-		// The translation key still appears at the top level via `err`.
-		expect(logs[0]?.record.err).toBe("API.UNKNOWN");
+		expect(err.cause).toBe(cause);
 	});
 
-	it("falls back to `message` when no translation key is available", () => {
-		const { logger, logs } = makeCapturingLogger();
-
-		// Constructed from a plain Error with no translationKey option.
-		new ProsopoEnvError(new Error("raw failure"), {
-			i18n: englishI18n,
-			logger,
+	it("is an immutable snapshot of its context and data", () => {
+		const context: Record<string, unknown> = { siteKey: "a" };
+		const err = new ProsopoError({
+			code: "UNEXPECTED",
+			errorSite: "TEST-1",
+			context,
+			data: { n: 1 },
 		});
-
-		expect(logs[0]?.record.err).toBe("raw failure");
-	});
-
-	it("respects `silent: true` and does not log", () => {
-		const { logger, logs } = makeCapturingLogger();
-
-		new ProsopoApiError("API.INVALID_SITE_KEY", {
-			context: { code: 400 },
-			i18n: englishI18n,
-			logger,
-			silent: true,
-		});
-
-		expect(logs).toHaveLength(0);
-	});
-
-	it("logs at debug level and includes the stack when logLevel is 'debug'", () => {
-		const { logger, logs } = makeCapturingLogger();
-
-		new ProsopoApiError("API.INVALID_SITE_KEY", {
-			context: { code: 400 },
-			i18n: englishI18n,
-			logger,
-			logLevel: "debug",
-		});
-
-		expect(logs[0]?.level).toBe("debug");
-		expect(logs[0]?.record.err).toBe("API.INVALID_SITE_KEY");
-		const data = logs[0]?.record.data as LogObject & { stack?: string };
-		expect(typeof data?.stack).toBe("string");
-	});
-
-	// Regression: auto-logged ProsopoApiErrors used to land with no `msg`
-	// field. Every ProsopoBaseError constructor auto-logs (unless `silent`),
-	// which produced ~800 "undefined msg" error entries per hour in prod —
-	// the whole category collapsed into a single unqueryable bucket in the
-	// log UI. Emit a non-empty `msg` (mirroring the translation key so
-	// dashboards can group by it just like `err`).
-	it("emits a non-empty msg field mirroring the translation key", () => {
-		const { logger, logs } = makeCapturingLogger();
-
-		new ProsopoApiError("API.INCORRECT_CAPTCHA_TYPE", {
-			context: { code: 400 },
-			i18n: englishI18n,
-			logger,
-		});
-
-		expect(logs).toHaveLength(1);
-		expect(logs[0]?.record.msg).toBe("API.INCORRECT_CAPTCHA_TYPE");
-		// msg and err carry the same identifier so filters on either field
-		// return the same set — no divergence for existing dashboards.
-		expect(logs[0]?.record.msg).toBe(logs[0]?.record.err);
-	});
-
-	it("emits msg on the debug-level branch too", () => {
-		const { logger, logs } = makeCapturingLogger();
-
-		new ProsopoApiError("API.INVALID_SITE_KEY", {
-			context: { code: 400 },
-			i18n: englishI18n,
-			logger,
-			logLevel: "debug",
-		});
-
-		expect(logs[0]?.level).toBe("debug");
-		expect(logs[0]?.record.msg).toBe("API.INVALID_SITE_KEY");
-	});
-
-	it("falls back to the raw message in msg when no translation key is set", () => {
-		const { logger, logs } = makeCapturingLogger();
-
-		new ProsopoEnvError(new Error("raw failure"), {
-			i18n: englishI18n,
-			logger,
-		});
-
-		// Same fallback that `err` uses — msg tracks err whichever branch
-		// the identifier resolution takes.
-		expect(logs[0]?.record.msg).toBe("raw failure");
-		expect(logs[0]?.record.msg).toBe(logs[0]?.record.err);
+		context.siteKey = "b";
+		expect(err.context.siteKey).toBe("a");
+		expect(Object.isFrozen(err)).toBe(true);
+		expect(Object.isFrozen(err.context)).toBe(true);
+		expect(Object.isFrozen(err.data)).toBe(true);
 	});
 });
 
-describe("Logger.unpackError prefers translationKey over translated message", () => {
-	let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
-
-	beforeEach(() => {
-		consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+describe("isProsopoError", () => {
+	const err = new ProsopoError({
+		code: "NO_SESSION_FOUND",
+		errorSite: "TEST-1",
 	});
 
-	afterEach(() => {
-		consoleErrorSpy.mockRestore();
+	it("matches any ProsopoError without codes", () => {
+		expect(isProsopoError(err)).toBe(true);
+		expect(isProsopoError(new Error("x"))).toBe(false);
+		expect(isProsopoError("x")).toBe(false);
 	});
 
-	it("emits the translation key as the top-level `err` when a ProsopoApiError is passed via { err }", () => {
-		// Build the error first with `silent: true` so its own auto-log doesn't
-		// interfere with the spy.
-		const apiError = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
-			context: { code: 400 },
-			i18n: frenchI18n, // .message is "Aucune session trouvée"
-			silent: true,
+	it("matches only the given codes", () => {
+		expect(isProsopoError(err, "NO_SESSION_FOUND")).toBe(true);
+		expect(isProsopoError(err, "UNEXPECTED", "NO_SESSION_FOUND")).toBe(true);
+		expect(isProsopoError(err, "UNEXPECTED")).toBe(false);
+	});
+
+	it("narrows the code", () => {
+		const caught: unknown = err;
+		if (!isProsopoError(caught, "NO_SESSION_FOUND"))
+			throw new Error("expected a match");
+		const code: "NO_SESSION_FOUND" = caught.code;
+		expect(code).toBe("NO_SESSION_FOUND");
+	});
+
+	it("matches a ProsopoError from another copy of the package", () => {
+		const foreign = Object.assign(new Error("x"), {
+			name: "ProsopoError",
+			code: "UNEXPECTED",
+			errorSite: "TEST-1",
 		});
-
-		// `apiError.message` is the (French) translation; we want the logger
-		// to emit the *key* at top level instead.
-		expect(apiError.message).toBe("Aucune session trouvée");
-
-		const logger = new NativeLogger("test");
-		logger.error(() => ({ err: apiError }));
-
-		expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
-		const output = consoleErrorSpy.mock.calls[0]?.[0] as string;
-		const parsed = JSON.parse(output) as { err?: string };
-		expect(parsed.err).toBe("CAPTCHA.NO_SESSION_FOUND");
-		expect(parsed.err).not.toBe("Aucune session trouvée");
-	});
-
-	it("falls back to `message` when the error has no translationKey", () => {
-		const plain = new Error("plain failure");
-		const logger = new NativeLogger("test");
-		logger.error(() => ({ err: plain }));
-
-		const output = consoleErrorSpy.mock.calls[0]?.[0] as string;
-		const parsed = JSON.parse(output) as { err?: string };
-		expect(parsed.err).toBe("plain failure");
+		expect(isProsopoError(foreign)).toBe(true);
 	});
 });
 
-describe("unwrapError still produces a translated HTTP response", () => {
-	it("translates the message via i18n for the response body even though the log emits the key", () => {
-		// Build silently so we don't pollute test output.
-		const err = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
-			context: { code: 400 },
-			i18n: englishI18n,
-			silent: true,
-		});
-
-		const { jsonError } = unwrapError(err, englishI18n);
-		expect(jsonError.message).toBe("No session found");
-		expect(jsonError.key).toBe("CAPTCHA.NO_SESSION_FOUND");
-		expect(jsonError.code).toBe(400);
+describe("isErrorCode", () => {
+	it("accepts only registered codes", () => {
+		expect(isErrorCode("NO_SESSION_FOUND")).toBe(true);
+		expect(isErrorCode("toString")).toBe(false);
+		expect(isErrorCode("CAPTCHA.NO_SESSION_FOUND")).toBe(false);
+		expect(isErrorCode(1)).toBe(false);
 	});
 
-	it("exposes the translation key on the JSON response regardless of construction locale", () => {
-		// Same error constructed under two different locales; both responses
-		// must carry the same `key` so clients can branch on it consistently.
-		const enErr = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
-			context: { code: 400 },
-			i18n: englishI18n,
-			silent: true,
-		});
-		const frErr = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
-			context: { code: 400 },
-			i18n: frenchI18n,
-			silent: true,
-		});
+	it("names every code in screaming snake case", () => {
+		for (const code of Object.keys(ERROR_CODES))
+			expect(code).toMatch(/^[A-Z][A-Z0-9_]*$/);
+	});
 
-		expect(unwrapError(enErr, englishI18n).jsonError.key).toBe(
-			"CAPTCHA.NO_SESSION_FOUND",
+	it("is the only thing the widget translates errors by", () => {
+		const widget: { ERRORS: Record<string, string> } = JSON.parse(
+			readFileSync(
+				new URL("../../../locale/src/locales/en/widget.json", import.meta.url),
+				"utf8",
+			),
 		);
-		expect(unwrapError(frErr, frenchI18n).jsonError.key).toBe(
-			"CAPTCHA.NO_SESSION_FOUND",
+		const unknown = Object.keys(widget.ERRORS).filter(
+			(code: string) => !isErrorCode(code),
 		);
+		expect(unknown).toEqual([]);
+	});
+});
+
+describe("isZodError and boundedIssues", () => {
+	it("recognises zod errors by name", () => {
+		expect(isZodError(zodError(1))).toBe(true);
+		expect(isZodError(new Error("x"))).toBe(false);
+		expect(isZodError(null)).toBe(false);
 	});
 
-	it("derives statusMessage from the resolved status code, not a hardcoded 'Bad Request'", () => {
-		const err = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
-			context: { code: 401 },
-			i18n: englishI18n,
-			silent: true,
-		});
-
-		const { code, statusMessage } = unwrapError(err, englishI18n);
-		expect(code).toBe(401);
-		expect(statusMessage).toBe("Unauthorized");
+	it("caps reported issues", () => {
+		const bounded = boundedIssues(zodError(MAX_REPORTED_ISSUES + 5));
+		expect(bounded.issueCount).toBe(MAX_REPORTED_ISSUES + 5);
+		expect(bounded.issues).toHaveLength(MAX_REPORTED_ISSUES);
 	});
 
-	it("falls back to a 5xx reason phrase for an unmapped server-error code", () => {
-		// 599 is unassigned, so it exercises the fallback rather than a real phrase.
-		const err = new ProsopoApiError("CAPTCHA.NO_SESSION_FOUND", {
-			context: { code: 599 },
-			i18n: englishI18n,
-			silent: true,
+	it("falls back to the message when there is no issue list", () => {
+		expect(
+			boundedIssues({ name: "ZodError", message: '[{"a":1}]' }),
+		).toStrictEqual({ issueCount: 1, issues: [{ a: 1 }] });
+		expect(boundedIssues({ name: "ZodError", message: "oops" })).toStrictEqual({
+			issueCount: 1,
+			issues: ["oops"],
 		});
+	});
+});
 
-		const { code, statusMessage } = unwrapError(err, englishI18n);
-		expect(code).toBe(599);
-		expect(statusMessage).toBe("Internal Server Error");
+describe("toProsopoError", () => {
+	it("returns a ProsopoError unchanged", () => {
+		const err = new ProsopoError({ code: "FORBIDDEN", errorSite: "TEST-1" });
+		expect(toProsopoError(err, "TEST-2")).toBe(err);
+	});
+
+	it("turns a zod error into INVALID_REQUEST with bounded issues", () => {
+		const err = toProsopoError(zodError(20), "TEST-2");
+		expect(err.code).toBe("INVALID_REQUEST");
+		expect(err.errorSite).toBe("TEST-2");
+		expect(err.data.issueCount).toBe(20);
+	});
+
+	it("turns a SyntaxError into INVALID_REQUEST", () => {
+		const err = toProsopoError(new SyntaxError("bad json"), "TEST-2");
+		expect(err.code).toBe("INVALID_REQUEST");
+		expect(err.status).toBe(400);
+	});
+
+	it("keeps the status of an exposed 4xx http-error", () => {
+		const tooLarge = Object.assign(new Error("too large"), {
+			status: 413,
+			expose: true,
+		});
+		const err = toProsopoError(tooLarge, "TEST-2");
+		expect(err.code).toBe("INVALID_REQUEST");
+		expect(err.status).toBe(413);
+	});
+
+	it("treats anything else as UNEXPECTED", () => {
+		const unexposed = Object.assign(new Error("x"), { status: 404 });
+		expect(toProsopoError(unexposed, "TEST-2").code).toBe("UNEXPECTED");
+		expect(toProsopoError("x", "TEST-2").code).toBe("UNEXPECTED");
+		expect(toProsopoError(new Error("x"), "TEST-2").status).toBe(500);
+	});
+});
+
+describe("toPublicError and toApiError", () => {
+	it("sends a public error's code, message and data", () => {
+		const err = new ProsopoError({
+			code: "DOMAIN_LIMIT_REACHED",
+			errorSite: "TEST-1",
+			context: { secret: "s" },
+			data: { limit: 3 },
+		});
+		expect(toPublicError(err, "BACKEND_ERROR")).toStrictEqual({
+			code: "DOMAIN_LIMIT_REACHED",
+			errorId: "DOMAIN_LIMIT_REACHED:TEST-1",
+			status: 400,
+			message: "Domain limit reached",
+			data: { limit: 3 },
+		});
+	});
+
+	it("omits empty data", () => {
+		const err = new ProsopoError({ code: "FORBIDDEN", errorSite: "TEST-1" });
+		expect(toPublicError(err, "BACKEND_ERROR")).not.toHaveProperty("data");
+	});
+
+	it("reduces a non-public error to its origin and site", () => {
+		const err = new ProsopoError({
+			code: "DB_UNAVAILABLE",
+			errorSite: "TEST-1",
+			data: { host: "h" },
+		});
+		expect(toPublicError(err, "FRONTEND_ERROR")).toStrictEqual({
+			code: "FRONTEND_ERROR",
+			errorId: "FRONTEND_ERROR:TEST-1",
+			status: 503,
+		});
+	});
+
+	it("wraps the public error in the response envelope", () => {
+		const result = toApiError(new Error("x"), "TEST-2");
+		expect(result.status).toBe(500);
+		expect(result.error.code).toBe("UNEXPECTED");
+		expect(result.body).toStrictEqual({
+			error: {
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:TEST-2",
+				status: 500,
+			},
+		});
+	});
+});
+
+describe("describeError", () => {
+	it("describes a ProsopoError and its cause chain", () => {
+		const err = new ProsopoError({
+			code: "DB_QUERY_FAILED",
+			errorSite: "TEST-1",
+			cause: new Error("socket closed"),
+			context: { siteKey: "a", error: zodError(20) },
+		});
+		const described = asDescription(describeError(err));
+		expect(described.code).toBe("DB_QUERY_FAILED");
+		expect(described.errorId).toBe("DB_QUERY_FAILED:TEST-1");
+		expect(described.data).toBeUndefined();
+		expect(described.context?.siteKey).toBe("a");
+		expect(described.context?.error).toStrictEqual(boundedIssues(zodError(20)));
+		expect(asDescription(described.cause ?? "").message).toBe("socket closed");
+	});
+
+	it("bounds a zod error's issues", () => {
+		const zod = Object.assign(new Error("[huge]"), zodError(50));
+		const described = asDescription(describeError(zod));
+		expect(described.message).toBe("Validation failed");
+		expect(described.issues?.issues).toHaveLength(MAX_REPORTED_ISSUES);
+	});
+
+	it("stringifies a non-error", () => {
+		expect(describeError(42)).toBe("42");
+	});
+
+	it("stops following causes at a fixed depth", () => {
+		let err = new Error("root");
+		for (let i = 0; i < 20; i++)
+			err = Object.assign(new Error(`level ${i}`), { cause: err });
+		let described: ErrorDescription | string | undefined = describeError(err);
+		let depth = 0;
+		while (typeof described === "object" && described.cause !== undefined) {
+			described = described.cause;
+			depth++;
+		}
+		expect(depth).toBe(5);
+	});
+});
+
+describe("isSevereError", () => {
+	it("is true for 5xx only", () => {
+		expect(
+			isSevereError(
+				new ProsopoError({ code: "UNEXPECTED", errorSite: "TEST-1" }),
+			),
+		).toBe(true);
+		expect(
+			isSevereError(
+				new ProsopoError({ code: "FORBIDDEN", errorSite: "TEST-1" }),
+			),
+		).toBe(false);
 	});
 });

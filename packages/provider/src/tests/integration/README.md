@@ -9,7 +9,7 @@ These integration tests verify the provider's functionality by starting containe
 ### Standard Mode (with Redis)
 
 ```bash
-npm run test:integration
+pnpm run test:integration
 ```
 
 ### CI/CD Mode (without Redis)
@@ -17,7 +17,7 @@ npm run test:integration
 In CI/CD environments where Docker containers may fail or be unstable, you can skip Redis:
 
 ```bash
-SKIP_REDIS=true npm run test:integration
+SKIP_REDIS=true pnpm run test:integration
 ```
 
 ## Environment Variables

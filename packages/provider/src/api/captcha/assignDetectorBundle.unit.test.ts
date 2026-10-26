@@ -163,6 +163,45 @@ describe("assignDetectorBundle", () => {
 		});
 	});
 
+	it("logs which bundle and release it handed out", async () => {
+		writeFileSync(join(dir, "bundle-0.js"), "JS");
+		writeFileSync(
+			join(dir, "bundle-0.json"),
+			JSON.stringify({ privateKey: "PK", innerConfig: "C", release: "3.9.1" }),
+		);
+		initDetectorBundlePool(dir);
+		const req = makeReq();
+		const { res, json } = makeRes();
+
+		await assignDetectorBundle(env)(req, res, next);
+
+		const info = req.logger.info as ReturnType<typeof vi.fn>;
+		const logged = info.mock.calls
+			.map(([thunk]) => (thunk as () => { msg: string; data: unknown })())
+			.find((entry) => entry.msg === "Detector bundle assigned");
+		const body = json.mock.calls[0]?.[0] as { detectorSessionId: string };
+		expect(logged?.data).toEqual({
+			bundleId: "bundle-0",
+			release: "3.9.1",
+			detectorSessionId: body.detectorSessionId,
+		});
+	});
+
+	it("does not log an assignment when the binding cannot be stored", async () => {
+		writePool(dir, 1);
+		initDetectorBundlePool(dir);
+		cacheDetectorBundle.mockResolvedValueOnce(false);
+		const req = makeReq();
+
+		await assignDetectorBundle(env)(req, makeRes().res, next);
+
+		const info = req.logger.info as ReturnType<typeof vi.fn>;
+		const messages = info.mock.calls.map(
+			([thunk]) => (thunk as () => { msg: string })().msg,
+		);
+		expect(messages).not.toContain("Detector bundle assigned");
+	});
+
 	it("serves one caller the same bundle across many assigns", async () => {
 		writePool(dir, 50);
 		initDetectorBundlePool(dir);

@@ -89,7 +89,7 @@ describe("ApiDnsEventEndpoint", () => {
 			mockLogger as never,
 		);
 		expect(result.status).toBe(ApiEndpointResponseStatus.SUCCESS);
-		expect(result.data).toEqual({ stored: 0, errors: 0 });
+		expect(result.data).toEqual({ stored: 0, errors: 0, dropped: 0 });
 		expect(mergeSessionDnsEvent).not.toHaveBeenCalled();
 	});
 
@@ -179,7 +179,7 @@ describe("ApiDnsEventEndpoint", () => {
 			{ events },
 			mockLogger as never,
 		);
-		expect(result.data).toEqual({ stored: 1, errors: 0 });
+		expect(result.data).toEqual({ stored: 1, errors: 0, dropped: 0 });
 	});
 
 	it("isolates per-event failures", async () => {
@@ -205,8 +205,58 @@ describe("ApiDnsEventEndpoint", () => {
 			mockLogger as never,
 		);
 		expect(result.status).toBe(ApiEndpointResponseStatus.SUCCESS);
-		expect(result.data).toEqual({ stored: 1, errors: 1 });
+		expect(result.data).toEqual({ stored: 1, errors: 1, dropped: 0 });
 		expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+	});
+
+	it("drops only the invalid events of a batch that passes through the route schema", async () => {
+		const good: DnsEvent = {
+			kind: "dns",
+			ts: "2026-06-08T15:00:00Z",
+			src_ip: "1.2.3.4",
+			jti: "session-good",
+		};
+		const overlongPath: Record<string, unknown> = {
+			kind: "http",
+			ts: "2026-06-08T15:00:00Z",
+			src_ip: "5.6.7.8",
+			jti: "session-bad",
+			path: `/${"a".repeat(10_000)}`,
+		};
+		const wrongKind: Record<string, unknown> = { ...good, kind: "smtp" };
+		const body = { events: [overlongPath, good, wrongKind, "not-an-object"] };
+
+		const args = endpoint.getRequestArgsSchema().parse(body);
+		const result = await endpoint.processRequest(args, mockLogger as never);
+
+		expect(result.status).toBe(ApiEndpointResponseStatus.SUCCESS);
+		expect(result.data).toEqual({ stored: 1, errors: 0, dropped: 3 });
+		expect(mergeSessionDnsEvent).toHaveBeenCalledTimes(1);
+		expect(mergeSessionDnsEvent).toHaveBeenCalledWith(
+			"session-good",
+			{ resolverIp: "1.2.3.4" },
+			expect.any(Date),
+		);
+		expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+	});
+
+	it("describes at most five invalid events in the drop log", async () => {
+		const events: unknown[] = Array.from({ length: 50 }, () => ({}));
+		const result = await endpoint.processRequest(
+			endpoint.getRequestArgsSchema().parse({ events }),
+			mockLogger as never,
+		);
+		expect(result.data).toEqual({ stored: 0, errors: 0, dropped: 50 });
+		const [firstWarn] = mockLogger.warn.mock.calls;
+		expect(firstWarn).toBeDefined();
+		const logged: { data: { invalid: unknown[] } } = firstWarn?.[0]();
+		expect(logged.data.invalid).toHaveLength(5);
+	});
+
+	it("still rejects a body without an events array", () => {
+		expect(() =>
+			endpoint.getRequestArgsSchema().parse({ events: "nope" }),
+		).toThrow();
 	});
 
 	it("returns the registered schema", () => {

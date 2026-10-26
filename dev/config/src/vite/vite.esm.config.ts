@@ -58,7 +58,7 @@ export default async function (
 			}),
 			VitePluginCopy({
 				srcDir: "src",
-				destDir: "dist",
+				destDir: "dist/esm",
 				include: ["**/*.json"],
 			}),
 			tsconfigPaths({ projects: [path.resolve(tsConfigPath)] }),
@@ -68,7 +68,7 @@ export default async function (
 			emptyOutDir: false,
 			ssr: true,
 			target: "node24",
-			outDir: "dist",
+			outDir: "dist/esm",
 			lib: {
 				name,
 				formats: ["es"],

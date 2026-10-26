@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { createPrivateKey } from "node:crypto";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import type { Logger } from "@prosopo/logger";
 import {
@@ -54,6 +54,34 @@ const isValidPrivateKey = (privateKeyString: string) => {
 	} catch (error) {
 		return false;
 	}
+};
+
+/**
+ * Matches `text` against a pattern where `*` matches any run of characters.
+ * Greedy two-pointer match, retrying from the last `*` on mismatch, so time
+ * is bounded by pattern length times text length.
+ */
+export const matchesGlob = (pattern: string, text: string): boolean => {
+	let p = 0;
+	let t = 0;
+	let starP = -1;
+	let starT = 0;
+	while (t < text.length) {
+		if (p < pattern.length && pattern[p] === "*") {
+			starP = p++;
+			starT = t;
+		} else if (p < pattern.length && pattern[p] === text[t]) {
+			p++;
+			t++;
+		} else if (starP !== -1) {
+			p = starP + 1;
+			t = ++starT;
+		} else {
+			return false;
+		}
+	}
+	while (p < pattern.length && pattern[p] === "*") p++;
+	return p === pattern.length;
 };
 
 export class ClientTaskManager {
@@ -289,9 +317,11 @@ export class ClientTaskManager {
 				},
 			);
 		} catch (e: unknown) {
-			const getClientListError = new ProsopoApiError("DATABASE.UNKNOWN", {
-				context: { error: e },
-				logger: this.logger,
+			const getClientListError = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "PROV-51",
+				message: "Unknown database error",
+				cause: e,
 			});
 			this.logger.error(() => ({
 				err: getClientListError,
@@ -366,9 +396,11 @@ export class ClientTaskManager {
 		updatedAt: string;
 	}> {
 		if (scope === DecisionMachineScope.Dapp && !dappAccount) {
-			throw new ProsopoApiError("API.BAD_REQUEST", {
+			throw new ProsopoError({
+				code: "INVALID_REQUEST",
+				errorSite: "PROV-52",
+				message: "BadRequest",
 				context: { scope, dappAccount },
-				logger: this.logger,
 			});
 		}
 
@@ -453,9 +485,11 @@ export class ClientTaskManager {
 	}> {
 		const artifact = await this.providerDB.getDecisionMachineArtifactById(id);
 		if (!artifact) {
-			throw new ProsopoApiError("API.BAD_REQUEST", {
+			throw new ProsopoError({
+				code: "INVALID_REQUEST",
+				errorSite: "PROV-53",
+				message: "BadRequest",
 				context: { id },
-				logger: this.logger,
 			});
 		}
 		return {
@@ -480,11 +514,15 @@ export class ClientTaskManager {
 	}> {
 		const success = await this.providerDB.removeDecisionMachineArtifact(id);
 		if (!success) {
-			throw new ProsopoApiError("API.BAD_REQUEST", {
+			throw new ProsopoError({
+				code: "INVALID_REQUEST",
+				errorSite: "PROV-54",
+				message: "BadRequest",
 				context: { id, message: "Decision machine not found" },
-				logger: this.logger,
 			});
 		}
+		invalidateAllDecisionMachineArtifactCaches();
+		invalidateDecisionMachineScriptCache();
 		return {
 			success,
 			deletedId: id,
@@ -497,6 +535,8 @@ export class ClientTaskManager {
 	}> {
 		const deletedCount =
 			await this.providerDB.removeAllDecisionMachineArtifacts();
+		invalidateAllDecisionMachineArtifactCaches();
+		invalidateDecisionMachineScriptCache();
 		return {
 			success: true,
 			deletedCount,
@@ -530,13 +570,10 @@ export class ClientTaskManager {
 				return referrerHost.endsWith(`.${allowed}`) || referrerHost === allowed;
 			}
 
-			// General glob pattern: convert * to .*
+			// General glob pattern. Matched without a regex: patterns are
+			// customer-controlled and `.*` runs backtrack exponentially.
 			if (pattern.includes("*")) {
-				const escaped = pattern
-					.replace(/[.+?^${}()|\[\]\\]/g, "\\$&")
-					.replace(/\*/g, ".*");
-				const regex = new RegExp(`^${escaped}$`, "i");
-				return regex.test(referrerHost);
+				return matchesGlob(pattern, referrerHost.toLowerCase());
 			}
 
 			// Exact or subdomain match for plain domains

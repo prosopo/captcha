@@ -30,5 +30,10 @@ strip = "symbols"
 # Debug symbols for our own crate only. Dependency debuginfo is the bulk of a
 # dev build and nobody steps through third-party code here; CI narrows our own
 # to line tables via CARGO_PROFILE_DEV_DEBUG.
+#
+# Dependencies optimised even in debug: they compile once and are cached, so
+# tests run near release speed while our own crate still rebuilds quickly.
+# Releases keep full LTO via `build:release` (`NODE_ENV=production pnpm build`).
 [profile.dev.package."*"]
 debug = false
+opt-level = 2

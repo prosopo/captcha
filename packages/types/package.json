@@ -1,29 +1,27 @@
 {
 	"name": "@prosopo/types",
-	"version": "5.10.1",
+	"version": "5.19.0",
 	"description": "Types for prosopo TypeScript packages",
 	"type": "module",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		}
 	},
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json",
-		"test": "NODE_ENV=${NODE_ENV:-test}; npx vitest run --config ./vite.test.config.ts --mode $NODE_ENV"
+		"build:types": "tsc --project tsconfig.types.json",
+		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts --mode $NODE_ENV"
 	},
 	"repository": {
 		"type": "git",
@@ -37,28 +35,28 @@
 	},
 	"homepage": "https://github.com/prosopo/captcha#readme",
 	"dependencies": {
-		"@polkadot/extension-inject": "0.63.1",
-		"@polkadot/types": "16.5.6",
+		"@polkadot/extension-inject": "0.64.1",
+		"@polkadot/types": "17.0.2",
 		"@polkadot/util": "14.0.3",
-		"@prosopo/locale": "3.6.0",
-		"@prosopo/util": "3.3.11",
-		"@prosopo/util-crypto": "13.5.33",
-		"ip-address": "10.7.0",
+		"@prosopo/locale": "workspace:*",
+		"@prosopo/util": "workspace:*",
+		"@prosopo/util-crypto": "workspace:*",
+		"ip-address": "10.7.4",
 		"scale-ts": "1.6.1",
-		"zod": "3.23.8"
+		"zod": "3.25.76"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.1",
+		"@prosopo/config": "workspace:*",
 		"@types/node": "22.5.5",
-		"@vitest/coverage-v8": "4.1.11",
+		"@vitest/coverage-v8": "5.0.4",
 		"concurrently": "9.0.1",
 		"del-cli": "6.0.0",
 		"npm-run-all": "4.1.5",
 		"tslib": "2.7.0",
 		"tsx": "4.20.3",
 		"typescript": "5.6.2",
-		"vite": "8.1.5",
-		"vitest": "4.1.11"
+		"vite": "8.1.6",
+		"vitest": "5.0.4"
 	},
 	"sideEffects": false
 }

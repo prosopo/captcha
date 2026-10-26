@@ -15,27 +15,40 @@
 import { describe, expect, it } from "vitest";
 import {
 	captchaPolicySeverity,
+	harshestPolicy,
 	isStricterCaptchaPolicy,
 	isStricterCaptchaType,
+	policyHarshness,
 	rankCaptchaType,
 } from "./index.js";
 
-// The four members of CaptchaType, as bare strings. Not imported from
+// The scoreable members of CaptchaType, as bare strings. Not imported from
 // @prosopo/types — this package deliberately has no dependencies, and the
 // coupling is asserted on the consuming side instead.
-const TYPES = ["image", "puzzle", "pow", "frictionless"] as const;
-const STRICTEST_FIRST = ["image", "puzzle", "pow", "frictionless"] as const;
+const TYPES = ["image", "iconOrder", "puzzle", "pow", "frictionless"] as const;
+const STRICTEST_FIRST = [
+	"image",
+	"iconOrder",
+	"puzzle",
+	"pow",
+	"frictionless",
+] as const;
 
 // Well above imageMaxRoundsDefault (32). `solvedImagesCount` is validated by
 // `number().int().min(2)` with no upper bound, so "absurd" is reachable.
 const ABSURD_ROUNDS = 100_000;
 
 describe("rankCaptchaType", () => {
-	it("ranks image > puzzle > pow > frictionless", () => {
+	it("ranks image > iconOrder > puzzle > pow > frictionless", () => {
 		const ascending = [...STRICTEST_FIRST].reverse();
 		const ranks = ascending.map(rankCaptchaType);
 		expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
 		expect(new Set(ranks).size).toBe(ascending.length);
+	});
+
+	it("does not rank audio above unset", () => {
+		expect(rankCaptchaType("audio")).toBe(0);
+		expect(isStricterCaptchaType("audio", undefined)).toBe(false);
 	});
 
 	it("ranks unset and unrecognised values at 0", () => {
@@ -43,6 +56,22 @@ describe("rankCaptchaType", () => {
 		expect(rankCaptchaType("")).toBe(0);
 		expect(rankCaptchaType("not-a-captcha-type")).toBe(0);
 	});
+
+	it.each(["constructor", "toString", "__proto__", "hasOwnProperty"])(
+		"ranks the Object.prototype key %s at 0",
+		(key) => {
+			expect(rankCaptchaType(key)).toBe(0);
+			expect(captchaPolicySeverity({ captchaType: key })).toBe(0);
+			expect(
+				isStricterCaptchaPolicy(
+					{ captchaType: "frictionless" },
+					{
+						captchaType: key,
+					},
+				),
+			).toBe(true);
+		},
+	);
 
 	// frictionless used to tie with unset at 0 in the access-rule table.
 	it("ranks frictionless above unset", () => {
@@ -56,8 +85,10 @@ describe("isStricterCaptchaType — type only, settings ignored", () => {
 	// Adjacent pairs in both orderings — non-adjacent comparisons would still
 	// pass with an off-by-one in the table.
 	it.each([
-		["image", "puzzle", true],
-		["puzzle", "image", false],
+		["image", "iconOrder", true],
+		["iconOrder", "image", false],
+		["iconOrder", "puzzle", true],
+		["puzzle", "iconOrder", false],
 		["puzzle", "pow", true],
 		["pow", "puzzle", false],
 		["pow", "frictionless", true],
@@ -90,6 +121,9 @@ describe("isStricterCaptchaType — type only, settings ignored", () => {
 describe("captchaPolicySeverity — type dominates", () => {
 	it("orders by type before any setting", () => {
 		expect(captchaPolicySeverity({ captchaType: "image" })).toBeGreaterThan(
+			captchaPolicySeverity({ captchaType: "iconOrder" }),
+		);
+		expect(captchaPolicySeverity({ captchaType: "iconOrder" })).toBeGreaterThan(
 			captchaPolicySeverity({ captchaType: "puzzle" }),
 		);
 		expect(captchaPolicySeverity({ captchaType: "puzzle" })).toBeGreaterThan(
@@ -250,5 +284,46 @@ describe("isStricterCaptchaPolicy — type then settings", () => {
 			false,
 		);
 		expect(isStricterCaptchaPolicy(harder, milder)).toBe(true);
+	});
+});
+
+describe("policyHarshness — blocks above every challenge", () => {
+	it("ranks a block above the strictest possible challenge", () => {
+		expect(policyHarshness({}, true)).toBeGreaterThan(
+			policyHarshness({ captchaType: "image", solvedImagesCount: 1e9 }, false),
+		);
+	});
+
+	it("ranks a challenge by its captcha policy severity", () => {
+		const policy = { captchaType: "pow", powDifficulty: 7 };
+		expect(policyHarshness(policy, false)).toBe(captchaPolicySeverity(policy));
+	});
+});
+
+describe("harshestPolicy", () => {
+	type Rule = { name: string; block: boolean; captchaType?: string };
+	const blocks = (rule: Rule): boolean => rule.block;
+
+	it("picks a block over any challenge, wherever it sits", () => {
+		const block: Rule = { name: "block", block: true };
+		const image: Rule = { name: "image", block: false, captchaType: "image" };
+		expect(harshestPolicy([image, block], blocks)).toBe(block);
+		expect(harshestPolicy([block, image], blocks)).toBe(block);
+	});
+
+	it("picks the stricter challenge", () => {
+		const pow: Rule = { name: "pow", block: false, captchaType: "pow" };
+		const image: Rule = { name: "image", block: false, captchaType: "image" };
+		expect(harshestPolicy([pow, image], blocks)).toBe(image);
+	});
+
+	it("keeps the first of equally harsh policies", () => {
+		const first: Rule = { name: "first", block: false, captchaType: "pow" };
+		const second: Rule = { name: "second", block: false, captchaType: "pow" };
+		expect(harshestPolicy([first, second], blocks)).toBe(first);
+	});
+
+	it("returns undefined for no policies", () => {
+		expect(harshestPolicy<Rule>([], blocks)).toBeUndefined();
 	});
 });

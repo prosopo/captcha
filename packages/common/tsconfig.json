@@ -2,7 +2,8 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist"
+		"outDir": "./dist/tsc",
+		"tsBuildInfoFile": "./dist/tsc/tsconfig.tsbuildinfo"
 	},
 	"include": [
 		"src",
@@ -15,12 +16,6 @@
 	"references": [
 		{
 			"path": "../../dev/config/tsconfig.json"
-		},
-		{
-			"path": "../locale"
-		},
-		{
-			"path": "../logger"
 		},
 		{
 			"path": "../types"

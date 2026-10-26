@@ -23,6 +23,7 @@ import {
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
+	type IFrictionlessTypes,
 	type IUserSettings,
 	Tier,
 	frictionlessImageThresholdDefault,
@@ -154,6 +155,7 @@ declare global {
 }
 
 export const checkboxClass = '[type="checkbox"]';
+export const widgetHostSelector = "prosopo-procaptcha";
 
 export function getWidgetElement(
 	selector: string,
@@ -206,47 +208,28 @@ function waitForProcaptchaScript(): Cypress.Chainable<void> {
 	});
 }
 
+// Clicked straight off the query, not through `cy.wrap`: the widget swaps its
+// placeholder checkbox for the challenge's own once detection answers, and a
+// wrapped element that has since left the page reports a (0, 0) position, so
+// realClick would land on the page corner instead of the checkbox.
 function clickCheckbox(): Cypress.Chainable<JQuery<HTMLElement>> {
-	// Wait for checkbox to exist and be visible
 	return getWidgetElement(checkboxClass, { timeout: 12000 })
-		.should("exist")
 		.should("be.visible")
 		.should("not.be.disabled")
 		.first()
-		.then(($checkbox) => {
-			// Log checkbox details for debugging
-			cy.task("log", `Found checkbox: ${$checkbox.length} element(s)`);
-			cy.task("log", `Checkbox is visible: ${$checkbox.is(":visible")}`);
-			cy.task("log", `Checkbox is disabled: ${$checkbox.is(":disabled")}`);
-			cy.task("log", `Checkbox checked state: ${$checkbox.is(":checked")}`);
-			cy.wrap($checkbox).realClick();
-		});
+		.realClick();
 }
 
 function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 	// First wait for the procaptcha script to be loaded
 	return cy.waitForProcaptchaScript().then(() => {
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+		// The checkbox takes a click before /frictionless has answered, so a
+		// `captcha/**` pattern would catch that response instead.
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/image").as(
 			"getCaptcha",
 		);
 
-		// Log for debugging
-		cy.task("log", `Looking for checkbox with selector: ${checkboxClass}`);
-
-		// Wait for checkbox to exist and be visible
-		getWidgetElement(checkboxClass, { timeout: 12000 })
-			.should("exist")
-			.should("be.visible")
-			.should("not.be.disabled")
-			.first()
-			.then(($checkbox) => {
-				// Log checkbox details for debugging
-				cy.task("log", `Found checkbox: ${$checkbox.length} element(s)`);
-				cy.task("log", `Checkbox is visible: ${$checkbox.is(":visible")}`);
-				cy.task("log", `Checkbox is disabled: ${$checkbox.is(":disabled")}`);
-				cy.task("log", `Checkbox checked state: ${$checkbox.is(":checked")}`);
-				cy.wrap($checkbox).realClick();
-			});
+		clickCheckbox();
 
 		return cy
 			.wait("@getCaptcha", { timeout: 36000 })
@@ -431,17 +414,20 @@ function elementExists(selector: string) {
 /**
  * Settings a test may hand to `registerSiteKey`.
  *
- * Widened past `Partial<IUserSettings>` on one field only: the score ladder
+ * Widened past `Partial<IUserSettings>` on two fields. The score ladder
  * migration has to keep working for records still holding the pre-ladder bare
  * number, and the ladder spec registers exactly that shape to prove it. Typed
  * as an explicit union rather than cast at the call site, so the legacy shape
- * is documented instead of smuggled through `unknown`.
+ * is documented instead of smuggled through `unknown`. `frictionlessTypes` may
+ * be partial because the admin endpoint fills the missing types in with their
+ * defaults.
  */
 export type RegisterSiteKeySettings = Omit<
 	Partial<IUserSettings>,
-	"frictionlessThreshold"
+	"frictionlessThreshold" | "frictionlessTypes"
 > & {
 	frictionlessThreshold?: IUserSettings["frictionlessThreshold"] | number;
+	frictionlessTypes?: Partial<IFrictionlessTypes>;
 };
 
 function registerSiteKey(
@@ -484,6 +470,7 @@ function registerSiteKey(
 			imageMaxRounds: MAX_IMAGE_CAPTCHA_ROUNDS,
 			imageMinRounds: MIN_IMAGE_CAPTCHA_ROUNDS,
 			puzzleTolerance: puzzleToleranceDefault,
+			audioAccessibilityEnabled: false,
 			disallowWebView: false,
 			verifiedTimeout: 60000,
 			solutionTimeout: 60000,

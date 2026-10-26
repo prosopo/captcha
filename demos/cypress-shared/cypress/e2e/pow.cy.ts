@@ -14,10 +14,14 @@
 /// <reference types="cypress" />
 
 import "@cypress/xpath";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { CaptchaType } from "@prosopo/types";
-import { checkboxClass, getWidgetElement } from "../support/commands.js";
+import {
+	checkboxClass,
+	getWidgetElement,
+	widgetHostSelector,
+} from "../support/commands.js";
 
 const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
 
@@ -38,12 +42,12 @@ describe("Proof of Work CAPTCHA", () => {
 		}));
 
 		if (!solutions) {
-			throw new ProsopoDatasetError(
-				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
-				{
-					context: { datasetWithSolutionHashes },
-				},
-			);
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "CYPR-10",
+				message: "No datasets found with required number of solutions",
+				context: { datasetWithSolutionHashes },
+			});
 		}
 		cy.intercept("/dummy").as("dummy");
 
@@ -85,6 +89,8 @@ describe("Proof of Work CAPTCHA", () => {
 			"powVerify",
 		);
 
+		cy.get(widgetHostSelector).first().snap("pow-initial");
+
 		getWidgetElement(checkboxClass, { timeout: 12000 }).first().realClick();
 
 		cy.wait("@powCaptcha", { timeout: 12000 })
@@ -110,5 +116,7 @@ describe("Proof of Work CAPTCHA", () => {
 			"contain",
 			"Challenge passed successfully",
 		);
+
+		cy.get(widgetHostSelector).first().snap("pow-success");
 	});
 });
