@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n, TranslateOptions } from "@prosopo/locale";
+import {
+	type Ti18n,
+	type TranslateOptions,
+	createUntranslatedI18n,
+} from "@prosopo/locale";
 import {
 	ModeEnum,
 	type ProcaptchaProps,
@@ -97,15 +101,15 @@ let widget: ProcaptchaPowHandle | undefined;
 
 const i18nStub = (
 	language: string,
-	changeLanguage: Mock<(l: string) => void>,
-) => ({ language, changeLanguage }) as unknown as Ti18n;
+	changeLanguage: Mock<(l: string) => Promise<unknown>>,
+) => createUntranslatedI18n({ language, changeLanguage });
 
 // Stands in for the shared i18n instance after the widget's own language (de)
 // has loaded; lookups follow i18nFrontend.ts: catalogue, then defaultValue.
 let translatorI18n: Ti18n | undefined;
 const germanI18n = (): Ti18n => {
 	const catalogue: Record<string, string> = {
-		"API.INVALID_SITE_KEY": "Ungültiger Site-Schlüssel",
+		"ERRORS.SITE_KEY_INVALID": "Ungültiger Site-Schlüssel",
 	};
 	return {
 		language: "de",
@@ -113,6 +117,7 @@ const germanI18n = (): Ti18n => {
 		t: (key: string, options?: TranslateOptions): string =>
 			catalogue[key] ?? options?.defaultValue ?? key,
 		changeLanguage: async (): Promise<void> => undefined,
+		exists: (): boolean => false,
 		hasLoadedNamespace: (): boolean => true,
 		on: (): void => undefined,
 		off: (): void => undefined,
@@ -122,7 +127,6 @@ const germanI18n = (): Ti18n => {
 const props = (overrides: Partial<ProcaptchaProps> = {}): ProcaptchaProps => ({
 	config: config(),
 	callbacks: {},
-	i18n: undefined as unknown as Ti18n,
 	...overrides,
 });
 
@@ -261,7 +265,11 @@ describe("what the widget renders", () => {
 	test("the checkbox shows the current error", async () => {
 		render(props());
 		await setState({
-			error: { message: "no session", key: "API.UNKNOWN_ERROR" },
+			error: {
+				code: "BACKEND_ERROR",
+				errorId: "BACKEND_ERROR:PROV-1",
+				message: "no session",
+			},
 		});
 		expect(mounted.container.textContent).toContain("no session");
 	});
@@ -270,7 +278,11 @@ describe("what the widget renders", () => {
 		translatorI18n = germanI18n();
 		render(props());
 		await setState({
-			error: { message: "Invalid site key", key: "API.INVALID_SITE_KEY" },
+			error: {
+				code: "SITE_KEY_INVALID",
+				errorId: "SITE_KEY_INVALID:PROV-1",
+				message: "Invalid site key",
+			},
 		});
 		expect(mounted.container.textContent).toContain(
 			"Ungültiger Site-Schlüssel",
@@ -473,15 +485,17 @@ describe("the invisible-mode execute event", () => {
 });
 
 describe("an invalidated session", () => {
-	const fail = async (key: string): Promise<void> => {
-		await setState({ error: { message: "boom", key } });
+	const fail = async (code: string): Promise<void> => {
+		await setState({
+			error: { code, errorId: `${code}:PROV-1`, message: "boom" },
+		});
 	};
 
 	test("is handed to the recovery-aware parent, with the original click", async () => {
 		const onSessionInvalidated = vi.fn<(x?: number, y?: number) => void>();
 		render(props({ onSessionInvalidated }));
 		click({ clientX: 9, clientY: 8 });
-		await fail("CAPTCHA.NO_SESSION_FOUND");
+		await fail("NO_SESSION_FOUND");
 		expect(onSessionInvalidated).toHaveBeenCalledWith(9, 8);
 	});
 
@@ -494,9 +508,9 @@ describe("an invalidated session", () => {
 				frictionlessState: frictionless({ restart }),
 			}),
 		);
-		await fail("CAPTCHA.NO_SESSION_FOUND");
+		await fail("NO_SESSION_FOUND");
 		await setState({ error: undefined });
-		await fail("CAPTCHA.NO_SESSION_FOUND");
+		await fail("NO_SESSION_FOUND");
 		expect(onSessionInvalidated).toHaveBeenCalledTimes(1);
 		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 150));
 		expect(restart).toHaveBeenCalledTimes(1);
@@ -505,7 +519,7 @@ describe("an invalidated session", () => {
 	test("without a recovery-aware parent the frictionless session restarts", async () => {
 		const restart = vi.fn<() => void>();
 		render(props({ frictionlessState: frictionless({ restart }) }));
-		await fail("CAPTCHA.NO_SESSION_FOUND");
+		await fail("NO_SESSION_FOUND");
 		expect(restart).not.toHaveBeenCalled();
 		await new Promise<void>((resolve: () => void) => setTimeout(resolve, 150));
 		expect(restart).toHaveBeenCalledTimes(1);
@@ -520,14 +534,14 @@ describe("an invalidated session", () => {
 				frictionlessState: frictionless({ restart }),
 			}),
 		);
-		await fail("API.UNKNOWN_ERROR");
+		await fail("BACKEND_ERROR");
 		expect(onSessionInvalidated).not.toHaveBeenCalled();
 		expect(restart).not.toHaveBeenCalled();
 	});
 
 	test("an error with nowhere to escalate to is simply shown", async () => {
 		render(props());
-		await expect(fail("CAPTCHA.NO_SESSION_FOUND")).resolves.toBeUndefined();
+		await expect(fail("NO_SESSION_FOUND")).resolves.toBeUndefined();
 	});
 });
 
@@ -538,7 +552,7 @@ describe("language", () => {
 	});
 
 	test("an existing i18n instance is switched rather than re-booted", () => {
-		const changeLanguage = vi.fn<(l: string) => void>();
+		const changeLanguage = vi.fn<(l: string) => Promise<unknown>>();
 		render(
 			props({
 				config: config({ language: "fr" }),
@@ -550,7 +564,7 @@ describe("language", () => {
 	});
 
 	test("an instance already in the right language is left alone", () => {
-		const changeLanguage = vi.fn<(l: string) => void>();
+		const changeLanguage = vi.fn<(l: string) => Promise<unknown>>();
 		render(
 			props({
 				config: config({ language: "fr" }),
@@ -561,7 +575,7 @@ describe("language", () => {
 	});
 
 	test("no configured language means the page's own choice stands", () => {
-		const changeLanguage = vi.fn<(l: string) => void>();
+		const changeLanguage = vi.fn<(l: string) => Promise<unknown>>();
 		render(props({ i18n: i18nStub("en", changeLanguage) }));
 		expect(changeLanguage).not.toHaveBeenCalled();
 		expect(mocks.loadI18next).not.toHaveBeenCalled();

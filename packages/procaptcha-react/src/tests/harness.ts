@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Translator } from "@prosopo/locale";
+import { type Translator, createUntranslatedI18n } from "@prosopo/locale";
 import {
 	type Account,
 	type Captcha,
@@ -124,6 +124,6 @@ export const translator = (
 	t: (key: string): string => key,
 	isReady: () => true,
 	subscribe: () => () => undefined,
-	i18n: undefined as unknown as Translator["i18n"],
+	i18n: createUntranslatedI18n(),
 	...overrides,
 });

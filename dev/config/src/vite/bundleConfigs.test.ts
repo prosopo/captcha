@@ -115,7 +115,7 @@ describe("ViteEsmConfig", () => {
 			entry: "src/index.ts",
 		});
 		expect(config.build?.target).toBe("node24");
-		expect(config.build?.outDir).toBe("dist");
+		expect(config.build?.outDir).toBe("dist/esm");
 	});
 
 	it("accepts an explicit entry, including a multi-entry map", async () => {

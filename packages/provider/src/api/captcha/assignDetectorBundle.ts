@@ -149,6 +149,11 @@ export default (env: ProviderEnvironment) =>
 				return res.json(noBundle);
 			}
 
+			req.logger.info(() => ({
+				msg: "Detector bundle assigned",
+				data: { bundleId, release: bundle.release, detectorSessionId },
+			}));
+
 			const parsed = AssignDetectorBundleRequestBody.safeParse(req.body);
 			const body = parsed.success ? parsed.data : undefined;
 			const response: AssignDetectorBundleResponse = {

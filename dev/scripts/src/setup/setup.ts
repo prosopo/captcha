@@ -14,7 +14,7 @@
 
 import path from "node:path";
 import { defaultConfig, getSecret } from "@prosopo/cli";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import {
@@ -123,7 +123,11 @@ export async function setup(provider: boolean, sites: boolean) {
 		await copyEnvFile();
 
 		if (!process.env.PROSOPO_SITE_KEY) {
-			throw new ProsopoEnvError("DEVELOPER.PROSOPO_SITE_KEY_MISSING");
+			throw new ProsopoError({
+				code: "CONFIG_INVALID",
+				errorSite: "SCRP-1",
+				message: "PROSOPO_SITE_KEY is not set in .env file.",
+			});
 		}
 
 		const config = defaultConfig();
@@ -184,6 +188,10 @@ export async function setup(provider: boolean, sites: boolean) {
 		process.exit();
 	} else {
 		console.error("no secret found in .env file");
-		throw new ProsopoEnvError("GENERAL.NO_MNEMONIC_OR_SEED");
+		throw new ProsopoError({
+			code: "CONFIG_INVALID",
+			errorSite: "SCRP-2",
+			message: "No secret provided",
+		});
 	}
 }

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { randomUUID } from "node:crypto";
+import type { TranslateFn } from "@prosopo/locale";
 import {
 	ApiParams,
 	type CaptchaResponseBody,
@@ -68,7 +69,7 @@ export const MAINTENANCE_VERIFY_SCORE = 0;
 // `reason` is failure-only and maintenance always passes, so it never applies.
 // `commitmentId` (image) is deliberately absent — no commitment exists to name.
 export const buildMaintenanceVerificationResponse = (
-	translate: (key: string) => string,
+	translate: TranslateFn,
 ): VerificationResponse => ({
 	[ApiParams.status]: translate("API.USER_VERIFIED"),
 	[ApiParams.verified]: true,

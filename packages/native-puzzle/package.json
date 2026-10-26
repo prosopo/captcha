@@ -1,6 +1,6 @@
 {
 	"name": "@prosopo/native-puzzle",
-	"version": "0.1.1",
+	"version": "0.1.5",
 	"description": "Rust puzzle background synthesis for the Prosopo captcha provider (napi-rs).",
 	"license": "Apache-2.0",
 	"author": "Prosopo Limited",
@@ -11,22 +11,24 @@
 	},
 	"main": "index.js",
 	"types": "index.d.ts",
-	"files": ["index.js", "index.d.ts", "*.node"],
+	"files": ["index.js", "index.d.ts", "dist/native/*.node"],
 	"engines": {
 		"node": "^24"
 	},
 	"napi": {
-		"binaryName": "index",
+		"binaryName": "prosopo-native-puzzle",
 		"targets": ["x86_64-unknown-linux-gnu"]
 	},
 	"scripts": {
-		"build": "napi build --platform --release",
-		"build:debug": "napi build --platform",
-		"bench": "node bench.mjs",
-		"test:cargo": "cargo test --release",
-		"clean": "cargo clean && rm -f *.node"
+		"build:native": "if [ \"$NODE_ENV\" = production ]; then pnpm run build:release; else pnpm run build:debug; fi",
+		"build:debug": "napi build --platform --output-dir dist/native",
+		"build:release": "napi build --platform --release --output-dir dist/native",
+		"bench": "pnpm run build:release && node bench.mjs",
+		"test:cargo": "cargo test",
+		"test": "node --test tests/dimensions.test.ts",
+		"clean": "cargo clean && rm -rf dist"
 	},
 	"devDependencies": {
-		"@napi-rs/cli": "3.10.5"
+		"@napi-rs/cli": "3.10.8"
 	}
 }

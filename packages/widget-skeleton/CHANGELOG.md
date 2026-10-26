@@ -1,5 +1,40 @@
 # @prosopo/widget-skeleton
 
+## 2.10.4
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+
+## 2.10.3
+### Patch Changes
+
+- f31f0d5: Bump vite from 8.1.5 to 8.1.6 in /packages/widget-skeleton
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+
+## 2.10.2
+### Patch Changes
+
+- a5c953d: Lay the widget out at its natural width in hosts that size it by measuring it.
+  
+  Size containment on the widget's container-query element left it with no
+  intrinsic width, so an inline-block, float, `fit-content` box, table cell,
+  flex item, auto grid track or absolutely positioned host found nothing to
+  shrink-wrap and fell back to the widget's 170px minimum — rendering it in its
+  smallest breakpoint on pages with room for all 302px. A zero-height measuring
+  row now states both intrinsic widths, so the widget fills its natural width
+  where there is room and still shrinks into parents narrower than it.
+  
+  `@prosopo/config` gains a `browser` test type, which keeps vitest browser-mode
+  suites out of jsdom runs.
+
 ## 2.10.1
 ### Patch Changes
 

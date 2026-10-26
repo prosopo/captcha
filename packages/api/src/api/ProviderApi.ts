@@ -136,7 +136,7 @@ export default class ProviderApi
 	// provider 55 µs apart with the same sessionId). The first call
 	// atomically consumes the session via `checkAndRemoveSession`; the
 	// second lands on a deleted session and returns
-	// `CAPTCHA.NO_SESSION_FOUND`. Deduping in-flight collapses those two
+	// `NO_SESSION_FOUND`. Deduping in-flight collapses those two
 	// POSTs into one.
 	//
 	// Only in-flight — not resolved-and-cached. Once the request settles we

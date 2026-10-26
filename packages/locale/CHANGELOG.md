@@ -1,5 +1,156 @@
 # @prosopo/locale
 
+## 3.13.1
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+  - @prosopo/util@3.3.17
+
+## 3.13.0
+### Minor Changes
+
+- b460b0b: Add a British English (`en-GB`) catalogue. Browsers and sites asking for `en-GB` now get British spelling and words (unauthorised, data centre, number plate, petrol pump, airship) instead of falling back to US English.
+
+## 3.12.1
+### Patch Changes
+
+- 49892fc: Hold express at 4 in `@prosopo/locale`, because the i18next middleware it uses
+  has no express 5 typings.
+  
+  `i18next-http-middleware@3.9.9` types the handler returned by `handle()` against
+  express 4. On express 5 that handler no longer matches the `app.use` it is passed
+  to, so locale stops compiling with "Argument of type 'Handler' is not assignable
+  to parameter of type 'PathParams'".
+  
+  This repo's own CI never saw it. The middleware's type definitions import
+  `express-serve-static-core` by bare name while declaring it only as a
+  devDependency, so pnpm gives the middleware no copy of its own and the import
+  resolves to whichever version reached the hoisted directory. Here that is
+  express 5 and everything passes. In a workspace that embeds this one alongside
+  express 4 consumers, the express 4 types win the hoist instead, the handler comes
+  back typed for express 4, and the build fails. That is how v3.8.36 shipped green
+  and broke its consumer.
+  
+  Dependabot is set to ignore express 5 for now. Lift the pin and the ignore
+  together once the middleware ships express 5 typings.
+
+## 3.12.0
+### Minor Changes
+
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+  - @prosopo/util@3.3.16
+
+## 3.11.1
+### Patch Changes
+
+- b6e9459: The colon after the "Select all …" prompt is added by the widget again, rather than being part of each translation. Every language's `WIDGET.SELECT_ALL` no longer ends with a colon, and the widget renders it as `<prompt>: <target>`. A locale test now fails if a translation brings its own colon back.
+  - @prosopo/util@3.3.15
+
+## 3.11.0
+### Minor Changes
+
+- 03df637: `@prosopo/locale` now exports `createUntranslatedI18n()`: a complete i18n instance with no catalogues, where `t` gives back the default value or the key. The tests use it in place of hand-made fakes that were cast to the i18n type. Those casts let a fake miss a method the code calls (as happened with `exists`) and still compile; now a missing method is a type error.
+  
+  `handleErrors` now only asks for the request and response fields it actually uses, so its tests can pass plain objects. It is still an Express error handler.
+  
+  The `i18n` prop on the image, audio, PoW and puzzle widgets is now typed as optional. The widgets already started their own i18n when none was passed; the type said it was required, so the tests had to cast `undefined` to pass nothing. The frictionless widget still requires it, because it reads from it straight away.
+
+### Patch Changes
+
+- 49e9385: The audio captcha's text (play button, instructions, error messages and so on) is now translated into all 92 languages. Before this it showed in English everywhere. The catalogue test had a special exemption for these strings, so nothing flagged it. That exemption is gone: any string left in English now fails the test, unless it is on the short list of words that really are the same in that language (brand names, loanwords, "OK").
+  
+  Some Filipino animal and object names and two Filipino/Scots error messages were on that list without being real loanwords. They are now translated too.
+  
+  Every translation still needs checking by a native speaker.
+
+## 3.10.1
+### Patch Changes
+
+- e841741: Browser apps that bundle `@prosopo/locale` (such as the portal) build again. The server catalogue lookup imported `existsSync` by name from `fs`, which browser bundlers replace with an empty module, so the build failed. It now reaches `fs` only when the server starts i18next.
+
+## 3.10.0
+### Minor Changes
+
+- eb99b3d: Fill in the missing and wrong translations across all 32 widget languages and add a generic Chinese (`zh`) catalogue.
+  
+  - Image labels that had been machine-translated wrongly (for example Hungarian "camel" as "cow", Thai "rhinoceros" as "gibbon") or left as hyphenated keys ("hot-air-balloon") now read as proper words.
+  - Turkish, Ukrainian, Malay, Indonesian, Javanese, Azerbaijani, Finnish, Romanian, Thai and Malayalam were largely rewritten. Corrupted Serbian characters were fixed.
+  - The "Select all …" prompt now ends with its own colon in each language (" :" in French, "：" in Chinese and Japanese), so the widget no longer appends an English colon.
+  - `Languages.chinese` is now `zh`. The existing `zh-CN` catalogue is still available as `Languages.chineseChina`.
+  - A new `locales` CI check fails a PR whose catalogues have missing or extra keys, empty or untranslated values (audio captcha strings excepted), the wrong script, or broken characters.
+- f3f7243: Add translations for 58 more languages, so the widget, image labels and error messages are translated for nearly every language Chrome and Firefox ship: Afrikaans, Albanian, Amharic, Aragonese, Armenian, Assamese, Asturian, Basque, Belarusian, Bengali, Bosnian, Bulgarian, Burmese, Catalan, Croatian, Danish, Esperanto, Estonian, Filipino, Frisian, Galician, Georgian, Gujarati, Hebrew, Icelandic, Interlingua, Irish, Kannada, Kazakh, Khmer, Kyrgyz, Lao, Latvian, Lithuanian, Macedonian, Marathi, Mongolian, Nepali, Norwegian Nynorsk, Occitan, Odia, Persian, Punjabi, Romansh, Scots, Scottish Gaelic, Sinhala, Slovak, Slovenian, Swahili, Tajik, Tamil, Telugu, Urdu, Uzbek, Welsh, Xhosa and Zulu. They were drafted without a native speaker and need review. Nynorsk (`nn`) now gets its own catalogue instead of Bokmål's, and the old codes `iw` (Hebrew) and `tl` (Filipino, as Firefox sends it) are matched.
+- f8eddf7: Image challenges now send each label's key (`targetKey`) and English text (`targetEn`) beside the translated `target`, and say which `language` they were translated into. Error responses add `messageEn` when the widget has no text of its own for the error's key. All new fields are additive. New `englishText(key)` in `@prosopo/locale`.
+- aec7857: Type-check translation keys on the server and every language file.
+  
+  - `req.t` and `req.i18n.t` only accept keys from the English catalogue, so a typo fails to compile.
+  - New `TargetKey`, `targetKeys` and `isTargetKey` for image labels. An image label with no translation now shows the English label (and logs a warning) instead of the raw `TARGET.<label>` key.
+  - Every language file must have the English file's keys, checked by `typecheck`.
+  - `@prosopo/server` returns the key instead of `undefined` for its status text when i18next is not initialised.
+  - Removed the last `@ts-ignore` in `@prosopo/locale`.
+- 6b11b15: The widget now tells the provider which language to use, so the challenge text comes back in the user's language.
+  
+  - The widget sends its language in a `Prosopo-Lang` header on every provider request. It uses the site's `data-language` if set, otherwise the browser's languages. The browser's own `Accept-Language` is left untouched, so bot detection still sees the real value.
+  - `data-language` may list several codes (`"xx, tr"`). The first one we support wins. If none are supported, the widget uses the browser's language instead of English.
+  - The provider picks `?lng=`, then `Prosopo-Lang`, then `Accept-Language`, then English.
+  - A variant uses its parent's catalogue (`zh-SG` → `zh`, `pt-PT` → `pt`). Traditional Chinese (`zh-TW`, `zh-HK`, `zh-Hant`) skips the Simplified `zh` catalogue and moves on to the reader's next language. `nb`/`nn` map to `no`, `in` to `id` and `jw` to `jv`.
+  - The widget no longer reads or writes an `i18next` cookie or local storage key on the host site.
+  - `ApiClient`/`ProviderApi` take optional default headers as a 4th constructor argument.
+- f8eddf7: Split each language's catalogue into `widget.json`, `target.json` and `translation.json`. The widget bundles English and downloads only the active language's `widget.json`. The provider loads all three. Server i18n now finishes loading every file before it reports ready. Removed two broken, unused scripts (`findUnused`, `testImport`) and the dependencies only they used.
+
+### Patch Changes
+
+- cbb6a10: Add `BROWSER_UI_LANGUAGES`, the list of every language Chrome and Firefox ship their interface in, with each one's layout direction. A test checks each direction against `getLanguageDirection`, so a browser language the right-to-left lists miss fails CI.
+- 4961a7e: Fix server translations when `@prosopo/locale` is loaded with `require`. The CommonJS build looked for its catalogues in `dist/cjs/locales`, which does not exist, so every string came back as its key. It now finds them in `dist/locales`.
+- b351896: Document why the widget keeps its own small translation look-up instead of i18next: measured again, i18next core is 14.1 KB gzipped against 1.8 KB, on a render path of about 21 KB, for plural and context features the widget does not use.
+- 0bd0230: The widget bundle no longer contains the English image labels and server error strings. `ProsopoError` used to check message keys against every English catalogue, which pulled all of them into the widget. It now asks the i18n instance it was given (`exists`). The server-only key helpers (`isTranslationKey`, `isTargetKey`, `englishText`) moved to their own module.
+- 1634139: `getLanguageDirection` now knows every right-to-left language and script in CLDR 48, not just ten languages, including ones we have no translation for yet (Hebrew, Persian, Urdu, Pashto, Kurdish and so on). It also reads script subtags (`pa-Arab` is right to left, `az-Latn` left to right), regions whose usual script is Arabic (`pa-PK`, `uz-AF`), and old codes such as `iw` for Hebrew. Where the browser has `Intl.Locale` text info, a language it says is right to left is laid out that way too, so languages added to CLDR later work without a code change. The language e2e test now also checks that an Arabic widget, chosen by the browser or by `data-language`, is laid out right to left.
+
 ## 3.9.1
 ### Patch Changes
 

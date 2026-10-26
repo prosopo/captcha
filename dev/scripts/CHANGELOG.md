@@ -1,5 +1,277 @@
 # @prosopo/scripts
 
+## 3.1.213
+### Patch Changes
+
+- Updated dependencies [92aa8f5]
+  - @prosopo/cli@3.9.4
+
+## 3.1.212
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [870fab7]
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/provider@5.22.0
+  - @prosopo/cli@3.9.3
+  - @prosopo/common@3.3.1
+  - @prosopo/datasets@3.2.12
+  - @prosopo/dotenv@3.0.63
+  - @prosopo/env@3.6.81
+  - @prosopo/keyring@2.10.12
+  - @prosopo/logger@2.1.6
+  - @prosopo/types-env@2.11.27
+  - @prosopo/types@5.19.0
+  - @prosopo/util-crypto@13.6.2
+  - @prosopo/util@3.3.17
+  - @prosopo/workspace@3.2.5
+
+## 3.1.211
+### Patch Changes
+
+- Updated dependencies [5c9792b]
+- Updated dependencies [4201cf0]
+  - @prosopo/provider@5.21.1
+  - @prosopo/cli@3.9.2
+
+## 3.1.210
+### Patch Changes
+
+- Updated dependencies [0d94ae6]
+  - @prosopo/cli@3.9.1
+
+## 3.1.209
+### Patch Changes
+
+- b4235b4: Document and support self-hosting on Cloudflare's free plan, for anyone without a server that has a public IP.
+  
+  A Worker on the free `workers.dev` subdomain serves the widget and forwards API calls through a Workers VPC binding to a
+  Cloudflare Tunnel, so the provider can run on any machine with Docker: no domain, no open ports, no certificates.
+  
+  - `docker/cloudflare/worker.ts` and `wrangler.jsonc`: the Worker. It also serves a demo page at `/` that shows whether
+    the provider is reachable, renders the CAPTCHA and displays the response token. It sets `X-Forwarded-For` to the
+    visitor's address, because without it the provider sees every visitor as the tunnel and per-IP limits apply to all of
+    them together.
+  - `docker-compose.self-hosted.cloudflare.yml`: adds `cloudflared` and leaves Caddy out, since Cloudflare terminates TLS.
+  - `generateSelfHostedEnv.ts --cloudflare`: writes a `COMPOSE_FILE` that loads both compose files and a
+    `CLOUDFLARE_TUNNEL_TOKEN` to fill in.
+  - `SELF_HOSTING.md`: a "No server? Run it on Cloudflare's free plan" section.
+- 159766a: Let a self-hosted provider run a detector you built yourself, and ship a working example built on BotD.
+  
+  Until now the only detector a provider could load was ours. Its output can only be read by the closed decoder in the
+  provider, so a self-hosted node with any other detector had nothing to score visitors with.
+  
+  **Open detector format.** A pool bundle can now be marked `format: "open-v1"`. The provider reads those bundles with a
+  short, documented decoder: an AES-256-GCM payload whose key is wrapped with the bundle's RSA-OAEP public key, carrying
+  `{ score, timestamp, userId, userAgent, headHash, d }`. The same checks apply as for our detector — the token must
+  match this visitor's account, user agent and page, and be under ten minutes old — and `d` reaches decision and routing
+  machines as `input.d`. Open bundles are only loaded when `PROSOPO_DETECTOR_OPEN_FORMAT=1`; the hosted fleet never sets
+  it, so nothing changes there.
+  
+  **`demos/detector-botd`.** A detector built on BotD that scores automated browsers as 1 and everything else as 0, plus a
+  `pool` script that builds the bundles with a fresh keypair each. Writing your own detector means replacing one function;
+  the encryption is done for you.
+  
+  **`detector_pool_set` CLI command.** Writes a pool read from stdin into the provider's pool directory. Stdin rather than a
+  file because the provider image runs as a non-root user and cannot read a file copied in as root.
+  
+  **Self-hosted compose and image.** The image now creates its pool directory owned by the runtime user, and the
+  self-hosted compose file mounts a `detector_pool` volume there and turns the open format on. The compose file no longer
+  defaults to provider 3.8.19, which it had silently stayed on for nineteen releases: `generateSelfHostedEnv.ts` writes
+  the version of the checkout it runs from.
+  
+  `SELF_HOSTING.md` gains a "Bring your own detector" section and now loads the widget with `type="module"`, which the
+  bundle has needed since it was split into chunks.
+  
+  Tested end to end on a stack built from this branch: stock headless Chromium was flagged by BotD and served a puzzle,
+  headed Chromium passed with proof of work, the detector's signals were stored on the session, and a provider without
+  the flag rejected the pool.
+- 5a1db28: Fix four things that broke the self-hosting guide for anyone starting from a fresh clone.
+  
+  - **The `fingerprintjs` submodule used an SSH URL**, so it could only be fetched by someone with GitHub SSH keys. It is
+    now HTTPS. The repository is public, so nobody needs credentials for it. Without it `pnpm run build:all` fails.
+  - **The guide ran the env script before anything was built.** The script imports built workspace packages, so on a fresh
+    clone it crashed with `ERR_MODULE_NOT_FOUND`. The guide now clones with `--recurse-submodules` and runs
+    `pnpm run build:all` in step 1.
+  - **Every `docker compose exec` in the guide failed** with "no configuration file provided", because the compose file is
+    not named `docker-compose.yml`. `generateSelfHostedEnv.ts` now writes `COMPOSE_FILE=docker-compose.self-hosted.yml`
+    into `.env`, which Compose reads on its own, so plain `docker compose` commands work.
+  - **The provider CLI exited 0 on a command it did not have.** An older image given `detector_pool_set` did nothing and
+    reported success. It now fails with `Unknown command`.
+- Updated dependencies [d02b3bc]
+- Updated dependencies [159766a]
+- Updated dependencies [5a1db28]
+  - @prosopo/provider@5.21.0
+  - @prosopo/types@5.18.0
+  - @prosopo/cli@3.9.0
+  - @prosopo/env@3.6.80
+  - @prosopo/common@3.3.0
+  - @prosopo/datasets@3.2.11
+  - @prosopo/keyring@2.10.11
+  - @prosopo/types-env@2.11.26
+
+## 3.1.208
+### Patch Changes
+
+- Updated dependencies [749fe8a]
+  - @prosopo/provider@5.20.2
+  - @prosopo/cli@3.8.38
+
+## 3.1.207
+### Patch Changes
+
+  - @prosopo/cli@3.8.37
+  - @prosopo/provider@5.20.1
+  - @prosopo/types@5.17.1
+  - @prosopo/common@3.3.0
+  - @prosopo/datasets@3.2.10
+  - @prosopo/env@3.6.79
+  - @prosopo/keyring@2.10.10
+  - @prosopo/types-env@2.11.25
+
+## 3.1.206
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+- Updated dependencies [22f0721]
+- Updated dependencies [860948c]
+  - @prosopo/cli@3.8.36
+  - @prosopo/common@3.3.0
+  - @prosopo/datasets@3.2.9
+  - @prosopo/dotenv@3.0.62
+  - @prosopo/env@3.6.78
+  - @prosopo/keyring@2.10.9
+  - @prosopo/logger@2.1.5
+  - @prosopo/provider@5.20.0
+  - @prosopo/types@5.17.0
+  - @prosopo/types-env@2.11.24
+  - @prosopo/util@3.3.16
+  - @prosopo/util-crypto@13.6.1
+  - @prosopo/workspace@3.2.4
+
+## 3.1.205
+### Patch Changes
+
+- Updated dependencies [5421e87]
+- Updated dependencies [a00fb86]
+  - @prosopo/provider@5.19.4
+  - @prosopo/cli@3.8.35
+
+## 3.1.204
+### Patch Changes
+
+- Updated dependencies [ebcd4ed]
+- Updated dependencies [3c5d196]
+  - @prosopo/provider@5.19.3
+  - @prosopo/cli@3.8.34
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+  - @prosopo/workspace@3.2.3
+  - @prosopo/datasets@3.2.8
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/env@3.6.77
+  - @prosopo/keyring@2.10.8
+  - @prosopo/logger@2.1.4
+  - @prosopo/types-env@2.11.23
+  - @prosopo/util@3.3.15
+  - @prosopo/util-crypto@13.6.0
+
+## 3.1.203
+### Patch Changes
+
+- Updated dependencies [24e89e1]
+- Updated dependencies [03df637]
+  - @prosopo/provider@5.19.2
+  - @prosopo/types@5.16.2
+  - @prosopo/cli@3.8.33
+  - @prosopo/common@3.2.2
+  - @prosopo/datasets@3.2.7
+  - @prosopo/env@3.6.76
+  - @prosopo/keyring@2.10.7
+  - @prosopo/types-env@2.11.22
+
+## 3.1.202
+### Patch Changes
+
+  - @prosopo/cli@3.8.32
+  - @prosopo/common@3.2.1
+  - @prosopo/provider@5.19.1
+  - @prosopo/types@5.16.1
+  - @prosopo/datasets@3.2.6
+  - @prosopo/env@3.6.75
+  - @prosopo/keyring@2.10.6
+  - @prosopo/types-env@2.11.21
+
+## 3.1.201
+### Patch Changes
+
+- f8eddf7: Split each language's catalogue into `widget.json`, `target.json` and `translation.json`. The widget bundles English and downloads only the active language's `widget.json`. The provider loads all three. Server i18n now finishes loading every file before it reports ready. Removed two broken, unused scripts (`findUnused`, `testImport`) and the dependencies only they used.
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/provider@5.19.0
+  - @prosopo/cli@3.8.31
+  - @prosopo/datasets@3.2.5
+  - @prosopo/env@3.6.74
+  - @prosopo/keyring@2.10.5
+  - @prosopo/types-env@2.11.20
+
+## 3.1.200
+### Patch Changes
+
+- Updated dependencies [460ca67]
+  - @prosopo/provider@5.18.0
+  - @prosopo/cli@3.8.30
+  - @prosopo/env@3.6.73
+  - @prosopo/types-env@2.11.19
+
 ## 3.1.199
 ### Patch Changes
 

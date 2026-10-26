@@ -15,21 +15,44 @@
 	"daemon": false,
 	"envMode": "loose",
 	"tasks": {
+		// Each build variant writes only its own dist/<variant> dir, so turbo can
+		// cache and restore every variant on its own. `build` is the aggregate a
+		// package needs at runtime: its ESM, its declarations and, for the napi
+		// packages, the native addon.
 		"build": {
-			"dependsOn": ["^build", "@prosopo/config#build"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"dependsOn": ["^build", "build:esm", "build:types", "build:native"],
+			"outputs": []
 		},
+		"build:esm": {
+			"dependsOn": ["^build:esm", "@prosopo/config#build"],
+			"outputs": ["dist/esm/**"]
+		},
+		"build:types": {
+			"dependsOn": ["^build:types"],
+			"outputs": ["dist/types/**"]
+		},
+		// Workspace dependencies resolve through `exports.types`, which is
+		// dist/types, not the dist/tsc this task emits. That includes a package
+		// importing itself by name (@prosopo/types does, and so do provider
+		// and api-route tests), hence its own build:types as well.
 		"build:tsc": {
-			"dependsOn": ["^build:tsc"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"dependsOn": ["^build:tsc", "^build:types", "build:types"],
+			"outputs": ["dist/tsc/**"]
 		},
 		"build:cjs": {
 			"dependsOn": ["^build:cjs", "@prosopo/config#build"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"outputs": ["dist/cjs/**"]
 		},
+		// Debug builds unless NODE_ENV=production; NODE_ENV is a global env var,
+		// so the two profiles are cached apart.
+		"build:native": {
+			"dependsOn": ["^build:native"],
+			"outputs": ["dist/native/**"]
+		},
+		// The cli bundle copies the native addons in beside itself.
 		"bundle": {
-			"dependsOn": ["@prosopo/config#build"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"dependsOn": ["@prosopo/config#build", "^build:native"],
+			"outputs": ["dist/bundle/**", "!dist/bundle/procaptcha.bundle.iife.js*"]
 		},
 		// Image builds copy dist/bundle out of the build context, so they wait on
 		// the bundle task. Not cached: the artefact is an image in the docker
@@ -67,27 +90,25 @@
 			"dependsOn": ["build:docker"],
 			"cache": false
 		},
+		// The IIFE fallback ships beside the ESM bundle, from the same folder the
+		// deployer uploads, so it shares dist/bundle and owns only its own files.
+		// It runs after `bundle`, which empties dist/bundle before writing.
 		"bundle:iife": {
-			"dependsOn": ["@prosopo/config#build"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"dependsOn": ["@prosopo/config#build", "bundle"],
+			"outputs": ["dist/bundle/procaptcha.bundle.iife.js*"]
 		},
 		"bundle:webpack": {
 			"dependsOn": ["@prosopo/config#build"],
-			"outputs": ["dist/**", "*.tsbuildinfo"]
+			"outputs": ["dist/bundle-webpack/**"]
 		},
 		"typecheck": {
-			"dependsOn": ["^typecheck"]
+			"dependsOn": ["build:types"]
 		},
 		"test": {
-			// Also depends on ^build:tsc, not just ^build: every package resolves
-			// its workspace dependencies through `exports.types` -> dist/*.d.ts,
-			// and only build:tsc emits those. `build` is a vite bundle, so it
-			// leaves dist as bare JS. Without the declarations tsc falls back to
-			// type-checking a dependency's compiled JavaScript, which floods the
-			// run with implicit-any errors and — because a .js file exports
-			// values, not types — makes vitest type tests fail on names that are
-			// perfectly valid types in source. Runtime tests never noticed.
-			"dependsOn": ["@prosopo/config#build", "^build:tsc"]
+			// Tests resolve workspace dependencies through their package exports,
+			// so they need each dependency's dist/esm and dist/types (^build); the
+			// napi packages' own tests load their own addon.
+			"dependsOn": ["@prosopo/config#build", "^build", "build:native"]
 		},
 		"lint": { "dependsOn": ["^lint"] },
 		"clean": {

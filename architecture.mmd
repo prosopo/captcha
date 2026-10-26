@@ -164,6 +164,9 @@ graph TB
     %% The detector ships ONLY as a provider-served pool bundle — there is no
     %% detector in the widget bundle. The browser is assigned one per session
     %% and the provider decrypts its output with that bundle's key.
+    %% A bundle stamped format "open-v1" (e.g. demos/detector-botd) is read by
+    %% the open decoder instead of the sealed one; such bundles load only when
+    %% PROSOPO_DETECTOR_OPEN_FORMAT=1, which self-hosted nodes set.
     Detector -->|request a bundle| DetectorAssignEP
     DetectorAssignEP --> DetectorPool
     DetectorPool -->|"per-session bundle + key,<br/>inline or as a script path"| Detector
@@ -327,6 +330,15 @@ graph TB
     Middleware -.->|"gates"| AdminAPI
     PowTasks --> Redis
 
+    %% ===== ERRORS =====
+    %% packages/common/src/error.ts + errorCodes.ts. Every throw is a ProsopoError with a code and
+    %% a site (PREFIX-N, declared per package in errorSites.ts, uniqueness tested in
+    %% packages/common/src/tests/errorSites.unit.test.ts). errorId = CODE:SITE.
+    ErrorEdge["Error edge<br/>(handleErrors, authMiddleware,<br/>domainMiddleware, blacklist 403)<br/>logs unhandled: 5xx error, 4xx debug"]
+    ProviderLogic -.->|"throw ProsopoError<br/>{code, errorSite, context, cause}"| ErrorEdge
+    ErrorEdge -.->|"public: {code, errorId, status, message, data}<br/>hidden: {BACKEND_ERROR, BACKEND_ERROR:SITE, status}<br/>context never sent"| Widget
+    Widget -.->|"translate ERRORS.CODE<br/>(locale widget.json),<br/>show text (errorId)"| EndUser
+
     %% ===== STYLES =====
     classDef actor fill:#e1f5fe,stroke:#0288d1,color:#000
     classDef browser fill:#fff3e0,stroke:#f57c00,color:#000
@@ -337,7 +349,7 @@ graph TB
 
     class Developer,EndUser actor
     class Widget,Manager,LB,Detector,Fingerprint,Behavioral,Frictionless,ImageCaptcha,PoW,PuzzleCaptcha,IconOrderCaptcha,AudioCaptcha browser
-    class Healthz,Details,FrictionlessEP,ImageChallengeEP,ImageSolutionEP,PowChallengeEP,PowSolutionEP,PuzzleChallengeEP,PuzzleSolutionEP,IconOrderChallengeEP,IconOrderSolutionEP,AudioChallengeEP,AudioSolutionEP,ImageVerifyEP,PowVerifyEP,PuzzleVerifyEP,IconOrderVerifyEP,AudioVerifyEP,SpamEmailEP,DetectorAssignEP,AuthVerifyEP,UnroutedEP,MetricsEP,Middleware,VerifyChecks,SessionGetEP,CountersClearEP,SiteKeyMgmt,DetectorPoolMgmt,DecisionMachineMgmt,MaintenanceToggle,RulesCRUD provider
+    class Healthz,Details,FrictionlessEP,ImageChallengeEP,ImageSolutionEP,PowChallengeEP,PowSolutionEP,PuzzleChallengeEP,PuzzleSolutionEP,IconOrderChallengeEP,IconOrderSolutionEP,AudioChallengeEP,AudioSolutionEP,ImageVerifyEP,PowVerifyEP,PuzzleVerifyEP,IconOrderVerifyEP,AudioVerifyEP,ErrorEdge,SpamEmailEP,DetectorAssignEP,AuthVerifyEP,UnroutedEP,MetricsEP,Middleware,VerifyChecks,SessionGetEP,CountersClearEP,SiteKeyMgmt,DetectorPoolMgmt,DecisionMachineMgmt,MaintenanceToggle,RulesCRUD provider
     class ImgTasks,PowTasks,PuzzleTasks,IconOrderTasks,AudioTasks,InteractiveBase,FrictionlessTasks,SolutionVerifier,DecisionMachine,DetectorPool,AccessPolicies,TrafficFilter,SpamFilter,WebBotAuth provider
     class MongoDB,Redis,Dataset storage
     class ServerPkg,DappBackend backend

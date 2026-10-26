@@ -22,7 +22,6 @@ import {
 	createServer,
 } from "node:http";
 import type { AddressInfo } from "node:net";
-import { ProsopoApiError } from "@prosopo/common";
 import { Keyring } from "@prosopo/keyring";
 import * as loadBalancerModule from "@prosopo/load-balancer";
 import {
@@ -134,22 +133,20 @@ describe("ProsopoServer against a stalled provider", () => {
 		CaptchaType.image,
 		CaptchaType.authenticated,
 	]) {
-		it(`fails closed with a 504 at the timeout (${captchaType})`, async () => {
+		it(`fails closed at the timeout (${captchaType})`, async () => {
 			const prosopoServer = newServer(TIMEOUT_MS);
+			const logError = vi.spyOn(prosopoServer.logger, "error");
 			const started = Date.now();
-			const outcome = await prosopoServer
-				.isVerified(buildToken(captchaType))
-				.then(
-					(response) => ({ response, error: undefined }),
-					(error: unknown) => ({ response: undefined, error }),
-				);
+			const response = await prosopoServer.isVerified(buildToken(captchaType));
 			const elapsed = Date.now() - started;
 
-			expect(outcome.response).toBeUndefined();
-			expect(outcome.error).toBeInstanceOf(ProsopoApiError);
-			if (outcome.error instanceof ProsopoApiError) {
-				expect(outcome.error.context?.code).toBe(504);
-			}
+			expect(response.verified).toBe(false);
+			const logged = logError.mock.calls.map(([record]) => record());
+			expect(logged).toContainEqual(
+				expect.objectContaining({
+					data: expect.objectContaining({ code: 504 }),
+				}),
+			);
 			expect(elapsed).toBeGreaterThanOrEqual(TIMEOUT_MS / 2);
 			expect(elapsed).toBeLessThan(5_000);
 		}, 15_000);

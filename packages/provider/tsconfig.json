@@ -2,7 +2,8 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist",
+		"outDir": "./dist/tsc",
+		"tsBuildInfoFile": "./dist/tsc/tsconfig.tsbuildinfo",
 		"allowJs": true
 	},
 	"include": [
@@ -58,6 +59,9 @@
 		},
 		{
 			"path": "../load-balancer"
+		},
+		{
+			"path": "../fingerprint"
 		},
 		{
 			"path": "../locale"

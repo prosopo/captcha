@@ -183,7 +183,7 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: "24"
+          node-version: "24.22.1"
 
       # Gates at `critical` and reports `high` separately without failing, for
       # the same reason semgrep uses a baseline: this tree has never been
@@ -216,7 +216,7 @@ jobs:
         with:
           submodules: false
 
-      - uses: taiki-e/install-action@e407f7bafb71fd004bc5c2da3032e5470cbb6ef0 # v2.87.24
+      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
         with:
           tool: cargo-audit
 

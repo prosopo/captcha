@@ -13,6 +13,17 @@ updates:
     # Matches pnpm's minimumReleaseAge, which refuses versions younger than this.
     cooldown:
       default-days: 7
+    # @prosopo/locale tests its i18next middleware through express, and
+    # i18next-http-middleware@3.9.9 types its handler against express 4. On
+    # express 5 that handler no longer matches `app.use`, so locale stops
+    # compiling. The break is invisible to this repo's own CI and only shows up
+    # where locale is consumed, so hold express at 4 until the middleware ships
+    # express 5 typings, then lift both together.
+    ignore:
+      - dependency-name: "express"
+        versions: [">=5"]
+      - dependency-name: "@types/express"
+        versions: [">=5"]
     # Keep majors as standalone PRs (they may need manual review / a larger bump),
     # group everything else to cut down on PR + changeset noise across the workspace.
     groups:

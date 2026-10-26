@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { IncomingHttpHeaders } from "node:http";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { Logger } from "@prosopo/logger";
 import type { ApiJsonError, KeyringPair } from "@prosopo/types";
 import type {
@@ -70,10 +70,7 @@ interface Harness {
 	logged: ReturnType<typeof vi.fn<(entry: () => unknown) => void>>;
 }
 
-const build = (
-	headers: IncomingHttpHeaders = {},
-	i18n?: { t: (key: string) => string },
-): Harness => {
+const build = (headers: IncomingHttpHeaders = {}): Harness => {
 	const json = vi.fn<(body: unknown) => Response>();
 	const status = vi.fn<(code: number) => Response>();
 	const res = { status, json } as unknown as Response;
@@ -82,8 +79,7 @@ const build = (
 	const logged = vi.fn<(entry: () => unknown) => void>();
 	const req = {
 		headers,
-		i18n,
-		logger: { error: logged } as unknown as Logger,
+		logger: { error: logged, debug: logged } as unknown as Logger,
 	} as unknown as Request;
 
 	return { req, res, next: captureNext(), status, json, logged };
@@ -161,25 +157,16 @@ describe("a token neither key accepts", () => {
 	test("is answered with an error body carrying the 401 code", () => {
 		const body = harness.json.mock.calls[0]?.[0] as { error: ApiJsonError };
 		expect(body.error).toEqual({
-			code: 401,
-			key: "API.UNAUTHORIZED",
-			message: "API.UNAUTHORIZED",
+			code: "UNAUTHORIZED",
+			errorId: "UNAUTHORIZED:APIX-8",
+			status: 401,
+			message: "Unauthorized",
 		});
 	});
 
-	test("does not serialise the request's i18n instance or error context", () => {
-		harness = build(bearer("token-1"), { t: (key: string) => `t:${key}` });
-		return run(rejects(), rejects()).then(() => {
-			const body = harness.json.mock.calls[0]?.[0];
-			expect(JSON.stringify(body)).not.toContain("context");
-			expect(body).toEqual({
-				error: {
-					code: 401,
-					key: "API.UNAUTHORIZED",
-					message: "t:API.UNAUTHORIZED",
-				},
-			});
-		});
+	test("does not serialise the error context", () => {
+		const body = harness.json.mock.calls[0]?.[0];
+		expect(JSON.stringify(body)).not.toContain("context");
 	});
 });
 
@@ -193,23 +180,25 @@ describe("the 401 body for a thrown error", () => {
 		expect(JSON.stringify(body)).not.toContain("hunter2");
 		expect(body).toEqual({
 			error: {
-				code: 401,
-				key: "API.UNAUTHORIZED",
-				message: "API.UNAUTHORIZED",
+				code: "UNAUTHORIZED",
+				errorId: "UNAUTHORIZED:APIX-8",
+				status: 401,
+				message: "Unauthorized",
 			},
 		});
 	});
 
-	test("reports only the translation key of a Prosopo error", async () => {
+	test("reports a Prosopo error's code and site but not its context", async () => {
 		harness = build({});
 		await run(accepts(), undefined);
 		const body = harness.json.mock.calls[0]?.[0];
 		expect(JSON.stringify(body)).not.toContain("Missing Authorization header");
 		expect(body).toEqual({
 			error: {
-				code: 401,
-				key: "GENERAL.MISSING_AUTH_HEADER",
-				message: "GENERAL.MISSING_AUTH_HEADER",
+				code: "UNAUTHORIZED",
+				errorId: "UNAUTHORIZED:APIX-3",
+				status: 401,
+				message: "Missing authorization header",
 			},
 		});
 	});
@@ -360,8 +349,8 @@ describe("verifySignature", () => {
 			verifySignature(signature, message, pair);
 			expect.unreachable("verifySignature should have thrown");
 		} catch (error) {
-			expect(error).toBeInstanceOf(ProsopoApiError);
-			expect((error as ProsopoApiError).context?.code).toBe(401);
+			expect(error).toBeInstanceOf(ProsopoError);
+			expect((error as ProsopoError).status).toBe(401);
 		}
 	});
 
@@ -374,7 +363,7 @@ describe("verifySignature", () => {
 			verifySignature(signature, message, pair);
 			expect.unreachable("verifySignature should have thrown");
 		} catch (error) {
-			const context = (error as ProsopoApiError).context;
+			const context = (error as ProsopoError).context;
 			expect(context?.account).toBe("5Test");
 			expect(context?.message).toBe(message);
 			expect(context?.signature).toBe(signature);
@@ -388,7 +377,7 @@ describe("verifySignature", () => {
 		const pair = pairThat(() => ({ isValid: true }));
 		vi.mocked(pair.verify).mockReturnValue(false);
 		expect(() => verifySignature("not hex", message, pair)).toThrow(
-			ProsopoApiError,
+			ProsopoError,
 		);
 		expect(pair.verify).toHaveBeenCalledTimes(1);
 	});

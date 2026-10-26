@@ -13,7 +13,8 @@
 // limitations under the License.
 
 import { ProviderApi } from "@prosopo/api";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
+import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	getProcaptchaRandomActiveProvider,
@@ -122,7 +123,13 @@ export const withTimeout = async <T>(
 	let timeoutId: NodeJS.Timeout | undefined;
 	const timeoutPromise = new Promise<never>((_, reject) => {
 		timeoutId = setTimeout(() => {
-			reject(new ProsopoEnvError("API.UNKNOWN"));
+			reject(
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "FRIC-1",
+					message: "Unknown API error",
+				}),
+			);
 		}, ms);
 	});
 
@@ -150,7 +157,7 @@ const customDetectBot: BotDetectionFunction = async (
 ): Promise<BotDetectionFunctionResult> => {
 	const siteKey = config.account.address;
 	if (!siteKey) {
-		throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+		throw new ProsopoError({ code: "SITE_KEY_MISSING", errorSite: "FRIC-2" });
 	}
 
 	const ipMode = pickIpMode(config);
@@ -209,7 +216,12 @@ const customDetectBot: BotDetectionFunction = async (
 			retryContext,
 		));
 
-	const providerApi = new ProviderApi(provider.provider.url, siteKey);
+	const providerApi = new ProviderApi(
+		provider.provider.url,
+		siteKey,
+		undefined,
+		widgetLanguageHeaders(config.language),
+	);
 
 	// Ask the provider for a per-session detector bundle. The detector lives ONLY
 	// in the provider-served pool: when the provider has a populated pool it

@@ -18,6 +18,8 @@ export const WIDGET_INNER_HEIGHT = 74;
 export const WIDGET_OUTER_HEIGHT = 80;
 export const WIDGET_MIN_HEIGHT = "80px";
 export const WIDGET_MAX_WIDTH = "302px";
+/** The narrowest the widget lays out at; below this it scrolls rather than shrink. */
+export const WIDGET_MIN_WIDTH = "170px";
 export const WIDGET_DIMENSIONS = {
 	maxWidth: WIDGET_MAX_WIDTH,
 	minHeight: `${WIDGET_OUTER_HEIGHT}px`,

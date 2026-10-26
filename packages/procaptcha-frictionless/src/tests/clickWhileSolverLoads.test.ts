@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Ti18n } from "@prosopo/locale";
+import { createUntranslatedI18n } from "@prosopo/locale";
 import {
 	type Account,
 	type BotDetectionFunction,
@@ -117,12 +117,12 @@ it("keeps a click made while the chosen solver is still loading", async () => {
 		} as unknown as ProcaptchaClientConfigOutput,
 		callbacks: {},
 		restart: vi.fn(),
-		i18n: {
+		i18n: createUntranslatedI18n({
 			isInitialized: true,
 			language: "en",
 			t: (key: string) => key,
 			changeLanguage: vi.fn(),
-		} as unknown as Ti18n,
+		}),
 		detectBot,
 	});
 	await settle();

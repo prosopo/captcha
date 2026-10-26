@@ -19,6 +19,7 @@ import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
 import codeSnippetInjector from "./src/plugins/code-snippet-injector.js";
 import formFillerInjector from "./src/plugins/form-filler-injector.js";
+import languageInjector from "./src/plugins/language-injector.js";
 import layoutInjector from "./src/plugins/layout-injector.js";
 import placementInjector from "./src/plugins/placement-injector.js";
 import statusLogInjector from "./src/plugins/status-log-injector.js";
@@ -189,7 +190,7 @@ export default defineConfig(({ command, mode }) => {
 			commonjsOptions: {
 				transformMixedEsModules: true,
 			},
-			outDir: "dist",
+			outDir: "dist/bundle",
 			emptyOutDir: false,
 			rollupOptions: {
 				input: {
@@ -281,39 +282,40 @@ export default defineConfig(({ command, mode }) => {
 			codeSnippetInjector(),
 			statusLogInjector(),
 			placementInjector(),
+			languageInjector(),
 			{
 				name: "copy-files",
 				closeBundle() {
 					// This runs after all other plugins have processed files
-					console.log("Copying additional files from src to dist...");
+					console.log("Copying additional files from src to dist/bundle...");
 					// Only copy assets and other non-HTML files since HTML files are processed by Vite
 					const srcAssetsDir = path.resolve(__dirname, "src/assets");
 
-					const destAssetsDir = path.resolve(__dirname, "dist/assets");
+					const destAssetsDir = path.resolve(__dirname, "dist/bundle/assets");
 					if (fs.existsSync(srcAssetsDir)) {
 						copyDirContents(srcAssetsDir, destAssetsDir);
 					}
 
 					// Copy any other necessary directories
 					const srcPluginsDir = path.resolve(__dirname, "src/plugins");
-					const destPluginsDir = path.resolve(__dirname, "dist/plugins");
+					const destPluginsDir = path.resolve(__dirname, "dist/bundle/plugins");
 					if (fs.existsSync(srcPluginsDir)) {
 						copyDirContents(srcPluginsDir, destPluginsDir);
 					}
 
 					// Final step: move any content from dist/src to dist root
-					const distSrcDir = path.resolve(__dirname, "dist/src");
-					const distDir = path.resolve(__dirname, "dist");
+					const distSrcDir = path.resolve(__dirname, "dist/bundle/src");
+					const distDir = path.resolve(__dirname, "dist/bundle");
 					if (fs.existsSync(distSrcDir)) {
-						console.log("Moving files from dist/src to dist root...");
+						console.log("Moving files from dist/bundle/src to dist/bundle...");
 						moveDirectoryContents(distSrcDir, distDir, true);
 
 						// Try to remove the now-empty dist/src directory
 						try {
 							fs.rmdirSync(distSrcDir);
-							console.log("Removed empty dist/src directory");
+							console.log("Removed empty dist/bundle/src directory");
 						} catch (err) {
-							console.warn("Could not remove dist/src directory:", err);
+							console.warn("Could not remove dist/bundle/src directory:", err);
 						}
 					}
 				},

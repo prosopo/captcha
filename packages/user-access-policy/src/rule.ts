@@ -68,6 +68,13 @@ export type PolicyScope = {
 	clientId?: string;
 };
 
+export type PolicyScopeExclusions = {
+	// Clients a global rule (no clientId) does not apply to. Lets an operator
+	// exempt a customer from a platform-wide rule without fanning the rule out
+	// into one copy per remaining client. Ignored on client-scoped rules.
+	excludedClientIds?: string[];
+};
+
 export type UserIp = {
 	numericIp?: bigint;
 	numericIpMaskMin?: bigint;
@@ -117,6 +124,7 @@ export type UserScope = UserAttributes & UserIp;
 // flat structure is used to fit the Redis requirements
 export type AccessRule = AccessPolicy &
 	PolicyScope &
+	PolicyScopeExclusions &
 	UserScope & {
 		groupId?: string;
 	};

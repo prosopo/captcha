@@ -12,290 +12,114 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {
-	type TranslateFn,
-	type TranslationKey,
-	isTranslationKey,
-} from "@prosopo/locale";
-import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import type { ApiJsonError } from "@prosopo/types";
+import { ERROR_CODES, type ErrorCode } from "./errorCodes.js";
 
-// HTTP reason phrases keyed by status code. Defined locally rather than
-// imported from `node:http`'s `STATUS_CODES`, because this module is also
-// bundled for the browser, where `node:http` is not available.
-const STATUS_MESSAGES: Record<number, string> = {
-	400: "Bad Request",
-	401: "Unauthorized",
-	402: "Payment Required",
-	403: "Forbidden",
-	404: "Not Found",
-	405: "Method Not Allowed",
-	408: "Request Timeout",
-	409: "Conflict",
-	410: "Gone",
-	413: "Payload Too Large",
-	415: "Unsupported Media Type",
-	422: "Unprocessable Entity",
-	429: "Too Many Requests",
-	500: "Internal Server Error",
-	501: "Not Implemented",
-	502: "Bad Gateway",
-	503: "Service Unavailable",
-	504: "Gateway Timeout",
-};
+// How errors work:
+// - Throw `new ProsopoError({ code, errorSite })`. The code says WHAT failed
+//   (UPPER_SNAKE, defined once in errorCodes.ts with its status and whether a
+//   client may see it); the site says WHERE (see `ErrorSites`).
+// - `errorId` is `<CODE>:<SITE>`, e.g. `SITE_KEY_INVALID:PROV-31`. It is what
+//   a user quotes and what we grep for to find the throw.
+// - Edges answer with `toPublicError`: a public error shows its code, message
+//   and data; any other shows only `BACKEND_ERROR:<SITE>` or
+//   `FRONTEND_ERROR:<SITE>`, so internals never leak but the site still does.
 
-type BaseErrorOptions<ContextType> = {
-	name?: string;
-	translationKey?: ErrorKey;
-	logger?: Logger;
-	logLevel?: LogLevel;
-	context?: ContextType;
-	silent?: boolean;
-	i18n?: { t: TranslateFn };
-};
+/**
+ * Every throw site id: `<PREFIX>-<N>`, e.g. `PROV-12`. The prefix is one per
+ * package and N counts up; a site is never reused or renumbered, so an errorId
+ * a user reported keeps pointing at the same line. Each package declares its
+ * own in `src/errorSites.ts` by augmenting this interface, so a typo is a type
+ * error. `tests/errorSites.unit.test.ts` checks the format, one prefix per
+ * package, and that each site is declared and used exactly once, because
+ * declaration merging silently accepts duplicates.
+ */
+// biome-ignore lint/suspicious/noEmptyInterface: augmented per package
+export interface ErrorSites {}
 
-interface BaseContextParams {
-	[key: string]: unknown;
-	failedFuncName?: string;
-	translationKey?: string;
-	code?: number;
+export type ErrorSite = Extract<keyof ErrorSites, string>;
+
+/** `<CODE>:<SITE>`, e.g. `SITE_KEY_INVALID:PROV-31`. */
+export type ErrorId<C extends string = ErrorCode> = `${C}:${ErrorSite}`;
+
+export type ErrorOrigin = "BACKEND_ERROR" | "FRONTEND_ERROR";
+
+export type ErrorContext = Readonly<Record<string, unknown>>;
+
+export interface ProsopoErrorOptions<C extends ErrorCode> {
+	readonly code: C;
+	readonly errorSite: ErrorSite;
+	/** Defaults to the code's English text. */
+	readonly message?: string;
+	readonly cause?: unknown;
+	/** For logs only, never sent to a client. */
+	readonly context?: ErrorContext;
+	/** Sent to a client when the error is public. */
+	readonly data?: ErrorContext;
+	readonly status?: number;
+	readonly public?: boolean;
 }
 
-type EnvContextParams = BaseContextParams & { missingEnvVars?: string[] };
-type ContractContextParams = BaseContextParams;
-type DBContextParams = BaseContextParams & { captchaId?: string[] };
-type CliContextParams = BaseContextParams;
-type DatasetContextParams = BaseContextParams;
-type ApiContextParams = BaseContextParams & {
-	code?: number;
-};
+const DEFAULT_STATUS = 500;
 
-type ErrorKey = TranslationKey;
+const frozenCopy = (value: ErrorContext | undefined): ErrorContext =>
+	Object.freeze({ ...value });
 
-const backupTranslationObj = { t: (key: string) => key };
+/**
+ * An immutable snapshot of a failure. It neither logs nor translates: whoever
+ * catches it decides whether it is worth logging, and only a frontend
+ * translates, by `code`.
+ */
+export class ProsopoError<C extends ErrorCode = ErrorCode> extends Error {
+	readonly code: C;
+	readonly errorSite: ErrorSite;
+	readonly errorId: ErrorId<C>;
+	readonly status: number;
+	readonly isPublic: boolean;
+	readonly context: ErrorContext;
+	readonly data: ErrorContext;
+	readonly cause: unknown;
 
-// An error's message is usually already text, not a key.
-const translateMessage = (i18n: { t: TranslateFn }, message: string): string =>
-	isTranslationKey(message) ? i18n.t(message) : message;
-
-export abstract class ProsopoBaseError<
-	ContextType extends BaseContextParams = BaseContextParams,
-> extends Error {
-	translationKey: string | undefined;
-	context: ContextType | undefined;
-
-	constructor(
-		error: Error | ErrorKey,
-		options?: BaseErrorOptions<ContextType>,
-	) {
-		const logger = options?.logger || getLogger("info", "common:error");
-		const logLevel = options?.logLevel || "error";
-		const i18n = options?.i18n || backupTranslationObj;
-		if (error instanceof Error) {
-			super(translateMessage(i18n, error.message));
-			this.translationKey = options?.translationKey;
-			this.context = options?.context;
-		} else {
-			super(translateMessage(i18n, error));
-			this.translationKey = error;
-			this.context = options?.context;
-		}
-		if (!options?.silent) this.logError(logger, logLevel, options?.name);
-	}
-
-	private logError(logger: Logger, logLevel: LogLevel, errorName?: string) {
-		// `err` at the top level is the queryable, locale-stable identifier in
-		// log aggregators — prefer the translation key over the translated
-		// message so dashboards can filter on a constant.
-		const err = this.translationKey || this.message;
-		// `msg` mirrors `err` so log dashboards that group by msg (the default
-		// grouping in most log UIs) surface a stable, non-empty label rather
-		// than the "undefined" bucket ~800 auto-logged errors per hour used to
-		// land in on prod. Duplicating into two fields keeps queries against
-		// either field working without a schema change.
-		const msg = err;
-		const data = {
-			errorType: errorName || this.name,
-			...(this.context ? { context: boundContextForLog(this.context) } : {}),
-		};
-		if (logLevel === "debug") {
-			logger.debug(() => ({
-				err,
-				msg,
-				data: { ...data, stack: this.stack },
-			}));
-			return;
-		}
-		logger.error(() => ({ err, msg, data }));
+	constructor(options: ProsopoErrorOptions<C>) {
+		const definition: { message: string; status?: number; public?: boolean } =
+			ERROR_CODES[options.code];
+		super(options.message ?? definition.message);
+		this.name = "ProsopoError";
+		this.code = options.code;
+		this.cause = options.cause;
+		this.errorSite = options.errorSite;
+		this.errorId = `${options.code}:${options.errorSite}`;
+		this.status = options.status ?? definition.status ?? DEFAULT_STATUS;
+		this.isPublic = options.public ?? definition.public ?? false;
+		this.context = frozenCopy(options.context);
+		this.data = frozenCopy(options.data);
+		Object.freeze(this);
 	}
 }
 
-// Generic error class
-export class ProsopoError extends ProsopoBaseError<BaseContextParams> {
-	constructor(
-		error: Error | ErrorKey,
-		options?: BaseErrorOptions<BaseContextParams>,
-	) {
-		const errorName = options?.name || "ProsopoError";
-		const optionsAll = { ...options, name: errorName };
-		super(error, optionsAll);
-	}
+/**
+ * Narrows to a ProsopoError, optionally of the given codes. Checks the name as
+ * well as the prototype, so an error from a second copy of this package (a
+ * bundled widget beside a host page's copy) still matches.
+ */
+export function isProsopoError(err: unknown): err is ProsopoError;
+export function isProsopoError<C extends ErrorCode>(
+	err: unknown,
+	...codes: readonly C[]
+): err is ProsopoError<C>;
+export function isProsopoError(
+	err: unknown,
+	...codes: readonly ErrorCode[]
+): err is ProsopoError {
+	const matches =
+		err instanceof ProsopoError ||
+		(err instanceof Error &&
+			err.name === "ProsopoError" &&
+			"errorSite" in err &&
+			"code" in err);
+	if (!matches) return false;
+	return codes.length === 0 || codes.some((code) => code === err.code);
 }
-
-export class ProsopoEnvError extends ProsopoBaseError<EnvContextParams> {
-	constructor(
-		error: Error | ErrorKey,
-		options?: BaseErrorOptions<EnvContextParams>,
-	) {
-		const errorName = options?.name || "ProsopoEnvError";
-		const optionsAll = { ...options, name: errorName };
-		super(error, optionsAll);
-	}
-}
-
-export class ProsopoContractError extends ProsopoBaseError<ContractContextParams> {
-	constructor(
-		error: Error | ErrorKey,
-		options?: BaseErrorOptions<ContractContextParams>,
-	) {
-		const errorName = options?.name || "ProsopoContractError";
-		const optionsAll = { ...options, name: errorName };
-		super(error, optionsAll);
-	}
-}
-
-export class ProsopoTxQueueError extends ProsopoBaseError<ContractContextParams> {
-	constructor(
-		error: Error | ErrorKey,
-		options?: BaseErrorOptions<ContractContextParams>,
-	) {
-		const errorName = options?.name || "ProsopoTxQueueError";
-		const optionsAll = { ...options, name: errorName };
-		super(error, optionsAll);
-	}
-}
-
-export class ProsopoDBError extends ProsopoBaseError<DBContextParams> {
-	constructor(
-		error: Error | ErrorKey,
-		options?: BaseErrorOptions<DBContextParams>,
-	) {
-		const errorName = options?.name || "ProsopoDBError";
-		const optionsAll = { ...options, name: errorName };
-		super(error, optionsAll);
-	}
-}
-
-export class ProsopoCliError extends ProsopoBaseError<CliContextParams> {
-	constructor(
-		error: Error | ErrorKey,
-		options?: BaseErrorOptions<CliContextParams>,
-	) {
-		const errorName = options?.name || "ProsopoCliError";
-		const optionsAll = { ...options, name: errorName };
-		super(error, optionsAll);
-	}
-}
-
-export class ProsopoDatasetError extends ProsopoBaseError<DatasetContextParams> {
-	constructor(
-		error: Error | ErrorKey,
-		options?: BaseErrorOptions<DatasetContextParams>,
-	) {
-		const errorName = options?.name || "ProsopoDatasetError";
-		const optionsAll = { ...options, name: errorName };
-		super(error, optionsAll);
-	}
-}
-
-export class ProsopoApiError extends ProsopoBaseError<ApiContextParams> {
-	code: number;
-
-	constructor(
-		error: Error | ErrorKey,
-		options?: BaseErrorOptions<ApiContextParams>,
-	) {
-		const errorName = options?.name || "ProsopoApiError";
-		const code = options?.context?.code || 500;
-		const optionsAll = {
-			...options,
-			name: errorName,
-			context: {
-				...options?.context,
-				code,
-				...(error instanceof ProsopoBaseError && error.translationKey
-					? { translationKey: error.translationKey }
-					: {}),
-			},
-		};
-		super(error, optionsAll);
-		this.code = code;
-	}
-}
-
-export const unwrapError = (
-	err: ProsopoBaseError | SyntaxError | ZodLikeError,
-	i18nInstance?: { t: TranslateFn },
-) => {
-	const i18n = i18nInstance || backupTranslationObj;
-	let code = "code" in err ? (err.code as number) : 400;
-
-	const message = translateMessage(i18n, err.message);
-	let jsonError: ApiJsonError = { code, message };
-	jsonError.message = message;
-	jsonError.key = "translationKey" in err ? err.translationKey : "API.UNKNOWN";
-
-	// unwrap the errors to get the actual error message
-	while (err instanceof ProsopoBaseError && err.context) {
-		// base error will not have a translation key
-		const contextTranslationKey =
-			typeof err.context.translationKey === "string"
-				? err.context.translationKey
-				: undefined;
-		jsonError.key =
-			contextTranslationKey || err.translationKey || "API.UNKNOWN";
-		jsonError.message = translateMessage(i18n, err.message);
-		jsonError.data = err.context.data as Record<string, unknown> | undefined;
-
-		const contextCode =
-			typeof err.context.code === "number" ? err.context.code : undefined;
-		code = contextCode ?? jsonError.code;
-		// Only move to the next error if ProsopoBaseError or ZodError
-		if (
-			err.context.error &&
-			(err.context.error instanceof ProsopoBaseError ||
-				isZodError(err.context.error))
-		) {
-			err = err.context.error;
-		} else {
-			break;
-		}
-	}
-
-	if (isZodError(err)) {
-		if (typeof err.message === "object") {
-			jsonError = err.message;
-		} else {
-			// ApiJsonError types `message` as a string, but for a validation
-			// error the response has always carried the parsed issue list.
-			jsonError.message = JSON.parse(JSON.stringify(boundedIssues(err).issues));
-			jsonError.key =
-				jsonError.key !== "API.UNKNOWN" ? jsonError.key : "API.INVALID_BODY";
-			code = 400;
-		}
-	}
-
-	jsonError.code = code;
-	// Derive the HTTP reason phrase from the final status code rather than
-	// hardcoding "Bad Request", so a 401/403/500 response carries the correct
-	// status message. For codes absent from the map, fall back by class so an
-	// unmapped 5xx (e.g. a non-standard 599) doesn't report a 4xx "Bad Request"
-	// phrase.
-	const statusMessage =
-		STATUS_MESSAGES[code] ??
-		(code >= 500 ? "Internal Server Error" : "Bad Request");
-	return { code, statusMessage, jsonError };
-};
 
 /**
  * The part of a zod error this module reads. Declared structurally so that
@@ -309,6 +133,17 @@ export interface ZodLikeError {
 }
 
 /**
+ * Recognised by `name` rather than `instanceof`. The name is the only signal
+ * that survives an error crossing a realm boundary or arriving from a second
+ * copy of zod, both of which `instanceof` misses.
+ */
+export const isZodError = (err: unknown): err is ZodLikeError =>
+	typeof err === "object" &&
+	err !== null &&
+	"name" in err &&
+	err.name === "ZodError";
+
+/**
  * A request body of up to 1MB can fail validation with one zod issue per array
  * element, i.e. tens of thousands of issues. Echoing or logging all of them
  * turned a 1MB request into a ~20MB response plus a multi-MB log line, built
@@ -316,13 +151,21 @@ export interface ZodLikeError {
  */
 export const MAX_REPORTED_ISSUES = 10;
 
-const boundedIssues = (
+const parseIssues = (message: string): unknown => {
+	try {
+		return JSON.parse(message);
+	} catch {
+		return message;
+	}
+};
+
+export const boundedIssues = (
 	err: ZodLikeError,
 ): { issueCount: number; issues: unknown[] } => {
 	// Prefer `issues`: zod builds `message` by serialising every issue.
 	const all: unknown = Array.isArray(err.issues)
 		? err.issues
-		: JSON.parse(err.message);
+		: parseIssues(err.message);
 	if (!Array.isArray(all)) return { issueCount: 1, issues: [all] };
 	return {
 		issueCount: all.length,
@@ -330,22 +173,153 @@ const boundedIssues = (
 	};
 };
 
-const boundContextForLog = <ContextType extends BaseContextParams>(
-	context: ContextType,
-): ContextType | (Omit<ContextType, "error"> & { error: object }) => {
-	if (!isZodError(context.error)) return context;
-	return {
-		...context,
-		error: { name: context.error.name, ...boundedIssues(context.error) },
-	};
+const MIN_CLIENT_ERROR = 400;
+const MAX_CLIENT_ERROR = 499;
+
+/**
+ * body-parser and other http-errors raise a 4xx with `expose: true` for a
+ * malformed request (bad JSON, too large, wrong charset).
+ */
+const clientHttpErrorStatus = (err: unknown): number | undefined => {
+	if (typeof err !== "object" || err === null) return undefined;
+	const status = "status" in err ? err.status : undefined;
+	if (
+		typeof status === "number" &&
+		status >= MIN_CLIENT_ERROR &&
+		status <= MAX_CLIENT_ERROR &&
+		"expose" in err &&
+		err.expose === true
+	)
+		return status;
+	return undefined;
 };
 
 /**
- * Recognised by `name` rather than `instanceof`. The name is the only signal
- * that survives an error crossing a realm boundary or arriving from a second
- * copy of zod, both of which `instanceof` misses — it was already the fallback
- * arm of this check.
+ * Turns anything thrown into a ProsopoError: a ProsopoError is returned as is,
+ * a zod error, a JSON SyntaxError or a 4xx http-error becomes INVALID_REQUEST,
+ * anything else becomes UNEXPECTED at `fallbackSite`.
  */
-export const isZodError = (err: unknown): err is ZodLikeError => {
-	return Boolean(err && (err as ZodLikeError).name === "ZodError");
+export const toProsopoError = (
+	err: unknown,
+	fallbackSite: ErrorSite,
+): ProsopoError => {
+	if (isProsopoError(err)) return err;
+	if (isZodError(err))
+		return new ProsopoError({
+			code: "INVALID_REQUEST",
+			errorSite: fallbackSite,
+			cause: err,
+			data: boundedIssues(err),
+		});
+	const clientStatus = clientHttpErrorStatus(err);
+	if (clientStatus !== undefined || err instanceof SyntaxError)
+		return new ProsopoError({
+			code: "INVALID_REQUEST",
+			errorSite: fallbackSite,
+			cause: err,
+			status: clientStatus,
+		});
+	return new ProsopoError({
+		code: "UNEXPECTED",
+		errorSite: fallbackSite,
+		cause: err,
+	});
 };
+
+/**
+ * What a client is allowed to see. A public error carries its code, message
+ * and data; any other is reduced to the origin label and its site, enough for
+ * a user to quote and for us to find the throw.
+ */
+export const toPublicError = (
+	err: ProsopoError,
+	origin: ErrorOrigin,
+): ApiJsonError => {
+	if (err.isPublic)
+		return {
+			code: err.code,
+			errorId: err.errorId,
+			status: err.status,
+			message: err.message,
+			...(Object.keys(err.data).length > 0 ? { data: { ...err.data } } : {}),
+		};
+	return {
+		code: origin,
+		errorId: `${origin}:${err.errorSite}`,
+		status: err.status,
+	};
+};
+
+export const toApiError = (
+	err: unknown,
+	fallbackSite: ErrorSite,
+): { error: ProsopoError; status: number; body: { error: ApiJsonError } } => {
+	const error = toProsopoError(err, fallbackSite);
+	return {
+		error,
+		status: error.status,
+		body: { error: toPublicError(error, "BACKEND_ERROR") },
+	};
+};
+
+const MAX_CAUSE_DEPTH = 5;
+
+export interface ErrorDescription {
+	readonly name: string;
+	readonly message: string;
+	readonly code?: string;
+	readonly errorId?: string;
+	readonly status?: number;
+	readonly context?: Readonly<Record<string, unknown>>;
+	readonly data?: Readonly<Record<string, unknown>>;
+	readonly issues?: { issueCount: number; issues: unknown[] };
+	readonly stack?: string;
+	readonly cause?: ErrorDescription | string;
+}
+
+const describeContext = (
+	context: ErrorContext,
+): Readonly<Record<string, unknown>> | undefined => {
+	if (Object.keys(context).length === 0) return undefined;
+	return Object.fromEntries(
+		Object.entries(context).map(([key, value]) => [
+			key,
+			isZodError(value) ? boundedIssues(value) : value,
+		]),
+	);
+};
+
+/** A plain, bounded record of an error and its causes, for a log line. */
+export const describeError = (
+	err: unknown,
+	depth = 0,
+): ErrorDescription | string => {
+	if (!(err instanceof Error)) return String(err);
+	const cause: unknown = "cause" in err ? err.cause : undefined;
+	const issues = isZodError(err) ? boundedIssues(err) : undefined;
+	const described: ErrorDescription = {
+		name: err.name,
+		message: issues ? "Validation failed" : err.message,
+		...(issues ? { issues } : {}),
+		...(isProsopoError(err)
+			? {
+					code: err.code,
+					errorId: err.errorId,
+					status: err.status,
+					context: describeContext(err.context),
+					data: describeContext(err.data),
+				}
+			: {}),
+		stack: err.stack,
+		...(cause !== undefined && depth < MAX_CAUSE_DEPTH
+			? { cause: describeError(cause, depth + 1) }
+			: {}),
+	};
+	return described;
+};
+
+const SEVERE_STATUS = 500;
+
+/** Whether an edge should log this error: faults, not a client's mistakes. */
+export const isSevereError = (err: ProsopoError): boolean =>
+	err.status >= SEVERE_STATUS;

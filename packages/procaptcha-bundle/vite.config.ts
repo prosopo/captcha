@@ -12,23 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { randomBytes } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import {
 	ViteFrontendConfig,
-	VitePluginRemoveUnusedTranslations,
+	VitePluginCopy,
+	buildToken,
 } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
-import { at, flatten } from "@prosopo/util";
-import fg from "fast-glob";
 import { defineConfig } from "vite";
+import { version } from "./package.json" with { type: "json" };
 
-// Per-build opaque chunk name for the honeypot module. Re-rolled on every
-// build so the emitted URL (e.g. `c8f2a1b0-<hash>.js`) doesn't leak the
+// load env using our util because vite loadEnv is not working for .env.development
+loadEnv();
+
+// Per-build opaque chunk name for the honeypot module. Changes with every
+// version (see buildToken) so the emitted URL (e.g. `c8f2a1b0-<hash>.js`) doesn't leak the
 // component's purpose and can't be fingerprinted by scrapers that maintain
 // static URL blocklists.
-const honeypotChunkName = `c${randomBytes(4).toString("hex")}`;
+const honeypotChunkName = `c${buildToken("honeypot", 4, version)}`;
 
 // Per-build opaque chunk name for the module that holds `@prosopo/fingerprint`
 // + `@prosopo/fingerprintjs`. Same rationale as `honeypotChunkName` — but the
@@ -38,10 +40,7 @@ const honeypotChunkName = `c${randomBytes(4).toString("hex")}`;
 // so the fingerprint sources (canvas / WebGL `getContext` / `getParameter` /
 // `getImageData` — expensive on real GPUs) ran twice per widget session. One
 // shared chunk = one module instance = one populated cache = one run.
-const sharedBrowserChunkName = `b${randomBytes(4).toString("hex")}`;
-
-// load env using our util because vite loadEnv is not working for .env.development
-loadEnv();
+const sharedBrowserChunkName = `b${buildToken("sharedBrowser", 4, version)}`;
 
 // Vite doesn't find the tsconfig for some reason
 process.env.TS_NODE_PROJECT = path.resolve("./tsconfig.json");
@@ -74,15 +73,6 @@ const copyDir = {
 	destDir: `${workspaceRoot}/packages/procaptcha-bundle/dist/bundle/locales`,
 };
 
-const localeFiles = await fg.glob(
-	`${workspaceRoot}/packages/locale/src/locales/**/*.json`,
-);
-
-const translationKeys = Object.keys(
-	flatten(JSON.parse(fs.readFileSync(at(localeFiles, 0), "utf-8"))),
-);
-
-// Merge with generic frontend config
 export default defineConfig(async ({ command, mode }) => {
 	// Test-only escape hatch for the firefox cypress leg: cypress can only
 	// dispatch trusted input over the chrome devtools protocol (chromium
@@ -122,7 +112,9 @@ export default defineConfig(async ({ command, mode }) => {
 					...frontendConfig.build?.rollupOptions?.output,
 					manualChunks(id: string) {
 						if (
-							id.includes("packages/procaptcha-common/dist/components/honeypot")
+							id.includes(
+								"packages/procaptcha-common/dist/esm/components/honeypot",
+							)
 						) {
 							return honeypotChunkName;
 						}
@@ -144,7 +136,7 @@ export default defineConfig(async ({ command, mode }) => {
 							return "web3Chunk";
 						}
 						// Split up the extension code into 2 chunks
-						if (id.includes("packages/account/dist/extension")) {
+						if (id.includes("packages/account/dist/esm/extension")) {
 							if (id.includes("ExtensionWeb3.js")) {
 								return "web3Chunk";
 							}
@@ -213,25 +205,16 @@ export default defineConfig(async ({ command, mode }) => {
 			},
 		},
 		plugins: [
-			{
-				name: "copy-dir",
-				async writeBundle() {
-					if (copyDir) {
-						const containingFolder = path.dirname(copyDir.destDir);
-						if (!fs.existsSync(containingFolder)) {
-							fs.mkdirSync(containingFolder, { recursive: true });
-						}
-						console.log(`Copying ${copyDir.srcDir} to ${copyDir.destDir}`);
-						fs.cpSync(copyDir.srcDir, copyDir.destDir, {
-							recursive: true,
-						});
-					}
-				},
-			},
-			VitePluginRemoveUnusedTranslations(
-				translationKeys,
-				`${copyDir.destDir}/**/*.json`,
-			),
+			// Only the widget namespace: the browser renders nothing else, and
+			// the provider translates image labels itself. Copied whole: the
+			// provider sends any of these keys with an error for the widget to
+			// show, so stripping keys the bundle never names would leave those
+			// errors untranslated.
+			VitePluginCopy({
+				srcDir: copyDir.srcDir,
+				destDir: copyDir.destDir,
+				include: ["*/widget.json"],
+			}),
 
 			...(frontendConfig.plugins ? frontendConfig.plugins : []),
 		],

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { HttpError, ProviderApi } from "@prosopo/api";
-import { ProsopoApiError, ProsopoContractError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { Keyring } from "@prosopo/keyring";
 import { findProvider } from "@prosopo/load-balancer";
 import { type LogLevel, type Logger, getLogger } from "@prosopo/logger";
@@ -28,7 +28,7 @@ import {
 	decodeProcaptchaOutput,
 } from "@prosopo/types";
 import { u8aToHex } from "@prosopo/util";
-import i18n from "i18next";
+import { translate } from "./translate.js";
 
 // Detect which section of the provider list the token's `providerUrl`
 // was minted from.
@@ -144,7 +144,9 @@ export class ProsopoServer {
 		}));
 		const dappUserSignature = this.pair?.sign(timestamp.toString());
 		if (!dappUserSignature) {
-			throw new ProsopoContractError("CAPTCHA.INVALID_TIMESTAMP", {
+			throw new ProsopoError({
+				code: "INVALID_TIMESTAMP",
+				errorSite: "SRVR-1",
 				context: { error: "Timestamp not found" },
 			});
 		}
@@ -322,7 +324,7 @@ export class ProsopoServer {
 	private notRecentResponse(): VerificationResponse {
 		return {
 			verified: false,
-			status: i18n.t("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
+			status: translate("API.USER_NOT_VERIFIED_TIME_EXPIRED"),
 		};
 	}
 
@@ -365,7 +367,7 @@ export class ProsopoServer {
 				}));
 				return {
 					verified: false,
-					status: i18n.t("API.USER_NOT_VERIFIED"),
+					status: translate("API.USER_NOT_VERIFIED"),
 				};
 			}
 			const verificationResponse = await this.verifyProvider(
@@ -394,12 +396,17 @@ export class ProsopoServer {
 
 			return verificationResponse;
 		} catch (err) {
-			this.logger.error(() => ({ err, data: { token } }));
+			// Any failure (malformed token, provider list or provider
+			// unreachable, signer error) answers "not verified" rather than
+			// throwing: callers that don't catch would otherwise turn a bad
+			// token or a provider outage into a 500 from their own endpoint.
 			const code =
 				err instanceof HttpError ? err.status : isTimeoutError(err) ? 504 : 500;
-			throw new ProsopoApiError("API.BAD_REQUEST", {
-				context: { code, token },
-			});
+			this.logger.error(() => ({ err, data: { token, code } }));
+			return {
+				verified: false,
+				status: translate("API.USER_NOT_VERIFIED"),
+			};
 		}
 	}
 }

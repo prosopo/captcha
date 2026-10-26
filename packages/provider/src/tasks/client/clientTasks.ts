@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { createPrivateKey } from "node:crypto";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { CaptchaDatabase, ClientDatabase } from "@prosopo/database";
 import type { Logger } from "@prosopo/logger";
 import {
@@ -317,9 +317,11 @@ export class ClientTaskManager {
 				},
 			);
 		} catch (e: unknown) {
-			const getClientListError = new ProsopoApiError("DATABASE.UNKNOWN", {
-				context: { error: e },
-				logger: this.logger,
+			const getClientListError = new ProsopoError({
+				code: "DB_QUERY_FAILED",
+				errorSite: "PROV-51",
+				message: "Unknown database error",
+				cause: e,
 			});
 			this.logger.error(() => ({
 				err: getClientListError,
@@ -394,9 +396,11 @@ export class ClientTaskManager {
 		updatedAt: string;
 	}> {
 		if (scope === DecisionMachineScope.Dapp && !dappAccount) {
-			throw new ProsopoApiError("API.BAD_REQUEST", {
+			throw new ProsopoError({
+				code: "INVALID_REQUEST",
+				errorSite: "PROV-52",
+				message: "BadRequest",
 				context: { scope, dappAccount },
-				logger: this.logger,
 			});
 		}
 
@@ -481,9 +485,11 @@ export class ClientTaskManager {
 	}> {
 		const artifact = await this.providerDB.getDecisionMachineArtifactById(id);
 		if (!artifact) {
-			throw new ProsopoApiError("API.BAD_REQUEST", {
+			throw new ProsopoError({
+				code: "INVALID_REQUEST",
+				errorSite: "PROV-53",
+				message: "BadRequest",
 				context: { id },
-				logger: this.logger,
 			});
 		}
 		return {
@@ -508,11 +514,15 @@ export class ClientTaskManager {
 	}> {
 		const success = await this.providerDB.removeDecisionMachineArtifact(id);
 		if (!success) {
-			throw new ProsopoApiError("API.BAD_REQUEST", {
+			throw new ProsopoError({
+				code: "INVALID_REQUEST",
+				errorSite: "PROV-54",
+				message: "BadRequest",
 				context: { id, message: "Decision machine not found" },
-				logger: this.logger,
 			});
 		}
+		invalidateAllDecisionMachineArtifactCaches();
+		invalidateDecisionMachineScriptCache();
 		return {
 			success,
 			deletedId: id,
@@ -525,6 +535,8 @@ export class ClientTaskManager {
 	}> {
 		const deletedCount =
 			await this.providerDB.removeAllDecisionMachineArtifacts();
+		invalidateAllDecisionMachineArtifactCaches();
+		invalidateDecisionMachineScriptCache();
 		return {
 			success: true,
 			deletedCount,

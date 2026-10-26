@@ -103,3 +103,43 @@ export enum DetectorLoadFailure {
  * bundle looks itself up by `import.meta.url`.
  */
 export const DETECTOR_REGISTRY_KEY = "prosopo.detector";
+
+/**
+ * Pool bundle format for detectors built outside Prosopo. A bundle stamped with
+ * it is decoded by the provider's open decoder instead of the sealed one, and
+ * is only loaded when `PROSOPO_DETECTOR_OPEN_FORMAT=1`.
+ */
+export const OPEN_DETECTOR_FORMAT = "open-v1";
+export type OpenDetectorFormat = typeof OPEN_DETECTOR_FORMAT;
+
+/**
+ * The `token` an open-format detector returns: `data` is the JSON
+ * {@link OpenDetectorPayload} encrypted with AES-256-GCM (tag appended, as
+ * WebCrypto emits it), and `key` is that AES key wrapped with the bundle's
+ * RSA public key using RSA-OAEP over SHA-256. All three fields are base64.
+ */
+export type OpenDetectorToken = {
+	v: 1;
+	key: string;
+	iv: string;
+	data: string;
+};
+
+export type OpenDetectorPayload = {
+	// 0 is human, 1 is bot. Compared against the site key's frictionless
+	// thresholds exactly as the sealed detector's score is.
+	score: number;
+	// Milliseconds since the epoch. Older than ten minutes is penalised.
+	timestamp: number;
+	// Must equal the `Prosopo-User` header the widget sends.
+	userId: string;
+	// First 32 hex characters of SHA-256(navigator.userAgent). Must match the
+	// hash of the request's User-Agent header.
+	userAgent: string;
+	// Must equal the `headHash` the widget sends alongside the token.
+	headHash: string;
+	isWebView?: boolean;
+	isIframe?: boolean;
+	// Arrives in decision and routing machines as `input.d`.
+	d?: DetectorData;
+};

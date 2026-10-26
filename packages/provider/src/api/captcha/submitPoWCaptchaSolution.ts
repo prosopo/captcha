@@ -15,7 +15,8 @@ import {
 	resolveMaxEscalationLevel,
 	severityToPuzzleDifficulty,
 } from "@prosopo/captcha-severity";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError, isProsopoError, isSevereError } from "@prosopo/common";
+import { summariseFingerprintProof } from "@prosopo/fingerprint/summary";
 import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
 	CaptchaType,
@@ -77,10 +78,12 @@ export default (env: ProviderEnvironment) =>
 			parsed = SubmitPowCaptchaSolutionBody.parse(req.body);
 		} catch (err) {
 			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: summariseRequestBody(req) },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-27",
+					message: "Error parsing captcha",
+					cause: err,
+					context: { body: summariseRequestBody(req) },
 				}),
 			);
 		}
@@ -117,10 +120,10 @@ export default (env: ProviderEnvironment) =>
 
 			if (!clientRecord) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "SITE_KEY_NOT_REGISTERED",
+						errorSite: "PROV-28",
+						context: { siteKey: dapp },
 					}),
 				);
 			}
@@ -135,6 +138,11 @@ export default (env: ProviderEnvironment) =>
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.countryCode
 					: undefined;
+			// Summarised once here and handed to both the routing context and the
+			// record write, so the machine and the stored record cannot disagree
+			// about what a proof disclosed, and a 7.8KB proof is parsed and
+			// Merkle-checked once per submission rather than twice.
+			const fingerprintSummary = summariseFingerprintProof(fingerprintProof);
 			// Observability for the proof-of-fingerprint flow: the validation
 			// itself runs inside the closed-source routing machine (no logger), so
 			// log here at the provider boundary whether a proof arrived.
@@ -145,6 +153,7 @@ export default (env: ProviderEnvironment) =>
 				data: {
 					fingerprintProofPresent: fingerprintProof !== undefined,
 					fingerprintProofBytes: fingerprintProof?.length ?? 0,
+					fingerprintSummarised: fingerprintSummary !== undefined,
 					challenge,
 				},
 			}));
@@ -158,12 +167,19 @@ export default (env: ProviderEnvironment) =>
 				countryCode,
 				// `false` here is a placeholder — `runPostPowRouting` overrides
 				// isWebView with the value recorded on the originating session.
-				platform: derivePlatform(userAgent, false),
+				platform: derivePlatform(userAgent, false, {
+					headers: flatHeaders,
+					...(req.ipInfo &&
+						"isValid" in req.ipInfo &&
+						req.ipInfo.isValid && { carrierNetwork: req.ipInfo.isMobile }),
+					...(req.tcpMss !== undefined && { tcpMss: req.tcpMss }),
+				}),
 				raw: {
 					headers: flatHeaders,
 					userAgent,
 					...(req.ja4 && { ja4: req.ja4 }),
 					...(fingerprintProof && { fingerprintProof }),
+					...(fingerprintSummary && { fingerprintSummary }),
 					...(req.tcpToChelloUs !== undefined && {
 						tcpToChelloUs: req.tcpToChelloUs,
 					}),
@@ -206,6 +222,7 @@ export default (env: ProviderEnvironment) =>
 				salt,
 				simdReadings,
 				clientMetaData,
+				fingerprintSummary,
 			);
 
 			// Surface the routing machine's post-PoW decision (escalation +
@@ -248,20 +265,19 @@ export default (env: ProviderEnvironment) =>
 			};
 			return res.json(response);
 		} catch (err) {
+			if (isProsopoError(err) && !isSevereError(err)) return next(err);
 			req.logger.error(() => ({
 				err,
 				body: summariseRequestBody(req),
 				msg: "Error in PoW captcha solution submission",
 			}));
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: {
-						code: 500,
-						siteKey: req.body.dapp,
-						error: err,
-					},
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "PROV-29",
+					message: "BadRequest",
+					cause: err,
+					context: { siteKey: req.body.dapp },
 				}),
 			);
 		}
@@ -352,9 +368,28 @@ export const buildEscalation = async (
 		  }
 		| undefined => {
 		if (escalatedType !== CaptchaType.puzzle) return undefined;
+		// This is the one point in the flow where the behavioural signals are
+		// in hand: the solve the user just submitted carries the client's own
+		// touch-support reading and its touch events, both persisted on the
+		// PoW record before routing ran.
 		const { isMobile } = derivePlatform(
 			originSession.headers?.["user-agent"] ?? "",
 			originSession.webView,
+			{
+				...(originSession.headers && { headers: originSession.headers }),
+				...(originSession.ipInfo?.isValid && {
+					carrierNetwork: originSession.ipInfo.isMobile,
+				}),
+				...(originSession.tcpMss !== undefined && {
+					tcpMss: originSession.tcpMss,
+				}),
+				...(powRecord.deviceCapability !== undefined && {
+					deviceCapability: powRecord.deviceCapability,
+				}),
+				...(powRecord.behavioralDataPacked?.c2 !== undefined && {
+					touchEventCount: powRecord.behavioralDataPacked.c2.length,
+				}),
+			},
 		);
 		const level = severityToPuzzleDifficulty(
 			routed.solvedImagesCount ?? originSession.solvedImagesCount,

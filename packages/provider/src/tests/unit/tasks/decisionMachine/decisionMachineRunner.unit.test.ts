@@ -746,6 +746,50 @@ describe("DecisionMachineRunner", () => {
 			expect((await runner.decide(input)).reason).toBe("new");
 		});
 
+		it("shares cached artifacts between runners built on the same database", async () => {
+			// Runners are built per request, so a cache that lived on the
+			// runner never served a second lookup.
+			const artifact = buildArtifact(
+				'module.exports.decide = () => ({ decision: "allow", reason: "shared" });',
+				DecisionMachineScope.Global,
+			);
+			(db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>)
+				.mockResolvedValueOnce(undefined)
+				.mockResolvedValueOnce(artifact);
+			const input = {
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed" as const,
+				headers: {},
+			};
+
+			await new DecisionMachineRunner(db).decide(input);
+			const second = await new DecisionMachineRunner(db).decide(input);
+
+			expect(second.reason).toBe("shared");
+			expect(db.getDecisionMachineArtifact).toHaveBeenCalledTimes(2);
+		});
+
+		it("keeps the caches of different databases apart", async () => {
+			const otherDb = {
+				getDecisionMachineArtifact: vi.fn().mockResolvedValue(undefined),
+			} as unknown as IProviderDatabase;
+			(
+				db.getDecisionMachineArtifact as unknown as ReturnType<typeof vi.fn>
+			).mockResolvedValue(undefined);
+			const input = {
+				userAccount: "user",
+				dappAccount: "dapp",
+				captchaResult: "passed" as const,
+				headers: {},
+			};
+
+			await new DecisionMachineRunner(db).decide(input);
+			await new DecisionMachineRunner(otherDb).decide(input);
+
+			expect(otherDb.getDecisionMachineArtifact).toHaveBeenCalledTimes(2);
+		});
+
 		it("does not retain runners, so construction is not bounded by a registry", async () => {
 			// Runners are built per request. The previous implementation enrolled
 			// each one in a module-level Set that nothing pruned, so it grew

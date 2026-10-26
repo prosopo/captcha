@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import {
+	MAX_STALE_PAYLOAD_LEVEL,
 	resolveMaxEscalationLevel,
 	severityToPuzzleDifficulty,
 } from "@prosopo/captcha-severity";
@@ -30,6 +31,8 @@ import {
 	type ImageRoundsBounds,
 	type KeyringPair,
 	NO_MEASUREMENT_REASONS,
+	OPEN_DETECTOR_FORMAT,
+	type OpenDetectorFormat,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	type RoutingMachineBaseline,
@@ -63,6 +66,7 @@ import {
 	type DecodedDetectorPayload,
 	getBotScore,
 } from "../detection/getBotScore.js";
+import { decodeOpenPayload } from "../detection/openPayload.js";
 import { samplePuzzleDifficulty } from "../puzzle/puzzleDifficulty.js";
 import { ipMatchesSession } from "./ipMatch.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
@@ -261,6 +265,7 @@ export class FrictionlessManager extends CaptchaManager {
 			simdReadings,
 			puzzleTolerance,
 			puzzle,
+			puzzleLevel,
 			iconOrderTolerance,
 			iconOrder,
 			isEscalation,
@@ -290,6 +295,7 @@ export class FrictionlessManager extends CaptchaManager {
 			powDifficulty,
 			...(puzzleTolerance !== undefined && { puzzleTolerance }),
 			...(puzzle && { puzzle }),
+			...(puzzleLevel !== undefined && { puzzleLevel }),
 			...(iconOrderTolerance !== undefined && { iconOrderTolerance }),
 			...(iconOrder && { iconOrder }),
 			userSitekeyIpHash,
@@ -361,7 +367,7 @@ export class FrictionlessManager extends CaptchaManager {
 	async createAuthenticatedSession(
 		token: string,
 		ipAddress: CompositeIpAddress,
-		webBotAuthAgent: string,
+		webBotAuthAgent: string | undefined,
 		siteKey: string,
 		userSitekeyIpHash?: string,
 		headers?: RequestHeaders,
@@ -387,8 +393,8 @@ export class FrictionlessManager extends CaptchaManager {
 			// Written rather than left absent so single-use enforcement can
 			// tell "never set" apart from "consumed".
 			serverChecked: false,
-			agent: true,
-			webBotAuthAgent,
+			agent: webBotAuthAgent !== undefined,
+			...(webBotAuthAgent && { webBotAuthAgent }),
 			...(ipInfo && { ipInfo }),
 			...(headers && { headers }),
 			...(clientSessionId && { clientMetaData: { clientSessionId } }),
@@ -605,7 +611,10 @@ export class FrictionlessManager extends CaptchaManager {
 		// severity-chosen puzzle has no verdict to re-derive from. Two sources,
 		// in precedence order: the difficulty ladder derived from the requested
 		// round count, then explicit router overrides, which win.
-		const finalPuzzleOverrides: Pick<Session, "puzzleTolerance" | "puzzle"> =
+		const finalPuzzleOverrides: Pick<
+			Session,
+			"puzzleTolerance" | "puzzle" | "puzzleLevel"
+		> =
 			finalCaptchaType === CaptchaType.puzzle
 				? (() => {
 						// The site's own ceiling on automatic escalation; 0 pins the
@@ -615,6 +624,10 @@ export class FrictionlessManager extends CaptchaManager {
 								puzzleMaxDifficultyDefault,
 							this.routingContext?.platform.isMobile ?? false,
 						);
+						const ceiling =
+							finalReason === FrictionlessReason.OLD_TIMESTAMP
+								? Math.min(maxLevel, MAX_STALE_PAYLOAD_LEVEL)
+								: maxLevel;
 						// Paths that measured nothing carry a fixed fallback round count,
 						// not a severity, so they must not read as an escalation.
 						const level =
@@ -625,7 +638,7 @@ export class FrictionlessManager extends CaptchaManager {
 										requestedSolvedImagesCount,
 										this.routingContext?.baseImageRounds ??
 											this.config.captchas.solved.count,
-										maxLevel,
+										ceiling,
 									);
 						// Level 0 means nothing escalated this session: leave the session
 						// bare so getPuzzleCaptchaChallenge falls back to the site's own
@@ -635,6 +648,7 @@ export class FrictionlessManager extends CaptchaManager {
 								? samplePuzzleDifficulty(
 										level,
 										DEFAULT_RENDER_SETTINGS.holeDarken,
+										ceiling,
 									)
 								: undefined;
 						const tolerance = routed.puzzleTolerance ?? difficulty?.tolerance;
@@ -685,6 +699,7 @@ export class FrictionlessManager extends CaptchaManager {
 			blocked,
 			puzzleTolerance: finalPuzzleOverrides.puzzleTolerance,
 			puzzle: finalPuzzleOverrides.puzzle,
+			puzzleLevel: finalPuzzleOverrides.puzzleLevel,
 			iconOrderTolerance: finalIconOrderOverrides.iconOrderTolerance,
 			iconOrder: finalIconOrderOverrides.iconOrder,
 			// Never set on this path; pinned so a stale value on
@@ -843,6 +858,7 @@ export class FrictionlessManager extends CaptchaManager {
 	async resolveDecryptAttempts(detectorSessionId?: string): Promise<{
 		attempts: {
 			key: string;
+			format?: OpenDetectorFormat;
 			innerConfig?: string;
 			payloadLayout?: string;
 			keyMap?: string;
@@ -855,6 +871,7 @@ export class FrictionlessManager extends CaptchaManager {
 				attempts: [
 					{
 						key: bundle.key,
+						format: bundle.format,
 						innerConfig: bundle.innerConfig,
 						payloadLayout: bundle.payloadLayout,
 						keyMap: bundle.keyMap,
@@ -899,14 +916,17 @@ export class FrictionlessManager extends CaptchaManager {
 						key: this.redactKeyForLogging(attempt.key),
 					},
 				}));
-				const result = await getBotScore(
-					token,
-					headHash,
-					attempt.key,
-					attempt.innerConfig,
-					attempt.payloadLayout,
-					attempt.keyMap,
-				);
+				const result =
+					attempt.format === OPEN_DETECTOR_FORMAT
+						? decodeOpenPayload(token, headHash, attempt.key)
+						: await getBotScore(
+								token,
+								headHash,
+								attempt.key,
+								attempt.innerConfig,
+								attempt.payloadLayout,
+								attempt.keyMap,
+							);
 				decrypted = result;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",

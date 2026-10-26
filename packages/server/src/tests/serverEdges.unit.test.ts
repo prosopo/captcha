@@ -146,7 +146,7 @@ afterEach(() => {
 });
 
 describe("ProsopoServer.verifyProvider — signer failures", () => {
-	it("throws when the signer cannot produce a signature", async () => {
+	it("answers not verified when the signer cannot produce a signature", async () => {
 		const server = new ProsopoServer(
 			buildConfig(60_000),
 			stubPair(() => undefined),
@@ -154,7 +154,7 @@ describe("ProsopoServer.verifyProvider — signer failures", () => {
 
 		await expect(
 			server.isVerified(buildLegacyToken(Date.now(), true)),
-		).rejects.toThrow();
+		).resolves.toMatchObject({ verified: false });
 		expect(spies.pow).not.toHaveBeenCalled();
 	});
 });

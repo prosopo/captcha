@@ -369,6 +369,7 @@ describe("ProsopoServer.verifyProvider — recency checks", () => {
 		);
 		const result = await server.isVerified(token);
 		expect(result.verified).toBe(false);
+		expect(result.status).toBe("API.USER_NOT_VERIFIED_TIME_EXPIRED");
 		expect(spies.puzzle).not.toHaveBeenCalled();
 		expect(spies.pow).not.toHaveBeenCalled();
 	});
@@ -545,9 +546,10 @@ describe("ProsopoServer.isVerified — short-circuits", () => {
 		);
 		const result = await server.isVerified(token);
 		expect(result.verified).toBe(false);
+		expect(result.status).toBe("API.USER_NOT_VERIFIED");
 	});
 
-	it("throws BAD_REQUEST for an unparseable token", async () => {
+	it("answers not verified for an unparseable token", async () => {
 		installProviderApiSpies();
 		installProviderLookup();
 		const server = new ProsopoServer(
@@ -555,6 +557,41 @@ describe("ProsopoServer.isVerified — short-circuits", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
 			stubPair() as any,
 		);
-		await expect(server.isVerified("0xdeadbeef")).rejects.toThrow();
+		await expect(server.isVerified("0xdeadbeef")).resolves.toMatchObject({
+			verified: false,
+		});
+	});
+
+	it("answers not verified when the provider list cannot be fetched", async () => {
+		installProviderApiSpies();
+		vi.spyOn(loadBalancerModule, "findProvider").mockRejectedValue(
+			new TypeError("fetch failed"),
+		);
+		const server = new ProsopoServer(
+			buildConfig(60_000, 60_000, 60_000),
+			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+			stubPair() as any,
+		);
+		await expect(
+			server.isVerified(buildToken(Date.now())),
+		).resolves.toMatchObject({ verified: false });
+	});
+
+	it("answers not verified when the provider call fails", async () => {
+		const spies = installProviderApiSpies();
+		spies.pow.mockRejectedValue(new TypeError("fetch failed"));
+		installProviderLookup();
+		const server = new ProsopoServer(
+			buildConfig(60_000, 60_000, 60_000),
+			// biome-ignore lint/suspicious/noExplicitAny: minimal stub pair
+			stubPair() as any,
+		);
+		const token = buildToken(Date.now(), {
+			[ApiParams.captchaType]: CaptchaType.pow,
+		});
+		await expect(server.isVerified(token)).resolves.toMatchObject({
+			verified: false,
+		});
+		expect(spies.pow).toHaveBeenCalledOnce();
 	});
 });

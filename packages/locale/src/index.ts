@@ -12,22 +12,56 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+export { BROWSER_UI_LANGUAGES } from "./browserUiLanguages.js";
+export type { Browser, BrowserUiLanguage } from "./browserUiLanguages.js";
 export { getLanguageDirection } from "./direction.js";
 export type { TextDirection } from "./direction.js";
 export { default as i18nMiddleware } from "./i18nMiddleware.js";
 export { default as loadI18next } from "./loadI18next.js";
 export { isLanguage, LanguageCodes, Languages } from "./translations.js";
+export {
+	browserLanguages,
+	LANGUAGE_HEADER,
+	LANGUAGE_QUERY_PARAM,
+	languageHeaders,
+	matchLanguage,
+	matchLanguageTag,
+	negotiateLanguage,
+	parseLanguageList,
+	requestLanguage,
+	resolveLanguageList,
+	widgetLanguageHeaders,
+} from "./languagePreference.js";
+export type { LanguageRequest } from "./languagePreference.js";
 export type { Language } from "./translations.js";
 export { isClientSide } from "./util.js";
-export { isTranslationKey, translationKeys } from "./translationKey.js";
-export type { TranslationKey } from "./translationKey.js";
+export {
+	englishText,
+	isTargetKey,
+	isTranslationKey,
+	targetKeys,
+	translationKeys,
+} from "./serverTranslationKeys.js";
+export {
+	canTranslate,
+	isWidgetTranslationKey,
+	NAMESPACES,
+} from "./translationKey.js";
+export type {
+	Namespace,
+	TargetKey,
+	TranslationKey,
+	WidgetTranslationKey,
+} from "./translationKey.js";
 export { createTranslator } from "./translator.js";
+export { createUntranslatedI18n } from "./untranslatedI18n.js";
 export type { Translator } from "./translator.js";
 export type {
 	I18nEvent,
+	I18nLookup,
 	Ti18n,
 	TranslateFn,
 	TranslateOptions,
 } from "./types.js";
-export { localiseErrorMessage } from "./errorMessage.js";
-export type { KeyedErrorMessage } from "./errorMessage.js";
+export { FALLBACK_ERROR_TEXT, localiseError } from "./errorMessage.js";
+export type { DisplayedError } from "./errorMessage.js";

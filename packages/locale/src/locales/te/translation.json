@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "చెల్లని చిరునామాను ఎన్‌కోడ్ చేయడం విఫలమైంది",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "captcha పరిష్కార నిబద్ధత లేదు",
+		"SIGNER_UNDEFINED": "సంతకందారు నిర్వచించబడలేదు",
+		"CANNOT_FIND_KEYPAIR": "కీ జతను కనుగొనలేకపోయాం",
+		"INVALID_DATA_FORMAT": "చెల్లని డేటా ఫార్మాట్"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "తెలియని ఎన్విరాన్‌మెంట్ అభ్యర్థించబడింది",
+		"INVALID_CAPTCHA_NUMBER": "దయచేసి captcha కాన్ఫిగరేషన్‌లను సరిగ్గా సెట్ చేయండి",
+		"INVALID_LOG_LEVEL": "చెల్లని లాగ్ స్థాయి",
+		"INVALID_PACKAGE_DIR": "చెల్లని ప్యాకేజీ డైరెక్టరీ"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "డేటాసెట్‌ను పార్స్ చేయడంలో లోపం",
+		"SOLUTION_PARSE_ERROR": "డేటాసెట్‌ను ప్రాసెస్ చేయడంలో లోపం",
+		"HASH_ERROR": "డేటాసెట్‌ను హ్యాష్ చేయడంలో లోపం",
+		"DATASET_ID_UNDEFINED": "డేటాసెట్ ID నిర్వచించబడలేదు",
+		"NOT_ENOUGH_LABELS": "తగినన్ని లేబుల్‌లు లేవు",
+		"NOT_ENOUGH_IMAGES": "తగినన్ని చిత్రాలు లేవు",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "డేటాసెట్‌లోని captchaల సంఖ్య కాన్ఫిగర్ చేసిన సంఖ్య కంటే తక్కువ",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "డేటాసెట్‌లోని పరిష్కారాల సంఖ్య కాన్ఫిగర్ చేసిన సంఖ్య కంటే తక్కువ",
+		"DUPLICATE_IMAGE": "నకిలీ చిత్రం గుర్తించబడింది",
+		"MERKLE_ERROR": "మెర్కిల్ ట్రీని సృష్టించడంలో లోపం"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "డేటాబేస్ ఇంజిన్‌ను దిగుమతి చేయడం విఫలమైంది",
+		"DATABASE_UNDEFINED": "డేటాబేస్ క్లయింట్ కనెక్ట్ కాలేదు",
+		"DATABASE_HOST_UNDEFINED": "డేటాబేస్ హోస్ట్ చిరునామా నిర్వచించబడలేదు",
+		"DATASET_LOAD_FAILED": "డేటాసెట్ లోడ్ విఫలమైంది",
+		"DATASET_GET_FAILED": "డేటాసెట్‌ను పొందడం విఫలమైంది",
+		"CAPTCHA_GET_FAILED": "captchaను పొందడం విఫలమైంది",
+		"CAPTCHA_UPDATE_FAILED": "captchaను అప్‌డేట్ చేయడం విఫలమైంది",
+		"IMAGE_GET_FAILED": "చిత్రాన్ని పొందడం విఫలమైంది",
+		"PENDING_RECORD_NOT_FOUND": "పెండింగ్‌లో ఉన్న రికార్డు ఏదీ కనుగొనబడలేదు",
+		"INVALID_HASH": "చెల్లని హ్యాష్",
+		"SOLUTION_GET_FAILED": "పరిష్కారాన్ని పొందడం విఫలమైంది",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "అవసరమైన సంఖ్యలో పరిష్కారాలు ఉన్న డేటాసెట్‌లు ఏవీ కనుగొనబడలేదు",
+		"SOLUTION_APPROVE_FAILED": "పరిష్కారాన్ని ఆమోదించడం విఫలమైంది",
+		"SOLUTION_FLAG_FAILED": "పరిష్కారాన్ని ప్రాసెస్ చేసినట్లు గుర్తించడం విఫలమైంది",
+		"TABLES_UNDEFINED": "పట్టికలు నిర్వచించబడలేదు",
+		"CONNECTION_UNDEFINED": "కనెక్షన్ నిర్వచించబడలేదు",
+		"COMMITMENT_FLAG_FAILED": "నిబద్ధతను ప్రాసెస్ చేసినట్లు గుర్తించడం విఫలమైంది",
+		"UNKNOWN": "తెలియని డేటాబేస్ లోపం",
+		"QUERY_ERROR": "డేటాబేస్ క్వెరీ విఫలమైంది",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "యాక్సెస్ నియమాల Redis కనెక్షన్ నిర్వచించబడలేదు",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "వినియోగదారు యాక్సెస్ నియమాల నిల్వ నిర్వచించబడలేదు",
+		"SESSION_STORE_FAILED": "సెషన్‌ను నిల్వ చేయడం విఫలమైంది",
+		"SESSION_CHECK_REMOVE_FAILED": "సెషన్‌ను తనిఖీ చేసి తీసివేయడం విఫలమైంది",
+		"SESSION_GET_FAILED": "సెషన్‌ను పొందడం విఫలమైంది"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "యజమాని వినియోగదారుని మార్చలేరు",
+		"CANNOT_DELETE_OWN_USER": "మీ స్వంత ఖాతాను తొలగించలేరు",
+		"CANNOT_DELETE_LAST_USER": "చివరి వినియోగదారుని తొలగించలేరు",
+		"USER_ALREADY_EXISTS": "వినియోగదారు ఇప్పటికే ఉన్నారు",
+		"NO_SUGGESTIONS_FOUND": "సూచనలు ఏవీ కనుగొనబడలేదు",
+		"CANNOT_DEACTIVATE_LAST_SITE": "చివరి సక్రియ సైట్‌ను నిష్క్రియం చేయలేరు",
+		"DUPLICATE_SITE_NAME": "ఈ పేరుతో ఒక సైట్ ఇప్పటికే ఉంది",
+		"INVALID_SITE_NAME": "సైట్ పేరులో అక్షరాలు, సంఖ్యలు, హైఫన్‌లు, అండర్‌స్కోర్‌లు మాత్రమే ఉండాలి"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "చెల్లని పారామీటర్"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "ఫైల్ కనుగొనబడలేదు",
+		"FILE_ALREADY_EXISTS": "ఫైల్ ఇప్పటికే ఉంది",
+		"INVALID_DIR_FORMAT": "చెల్లని డైరెక్టరీ ఫార్మాట్"
+	}
+}

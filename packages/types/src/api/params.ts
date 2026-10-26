@@ -38,6 +38,7 @@ export enum ApiParams {
 	secret = "secret",
 	timestamp = "timestamp",
 	signature = "signature",
+	language = "language",
 	error = "error",
 	siteKey = "siteKey",
 	siteKeys = "siteKeys",

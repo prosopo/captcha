@@ -15,6 +15,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { I18nLookup } from "@prosopo/locale";
 import {
 	CaptchaType,
 	type IPInfoResult,
@@ -85,7 +86,7 @@ type MockReq = {
 	ip: string;
 	ja4: Record<string, unknown>;
 	logger: Record<string, unknown>;
-	i18n: { t: (s: string) => string };
+	i18n: I18nLookup;
 	requestId?: string;
 	path?: string;
 	method?: string;
@@ -121,7 +122,7 @@ const buildReqRes = (body: unknown, ip = "127.0.0.1") => {
 		ip,
 		ja4: {},
 		logger: mockLogger,
-		i18n: { t: (s: string) => s },
+		i18n: { t: (s: string): string => s, exists: (): boolean => false },
 		requestId: "test-request-id",
 		path: "/frictionless",
 		method: "POST",
@@ -409,7 +410,12 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		expect(next).not.toHaveBeenCalled();
 		expect(res.status).toHaveBeenCalledWith(401);
 		expect(res.json).toHaveBeenCalledWith(
-			expect.objectContaining({ error: "Unauthorized" }),
+			expect.objectContaining({
+				error: expect.objectContaining({
+					code: "ACCESS_POLICY_BLOCK",
+					errorId: "ACCESS_POLICY_BLOCK:PROV-89",
+				}),
+			}),
 		);
 		expect(
 			tasksInstance.frictionlessManager.registerBlockedSession,

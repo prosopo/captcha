@@ -1,5 +1,59 @@
 # @prosopo/captcha-severity
 
+## 1.4.0
+### Minor Changes
+
+- 915f30b: Traffic filter categories can now have exceptions. An exception matches visitors by country, by whether their country is inside or outside the account's market, by a minimum abuser score, or any mix of these. It then replaces the category's block or challenge action. When several exceptions match, the harshest wins: a block beats any challenge, and a stricter captcha beats a milder one. So the order of the list does not matter. For example, block proxies, but challenge those from the account's market unless their abuser score is at least 0.5.
+  
+  The account's market countries now travel to providers inside each site's traffic filter, including when a provider pulls updated sites from the portal database. An exception that depends on the market never matches while the account has no market set.
+  
+  `@prosopo/captcha-severity` gains `policyHarshness` and `harshestPolicy`. They rank a policy that may block, and the access rules now use them too, with the same ordering as before.
+
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+
+## 1.3.3
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+
+## 1.3.2
+### Patch Changes
+
+- a00fb86: Make the puzzle easier to solve on a phone.
+  
+  Two changes. First, how we work out whether the user is on a phone at all: it
+  used to be read off the IP's mobile-carrier flag, which says what network the
+  address is on and not what device is holding it, so every phone on home Wi-Fi
+  or behind a VPN counted as a desktop. It is now weighed across everything the
+  request carries — the User-Agent, the `Sec-CH-UA-Mobile` and
+  `Sec-CH-UA-Platform` client hints, the carrier flag, the connection's MSS, the
+  in-app-browser flag, and the touch readings that arrive with a solved
+  challenge. Signals that disagree cancel out, so a desktop browser claiming a
+  phone's User-Agent still counts as a desktop, and a touchscreen laptop is no
+  longer mistaken for a phone.
+  
+  Second, a phone is never asked for a placement more accurate than a fingertip
+  can give, nor handed a piece smaller than a fingertip covers. Both are applied
+  when the challenge is cut, so they hold whichever route set the difficulty —
+  the site's own setting, a traffic-filter policy, a routing machine, or
+  automatic escalation.
+
+## 1.3.1
+### Patch Changes
+
+- ebcd4ed: Bound automatic puzzle difficulty escalation, and record the level a session was
+  given so it can be read back from the session record.
+
 ## 1.3.0
 ### Minor Changes
 

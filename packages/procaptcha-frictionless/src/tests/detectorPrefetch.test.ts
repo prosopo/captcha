@@ -12,15 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { ProviderApi } from "@prosopo/api";
+import { LANGUAGE_HEADER } from "@prosopo/locale";
 import { DetectorScriptDelivery, type EnvironmentTypes } from "@prosopo/types";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const assignDetectorBundle = vi.fn();
 const getProcaptchaRandomActiveProvider = vi.fn();
+const providerApiArgs = vi.fn();
 
 vi.mock("@prosopo/api", () => ({
 	ProviderApi: class {
 		assignDetectorBundle = assignDetectorBundle;
+		constructor(...args: ConstructorParameters<typeof ProviderApi>) {
+			providerApiArgs(...args);
+		}
 	},
 }));
 
@@ -64,6 +70,21 @@ describe("detectorPrefetch", () => {
 		expect(assignDetectorBundle).toHaveBeenCalledWith(
 			SITE_KEY,
 			DetectorScriptDelivery.url,
+		);
+	});
+
+	it("sends the site's language with the assignment request", async () => {
+		getProcaptchaRandomActiveProvider.mockResolvedValue(provider);
+		assignDetectorBundle.mockResolvedValue({ useProviderBundle: true });
+
+		prefetchDetector(ENV, undefined, SITE_KEY, "tr");
+		await takePrefetchedDetector(ENV, undefined, SITE_KEY);
+
+		expect(providerApiArgs).toHaveBeenCalledWith(
+			provider.provider.url,
+			SITE_KEY,
+			undefined,
+			{ [LANGUAGE_HEADER]: "tr" },
 		);
 	});
 
