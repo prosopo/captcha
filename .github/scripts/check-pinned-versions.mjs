@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // Supply-chain guard: fail CI if any package.json declares a non-exact (floating)
 // version in dependencies, devDependencies or optionalDependencies, or if
-// package-lock.json is missing integrity hashes for resolved registry packages.
+// pnpm-lock.yaml is missing integrity hashes for resolved registry packages.
 // (peerDependencies are exempt — see the note below.)
 //
-// Floating ranges (^, ~, *, >=, "latest", ...) let `npm install` silently pull a
+// Floating ranges (^, ~, *, >=, "latest", ...) let `pnpm install` silently pull a
 // newer release than the one that was reviewed. When that newer release is
 // malicious, every fresh install / CI run is compromised before anyone notices.
 // Recent npm supply-chain attacks that worked exactly this way:
@@ -20,8 +20,9 @@
 //                password stealer on install.
 //   - Nov 2018  event-stream / flatmap-stream — transitive dep backdoored to steal
 //                bitcoin-wallet credentials.
-// Pinning exact versions + committing the lockfile + `npm ci` means a new malicious
-// release is NOT pulled until the version is explicitly bumped and reviewed.
+// Pinning exact versions + committing the lockfile + `pnpm install
+// --frozen-lockfile` means a new malicious release is NOT pulled until the
+// version is explicitly bumped and reviewed.
 //
 // peerDependencies are intentionally exempt: they express a compatibility *range*
 // against whatever the consumer installs, so pinning them would wrongly constrain
@@ -29,6 +30,7 @@
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
+import { parsePnpmLock, parseResolution } from "./pnpm-lockfile.mjs";
 
 const ROOT = process.cwd();
 
@@ -89,7 +91,8 @@ function findPackageJsons(dir, out = []) {
 /**
  * Is `spec` an acceptable, non-floating dependency specifier?
  * Accepts: an exact semver (1.2.3, 1.2.3-rc.1+build), or a non-registry
- * specifier that is inherently pinned (file:, link:, exact npm: alias).
+ * specifier that is inherently pinned (file:, link:, workspace:*, exact npm:
+ * alias).
  * Rejects: ^, ~, *, x, latest, >=, <, ||, " - " ranges and bare/empty values.
  */
 const EXACT_SEMVER = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
@@ -101,11 +104,12 @@ function isPinned(spec) {
 	// Local sources are pinned by definition.
 	if (v.startsWith("file:") || v.startsWith("link:")) return true;
 
-	// Workspace protocol with an explicit version (workspace:1.2.3). Reject
-	// floating workspace ranges (workspace:*, workspace:^).
+	// Workspace protocol: always the local copy, and `pnpm publish` rewrites
+	// `workspace:*` and `workspace:1.2.3` to that exact version. Reject
+	// workspace:^ / workspace:~, which publish as floating ranges.
 	if (v.startsWith("workspace:")) {
 		const rest = v.slice("workspace:".length);
-		return EXACT_SEMVER.test(rest);
+		return rest === "*" || EXACT_SEMVER.test(rest);
 	}
 
 	// npm alias: must point at an exact version (npm:pkg@1.2.3).
@@ -148,32 +152,32 @@ function checkPackageJson(file) {
  * so a tampered tarball cannot be substituted for the reviewed one.
  */
 function checkLockfile(file) {
-	let lock;
-	try {
-		lock = JSON.parse(readFileSync(file, "utf8"));
-	} catch (e) {
-		errors.push(`${relative(ROOT, file)}: invalid JSON (${e.message})`);
-		return;
-	}
 	const rel = relative(ROOT, file);
-	if ((lock.lockfileVersion ?? 0) < 2) {
+	const lock = parsePnpmLock(readFileSync(file, "utf8"));
+	if (!/^9\./.test(lock.lockfileVersion ?? "")) {
 		errors.push(
-			`${rel}: lockfileVersion ${lock.lockfileVersion} is too old; needs >= 2 for integrity hashes`,
+			`${rel}: lockfileVersion ${lock.lockfileVersion} is not supported; this check reads the v9 layout`,
 		);
 		return;
 	}
-	const packages = lock.packages || {};
-	for (const [key, entry] of Object.entries(packages)) {
-		// Root project and workspace members ("" and workspace dirs) and local
-		// links have no registry tarball / integrity — skip them.
-		if (key === "" || !key.includes("node_modules/")) continue;
-		if (entry.link === true) continue;
-		// Only registry-resolved deps must have integrity. git/file/url deps are
-		// pinned by their resolved field instead.
-		const resolved = entry.resolved || "";
+	if (lock.importers.size === 0 || lock.packages.size === 0) {
+		errors.push(`${rel}: no importers or packages found; cannot verify it`);
+		return;
+	}
+	for (const [key, entry] of lock.packages) {
+		if (entry.resolution === undefined) {
+			errors.push(`${rel}  ${key}: no resolution`);
+			continue;
+		}
+		const resolution = parseResolution(entry.resolution);
+		if (resolution.integrity) continue;
+		// git and local directory deps are pinned by commit / path instead.
+		if (resolution.type === "git" || resolution.type === "directory") continue;
+		// A plain tarball URL outside a registry is pinned by the URL itself.
+		const tarball = resolution.tarball ?? "";
 		const isRegistry =
-			resolved === "" || /^https?:\/\/[^/]*registry\./.test(resolved);
-		if (isRegistry && !entry.integrity) {
+			tarball === "" || /^https?:\/\/[^/]*registry\./.test(tarball);
+		if (isRegistry) {
 			errors.push(`${rel}  ${key}: missing integrity hash`);
 		}
 	}
@@ -185,15 +189,15 @@ for (const f of pkgFiles) checkPackageJson(f);
 // Lockfiles live next to each package.json that owns one.
 const seenLocks = new Set();
 for (const f of pkgFiles) {
-	const lock = join(dirname(f), "package-lock.json");
+	const lock = join(dirname(f), "pnpm-lock.yaml");
 	if (seenLocks.has(lock)) continue;
 	try {
 		statSync(lock);
-		seenLocks.add(lock);
-		checkLockfile(lock);
 	} catch {
-		/* no lockfile here */
+		continue;
 	}
+	seenLocks.add(lock);
+	checkLockfile(lock);
 }
 
 if (errors.length > 0) {
@@ -204,7 +208,7 @@ if (errors.length > 0) {
 	console.error(
 		"\nDependencies in dependencies/devDependencies/optionalDependencies must use an" +
 			'\nexact version (e.g. "1.2.3", not "^1.2.3"). peerDependencies may use ranges.' +
-			"\nThis prevents `npm install` from silently pulling a malicious newer release." +
+			"\nThis prevents `pnpm install` from silently pulling a malicious newer release." +
 			"\nRun `node .github/scripts/check-pinned-versions.mjs` locally to reproduce.",
 	);
 	process.exit(1);

@@ -14,33 +14,36 @@
 
 import {
 	CaptchaType,
-	ContextType,
 	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
 	type IUserData,
 	type IUserSettings,
+	MAX_PAD_BYTES,
 	type Timestamp,
 	TrafficFilterAction,
 	abuseScoreThresholdDefault,
 	abuseScoreThresholdExceedActionDefault,
 	captchaTypeDefault,
 	cityChangeActionDefault,
-	contextAwareThresholdDefault,
 	countryChangeActionDefault,
 	distanceExceedActionDefault,
 	distanceThresholdKmDefault,
 	domainsDefault,
 	frictionlessThresholdDefault,
+	frictionlessTypesDefault,
 	imageMaxRoundsDefault,
+	imageMinRoundsDefault,
 	imageThresholdDefault,
 	ispChangeActionDefault,
 	powDifficultyDefault,
+	puzzleMaxDifficultyMax,
 	requireAllConditionsDefault,
+	trafficFilterAbuserScoreThresholdDefault,
 } from "@prosopo/types";
-import mongoose from "mongoose";
+import type mongoose from "mongoose";
 import { Schema as MongooseSchema, Schema } from "mongoose";
 import type { IDatabase } from "./mongo.js";
-import type { ClientRecord, Tables } from "./provider.js";
+import type { IUserDataSlim, Tables } from "./provider.js";
 
 export type UserDataRecord = mongoose.Document & IUserData;
 
@@ -113,9 +116,58 @@ export const IPValidationRulesSchema = new Schema({
 	},
 });
 
+// Per-render puzzle tunables, mirroring `PuzzleSettingsSchema` in
+// @prosopo/types. Every field is optional: the provider merges whatever is
+// set on top of the asset package's defaults, so a site that overrides one
+// value must not have the other five written into its record.
+//
+// Declared explicitly rather than left to the strict-mode default for the
+// same reason as `frictionlessTypes` below: an undeclared field is dropped
+// on write, so the portal's puzzle settings would round-trip through zod,
+// reach the database and vanish. Bounds mirror the zod field schemas.
+// `_id: false` because this is a value object, not a document.
+export const PuzzleRenderSettingsSchema = new Schema(
+	{
+		decoyCount: { type: Number, min: 0, max: 200, required: false },
+		decoyEdgeDarkness: { type: Number, min: 0, max: 40, required: false },
+		decoyBodyBrightness: { type: Number, min: -20, max: 20, required: false },
+		decoyHoleDarken: { type: Number, min: 0, max: 1, required: false },
+		holeDarken: { type: Number, min: 0, max: 1, required: false },
+		pieceScale: {
+			type: new Schema(
+				{
+					min: { type: Number, min: 0.05, max: 0.95, required: false },
+					max: { type: Number, min: 0.05, max: 0.95, required: false },
+				},
+				{ _id: false },
+			),
+			required: false,
+		},
+	},
+	{ _id: false },
+);
+
+// Mirrors `AudioSettingsSchema`, declared for the same reason as the puzzle block.
+export const AudioRenderSettingsSchema = new Schema(
+	{
+		digitCount: { type: Number, min: 3, max: 8, required: false },
+		noiseSnrDb: { type: Number, min: 3, max: 60, required: false },
+		babbleGain: { type: Number, min: 0, max: 0.6, required: false },
+		babbleVoices: { type: Number, min: 0, max: 4, required: false },
+		reverbMix: { type: Number, min: 0, max: 0.6, required: false },
+		gapMs: { type: Number, min: 0, max: 1500, required: false },
+	},
+	{ _id: false },
+);
+
+// Mirrors `SelectableCaptchaTypeSchema`.
+const SELECTABLE_CAPTCHA_TYPES: CaptchaType[] = Object.values(
+	CaptchaType,
+).filter((captchaType) => captchaType !== CaptchaType.audio);
+
 // Sub-schema for one trafficFilter category's policy. `_id: false` prevents
 // Mongoose from stamping an implicit ObjectId onto each subdoc.
-export const TrafficCategoryPolicySchema = new Schema(
+const TrafficCategoryActionSchema = new Schema(
 	{
 		action: {
 			type: String,
@@ -124,20 +176,49 @@ export const TrafficCategoryPolicySchema = new Schema(
 		},
 		captchaType: {
 			type: String,
-			enum: CaptchaType,
+			enum: SELECTABLE_CAPTCHA_TYPES,
 			required: false,
 		},
 		powDifficulty: { type: Number, required: false },
 		solvedImagesCount: { type: Number, required: false },
 		puzzleTolerance: { type: Number, required: false },
+		// Bytes of tarpit padding the provider appends to this category's
+		// challenge issuance response. Declared here because mongoose is
+		// strict by default: the field round-tripped through zod on both the
+		// portal save and the provider's client-list push, and was then
+		// dropped on write at each end — so `checkTrafficFilter` only ever
+		// read `undefined` and no category was ever padded.
+		padBytes: { type: Number, min: 0, max: MAX_PAD_BYTES, required: false },
+		iconOrderTolerance: { type: Number, required: false },
+		// Mixed: the shape is validated by zod, not mongoose.
+		iconOrder: { type: MongooseSchema.Types.Mixed, required: false },
+		// Per-category render overrides, layered on top of the site-wide
+		// `puzzle` and `audio` blocks by the traffic filter.
+		puzzle: { type: PuzzleRenderSettingsSchema, required: false },
+		audio: { type: AudioRenderSettingsSchema, required: false },
 	},
 	{ _id: false },
 );
 
+const TrafficCategoryExceptionSchema = TrafficCategoryActionSchema.clone().add({
+	countries: { type: [String], default: undefined, required: false },
+	inMarket: { type: Boolean, required: false },
+	minAbuserScore: { type: Number, min: 0, max: 1, required: false },
+});
+
+export const TrafficCategoryPolicySchema =
+	TrafficCategoryActionSchema.clone().add({
+		exceptions: {
+			type: [TrafficCategoryExceptionSchema],
+			default: undefined,
+			required: false,
+		},
+	});
+
 export const UserSettingsSchema = new Schema({
 	captchaType: {
 		type: String,
-		enum: CaptchaType,
+		enum: SELECTABLE_CAPTCHA_TYPES,
 		default: captchaTypeDefault,
 	},
 	verifiedTimeout: {
@@ -157,6 +238,49 @@ export const UserSettingsSchema = new Schema({
 		type: MongooseSchema.Types.Mixed,
 		default: () => ({ ...frictionlessThresholdDefault }),
 	},
+	// Which challenge types the frictionless flow may serve. Declared here
+	// because mongoose is strict by default: a field absent from the schema is
+	// silently dropped on write, so without this the setting round-trips
+	// through zod, reaches the database, and vanishes — leaving the provider to
+	// read `undefined` and serve every type as though nothing were disabled.
+	//
+	// `_id: false` because this is a value object, not a document; mongoose
+	// would otherwise stamp an ObjectId into every site's settings.
+	frictionlessTypes: {
+		type: new Schema(
+			{
+				image: { type: Boolean, default: true },
+				puzzle: { type: Boolean, default: true },
+				iconOrder: { type: Boolean, default: true },
+			},
+			{ _id: false },
+		),
+		default: () => ({ ...frictionlessTypesDefault }),
+	},
+	// No defaults at either level: an absent flag has to stay absent so that
+	// `captchaTypeFeatureFlagDefaults` decides it, rather than a value frozen
+	// into the record when it was first written.
+	captchaTypeFeatureFlags: {
+		type: new Schema(
+			{
+				puzzle: { type: Boolean, required: false },
+				iconOrder: { type: Boolean, required: false },
+				audio: { type: Boolean, required: false },
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
+	// Unset for the same reason as `captchaTypeFeatureFlags`.
+	widgetFeatureFlags: {
+		type: new Schema(
+			{
+				puzzleImageSwitch: { type: Boolean, required: false },
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
 	powDifficulty: { type: Number, default: powDifficultyDefault },
 	imageThreshold: {
 		type: Number,
@@ -167,10 +291,46 @@ export const UserSettingsSchema = new Schema({
 		default: imageMaxRoundsDefault,
 		required: false,
 	},
+	imageMinRounds: {
+		type: Number,
+		default: imageMinRoundsDefault,
+		required: false,
+	},
 	puzzleTolerance: {
 		type: Number,
 		required: false,
 	},
+	iconOrderTolerance: {
+		type: Number,
+		required: false,
+	},
+	iconOrder: {
+		type: MongooseSchema.Types.Mixed,
+		required: false,
+	},
+	// Ceiling on automatic puzzle escalation, in difficulty-ladder levels.
+	// No default: an absent value means "site never set this", and the
+	// provider falls back to `puzzleMaxDifficultyDefault` at read time. A
+	// schema default would be indistinguishable from an operator explicitly
+	// choosing that level.
+	puzzleMaxDifficulty: {
+		type: Number,
+		min: 0,
+		max: puzzleMaxDifficultyMax,
+		required: false,
+	},
+	// Site-wide puzzle and audio render overrides. No default: an absent
+	// block means "use the provider defaults", and defaulting it would write
+	// an empty subdocument onto every site regardless of captcha type.
+	puzzle: {
+		type: PuzzleRenderSettingsSchema,
+		required: false,
+	},
+	audio: {
+		type: AudioRenderSettingsSchema,
+		required: false,
+	},
+	audioAccessibilityEnabled: { type: Boolean, required: false },
 	ipValidationRules: IPValidationRulesSchema,
 	domains: {
 		type: [String],
@@ -179,22 +339,6 @@ export const UserSettingsSchema = new Schema({
 	disallowWebView: {
 		type: Boolean,
 		default: false,
-	},
-	contextAware: {
-		enabled: { type: Boolean, default: false },
-		contexts: {
-			type: mongoose.Schema.Types.Mixed,
-			default: {
-				[ContextType.Default]: {
-					type: ContextType.Default,
-					threshold: contextAwareThresholdDefault,
-				},
-				[ContextType.Webview]: {
-					type: ContextType.Webview,
-					threshold: contextAwareThresholdDefault,
-				},
-			},
-		},
 	},
 	spamEmailDomainCheckEnabled: {
 		type: Boolean,
@@ -222,7 +366,12 @@ export const UserSettingsSchema = new Schema({
 		proxy: { type: TrafficCategoryPolicySchema, required: false },
 		tor: { type: TrafficCategoryPolicySchema, required: false },
 		abuser: { type: TrafficCategoryPolicySchema, required: false },
-		abuserScoreThreshold: { type: Number, min: 0, max: 1, default: 0 },
+		abuserScoreThreshold: {
+			type: Number,
+			min: 0,
+			max: 1,
+			default: trafficFilterAbuserScoreThresholdDefault,
+		},
 		datacenter: { type: TrafficCategoryPolicySchema, required: false },
 		datacenterNameAllowlist: { type: [String], required: false },
 		datacenterNameDenylist: { type: [String], required: false },
@@ -230,6 +379,7 @@ export const UserSettingsSchema = new Schema({
 		mobile: { type: TrafficCategoryPolicySchema, required: false },
 		satellite: { type: TrafficCategoryPolicySchema, required: false },
 		crawler: { type: TrafficCategoryPolicySchema, required: false },
+		marketCountries: { type: [String], default: undefined, required: false },
 	},
 	storeMetadata: {
 		type: Boolean,
@@ -245,6 +395,9 @@ export const UserSettingsSchema = new Schema({
 			default: "morse",
 		},
 	},
+	allowAgents: { type: Boolean, required: false },
+	assetOrigin: { type: String, required: false },
+	clientUrl: { type: String, required: false },
 });
 
 export const UserDataSchema: mongoose.Schema<UserDataRecord> = new Schema({
@@ -278,6 +431,7 @@ type AccountRecord = mongoose.Document & {
 	signupEmail: string;
 	tier: string;
 	tierRequestQuota: number;
+	marketCountries?: string[];
 	marketingPreferences: boolean;
 	users: User[];
 	sites: {
@@ -299,6 +453,7 @@ export const AccountSchema = new Schema<AccountRecord>({
 	signupEmail: String,
 	tier: String,
 	tierRequestQuota: Number,
+	marketCountries: { type: [String], default: undefined },
 	marketingPreferences: Boolean,
 	users: [
 		{
@@ -320,6 +475,9 @@ export const AccountSchema = new Schema<AccountRecord>({
 				powDifficulty: Number,
 				captchaType: String,
 				frictionlessThreshold: MongooseSchema.Types.Mixed,
+				frictionlessTypes: MongooseSchema.Types.Mixed,
+				captchaTypeFeatureFlags: MongooseSchema.Types.Mixed,
+				widgetFeatureFlags: MongooseSchema.Types.Mixed,
 				ipValidationRules: IPValidationRulesSchema,
 			},
 			createdAt: Number,
@@ -336,5 +494,7 @@ export enum TableNames {
 
 export interface IClientDatabase extends IDatabase {
 	getTables(): Tables<TableNames>;
-	getUpdatedClients(updatedAtTimestamp: Timestamp): Promise<ClientRecord[]>;
+	// Plain objects built from the portal's account documents, not mongoose
+	// Documents — `IUserDataSlim` is what this actually returns.
+	getUpdatedClients(updatedAtTimestamp: Timestamp): Promise<IUserDataSlim[]>;
 }

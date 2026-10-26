@@ -1,5 +1,129 @@
 # @prosopo/widget-skeleton
 
+## 2.10.4
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+
+## 2.10.3
+### Patch Changes
+
+- f31f0d5: Bump vite from 8.1.5 to 8.1.6 in /packages/widget-skeleton
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+
+## 2.10.2
+### Patch Changes
+
+- a5c953d: Lay the widget out at its natural width in hosts that size it by measuring it.
+  
+  Size containment on the widget's container-query element left it with no
+  intrinsic width, so an inline-block, float, `fit-content` box, table cell,
+  flex item, auto grid track or absolutely positioned host found nothing to
+  shrink-wrap and fell back to the widget's 170px minimum — rendering it in its
+  smallest breakpoint on pages with room for all 302px. A zero-height measuring
+  row now states both intrinsic widths, so the widget fills its natural width
+  where there is room and still shrinks into parents narrower than it.
+  
+  `@prosopo/config` gains a `browser` test type, which keeps vitest browser-mode
+  suites out of jsdom runs.
+
+## 2.10.1
+### Patch Changes
+
+- 92edebd: The widget's loading spinner and the reload icon no longer announce hard-coded English. The spinner is a progress indicator labelled from the new `WIDGET.LOADING` string (in all 32 languages) once translations are loaded, and the reload icon's tooltip uses the same translated label as the button.
+- 6d5b7f5: The widget now lays itself out right to left when its language is written right to left (Arabic today). The bundle sets `dir` on the widget from its language, and the checkbox, spinner and logo use start/end spacing so they mirror. The widget still ignores the page's own direction, so an English widget on an Arabic page stays left to right. `@prosopo/locale` gains `getLanguageDirection` for this.
+
+## 2.10.0
+### Minor Changes
+
+- 3d45c37: Stop the widget's hover highlights costing a phone user their first tap.
+  
+  Tapping the checkbox on an iPhone did nothing the first time. The second tap worked. The cause is a rule iOS applies to every page: if the first tap on a control changes what is under the finger, Safari treats it as "show me the hover state" rather than "activate this", and withholds the click. Every control in the widget that lights up on hover was therefore asking to be tapped twice.
+  
+  Hover feedback is now drawn only where a pointer can actually rest on something. On a desktop nothing changes. On a touch screen the highlight never appears and the first tap activates the control, which is what a visitor expects.
+  
+  Four places had it, and only one of them was the checkbox:
+  
+  - the **checkbox** — a state layer around the box
+  - the **reload button** in the challenge dialog — a fill change
+  - the dialog's **action buttons**, Cancel, Next and Submit — a state layer
+  - the **widget container** itself, via a CSS `:hover` rule. This one is easy to miss and matters most: the box that lights up is the one the checkbox sits inside, so it repaints under the finger even when the tap never touches a control with its own hover.
+  
+  The first three ask `matchMedia("(hover: hover)")` before listening for the pointer at all; the fourth is wrapped in the matching media query. The image tiles never had hover feedback and are unchanged.
+  
+  None of this came from the recent randomisation work — the React components these replaced carried the same handlers, so it has been there as long as the widget has.
+  
+  Covered by a test per control asserting no state layer is drawn when the device reports it cannot hover, plus tests for the check itself, including that it assumes a pointer when the environment cannot answer — which is what keeps the existing desktop behaviour, and every existing hover test, intact.
+
+## 2.9.0
+### Minor Changes
+
+- e180281: Give the checkbox a different set of class names and a different DOM shape on every page load, so a solver script cannot hardcode a way to find it.
+  
+  Until now the widget rendered the same markup for every user, forever. The control was always `input.prosopo-checkbox__box`, the label was always `.prosopo-checkbox__label`, and the box always sat inside the same four nested divs at the same pixel offset. Anyone writing a script to click it only had to work that out once. The element `id` was already randomised per render, which bought nothing while everything around it stayed fixed.
+  
+  Two things change, both generated fresh each time a widget mounts:
+  
+  - **The names.** Every class inside the checkbox's shadow root is now an 8-character token drawn at mount, in both the loading skeleton and the live control. Selectors scraped from one page load are dead on the next.
+  - **The shape.** The fixed four-div nest is now between two and five wrappers, each randomly a `div` or a `span`, so structural and `nth-child` selectors do not hold either. Only elements with no accessible role are used, so no landmark is introduced for a screen reader.
+  
+  Two related fixes come with it:
+  
+  - `procaptcha-common`'s checkbox set `data-cy="captcha-checkbox"` on the real input unconditionally, shipping an end-to-end test hook to production. The widget skeleton has always withheld that attribute outside development; the component now does the same.
+  - Finding the checkbox's interactive area was itself done by class lookup across two shadow boundaries. `createCheckboxElement` and `createWidgetSkeletonElement` now return the node directly, which is what allows the names to change at all, and removes a lookup that could silently return `null`.
+  
+  The spinner rules that `procaptcha-common` renders used to live in `widget-skeleton`'s stylesheet — an undeclared dependency that only worked because the component happened to render inside that shadow root. Each package now carries its own, so the two can name things independently.
+  
+  Breaking for direct API consumers: `WIDGET_CHECKBOX_SPINNER_CSS_CLASS` is gone, since no such class exists any more, and `createWidgetSkeletonElement` returns `{ element, interactiveArea }` rather than a bare element. `createWidgetSkeleton` — what the bundle actually calls — is unchanged.
+  
+  The one class still fixed is `prosopo-checkbox` on the host element, which sits in the embedding page's light DOM where a site's own CSS may target it. Note also what this does not do: the control is still a real `<input type="checkbox">` in an open shadow root, so a script that looks for it by role or type rather than by name will still find it. Closing the shadow root, or making the real input harder to tell from decoys, is a separate decision with accessibility and testability costs to weigh.
+
+## 2.8.7
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+
 ## 2.8.6
 ### Patch Changes
 

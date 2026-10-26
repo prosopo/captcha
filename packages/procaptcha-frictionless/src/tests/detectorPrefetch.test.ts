@@ -12,15 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { ProviderApi } from "@prosopo/api";
+import { LANGUAGE_HEADER } from "@prosopo/locale";
 import type { EnvironmentTypes } from "@prosopo/types";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const assignDetectorBundle = vi.fn();
 const getProcaptchaRandomActiveProvider = vi.fn();
+const providerApiArgs = vi.fn();
 
 vi.mock("@prosopo/api", () => ({
 	ProviderApi: class {
 		assignDetectorBundle = assignDetectorBundle;
+		constructor(...args: ConstructorParameters<typeof ProviderApi>) {
+			providerApiArgs(...args);
+		}
 	},
 }));
 
@@ -41,6 +47,7 @@ const provider = { provider: { url: "https://pronode.example" } };
 afterEach(() => {
 	clearPrefetchedDetectors();
 	vi.clearAllMocks();
+	vi.useRealTimers();
 });
 
 describe("detectorPrefetch", () => {
@@ -64,13 +71,22 @@ describe("detectorPrefetch", () => {
 		expect(assignDetectorBundle).toHaveBeenCalledWith(SITE_KEY);
 	});
 
-	it("is shareable, so every widget on a page claims the same assignment", async () => {
-		// Previously single-use. That meant a page mounting one widget per form
-		// paid a provider resolve + assign per widget; one production
-		// integration mounts eight, so a page view cost eight assign calls.
-		// Sharing is sound because detectorSessionId binds to a bundleId purely
-		// so the provider can resolve which cipher keys decrypt that widget's
-		// readings, and widgets sharing an assignment run the same bundle.
+	it("sends the site's language with the assignment request", async () => {
+		getProcaptchaRandomActiveProvider.mockResolvedValue(provider);
+		assignDetectorBundle.mockResolvedValue({ useProviderBundle: true });
+
+		prefetchDetector(ENV, undefined, SITE_KEY, "tr");
+		await takePrefetchedDetector(ENV, undefined, SITE_KEY);
+
+		expect(providerApiArgs).toHaveBeenCalledWith(
+			provider.provider.url,
+			SITE_KEY,
+			undefined,
+			{ [LANGUAGE_HEADER]: "tr" },
+		);
+	});
+
+	it("hands every widget on the page the same assignment", async () => {
 		getProcaptchaRandomActiveProvider.mockResolvedValue(provider);
 		assignDetectorBundle.mockResolvedValue({ useProviderBundle: true });
 
@@ -84,9 +100,6 @@ describe("detectorPrefetch", () => {
 	});
 
 	it("does not hand a failed pin to a later widget", async () => {
-		// The guarantee the old single-use behaviour existed for. It now comes
-		// from dropping the entry on rejection instead, and from customDetectBot
-		// only claiming on a first attempt — a retry re-resolves by construction.
 		getProcaptchaRandomActiveProvider.mockRejectedValue(
 			new Error("no provider"),
 		);
@@ -96,6 +109,35 @@ describe("detectorPrefetch", () => {
 		await (first as Promise<unknown>).catch(() => undefined);
 
 		expect(takePrefetchedDetector(ENV, undefined, SITE_KEY)).toBeUndefined();
+	});
+
+	it("does not hand out a pin older than a minute", () => {
+		vi.useFakeTimers();
+		getProcaptchaRandomActiveProvider.mockResolvedValue(provider);
+		assignDetectorBundle.mockResolvedValue({ useProviderBundle: true });
+
+		prefetchDetector(ENV, undefined, SITE_KEY);
+		expect(takePrefetchedDetector(ENV, undefined, SITE_KEY)).toBeDefined();
+
+		vi.advanceTimersByTime(61_000);
+		expect(takePrefetchedDetector(ENV, undefined, SITE_KEY)).toBeUndefined();
+	});
+
+	it("starts a fresh request when the existing one is older than a minute", () => {
+		vi.useFakeTimers();
+		getProcaptchaRandomActiveProvider.mockResolvedValue(provider);
+		assignDetectorBundle.mockResolvedValue({ useProviderBundle: true });
+
+		prefetchDetector(ENV, undefined, SITE_KEY);
+		const first = takePrefetchedDetector(ENV, undefined, SITE_KEY);
+
+		vi.advanceTimersByTime(61_000);
+		prefetchDetector(ENV, undefined, SITE_KEY);
+
+		expect(getProcaptchaRandomActiveProvider).toHaveBeenCalledTimes(2);
+		const second = takePrefetchedDetector(ENV, undefined, SITE_KEY);
+		expect(second).toBeDefined();
+		expect(second).not.toBe(first);
 	});
 
 	it("does not start a second request for the same key", () => {

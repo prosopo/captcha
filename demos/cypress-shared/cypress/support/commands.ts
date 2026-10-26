@@ -23,6 +23,7 @@ import {
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
+	type IFrictionlessTypes,
 	type IUserSettings,
 	Tier,
 	frictionlessImageThresholdDefault,
@@ -34,6 +35,7 @@ import { getPair } from "@prosopo/keyring";
 import type { CaptchaWithoutId } from "@prosopo/types";
 
 export const MAX_IMAGE_CAPTCHA_ROUNDS = 3;
+export const MIN_IMAGE_CAPTCHA_ROUNDS = 2;
 
 // Solution record keyed by item hashes + target for stable matching across
 // dataset rebuilds. We can't match by captchaContentId because buildDataset
@@ -62,8 +64,7 @@ export function buildTestSolutions(
 
 declare global {
 	namespace Cypress {
-		// biome-ignore lint/suspicious/noExplicitAny: TODO fix any
-		interface Chainable<Subject = any> {
+		interface Chainable<Subject> {
 			clickIAmHuman(): Cypress.Chainable<Captcha[]>;
 
 			clickCheckbox(): Cypress.Chainable<JQuery<HTMLElement>>;
@@ -77,6 +78,10 @@ declare global {
 			getSelectors(captcha: Captcha): Chainable<string[]>;
 
 			clickNextButton(): Chainable<JQuery<HTMLElement>>;
+
+			// Wait for the widget to render the given image captcha round
+			// before interacting with it.
+			waitForCaptchaRound(index: number): Chainable<JQuery<HTMLElement>>;
 
 			elementExists(element: string): Chainable<Subject>;
 
@@ -202,47 +207,28 @@ function waitForProcaptchaScript(): Cypress.Chainable<void> {
 	});
 }
 
+// Clicked straight off the query, not through `cy.wrap`: the widget swaps its
+// placeholder checkbox for the challenge's own once detection answers, and a
+// wrapped element that has since left the page reports a (0, 0) position, so
+// realClick would land on the page corner instead of the checkbox.
 function clickCheckbox(): Cypress.Chainable<JQuery<HTMLElement>> {
-	// Wait for checkbox to exist and be visible
 	return getWidgetElement(checkboxClass, { timeout: 12000 })
-		.should("exist")
 		.should("be.visible")
 		.should("not.be.disabled")
 		.first()
-		.then(($checkbox) => {
-			// Log checkbox details for debugging
-			cy.task("log", `Found checkbox: ${$checkbox.length} element(s)`);
-			cy.task("log", `Checkbox is visible: ${$checkbox.is(":visible")}`);
-			cy.task("log", `Checkbox is disabled: ${$checkbox.is(":disabled")}`);
-			cy.task("log", `Checkbox checked state: ${$checkbox.is(":checked")}`);
-			cy.wrap($checkbox).realClick();
-		});
+		.realClick();
 }
 
 function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 	// First wait for the procaptcha script to be loaded
 	return cy.waitForProcaptchaScript().then(() => {
-		cy.intercept("POST", "**/prosopo/provider/client/captcha/**").as(
+		// The checkbox takes a click before /frictionless has answered, so a
+		// `captcha/**` pattern would catch that response instead.
+		cy.intercept("POST", "**/prosopo/provider/client/captcha/image").as(
 			"getCaptcha",
 		);
 
-		// Log for debugging
-		cy.task("log", `Looking for checkbox with selector: ${checkboxClass}`);
-
-		// Wait for checkbox to exist and be visible
-		getWidgetElement(checkboxClass, { timeout: 12000 })
-			.should("exist")
-			.should("be.visible")
-			.should("not.be.disabled")
-			.first()
-			.then(($checkbox) => {
-				// Log checkbox details for debugging
-				cy.task("log", `Found checkbox: ${$checkbox.length} element(s)`);
-				cy.task("log", `Checkbox is visible: ${$checkbox.is(":visible")}`);
-				cy.task("log", `Checkbox is disabled: ${$checkbox.is(":disabled")}`);
-				cy.task("log", `Checkbox checked state: ${$checkbox.is(":checked")}`);
-				cy.wrap($checkbox).realClick();
-			});
+		clickCheckbox();
 
 		return cy
 			.wait("@getCaptcha", { timeout: 36000 })
@@ -259,6 +245,7 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 					captchas.length,
 				);
 				expect(captchas).to.have.lengthOf.lte(MAX_IMAGE_CAPTCHA_ROUNDS);
+				expect(captchas).to.have.lengthOf.gte(MIN_IMAGE_CAPTCHA_ROUNDS);
 				expect(captchas[0]).to.have.property("items");
 				console.log(
 					"-----------------------------captchas[0].items",
@@ -273,27 +260,21 @@ function clickIAmHuman(): Cypress.Chainable<Captcha[]> {
 	});
 }
 
+/**
+ * The tiles of the round currently on screen.
+ *
+ * The widget draws its class names and its nesting depth fresh on every load,
+ * so there is nothing here to walk up from and nothing to name: this waits on
+ * the instruction line's test hook and then takes the images out of the round's
+ * own hook. The walk this replaced climbed four parents and stepped sideways,
+ * which only ever worked because the markup was the same for everyone.
+ */
 function captchaImages(): Cypress.Chainable<JQuery<HTMLElement>> {
-	// Wait for the modal to be visible first
-	return getWidgetElement(".prosopo-modalInner p", { timeout: 10000 })
+	return getWidgetElement('[data-cy="captcha-prompt"]', { timeout: 10000 })
 		.should("be.visible")
-		.then(($p) => {
-			const $pWithText = $p.filter((index, el) => {
-				return Cypress.$(el).text().includes("all containing");
-			});
-
-			cy.wrap($pWithText)
-				.should("be.visible")
-				.parent()
-				.parent()
-				.parent()
-				.parent()
-				.children()
-				.next()
-				.children()
-				.first()
-				.children()
-				.should("have.length.gte", 1) // Ensure at least one image exists
+		.then(() => {
+			getWidgetElement('[data-cy="captcha-panel"] img', { timeout: 10000 })
+				.should("have.length.gte", 1)
 				.as("captchaImages");
 		});
 }
@@ -383,14 +364,43 @@ function clickCorrectCaptchaImages(
 }
 
 function clickNextButton(): Chainable<JQuery<HTMLElement>> {
-	// Ensure button exists and is visible before clicking
-	return getWidgetElement('button[data-cy="button-next"]')
+	// The widget ignores untrusted events, so this has to be a realClick, which
+	// means it clicks at coordinates rather than at an element. Callers should
+	// wait for the round to settle first — see waitForCaptchaRound.
+	cy.task("log", "Next button: waiting for it to be visible...");
+	// Nothing may sit between the query and the click: a `.then()` that queues
+	// a command yields that command's subject, and realClick needs the button.
+	// Not `button[data-cy=...]`: the widget draws the element each control is
+	// made of per load, so half of all runs render this one as a div carrying the
+	// button role. The hook is the only part that holds.
+	return getWidgetElement('[data-cy="button-next"]')
 		.should("exist")
 		.should("be.visible")
-		.then(($btn) => {
-			cy.task("log", "Next button found and visible, clicking...");
-			cy.wrap($btn).realClick();
-			cy.task("log", "Next button clicked!");
+		.realClick();
+}
+
+/**
+ * Wait until the widget is showing the given round and that round's images
+ * have finished loading.
+ *
+ * Both matter before clicking. The round marker says the new round has been
+ * committed — the next/submit button is the same DOM node in every round, only
+ * its label and handler change (see CaptchaComponent.tsx). The images matter
+ * because they carry the height of the grid: realClick measures the button,
+ * then dispatches at those coordinates, so an image that finishes loading in
+ * between pushes the button down and the click lands on the image above it
+ * instead of on the button.
+ */
+function waitForCaptchaRound(index: number): Chainable<JQuery<HTMLElement>> {
+	return getWidgetElement(`[data-cy="captcha-${index}"]`, { timeout: 15000 })
+		.should("be.visible")
+		.should(($round) => {
+			const images = $round.find("img");
+			expect(images.length, `round ${index} image count`).to.be.gte(1);
+			images.each((_, image) => {
+				const { complete, naturalWidth, src } = image as HTMLImageElement;
+				expect(complete && naturalWidth > 0, `${src} loaded`).to.equal(true);
+			});
 		});
 }
 
@@ -403,17 +413,20 @@ function elementExists(selector: string) {
 /**
  * Settings a test may hand to `registerSiteKey`.
  *
- * Widened past `Partial<IUserSettings>` on one field only: the score ladder
+ * Widened past `Partial<IUserSettings>` on two fields. The score ladder
  * migration has to keep working for records still holding the pre-ladder bare
  * number, and the ladder spec registers exactly that shape to prove it. Typed
  * as an explicit union rather than cast at the call site, so the legacy shape
- * is documented instead of smuggled through `unknown`.
+ * is documented instead of smuggled through `unknown`. `frictionlessTypes` may
+ * be partial because the admin endpoint fills the missing types in with their
+ * defaults.
  */
 export type RegisterSiteKeySettings = Omit<
 	Partial<IUserSettings>,
-	"frictionlessThreshold"
+	"frictionlessThreshold" | "frictionlessTypes"
 > & {
 	frictionlessThreshold?: IUserSettings["frictionlessThreshold"] | number;
+	frictionlessTypes?: Partial<IFrictionlessTypes>;
 };
 
 function registerSiteKey(
@@ -421,7 +434,7 @@ function registerSiteKey(
 	captchaType?: CaptchaType,
 	settingsOverrides?: RegisterSiteKeySettings,
 ) {
-	const siteKey = Cypress.env(
+	const siteKey = Cypress.expose(
 		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
 	);
 	if (!siteKey) {
@@ -436,7 +449,7 @@ function registerSiteKey(
 	);
 
 	return cy.then(() => {
-		const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+		const pair = getPair(Cypress.expose("PROSOPO_PROVIDER_MNEMONIC"));
 		const jwt = pair.jwtIssue();
 		const adminSiteKeyURL = `https://localhost:9229${AdminApiPaths.SiteKeyRegister}`;
 
@@ -454,7 +467,9 @@ function registerSiteKey(
 			powDifficulty: 1,
 			imageThreshold: 0.8,
 			imageMaxRounds: MAX_IMAGE_CAPTCHA_ROUNDS,
+			imageMinRounds: MIN_IMAGE_CAPTCHA_ROUNDS,
 			puzzleTolerance: puzzleToleranceDefault,
+			audioAccessibilityEnabled: false,
 			disallowWebView: false,
 			verifiedTimeout: 60000,
 			solutionTimeout: 60000,
@@ -483,7 +498,7 @@ function registerSiteKey(
 }
 
 function adminJwtAndUrl(path: AdminApiPaths): { url: string; jwt: string } {
-	const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+	const pair = getPair(Cypress.expose("PROSOPO_PROVIDER_MNEMONIC"));
 	return {
 		url: `https://localhost:9229${path}`,
 		jwt: pair.jwtIssue(),
@@ -581,7 +596,7 @@ const ACCESS_RULE_DELETE_ALL_PATH =
 // biome-ignore lint/suspicious/noExplicitAny: rule shape lives in @prosopo/user-access-policy
 function addAccessRules(rules: any[]) {
 	return cy.then(() => {
-		const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+		const pair = getPair(Cypress.expose("PROSOPO_PROVIDER_MNEMONIC"));
 		const jwt = pair.jwtIssue();
 		return cy.request({
 			method: "POST",
@@ -601,7 +616,7 @@ function addAccessRules(rules: any[]) {
 
 function deleteAllAccessRules() {
 	return cy.then(() => {
-		const pair = getPair(Cypress.env("PROSOPO_PROVIDER_MNEMONIC"));
+		const pair = getPair(Cypress.expose("PROSOPO_PROVIDER_MNEMONIC"));
 		const jwt = pair.jwtIssue();
 		return cy.request({
 			method: "POST",
@@ -643,6 +658,7 @@ Cypress.Commands.add("captchaImages", captchaImages);
 Cypress.Commands.add("clickCorrectCaptchaImages", clickCorrectCaptchaImages);
 Cypress.Commands.add("getSelectors", getSelectors);
 Cypress.Commands.add("clickNextButton", clickNextButton);
+Cypress.Commands.add("waitForCaptchaRound", waitForCaptchaRound);
 Cypress.Commands.add("elementExists", elementExists);
 Cypress.Commands.add("registerSiteKey", registerSiteKey);
 Cypress.Commands.add("waitForProcaptchaScript", waitForProcaptchaScript);

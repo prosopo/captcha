@@ -84,7 +84,7 @@ const solvePowAndSubmit = (uniqueId: string) => {
 
 describe("Client session id correlation", () => {
 	it("verifies a token whose solve carries the same session id the widget rendered with", () => {
-		cy.visit(Cypress.env("default_page"));
+		cy.visit(Cypress.expose("default_page"));
 		cy.waitForProcaptchaScript();
 		getWidgetElement(checkboxClass).should("be.visible");
 
@@ -103,7 +103,7 @@ describe("Client session id correlation", () => {
 
 	it("rejects a token verified with a different session id", () => {
 		// Same render-time id, different id at verify.
-		cy.visit(`${Cypress.env("default_page")}?mismatch=1`);
+		cy.visit(`${Cypress.expose("default_page")}?mismatch=1`);
 		cy.waitForProcaptchaScript();
 		getWidgetElement(checkboxClass).should("be.visible");
 

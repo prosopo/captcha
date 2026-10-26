@@ -3,7 +3,7 @@
 
 import type { Keypair } from "../../types.js";
 
-import { secp256k1 } from "@noble/curves/secp256k1";
+import { secp256k1 } from "@noble/curves/secp256k1.js";
 
 /**
  * @name secp256k1PairFromSeed

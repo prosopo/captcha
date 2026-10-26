@@ -17,14 +17,37 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "@prosopo/dotenv";
 import { type UserConfig, defineConfig } from "vite";
-import explanationInjector from "./src/plugins/explanation-injector.js";
+import codeSnippetInjector from "./src/plugins/code-snippet-injector.js";
 import formFillerInjector from "./src/plugins/form-filler-injector.js";
-import navigationInjector from "./src/plugins/navigation-injector.js";
+import languageInjector from "./src/plugins/language-injector.js";
+import layoutInjector from "./src/plugins/layout-injector.js";
+import placementInjector from "./src/plugins/placement-injector.js";
 import statusLogInjector from "./src/plugins/status-log-injector.js";
 
-loadEnv();
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// A .env.<mode> found by searching up from here wins. The private repo's root
+// one carries no demo site keys, so the committed env.<mode> beside this file
+// fills in whatever is still unset.
+loadEnv();
+loadEnv(__dirname, "env");
+
+const DEMO_SITE_KEY_VARS = [
+	"PROSOPO_SITE_KEY_FRICTIONLESS",
+	"PROSOPO_SITE_KEY_POW",
+	"PROSOPO_SITE_KEY_IMAGE",
+	"PROSOPO_SITE_KEY_PUZZLE",
+] as const;
+
+const assertDemoSiteKeysSet = (mode: string) => {
+	const missing = DEMO_SITE_KEY_VARS.filter((name) => !process.env[name]);
+	if (missing.length > 0) {
+		throw new Error(
+			`Refusing to build the demos for mode "${mode}" without ${missing.join(", ")}: every page would ship data-sitekey="undefined".`,
+		);
+	}
+};
+
 const certPath = path.resolve(__dirname, "../../certs");
 const keyPath = path.join(certPath, "server.key");
 const crtPath = path.join(certPath, "server.crt");
@@ -92,6 +115,10 @@ function moveDirectoryContents(
 }
 
 export default defineConfig(({ command, mode }) => {
+	if (command === "build") {
+		assertDemoSiteKeysSet(mode);
+	}
+
 	// Check if certificates exist
 	const useTls = fs.existsSync(keyPath) && fs.existsSync(crtPath);
 
@@ -119,6 +146,12 @@ export default defineConfig(({ command, mode }) => {
 			),
 			"import.meta.env.PROSOPO_SITE_KEY_PUZZLE": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY_PUZZLE,
+			),
+			"import.meta.env.PROSOPO_SITE_KEY_AUDIO": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_AUDIO,
+			),
+			"import.meta.env.PROSOPO_SITE_KEY_ICONORDER": JSON.stringify(
+				process.env.PROSOPO_SITE_KEY_ICONORDER,
 			),
 			"import.meta.env.PROSOPO_SITE_KEY_POW": JSON.stringify(
 				process.env.PROSOPO_SITE_KEY_POW,
@@ -157,7 +190,7 @@ export default defineConfig(({ command, mode }) => {
 			commonjsOptions: {
 				transformMixedEsModules: true,
 			},
-			outDir: "dist",
+			outDir: "dist/bundle",
 			emptyOutDir: false,
 			rollupOptions: {
 				input: {
@@ -165,7 +198,7 @@ export default defineConfig(({ command, mode }) => {
 					"pow-explicit": path.resolve(__dirname, "src/pow-explicit.html"),
 					"image-explicit": path.resolve(__dirname, "src/image-explicit.html"),
 					"pow-implicit": path.resolve(__dirname, "src/pow-implicit.html"),
-					"image-implicit": path.resolve(__dirname, "src/index.html"),
+					"image-implicit": path.resolve(__dirname, "src/image-implicit.html"),
 					"frictionless-implicit": path.resolve(
 						__dirname,
 						"src/frictionless-implicit.html",
@@ -173,6 +206,10 @@ export default defineConfig(({ command, mode }) => {
 					"frictionless-explicit": path.resolve(
 						__dirname,
 						"src/frictionless-explicit.html",
+					),
+					"frictionless-manual-start": path.resolve(
+						__dirname,
+						"src/frictionless-manual-start.html",
 					),
 					"invisible-pow-explicit": path.resolve(
 						__dirname,
@@ -206,6 +243,10 @@ export default defineConfig(({ command, mode }) => {
 						__dirname,
 						"src/puzzle-explicit.html",
 					),
+					"puzzle-bind-explicit": path.resolve(
+						__dirname,
+						"src/puzzle-bind-explicit.html",
+					),
 					"invisible-puzzle-implicit": path.resolve(
 						__dirname,
 						"src/invisible-puzzle-implicit.html",
@@ -214,47 +255,67 @@ export default defineConfig(({ command, mode }) => {
 						__dirname,
 						"src/invisible-puzzle-explicit.html",
 					),
+					"audio-implicit": path.resolve(__dirname, "src/audio-implicit.html"),
+					"audio-explicit": path.resolve(__dirname, "src/audio-explicit.html"),
+					"invisible-audio-implicit": path.resolve(
+						__dirname,
+						"src/invisible-audio-implicit.html",
+					),
+					"invisible-audio-explicit": path.resolve(
+						__dirname,
+						"src/invisible-audio-explicit.html",
+					),
+					"icon-order-implicit": path.resolve(
+						__dirname,
+						"src/icon-order-implicit.html",
+					),
+					"icon-order-explicit": path.resolve(
+						__dirname,
+						"src/icon-order-explicit.html",
+					),
 				},
 			},
 		},
 		plugins: [
-			navigationInjector(),
+			layoutInjector(),
 			formFillerInjector(),
-			explanationInjector(),
+			codeSnippetInjector(),
 			statusLogInjector(),
+			placementInjector(),
+			languageInjector(),
 			{
 				name: "copy-files",
 				closeBundle() {
 					// This runs after all other plugins have processed files
-					console.log("Copying additional files from src to dist...");
+					console.log("Copying additional files from src to dist/bundle...");
 					// Only copy assets and other non-HTML files since HTML files are processed by Vite
 					const srcAssetsDir = path.resolve(__dirname, "src/assets");
 
-					const destAssetsDir = path.resolve(__dirname, "dist/assets");
+					const destAssetsDir = path.resolve(__dirname, "dist/bundle/assets");
 					if (fs.existsSync(srcAssetsDir)) {
 						copyDirContents(srcAssetsDir, destAssetsDir);
 					}
 
 					// Copy any other necessary directories
 					const srcPluginsDir = path.resolve(__dirname, "src/plugins");
-					const destPluginsDir = path.resolve(__dirname, "dist/plugins");
+					const destPluginsDir = path.resolve(__dirname, "dist/bundle/plugins");
 					if (fs.existsSync(srcPluginsDir)) {
 						copyDirContents(srcPluginsDir, destPluginsDir);
 					}
 
 					// Final step: move any content from dist/src to dist root
-					const distSrcDir = path.resolve(__dirname, "dist/src");
-					const distDir = path.resolve(__dirname, "dist");
+					const distSrcDir = path.resolve(__dirname, "dist/bundle/src");
+					const distDir = path.resolve(__dirname, "dist/bundle");
 					if (fs.existsSync(distSrcDir)) {
-						console.log("Moving files from dist/src to dist root...");
+						console.log("Moving files from dist/bundle/src to dist/bundle...");
 						moveDirectoryContents(distSrcDir, distDir, true);
 
 						// Try to remove the now-empty dist/src directory
 						try {
 							fs.rmdirSync(distSrcDir);
-							console.log("Removed empty dist/src directory");
+							console.log("Removed empty dist/bundle/src directory");
 						} catch (err) {
-							console.warn("Could not remove dist/src directory:", err);
+							console.warn("Could not remove dist/bundle/src directory:", err);
 						}
 					}
 				},

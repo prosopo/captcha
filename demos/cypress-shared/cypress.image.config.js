@@ -29,11 +29,11 @@ export default defineConfig({
 	screenshotsFolder: "./cypress/snapshots/actual",
 	trashAssetsBeforeRuns: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
-	env: {
+	expose: {
 		...process.env,
 		// For the client-example, the default page is the captcha type. For the client-bundle-example, the default_page
-		// is sometimes passed via --env default_page='/THE_PAGE.html'" inside package.json scripts.
-		default_page: "/",
+		// is sometimes passed via --expose default_page='/THE_PAGE.html'" inside package.json scripts.
+		default_page: "/image-implicit.html",
 		visualRegressionType: "regression",
 		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
 		visualRegressionDiffDirectory: "cypress/snapshots/diff",
@@ -79,6 +79,8 @@ export default defineConfig({
 			// bespoke lax-tolerance registration. Runs under its own
 			// cypress.puzzle.config.js.
 			"cypress/e2e/**/puzzle.cy.ts",
+			// Needs the `audioAnswer` task only cypress.audio.config.js registers.
+			"cypress/e2e/**/audio.cy.ts",
 			// Escalation spec drives the frictionless flow + installs a
 			// dapp-scoped routing machine; it has its own
 			// cypress.escalation.config.js and must not be pulled into
@@ -98,6 +100,12 @@ export default defineConfig({
 			// override, so every request short-circuits to image and only the
 			// image-band cases pass by accident.
 			"cypress/e2e/**/frictionlessLadder.cy.ts",
+			// Challenge-type toggles spec: needs the same banded-score env as
+			// the ladder (detector override + L_RULES) to get a session into
+			// the image and puzzle bands at all. Without it every case scores
+			// zero and lands on PoW, so it must not be pulled into this
+			// catch-all. Runs under cypress.frictionlessTypes.config.js.
+			"cypress/e2e/**/frictionlessTypes.cy.ts",
 			"cypress/e2e/**/postPowPuzzle.cy.ts",
 			"cypress/e2e/**/decisionMachineDeny.cy.ts",
 			"cypress/e2e/**/decisionMachineDenyPow.cy.ts",

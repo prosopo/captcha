@@ -14,6 +14,8 @@
 
 import { type Logger, getLogger } from "@prosopo/logger";
 import type {
+	AudioCaptchaRecord,
+	IconOrderCaptchaRecord,
 	PoWCaptchaRecord,
 	PuzzleCaptchaRecord,
 	StoredSession,
@@ -49,6 +51,18 @@ export class CentralDbStreamer {
 	private lastFailureTime = 0;
 	private static readonly RECONNECT_COOLDOWN_MS = 5_000;
 
+	/**
+	 * The central DB is long-haul for every provider and genuinely distant for
+	 * some of them: a pronode outside the European core measures 2-30s just to
+	 * complete the TLS handshake to it, against a default ceiling of 10s. Below
+	 * that ceiling the streamer can never connect at all, so it burns a connect
+	 * attempt every cooldown forever and no record is ever streamed. These are
+	 * deliberately generous — this is a fire-and-forget background path, so a
+	 * slow connect costs nothing that a failed one doesn't cost more of.
+	 */
+	private static readonly CONNECT_TIMEOUT_MS = 45_000;
+	private static readonly SERVER_SELECTION_TIMEOUT_MS = 45_000;
+
 	constructor(mongoCaptchaUri: string, logger?: Logger) {
 		this.logger = logger || getLogger("info", "CentralDbStreamer");
 		this.db = new CaptchaDatabase(
@@ -56,6 +70,10 @@ export class CentralDbStreamer {
 			undefined,
 			undefined,
 			this.logger,
+			{
+				connectTimeoutMS: CentralDbStreamer.CONNECT_TIMEOUT_MS,
+				serverSelectionTimeoutMS: CentralDbStreamer.SERVER_SELECTION_TIMEOUT_MS,
+			},
 		);
 	}
 
@@ -206,23 +224,7 @@ export class CentralDbStreamer {
 		record: PuzzleCaptchaRecord,
 		markStored?: MarkStoredCallback,
 	): void {
-		const timestamp = this.getRecordTimestamp(record);
-		this.ensureConnected()
-			.then(() => {
-				const { _id, ...safeDoc } = record;
-				return this.db.tables.puzzlecaptcha.updateOne(
-					{ challenge: safeDoc.challenge },
-					{ $set: safeDoc },
-					{ upsert: true },
-				);
-			})
-			.then(() => markStored?.(timestamp))
-			.catch((err: unknown) => {
-				this.logger.error(() => ({
-					err,
-					msg: "Failed to stream puzzle record to central DB",
-				}));
-			});
+		this.streamChallengeRecord("puzzlecaptcha", "puzzle", record, markStored);
 	}
 
 	/**
@@ -232,16 +234,94 @@ export class CentralDbStreamer {
 		getFullRecord: () => Promise<PuzzleCaptchaRecord | null>,
 		markStored?: MarkStoredCallback,
 	): void {
+		this.streamChallengeUpdate(
+			getFullRecord,
+			(record) => this.streamPuzzleRecord(record, markStored),
+			"puzzle",
+		);
+	}
+
+	streamAudioRecord(
+		record: AudioCaptchaRecord,
+		markStored?: MarkStoredCallback,
+	): void {
+		this.streamChallengeRecord("audiocaptcha", "audio", record, markStored);
+	}
+
+	streamAudioUpdate(
+		getFullRecord: () => Promise<AudioCaptchaRecord | null>,
+		markStored?: MarkStoredCallback,
+	): void {
+		this.streamChallengeUpdate(
+			getFullRecord,
+			(record) => this.streamAudioRecord(record, markStored),
+			"audio",
+		);
+	}
+
+	streamIconOrderRecord(
+		record: IconOrderCaptchaRecord,
+		markStored?: MarkStoredCallback,
+	): void {
+		this.streamChallengeRecord(
+			"iconordercaptcha",
+			"icon-order",
+			record,
+			markStored,
+		);
+	}
+
+	streamIconOrderUpdate(
+		getFullRecord: () => Promise<IconOrderCaptchaRecord | null>,
+		markStored?: MarkStoredCallback,
+	): void {
+		this.streamChallengeUpdate(
+			getFullRecord,
+			(record) => this.streamIconOrderRecord(record, markStored),
+			"icon-order",
+		);
+	}
+
+	private streamChallengeRecord(
+		table: "puzzlecaptcha" | "iconordercaptcha" | "audiocaptcha",
+		label: string,
+		record: PuzzleCaptchaRecord | IconOrderCaptchaRecord | AudioCaptchaRecord,
+		markStored?: MarkStoredCallback,
+	): void {
+		const timestamp = this.getRecordTimestamp(record);
+		this.ensureConnected()
+			.then(() => {
+				const { _id, ...safeDoc } = record;
+				return this.db.tables[table].updateOne(
+					{ challenge: safeDoc.challenge },
+					{ $set: safeDoc },
+					{ upsert: true },
+				);
+			})
+			.then(() => markStored?.(timestamp))
+			.catch((err: unknown) => {
+				this.logger.error(() => ({
+					err,
+					msg: `Failed to stream ${label} record to central DB`,
+				}));
+			});
+	}
+
+	private streamChallengeUpdate<T>(
+		getFullRecord: () => Promise<T | null>,
+		stream: (record: T) => void,
+		label: string,
+	): void {
 		getFullRecord()
 			.then((record) => {
 				if (record) {
-					this.streamPuzzleRecord(record, markStored);
+					stream(record);
 				}
 			})
 			.catch((err: unknown) => {
 				this.logger.error(() => ({
 					err,
-					msg: "Failed to fetch puzzle record for central DB streaming",
+					msg: `Failed to fetch ${label} record for central DB streaming`,
 				}));
 			});
 	}

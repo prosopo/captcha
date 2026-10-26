@@ -1,5 +1,466 @@
 # @prosopo/user-access-policy
 
+## 3.15.8
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/api@4.7.7
+  - @prosopo/api-route@2.6.66
+  - @prosopo/common@3.3.1
+  - @prosopo/logger@2.1.6
+  - @prosopo/redis-client@1.0.43
+  - @prosopo/types@5.19.0
+  - @prosopo/util@3.3.17
+
+## 3.15.7
+### Patch Changes
+
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+  - @prosopo/api@4.7.6
+  - @prosopo/common@3.3.0
+
+## 3.15.6
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+  - @prosopo/api@4.7.5
+  - @prosopo/common@3.3.0
+
+## 3.15.5
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/api@4.7.4
+  - @prosopo/api-route@2.6.65
+  - @prosopo/common@3.3.0
+  - @prosopo/logger@2.1.5
+  - @prosopo/redis-client@1.0.42
+  - @prosopo/types@5.17.0
+  - @prosopo/util@3.3.16
+
+## 3.15.4
+### Patch Changes
+
+- 3c5d196: Make the Web Bot Auth agent pass work end to end. Driving a signing agent through the demo site turned up six things that stopped an allowed agent getting through, or let a blocked one past:
+  
+  - A site set to a fixed captcha type (PoW, image, puzzle, icon order), or a provider with no detector bundles, served its challenge before the signature was checked. A verified agent's Allow and Block rules are now applied first.
+  - An agent with an existing challenge session for the same user, IP and site got that session back. A matching Allow rule now replaces it with a fresh authenticated session.
+  - An agent whose page sent no detector token failed with "Failed to store session". The session now gets a generated token, the way the other no-detector paths do.
+  - A provider that sees clients as IPv4-mapped IPv6 (`::ffff:1.2.3.4`) rejected every verify, because the site forwards the plain `1.2.3.4`. The IP check now treats the two as the same address.
+  - Deleting or filtering access rules by `webBotAuthAgent` sent Redis an unescaped URL, which is a query syntax error, so nothing was deleted. Removing an Agent Trust rule in the portal left it in force.
+  - The widget issued the token at page load and never refreshed it. In invisible mode it drew the badge and fired the callback before the user did anything; it now draws nothing and issues the token on execute(). In both modes the pass now expires and renews like a solved PoW, so an agent that takes more than three minutes to fill a form no longer fails with "not recent".
+  
+  Rejected signatures are now logged with the reason.
+  - @prosopo/common@3.2.3
+  - @prosopo/types@5.16.3
+  - @prosopo/api@4.7.3
+  - @prosopo/api-route@2.6.64
+  - @prosopo/logger@2.1.4
+  - @prosopo/redis-client@1.0.41
+  - @prosopo/util@3.3.15
+
+## 3.15.3
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+  - @prosopo/api@4.7.2
+
+## 3.15.2
+### Patch Changes
+
+  - @prosopo/common@3.2.1
+  - @prosopo/types@5.16.1
+  - @prosopo/api@4.7.1
+
+## 3.15.1
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/api@4.7.0
+
+## 3.15.0
+### Minor Changes
+
+- 460ca67: Global access rules can now name clients they don't apply to.
+  
+  A rule with no `clientId` used to apply to every site with no exceptions, so the only way to spare one customer from a platform-wide ban was to delete the ban for everyone. Rules now take an optional `excludedClientIds` list. A request from a listed site skips that global rule, while the site's own rules and every other site are unaffected. The insert API accepts the list on a rule group.
+  
+  `rankCandidateRules` drops a global rule for the clients it lists; the Redis lookup still fetches it, because negating the list inside the lookup's union is mis-evaluated by RediSearch 2.8 and can drop unrelated global rules. The list is left out of the rule's key hash, so changing the list rewrites the same rule instead of leaving the old version enforcing the old list. Re-pushing a rule without a list clears any list it had.
+  
+  Providers that predate this change ignore the field and treat the rule as a plain global rule. Deploy the providers before anything starts writing exclusions, or the excluded sites stay blocked until they are updated.
+
+## 3.14.18
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/redis-client@1.0.41
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+  - @prosopo/api@4.6.1
+  - @prosopo/api-route@2.6.64
+  - @prosopo/common@3.1.65
+  - @prosopo/logger@2.1.4
+
+## 3.14.17
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/api@4.6.0
+  - @prosopo/types@5.15.0
+  - @prosopo/common@3.1.64
+
+## 3.14.16
+### Patch Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/api@4.5.0
+  - @prosopo/common@3.1.63
+
+## 3.14.15
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/util@3.3.14
+  - @prosopo/api@4.4.0
+  - @prosopo/common@3.1.62
+  - @prosopo/api-route@2.6.63
+  - @prosopo/logger@2.1.3
+  - @prosopo/redis-client@1.0.40
+
+## 3.14.14
+### Patch Changes
+
+- Updated dependencies [ede4352]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+  - @prosopo/types@5.12.0
+  - @prosopo/util@3.3.13
+  - @prosopo/common@3.1.61
+  - @prosopo/api@4.3.8
+  - @prosopo/logger@2.1.2
+  - @prosopo/api-route@2.6.62
+  - @prosopo/redis-client@1.0.39
+
+## 3.14.13
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/api@4.3.7
+
+## 3.14.12
+### Patch Changes
+
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [4109641]
+- Updated dependencies [dab0338]
+- Updated dependencies [0d29dde]
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/redis-client@1.0.38
+  - @prosopo/api@4.3.6
+  - @prosopo/util@3.3.12
+  - @prosopo/api-route@2.6.61
+  - @prosopo/logger@2.1.1
+
+## 3.14.11
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/api@4.3.5
+
+## 3.14.10
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+  - @prosopo/types@5.10.1
+  - @prosopo/api@4.3.4
+
+## 3.14.9
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+  - @prosopo/util@3.3.11
+  - @prosopo/api@4.3.3
+  - @prosopo/api-route@2.6.60
+  - @prosopo/redis-client@1.0.37
+
+## 3.14.8
+### Patch Changes
+
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+  - @prosopo/api@4.3.2
+
+## 3.14.7
+### Patch Changes
+
+- a22069d: Let a Block access rule name the reason it fired, so the 403 says why instead of "Forbidden"
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+  - @prosopo/api@4.3.1
+  - @prosopo/common@3.1.57
+
+## 3.14.6
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/api@4.3.0
+
+## 3.14.5
+### Patch Changes
+
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/api@4.2.5
+
+## 3.14.4
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/common@3.1.56
+  - @prosopo/redis-client@1.0.36
+  - @prosopo/types@5.8.4
+  - @prosopo/util@3.3.10
+  - @prosopo/api@4.2.4
+  - @prosopo/api-route@2.6.59
+  - @prosopo/logger@2.0.10
+
+## 3.14.3
+### Patch Changes
+
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [028a158]
+  - @prosopo/types@5.8.3
+  - @prosopo/api@4.2.3
+  - @prosopo/common@3.1.55
+
+## 3.14.2
+### Patch Changes
+
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/types@5.8.2
+  - @prosopo/api@4.2.2
+
+## 3.14.1
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+  - @prosopo/api@4.2.1
+
+## 3.14.0
+### Minor Changes
+
+- af267c2: Web Bot Auth verifier and an authenticated frictionless flow for pre-verified agents.
+  
+  **`@prosopo/web-bot-auth`** — a new package: an RFC 9421 HTTP Message Signatures verifier built on `@noble/curves/ed25519`, with no Cloudflare dependency. It parses `Signature-Agent` in both its bare-string and dictionary forms, resolves the signer's JWKS at `/.well-known/http-message-signatures-directory` honouring the response's cache-control TTL, and verifies the Ed25519 signature over the RFC 9421 signature base.
+  
+  **Provider fast path.** `/captcha/frictionless` returns `captchaType: authenticated` when a non-`deferToVerify` `AccessPolicyType.Allow` rule matches the request's user scope, and writes a session with `serverChecked: false`, `agent: true` and the issuing IP frozen for verify-time binding. Decrypt, bot score and the decision machine are all skipped. A verified `Signature-Agent` is one way to qualify — the userScope gains a `webBotAuthAgent` field, set only when signature verification succeeded so a rule scoped to a signer can never be matched by a spoofed header — but an IP CIDR, JA4, user agent, ASN or country rule qualifies the same way. A `Block` or `Restrict` on the same match set always wins, because severity outranks Allow.
+  
+  **`/client/authenticated/verify`.** A separate router with mandatory IP binding — the operator must forward the client IP (`API.AUTHENTICATED_IP_REQUIRED`) and it must match the one the session was issued to (`API.AUTHENTICATED_IP_MISMATCH`), so a leaked token cannot be replayed from elsewhere. Single use is enforced through `serverChecked`, and `captchaType` is checked so an ordinary captcha token cannot be redeemed on this route. `clientSessionId` correlation goes through the same `isClientSessionMismatch` helper as pow / image / puzzle, so the authenticated path cannot drift from the others.
+  
+  **Surface.** `AccessPolicyType.Allow` and `CaptchaType.authenticated`; `webBotAuthAgent` on the user scope (indexed, normalised at parse time to a lowercase scheme+host with no trailing slash); `Session.agent` / `Session.webBotAuthAgent` for the Traffic view's "pre-verified pass" filter; `submitAuthenticatedCaptchaVerify` on `ProviderApi` and the matching branch in `@prosopo/server.verifyProvider`; `AuthenticatedBadge` and a dispatch branch in `procaptcha-frictionless`.
+  
+  Three fixes the new end-to-end coverage turned up, each of which broke the flow outright:
+  
+  - `ipMatchesSession` compared the operator's parsed IP against the session's composite halves with `===`. A session read back from Mongo carries BSON (`Decimal128`, or `Long` on pre-migration records), not the `bigint` the type claims, so the comparison was false for every session that had been through the database — every legitimate redemption was rejected as `API.AUTHENTICATED_IP_MISMATCH`. Both halves are now normalised before comparison, and an unparseable half fails closed rather than defaulting to `0n`, so garbage still cannot match garbage.
+  - `serverChecked` was never written onto the authenticated session, so "never set" and "consumed" were distinguishable only by an absence. It is now written as `false` at issuance.
+  - `serverChecked` was missing from `SESSION_PROJECTION`. Left out, the single-use check reads `undefined` and an authenticated token verifies an unlimited number of times.
+
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/api@4.2.0
+
+## 3.13.0
+### Minor Changes
+
+- e22d5fb: Add an arbitrary-header match dimension to user access policies.
+  
+  A `Block` or `Restrict` rule can now target a named request header with an `equals`, `contains`, `notEquals`, `notContains`, `notEqualsAny` or `notContainsAny` operator. The negated operators back the portal's allow-list mode — block unless the header matches; the `*Any` pair carries a list of accepted values in `headerValue` so an allow-list over several values of the same header fires only when the header matches none of them (separate single-value rules would each fire on the other's value and block everything). Because substring `contains` and per-rule operators can't be expressed as a Redis TAG query — and an allow-list rule must still fire on a request that omits the header — the header condition is carried on the rule as `headerName`/`headerValue`/`headerOperator` and evaluated in code against the raw request headers, while an indexed `headerMatch` sentinel makes every header rule a matching candidate for every request. Header rules contribute one point to rule specificity ranking, mirroring the other scalar dimensions.
+  
+  The raw request headers are a **required** argument of `getPrioritisedAccessRule` / `CaptchaManager.getPrioritisedAccessPolicies`, with no default. A negated header operator treats a missing header as "does not match", so a lookup that quietly ran with an empty header map would fire every allow-list rule on every request. Every lookup now passes them: the request-time block middleware, the verify-path hard-block check, the `/frictionless` policy and dedup lookups, and the image / PoW / puzzle challenge endpoints.
+  
+  `getPrioritisedAccessRule` now caches only the candidate fetch and ranks per request, because the header verdict depends on data that is not part of the cache key. This also closes a latent gap where `os` was never part of `hardBlockCacheKey`, so a cached ranked list could serve one operating system's verdict to a request from another.
+
+### Patch Changes
+
+- 6f57ee9: chore(deps): bump yargs from 17.7.2 to 18.1.0
+- 6f57ee9: chore(deps): bump the npm-minor-and-patch group across 1 directory with 3 updates
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/api@4.1.6
+  - @prosopo/api-route@2.6.58
+  - @prosopo/common@3.1.54
+  - @prosopo/logger@2.0.9
+  - @prosopo/redis-client@1.0.35
+
+## 3.12.33
+### Patch Changes
+
+- 7fd6eb2: Add a `browser` match dimension to access rules.
+  
+  Rules can now be scoped to the browser classified server-side from the request
+  User-Agent (`chrome`, `safari`, `firefox`, `edge`, `opera`, `samsung_internet`,
+  `wechat`, `facebook`, `instagram`, `ie`, `unknown`), mirroring the existing `os`
+  dimension. The classifier duplicates `@prosopo/decision-machines`' `uaClassify`
+  because the provider request path cannot depend on that package.
+  
+  Also fixes `os` never getting its own probe on the Redis split-query hot path:
+  `SCALAR_USER_SCOPE_FIELDS` in `redisRulesSplitQuery` had not been updated when
+  the OS dimension landed, so an OS-only rule was reachable only via the
+  `no-user-scope` fall-through, competing for that probe's candidate budget
+  against genuine client-wide blocks.
+  
+  The Redis index gains a `browser` TAG field. `createRedisIndex` hashes the index
+  definition and drops/recreates when the hash changes, so this needs no manual
+  migration — verified locally: the index came back carrying `browser` and the
+  stored hash moved to match.
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/api@4.1.5
+  - @prosopo/api-route@2.6.57
+  - @prosopo/common@3.1.53
+  - @prosopo/logger@2.0.8
+  - @prosopo/redis-client@1.0.34
+  - @prosopo/types@5.6.0
+  - @prosopo/util@3.3.8
+
+## 3.12.32
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/api@4.1.4
+
+## 3.12.31
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/api@4.1.3
+
+## 3.12.30
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/types@5.5.1
+  - @prosopo/api@4.1.2
+
 ## 3.12.29
 ### Patch Changes
 

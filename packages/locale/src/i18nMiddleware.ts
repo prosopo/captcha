@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import i18n from "i18next";
 import { handle } from "i18next-http-middleware";
 import loadI18next from "./loadI18next.js";
 
@@ -23,7 +24,11 @@ type HandleOptions = NonNullable<Parameters<typeof handle>[1]>;
 async function i18nMiddleware(
 	options: HandleOptions,
 ): Promise<ReturnType<typeof handle>> {
-	const i18n = await loadI18next(true);
+	// The middleware needs the i18next instance itself, not the narrow Ti18n
+	// the widget shares with it. loadI18next(true) initialises that very
+	// singleton and waits for its resources, so importing it here is the same
+	// object, fully loaded.
+	await loadI18next(true);
 	return handle(i18n, { ...options });
 }
 

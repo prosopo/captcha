@@ -14,7 +14,9 @@
 
 import type { Logger } from "@prosopo/logger";
 import type {
+	CounterDimension,
 	CounterSpec,
+	DetectorData,
 	RoutingMachineBaseline,
 	RoutingMachineInput,
 	RoutingMachineInputBase,
@@ -37,11 +39,27 @@ export interface RoutingContext {
 	score: number;
 	platform: RoutingMachinePlatform;
 	raw: RoutingMachineRawSignals;
-	// The sitekey's `imageMaxRounds`, so a router-supplied `solvedImagesCount`
-	// can be held to the same ceiling every other path respects. Optional
-	// because the dedup replay only asks the router which captchaType it would
-	// pick and never creates a session from the answer.
+	// Everything the detector reported, forwarded to the machine as
+	// `input.d`. See RoutingMachineInputBase.d.
+	d?: DetectorData;
+	// The sitekey's image-round bounds, so a router-supplied
+	// `solvedImagesCount` can be held to the same floor and ceiling every
+	// other path respects. Optional because the dedup replay only asks the
+	// router which captchaType it would pick and never creates a session from
+	// the answer.
 	imageMaxRounds?: number;
+	imageMinRounds?: number;
+	// The site's ordinary image round count (`captchas.solved.count`). Used
+	// as the zero point when translating a requested round count into a
+	// puzzle difficulty level — severity is "rounds above normal", which
+	// means the same thing across sites where an absolute count does not.
+	baseImageRounds?: number;
+	// Ceiling on that difficulty level, from the sitekey's
+	// `puzzleMaxDifficulty`. Same rationale as `imageMaxRounds` above: this is
+	// the site's own bound on how far a rule may escalate it, and 0 keeps the
+	// site's configured puzzle settings on every challenge. Optional for the
+	// dedup replay; absent falls back to `puzzleMaxDifficultyDefault`.
+	puzzleMaxDifficulty?: number;
 }
 
 /**
@@ -69,6 +87,7 @@ export const applyRouter = async (
 			score: ctx.score,
 			platform: ctx.platform,
 			raw: ctx.raw,
+			...(ctx.d !== undefined && { d: ctx.d }),
 		};
 
 		const specs = await runner.getRequiredCounters(partial, logger);
@@ -108,8 +127,9 @@ export const applyRouter = async (
 
 /**
  * Map machine-declared CounterSpecs onto the values that the provider knows
- * how to read (IP and userAccount). Specs whose dimension we cannot resolve
- * are silently skipped.
+ * how to read. Specs whose dimension we cannot resolve are silently skipped,
+ * so a rule naming `deviceBucket` on a request that disclosed no proof of
+ * fingerprint simply does not get that key.
  */
 const specsToReads = (
 	specs: CounterSpec[],
@@ -117,14 +137,27 @@ const specsToReads = (
 ): CounterIncrement[] => {
 	const out: CounterIncrement[] = [];
 	for (const spec of specs) {
-		const value =
-			spec.dimension === "ip"
-				? ctx.ip
-				: spec.dimension === "userAccount"
-					? ctx.userAccount
-					: undefined;
-		if (value === undefined) continue;
+		const value = resolveDimension(spec.dimension, ctx);
+		if (value === undefined || value === "") continue;
 		out.push({ spec, value });
 	}
 	return out;
+};
+
+const resolveDimension = (
+	dimension: CounterDimension,
+	ctx: RoutingContext,
+): string | undefined => {
+	switch (dimension) {
+		case "ip":
+			return ctx.ip;
+		case "userAccount":
+			return ctx.userAccount;
+		case "deviceBucket":
+			return ctx.raw.fingerprintSummary?.bucketId;
+		// peerIp is not resolvable here: the routing machine runs on the
+		// provider's own request, which has no peer hop.
+		case "peerIp":
+			return undefined;
+	}
 };

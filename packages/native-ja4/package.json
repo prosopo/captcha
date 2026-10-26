@@ -1,27 +1,33 @@
 {
 	"name": "@prosopo/native-ja4",
-	"version": "0.0.3",
+	"version": "0.0.10",
 	"description": "Rust JA4 TLS fingerprint parser exposed to Node via napi-rs.",
 	"license": "Apache-2.0",
-	"private": true,
+	"author": "Prosopo Limited",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/prosopo/captcha.git",
+		"directory": "packages/native-ja4"
+	},
 	"main": "index.js",
 	"types": "index.d.ts",
-	"files": ["index.js", "index.d.ts", "*.node"],
+	"files": ["index.js", "index.d.ts", "dist/native/*.node"],
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"napi": {
 		"binaryName": "prosopo-native-ja4",
 		"targets": ["x86_64-unknown-linux-gnu"]
 	},
 	"scripts": {
-		"build": "napi build --platform --release",
-		"build:debug": "napi build --platform",
-		"test:cargo": "cargo test --release",
-		"clean": "cargo clean && rm -f *.node index.js index.d.ts"
+		"build:native": "if [ \"$NODE_ENV\" = production ]; then pnpm run build:release; else pnpm run build:debug; fi",
+		"build:debug": "napi build --platform --output-dir dist/native",
+		"build:release": "napi build --platform --release --output-dir dist/native",
+		"test": "node --test \"tests/**/*.test.ts\"",
+		"test:cargo": "cargo test",
+		"clean": "cargo clean && rm -rf dist"
 	},
 	"devDependencies": {
-		"@napi-rs/cli": "2.18.4"
+		"@napi-rs/cli": "3.10.8"
 	}
 }

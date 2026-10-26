@@ -14,11 +14,8 @@
 
 import { stringToHex } from "@polkadot/util/string";
 import { ProviderApi } from "@prosopo/api";
-import {
-	ProsopoDatasetError,
-	ProsopoEnvError,
-	ProsopoError,
-} from "@prosopo/common";
+import { ProsopoError, toPublicError } from "@prosopo/common";
+import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
 	buildClientMetaData,
@@ -36,6 +33,7 @@ import {
 	type CaptchaSolution,
 	CaptchaType,
 	type FrictionlessState,
+	InputMethod,
 	type ProcaptchaCallbacks,
 	type ProcaptchaClientConfigInput,
 	type ProcaptchaClientConfigOutput,
@@ -91,9 +89,19 @@ export function Manager(
 
 	let checkboxClickX = 0;
 	let checkboxClickY = 0;
+	let checkboxInputMethod = InputMethod.pointer;
 	// URL of the provider used on the previous attempt. On a retry we exclude it
 	// from the candidate pool so the fallback lands on a different provider.
 	let previousProviderUrl: string | undefined;
+	// The sessionId this manager has already exchanged for a challenge. The
+	// provider consumes a session the moment it issues a challenge against it
+	// (`checkAndRemoveSession`), so asking for a second challenge with the same
+	// id is a guaranteed 400 NO_SESSION_FOUND. `defaultState()` doesn't
+	// clear `sessionId` and `buildUpdateState` skips `undefined`, so a stale id
+	// survives `resetState()` — any path that re-enters `start()` (a
+	// providerRetry after a late failure, a `procaptcha:execute` event, a
+	// non-delegated reload) would otherwise re-send it.
+	let spentSessionId: string | undefined;
 
 	/**
 	 * Build the config on demand, using the optional config passed in from the outside. State may override various
@@ -118,9 +126,17 @@ export function Manager(
 	/**
 	 * Called on start of user verification. This is when the user ticks the box to claim they are human.
 	 */
-	const start = async (checkboxX = 0, checkboxY = 0) => {
+	const start = async (
+		checkboxX = 0,
+		checkboxY = 0,
+		inputMethod: InputMethod = InputMethod.pointer,
+	) => {
 		checkboxClickX = checkboxX;
 		checkboxClickY = checkboxY;
+		if (state.answeredIncorrectly) {
+			updateState({ answeredIncorrectly: false });
+		}
+		checkboxInputMethod = inputMethod;
 		events.onOpen();
 		await providerRetry(
 			async () => {
@@ -189,28 +205,57 @@ export function Manager(
 					updateState({ captchaApi });
 				}
 
+				// Short-circuit a challenge fetch we already know the provider
+				// will reject, and route straight to the recovery path the
+				// wrapper listens for — re-minting a session is the only way
+				// forward, and the doomed round trip only delays it.
+				if (state.sessionId && state.sessionId === spentSessionId) {
+					updateState({
+						loading: false,
+						error: toPublicError(
+							new ProsopoError({
+								code: "NO_SESSION_FOUND",
+								errorSite: "PCAP-18",
+							}),
+							"FRONTEND_ERROR",
+						),
+					});
+					events.onError(new Error("No session found"));
+					return;
+				}
+
 				// Non-blocking check — attach SIMD readings only if the
 				// prefetched benchmark has already resolved by this point.
 				const simdReadingsOnChallenge = frictionlessState?.getSimdReadings
 					? await frictionlessState.getSimdReadings(0)
 					: undefined;
+				// Mark the id spent as soon as the request goes out: once the
+				// provider has seen it we must assume it is consumed, whether
+				// the response is a challenge, a 4xx, or never arrives. A
+				// transport failure is the only case where it may still be
+				// live, and treating it as spent there costs one extra
+				// /frictionless on the retry — cheaper than re-sending a dead
+				// id and stranding the user on "No session found".
+				const challengeSessionId = state.sessionId;
+				if (challengeSessionId) spentSessionId = challengeSessionId;
 				const challenge = await captchaApi?.getCaptchaChallenge(
-					state.sessionId,
+					challengeSessionId,
 					simdReadingsOnChallenge,
 				);
 
 				if (challenge.error) {
 					updateState({
 						loading: false,
-						error: {
-							message: challenge.error.message,
-							key: challenge.error.key || "API.UNKNOWN_ERROR",
-						},
+						error: challenge.error,
 					});
 					events.onError(new Error(challenge.error?.message));
 				} else {
 					if (challenge.captchas.length <= 0) {
-						throw new ProsopoDatasetError("DEVELOPER.PROVIDER_NO_CAPTCHA");
+						throw new ProsopoError({
+							code: "RECORD_NOT_FOUND",
+							errorSite: "PCAP-1",
+							message: "No captchas returned from provider",
+						});
 					}
 
 					// setup timeout, taking the timeout from the individual captcha or the global default
@@ -221,6 +266,7 @@ export function Manager(
 						)
 						.reduce((a: number, b: number) => a + b);
 					const timeout = setTimeout(() => {
+						if (disposed) return;
 						events.onChallengeExpired();
 						// expired, disallow user's claim to be human
 						updateState({ isHuman: false, showModal: false, loading: false });
@@ -251,7 +297,10 @@ export function Manager(
 				clearTimeout();
 
 				if (!state.challenge) {
-					throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
+					throw new ProsopoError({
+						code: "RECORD_NOT_FOUND",
+						errorSite: "PCAP-2",
+						message: "No captcha found",
 						context: { error: "Cannot submit, no Captcha found in state" },
 					});
 				}
@@ -266,14 +315,22 @@ export function Manager(
 					(captcha, index) => {
 						const solution = at(state.solutions, index);
 						const shapeCoords = solution.flatMap(([_, x, y]) => [x, y]);
+						const shapeInputMethods = solution.map(
+							([, , , inputMethod]) => inputMethod,
+						);
 						const coords =
 							index === 0
 								? [checkboxClickX, checkboxClickY, ...shapeCoords]
 								: shapeCoords;
+						const inputMethods =
+							index === 0
+								? [checkboxInputMethod, ...shapeInputMethods]
+								: shapeInputMethods;
+						const countByte = 1;
 						const salt = randomAsHex(
 							coords
 								.map((x) => x.toString(16).length + 4)
-								.reduce((acc, curr) => acc + curr, 0),
+								.reduce((acc, curr) => acc + curr, countByte),
 						);
 
 						const saltCoord = embedData(salt, coords);
@@ -282,6 +339,7 @@ export function Manager(
 							captchaContentId: captcha.captchaContentId,
 							salt: saltCoord,
 							solution: solution.flatMap((s) => s[0]),
+							inputMethods,
 						};
 					},
 				);
@@ -291,7 +349,10 @@ export function Manager(
 
 				const first = at(challenge.captchas, 0);
 				if (!first.datasetId) {
-					throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_ID", {
+					throw new ProsopoError({
+						code: "INVALID_DATA",
+						errorSite: "PCAP-3",
+						message: "Invalid captcha id",
 						context: { error: "No datasetId set for challenge" },
 					});
 				}
@@ -299,13 +360,19 @@ export function Manager(
 				const captchaApi = state.captchaApi;
 
 				if (!captchaApi) {
-					throw new ProsopoError("CAPTCHA.INVALID_TOKEN", {
+					throw new ProsopoError({
+						code: "INVALID_REQUEST",
+						errorSite: "PCAP-4",
+						message: "Invalid token",
 						context: { error: "No Captcha API found in state" },
 					});
 				}
 
 				if (!signer || !signer.signRaw) {
-					throw new ProsopoEnvError("GENERAL.CANT_FIND_KEYRINGPAIR", {
+					throw new ProsopoError({
+						code: "CONFIG_INVALID",
+						errorSite: "PCAP-5",
+						message: "Can't find the keyringpair for {{address}}",
 						context: {
 							error:
 								"Signer is not defined, cannot sign message to prove account ownership",
@@ -326,13 +393,15 @@ export function Manager(
 					frictionlessState?.encryptBehavioralData &&
 					(frictionlessState?.behaviorCollector1 ||
 						frictionlessState?.behaviorCollector2 ||
-						frictionlessState?.behaviorCollector3)
+						frictionlessState?.behaviorCollector3 ||
+						frictionlessState?.behaviorCollector4)
 				) {
 					try {
 						const behavioralData = {
 							collector1: frictionlessState.behaviorCollector1?.getData() || [],
 							collector2: frictionlessState.behaviorCollector2?.getData() || [],
 							collector3: frictionlessState.behaviorCollector3?.getData() || [],
+							collector4: frictionlessState.behaviorCollector4?.getData() || [],
 							deviceCapability: frictionlessState.deviceCapability || "unknown",
 						};
 
@@ -368,6 +437,8 @@ export function Manager(
 						simdReadings,
 						clientMetaData,
 					);
+				// A solve that lands after destroy must not reach the site.
+				if (disposed) return;
 
 				// mark as is human if solution has been approved
 				const isHuman = submission[0].verified;
@@ -402,7 +473,14 @@ export function Manager(
 					setValidChallengeTimeout();
 				} else {
 					events.onFailed();
-					resetState(frictionlessState?.restart);
+					// Independent of onFailed, which sites routinely override: without
+					// this the modal just closes and the user never learns why.
+					updateState({ answeredIncorrectly: true });
+					resetState(
+						frictionlessState
+							? () => frictionlessState.restart({ showRetry: true })
+							: undefined,
+					);
 				}
 			},
 			start,
@@ -442,7 +520,7 @@ export function Manager(
 			// start the captcha process again unless we need a new session,
 			// keeping the checkbox click position so the replacement solution
 			// still carries the real entry point rather than (0, 0)
-			await start(checkboxClickX, checkboxClickY);
+			await start(checkboxClickX, checkboxClickY, checkboxInputMethod);
 		}
 	};
 
@@ -451,15 +529,27 @@ export function Manager(
 	 * @param hash the hash of the image
 	 * @param x
 	 * @param y
+	 * @param inputMethod how the image was selected; pointer when not given
 	 */
-	const select = (hash: string, x?: number, y?: number) => {
+	const select = (
+		hash: string,
+		x?: number,
+		y?: number,
+		inputMethod: InputMethod = InputMethod.pointer,
+	) => {
 		if (!state.challenge) {
-			throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
+			throw new ProsopoError({
+				code: "RECORD_NOT_FOUND",
+				errorSite: "PCAP-6",
+				message: "No captcha found",
 				context: { error: "Cannot select, no Captcha found in state" },
 			});
 		}
 		if (state.index >= state.challenge.captchas.length || state.index < 0) {
-			throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
+			throw new ProsopoError({
+				code: "RECORD_NOT_FOUND",
+				errorSite: "PCAP-7",
+				message: "No captcha found",
 				context: {
 					error: "Cannot select, index is out of range for this Captcha",
 				},
@@ -474,7 +564,7 @@ export function Manager(
 			solutions[index] = newSolution;
 		} else {
 			// add the hash to the solution
-			solutions[index] = [...solution, [hash, x || 0, y || 0]];
+			solutions[index] = [...solution, [hash, x || 0, y || 0, inputMethod]];
 		}
 		updateState({ solutions });
 	};
@@ -484,12 +574,18 @@ export function Manager(
 	 */
 	const nextRound = () => {
 		if (!state.challenge) {
-			throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
+			throw new ProsopoError({
+				code: "RECORD_NOT_FOUND",
+				errorSite: "PCAP-8",
+				message: "No captcha found",
 				context: { error: "Cannot select, no Captcha found in state" },
 			});
 		}
 		if (state.index + 1 >= state.challenge.captchas.length) {
-			throw new ProsopoError("CAPTCHA.NO_CAPTCHA", {
+			throw new ProsopoError({
+				code: "RECORD_NOT_FOUND",
+				errorSite: "PCAP-9",
+				message: "No captcha found",
 				context: {
 					error: "Cannot select, index is out of range for this Captcha",
 				},
@@ -506,9 +602,20 @@ export function Manager(
 		const config = getConfig();
 		const siteKey = config.account.address;
 		if (!siteKey) {
-			throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+			throw new ProsopoError({
+				code: "SITE_KEY_MISSING",
+				errorSite: "PCAP-10",
+			});
 		}
-		return { providerApi: new ProviderApi(providerUrl, siteKey), siteKey };
+		return {
+			providerApi: new ProviderApi(
+				providerUrl,
+				siteKey,
+				undefined,
+				widgetLanguageHeaders(config.language),
+			),
+			siteKey,
+		};
 	};
 
 	const clearTimeout = () => {
@@ -521,6 +628,7 @@ export function Manager(
 	const setValidChallengeTimeout = () => {
 		const timeMillis: number = configOptional.captchas.image.solutionTimeout;
 		const successfullChallengeTimeout = setTimeout(() => {
+			if (disposed) return;
 			// Human state expired, disallow user's claim to be human
 			updateState({ isHuman: false });
 
@@ -533,6 +641,8 @@ export function Manager(
 	const resetState = (frictionlessRestart?: () => void) => {
 		// clear timeout just in case a timer is still active (shouldn't be)
 		clearTimeout();
+		// an earlier solve's expiry must not fire against the fresh session
+		window.clearTimeout(Number(state.successfullChallengeTimeout));
 		updateState(defaultState());
 		events.onReset();
 		// reset the frictionless state if it exists
@@ -548,7 +658,9 @@ export function Manager(
 		const config = getConfig();
 		// check if account has been provided in config (doesn't matter in web2 mode)
 		if (!config.web2 && !config.userAccountAddress) {
-			throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+			throw new ProsopoError({
+				code: "ACCOUNT_NOT_FOUND",
+				errorSite: "PCAP-11",
 				context: { error: "Account address has not been set for web3 mode" },
 			});
 		}
@@ -573,7 +685,9 @@ export function Manager(
 
 	const getAccount = () => {
 		if (!state.account) {
-			throw new ProsopoEnvError("GENERAL.ACCOUNT_NOT_FOUND", {
+			throw new ProsopoError({
+				code: "ACCOUNT_NOT_FOUND",
+				errorSite: "PCAP-12",
 				context: { error: "Account not loaded" },
 			});
 		}
@@ -583,7 +697,10 @@ export function Manager(
 
 	const getDappAccount = () => {
 		if (!state.dappAccount) {
-			throw new ProsopoEnvError("GENERAL.SITE_KEY_MISSING");
+			throw new ProsopoError({
+				code: "SITE_KEY_MISSING",
+				errorSite: "PCAP-13",
+			});
 		}
 
 		const dappAccount: string = state.dappAccount;
@@ -592,12 +709,32 @@ export function Manager(
 
 	const getExtension = (account: Account) => {
 		if (!account.extension) {
-			throw new ProsopoEnvError("ACCOUNT.NO_POLKADOT_EXTENSION", {
+			throw new ProsopoError({
+				code: "WALLET_NOT_FOUND",
+				errorSite: "PCAP-14",
+				message: "Polkadot extension not found",
 				context: { error: "Extension not loaded" },
 			});
 		}
 
 		return account.extension;
+	};
+
+	// Set once the widget that owns this manager is torn down. A solve still in
+	// flight can land afterwards, so the timer callbacks check it as well as
+	// being cleared here.
+	let disposed = false;
+
+	/**
+	 * Stops this manager's challenge and solution-expiry timers without firing
+	 * any event. Left running after the widget is destroyed (reset(), a
+	 * restart, an SPA route change) they fired onExpired/onReset later on,
+	 * which also cleared the replacement widget's token from the form.
+	 */
+	const dispose = () => {
+		disposed = true;
+		window.clearTimeout(Number(state.timeout));
+		window.clearTimeout(Number(state.successfullChallengeTimeout));
 	};
 
 	return {
@@ -607,5 +744,6 @@ export function Manager(
 		select,
 		nextRound,
 		reload,
+		dispose,
 	};
 }

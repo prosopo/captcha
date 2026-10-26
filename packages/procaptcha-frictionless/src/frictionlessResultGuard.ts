@@ -12,16 +12,58 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import type { ErrorCode } from "@prosopo/common";
+import type { WidgetError } from "@prosopo/types";
+
 export type FrictionlessGuardOutcome =
 	| { kind: "pass" }
-	| { kind: "error"; message: string; key?: string };
+	| {
+			kind: "error";
+			message: string;
+			error?: WidgetError;
+			retryable: boolean;
+	  };
+
+/**
+ * Error codes that describe the caller's situation rather than the provider's
+ * health, so re-rolling onto another provider would return the same answer.
+ *
+ * Two groups. Integration faults (site key, origin, captcha type) need the
+ * site owner to change something and the text is what tells them what. Policy
+ * denials are a decision about this visitor that every provider shares —
+ * retrying them would both mislead the user and hammer the fleet on behalf of
+ * traffic we have just refused.
+ *
+ * Anything outside this list is treated as the provider failing, not the
+ * caller: see {@link evaluateFrictionlessResult}.
+ */
+const TERMINAL_ERROR_CODES: ReadonlySet<string> = new Set<ErrorCode>([
+	"SITE_KEY_NOT_REGISTERED",
+	"SITE_KEY_INVALID",
+	"ORIGIN_NOT_ALLOWED",
+	"INCORRECT_CAPTCHA_TYPE",
+	"ACCESS_POLICY_BLOCK",
+	"ABUSER_BLOCKED",
+	"CRAWLER_BLOCKED",
+	"DATACENTER_BLOCKED",
+	"DISALLOWED_WEBVIEW",
+	"MOBILE_BLOCKED",
+	"PROXY_BLOCKED",
+	"SATELLITE_BLOCKED",
+	"TOR_BLOCKED",
+	"VPN_BLOCKED",
+	"FORBIDDEN",
+	"UNAUTHORIZED",
+	// carries its own ten-second restart in ProcaptchaFrictionless
+	"NO_SESSION_FOUND",
+]);
 
 // Fields the guard reads off the `/frictionless` result. Kept minimal
 // (subset of BotDetectionFunctionResult) so the helper can be exercised
 // without pulling in the full widget config surface.
 export type FrictionlessGuardInput = {
 	captchaType?: string;
-	error?: { message?: string; key?: string };
+	error?: Partial<WidgetError>;
 };
 
 const MISSING_CAPTCHA_TYPE_MESSAGE =
@@ -31,7 +73,7 @@ const MISSING_CAPTCHA_TYPE_MESSAGE =
  * Decide whether a `/frictionless` response is safe to mount an inner widget
  * against.
  *
- * `result.error?.message` catches the well-formed error shape emitted when
+ * `result.error?.code` catches the well-formed error shape emitted when
  * the provider surfaces a normal captcha error. A response with no
  * `captchaType` is the other failure mode: request-time short-circuits
  * (access-policy hard-block, decision-machine autoBan, domain / header
@@ -48,15 +90,27 @@ const MISSING_CAPTCHA_TYPE_MESSAGE =
 export const evaluateFrictionlessResult = (
 	result: FrictionlessGuardInput,
 ): FrictionlessGuardOutcome => {
-	if (result.error?.message) {
+	const code = result.error?.code;
+	if (code) {
+		const errorId = result.error?.errorId ?? code;
+		const message = result.error?.message;
 		return {
 			kind: "error",
-			message: result.error.message,
-			...(result.error.key !== undefined && { key: result.error.key }),
+			message: message ?? errorId,
+			error: { code, errorId, ...(message !== undefined && { message }) },
+			// An unhandled throw inside a handler reaches us as BACKEND_ERROR: the
+			// provider failed, so another provider is worth trying. Bare-string
+			// errors (handled below) carry no code; they are hard blocks, and
+			// re-rolling those would hammer the fleet for traffic already refused.
+			retryable: !TERMINAL_ERROR_CODES.has(code),
 		};
 	}
 	if (!result.captchaType) {
-		return { kind: "error", message: MISSING_CAPTCHA_TYPE_MESSAGE };
+		return {
+			kind: "error",
+			message: MISSING_CAPTCHA_TYPE_MESSAGE,
+			retryable: false,
+		};
 	}
 	return { kind: "pass" };
 };

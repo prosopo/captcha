@@ -39,7 +39,7 @@ describe("elements/window", () => {
 			(window as any).testCallback = testFn;
 
 			const result = getWindowCallback("testCallback");
-			expect(result).toBe(testFn);
+			expect(result()).toBe("test");
 		});
 
 		it("should handle window. prefix in callback name", () => {
@@ -48,20 +48,20 @@ describe("elements/window", () => {
 			(window as any).testCallback = testFn;
 
 			const result = getWindowCallback("window.testCallback");
-			expect(result).toBe(testFn);
+			expect(result()).toBe("test");
 		});
 
 		it("should throw error if callback is not a function", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).testCallback = "not a function";
 
-			expect(() => getWindowCallback("testCallback")).toThrow(
+			expect(() => getWindowCallback("testCallback")()).toThrow(
 				"Callback testCallback is not defined on the window object",
 			);
 		});
 
 		it("should throw error if callback does not exist", () => {
-			expect(() => getWindowCallback("nonExistentCallback")).toThrow(
+			expect(() => getWindowCallback("nonExistentCallback")()).toThrow(
 				"Callback nonExistentCallback is not defined on the window object",
 			);
 		});
@@ -70,7 +70,7 @@ describe("elements/window", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).testCallback = undefined;
 
-			expect(() => getWindowCallback("testCallback")).toThrow(
+			expect(() => getWindowCallback("testCallback")()).toThrow(
 				"Callback testCallback is not defined on the window object",
 			);
 		});
@@ -79,9 +79,21 @@ describe("elements/window", () => {
 			// biome-ignore lint/suspicious/noExplicitAny: Test setup
 			(window as any).testCallback = null;
 
-			expect(() => getWindowCallback("testCallback")).toThrow(
+			expect(() => getWindowCallback("testCallback")()).toThrow(
 				"Callback testCallback is not defined on the window object",
 			);
+		});
+
+		it("resolves a callback the page defines after the widget mounts", () => {
+			// The widget is loaded async, so it can run before the script that
+			// defines the callback. Resolving at mount threw and took the whole
+			// widget down whenever it won that race.
+			const resolved = getWindowCallback("testLateCallback");
+
+			// biome-ignore lint/suspicious/noExplicitAny: Test setup
+			(window as any).testLateCallback = (x: number) => x + 1;
+
+			expect(resolved(1)).toBe(2);
 		});
 
 		it("should work with arrow functions", () => {
@@ -90,7 +102,6 @@ describe("elements/window", () => {
 			(window as any).testArrowCallback = arrowFn;
 
 			const result = getWindowCallback("testArrowCallback");
-			expect(result).toBe(arrowFn);
 			expect(result(5)).toBe(10);
 		});
 
@@ -102,7 +113,6 @@ describe("elements/window", () => {
 			(window as any).testRegularCallback = regularFn;
 
 			const result = getWindowCallback("testRegularCallback");
-			expect(result).toBe(regularFn);
 			expect(result(5)).toBe(10);
 		});
 	});

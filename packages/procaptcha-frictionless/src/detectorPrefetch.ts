@@ -17,23 +17,29 @@
  *
  * Since the detector moved into the provider-served pool, the frictionless flow
  * cannot start until `/detector/assign` has returned. That request is issued by
- * `customDetectBot`, which only runs once React has mounted the widget — and
+ * `customDetectBot`, which only runs once the widget has mounted — and
  * that mount sits behind the bundle's dynamic-import chain. Measured on a
  * staging demo page the assign request did not leave the browser until 1513 ms,
  * of which ~700 ms was purely waiting for chunks to arrive in sequence.
  *
- * Nothing in the request depends on React, i18n or the widget config: it needs
+ * Nothing in the request depends on the widget, i18n or its config: it needs
  * the site key (a DOM attribute, readable immediately), the environment (a
- * build-time constant) and the IP-mode flags (DOM attributes). So the entry
- * point kicks it off as soon as it has read those, and `customDetectBot` picks
- * up the in-flight promise instead of starting its own.
+ * build-time constant), the IP-mode flags and the site's language (DOM
+ * attributes). So the entry point kicks it off as soon as it has read those,
+ * and `customDetectBot` picks up the in-flight promise instead of starting its
+ * own.
  *
- * The cache is deliberately single-use. A provider pin is only valid for the
- * attempt it was made for — on a retry the previous pronode is the one that
- * just failed — so a consumed entry is dropped and the retry re-resolves.
+ * Every widget on the page for the same key claims the same assignment, so a
+ * page with one widget per form costs one assign rather than one per widget.
+ * That is safe because `detectorSessionId` only tells the provider which
+ * bundle's keys decrypt the readings, and every claimant runs that bundle. A
+ * retry never claims (see `customDetectBot`), a failed prefetch drops itself,
+ * and an entry older than PREFETCH_TTL_MS is replaced, so no claimant inherits
+ * a failed or aged provider pin.
  */
 
 import { ProviderApi } from "@prosopo/api";
+import { type Language, widgetLanguageHeaders } from "@prosopo/locale";
 import { getProcaptchaRandomActiveProvider } from "@prosopo/procaptcha-common";
 import type {
 	AssignDetectorBundleResponse,
@@ -59,13 +65,6 @@ interface PrefetchEntry {
 
 const inFlight = new Map<string, PrefetchEntry>();
 
-/**
- * How long a started prefetch stays claimable. A page that mounts several
- * widgets does so within a tick or two of each other, so a short window is
- * enough for them to share one assignment; anything mounting much later
- * (a modal opened minutes in, say) re-resolves rather than reusing a provider
- * pin that has since gone stale.
- */
 const PREFETCH_TTL_MS = 60_000;
 
 const keyOf = (
@@ -73,6 +72,15 @@ const keyOf = (
 	ipMode: IpModeParam,
 	siteKey: string,
 ): string => `${environment}|${ipMode ?? "auto"}|${siteKey}`;
+
+const freshEntry = (key: string): PrefetchEntry | undefined => {
+	const entry = inFlight.get(key);
+	if (entry && Date.now() - entry.startedAt > PREFETCH_TTL_MS) {
+		inFlight.delete(key);
+		return undefined;
+	}
+	return entry;
+};
 
 /**
  * Start resolving a provider and assigning a detector bundle. Safe to call more
@@ -87,9 +95,10 @@ export const prefetchDetector = (
 	environment: EnvironmentTypes,
 	ipMode: IpModeParam,
 	siteKey: string,
+	language?: Language,
 ): void => {
 	const key = keyOf(environment, ipMode, siteKey);
-	if (inFlight.has(key)) return;
+	if (freshEntry(key)) return;
 	const startedAt = Date.now();
 
 	const promise = (async (): Promise<PrefetchedDetector> => {
@@ -97,19 +106,19 @@ export const prefetchDetector = (
 			environment,
 			ipMode,
 		);
-		const providerApi = new ProviderApi(provider.provider.url, siteKey);
+		const providerApi = new ProviderApi(
+			provider.provider.url,
+			siteKey,
+			undefined,
+			widgetLanguageHeaders(language),
+		);
 		const assigned = await providerApi.assignDetectorBundle(siteKey);
 		return { provider, assigned };
 	})();
 
-	// Attach a no-op catch so a failed prefetch never becomes an unhandled
-	// rejection. `takePrefetchedDetector`'s consumer still sees the rejection on
-	// the original promise and falls back.
-	//
-	// Drop the entry if it rejects, so a later widget re-resolves instead of
-	// inheriting a pin that has already failed. This is what the previous
-	// delete-on-claim was protecting against; doing it on rejection instead
-	// keeps that guarantee while letting concurrent widgets share a success.
+	// Besides dropping a failed entry, this catch stops it surfacing as an
+	// unhandled rejection; claimants still see the rejection on the original
+	// promise and fall back.
 	promise.catch(() => {
 		if (inFlight.get(key)?.promise === promise) inFlight.delete(key);
 	});
@@ -117,40 +126,15 @@ export const prefetchDetector = (
 };
 
 /**
- * Claim a prefetched assignment, if one was started for this exact key and is
- * still fresh.
- *
- * The entry is deliberately NOT removed on claim. It used to be, which meant
- * that on a page carrying several widgets only the first shared the prefetch
- * and every other widget issued its own provider resolve + assign. One
- * production integration mounts a widget per form — eight on a property page —
- * so a single page view cost eight assign calls instead of one, enough to push
- * ordinary visitors past a rate detector.
- *
- * Sharing one assignment across widgets is sound: `detectorSessionId` binds to
- * a bundleId in Redis purely so the provider can resolve which cipher keys
- * decrypt that widget's SIMD readings. Widgets sharing an assignment run the
- * same bundle, so the same keys are the right ones. It is a lookup, not a
- * one-shot token.
- *
- * A failed prefetch still removes itself (see `prefetchDetector`), and entries
- * go stale after PREFETCH_TTL_MS, so neither a failed nor an aged provider pin
- * is handed out.
+ * Claim the prefetched assignment for this exact key, if one is still fresh.
+ * The entry stays in place so every widget on the page shares it.
  */
 export const takePrefetchedDetector = (
 	environment: EnvironmentTypes,
 	ipMode: IpModeParam,
 	siteKey: string,
-): Promise<PrefetchedDetector> | undefined => {
-	const key = keyOf(environment, ipMode, siteKey);
-	const entry = inFlight.get(key);
-	if (!entry) return undefined;
-	if (Date.now() - entry.startedAt > PREFETCH_TTL_MS) {
-		inFlight.delete(key);
-		return undefined;
-	}
-	return entry.promise;
-};
+): Promise<PrefetchedDetector> | undefined =>
+	freshEntry(keyOf(environment, ipMode, siteKey))?.promise;
 
 /** Test seam — drops any in-flight prefetches. */
 export const clearPrefetchedDetectors = (): void => {

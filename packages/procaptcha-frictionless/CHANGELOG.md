@@ -1,5 +1,888 @@
 # @prosopo/procaptcha-frictionless
 
+## 2.21.9
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/api@4.7.7
+  - @prosopo/common@3.3.1
+  - @prosopo/locale@3.13.1
+  - @prosopo/procaptcha-audio@0.2.10
+  - @prosopo/procaptcha-common@2.21.9
+  - @prosopo/procaptcha-icon-order@0.2.10
+  - @prosopo/procaptcha-pow@2.13.19
+  - @prosopo/procaptcha-puzzle@2.17.9
+  - @prosopo/procaptcha-react@2.14.10
+  - @prosopo/types@5.19.0
+  - @prosopo/widget-skeleton@2.10.4
+
+## 2.21.8
+### Patch Changes
+
+- 159766a: Let a self-hosted provider run a detector you built yourself, and ship a working example built on BotD.
+  
+  Until now the only detector a provider could load was ours. Its output can only be read by the closed decoder in the
+  provider, so a self-hosted node with any other detector had nothing to score visitors with.
+  
+  **Open detector format.** A pool bundle can now be marked `format: "open-v1"`. The provider reads those bundles with a
+  short, documented decoder: an AES-256-GCM payload whose key is wrapped with the bundle's RSA-OAEP public key, carrying
+  `{ score, timestamp, userId, userAgent, headHash, d }`. The same checks apply as for our detector — the token must
+  match this visitor's account, user agent and page, and be under ten minutes old — and `d` reaches decision and routing
+  machines as `input.d`. Open bundles are only loaded when `PROSOPO_DETECTOR_OPEN_FORMAT=1`; the hosted fleet never sets
+  it, so nothing changes there.
+  
+  **`demos/detector-botd`.** A detector built on BotD that scores automated browsers as 1 and everything else as 0, plus a
+  `pool` script that builds the bundles with a fresh keypair each. Writing your own detector means replacing one function;
+  the encryption is done for you.
+  
+  **`detector_pool_set` CLI command.** Writes a pool read from stdin into the provider's pool directory. Stdin rather than a
+  file because the provider image runs as a non-root user and cannot read a file copied in as root.
+  
+  **Self-hosted compose and image.** The image now creates its pool directory owned by the runtime user, and the
+  self-hosted compose file mounts a `detector_pool` volume there and turns the open format on. The compose file no longer
+  defaults to provider 3.8.19, which it had silently stayed on for nineteen releases: `generateSelfHostedEnv.ts` writes
+  the version of the checkout it runs from.
+  
+  `SELF_HOSTING.md` gains a "Bring your own detector" section and now loads the widget with `type="module"`, which the
+  bundle has needed since it was split into chunks.
+  
+  Tested end to end on a stack built from this branch: stock headless Chromium was flagged by BotD and served a puzzle,
+  headed Chromium passed with proof of work, the detector's signals were stored on the session, and a provider without
+  the flag rejected the pool.
+- Updated dependencies [b460b0b]
+- Updated dependencies [159766a]
+- Updated dependencies [96dbf9a]
+  - @prosopo/locale@3.13.0
+  - @prosopo/types@5.18.0
+  - @prosopo/procaptcha-common@2.21.8
+  - @prosopo/procaptcha-react@2.14.9
+  - @prosopo/procaptcha-audio@0.2.9
+  - @prosopo/procaptcha-icon-order@0.2.9
+  - @prosopo/procaptcha-pow@2.13.18
+  - @prosopo/procaptcha-puzzle@2.17.8
+  - @prosopo/api@4.7.6
+  - @prosopo/common@3.3.0
+
+## 2.21.7
+### Patch Changes
+
+- Updated dependencies [49892fc]
+  - @prosopo/locale@3.12.1
+  - @prosopo/procaptcha-audio@0.2.8
+  - @prosopo/procaptcha-icon-order@0.2.8
+  - @prosopo/procaptcha-pow@2.13.17
+  - @prosopo/procaptcha-puzzle@2.17.7
+  - @prosopo/procaptcha-react@2.14.8
+  - @prosopo/types@5.17.1
+  - @prosopo/api@4.7.5
+  - @prosopo/common@3.3.0
+  - @prosopo/procaptcha-common@2.21.7
+
+## 2.21.6
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- Updated dependencies [f31f0d5]
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/widget-skeleton@2.10.3
+  - @prosopo/api@4.7.4
+  - @prosopo/common@3.3.0
+  - @prosopo/locale@3.12.0
+  - @prosopo/procaptcha-audio@0.2.7
+  - @prosopo/procaptcha-common@2.21.6
+  - @prosopo/procaptcha-icon-order@0.2.7
+  - @prosopo/procaptcha-pow@2.13.16
+  - @prosopo/procaptcha-puzzle@2.17.6
+  - @prosopo/procaptcha-react@2.14.7
+  - @prosopo/types@5.17.0
+
+## 2.21.5
+### Patch Changes
+
+- 3c5d196: Make the Web Bot Auth agent pass work end to end. Driving a signing agent through the demo site turned up six things that stopped an allowed agent getting through, or let a blocked one past:
+  
+  - A site set to a fixed captcha type (PoW, image, puzzle, icon order), or a provider with no detector bundles, served its challenge before the signature was checked. A verified agent's Allow and Block rules are now applied first.
+  - An agent with an existing challenge session for the same user, IP and site got that session back. A matching Allow rule now replaces it with a fresh authenticated session.
+  - An agent whose page sent no detector token failed with "Failed to store session". The session now gets a generated token, the way the other no-detector paths do.
+  - A provider that sees clients as IPv4-mapped IPv6 (`::ffff:1.2.3.4`) rejected every verify, because the site forwards the plain `1.2.3.4`. The IP check now treats the two as the same address.
+  - Deleting or filtering access rules by `webBotAuthAgent` sent Redis an unescaped URL, which is a query syntax error, so nothing was deleted. Removing an Agent Trust rule in the portal left it in force.
+  - The widget issued the token at page load and never refreshed it. In invisible mode it drew the badge and fired the callback before the user did anything; it now draws nothing and issues the token on execute(). In both modes the pass now expires and renews like a solved PoW, so an agent that takes more than three minutes to fill a form no longer fails with "not recent".
+  
+  Rejected signatures are now logged with the reason.
+- Updated dependencies [b6e9459]
+- Updated dependencies [a5c953d]
+  - @prosopo/locale@3.11.1
+  - @prosopo/procaptcha-react@2.14.6
+  - @prosopo/widget-skeleton@2.10.2
+  - @prosopo/common@3.2.3
+  - @prosopo/procaptcha-audio@0.2.6
+  - @prosopo/procaptcha-icon-order@0.2.6
+  - @prosopo/procaptcha-pow@2.13.15
+  - @prosopo/procaptcha-puzzle@2.17.5
+  - @prosopo/types@5.16.3
+  - @prosopo/procaptcha-common@2.21.5
+  - @prosopo/api@4.7.3
+
+## 2.21.4
+### Patch Changes
+
+- Updated dependencies [49e9385]
+- Updated dependencies [03df637]
+  - @prosopo/locale@3.11.0
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+  - @prosopo/procaptcha-audio@0.2.5
+  - @prosopo/procaptcha-icon-order@0.2.5
+  - @prosopo/procaptcha-pow@2.13.14
+  - @prosopo/procaptcha-puzzle@2.17.4
+  - @prosopo/procaptcha-react@2.14.5
+  - @prosopo/api@4.7.2
+  - @prosopo/procaptcha-common@2.21.4
+
+## 2.21.3
+### Patch Changes
+
+- Updated dependencies [e841741]
+  - @prosopo/locale@3.10.1
+  - @prosopo/common@3.2.1
+  - @prosopo/procaptcha-audio@0.2.4
+  - @prosopo/procaptcha-icon-order@0.2.4
+  - @prosopo/procaptcha-pow@2.13.13
+  - @prosopo/procaptcha-puzzle@2.17.3
+  - @prosopo/procaptcha-react@2.14.4
+  - @prosopo/types@5.16.1
+  - @prosopo/api@4.7.1
+  - @prosopo/procaptcha-common@2.21.3
+
+## 2.21.2
+### Patch Changes
+
+- 6b11b15: The widget now tells the provider which language to use, so the challenge text comes back in the user's language.
+  
+  - The widget sends its language in a `Prosopo-Lang` header on every provider request. It uses the site's `data-language` if set, otherwise the browser's languages. The browser's own `Accept-Language` is left untouched, so bot detection still sees the real value.
+  - `data-language` may list several codes (`"xx, tr"`). The first one we support wins. If none are supported, the widget uses the browser's language instead of English.
+  - The provider picks `?lng=`, then `Prosopo-Lang`, then `Accept-Language`, then English.
+  - A variant uses its parent's catalogue (`zh-SG` → `zh`, `pt-PT` → `pt`). Traditional Chinese (`zh-TW`, `zh-HK`, `zh-Hant`) skips the Simplified `zh` catalogue and moves on to the reader's next language. `nb`/`nn` map to `no`, `in` to `id` and `jw` to `jv`.
+  - The widget no longer reads or writes an `i18next` cookie or local storage key on the host site.
+  - `ApiClient`/`ProviderApi` take optional default headers as a 4th constructor argument.
+- Updated dependencies [eb99b3d]
+- Updated dependencies [f3f7243]
+- Updated dependencies [cbb6a10]
+- Updated dependencies [4961a7e]
+- Updated dependencies [b351896]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [1634139]
+  - @prosopo/locale@3.10.0
+  - @prosopo/procaptcha-react@2.14.3
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/api@4.7.0
+  - @prosopo/procaptcha-audio@0.2.3
+  - @prosopo/procaptcha-icon-order@0.2.3
+  - @prosopo/procaptcha-pow@2.13.12
+  - @prosopo/procaptcha-puzzle@2.17.2
+  - @prosopo/procaptcha-common@2.21.2
+
+## 2.21.1
+### Patch Changes
+
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+- Updated dependencies [aab71a1]
+  - @prosopo/types@5.15.1
+  - @prosopo/procaptcha-pow@2.13.11
+  - @prosopo/procaptcha-common@2.21.1
+  - @prosopo/api@4.6.1
+  - @prosopo/common@3.1.65
+  - @prosopo/locale@3.9.1
+  - @prosopo/procaptcha-audio@0.2.2
+  - @prosopo/procaptcha-icon-order@0.2.2
+  - @prosopo/procaptcha-puzzle@2.17.1
+  - @prosopo/procaptcha-react@2.14.2
+  - @prosopo/widget-skeleton@2.10.1
+
+## 2.21.0
+### Minor Changes
+
+- 4570692: Let a user swap the puzzle captcha for an image challenge, on sites where Prosopo has switched it on.
+  
+  Sites get a new staff-only setting, `widgetFeatureFlags.puzzleImageSwitch`. It is off by default and has no stored default. When it is on and the site allows image challenges, the puzzle response says `imageSwitchAvailable: true`. The puzzle then shows a small grid icon next to its title, with a "Switch to an image challenge" tooltip on hover or keyboard focus. After two wrong answers or refreshes in a row, the icon fills with the primary colour and its tooltip shows without a hover, because a touch screen has no hover. The tooltip goes away once the user starts moving the piece.
+  
+  Pressing it re-mints the session the same way refresh does, with `switchToImage: true`. The provider only honours that when the request is a refresh of a puzzle session on the same site and the switch is on. The new session is then an image challenge with reason `PUZZLE_USER_SWITCH`. Like the refresh limit, it only ever moves from puzzle to image, so a client that fakes the request can only make its own challenge harder.
+  
+  Also fixes a wrong puzzle answer restarting the whole widget. The user was sent back to the checkbox instead of getting a new puzzle with "Not quite — try again", and a wasted `/frictionless` request went out. The puzzle now retries in place.
+
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/procaptcha-puzzle@2.17.0
+  - @prosopo/procaptcha-common@2.21.0
+  - @prosopo/api@4.6.0
+  - @prosopo/types@5.15.0
+  - @prosopo/locale@3.9.0
+  - @prosopo/procaptcha-audio@0.2.1
+  - @prosopo/procaptcha-icon-order@0.2.1
+  - @prosopo/procaptcha-pow@2.13.10
+  - @prosopo/procaptcha-react@2.14.1
+  - @prosopo/common@3.1.64
+
+## 2.20.0
+### Minor Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- e13d7a8: New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
+  
+  Icon-order is off by default. Only Prosopo can switch it on for a site, with the `captchaTypeFeatureFlags.iconOrder` feature flag; the site owner cannot. A site without the flag is never served icon-order by any route, and the challenge endpoint refuses it. Once the flag is on, the owner can still keep icon-order out of the frictionless flow with `frictionlessTypes.iconOrder`, the same way as image and puzzle.
+  
+  The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
+  
+  `@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
+  
+  Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+  
+  The demo playground has icon-order pages, and there is an end-to-end test for it.
+
+### Patch Changes
+
+- bdac756: The checkbox can be clicked as soon as the widget appears, instead of spinning until bot detection has finished.
+  
+  Detection downloads and runs a detector bundle before the widget knows which challenge to show, which took around three seconds on staging. The checkbox used to sit in its loading state for all of that. Now it is live from the first paint. A click made while detection is still running switches the box to "Checking", is remembered along with where the user clicked, and is replayed on whichever challenge detection picks, so the user never has to click twice.
+  
+  This includes a click made after detection has answered but while the chosen challenge's code is still downloading. That click was being dropped, because the widget checked for a held click before the download rather than after it.
+  
+  It also includes a click whose press begins on the placeholder just as the challenge is ready. Swapping the box out mid-press made the browser deliver the click to neither box, so the swap now waits, for up to a second, for the press to finish.
+  
+  Nothing about what a token needs has changed: no challenge opens and no token is issued until detection has produced a verdict, so clicking early does not let a bot skip it. Synthetic clicks are still ignored, and a detection failure still falls back the same way it did before.
+  
+  Tests: the checkbox is live while detection is pending; a click during detection shows the spinner and opens the chosen challenge with the click position once detection lands; a keyboard activation is held the same way; a synthetic click is ignored. `manualStart.test.ts` is renamed `startMode.test.ts`, since it now covers both start modes.
+  
+  The e2e `clickIAmHuman` helper now waits on `/captcha/image` rather than any `/captcha/*` request. Cypress now clicks the checkbox before `/frictionless` has answered, so the broad pattern was catching that response instead of the image challenge.
+  
+  The e2e checkbox helpers also click straight off a fresh query, rather than through a wrapped element. The widget swaps its placeholder checkbox for the challenge's own once detection answers, and a wrapped element that has left the page reports a (0, 0) position, so the click landed on the page corner.
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/api@4.5.0
+  - @prosopo/procaptcha-audio@0.2.0
+  - @prosopo/procaptcha-common@2.20.0
+  - @prosopo/procaptcha-react@2.14.0
+  - @prosopo/procaptcha-puzzle@2.16.0
+  - @prosopo/procaptcha-icon-order@0.2.0
+  - @prosopo/locale@3.8.0
+  - @prosopo/common@3.1.63
+  - @prosopo/procaptcha-pow@2.13.9
+
+## 2.19.0
+### Minor Changes
+
+- dcb691b: Add a refresh control to the puzzle captcha.
+  
+  A user who can't solve the puzzle they were given can now ask for a different one, from a button in the puzzle's header. The replacement comes through a new frictionless session, like a wrong answer already does.
+  
+  The widget tells the provider which session was refreshed (`refreshOf`). The provider then records `refreshOf`, `refreshCount` and `refreshedAfterMs` on the new session, so refresh behaviour can be scored later. After three refreshes in a row it serves an image challenge instead, with reason `PUZZLE_REFRESH_LIMIT`. It only does this if the site has image enabled. The switch only goes from puzzle to image, so a client that lies about its refreshes can only make its own challenge harder. A client that leaves the field out gets a normal session, the same as reloading the page.
+  
+  The image widget's reload button now reports itself as a refresh too. That way a user who was moved onto image isn't sent back to the puzzle by their next reload.
+
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [2e69b83]
+- Updated dependencies [4669e64]
+- Updated dependencies [2e69b83]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/procaptcha-react@2.13.7
+  - @prosopo/procaptcha-common@2.19.0
+  - @prosopo/procaptcha-puzzle@2.15.0
+  - @prosopo/api@4.4.0
+  - @prosopo/locale@3.7.0
+  - @prosopo/common@3.1.62
+  - @prosopo/procaptcha-pow@2.13.8
+  - @prosopo/widget-skeleton@2.10.1
+
+## 2.18.7
+### Patch Changes
+
+- 2145922: A wrong image answer no longer just closes the popup. The widget now says "Not quite — try again" beside the checkbox (the same translated line the puzzle uses), and the checkbox stays clickable so the user can have another go. This happens even when the site supplies its own failed callback, and it survives the frictionless widget restarting itself after the failure. The notice clears as soon as the user starts again.
+- 4461043: Widget accessibility fixes.
+  
+  - Screen readers now announce the checkbox's error message, through a polite live region that exists from the moment the widget mounts.
+  - The authenticated ("Verified agent" / "Trusted request") badge now follows `theme: "dark"` and the widget's language.
+  - The badge no longer carries a fixed `aria-label`, which hid its visible text and said "Verified agent" even for a trusted request.
+- 54a07f3: Provider errors shown in the widget now use the widget's configured language. The provider translates errors into the browser's language, so a German widget in an English browser showed English errors. The widget now translates the error key itself and keeps the provider's text only for errors its catalogue does not know.
+- b75e9b7: Fix the error FAQ link and translate two widget strings.
+  
+  - The error FAQ link no longer ends in `//` when `PROSOPO_DOCS_URL` is set, and a trailing slash on that variable no longer breaks it.
+  - The "Cannot load CAPTCHA" fallback message now shows in the widget's language.
+  - The image challenge's reload button now has a translated accessible name instead of always being "Reload".
+  - Adds `WIDGET.CANNOT_LOAD` and `WIDGET.RELOAD` to every locale.
+- Updated dependencies [ede4352]
+- Updated dependencies [4ea2ca9]
+- Updated dependencies [2145922]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [af4a7e7]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [7b65240]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b38d55f]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+- Updated dependencies [082346b]
+  - @prosopo/types@5.12.0
+  - @prosopo/procaptcha-common@2.18.2
+  - @prosopo/procaptcha-react@2.13.6
+  - @prosopo/locale@3.6.2
+  - @prosopo/procaptcha-pow@2.13.7
+  - @prosopo/procaptcha-puzzle@2.14.7
+  - @prosopo/common@3.1.61
+  - @prosopo/widget-skeleton@2.10.1
+  - @prosopo/api@4.3.8
+
+## 2.18.6
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/api@4.3.7
+  - @prosopo/procaptcha-common@2.18.1
+  - @prosopo/procaptcha-pow@2.13.6
+  - @prosopo/procaptcha-puzzle@2.14.6
+  - @prosopo/procaptcha-react@2.13.5
+
+## 2.18.5
+### Patch Changes
+
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [294b480]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [caabd39]
+- Updated dependencies [dab0338]
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/locale@3.6.1
+  - @prosopo/procaptcha-common@2.18.0
+  - @prosopo/procaptcha-react@2.13.4
+  - @prosopo/api@4.3.6
+  - @prosopo/procaptcha-pow@2.13.5
+  - @prosopo/procaptcha-puzzle@2.14.5
+
+## 2.18.4
+### Patch Changes
+
+- 20542d8: Send page scroll events with the captcha's behavioural data.
+  
+  The widget now passes a fourth collector, the page's scroll position and the
+  time of each scroll, alongside mouse, touch and click data, and the provider
+  stores it as `c4` on the captcha record. People scroll in uneven bursts while
+  bots tend to scroll at a steady rate, so this gives detection something to
+  work with. Detector bundles that predate the scroll tracker simply send no
+  `c4`.
+- eebe6ee: Stop re-sending a consumed sessionId, and keep `CAPTCHA.NO_SESSION_FOUND` off the checkbox.
+  
+  A provider consumes a session when it issues a challenge against it, so a second challenge fetch carrying the same id cannot succeed. Three changes follow from that:
+  
+  - The puzzle widget's wrong-answer path called `manager.start()` again on the same session. It now hands back to the frictionless wrapper through `onReload`, which mints a new session and re-mounts the widget with `autoStart` — the same route the reload button already took. `onReload` gains an options argument, and `ProcaptchaProps` gains `startShowRetry`, so the replacement challenge still carries the retry prompt across the re-mount.
+  - The puzzle manager tracks the id it has already exchanged for a challenge and short-circuits rather than re-sending it, covering the other paths that re-enter `start()`. The id is marked once the provider has answered, not before the request goes out, so a throw still falls over onto another provider.
+  - `CAPTCHA.NO_SESSION_FOUND` is now treated as an internal recovery signal in the puzzle, PoW and image widgets and in the frictionless wrapper: where a re-mint is going to happen the widget holds its loading state instead of rendering the error. With no recovery route available the error is still shown.
+  
+  The wrapper's restart is no longer a flat ten seconds. `getRestartDelayMs` in `@prosopo/procaptcha-common` doubles it to a two-minute ceiling, jittered over the top half of each interval, so a client that keeps losing its session retries indefinitely at a bounded rate.
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/procaptcha-pow@2.13.4
+  - @prosopo/procaptcha-puzzle@2.14.4
+  - @prosopo/procaptcha-common@2.17.3
+  - @prosopo/procaptcha-react@2.13.3
+  - @prosopo/api@4.3.5
+
+## 2.18.3
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+  - @prosopo/types@5.10.1
+  - @prosopo/api@4.3.4
+  - @prosopo/procaptcha-common@2.17.2
+  - @prosopo/procaptcha-pow@2.13.3
+  - @prosopo/procaptcha-puzzle@2.14.3
+  - @prosopo/procaptcha-react@2.13.2
+
+## 2.18.2
+### Patch Changes
+
+- Updated dependencies [aed164d]
+- Updated dependencies [3d45c37]
+- Updated dependencies [4cc28db]
+- Updated dependencies [d3b3286]
+  - @prosopo/procaptcha-react@2.13.1
+  - @prosopo/widget-skeleton@2.10.0
+  - @prosopo/procaptcha-common@2.17.1
+  - @prosopo/procaptcha-pow@2.13.2
+  - @prosopo/procaptcha-puzzle@2.14.2
+
+## 2.18.1
+### Patch Changes
+
+- Updated dependencies [94929c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [c3300ee]
+- Updated dependencies [e180281]
+- Updated dependencies [5e5fb9e]
+  - @prosopo/procaptcha-common@2.17.0
+  - @prosopo/locale@3.6.0
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/procaptcha-puzzle@2.14.1
+  - @prosopo/widget-skeleton@2.9.0
+  - @prosopo/procaptcha-react@2.13.0
+  - @prosopo/procaptcha-pow@2.13.1
+  - @prosopo/api@4.3.3
+
+## 2.18.0
+### Minor Changes
+
+- 59c02da: Replace React with vanilla TS/DOM in the widget.
+  
+  The widget packages no longer depend on react, react-dom, @emotion or
+  react-i18next: every component is now a `mount*` function returning a handle
+  with `update`/`destroy`. `useTranslation` is replaced by `createTranslator`,
+  which exposes i18next's `t` plus the events that used to trigger a re-render.
+  The rendered markup, styling and behaviour are unchanged — only the
+  implementation is.
+  
+  Everything the widget has gained since this rewrite started is carried over,
+  so nothing is lost by dropping React: the shared challenge surface (popup and
+  float placement, escape/outside-click dismissal and the dialog focus trap),
+  the image-tile and puzzle-piece keyboard paths, the checkbox's focus handover
+  across the loading swap, the server-rendered puzzle imagery, `startMode:
+  "manual"` with `window.procaptcha.start()`, `data-bind` / targeted
+  `execute(widgetId)`, the Web Bot Auth "authenticated" badge, the client
+  session id, and the bounded session re-mint and reload handling in the
+  frictionless wrapper.
+
+### Patch Changes
+
+- Updated dependencies [59c02da]
+  - @prosopo/procaptcha-common@2.16.0
+  - @prosopo/procaptcha-puzzle@2.14.0
+  - @prosopo/procaptcha-react@2.12.0
+  - @prosopo/procaptcha-pow@2.13.0
+  - @prosopo/locale@3.5.0
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+  - @prosopo/api@4.3.2
+
+## 2.17.1
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+  - @prosopo/locale@3.4.4
+  - @prosopo/api@4.3.1
+  - @prosopo/common@3.1.57
+  - @prosopo/procaptcha-common@2.15.1
+  - @prosopo/procaptcha-pow@2.12.8
+  - @prosopo/procaptcha-puzzle@2.13.4
+  - @prosopo/procaptcha-react@2.11.4
+
+## 2.17.0
+### Minor Changes
+
+- 0f23010: Correlate captcha sessions with Prosopo Protect sessions on sites that run both.
+  
+  Protect's challenge page already renders the widget with `data-sessionid=<its session id>`, so captchas served from the interstitial can be matched back to the Protect session. A widget the site embeds itself — on its own pages — had no way to know that id, so those sessions could not be matched to anything.
+  
+  The widget now falls back to reading Protect's session id from the page (`window.prosopo_protect.jti`, or the `prosopo_session` cookie Protect sets on the site's domain) when the site has not supplied a session id of its own. A session id the site does supply always wins, so nothing changes for sites that use the field themselves, and sites without Protect are unaffected. Only the id is read — the session token that shares the cookie never leaves the page.
+  
+  Two gaps in the existing field are closed alongside it: the widget now sends the session id when it first asks for a captcha rather than only when submitting a solution, and the provider records it on the session at that point. Previously a session that was allowed without a challenge, or abandoned before the user solved one, carried no session id at all. An escalated session now inherits the id from the session it escalated from.
+
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/procaptcha-common@2.15.0
+  - @prosopo/api@4.3.0
+  - @prosopo/procaptcha-pow@2.12.7
+  - @prosopo/procaptcha-puzzle@2.13.3
+  - @prosopo/procaptcha-react@2.11.3
+
+## 2.16.5
+### Patch Changes
+
+- be25974: Two optional per-site settings are now passed through to the client. Sites that
+  do not set them are unaffected.
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/api@4.2.5
+  - @prosopo/procaptcha-common@2.14.2
+  - @prosopo/procaptcha-pow@2.12.6
+  - @prosopo/procaptcha-puzzle@2.13.2
+  - @prosopo/procaptcha-react@2.11.2
+
+## 2.16.4
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- 08e2254: Don't lose an `execute()` call that arrives before the captcha widget has finished loading. Previously, submitting a form quickly on an invisible captcha could do nothing: the widget only starts listening once the provider has answered and its code has loaded, so an earlier `execute()` was dropped and the challenge never opened. The call is now held and replayed as soon as the widget is ready.
+- 4d45e3d: Stop `DecisionMachineRunner` retaining every instance, and re-roll the frictionless widget onto another provider on an unrecognised error.
+  
+  `DecisionMachineRunner` enrolled itself in a module-level `Set` so an artifact upload could flush every runner's cache. That assumed runners were built once per process; they are built per request, and nothing pruned the set, so it grew for as long as the process lived and construction eventually began to fail. `WeakRef` did not bound it — the set held the wrapper, which outlives its referent. The registry is replaced by a generation counter: an invalidation bumps it, and a runner drops its cache when the value it carries no longer matches. Nothing holds a runner reference, so there is nothing to grow.
+  
+  The widget compounded it. The HTTP client does not throw on a 400 with a JSON body, so a provider-side failure came back looking like a normal result, and the frictionless guard turned it into a terminal error — no fallback, no retry, no restart timer. One unhealthy provider stranded the user on its first response even when every other node was healthy. Errors whose key we do not recognise are now thrown, which hands them to the existing provider re-roll. Integration faults (site key, origin, captcha type) and policy denials still display as before: another provider returns the same answer, and for those the message is the point. Errors with no key at all are unchanged, since hard blocks arrive in that shape. A site's error callback now also fires once retries are exhausted, which it previously did not.
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d710b7f]
+- Updated dependencies [d4e9425]
+- Updated dependencies [0be8838]
+  - @prosopo/common@3.1.56
+  - @prosopo/locale@3.4.3
+  - @prosopo/procaptcha-common@2.14.1
+  - @prosopo/procaptcha-pow@2.12.5
+  - @prosopo/procaptcha-puzzle@2.13.1
+  - @prosopo/procaptcha-react@2.11.1
+  - @prosopo/types@5.8.4
+  - @prosopo/api@4.2.4
+
+## 2.16.3
+### Patch Changes
+
+- 864ddde: Make the challenges usable with a keyboard and a screen reader.
+  
+  The puzzle could only be solved by dragging with a mouse or a finger. The piece
+  was a plain `div`, so it could not be tabbed to, had no name or role, and a
+  screen reader announced nothing at all — a user on assistive tech could tick "I
+  am human", get a silent overlay, and have no way forward. The image captcha had
+  the same problem in its tiles.
+  
+  What changed:
+  
+  - The puzzle piece can now be focused and moved with the arrow keys (hold shift
+    for smaller steps, Home to start over, Enter or Space to submit). It has a
+    name, a role, and a visible focus ring.
+  - The puzzle announces its state as you go: where the piece is, as a percentage
+    across and down the board; that an answer is being checked; and that a failed
+    go has been replaced by a fresh puzzle.
+  - The image captcha tiles are now buttons rather than clickable `div`s, so they
+    can be tabbed to and activated with Enter or Space, and they report whether
+    they are selected instead of only looking selected.
+  - Both challenges now open as a proper dialog: it takes focus when it opens,
+    keeps Tab inside itself, and gives focus back to the checkbox on close.
+  - The spinner that replaces the checkbox while a check runs used to drop focus
+    to the top of the page without saying why. It now takes focus in the
+    checkbox's place, names itself, and hands focus back when the check finishes.
+    This affects the pow, image and puzzle flows.
+  - The puzzle's on-screen text was hardcoded English. It now goes through the
+    locale package, and the new strings are translated into all 32 locales.
+  
+  A visual puzzle still cannot be solved by someone who cannot see it — the widget
+  is never told where the target is, so there is nothing it could describe. Sites
+  that need a challenge a blind user can complete should use the pow captcha type,
+  which needs no interaction beyond the checkbox.
+- Updated dependencies [028a158]
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [864ddde]
+- Updated dependencies [028a158]
+  - @prosopo/procaptcha-common@2.14.0
+  - @prosopo/procaptcha-react@2.11.0
+  - @prosopo/types@5.8.3
+  - @prosopo/procaptcha-puzzle@2.13.0
+  - @prosopo/procaptcha-pow@2.12.4
+  - @prosopo/locale@3.4.2
+  - @prosopo/api@4.2.3
+  - @prosopo/common@3.1.55
+
+## 2.16.2
+### Patch Changes
+
+- Updated dependencies [124784f]
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/procaptcha-common@2.13.3
+  - @prosopo/procaptcha-react@2.10.4
+  - @prosopo/types@5.8.2
+  - @prosopo/api@4.2.2
+  - @prosopo/procaptcha-pow@2.12.3
+  - @prosopo/procaptcha-puzzle@2.12.3
+
+## 2.16.1
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+  - @prosopo/api@4.2.1
+  - @prosopo/procaptcha-common@2.13.2
+  - @prosopo/procaptcha-pow@2.12.2
+  - @prosopo/procaptcha-puzzle@2.12.2
+  - @prosopo/procaptcha-react@2.10.3
+
+## 2.16.0
+### Minor Changes
+
+- af267c2: Web Bot Auth verifier and an authenticated frictionless flow for pre-verified agents.
+  
+  **`@prosopo/web-bot-auth`** — a new package: an RFC 9421 HTTP Message Signatures verifier built on `@noble/curves/ed25519`, with no Cloudflare dependency. It parses `Signature-Agent` in both its bare-string and dictionary forms, resolves the signer's JWKS at `/.well-known/http-message-signatures-directory` honouring the response's cache-control TTL, and verifies the Ed25519 signature over the RFC 9421 signature base.
+  
+  **Provider fast path.** `/captcha/frictionless` returns `captchaType: authenticated` when a non-`deferToVerify` `AccessPolicyType.Allow` rule matches the request's user scope, and writes a session with `serverChecked: false`, `agent: true` and the issuing IP frozen for verify-time binding. Decrypt, bot score and the decision machine are all skipped. A verified `Signature-Agent` is one way to qualify — the userScope gains a `webBotAuthAgent` field, set only when signature verification succeeded so a rule scoped to a signer can never be matched by a spoofed header — but an IP CIDR, JA4, user agent, ASN or country rule qualifies the same way. A `Block` or `Restrict` on the same match set always wins, because severity outranks Allow.
+  
+  **`/client/authenticated/verify`.** A separate router with mandatory IP binding — the operator must forward the client IP (`API.AUTHENTICATED_IP_REQUIRED`) and it must match the one the session was issued to (`API.AUTHENTICATED_IP_MISMATCH`), so a leaked token cannot be replayed from elsewhere. Single use is enforced through `serverChecked`, and `captchaType` is checked so an ordinary captcha token cannot be redeemed on this route. `clientSessionId` correlation goes through the same `isClientSessionMismatch` helper as pow / image / puzzle, so the authenticated path cannot drift from the others.
+  
+  **Surface.** `AccessPolicyType.Allow` and `CaptchaType.authenticated`; `webBotAuthAgent` on the user scope (indexed, normalised at parse time to a lowercase scheme+host with no trailing slash); `Session.agent` / `Session.webBotAuthAgent` for the Traffic view's "pre-verified pass" filter; `submitAuthenticatedCaptchaVerify` on `ProviderApi` and the matching branch in `@prosopo/server.verifyProvider`; `AuthenticatedBadge` and a dispatch branch in `procaptcha-frictionless`.
+  
+  Three fixes the new end-to-end coverage turned up, each of which broke the flow outright:
+  
+  - `ipMatchesSession` compared the operator's parsed IP against the session's composite halves with `===`. A session read back from Mongo carries BSON (`Decimal128`, or `Long` on pre-migration records), not the `bigint` the type claims, so the comparison was false for every session that had been through the database — every legitimate redemption was rejected as `API.AUTHENTICATED_IP_MISMATCH`. Both halves are now normalised before comparison, and an unparseable half fails closed rather than defaulting to `0n`, so garbage still cannot match garbage.
+  - `serverChecked` was never written onto the authenticated session, so "never set" and "consumed" were distinguishable only by an absence. It is now written as `false` at issuance.
+  - `serverChecked` was missing from `SESSION_PROJECTION`. Left out, the single-use check reads `undefined` and an authenticated token verifies an unlimited number of times.
+
+### Patch Changes
+
+- 6c5b82f: Fall back to a `data:` URL when `blob:` is blocked, so a CSP that permits one scheme keeps the detector.
+  
+  `DetectorLoaderFromScript` imported the provider-served module text from a blob URL only. `blob:` and `data:` are gated by different CSP directives and sites commonly allow one without the other — a `script-src` of `*` matches neither, and a policy listing `data:` for scripts with `blob:` only under `worker-src` blocks the blob path outright. On such an origin the import threw, the caller fell through to its no-detector path, and the session sent no detector session id, no token and no head hash, so the provider recorded `MISSING_TOKEN` and served a challenge the session could not pass frictionlessly.
+  
+  - Percent-encoding rather than base64: the module is several hundred KB and `btoa(String.fromCharCode(...bytes))` overflows the call stack at that size.
+  - The blob URL is revoked on every path, including when its own import fails.
+  - `/* webpackIgnore: true */` sits alongside `/* @vite-ignore */`. Neither is redundant — `@vite-ignore` stops Vite analysing a non-literal specifier, `webpackIgnore` stops webpack rewriting it into a context module that cannot resolve a blob or data URL at runtime.
+  - The import is injected as `ModuleImporter` so the fallback is testable without a real dynamic import.
+  
+  Known gap, not addressed here: `removeComments` in the shared build config strips both pragmas from `dist/`, so consumers bundling this package from npm still receive a bare `import(url)`. Emitting comments would leak source comments into shipped output, so that needs a mechanism which does not rely on a comment surviving compilation.
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/api@4.2.0
+  - @prosopo/procaptcha-common@2.13.1
+  - @prosopo/procaptcha-pow@2.12.1
+  - @prosopo/procaptcha-puzzle@2.12.1
+  - @prosopo/procaptcha-react@2.10.2
+
+## 2.15.1
+### Patch Changes
+
+- 46cca63: Make the post-PoW escalation handoff idempotent.
+  
+  Follow-up to the `CAPTCHA.NO_SESSION_FOUND` recovery fix: this is the other producer of the duplicate `/captcha/image` POST that fix had to recover from.
+  
+  Production, 2026-09-07, the same affected user:
+  
+  ```
+  11:27:49.910  POST /pow/solution   200  escalation envelope returned
+  11:27:50.263  POST /captcha/image  200  escalation session issued
+  11:27:55.030  POST /captcha/image  400  CAPTCHA.NO_SESSION_FOUND, same session
+  ```
+  
+  The provider mints exactly one escalation session per PoW solution and consumes it on the first challenge fetch. The PoW manager fires `onEscalate` from inside its `providerRetry`-wrapped `submit()`, so a throw anywhere after the handoff re-runs `submit()` and escalates a second time on the same envelope — mounting a second image widget against a session the first one already spent. `onEscalate` now ignores a repeat handoff for a sessionId it has already mounted; a genuinely new escalation session is still followed.
+  
+  Adds `escalationHandoff.integration.test.tsx`, which drives the real `ProcaptchaFrictionless` wrapper into the real image widget and its real `Manager` with only the network stubbed. The stub enforces the provider's one-shot session contract and returns the `NO_SESSION_FOUND` envelope in the response body rather than throwing — `HttpClientBase` only throws when a failure isn't JSON, so a 400 from the provider arrives as `challenge.error`, which is what the widget's recovery path keys off.
+- 9e06d72: Stop `CAPTCHA.NO_SESSION_FOUND` leaving the widget on a dead checkbox.
+  
+  Users reported a checkbox reading "No session found" that never recovered, usually after pressing the image-challenge reload button. Provider logs show the shape clearly: `POST /captcha/image` returns 200 and issues a challenge, then 2-6 seconds later the *same* sessionId is POSTed again and the provider answers 400 `CAPTCHA.NO_SESSION_FOUND` — `checkAndRemoveSession` consumed the session when it issued the first challenge, so a second challenge fetch on that id can never succeed.
+  
+  Three defects combined to turn that into a permanent dead end.
+  
+  - **The manager re-sent a sessionId it had already spent.** `defaultState()` doesn't clear `sessionId` and `buildUpdateState` skips `undefined`, so a stale id survives `resetState()` and any path that re-enters `start()` re-sends it. `Manager` now remembers the id it exchanged for a challenge and, rather than making a request it knows the provider will reject, routes straight to the `CAPTCHA.NO_SESSION_FOUND` state the wrapper already listens for.
+  
+  - **Recovery was one-shot per outer widget lifetime and had no terminal branch.** `ProcaptchaWidget` always takes the `onSessionInvalidated` branch and returns before its own `frictionlessState.restart()` fallback, and its guard ref is fresh on every re-mount because the wrapper bumps the mount key. So once the wrapper's one-shot was spent, the second failure was handled by nobody: no re-mint, no restart, no message — just a stuck checkbox. `handleSessionInvalidated` is now a bounded counter (`MAX_SESSION_INVALIDATED_RETRIES`) rather than a boolean, it reports `exhausted` to the caller, a reload press clears it (a reload mints a genuinely new session, so it shouldn't spend the budget for the old one), and exhaustion falls over visibly through `fallOverWithStyle` — which schedules the existing 10-second full restart, so there is always a way back.
+  
+  - **`resetState(0)` never reset anything.** `0 || stateRef.current.attemptCount` kept the old count, so `attemptCount` accumulated across every re-mint and `start()`'s own `attemptCount >= 5` fall-over fired after five *cumulative* runs in a widget lifetime. Five successful reload presses were enough to drop the user onto the error placeholder. Now `??`, so callers passing literal `0` get the reset they asked for.
+  - @prosopo/procaptcha-react@2.10.1
+
+## 2.15.0
+### Minor Changes
+
+- d288371: Let a site choose where a challenge opens, and which button triggers it.
+  
+  - `placement: "popup" | "float"`, also `data-placement`. `popup` is the default and unchanged. `float` opens the challenge directly above the widget and keeps it pinned there as the page scrolls, leaves the page usable behind it, and dismisses on Escape or an outside click. An invisible widget always uses popup.
+  - `bind: "#selector"`, also `data-bind`. The matching host-page button triggers that one widget, in visible or invisible mode. The click's default action is prevented so a submit button does not post the form before a token exists.
+  - `execute(widgetId?)`. Called with no argument every widget responds, as before. Called with the id `render()` returns, only that widget runs. Implicitly rendered invisible buttons now trigger only their own widget.
+  
+  Behaviour changes for existing widgets:
+  
+  - Escape now closes the image and puzzle challenge in both placements. For the image captcha this runs the cancel path, which fires `onClose` and restarts frictionless.
+  - Image and puzzle now present on one shared `ChallengeSurface`. Both were already portalled to `document.body`, so neither moves in the page, but the markup around them changed: the outer layer keeps `prosopo-modalOuter` for the image captcha and also carries `prosopo-challenge-surface`, and a new `prosopo-challenge-content` element sits between it and `prosopo-modalInner`. A direct-child selector such as `.prosopo-modalOuter > .prosopo-modalInner` no longer matches, and the centring transform now lives on `prosopo-challenge-content` rather than on `prosopo-modalInner`.
+  
+  `createConfig` takes a named options object.
+
+### Patch Changes
+
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/procaptcha-common@2.13.0
+  - @prosopo/procaptcha-react@2.10.0
+  - @prosopo/procaptcha-puzzle@2.12.0
+  - @prosopo/procaptcha-pow@2.12.0
+  - @prosopo/api@4.1.6
+  - @prosopo/common@3.1.54
+
+## 2.14.0
+### Minor Changes
+
+- 80f73c1: Sites can now control when the widget starts working.
+  
+  By default the widget runs bot detection, starts the behavioural collectors and calls `/frictionless` as soon as it mounts. Rendering with `data-start-mode="manual"` (or `startMode: "manual"` in the render options) keeps all of that off the page load: the checkbox still appears immediately, at its final size, so nothing shifts, but the widget does nothing else until one of two things happens.
+  
+  - The site calls `window.procaptcha.start()`, optionally with a widget id, or dispatches a `procaptcha:start` event on `document`. The frictionless flow runs and the widget then waits for a click exactly as it does today.
+  - The visitor clicks the checkbox. The frictionless flow runs and whichever challenge the provider chooses opens straight away, carrying that click's position, so the visitor is never asked to click twice.
+  
+  Both triggers are one-shot: whichever comes first wins and the other is ignored. `window.procaptcha.execute()` also starts a manual widget, opening its challenge immediately. Widgets in the default `auto` mode are unaffected.
+
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/api@4.1.5
+  - @prosopo/common@3.1.53
+  - @prosopo/locale@3.4.1
+  - @prosopo/procaptcha-common@2.12.6
+  - @prosopo/procaptcha-pow@2.11.6
+  - @prosopo/procaptcha-puzzle@2.11.6
+  - @prosopo/procaptcha-react@2.9.122
+  - @prosopo/types@5.6.0
+  - @prosopo/widget-skeleton@2.8.7
+
+## 2.13.23
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+- Updated dependencies [37ab95c]
+  - @prosopo/types@5.5.3
+  - @prosopo/procaptcha-puzzle@2.11.5
+  - @prosopo/api@4.1.4
+  - @prosopo/procaptcha-common@2.12.5
+  - @prosopo/procaptcha-pow@2.11.5
+  - @prosopo/procaptcha-react@2.9.121
+
+## 2.13.22
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/api@4.1.3
+  - @prosopo/procaptcha-common@2.12.4
+  - @prosopo/procaptcha-pow@2.11.4
+  - @prosopo/procaptcha-puzzle@2.11.4
+  - @prosopo/procaptcha-react@2.9.120
+
+## 2.13.21
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/types@5.5.1
+  - @prosopo/api@4.1.2
+  - @prosopo/procaptcha-common@2.12.3
+  - @prosopo/procaptcha-pow@2.11.3
+  - @prosopo/procaptcha-puzzle@2.11.3
+  - @prosopo/procaptcha-react@2.9.119
+
 ## 2.13.20
 ### Patch Changes
 

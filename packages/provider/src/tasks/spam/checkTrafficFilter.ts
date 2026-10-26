@@ -13,10 +13,17 @@
 // limitations under the License.
 
 import {
-	CaptchaType,
+	harshestPolicy,
+	isStricterCaptchaType,
+} from "@prosopo/captcha-severity";
+import {
+	type CaptchaType,
+	type IAudioSettings,
+	type IIconOrderSettings,
 	type IPInfoResponse,
 	type IPInfoResult,
 	type IPuzzleSettings,
+	type ITrafficCategoryException,
 	type ITrafficCategoryPolicy,
 	type ITrafficFilter,
 	ResultReason,
@@ -113,10 +120,22 @@ const matchesDatacenterNameList = (
 	return candidates.some((c) => normalisedList.includes(c));
 };
 
+// iCloud Private Relay puts many real Apple users behind each partner-CDN
+// egress IP, so it is allowlisted for every site without being configured.
+// An operator who wants it treated as datacenter names it in
+// `datacenterNameDenylist`, which wins over this as over any allowlist entry.
+const DEFAULT_DATACENTER_ALLOWLIST: ReadonlyArray<string> = [
+	"iCloud Private Relay",
+];
+
+export const isPrivateRelay = (ipInfo: IPInfoResult): boolean =>
+	matchesDatacenterNameList(ipInfo, DEFAULT_DATACENTER_ALLOWLIST);
+
 export const isDatacenterAllowlisted = (
 	ipInfo: IPInfoResult,
 	allowlist: ReadonlyArray<string> | undefined,
-): boolean => matchesDatacenterNameList(ipInfo, allowlist);
+): boolean =>
+	isPrivateRelay(ipInfo) || matchesDatacenterNameList(ipInfo, allowlist);
 
 // Counterpart to `isDatacenterAllowlisted`. When the datacenter rule is
 // active and the IP's name matches an entry in `datacenterNameDenylist`,
@@ -149,12 +168,47 @@ export const isEffectivelyDatacenter = (
 	);
 };
 
-const push = (
-	matches: TrafficFilterMatch[],
-	category: TrafficCategory,
-	policy: ITrafficCategoryPolicy | undefined,
-): void => {
-	if (policy) matches.push({ category, policy });
+const maxAbuserScore = (ipInfo: IPInfoResult): number =>
+	Math.max(ipInfo.abuserScore ?? 0, ipInfo.companyAbuserScore ?? 0);
+
+const exceptionApplies = (
+	exception: ITrafficCategoryException,
+	ipInfo: IPInfoResult,
+	marketCountries: ReadonlyArray<string>,
+): boolean => {
+	const countryCode = ipInfo.countryCode?.trim().toUpperCase();
+	if (
+		exception.countries &&
+		!(countryCode && exception.countries.includes(countryCode))
+	) {
+		return false;
+	}
+	if (exception.inMarket !== undefined) {
+		if (!countryCode || marketCountries.length === 0) return false;
+		if (marketCountries.includes(countryCode) !== exception.inMarket) {
+			return false;
+		}
+	}
+	return (
+		exception.minAbuserScore === undefined ||
+		maxAbuserScore(ipInfo) >= exception.minAbuserScore
+	);
+};
+
+const policyForIp = (
+	policy: ITrafficCategoryPolicy,
+	ipInfo: IPInfoResult,
+	marketCountries: ReadonlyArray<string>,
+): ITrafficCategoryPolicy => {
+	const exception = harshestPolicy(
+		(policy.exceptions ?? []).filter((candidate) =>
+			exceptionApplies(candidate, ipInfo, marketCountries),
+		),
+		(candidate) => candidate.action === TrafficFilterAction.Block,
+	);
+	if (!exception) return policy;
+	const { countries, inMarket, minAbuserScore, ...exceptionPolicy } = exception;
+	return exceptionPolicy;
 };
 
 // Highest-precedence flag set on the IP wins. Only that category's policy
@@ -177,23 +231,42 @@ const evaluateIpInfo = (
 	const matches: TrafficFilterMatch[] = [];
 	if (!ipInfo || !ipInfo.isValid) return matches;
 
+	const push = (
+		category: TrafficCategory,
+		policy: ITrafficCategoryPolicy | undefined,
+	): void => {
+		if (!policy) return;
+		const marketCountries = trafficFilter.marketCountries ?? [];
+		matches.push({
+			category,
+			policy: policyForIp(policy, ipInfo, marketCountries),
+		});
+	};
+
 	if (ipInfo.isTor) {
-		push(matches, "tor", trafficFilter.tor);
+		push("tor", trafficFilter.tor);
 		return matches;
 	}
 
 	if (ipInfo.isVPN) {
-		push(matches, "vpn", trafficFilter.vpn);
+		push("vpn", trafficFilter.vpn);
 		return matches;
 	}
 
 	if (ipInfo.isProxy) {
-		push(matches, "proxy", trafficFilter.proxy);
+		push("proxy", trafficFilter.proxy);
 		return matches;
 	}
 
 	if (isEffectivelyDatacenter(ipInfo, trafficFilter)) {
-		push(matches, "datacenter", trafficFilter.datacenter);
+		push("datacenter", trafficFilter.datacenter);
+		return matches;
+	}
+
+	// A relay egress IP is a partner CDN node shared by many Apple users, so
+	// the lower flags (an abuser score in particular) describe the node, not
+	// the visitor. Relay owns the IP the way a VPN does.
+	if (ipInfo.isDatacenter && isPrivateRelay(ipInfo)) {
 		return matches;
 	}
 
@@ -201,29 +274,25 @@ const evaluateIpInfo = (
 		const threshold =
 			trafficFilter.abuserScoreThreshold ??
 			trafficFilterAbuserScoreThresholdDefault;
-		const maxScore = Math.max(
-			ipInfo.abuserScore ?? 0,
-			ipInfo.companyAbuserScore ?? 0,
-		);
-		if (maxScore >= threshold) {
-			push(matches, "abuser", trafficFilter.abuser);
+		if (maxAbuserScore(ipInfo) >= threshold) {
+			push("abuser", trafficFilter.abuser);
 			return matches;
 		}
 	}
 
 	// Public DNS resolvers share IP space with search crawlers.
 	if (ipInfo.isCrawler && !isDnsExtra) {
-		push(matches, "crawler", trafficFilter.crawler);
+		push("crawler", trafficFilter.crawler);
 		return matches;
 	}
 
 	if (ipInfo.isSatellite) {
-		push(matches, "satellite", trafficFilter.satellite);
+		push("satellite", trafficFilter.satellite);
 		return matches;
 	}
 
 	if (ipInfo.isMobile) {
-		push(matches, "mobile", trafficFilter.mobile);
+		push("mobile", trafficFilter.mobile);
 		return matches;
 	}
 
@@ -243,6 +312,13 @@ const evaluateIpInfo = (
  * passes cleanly — lower flags are not consulted. So an IP that's flagged
  * as both VPN and proxy is only acted on if the operator has a VPN policy.
  *
+ * Exceptions: once a category owns the IP, its `exceptions` whose conditions
+ * (country, in or out of the account's market, minimum abuser score) the IP
+ * meets replace the category's policy. When several match, the harshest wins
+ * by the same ranking the access rules use, so their order does not matter:
+ * e.g. proxies blocked, but challenged in the market unless their abuser
+ * score is high.
+ *
  * Qualifying conditions: a flag that fails its qualifier does not "own"
  * the IP and evaluation falls through to the next flag. The abuser flag
  * needs `abuserScore` (or `companyAbuserScore`) at or above
@@ -253,9 +329,9 @@ const evaluateIpInfo = (
  * crawlers.
  *
  * Datacenter name lists: `datacenterNameAllowlist` lets operators opt named
- * consumer relays (e.g. iCloud Private Relay) out of the datacenter rule;
- * `datacenterNameDenylist` opts named providers back in even when the ISP
- * heuristic would exempt them.
+ * consumer relays out of the datacenter rule (iCloud Private Relay is out by
+ * default); `datacenterNameDenylist` opts named providers back in, including
+ * iCloud Private Relay, and even when the ISP heuristic would exempt them.
  *
  * When `trafficFilter.skipExtrasOnValidDnsPath` is on and the catcher
  * confirmed the DNS path matched the connection path (`pathValid: true`),
@@ -297,20 +373,22 @@ export const checkTrafficFilter = (
 	return { isBlocked: false, matches };
 };
 
+/** A lower tolerance is a smaller hit radius, so the strictest is the minimum. */
+const strictestTolerance = (
+	current: number | undefined,
+	next: number | undefined,
+): number | undefined =>
+	next === undefined || current === undefined
+		? (next ?? current)
+		: Math.min(current, next);
+
 // Precedence for combining multiple `challenge` matches on the same
 // request. `block` outranks any challenge (short-circuited earlier in
 // `checkTrafficFilter`); among captcha types, image outranks puzzle
 // outranks pow — a stricter check is monotonically preferred so the
-// operator's hardest configured policy wins.
-const CAPTCHA_TYPE_RANK: Record<CaptchaType, number> = {
-	[CaptchaType.image]: 4,
-	[CaptchaType.puzzle]: 3,
-	[CaptchaType.pow]: 2,
-	[CaptchaType.frictionless]: 1,
-};
-
-const rankCaptchaType = (t: CaptchaType | undefined): number =>
-	t === undefined ? 0 : (CAPTCHA_TYPE_RANK[t] ?? 0);
+// operator's hardest configured policy wins. The ordering comes from
+// `@prosopo/captcha-severity`, shared with the access rules' `ruleHarshness`
+// and with downstream routing consumers.
 
 export type ResolvedChallengePolicy = {
 	captchaType?: CaptchaType;
@@ -323,6 +401,9 @@ export type ResolvedChallengePolicy = {
 	// object means "no policy specified any puzzle setting"; undefined
 	// means no challenge matches at all (already short-circuited above).
 	puzzleSettings?: IPuzzleSettings;
+	audioSettings?: IAudioSettings;
+	iconOrderTolerance?: number;
+	iconOrderSettings?: IIconOrderSettings;
 	// Categories whose policies contributed to the resolved combination.
 	sourceCategories: TrafficCategory[];
 };
@@ -344,10 +425,7 @@ export const resolveChallengePolicy = (
 
 	let winningCaptchaType: CaptchaType | undefined;
 	for (const m of challenges) {
-		if (
-			rankCaptchaType(m.policy.captchaType) >
-			rankCaptchaType(winningCaptchaType)
-		) {
+		if (isStricterCaptchaType(m.policy.captchaType, winningCaptchaType)) {
 			winningCaptchaType = m.policy.captchaType;
 		}
 	}
@@ -356,6 +434,9 @@ export const resolveChallengePolicy = (
 	let solvedImagesCount: number | undefined;
 	let puzzleTolerance: number | undefined;
 	let puzzleSettings: IPuzzleSettings | undefined;
+	let audioSettings: IAudioSettings | undefined;
+	let iconOrderTolerance: number | undefined;
+	let iconOrderSettings: IIconOrderSettings | undefined;
 	for (const m of challenges) {
 		if (m.policy.powDifficulty !== undefined) {
 			powDifficulty =
@@ -369,18 +450,29 @@ export const resolveChallengePolicy = (
 					? m.policy.solvedImagesCount
 					: Math.max(solvedImagesCount, m.policy.solvedImagesCount);
 		}
-		if (m.policy.puzzleTolerance !== undefined) {
-			puzzleTolerance =
-				puzzleTolerance === undefined
-					? m.policy.puzzleTolerance
-					: Math.min(puzzleTolerance, m.policy.puzzleTolerance);
-		}
+		puzzleTolerance = strictestTolerance(
+			puzzleTolerance,
+			m.policy.puzzleTolerance,
+		);
 		// Per-field merge across categories: last-writer-wins on any sub-
 		// field that is set. If no category sets a given puzzle field, the
 		// combined object leaves it undefined and the downstream resolver
 		// falls back to clientSettings then the asset-package default.
 		if (m.policy.puzzle) {
 			puzzleSettings = { ...(puzzleSettings ?? {}), ...m.policy.puzzle };
+		}
+		if (m.policy.audio) {
+			audioSettings = { ...(audioSettings ?? {}), ...m.policy.audio };
+		}
+		iconOrderTolerance = strictestTolerance(
+			iconOrderTolerance,
+			m.policy.iconOrderTolerance,
+		);
+		if (m.policy.iconOrder) {
+			iconOrderSettings = {
+				...(iconOrderSettings ?? {}),
+				...m.policy.iconOrder,
+			};
 		}
 	}
 
@@ -390,6 +482,29 @@ export const resolveChallengePolicy = (
 		solvedImagesCount,
 		puzzleTolerance,
 		puzzleSettings,
+		audioSettings,
+		iconOrderTolerance,
+		iconOrderSettings,
 		sourceCategories: challenges.map((m) => m.category),
 	};
+};
+
+/**
+ * Largest `padBytes` across all matched categories, block or challenge. A
+ * blocked category still resolves to a deferred challenge at request time, so
+ * padding it burns the caller's bandwidth on the way to being blocked.
+ */
+export const resolvePadBytes = (
+	matches: TrafficFilterMatch[],
+): number | undefined => {
+	let padBytes: number | undefined;
+	for (const m of matches) {
+		if (m.policy.padBytes !== undefined) {
+			padBytes =
+				padBytes === undefined
+					? m.policy.padBytes
+					: Math.max(padBytes, m.policy.padBytes);
+		}
+	}
+	return padBytes;
 };

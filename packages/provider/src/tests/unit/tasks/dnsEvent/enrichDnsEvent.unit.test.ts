@@ -331,6 +331,50 @@ describe("computeDnsAsymmetry", () => {
 			);
 			expect(score).toBe(0);
 		});
+
+		it("skips iCloud Private Relay with no allowlist configured", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({
+						isDatacenter: true,
+						datacenterName: "iCloud Private Relay",
+					}),
+				}),
+				undefined,
+				filterAllowingVpn,
+			);
+			expect(score).toBe(0);
+		});
+
+		it("skips iCloud Private Relay when no trafficFilter is supplied", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({
+						isDatacenter: true,
+						datacenterName: "iCloud Private Relay",
+					}),
+				}),
+				undefined,
+			);
+			expect(score).toBe(0);
+		});
+
+		it("counts iCloud Private Relay when the operator denylists it", () => {
+			const score = computeDnsAsymmetry(
+				enrichedWith({
+					resolverIpInfo: baseInfo({
+						isDatacenter: true,
+						datacenterName: "iCloud Private Relay",
+					}),
+				}),
+				undefined,
+				{
+					...filterAllowingVpn,
+					datacenterNameDenylist: ["iCloud Private Relay"],
+				},
+			);
+			expect(score).toBeGreaterThan(0);
+		});
 	});
 
 	describe("abuser gating", () => {

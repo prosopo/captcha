@@ -1,5 +1,665 @@
 # @prosopo/procaptcha-common
 
+## 2.21.9
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/account@2.8.115
+  - @prosopo/load-balancer@2.11.16
+  - @prosopo/types@5.19.0
+  - @prosopo/widget-skeleton@2.10.4
+
+## 2.21.8
+### Patch Changes
+
+- 96dbf9a: The widget's controls were smaller than a fingertip. Tapping the empty space around the "I am human" box now ticks it, so the area that responds is the full 58px row instead of the 28px box. The challenge's Cancel/Next buttons are now at least 44px tall (were 40px) and the reload button is 44px (was 40px).
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+  - @prosopo/account@2.8.114
+  - @prosopo/load-balancer@2.11.15
+
+## 2.21.7
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+  - @prosopo/account@2.8.113
+  - @prosopo/load-balancer@2.11.14
+
+## 2.21.6
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- Updated dependencies [f31f0d5]
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/widget-skeleton@2.10.3
+  - @prosopo/account@2.8.112
+  - @prosopo/load-balancer@2.11.13
+  - @prosopo/types@5.17.0
+
+## 2.21.5
+### Patch Changes
+
+- Updated dependencies [a5c953d]
+  - @prosopo/widget-skeleton@2.10.2
+  - @prosopo/types@5.16.3
+  - @prosopo/account@2.8.111
+  - @prosopo/load-balancer@2.11.12
+
+## 2.21.4
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+  - @prosopo/account@2.8.110
+  - @prosopo/load-balancer@2.11.11
+
+## 2.21.3
+### Patch Changes
+
+  - @prosopo/types@5.16.1
+  - @prosopo/account@2.8.109
+  - @prosopo/load-balancer@2.11.10
+
+## 2.21.2
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+  - @prosopo/types@5.16.0
+  - @prosopo/account@2.8.108
+  - @prosopo/load-balancer@2.11.9
+
+## 2.21.1
+### Patch Changes
+
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/account@2.8.107
+  - @prosopo/types@5.15.1
+  - @prosopo/load-balancer@2.11.8
+  - @prosopo/widget-skeleton@2.10.1
+
+## 2.21.0
+### Minor Changes
+
+- 4570692: Let a user swap the puzzle captcha for an image challenge, on sites where Prosopo has switched it on.
+  
+  Sites get a new staff-only setting, `widgetFeatureFlags.puzzleImageSwitch`. It is off by default and has no stored default. When it is on and the site allows image challenges, the puzzle response says `imageSwitchAvailable: true`. The puzzle then shows a small grid icon next to its title, with a "Switch to an image challenge" tooltip on hover or keyboard focus. After two wrong answers or refreshes in a row, the icon fills with the primary colour and its tooltip shows without a hover, because a touch screen has no hover. The tooltip goes away once the user starts moving the piece.
+  
+  Pressing it re-mints the session the same way refresh does, with `switchToImage: true`. The provider only honours that when the request is a refresh of a puzzle session on the same site and the switch is on. The new session is then an image challenge with reason `PUZZLE_USER_SWITCH`. Like the refresh limit, it only ever moves from puzzle to image, so a client that fakes the request can only make its own challenge harder.
+  
+  Also fixes a wrong puzzle answer restarting the whole widget. The user was sent back to the checkbox instead of getting a new puzzle with "Not quite — try again", and a wasted `/frictionless` request went out. The puzzle now retries in place.
+
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+  - @prosopo/account@2.8.106
+  - @prosopo/load-balancer@2.11.7
+
+## 2.20.0
+### Minor Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- e13d7a8: New captcha type: `iconOrder`. The user is shown a frame of icons and a legend, and clicks the legend's icons in the order given.
+  
+  Icon-order is off by default. Only Prosopo can switch it on for a site, with the `captchaTypeFeatureFlags.iconOrder` feature flag; the site owner cannot. A site without the flag is never served icon-order by any route, and the challenge endpoint refuses it. Once the flag is on, the owner can still keep icon-order out of the frictionless flow with `frictionlessTypes.iconOrder`, the same way as image and puzzle.
+  
+  The answer never leaves the provider. Icon positions are stored on the challenge record, and the widget receives only the rendered frame and legend. Grading checks order as well as position, and each icon's hit radius scales with its size. Verifying a token is single-use under concurrent requests.
+  
+  `@prosopo/icon-order-assets` draws the imagery, and `@prosopo/procaptcha-icon-order` is the widget. Its text is translated into every supported language.
+  
+  Puzzle and icon-order now share their server code: challenge and solution handlers, the verify route, the submit and verify pipeline, and the database record methods. The widget code they have in common moves into `@prosopo/procaptcha-common`: the lazy mount wrapper, manager expiry and dispose, spent-session handling, behavioural data encryption and trusted click coordinates. Puzzle's behaviour is unchanged.
+  
+  The demo playground has icon-order pages, and there is an end-to-end test for it.
+
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/account@2.8.105
+  - @prosopo/load-balancer@2.11.6
+
+## 2.19.0
+### Minor Changes
+
+- dcb691b: Add a refresh control to the puzzle captcha.
+  
+  A user who can't solve the puzzle they were given can now ask for a different one, from a button in the puzzle's header. The replacement comes through a new frictionless session, like a wrong answer already does.
+  
+  The widget tells the provider which session was refreshed (`refreshOf`). The provider then records `refreshOf`, `refreshCount` and `refreshedAfterMs` on the new session, so refresh behaviour can be scored later. After three refreshes in a row it serves an image challenge instead, with reason `PUZZLE_REFRESH_LIMIT`. It only does this if the site has image enabled. The switch only goes from puzzle to image, so a client that lies about its refreshes can only make its own challenge harder. A client that leaves the field out gets a normal session, the same as reloading the page.
+  
+  The image widget's reload button now reports itself as a refresh too. That way a user who was moved onto image isn't sent back to the puzzle by their next reload.
+
+### Patch Changes
+
+- 2e69b83: The image challenge now grows to fit the screen it is on. Before, the popup sat at a fixed 322px whatever the device, because the box holding it shrank to wrap its contents and the panel inside could only reach the grid's 300px minimum. That left every image tile at 94.7px — on a phone with 344px of room going spare, and on a 1280px desktop where the panel is allowed to be 500px wide.
+  
+  Tiles now scale with the viewport: 102px on a Galaxy S22, 119px on an S22 Ultra, 107px on an iPhone SE, 154px on desktop. A screen narrower than the 300px minimum (a folding phone's cover display, say) still scrolls sideways exactly as before, and the floating placement is untouched.
+  
+  Measured in Chromium at each device's viewport and pixel ratio; the 3x3 grid still lays out as three rows on all of them.
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/account@2.8.104
+  - @prosopo/load-balancer@2.11.5
+  - @prosopo/widget-skeleton@2.10.1
+
+## 2.18.2
+### Patch Changes
+
+- 4ea2ca9: Challenge popups now use the same text direction as the widget that opened them, so an Arabic or Hebrew widget gets a right-to-left popup. When a later widget on the page changes the shared language, earlier widgets now update their direction too instead of keeping the old one.
+- 2145922: A wrong image answer no longer just closes the popup. The widget now says "Not quite — try again" beside the checkbox (the same translated line the puzzle uses), and the checkbox stays clickable so the user can have another go. This happens even when the site supplies its own failed callback, and it survives the frictionless widget restarting itself after the failure. The notice clears as soon as the user starts again.
+- 4461043: Widget accessibility fixes.
+  
+  - Screen readers now announce the checkbox's error message, through a polite live region that exists from the moment the widget mounts.
+  - The authenticated ("Verified agent" / "Trusted request") badge now follows `theme: "dark"` and the widget's language.
+  - The badge no longer carries a fixed `aria-label`, which hid its visible text and said "Verified agent" even for a trusted request.
+- 92edebd: The widget's loading spinner and the reload icon no longer announce hard-coded English. The spinner is a progress indicator labelled from the new `WIDGET.LOADING` string (in all 32 languages) once translations are loaded, and the reload icon's tooltip uses the same translated label as the button.
+- 7b65240: If a challenge is left open until its time limit runs out, the widget used to close the challenge and untick itself without saying why. It now shows a "captcha solution has expired" message under the widget, in the widget's language, the same way a failed challenge does. The message is removed when the next challenge is solved. Sites that pass a `chalexpired-callback` are unaffected.
+- b38d55f: A failed challenge no longer opens a blocking, English-only `alert()`. By default the widget now shows the failure message under itself, in the widget's language and with `role="alert"` so screen readers announce it. For an invisible-mode button the message goes beside the button, so the button's label is left alone. The message is removed when the next challenge is solved. Sites that pass a `failed-callback` are unaffected.
+- b75e9b7: Fix the error FAQ link and translate two widget strings.
+  
+  - The error FAQ link no longer ends in `//` when `PROSOPO_DOCS_URL` is set, and a trailing slash on that variable no longer breaks it.
+  - The "Cannot load CAPTCHA" fallback message now shows in the widget's language.
+  - The image challenge's reload button now has a translated accessible name instead of always being "Reload".
+  - Adds `WIDGET.CANNOT_LOAD` and `WIDGET.RELOAD` to every locale.
+- Updated dependencies [ede4352]
+- Updated dependencies [2145922]
+- Updated dependencies [70fcefd]
+- Updated dependencies [92edebd]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/types@5.12.0
+  - @prosopo/load-balancer@2.11.4
+  - @prosopo/widget-skeleton@2.10.1
+  - @prosopo/account@2.8.103
+
+## 2.18.1
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/account@2.8.102
+  - @prosopo/load-balancer@2.11.3
+
+## 2.18.0
+### Minor Changes
+
+- b77c5f4: The image captcha widget now tells the provider whether each tile, and the checkbox, was picked with a mouse or finger or with the keyboard. Keyboard presses have no screen position, so they all arrive as (0, 0). The provider used to see those repeats as a script clicking the same pixel and reject people who solve with the keyboard. It now looks for repeated positions among pointer selections only. It rejects a keyboard selection that claims a position. Requests from older widgets, which send no input method, are checked as strictly as before. The input method is stored on the commitment next to the coordinates.
+
+### Patch Changes
+
+- caabd39: On a page with more than one captcha (a login form and a sign-up form, say), solving, expiring, resetting or erroring one widget no longer deletes the token another widget already put into its own form. Each widget now only clears the `procaptcha-response` field in its own form, so submitting the first form after completing the second no longer fails verification.
+- Updated dependencies [59b7e87]
+- Updated dependencies [e5aefc6]
+- Updated dependencies [5375d10]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+  - @prosopo/types@5.11.0
+  - @prosopo/load-balancer@2.11.2
+  - @prosopo/account@2.8.101
+
+## 2.17.3
+### Patch Changes
+
+- eebe6ee: Stop re-sending a consumed sessionId, and keep `CAPTCHA.NO_SESSION_FOUND` off the checkbox.
+  
+  A provider consumes a session when it issues a challenge against it, so a second challenge fetch carrying the same id cannot succeed. Three changes follow from that:
+  
+  - The puzzle widget's wrong-answer path called `manager.start()` again on the same session. It now hands back to the frictionless wrapper through `onReload`, which mints a new session and re-mounts the widget with `autoStart` — the same route the reload button already took. `onReload` gains an options argument, and `ProcaptchaProps` gains `startShowRetry`, so the replacement challenge still carries the retry prompt across the re-mount.
+  - The puzzle manager tracks the id it has already exchanged for a challenge and short-circuits rather than re-sending it, covering the other paths that re-enter `start()`. The id is marked once the provider has answered, not before the request goes out, so a throw still falls over onto another provider.
+  - `CAPTCHA.NO_SESSION_FOUND` is now treated as an internal recovery signal in the puzzle, PoW and image widgets and in the frictionless wrapper: where a re-mint is going to happen the widget holds its loading state instead of rendering the error. With no recovery route available the error is still shown.
+  
+  The wrapper's restart is no longer a flat ten seconds. `getRestartDelayMs` in `@prosopo/procaptcha-common` doubles it to a two-minute ceiling, jittered over the top half of each interval, so a client that keeps losing its session retries indefinitely at a bounded rate.
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/account@2.8.100
+  - @prosopo/load-balancer@2.11.1
+
+## 2.17.2
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+- Updated dependencies [f13bea8]
+  - @prosopo/types@5.10.1
+  - @prosopo/load-balancer@2.11.0
+  - @prosopo/account@2.8.99
+
+## 2.17.1
+### Patch Changes
+
+- 3d45c37: Stop the widget's hover highlights costing a phone user their first tap.
+  
+  Tapping the checkbox on an iPhone did nothing the first time. The second tap worked. The cause is a rule iOS applies to every page: if the first tap on a control changes what is under the finger, Safari treats it as "show me the hover state" rather than "activate this", and withholds the click. Every control in the widget that lights up on hover was therefore asking to be tapped twice.
+  
+  Hover feedback is now drawn only where a pointer can actually rest on something. On a desktop nothing changes. On a touch screen the highlight never appears and the first tap activates the control, which is what a visitor expects.
+  
+  Four places had it, and only one of them was the checkbox:
+  
+  - the **checkbox** — a state layer around the box
+  - the **reload button** in the challenge dialog — a fill change
+  - the dialog's **action buttons**, Cancel, Next and Submit — a state layer
+  - the **widget container** itself, via a CSS `:hover` rule. This one is easy to miss and matters most: the box that lights up is the one the checkbox sits inside, so it repaints under the finger even when the tap never touches a control with its own hover.
+  
+  The first three ask `matchMedia("(hover: hover)")` before listening for the pointer at all; the fourth is wrapped in the matching media query. The image tiles never had hover feedback and are unchanged.
+  
+  None of this came from the recent randomisation work — the React components these replaced carried the same handlers, so it has been there as long as the widget has.
+  
+  Covered by a test per control asserting no state layer is drawn when the device reports it cannot hover, plus tests for the check itself, including that it assumes a pointer when the environment cannot answer — which is what keeps the existing desktop behaviour, and every existing hover test, intact.
+- 4cc28db: Fix the image challenge laying out two columns instead of three on a phone, which pushed the last images below the screen where they could not be reached.
+  
+  On a Samsung A52s the image grid is 345.578px wide. Each tile asked for `calc(33.333% - 5.33px)` at an 8px gap, so three tiles and the two gaps between them came to 345.584px — **six thousandths of a pixel too wide**. That is enough for the browser to wrap, so the challenge drew two columns and five rows rather than three and three. The panel went from about 370px tall to about 1080px, and three of the nine images ended up below a 718px viewport.
+  
+  The tile width is now written as `calc((100% - 16px) / 3)`, leaving both the subtraction and the division to the browser. There is nothing left to round, so three tiles and their gaps come to exactly the width of the row at every gap the grid draws.
+  
+  This arrived with the dialog randomisation, which replaced a fixed `calc(33.333% - 10px)` with a width derived from the randomised gap. The old value subtracted a whole gap per tile where only two thirds was needed, so it happened to leave about 10px of slack and always fitted. Deriving the width exactly removed the slack, and the rounding then tipped it over. Which gaps break depends on the arithmetic — 8, 11 and 14 round down and overflow, the rest do not — so it looked intermittent.
+  
+  The panel that holds the images is also `touch-action: pan-y` rather than `touch-action: none` now. It is an `overflow-y: auto` box, so on a phone it is the thing a finger has to drag when the images do not fit, and `none` told the browser not to pan it at all — which is what turned "some images are off-screen" into "some images cannot be reached". Stopping the page behind from scrolling is `overscroll-behavior`'s job and it still does it. That one is older than the randomisation; it came in with the React to vanilla rewrite, and the React component before it had the same thing.
+  
+  Covered by a test that works out where three tiles and two gaps land for every gap the challenge draws, against a set of panel widths including the A52s' 345.578px. It fails on the old expression with exactly the numbers measured on the device.
+- d3b3286: Stop the widget failing to render when it loads before the page's callbacks are defined.
+  
+  A site names its callbacks by string, either as `data-callback="onCaptchaVerified"` or in the render options. The widget looked those names up on `window` the moment it mounted, and threw if one was not there yet — which took the whole widget down, so the visitor got no captcha at all.
+  
+  Whether that happened was a race. The documented way to embed the widget is `<script ... async defer>`, and `async` means the bundle runs as soon as it has arrived, which can be before the rest of the page has executed. A page that defines its callback in a module script — as every one of our own demo pages does — is therefore relying on the network to lose that race. It usually does. When it does not, the widget dies, and nothing about the error points at load order.
+  
+  The name is now looked up when the callback actually fires. By then the page has long since finished loading, so the race is gone. A name that is never defined anywhere still throws the same error, just at the point where it would have been called: the site's own handler breaks instead of the captcha.
+  
+  This is also what was making the end-to-end suite fail intermittently — the failing spec moved around between runs, because which one lost the race depended on how the bundle happened to be chunked.
+- Updated dependencies [3d45c37]
+  - @prosopo/widget-skeleton@2.10.0
+
+## 2.17.0
+### Minor Changes
+
+- e180281: Give the checkbox a different set of class names and a different DOM shape on every page load, so a solver script cannot hardcode a way to find it.
+  
+  Until now the widget rendered the same markup for every user, forever. The control was always `input.prosopo-checkbox__box`, the label was always `.prosopo-checkbox__label`, and the box always sat inside the same four nested divs at the same pixel offset. Anyone writing a script to click it only had to work that out once. The element `id` was already randomised per render, which bought nothing while everything around it stayed fixed.
+  
+  Two things change, both generated fresh each time a widget mounts:
+  
+  - **The names.** Every class inside the checkbox's shadow root is now an 8-character token drawn at mount, in both the loading skeleton and the live control. Selectors scraped from one page load are dead on the next.
+  - **The shape.** The fixed four-div nest is now between two and five wrappers, each randomly a `div` or a `span`, so structural and `nth-child` selectors do not hold either. Only elements with no accessible role are used, so no landmark is introduced for a screen reader.
+  
+  Two related fixes come with it:
+  
+  - `procaptcha-common`'s checkbox set `data-cy="captcha-checkbox"` on the real input unconditionally, shipping an end-to-end test hook to production. The widget skeleton has always withheld that attribute outside development; the component now does the same.
+  - Finding the checkbox's interactive area was itself done by class lookup across two shadow boundaries. `createCheckboxElement` and `createWidgetSkeletonElement` now return the node directly, which is what allows the names to change at all, and removes a lookup that could silently return `null`.
+  
+  The spinner rules that `procaptcha-common` renders used to live in `widget-skeleton`'s stylesheet — an undeclared dependency that only worked because the component happened to render inside that shadow root. Each package now carries its own, so the two can name things independently.
+  
+  Breaking for direct API consumers: `WIDGET_CHECKBOX_SPINNER_CSS_CLASS` is gone, since no such class exists any more, and `createWidgetSkeletonElement` returns `{ element, interactiveArea }` rather than a bare element. `createWidgetSkeleton` — what the bundle actually calls — is unchanged.
+  
+  The one class still fixed is `prosopo-checkbox` on the host element, which sits in the embedding page's light DOM where a site's own CSS may target it. Note also what this does not do: the control is still a real `<input type="checkbox">` in an open shadow root, so a script that looks for it by role or type rather than by name will still find it. Closing the shadow root, or making the real input harder to tell from decoys, is a separate decision with accessibility and testability costs to weigh.
+- 5e5fb9e: Give the image challenge dialog different class names, a different DOM shape, different element types for its controls and slightly different spacing on every page load, so a solver script cannot hardcode a way to find or click anything inside it.
+  
+  This is the same treatment the checkbox got. Until now the dialog was identical for every user, forever: the panel was always `.prosopo-modalInner` inside `.prosopo-modalOuter` inside `.prosopo-challenge-content`, every tile and every action was a `<button>`, the grid gap was always 10px, and the whole thing sat at the same offsets. The end-to-end suite was itself finding the images by climbing four parents and stepping sideways from the instruction line — which is the clearest possible evidence that the markup was a reliable handle.
+  
+  Four things now change, all drawn fresh each time a challenge mounts:
+  
+  - **The names.** Every class the dialog renders — the two modal layers, the challenge surface and its panel, the reload control — is an 8-character token drawn at mount. Selectors scraped from one page load are dead on the next. The challenge surface is shared with the puzzle, so the puzzle gets this too. Nothing in the widget's own CSS referenced these names, but a site that had written its own rules against `.prosopo-modalOuter`, `.prosopo-modalInner`, `.prosopo-challenge-content` or `.reload-button` will find they no longer match. `image-captcha` on the widget root stays fixed, as `prosopo-checkbox` did, because that one sits in the embedding page's light DOM.
+  - **The shape.** The panel, the header, the grid, the action row, each action and each tile sit inside a random number of randomly named `div` or `span` wrappers. The wrappers are `display: contents`, so they generate no boxes and cannot move anything: depth varies, layout does not. Only elements with no accessible role are used, so nothing new is announced to a screen reader.
+  - **The element each control is made of.** Every tile and every action is now randomly either a real `<button>` or a `<div role="button" tabindex="0">`, so `button` no longer finds them all. The generic variant is given by hand what the button gave for free: it is in the tab order, it activates on Enter and on Space, Space does not scroll the dialog, and it carries the same `aria-pressed` state. The surface's focus trap already matched `[tabindex]:not([tabindex="-1"])`, so both variants are trapped and tabbable alike.
+  - **The spacing.** The grid gap, the grid's and the header's padding, the action row's padding and the panel's own margins are each nudged a few pixels, so tile centres are not where they were last time. Each of these changes the panel's size rather than moving the panel, so the surface still centres it and a panel taller than the viewport still scrolls to its own edges. The tile and action widths are now derived from the gap they were drawn with — three columns fit only if each cell gives up two thirds of a gap, and the old hardcoded basis would have wrapped the row at the wide end of the range.
+  
+  Three related fixes come with it:
+  
+  - The tick badge on a selected tile was shipping `data-testid="CheckIcon"` to production, plus an `aria-label` on an `aria-hidden` element that nothing could ever read and a stray `color="#fff"` attribute. All three are gone.
+  - The reload button acted on any click, including one a script dispatched. It now takes the same trusted-event gate every other control in the widget has.
+  - The end-to-end suite no longer depends on the markup at all. It uses `data-cy` hooks — the instruction line, the challenge panel, the round, the reload control — that are withheld from production builds, exactly as the checkbox withholds `captcha-checkbox`.
+  
+  Note what this does not do. The dialog still says it is a dialog, the tiles still expose the button role and their pressed state, and the images still carry alt text. A script that looks for what these things mean rather than what they are called will still find them. That is the price of the challenge being usable with a screen reader, and it is the right price; the point here is to kill the cheap selector, not to claim the dialog is unfindable.
+
+### Patch Changes
+
+- 94929c3: Make the checkbox's label part of the target, so pressing the words activates it.
+  
+  Only the 28px box itself responded to a press. The 15px of space around it is margin, which belongs to no element, and the "I am human" text beside it was a plain `<label>` with nothing tying it to the control — so a press that landed anywhere but the box was silently dropped. On a phone that is most presses, and it reads as the widget ignoring the first tap and working on the second.
+  
+  The label now names the input, which is what makes the words activate it. The association is refreshed whenever the input's id is regenerated.
+- Updated dependencies [a9141c3]
+- Updated dependencies [e180281]
+  - @prosopo/types@5.10.0
+  - @prosopo/load-balancer@2.10.50
+  - @prosopo/widget-skeleton@2.9.0
+  - @prosopo/account@2.8.98
+
+## 2.16.0
+### Minor Changes
+
+- 59c02da: Replace React with vanilla TS/DOM in the widget.
+  
+  The widget packages no longer depend on react, react-dom, @emotion or
+  react-i18next: every component is now a `mount*` function returning a handle
+  with `update`/`destroy`. `useTranslation` is replaced by `createTranslator`,
+  which exposes i18next's `t` plus the events that used to trigger a re-render.
+  The rendered markup, styling and behaviour are unchanged — only the
+  implementation is.
+  
+  Everything the widget has gained since this rewrite started is carried over,
+  so nothing is lost by dropping React: the shared challenge surface (popup and
+  float placement, escape/outside-click dismissal and the dialog focus trap),
+  the image-tile and puzzle-piece keyboard paths, the checkbox's focus handover
+  across the loading swap, the server-rendered puzzle imagery, `startMode:
+  "manual"` with `window.procaptcha.start()`, `data-bind` / targeted
+  `execute(widgetId)`, the Web Bot Auth "authenticated" badge, the client
+  session id, and the bounded session re-mint and reload handling in the
+  frictionless wrapper.
+
+### Patch Changes
+
+  - @prosopo/types@5.9.2
+  - @prosopo/account@2.8.97
+  - @prosopo/load-balancer@2.10.49
+
+## 2.15.1
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+  - @prosopo/account@2.8.96
+  - @prosopo/load-balancer@2.10.48
+
+## 2.15.0
+### Minor Changes
+
+- 0f23010: Correlate captcha sessions with Prosopo Protect sessions on sites that run both.
+  
+  Protect's challenge page already renders the widget with `data-sessionid=<its session id>`, so captchas served from the interstitial can be matched back to the Protect session. A widget the site embeds itself — on its own pages — had no way to know that id, so those sessions could not be matched to anything.
+  
+  The widget now falls back to reading Protect's session id from the page (`window.prosopo_protect.jti`, or the `prosopo_session` cookie Protect sets on the site's domain) when the site has not supplied a session id of its own. A session id the site does supply always wins, so nothing changes for sites that use the field themselves, and sites without Protect are unaffected. Only the id is read — the session token that shares the cookie never leaves the page.
+  
+  Two gaps in the existing field are closed alongside it: the widget now sends the session id when it first asks for a captcha rather than only when submitting a solution, and the provider records it on the session at that point. Previously a session that was allowed without a challenge, or abandoned before the user solved one, carried no session id at all. An escalated session now inherits the id from the session it escalated from.
+
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/account@2.8.95
+  - @prosopo/load-balancer@2.10.47
+
+## 2.14.2
+### Patch Changes
+
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/account@2.8.94
+  - @prosopo/load-balancer@2.10.46
+
+## 2.14.1
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- 0be8838: Look up user callbacks on `window` without `any`, so each callback is type-checked against the arguments it is actually called with. Only a leading `window.` is now stripped from a callback name. The `error-callback` render option type now accepts the `Error` it is called with.
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d4e9425]
+- Updated dependencies [0be8838]
+  - @prosopo/account@2.8.93
+  - @prosopo/types@5.8.4
+  - @prosopo/load-balancer@2.10.45
+
+## 2.14.0
+### Minor Changes
+
+- 864ddde: Make the challenges usable with a keyboard and a screen reader.
+  
+  The puzzle could only be solved by dragging with a mouse or a finger. The piece
+  was a plain `div`, so it could not be tabbed to, had no name or role, and a
+  screen reader announced nothing at all — a user on assistive tech could tick "I
+  am human", get a silent overlay, and have no way forward. The image captcha had
+  the same problem in its tiles.
+  
+  What changed:
+  
+  - The puzzle piece can now be focused and moved with the arrow keys (hold shift
+    for smaller steps, Home to start over, Enter or Space to submit). It has a
+    name, a role, and a visible focus ring.
+  - The puzzle announces its state as you go: where the piece is, as a percentage
+    across and down the board; that an answer is being checked; and that a failed
+    go has been replaced by a fresh puzzle.
+  - The image captcha tiles are now buttons rather than clickable `div`s, so they
+    can be tabbed to and activated with Enter or Space, and they report whether
+    they are selected instead of only looking selected.
+  - Both challenges now open as a proper dialog: it takes focus when it opens,
+    keeps Tab inside itself, and gives focus back to the checkbox on close.
+  - The spinner that replaces the checkbox while a check runs used to drop focus
+    to the top of the page without saying why. It now takes focus in the
+    checkbox's place, names itself, and hands focus back when the check finishes.
+    This affects the pow, image and puzzle flows.
+  - The puzzle's on-screen text was hardcoded English. It now goes through the
+    locale package, and the new strings are translated into all 32 locales.
+  
+  A visual puzzle still cannot be solved by someone who cannot see it — the widget
+  is never told where the target is, so there is nothing it could describe. Sites
+  that need a challenge a blind user can complete should use the pow captcha type,
+  which needs no interaction beyond the checkbox.
+
+### Patch Changes
+
+- 028a158: Stop the widget taking focus off the form the user is filling in.
+  
+  While the widget checks a user, its checkbox is replaced by a spinner, and the
+  box takes focus back when the check finishes so a keyboard user is not left
+  stranded at the top of the page. It did that unconditionally, so if the user
+  spent the wait typing into the page's own form, the box grabbed focus off
+  whatever field they were in — and the keystroke that arrived with it went
+  nowhere. It now only claims focus back when nothing else holds it, which is
+  where removing the spinner leaves it.
+  
+  This is what made the `puzzle` cypress spec flaky: it fills the signup form as
+  soon as the puzzle is solved, and lost the race with the widget often enough to
+  fail CI.
+  
+  Covered by a new unit test in `procaptcha-react` that focuses an element outside
+  the widget mid-check and asserts focus is still there afterwards.
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [028a158]
+  - @prosopo/types@5.8.3
+  - @prosopo/account@2.8.92
+  - @prosopo/load-balancer@2.10.44
+
+## 2.13.3
+### Patch Changes
+
+- 124784f: Stop the image captcha losing its instruction line and top row of images on mobile.
+  
+  On iOS the challenge panel was being shifted up by 100% of its own height, so
+  anything taller than half the screen ran off the top with no way to scroll back
+  to it. Users saw nine images and a Next button but no "Select all containing
+  ..." prompt, which made the challenge unsolvable.
+  
+  The lift was compensating for the layer underneath it being sized with
+  `100vh` — on iOS Safari that is the height the page would have if the browser
+  toolbars retracted, so the centring box was taller than the visible area and
+  pushed the panel down under the bottom bar. Sizing that box with `100dvh`
+  instead centres correctly on its own, so the lift is gone. The panel is now
+  centred as a flex item and capped at the viewport height, scrolling when it
+  does not fit rather than overflowing off both edges.
+- Updated dependencies [0d479f9]
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/load-balancer@2.10.43
+  - @prosopo/types@5.8.2
+  - @prosopo/account@2.8.91
+
+## 2.13.2
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+  - @prosopo/account@2.8.90
+  - @prosopo/load-balancer@2.10.42
+
+## 2.13.1
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/account@2.8.89
+  - @prosopo/load-balancer@2.10.41
+
+## 2.13.0
+### Minor Changes
+
+- d288371: Let a site choose where a challenge opens, and which button triggers it.
+  
+  - `placement: "popup" | "float"`, also `data-placement`. `popup` is the default and unchanged. `float` opens the challenge directly above the widget and keeps it pinned there as the page scrolls, leaves the page usable behind it, and dismisses on Escape or an outside click. An invisible widget always uses popup.
+  - `bind: "#selector"`, also `data-bind`. The matching host-page button triggers that one widget, in visible or invisible mode. The click's default action is prevented so a submit button does not post the form before a token exists.
+  - `execute(widgetId?)`. Called with no argument every widget responds, as before. Called with the id `render()` returns, only that widget runs. Implicitly rendered invisible buttons now trigger only their own widget.
+  
+  Behaviour changes for existing widgets:
+  
+  - Escape now closes the image and puzzle challenge in both placements. For the image captcha this runs the cancel path, which fires `onClose` and restarts frictionless.
+  - Image and puzzle now present on one shared `ChallengeSurface`. Both were already portalled to `document.body`, so neither moves in the page, but the markup around them changed: the outer layer keeps `prosopo-modalOuter` for the image captcha and also carries `prosopo-challenge-surface`, and a new `prosopo-challenge-content` element sits between it and `prosopo-modalInner`. A direct-child selector such as `.prosopo-modalOuter > .prosopo-modalInner` no longer matches, and the centring transform now lives on `prosopo-challenge-content` rather than on `prosopo-modalInner`.
+  
+  `createConfig` takes a named options object.
+
+### Patch Changes
+
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/account@2.8.88
+  - @prosopo/load-balancer@2.10.40
+
+## 2.12.6
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/account@2.8.87
+  - @prosopo/load-balancer@2.10.39
+  - @prosopo/types@5.6.0
+  - @prosopo/widget-skeleton@2.8.7
+
+## 2.12.5
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/account@2.8.86
+  - @prosopo/load-balancer@2.10.38
+
+## 2.12.4
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/account@2.8.85
+  - @prosopo/load-balancer@2.10.37
+
+## 2.12.3
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/types@5.5.1
+  - @prosopo/account@2.8.84
+  - @prosopo/load-balancer@2.10.36
+
 ## 2.12.2
 ### Patch Changes
 

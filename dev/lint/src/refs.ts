@@ -16,6 +16,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { inspect } from "node:util";
 import { get } from "@prosopo/util";
+import { getWorkspacePatterns } from "@prosopo/workspace";
 import fg from "fast-glob";
 import ts from "typescript";
 import type { Argv } from "yargs";
@@ -29,7 +30,6 @@ const packageConfigSchema = z.object({
 	devDependencies: z.record(z.string()).optional(),
 	peerDependencies: z.record(z.string()).optional(),
 	optionalDependencies: z.record(z.string()).optional(),
-	workspaces: z.array(z.string()).optional(),
 	references: z.array(z.record(z.string())).optional(),
 });
 
@@ -58,21 +58,7 @@ const loadPackageConfigWithErrorContext = (
 };
 
 const findWorkspacePackageJsons = (workspacePackageJson: File) =>
-	// get the workspace globs
-	z
-		.string()
-		.array()
-		.catch([])
-		.parse(workspacePackageJson.content.workspaces)
-		.map(
-			(pattern) =>
-				`${path.dirname(workspacePackageJson.path)}/${pattern}/package.json`,
-		)
-		// glob the workspace paths
-		// add package.json to the dirs and filter out any that don't exist (e.g. packages/* may match packages/some-dir but if some-dir doesn't have a package.json we don't want it)
-
-		.map((pattern) => fg.globSync(pattern))
-		.reduce((acc, val) => acc.concat(val), []);
+	fg.globSync(getWorkspacePatterns(workspacePackageJson.path, "package.json"));
 
 const getDevDependencies = (packageJson: File) => {
 	const developmentDependencies = Object.keys(
@@ -138,11 +124,6 @@ const validateWorkspace = async (args: {
 	const workspacePackagePath = args.packageJsonPath;
 	const workspacePackage = loadPackageConfig(workspacePackagePath);
 
-	// check the package json is a workspace
-	if (workspacePackage.content.workspaces === undefined) {
-		throw new Error(`${workspacePackage.path} is not a workspace`);
-	}
-
 	// list all the packages in the workspace
 	const workspacePackageNames = getWorkspacePackageNames(
 		findWorkspacePackageJsons(workspacePackage),
@@ -150,14 +131,7 @@ const validateWorkspace = async (args: {
 
 	const packagePatterns = [
 		workspacePackagePath, // include the workspace package.json
-		...z
-			.string()
-			.array()
-			.parse(workspacePackage.content.workspaces)
-			.map(
-				(pattern) =>
-					`${path.dirname(workspacePackagePath)}/${pattern}/package.json`,
-			),
+		...getWorkspacePatterns(workspacePackagePath, "package.json"),
 	];
 	const packagePaths = fg.globSync(packagePatterns);
 
@@ -267,8 +241,12 @@ const validateDependencies = async (args: {
 }): Promise<InvalidTsConfig[]> => {
 	const packageJson = args.packageJson;
 
-	// skip workspaces
-	if (packageJson.content.workspaces) {
+	// skip the workspace root
+	if (
+		fs.existsSync(
+			path.join(path.dirname(packageJson.path), "pnpm-workspace.yaml"),
+		)
+	) {
 		return [];
 	}
 
@@ -333,6 +311,14 @@ const validateDependencies = async (args: {
 				);
 				imports.push("@types/node");
 			}
+
+			// A URL import is fetched over the network rather than resolved
+			// through node_modules, so it is never a package.json dependency.
+			// Bunny's edge runtime takes its SDK this way
+			// (`https://esm.sh/@bunny.net/edgescript-sdk`), and without this the
+			// specifier's scheme is read as the package name — the provider was
+			// reported as missing a dependency called `https:`.
+			imports = imports.filter((importPath) => !/^https?:/.test(importPath));
 
 			// Process imports to extract package names and handle relative imports
 			imports = imports.flatMap((importPath) => {

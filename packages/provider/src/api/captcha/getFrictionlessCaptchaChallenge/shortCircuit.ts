@@ -19,6 +19,7 @@ import {
 	type ModeEnum,
 	type RequestHeaders,
 	type ScoreComponents,
+	clampImageRounds,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
@@ -47,8 +48,8 @@ export type ShortCircuitInput = {
 	// bypass paths resolve the assigned bundleId via Redis and promote it
 	// onto the session so SIMD / BDP attach at later hops (challenge GET,
 	// solution submit) can find the right keypair. Without this, sessions on
-	// configured-captchaType sitekeys (pow / image / puzzle) had no bundleId
-	// and every attach silently dropped the payload.
+	// configured-captchaType sitekeys (pow / image / puzzle / icon-order)
+	// had no bundleId and every attach silently dropped the payload.
 	detectorSessionId?: string;
 	tcpToChelloUs?: number;
 	chelloToHandshakeUs?: number;
@@ -166,9 +167,9 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 			return res.json(
 				await input.tasks.frictionlessManager.sendImageCaptcha({
 					...sessionParams,
-					solvedImagesCount: Math.min(
+					solvedImagesCount: clampImageRounds(
 						input.env.config.captchas.solved.count,
-						input.clientRecord.settings.imageMaxRounds,
+						input.clientRecord.settings,
 					),
 				}),
 			);
@@ -179,6 +180,12 @@ export const runConfiguredCaptchaTypeShortCircuit = async (
 		case CaptchaType.puzzle:
 			return res.json(
 				await input.tasks.frictionlessManager.sendPuzzleCaptcha(sessionParams),
+			);
+		case CaptchaType.iconOrder:
+			return res.json(
+				await input.tasks.frictionlessManager.sendIconOrderCaptcha(
+					sessionParams,
+				),
 			);
 		default:
 			throw new Error(

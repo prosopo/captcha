@@ -69,6 +69,95 @@ describe("frictionlessTasksUtils", () => {
 			const result = computeFrictionlessScore({});
 			expect(result).toBe(0);
 		});
+
+		// Regression: `acc + []` coerces the accumulator to a string, so any
+		// numeric component summed after an array turned the whole score into
+		// NaN. Mongoose defaults array paths to `[]`, so `triggeredDetectors`
+		// is present on every session read back from the database, and the
+		// captcha tasks spread `dnsAsymmetry` on afterwards — landing it after
+		// the array in key order. This is the exact shape that produced it.
+		it("ignores an empty triggeredDetectors array before a numeric component", () => {
+			const result = computeFrictionlessScore({
+				baseScore: 0.12402739646161609,
+				lScore: 0.3,
+				shadowDomPenalty: false,
+				triggeredDetectors: [],
+				dnsAsymmetry: 0.3,
+			});
+			expect(result).toBe(0.72);
+		});
+
+		it("ignores a populated triggeredDetectors array", () => {
+			const result = computeFrictionlessScore({
+				baseScore: 0.2,
+				triggeredDetectors: [3, 7],
+				dnsAsymmetry: 0.3,
+			});
+			expect(result).toBe(0.5);
+		});
+
+		// `shadowDomPenalty` is diagnostic metadata with no arithmetic weight
+		// anywhere in the scoring path. Summed directly, `true` would silently
+		// add a full 1.0 and cap every such session at the maximum score.
+		it("ignores shadowDomPenalty in both boolean states", () => {
+			expect(
+				computeFrictionlessScore({
+					baseScore: 0.2,
+					shadowDomPenalty: true,
+					lScore: 0.3,
+				}),
+			).toBe(0.5);
+			expect(
+				computeFrictionlessScore({
+					baseScore: 0.2,
+					shadowDomPenalty: false,
+					lScore: 0.3,
+				}),
+			).toBe(0.5);
+		});
+
+		it("is order-independent across the non-numeric fields", () => {
+			const expected = 0.72;
+			expect(
+				computeFrictionlessScore({
+					triggeredDetectors: [],
+					shadowDomPenalty: true,
+					baseScore: 0.12,
+					lScore: 0.3,
+					dnsAsymmetry: 0.3,
+				}),
+			).toBe(expected);
+			expect(
+				computeFrictionlessScore({
+					baseScore: 0.12,
+					lScore: 0.3,
+					dnsAsymmetry: 0.3,
+					triggeredDetectors: [],
+					shadowDomPenalty: true,
+				}),
+			).toBe(expected);
+		});
+
+		// A score that cannot be computed must not read as a low one, so a
+		// genuinely numeric NaN still propagates — `typeof NaN === "number"`.
+		it("still propagates NaN from a numeric component past an array", () => {
+			const result = computeFrictionlessScore({
+				baseScore: Number.NaN,
+				triggeredDetectors: [],
+				dnsAsymmetry: 0.3,
+			});
+			expect(result).toBeNaN();
+		});
+
+		it("still caps at 1 with non-numeric fields present", () => {
+			const result = computeFrictionlessScore({
+				baseScore: 0.8,
+				triggeredDetectors: [],
+				shadowDomPenalty: true,
+				lScore: 0.5,
+			});
+			expect(result).toBe(1);
+		});
 	});
 
 	describe("timestampDecayFunction", () => {

@@ -12,6 +12,21 @@ services:
     pull_policy: always
     env_file:
       - ../.env.1.${NODE_ENV}
+    # Pins mongo1 to its tailnet address so both the seed host in
+    # PROSOPO_MONGO_*_URI and the name mongod advertises for itself
+    # (`mongo1.prosopo.io:27018`, because it runs --replSet) resolve inside the
+    # WireGuard tunnel. Overriding only the URI does not work: the driver
+    # discovers the replica set and re-dials the advertised name, which without
+    # this goes back out to the public load balancer. The URIs therefore carry
+    # ssl=false — mongod itself has TLS off, and WireGuard supplies the
+    # encryption, terminating on mongo1 rather than on a proxy.
+    #
+    # Literal, not a compose variable: 18 playbooks run `docker compose` against
+    # this file with their own environment blocks, and an unset variable here
+    # expands to "mongo1.prosopo.io:" and stops the container from starting.
+    # Inert where mongo1 is not used — staging points at a different host.
+    extra_hosts:
+      - "mongo1.prosopo.io:100.64.0.21"
     volumes:
       # Detector bundle pool, host-mounted so a pushed pool survives container
       # restarts. Never bake this into the image: prosopo/provider is a public
@@ -33,7 +48,8 @@ services:
         max-size: '100m'
         max-file: '1'
     healthcheck:
-      test: [ "CMD", "curl", "--fail", "localhost:9229/healthz" ] # ping the healthz endpoint
+      # Distroless runtime: no curl. node is the only binary in the image.
+      test: [ "CMD", "/nodejs/bin/node", "-e", "fetch('http://localhost:9229/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" ]
       interval: 5m
       retries: 3
       start_period: 30s
@@ -55,6 +71,9 @@ services:
     pull_policy: build
     env_file:
       - ../.env.2.${NODE_ENV}
+    # See provider1.
+    extra_hosts:
+      - "mongo1.prosopo.io:100.64.0.21"
     volumes:
       # See provider1 — separate pool because this container runs the previous
       # image version.
@@ -72,7 +91,8 @@ services:
         max-size: '100m'
         max-file: '1'
     healthcheck:
-      test: [ "CMD", "curl", "--fail", "localhost:9339/healthz" ] # ping the healthz endpoint
+      # Distroless runtime: no curl. node is the only binary in the image.
+      test: [ "CMD", "/nodejs/bin/node", "-e", "fetch('http://localhost:9339/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" ]
       interval: 5m
       retries: 3
       start_period: 30s
@@ -193,7 +213,7 @@ services:
   # `prosopo/tcp-probe:${TCP_PROBE_IMAGE}` to Docker Hub — currently only
   # built locally under `protect/tcp-probe`. See `deploy/DEPLOY.md` there
   # for the bumblebee-side reference deployment; the same wire protocol
-  # (12-byte req, 80-byte reply) and image are reused here.
+  # (12-byte req, 80- or 104-byte reply) and image are reused here.
   #
   # `network_mode: host` is mandatory: XDP/TC hooks attach to real host
   # interfaces, and the container-network veth wouldn't see the outside
@@ -205,7 +225,13 @@ services:
     container_name: tcp-probe
     profiles:
       - tcp-probe
-    image: prosopo/tcp-probe:${TCP_PROBE_IMAGE:-latest}
+    # Pinned, not `:latest`. The probe's reply is a bare fixed-size struct
+    # with no version in it, so the tag is the only thing that says which
+    # layout a host is serving — and publishing `:latest` would change that
+    # on every pronode at the next pull, with nobody running a deploy. Set
+    # TCP_PROBE_IMAGE explicitly to move a host. 0.1.1 serves the 80-byte
+    # record; chaddy reads that and the 104-byte one (prosopo/chaddy#17).
+    image: prosopo/tcp-probe:${TCP_PROBE_IMAGE:-0.1.1}
     network_mode: host
     cap_add:
       - BPF
@@ -292,32 +318,44 @@ services:
       - 8.8.8.8
       - 1.1.1.1
       - 208.67.222.222
+  # Our own IP reputation DB (captcha-private#5467), replacing the ipapi.is
+  # worker outright. It keeps the service name, the port and an `ipinfo`
+  # network alias, so every caller that resolves ipinfo:3899 keeps working
+  # untouched and the rollback is reverting this block. The response carries
+  # the ipapi.is field shape, so callers parsing asn/geo/booleans need no
+  # change.
+  #
+  # Memory: the artifact is ~1.8 GB held in RAM against the ipapi.is worker's
+  # 7.4-8.4 GB. The cap is well above the measured figure and well below the
+  # old 10G, so an overshoot kills this container rather than letting the
+  # kernel pick mongod or a provider as the victim.
   ipinfo:
-    # IP metadata sidecar
     container_name: ipinfo
-    image: prosopo/ipinfo:${IPINFO_VERSION:-0.1.0}
+    image: ghcr.io/prosopo/reputation:${REPUTATION_VERSION:-0.3.1}
     restart: unless-stopped
-    # Pass the config path explicitly. The image bakes a default config.json
-    # at /usr/src/app/config.json which getConfigPath() finds before the
-    # mounted /usr/src/app/config/config.json — silently ignoring our
-    # customLists and API key. Passing the path as argv[2] short-circuits
-    # that resolution order.
-    command: ["node", "src/ipapi_is_worker.js", "/usr/src/app/config/config.json"]
-    # NET_ADMIN is required to check/create firewall chains, even when
-    # enableFirewall is false in config.
-    cap_add:
-      - NET_ADMIN
-    # No host ports
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+    environment:
+      REPUTATION_ARTIFACT: /data/reputation.bin
+      REPUTATION_WEIGHTS: /data/weights.json
+      REPUTATION_BIND: 0.0.0.0:3899
     expose:
       - "3899"
     networks:
-      - internal
+      internal:
+        aliases:
+          - ipinfo
+          - reputation
     volumes:
-      # Database blob ships separately
-      - ./ipinfo/ipapi_database_ram:/usr/src/app/ipapi_database_ram:ro
-      # Config override
-      - ./ipinfo/config:/usr/src/app/config:ro
-    # Cap the json log file so a chatty container can't fill the host disk.
+      - ./reputation:/data:ro
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/reputation", "--healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     logging:
       driver: 'json-file'
       options:

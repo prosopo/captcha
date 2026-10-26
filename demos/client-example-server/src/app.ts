@@ -18,13 +18,13 @@ import type { Server } from "node:http";
 import https from "node:https";
 import type { ServerOptions } from "node:https";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { loadEnv } from "@prosopo/dotenv";
 import { getLogger } from "@prosopo/logger";
 import { getServerConfig } from "@prosopo/server";
 import type { ProsopoServerConfigOutput } from "@prosopo/types";
 import { at, isMain } from "@prosopo/util";
+import { packageDir } from "@prosopo/util/node";
 import cors from "cors";
 import express from "express";
 import routesFactory from "./routes/routes.js";
@@ -120,10 +120,10 @@ export const resolvePort = (config: ProsopoServerConfigOutput): number => {
 export const startServer = (
 	app: express.Express,
 	port: number,
-	dirname: string = path.dirname(fileURLToPath(import.meta.url)),
+	pkgDir: string | undefined = packageDir(import.meta.url),
 ): Server => {
-	if (isDevelopmentOrTest()) {
-		const certsDir = path.resolve(dirname, "../../../certs");
+	if (isDevelopmentOrTest() && pkgDir !== undefined) {
+		const certsDir = path.resolve(pkgDir, "../../certs");
 
 		const keyPath = path.join(certsDir, "server.key");
 		const certPath = path.join(certsDir, "server.crt");
@@ -173,9 +173,12 @@ export async function main(): Promise<Server> {
 	logger.info(() => ({ msg: "mongo uri", data: { uri } }));
 	const mongoose = connectionFactory(uri);
 	if (!process.env.PROSOPO_SITE_PRIVATE_KEY) {
-		const mnemonicError = new ProsopoEnvError("GENERAL.MNEMONIC_UNDEFINED", {
+		const mnemonicError = new ProsopoError({
+			code: "CONFIG_INVALID",
+			errorSite: "CLEX-1",
+			message:
+				"Mnemonic Undefined. Please set the mnemonic in environment variables",
 			context: { missingParams: ["PROSOPO_SITE_PRIVATE_KEY"] },
-			logger,
 		});
 
 		logger.error(() => ({ err: mnemonicError }));

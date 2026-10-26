@@ -80,6 +80,17 @@ describe("re-exported types", () => {
 		expectTypeOf<ExportedRenderOptions>().toEqualTypeOf<ProcaptchaRenderOptions>();
 	});
 
+	it("carries the placement and bind options through to consumers", () => {
+		assertType<ExportedRenderOptions>({ siteKey: "k", placement: "float" });
+		assertType<ExportedRenderOptions>({ siteKey: "k", placement: "popup" });
+		assertType<ExportedRenderOptions>({ siteKey: "k", bind: "#submit" });
+	});
+
+	it("rejects a placement outside the union", () => {
+		// @ts-expect-error inline is not a supported placement
+		assertType<ExportedRenderOptions>({ siteKey: "k", placement: "inline" });
+	});
+
 	it("exports the language union as a usable type", () => {
 		// `Languages` is a const object with no type meaning, so re-exporting the
 		// name as a type produced a binding consumers could not use at all.

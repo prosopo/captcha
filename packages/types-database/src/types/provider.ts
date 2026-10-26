@@ -13,8 +13,10 @@
 // limitations under the License.
 
 import type { AllKeys } from "@prosopo/common";
-import { type TranslationKey, TranslationKeysSchema } from "@prosopo/locale";
+import { translationKeys } from "@prosopo/locale";
 import {
+	type AudioCaptchaStored,
+	type AudioEvent,
 	CaptchaLabel,
 	CaptchaType,
 	type ClientContextEntropy,
@@ -25,14 +27,17 @@ import {
 	DecisionMachineLanguage,
 	DecisionMachineRuntime,
 	DecisionMachineScope,
+	type IconOrderCaptchaStored,
 	IpAddressType,
 	ModeEnum,
 	type PendingImageCaptchaRequest,
 	type PoWCaptchaStored,
 	type PuzzleCaptchaStored,
+	type ResultReason,
 	type Session,
 	type SimdReadingsStage,
 	type SolutionRecord,
+	type StoredIconTarget,
 	Tier,
 	type UserCommitment,
 	type UserSolutionSchema,
@@ -49,9 +54,11 @@ import {
 	type Hash,
 	type IPInfoResponse,
 	type IUserData,
+	InputMethod,
 	type Item,
 	type PoWChallengeComponents,
 	type PoWChallengeId,
+	type PuzzleRenderRecord,
 	type RequestHeaders,
 	ScheduledTaskNames,
 	type ScheduledTaskResult,
@@ -165,6 +172,9 @@ export const ClientMetaDataRecordSchemaObj = {
 export type PoWCaptchaRecord = mongoose.Document & PoWCaptchaStored;
 
 export type PuzzleCaptchaRecord = mongoose.Document & PuzzleCaptchaStored;
+export type AudioCaptchaRecord = mongoose.Document & AudioCaptchaStored;
+
+export type IconOrderCaptchaRecord = mongoose.Document & IconOrderCaptchaStored;
 
 export type UserCommitmentRecord = mongoose.Document & UserCommitment;
 
@@ -226,7 +236,7 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 		status: { type: String, enum: CaptchaStatus, required: true },
 		reason: {
 			type: String,
-			enum: TranslationKeysSchema.options,
+			enum: translationKeys,
 			required: false,
 		},
 		error: { type: String, required: false },
@@ -281,11 +291,41 @@ export const PoWCaptchaRecordSchema = new Schema<PoWCaptchaRecord>({
 			c1: { type: [Schema.Types.Mixed], required: true },
 			c2: { type: [Schema.Types.Mixed], required: true },
 			c3: { type: [Schema.Types.Mixed], required: true },
+			c4: { type: [Schema.Types.Mixed], required: false },
 			d: { type: String, required: true },
 		},
 		required: false,
 	},
 	providerSignature: { type: String, required: true },
+	// Mongoose runs `strict: true` and silently drops undeclared paths, so an
+	// omission here means the field is written and never stored.
+	fingerprintSummary: {
+		type: new Schema(
+			{
+				root: { type: String, required: true },
+				groupHash: { type: String, required: true },
+				bucketId: { type: String, required: false },
+				colorDepth: { type: Number, required: false },
+				hardwareConcurrency: { type: Number, required: false },
+				disclosed: {
+					type: new Schema(
+						{
+							timezone: { type: String, required: false },
+							languages: { type: String, required: false },
+							architecture: { type: Number, required: false },
+							cookiesEnabled: { type: Boolean, required: false },
+							sessionStorage: { type: Boolean, required: false },
+							localStorage: { type: Boolean, required: false },
+						},
+						{ _id: false },
+					),
+					required: false,
+				},
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
 	// Internal ML labelling applied by superadmins via the audit page.
 	label: { type: String, enum: Object.values(CaptchaLabel), required: false },
 	labelReason: { type: String, required: false },
@@ -355,7 +395,12 @@ PoWCaptchaRecordSchema.index(
 	},
 );
 
-export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
+/**
+ * Fields shared by every interactive captcha record. Kept in one place because
+ * the portal and audit views read them generically, so a field missed on one
+ * type shows up as an empty column rather than a compile error.
+ */
+const interactiveCaptchaRecordFields = {
 	challenge: { type: String, required: true },
 	dappAccount: { type: String, required: true },
 	userAccount: { type: String, required: true },
@@ -368,28 +413,10 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 		status: { type: String, enum: CaptchaStatus, required: true },
 		reason: {
 			type: String,
-			enum: TranslationKeysSchema.options,
+			enum: translationKeys,
 			required: false,
 		},
 		error: { type: String, required: false },
-	},
-	targetX: { type: Number, required: true },
-	targetY: { type: Number, required: true },
-	originX: { type: Number, required: true },
-	originY: { type: Number, required: true },
-	tolerance: { type: Number, required: true },
-	puzzleEvents: {
-		type: [
-			new Schema<{ x: number; y: number; t: number }>(
-				{
-					x: { type: Number, required: true },
-					y: { type: Number, required: true },
-					t: { type: Number, required: true },
-				},
-				{ _id: false },
-			),
-		],
-		required: false,
 	},
 	ipAddress: CompositeIpAddressRecordSchemaObj,
 	providedIp: {
@@ -437,53 +464,164 @@ export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
 			c1: { type: [Schema.Types.Mixed], required: true },
 			c2: { type: [Schema.Types.Mixed], required: true },
 			c3: { type: [Schema.Types.Mixed], required: true },
+			c4: { type: [Schema.Types.Mixed], required: false },
 			d: { type: String, required: true },
 		},
 		required: false,
 	},
 	providerSignature: { type: String, required: true },
+};
+
+const pointerEventSchema = () =>
+	new Schema<{ x: number; y: number; t: number }>(
+		{
+			x: { type: Number, required: true },
+			y: { type: Number, required: true },
+			t: { type: Number, required: true },
+		},
+		{ _id: false },
+	);
+
+export const PuzzleCaptchaRecordSchema = new Schema<PuzzleCaptchaRecord>({
+	...interactiveCaptchaRecordFields,
+	targetX: { type: Number, required: true },
+	targetY: { type: Number, required: true },
+	originX: { type: Number, required: true },
+	originY: { type: Number, required: true },
+	tolerance: { type: Number, required: true },
+	// Render inputs kept so the portal can replay the exact puzzle a user was
+	// served. Patched on after the imagery is produced, so absent on older
+	// records and on any challenge whose render threw. `backgroundSeed` and
+	// `renderSeed` regenerate the clean background and must never be served to
+	// a caller — see puzzle-assets/src/prng.ts.
+	render: {
+		type: new Schema<PuzzleRenderRecord>(
+			{
+				level: { type: Number, required: false },
+				pieceSize: { type: Number, required: true },
+				geometry: {
+					width: { type: Number, required: true },
+					height: { type: Number, required: true },
+					notchSize: { type: Number, required: true },
+				},
+				settings: {
+					decoyCount: { type: Number, required: true },
+					decoyEdgeDarkness: { type: Number, required: true },
+					decoyBodyBrightness: { type: Number, required: true },
+					holeDarken: { type: Number, required: true },
+					decoyHoleDarken: { type: Number, required: true },
+				},
+				backgroundSeed: { type: String, required: true },
+				renderSeed: { type: String, required: true },
+			},
+			{ _id: false },
+		),
+		required: false,
+	},
+	puzzleEvents: {
+		type: [pointerEventSchema()],
+		required: false,
+	},
 });
 
-// Set an index on the challenge field, ascending
-PuzzleCaptchaRecordSchema.index({ challenge: 1 });
-PuzzleCaptchaRecordSchema.index({ lastUpdatedTimestamp: 1 });
-PuzzleCaptchaRecordSchema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
-PuzzleCaptchaRecordSchema.index({ "ipAddress.lower": 1 });
-PuzzleCaptchaRecordSchema.index({ "ipAddress.upper": 1 });
-PuzzleCaptchaRecordSchema.index({ "result.reason": 1 });
-PuzzleCaptchaRecordSchema.index({ "ipInfo.countryCode": 1 });
-PuzzleCaptchaRecordSchema.index({ "ipInfo.isVPN": 1 });
-PuzzleCaptchaRecordSchema.index({ ipInfo: 1 });
-PuzzleCaptchaRecordSchema.index({ parsedUserAgentInfo: 1 });
-// Compound `{pendingStage:1, _id:1}` partial — see PoWCaptchaRecordSchema's
-// pendingStage_partial for rationale.
-PuzzleCaptchaRecordSchema.index(
-	{ pendingStage: 1, _id: 1 },
-	{
-		name: "pendingStage_partial",
-		partialFilterExpression: { pendingStage: true },
+export const IconOrderCaptchaRecordSchema = new Schema<IconOrderCaptchaRecord>({
+	...interactiveCaptchaRecordFields,
+	tolerance: { type: Number, required: true },
+	targets: {
+		type: [
+			new Schema<StoredIconTarget>(
+				{
+					x: { type: Number, required: true },
+					y: { type: Number, required: true },
+					size: { type: Number, required: true },
+					kind: { type: String, required: true },
+				},
+				{ _id: false },
+			),
+		],
+		required: true,
 	},
-);
-// See `PoWCaptchaRecordSchema.spamEmailCount_partial` — same purpose here
-// for puzzle captchas.
-PuzzleCaptchaRecordSchema.index(
-	{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
-	{
-		name: "spamEmailCount_partial",
-		partialFilterExpression: {
-			"metadata.emailNormalised": { $exists: true },
-			serverChecked: true,
+	clicks: {
+		type: [
+			new Schema<{ x: number; y: number }>(
+				{
+					x: { type: Number, required: true },
+					y: { type: Number, required: true },
+				},
+				{ _id: false },
+			),
+		],
+		required: false,
+	},
+	iconOrderEvents: {
+		type: [pointerEventSchema()],
+		required: false,
+	},
+});
+
+const indexInteractiveCaptchaRecord = <T>(schema: Schema<T>): void => {
+	schema.index({ challenge: 1 });
+	schema.index({ lastUpdatedTimestamp: 1 });
+	schema.index({ dappAccount: 1, requestedAtTimestamp: 1 });
+	schema.index({ "ipAddress.lower": 1 });
+	schema.index({ "ipAddress.upper": 1 });
+	schema.index({ "result.reason": 1 });
+	schema.index({ "ipInfo.countryCode": 1 });
+	schema.index({ "ipInfo.isVPN": 1 });
+	schema.index({ ipInfo: 1 });
+	schema.index({ parsedUserAgentInfo: 1 });
+	// Compound `{pendingStage:1, _id:1}` partial — see PoWCaptchaRecordSchema's
+	// pendingStage_partial for rationale.
+	schema.index(
+		{ pendingStage: 1, _id: 1 },
+		{
+			name: "pendingStage_partial",
+			partialFilterExpression: { pendingStage: true },
 		},
+	);
+	// See `PoWCaptchaRecordSchema.spamEmailCount_partial`.
+	schema.index(
+		{ dappAccount: 1, "metadata.emailNormalised": 1, serverChecked: 1 },
+		{
+			name: "spamEmailCount_partial",
+			partialFilterExpression: {
+				"metadata.emailNormalised": { $exists: true },
+				serverChecked: true,
+			},
+		},
+	);
+	// See `PoWCaptchaRecordSchema.blocked_partial`.
+	schema.index(
+		{ blocked: 1 },
+		{
+			name: "blocked_partial",
+			partialFilterExpression: { blocked: true },
+		},
+	);
+};
+
+export const AudioCaptchaRecordSchema = new Schema<AudioCaptchaRecord>({
+	...interactiveCaptchaRecordFields,
+	answer: { type: String, required: true },
+	submittedAnswer: { type: String, required: false },
+	replays: { type: Number, required: false },
+	audioEvents: {
+		type: [
+			new Schema<AudioEvent>(
+				{
+					kind: { type: String, required: true },
+					t: { type: Number, required: true },
+				},
+				{ _id: false },
+			),
+		],
+		required: false,
 	},
-);
-// See `PoWCaptchaRecordSchema.blocked_partial`.
-PuzzleCaptchaRecordSchema.index(
-	{ blocked: 1 },
-	{
-		name: "blocked_partial",
-		partialFilterExpression: { blocked: true },
-	},
-);
+});
+
+indexInteractiveCaptchaRecord(PuzzleCaptchaRecordSchema);
+indexInteractiveCaptchaRecord(IconOrderCaptchaRecordSchema);
+indexInteractiveCaptchaRecord(AudioCaptchaRecordSchema);
 
 export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 	userAccount: { type: String, required: true },
@@ -495,7 +633,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		status: { type: String, enum: CaptchaStatus, required: true },
 		reason: {
 			type: String,
-			enum: TranslationKeysSchema.options,
+			enum: translationKeys,
 			required: false,
 		},
 		error: { type: String, required: false },
@@ -544,6 +682,11 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 		required: false,
 	},
 	coords: { type: [[[Number]]], required: false },
+	inputMethods: {
+		type: [[{ type: String, enum: Object.values(InputMethod) }]],
+		required: false,
+		default: undefined,
+	},
 	// Pending request fields for image captcha workflow
 	pending: { type: Boolean, required: true },
 	salt: { type: String, required: true },
@@ -557,6 +700,7 @@ export const UserCommitmentRecordSchema = new Schema<UserCommitmentRecord>({
 			c1: { type: [Schema.Types.Mixed], required: true },
 			c2: { type: [Schema.Types.Mixed], required: true },
 			c3: { type: [Schema.Types.Mixed], required: true },
+			c4: { type: [Schema.Types.Mixed], required: false },
 			d: { type: String, required: true },
 		},
 		required: false,
@@ -733,6 +877,11 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// already validated by RoutingMachineOutputSchema before it gets here.
 	puzzleTolerance: { type: Number, required: false },
 	puzzle: { type: Object, required: false },
+	iconOrderTolerance: { type: Number, required: false },
+	iconOrder: { type: Object, required: false },
+	// Ladder index the two fields above were sampled from, reported onto the
+	// challenge record. See `Session.puzzleLevel`.
+	puzzleLevel: { type: Number, required: false },
 	storedAtTimestamp: { type: Date, required: false, expires: ONE_DAY },
 	lastUpdatedTimestamp: { type: Date, required: false },
 	// See `StoredCaptcha.pendingStage` — same semantics on Session records.
@@ -754,6 +903,9 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// gap only for fields that are inherently origin-populated; escalation-
 	// owned fields (captchaType, sessionId, score, etc.) are never overridden.
 	originSessionId: { type: String, required: false },
+	refreshOf: { type: String, required: false },
+	refreshCount: { type: Number, required: false },
+	refreshedAfterMs: { type: Number, required: false },
 	decryptedHeadHash: { type: String, required: false, default: "" },
 	bundleId: { type: String, required: false },
 	siteKey: { type: String, required: false },
@@ -806,6 +958,13 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	},
 	userSubmitted: { type: Boolean, required: false },
 	serverChecked: { type: Boolean, required: false },
+	// Web Bot Auth: true on sessions issued to a verified Ed25519 signer.
+	// Boolean shortcut; the full Signature-Agent URL is on webBotAuthAgent.
+	agent: { type: Boolean, required: false },
+	// Verified Signature-Agent URL (e.g. "https://chatgpt.com"). Presence
+	// on a session makes the `/verify` path require the operator to pass
+	// `ip` and enforces `session.ipAddress === ip` for replay defence.
+	webBotAuthAgent: { type: String, required: false },
 	// WASM SIMD CPU fingerprint readings collected by the catcher client.
 	// Stored as a free-form Mixed sub-document because the shape is a
 	// discriminated union and the dataset is still evolving — Zod validates
@@ -814,20 +973,12 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	// Stage at which the SIMD readings first arrived on this session
 	// (frictionless / challenge / submit). First-hop-wins.
 	simdReadingsStage: { type: String, required: false },
-	entropyMathRandomFingerprint: { type: String, required: false },
-	entropyCryptoFingerprint: { type: String, required: false },
-	entropyWallClockOffsetMs: { type: Number, required: false },
-	entropyMathRandomFirst: { type: Number, required: false },
-	g: { type: String, required: false },
-	i: { type: Boolean, required: false },
-	// Raw iOS WKWebView-vs-Safari DOM signals that the client-side
-	// classifier folds into `webView` (see @prosopo/types Session for
-	// per-key semantics). Persisted so server-side rules can retune
-	// the aggregation from live traffic without a catcher release.
-	sw: { type: Boolean, required: false },
-	md: { type: Boolean, required: false },
-	bn: { type: Boolean, required: false },
-	fs: { type: Boolean, required: false },
+	// Everything the detector reported — see @prosopo/types `Session.d`.
+	// Mixed because the whole point is that its shape is not declared here;
+	// the provider caps and sanitises it on ingress so it is always safe to
+	// store. Mongoose would silently drop an undeclared subdocument under
+	// strict mode, which is exactly the failure this field exists to end.
+	d: { type: Schema.Types.Mixed, required: false },
 	// Per-TLS-connection handshake timings forwarded by the chaddy Caddy
 	// plugin (X-TLS-TCP-To-Chello-Us / X-TLS-Chello-To-Handshake-Us).
 	// See @prosopo/types Session.tcpToChelloUs for full semantics.
@@ -843,9 +994,26 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 	observedTtl: { type: Number, required: false },
 	tcpMss: { type: Number, required: false },
 	tcpWscale: { type: Number, required: false },
+	tcpWindow: { type: Number, required: false },
+	// Whole-SYN fields from the 104-byte probe record. `tcpOptsKinds` is the
+	// decoded option-kind list in wire order, not the probe's packed u64 —
+	// see @prosopo/types Session for why it cannot be stored packed.
+	tcpOptsKinds: { type: [Number], required: false },
+	tcpOptsPresent: { type: Number, required: false },
+	tcpOptsCount: { type: Number, required: false },
+	tcpTsval: { type: Number, required: false },
+	tcpTsecr: { type: Number, required: false },
+	tcpFlags: { type: Number, required: false },
+	tcpDataOffsetResv: { type: Number, required: false },
+	tcpUrgPtr: { type: Number, required: false },
+	ipIdent: { type: Number, required: false },
+	ipTotalLen: { type: Number, required: false },
+	ipFragFlags: { type: Number, required: false },
+	ipTos: { type: Number, required: false },
+	// Superseded by tcpOptsPresent / tcpOptsKinds; kept because historical
+	// rows hold them and routing rules read them.
 	tcpOptsFlags: { type: Number, required: false },
 	tcpOptsOrder: { type: Number, required: false },
-	tcpWindow: { type: Number, required: false },
 	// DNS observation merge target. Populated by
 	// POST /v1/prosopo/provider/admin/dns/event from the dns-event
 	// sidecar (see types/provider/database.ts → Session.dnsEvent).
@@ -862,9 +1030,10 @@ export const SessionRecordSchema = new Schema<SessionRecord>({
 		required: false,
 	},
 	// Site-owner metadata the widget was rendered with — see
-	// `Session.clientMetaData`. Mirrored up from the captcha record so the
-	// session row carries the same `clientSessionId` the verify call
-	// correlates against.
+	// `Session.clientMetaData`. Written at issuance when the widget reported a
+	// session id, and mirrored up from the captcha record at solve time, so the
+	// session row carries the same `clientSessionId` the verify call correlates
+	// against either way.
 	clientMetaData: {
 		type: new Schema(ClientMetaDataRecordSchemaObj, { _id: false }),
 		required: false,
@@ -876,8 +1045,10 @@ SessionRecordSchema.index({ deleted: 1 });
 SessionRecordSchema.index({ blocked: 1 });
 SessionRecordSchema.index({ sessionId: 1 }, { unique: true });
 SessionRecordSchema.index({ userSitekeyIpHash: 1 });
+// Dotted path into the detector bag. Sparse, so only sessions whose detector
+// actually reported this key are carried.
 SessionRecordSchema.index(
-	{ siteKey: 1, entropyMathRandomFingerprint: 1, createdAt: -1 },
+	{ siteKey: 1, "d.em": 1, createdAt: -1 },
 	{ sparse: true },
 );
 SessionRecordSchema.index({ token: 1 });
@@ -960,7 +1131,13 @@ export const DecisionMachineArtifactRecordSchema =
 		version: { type: String, required: false },
 		captchaType: {
 			type: String,
-			enum: [CaptchaType.pow, CaptchaType.image, CaptchaType.puzzle],
+			enum: [
+				CaptchaType.pow,
+				CaptchaType.image,
+				CaptchaType.puzzle,
+				CaptchaType.iconOrder,
+				CaptchaType.audio,
+			],
 			required: false,
 		},
 		createdAt: { type: Date, required: true },
@@ -985,6 +1162,21 @@ export const ClientContextEntropyRecordSchema =
 				required: true,
 			},
 			entropy: { type: String, required: true },
+			totalSessions: { type: Number, required: false },
+			distinctHashes: { type: Number, required: false },
+			urls: {
+				type: [
+					new Schema(
+						{
+							url: { type: String, required: true },
+							sessions: { type: Number, required: true },
+							entropy: { type: String, required: true },
+						},
+						{ _id: false },
+					),
+				],
+				required: false,
+			},
 		},
 		{ timestamps: { createdAt: true, updatedAt: true } },
 	);
@@ -1040,6 +1232,11 @@ export const SESSION_PROJECTION = {
 	// overrides silently never apply.
 	puzzleTolerance: 1,
 	puzzle: 1,
+	iconOrderTolerance: 1,
+	iconOrder: 1,
+	// Projected alongside them so the challenge record can report which ladder
+	// level produced the override it just applied.
+	puzzleLevel: 1,
 	// Read by captchaManager.peek* to report the session's own
 	// difficulty alongside solvedImagesCount.
 	powDifficulty: 1,
@@ -1050,29 +1247,22 @@ export const SESSION_PROJECTION = {
 	// Carried onto escalation sessions by `buildEscalation` so the
 	// escalated record keeps the Protect tag.
 	isProtect: 1,
-	// Entropy fingerprints and the compact client-capability flags.
-	// Read in two places, both of which silently degraded without
-	// them: `buildEscalation` copies them onto the escalation
-	// session, and `getSessionRecordWithOriginFallback` compares
-	// them against the origin session to decide whether a second
-	// lookup is even needed. Unprojected, every one read as
-	// undefined — so the fallback always fired and always copied
-	// nothing.
-	entropyMathRandomFingerprint: 1,
-	entropyCryptoFingerprint: 1,
-	entropyWallClockOffsetMs: 1,
-	entropyMathRandomFirst: 1,
-	g: 1,
-	i: 1,
-	sw: 1,
-	md: 1,
-	bn: 1,
-	fs: 1,
+	// The detector bag, whole. Read by `buildEscalation` (copied onto
+	// the escalation session), by `getSessionRecordWithOriginFallback`
+	// (merged from the origin), and by the verify paths that build
+	// decision-machine input. Projecting it as one field is the reason
+	// a new signal no longer needs a line here — the previous
+	// per-signal list silently read `undefined` for anything anyone
+	// forgot to add, and several were forgotten.
+	d: 1,
 	userSitekeyIpHash: 1,
 	simdReadings: 1,
 	bundleId: 1,
 	dnsEvent: 1,
 	originSessionId: 1,
+	// Read by the next refresh to extend the chain and time it.
+	refreshCount: 1,
+	createdAt: 1,
 	currentUrl: 1,
 	iframeUrl: 1,
 	// Mirrored up from the captcha record at solve time. Projected
@@ -1086,6 +1276,12 @@ export const SESSION_PROJECTION = {
 	// path too. Keep this projection in sync with whatever
 	// fields the read-only callers need.
 	captchaType: 1,
+	// Single-use marker for the authenticated (Web Bot Auth) verify path.
+	// `verifyAuthenticatedSession` reads it to reject a token that has already
+	// been redeemed, then sets it — without the projection the check would read
+	// `undefined` and every authenticated token would verify an unlimited
+	// number of times.
+	serverChecked: 1,
 	// Raw per-connection TCP-handshake signals populated by the
 	// tcp-probe eBPF sidecar (see @prosopo/types Session for the
 	// wire semantics). The verify-time DM input surface exposes
@@ -1102,9 +1298,21 @@ export const SESSION_PROJECTION = {
 	observedTtl: 1,
 	tcpMss: 1,
 	tcpWscale: 1,
+	tcpWindow: 1,
+	tcpOptsKinds: 1,
+	tcpOptsPresent: 1,
+	tcpOptsCount: 1,
+	tcpTsval: 1,
+	tcpTsecr: 1,
+	tcpFlags: 1,
+	tcpDataOffsetResv: 1,
+	tcpUrgPtr: 1,
+	ipIdent: 1,
+	ipTotalLen: 1,
+	ipFragFlags: 1,
+	ipTos: 1,
 	tcpOptsFlags: 1,
 	tcpOptsOrder: 1,
-	tcpWindow: 1,
 	"headers.user-agent": 1,
 	"headers.accept": 1,
 	"headers.accept-language": 1,
@@ -1188,7 +1396,12 @@ export interface IProviderDatabase extends IDatabase {
 		requestHash: string,
 	): Promise<PendingImageCaptchaRequest>;
 
-	updatePendingImageCommitmentStatus(requestHash: string): Promise<void>;
+	/**
+	 * Atomically flips a pending image request to not-pending. Resolves true
+	 * only for the one caller that performed the flip, so concurrent
+	 * submissions against the same request cannot all be evaluated.
+	 */
+	updatePendingImageCommitmentStatus(requestHash: string): Promise<boolean>;
 
 	getAllCaptchasByDatasetId(
 		datasetId: string,
@@ -1228,7 +1441,7 @@ export interface IProviderDatabase extends IDatabase {
 
 	disapproveDappUserCommitment(
 		commitmentId: string,
-		reason?: TranslationKey,
+		reason?: ResultReason,
 		coords?: [number, number][][],
 	): Promise<void>;
 
@@ -1251,18 +1464,24 @@ export interface IProviderDatabase extends IDatabase {
 		asOfTimestamp?: Date,
 	): Promise<void>;
 
-	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<void>;
+	/**
+	 * Marks commitments server-checked, skipping ones already checked.
+	 * Resolves to the number this call newly claimed — a verify must only
+	 * proceed when it claimed its commitment, otherwise a concurrent verify
+	 * of the same token already did.
+	 */
+	markDappUserCommitmentsChecked(commitmentIds: Hash[]): Promise<number>;
 
 	updateDappUserCommitment(
-		commitmentId: Hash,
+		commitmentId: UserCommitment["id"],
 		updates: Partial<UserCommitment>,
 	): Promise<void>;
 
 	/**
-	 * Counts server-checked captcha records (across image, PoW and puzzle
-	 * collections) for a dapp whose `metadata.emailNormalised` equals the
-	 * given value. Backs the per-email submission-count rejection in the
-	 * verify tasks. Returns 0 when the normalised email is empty.
+	 * Counts server-checked captcha records (across image, PoW, puzzle and
+	 * icon-order collections) for a dapp whose `metadata.emailNormalised`
+	 * equals the given value. Backs the per-email submission-count rejection
+	 * in the verify tasks. Returns 0 when the normalised email is empty.
 	 */
 	countCommitmentsByNormalisedEmail(
 		dappAccount: string,
@@ -1278,7 +1497,19 @@ export interface IProviderDatabase extends IDatabase {
 		afterId?: unknown,
 	): Promise<PoWCaptchaRecord[]>;
 
-	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<void>;
+	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
+	markDappUserPoWCommitmentsChecked(challengeIds: string[]): Promise<number>;
+
+	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
+	markPuzzleCaptchaRecordChecked(challenge: PoWChallengeId): Promise<boolean>;
+
+	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
+	markIconOrderCaptchaRecordChecked(
+		challenge: PoWChallengeId,
+	): Promise<boolean>;
+
+	/** Same claim contract as {@link markDappUserCommitmentsChecked}. */
+	markAudioCaptchaRecordChecked(challenge: PoWChallengeId): Promise<boolean>;
 
 	markDappUserPoWCommitmentsStored(
 		challengeIds: string[],
@@ -1378,7 +1609,82 @@ export interface IProviderDatabase extends IDatabase {
 		updates: Partial<PuzzleCaptchaRecord>,
 	): Promise<void>;
 
-	updateClientRecords(clientRecords: ClientRecord[]): Promise<void>;
+	storeAudioCaptchaRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		answer: string,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		ipInfo?: IPInfoResponse,
+	): Promise<void>;
+
+	storeIconOrderCaptchaRecord(
+		challenge: PoWChallengeId,
+		components: PoWChallengeComponents,
+		targets: StoredIconTarget[],
+		tolerance: number,
+		providerSignature: string,
+		ipAddress: CompositeIpAddress,
+		headers: RequestHeaders,
+		ja4: string,
+		sessionId?: string,
+		ipInfo?: IPInfoResponse,
+	): Promise<void>;
+
+	getAudioCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<AudioCaptchaRecord | null>;
+
+	updateAudioCaptchaRecordResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		serverChecked: boolean,
+		userSubmitted: boolean,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void>;
+
+	getIconOrderCaptchaRecordByChallenge(
+		challenge: string,
+	): Promise<IconOrderCaptchaRecord | null>;
+
+	/**
+	 * Atomically take the single submission a challenge allows: `true` only
+	 * for the caller that set `userSubmitted`, so concurrent submitters cannot
+	 * each be graded.
+	 */
+	claimIconOrderCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
+
+	/** Same claim contract as {@link claimIconOrderCaptchaSubmission}. */
+	claimAudioCaptchaSubmission(challenge: PoWChallengeId): Promise<boolean>;
+
+	updateIconOrderCaptchaRecordResult(
+		challenge: PoWChallengeId,
+		result: CaptchaResult,
+		serverChecked: boolean,
+		userSubmitted: boolean,
+		userSignature?: string,
+		coords?: [number, number][][],
+		lastUpdatedTimestamp?: Date,
+	): Promise<void>;
+
+	updateAudioCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<AudioCaptchaRecord>,
+	): Promise<void>;
+
+	updateIconOrderCaptchaRecord(
+		challenge: PoWChallengeId,
+		updates: Partial<IconOrderCaptchaRecord>,
+	): Promise<void>;
+
+	// Accepts plain records: the client-list poll builds these from the
+	// portal's account documents and they are never mongoose Documents.
+	updateClientRecords(clientRecords: IUserDataSlim[]): Promise<void>;
 
 	removeClientRecords(accounts: string[]): Promise<void>;
 
@@ -1403,6 +1709,13 @@ export interface IProviderDatabase extends IDatabase {
 		updates: Partial<Session>,
 		streamToCentral?: boolean,
 	): Promise<void>;
+
+	/**
+	 * Marks a session server-checked only if it is not already. Resolves true
+	 * for the single caller that performed the flip, so concurrent verifies of
+	 * one token cannot all succeed.
+	 */
+	claimSessionServerCheck(sessionId: string): Promise<boolean>;
 
 	/**
 	 * Record SIMD CPU fingerprint readings on the session — first hop wins.
@@ -1478,11 +1791,6 @@ export interface IProviderDatabase extends IDatabase {
 	removeDecisionMachineArtifact(id: string): Promise<boolean>;
 
 	removeAllDecisionMachineArtifacts(): Promise<number>;
-
-	getClientContextEntropy(
-		account: string,
-		contextType: ContextType,
-	): Promise<string | undefined>;
 
 	getSpamEmailDomain(domain: string): Promise<SpamEmailDomainRecord | null>;
 

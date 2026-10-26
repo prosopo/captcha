@@ -149,6 +149,7 @@ describe("Captcha type + params selection hierarchy (integration)", () => {
 			initialize: async () => {},
 			isAvailable: () => true,
 			lookup: async () => currentIpInfo,
+			country: (): string | undefined => undefined,
 		};
 
 		tasks = new Tasks(env);

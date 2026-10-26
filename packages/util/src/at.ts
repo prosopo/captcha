@@ -15,7 +15,8 @@ export type AtOptions = {
 	optional?: boolean; // whether to allow undefined elements in the array (true == optional, false == mandatory)
 	noWrap?: boolean; // whether to wrap the index around the bounds of the array (true == no wrap, false == wrap indices)
 };
-// Get an element from an array, throwing an error if it's index is out of bounds or if the element is undefined or null (can be overridden with the options)
+// Get an element from an array or string. Out-of-range indices wrap around unless `noWrap` is set, in which case they
+// throw. Throws on an empty input, a non-integer index, or an undefined element (unless `optional` is set).
 
 export function at(
 	str: string,
@@ -37,13 +38,16 @@ export function at<T extends readonly unknown[]>(
 	items: T | string,
 	index: number,
 	options?: AtOptions,
-): T[number] {
+): T[number] | string | undefined {
 	if (items.length === 0) {
 		throw new Error("Array is empty");
 	}
 
 	if (!Number.isFinite(index)) {
 		throw new Error(`Index ${index} is not a finite number`);
+	}
+	if (!Number.isInteger(index)) {
+		throw new Error(`Index ${index} is not an integer`);
 	}
 
 	if (!options?.noWrap) {
@@ -64,5 +68,9 @@ export function at<T extends readonly unknown[]>(
 		throw new Error(`Index ${index} smaller than 0`);
 	}
 
-	return items[index] as unknown as T;
+	const item = items[index];
+	if (item === undefined && !options?.optional) {
+		throw new Error(`Element at index ${index} is undefined`);
+	}
+	return item;
 }

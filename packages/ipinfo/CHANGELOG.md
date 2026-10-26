@@ -1,5 +1,324 @@
 # @prosopo/ipinfo
 
+## 0.4.25
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/logger@2.1.6
+  - @prosopo/types@5.19.0
+
+## 0.4.24
+### Patch Changes
+
+- Updated dependencies [159766a]
+  - @prosopo/types@5.18.0
+
+## 0.4.23
+### Patch Changes
+
+  - @prosopo/types@5.17.1
+
+## 0.4.22
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- 860948c: Server-side verify (what siteverify calls) now does far less waiting. A PoW verify used to make about 19 database and ip-lookup calls one after another; it now makes about 6, and a rejected verify fewer. Changes:
+  
+  - The ip lookup that runs on every request is skipped on verify routes. Nothing on verify used it, and the caller there is the site's server, not the user.
+  - The session record is read once instead of twice, and the client record once instead of twice.
+  - DNS enrichment and the user's ip lookup run alongside the access-rule check instead of after it. The ip lookup is skipped once a check has already failed.
+  - The verify answers without waiting for its two bookkeeping writes, unless 500 are already waiting, so a slow database cannot pile them up in memory. The single-use claim is still made before anything else, so a token still verifies only once.
+  - Decision-machine artifacts are cached per process. They were cached per request, so every verify read them from Mongo. Saving or deleting a machine clears the cache.
+  - Client records are cached for 30 seconds and the cache is cleared by every client-record write in the process.
+  - Successful ip lookups are cached for 10 minutes, so an address is not looked up twice in one verify, or again at verify after the challenge looked it up.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+  - @prosopo/logger@2.1.5
+  - @prosopo/types@5.17.0
+
+## 0.4.21
+### Patch Changes
+
+  - @prosopo/types@5.16.3
+  - @prosopo/logger@2.1.4
+
+## 0.4.20
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+
+## 0.4.19
+### Patch Changes
+
+  - @prosopo/types@5.16.1
+
+## 0.4.18
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+  - @prosopo/types@5.16.0
+
+## 0.4.17
+### Patch Changes
+
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/types@5.15.1
+  - @prosopo/logger@2.1.4
+
+## 0.4.16
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+
+## 0.4.15
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+
+## 0.4.14
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/logger@2.1.3
+
+## 0.4.13
+### Patch Changes
+
+- Updated dependencies [ede4352]
+- Updated dependencies [2145922]
+  - @prosopo/types@5.12.0
+  - @prosopo/logger@2.1.2
+
+## 0.4.12
+### Patch Changes
+
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+
+## 0.4.11
+### Patch Changes
+
+- Updated dependencies [59b7e87]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [dab0338]
+  - @prosopo/types@5.11.0
+  - @prosopo/logger@2.1.1
+
+## 0.4.10
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+
+## 0.4.9
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+  - @prosopo/types@5.10.1
+
+## 0.4.8
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+
+## 0.4.7
+### Patch Changes
+
+  - @prosopo/types@5.9.2
+
+## 0.4.6
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+
+## 0.4.5
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+
+## 0.4.4
+### Patch Changes
+
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+
+## 0.4.3
+### Patch Changes
+
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d4e9425]
+- Updated dependencies [0be8838]
+  - @prosopo/types@5.8.4
+  - @prosopo/logger@2.0.10
+
+## 0.4.2
+### Patch Changes
+
+- Updated dependencies [028a158]
+- Updated dependencies [3958046]
+- Updated dependencies [028a158]
+  - @prosopo/types@5.8.3
+
+## 0.4.1
+### Patch Changes
+
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/types@5.8.2
+
+## 0.4.0
+### Minor Changes
+
+- 886b664: Optionally answer `/healthz` with the node nearest the caller.
+  
+  `/healthz` tells a client which node to pin its captcha calls to, and a node has always answered with its own name — so the pin is whatever the DNS layer picked. The DNS layer only sees the client's address when the client's resolver forwards it, which many do not. The provider always sees it, because the connection is already open.
+  
+  Behind `PROSOPO_HEALTHZ_GEO_STEERING`, off by default. With it off nothing in this change runs and the response is unchanged, headers included.
+  
+  - `IpInfoService.country(ip)` is a new MaxMind-only fast path: an in-process, synchronous read of the memory-mapped database, returning an ISO 3166-1 alpha-2 code or `undefined`. `lookup()` is unchanged and still prefers ipapi.is for its threat data; a country lookup does not need that data and must not pay a network call for it. Added to `IIpInfoService` in `@prosopo/ipinfo` and `@prosopo/types-env`.
+  - The country → host map is configuration, supplied by the deployment as JSON in `PROSOPO_HEALTHZ_GEO_ROUTES`. It is also the candidate set: a host that must not receive traffic simply does not appear in it. An unparseable or empty map leaves steering off rather than failing startup.
+  - A background poller (`PROSOPO_HEALTHZ_GEO_PROBE_INTERVAL_MS`, `PROSOPO_HEALTHZ_GEO_PROBE_TIMEOUT_MS`) tracks each candidate's health. Every candidate starts down and only becomes up on a successful probe, so a poller that has not run or is failing leaves steering off. The request path reads a boolean and never awaits a probe.
+  - The handler never awaits readiness. It reads `ipInfoService.isAvailable()`, which is false before the environment is ready, and answers with its own name. Loopback and private-range callers — deploy gates, container health checks — short-circuit the same way. `/healthz` stays dependency-free.
+  - `Cache-Control: no-store, private` is set whenever steering is on, before the decision, so it covers every branch. The answer varies per caller and no intermediary may cache and replay it.
+  - `prosopo_healthz_geo_outcomes_total{outcome}` on `/metrics` counts `steered`, `not_steered`, `target_down` and `geo_unavailable`. Every outcome but the first falls back to the node's own name, which is also the behaviour with steering off, so nothing else would show that steering had stopped working.
+  
+  No client-side change: the load balancer already pins to whatever `host` the response carries.
+
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+
+## 0.3.25
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+
+## 0.3.24
+### Patch Changes
+
+- 162f591: Make the MaxMind fallback answer lookups instead of silently failing all of them.
+  
+  `MaxMindBackend` was configured with `cityDbPath` pointing at `GeoLite2-Country.mmdb` (`MAXMIND_DB_PATH`), and only ever called `city()`. `Reader.open()` accepts any valid `.mmdb`, so the reader opened, `isAvailable()` reported `true`, and the backend advertised itself as a working fallback — but `city()` checks `metadata.databaseType` and throws `BadMethodCallError` against a Country database. The throw was swallowed at `debug` level, `asnReader` was never configured because nothing read a path for it, and every lookup fell through to `{ isValid: false, error: "No MaxMind data available for IP" }`.
+  
+  The failure was invisible for as long as ipapi.is was up, because `IpInfoService` only reaches MaxMind when the ipapi.is lookup fails. When the self-hosted ipapi.is sidecar went down on five production provider nodes, IP lookups did not degrade to MaxMind — they failed outright, and `compareIPs` returned "Failed to lookup both IP addresses" for every request whose challenge IP differed from its solution IP.
+  
+  Three changes:
+  
+  - `MaxMindBackend` latches the database kind on the first `BadMethodCallError` and uses `country()` from then on, so a Country database yields country and country code rather than nothing. The latch means the rejection is constructed once per process, not once per request, and a genuine City database never pays for a second lookup. The mismatch is logged once at `warn` with the offending path, because silent degradation is what let this sit unnoticed.
+  - `maxmindAsnDbPath` is read from `MAXMIND_ASN_DB_PATH`. The image has downloaded `GeoLite2-ASN.mmdb` alongside City and Country since the Dockerfile was written, but nothing ever opened it, so the fallback could not name a provider or an AS number.
+  - `deepValidateIpAddress` logs `ip1Error` and `ip2Error` alongside the top-level comparison error. "Failed to lookup both IP addresses" on its own does not distinguish an IP that is absent from the database from a backend that is down, and diagnosing the difference meant going onto the host.
+  
+  Deployments should also point `MAXMIND_DB_PATH` at `GeoLite2-City.mmdb`, which the image already ships: country-level data is enough for geoblocking but carries no coordinates, so the IP distance rule cannot run against it.
+
+## 0.3.23
+### Patch Changes
+
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/types@5.7.0
+  - @prosopo/logger@2.0.9
+
+## 0.3.22
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/logger@2.0.8
+  - @prosopo/types@5.6.0
+
+## 0.3.21
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+
+## 0.3.20
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+
+## 0.3.19
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/types@5.5.1
+
 ## 0.3.18
 ### Patch Changes
 

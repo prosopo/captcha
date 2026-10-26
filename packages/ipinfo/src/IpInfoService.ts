@@ -15,6 +15,7 @@
 import type { IPInfoResponse } from "@prosopo/types";
 import { IpapiBackend } from "./backends/ipapi.js";
 import { MaxMindBackend } from "./backends/maxmind.js";
+import { LookupCache } from "./lookupCache.js";
 import type { IIpInfoService, IpInfoServiceConfig } from "./types.js";
 
 /**
@@ -69,9 +70,13 @@ export class IpInfoService implements IIpInfoService {
 	private maxmindBackend: MaxMindBackend | null = null;
 	private ipapiBackend: IpapiBackend | null = null;
 	private config: IpInfoServiceConfig;
+	private readonly cache: LookupCache | undefined;
 
 	constructor(config: IpInfoServiceConfig, backends?: IpInfoBackends) {
 		this.config = config;
+		this.cache = config.lookupCache
+			? new LookupCache(config.lookupCache)
+			: undefined;
 
 		if (backends) {
 			this.maxmindBackend = backends.maxmind ?? null;
@@ -117,7 +122,34 @@ export class IpInfoService implements IIpInfoService {
 		);
 	}
 
+	/**
+	 * MaxMind-only country fast path: the ISO 3166-1 alpha-2 code for `ip`, or
+	 * undefined when it cannot be determined.
+	 *
+	 * Deliberately NOT `lookup()`. `lookup()` prefers ipapi.is for its threat
+	 * data, which puts a network call to the sidecar on the caller's path; a
+	 * caller that only wants a country does not need that data and must not pay
+	 * for it. The MaxMind database is memory-mapped and read in-process, so this
+	 * is synchronous and cannot fail on a network or a slow sidecar.
+	 *
+	 * Returns undefined rather than throwing for every failure mode — no
+	 * MaxMind backend configured, backend not initialised yet, non-routable
+	 * address, address absent from the database — so callers have exactly one
+	 * "no answer" case to handle.
+	 */
+	country(ip: string): string | undefined {
+		if (isNonRoutable(ip)) return undefined;
+		if (!this.maxmindBackend?.isAvailable()) return undefined;
+		return this.maxmindBackend.countryCode(ip);
+	}
+
 	async lookup(ip: string): Promise<IPInfoResponse> {
+		return this.cache
+			? this.cache.getOrLookup(ip, (address) => this.lookupUncached(address))
+			: this.lookupUncached(ip);
+	}
+
+	private async lookupUncached(ip: string): Promise<IPInfoResponse> {
 		if (isNonRoutable(ip)) {
 			return {
 				isValid: false,

@@ -30,7 +30,7 @@ export default defineConfig({
 	screenshotsFolder: "./cypress/snapshots/actual",
 	trashAssetsBeforeRuns: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
-	env: {
+	expose: {
 		...process.env,
 		// Same explicit-frictionless demo the other frictionless specs use —
 		// the site key configured here is `PROSOPO_SITE_KEY_FRICTIONLESS`,

@@ -20,7 +20,6 @@
  * on the server-side provider package.
  */
 export enum FrictionlessReason {
-	CONTEXT_AWARE_VALIDATION_FAILED = "CONTEXT_AWARE_VALIDATION_FAILED",
 	USER_ACCESS_POLICY = "USER_ACCESS_POLICY",
 	ACCESS_POLICY_BLOCK = "ACCESS_POLICY_BLOCK",
 	USER_AGENT_MISMATCH = "USER_AGENT_MISMATCH",
@@ -40,6 +39,15 @@ export enum FrictionlessReason {
 	// solves are escalated to an image captcha rather than approved outright
 	// (see verifyPowCaptchaSolution in @prosopo/provider).
 	MISSING_COORDINATES = "MISSING_COORDINATES",
+	// The address that asked for a PoW challenge is not the address that
+	// solved it. A challenge is short-lived and bound to one session, so the
+	// honest explanations are narrow — a mobile handoff mid-solve — while
+	// handing the challenge to a second host is the cheap way to farm the work
+	// out. Escalated to an image captcha rather than denied: a real network
+	// change should cost a picture, not a rejection. Judged on the network part
+	// only — the v6 /64 and the v4 /24 — since the host bits are reassigned by
+	// design on both (see isSameIpOrigin).
+	IP_CHANGED = "IP_CHANGED",
 	// The detector payload could not be decrypted: no bundle resolved for the
 	// session (expired/missing Redis binding, bundle no longer in the pool), or
 	// the ciphertext did not open with the bundle's keys. Distinct from a high
@@ -52,7 +60,41 @@ export enum FrictionlessReason {
 	MISSING_TOKEN = "MISSING_TOKEN",
 	// A token arrived without its accompanying head hash.
 	MISSING_HEAD_HASH = "MISSING_HEAD_HASH",
+	// The user kept refreshing the puzzle, so the replacement is an image
+	// challenge instead. Only ever this direction, and only where the site
+	// has image enabled (see switchTypeAfterRefreshes in @prosopo/provider).
+	PUZZLE_REFRESH_LIMIT = "PUZZLE_REFRESH_LIMIT",
+	// The user asked to swap the puzzle for an image challenge.
+	PUZZLE_USER_SWITCH = "PUZZLE_USER_SWITCH",
 }
+
+/**
+ * Reasons that mean "we measured nothing", as opposed to "we measured
+ * something bad".
+ *
+ * Each of these paths sizes its challenge from a fixed constant
+ * (`MISSING_TOKEN_IMAGE_ROUNDS` and friends) chosen to be short — "prove
+ * you're human quickly", per their own doc comments — not from any signal the
+ * client produced. Those constants nonetheless sit above the default baseline
+ * of `DEFAULT_SOLVED_COUNT`, so anything reading a round count as severity
+ * scores them as an escalation and applies a graduated response to a session
+ * that never produced a measurement to grade.
+ *
+ * That is wrong wherever the "severity" changes what a legitimate user
+ * experiences rather than what a suspected bot pays. The concrete case: a site
+ * whose CSP blocks the detector bundle sends no token on EVERY request, so
+ * every one of its users was permanently escalated and the site's own puzzle
+ * settings were never rendered.
+ *
+ * `OLD_TIMESTAMP` is deliberately absent: its round count comes from
+ * `timestampDecayFunction`, which scales with how stale the payload is. That
+ * is a real graduated measurement, not a fixed fallback.
+ */
+export const NO_MEASUREMENT_REASONS: ReadonlySet<FrictionlessReason> = new Set([
+	FrictionlessReason.MISSING_TOKEN,
+	FrictionlessReason.MISSING_HEAD_HASH,
+	FrictionlessReason.DECRYPTION_FAILED,
+]);
 
 /**
  * Reason persisted at `result.reason` to record the outcome of a captcha
@@ -84,6 +126,7 @@ export enum ResultReason {
 	SPAM_EMAIL_RULE = "API.SPAM_EMAIL_RULE",
 	SPAM_EMAIL_COUNT_EXCEEDED = "API.SPAM_EMAIL_COUNT_EXCEEDED",
 	TIMESTAMP_TOO_OLD = "API.TIMESTAMP_TOO_OLD",
+	TOO_MANY_LOCALHOST = "API.TOO_MANY_LOCALHOST",
 	TOR_BLOCKED = "API.TOR_BLOCKED",
 	VPN_BLOCKED = "API.VPN_BLOCKED",
 	CAPTCHA_INVALID_SALT = "CAPTCHA.INVALID_SALT",

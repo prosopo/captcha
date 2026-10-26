@@ -73,6 +73,16 @@ describe("buildScopedBlockSubQueries", () => {
 		}
 	});
 
+	it("leaves client exclusions to the ranker instead of negating them in the query", () => {
+		// RediSearch 2.8 mis-evaluates a NOT inside this union and drops
+		// unrelated global rules, so the exclusion must not move back here.
+		const subs = buildScopedBlockSubQueries({ ja4Hash: "abc" }, "client-A");
+
+		for (const sub of subs) {
+			expect(sub.query).not.toContain("excludedClientIds");
+		}
+	});
+
 	it("skips the client-specific probe when no clientId is passed", () => {
 		const subs = buildScopedBlockSubQueries({ ja4Hash: "abc" }, undefined);
 
@@ -101,12 +111,29 @@ describe("buildScopedBlockSubQueries", () => {
 			"coords",
 			"countryCode",
 			"asn",
+			"os",
+			"browser",
 			"numericIp",
 			"numericIpMaskMin",
 			"numericIpMaskMax",
 		]) {
 			expect(fallThrough?.query).toContain(`ismissing(@${field})`);
 		}
+	});
+
+	it("emits field probes for the UA-derived os and browser scopes", () => {
+		const subs = buildScopedBlockSubQueries(
+			{ os: "windows", browser: "firefox" },
+			"client-A",
+		);
+
+		// Without its own probe a browser-only rule is reachable only via the
+		// no-user-scope fall-through, sharing that probe's candidate budget.
+		const osSub = subs.find((s) => s.kind === "field:os");
+		expect(osSub?.query).toContain("@os:{windows}");
+
+		const browserSub = subs.find((s) => s.kind === "field:browser");
+		expect(browserSub?.query).toContain("@browser:{firefox}");
 	});
 
 	it("uses NUMERIC range syntax for asn, not TAG syntax", () => {

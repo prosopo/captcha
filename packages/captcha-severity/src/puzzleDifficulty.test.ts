@@ -1,0 +1,285 @@
+// Copyright 2021-2026 Prosopo (UK) Ltd.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+import { describe, expect, it } from "vitest";
+import {
+	MAX_AUTO_ESCALATION_LEVEL,
+	MAX_AUTO_ESCALATION_LEVEL_TOUCH,
+	PUZZLE_DIFFICULTY_LEVELS,
+	TOUCH_MIN_PIECE_SCALE,
+	TOUCH_MIN_TOLERANCE_PX,
+	clampDifficultyLevel,
+	easePieceScaleForTouch,
+	easeToleranceForTouch,
+	puzzleDifficultyToSeverity,
+	resolveMaxEscalationLevel,
+	severityToPuzzleDifficulty,
+} from "./puzzleDifficulty.js";
+
+describe("PUZZLE_DIFFICULTY_LEVELS table", () => {
+	it("is ordered strictly harder as the level rises", () => {
+		for (let i = 1; i < PUZZLE_DIFFICULTY_LEVELS.length; i++) {
+			const prev = PUZZLE_DIFFICULTY_LEVELS[i - 1];
+			const cur = PUZZLE_DIFFICULTY_LEVELS[i];
+			if (!prev || !cur) throw new Error("missing level");
+			// Harder = tighter tolerance, more decoys, decoys closer to the real
+			// cut's darkness, stronger decoy rims, smaller pieces.
+			expect(cur.tolerance.max).toBeLessThan(prev.tolerance.max);
+			expect(cur.decoyCount.min).toBeGreaterThanOrEqual(prev.decoyCount.min);
+			expect(cur.decoyHoleDarken.max).toBeLessThan(prev.decoyHoleDarken.max);
+			expect(cur.decoyEdgeDarkness.max).toBeGreaterThan(
+				prev.decoyEdgeDarkness.max,
+			);
+			expect(cur.pieceScale.max).toBeLessThan(prev.pieceScale.max);
+		}
+	});
+
+	it("overlaps adjacent bands so one render does not identify the level", () => {
+		// If bands were disjoint, a solver could read the level straight off the
+		// decoy count and know whether it had been flagged.
+		for (let i = 1; i < PUZZLE_DIFFICULTY_LEVELS.length; i++) {
+			const prev = PUZZLE_DIFFICULTY_LEVELS[i - 1];
+			const cur = PUZZLE_DIFFICULTY_LEVELS[i];
+			if (!prev || !cur) throw new Error("missing level");
+			expect(cur.decoyCount.min).toBeLessThanOrEqual(prev.decoyCount.max);
+			expect(cur.tolerance.max).toBeGreaterThanOrEqual(prev.tolerance.min);
+		}
+	});
+
+	it("indexes each band by its own position", () => {
+		PUZZLE_DIFFICULTY_LEVELS.forEach((band, index) => {
+			expect(band.level).toBe(index);
+		});
+	});
+});
+
+describe("severityToPuzzleDifficulty", () => {
+	it("maps no requested rounds to the baseline level", () => {
+		expect(severityToPuzzleDifficulty(undefined, 2)).toBe(0);
+	});
+
+	it("maps a request at or below the site baseline to the baseline level", () => {
+		expect(severityToPuzzleDifficulty(2, 2)).toBe(0);
+		expect(severityToPuzzleDifficulty(1, 2)).toBe(0);
+	});
+
+	it("rises monotonically with rounds requested above the baseline", () => {
+		const levels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 12].map((extra) =>
+			severityToPuzzleDifficulty(2 + extra, 2, PUZZLE_DIFFICULTY_LEVELS.length),
+		);
+		for (let i = 1; i < levels.length; i++) {
+			expect(levels[i]).toBeGreaterThanOrEqual(levels[i - 1] as number);
+		}
+	});
+
+	it("is relative to the site baseline, not an absolute round count", () => {
+		// Same absolute count means different severity on sites whose ordinary
+		// challenge is a different length.
+		expect(severityToPuzzleDifficulty(6, 2)).toBeGreaterThan(
+			severityToPuzzleDifficulty(6, 6),
+		);
+	});
+
+	it("caps automatic escalation below the hardest level", () => {
+		// With image disabled there is no fallback modality, so the hardest
+		// level must not be reachable by escalation alone.
+		expect(severityToPuzzleDifficulty(100, 2)).toBe(MAX_AUTO_ESCALATION_LEVEL);
+		expect(MAX_AUTO_ESCALATION_LEVEL).toBeLessThan(
+			PUZZLE_DIFFICULTY_LEVELS.length - 1,
+		);
+	});
+});
+
+describe("clampDifficultyLevel", () => {
+	it("clamps out-of-range and non-finite input", () => {
+		expect(clampDifficultyLevel(-5)).toBe(0);
+		expect(clampDifficultyLevel(Number.NaN)).toBe(0);
+		expect(clampDifficultyLevel(99)).toBe(MAX_AUTO_ESCALATION_LEVEL);
+	});
+});
+
+describe("puzzleDifficultyToSeverity", () => {
+	// The property every writer depends on: a difficulty chosen in a rule
+	// editor, or normalised by a detector, must come back off the wire as the
+	// same difficulty the provider serves.
+	it("round-trips every reachable level, on any site baseline", () => {
+		for (const baseImageRounds of [1, 2, 5, 10]) {
+			for (let level = 0; level <= MAX_AUTO_ESCALATION_LEVEL; level++) {
+				const rounds = puzzleDifficultyToSeverity(level, baseImageRounds);
+				expect(severityToPuzzleDifficulty(rounds, baseImageRounds)).toBe(level);
+			}
+		}
+	});
+
+	it("round-trips the reserved level when the caller lifts the ceiling", () => {
+		const maxLevel = PUZZLE_DIFFICULTY_LEVELS.length - 1;
+		const rounds = puzzleDifficultyToSeverity(maxLevel, 2, maxLevel);
+		expect(severityToPuzzleDifficulty(rounds, 2, maxLevel)).toBe(maxLevel);
+	});
+
+	it("gives each level a distinct round count", () => {
+		const counts = Array.from(
+			{ length: MAX_AUTO_ESCALATION_LEVEL + 1 },
+			(_, level) => puzzleDifficultyToSeverity(level, 2),
+		);
+		expect(new Set(counts).size).toBe(counts.length);
+	});
+
+	it("clamps to the same ceiling severityToPuzzleDifficulty does", () => {
+		expect(puzzleDifficultyToSeverity(99, 2)).toBe(
+			puzzleDifficultyToSeverity(MAX_AUTO_ESCALATION_LEVEL, 2),
+		);
+		expect(puzzleDifficultyToSeverity(-1, 2)).toBe(2);
+		expect(puzzleDifficultyToSeverity(Number.NaN, 2)).toBe(2);
+	});
+
+	it("leaves the site's own settings in force at level 0", () => {
+		// Level 0 samples no band, so the count it maps to must be one the
+		// provider reads as "nothing escalated this session".
+		expect(
+			severityToPuzzleDifficulty(puzzleDifficultyToSeverity(0, 2), 2),
+		).toBe(0);
+	});
+});
+
+describe("resolveMaxEscalationLevel", () => {
+	it("stops touch one rung below pointer", () => {
+		expect(MAX_AUTO_ESCALATION_LEVEL_TOUCH).toBe(MAX_AUTO_ESCALATION_LEVEL - 1);
+	});
+
+	it("applies the device ceiling when the site has no cap of its own", () => {
+		expect(resolveMaxEscalationLevel(undefined, false)).toBe(
+			MAX_AUTO_ESCALATION_LEVEL,
+		);
+		expect(resolveMaxEscalationLevel(undefined, true)).toBe(
+			MAX_AUTO_ESCALATION_LEVEL_TOUCH,
+		);
+	});
+
+	it("does not let a permissive site cap out-vote the touch ceiling", () => {
+		expect(resolveMaxEscalationLevel(4, true)).toBe(
+			MAX_AUTO_ESCALATION_LEVEL_TOUCH,
+		);
+		expect(resolveMaxEscalationLevel(3, true)).toBe(
+			MAX_AUTO_ESCALATION_LEVEL_TOUCH,
+		);
+	});
+
+	it("does not raise a site that deliberately sits below the ceiling", () => {
+		expect(resolveMaxEscalationLevel(0, true)).toBe(0);
+		expect(resolveMaxEscalationLevel(0, false)).toBe(0);
+		expect(resolveMaxEscalationLevel(1, true)).toBe(1);
+	});
+
+	it("never returns a level the ladder cannot serve", () => {
+		for (const isTouch of [true, false]) {
+			for (const siteMax of [-1, 0, 1, 2, 3, 4, 99, Number.NaN]) {
+				const resolved = resolveMaxEscalationLevel(siteMax, isTouch);
+				expect(resolved).toBeGreaterThanOrEqual(0);
+				expect(resolved).toBeLessThan(PUZZLE_DIFFICULTY_LEVELS.length);
+			}
+		}
+	});
+
+	it("caps the level actually served on touch at L2", () => {
+		const touchMax = resolveMaxEscalationLevel(4, true);
+		expect(severityToPuzzleDifficulty(100, 2, touchMax)).toBe(
+			MAX_AUTO_ESCALATION_LEVEL_TOUCH,
+		);
+		expect(clampDifficultyLevel(99, touchMax)).toBe(
+			MAX_AUTO_ESCALATION_LEVEL_TOUCH,
+		);
+	});
+
+	it("leaves the pointer path on its existing ceiling", () => {
+		const pointerMax = resolveMaxEscalationLevel(undefined, false);
+		expect(severityToPuzzleDifficulty(100, 2, pointerMax)).toBe(
+			MAX_AUTO_ESCALATION_LEVEL,
+		);
+	});
+
+	it("keeps the touch ceiling strictly easier than the pointer ceiling", () => {
+		const touch = PUZZLE_DIFFICULTY_LEVELS[MAX_AUTO_ESCALATION_LEVEL_TOUCH];
+		const pointer = PUZZLE_DIFFICULTY_LEVELS[MAX_AUTO_ESCALATION_LEVEL];
+		expect(touch).toBeDefined();
+		expect(pointer).toBeDefined();
+		if (!touch || !pointer) return;
+		expect(touch.tolerance.min).toBeGreaterThan(pointer.tolerance.min);
+		expect(touch.pieceScale.min).toBeGreaterThan(pointer.pieceScale.min);
+		expect(touch.decoyCount.max).toBeLessThan(pointer.decoyCount.max);
+	});
+});
+
+describe("touch easing", () => {
+	it("raises a tolerance below the touch floor", () => {
+		expect(easeToleranceForTouch(5)).toBe(TOUCH_MIN_TOLERANCE_PX);
+		expect(easeToleranceForTouch(8)).toBe(TOUCH_MIN_TOLERANCE_PX);
+	});
+
+	it("leaves a tolerance at or above the floor alone", () => {
+		expect(easeToleranceForTouch(TOUCH_MIN_TOLERANCE_PX)).toBe(
+			TOUCH_MIN_TOLERANCE_PX,
+		);
+		expect(easeToleranceForTouch(15)).toBe(15);
+	});
+
+	it("never tightens a tolerance", () => {
+		for (const tolerance of [1, 5, 10, 12, 15, 20, 1000]) {
+			expect(easeToleranceForTouch(tolerance)).toBeGreaterThanOrEqual(
+				tolerance,
+			);
+		}
+	});
+
+	it("raises both ends of a piece-scale range that sits under the floor", () => {
+		expect(easePieceScaleForTouch({ min: 0.05, max: 0.1 })).toEqual({
+			min: TOUCH_MIN_PIECE_SCALE,
+			max: TOUCH_MIN_PIECE_SCALE,
+		});
+	});
+
+	it("raises only the min when the max is already above the floor", () => {
+		expect(easePieceScaleForTouch({ min: 0.1, max: 0.28 })).toEqual({
+			min: TOUCH_MIN_PIECE_SCALE,
+			max: 0.28,
+		});
+	});
+
+	it("never inverts a piece-scale range", () => {
+		for (const range of [
+			{ min: 0.05, max: 0.05 },
+			{ min: 0.1, max: 0.28 },
+			{ min: 0.15, max: 0.45 },
+			{ min: 0.3, max: 0.3 },
+		]) {
+			const eased = easePieceScaleForTouch(range);
+			expect(eased.max).toBeGreaterThanOrEqual(eased.min);
+			expect(eased.min).toBeGreaterThanOrEqual(range.min);
+		}
+	});
+
+	it("eases the hardest level a touch device can be escalated to", () => {
+		const band = PUZZLE_DIFFICULTY_LEVELS[MAX_AUTO_ESCALATION_LEVEL_TOUCH];
+		expect(band).toBeDefined();
+		if (!band) return;
+		// The floors have to bite at the touch ceiling or they do nothing for
+		// the users this exists for.
+		expect(easeToleranceForTouch(band.tolerance.min)).toBeGreaterThan(
+			band.tolerance.min,
+		);
+		expect(easePieceScaleForTouch(band.pieceScale).min).toBeGreaterThan(
+			band.pieceScale.min,
+		);
+	});
+});

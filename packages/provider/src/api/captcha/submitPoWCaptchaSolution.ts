@@ -11,27 +11,43 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-import { ProsopoApiError } from "@prosopo/common";
+import {
+	resolveMaxEscalationLevel,
+	severityToPuzzleDifficulty,
+} from "@prosopo/captcha-severity";
+import { ProsopoError, isProsopoError, isSevereError } from "@prosopo/common";
+import { summariseFingerprintProof } from "@prosopo/fingerprint/summary";
+import { DEFAULT_RENDER_SETTINGS } from "@prosopo/puzzle-assets";
 import {
 	CaptchaType,
 	type FrictionlessReason,
+	type IFrictionlessTypes,
+	type IPuzzleSettings,
 	type PowCaptchaSolutionEscalation,
 	type PowCaptchaSolutionResponse,
 	SubmitPowCaptchaSolutionBody,
 	type SubmitPowCaptchaSolutionBodyTypeOutput,
+	imageMaxRoundsDefault,
+	resolveAllowedCaptchaTypes,
 } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { flatten, getIPAddress } from "@prosopo/util";
 import type { NextFunction, Request, Response } from "express";
 import type { AugmentedRequest } from "../../express.js";
-import { downgradePuzzleIfUnavailable } from "../../tasks/puzzle/puzzleRenderer.js";
+import { coerceToEnabledCaptchaType } from "../../tasks/captchaTypeSelection.js";
+import { samplePuzzleDifficulty } from "../../tasks/puzzle/puzzleDifficulty.js";
 import { Tasks } from "../../tasks/tasks.js";
 import {
 	derivePlatform,
 	deriveTrafficPolicies,
 } from "../../utils/devicePlatform.js";
 import { getMaintenanceMode } from "../admin/apiToggleMaintenanceModeEndpoint.js";
-import { rawTlsSignalsForSession } from "../rawTlsSignalsMiddleware.js";
+import {
+	type RawTlsSignals,
+	rawTlsSignalsForSession,
+	rawTlsSignalsFromRecord,
+} from "../rawTlsSignalsMiddleware.js";
+import { summariseRequestBody } from "../requestBodySummary.js";
 import { resolveTestSiteKeyVerdict } from "../testSiteKey.js";
 import { validateAddr, validateSiteKey } from "../validateAddress.js";
 
@@ -62,10 +78,12 @@ export default (env: ProviderEnvironment) =>
 			parsed = SubmitPowCaptchaSolutionBody.parse(req.body);
 		} catch (err) {
 			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err, body: req.body },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-27",
+					message: "Error parsing captcha",
+					cause: err,
+					context: { body: summariseRequestBody(req) },
 				}),
 			);
 		}
@@ -102,10 +120,10 @@ export default (env: ProviderEnvironment) =>
 
 			if (!clientRecord) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "SITE_KEY_NOT_REGISTERED",
+						errorSite: "PROV-28",
+						context: { siteKey: dapp },
 					}),
 				);
 			}
@@ -120,6 +138,11 @@ export default (env: ProviderEnvironment) =>
 				req.ipInfo && "isValid" in req.ipInfo && req.ipInfo.isValid
 					? req.ipInfo.countryCode
 					: undefined;
+			// Summarised once here and handed to both the routing context and the
+			// record write, so the machine and the stored record cannot disagree
+			// about what a proof disclosed, and a 7.8KB proof is parsed and
+			// Merkle-checked once per submission rather than twice.
+			const fingerprintSummary = summariseFingerprintProof(fingerprintProof);
 			// Observability for the proof-of-fingerprint flow: the validation
 			// itself runs inside the closed-source routing machine (no logger), so
 			// log here at the provider boundary whether a proof arrived.
@@ -130,6 +153,7 @@ export default (env: ProviderEnvironment) =>
 				data: {
 					fingerprintProofPresent: fingerprintProof !== undefined,
 					fingerprintProofBytes: fingerprintProof?.length ?? 0,
+					fingerprintSummarised: fingerprintSummary !== undefined,
 					challenge,
 				},
 			}));
@@ -143,12 +167,19 @@ export default (env: ProviderEnvironment) =>
 				countryCode,
 				// `false` here is a placeholder — `runPostPowRouting` overrides
 				// isWebView with the value recorded on the originating session.
-				platform: derivePlatform(userAgent, false),
+				platform: derivePlatform(userAgent, false, {
+					headers: flatHeaders,
+					...(req.ipInfo &&
+						"isValid" in req.ipInfo &&
+						req.ipInfo.isValid && { carrierNetwork: req.ipInfo.isMobile }),
+					...(req.tcpMss !== undefined && { tcpMss: req.tcpMss }),
+				}),
 				raw: {
 					headers: flatHeaders,
 					userAgent,
 					...(req.ja4 && { ja4: req.ja4 }),
 					...(fingerprintProof && { fingerprintProof }),
+					...(fingerprintSummary && { fingerprintSummary }),
 					...(req.tcpToChelloUs !== undefined && {
 						tcpToChelloUs: req.tcpToChelloUs,
 					}),
@@ -191,6 +222,7 @@ export default (env: ProviderEnvironment) =>
 				salt,
 				simdReadings,
 				clientMetaData,
+				fingerprintSummary,
 			);
 
 			// Surface the routing machine's post-PoW decision (escalation +
@@ -207,11 +239,23 @@ export default (env: ProviderEnvironment) =>
 				}));
 			}
 
-			const escalation = await buildEscalation(tasks, result, challenge, {
-				tcpToChelloUs: req.tcpToChelloUs,
-				chelloToHandshakeUs: req.chelloToHandshakeUs,
-				...rawTlsSignalsForSession(req),
-			});
+			const escalation = await buildEscalation(
+				tasks,
+				result,
+				challenge,
+				{
+					tcpToChelloUs: req.tcpToChelloUs,
+					chelloToHandshakeUs: req.chelloToHandshakeUs,
+					...rawTlsSignalsForSession(req),
+				},
+				{
+					allowedCaptchaTypes: resolveAllowedCaptchaTypes(
+						clientRecord.settings,
+					),
+					imageMaxRounds: clientRecord.settings?.imageMaxRounds,
+					puzzleMaxDifficulty: clientRecord.settings?.puzzleMaxDifficulty,
+				},
+			);
 			const response: PowCaptchaSolutionResponse = {
 				status: "ok",
 				// On escalation the user is not done — they still need to clear
@@ -221,20 +265,19 @@ export default (env: ProviderEnvironment) =>
 			};
 			return res.json(response);
 		} catch (err) {
+			if (isProsopoError(err) && !isSevereError(err)) return next(err);
 			req.logger.error(() => ({
 				err,
-				body: req.body,
+				body: summariseRequestBody(req),
 				msg: "Error in PoW captcha solution submission",
 			}));
 			return next(
-				new ProsopoApiError("API.BAD_REQUEST", {
-					context: {
-						code: 500,
-						siteKey: req.body.dapp,
-						error: err,
-					},
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "PROV-29",
+					message: "BadRequest",
+					cause: err,
+					context: { siteKey: req.body.dapp },
 				}),
 			);
 		}
@@ -257,18 +300,19 @@ export const buildEscalation = async (
 	// signals) come from the CURRENT PoW-submit request, not from
 	// `originSession` — those values belong to a different TCP connection
 	// made during the earlier frictionless request.
-	perConnectionSignals?: {
+	perConnectionSignals?: RawTlsSignals & {
 		tcpToChelloUs?: number;
 		chelloToHandshakeUs?: number;
-		synNs?: number;
-		synackNs?: number;
-		ackNs?: number;
-		observedTtl?: number;
-		tcpMss?: number;
-		tcpWscale?: number;
-		tcpOptsFlags?: number;
-		tcpOptsOrder?: number;
-		tcpWindow?: number;
+	},
+	// Site constraints on what an escalation may serve. Threaded from the
+	// handler, which already holds the client record, rather than re-read
+	// here. An absent `allowedCaptchaTypes` falls back to the default flags and
+	// preferences, and an absent `imageMaxRounds` to the schema default, so the
+	// round count is bounded either way.
+	siteConstraints?: {
+		allowedCaptchaTypes?: IFrictionlessTypes;
+		imageMaxRounds?: number;
+		puzzleMaxDifficulty?: number;
 	},
 ): Promise<PowCaptchaSolutionEscalation | undefined> => {
 	if (!result.verified || !result.routingOutput) return undefined;
@@ -293,9 +337,78 @@ export const buildEscalation = async (
 	};
 
 	// Second place a session's captchaType is decided (the other is
-	// sendCaptcha). Same reasoning: escalating into a puzzle this provider
-	// cannot render would leave the widget with a session it can never satisfy.
-	const escalatedType = downgradePuzzleIfUnavailable(routed.captchaType);
+	// sendCaptcha). Same reasoning: escalating into a type this provider
+	// cannot render — or the site has disabled — would leave the widget with a
+	// session it can never satisfy.
+	const escalatedType = coerceToEnabledCaptchaType(
+		routed.captchaType,
+		siteConstraints?.allowedCaptchaTypes,
+	);
+
+	// Coercion bottoms out at PoW, which is not an escalation: the user has
+	// just solved a PoW challenge, so re-issuing one would either loop or hand
+	// them a free pass. A site with BOTH interactive types disabled therefore
+	// cannot escalate a verified PoW solve at all — the solve stands, which is
+	// the same outcome as no routing machine having fired.
+	if (escalatedType === CaptchaType.pow) return undefined;
+
+	const imageMaxRounds =
+		siteConstraints?.imageMaxRounds ?? imageMaxRoundsDefault;
+
+	// Size a puzzle escalation off the same severity currency the image path
+	// uses, so a site with image disabled keeps a graduated response instead
+	// of serving one identical puzzle for every escalation. `createSession`
+	// takes these as its trailing overrides; they are dropped for non-puzzle
+	// types by the same rule as in sendCaptcha.
+	const escalationPuzzleOverrides = (():
+		| {
+				puzzleTolerance: number;
+				puzzle: IPuzzleSettings;
+				puzzleLevel: number;
+		  }
+		| undefined => {
+		if (escalatedType !== CaptchaType.puzzle) return undefined;
+		// This is the one point in the flow where the behavioural signals are
+		// in hand: the solve the user just submitted carries the client's own
+		// touch-support reading and its touch events, both persisted on the
+		// PoW record before routing ran.
+		const { isMobile } = derivePlatform(
+			originSession.headers?.["user-agent"] ?? "",
+			originSession.webView,
+			{
+				...(originSession.headers && { headers: originSession.headers }),
+				...(originSession.ipInfo?.isValid && {
+					carrierNetwork: originSession.ipInfo.isMobile,
+				}),
+				...(originSession.tcpMss !== undefined && {
+					tcpMss: originSession.tcpMss,
+				}),
+				...(powRecord.deviceCapability !== undefined && {
+					deviceCapability: powRecord.deviceCapability,
+				}),
+				...(powRecord.behavioralDataPacked?.c2 !== undefined && {
+					touchEventCount: powRecord.behavioralDataPacked.c2.length,
+				}),
+			},
+		);
+		const level = severityToPuzzleDifficulty(
+			routed.solvedImagesCount ?? originSession.solvedImagesCount,
+			tasks.config.captchas.solved.count,
+			resolveMaxEscalationLevel(siteConstraints?.puzzleMaxDifficulty, isMobile),
+		);
+		// As in sendCaptcha: level 0 leaves the site's configured puzzle
+		// settings in force rather than overriding them with band values.
+		if (level === 0) return undefined;
+		const difficulty = samplePuzzleDifficulty(
+			level,
+			DEFAULT_RENDER_SETTINGS.holeDarken,
+		);
+		return {
+			puzzleTolerance: difficulty.tolerance,
+			puzzle: difficulty.puzzle,
+			puzzleLevel: difficulty.level,
+		};
+	})();
 
 	// Prefer the routing machine's own selection reason (e.g. an invalid
 	// fingerprint proof) for the escalated captcha record; fall back to the
@@ -303,70 +416,70 @@ export const buildEscalation = async (
 	const selectionReason =
 		(routed.reason as FrictionlessReason | undefined) ?? originSession.reason;
 
-	const newSession = await tasks.frictionlessManager.createSession(
-		originSession.token,
-		originSession.score,
-		originSession.threshold,
-		originSession.scoreComponents,
-		originSession.ipAddress,
-		escalatedType,
-		originSession.siteKey ?? powRecord.dappAccount,
-		escalatedType === CaptchaType.image
-			? (routed.solvedImagesCount ?? originSession.solvedImagesCount)
-			: undefined,
-		undefined,
-		originSession.userSitekeyIpHash,
-		originSession.webView,
-		originSession.iFrame,
-		originSession.decryptedHeadHash,
-		selectionReason,
-		undefined,
-		undefined,
-		originSession.ipInfo,
-		originSession.headers,
-		originSession.mode,
-		originSession.simdReadings,
-		originSession.entropyMathRandomFingerprint,
-		originSession.entropyCryptoFingerprint,
-		originSession.entropyWallClockOffsetMs,
-		originSession.entropyMathRandomFirst,
+	// Enumerated rather than spread from `originSession`: what an escalation
+	// inherits from the session it escalated from is a deliberate list, not
+	// "everything the origin happened to carry". Behavioural data in
+	// particular lives only in the pow-solve request payload and must not
+	// follow the user onto the new session.
+	const newSession = await tasks.frictionlessManager.createSession({
+		token: originSession.token,
+		score: originSession.score,
+		threshold: originSession.threshold,
+		scoreComponents: originSession.scoreComponents,
+		ipAddress: originSession.ipAddress,
+		captchaType: escalatedType,
+		// The origin's siteKey is the source of truth if set.
+		siteKey: originSession.siteKey ?? powRecord.dappAccount,
+		// Clamp to the sitekey's ceiling. The routing machine's output schema
+		// only constrains the count to a positive int, so an escalation could
+		// otherwise mint a session demanding more rounds than the site permits.
+		solvedImagesCount:
+			escalatedType === CaptchaType.image
+				? Math.min(
+						routed.solvedImagesCount ??
+							originSession.solvedImagesCount ??
+							tasks.config.captchas.solved.count,
+						imageMaxRounds,
+					)
+				: undefined,
+		userSitekeyIpHash: originSession.userSitekeyIpHash,
+		webView: originSession.webView,
+		iFrame: originSession.iFrame,
+		decryptedHeadHash: originSession.decryptedHeadHash,
+		reason: selectionReason,
+		ipInfo: originSession.ipInfo,
+		headers: originSession.headers,
+		mode: originSession.mode,
+		simdReadings: originSession.simdReadings,
+		// The whole detector bag, so the escalated session answers the same
+		// rules the origin would have. Previously each signal was named here
+		// individually and several were never added, so they stopped existing
+		// the moment a user was escalated.
+		d: originSession.d,
 		// Carry the detector pool bundle forward so the escalated image/puzzle
 		// solve can decrypt the (same-origin) behavioural payload.
-		originSession.bundleId,
-		originSession.currentUrl,
-		perConnectionSignals?.tcpToChelloUs,
-		perConnectionSignals?.chelloToHandshakeUs,
-		true,
-		originSession.iframeUrl,
-		originSession.isProtect,
-		// Record the origin sessionId on the escalation record. The
-		// DM-input read path (captchaManager.getSessionRecordWithOriginFallback)
-		// uses this to fall back to the origin session for fields that the
-		// escalation doesn't carry itself — simdReadings (attached by pow-
-		// submit fire-and-forget, races the escalation read), dnsEvent
-		// (set by the DNS sidecar on the origin's TLS connection only).
-		originSession.sessionId,
-		originSession.g,
-		undefined,
-		originSession.i,
-		originSession.sw,
-		originSession.md,
-		originSession.bn,
-		originSession.fs,
+		bundleId: originSession.bundleId,
+		currentUrl: originSession.currentUrl,
+		iframeUrl: originSession.iframeUrl,
+		isProtect: originSession.isProtect,
+		isEscalation: true,
+		// The DM-input read path (captchaManager.getSessionRecordWithOriginFallback)
+		// uses this to fall back to the origin session for fields the escalation
+		// doesn't carry itself — simdReadings (attached by pow-submit
+		// fire-and-forget, races the escalation read), dnsEvent (set by the DNS
+		// sidecar on the origin's TLS connection only).
+		originSessionId: originSession.sessionId,
 		// Raw signals for the current PoW-submit TCP connection — not the
-		// origin's. Escalation session belongs on this hop's fingerprint.
-		perConnectionSignals && {
-			synNs: perConnectionSignals.synNs,
-			synackNs: perConnectionSignals.synackNs,
-			ackNs: perConnectionSignals.ackNs,
-			observedTtl: perConnectionSignals.observedTtl,
-			tcpMss: perConnectionSignals.tcpMss,
-			tcpWscale: perConnectionSignals.tcpWscale,
-			tcpOptsFlags: perConnectionSignals.tcpOptsFlags,
-			tcpOptsOrder: perConnectionSignals.tcpOptsOrder,
-			tcpWindow: perConnectionSignals.tcpWindow,
-		},
-	);
+		// origin's. The escalation session belongs on this hop's fingerprint.
+		tcpToChelloUs: perConnectionSignals?.tcpToChelloUs,
+		chelloToHandshakeUs: perConnectionSignals?.chelloToHandshakeUs,
+		...rawTlsSignalsFromRecord(perConnectionSignals),
+		puzzleTolerance: escalationPuzzleOverrides?.puzzleTolerance,
+		puzzle: escalationPuzzleOverrides?.puzzle,
+		// The escalated session is the same render as the origin, so it answers
+		// to the same session id the verify call will correlate against.
+		clientMetaData: originSession.clientMetaData,
+	});
 
 	// Record the origin → escalation sessionId mapping so a /captcha/*
 	// request that arrives carrying the originating sessionId (because the

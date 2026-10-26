@@ -29,7 +29,7 @@
 //      DM denies → /signup returns 401.
 
 import "@cypress/xpath";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { datasetWithSolutionHashes } from "@prosopo/datasets";
 import { type Captcha, CaptchaType } from "@prosopo/types";
 import {
@@ -38,7 +38,7 @@ import {
 	getWidgetElement,
 } from "../support/commands.js";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "image";
+const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "image";
 
 // Test-only decide() DM: always deny with a recognisable reason string so
 // the test can pin the assertion on the reason rather than a generic
@@ -57,7 +57,7 @@ const ALWAYS_DENY_DM = `
 `;
 
 describe("Decision machine denies an otherwise-valid solve at verify", () => {
-	const siteKey: string = Cypress.env(
+	const siteKey: string = Cypress.expose(
 		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
 	);
 
@@ -105,16 +105,18 @@ describe("Decision machine denies an otherwise-valid solve at verify", () => {
 
 		const solutions = buildTestSolutions(datasetWithSolutionHashes.captchas);
 		if (!solutions) {
-			throw new ProsopoDatasetError(
-				"DATABASE.DATASET_WITH_SOLUTIONS_GET_FAILED",
-				{ context: { datasetWithSolutionHashes } },
-			);
+			throw new ProsopoError({
+				code: "DATASET_INVALID",
+				errorSite: "CYPR-5",
+				message: "No datasets found with required number of solutions",
+				context: { datasetWithSolutionHashes },
+			});
 		}
 
 		cy.intercept("/dummy").as("dummy");
 
 		return cy
-			.visit(Cypress.env("default_page"), {
+			.visit(Cypress.expose("default_page"), {
 				timeout: 30000,
 				failOnStatusCode: false,
 			})

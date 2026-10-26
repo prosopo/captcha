@@ -33,5 +33,7 @@ export {
 };
 
 export * from "./errorHandler.js";
+export { type ChainableResponse, sendProsopoError } from "./errorResponse.js";
 export * from "./middlewares/authMiddleware.js";
+export * from "./middlewares/jwtReplayGuard.js";
 export * from "./middlewares/requestLoggerMiddleware.js";

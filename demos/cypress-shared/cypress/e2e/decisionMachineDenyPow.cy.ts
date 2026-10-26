@@ -23,7 +23,7 @@ import "@cypress/xpath";
 import { CaptchaType } from "@prosopo/types";
 import { checkboxClass, getWidgetElement } from "../support/commands.js";
 
-const baseCaptchaType: CaptchaType = Cypress.env("CAPTCHA_TYPE") || "pow";
+const baseCaptchaType: CaptchaType = Cypress.expose("CAPTCHA_TYPE") || "pow";
 
 // Same DM source as the image variant — decide() is called from all three
 // server-verify paths, so a shared always-deny DM covers each.
@@ -39,7 +39,7 @@ const ALWAYS_DENY_DM = `
 `;
 
 describe("Decision machine denies a pow solve at verify", () => {
-	const siteKey: string = Cypress.env(
+	const siteKey: string = Cypress.expose(
 		`PROSOPO_SITE_KEY_${baseCaptchaType.toUpperCase()}`,
 	);
 
@@ -83,7 +83,7 @@ describe("Decision machine denies a pow solve at verify", () => {
 		cy.intercept("/dummy").as("dummy");
 
 		return cy
-			.visit(Cypress.env("default_page"), {
+			.visit(Cypress.expose("default_page"), {
 				timeout: 30000,
 				failOnStatusCode: false,
 			})

@@ -55,15 +55,18 @@ interface StubBackend {
 	initialize: () => Promise<void>;
 	isAvailable: () => boolean;
 	lookup: (ip: string) => Promise<IPInfoResponse>;
+	countryCode: (ip: string) => string | undefined;
 }
 
 const stub = (
 	available: boolean,
 	answer: IPInfoResponse = result("stub"),
+	countryCode: string | undefined = "US",
 ): StubBackend => ({
 	initialize: vi.fn<() => Promise<void>>(async () => {}),
 	isAvailable: vi.fn<() => boolean>(() => available),
 	lookup: vi.fn<(ip: string) => Promise<IPInfoResponse>>(async () => answer),
+	countryCode: vi.fn<(ip: string) => string | undefined>(() => countryCode),
 });
 
 /**
@@ -410,6 +413,7 @@ describe("IpInfoService.lookup", () => {
 			lookup: vi.fn<(ip: string) => Promise<IPInfoResponse>>(async () =>
 				result("recovered"),
 			),
+			countryCode: vi.fn<(ip: string) => string | undefined>(() => undefined),
 		};
 		const svc = service({ ipapi: flaky });
 
@@ -418,5 +422,60 @@ describe("IpInfoService.lookup", () => {
 		);
 		up = true;
 		expect(await svc.lookup(IP)).toEqual(result("recovered"));
+	});
+});
+
+describe("IpInfoService.country", () => {
+	it("answers from MaxMind", () => {
+		expect(
+			service({ maxmind: stub(true, result("maxmind"), "GB") }).country(IP),
+		).toBe("GB");
+	});
+
+	it("never consults ipapi, even when ipapi is the preferred backend", () => {
+		// `lookup()` prefers ipapi for its threat data, which costs a call to
+		// the sidecar. A country lookup does not need that data and must not
+		// pay for it.
+		const ipapi = stub(true, result("ipapi"));
+		const maxmind = stub(true, result("maxmind"), "FR");
+
+		expect(service({ maxmind, ipapi }).country(IP)).toBe("FR");
+
+		expect(ipapi.lookup).not.toHaveBeenCalled();
+		expect(ipapi.isAvailable).not.toHaveBeenCalled();
+	});
+
+	it("has no answer for a loopback caller, without reading the database", () => {
+		// Deploy gates and container health checks call over loopback; they
+		// must cost nothing and must never resolve to a country.
+		const maxmind = stub(true, result("maxmind"), "US");
+
+		expect(service({ maxmind }).country("127.0.0.1")).toBeUndefined();
+		expect(service({ maxmind }).country("::1")).toBeUndefined();
+		expect(service({ maxmind }).country("10.1.2.3")).toBeUndefined();
+
+		expect(maxmind.countryCode).not.toHaveBeenCalled();
+	});
+
+	it("has no answer when no MaxMind backend is configured", () => {
+		expect(service({ ipapi: stub(true) }).country(IP)).toBeUndefined();
+	});
+
+	it("has no answer while MaxMind is still unavailable", () => {
+		// Availability is false until the environment finishes becoming ready,
+		// which is exactly when a caller that cannot await readiness asks.
+		const maxmind = stub(false, result("maxmind"), "DE");
+
+		expect(service({ maxmind }).country(IP)).toBeUndefined();
+		expect(maxmind.countryCode).not.toHaveBeenCalled();
+	});
+
+	it("has no answer when the address is absent from the database", () => {
+		const maxmind: StubBackend = {
+			...stub(true, result("maxmind")),
+			countryCode: vi.fn<(ip: string) => string | undefined>(() => undefined),
+		};
+
+		expect(service({ maxmind }).country(IP)).toBeUndefined();
 	});
 });

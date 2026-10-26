@@ -30,9 +30,9 @@ export default defineConfig({
 	screenshotsFolder: "./cypress/snapshots/actual",
 	trashAssetsBeforeRuns: true,
 	headers: { "Accept-Encoding": "gzip, deflate" },
-	env: {
+	expose: {
 		...process.env,
-		default_page: "/",
+		default_page: "/image-implicit.html",
 		visualRegressionType: "regression",
 		visualRegressionBaseDirectory: "cypress/snapshots/baseline",
 		visualRegressionDiffDirectory: "cypress/snapshots/diff",

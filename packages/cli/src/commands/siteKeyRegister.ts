@@ -16,16 +16,18 @@ import { ProviderEnvironment } from "@prosopo/env";
 import { LogLevel, type Logger, getLogger } from "@prosopo/logger";
 import { Tasks } from "@prosopo/provider";
 import {
-	ContextType,
 	type KeyringPair,
-	contextAwareThresholdDefault,
 	frictionlessImageThresholdDefault,
+	frictionlessTypesDefault,
+	iconOrderToleranceDefault,
 	imageMaxRoundsDefault,
+	imageMinRoundsDefault,
+	puzzleMaxDifficultyDefault,
 	puzzleToleranceDefault,
 } from "@prosopo/types";
 import {
-	CaptchaTypeSpec,
 	type ProsopoConfigOutput,
+	SelectableCaptchaTypeSpec,
 	Tier,
 } from "@prosopo/types";
 import type { ArgumentsCamelCase, Argv } from "yargs";
@@ -35,7 +37,7 @@ import { validateSiteKey } from "./validators.js";
 export const SiteKeyRegisterCommandArgsSpec = z.object({
 	sitekey: z.string(),
 	tier: z.nativeEnum(Tier),
-	captcha_type: CaptchaTypeSpec,
+	captcha_type: SelectableCaptchaTypeSpec,
 	frictionless_threshold: z.number().max(1).min(0),
 	// Optional upper rung of the score ladder. Omit for the two-outcome
 	// ladder (pow below the threshold, image above it). Uncapped: the score
@@ -50,6 +52,12 @@ export const SiteKeyRegisterCommandArgsSpec = z.object({
 		.positive()
 		.optional()
 		.default(imageMaxRoundsDefault),
+	image_min_rounds: z
+		.number()
+		.int()
+		.positive()
+		.optional()
+		.default(imageMinRoundsDefault),
 });
 
 export default (
@@ -109,6 +117,11 @@ export default (
 					type: "number" as const,
 					demandOption: false,
 					desc: "Image max rounds for settings",
+				} as const)
+				.option("image_min_rounds", {
+					type: "number" as const,
+					demandOption: false,
+					desc: "Image min rounds for settings",
 				} as const),
 		handler: async (argv: ArgumentsCamelCase) => {
 			try {
@@ -124,30 +137,28 @@ export default (
 					domains,
 					image_threshold,
 					image_max_rounds,
+					image_min_rounds,
 				} = SiteKeyRegisterCommandArgsSpec.parse(argv);
 				const tasks = new Tasks(env);
 				await tasks.clientTaskManager.registerSiteKey(sitekey, tier, {
-					captchaType: CaptchaTypeSpec.parse(captcha_type),
+					captchaType: SelectableCaptchaTypeSpec.parse(captcha_type),
 					frictionlessThreshold: {
 						frictionlessPuzzleThreshold: frictionless_threshold as number,
 						frictionlessImageThreshold:
 							frictionless_image_threshold ?? frictionlessImageThresholdDefault,
 					},
+					// Registering a sitekey leaves image and puzzle on; anything
+					// further is a portal-side decision.
+					frictionlessTypes: frictionlessTypesDefault,
 					domains: domains || [],
 					powDifficulty: pow_difficulty as number,
 					imageThreshold: image_threshold as number,
 					imageMaxRounds: image_max_rounds as number,
+					imageMinRounds: image_min_rounds as number,
 					puzzleTolerance: puzzleToleranceDefault,
+					iconOrderTolerance: iconOrderToleranceDefault,
+					puzzleMaxDifficulty: puzzleMaxDifficultyDefault,
 					disallowWebView: false,
-					contextAware: {
-						enabled: false,
-						contexts: {
-							[ContextType.Default]: {
-								type: ContextType.Default,
-								threshold: contextAwareThresholdDefault,
-							},
-						},
-					},
 					verifiedTimeout: 60000,
 					solutionTimeout: 60000,
 				});

@@ -20,8 +20,13 @@
 // read. These tests pin the persistence half.
 
 import {
+	MAX_AUTO_ESCALATION_LEVEL,
+	MAX_STALE_PAYLOAD_LEVEL,
+} from "@prosopo/captcha-severity";
+import {
 	CaptchaType,
 	FrictionlessPenalties,
+	FrictionlessReason,
 	type KeyringPair,
 	type ProsopoConfigOutput,
 	type RoutingMachineOutput,
@@ -176,5 +181,193 @@ describe("router-supplied puzzle overrides reach the session record", () => {
 		expect(storedSession().captchaType).toBe(CaptchaType.pow);
 		expect(storedSession().puzzleTolerance).toBeUndefined();
 		expect(storedSession().puzzle).toBeUndefined();
+	});
+
+	// The difficulty ladder reads the requested round count as severity. The
+	// no-measurement paths carry a fixed fallback count that happens to sit
+	// above `captchas.solved.count`, so before NO_MEASUREMENT_REASONS they
+	// scored as an escalation and the sampled band replaced the site's own
+	// puzzle config. A site whose CSP blocks the detector bundle sends no
+	// token on every request, so every one of its users was permanently
+	// escalated and its configured puzzle never rendered.
+	describe.each([
+		FrictionlessReason.MISSING_TOKEN,
+		FrictionlessReason.MISSING_HEAD_HASH,
+		FrictionlessReason.DECRYPTION_FAILED,
+	])("no-measurement reason %s", (reason: FrictionlessReason) => {
+		it("leaves the session bare so the site's own puzzle settings render", async () => {
+			routerReturns({ captchaType: CaptchaType.puzzle });
+
+			// MISSING_TOKEN_IMAGE_ROUNDS is 3 against a baseline of 2 — one
+			// rung above, which is exactly what used to trip level 1.
+			await manager.sendPuzzleCaptcha({ solvedImagesCount: 3, reason });
+
+			expect(storedSession().reason).toBe(reason);
+			expect(storedSession().puzzle).toBeUndefined();
+			expect(storedSession().puzzleTolerance).toBeUndefined();
+		});
+
+		it("still honours an explicit router override", async () => {
+			routerReturns({
+				captchaType: CaptchaType.puzzle,
+				puzzleTolerance: 9,
+				puzzle: { decoyCount: 14 },
+			});
+
+			await manager.sendPuzzleCaptcha({ solvedImagesCount: 3, reason });
+
+			expect(storedSession().puzzleTolerance).toBe(9);
+			expect(storedSession().puzzle).toEqual({ decoyCount: 14 });
+		});
+	});
+
+	// The guard is scoped to reasons that measured nothing. A genuine
+	// escalation must still get its graduated puzzle.
+	it("still escalates when the round count came from a real signal", async () => {
+		routerReturns({ captchaType: CaptchaType.puzzle });
+
+		await manager.sendPuzzleCaptcha({
+			solvedImagesCount: 3,
+			reason: FrictionlessReason.BOT_SCORE_PUZZLE_BAND,
+		});
+
+		expect(storedSession().puzzle).toBeDefined();
+		expect(storedSession().puzzleTolerance).toBeDefined();
+	});
+
+	it("still escalates on an old timestamp", async () => {
+		routerReturns({ captchaType: CaptchaType.puzzle });
+
+		await manager.sendPuzzleCaptcha({
+			solvedImagesCount: 3,
+			reason: FrictionlessReason.OLD_TIMESTAMP,
+		});
+
+		expect(storedSession().puzzle).toBeDefined();
+		expect(storedSession().puzzleLevel).toBe(MAX_STALE_PAYLOAD_LEVEL);
+	});
+
+	it("caps an old timestamp however large the round count", async () => {
+		routerReturns({ captchaType: CaptchaType.puzzle });
+
+		await manager.sendPuzzleCaptcha({
+			solvedImagesCount: 8,
+			reason: FrictionlessReason.OLD_TIMESTAMP,
+		});
+
+		expect(storedSession().puzzleLevel).toBe(MAX_STALE_PAYLOAD_LEVEL);
+	});
+
+	it("leaves the same round count uncapped under another reason", async () => {
+		routerReturns({ captchaType: CaptchaType.puzzle });
+
+		await manager.sendPuzzleCaptcha({
+			solvedImagesCount: 8,
+			reason: FrictionlessReason.BOT_SCORE_ABOVE_THRESHOLD,
+		});
+
+		expect(storedSession().puzzleLevel).toBe(MAX_AUTO_ESCALATION_LEVEL);
+	});
+
+	// The site's own ceiling on escalation — the puzzle counterpart to
+	// imageMaxRounds. A site that configured an easier puzzle and set the cap
+	// to 0 must get exactly that, no matter how severe the session looked.
+	describe("puzzleMaxDifficulty", () => {
+		const withCap = (puzzleMaxDifficulty: number): void => {
+			manager.setRoutingContext({ ...context, puzzleMaxDifficulty });
+		};
+
+		it("pins the session to the site's own settings at 0", async () => {
+			withCap(0);
+			routerReturns({ captchaType: CaptchaType.puzzle });
+
+			// Six rounds above the baseline of 2 — level 3 without the cap.
+			await manager.sendPuzzleCaptcha({
+				solvedImagesCount: 8,
+				reason: FrictionlessReason.BOT_SCORE_PUZZLE_BAND,
+			});
+
+			expect(storedSession().puzzle).toBeUndefined();
+			expect(storedSession().puzzleTolerance).toBeUndefined();
+		});
+
+		it("still allows escalation below the cap", async () => {
+			withCap(2);
+			routerReturns({ captchaType: CaptchaType.puzzle });
+
+			await manager.sendPuzzleCaptcha({
+				solvedImagesCount: 4,
+				reason: FrictionlessReason.BOT_SCORE_PUZZLE_BAND,
+			});
+
+			expect(storedSession().puzzle).toBeDefined();
+		});
+
+		// A cap of 0 bounds the ladder, not the operator. An explicitly routed
+		// override is a deliberate instruction and still applies.
+		it("does not suppress an explicit router override", async () => {
+			withCap(0);
+			routerReturns({
+				captchaType: CaptchaType.puzzle,
+				puzzleTolerance: 7,
+				puzzle: { decoyCount: 20 },
+			});
+
+			await manager.sendPuzzleCaptcha({
+				solvedImagesCount: 8,
+				reason: FrictionlessReason.BOT_SCORE_PUZZLE_BAND,
+			});
+
+			expect(storedSession().puzzleTolerance).toBe(7);
+			expect(storedSession().puzzle).toEqual({ decoyCount: 20 });
+		});
+
+		// Sites saved before the setting existed carry no value, and must keep
+		// the escalation behaviour they had.
+		it("falls back to the default ceiling when the site never set one", async () => {
+			manager.setRoutingContext(context);
+			routerReturns({ captchaType: CaptchaType.puzzle });
+
+			await manager.sendPuzzleCaptcha({
+				solvedImagesCount: 4,
+				reason: FrictionlessReason.BOT_SCORE_PUZZLE_BAND,
+			});
+
+			expect(storedSession().puzzle).toBeDefined();
+		});
+	});
+
+	it("persists router icon-order overrides on an icon-order session", async () => {
+		manager.setRoutingContext(context);
+		manager.setAllowedCaptchaTypes({
+			image: true,
+			puzzle: true,
+			iconOrder: true,
+		});
+		routerReturns({
+			captchaType: CaptchaType.iconOrder,
+			iconOrderTolerance: 0.5,
+			iconOrder: { decoyCount: 2 },
+		});
+
+		await manager.sendIconOrderCaptcha();
+
+		expect(storedSession().captchaType).toBe(CaptchaType.iconOrder);
+		expect(storedSession().iconOrderTolerance).toBe(0.5);
+		expect(storedSession().iconOrder).toEqual({ decoyCount: 2 });
+		expect(storedSession().puzzleTolerance).toBeUndefined();
+	});
+
+	it("drops icon-order overrides when the session is not icon-order", async () => {
+		routerReturns({
+			captchaType: CaptchaType.puzzle,
+			iconOrderTolerance: 0.5,
+			iconOrder: { decoyCount: 2 },
+		});
+
+		await manager.sendPuzzleCaptcha();
+
+		expect(storedSession().iconOrderTolerance).toBeUndefined();
+		expect(storedSession().iconOrder).toBeUndefined();
 	});
 });

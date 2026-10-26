@@ -1,5 +1,267 @@
 # @prosopo/common
 
+## 3.3.1
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+
+## 3.3.0
+### Minor Changes
+
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+
+## 3.2.3
+### Patch Changes
+
+- Updated dependencies [b6e9459]
+  - @prosopo/locale@3.11.1
+  - @prosopo/logger@2.1.4
+
+## 3.2.2
+### Patch Changes
+
+- Updated dependencies [49e9385]
+- Updated dependencies [03df637]
+  - @prosopo/locale@3.11.0
+
+## 3.2.1
+### Patch Changes
+
+- Updated dependencies [e841741]
+  - @prosopo/locale@3.10.1
+
+## 3.2.0
+### Minor Changes
+
+- f8eddf7: Image challenges now send each label's key (`targetKey`) and English text (`targetEn`) beside the translated `target`, and say which `language` they were translated into. Error responses add `messageEn` when the widget has no text of its own for the error's key. All new fields are additive. New `englishText(key)` in `@prosopo/locale`.
+
+### Patch Changes
+
+- 0bd0230: The widget bundle no longer contains the English image labels and server error strings. `ProsopoError` used to check message keys against every English catalogue, which pulled all of them into the widget. It now asks the i18n instance it was given (`exists`). The server-only key helpers (`isTranslationKey`, `isTargetKey`, `englishText`) moved to their own module.
+- Updated dependencies [eb99b3d]
+- Updated dependencies [f3f7243]
+- Updated dependencies [cbb6a10]
+- Updated dependencies [4961a7e]
+- Updated dependencies [b351896]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+- Updated dependencies [6b11b15]
+- Updated dependencies [f8eddf7]
+- Updated dependencies [1634139]
+  - @prosopo/locale@3.10.0
+
+## 3.1.65
+### Patch Changes
+
+  - @prosopo/locale@3.9.1
+  - @prosopo/logger@2.1.4
+
+## 3.1.64
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/locale@3.9.0
+
+## 3.1.63
+### Patch Changes
+
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+  - @prosopo/locale@3.8.0
+
+## 3.1.62
+### Patch Changes
+
+- Updated dependencies [dcb691b]
+  - @prosopo/locale@3.7.0
+  - @prosopo/logger@2.1.3
+
+## 3.1.61
+### Patch Changes
+
+- 06784d0: Error classes now only accept error keys that exist in the English translation catalogue, so a misspelt key such as `DATABASE.DATABASE_IMPORT_ERROR` fails to compile instead of showing the raw key to users.
+- 06784d0: Translation keys are now a typed union built from the English catalogue, so calling the translator with a key that does not exist fails to compile. Error classes only pass a message to the translator when it is a real catalogue key, and free-text messages are shown as they are.
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [06784d0]
+- Updated dependencies [4461043]
+- Updated dependencies [92edebd]
+- Updated dependencies [54a07f3]
+- Updated dependencies [b75e9b7]
+- Updated dependencies [6d5b7f5]
+  - @prosopo/locale@3.6.2
+  - @prosopo/logger@2.1.2
+
+## 3.1.60
+### Patch Changes
+
+- b5e55a6: API error responses and error logs now carry at most 10 validation issues, plus the total count in the log. A body under the 1MB limit can fail validation with one issue per array element. For example, 150,000 `null` puzzle events give 150,000 issues. Every issue went into the 400 response and into the error log, so a 900KB request produced a 20MB response and a multi-MB log line. Both were built on the event loop, which stalled every other request on the provider while it ran.
+- Updated dependencies [294b480]
+  - @prosopo/locale@3.6.1
+  - @prosopo/logger@2.1.1
+
+## 3.1.59
+### Patch Changes
+
+- a9141c3: Stop shipping i18next to the browser. Saves about 22KB gzipped off the widget.
+  
+  The widget was pulling in i18next and four of its plugins — a language detector, an HTTP backend, a chained backend and a resources-to-backend adapter, which between them also dragged in the `cross-fetch` polyfill — to look up 444 short strings with no plurals, no nesting and two interpolated values. That machinery is about 23KB gzipped; the replacement is 1.25KB.
+  
+  `i18nFrontend.ts` now does the job directly: pick a language, fetch the matching `locales/<lang>/translation.json` next to the bundle, and look keys up in it. Behaviour is unchanged in the ways a visitor can see:
+  
+  - language is chosen from the widget's own setting first, then a cookie, then localStorage, then the browser — the same order as before, and the choice is still remembered in both cookie and localStorage
+  - a regional tag like `de-AT` still resolves to `de`
+  - English is still fetched alongside the chosen language, so a key a translation is missing still renders English rather than its key
+  - `{{name}}` placeholders are still filled in, including in a caller's `defaultValue`
+  - if the catalogue cannot be fetched the widget still renders, in English, rather than waiting
+  
+  i18next stays for the server, where `i18next-http-middleware` needs the real instance to read the `Accept-Language` header. `Ti18n` is now a small interface describing the handful of methods this repository actually calls, which both implementations satisfy, so `@prosopo/common` no longer needs i18next for a type either.
+  
+  Covered by 189 tests in `@prosopo/locale`, and the built bundle was checked in a real browser: French picked up from the browser, a switch to German, interpolation, and both fallbacks.
+- a9141c3: Stop loading zod before the widget can draw itself. Takes another 13KB gzipped off the critical path.
+  
+  zod is 14KB gzipped and it was being downloaded and parsed before the checkbox appeared, because six small things on the startup path happened to use it:
+  
+  - two lists of strings in `@prosopo/logger` (log levels, output format)
+  - two lists of strings in `@prosopo/locale` (language codes, translation keys)
+  - two lists of two strings in `@prosopo/types` (start mode, challenge placement)
+  - one four-field object in `@prosopo/load-balancer` (a provider entry)
+  - an `instanceof ZodError` check in `@prosopo/common`
+  - `INPUT_LIMITS`, a plain table of numbers, that happened to live in the same file as zod-based string builders
+  
+  None of these need a validation library. They are now plain TypeScript: a list, a type, and where input is untrusted, a one-line guard. `INPUT_LIMITS` moved to its own file so reading it no longer drags the builders along.
+  
+  zod has not gone anywhere — the real request and response schemas in `@prosopo/types` still use it, and still validate exactly as before. It now arrives with the code that needs it, after the widget is on screen, rather than in front of it.
+  
+  Two API changes for anyone importing these directly:
+  
+  - `LanguageSchema`, `TranslationKeysSchema`, `StartModeSchema` and `Placement` are no longer exported as zod schemas. Use `isLanguage()`, `isStartMode()`, `isPlacement()` to check a value, and `LanguageCodes`, `translationKeys`, `StartModes`, `Placements` for the lists.
+  - `isZodError()` now recognises a zod error by its name rather than `instanceof`. That is strictly more tolerant: the name still matches when an error crosses a realm boundary or comes from a second copy of zod, which `instanceof` misses — it was already the fallback arm of the same check.
+  
+  Two behaviour notes: a malformed entry in the fetched provider list now throws a plain `Error` naming the entry, where it used to throw an untranslated zod error; and the language codes accepted are unchanged.
+  
+  Covered by the existing suites for every package touched (types, types-database, locale, logger, common, load-balancer, all five procaptcha packages, api, cli, api-express-router, server, and the provider's 1322 unit tests), all passing. The built bundle was also loaded in a real browser: the widget renders from the first eight chunks, zod arrives in the second wave, and the provider's error came back translated into German.
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/locale@3.6.0
+  - @prosopo/logger@2.1.0
+
+## 3.1.58
+### Patch Changes
+
+- Updated dependencies [59c02da]
+  - @prosopo/locale@3.5.0
+
+## 3.1.57
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/locale@3.4.4
+
+## 3.1.56
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- Updated dependencies [f4e4a83]
+- Updated dependencies [d710b7f]
+  - @prosopo/locale@3.4.3
+  - @prosopo/logger@2.0.10
+
+## 3.1.55
+### Patch Changes
+
+- Updated dependencies [864ddde]
+  - @prosopo/locale@3.4.2
+
+## 3.1.54
+### Patch Changes
+
+  - @prosopo/logger@2.0.9
+
+## 3.1.53
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [89dd38a]
+  - @prosopo/locale@3.4.1
+  - @prosopo/logger@2.0.8
+
 ## 3.1.52
 ### Patch Changes
 

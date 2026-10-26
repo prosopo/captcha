@@ -13,8 +13,13 @@
 // limitations under the License.
 
 import {
+	CaptchaType,
 	type IFrictionlessThreshold,
+	type IFrictionlessTypes,
+	type IUserSettings,
 	frictionlessPuzzleThresholdDefault,
+	isWidgetFeatureEnabled,
+	resolveAllowedCaptchaTypes,
 	resolveFrictionlessThreshold,
 } from "@prosopo/types";
 
@@ -37,20 +42,55 @@ export const resolveScoreLadder = (
 };
 
 /**
+ * The types any session minted by /frictionless may be. The owner's
+ * `frictionlessTypes` only governs the frictionless flow, so a site pinned to
+ * a concrete `captchaType` is held to the feature flags alone.
+ */
+export const resolveSiteAllowedCaptchaTypes = (
+	settings: Pick<
+		Partial<IUserSettings>,
+		"captchaType" | "frictionlessTypes" | "captchaTypeFeatureFlags"
+	>,
+): IFrictionlessTypes =>
+	resolveAllowedCaptchaTypes({
+		captchaTypeFeatureFlags: settings.captchaTypeFeatureFlags,
+		...((!settings.captchaType ||
+			settings.captchaType === CaptchaType.frictionless) && {
+			frictionlessTypes: settings.frictionlessTypes,
+		}),
+	});
+
+/**
+ * Whether a user on this site may swap a puzzle for an image challenge: the
+ * switch is on and the site may be served image challenges at all.
+ */
+export const isPuzzleImageSwitchAvailable = (
+	settings: Pick<
+		Partial<IUserSettings>,
+		| "captchaType"
+		| "frictionlessTypes"
+		| "captchaTypeFeatureFlags"
+		| "widgetFeatureFlags"
+	>,
+): boolean =>
+	isWidgetFeatureEnabled("puzzleImageSwitch", settings.widgetFeatureFlags) &&
+	resolveSiteAllowedCaptchaTypes(settings).image;
+
+/**
  * Image rounds served when the detector payload could not be decrypted.
  *
  * Deliberately short. A failed decrypt means we have no measurement of the
  * client — most often a benign cause (the session's Redis bundle binding
  * expired, the bundle left the pool on a rotation, a stale cached widget) — so
- * this is a "prove you're human quickly", not a punishment. Capped by the
- * sitekey's `imageMaxRounds` at the call site.
+ * this is a "prove you're human quickly", not a punishment. Clamped into the
+ * sitekey's `[imageMinRounds, imageMaxRounds]` at the call site.
  */
 export const DECRYPTION_FAILED_IMAGE_ROUNDS = 3;
 
 /**
  * Image rounds served when the client sent no detector token at all. It ran no
- * detection, so we know nothing about it and it must solve to proceed. Capped
- * by the sitekey's `imageMaxRounds` at the call site.
+ * detection, so we know nothing about it and it must solve to proceed. Clamped
+ * into the sitekey's `[imageMinRounds, imageMaxRounds]` at the call site.
  */
 export const MISSING_TOKEN_IMAGE_ROUNDS = 3;
 
@@ -82,12 +122,3 @@ export const getRoundsFromTriggeredDetectors = (
 ): number =>
 	base +
 	Math.min(triggeredDetectors?.length ?? 0, MAX_DETECTOR_EXTRA_IMAGE_ROUNDS);
-
-export const getRoundsFromSimScore = (simScore: number): number => {
-	if (simScore >= 0.9) return 0;
-	if (simScore >= 0.8) return 3;
-	if (simScore >= 0.7) return 4;
-	if (simScore >= 0.6) return 6;
-	if (simScore >= 0.5) return 7;
-	return 8;
-};

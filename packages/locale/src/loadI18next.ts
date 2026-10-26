@@ -12,32 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { i18n } from "i18next";
-let i18nInstance: i18n;
+import type { Ti18n } from "./types.js";
+
+let i18nInstance: Ti18n;
 
 /**
  * How long to wait for i18next to report `loaded` before giving up on it.
  *
- * Resolution is driven by an event, and events are not guaranteed: a backend
- * that never answers (http backend against a dead CDN, fs backend against a
- * missing locales dir) leaves the listener armed and the promise pending for
- * the lifetime of the process. `cli.ts` calls loadI18next(true).then(...) with
+ * Resolution is driven by an event, and events are not guaranteed: a catalogue
+ * that never arrives (the widget's fetch against a dead CDN, the fs backend
+ * against a missing locales dir) leaves the listener armed and the promise
+ * pending for the lifetime of the process. `cli.ts` calls loadI18next(true).then(...) with
  * nothing to time it out, so a pending promise there is a silent boot hang with
  * no log line to explain it.
  */
 export const I18N_LOAD_TIMEOUT_MS = 10_000;
 
 const reconcileLanguage = async (
-	instance: i18n,
+	instance: Ti18n,
 	lng: string | undefined,
-): Promise<i18n> => {
+): Promise<Ti18n> => {
 	if (lng && instance.language !== lng) {
 		await instance.changeLanguage(lng);
 	}
 	return instance;
 };
 
-async function loadI18next(backend: boolean, lng?: string): Promise<i18n> {
+async function loadI18next(backend: boolean, lng?: string): Promise<Ti18n> {
 	return new Promise((resolve, reject) => {
 		// On timeout we resolve with the (possibly not fully loaded) instance
 		// rather than rejecting. i18next falls back to the key itself when a
@@ -69,7 +70,7 @@ async function loadI18next(backend: boolean, lng?: string): Promise<i18n> {
 		// Both latches are one-shot: i18next can emit `loaded` more than once
 		// (per namespace, and again after changeLanguage), and a late event
 		// arriving after the timeout must not re-settle or leak a second timer.
-		const done = (instance: i18n): void => {
+		const done = (instance: Ti18n): void => {
 			if (settled) {
 				return;
 			}
@@ -96,8 +97,8 @@ async function loadI18next(backend: boolean, lng?: string): Promise<i18n> {
 			import("./i18nBackend.js")
 				.then(({ default: initializeI18n }) => {
 					if (!i18nInstance) {
-						// pass the resolver into the i18n init fn, which fires it on the first
-						// "loaded" event
+						// pass the resolver into the i18n init fn, which fires it once
+						// every namespace has been read
 						i18nInstance = initializeI18n(done);
 					} else {
 						// we've already initialised i18n so just return it
@@ -118,7 +119,7 @@ async function loadI18next(backend: boolean, lng?: string): Promise<i18n> {
 						}, lng);
 					} else {
 						// Singleton already exists (e.g. a prior widget mounted with a
-						// different language, or a React consumer initialised earlier).
+						// different language, or a direct consumer initialised earlier).
 						// Reconcile before resolving so callers can render synchronously
 						// against the requested language instead of seeing a flash of
 						// the previous one.
@@ -131,7 +132,5 @@ async function loadI18next(backend: boolean, lng?: string): Promise<i18n> {
 		}
 	});
 }
-
-export type { i18n as Ti18n };
 
 export default loadI18next;

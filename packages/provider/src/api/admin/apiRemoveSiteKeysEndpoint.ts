@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { ProsopoApiError } from "@prosopo/common";
+import type { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import { RemoveSitekeysBody } from "@prosopo/types";
 import type { z } from "zod";
@@ -52,7 +52,7 @@ class ApiRemoveSiteKeysEndpoint implements ApiEndpoint<RemoveSitekeysBodyType> {
 			logger.error(() => ({ err: error, msg: "Error removing site keys" }));
 			return {
 				status: ApiEndpointResponseStatus.FAIL,
-				error: (error as ProsopoApiError).message,
+				error: (error as ProsopoError).message,
 			};
 		}
 	}

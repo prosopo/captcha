@@ -15,6 +15,7 @@ import { createRequire } from "node:module";
 import * as path from "node:path";
 import {
 	ViteBackendConfig,
+	copyAssetsPlugin,
 	nodejsPolarsNativeFilePlugin,
 } from "@prosopo/config";
 import { loadEnv } from "@prosopo/dotenv";
@@ -38,20 +39,37 @@ process.env.TS_NODE_PROJECT = path.resolve("./tsconfig.json");
 // their absolute paths so nodejsPolarsNativeFilePlugin can copy them into
 // dist/bundle at bundle time.
 const nativeRequire = createRequire(import.meta.url);
-// napi-rs writes every package's binary as `index.<triple>.node`, so we
-// have to rename on copy or the second overwrites the first in dist/bundle.
 const nativeBinaryPaths = [
 	{
-		src: nativeRequire.resolve("@prosopo/native-ja4/index.linux-x64-gnu.node"),
+		src: nativeRequire.resolve(
+			"@prosopo/native-ja4/dist/native/prosopo-native-ja4.linux-x64-gnu.node",
+		),
 		dest: "prosopo-native-ja4.node",
 	},
 	{
 		src: nativeRequire.resolve(
-			"@prosopo/native-merkle/index.linux-x64-gnu.node",
+			"@prosopo/native-merkle/dist/native/prosopo-native-merkle.linux-x64-gnu.node",
 		),
 		dest: "prosopo-native-merkle.node",
 	},
+	{
+		src: nativeRequire.resolve(
+			"@prosopo/native-puzzle/dist/native/prosopo-native-puzzle.linux-x64-gnu.node",
+		),
+		dest: "prosopo-native-puzzle.node",
+	},
 ];
+// The obfuscated decoders are loaded by URL at runtime, not by import, so a
+// decoder worker can load the same file the main thread would — a bundled
+// dynamic import becomes a content-hashed chunk that a worker cannot name.
+// Copying them under stable basenames is what makes that URL constructible.
+const decoderDir = path.resolve(dir, "../provider/src/tasks/detection");
+const decoderAssets = [
+	"decodePayload.js",
+	"decodeSimd.js",
+	"decodeBehavior.js",
+].map((file) => ({ src: path.join(decoderDir, file), dest: file }));
+
 const bundleOutDir = path.resolve(dir, "dist/bundle");
 
 // Merge with generic backend config
@@ -68,6 +86,7 @@ export default defineConfig(async ({ command, mode }) => {
 	backendConfig.plugins = [
 		...(backendConfig.plugins ?? []),
 		nodejsPolarsNativeFilePlugin(nativeBinaryPaths, bundleOutDir),
+		copyAssetsPlugin(decoderAssets, bundleOutDir),
 	];
 	return defineConfig({
 		ssr: {

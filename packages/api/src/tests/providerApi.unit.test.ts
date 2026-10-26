@@ -559,13 +559,21 @@ describe("getFrictionlessCaptcha", () => {
 			undefined, // detectorSessionId
 			"https://site.example/page",
 			"https://iframe.example",
+			"bumblebee-abc",
 		);
 		expect(body()).toMatchObject({
 			[ApiParams.mode]: ModeEnum.invisible,
 			[ApiParams.simdReadings]: "readings",
 			[ApiParams.currentUrl]: "https://site.example/page",
 			[ApiParams.iframeUrl]: "https://iframe.example",
+			[ApiParams.clientSessionId]: "bumblebee-abc",
 		});
+	});
+
+	test("omits the session id when the widget has none to report", async () => {
+		fetchStub.respond(frictionlessBody);
+		await api().getFrictionlessCaptcha("token", "0xhead", SITE_KEY, USER);
+		expect(body()).not.toHaveProperty(ApiParams.clientSessionId);
 	});
 
 	test("moves the honeypot from the meta header onto the response", async () => {

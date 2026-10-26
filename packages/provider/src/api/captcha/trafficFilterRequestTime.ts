@@ -16,9 +16,13 @@ import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
 	type GetFrictionlessCaptchaResponse,
+	type IAudioSettings,
+	type IIconOrderSettings,
 	type IPInfoResponse,
 	type IPuzzleSettings,
 	type ITrafficFilter,
+	clampImageRounds,
+	resolveImageRoundsBounds,
 } from "@prosopo/types";
 import type { ClientRecord } from "@prosopo/types-database";
 import type { Response } from "express";
@@ -27,10 +31,11 @@ import {
 	type ResolvedChallengePolicy,
 	checkTrafficFilter,
 	resolveChallengePolicy,
+	resolvePadBytes,
 } from "../../tasks/spam/checkTrafficFilter.js";
 
 export type RequestTimeTrafficVerdict =
-	| { kind: "pass" }
+	| { kind: "pass"; padBytes?: number }
 	| {
 			kind: "challenge";
 			// The strictest captcha type across matched challenge policies, or
@@ -39,11 +44,18 @@ export type RequestTimeTrafficVerdict =
 			powDifficulty?: number;
 			solvedImagesCount?: number;
 			puzzleTolerance?: number;
+			// Tarpit padding for the issuance response, resolved across all
+			// matched categories — block as well as challenge, since a blocked
+			// category still hands out a deferred challenge here.
+			padBytes?: number;
 			// Merged puzzle render overrides across matched challenge
 			// categories; the getPuzzleCaptchaChallenge resolver treats this
 			// as the top of the override chain (asset default → client
 			// setting → this).
 			puzzleSettings?: IPuzzleSettings;
+			audioSettings?: IAudioSettings;
+			iconOrderTolerance?: number;
+			iconOrderSettings?: IIconOrderSettings;
 			sourceCategories: ResolvedChallengePolicy["sourceCategories"];
 	  };
 
@@ -73,9 +85,10 @@ export const applyTrafficFilterAtRequestTime = (
 	// as `challenge`, and let submit-time enforce every `block` (defaulted
 	// or otherwise).
 	const result = checkTrafficFilter(ipInfo, trafficFilter);
+	const padBytes = resolvePadBytes(result.matches);
 
 	const resolved = resolveChallengePolicy(result.matches);
-	if (!resolved) return { kind: "pass" };
+	if (!resolved) return { kind: "pass", padBytes };
 
 	logger?.info(() => ({
 		msg: "Traffic filter applied challenge overrides",
@@ -94,7 +107,11 @@ export const applyTrafficFilterAtRequestTime = (
 		powDifficulty: resolved.powDifficulty,
 		solvedImagesCount: resolved.solvedImagesCount,
 		puzzleTolerance: resolved.puzzleTolerance,
+		padBytes,
 		puzzleSettings: resolved.puzzleSettings,
+		audioSettings: resolved.audioSettings,
+		iconOrderTolerance: resolved.iconOrderTolerance,
+		iconOrderSettings: resolved.iconOrderSettings,
 		sourceCategories: resolved.sourceCategories,
 	};
 };
@@ -154,11 +171,11 @@ export const handleFrictionlessTrafficFilter = async (
 		response = await input.frictionlessManager.sendImageCaptcha({
 			...baseParams,
 			solvedImagesCount: verdict.solvedImagesCount
-				? Math.min(
+				? clampImageRounds(
 						verdict.solvedImagesCount,
-						input.clientRecord.settings.imageMaxRounds,
+						input.clientRecord.settings,
 					)
-				: input.clientRecord.settings.imageMaxRounds,
+				: resolveImageRoundsBounds(input.clientRecord.settings).max,
 		});
 	} else if (verdict.captchaType === CaptchaType.pow) {
 		logDispatch(CaptchaType.pow);

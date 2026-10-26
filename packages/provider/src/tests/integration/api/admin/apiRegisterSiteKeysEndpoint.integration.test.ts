@@ -17,10 +17,8 @@ import type { Logger } from "@prosopo/logger";
 import {
 	CaptchaType,
 	ClientSettingsSchema,
-	ContextType,
 	type ProsopoConfigOutput,
 	Tier,
-	contextAwareThresholdDefault,
 } from "@prosopo/types";
 import type { ClientRecord, IProviderDatabase } from "@prosopo/types-database";
 import { describe, expect, it, vi } from "vitest";
@@ -68,15 +66,6 @@ describe("apiRegisterSiteKeysEndpoint", () => {
 		imageMaxRounds: 3,
 		powDifficulty: 1,
 		disallowWebView: false,
-		contextAware: {
-			enabled: false,
-			contexts: {
-				default: {
-					type: ContextType.Default,
-					threshold: contextAwareThresholdDefault,
-				},
-			},
-		},
 	});
 
 	it("should register or update multiple site keys", async () => {
@@ -145,7 +134,9 @@ describe("apiRegisterSiteKeysEndpoint", () => {
 
 		const registerPromise = registerSiteKeys(db, records);
 
-		await expect(registerPromise).rejects.toThrowError("API.INVALID_SITE_KEY");
+		await expect(registerPromise).rejects.toMatchObject({
+			code: "SITE_KEY_INVALID",
+		});
 	});
 
 	it("should not call updateClientRecords if a site key is invalid", async () => {
@@ -158,9 +149,9 @@ describe("apiRegisterSiteKeysEndpoint", () => {
 		];
 		const db = getMockDb();
 
-		await expect(registerSiteKeys(db, records)).rejects.toThrowError(
-			"API.INVALID_SITE_KEY",
-		);
+		await expect(registerSiteKeys(db, records)).rejects.toMatchObject({
+			code: "SITE_KEY_INVALID",
+		});
 		expect(db.updateClientRecords).not.toHaveBeenCalled();
 	});
 });

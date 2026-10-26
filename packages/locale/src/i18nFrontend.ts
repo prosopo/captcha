@@ -12,94 +12,198 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import i18n, { type InitOptions } from "i18next";
-import I18nextBrowserLanguageDetector from "i18next-browser-languagedetector";
-import ChainedBackend from "i18next-chained-backend";
-import HttpBackend from "i18next-http-backend";
-import resourcesToBackend from "i18next-resources-to-backend";
-import { initReactI18next } from "react-i18next";
+import { flatten } from "@prosopo/util";
 import { i18nSharedOptions } from "./i18SharedOptions.js";
+import {
+	browserLanguages,
+	matchLanguage,
+	resolveLanguageList,
+} from "./languagePreference.js";
+import widgetEn from "./locales/en/widget.json" with { type: "json" };
+import { NAMESPACES } from "./translationKey.js";
+import type { I18nEvent, Ti18n, TranslateOptions } from "./types.js";
 
-const reactOptions: InitOptions = {
-	react: {
-		useSuspense: true,
-	},
-	detection: {
-		order: ["navigator", "htmlTag", "path", "subdomain"],
-		caches: ["localStorage", "cookie"],
-	},
+const NAMESPACE = NAMESPACES.widget;
+const FALLBACK_LANGUAGE = i18nSharedOptions.fallbackLng;
+
+/**
+ * How long to wait for a catalogue before rendering untranslated.
+ *
+ * A widget with no text is worse than a widget in English: every caller
+ * supplies a `defaultValue`, and `t()` falls back to the key otherwise, so a
+ * catalogue that never arrives degrades rather than blocks.
+ */
+const CATALOGUE_FETCH_TIMEOUT_MS = 10_000;
+
+type Catalogue = Record<string, string>;
+
+/**
+ * English ships inside the bundle: the key checks in translationKey.ts import
+ * it anyway, and it means the widget always has English text, for its own
+ * fallback and for logs and crash reports, without a second fetch.
+ */
+const bundledEnglish: Catalogue = flatten(widgetEn);
+
+/**
+ * Locale JSON sits next to the bundle that asked for it. The widget is embedded
+ * by third parties and cannot know a base URL, but it does know where its own
+ * module was served from.
+ */
+const catalogueUrl = (language: string): string => {
+	const moduleUrl = import.meta.url;
+	const directory = moduleUrl.slice(0, moduleUrl.lastIndexOf("/"));
+	return `${directory}/locales/${language}/${NAMESPACE}.json`;
 };
 
-const getLoadPath = (language: string, namespace: string) => {
-	const filename = import.meta.url.split("/").pop();
-	return `${import.meta.url.replace(`/${filename}`, "")}/locales/${language}/${namespace}.json`;
+/**
+ * Only the browser's own list. Nothing is read from or written to cookies or
+ * storage: the widget runs on other people's sites, where the i18next cookie
+ * and `i18nextLng` key may belong to the site's own i18n.
+ */
+const detectLanguage = (): string =>
+	matchLanguage(browserLanguages()) ?? FALLBACK_LANGUAGE;
+
+const fetchCatalogue = async (language: string): Promise<Catalogue> => {
+	const controller = new AbortController();
+	const timer = setTimeout(
+		() => controller.abort(),
+		CATALOGUE_FETCH_TIMEOUT_MS,
+	);
+	try {
+		const response = await fetch(catalogueUrl(language), {
+			signal: controller.signal,
+		});
+		if (!response.ok) {
+			return {};
+		}
+		const body: unknown = await response.json();
+		return typeof body === "object" && body !== null ? flatten(body) : {};
+	} catch {
+		return {};
+	} finally {
+		clearTimeout(timer);
+	}
 };
+
+const interpolate = (template: string, options?: TranslateOptions): string =>
+	options
+		? template.replace(/\{\{(\w+)\}\}/g, (placeholder, name: string) =>
+				name in options ? String(options[name]) : placeholder,
+			)
+		: template;
+
+interface BrowserI18n extends Ti18n {
+	/** Resolves once the active language's catalogue has been fetched. */
+	ready(): Promise<BrowserI18n>;
+}
+
+const createBrowserI18n = (requested?: string): BrowserI18n => {
+	const catalogues = new Map<string, Catalogue>([
+		[FALLBACK_LANGUAGE, bundledEnglish],
+	]);
+	const listeners = new Map<I18nEvent, Set<() => void>>();
+	let language = resolveLanguageList(requested) ?? detectLanguage();
+	let initialised = false;
+
+	const emit = (event: I18nEvent): void => {
+		for (const listener of listeners.get(event) ?? []) {
+			listener();
+		}
+	};
+
+	/**
+	 * Only the active language's widget namespace is fetched. English is
+	 * already loaded, so a key missing from a translation still renders
+	 * English rather than its key, the key-level fallback i18next gives via
+	 * `fallbackLng`.
+	 */
+	const loadCatalogues = async (target: string): Promise<void> => {
+		if (!catalogues.has(target)) {
+			catalogues.set(target, await fetchCatalogue(target));
+		}
+	};
+
+	const lookup = (candidate: string, key: string): string | undefined =>
+		catalogues.get(candidate)?.[key];
+
+	const loading = loadCatalogues(language).then(() => {
+		initialised = true;
+		emit("initialized");
+		emit("loaded");
+	});
+
+	const instance: BrowserI18n = {
+		get language(): string {
+			return language;
+		},
+		get isInitialized(): boolean {
+			return initialised;
+		},
+		t: (key: string, options?: TranslateOptions): string =>
+			interpolate(
+				lookup(language, key) ??
+					lookup(FALLBACK_LANGUAGE, key) ??
+					options?.defaultValue ??
+					key,
+				options,
+			),
+		exists: (key: string): boolean =>
+			lookup(language, key) !== undefined ||
+			lookup(FALLBACK_LANGUAGE, key) !== undefined,
+		hasLoadedNamespace: (namespace: string): boolean =>
+			namespace === NAMESPACE && catalogues.has(language),
+		changeLanguage: async (next: string): Promise<BrowserI18n> => {
+			const resolved = resolveLanguageList(next) ?? FALLBACK_LANGUAGE;
+			if (resolved !== language) {
+				language = resolved;
+				await loadCatalogues(resolved);
+				emit("loaded");
+				emit("languageChanged");
+			}
+			return instance;
+		},
+		on: (event: I18nEvent, listener: () => void): void => {
+			const existing = listeners.get(event) ?? new Set<() => void>();
+			existing.add(listener);
+			listeners.set(event, existing);
+		},
+		off: (event: I18nEvent, listener: () => void): void => {
+			listeners.get(event)?.delete(listener);
+		},
+		ready: async (): Promise<BrowserI18n> => {
+			await loading;
+			return instance;
+		},
+	};
+
+	return instance;
+};
+
+/**
+ * The widget owns this instance. A host page running its own i18n must not be
+ * able to capture the widget's translations, and every widget on the page
+ * shares one catalogue fetch.
+ */
+let instance: BrowserI18n | undefined;
 
 export function initializeI18n(
-	i18nLoadedCallback?: (value: typeof i18n) => void,
+	i18nLoadedCallback?: (value: Ti18n) => void,
 	lng?: string,
-) {
-	if (!i18n.isInitialized) {
-		i18n
-			// @ts-ignore
-			.use(ChainedBackend)
-			.use(
-				new I18nextBrowserLanguageDetector(null, {
-					order: ["cookie", "localStorage", "navigator"],
-					lookupQuerystring: "lng",
-					lookupCookie: "i18next",
-					lookupLocalStorage: "i18nextLng",
-					caches: ["localStorage", "cookie"],
-				}),
-			)
-			.use(initReactI18next)
-			.init({
-				...i18nSharedOptions,
-				// When the site owner has resolved a language upfront (via widget
-				// config or data-language) we set `lng` explicitly so i18next skips
-				// browser detection. This is the single source of truth for the
-				// widget language and prevents the flash-of-wrong-language race
-				// where child components read the browser-detected language on
-				// first render before an effect can call changeLanguage().
-				...(lng ? { lng } : {}),
-				backend: {
-					backends: [
-						HttpBackend, // if a namespace can't be loaded via normal http-backend loadPath, then the inMemoryLocalBackend will try to return the correct resources
-						// with dynamic import, you have to use the "default" key of the module ( https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#importing_defaults )
-						resourcesToBackend(
-							(language: string, namespace: string) =>
-								import(getLoadPath(language, namespace)),
-						),
-					],
-					backendOptions: [
-						{
-							loadPath: getLoadPath("{{lng}}", "{{ns}}"),
-						},
-					],
-				},
-				...reactOptions,
-			} as InitOptions);
-		// "loaded" fires once per namespace, and again after changeLanguage(),
-		// so the raw event is not the one-shot signal the callback expects.
-		// Latch it here as well as in loadI18next: this callback is public and
-		// a caller could reasonably use it to run a side effect.
-		let notified = false;
-		i18n.on("loaded", () => {
-			if (notified) {
-				return;
-			}
-			notified = true;
-			i18nLoadedCallback?.(i18n);
-		});
+): Ti18n {
+	if (!instance) {
+		// Passing `lng` here rather than calling changeLanguage() afterwards is
+		// what stops the widget rendering a flash of the browser's language
+		// before the site owner's choice is applied.
+		const created = createBrowserI18n(lng);
+		instance = created;
+		void created.ready().then(() => i18nLoadedCallback?.(created));
 	} else {
-		// Already initialised (e.g. useTranslation() ran first, or a second
-		// widget mounted). The `loaded` handler is only registered in the init
-		// branch, so the callback has to fire here or loadI18next() never
-		// settles. Resources are already present, so resolving immediately is
-		// correct; the caller reconciles the language afterwards.
-		i18nLoadedCallback?.(i18n);
+		// Already built (a second widget on the page, or createTranslator() got
+		// here first). The callback is only armed in the branch above, so it has
+		// to fire here or loadI18next() never settles.
+		i18nLoadedCallback?.(instance);
 	}
-	return i18n;
+	return instance;
 }
 
 export default initializeI18n;

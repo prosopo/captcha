@@ -89,10 +89,15 @@ export function merge<T extends object | A[], U extends object | B[], A, B>(
 			const destAny = task.dest as any;
 			// for every entry in src
 			for (const [key, value] of Object.entries(src)) {
-				// if the value in src + dest is an array or object, then we need to merge it
+				// assigning `__proto__` would swap dest's prototype
+				if (key === "__proto__") {
+					continue;
+				}
+				// only descend into dest's own values: an inherited one (e.g. `constructor`) is shared by every object
 				if (
-					(isArray(value) && isArray(destAny[key])) ||
-					(isObject(value) && isObject(destAny[key]))
+					Object.prototype.hasOwnProperty.call(destAny, key) &&
+					((isArray(value) && isArray(destAny[key])) ||
+						(isObject(value) && isObject(destAny[key])))
 				) {
 					// need to merge arrays or objects
 					queue.push({

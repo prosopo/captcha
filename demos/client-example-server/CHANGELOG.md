@@ -1,5 +1,537 @@
 # @prosopo/client-example-server
 
+## 2.7.185
+### Patch Changes
+
+- 2086040: Each kind of build now writes to its own folder under dist: dist/esm (vite ESM), dist/cjs (vite CommonJS), dist/types (declarations), dist/tsc (plain tsc), dist/bundle and dist/bundle-webpack (bundles) and dist/native (the Rust addons). Turbo caches each folder separately, so building one variant no longer overwrites or invalidates another. Package exports point at the new folders; anything importing a file from dist by path has to add the variant folder.
+  
+  The Rust addons are no longer committed. They are built into dist/native, in debug for development and tests and fully optimised when NODE_ENV=production, so building them now needs a Rust toolchain.
+  
+  Code that found the repo root or its certificates by climbing a fixed number of folders up from its own file now starts from its package's folder instead (new `packageDir` in @prosopo/util/node). The fixed count stopped working once the build output moved one folder deeper.
+- Updated dependencies [2086040]
+- Updated dependencies [915f30b]
+  - @prosopo/common@3.3.1
+  - @prosopo/database@4.3.0
+  - @prosopo/dotenv@3.0.63
+  - @prosopo/keyring@2.10.12
+  - @prosopo/logger@2.1.6
+  - @prosopo/server@2.14.1
+  - @prosopo/types@5.19.0
+  - @prosopo/util@3.3.17
+
+## 2.7.184
+### Patch Changes
+
+- 0d94ae6: Pin Node to 24.22.1 in every Docker image and CI workflow, the first 24.x release with the fix for CVE-2026-111497 (an out-of-bounds write in the bundled Brotli decoder that can lead to remote code execution).
+  
+  Before this, everything asked for plain `24`, which does not guarantee a patched build. Docker reuses a cached base image, and `setup-node` uses whatever 24.x a runner already has cached.
+  
+  The provider image needed more than a tag bump. Its runtime, `gcr.io/distroless/nodejs24-debian12`, is stuck on Node 24.14.0 and will not get the fix. It now runs on `nodejs24-debian13`, pinned by digest because distroless publishes no Node version tags. The builder moves to `node:24.22.1-trixie-slim` so both stages still use the same Debian release and glibc. Sharp and the native ja4, merkle and puzzle addons were checked loading on the new runtime.
+
+## 2.7.183
+### Patch Changes
+
+- Updated dependencies [d02b3bc]
+- Updated dependencies [159766a]
+- Updated dependencies [f695b3a]
+  - @prosopo/database@4.2.10
+  - @prosopo/types@5.18.0
+  - @prosopo/server@2.14.0
+  - @prosopo/common@3.3.0
+  - @prosopo/keyring@2.10.11
+
+## 2.7.182
+### Patch Changes
+
+  - @prosopo/server@2.13.8
+  - @prosopo/types@5.17.1
+  - @prosopo/common@3.3.0
+  - @prosopo/database@4.2.9
+  - @prosopo/keyring@2.10.10
+
+## 2.7.181
+### Patch Changes
+
+- 46b97b7: Roll up the open Dependabot updates: express 5 (with `@types/express` 5), dotenv 18, undici 8, geolib 4, vitest 5, vite 8.1.6 everywhere, 17 minor and patch bumps (Babel, mongoose, i18next, ip-address, turbo and others), `@angular/router` in the Angular demo, and a GitHub Actions bump.
+  
+  The whole vitest family moves to 5.0.4, including `@vitest/coverage-v8`, because `@vitest/browser-playwright` 5 only works with vitest 5. The `@types/express-serve-static-core` override moves to 5.1.3 to match `@types/express` 5.
+  
+  `@prosopo/dotenv` now loads env files with `quiet: true`. Since dotenv 17, every load prints an "injected env" line to stderr unless told not to.
+- d2148c8: Errors now carry a fixed code and a site instead of a translation key.
+  
+  Every error is a `ProsopoError` with a `code` from one list in
+  `@prosopo/common` (`ERROR_CODES`) and an `errorSite` such as `PROV-12`, which
+  names the one place it was thrown. Together they make the `errorId`, e.g.
+  `SITE_KEY_INVALID:PROV-31`, which the widget shows after the message so a
+  screenshot is enough to find the throw.
+  
+  What a client sees:
+  
+  - A public error (bad site key, blocked network, and so on) sends its code,
+    English message, data and errorId.
+  - Anything else sends only `BACKEND_ERROR:<site>` (or `FRONTEND_ERROR:<site>`
+    from the widget) and a status. Internal details never leave the server.
+  
+  The provider no longer translates errors. The widget looks up
+  `ERRORS.<CODE>` in its catalogue and falls back to the English message. The
+  old error classes (`ProsopoApiError`, `ProsopoEnvError` and the rest), the
+  `key`/`messageEn` fields and `localiseErrorMessage` are gone.
+  
+  Other changes in behaviour:
+  
+  - An error with no specific code is a hidden 500.
+  - Errors no longer log themselves when they are created. The server logs each
+    unhandled one once: 5xx as errors, 4xx at debug.
+  - An invalid PoW signature is a 401 instead of a 500.
+  - `stringifyBigInts` returns a copy instead of changing its input, so frozen
+    error context can be logged.
+  - The provider's last hand-written error replies now use the same error body.
+    These were the missing-header 401s, the access-policy block, autoBan, the
+    metrics 401/403 and the rate limiter. The rate limiter answers with a new
+    public `RATE_LIMITED` (429) code.
+- Updated dependencies [46b97b7]
+- Updated dependencies [d2148c8]
+- Updated dependencies [2bcf2fe]
+- Updated dependencies [860948c]
+  - @prosopo/common@3.3.0
+  - @prosopo/database@4.2.8
+  - @prosopo/dotenv@3.0.62
+  - @prosopo/keyring@2.10.9
+  - @prosopo/logger@2.1.5
+  - @prosopo/server@2.13.7
+  - @prosopo/types@5.17.0
+  - @prosopo/util@3.3.16
+
+## 2.7.180
+### Patch Changes
+
+  - @prosopo/common@3.2.3
+  - @prosopo/server@2.13.6
+  - @prosopo/types@5.16.3
+  - @prosopo/database@4.2.7
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/keyring@2.10.8
+  - @prosopo/logger@2.1.4
+  - @prosopo/util@3.3.15
+
+## 2.7.179
+### Patch Changes
+
+- Updated dependencies [03df637]
+  - @prosopo/types@5.16.2
+  - @prosopo/common@3.2.2
+  - @prosopo/server@2.13.5
+  - @prosopo/database@4.2.6
+  - @prosopo/keyring@2.10.7
+
+## 2.7.178
+### Patch Changes
+
+  - @prosopo/common@3.2.1
+  - @prosopo/server@2.13.4
+  - @prosopo/types@5.16.1
+  - @prosopo/database@4.2.5
+  - @prosopo/keyring@2.10.6
+
+## 2.7.177
+### Patch Changes
+
+- Updated dependencies [f8eddf7]
+- Updated dependencies [aec7857]
+- Updated dependencies [0bd0230]
+  - @prosopo/types@5.16.0
+  - @prosopo/common@3.2.0
+  - @prosopo/server@2.13.3
+  - @prosopo/database@4.2.4
+  - @prosopo/keyring@2.10.5
+
+## 2.7.176
+### Patch Changes
+
+  - @prosopo/database@4.2.3
+
+## 2.7.175
+### Patch Changes
+
+- 1f36456: Roll up the open Dependabot updates: 25 minor and patch bumps, sharp 0.35.5, pbkdf2 3.1.7, smoldot 3.6.0, and two GitHub Actions bumps.
+  
+  Babel moves to 8. Its plugins and babel-loader move with it, because Babel 8 refuses to load v7 plugins. The import-attributes syntax plugin is gone: Babel 8 parses `with { type: "json" }` by default. The unused `@rollup/plugin-babel` is removed.
+  
+  `@polkadot/types` and `@polkadot/types-codec` move to 17.0.2. Without that, `@polkadot/extension-*` 0.64 pulls in a second copy of the types and the widget packages stop typechecking.
+- Updated dependencies [1f36456]
+- Updated dependencies [0e02b4b]
+  - @prosopo/database@4.2.2
+  - @prosopo/types@5.15.1
+  - @prosopo/util@3.3.15
+  - @prosopo/common@3.1.65
+  - @prosopo/dotenv@3.0.61
+  - @prosopo/keyring@2.10.4
+  - @prosopo/logger@2.1.4
+  - @prosopo/server@2.13.2
+
+## 2.7.174
+### Patch Changes
+
+- Updated dependencies [4570692]
+  - @prosopo/types@5.15.0
+  - @prosopo/server@2.13.1
+  - @prosopo/common@3.1.64
+  - @prosopo/database@4.2.1
+  - @prosopo/keyring@2.10.3
+
+## 2.7.173
+### Patch Changes
+
+- b299a91: An audio challenge, offered only as an accessibility alternative, like reCAPTCHA's audio option. The user hears a short sequence of spoken digits and types them in.
+  
+  It is off by default and needs two switches. Prosopo has to turn on the `captchaTypeFeatureFlags.audio` feature flag for the site, which the site owner cannot do, and the site owner has to set `audioAccessibilityEnabled`. When both are on, image, puzzle and icon-order challenges show a "Use audio instead" button. Pressing it swaps the visual challenge for the audio one. After a wrong answer the user stays on audio and gets a fresh clip.
+  
+  Audio is never a captcha type that can be selected or routed to. A site's `captchaType`, traffic-filter categories, Restrict rules and the site-key CLI all reject it, and routing, PoW escalation and the severity tiers leave it out. The provider only serves audio against the visual session the user was already given, and only on a site with both switches on; any other audio request is refused before the session is used up, and a request without a session is always refused.
+  
+  The spoken digits are synthesised by `@prosopo/audio-assets`, so there is no recorded set of clips to collect. The answer never leaves the provider, and a challenge can be submitted and verified only once, even under concurrent requests. `@prosopo/procaptcha-audio` is the widget. It and the "Use audio instead" button are built on the shared widget code in `@prosopo/procaptcha-common`, and the provider side is built on the shared interactive-captcha code that puzzle and icon-order use.
+  
+  The demo playground has audio pages, and there is an end-to-end test for it.
+- Updated dependencies [b299a91]
+- Updated dependencies [e13d7a8]
+- Updated dependencies [270395d]
+  - @prosopo/types@5.14.0
+  - @prosopo/database@4.2.0
+  - @prosopo/server@2.13.0
+  - @prosopo/keyring@2.10.2
+  - @prosopo/common@3.1.63
+
+## 2.7.172
+### Patch Changes
+
+- Updated dependencies [1c13037]
+- Updated dependencies [f961dab]
+- Updated dependencies [a17e8eb]
+- Updated dependencies [7d57d2a]
+- Updated dependencies [dcb691b]
+- Updated dependencies [80b7780]
+- Updated dependencies [dd4c27c]
+  - @prosopo/types@5.13.0
+  - @prosopo/util@3.3.14
+  - @prosopo/common@3.1.62
+  - @prosopo/database@4.1.4
+  - @prosopo/keyring@2.10.1
+  - @prosopo/server@2.12.15
+  - @prosopo/dotenv@3.0.60
+  - @prosopo/logger@2.1.3
+
+## 2.7.171
+### Patch Changes
+
+- Updated dependencies [ede4352]
+- Updated dependencies [f53ddb2]
+- Updated dependencies [de6bb08]
+- Updated dependencies [2145922]
+- Updated dependencies [8ed0eb8]
+- Updated dependencies [06784d0]
+- Updated dependencies [06784d0]
+- Updated dependencies [8d7ba8c]
+- Updated dependencies [995e954]
+  - @prosopo/keyring@2.10.0
+  - @prosopo/types@5.12.0
+  - @prosopo/database@4.1.3
+  - @prosopo/util@3.3.13
+  - @prosopo/common@3.1.61
+  - @prosopo/server@2.12.14
+  - @prosopo/logger@2.1.2
+  - @prosopo/dotenv@3.0.59
+
+## 2.7.170
+### Patch Changes
+
+  - @prosopo/database@4.1.2
+
+## 2.7.169
+### Patch Changes
+
+- 382cc2e: Warm up the app.js import once before the entrypoint tests, so the cold transform no longer times out whichever case runs first on a loaded machine.
+- Updated dependencies [254bc05]
+  - @prosopo/types@5.11.1
+  - @prosopo/database@4.1.1
+  - @prosopo/keyring@2.9.99
+  - @prosopo/server@2.12.13
+
+## 2.7.168
+### Patch Changes
+
+- a663bec: Stop the example server from logging the site secret. The demo's API-verify path built the siteverify request body — which includes the site's private secret — and logged the whole object at info level, teaching integrators to copy a pattern that leaks their secret into their logs. The secret is now redacted in the log line; it is still sent to the verify endpoint unchanged.
+- Updated dependencies [f650c66]
+- Updated dependencies [59b7e87]
+- Updated dependencies [b5e55a6]
+- Updated dependencies [e5aefc6]
+- Updated dependencies [0c8678e]
+- Updated dependencies [b77c5f4]
+- Updated dependencies [7065689]
+- Updated dependencies [dab0338]
+- Updated dependencies [2cd89a9]
+- Updated dependencies [dffecf0]
+- Updated dependencies [0d29dde]
+- Updated dependencies [fa316d6]
+  - @prosopo/database@4.1.0
+  - @prosopo/types@5.11.0
+  - @prosopo/common@3.1.60
+  - @prosopo/server@2.12.12
+  - @prosopo/util@3.3.12
+  - @prosopo/keyring@2.9.98
+  - @prosopo/dotenv@3.0.58
+  - @prosopo/logger@2.1.1
+
+## 2.7.167
+### Patch Changes
+
+- Updated dependencies [fda0eba]
+- Updated dependencies [1728cd0]
+- Updated dependencies [20542d8]
+- Updated dependencies [eebe6ee]
+  - @prosopo/types@5.10.2
+  - @prosopo/database@4.0.41
+  - @prosopo/keyring@2.9.97
+  - @prosopo/server@2.12.11
+
+## 2.7.166
+### Patch Changes
+
+- Updated dependencies [4c9b84b]
+  - @prosopo/types@5.10.1
+  - @prosopo/database@4.0.40
+  - @prosopo/keyring@2.9.96
+  - @prosopo/server@2.12.10
+
+## 2.7.165
+### Patch Changes
+
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+- Updated dependencies [a9141c3]
+  - @prosopo/common@3.1.59
+  - @prosopo/types@5.10.0
+  - @prosopo/logger@2.1.0
+  - @prosopo/util@3.3.11
+  - @prosopo/keyring@2.9.95
+  - @prosopo/database@4.0.39
+  - @prosopo/server@2.12.9
+  - @prosopo/dotenv@3.0.57
+
+## 2.7.164
+### Patch Changes
+
+  - @prosopo/common@3.1.58
+  - @prosopo/types@5.9.2
+  - @prosopo/database@4.0.38
+  - @prosopo/keyring@2.9.94
+  - @prosopo/server@2.12.8
+
+## 2.7.163
+### Patch Changes
+
+- Updated dependencies [a22069d]
+  - @prosopo/types@5.9.1
+  - @prosopo/database@4.0.37
+  - @prosopo/common@3.1.57
+  - @prosopo/keyring@2.9.93
+  - @prosopo/server@2.12.7
+
+## 2.7.162
+### Patch Changes
+
+- Updated dependencies [a606f54]
+- Updated dependencies [0f23010]
+  - @prosopo/types@5.9.0
+  - @prosopo/database@4.0.36
+  - @prosopo/keyring@2.9.92
+  - @prosopo/server@2.12.6
+
+## 2.7.161
+### Patch Changes
+
+- Updated dependencies [be25974]
+  - @prosopo/types@5.8.5
+  - @prosopo/database@4.0.35
+  - @prosopo/keyring@2.9.91
+  - @prosopo/server@2.12.5
+
+## 2.7.160
+### Patch Changes
+
+- f4e4a83: chore(deps): roll up the open dependabot bumps (react 19.3, mongoose 9.10, @polkadot/util 14, redis 6, cron-parser 5, react-i18next 17 with i18next 26, @scure/base 2, cypress 16, rollup/babel plugin majors, vitest 4.1.11, angular 20.3.28, js-yaml)
+- Updated dependencies [f4e4a83]
+- Updated dependencies [c386199]
+- Updated dependencies [d4e9425]
+- Updated dependencies [ae121df]
+- Updated dependencies [0be8838]
+  - @prosopo/common@3.1.56
+  - @prosopo/database@4.0.34
+  - @prosopo/keyring@2.9.90
+  - @prosopo/server@2.12.4
+  - @prosopo/types@5.8.4
+  - @prosopo/util@3.3.10
+  - @prosopo/dotenv@3.0.56
+  - @prosopo/logger@2.0.10
+
+## 2.7.159
+### Patch Changes
+
+- ca03f7e: Stop the staging database being killed by the host, and let it come back on its own.
+  
+  The `database1` mongo container had no memory limit and no restart policy. The
+  staging host has 5.8GB of RAM and no swap, so mongod grew until the kernel
+  OOM-killer took it — three times, on 18 August, 5 September and 8 September.
+  Because it was the only service in this compose file without
+  `restart: unless-stopped`, nothing brought it back, and the last crash left the
+  database down for two days.
+  
+  It now has `mem_limit: 3g`, which keeps it clear of the host limit, and a
+  WiredTiger cache pinned to 1.5GB so the rest of the budget is left for
+  connections and sorts rather than being handed to the cache. `restart:
+  unless-stopped` matches the other two services, so a crash costs seconds
+  instead of days.
+- Updated dependencies [98ab052]
+- Updated dependencies [028a158]
+- Updated dependencies [1f0598c]
+- Updated dependencies [3958046]
+- Updated dependencies [028a158]
+  - @prosopo/database@4.0.33
+  - @prosopo/types@5.8.3
+  - @prosopo/common@3.1.55
+  - @prosopo/keyring@2.9.89
+  - @prosopo/server@2.12.3
+
+## 2.7.158
+### Patch Changes
+
+- Updated dependencies [477b4e7]
+- Updated dependencies [e4d6f06]
+  - @prosopo/types@5.8.2
+  - @prosopo/server@2.12.2
+  - @prosopo/database@4.0.32
+  - @prosopo/keyring@2.9.88
+
+## 2.7.157
+### Patch Changes
+
+- Updated dependencies [0c1f301]
+- Updated dependencies [32d286d]
+  - @prosopo/types@5.8.1
+  - @prosopo/database@4.0.31
+  - @prosopo/keyring@2.9.87
+  - @prosopo/server@2.12.1
+
+## 2.7.156
+### Patch Changes
+
+- Updated dependencies [929d99b]
+- Updated dependencies [934fa5d]
+- Updated dependencies [b2183f9]
+- Updated dependencies [27f525e]
+- Updated dependencies [af267c2]
+  - @prosopo/types@5.8.0
+  - @prosopo/database@4.0.30
+  - @prosopo/server@2.12.0
+  - @prosopo/keyring@2.9.86
+
+## 2.7.155
+### Patch Changes
+
+- Updated dependencies [8a63ea3]
+  - @prosopo/database@4.0.29
+
+## 2.7.154
+### Patch Changes
+
+- Updated dependencies [f8a41fe]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [6f57ee9]
+- Updated dependencies [d288371]
+  - @prosopo/database@4.0.28
+  - @prosopo/types@5.7.0
+  - @prosopo/util@3.3.9
+  - @prosopo/common@3.1.54
+  - @prosopo/dotenv@3.0.55
+  - @prosopo/keyring@2.9.85
+  - @prosopo/logger@2.0.9
+  - @prosopo/server@2.11.7
+
+## 2.7.153
+### Patch Changes
+
+- 89dd38a: chore(deps): batch the outstanding dependabot bumps into one upgrade
+  
+  Rolls up dependabot PRs #3112, #3127-#3134 and #3159. Majors: `mongoose`
+  8 -> 9, `bson` 6 -> 7, `@noble/curves` 1 -> 2, `@polkadot/util-crypto`
+  13 -> 14, `@typegoose/auto-increment` 4 -> 5, `@babel/preset-env` 7 -> 8,
+  `@types/jsdom` 21 -> 30, `@types/bcrypt` 5 -> 6, `@actions/github` 6 -> 9,
+  `testcontainers` 11 -> 12. The rest are minor/patch.
+  
+  Code changes the majors forced:
+  - `@noble/curves` v2 requires `.js` specifiers and renamed the point API,
+    so `secp256k1.ProjectivePoint.fromHex(...).toRawBytes()` becomes
+    `secp256k1.Point.fromBytes(...).toBytes()`, `RistrettoPoint` becomes
+    `ristretto255.Point`, and `abstract/utils` moves to `utils.js`.
+  - mongoose 9 drops `RootFilterQuery` (now `QueryFilter`), no longer sets
+    `background: true` on schema indexes by default, and no longer declares
+    `id` on `Document`, which un-hid a mismatch between
+    `updateDappUserCommitment`'s `Hash` parameter and the `string` `id` it
+    filters on.
+  - mongoose 9 rejects an aggregation-pipeline update (an array) unless the
+    call passes `updatePipeline: true`, so the six pipeline writes in
+    `ProviderDatabase` now opt in explicitly.
+  - mongoose 9's `castUpdate` throws on a `$setOnInsert` key inside `$set`.
+    `storeUserImageCaptchaSolution` passed its record straight in as the
+    update, and mongoose's `moveImmutableProperties` mutates that object on
+    an upsert -- adding the very `$setOnInsert` key the record then carried
+    into `CentralDbStreamer.streamImageRecord`. Image records stopped
+    reaching the central DB (the streamer is fire-and-forget, so it only
+    logged) and signup verification returned 500. The update is now an
+    explicit `$set` over a shallow copy.
+  - `@prosopo/database` moves from mongodb 6.20 to 7.5 to match the driver
+    mongoose 9 pulls, so bson 7 is the only copy resolvable in the package.
+  - `vitest`/`@vitest/coverage-v8` go to 4.1.11 alongside dependabot's
+    `@vitest/spy` bump; leaving them at 4.1.10 installed a second copy of
+    `@vitest/spy` and broke type inference in the provider test utils.
+- Updated dependencies [89dd38a]
+- Updated dependencies [80f73c1]
+- Updated dependencies [8a670d3]
+  - @prosopo/common@3.1.53
+  - @prosopo/database@4.0.27
+  - @prosopo/dotenv@3.0.54
+  - @prosopo/keyring@2.9.84
+  - @prosopo/logger@2.0.8
+  - @prosopo/server@2.11.6
+  - @prosopo/types@5.6.0
+  - @prosopo/util@3.3.8
+
+## 2.7.152
+### Patch Changes
+
+- Updated dependencies [a62b994]
+- Updated dependencies [a447afa]
+  - @prosopo/types@5.5.3
+  - @prosopo/database@4.0.26
+  - @prosopo/keyring@2.9.83
+  - @prosopo/server@2.11.5
+
+## 2.7.151
+### Patch Changes
+
+- Updated dependencies [458cf17]
+  - @prosopo/types@5.5.2
+  - @prosopo/database@4.0.25
+  - @prosopo/keyring@2.9.82
+  - @prosopo/server@2.11.4
+
+## 2.7.150
+### Patch Changes
+
+- Updated dependencies [0a88895]
+  - @prosopo/database@4.0.24
+  - @prosopo/types@5.5.1
+  - @prosopo/keyring@2.9.81
+  - @prosopo/server@2.11.3
+
 ## 2.7.149
 ### Patch Changes
 

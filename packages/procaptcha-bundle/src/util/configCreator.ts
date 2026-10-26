@@ -15,23 +15,39 @@
 import type { Languages } from "@prosopo/locale";
 import {
 	EnvironmentTypesSchema,
+	type PlacementType,
 	type ProcaptchaClientConfigOutput,
 	ProcaptchaConfigSchema,
+	resolvePlacement,
 } from "@prosopo/types";
 
+interface CreateConfigOptions {
+	siteKey?: string;
+	theme?: "light" | "dark";
+	language?: (typeof Languages)[keyof typeof Languages];
+	web2?: boolean;
+	invisible?: boolean;
+	placement?: PlacementType;
+	userAccountAddress?: string;
+	ipv4?: boolean;
+	ipv6?: boolean;
+}
+
 function createConfig(
-	siteKey?: string,
-	theme: "light" | "dark" = "light",
-	language?: (typeof Languages)[keyof typeof Languages],
-	web2 = true,
-	invisible = false,
-	userAccountAddress?: string,
-	ipv4 = false,
-	ipv6 = false,
+	options: CreateConfigOptions = {},
 ): ProcaptchaClientConfigOutput {
-	if (!siteKey) {
-		siteKey = process.env.PROSOPO_SITE_KEY || "";
-	}
+	const {
+		theme = "light",
+		language,
+		web2 = true,
+		invisible = false,
+		placement,
+		userAccountAddress,
+		ipv4 = false,
+		ipv6 = false,
+	} = options;
+
+	const siteKey = options.siteKey || process.env.PROSOPO_SITE_KEY || "";
 
 	return ProcaptchaConfigSchema.parse({
 		defaultEnvironment: process.env.PROSOPO_DEFAULT_ENVIRONMENT
@@ -45,6 +61,7 @@ function createConfig(
 		mongoAtlasUri: process.env.PROSOPO_MONGO_EVENTS_URI || "",
 		web2,
 		mode: invisible ? "invisible" : "visible",
+		placement: resolvePlacement(placement, invisible),
 		theme,
 		language,
 		ipv4,
@@ -53,3 +70,4 @@ function createConfig(
 }
 
 export { createConfig };
+export type { CreateConfigOptions };

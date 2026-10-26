@@ -8,4 +8,4 @@ Let every widget on a page share one detector-bundle assignment instead of only 
 
 Sharing is sound: `detectorSessionId` binds to a `bundleId` in Redis purely so the provider can resolve which cipher keys decrypt that widget's SIMD readings. Widgets sharing an assignment run the same bundle, so those are the right keys — it is a lookup, not a one-shot token.
 
-The guarantee the removal existed for is kept by two narrower mechanisms: a prefetch that rejects drops itself from the map, so no later widget inherits a failed pin, and entries go stale after 60s so a widget mounting much later re-resolves rather than reusing an aged provider pin. Retries were never affected either way — `customDetectBot` only claims on a first attempt.
+The guarantee the removal existed for is kept by two narrower mechanisms: a prefetch that rejects drops itself from the map, so no later widget inherits a failed pin, and entries go stale after 60s, so a widget rendered much later starts a fresh prefetch rather than reusing an aged provider pin. Retries were never affected either way — `customDetectBot` only claims on a first attempt.

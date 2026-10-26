@@ -19,15 +19,42 @@ enum CaptchaType {
 	pow = "pow",
 	frictionless = "frictionless",
 	puzzle = "puzzle",
+	audio = "audio",
+	iconOrder = "iconOrder",
+	// Web Bot Auth verified — no user-facing challenge. Issued only by the
+	// frictionless flow when the request carried a valid Ed25519 signature
+	// per RFC 9421 / draft-meunier-web-bot-auth AND no operator-authored
+	// Block/Restrict rule matched the verified Signature-Agent URL. The
+	// widget renders a "Verified agent" badge and auto-submits the token.
+	// The captcha record carries `webBotAuthAgent` + `clientIp` so the
+	// verify path can enforce IP binding.
+	authenticated = "authenticated",
 }
 
 const CaptchaTypeSchema = z.nativeEnum(CaptchaType);
 
-// Decision machines only work with pow and image captcha types (not frictionless)
+// Decision machines only work with the concrete challenge types.
+// Frictionless is the outer flow that dispatches to these; authenticated
+// is a pre-verified pass-through and has no scoring surface.
 const DecisionMachineCaptchaTypeSchema = z.union([
 	z.literal(CaptchaType.pow),
 	z.literal(CaptchaType.image),
 	z.literal(CaptchaType.puzzle),
+	z.literal(CaptchaType.audio),
+	z.literal(CaptchaType.iconOrder),
 ]);
 
-export { CaptchaType, CaptchaTypeSchema, DecisionMachineCaptchaTypeSchema };
+// What a site, access rule or traffic category may select. Audio is only the
+// accessibility alternative, so a record naming it is rejected on write.
+const SelectableCaptchaTypeSchema = CaptchaTypeSchema.refine(
+	// `boolean`, not an inferred type predicate, so the output stays `CaptchaType`.
+	(captchaType): boolean => captchaType !== CaptchaType.audio,
+	{ message: "audio is only served as an accessibility alternative" },
+);
+
+export {
+	CaptchaType,
+	CaptchaTypeSchema,
+	DecisionMachineCaptchaTypeSchema,
+	SelectableCaptchaTypeSchema,
+};

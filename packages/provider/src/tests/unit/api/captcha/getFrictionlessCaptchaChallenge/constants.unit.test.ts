@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import {
+	CaptchaType,
 	frictionlessImageThresholdDefault,
 	frictionlessPuzzleThresholdDefault,
 } from "@prosopo/types";
@@ -20,9 +21,9 @@ import { describe, expect, it } from "vitest";
 import {
 	DEFAULT_FRICTIONLESS_THRESHOLD,
 	MAX_DETECTOR_EXTRA_IMAGE_ROUNDS,
-	getRoundsFromSimScore,
 	getRoundsFromTriggeredDetectors,
 	resolveScoreLadder,
+	resolveSiteAllowedCaptchaTypes,
 } from "../../../../../api/captcha/getFrictionlessCaptchaChallenge/constants.js";
 
 describe("getFrictionlessCaptchaChallenge/constants", () => {
@@ -86,38 +87,6 @@ describe("getFrictionlessCaptchaChallenge/constants", () => {
 		});
 	});
 
-	describe("getRoundsFromSimScore", () => {
-		const cases: Array<[number, number]> = [
-			[1.0, 0],
-			[0.9, 0],
-			[0.89, 3],
-			[0.8, 3],
-			[0.79, 4],
-			[0.7, 4],
-			[0.69, 6],
-			[0.6, 6],
-			[0.59, 7],
-			[0.5, 7],
-			[0.49, 8],
-			[0, 8],
-		];
-		for (const [sim, rounds] of cases) {
-			it(`maps sim=${sim} → ${rounds} rounds`, () => {
-				expect(getRoundsFromSimScore(sim)).toBe(rounds);
-			});
-		}
-
-		it("is monotonically non-decreasing as similarity decreases", () => {
-			// Iterate by integer percentage to avoid floating-point drift.
-			let last = -Number.POSITIVE_INFINITY;
-			for (let pct = 100; pct >= 0; pct -= 5) {
-				const rounds = getRoundsFromSimScore(pct / 100);
-				expect(rounds).toBeGreaterThanOrEqual(last);
-				last = rounds;
-			}
-		});
-	});
-
 	describe("getRoundsFromTriggeredDetectors", () => {
 		it("returns the baseline when the detector found nothing", () => {
 			expect(getRoundsFromTriggeredDetectors(2, [])).toBe(2);
@@ -147,5 +116,78 @@ describe("getFrictionlessCaptchaChallenge/constants", () => {
 				last = rounds;
 			}
 		});
+	});
+});
+
+describe("resolveSiteAllowedCaptchaTypes", () => {
+	it("allows image and puzzle, but not icon-order, on a site with nothing configured", () => {
+		expect(resolveSiteAllowedCaptchaTypes({})).toEqual({
+			image: true,
+			puzzle: true,
+			iconOrder: false,
+		});
+	});
+
+	it("applies the owner's frictionlessTypes on a frictionless site", () => {
+		expect(
+			resolveSiteAllowedCaptchaTypes({
+				captchaType: CaptchaType.frictionless,
+				frictionlessTypes: { image: false, puzzle: true, iconOrder: true },
+			}),
+		).toEqual({ image: false, puzzle: true, iconOrder: false });
+	});
+
+	it("ignores frictionlessTypes on a site pinned to a concrete type", () => {
+		expect(
+			resolveSiteAllowedCaptchaTypes({
+				captchaType: CaptchaType.image,
+				frictionlessTypes: { image: false, puzzle: false, iconOrder: true },
+			}),
+		).toEqual({ image: true, puzzle: true, iconOrder: false });
+	});
+
+	it("holds a site pinned to icon-order to the icon-order feature flag alone", () => {
+		expect(
+			resolveSiteAllowedCaptchaTypes({
+				captchaType: CaptchaType.iconOrder,
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+			}).iconOrder,
+		).toBe(false);
+		expect(
+			resolveSiteAllowedCaptchaTypes({
+				captchaType: CaptchaType.iconOrder,
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: false },
+				captchaTypeFeatureFlags: { iconOrder: true },
+			}).iconOrder,
+		).toBe(true);
+	});
+
+	it("applies the puzzle feature flag on a site pinned to puzzle", () => {
+		expect(
+			resolveSiteAllowedCaptchaTypes({
+				captchaType: CaptchaType.puzzle,
+				captchaTypeFeatureFlags: { puzzle: false },
+			}),
+		).toEqual({ image: true, puzzle: false, iconOrder: false });
+	});
+
+	it("applies the puzzle feature flag on a frictionless site", () => {
+		expect(
+			resolveSiteAllowedCaptchaTypes({
+				captchaType: CaptchaType.frictionless,
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: true },
+				captchaTypeFeatureFlags: { puzzle: false },
+			}),
+		).toEqual({ image: true, puzzle: false, iconOrder: false });
+	});
+
+	it("applies the owner's icon-order preference on a frictionless site with the flag on", () => {
+		expect(
+			resolveSiteAllowedCaptchaTypes({
+				captchaType: CaptchaType.frictionless,
+				frictionlessTypes: { image: true, puzzle: true, iconOrder: false },
+				captchaTypeFeatureFlags: { iconOrder: true },
+			}).iconOrder,
+		).toBe(false);
 	});
 });

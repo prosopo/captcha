@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { LanguageSchema } from "@prosopo/locale";
+import { LanguageCodes } from "@prosopo/locale";
 import type { input } from "zod";
 import { array, literal } from "zod";
 import { number } from "zod";
@@ -23,6 +23,7 @@ import { union } from "zod";
 import type { infer as zInfer } from "zod";
 import z, { boolean } from "zod";
 import { Mode, ModeEnum } from "./mode.js";
+import { type StartMode, StartModeEnum, StartModes } from "./startMode.js";
 export { Mode, ModeEnum };
 export type { ModeType } from "./mode.js";
 import {
@@ -39,7 +40,15 @@ import {
 	PENALTY_UNVERIFIED_HOST_DEFAULT,
 	PENALTY_WEBVIEW_DEFAULT,
 } from "./frictionless.js";
+// Re-exported to consumers by ./index.js, not from here.
+import { PlacementEnum, type PlacementType, Placements } from "./placement.js";
 import {
+	DEFAULT_AUDIO_CAPTCHA_CACHED_TIMEOUT,
+	DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_AUDIO_CAPTCHA_VERIFIED_TIMEOUT,
+	DEFAULT_ICON_ORDER_CAPTCHA_CACHED_TIMEOUT,
+	DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT,
+	DEFAULT_ICON_ORDER_CAPTCHA_VERIFIED_TIMEOUT,
 	DEFAULT_IMAGE_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_IMAGE_CAPTCHA_TIMEOUT,
 	DEFAULT_IMAGE_CAPTCHA_VERIFIED_TIMEOUT,
@@ -48,6 +57,7 @@ import {
 	DEFAULT_POW_CAPTCHA_CACHED_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_POW_CAPTCHA_VERIFIED_TIMEOUT,
+	DEFAULT_PROVIDER_REQUEST_TIMEOUT_MS,
 	DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT,
 	DEFAULT_PUZZLE_CAPTCHA_SOLUTION_TIMEOUT,
 	DEFAULT_PUZZLE_CAPTCHA_VERIFIED_TIMEOUT,
@@ -173,6 +183,18 @@ const defaultPuzzleCaptchaTimeouts = {
 	cachedTimeout: DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT,
 };
 
+const defaultAudioCaptchaTimeouts = {
+	verifiedTimeout: DEFAULT_AUDIO_CAPTCHA_VERIFIED_TIMEOUT,
+	solutionTimeout: DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT,
+	cachedTimeout: DEFAULT_AUDIO_CAPTCHA_CACHED_TIMEOUT,
+};
+
+const defaultIconOrderCaptchaTimeouts = {
+	verifiedTimeout: DEFAULT_ICON_ORDER_CAPTCHA_VERIFIED_TIMEOUT,
+	solutionTimeout: DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT,
+	cachedTimeout: DEFAULT_ICON_ORDER_CAPTCHA_CACHED_TIMEOUT,
+};
+
 const defaultContractCaptchaTimeouts = {
 	maxVerifiedTime: DEFAULT_MAX_VERIFIED_TIME_CONTRACT,
 };
@@ -181,6 +203,8 @@ const defaultCaptchaTimeouts = {
 	image: defaultImageCaptchaTimeouts,
 	pow: defaultPoWCaptchaTimeouts,
 	puzzle: defaultPuzzleCaptchaTimeouts,
+	audio: defaultAudioCaptchaTimeouts,
+	iconOrder: defaultIconOrderCaptchaTimeouts,
 	contract: defaultContractCaptchaTimeouts,
 };
 
@@ -233,6 +257,34 @@ export const CaptchaTimeoutSchema = object({
 			.optional()
 			.default(DEFAULT_PUZZLE_CAPTCHA_CACHED_TIMEOUT),
 	}).default(defaultPuzzleCaptchaTimeouts),
+	audio: object({
+		verifiedTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_AUDIO_CAPTCHA_VERIFIED_TIMEOUT),
+		solutionTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_AUDIO_CAPTCHA_SOLUTION_TIMEOUT),
+		cachedTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_AUDIO_CAPTCHA_CACHED_TIMEOUT),
+	}).default(defaultAudioCaptchaTimeouts),
+	iconOrder: object({
+		verifiedTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_ICON_ORDER_CAPTCHA_VERIFIED_TIMEOUT),
+		solutionTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_ICON_ORDER_CAPTCHA_SOLUTION_TIMEOUT),
+		cachedTimeout: number()
+			.positive()
+			.optional()
+			.default(DEFAULT_ICON_ORDER_CAPTCHA_CACHED_TIMEOUT),
+	}).default(defaultIconOrderCaptchaTimeouts),
 	contract: object({
 		maxVerifiedTime: number()
 			.positive()
@@ -249,6 +301,13 @@ export const ProsopoServerConfigSchema = ProsopoClientConfigSchema.merge(
 	object({
 		serverUrl: string().url().optional(),
 		timeouts: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
+		// How long a verify call to the provider may take before it fails, so a
+		// stalled provider cannot hold the site owner's request open.
+		providerRequestTimeoutMs: number()
+			.int()
+			.positive()
+			.optional()
+			.default(DEFAULT_PROVIDER_REQUEST_TIMEOUT_MS),
 	}),
 );
 
@@ -275,6 +334,15 @@ export type ProsopoClientConfigOutput = output<
 	typeof ProsopoClientConfigSchema
 >;
 
+// Built here rather than exported from @prosopo/locale: that package is on the
+// widget's critical path, and a zod enum of language codes would put the whole
+// of zod there for a list of strings.
+const LanguageSchema = zEnum(LanguageCodes as [string, ...string[]]);
+
+const StartModeSchema = zEnum(StartModes as [StartMode, ...StartMode[]]);
+
+const Placement = zEnum(Placements as [PlacementType, ...PlacementType[]]);
+
 const ThemeType = union([literal("light"), literal("dark")]);
 
 export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
@@ -283,6 +351,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		captchas: CaptchaTimeoutSchema.optional().default(defaultCaptchaTimeouts),
 		language: LanguageSchema.optional(),
 		mode: Mode.optional().default(ModeEnum.visible),
+		placement: Placement.optional().default(PlacementEnum.popup),
 		// Restrict provider DNS resolution. When both are unset providers stay
 		// dual-stack. `ipv4` wins if both are true.
 		ipv4: boolean().optional(),
@@ -293,6 +362,7 @@ export const ProcaptchaConfigSchema = ProsopoClientConfigSchema.and(
 		// call can correlate it. Named `clientSessionId` here to keep it clear
 		// of the provider's own frictionless `sessionId`.
 		clientSessionId: string().optional(),
+		startMode: StartModeSchema.optional().default(StartModeEnum.auto),
 	}),
 );
 

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { ProviderApi } from "@prosopo/api";
-import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	CaptchaMerkleTree,
 	computeCaptchaSolutionHash,
@@ -82,8 +82,11 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 
 			return captchaChallenge;
 		} catch (error) {
-			throw new ProsopoEnvError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
-				context: { error },
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "PCAP-15",
+				message: "Invalid captcha challenge",
+				cause: error,
 			});
 		}
 	}
@@ -102,7 +105,10 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 		// overflows the stack, so an empty solution set has to be rejected here
 		// rather than by inspecting the resulting tree.
 		if (solutions.length === 0) {
-			throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "PCAP-16",
+				message: "Invalid captcha challenge",
 				context: { error: "No captcha solutions to commit to" },
 			});
 		}
@@ -135,8 +141,11 @@ export class ProsopoCaptchaApi implements ProcaptchaApiInterface {
 				clientMetaData,
 			);
 		} catch (error) {
-			throw new ProsopoDatasetError("CAPTCHA.INVALID_CAPTCHA_CHALLENGE", {
-				context: { error },
+			throw new ProsopoError({
+				code: "INVALID_DATA",
+				errorSite: "PCAP-17",
+				message: "Invalid captcha challenge",
+				cause: error,
 			});
 		}
 
