@@ -19,7 +19,7 @@
 	"dependencies": {
 		"@actions/core": "3.0.1",
 		"@actions/github": "9.1.1",
-		"undici": "8.12.0"
+		"undici": "8.12.2"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
