@@ -20,6 +20,7 @@ import {
 	CaptchaType,
 	type ClickEventPoint,
 	type ClientMetaData,
+	DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT,
 	type EnvironmentTypes,
 	type FrictionlessState,
 	type GetPowCaptchaResponse,
@@ -77,6 +78,8 @@ import {
  */
 const mocks = vi.hoisted(() => {
 	const providerApiConstructions: { url: string; siteKey: string }[] = [];
+	const providerApiHeaders: (Readonly<Record<string, string>> | undefined)[] =
+		[];
 	const getPowCaptchaChallenge =
 		vi.fn<
 			(
@@ -105,8 +108,14 @@ const mocks = vi.hoisted(() => {
 	class ProviderApiMock {
 		public getPowCaptchaChallenge = getPowCaptchaChallenge;
 		public submitPowCaptchaSolution = submitPowCaptchaSolution;
-		constructor(url: string, siteKey: string) {
+		constructor(
+			url: string,
+			siteKey: string,
+			_timeoutMs?: number,
+			defaultHeaders?: Readonly<Record<string, string>>,
+		) {
 			providerApiConstructions.push({ url, siteKey });
+			providerApiHeaders.push(defaultHeaders);
 		}
 	}
 
@@ -132,6 +141,7 @@ const mocks = vi.hoisted(() => {
 
 	return {
 		providerApiConstructions,
+		providerApiHeaders,
 		getPowCaptchaChallenge,
 		submitPowCaptchaSolution,
 		ProviderApiMock,
@@ -201,6 +211,7 @@ interface Harness {
 		onHuman: Mock<(token: string) => void>;
 		onFailed: Mock<() => void>;
 		onExpired: Mock<() => void>;
+		onChallengeExpired: Mock<() => void>;
 		onReset: Mock<() => void>;
 	};
 	onEscalate: Mock<ProcaptchaEscalationHandler>;
@@ -229,6 +240,7 @@ const build = (options: HarnessOptions = {}): Harness => {
 		onHuman: vi.fn<(token: string) => void>(),
 		onFailed: vi.fn<() => void>(),
 		onExpired: vi.fn<() => void>(),
+		onChallengeExpired: vi.fn<() => void>(),
 		onReset: vi.fn<() => void>(),
 	};
 	const restart = vi.fn<() => void>();
@@ -277,11 +289,22 @@ const submitArgs = (
 	return call;
 };
 
+/** Makes the proof-of-work solve take `solveTime` ms on a stubbed clock. */
+const slowSolve = (solveTime: number) => {
+	let clock = 1_700_000_000_000;
+	mocks.solvePoW.mockImplementation(async (): Promise<number> => {
+		clock += solveTime;
+		return 42;
+	});
+	return vi.spyOn(Date, "now").mockImplementation((): number => clock);
+};
+
 const signRaw = signRawMock;
 
 beforeEach(() => {
 	vi.clearAllMocks();
 	mocks.providerApiConstructions.length = 0;
+	mocks.providerApiHeaders.length = 0;
 	signRaw.mockResolvedValue({ id: 1, signature: "0xuser-signature" });
 	mocks.getAccount.mockResolvedValue(account(signRaw));
 	mocks.extensionLoader.mockResolvedValue(mocks.ExtensionMock);
@@ -410,6 +433,22 @@ describe("start: getting to a challenge", () => {
 });
 
 describe("start: choosing a provider", () => {
+	test("sends the site's language to the provider", async () => {
+		vi.stubGlobal("navigator", { languages: ["de"] });
+		const harness = build({ configInput: config({ language: "tr" }) });
+		await harness.manager.start();
+		vi.unstubAllGlobals();
+		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr" }]);
+	});
+
+	test("sends the browser's languages when the site set none", async () => {
+		vi.stubGlobal("navigator", { languages: ["tr-TR", "en"] });
+		const harness = build();
+		await harness.manager.start();
+		vi.unstubAllGlobals();
+		expect(mocks.providerApiHeaders).toEqual([{ "Prosopo-Lang": "tr-TR,en" }]);
+	});
+
 	test("uses the provider the frictionless session already picked", async () => {
 		const harness = build();
 		await harness.manager.start();
@@ -513,16 +552,18 @@ describe("start: the challenge request", () => {
 		mocks.getPowCaptchaChallenge.mockResolvedValue(
 			challengeResponse({
 				error: {
+					code: "NO_SESSION_FOUND",
+					errorId: "NO_SESSION_FOUND:PROV-1",
+					status: 400,
 					message: "no session",
-					key: "CAPTCHA.NO_SESSION_FOUND",
-					code: 400,
 				},
 			}),
 		);
 		await harness.manager.start();
-		expect(lastUpdate(harness, "error")).toEqual({
+		expect(lastUpdate(harness, "error")).toMatchObject({
+			code: "NO_SESSION_FOUND",
+			errorId: "NO_SESSION_FOUND:PROV-1",
 			message: "no session",
-			key: "CAPTCHA.NO_SESSION_FOUND",
 		});
 		expect(lastUpdate(harness, "loading")).toBe(false);
 		expect(mocks.solvePoW).not.toHaveBeenCalled();
@@ -531,17 +572,25 @@ describe("start: the challenge request", () => {
 		expect(harness.events.onHuman).not.toHaveBeenCalled();
 	});
 
-	test("an error with no key is still reported under a known key", async () => {
+	test("a hidden provider error is reported with its errorId", async () => {
 		// The widget switches on the key; an undefined one would fall through
 		// every branch that handles a specific failure.
 		const harness = build();
 		mocks.getPowCaptchaChallenge.mockResolvedValue(
-			challengeResponse({ error: { message: "boom", code: 500 } }),
+			challengeResponse({
+				error: {
+					code: "BACKEND_ERROR",
+					errorId: "BACKEND_ERROR:PROV-1",
+					status: 500,
+					message: "boom",
+				},
+			}),
 		);
 		await harness.manager.start();
-		expect(lastUpdate(harness, "error")).toEqual({
+		expect(lastUpdate(harness, "error")).toMatchObject({
+			code: "BACKEND_ERROR",
+			errorId: "BACKEND_ERROR:PROV-1",
 			message: "boom",
-			key: "API.UNKNOWN_ERROR",
 		});
 	});
 });
@@ -904,6 +953,37 @@ describe("start: what the provider decides", () => {
 		expect(harness.restart).toHaveBeenCalledTimes(1);
 	});
 
+	test("a disposed manager never expires the solve", async () => {
+		vi.useFakeTimers();
+		const harness = build();
+		await harness.manager.start();
+		harness.events.onReset.mockClear();
+		harness.manager.dispose();
+		vi.runOnlyPendingTimers();
+		expect(harness.events.onExpired).not.toHaveBeenCalled();
+		expect(harness.events.onReset).not.toHaveBeenCalled();
+		expect(harness.restart).not.toHaveBeenCalled();
+	});
+
+	test("a solve that lands after dispose schedules no expiry", async () => {
+		vi.useFakeTimers();
+		const harness = build();
+		harness.manager.dispose();
+		await harness.manager.start();
+		harness.events.onReset.mockClear();
+		vi.runOnlyPendingTimers();
+		expect(harness.events.onExpired).not.toHaveBeenCalled();
+		expect(harness.restart).not.toHaveBeenCalled();
+	});
+
+	test("a solve that lands after dispose never reaches the site", async () => {
+		const harness = build();
+		harness.manager.dispose();
+		await harness.manager.start();
+		expect(harness.events.onHuman).not.toHaveBeenCalled();
+		expect(harness.events.onFailed).not.toHaveBeenCalled();
+	});
+
 	test("an unverified solution fails the user and resets the session", async () => {
 		const harness = build();
 		mocks.submitPowCaptchaSolution.mockResolvedValue(
@@ -915,6 +995,36 @@ describe("start: what the provider decides", () => {
 		expect(lastUpdate(harness, "loading")).toBe(false);
 		expect(harness.restart).toHaveBeenCalledTimes(1);
 		expect(harness.events.onHuman).not.toHaveBeenCalled();
+	});
+
+	test("a solution rejected after a solve slower than the solution window reports an expired challenge", async () => {
+		const harness = build();
+		const solveTime = DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT;
+		const now = slowSolve(solveTime);
+		mocks.submitPowCaptchaSolution.mockResolvedValue(
+			solutionResponse({ verified: false }),
+		);
+		await harness.manager.start();
+		now.mockRestore();
+		expect(harness.events.onChallengeExpired).toHaveBeenCalledTimes(1);
+		expect(harness.events.onFailed).not.toHaveBeenCalled();
+		expect(lastUpdate(harness, "isHuman")).toBe(false);
+		expect(lastUpdate(harness, "loading")).toBe(false);
+		expect(lastUpdate(harness, "error")).toBeUndefined();
+		expect(harness.restart).toHaveBeenCalledTimes(1);
+	});
+
+	test("a solution rejected within the solution window still fails the user", async () => {
+		const harness = build();
+		const solveTime = DEFAULT_POW_CAPTCHA_SOLUTION_TIMEOUT - 1;
+		const now = slowSolve(solveTime);
+		mocks.submitPowCaptchaSolution.mockResolvedValue(
+			solutionResponse({ verified: false }),
+		);
+		await harness.manager.start();
+		now.mockRestore();
+		expect(harness.events.onFailed).toHaveBeenCalledTimes(1);
+		expect(harness.events.onChallengeExpired).not.toHaveBeenCalled();
 	});
 
 	test("an escalation hands over without declaring success or failure", async () => {

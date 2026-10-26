@@ -13,9 +13,10 @@
 // limitations under the License.
 
 import initializeI18n from "./i18nFrontend.js";
+import { NAMESPACES, type WidgetTranslationKey } from "./translationKey.js";
 import type { Ti18n, TranslateOptions } from "./types.js";
 
-const NAMESPACE = "translation";
+const NAMESPACE = NAMESPACES.widget;
 
 export interface Translator {
 	/**
@@ -23,7 +24,7 @@ export interface Translator {
 	 * interpolation values and the `defaultValue` a widget falls back to when
 	 * its key has not been added to the bundled catalogues yet.
 	 */
-	t(key: string, options?: TranslateOptions): string;
+	t(key: WidgetTranslationKey, options?: TranslateOptions): string;
 	/**
 	 * Whether the namespace for the active language has finished loading.
 	 * Mirrors `ready` from the old react-i18next hook: widgets render an empty
@@ -49,7 +50,7 @@ export const createTranslator = (existing?: Ti18n): Translator => {
 		i18n.isInitialized && i18n.hasLoadedNamespace(NAMESPACE);
 
 	return {
-		t: (key: string, options?: TranslateOptions): string =>
+		t: (key: WidgetTranslationKey, options?: TranslateOptions): string =>
 			i18n.t(key, options),
 		isReady,
 		i18n,

@@ -1,4 +1,4 @@
-import { ProsopoCliError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { LogLevel, getLogger } from "@prosopo/logger";
 import yargs, { type ArgumentsCamelCase, type Argv } from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -61,7 +61,9 @@ export class Cli {
 				"default command",
 				(y: Argv) => y,
 				() => {
-					throw new ProsopoCliError("CLI.PARAMETER_ERROR", {
+					throw new ProsopoError({
+						code: "CLI_INVALID_ARGUMENT",
+						errorSite: "DSFS-1",
 						context: { error: "no command specified" },
 					});
 				},

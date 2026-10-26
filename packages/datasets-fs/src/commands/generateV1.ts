@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import fs from "node:fs";
-import { ProsopoDatasetError, ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import {
 	CaptchaTypes,
 	type CaptchaWithoutId,
@@ -84,12 +84,11 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
 			bar.increment();
 
 			if (this.targets.length <= 1) {
-				throw new ProsopoDatasetError(
-					new Error("not enough different labels in labelled data"),
-					{
-						translationKey: "DATASET.NOT_ENOUGH_LABELS",
-					},
-				);
+				throw new ProsopoError({
+					code: "DATASET_INVALID",
+					errorSite: "DSFS-6",
+					message: "not enough different labels in labelled data",
+				});
 			}
 
 			// uniformly sample targets
@@ -107,20 +106,18 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
 			);
 
 			if (targetItems.length < nCorrect) {
-				throw new ProsopoEnvError(
-					new Error(`not enough images for target (${target})`),
-					{
-						translationKey: "DATASET.NOT_ENOUGH_IMAGES",
-					},
-				);
+				throw new ProsopoError({
+					code: "DATASET_INVALID",
+					errorSite: "DSFS-7",
+					message: `not enough images for target (${target})`,
+				});
 			}
 			if (notTargetItems.length < nIncorrect) {
-				throw new ProsopoDatasetError(
-					new Error(`not enough non-matching images for target (${target})`),
-					{
-						translationKey: "DATASET.NOT_ENOUGH_IMAGES",
-					},
-				);
+				throw new ProsopoError({
+					code: "DATASET_INVALID",
+					errorSite: "DSFS-8",
+					message: `not enough non-matching images for target (${target})`,
+				});
 			}
 
 			// get the correct items
@@ -180,22 +177,20 @@ export class GenerateV1 extends Generate<ArgsSchemaType> {
 		for (let i = 0; i < unsolved; i++) {
 			bar.increment();
 			if (this.unlabelled.length <= size) {
-				throw new ProsopoDatasetError(
-					new Error("unlabelled map file does not contain enough data"),
-					{
-						translationKey: "DATASET.NOT_ENOUGH_IMAGES",
-					},
-				);
+				throw new ProsopoError({
+					code: "DATASET_INVALID",
+					errorSite: "DSFS-9",
+					message: "unlabelled map file does not contain enough data",
+				});
 			}
 			// pick a random label to be the target
 			// note that these are potentially different to the labelled data labels
 			if (this.labels.length <= 0) {
-				throw new ProsopoDatasetError(
-					new Error("no labels found for unlabelled data"),
-					{
-						translationKey: "DATASET.NOT_ENOUGH_LABELS",
-					},
-				);
+				throw new ProsopoError({
+					code: "DATASET_INVALID",
+					errorSite: "DSFS-10",
+					message: "no labels found for unlabelled data",
+				});
 			}
 			const index = _.random(0, this.labels.length - 1);
 			const target = at(this.labels, index);

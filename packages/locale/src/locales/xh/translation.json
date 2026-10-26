@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Ayikwazanga ukufaka ikhowudi kwidilesi engasebenziyo",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Isibophelelo sesisombululo se-captcha asikho",
+		"SIGNER_UNDEFINED": "Umtyikityi akachazwanga",
+		"CANNOT_FIND_KEYPAIR": "Ayikwazi ukufumana i-keypair",
+		"INVALID_DATA_FORMAT": "Ifomathi yedatha engasebenziyo"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Kuceliwe okusingqongileyo okungaziwayo",
+		"INVALID_CAPTCHA_NUMBER": "Nceda uqwalasele useto lwe-captcha ngokuchanekileyo",
+		"INVALID_LOG_LEVEL": "Inqanaba lelogi elingasebenziyo",
+		"INVALID_PACKAGE_DIR": "Uvimba weefayile wephakheji ongasebenziyo"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Impazamo ekuhlalutyeni iseti yedatha",
+		"SOLUTION_PARSE_ERROR": "Impazamo ekulungiseni iseti yedatha",
+		"HASH_ERROR": "Impazamo ekwenzeni i-hash yeseti yedatha",
+		"DATASET_ID_UNDEFINED": "I-ID yeseti yedatha ayichazwanga",
+		"NOT_ENOUGH_LABELS": "Iileyibhile azonelanga",
+		"NOT_ENOUGH_IMAGES": "Imifanekiso ayonelanga",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Inani lee-captcha kwiseti yedatha lingaphantsi kwenani eliqwalaselweyo",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Inani lezisombululo kwiseti yedatha lingaphantsi kwenani eliqwalaselweyo",
+		"DUPLICATE_IMAGE": "Kufunyenwe umfanekiso ophindiweyo",
+		"MERKLE_ERROR": "Impazamo ekwakheni umthi we-Merkle"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Ayikwazanga ukungenisa injini yovimba wedatha",
+		"DATABASE_UNDEFINED": "Umthengi wovimba wedatha akaqhagamshelwanga",
+		"DATABASE_HOST_UNDEFINED": "Idilesi yomamkeli wovimba wedatha ayichazwanga",
+		"DATASET_LOAD_FAILED": "Ukulayishwa kweseti yedatha kusilele",
+		"DATASET_GET_FAILED": "Ayikwazanga ukufumana iseti yedatha",
+		"CAPTCHA_GET_FAILED": "Ayikwazanga ukufumana ii-captcha",
+		"CAPTCHA_UPDATE_FAILED": "Ayikwazanga ukuhlaziya ii-captcha",
+		"IMAGE_GET_FAILED": "Ayikwazanga ukufumana umfanekiso",
+		"PENDING_RECORD_NOT_FOUND": "Akukho zirekhodi zilindileyo zifumanekileyo",
+		"INVALID_HASH": "I-hash engasebenziyo",
+		"SOLUTION_GET_FAILED": "Ayikwazanga ukufumana isisombululo",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Akukho seti yedatha inenani elifunekayo lezisombululo ifumanekileyo",
+		"SOLUTION_APPROVE_FAILED": "Ayikwazanga ukwamkela isisombululo",
+		"SOLUTION_FLAG_FAILED": "Ayikwazanga ukuphawula isisombululo njengesiqhutyiweyo",
+		"TABLES_UNDEFINED": "Iitheyibhile azichazwanga",
+		"CONNECTION_UNDEFINED": "Uqhagamshelo aluchazwanga",
+		"COMMITMENT_FLAG_FAILED": "Ayikwazanga ukuphawula isibophelelo njengesiqhutyiweyo",
+		"UNKNOWN": "Impazamo yovimba wedatha engaziwayo",
+		"QUERY_ERROR": "Umbuzo kovimba wedatha usilele",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Uqhagamshelo lwe-Redis lwemigaqo yokufikelela aluchazwanga",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Ivenkile yemigaqo yokufikelela yomsebenzisi ayichazwanga",
+		"SESSION_STORE_FAILED": "Ayikwazanga ukugcina iseshoni",
+		"SESSION_CHECK_REMOVE_FAILED": "Ayikwazanga ukujonga nokususa iseshoni",
+		"SESSION_GET_FAILED": "Ayikwazanga ukufumana iseshoni"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Awukwazi ukutshintsha umsebenzisi ongumnini",
+		"CANNOT_DELETE_OWN_USER": "Awukwazi ukucima i-akhawunti yakho",
+		"CANNOT_DELETE_LAST_USER": "Awukwazi ukucima umsebenzisi wokugqibela",
+		"USER_ALREADY_EXISTS": "Umsebenzisi sele ekhona",
+		"NO_SUGGESTIONS_FOUND": "Akukho zindululo zifumanekileyo",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Awukwazi ukuvala isayithi yokugqibela esebenzayo",
+		"DUPLICATE_SITE_NAME": "Isayithi enelo gama sele ikhona",
+		"INVALID_SITE_NAME": "Igama lesayithi linokuqulatha kuphela oonobumba, amanani, ii-underscore nee-hyphen"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Iparamitha engasebenziyo"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Ifayile ayifumanekanga",
+		"FILE_ALREADY_EXISTS": "Ifayile sele ikhona",
+		"INVALID_DIR_FORMAT": "Ifomathi kavimba weefayile engasebenziyo"
+	}
+}

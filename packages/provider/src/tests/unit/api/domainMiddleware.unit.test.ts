@@ -12,15 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import type { Server } from "node:http";
+// domainMiddleware is the gate that ties a site key to the origins allowed to
+// use it. These tests drive it through a real express app so the assertions
+// are about what a caller actually gets back: whether the request reaches the
+// route behind the gate, and with which status.
+
+import http from "node:http";
 import type { AddressInfo } from "node:net";
-import { i18nMiddleware } from "@prosopo/locale";
 import { getLogger } from "@prosopo/logger";
-import { ALWAYS_PASS_SITE_KEY } from "@prosopo/types";
+import { ALWAYS_PASS_SITE_KEY, Tier } from "@prosopo/types";
+import {
+	type ClientRecord,
+	ClientRecordSchema,
+	type IProviderDatabase,
+} from "@prosopo/types-database";
 import type { ProviderEnvironment } from "@prosopo/types-env";
-import express, { type Request, type Response } from "express";
+import express from "express";
+import i18next, { type TFunction } from "i18next";
+import mongoose from "mongoose";
 import {
 	afterAll,
+	afterEach,
 	beforeAll,
 	beforeEach,
 	describe,
@@ -28,102 +40,267 @@ import {
 	it,
 	vi,
 } from "vitest";
+import { setMaintenanceMode } from "../../../api/admin/apiToggleMaintenanceModeEndpoint.js";
 import { domainMiddleware } from "../../../api/domainMiddleware.js";
+import type { ClientTaskManager } from "../../../tasks/client/clientTasks.js";
+import { createMockProviderEnvironment } from "../testUtils/mockProviderEnv.js";
 
-const { getClientRecord } = vi.hoisted(() => ({
-	getClientRecord:
-		vi.fn<
-			(
-				siteKey: string,
-			) => Promise<{ settings: { domains: string[] } } | undefined>
-		>(),
-}));
+// The real Tasks wires up every task manager; the middleware only reads the
+// client record and the domain matcher, so the stand-in builds just those —
+// the matcher is the real ClientTaskManager implementation.
+vi.mock("../../../tasks/index.js", async () => {
+	const { ClientTaskManager: RealClientTaskManager } = await import(
+		"../../../tasks/client/clientTasks.js"
+	);
+	class Tasks {
+		db: IProviderDatabase;
+		clientTaskManager: ClientTaskManager;
+		constructor(env: ProviderEnvironment) {
+			this.db = env.getDb();
+			this.clientTaskManager = new RealClientTaskManager(
+				env.config,
+				env.logger,
+				this.db,
+			);
+		}
+	}
+	return { Tasks };
+});
 
-vi.mock("../../../tasks/index.js", () => ({
-	Tasks: class {
-		db = { getClientRecord };
-		clientTaskManager = {
-			domainPatternMatcher: (referrer: string, domain: string): boolean =>
-				new URL(referrer).hostname === domain,
-		};
-	},
-}));
+const SITE_KEY = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
+const OTHER_SITE_KEY = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
 
-// Two valid sr25519 addresses: the attacker's own site key and a victim's.
-const ATTACKER = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY";
-const VICTIM = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty";
+const ClientModel = mongoose.model<ClientRecord>(
+	"DomainMiddlewareTestClient",
+	ClientRecordSchema,
+);
+
+const clientRecord = (domains: string[] | undefined): ClientRecord =>
+	new ClientModel({
+		account: SITE_KEY,
+		tier: Tier.Free,
+		settings: domains === undefined ? undefined : { domains },
+	});
+
+const getClientRecord = vi.fn<IProviderDatabase["getClientRecord"]>();
+
+let server: http.Server;
+let port: number;
+let t: TFunction;
+
+beforeAll(async () => {
+	const i18n = i18next.createInstance();
+	await i18n.init({ lng: "en", resources: {} });
+	t = i18n.t;
+
+	const env = createMockProviderEnvironment();
+	const db = env.getDb();
+	db.getClientRecord = getClientRecord;
+
+	const app = express();
+	app.use(express.json());
+	app.use((req, _res, next) => {
+		req.t = t;
+		req.i18n = i18n;
+		req.logger = getLogger("error", "test:domain-middleware");
+		next();
+	});
+	app.use(domainMiddleware(env));
+	app.post("/", (_req, res) => {
+		res.status(200).json({ reached: true });
+	});
+
+	server = http.createServer(app);
+	await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+	const address: AddressInfo | string | null = server.address();
+	if (address === null || typeof address === "string") {
+		throw new Error("test server did not bind a TCP port");
+	}
+	port = address.port;
+});
+
+afterAll(async () => {
+	await new Promise<void>((resolve) => server.close(() => resolve()));
+});
+
+beforeEach(() => {
+	setMaintenanceMode(false);
+	getClientRecord.mockReset();
+});
+
+afterEach(() => {
+	setMaintenanceMode(false);
+});
+
+interface GateResult {
+	status: number;
+	reached: boolean;
+}
+
+/**
+ * POSTs to the gated route with exactly the given headers. node:http is used
+ * rather than fetch because fetch decides the Origin header for itself.
+ */
+const send = (
+	headers: Record<string, string>,
+	body?: object,
+): Promise<GateResult> =>
+	new Promise<GateResult>((resolve, reject) => {
+		const req = http.request(
+			{
+				host: "127.0.0.1",
+				port,
+				path: "/",
+				method: "POST",
+				headers:
+					body === undefined
+						? headers
+						: { ...headers, "content-type": "application/json" },
+			},
+			(res) => {
+				let body = "";
+				res.setEncoding("utf8");
+				res.on("data", (chunk: string) => {
+					body += chunk;
+				});
+				res.on("end", () => {
+					resolve({
+						status: res.statusCode ?? 0,
+						reached: body.includes('"reached":true'),
+					});
+				});
+			},
+		);
+		req.on("error", reject);
+		req.end(body === undefined ? undefined : JSON.stringify(body));
+	});
+
+const withKey = (origin?: string): Record<string, string> => ({
+	"prosopo-site-key": SITE_KEY,
+	...(origin === undefined ? {} : { origin }),
+});
 
 describe("domainMiddleware", () => {
-	let server: Server;
-	let baseUrl: string;
-
-	beforeAll(async () => {
-		const app = express();
-		app.use(express.json());
-		app.use((req: Request, _res: Response, next) => {
-			req.logger = getLogger("error", "test:domain-middleware");
-			next();
-		});
-		app.use(await i18nMiddleware({}));
-		const env: Partial<ProviderEnvironment> = {};
-		app.use(domainMiddleware(env as ProviderEnvironment));
-		app.post("/client", (_req: Request, res: Response) => {
-			res.json({ reached: true });
-		});
-		server = app.listen(0, "127.0.0.1");
-		await new Promise<void>((resolve) => server.once("listening", resolve));
-		const address: AddressInfo | string | null = server.address();
-		if (address === null || typeof address === "string")
-			throw new Error("test server has no TCP address");
-		baseUrl = `http://127.0.0.1:${address.port}`;
+	it("rejects a request without a site key", async () => {
+		const result = await send({ origin: "https://example.com" });
+		expect(result).toEqual({ status: 400, reached: false });
+		expect(getClientRecord).not.toHaveBeenCalled();
 	});
 
-	afterAll(async () => {
-		await new Promise<void>((resolve) => server.close(() => resolve()));
-	});
-
-	beforeEach(() => {
-		getClientRecord.mockReset();
-		getClientRecord.mockImplementation(async (siteKey: string) =>
-			siteKey === ATTACKER
-				? { settings: { domains: ["attacker.example"] } }
-				: { settings: { domains: ["victim.example"] } },
-		);
-	});
-
-	const post = (
-		headerSiteKey: string,
-		body: object,
-	): Promise<globalThis.Response> =>
-		fetch(`${baseUrl}/client`, {
-			method: "POST",
-			headers: {
-				"content-type": "application/json",
-				origin: "https://attacker.example",
-				"prosopo-site-key": headerSiteKey,
-			},
-			body: JSON.stringify(body),
+	it("rejects a malformed site key before touching the database", async () => {
+		const result = await send({
+			"prosopo-site-key": "not-an-address",
+			origin: "https://example.com",
 		});
+		expect(result).toEqual({ status: 400, reached: false });
+		expect(getClientRecord).not.toHaveBeenCalled();
+	});
+
+	it("lets a reserved test site key through from any origin", async () => {
+		const result = await send({
+			"prosopo-site-key": ALWAYS_PASS_SITE_KEY,
+			origin: "https://anything.invalid",
+		});
+		expect(result).toEqual({ status: 200, reached: true });
+		expect(getClientRecord).not.toHaveBeenCalled();
+	});
+
+	it("rejects a site key with no client record", async () => {
+		getClientRecord.mockResolvedValue(undefined);
+		const result = await send(withKey("https://example.com"));
+		expect(result).toEqual({ status: 400, reached: false });
+		expect(getClientRecord).toHaveBeenCalledWith(SITE_KEY);
+	});
+
+	it("rejects a registered site key that allows no domains", async () => {
+		getClientRecord.mockResolvedValue(clientRecord(undefined));
+		const result = await send(withKey("https://example.com"));
+		expect(result).toEqual({ status: 400, reached: false });
+	});
+
+	it("rejects a request without an Origin header", async () => {
+		getClientRecord.mockResolvedValue(clientRecord(["example.com"]));
+		const result = await send(withKey());
+		expect(result).toEqual({ status: 400, reached: false });
+	});
+
+	it.each([
+		["the exact domain", "https://example.com"],
+		["a subdomain", "https://shop.example.com"],
+		[
+			"the Google Translate proxy of the domain",
+			"https://example-com.translate.goog",
+		],
+	])("allows %s", async (_name: string, origin: string) => {
+		getClientRecord.mockResolvedValue(clientRecord(["example.com"]));
+		const result = await send(withKey(origin));
+		expect(result).toEqual({ status: 200, reached: true });
+	});
+
+	it.each([
+		["another domain", "https://evil.com"],
+		["a lookalike suffix", "https://example.com.evil.com"],
+		["a lookalike prefix", "https://evilexample.com"],
+		[
+			"the Google Translate proxy of another domain",
+			"https://evil-com.translate.goog",
+		],
+		["a null origin", "null"],
+	])("rejects %s", async (_name: string, origin: string) => {
+		getClientRecord.mockResolvedValue(clientRecord(["example.com"]));
+		const result = await send(withKey(origin));
+		expect(result.reached).toBe(false);
+		expect(result.status).toBeGreaterThanOrEqual(400);
+	});
 
 	it("lets a request through when the body site key matches the header", async () => {
-		const res = await post(ATTACKER, { dapp: ATTACKER });
-		expect(res.status).toBe(200);
+		getClientRecord.mockResolvedValue(clientRecord(["example.com"]));
+		const result = await send(withKey("https://example.com"), {
+			dapp: SITE_KEY,
+		});
+		expect(result).toEqual({ status: 200, reached: true });
 	});
 
-	it("rejects a body site key that differs from the origin-checked header", async () => {
-		// The attacker's origin is allowed for their own key only; the handler
-		// would act for the victim's key taken from the body.
-		const res = await post(ATTACKER, { dapp: VICTIM });
-		expect(res.status).toBe(400);
-	});
+	it.each([
+		["another site's key", OTHER_SITE_KEY],
+		["a non-string", [SITE_KEY]],
+	])(
+		"rejects a body site key that is %s",
+		async (_name: string, dapp: unknown) => {
+			getClientRecord.mockResolvedValue(clientRecord(["example.com"]));
+			const result = await send(withKey("https://example.com"), { dapp });
+			expect(result).toEqual({ status: 400, reached: false });
+			expect(getClientRecord).not.toHaveBeenCalled();
+		},
+	);
 
-	it("rejects a victim body site key behind a reserved test site key header", async () => {
-		const res = await post(ALWAYS_PASS_SITE_KEY, { dapp: VICTIM });
-		expect(res.status).toBe(400);
+	it("rejects another site's body key behind a reserved test site key", async () => {
+		const result = await send(
+			{
+				"prosopo-site-key": ALWAYS_PASS_SITE_KEY,
+				origin: "https://anything.invalid",
+			},
+			{ dapp: OTHER_SITE_KEY },
+		);
+		expect(result).toEqual({ status: 400, reached: false });
 	});
 
 	it("lets a request with no body site key through on the header alone", async () => {
-		const res = await post(ATTACKER, {});
-		expect(res.status).toBe(200);
+		getClientRecord.mockResolvedValue(clientRecord(["example.com"]));
+		const result = await send(withKey("https://example.com"), {});
+		expect(result).toEqual({ status: 200, reached: true });
+	});
+
+	it("fails closed when the client lookup throws", async () => {
+		getClientRecord.mockRejectedValue(new Error("mongo down"));
+		const result = await send(withKey("https://example.com"));
+		expect(result).toEqual({ status: 401, reached: false });
+	});
+
+	it("skips validation while maintenance mode is on", async () => {
+		setMaintenanceMode(true);
+		const result = await send({ origin: "https://evil.com" });
+		expect(result).toEqual({ status: 200, reached: true });
+		expect(getClientRecord).not.toHaveBeenCalled();
 	});
 });

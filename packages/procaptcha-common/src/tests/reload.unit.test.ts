@@ -147,7 +147,7 @@ describe("what the button renders", () => {
 	test("renders the reload glyph as inline svg", () => {
 		const svg = render().querySelector("svg");
 		expect(svg?.namespaceURI).toBe("http://www.w3.org/2000/svg");
-		expect(svg?.querySelector("title")?.textContent).toBe("reload");
+		expect(svg?.querySelector("title")?.textContent).toBe("Reload");
 	});
 
 	test("sizes the icon to the M3 24dp glyph", () => {
@@ -156,10 +156,10 @@ describe("what the button renders", () => {
 		expect(svg?.getAttribute("height")).toBe("24px");
 	});
 
-	test("is a 40dp circular container", () => {
+	test("is a circular container big enough to tap, 44px", () => {
 		const element = render();
-		expect(element.style.height).toBe("40px");
-		expect(element.style.width).toBe("40px");
+		expect(element.style.height).toBe("44px");
+		expect(element.style.width).toBe("44px");
 		expect(element.style.borderRadius).toBe("50%");
 	});
 });

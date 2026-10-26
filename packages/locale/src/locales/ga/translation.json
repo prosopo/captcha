@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Theip ar ionchódú an tseolta neamhbhailí",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Níl gealltanas réitigh captcha ann",
+		"SIGNER_UNDEFINED": "Níl an sínitheoir sainithe",
+		"CANNOT_FIND_KEYPAIR": "Ní féidir an péire eochracha a aimsiú",
+		"INVALID_DATA_FORMAT": "Formáid sonraí neamhbhailí"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Iarradh timpeallacht anaithnid",
+		"INVALID_CAPTCHA_NUMBER": "Cumraigh socruithe na captcha i gceart",
+		"INVALID_LOG_LEVEL": "Leibhéal logála neamhbhailí",
+		"INVALID_PACKAGE_DIR": "Eolaire pacáiste neamhbhailí"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Earráid agus an tacar sonraí á pharsáil",
+		"SOLUTION_PARSE_ERROR": "Earráid agus an tacar sonraí á phróiseáil",
+		"HASH_ERROR": "Earráid agus an tacar sonraí á haiseáil",
+		"DATASET_ID_UNDEFINED": "Níl aitheantas an tacair sonraí sainithe",
+		"NOT_ENOUGH_LABELS": "Níl dóthain lipéad",
+		"NOT_ENOUGH_IMAGES": "Níl dóthain íomhánna",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Tá líon na captcha sa tacar sonraí níos lú ná an líon cumraithe",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Tá líon na réiteach sa tacar sonraí níos lú ná an líon cumraithe",
+		"DUPLICATE_IMAGE": "Braitheadh íomhá dhúblach",
+		"MERKLE_ERROR": "Earráid agus crann Merkle á thógáil"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Theip ar iompórtáil inneall an bhunachair sonraí",
+		"DATABASE_UNDEFINED": "Níl cliant an bhunachair sonraí ceangailte",
+		"DATABASE_HOST_UNDEFINED": "Níl seoladh óstach an bhunachair sonraí sainithe",
+		"DATASET_LOAD_FAILED": "Theip ar lódáil an tacair sonraí",
+		"DATASET_GET_FAILED": "Theip ar fháil an tacair sonraí",
+		"CAPTCHA_GET_FAILED": "Theip ar fháil na captcha",
+		"CAPTCHA_UPDATE_FAILED": "Theip ar nuashonrú na captcha",
+		"IMAGE_GET_FAILED": "Theip ar fháil na híomhá",
+		"PENDING_RECORD_NOT_FOUND": "Níor aimsíodh aon taifid ar feitheamh",
+		"INVALID_HASH": "Haisc neamhbhailí",
+		"SOLUTION_GET_FAILED": "Theip ar fháil an réitigh",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Níor aimsíodh tacar sonraí leis an líon riachtanach réiteach",
+		"SOLUTION_APPROVE_FAILED": "Theip ar cheadú an réitigh",
+		"SOLUTION_FLAG_FAILED": "Theip ar mharcáil an réitigh mar phróiseáilte",
+		"TABLES_UNDEFINED": "Níl táblaí sainithe",
+		"CONNECTION_UNDEFINED": "Níl nasc sainithe",
+		"COMMITMENT_FLAG_FAILED": "Theip ar mharcáil an ghealltanais mar phróiseáilte",
+		"UNKNOWN": "Earráid bhunachair sonraí anaithnid",
+		"QUERY_ERROR": "Theip ar cheist an bhunachair sonraí",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Níl nasc Redis na rialacha rochtana sainithe",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Níl stór rialacha rochtana úsáideora sainithe",
+		"SESSION_STORE_FAILED": "Theip ar stóráil an tseisiúin",
+		"SESSION_CHECK_REMOVE_FAILED": "Theip ar sheiceáil agus ar bhaint an tseisiúin",
+		"SESSION_GET_FAILED": "Theip ar fháil an tseisiúin"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Ní féidir an t-úsáideoir úinéara a athrú",
+		"CANNOT_DELETE_OWN_USER": "Ní féidir do chuntas féin a scriosadh",
+		"CANNOT_DELETE_LAST_USER": "Ní féidir an t-úsáideoir deiridh a scriosadh",
+		"USER_ALREADY_EXISTS": "Tá an t-úsáideoir ann cheana",
+		"NO_SUGGESTIONS_FOUND": "Níor aimsíodh aon mholtaí",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Ní féidir an suíomh gníomhach deiridh a dhíghníomhachtú",
+		"DUPLICATE_SITE_NAME": "Tá suíomh leis an ainm seo ann cheana",
+		"INVALID_SITE_NAME": "Ní féidir ach litreacha, uimhreacha, fostríocanna agus fleiscíní a bheith in ainm suímh"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Paraiméadar neamhbhailí"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Níor aimsíodh an comhad",
+		"FILE_ALREADY_EXISTS": "Tá an comhad ann cheana",
+		"INVALID_DIR_FORMAT": "Formáid eolaire neamhbhailí"
+	}
+}

@@ -18,20 +18,20 @@
  * stubbed, and the stub enforces the provider's actual contract —
  * `checkAndRemoveSession` consumes a session the moment it issues a challenge,
  * so a second `/captcha/image` on the same sessionId is answered with 400
- * CAPTCHA.NO_SESSION_FOUND.
+ * NO_SESSION_FOUND.
  *
  * Observed in production on provider 3.8.5:
  *
  *   11:27:49.910  POST /pow/solution        200  escalation envelope returned
  *   11:27:50.263  POST /captcha/image       200  escalation session issued
- *   11:27:55.030  POST /captcha/image       400  CAPTCHA.NO_SESSION_FOUND, same session
+ *   11:27:55.030  POST /captcha/image       400  NO_SESSION_FOUND, same session
  *
  * The PoW manager fires `onEscalate` from inside its `providerRetry`-wrapped
  * `submit()`, so a throw after the handoff re-runs submit and escalates a
  * second time on the same envelope.
  */
 
-import type { Ti18n } from "@prosopo/locale";
+import { createUntranslatedI18n } from "@prosopo/locale";
 import {
 	type Account,
 	ApiParams,
@@ -90,15 +90,16 @@ const mocks = vi.hoisted(() => {
 		if (sessionId && consumed.has(sessionId)) {
 			// A 400 carrying a JSON body is *returned*, not thrown —
 			// HttpClientBase only throws when the failure isn't JSON. This is
-			// the envelope the provider's ProsopoApiError serialises to, and
-			// `error.key` is what the widget's recovery path keys off.
+			// the envelope the provider's error handler serialises to, and
+			// `error.code` is what the widget's recovery path keys off.
 			return {
 				...body(),
 				captchas: [],
 				error: {
-					key: "CAPTCHA.NO_SESSION_FOUND",
+					code: "NO_SESSION_FOUND",
+					errorId: "NO_SESSION_FOUND:PROV-1",
+					status: 400,
 					message: "No session found",
-					code: 400,
 				},
 			} as unknown as CaptchaResponseBody;
 		}
@@ -191,15 +192,16 @@ const config = (): ProcaptchaClientConfigOutput =>
 		mode: ModeEnum.visible,
 	}) as unknown as ProcaptchaClientConfigOutput;
 
-const i18nStub = {
+const i18nStub = createUntranslatedI18n({
 	isInitialized: true,
 	language: "en",
 	t: (key: string) => key,
 	changeLanguage: vi.fn(),
+	exists: (): boolean => false,
 	hasLoadedNamespace: () => true,
 	on: () => undefined,
 	off: () => undefined,
-} as unknown as Ti18n;
+});
 
 const detectBot: Mock<BotDetectionFunction> = vi.fn(
 	async () =>
@@ -305,7 +307,7 @@ describe("post-PoW escalation handoff", () => {
 		// The PoW manager escalates from inside providerRetry, so a retried
 		// submit() replays the same envelope. Before the guard this mounted a
 		// second image widget against a session the first one had already
-		// spent, and the provider answered 400 CAPTCHA.NO_SESSION_FOUND.
+		// spent, and the provider answered 400 NO_SESSION_FOUND.
 		await escalate(ESCALATION_SESSION_ID);
 		await escalate(ESCALATION_SESSION_ID, false);
 
@@ -350,7 +352,7 @@ describe("the one-shot session contract this suite stubs", () => {
 
 		const repeat = await api.getCaptchaChallenge("user", provider, "session-x");
 
-		expect(repeat[ApiParams.error]?.key).toBe("CAPTCHA.NO_SESSION_FOUND");
+		expect(repeat[ApiParams.error]?.code).toBe("NO_SESSION_FOUND");
 		expect(repeat[ApiParams.captchas]).toHaveLength(0);
 	});
 });

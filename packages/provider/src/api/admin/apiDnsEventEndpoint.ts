@@ -19,7 +19,11 @@ import {
 } from "@prosopo/api-route";
 import type { IIpInfoService } from "@prosopo/ipinfo";
 import { type Logger, getLogger } from "@prosopo/logger";
-import { type DnsEvent, DnsEventBatchSchema } from "@prosopo/types";
+import {
+	type DnsEvent,
+	DnsEventIngestBatchSchema,
+	DnsEventSchema,
+} from "@prosopo/types";
 import type { IProviderDatabase } from "@prosopo/types-database";
 import type { z } from "zod";
 import {
@@ -27,7 +31,11 @@ import {
 	enrichDnsEvent,
 } from "../../tasks/dnsEvent/enrichDnsEvent.js";
 
-type DnsEventBatchSchemaType = typeof DnsEventBatchSchema;
+// Only the first few invalid events are described in the log line so a
+// fully-garbage batch cannot produce an unbounded log entry.
+const MAX_LOGGED_INVALID = 5;
+
+type DnsEventBatchSchemaType = typeof DnsEventIngestBatchSchema;
 
 // Exported for unit tests — picks out the field(s) one DnsEvent contributes.
 export const dnsEventToFields = (
@@ -62,9 +70,25 @@ class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
 
 		let stored = 0;
 		let errors = 0;
+		let dropped = 0;
+		const invalid: { index: number; issues: string[] }[] = [];
 		const now = new Date();
 
-		for (const event of events) {
+		for (const [index, raw] of events.entries()) {
+			const parsed = DnsEventSchema.safeParse(raw);
+			if (!parsed.success) {
+				dropped += 1;
+				if (invalid.length < MAX_LOGGED_INVALID) {
+					invalid.push({
+						index,
+						issues: parsed.error.issues.map(
+							(issue) => `${issue.path.join(".")}: ${issue.message}`,
+						),
+					});
+				}
+				continue;
+			}
+			const event = parsed.data;
 			const sessionId = event.jti;
 			if (!sessionId) {
 				continue;
@@ -91,19 +115,26 @@ class ApiDnsEventEndpoint implements ApiEndpoint<DnsEventBatchSchemaType> {
 			}
 		}
 
+		if (dropped > 0) {
+			logger.warn(() => ({
+				data: { received: events.length, dropped, invalid },
+				msg: "Dropped invalid DNS events from batch",
+			}));
+		}
+
 		logger.info(() => ({
-			data: { received: events.length, stored, errors },
+			data: { received: events.length, stored, errors, dropped },
 			msg: "Processed DNS event batch",
 		}));
 
 		return {
 			status: ApiEndpointResponseStatus.SUCCESS,
-			data: { stored, errors },
+			data: { stored, errors, dropped },
 		};
 	}
 
 	public getRequestArgsSchema(): DnsEventBatchSchemaType {
-		return DnsEventBatchSchema;
+		return DnsEventIngestBatchSchema;
 	}
 
 	private async recomputeDnsAsymmetry(

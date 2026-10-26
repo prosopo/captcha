@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 import { fileURLToPath } from "node:url";
-import { ProsopoDBError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import type { IDatabase } from "@prosopo/types-database";
 import mongoose, { type Connection } from "mongoose";
@@ -80,9 +80,11 @@ export class MongoDatabase implements IDatabase {
 
 	getConnection(): mongoose.Connection {
 		if (!this.connection) {
-			throw new ProsopoDBError("DATABASE.CONNECTION_UNDEFINED", {
+			throw new ProsopoError({
+				code: "DB_UNAVAILABLE",
+				errorSite: "DBSE-1",
+				message: "Connection undefined",
 				context: { failedFuncName: this.getConnection.name },
-				logger: this.logger,
 			});
 		}
 		return this.connection;

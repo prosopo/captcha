@@ -17,7 +17,7 @@ import {
 	type ApiEndpointResponse,
 	ApiEndpointResponseStatus,
 } from "@prosopo/api-route";
-import type { ProsopoApiError } from "@prosopo/common";
+import type { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import {
 	type GetAllDecisionMachinesBody,
@@ -73,7 +73,7 @@ class ApiGetAllDecisionMachinesEndpoint
 			}));
 			return {
 				status: ApiEndpointResponseStatus.FAIL,
-				error: (error as ProsopoApiError).message,
+				error: (error as ProsopoError).message,
 			};
 		}
 	}

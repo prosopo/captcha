@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { ProsopoDatasetError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { LabelledDataSchema, type LabelledItem } from "@prosopo/types";
 import { lodash } from "@prosopo/util/lodash";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
@@ -46,8 +46,10 @@ export class Labels extends InputOutputCliCommand<ArgsSchemaType> {
 
 		const file = args.input;
 		if (!fs.existsSync(file)) {
-			throw new ProsopoDatasetError(new Error(`file does not exist: ${file}`), {
-				translationKey: "FS.FILE_NOT_FOUND",
+			throw new ProsopoError({
+				code: "FILE_ERROR",
+				errorSite: "DSFS-15",
+				message: `file does not exist: ${file}`,
 			});
 		}
 

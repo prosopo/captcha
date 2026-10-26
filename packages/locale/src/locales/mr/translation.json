@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "अवैध पत्ता एन्कोड करता आला नाही",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "captcha उपायाची वचनबद्धता अस्तित्वात नाही",
+		"SIGNER_UNDEFINED": "स्वाक्षरीकर्ता परिभाषित नाही",
+		"CANNOT_FIND_KEYPAIR": "की जोडी सापडली नाही",
+		"INVALID_DATA_FORMAT": "अवैध डेटा स्वरूप"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "अज्ञात एन्व्हायर्नमेंटची विनंती केली",
+		"INVALID_CAPTCHA_NUMBER": "कृपया captcha कॉन्फिगरेशन योग्यरित्या सेट करा",
+		"INVALID_LOG_LEVEL": "अवैध लॉग स्तर",
+		"INVALID_PACKAGE_DIR": "अवैध पॅकेज डिरेक्टरी"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "डेटासेट पार्स करताना त्रुटी",
+		"SOLUTION_PARSE_ERROR": "डेटासेटवर प्रक्रिया करताना त्रुटी",
+		"HASH_ERROR": "डेटासेट हॅश करताना त्रुटी",
+		"DATASET_ID_UNDEFINED": "डेटासेट आयडी परिभाषित नाही",
+		"NOT_ENOUGH_LABELS": "पुरेशी लेबले नाहीत",
+		"NOT_ENOUGH_IMAGES": "पुरेशी चित्रे नाहीत",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "डेटासेटमधील captcha ची संख्या कॉन्फिगर केलेल्या संख्येपेक्षा कमी आहे",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "डेटासेटमधील उपायांची संख्या कॉन्फिगर केलेल्या संख्येपेक्षा कमी आहे",
+		"DUPLICATE_IMAGE": "दुहेरी चित्र आढळले",
+		"MERKLE_ERROR": "मर्कल ट्री तयार करताना त्रुटी"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "डेटाबेस इंजिन आयात करता आले नाही",
+		"DATABASE_UNDEFINED": "डेटाबेस क्लायंट जोडलेला नाही",
+		"DATABASE_HOST_UNDEFINED": "डेटाबेस होस्ट पत्ता परिभाषित नाही",
+		"DATASET_LOAD_FAILED": "डेटासेट लोड अयशस्वी",
+		"DATASET_GET_FAILED": "डेटासेट मिळवता आला नाही",
+		"CAPTCHA_GET_FAILED": "captcha मिळवता आला नाही",
+		"CAPTCHA_UPDATE_FAILED": "captcha अपडेट करता आला नाही",
+		"IMAGE_GET_FAILED": "चित्र मिळवता आले नाही",
+		"PENDING_RECORD_NOT_FOUND": "प्रलंबित नोंद सापडली नाही",
+		"INVALID_HASH": "अवैध हॅश",
+		"SOLUTION_GET_FAILED": "उपाय मिळवता आला नाही",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "आवश्यक संख्येने उपाय असलेले कोणतेही डेटासेट सापडले नाहीत",
+		"SOLUTION_APPROVE_FAILED": "उपाय मंजूर करता आला नाही",
+		"SOLUTION_FLAG_FAILED": "उपाय प्रक्रिया केलेला म्हणून चिन्हांकित करता आला नाही",
+		"TABLES_UNDEFINED": "टेबल परिभाषित नाहीत",
+		"CONNECTION_UNDEFINED": "कनेक्शन परिभाषित नाही",
+		"COMMITMENT_FLAG_FAILED": "वचनबद्धता प्रक्रिया केलेली म्हणून चिन्हांकित करता आली नाही",
+		"UNKNOWN": "अज्ञात डेटाबेस त्रुटी",
+		"QUERY_ERROR": "डेटाबेस क्वेरी अयशस्वी",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "प्रवेश नियमांचे Redis कनेक्शन परिभाषित नाही",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "वापरकर्ता प्रवेश नियमांचा संग्रह परिभाषित नाही",
+		"SESSION_STORE_FAILED": "सत्र साठवता आले नाही",
+		"SESSION_CHECK_REMOVE_FAILED": "सत्र तपासून काढता आले नाही",
+		"SESSION_GET_FAILED": "सत्र मिळवता आले नाही"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "मालक वापरकर्त्यात बदल करता येत नाही",
+		"CANNOT_DELETE_OWN_USER": "तुमचे स्वतःचे खाते हटवता येत नाही",
+		"CANNOT_DELETE_LAST_USER": "शेवटचा वापरकर्ता हटवता येत नाही",
+		"USER_ALREADY_EXISTS": "वापरकर्ता आधीच अस्तित्वात आहे",
+		"NO_SUGGESTIONS_FOUND": "कोणत्याही सूचना सापडल्या नाहीत",
+		"CANNOT_DEACTIVATE_LAST_SITE": "शेवटची सक्रिय साइट निष्क्रिय करता येत नाही",
+		"DUPLICATE_SITE_NAME": "या नावाची साइट आधीच अस्तित्वात आहे",
+		"INVALID_SITE_NAME": "साइटच्या नावात फक्त अक्षरे, अंक, हायफन आणि अंडरस्कोर असू शकतात"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "अवैध पॅरामीटर"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "फाइल सापडली नाही",
+		"FILE_ALREADY_EXISTS": "फाइल आधीच अस्तित्वात आहे",
+		"INVALID_DIR_FORMAT": "अवैध डिरेक्टरी स्वरूप"
+	}
+}

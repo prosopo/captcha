@@ -19,6 +19,7 @@ import {
 	mountProcaptchaFrictionless,
 } from "@prosopo/procaptcha-frictionless";
 import type {
+	FrictionlessRestartOptions,
 	ProcaptchaCallbacks,
 	ProcaptchaClientConfigInput,
 } from "@prosopo/types";
@@ -53,7 +54,7 @@ export const mountBundleCaptcha = (
 	let current: ProcaptchaFrictionlessHandle | undefined;
 	let destroyed = false;
 
-	const mount = () => {
+	const mount = (options?: FrictionlessRestartOptions) => {
 		if (destroyed) {
 			return;
 		}
@@ -63,13 +64,14 @@ export const mountBundleCaptcha = (
 			restart,
 			i18n,
 			container,
+			startShowRetry: options?.showRetry,
 		});
 	};
 
-	function restart(): void {
+	function restart(options?: FrictionlessRestartOptions): void {
 		current?.destroy();
 		current = undefined;
-		mount();
+		mount(options);
 	}
 
 	mount();
