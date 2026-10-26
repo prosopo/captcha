@@ -56,7 +56,7 @@
 		"dotenv": "18.0.8",
 		"ip-address": "10.7.4",
 		"redis": "6.3.0",
-		"zod": "3.25.76"
+		"zod": "4.6.6"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
