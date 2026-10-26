@@ -14,6 +14,11 @@
 
 import { ProviderApi } from "@prosopo/api";
 import { ProsopoError } from "@prosopo/common";
+import {
+	FINGERPRINT_DISCLOSURE_KEYS,
+	encodeFingerprintProof,
+	getFingerprintProof,
+} from "@prosopo/fingerprint";
 import { widgetLanguageHeaders } from "@prosopo/locale";
 import {
 	ExtensionLoader,
@@ -143,6 +148,24 @@ export const withTimeout = async <T>(
 			clearTimeout(timeoutId);
 		}
 		throw error;
+	}
+};
+
+// Sent with the frictionless request so the provider can record the device
+// bucket for every session, whichever captcha type it is then served.
+// Best-effort and capped: a proof that is slow or fails to build is left off
+// rather than delaying the captcha.
+const FINGERPRINT_PROOF_TIMEOUT_MS = 1000;
+
+const fingerprintProofIfReady = async (): Promise<string | undefined> => {
+	try {
+		const proof = await withTimeout(
+			getFingerprintProof(FINGERPRINT_DISCLOSURE_KEYS),
+			FINGERPRINT_PROOF_TIMEOUT_MS,
+		);
+		return encodeFingerprintProof(proof);
+	} catch {
+		return undefined;
 	}
 };
 
@@ -286,6 +309,7 @@ const customDetectBot: BotDetectionFunction = async (
 		const userAccount = await ext.getAccount(config);
 		const { currentUrl: fallbackUrl, iframeUrl: fallbackIframeUrl } =
 			getCurrentPageUrls();
+		const fallbackFingerprintProof = await fingerprintProofIfReady();
 		const captcha = await withTimeout(
 			providerApi.getFrictionlessCaptcha(
 				undefined,
@@ -300,6 +324,7 @@ const customDetectBot: BotDetectionFunction = async (
 				clientSessionId,
 				refreshOf,
 				switchToImage,
+				fallbackFingerprintProof,
 			),
 			10000,
 		);
@@ -347,6 +372,7 @@ const customDetectBot: BotDetectionFunction = async (
 	// burns. Readings still attach on the challenge GET and on solution
 	// submit (first-hop-wins server-side).
 	const { currentUrl, iframeUrl } = getCurrentPageUrls();
+	const fingerprintProof = await fingerprintProofIfReady();
 	const captchaPromise = providerApi.getFrictionlessCaptcha(
 		detectionResult.token,
 		detectionResult.encryptHeadHash,
@@ -360,6 +386,7 @@ const customDetectBot: BotDetectionFunction = async (
 		clientSessionId,
 		refreshOf,
 		switchToImage,
+		fingerprintProof,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

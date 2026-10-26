@@ -783,6 +783,9 @@ export const GetFrictionlessCaptchaChallengeRequestBody = object({
 	// refresh. Only honoured alongside a `refreshOf` naming a puzzle session
 	// on a site with the switch enabled, and only ever moves puzzle to image.
 	[ApiParams.switchToImage]: boolean().optional(),
+	// Encoded proof of fingerprint. Sent here so every session carries the
+	// device bucket whichever captcha type it is served, not only PoW.
+	[ApiParams.fingerprintProof]: boundedString(INPUT_LIMITS.TOKEN).optional(),
 });
 
 export type GetFrictionlessCaptchaChallengeRequestBodyOutput = output<

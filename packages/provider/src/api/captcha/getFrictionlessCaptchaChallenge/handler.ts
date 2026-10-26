@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { ProsopoError } from "@prosopo/common";
+import { summariseFingerprintProof } from "@prosopo/fingerprint/summary";
 import {
 	ApiParams,
 	CaptchaType,
@@ -116,7 +117,14 @@ export default (
 				clientSessionId,
 				refreshOf,
 				switchToImage,
+				fingerprintProof,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
+
+			// Recorded on the session and copied onto whichever captcha record it
+			// leads to, so the device bucket exists for image and puzzle solves
+			// too. Not handed to the routing machine here: counter rules naming
+			// `deviceBucket` are written for the PoW-submit stage.
+			const fingerprintSummary = summariseFingerprintProof(fingerprintProof);
 
 			// Re-sanitise whatever the client reported: keep only scheme + host
 			// + path and drop the query string, fragment and any embedded
@@ -934,6 +942,7 @@ export default (
 				...(decodedSimdReadings && { simdReadings: decodedSimdReadings }),
 				...(d !== undefined && { d }),
 				...(clientSessionId && { clientMetaData: { clientSessionId } }),
+				...(fingerprintSummary && { fingerprintSummary }),
 				...refresh?.lineage,
 				...(req.tcpToChelloUs !== undefined && {
 					tcpToChelloUs: req.tcpToChelloUs,
