@@ -25,7 +25,7 @@
 	},
 	"dependencies": {
 		"@prosopo/logger": "workspace:*",
-		"zod": "3.23.8"
+		"zod": "3.25.76"
 	},
 	"devDependencies": {
 		"@prosopo/config": "workspace:*",
