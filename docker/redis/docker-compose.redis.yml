@@ -1,0 +1,17 @@
+# Base standalone redis-stack. Layer exactly one overlay on top (keep it beside this file):
+#   docker compose -f docker-compose.redis.yml -f docker-compose.redis.dev.yml up -d     # tests: Insight UI, password "root", no persistence
+#   docker compose -f docker-compose.redis.yml -f docker-compose.redis.server.yml up -d  # persistent, password from ../.env.${NODE_ENV}
+services:
+  redis-stack:
+    container_name: redis-stack
+    image: redis/redis-stack:latest
+    volumes:
+      - ./redis.conf:/redis-stack.conf
+    ports:
+      - '6379:6379' # DB
+    # Cap the json log file so a chatty container can't fill the host disk.
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '100m'
+        max-file: '1'

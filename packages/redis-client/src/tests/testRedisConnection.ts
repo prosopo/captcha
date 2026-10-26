@@ -28,7 +28,7 @@ const mockLogger = new Proxy(
 
 export const createTestRedisConnection = (logger?: Logger): RedisConnection =>
 	connectToRedis({
-		// /docker/redis/redis-stack.docker-compose.yml
+		// docker/redis: docker-compose.redis.yml + docker-compose.redis.dev.yml
 		url: "redis://localhost:6379",
 		password: "root",
 		logger: logger || mockLogger,

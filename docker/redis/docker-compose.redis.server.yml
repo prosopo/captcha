@@ -1,0 +1,9 @@
+# Overlay: persistent redis configured from the env file. Use with:
+#   docker compose -f docker-compose.redis.yml -f docker-compose.redis.server.yml up -d
+services:
+  redis-stack:
+    container_name: redis-stack-server
+    volumes:
+      - /data/redis:/data/redis
+    env_file:
+      - ../.env.${NODE_ENV}
