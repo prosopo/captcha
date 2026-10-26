@@ -129,6 +129,11 @@ export default (env: ProviderEnvironment) =>
 				return res.json(noBundle);
 			}
 
+			req.logger.info(() => ({
+				msg: "Detector bundle assigned",
+				data: { bundleId, release: bundle.release, detectorSessionId },
+			}));
+
 			const response: AssignDetectorBundleResponse = {
 				[ApiParams.useProviderBundle]: true,
 				[ApiParams.detectorSessionId]: detectorSessionId,

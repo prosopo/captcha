@@ -90,6 +90,13 @@ afterEach(() => {
 });
 
 describe("what the button renders", () => {
+	test("is at least 44px tall, so a fingertip can hit it", () => {
+		const element = render({ text: "Next" });
+		expect(Number.parseFloat(element.style.minHeight)).toBeGreaterThanOrEqual(
+			44,
+		);
+	});
+
 	test("shows its text and labels itself with it", () => {
 		const element = render({ text: "Submit" });
 		expect(element.textContent).toBe("Submit");

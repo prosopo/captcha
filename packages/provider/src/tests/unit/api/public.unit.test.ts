@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { handleErrors } from "@prosopo/api-express-router";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import type { ProviderEnvironment } from "@prosopo/env";
 import {
 	type IPInfoResponse,
@@ -42,8 +42,11 @@ import { resetHealthzGeoRouter } from "../../../api/healthzGeo.js";
 import { metricsHandler } from "../../../api/metrics.js";
 import { publicRouter } from "../../../api/public.js";
 
-vi.mock("@prosopo/api-express-router", () => ({
+vi.mock("@prosopo/api-express-router", async (importActual) => ({
 	handleErrors: vi.fn(),
+	sendProsopoError: (
+		await importActual<typeof import("@prosopo/api-express-router")>()
+	).sendProsopoError,
 }));
 
 vi.mock("@prosopo/util", async (importActual) => {
@@ -188,8 +191,10 @@ describe("publicRouter", () => {
 					msg: "Error getting provider details",
 				}));
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { code: 500 },
+					new ProsopoError({
+						code: "UNEXPECTED",
+						errorSite: "PROV-1",
+						message: "BadRequest",
 					}),
 				);
 			}
@@ -238,8 +243,10 @@ describe("publicRouter", () => {
 					msg: "Error getting provider details",
 				}));
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: { code: 500 },
+					new ProsopoError({
+						code: "UNEXPECTED",
+						errorSite: "PROV-1",
+						message: "BadRequest",
 					}),
 				);
 			}
@@ -252,12 +259,12 @@ describe("publicRouter", () => {
 			expect.any(Function), // Logger function
 		);
 
-		// Verify next was called with ProsopoApiError
-		expect(mockNext).toHaveBeenCalledWith(expect.any(ProsopoApiError));
+		// Verify next was called with ProsopoError
+		expect(mockNext).toHaveBeenCalledWith(expect.any(ProsopoError));
 
 		// @ts-ignore
-		const error = mockNext.mock.calls[0][0] as ProsopoApiError;
-		expect(error).toBeInstanceOf(ProsopoApiError);
+		const error = mockNext.mock.calls[0][0] as ProsopoError;
+		expect(error).toBeInstanceOf(ProsopoError);
 	});
 
 	it("should register error handler middleware", () => {
@@ -326,7 +333,10 @@ describe("publicRouter", () => {
 			status: vi.fn().mockReturnThis(),
 			send: vi.fn(),
 		} as unknown as Response;
-		const metricsReq = { headers: {} } as Request;
+		const metricsReq = {
+			headers: {},
+			socket: { remoteAddress: "127.0.0.1" },
+		} as Request;
 
 		await metricsHandler(mockEnv)(metricsReq, metricsRes, mockNext);
 
@@ -347,10 +357,10 @@ describe("publicRouter", () => {
 		process.env.PROSOPO_METRICS_TOKEN = "secret";
 		try {
 			const statusMock = vi.fn().mockReturnThis();
-			const sendMock = vi.fn();
+			const jsonMock = vi.fn();
 			const metricsRes = {
 				status: statusMock,
-				send: sendMock,
+				json: jsonMock,
 				set: vi.fn(),
 				end: vi.fn(),
 			} as unknown as Response;
@@ -359,8 +369,44 @@ describe("publicRouter", () => {
 			await metricsHandler(mockEnv)(metricsReq, metricsRes, mockNext);
 
 			expect(statusMock).toHaveBeenCalledWith(401);
+			expect(jsonMock).toHaveBeenCalledWith({
+				error: expect.objectContaining({
+					errorId: "UNAUTHORIZED:PROV-91",
+				}),
+			});
 		} finally {
 			restoreEnv("PROSOPO_METRICS_TOKEN", previous);
+		}
+	});
+
+	it("should forbid a proxied scrape when no metrics token is set", async () => {
+		vi.stubEnv("PROSOPO_METRICS_TOKEN", undefined);
+		vi.stubEnv("PROSOPO_METRICS_PUBLIC", undefined);
+		try {
+			const statusMock = vi.fn().mockReturnThis();
+			const jsonMock = vi.fn();
+			const metricsRes: Pick<Response, "status" | "json" | "set" | "end"> = {
+				status: statusMock,
+				json: jsonMock,
+				set: vi.fn(),
+				end: vi.fn(),
+			};
+			const metricsReq: Pick<Request, "headers"> = {
+				headers: { "x-forwarded-for": "203.0.113.1" },
+			};
+
+			await metricsHandler(mockEnv)(
+				metricsReq as Request,
+				metricsRes as Response,
+				mockNext,
+			);
+
+			expect(statusMock).toHaveBeenCalledWith(403);
+			expect(jsonMock).toHaveBeenCalledWith({
+				error: expect.objectContaining({ errorId: "FORBIDDEN:PROV-92" }),
+			});
+		} finally {
+			vi.unstubAllEnvs();
 		}
 	});
 

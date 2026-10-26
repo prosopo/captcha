@@ -157,7 +157,7 @@
 
             // Render the CAPTCHA
 
-            const widgetId = render(document.getElementById('procaptcha-container'), {
+            const widgetId = await render(document.getElementById('procaptcha-container'), {
                 siteKey: import.meta.env.PROSOPO_SITE_KEY_IMAGE,
                 callback: handleCaptchaResponse,
                 "failed-callback": handleCaptchaFailed,

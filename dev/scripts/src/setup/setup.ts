@@ -14,7 +14,7 @@
 
 import path from "node:path";
 import { defaultConfig, getSecret } from "@prosopo/cli";
-import { ProsopoEnvError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { getEnvFile } from "@prosopo/dotenv";
 import { ProviderEnvironment } from "@prosopo/env";
 import {
@@ -26,7 +26,7 @@ import { LogLevel, getLogger } from "@prosopo/logger";
 import type { IProviderAccount } from "@prosopo/types";
 import { get } from "@prosopo/util";
 import fse from "fs-extra";
-import { updateDemoHTMLFiles, updateEnvFiles } from "../util/index.js";
+import { updateEnvFiles } from "../util/index.js";
 import { setupProvider } from "./provider.js";
 import { registerSiteKey } from "./site.js";
 
@@ -123,7 +123,11 @@ export async function setup(provider: boolean, sites: boolean) {
 		await copyEnvFile();
 
 		if (!process.env.PROSOPO_SITE_KEY) {
-			throw new ProsopoEnvError("DEVELOPER.PROSOPO_SITE_KEY_MISSING");
+			throw new ProsopoError({
+				code: "CONFIG_INVALID",
+				errorSite: "SCRP-1",
+				message: "PROSOPO_SITE_KEY is not set in .env file.",
+			});
 		}
 
 		const config = defaultConfig();
@@ -161,14 +165,12 @@ export async function setup(provider: boolean, sites: boolean) {
 
 				await registerSiteKey(env, siteKey.pair.address, siteKey.settings);
 
+				// Demo HTML is deliberately left alone: it takes its keys from env at
+				// build time, and rewriting every `data-sitekey` once per type left
+				// all pages carrying whichever key was registered last.
 				env.logger.debug(() => ({
 					msg: "Updating env files with PROSOPO_SITE_KEY",
 				}));
-				await updateDemoHTMLFiles(
-					[/data-sitekey="(\w{48})"/, /siteKey:\s*'(\w{48})'/],
-					siteKey.pair.address,
-					env.logger,
-				);
 
 				const envVarNames =
 					siteKey.settings.captchaType === "image"
@@ -186,6 +188,10 @@ export async function setup(provider: boolean, sites: boolean) {
 		process.exit();
 	} else {
 		console.error("no secret found in .env file");
-		throw new ProsopoEnvError("GENERAL.NO_MNEMONIC_OR_SEED");
+		throw new ProsopoError({
+			code: "CONFIG_INVALID",
+			errorSite: "SCRP-2",
+			message: "No secret provided",
+		});
 	}
 }

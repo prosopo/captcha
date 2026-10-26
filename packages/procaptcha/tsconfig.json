@@ -2,7 +2,8 @@
 	"extends": "../../tsconfig.esm.json",
 	"compilerOptions": {
 		"rootDir": "./src",
-		"outDir": "./dist",
+		"outDir": "./dist/tsc",
+		"tsBuildInfoFile": "./dist/tsc/tsconfig.tsbuildinfo",
 		"lib": ["es6", "dom"]
 	},
 	"include": [
@@ -27,6 +28,9 @@
 		},
 		{
 			"path": "../load-balancer"
+		},
+		{
+			"path": "../locale"
 		},
 		{
 			"path": "../procaptcha-common"

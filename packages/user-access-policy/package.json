@@ -1,71 +1,75 @@
 {
 	"name": "@prosopo/user-access-policy",
-	"version": "3.14.10",
+	"version": "3.15.8",
 	"type": "module",
 	"engines": {
-		"node": "^24",
-		"npm": "^11"
+		"node": "^24"
 	},
 	"exports": {
 		".": {
-			"types": "./dist/.export.d.ts",
-			"import": "./dist/.export.js",
+			"types": "./dist/types/.export.d.ts",
+			"import": "./dist/esm/.export.js",
 			"require": "./dist/cjs/.export.cjs"
 		},
 		"./api": {
-			"types": "./dist/api/.export.d.ts",
-			"import": "./dist/api/.export.js",
+			"types": "./dist/types/api/.export.d.ts",
+			"import": "./dist/esm/api/.export.js",
 			"require": "./dist/cjs/api/.export.cjs"
 		},
 		"./redis": {
-			"types": "./dist/redis/.export.d.ts",
-			"import": "./dist/redis/.export.js",
+			"types": "./dist/types/redis/.export.d.ts",
+			"import": "./dist/esm/redis/.export.js",
 			"require": "./dist/cjs/redis/.export.cjs"
 		},
 		"./mongoose": {
-			"types": "./dist/mongoose/.export.d.ts",
-			"import": "./dist/mongoose/.export.js",
+			"types": "./dist/types/mongoose/.export.d.ts",
+			"import": "./dist/esm/mongoose/.export.js",
 			"require": "./dist/cjs/mongoose/.export.cjs"
 		}
 	},
 	"imports": {
-		"#policy/*": "./dist/*"
+		"#policy/*": {
+			"types": "./dist/types/*",
+			"default": "./dist/esm/*"
+		}
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "npm run build:cross-env -- --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json",
-		"test:unit": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=unit npx vitest run --config ./vite.test.config.ts",
-		"test:integration": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=integration npx vitest run --config ./vite.test.config.ts",
-		"test": "npm run test:unit && npm run test:integration"
+		"build:types": "tsc --project tsconfig.types.json",
+		"test:unit": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=unit pnpm exec vitest run --config ./vite.test.config.ts",
+		"test:integration": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=integration pnpm exec vitest run --config ./vite.test.config.ts",
+		"test": "pnpm run test:unit && pnpm run test:integration"
 	},
 	"dependencies": {
-		"@prosopo/api": "4.3.4",
-		"@prosopo/api-route": "2.6.60",
-		"@prosopo/common": "3.1.59",
-		"@prosopo/logger": "2.1.0",
-		"@prosopo/redis-client": "1.0.37",
-		"@prosopo/types": "5.10.1",
-		"@prosopo/util": "3.3.11",
-		"@redis/search": "6.2.1",
+		"@prosopo/api": "workspace:*",
+		"@prosopo/api-route": "workspace:*",
+		"@prosopo/common": "workspace:*",
+		"@prosopo/logger": "workspace:*",
+		"@prosopo/redis-client": "workspace:*",
+		"@prosopo/types": "workspace:*",
+		"@prosopo/util": "workspace:*",
+		"@redis/search": "6.3.0",
 		"cidr-calc": "1.0.4",
-		"dotenv": "16.4.5",
-		"ip-address": "10.7.0",
-		"redis": "6.2.1",
+		"dotenv": "18.0.7",
+		"ip-address": "10.7.4",
+		"redis": "6.3.0",
 		"zod": "3.23.8"
 	},
 	"devDependencies": {
-		"@prosopo/config": "3.4.1",
-		"@prosopo/util-crypto": "13.5.33",
+		"@prosopo/config": "workspace:*",
+		"@prosopo/util-crypto": "workspace:*",
 		"@types/node": "22.10.2",
+		"@types/yargs": "17.0.35",
+		"del-cli": "6.0.0",
 		"fast-glob": "3.3.3",
-		"mongoose": "9.10.0",
-		"vite": "8.1.5",
-		"vitest": "4.1.11",
-		"yargs": "18.1.0"
+		"mongoose": "9.11.2",
+		"typescript": "5.6.2",
+		"vite": "8.1.6",
+		"vitest": "5.0.4",
+		"yargs": "18.2.0"
 	},
 	"author": "PROSOPO LIMITED <info@prosopo.io>",
 	"license": "Apache-2.0",

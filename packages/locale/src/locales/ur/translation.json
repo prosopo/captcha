@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "غلط پتے کو انکوڈ کرنے میں ناکامی",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "captcha حل کی وابستگی موجود نہیں",
+		"SIGNER_UNDEFINED": "دستخط کنندہ متعین نہیں",
+		"CANNOT_FIND_KEYPAIR": "کلیدی جوڑا نہیں ملا",
+		"INVALID_DATA_FORMAT": "غلط ڈیٹا فارمیٹ"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "نامعلوم ماحول کی درخواست کی گئی",
+		"INVALID_CAPTCHA_NUMBER": "براہ کرم captcha کی ترتیبات درست طریقے سے ترتیب دیں",
+		"INVALID_LOG_LEVEL": "غلط لاگ سطح",
+		"INVALID_PACKAGE_DIR": "غلط پیکج ڈائریکٹری"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "ڈیٹا سیٹ پارس کرنے میں خرابی",
+		"SOLUTION_PARSE_ERROR": "ڈیٹا سیٹ پر کارروائی میں خرابی",
+		"HASH_ERROR": "ڈیٹا سیٹ ہیش کرنے میں خرابی",
+		"DATASET_ID_UNDEFINED": "ڈیٹا سیٹ کی شناخت متعین نہیں",
+		"NOT_ENOUGH_LABELS": "کافی لیبل نہیں ہیں",
+		"NOT_ENOUGH_IMAGES": "کافی تصاویر نہیں ہیں",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "ڈیٹا سیٹ میں captcha کی تعداد ترتیب دی گئی تعداد سے کم ہے",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "ڈیٹا سیٹ میں حل کی تعداد ترتیب دی گئی تعداد سے کم ہے",
+		"DUPLICATE_IMAGE": "دہری تصویر پائی گئی",
+		"MERKLE_ERROR": "مرکل ٹری بنانے میں خرابی"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "ڈیٹا بیس انجن درآمد کرنے میں ناکامی",
+		"DATABASE_UNDEFINED": "ڈیٹا بیس کلائنٹ منسلک نہیں ہے",
+		"DATABASE_HOST_UNDEFINED": "ڈیٹا بیس ہوسٹ کا پتہ متعین نہیں",
+		"DATASET_LOAD_FAILED": "ڈیٹا سیٹ لوڈ نہیں ہو سکا",
+		"DATASET_GET_FAILED": "ڈیٹا سیٹ حاصل کرنے میں ناکامی",
+		"CAPTCHA_GET_FAILED": "captcha حاصل کرنے میں ناکامی",
+		"CAPTCHA_UPDATE_FAILED": "captcha اپ ڈیٹ کرنے میں ناکامی",
+		"IMAGE_GET_FAILED": "تصویر حاصل کرنے میں ناکامی",
+		"PENDING_RECORD_NOT_FOUND": "کوئی زیر التوا ریکارڈ نہیں ملا",
+		"INVALID_HASH": "غلط ہیش",
+		"SOLUTION_GET_FAILED": "حل حاصل کرنے میں ناکامی",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "مطلوبہ تعداد میں حل والے کوئی ڈیٹا سیٹ نہیں ملے",
+		"SOLUTION_APPROVE_FAILED": "حل کی منظوری میں ناکامی",
+		"SOLUTION_FLAG_FAILED": "حل کو پروسیس شدہ نشان زد کرنے میں ناکامی",
+		"TABLES_UNDEFINED": "ٹیبلز متعین نہیں",
+		"CONNECTION_UNDEFINED": "کنکشن متعین نہیں",
+		"COMMITMENT_FLAG_FAILED": "وابستگی کو پروسیس شدہ نشان زد کرنے میں ناکامی",
+		"UNKNOWN": "نامعلوم ڈیٹا بیس خرابی",
+		"QUERY_ERROR": "ڈیٹا بیس استفسار ناکام ہو گیا",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "رسائی کے قواعد کا Redis کنکشن متعین نہیں",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "صارف رسائی قواعد کا اسٹوریج متعین نہیں",
+		"SESSION_STORE_FAILED": "سیشن محفوظ کرنے میں ناکامی",
+		"SESSION_CHECK_REMOVE_FAILED": "سیشن کی جانچ اور حذف کرنے میں ناکامی",
+		"SESSION_GET_FAILED": "سیشن حاصل کرنے میں ناکامی"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "مالک صارف میں ترمیم نہیں کی جا سکتی",
+		"CANNOT_DELETE_OWN_USER": "آپ اپنا اکاؤنٹ حذف نہیں کر سکتے",
+		"CANNOT_DELETE_LAST_USER": "آخری صارف کو حذف نہیں کیا جا سکتا",
+		"USER_ALREADY_EXISTS": "صارف پہلے سے موجود ہے",
+		"NO_SUGGESTIONS_FOUND": "کوئی تجاویز نہیں ملیں",
+		"CANNOT_DEACTIVATE_LAST_SITE": "آخری فعال سائٹ کو غیر فعال نہیں کیا جا سکتا",
+		"DUPLICATE_SITE_NAME": "اس نام کی سائٹ پہلے سے موجود ہے",
+		"INVALID_SITE_NAME": "سائٹ کے نام میں صرف حروف، اعداد، ہائفن اور انڈر اسکور ہو سکتے ہیں"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "غلط پیرامیٹر"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "فائل نہیں ملی",
+		"FILE_ALREADY_EXISTS": "فائل پہلے سے موجود ہے",
+		"INVALID_DIR_FORMAT": "غلط ڈائریکٹری فارمیٹ"
+	}
+}

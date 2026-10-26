@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Не успеа кодирањето на неважечка адреса",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Обврската за решението на captcha не постои",
+		"SIGNER_UNDEFINED": "Потписникот не е дефиниран",
+		"CANNOT_FIND_KEYPAIR": "Не може да се најде парот клучеви",
+		"INVALID_DATA_FORMAT": "Неважечки формат на податоци"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Побарана е непозната околина",
+		"INVALID_CAPTCHA_NUMBER": "Правилно конфигурирајте ги поставките на captcha",
+		"INVALID_LOG_LEVEL": "Неважечко ниво на дневник",
+		"INVALID_PACKAGE_DIR": "Неважечка папка на пакет"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Грешка при парсирање на збирката податоци",
+		"SOLUTION_PARSE_ERROR": "Грешка при парсирање на збирката податоци",
+		"HASH_ERROR": "Грешка при хеширање на збирката податоци",
+		"DATASET_ID_UNDEFINED": "ID-то на збирката податоци не е дефинирано",
+		"NOT_ENOUGH_LABELS": "Нема доволно ознаки",
+		"NOT_ENOUGH_IMAGES": "Нема доволно слики",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Бројот на captcha во збирката податоци е помал од конфигурираниот број",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Бројот на решенија во збирката податоци е помал од конфигурираниот број",
+		"DUPLICATE_IMAGE": "откриена е дупликат слика",
+		"MERKLE_ERROR": "Грешка при создавање на Мерклово дрво"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Не успеа увезувањето на моторот на базата податоци",
+		"DATABASE_UNDEFINED": "Клиентот на базата податоци не е поврзан",
+		"DATABASE_HOST_UNDEFINED": "Адресата на домаќинот на базата податоци не е дефинирана",
+		"DATASET_LOAD_FAILED": "Вчитувањето на збирката податоци не успеа",
+		"DATASET_GET_FAILED": "Не успеа добивањето на збирката податоци",
+		"CAPTCHA_GET_FAILED": "Не успеа добивањето на captcha",
+		"CAPTCHA_UPDATE_FAILED": "Не успеа ажурирањето на captcha",
+		"IMAGE_GET_FAILED": "Не успеа добивањето на сликата",
+		"PENDING_RECORD_NOT_FOUND": "Не е пронајден запис на чекање",
+		"INVALID_HASH": "Неважечки хеш",
+		"SOLUTION_GET_FAILED": "Не успеа добивањето на решението",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Не се пронајдени збирки податоци со потребниот број решенија",
+		"SOLUTION_APPROVE_FAILED": "Не успеа одобрувањето на решението",
+		"SOLUTION_FLAG_FAILED": "Не успеа означувањето на решението како обработено",
+		"TABLES_UNDEFINED": "Табелите не се дефинирани",
+		"CONNECTION_UNDEFINED": "Врската не е дефинирана",
+		"COMMITMENT_FLAG_FAILED": "Не успеа означувањето на обврската како обработена",
+		"UNKNOWN": "Непозната грешка на базата податоци",
+		"QUERY_ERROR": "Барањето до базата податоци не успеа",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Врската за правилата за пристап на Redis не е дефинирана",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Складиштето за правилата за пристап на корисници не е дефинирано",
+		"SESSION_STORE_FAILED": "Не успеа зачувувањето на сесијата",
+		"SESSION_CHECK_REMOVE_FAILED": "Не успеа проверката и отстранувањето на сесијата",
+		"SESSION_GET_FAILED": "Не успеа добивањето на сесијата"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Не може да се измени корисникот сопственик",
+		"CANNOT_DELETE_OWN_USER": "Не може да ја избришете сопствената сметка",
+		"CANNOT_DELETE_LAST_USER": "Не може да се избрише последниот корисник",
+		"USER_ALREADY_EXISTS": "Корисникот веќе постои",
+		"NO_SUGGESTIONS_FOUND": "Не се пронајдени предлози",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Не може да се деактивира последниот активен сајт",
+		"DUPLICATE_SITE_NAME": "Веќе постои сајт со ова име",
+		"INVALID_SITE_NAME": "Името на сајтот смее да содржи само букви, бројки, цртички и долни црти"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Неважечки параметар"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Датотеката не е пронајдена",
+		"FILE_ALREADY_EXISTS": "Датотеката веќе постои",
+		"INVALID_DIR_FORMAT": "Неважечки формат на папка"
+	}
+}

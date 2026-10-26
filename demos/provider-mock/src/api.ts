@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import type { IncomingHttpHeaders } from "node:http";
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { type Logger, getLogger } from "@prosopo/logger";
 import { getJA4 } from "@prosopo/provider";
 import {
@@ -90,9 +90,11 @@ export const createVerifyHandler =
 			body = VerifySolutionBody.parse(req.body);
 		} catch (err) {
 			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { error: err, code: 400 },
-					logLevel: "info",
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PMCK-1",
+					message: "Error parsing captcha",
+					cause: err,
 				}),
 			);
 		}
@@ -107,8 +109,11 @@ export const createVerifyHandler =
 			});
 		} catch (err) {
 			return next(
-				new ProsopoApiError("API.UNKNOWN", {
-					context: { error: err, code: 500 },
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "PMCK-2",
+					message: "Unknown API error",
+					cause: err,
 				}),
 			);
 		}

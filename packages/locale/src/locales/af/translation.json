@@ -1,0 +1,71 @@
+{
+	"CONTRACT": {
+		"INVALID_ADDRESS": "Kon nie ongeldige adres enkodeer nie",
+		"CAPTCHA_SOLUTION_COMMITMENT_DOES_NOT_EXIST": "Captcha-oplossingverbintenis bestaan nie",
+		"SIGNER_UNDEFINED": "Ondertekenaar ongedefinieer",
+		"CANNOT_FIND_KEYPAIR": "Kan nie sleutelpaar vind nie",
+		"INVALID_DATA_FORMAT": "Ongeldige dataformaat"
+	},
+	"CONFIG": {
+		"UNKNOWN_ENVIRONMENT": "Onbekende omgewing versoek",
+		"INVALID_CAPTCHA_NUMBER": "Stel asseblief die captcha-konfigurasies korrek op",
+		"INVALID_LOG_LEVEL": "Ongeldige logvlak",
+		"INVALID_PACKAGE_DIR": "Ongeldige pakketgids"
+	},
+	"DATASET": {
+		"DATASET_PARSE_ERROR": "Fout met ontleding van datastel",
+		"SOLUTION_PARSE_ERROR": "Fout met ontleding van datastel",
+		"HASH_ERROR": "Fout met hashing van datastel",
+		"DATASET_ID_UNDEFINED": "Datastel-ID ongedefinieer",
+		"NOT_ENOUGH_LABELS": "Nie genoeg etikette nie",
+		"NOT_ENOUGH_IMAGES": "Nie genoeg prente nie",
+		"CAPTCHAS_COUNT_LESS_THAN_CONFIGURED": "Aantal captchas in datastel is minder as die gekonfigureerde aantal captchas",
+		"SOLUTIONS_COUNT_LESS_THAN_CONFIGURED": "Aantal oplossings in datastel is minder as die gekonfigureerde aantal oplossings",
+		"DUPLICATE_IMAGE": "duplikaatprent bespeur",
+		"MERKLE_ERROR": "Fout met skep van Merkle-boom"
+	},
+	"DATABASE": {
+		"DATABASE_IMPORT_FAILED": "Kon nie databasisenjin invoer nie",
+		"DATABASE_UNDEFINED": "Databasiskliënt is nie gekoppel nie",
+		"DATABASE_HOST_UNDEFINED": "Databasisgasheeradres is nie gedefinieer nie",
+		"DATASET_LOAD_FAILED": "Laai van datastel het misluk",
+		"DATASET_GET_FAILED": "Kon nie datastel kry nie",
+		"CAPTCHA_GET_FAILED": "Kon nie captcha kry nie",
+		"CAPTCHA_UPDATE_FAILED": "Kon nie captcha bywerk nie",
+		"IMAGE_GET_FAILED": "Kon nie prent kry nie",
+		"PENDING_RECORD_NOT_FOUND": "Geen hangende rekord gevind nie",
+		"INVALID_HASH": "Ongeldige hash",
+		"SOLUTION_GET_FAILED": "Kon nie oplossing kry nie",
+		"DATASET_WITH_SOLUTIONS_GET_FAILED": "Geen datastelle met die vereiste aantal oplossings gevind nie",
+		"SOLUTION_APPROVE_FAILED": "Kon nie oplossing goedkeur nie",
+		"SOLUTION_FLAG_FAILED": "Kon nie oplossing as verwerk merk nie",
+		"TABLES_UNDEFINED": "Tabelle ongedefinieer",
+		"CONNECTION_UNDEFINED": "Verbinding ongedefinieer",
+		"COMMITMENT_FLAG_FAILED": "Kon nie verbintenis as verwerk merk nie",
+		"UNKNOWN": "Onbekende databasisfout",
+		"QUERY_ERROR": "Databasisnavraag het misluk",
+		"REDIS_ACCESS_RULES_CONNECTION_UNDEFINED": "Redis-toegangsreëlsverbinding ongedefinieer",
+		"USER_ACCESS_RULES_STORAGE_UNDEFINED": "Gebruikerstoegangsreëlsberging ongedefinieer",
+		"SESSION_STORE_FAILED": "Kon nie sessie stoor nie",
+		"SESSION_CHECK_REMOVE_FAILED": "Kon nie sessie kontroleer en verwyder nie",
+		"SESSION_GET_FAILED": "Kon nie sessie kry nie"
+	},
+	"PORTAL": {
+		"CANNOT_MODIFY_OWNER_USER": "Kan nie eienaargebruiker wysig nie",
+		"CANNOT_DELETE_OWN_USER": "Kan nie jou eie rekening uitvee nie",
+		"CANNOT_DELETE_LAST_USER": "Kan nie laaste gebruiker uitvee nie",
+		"USER_ALREADY_EXISTS": "Gebruiker bestaan reeds",
+		"NO_SUGGESTIONS_FOUND": "Geen voorstelle gevind nie",
+		"CANNOT_DEACTIVATE_LAST_SITE": "Kan nie die laaste aktiewe webwerf deaktiveer nie",
+		"DUPLICATE_SITE_NAME": "'n Webwerf met hierdie naam bestaan reeds",
+		"INVALID_SITE_NAME": "Webwerfnaam mag slegs letters, syfers, koppeltekens en onderstrepings bevat"
+	},
+	"CLI": {
+		"PARAMETER_ERROR": "Ongeldige parameter"
+	},
+	"FS": {
+		"FILE_NOT_FOUND": "Lêer nie gevind nie",
+		"FILE_ALREADY_EXISTS": "Lêer bestaan reeds",
+		"INVALID_DIR_FORMAT": "Ongeldige gidsformaat"
+	}
+}

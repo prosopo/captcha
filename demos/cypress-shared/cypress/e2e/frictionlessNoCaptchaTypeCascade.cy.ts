@@ -24,7 +24,9 @@
 //      rejections — the trafficFilter path used to be here too but
 //      was moved back to verify-time; see the comment on
 //      `applyTrafficFilterAtRequestTime`) and returns 401 with a
-//      bare-string body `{"error":"Unauthorized"}`.
+//      bare-string body `{"error":"Unauthorized"}`. Those paths now
+//      send a structured `{error: {code, errorId}}`; the spec stays
+//      because a provider on an older build still sends the string.
 //   2. HttpClientBase does not throw on 4xx JSON — it hands the body
 //      back verbatim as a `GetFrictionlessCaptchaResponse`.
 //   3. Widget's `result.error?.message` check misses (the error is a
@@ -61,9 +63,9 @@ describe("Frictionless response missing captchaType does not cascade to a pow ca
 	});
 
 	it("does not follow up with /captcha/pow when /frictionless returns a bare-string 401", () => {
-		// Simulate the wire shape emitted by every server path that
-		// currently returns 401 with `{ error: "Unauthorized" }` — the
-		// exact body seen in prod on affected frictionless sitekeys.
+		// Simulate the wire shape older providers emitted on every 401
+		// path, `{ error: "Unauthorized" }` — the exact body seen in prod
+		// on affected frictionless sitekeys.
 		// The widget must handle this without cascading into a pow
 		// challenge.
 		cy.intercept("POST", "**/prosopo/provider/client/captcha/frictionless", {

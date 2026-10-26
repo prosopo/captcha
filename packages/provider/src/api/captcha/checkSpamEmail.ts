@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { ProsopoApiError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 import { INPUT_LIMITS, safeLine } from "@prosopo/types";
 import type { ProviderEnvironment } from "@prosopo/types-env";
 import { extractDomainFromEmail } from "@prosopo/util";
@@ -42,10 +42,11 @@ export default (env: ProviderEnvironment) =>
 		} catch (err) {
 			// A malformed request body is a client error (400), not a 500.
 			return next(
-				new ProsopoApiError("CAPTCHA.PARSE_ERROR", {
-					context: { code: 400, error: err },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "INVALID_REQUEST",
+					errorSite: "PROV-1",
+					message: "Error parsing captcha",
+					cause: err,
 				}),
 			);
 		}
@@ -79,10 +80,10 @@ export default (env: ProviderEnvironment) =>
 			const clientRecord = await tasks.db.getClientRecord(dapp);
 			if (!clientRecord) {
 				return next(
-					new ProsopoApiError("API.SITE_KEY_NOT_REGISTERED", {
-						context: { code: 400, siteKey: dapp },
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "SITE_KEY_NOT_REGISTERED",
+						errorSite: "PROV-2",
+						context: { siteKey: dapp },
 					}),
 				);
 			}
@@ -90,13 +91,11 @@ export default (env: ProviderEnvironment) =>
 			const valid = clientRecord.settings.spamEmailDomainCheckEnabled;
 			if (!valid) {
 				return next(
-					new ProsopoApiError("API.BAD_REQUEST", {
-						context: {
-							code: 400,
-							siteKey: dapp,
-						},
-						i18n: req.i18n,
-						logger: req.logger,
+					new ProsopoError({
+						code: "INVALID_REQUEST",
+						errorSite: "PROV-3",
+						message: "BadRequest",
+						context: { siteKey: dapp },
 					}),
 				);
 			}
@@ -125,10 +124,10 @@ export default (env: ProviderEnvironment) =>
 				error,
 			}));
 			return next(
-				new ProsopoApiError("API.INTERNAL_SERVER_ERROR", {
-					context: { code: 500 },
-					i18n: req.i18n,
-					logger: req.logger,
+				new ProsopoError({
+					code: "UNEXPECTED",
+					errorSite: "PROV-4",
+					message: "Internal server error",
 				}),
 			);
 		}

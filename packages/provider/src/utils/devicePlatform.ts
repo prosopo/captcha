@@ -17,30 +17,30 @@ import type {
 	RoutingMachinePlatform,
 	TrafficCategoryPolicies,
 } from "@prosopo/types";
+import { type MobileSignals, deriveMobileVerdict } from "./mobileSignals.js";
 
 // NB: `isApple` covers desktop macOS as well as iOS. A rule that needs
 // "iPhone / iPad specifically" must test the UA itself — see the iOS UA
 // gate in the decision machines' route checks.
 const APPLE_UA_REGEX = /iPhone|iPad|iPod|Macintosh|Mac OS X/i;
-const MOBILE_UA_REGEX = /Mobile|Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i;
+
+/** Everything `derivePlatform` can weigh beyond its positional arguments. */
+export type PlatformSignals = Omit<MobileSignals, "userAgent" | "webView">;
 
 /**
  * Derive platform flags from server-visible signals. `isWebView` is supplied
  * by the caller because that bit only comes from the encrypted bot-detection
- * payload, not request headers. `isMobile` prefers IPInfo's network-classified
- * mobile bit when present and falls back to UA parsing otherwise.
+ * payload, not request headers. `isMobile` is a weighed verdict over whatever
+ * signals the caller can supply — see `deriveMobileVerdict`.
  */
 export const derivePlatform = (
 	userAgent: string,
 	webView: boolean,
-	ipInfo?: { isMobile?: boolean },
+	signals: PlatformSignals = {},
 ): RoutingMachinePlatform => ({
 	isApple: APPLE_UA_REGEX.test(userAgent),
 	isWebView: webView,
-	isMobile:
-		typeof ipInfo?.isMobile === "boolean"
-			? ipInfo.isMobile
-			: MOBILE_UA_REGEX.test(userAgent),
+	isMobile: deriveMobileVerdict({ ...signals, userAgent, webView }).isMobile,
 });
 
 // Categories on TrafficFilterSchema that carry a TrafficCategoryPolicy. The

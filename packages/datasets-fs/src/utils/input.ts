@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { ProsopoDatasetError, ProsopoError } from "@prosopo/common";
+import { ProsopoError } from "@prosopo/common";
 // Copyright 2021-2026 Prosopo (UK) Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,10 +26,10 @@ export class InputCliCommand<
 	T extends typeof InputArgsSchema,
 > extends CliCommand<T> {
 	public override getArgSchema(): T {
-		throw new ProsopoError("DEVELOPER.METHOD_NOT_IMPLEMENTED");
+		throw new ProsopoError({ code: "NOT_IMPLEMENTED", errorSite: "DSFS-18" });
 	}
 	public override getDescription(): string {
-		throw new ProsopoError("DEVELOPER.METHOD_NOT_IMPLEMENTED");
+		throw new ProsopoError({ code: "NOT_IMPLEMENTED", errorSite: "DSFS-19" });
 	}
 	public override getOptions() {
 		return {
@@ -47,12 +47,11 @@ export class InputCliCommand<
 		await super._check(args);
 		// input must exist
 		if (!fs.existsSync(args.input)) {
-			throw new ProsopoDatasetError(
-				new Error(`input path does not exist: ${args.input}`),
-				{
-					translationKey: "FS.FILE_NOT_FOUND",
-				},
-			);
+			throw new ProsopoError({
+				code: "FILE_ERROR",
+				errorSite: "DSFS-20",
+				message: `input path does not exist: ${args.input}`,
+			});
 		}
 	}
 }

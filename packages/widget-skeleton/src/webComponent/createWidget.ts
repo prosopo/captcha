@@ -22,17 +22,22 @@ import { applyDefaultStyles } from "./createWebComponent.js";
  * @param container - The HTML element to attach the widget to
  * @param theme - The theme to apply to the widget
  * @param webComponentTag - The tag name for the web component
+ * @param loadingLabel - What the spinner is announced as, in the widget's language
  * @returns The interactive area of the widget as an HTMLElement
  */
 export function createWidgetSkeleton(
 	container: Element,
 	theme: Theme,
 	webComponentTag: string,
+	loadingLabel?: string,
 ): { widgetInteractiveArea: HTMLElement; webComponent: HTMLElement } {
 	const host = document.createElement(webComponentTag);
 	applyDefaultStyles(host);
 
-	const { element, interactiveArea } = createWidgetSkeletonElement(theme);
+	const { element, interactiveArea } = createWidgetSkeletonElement(
+		theme,
+		loadingLabel,
+	);
 	host.appendChild(element);
 
 	container.innerHTML = "";
