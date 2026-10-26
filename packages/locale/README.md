@@ -66,7 +66,7 @@ host's own. Its language comes only from the attribute or the browser.
 - Case is ignored: `TR-tr` → `tr`.
 - A variant falls back to its parent (RFC 4647 lookup): `zh-SG` → `zh`,
   `pt-PT` → `pt`. A variant with its own catalogue keeps it: `pt-BR` →
-  `pt-BR`, `zh-CN` → `zh-CN`.
+  `pt-BR`, `zh-CN` → `zh-CN`, `en-GB` → `en-GB`.
 - Traditional Chinese (`zh-TW`, `zh-HK`, `zh-MO`, `zh-Hant-*`) never falls
   back to `zh`, which is Simplified: Hong Kong and Macau tags get `zh-HK`,
   the rest `zh-TW`. Both were converted from `zh-CN` with OpenCC and then

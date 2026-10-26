@@ -1,33 +1,32 @@
 {
 	"name": "@prosopo/fingerprint",
-	"version": "2.8.1",
+	"version": "2.8.3",
 	"description": "Provider fingerprint",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "^24"
 	},
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		},
 		"./summary": {
-			"types": "./dist/summary.d.ts",
-			"import": "./dist/summary.js",
+			"types": "./dist/types/summary.d.ts",
+			"import": "./dist/esm/summary.js",
 			"require": "./dist/cjs/summary.cjs"
 		}
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"build:types": "tsc --project tsconfig.types.json"
 	},
 	"repository": {
 		"type": "git",

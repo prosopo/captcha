@@ -1,15 +1,14 @@
 {
 	"name": "@prosopo/config",
-	"version": "3.5.0",
+	"version": "3.5.1",
 	"description": "Prosopo config library",
 	"type": "module",
 	"scripts": {
-		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-production}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"typecheck": "tsc --project tsconfig.types.json",
+		"clean": "del-cli --verbose dist",
+		"build:types": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts --mode $NODE_ENV"
 	},
 	"engines": {
@@ -84,20 +83,22 @@
 		"registry": "https://registry.npmjs.org"
 	},
 	"sideEffects": false,
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		},
 		"./webpack": {
-			"import": "./dist/webpack/index.js",
-			"require": "./dist/webpack/cjs/index.cjs"
+			"types": "./dist/types/webpack/index.d.ts",
+			"import": "./dist/esm/webpack/index.js",
+			"require": "./dist/cjs/webpack/index.cjs"
 		},
 		"./webpack/webpack.config": {
-			"import": "./dist/webpack/webpack.config.js",
+			"types": "./dist/types/webpack/webpack.config.d.ts",
+			"import": "./dist/esm/webpack/webpack.config.js",
 			"require": "./dist/cjs/webpack/webpack.config.cjs"
 		}
 	}

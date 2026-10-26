@@ -31,6 +31,8 @@ import {
 	type ImageRoundsBounds,
 	type KeyringPair,
 	NO_MEASUREMENT_REASONS,
+	OPEN_DETECTOR_FORMAT,
+	type OpenDetectorFormat,
 	type ProsopoConfigOutput,
 	type RequestHeaders,
 	type RoutingMachineBaseline,
@@ -64,6 +66,7 @@ import {
 	type DecodedDetectorPayload,
 	getBotScore,
 } from "../detection/getBotScore.js";
+import { decodeOpenPayload } from "../detection/openPayload.js";
 import { samplePuzzleDifficulty } from "../puzzle/puzzleDifficulty.js";
 import { ipMatchesSession } from "./ipMatch.js";
 import { type RoutingContext, applyRouter } from "./routingMachine.js";
@@ -855,6 +858,7 @@ export class FrictionlessManager extends CaptchaManager {
 	async resolveDecryptAttempts(detectorSessionId?: string): Promise<{
 		attempts: {
 			key: string;
+			format?: OpenDetectorFormat;
 			innerConfig?: string;
 			payloadLayout?: string;
 			keyMap?: string;
@@ -867,6 +871,7 @@ export class FrictionlessManager extends CaptchaManager {
 				attempts: [
 					{
 						key: bundle.key,
+						format: bundle.format,
 						innerConfig: bundle.innerConfig,
 						payloadLayout: bundle.payloadLayout,
 						keyMap: bundle.keyMap,
@@ -911,14 +916,17 @@ export class FrictionlessManager extends CaptchaManager {
 						key: this.redactKeyForLogging(attempt.key),
 					},
 				}));
-				const result = await getBotScore(
-					token,
-					headHash,
-					attempt.key,
-					attempt.innerConfig,
-					attempt.payloadLayout,
-					attempt.keyMap,
-				);
+				const result =
+					attempt.format === OPEN_DETECTOR_FORMAT
+						? decodeOpenPayload(token, headHash, attempt.key)
+						: await getBotScore(
+								token,
+								headHash,
+								attempt.key,
+								attempt.innerConfig,
+								attempt.payloadLayout,
+								attempt.keyMap,
+							);
 				decrypted = result;
 				this.logger.debug(() => ({
 					msg: "Successfully decrypted score",

@@ -1,14 +1,14 @@
 {
 	"name": "@prosopo/client-example-server",
-	"version": "2.7.182",
+	"version": "2.7.185",
 	"description": "Backend for client-example",
-	"main": "dist/app.js",
-	"types": "dist/app.d.ts",
+	"main": "dist/esm/app.js",
+	"types": "dist/types/app.d.ts",
 	"exports": {
 		".": {
-			"import": "./dist/index.js",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs",
-			"types": "./dist/app.d.ts"
+			"types": "./dist/types/app.d.ts"
 		}
 	},
 	"type": "module",
@@ -17,16 +17,15 @@
 	},
 	"scripts": {
 		"dev": "NODE_ENV=${NODE_ENV:-development}; vite serve --mode=$NODE_ENV --config ./vite.config.ts --host",
-		"start": "NODE_ENV=${NODE_ENV:-development}; node ./dist/app.js",
+		"start": "NODE_ENV=${NODE_ENV:-development}; node ./dist/esm/app.js",
 		"start:bundle": "node ./dist/bundle/prosopo_client_example_server.app.bundle.js",
-		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"docker-tag": "node ../../docker/docker-tag.mjs",
 		"build:docker": "docker buildx build --progress=plain --tag $(pnpm run --silent docker-tag) --platform linux/amd64 -f ./Dockerfile ../..",
 		"publish:docker": "docker push $(pnpm run --silent docker-tag)",
-		"typecheck": "tsc --project tsconfig.types.json",
+		"build:types": "tsc --project tsconfig.types.json",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
 		"test:watch": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest --config ./vite.test.config.ts",
 		"test:coverage": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --coverage --config ./vite.test.config.ts",

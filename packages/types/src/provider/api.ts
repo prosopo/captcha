@@ -69,6 +69,7 @@ import type {
 	ChallengeSignature,
 	RequestHashSignature,
 } from "../procaptcha/index.js";
+import { OPEN_DETECTOR_FORMAT } from "./detection.js";
 
 /**
  * An error as a client receives it. `code` is what the widget branches on and
@@ -819,7 +820,10 @@ export const ReplaceDetectorPoolBody = object({
 		object({
 			js: string(),
 			privateKey: string(),
-			innerConfig: string(),
+			// Required for sealed bundles. Open-format bundles have no inner
+			// layer; the pool rejects a sealed bundle that arrives without it.
+			innerConfig: string().optional(),
+			format: literal(OPEN_DETECTOR_FORMAT).optional(),
 			// Release the bundle was built from, e.g. "3.6.64". The widget runs
 			// whatever the provider serves, so this is the only guard against a
 			// pool built from a different release. Optional for pools predating

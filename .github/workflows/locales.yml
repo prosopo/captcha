@@ -55,16 +55,15 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: '24'
+          node-version: '24.22.1'
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile --prefer-offline
 
       # vite.test.config.ts imports the built @prosopo/config and needs an
       # .env.test, and the type tests resolve locale's other workspace
-      # dependencies (such as @prosopo/util) through their dist/*.d.ts, which
-      # only build:tsc emits — `build` is a vite bundle with no declarations.
-      - run: pnpm exec turbo run @prosopo/config#build build:tsc --filter='@prosopo/locale^...'
+      # dependencies (such as @prosopo/util) through their dist/types.
+      - run: pnpm exec turbo run @prosopo/config#build build:types --filter='@prosopo/locale^...'
 
       - run: cp dev/scripts/env.test .env.test
 

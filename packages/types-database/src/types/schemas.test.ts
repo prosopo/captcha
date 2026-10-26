@@ -688,6 +688,51 @@ describe("UserSettingsSchema", () => {
 		expect(doc.trafficFilter.vpn.puzzle.pieceScale.max).toBe(0.2);
 	});
 
+	it("persists exceptions on a traffic filter category", () => {
+		const doc = settings({
+			trafficFilter: {
+				proxy: {
+					action: TrafficFilterAction.Challenge,
+					exceptions: [
+						{
+							countries: ["GB"],
+							minAbuserScore: 0.5,
+							action: TrafficFilterAction.Block,
+						},
+					],
+				},
+			},
+		});
+		const [exception] = doc.trafficFilter.proxy.exceptions;
+		expect([...exception.countries]).toEqual(["GB"]);
+		expect(exception.minAbuserScore).toBe(0.5);
+		expect(exception.action).toBe(TrafficFilterAction.Block);
+	});
+
+	it("leaves exceptions absent when none are configured", () => {
+		const doc = settings({
+			trafficFilter: { proxy: { action: TrafficFilterAction.Block } },
+		});
+		expect(doc.trafficFilter.proxy.exceptions).toBeUndefined();
+	});
+
+	it("rejects an exception abuser score outside the unit interval", () => {
+		expect(
+			errorPaths(
+				settings({
+					trafficFilter: {
+						proxy: {
+							action: TrafficFilterAction.Challenge,
+							exceptions: [
+								{ minAbuserScore: 2, action: TrafficFilterAction.Block },
+							],
+						},
+					},
+				}).validateSync(),
+			),
+		).toEqual(["trafficFilter.proxy.exceptions.0.minAbuserScore"]);
+	});
+
 	it("persists the tarpit padBytes on a challenge category", () => {
 		const doc = settings({
 			trafficFilter: {

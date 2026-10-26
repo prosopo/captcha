@@ -1,15 +1,14 @@
 {
 	"name": "@prosopo/prosoponator-bot",
-	"version": "2.6.30",
+	"version": "2.6.31",
 	"description": "",
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json",
+		"build:types": "tsc --project tsconfig.types.json",
 		"start": "pnpm exec tsx src/index.ts",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
 		"test:watch": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest --config ./vite.test.config.ts",
@@ -36,13 +35,13 @@
 		"vite": "8.1.6",
 		"vitest": "5.0.4"
 	},
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"exports": {
 		".": {
-			"import": "./dist/index.js",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs",
-			"types": "./dist/index.d.ts"
+			"types": "./dist/types/index.d.ts"
 		}
 	},
 	"engines": {

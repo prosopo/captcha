@@ -1,38 +1,39 @@
 {
 	"name": "@prosopo/account",
-	"version": "2.8.113",
+	"version": "2.8.115",
 	"description": "Services and Utils for Prosopo account gen and management",
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
+	"main": "dist/esm/index.js",
+	"types": "dist/types/index.d.ts",
 	"type": "module",
 	"engines": {
 		"node": "^24"
 	},
 	"exports": {
 		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.cjs"
 		},
 		"./extension/ExtensionWeb2": {
-			"import": "./dist/extension/ExtensionWeb2.js",
+			"types": "./dist/types/extension/ExtensionWeb2.d.ts",
+			"import": "./dist/esm/extension/ExtensionWeb2.js",
 			"require": "./dist/cjs/extension/ExtensionWeb2.cjs",
-			"default": "./dist/extension/ExtensionWeb2.js"
+			"default": "./dist/esm/extension/ExtensionWeb2.js"
 		},
 		"./extension/ExtensionWeb3": {
-			"import": "./dist/extension/ExtensionWeb3.js",
+			"types": "./dist/types/extension/ExtensionWeb3.d.ts",
+			"import": "./dist/esm/extension/ExtensionWeb3.js",
 			"require": "./dist/cjs/extension/ExtensionWeb3.cjs",
-			"default": "./dist/extension/ExtensionWeb3.js"
+			"default": "./dist/esm/extension/ExtensionWeb3.js"
 		}
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
-		"build:tsc": "pnpm run typecheck && pnpm run build",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
+		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
 		"test": "NODE_ENV=${NODE_ENV:-test}; pnpm exec vitest run --config ./vite.test.config.ts",
-		"typecheck": "tsc --project tsconfig.types.json"
+		"build:types": "tsc --project tsconfig.types.json"
 	},
 	"repository": {
 		"type": "git",

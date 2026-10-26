@@ -1,42 +1,44 @@
 {
 	"name": "@prosopo/user-access-policy",
-	"version": "3.15.6",
+	"version": "3.15.8",
 	"type": "module",
 	"engines": {
 		"node": "^24"
 	},
 	"exports": {
 		".": {
-			"types": "./dist/.export.d.ts",
-			"import": "./dist/.export.js",
+			"types": "./dist/types/.export.d.ts",
+			"import": "./dist/esm/.export.js",
 			"require": "./dist/cjs/.export.cjs"
 		},
 		"./api": {
-			"types": "./dist/api/.export.d.ts",
-			"import": "./dist/api/.export.js",
+			"types": "./dist/types/api/.export.d.ts",
+			"import": "./dist/esm/api/.export.js",
 			"require": "./dist/cjs/api/.export.cjs"
 		},
 		"./redis": {
-			"types": "./dist/redis/.export.d.ts",
-			"import": "./dist/redis/.export.js",
+			"types": "./dist/types/redis/.export.d.ts",
+			"import": "./dist/esm/redis/.export.js",
 			"require": "./dist/cjs/redis/.export.cjs"
 		},
 		"./mongoose": {
-			"types": "./dist/mongoose/.export.d.ts",
-			"import": "./dist/mongoose/.export.js",
+			"types": "./dist/types/mongoose/.export.d.ts",
+			"import": "./dist/esm/mongoose/.export.js",
 			"require": "./dist/cjs/mongoose/.export.cjs"
 		}
 	},
 	"imports": {
-		"#policy/*": "./dist/*"
+		"#policy/*": {
+			"types": "./dist/types/*",
+			"default": "./dist/esm/*"
+		}
 	},
 	"scripts": {
-		"clean": "del-cli --verbose dist tsconfig.tsbuildinfo",
-		"build": "pnpm run build:cross-env --mode ${NODE_ENV:-development}",
-		"build:cross-env": "vite build --config vite.esm.config.ts",
+		"clean": "del-cli --verbose dist",
+		"build:esm": "vite build --config vite.esm.config.ts --mode ${NODE_ENV:-development}",
 		"build:tsc": "tsc --build --verbose",
 		"build:cjs": "NODE_ENV=${NODE_ENV:-development}; vite build --config vite.cjs.config.ts --mode $NODE_ENV",
-		"typecheck": "tsc --project tsconfig.types.json",
+		"build:types": "tsc --project tsconfig.types.json",
 		"test:unit": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=unit pnpm exec vitest run --config ./vite.test.config.ts",
 		"test:integration": "NODE_ENV=${NODE_ENV:-test}; TEST_TYPE=integration pnpm exec vitest run --config ./vite.test.config.ts",
 		"test": "pnpm run test:unit && pnpm run test:integration"

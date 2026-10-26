@@ -167,7 +167,7 @@ const SELECTABLE_CAPTCHA_TYPES: CaptchaType[] = Object.values(
 
 // Sub-schema for one trafficFilter category's policy. `_id: false` prevents
 // Mongoose from stamping an implicit ObjectId onto each subdoc.
-export const TrafficCategoryPolicySchema = new Schema(
+const TrafficCategoryActionSchema = new Schema(
 	{
 		action: {
 			type: String,
@@ -199,6 +199,21 @@ export const TrafficCategoryPolicySchema = new Schema(
 	},
 	{ _id: false },
 );
+
+const TrafficCategoryExceptionSchema = TrafficCategoryActionSchema.clone().add({
+	countries: { type: [String], default: undefined, required: false },
+	inMarket: { type: Boolean, required: false },
+	minAbuserScore: { type: Number, min: 0, max: 1, required: false },
+});
+
+export const TrafficCategoryPolicySchema =
+	TrafficCategoryActionSchema.clone().add({
+		exceptions: {
+			type: [TrafficCategoryExceptionSchema],
+			default: undefined,
+			required: false,
+		},
+	});
 
 export const UserSettingsSchema = new Schema({
 	captchaType: {
@@ -364,6 +379,7 @@ export const UserSettingsSchema = new Schema({
 		mobile: { type: TrafficCategoryPolicySchema, required: false },
 		satellite: { type: TrafficCategoryPolicySchema, required: false },
 		crawler: { type: TrafficCategoryPolicySchema, required: false },
+		marketCountries: { type: [String], default: undefined, required: false },
 	},
 	storeMetadata: {
 		type: Boolean,
@@ -415,6 +431,7 @@ type AccountRecord = mongoose.Document & {
 	signupEmail: string;
 	tier: string;
 	tierRequestQuota: number;
+	marketCountries?: string[];
 	marketingPreferences: boolean;
 	users: User[];
 	sites: {
@@ -436,6 +453,7 @@ export const AccountSchema = new Schema<AccountRecord>({
 	signupEmail: String,
 	tier: String,
 	tierRequestQuota: Number,
+	marketCountries: { type: [String], default: undefined },
 	marketingPreferences: Boolean,
 	users: [
 		{

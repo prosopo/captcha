@@ -20,5 +20,9 @@ lto = true
 codegen-units = 1
 strip = "symbols"
 
+# Dependencies optimised even in debug: they compile once and are cached, so
+# tests run near release speed while our own crate still rebuilds quickly.
+# Releases keep full LTO via `build:release` (`NODE_ENV=production pnpm build`).
 [profile.dev.package."*"]
 debug = false
+opt-level = 2
