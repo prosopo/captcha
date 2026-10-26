@@ -953,7 +953,8 @@ source = '''
 [sources.cadvisor_metrics]
 type = "prometheus_scrape"
 endpoints = [ "http://cadvisor:8080/metrics" ]
-scrape_interval_secs = 30
+# Container cpu/memory/network/disk move slower than the 30s host tier needs.
+scrape_interval_secs = 60
 
 # Transform: Add host and environment tags to cAdvisor metrics
 # Enables container-level monitoring and resource tracking
