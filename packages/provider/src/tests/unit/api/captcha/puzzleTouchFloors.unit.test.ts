@@ -23,7 +23,7 @@ import {
 	TOUCH_MIN_TOLERANCE_PX,
 } from "@prosopo/captcha-severity";
 import { DEFAULT_GEOMETRY } from "@prosopo/puzzle-assets";
-import type { IPuzzleSettings } from "@prosopo/types";
+import type { FingerprintSummaryStored, IPuzzleSettings } from "@prosopo/types";
 import type { ClientRecord, ProjectedSession } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -77,6 +77,7 @@ const buildContext = (overrides: {
 	sessionPuzzleTolerance?: number;
 	trafficVerdict?: RequestTimeTrafficVerdict;
 	carrierNetwork?: boolean;
+	sessionFingerprintSummary?: FingerprintSummaryStored;
 }): ChallengeIssueContext => ({
 	tasks: buildTasks(),
 	user: "user",
@@ -95,6 +96,9 @@ const buildContext = (overrides: {
 			puzzleTolerance: overrides.sessionPuzzleTolerance,
 		}),
 		...(overrides.sessionPuzzle && { puzzle: overrides.sessionPuzzle }),
+		...(overrides.sessionFingerprintSummary && {
+			fingerprintSummary: overrides.sessionFingerprintSummary,
+		}),
 	} as unknown as ProjectedSession,
 	trafficVerdict: overrides.trafficVerdict ?? { kind: "pass" },
 	provenance: {
@@ -322,8 +326,10 @@ describe("the session's fingerprint summary at issuance", () => {
 			groupHash: "0xgroup",
 			bucketId: "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f",
 		};
-		const ctx = buildContext({ userAgent: WINDOWS_CHROME_UA });
-		ctx.sessionRecord = { ...ctx.sessionRecord, fingerprintSummary };
+		const ctx = buildContext({
+			userAgent: WINDOWS_CHROME_UA,
+			sessionFingerprintSummary: fingerprintSummary,
+		});
 
 		await issuePuzzleChallenge(ctx);
 
