@@ -23,6 +23,7 @@ import type { I18nLookup } from "@prosopo/locale";
 import {
 	CaptchaType,
 	type IPInfoResult,
+	MAX_WIDGET_SLOT,
 	TrafficFilterAction,
 } from "@prosopo/types";
 import { AccessPolicyType } from "@prosopo/user-access-policy";
@@ -155,8 +156,8 @@ vi.mock("../../../utils/hashUserAgent.js", () => ({
 // Mock the hashUserIp utility
 vi.mock("../../../utils/hashUserIp.js", () => ({
 	hashUserIp: vi.fn(
-		(user: string, ip: string, sitekey: string) =>
-			`hash-${user}-${ip}-${sitekey}`,
+		(user: string, ip: string, sitekey: string, widgetSlot?: number) =>
+			`hash-${user}-${ip}-${sitekey}${widgetSlot ? `-${widgetSlot}` : ""}`,
 	),
 }));
 
@@ -729,6 +730,58 @@ describe("getFrictionlessCaptchaChallenge - context selection", () => {
 		expect(res.json).toHaveBeenCalledWith(
 			expect.objectContaining({ sessionId: "live-pow-session" }),
 		);
+	});
+
+	describe("several widgets on one page", () => {
+		const clientRecord = {
+			account: "siteManyWidgets",
+			settings: {
+				captchaType: CaptchaType.frictionless,
+				frictionlessThreshold: 0.5,
+				disallowWebView: false,
+			},
+		};
+		const request = (widgetSlot?: number): Record<string, unknown> => ({
+			token: `tSlot${widgetSlot}`,
+			headHash: "hhSlot",
+			dapp: "siteManyWidgets",
+			user: "u",
+			...(widgetSlot !== undefined && { widgetSlot }),
+		});
+
+		beforeEach(() => {
+			tasksInstance.db.getClientRecord.mockResolvedValue(clientRecord);
+			tasksInstance.frictionlessManager.decryptPayload.mockResolvedValue(
+				payload(false),
+			);
+		});
+
+		it("looks up a separate dedup session for each widget slot", async () => {
+			for (const widgetSlot of [undefined, 0, 1, 2]) {
+				const { req, res, next } = buildReqRes(request(widgetSlot));
+				// biome-ignore lint/suspicious/noExplicitAny: mock request
+				await handler(req as any, res as any, next);
+				expect(next).not.toHaveBeenCalled();
+			}
+
+			const lookedUp =
+				tasksInstance.db.getSessionByuserSitekeyIpHash.mock.calls.map(
+					(call: unknown[]) => call[0],
+				);
+			expect(lookedUp[0]).toBe(lookedUp[1]);
+			expect(new Set(lookedUp).size).toBe(3);
+		});
+
+		it("rejects a widget slot past the cap", async () => {
+			const { req, res, next } = buildReqRes(request(MAX_WIDGET_SLOT + 1));
+			// biome-ignore lint/suspicious/noExplicitAny: mock request
+			await handler(req as any, res as any, next);
+
+			expect(next).toHaveBeenCalled();
+			expect(
+				tasksInstance.db.getSessionByuserSitekeyIpHash,
+			).not.toHaveBeenCalled();
+		});
 	});
 
 	it("evicts the reused session and re-routes when the routing machine returns a different captchaType", async () => {

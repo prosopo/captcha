@@ -118,6 +118,7 @@ export default (
 				refreshOf,
 				switchToImage,
 				fingerprintProof,
+				widgetSlot,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
 			// Recorded on the session and copied onto whichever captcha record it
@@ -214,7 +215,12 @@ export default (
 			}
 
 			const tasks = new Tasks(env, req.logger);
-			const userSitekeyIpHash = hashUserIp(user, normalizedIp, dapp);
+			const userSitekeyIpHash = hashUserIp(
+				user,
+				normalizedIp,
+				dapp,
+				widgetSlot,
+			);
 
 			// Fan out the three independent async dependencies in
 			// parallel: SIMD reading decrypt, session dedup lookup, and
