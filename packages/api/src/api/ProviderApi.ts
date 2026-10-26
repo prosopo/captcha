@@ -626,6 +626,7 @@ export default class ProviderApi
 		clientSessionId?: string,
 		refreshOf?: string,
 		switchToImage?: boolean,
+		widgetSlot?: number,
 	): Promise<GetFrictionlessCaptchaResponse> {
 		const body: GetFrictionlessCaptchaChallengeRequestBodyOutput = {
 			[ApiParams.dapp]: dapp,
@@ -645,6 +646,7 @@ export default class ProviderApi
 			...(refreshOf && { [ApiParams.refreshOf]: refreshOf }),
 			...(refreshOf &&
 				switchToImage && { [ApiParams.switchToImage]: switchToImage }),
+			...(widgetSlot !== undefined && { [ApiParams.widgetSlot]: widgetSlot }),
 		};
 		const { data, headers } = await this.postWithHeaders<
 			GetFrictionlessCaptchaResponse,

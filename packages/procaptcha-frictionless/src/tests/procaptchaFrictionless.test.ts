@@ -620,3 +620,28 @@ describe("tearing down", () => {
 		expect(mocks.mounted).toHaveLength(0);
 	});
 });
+
+describe("several widgets on one page", () => {
+	test("gives each widget for a site key its own slot, and reuses a freed one", async () => {
+		const detectBot = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValue(detection(CaptchaType.pow));
+		const second = document.createElement("div");
+		document.body.appendChild(second);
+		widget = mountProcaptchaFrictionless(container, props(detectBot));
+		const secondWidget = mountProcaptchaFrictionless(second, props(detectBot));
+		await settle();
+		expect(detectBot.mock.calls.map((call) => call[6])).toEqual([0, 1]);
+
+		widget.destroy();
+		const remounted = vi
+			.fn<BotDetectionFunction>()
+			.mockResolvedValue(detection(CaptchaType.pow));
+		widget = mountProcaptchaFrictionless(container, props(remounted));
+		await settle();
+		expect(remounted.mock.calls[0]?.[6]).toBe(0);
+
+		secondWidget.destroy();
+		second.remove();
+	});
+});

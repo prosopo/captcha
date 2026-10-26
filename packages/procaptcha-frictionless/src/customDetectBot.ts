@@ -153,6 +153,7 @@ const customDetectBot: BotDetectionFunction = async (
 	retryContext?: ProviderSelectRetryContext,
 	refreshOf?: string,
 	switchToImage?: boolean,
+	widgetSlot?: number,
 ): Promise<BotDetectionFunctionResult> => {
 	if (!config.account.address) {
 		throw new ProsopoError({ code: "SITE_KEY_MISSING", errorSite: "FRIC-2" });
@@ -300,6 +301,7 @@ const customDetectBot: BotDetectionFunction = async (
 				clientSessionId,
 				refreshOf,
 				switchToImage,
+				widgetSlot,
 			),
 			10000,
 		);
@@ -360,6 +362,7 @@ const customDetectBot: BotDetectionFunction = async (
 		clientSessionId,
 		refreshOf,
 		switchToImage,
+		widgetSlot,
 	);
 	if (detectionResult.getSimdReadings) {
 		// Fire-and-forget: triggers the memoised prefetch inside the catcher

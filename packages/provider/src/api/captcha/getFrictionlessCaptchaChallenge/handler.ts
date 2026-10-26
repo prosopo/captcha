@@ -116,6 +116,7 @@ export default (
 				clientSessionId,
 				refreshOf,
 				switchToImage,
+				widgetSlot,
 			} = GetFrictionlessCaptchaChallengeRequestBody.parse(req.body);
 
 			// Re-sanitise whatever the client reported: keep only scheme + host
@@ -206,7 +207,12 @@ export default (
 			}
 
 			const tasks = new Tasks(env, req.logger);
-			const userSitekeyIpHash = hashUserIp(user, normalizedIp, dapp);
+			const userSitekeyIpHash = hashUserIp(
+				user,
+				normalizedIp,
+				dapp,
+				widgetSlot,
+			);
 
 			// Fan out the three independent async dependencies in
 			// parallel: SIMD reading decrypt, session dedup lookup, and
