@@ -103,6 +103,7 @@ export enum ApiParams {
 	clientSessionId = "clientSessionId",
 	refreshOf = "refreshOf",
 	switchToImage = "switchToImage",
+	widgetSlot = "widgetSlot",
 	imageSwitchAvailable = "imageSwitchAvailable",
 	honeypot = "honeypot",
 	fingerprintProof = "fingerprintProof",

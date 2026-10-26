@@ -211,6 +211,7 @@ export class FrictionlessManager extends CaptchaManager {
 			refreshOf: params.refreshOf,
 			refreshCount: params.refreshCount,
 			refreshedAfterMs: params.refreshedAfterMs,
+			fingerprintSummary: params.fingerprintSummary,
 		};
 	}
 
@@ -276,6 +277,7 @@ export class FrictionlessManager extends CaptchaManager {
 			isProtect,
 			matchedRule,
 			clientMetaData,
+			fingerprintSummary,
 			webView = false,
 			iFrame = false,
 			decryptedHeadHash = "",
@@ -331,6 +333,7 @@ export class FrictionlessManager extends CaptchaManager {
 			// Stamped at issuance, not only mirrored up at solve time, so a
 			// session that is never solved still correlates back to the render.
 			...(clientMetaData && { clientMetaData }),
+			...(fingerprintSummary && { fingerprintSummary }),
 		};
 
 		await this.db.storeSessionRecord(sessionRecord);

@@ -23,7 +23,7 @@ import {
 	TOUCH_MIN_TOLERANCE_PX,
 } from "@prosopo/captcha-severity";
 import { DEFAULT_GEOMETRY } from "@prosopo/puzzle-assets";
-import type { IPuzzleSettings } from "@prosopo/types";
+import type { FingerprintSummaryStored, IPuzzleSettings } from "@prosopo/types";
 import type { ClientRecord, ProjectedSession } from "@prosopo/types-database";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -77,6 +77,7 @@ const buildContext = (overrides: {
 	sessionPuzzleTolerance?: number;
 	trafficVerdict?: RequestTimeTrafficVerdict;
 	carrierNetwork?: boolean;
+	sessionFingerprintSummary?: FingerprintSummaryStored;
 }): ChallengeIssueContext => ({
 	tasks: buildTasks(),
 	user: "user",
@@ -95,6 +96,9 @@ const buildContext = (overrides: {
 			puzzleTolerance: overrides.sessionPuzzleTolerance,
 		}),
 		...(overrides.sessionPuzzle && { puzzle: overrides.sessionPuzzle }),
+		...(overrides.sessionFingerprintSummary && {
+			fingerprintSummary: overrides.sessionFingerprintSummary,
+		}),
 	} as unknown as ProjectedSession,
 	trafficVerdict: overrides.trafficVerdict ?? { kind: "pass" },
 	provenance: {
@@ -287,5 +291,56 @@ describe("the floors need corroboration", () => {
 		});
 		expect(servedTolerance()).toBe(TOUCH_MIN_TOLERANCE_PX);
 		expect(servedPieceSize()).toBe(TOUCH_MIN_PIECE_PX);
+	});
+});
+
+describe("the session's fingerprint summary at issuance", () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		getPuzzleCaptchaChallenge = vi.fn().mockResolvedValue({
+			challenge: "challenge",
+			requestedAtTimestamp: 0,
+			targetX: 10,
+			targetY: 10,
+			originX: 0,
+			originY: 0,
+			tolerance: 12,
+			providerSignature: "sig",
+		});
+		renderPuzzleImagesMock.mockResolvedValue({
+			background: "bg",
+			piece: "piece",
+			pieceSize: 60,
+			backgroundSeed: "seed",
+			renderSeed: "seed",
+		});
+	});
+
+	/** The summary argument storePuzzleCaptchaRecord was given. */
+	const storedSummary = (ctx: ChallengeIssueContext): unknown =>
+		vi.mocked(ctx.tasks.db.storePuzzleCaptchaRecord).mock.calls[0]?.[13];
+
+	it("is stored on the puzzle record", async () => {
+		const fingerprintSummary = {
+			root: "0xroot",
+			groupHash: "0xgroup",
+			bucketId: "9f1c3a0e7b2d4c6a8e0f1a2b3c4d5e6f",
+		};
+		const ctx = buildContext({
+			userAgent: WINDOWS_CHROME_UA,
+			sessionFingerprintSummary: fingerprintSummary,
+		});
+
+		await issuePuzzleChallenge(ctx);
+
+		expect(storedSummary(ctx)).toStrictEqual(fingerprintSummary);
+	});
+
+	it("is left off when the session has none", async () => {
+		const ctx = buildContext({ userAgent: WINDOWS_CHROME_UA });
+
+		await issuePuzzleChallenge(ctx);
+
+		expect(storedSummary(ctx)).toBeUndefined();
 	});
 });
